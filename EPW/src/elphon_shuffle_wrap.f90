@@ -28,8 +28,8 @@
   USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
-  USE uspp_data,     ONLY : nqxq, dq, qrad, tab_rhc
-  USE gvect,         ONLY : gcutm, ngm, g, gg
+  USE qrad_mod,      ONLY : init_tab_qrad, deallocate_tab_qrad
+  USE gvect,         ONLY : gcutm
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
   USE io_files,      ONLY : prefix, tmp_dir
@@ -113,10 +113,6 @@
   !! Number of qpoints in the irreducible wedge
   INTEGER :: nqc
   !! Number of qpoints on the uniform grid
-  INTEGER :: maxvalue
-  !! Temporary INTEGER for max value
-  INTEGER :: nqxq_tmp
-  !! Maximum G+q length
   INTEGER :: ik
   !! Total k-point index
   INTEGER :: ios
@@ -191,6 +187,8 @@
   !! Wannier centers
   REAL(KIND = DP) :: qnorm_tmp
   !! Absolute value of xqc_irr
+  REAL(KIND = DP) :: qmax
+  !! Max value of q for interpoplation table
   REAL(KIND = DP) :: sumr(2, 3, nat, 3)
   !! Sum to impose the ASR
   REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
@@ -234,33 +232,18 @@
     xqc_irr(:, :) = xqc(:, 1:nqc_irr)
     xqc(:, :) = zero
     !
-    ! fix for uspp
-    ! this is needed to get the correct size of the interpolation table 'qrad'
-    ! for the non-local part of the pseudopotential in PW/src/allocate_nlpot.f90
+    ! ensure that the size of the interpolation table 'tab_qrad' for the Q(r)
+    ! Q(r) of ultrasoft pseudopotentials is sufficient; re-initialize otherwise
     !
     IF (.NOT. epbread .AND. .NOT. epwread) THEN
-      maxvalue = nqxq
+      qnorm_tmp = 0.0_dp
       DO iq_irr = 1, nqc_irr
-        qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
-        nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) * tpiba / dq + 4) * cell_factor)
-        IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
+        qnorm_tmp = MAX( qnorm_tmp, xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
       ENDDO
-      !
-      IF (maxvalue > nqxq) THEN
-        DEALLOCATE(qrad, STAT = ierr)
-        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
-        ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
-        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
-        IF (ALLOCATED(tab_rhc)) THEN
-           DEALLOCATE(tab_rhc)
-           ALLOCATE(tab_rhc(maxvalue,nsp))
-        END IF
-        !
-        qrad(:, :, :, :) = zero
-        ! RM - need to call init_us_1 to re-calculate qrad
-        ! PG - maybe it would be sufficient to call init_tab_qrad?
-        CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      ENDIF
+      qmax = (SQRT(gcutm) + SQRT(qnorm_tmp)) * tpiba * cell_factor
+      ! FIXME: I don't think cell_factor should be there
+      CALL init_tab_qrad(qmax, omega, intra_bgrp_comm, ierr)
+      
     ENDIF
     !
     IF (nkstot /= nkc1 * nkc2 * nkc3) CALL errore('elphon_shuffle_wrap', 'nscf run inconsistent with epw input', 1)
@@ -961,9 +944,10 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc_irr', 1)
   ENDIF
   !
-  IF ((maxvalue > nqxq) .AND. (.NOT. epbread .AND. .NOT. epwread)) THEN
-    DEALLOCATE(qrad, STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
+  IF ( .NOT. epbread .AND. .NOT. epwread ) THEN
+     ! FIXME: the original instruction was "deallocate qrad if re-allocated above"
+     ! FIXME: I don't see any reason not to deallocate here if qrad no longer needed
+     CALL deallocate_tab_qrad ( )
   ENDIF
   !
   IF (.NOT. (epwread .AND. .NOT. epbread)) THEN

@@ -1,7 +1,3 @@
-#if !defined(__CUDA)
-#define cublasZgerc  zgerc
-#endif
-
 MODULE oscdft_functions_gpu
 #if defined (__OSCDFT)
    USE kinds,                    ONLY : DP
@@ -58,14 +54,14 @@ MODULE oscdft_functions_gpu
          IF (idx%nconstr == 0) RETURN
          IF (.NOT.ANY(inp%spin_index(idx%iconstr2ioscdft(:)) == current_spin)) RETURN
 
-         CALL start_clock("oscdftGhdiag")
+         CALL start_clock_gpu("oscdft_hdiag")
          npw = ngk(current_k)
 
          IF (.NOT.ctx%wfc_allocated) THEN
             CALL errore("oscdft_h_psi", "wfc not allocated", 1)
          END IF
 
-         ik = current_k 
+         ik = current_k
          CALL using_h_diag_d(1)
          IF (isk(ik) == current_spin) THEN
             IF (nks > 1) THEN
@@ -111,25 +107,24 @@ MODULE oscdft_functions_gpu
             END DO
             !$acc end data
          END IF
-         CALL stop_clock("oscdftGhdiag")
+         CALL stop_clock_gpu("oscdft_hdiag")
       END SUBROUTINE oscdft_h_diag_gpu
 
       SUBROUTINE oscdft_h_psi_gpu(ctx, lda, n, m, psi_d, hpsi_d)
          USE noncollin_module,    ONLY : npol
-         ! USE becmod,              ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
-         USE becmod_gpum,         ONLY : bec_type_d
-         USE becmod_subs_gpum,    ONLY : calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
          USE klist,               ONLY : nks, nelup, neldw
          USE buffers,             ONLY : get_buffer
          USE lsda_mod,            ONLY : isk, current_spin
          USE io_files,            ONLY : nwordwfc
          USE gvect,               ONLY : gstart
-         USE control_flags,       ONLY : gamma_only
+         USE control_flags,       ONLY : gamma_only, offload_type
          USE wvfct,               ONLY : btype, current_k, nbnd, wg
          USE mp_bands,            ONLY : intra_bgrp_comm
          USE mp,                  ONLY : mp_barrier
+         USE becmod,              ONLY : bec_type, allocate_bec_type_acc,&
+                                         deallocate_bec_type_acc
 #if defined(__CUDA)
-         USE cublas
+         USE becmod,              ONLY : calbec_cuf
 #endif
          IMPLICIT NONE
 
@@ -140,16 +135,17 @@ MODULE oscdft_functions_gpu
          INTEGER,                   INTENT(IN)            :: lda, n, m
          COMPLEX(DP),               INTENT(IN)            :: psi_d(lda*npol,m)
          COMPLEX(DP),               INTENT(INOUT)         :: hpsi_d(lda*npol,m)
-         TYPE(bec_type_d)                                 :: proj_d
-         LOGICAL                                          :: done_calbec
          INTEGER                                          :: iconstr, ioscdft,&
                                                              ik, h, k, curr_dim,&
                                                              ibnd, i, oidx, isum, osum, jsum,&
                                                              h_off, k_off
          REAL(DP)                                         :: occ_const
-         COMPLEX(DP)                                      :: alpha! , deriv_f(lda*npol,m)
+         COMPLEX(DP)                                      :: alpha
 
-         COMPLEX(DP), POINTER :: wfcO_wfc(:,:)
+         COMPLEX(DP),    POINTER :: wfcO_wfc(:,:)
+         TYPE(bec_type), TARGET  :: proj
+         REAL(DP),       POINTER :: proj_r(:,:)
+         COMPLEX(DP),    POINTER :: proj_k(:,:)
 #if defined(__CUDA)
          attributes(DEVICE) :: psi_d, hpsi_d
 #endif
@@ -163,22 +159,24 @@ MODULE oscdft_functions_gpu
          IF (idx%nconstr == 0) RETURN
 
 
-         CALL start_clock("oscdftGhpsi")
+         CALL start_clock_gpu("oscdft_hpsi")
          ! sum_hk u_h^I u_k^I |phi_k> <phi_h|psi>
-         CALL check_bec_type_unallocated_gpu(proj_d)
          ik = current_k
-         CALL allocate_bec_type_gpu(m, wfcO%n, proj_d)
-         IF (nks > 1) THEN
-            CALL oscdft_get_buffer(wfcO, ik)
+         CALL allocate_bec_type_acc(m, wfcO%n, proj)
+         IF (gamma_only) THEN
+            proj_r => proj%r
+         ELSE
+            proj_k => proj%k
          END IF
+         IF (nks > 1) CALL oscdft_get_buffer(wfcO, ik)
          wfcO_wfc => wfcO%wfc
          !$acc data copyin(wfcO_wfc(:,:))
 
          ! gets <psi|phi_h>, then call ZGERC where this term is turned to its complex conjugate (<phi_h|psi>)
-         !$acc host_data use_device(wfcO_wfc(:,:))
-         CALL calbec_gpu(n, psi_d, wfcO_wfc, proj_d)
-         !$acc end host_data
-         ! deriv_f = (0.D0, 0.D0)
+#if defined(__CUDA)
+!civn: remove evc_d and use calbec instead
+         CALL calbec_cuf(offload_type, n, psi_d, wfcO_wfc, proj)
+#endif
 
          DO iconstr=1,idx%nconstr
             ioscdft = idx%iconstr2ioscdft(iconstr)
@@ -204,20 +202,20 @@ MODULE oscdft_functions_gpu
                      alpha = CMPLX(occ_const * ctx%multipliers(iconstr), 0.D0, kind=DP)
                      IF (gamma_only) THEN
                         !$acc data present(wfcO_wfc(:,:), hpsi_d)
-                        !$acc host_data use_device(wfcO_wfc(:,:))
+                        !$acc host_data use_device(wfcO_wfc(:,:), proj_r)
                         CALL MYDGER(2*n,m,DBLE(alpha),&
                                         wfcO_wfc(1,h_off),1,&
-                                        proj_d%r_d(1:m,k_off),1,&
+                                        proj_r(1:m,k_off),1,&
                                         hpsi_d,2*lda)
                         !$acc end host_data
                         !$acc end data
                      ELSE
                         !$acc data present(wfcO_wfc(:,:), hpsi_d)
-                        !$acc host_data use_device(wfcO_wfc(:,:))
-                        CALL cublasZgerc(n,m,alpha,&
-                                         wfcO_wfc(1,h_off),1,&
-                                         proj_d%k_d(1:m,k_off),1,&
-                                         hpsi_d,lda)
+                        !$acc host_data use_device(wfcO_wfc(:,:), proj_k)
+                        CALL MYZGERC(n,m,alpha,&
+                                     wfcO_wfc(1,h_off),1,&
+                                     proj_k(1:m,k_off),1,&
+                                     hpsi_d,lda)
                         !$acc end host_data
                         !$acc end data
                      END IF
@@ -225,13 +223,11 @@ MODULE oscdft_functions_gpu
                END DO
             END IF
          END DO
-         ! hpsi(1:n,1:m) = hpsi(1:n,1:m) + deriv_f(1:n,1:m)
-         ! IF (gamma_only.AND.gstart==2) hpsi(1,1:m) = CMPLX(DBLE(hpsi(1,1:m)), 0.D0, kind=DP)
          !$acc end data
 
-         CALL deallocate_bec_type_gpu(proj_d)
+         CALL deallocate_bec_type_acc(proj)
          CALL mp_barrier(intra_bgrp_comm)
-         CALL stop_clock("oscdftGhpsi")
+         CALL stop_clock_gpu("oscdft_hpsi")
       END SUBROUTINE oscdft_h_psi_gpu
 #endif
 END MODULE oscdft_functions_gpu

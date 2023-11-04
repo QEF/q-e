@@ -7,14 +7,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_xpsi_driver_cuf &
-            ( npwx, npw, nstart, nbnd, psi_d, npol, overlap, evc_d, hevc_d, sevc_d, e_d, use_para_diag, gamma_only )
+SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dptr, &
+              npwx, npw, nstart, nbnd, psi_d, npol, overlap, evc_d, hevc_d, sevc_d, e_d, use_para_diag, gamma_only )
   !----------------------------------------------------------------------------
   !
   !! Driver routine for Hamiltonian diagonalization in the subspace 
   !! spanned by nstart states psi ( atomic or random wavefunctions ).
   !! Produces on output nbnd eigenvectors ( nbnd <= nstart ) in evc.
-  !! Calls h_psi, s_psi to calculate H|psi> and S|psi>,
+  !! Calls h_psi_ptr, s_psi_ptr to calculate H|psi> and S|psi>,
   !! which are saved in hevc and sevc.
   !
   USE util_param,         ONLY : DP
@@ -53,10 +53,11 @@ SUBROUTINE rotate_xpsi_driver_cuf &
   COMPLEX(DP), POINTER             :: sevc_h(:,:)
   REAL(DP), ALLOCATABLE            :: e_h(:)
   !
-  EXTERNAL :: h_psi, s_psi, h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_hptr, h_psi_dptr, &  ! host pointers
+              s_psi_hptr, s_psi_dptr     ! device pointers
+    ! h_psi_... (npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,spsi)
+    ! s_psi_... (npwx,npw,nbnd,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
   !
@@ -83,13 +84,13 @@ SUBROUTINE rotate_xpsi_driver_cuf &
      IF ( gamma_only ) THEN
   !write (*,*) 'inside para gamma'; FLUSH(6)
         !
-        CALL protate_xpsi_gamma ( h_psi, s_psi, overlap, &
+        call protate_xpsi_gamma ( h_psi_hptr, s_psi_hptr, overlap, &
                                   npwx, npw, nstart, nbnd, psi_h, evc_h, hevc_h, sevc_h, e_h )
         !
      ELSE
   !write (*,*) 'inside para k'; FLUSH(6)
         !
-        CALL protate_xpsi_k ( h_psi, s_psi, overlap, &
+        call protate_xpsi_k ( h_psi_hptr, s_psi_hptr, overlap, &
                               npwx, npw, nstart, nbnd, npol, psi_h, evc_h, hevc_h, sevc_h, e_h )
         !
      END IF
@@ -113,13 +114,13 @@ SUBROUTINE rotate_xpsi_driver_cuf &
      IF ( gamma_only ) THEN
   !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
-        CALL rotate_xpsi_gamma_gpu ( h_psi_gpu, s_psi_gpu, overlap, &
+        CALL rotate_xpsi_gamma_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
                                  npwx, npw, nstart, nbnd, psi_d, evc_d, hevc_d, sevc_d, e_d )
         !
      ELSE
   !write (*,*) 'inside serial k'; FLUSH(6)
         !
-        CALL rotate_xpsi_k_gpu ( h_psi_gpu, s_psi_gpu, overlap, &
+        CALL rotate_xpsi_k_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
                              npwx, npw, nstart, nbnd, npol, psi_d, evc_d, hevc_d, sevc_d, e_d )
         !
      END IF

@@ -809,8 +809,6 @@ MODULE oscdft_functions
                END DO
             END IF
          END DO
-         ! hpsi(1:n,1:m) = hpsi(1:n,1:m) + deriv_f(1:n,1:m)
-         ! IF (gamma_only.AND.gstart==2) hpsi(1,1:m) = CMPLX(DBLE(hpsi(1,1:m)), 0.D0, kind=DP)
          CALL deallocate_bec_type(proj)
          CALL mp_barrier(intra_bgrp_comm)
          CALL stop_clock("oscdft_hpsi")

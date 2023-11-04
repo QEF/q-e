@@ -29,8 +29,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_rho,              ONLY : rho_r2g
-  USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3,&
-                                   g_d, gg_d, mill_d, eigts1_d, eigts2_d, eigts3_d
+  USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -95,15 +94,15 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   IF ( ngm_l <= 0 ) GO TO 10
   !
   ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0( ngm_l, lmaxq*lmaxq ) )
-  !$acc data create( vaux, qmod, vaux, ylmk0 )
+  !$acc data create( vaux, qmod, ylmk0 )
   !
-  !$acc host_data use_device(ylmk0)
-  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0 )
+  !$acc host_data use_device(ylmk0, g, gg)
+  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !$acc end host_data
   !
   !$acc parallel loop
   DO ig = 1, ngm_l
-     qmod (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
+     qmod (ig) = SQRT(gg(ngm_s+ig-1))*tpiba
   ENDDO
   ! ... Fourier transform of the total effective potential
   !
@@ -139,7 +138,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         nhnt = nh(nt)
         nij = nh(nt)*(nh(nt)+1)/2
         ALLOCATE ( qgm(ngm_l,nij) )
-        !$acc data create( qgm )
+        !$acc data create( qgm ) present(eigts1, eigts2, eigts3, mill)
         !
         ! ... Compute and store Q(G) for this atomic species 
         ! ... (without structure factor)
@@ -164,9 +163,9 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
                  nb = na_to_nab_d(na)
                  IF (nb > 0) &
                     aux_d(ig,nb) = vaux(ig,is) * CONJG ( &
-                      eigts1_d(mill_d(1,ngm_s+ig-1),na) * &
-                      eigts2_d(mill_d(2,ngm_s+ig-1),na) * &
-                      eigts3_d(mill_d(3,ngm_s+ig-1),na) )
+                      eigts1(mill(1,ngm_s+ig-1),na) * &
+                      eigts2(mill(2,ngm_s+ig-1),na) * &
+                      eigts3(mill(3,ngm_s+ig-1),na) )
               END DO
            END DO
            !
@@ -196,8 +195,8 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         !$acc end host_data
         !
         DEALLOCATE ( deeaux_d, aux_d )
-        DEALLOCATE ( qgm )
         !$acc end data
+        DEALLOCATE ( qgm )
         !
      END IF
      !

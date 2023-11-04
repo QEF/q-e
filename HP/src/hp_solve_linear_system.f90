@@ -28,7 +28,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE wvfct,                ONLY : nbnd, npwx
   USE uspp,                 ONLY : okvan, nkb, deeq_nc
   USE uspp_param,           ONLY : nhm
-  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, becp
+  USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, becp
   USE buffers,              ONLY : save_buffer, get_buffer
   USE noncollin_module,     ONLY : npol, nspin_mag, noncolin, domag
   USE paw_variables,        ONLY : okpaw
@@ -56,10 +56,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt  
   USE lsda_mod,             ONLY : nspin     
   USE scf,                  ONLY : vrs    
-#if defined(__CUDA)
-  USE becmod_gpum,      ONLY: becp_d
-  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
-#endif
   !
   IMPLICIT NONE
   !
@@ -150,10 +146,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   IF (okvan) ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, 1))
   IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, nat, nspin_mag, 1))
-  CALL allocate_bec_type (nkb, nbnd, becp)
-#if defined(__CUDA)
-  CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
-#endif
+  CALL allocate_bec_type_acc (nkb, nbnd, becp)
   !
   ALLOCATE (dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, 1))
   !
@@ -567,7 +560,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      DEALLOCATE (t)
      DEALLOCATE (tmq)
   ENDIF
-  CALL deallocate_bec_type (becp)
+  CALL deallocate_bec_type_acc (becp)
   !
   WRITE( stdout,*) "     "
   WRITE( stdout,*) "     =--------------------------------------------="

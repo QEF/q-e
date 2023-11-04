@@ -331,7 +331,6 @@ CONTAINS
       USE exx,    ONLY : exxenergy2, fock2
       USE xc_lib, ONLY : xclib_dft_is
       !
-      USE becmod_subs_gpum, ONLY : using_becp_auto
       USE uspp_init,        ONLY : init_us_2
       !
       IMPLICIT NONE
@@ -343,7 +342,6 @@ CONTAINS
 
       ALLOCATE (aux(dfftp%nnr,1))
       CALL allocate_bec_type ( nkb, nbnd, becp )
-      CALL using_becp_auto(2)
 
       ek  = 0.d0
       eloc= 0.d0
@@ -480,7 +478,6 @@ CONTAINS
       END IF
       !
       CALL deallocate_bec_type (becp)
-      CALL using_becp_auto(2)
       DEALLOCATE (aux)
 
       WRITE (stdout,*)

@@ -65,7 +65,6 @@ SUBROUTINE init_run()
   USE wannier_module,           ONLY : allocate_wannier  
   USE io_files,                 ONLY : tmp_dir, create_directory, restart_dir
   USE io_global,                ONLY : ionode, stdout
-  USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE ions_base,                ONLY : ions_reference_positions, cdmi
@@ -116,10 +115,7 @@ SUBROUTINE init_run()
 
   IF( nbgrp > 1 .AND. force_pairing ) &
      CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
-  !
-  ! ... Open files containing MD information
-  !
-  CALL printout_base_init( )
+ 
   !
   ! ... Create main restart directory
   !

@@ -22,17 +22,19 @@ SUBROUTINE set_rhoc
   USE cell_base, ONLY : omega, tpiba2
   USE fft_base,  ONLY : dfftp
   USE fft_rho,   ONLY : rho_g2r
-  USE gvect,     ONLY : ngm, ngl, gl, igtongl
+  USE gvect,     ONLY : ngm, ngl, gl, igtongl, ecutrho
   USE vlocal,    ONLY : strf
   USE mp_bands,  ONLY : intra_bgrp_comm
-  USE mp,        ONLY : mp_sum
+  USE mp,        ONLY : mp_sum, mp_max
   USE scf,       ONLY : rho_core, rhog_core
+  USE cellmd,    ONLY : cell_factor
+  USE rhoc_mod,  ONLY : init_tab_rhc, interp_rhc
   !
   IMPLICIT NONE
   !
   REAL(DP) , ALLOCATABLE ::  rhocg(:)
   ! the radial fourier transform
-  REAL(DP) ::  rhoneg
+  REAL(DP) ::  qmax, rhoneg
   ! used to check the core charge
   INTEGER :: ir, nt, ng
   ! counter on mesh points
@@ -43,8 +45,19 @@ SUBROUTINE set_rhoc
   rho_core(:)  = 0.0_DP
 
   IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
+     !
+     qmax = tpiba2 * MAXVAL ( gl )
+     CALL mp_max (qmax, intra_bgrp_comm)
+     !! this is the actual maximum |G|^2 needed in the interpolation table
+     !! for variable-cell calculations. It may exceed ecutrho, so we use
+     !! "cell_factor" (1.2 or so) as below, in order to avoid too frequent
+     !! re-allocations of the interpolation table
+     !
+     qmax = MAX (sqrt(qmax), sqrt(ecutrho)*cell_factor)
+     CALL init_tab_rhc  ( qmax, omega, intra_bgrp_comm, ir )
+     !
      ALLOCATE (rhocg( ngl))
-     !$acc data create(rhocg) copyin(gl, igtongl, strf, rhog_core, rho_core)
+     !$acc data create(rhocg) copyin(gl, strf, rhog_core, rho_core) present(igtongl)
      !
      !    the sum is on atom types
      !
@@ -115,4 +128,3 @@ SUBROUTINE set_rhoc
   RETURN
 
 END SUBROUTINE set_rhoc
-

@@ -184,6 +184,7 @@ set(src_pw
    src/run_pwscf.f90 
    src/s_1psi.f90 
    src/s_psi.f90 
+   src/s_psi_acc.f90 
    src/save_in_cbands.f90 
    src/save_in_electrons.f90 
    src/scale_h.f90 
@@ -221,7 +222,6 @@ set(src_pw
    src/tetra.f90 
    src/transform_becsum_so.f90 
    src/transform_becsum_nc.f90 
-   src/transform_qq_so.f90 
    src/trnvecc.f90 
    src/two_chem.f90
    src/update_pot.f90 
@@ -250,7 +250,6 @@ set(src_pw
    src/newd_gpu.f90
    src/sum_band_gpu.f90
    src/add_paw_to_deeq_gpu.f90
-   src/s_psi_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90
@@ -282,10 +281,7 @@ if (QE_ENABLE_OSCDFT)
         src/oscdft_forces.f90
         src/oscdft_forces_subs.f90
         # GPU
-        src/oscdft_wavefunction_subs_gpu.f90
-        src/oscdft_wfcO_gpu.f90
-        src/oscdft_functions_gpu.f90
-        src/additional_cusolver_subs.f90)
+        src/oscdft_functions_gpu.f90)
 endif()
 qe_enable_cuda_fortran("${src_pw}")
     

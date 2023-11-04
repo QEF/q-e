@@ -1,0 +1,4 @@
+&OSCDFT_PP_NAMELIST
+  prefix="anatase",
+  outdir="./",
+/

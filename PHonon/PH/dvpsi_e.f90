@@ -31,7 +31,6 @@ subroutine dvpsi_e (ik, ipol)
   USE mp_bands,        ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
   USE xc_lib,          ONLY : exx_is_active
   USE uspp,            ONLY : okvan, nkb, vkb
-  USE becmod_subs_gpum,ONLY : using_becp_auto
   USE uspp_param,      ONLY : nh, nhm
   USE ramanm,          ONLY : eth_rps
   USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
@@ -134,11 +133,9 @@ subroutine dvpsi_e (ik, ipol)
      if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .and. nbnd>1 ) then
         call divide(inter_bgrp_comm,nbnd,n_start,n_end)
         if (n_end >= n_start) then
-                CALL using_becp_auto(2)
                 CALL calbec (npw, vkb, dvpsi(:,n_start:n_end), becp , n_end-n_start+1 )
         endif
      else
-        CALL using_becp_auto(2)
         CALL calbec (npw, vkb, dvpsi, becp )
      end if
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)

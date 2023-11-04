@@ -3361,7 +3361,9 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, ios, &
           DO i = 1, ctrAB ! over qpoints
             dotp = 0.0d0
             DO ii = 1, 3
-              dotp = dotp + q(i, ii) * Rlist(j, ii)!
+              !dotp = dotp + q(i, ii) * Rlist(j, ii)!
+              ! q(3, nq)
+              dotp = dotp + q(ii, i) * Rlist(j, ii)
             ENDDO ! ii
             sum_er_B2(ctr2) = sum_er_B2(ctr2) + cos(tpi * dotp) * F_vect(p, i)
             !

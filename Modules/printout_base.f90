@@ -11,172 +11,54 @@
 
 MODULE printout_base
 
+  USE kinds, only : DP
   IMPLICIT NONE
   SAVE
 
-  CHARACTER(LEN=256) :: fort_unit(30:44)
-  ! ...  fort_unit = fortran units for saving physical quantity
+  INTEGER, EXTERNAL :: find_free_unit
 
 CONTAINS
 
 
-  SUBROUTINE printout_base_init( )
+FUNCTION printout_base_name( suffix )
+   !  return the full name of a print out file with a given suffix
 
-     USE io_files,  ONLY: tmp_dir, prefix
-     USE io_global, ONLY: ionode, ionode_id
-     USE mp_global, ONLY: intra_image_comm 
-     USE mp, ONLY: mp_bcast
-
-     INTEGER :: iunit, ierr, ios
-     CHARACTER(LEN=256) :: pprefix
-     ! ...  prefix combined with the output path
-
-     pprefix = TRIM( tmp_dir ) // TRIM( prefix )
-
-     ierr = 0
-
-     IF( ionode ) THEN
-        fort_unit(30) = trim(pprefix)//'.con'
-        fort_unit(31) = trim(pprefix)//'.eig'
-        fort_unit(32) = trim(pprefix)//'.pol'
-        fort_unit(33) = trim(pprefix)//'.evp'
-        fort_unit(34) = trim(pprefix)//'.vel'
-        fort_unit(35) = trim(pprefix)//'.pos'
-        fort_unit(36) = trim(pprefix)//'.cel'
-        fort_unit(37) = trim(pprefix)//'.for'
-        fort_unit(38) = trim(pprefix)//'.str'
-        fort_unit(39) = trim(pprefix)//'.nos'
-        fort_unit(40) = trim(pprefix)//'.the'
-        fort_unit(41) = trim(pprefix)//'.spr'  ! wannier spread
-        fort_unit(42) = trim(pprefix)//'.wfc'  ! wannier function
-        fort_unit(43) = trim(pprefix)//'.hrs'  ! hirshfeld volumes 
-        fort_unit(44) = trim(pprefix)//'.ncg'  ! number of cgsteps
-        DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-           OPEN(UNIT=iunit, FILE=fort_unit(iunit), &
-               STATUS='unknown', POSITION='append', IOSTAT = ios )
-           CLOSE( iunit )
-           ierr = ierr + ABS(ios)
-        END DO
-     END IF
-
-     CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-     IF( ierr /= 0 ) THEN
-        CALL errore(' printout_base_init ', &
-              ' error in opening files '//TRIM(pprefix)//'.XXX',ierr)
-     END IF
-
-    RETURN
-  END SUBROUTINE printout_base_init
+   USE io_files,  ONLY: tmp_dir, prefix
+   CHARACTER(LEN=*), INTENT(IN) :: suffix
+   CHARACTER(LEN=256) :: printout_base_name
+   printout_base_name = TRIM( tmp_dir ) // TRIM( prefix ) // TRIM(suffix)
+   return
+end function
 
 
-  SUBROUTINE printout_base_open( suffix )
-    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: suffix
-    INTEGER :: iunit
+
+  function printout_base_open( suffix )
+    CHARACTER(LEN=*), INTENT(IN) :: suffix
+    INTEGER :: printout_base_open
     LOGICAL :: ok=.true.
-    ! ...  Open units 30, 31, ... 44 for simulation output
-    IF( PRESENT( suffix ) ) THEN
-       IF( LEN( suffix ) /= 3 ) &
-          CALL errore(" printout_base_open ", " wrong suffix ", 1 )
-       ok = .false.
-    END IF
-    DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-       IF( PRESENT( suffix ) ) THEN
-          IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == &
-              ( len_trim( fort_unit(iunit) ) - 2 )                ) THEN
-             OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
-             ok = .true.
-          END IF
-       ELSE
-          OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
-       END IF
-    END DO
-    IF( PRESENT( suffix ) ) THEN
-       IF( .NOT. ok ) &
-          CALL errore(" printout_base_open ", " file with suffix "//suffix//" not found ", 1 )
-    END IF
+
+    printout_base_open = find_free_unit()
+    if (printout_base_open <= 0 ) then
+       call errore (" printout_base_open ", " cannot find a free unit ", 1)
+    endif
+    OPEN( UNIT=printout_base_open, FILE=printout_base_name(suffix),&
+          STATUS='unknown', POSITION='append')
     RETURN
-  END SUBROUTINE printout_base_open
+   END function printout_base_open
 
-
-  FUNCTION printout_base_unit( suffix )
-    !   return the unit corresponding to a given suffix
-    CHARACTER(LEN=*), INTENT(IN) :: suffix
-    INTEGER :: printout_base_unit
-    INTEGER :: iunit
-    LOGICAL :: ok
-    IF( LEN( suffix ) /= 3 ) &
-       CALL errore(" printout_base_unit ", " wrong suffix ", 1 )
-    ok = .false.
-    DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-       IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
-          printout_base_unit = iunit
-          ok = .true.
-       END IF
-    END DO
-    IF( .NOT. ok ) &
-       CALL errore(" printout_base_unit ", " file with suffix "//suffix//" not found ", 1 )
-    RETURN
-  END FUNCTION printout_base_unit
-
-
-  FUNCTION printout_base_name( suffix )
-    !  return the full name of a print out file with a given suffix
-    CHARACTER(LEN=*), INTENT(IN) :: suffix
-    CHARACTER(LEN=256) :: printout_base_name
-    INTEGER :: iunit
-    LOGICAL :: ok
-    IF( LEN( suffix ) /= 3 ) &
-       CALL errore(" printout_base_name ", " wrong suffix ", 1 )
-    ok = .false.
-    DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-       IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
-          printout_base_name = fort_unit(iunit)
-          ok = .true.
-       END IF
-    END DO
-    IF( .NOT. ok ) &
-       CALL errore(" printout_base_name ", " file with suffix "//suffix//" not found ", 1 )
-    RETURN
-  END FUNCTION printout_base_name
-
-
-
-  SUBROUTINE printout_base_close( suffix )
-    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: suffix
-    INTEGER :: iunit
+  SUBROUTINE printout_base_close( iunit )
+    INTEGER, intent(in) :: iunit
     LOGICAL :: topen
-    LOGICAL :: ok
-    ! ...   Close and flush unit 30, ... 44
-    IF( PRESENT( suffix ) ) THEN
-       IF( LEN( suffix ) /= 3 ) &
-          CALL errore(" printout_base_close ", " wrong suffix ", 1 )
-       ok = .false.
-    END IF
-    DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-       IF( PRESENT( suffix ) ) THEN
-          IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
-             INQUIRE( UNIT=iunit, OPENED=topen )
-             IF( topen ) CLOSE(iunit)
-             ok = .true.
-          END IF
-       ELSE
-          INQUIRE( UNIT=iunit, OPENED=topen )
-          IF (topen) CLOSE(iunit)
-       END IF
-    END DO
-    IF( PRESENT( suffix ) ) THEN
-       IF( .NOT. ok ) &
-          CALL errore(" printout_base_close ", " file with suffix "//suffix//" not found ", 1 )
-    END IF
-    RETURN
+    INQUIRE( UNIT=iunit, OPENED=topen )
+    IF (topen) CLOSE(iunit)
   END SUBROUTINE printout_base_close
 
   
   SUBROUTINE printout_pos( iunit, tau, nat, ityp, what, nfi, tps, label, fact, head )
     !
-    USE kinds
     !
-    INTEGER,          INTENT(IN)           :: iunit, nat, ityp(:)
+    INTEGER,          INTENT(IN)           :: iunit, nat
+    INTEGER,          INTENT(IN), OPTIONAL :: ityp(:)
     REAL(DP),        INTENT(IN)           :: tau( :, : )
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
     INTEGER,          INTENT(IN), OPTIONAL :: nfi
@@ -214,7 +96,7 @@ CONTAINS
        END IF
     END IF
     !
-    IF( PRESENT( label ) ) THEN
+    IF( PRESENT( label ) .and. PRESENT(ityp) ) THEN
        DO ia = 1, nat
          WRITE( iunit, 255 ) label(ityp(ia)), ( f * tau(k,ia),k = 1,3)
        END DO
@@ -445,5 +327,48 @@ CONTAINS
       RETURN
       !
     END SUBROUTINE read_print_counter   
+
+
+   SUBROUTINE print_eigenvalues( ei_unit, tfile, tstdout, nfi, tps, nspin, ei, nupdwn )
+      !
+      use constants,  only : autoev 
+      USE io_global,  ONLY : stdout, ionode
+      !
+      INTEGER,  INTENT(IN) :: ei_unit, nupdwn(:)
+      LOGICAL,  INTENT(IN) :: tfile, tstdout
+      INTEGER,  INTENT(IN) :: nfi, nspin
+      REAL(DP), INTENT(IN) :: tps, ei(:,:)
+      !
+      INTEGER :: i, j, ik
+      !
+      IF ( tfile ) THEN
+          WRITE(ei_unit,30) nfi, tps
+      END IF
+      !
+      ik = 1
+      !
+      DO j = 1, nspin
+         !
+         IF( tstdout ) THEN
+            WRITE( stdout,1002) ik, j
+            WRITE( stdout,1004) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
+         END IF
+         !
+         IF( tfile ) THEN
+            WRITE(ei_unit,1010) ik, j
+            WRITE(ei_unit,1020) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
+         END IF
+         !
+      END DO
+      !
+  30  FORMAT(2X,'STEP:',I7,1X,F10.2)
+ 1002 FORMAT(/,3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
+ 1004 FORMAT(10F8.2)
+ 1010 FORMAT(3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
+ 1020 FORMAT(10F8.2)
+      !
+      RETURN
+   END SUBROUTINE print_eigenvalues
+
     !
 END MODULE printout_base

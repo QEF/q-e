@@ -50,7 +50,6 @@ SUBROUTINE sum_band()
   USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE fft_interfaces,       ONLY : invfft
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
@@ -166,7 +165,6 @@ SUBROUTINE sum_band()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
-  IF ( okvan ) CALL using_becp_auto(2)
   !
   IF (xclib_dft_is('meta') .OR. lxdm) THEN
      ALLOCATE( kplusg_evc(npwx,2) )
@@ -198,7 +196,6 @@ SUBROUTINE sum_band()
     DEALLOCATE( kplusg )
   ENDIF
   IF ( okvan ) CALL deallocate_bec_type ( becp )
-  IF ( okvan ) CALL using_becp_auto(2)
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -891,7 +888,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,                 ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,         ONLY : using_et
-  USE becmod_subs_gpum,   ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -916,7 +912,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
-  CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)

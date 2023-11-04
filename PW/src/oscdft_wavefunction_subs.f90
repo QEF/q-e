@@ -147,7 +147,7 @@ MODULE oscdft_wavefunction_subs
             CALL errore("oscdft_init_wavefunctions", "internal error: counter /= natomwfc", counter)
          END IF
 
-         IF (wfc%iun /= 0) THEN 
+         IF (wfc%iun /= 0) THEN
             wfc%nword = npwx * npol * wfc%n
             IF (wfc%n > 0) THEN
                CALL open_buffer(wfc%iun, extension, wfc%nword, io_level, exst)
@@ -276,7 +276,8 @@ MODULE oscdft_wavefunction_subs
          USE mp_bands,         ONLY : intra_bgrp_comm
          USE mp,               ONLY : mp_sum
          USE gvect,            ONLY : gstart
-         USE control_flags,    ONLY : gamma_only
+         USE control_flags,    ONLY : gamma_only, use_gpu
+         USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
 
          IMPLICIT NONE
 
@@ -286,68 +287,120 @@ MODULE oscdft_wavefunction_subs
          LOGICAL, INTENT(IN)        :: normalize_only
 
          COMPLEX(DP) :: temp
-         COMPLEX(DP) , ALLOCATABLE ::  work (:,:), overlap (:,:)
-         REAL(DP) , ALLOCATABLE :: e (:), overlap_gam(:,:)
+         COMPLEX(DP), ALLOCATABLE ::  work (:,:), overlap (:,:), s(:,:)
+         REAL(DP) , ALLOCATABLE  :: e (:), overlap_gam(:,:)
+         !$acc declare device_resident(work, overlap, e, overlap_gam, s)
          INTEGER :: i, j, k
 
-         ALLOCATE (overlap(m,m))    
-         ALLOCATE (work   (m,m))    
-         ALLOCATE (e      (m))    
-         ! 
+         !$acc data present(wfc, swfc)
+         ALLOCATE (overlap(m,m))
+         ALLOCATE (work   (m,m))
+         ALLOCATE (e      (m))
+         ALLOCATE (s      (m, m))
+
+         !$acc kernels
          overlap(:,:) = (0.d0,0.d0)
          work(:,:)    = (0.d0,0.d0)
+         !$acc end kernels
 
          IF (gamma_only) THEN
             ALLOCATE(overlap_gam(m,m))
-            CALL DGEMM('T', 'N', m, m, 2*npw, 2.D0, wfc, 2*npwx, swfc, 2*npwx, 0.D0, overlap_gam, m)
+            !$acc host_data use_device(wfc, swfc, overlap_gam)
+            CALL MYDGEMM('T', 'N', m, m, 2*npw, 2.D0, wfc, 2*npwx, swfc,&
+               2*npwx, 0.D0, overlap_gam, m)
             IF (gstart == 2) THEN
-               CALL DGER(m, m, -1.D0, wfc, 2*npwx, swfc, 2*npwx, overlap_gam, m)
+               CALL MYDGER(m, m, -1.D0, wfc, 2*npwx, swfc, 2*npwx, overlap_gam, m)
             END IF
             CALL mp_sum(overlap_gam, intra_bgrp_comm)
+            !$acc end host_data
+
+            !$acc kernels
             overlap = CMPLX(overlap_gam, 0.D0, kind=DP)
+            !$acc end kernels
+
             DEALLOCATE(overlap_gam)
          ELSE
-            CALL ZGEMM('C', 'N', m, m, npw, (1.D0, 0.D0), wfc, npwx,&
+            !$acc host_data use_device(wfc, swfc, overlap)
+            CALL MYZGEMM('C', 'N', m, m, npw, (1.D0, 0.D0), wfc, npwx,&
                swfc, npwx, (0.D0, 0.D0), overlap, m)
             CALL mp_sum(overlap, intra_bgrp_comm)
+            !$acc end host_data
          END IF
+
          IF (normalize_only) THEN
+            !$acc parallel loop collapse(2) private(i, j)
             DO i=1,m
-               DO j=i+1,m
-                  overlap(i,j) = (0.D0, 0.D0)
-                  overlap(j,i) = (0.D0, 0.D0)
+               DO j=1,m
+                  IF (i .NE. j) THEN
+                     overlap(i,j) = CMPLX(0.D0,0.D0, kind=DP)
+                  END IF
                END DO
             END DO
          END IF
+
          ! calc O^(-1/2 T)
-         CALL cdiagh (m, overlap, m, e, work)
+         IF (use_gpu) THEN
+            !$acc kernels
+            s(:,:) = CMPLX(0.d0,0.d0, kind=dp)
+            DO i = 1, m
+               s(i,i) = CMPLX(1.d0,0.d0, kind=dp)
+            ENDDO
+            !$acc end kernels
+
+            !$acc host_data use_device(overlap, e, work, s)
+            CALL laxlib_cdiaghg_gpu(m, m, overlap, s, m, e, work, me_bgrp,&
+                                    root_bgrp, intra_bgrp_comm)
+            !$acc end host_data
+         ELSE
+            CALL cdiagh (m, overlap, m, e, work)
+         END IF
+
+         ! calc O^(-1/2 T)
+         !$acc parallel loop collapse(2) private(i, j, temp, k)
          DO i=1,m
-            DO j=i,m
+            DO j=1,m
+               IF (j < i) CYCLE
                temp = (0.d0, 0.d0)
                DO k=1,m
                   temp = temp + work (j, k) * (1.d0/SQRT(CMPLX(e(k),0.D0,kind=DP))) * CONJG (work (i, k) )
                END DO
                overlap (i, j) = temp
-               IF (j.NE.i) overlap (j, i) = CONJG (temp)
+               IF (j /= i) overlap (j, i) = CONJG (temp)
             END DO
          END DO
+
+         DEALLOCATE(work)
+
+         ALLOCATE(work(npwx,m))
 
          ! lowdin ortho
          ! swfc = swfc * O^(-1/2 T)
          ! wfc  = wfc  * O^(-1/2 T)
-         DO i=1,npw
-            work(:,1:2) = (0.D0, 0.D0)
-            CALL ZGEMV('n', m, m, (1.D0, 0.D0), overlap,&
-                       m, swfc(i,1), npwx, (0.D0, 0.D0), work(1,1), 1)
-            CALL ZGEMV('n', m, m, (1.D0, 0.D0), overlap,&
-                       m,  wfc(i,1), npwx, (0.D0, 0.D0), work(1,2), 1)
-            CALL ZCOPY(m, work(1,1), 1, swfc(i,1), npwx)
-            CALL ZCOPY(m, work(1,2), 1,  wfc(i,1), npwx)
+
+         !$acc host_data use_device(overlap, swfc, work)
+         CALL MYZGEMM('N', 'T', npwx, m, m, (1.D0, 0.D0), swfc, npwx,&
+            overlap, m, (0.D0, 0.D0), work, npwx)
+         !$acc end host_data
+         !$acc parallel loop collapse(2)
+         DO j=1,m
+            DO i=1,npwx
+               swfc(i,j) = work(i,j)
+            END DO
          END DO
-         DEALLOCATE(overlap, work, e)
-         ! 100 FORMAT("OSCDFT DEBUG: ", A, ": ", *(SS, ES14.7, SP, ES14.7, "i", :, ' '))
-         ! 101 FORMAT("OSCDFT DEBUG: ", A, ": ", *(ES14.7, :, " "))
-         ! 102 FORMAT("OSCDFT DEBUG: temp(", I5, ",", I5, "): ", SS, ES14.7, SP, ES14.7, "i")
+
+         !$acc host_data use_device(overlap, wfc, work)
+         CALL MYZGEMM('N', 'T', npwx, m, m, (1.D0, 0.D0), wfc, npwx,&
+            overlap, m, (0.D0, 0.D0), work, npwx)
+         !$acc end host_data
+         !$acc parallel loop collapse(2)
+         DO j=1,m
+            DO i=1,npwx
+               wfc(i,j) = work(i,j)
+            END DO
+         END DO
+
+         DEALLOCATE(overlap, work, e, s)
+         !$acc end data
       END SUBROUTINE oscdft_ortho_swfc
 
       SUBROUTINE get_overlap_ctx(ctx, ik, oatwfcS, wfcatom, swfcatom)
@@ -384,14 +437,26 @@ MODULE oscdft_wavefunction_subs
                     col, col_orb, col_m, col_off,&
                     ioscdft, isym, npw
 
-         orbs   => idx%orbs
+         REAL(DP),    POINTER :: overlap_gam(:,:,:,:)
+         COMPLEX(DP), POINTER :: overlap_k  (:,:,:,:)
 
+         !$acc data present(wfcatom, swfcatom)
+         orbs   => idx%orbs
          npw = ngk(ik)
          IF (gamma_only) THEN
-            idx%overlap_gam(:,:,:,:,ik) = 0.D0
+            overlap_gam => idx%overlap_gam(:,:,:,:,ik)
+            !$acc enter data create(overlap_gam(:,:,:,:))
+            !$acc kernels
+            overlap_gam = 0.D0
+            !$acc end kernels
          ELSE
-            idx%overlap_k  (:,:,:,:,ik) = (0.D0,0.D0)
+            overlap_k => idx%overlap_k(:,:,:,:,ik)
+            !$acc enter data create(overlap_k(:,:,:,:))
+            !$acc kernels
+            overlap_k = (0.D0, 0.D0)
+            !$acc end kernels
          END IF
+
          DO ioscdft=1,inp%noscdft
             DO isym=1,nsym
                row = 1
@@ -405,24 +470,28 @@ MODULE oscdft_wavefunction_subs
                      col_off = oatwfcS(isym,col_orb) + 1
 
                      IF (gamma_only) THEN
-                        CALL DGEMM('T', 'N', row_m, col_m, 2*npwx, 2.D0,&
+                        !$acc host_data use_device(wfcatom, swfcatom, overlap_gam(:,:,:,:))
+                        CALL MYDGEMM('T', 'N', row_m, col_m, 2*npwx, 2.D0,&
                            wfcatom(:,row_off), 2*npwx,&
                            swfcatom(:,col_off), 2*npwx,&
                            0.D0, idx%overlap_gam(row,col,isym,ioscdft,ik),&
                            idx%max_ns_dim)
                         IF (gstart == 2) THEN
-                           CALL DGER(row_m, col_m, -1.D0,&
+                           CALL MYDGER(row_m, col_m, -1.D0,&
                               wfcatom(:,row_off), 2*npwx,&
                               swfcatom(:,col_off), 2*npwx,&
                               idx%overlap_gam(row,col,isym,ioscdft,ik),&
                               idx%max_ns_dim)
                         END IF
+                        !$acc end host_data
                      ELSE
-                        CALL ZGEMM('C', 'N', row_m, col_m, npw, (1.D0,0.D0),&
+                        !$acc host_data use_device(wfcatom, swfcatom, overlap_k(:,:,:,:))
+                        CALL MYZGEMM('C', 'N', row_m, col_m, npw, (1.D0,0.D0),&
                            wfcatom(:,row_off), npwx,&
                            swfcatom(:,col_off), npwx,&
                            (0.D0,0.D0), idx%overlap_k(row,col,isym,ioscdft,ik),&
                            idx%max_ns_dim)
+                        !$acc end host_data
                      END IF
 
                      col = col + col_m
@@ -433,10 +502,13 @@ MODULE oscdft_wavefunction_subs
             END DO
          END DO
          IF (gamma_only) THEN
+            !$acc exit data copyout(overlap_gam(:,:,:,:))
             CALL mp_sum(idx%overlap_gam(:,:,:,:,ik), intra_bgrp_comm)
          ELSE
+            !$acc exit data copyout(overlap_k(:,:,:,:))
             CALL mp_sum(idx%overlap_k  (:,:,:,:,ik), intra_bgrp_comm)
          END IF
+         !$acc end data
       END SUBROUTINE get_overlap_internal
 
       SUBROUTINE write_overlap_ctx(ctx)
@@ -520,43 +592,50 @@ MODULE oscdft_wavefunction_subs
          TYPE(oscdft_input_type),   INTENT(INOUT) :: inp
          TYPE(oscdft_indices_type), INTENT(INOUT) :: idx
 
-         COMPLEX(DP), ALLOCATABLE :: work(:,:), work_gam(:,:)
+         COMPLEX(DP), ALLOCATABLE :: mat(:,:), eigv(:,:)
          REAL(DP),    ALLOCATABLE :: e(:)
 
          INTEGER     :: max_ns_dim, ik, ioscdft, isym, nsdim, i, j, k
          COMPLEX(DP) :: temp
 
          max_ns_dim = idx%max_ns_dim
-         IF (gamma_only) ALLOCATE(work_gam(max_ns_dim,max_ns_dim))
-         ALLOCATE(work(max_ns_dim,max_ns_dim), e(max_ns_dim))
+         IF (max_ns_dim <= 0) RETURN
+
+         ALLOCATE(mat(max_ns_dim,max_ns_dim), eigv(max_ns_dim,max_ns_dim), e(max_ns_dim))
+
          DO ik=1,nks
             DO ioscdft=1,inp%noscdft
                DO isym=1,nsym
                   nsdim = idx%ns_dim(ioscdft)
 
                   IF (gamma_only) THEN
-                     work_gam(1:nsdim,1:nsdim) = CMPLX(idx%overlap_gam(1:nsdim,1:nsdim,isym,ioscdft,ik), 0.D0, kind=DP)
-                     CALL cdiagh(nsdim, work_gam, max_ns_dim, e, work)
+                     mat(1:nsdim,1:nsdim) = CMPLX(idx%overlap_gam(1:nsdim,1:nsdim,isym,ioscdft,ik), 0.D0, kind=DP)
                   ELSE
-                     CALL cdiagh(nsdim, idx%overlap_k(:,:,isym,ioscdft,ik), max_ns_dim, e, work)
+                     mat(1:nsdim,1:nsdim) = idx%overlap_k(1:nsdim,1:nsdim,isym,ioscdft,ik)
                   END IF
 
+                  CALL cdiagh(nsdim, mat, max_ns_dim, e, eigv)
+
                   ! idx%coeffs = O^(-1/2), where O = <atomic wfc|S|atomic wfc> (from idx%overlap_k/gam)
+
                   DO i=1,nsdim
-                     DO j=i,nsdim
+                     DO j=1,nsdim
+                        IF ( j < i ) CYCLE
                         temp = (0.D0,0.D0)
                         DO k=1,nsdim
-                           temp = temp + work(j,k) * (1.D0/SQRT(CMPLX(e(k),0.D0,kind=DP))) * CONJG(work(i,k))
+                           temp = temp + eigv(j,k) * (1.D0/SQRT(CMPLX(e(k),0.D0,kind=DP))) * CONJG(eigv(i,k))
                         END DO
-                        idx%coeffs(j,i,isym,ioscdft,ik) = temp
-                        IF (i.NE.j) idx%coeffs(i,j,isym,ioscdft,ik) = CONJG(temp)
+                        mat(j,i) = temp
+                        IF (i.NE.j) mat(i,j) = CONJG(temp)
                      END DO
                   END DO
+
+                  idx%coeffs(1:nsdim,1:nsdim,isym,ioscdft,ik) = mat(1:nsdim,1:nsdim)
                END DO
             END DO
          END DO
-         DEALLOCATE(work, e)
-         IF (gamma_only) DEALLOCATE(work_gam)
+
+         DEALLOCATE(mat, eigv, e)
       END SUBROUTINE lowdin_ortho_overlap_internal
 
       SUBROUTINE oscdft_get_buffer(wfc, ik)

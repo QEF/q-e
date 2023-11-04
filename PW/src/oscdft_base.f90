@@ -22,12 +22,6 @@ MODULE oscdft_base
          CALL print_clock("oscdft_hdiag")
          CALL print_clock("oscdft_hpsi")
          CALL print_clock("oscdft_force")
-         IF (use_gpu) THEN
-            WRITE(stdout, '(/,5X,"OSCDFT GPU routines")')
-            CALL print_clock("oscdftGns")
-            CALL print_clock("oscdftGhdiag")
-            CALL print_clock("oscdftGhpsi")
-         END IF
       END SUBROUTINE print_oscdft_clocks
 #endif
 END MODULE oscdft_base

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +18,8 @@ SUBROUTINE scale_h
   USE cell_base,      ONLY : bg, omega, set_h_ainv, tpiba
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
-  USE gvect,          ONLY : g, gg, ngm, g_d, gg_d
-  USE klist,          ONLY : xk, wk, nkstot
+  USE gvect,          ONLY : g, gg, ngm
+  USE klist,          ONLY : xk, wk, nkstot, qnorm
   USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
@@ -29,13 +29,16 @@ SUBROUTINE scale_h
   USE rism_module,    ONLY : lrism, rism_reinit3d
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
+  USE vloc_mod,       ONLY : scale_tab_vloc
+  USE rhoc_mod,       ONLY : scale_tab_rhc
+  USE rhoat_mod,      ONLY : scale_tab_rhoat
+  USE qrad_mod,       ONLY : scale_tab_qrad, init_tab_qrad
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig
-  ! counter on G vectors
-  INTEGER  :: ik, ipol
-  REAL(DP) :: gg_max
+  INTEGER :: ig, ik, ipol, ierr
+  ! counters
+  REAL(DP) :: gg_max, qmax
   !
   ! scale the k points
   !
@@ -70,16 +73,12 @@ SUBROUTINE scale_h
      gg (ig) = g(1,ig) * g(1,ig) + g(2,ig) * g(2,ig) + g(3,ig) * g(3,ig)
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
-#if defined(__CUDA)
-  ! update GPU copies of variables as well
-  g_d  = g
-  gg_d = gg
-#endif
   !$acc update device(g,gg)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
-  !
-  IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN
+  qmax = SQRT(gg_max)*tpiba
+  ! qmax is the largest |G| actually needed in interpolation tables
+  IF ( nqxq < INT(qmax/dq)+4 ) THEN
      CALL errore( 'scale_h', 'Not enough space allocated for radial FFT: '//&
                              'try restarting with a larger cell_factor.', 1 )
   ENDIF
@@ -87,11 +86,9 @@ SUBROUTINE scale_h
   ! scale the non-local pseudopotential tables
   !
   call scale_uspp_data( omega_old/omega )
-
-  !
-  ! recalculate the local part of the pseudopotential
-  !
-  CALL init_vloc( )
+  CALL scale_tab_rhc( omega_old/omega )
+  CALL scale_tab_rhoat( omega_old/omega )
+  CALL scale_tab_qrad( omega_old/omega )
   !
   ! for hybrid functionals
   !
@@ -100,7 +97,19 @@ SUBROUTINE scale_h
      ! not sure next line is needed
      CALL exx_mp_init( )
      CALL exx_gvec_reinit( at_old )
-  ENDIF
+     qmax = qmax + qnorm
+     ! For USPP + hybrid, qmax is the largest |q+G| needed
+     ! Note that qnorm is recomputed in exx_grid_init
+  END IF
+  !
+  ! Check interpolation table, re-allocate if needed
+  !
+  CALL init_tab_qrad ( qmax, omega, intra_bgrp_comm, ierr)
+  !
+  ! recalculate the local part of the pseudopotential
+  !
+  CALL scale_tab_vloc( omega_old/omega )
+  CALL init_vloc( )
   !
   ! for ts-vdw
   !

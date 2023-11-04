@@ -33,16 +33,13 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : np_in_sp_s   , np_in_sp_me_s   , np_in_sp_p   , np_in_sp_me_p
     USE exx_module,              ONLY  : xx_in_sp,yy_in_sp,zz_in_sp,sc_xx_in_sp,sc_yy_in_sp,sc_zz_in_sp 
     USE energies,                ONLY  : exx
-    USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
+    USE printout_base,           ONLY  : printout_base_open, printout_base_close
     USE wannier_base,            ONLY  : neigh, dis_cutoff, texx_cube
     USE mp_wave,                 ONLY  : redistwfr
     !
     USE time_step,               ONLY  : tps                !md time in picoseconds
     USE io_global,               ONLY  : ionode             !logical for I/O node
     USE cp_main_variables,       ONLY  : iprint_stdout      !print control
-    USE printout_base,           ONLY  : printout_base_close!close print unit
-    USE printout_base,           ONLY  : printout_base_open !open print unit
-    USE printout_base,           ONLY  : printout_base_unit !printout_base_unit
     USE exx_module,              ONLY  : dexx_dh
     USE exx_module,              ONLY  : exx_energy_cell_derivative
     USE exx_module,              ONLY  : exxalfa
@@ -464,10 +461,8 @@ SUBROUTINE exx_gs(nfi, c)
       !   
       IF (ionode) THEN
         !   
-        iunit=printout_base_unit("ncg")
+        iunit=printout_base_open(".ncg")
         !
-        CALL printout_base_open("ncg")
-        !   
         WRITE(iunit,'(I8,F16.8)')nfi,tps
         !   
       END IF    
@@ -964,6 +959,12 @@ SUBROUTINE exx_gs(nfi, c)
     END IF ! vl2vg
     !
     CALL stop_clock('vl2vg')
+
+    IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
+      IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
+        CALL printout_base_close(iunit)
+      END IF
+    END IF    
     !
     !==============================================================================
     IF (ALLOCATED(vpsil))           DEALLOCATE(vpsil)
@@ -1275,7 +1276,7 @@ SUBROUTINE exx_gs(nfi, c)
       !--------------------------------------------------------------------------------------
       !
       !--------------------------------------------------------------------------------------
-      ! write cgsteps in the suffix.ncg (unit=44)
+      ! write cgsteps in the suffix.ncg
       !--------------------------------------------------------------------------------------
       IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
         IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
@@ -1348,7 +1349,7 @@ SUBROUTINE exx_gs(nfi, c)
         pair_dist(3,j,iobtl),cgstep)
       CALL stop_clock('getvofr')
       !
-      ! write cgsteps in the suffix.ncg (unit=44)
+      ! write cgsteps in the suffix.ncg
       !
       IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
         !   
@@ -1443,12 +1444,11 @@ SUBROUTINE exx_gs(nfi, c)
       !--------------------------------------------------------------------------------------
       !
       !--------------------------------------------------------------------------------------
-      ! write cgsteps in the suffix.ncg (unit=44)
+      ! write cgsteps in the suffix.ncg
       !--------------------------------------------------------------------------------------
       IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
         IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
-          WRITE(44,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
-          CALL printout_base_close("ncg")
+          WRITE(iunit,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
         END IF    
       END IF    
       !--------------------------------------------------------------------------------------
@@ -1494,18 +1494,12 @@ SUBROUTINE exx_gs(nfi, c)
       !
       CALL stop_clock('getvofr')
       !
-      ! write cgsteps in the suffix.ncg (unit=44)
+      ! write cgsteps in the suffix.ncg
       !
       IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
-        !   
         IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
-          !   
-          WRITE(44,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
-          !
-          CALL printout_base_close("ncg")
-          !   
-        END IF    
-        !   
+          WRITE(iunit,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
+        END IF
       END IF    
       !
       ! update vpsil in the global grid (exxalfa is 0.25 for PBE0) 

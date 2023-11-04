@@ -30,6 +30,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE gvect,                ONLY: ngm, g, gcutm, ngm_g
    USE uspp,                 ONLY: nkb, vkb, okvan
    USE uspp_param,           ONLY: upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY: transform_qq_so
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY: npwx, nbnd
@@ -111,7 +112,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    REAL(DP) :: weight
    REAL(DP) :: pola, pola_ion
    REAL(DP), ALLOCATABLE :: wstring(:)
-   REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    REAL(DP) :: zeta_mod
    COMPLEX(DP), ALLOCATABLE :: aux(:,:)
    COMPLEX(DP), ALLOCATABLE :: aux0(:,:)
@@ -308,30 +308,14 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    IF (okvan) THEN
       !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
       ! CALL calc_btq(dkmod,qrad_dk,0) is no longer needed, see bp_c_phase
-      !
-      !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dk2 = dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2(lmaxq*lmaxq, 1, dk, dk2, ylm_dk)
-      !
-      !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-      q_dk=(0.d0,0.d0)
-      DO np =1, ntyp
-         IF ( upf(np)%tvanp ) THEN
-            DO iv = 1, nh(np)
-               DO jv = iv, nh(np)
-                  CALL qvan2(1,iv,jv,np,dkmod,pref,ylm_dk)
-                  q_dk(iv,jv,np) = omega*pref
-                  q_dk(jv,iv,np) = omega*pref
-               ENDDO
-            ENDDO
-         ENDIF
-      ENDDO
+      CALL compute_qqc ( tpiba, dk, omega, q_dk )
       IF (lspinorb) CALL transform_qq_so(q_dk,q_dk_so)
+      !
    ENDIF
    !
-   !  -------------------------------------------------------------------------   !
-   !                   electronic polarization: strings phases                    !
-   !  -------------------------------------------------------------------------   !
+   !  -------------------------------------------------------------------------    !
+   !                   electronic polarization: strings phases                     !
+   !  -------------------------------------------------------------------------    !
    !
    el_loc=0.d0
    kpoint=0

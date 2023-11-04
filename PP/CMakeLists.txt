@@ -532,6 +532,8 @@ if (QE_ENABLE_OSCDFT)
             qe_pp
             qe_fftx
             qe_upflib
+            qe_mpi_fortran
+            qe_lapack
             qe_xclib)
 endif()
 
@@ -549,6 +551,8 @@ if (QE_ENABLE_OSCDFT)
             qe_pp
             qe_fftx
             qe_upflib
+            qe_mpi_fortran
+            qe_lapack
             qe_xclib)
 endif()
 

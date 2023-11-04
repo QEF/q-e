@@ -17,7 +17,7 @@ SUBROUTINE stress( sigma )
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,        ONLY : ry_kbar
   USE ener,             ONLY : etxc, vtxc
-  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl, gl_d
+  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl
   USE fft_base,         ONLY : dfftp
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
@@ -71,9 +71,7 @@ SUBROUTINE stress( sigma )
   CALL start_clock( 'stress' )
   !
   !$acc update device( g, gg )
-#if defined(__CUDA)
-  gl_d = gl
-#endif
+  !FIXME: I don't think the above line is needed
   !
   ! ... contribution from local potential
   !

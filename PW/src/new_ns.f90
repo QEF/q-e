@@ -240,7 +240,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE becmod,               ONLY : bec_type, calbec, &
                                      allocate_bec_type, deallocate_bec_type
     USE wavefunctions_gpum,   ONLY : using_evc
-    USE becmod_subs_gpum,     ONLY : using_becp_auto
     USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
@@ -265,7 +264,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     ! Compute <beta|psi>
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
-    CALL using_becp_auto(2)
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
     CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
@@ -277,7 +275,6 @@ SUBROUTINE compute_pproj( ik, q, p )
        p%k(:,:) = (0.0_DP,0.0_DP)
     ENDIF
     !
-    CALL using_becp_auto(0)
     DO nt = 1, ntyp
        DO na = 1, nat
           IF ( ityp(na) == nt ) THEN
@@ -300,7 +297,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     ENDDO
     !
     CALL deallocate_bec_type( becp )
-    CALL using_becp_auto(2)
     !
     RETURN
     !

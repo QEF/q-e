@@ -44,7 +44,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
+SUBROUTINE bpcg_gamma( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -102,9 +102,9 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
 
-  EXTERNAL  hs_psi, g_1psi
-  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
-  ! hs_psi( npwx, npw, nvec, psi, hpsi, spsi )
+  EXTERNAL  hs_psi_ptr, g_1psi_ptr
+  ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
+  ! hs_psi_ptr( npwx, npw, nvec, psi, hpsi, spsi )
   !
   INTEGER :: ii ! kernel indeces
   !
@@ -151,7 +151,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
         ! initial preconditioned gradient 
         !$acc host_data use_device(z, e)
         do l=nactive+1,nactive+nnew; i=l+done
-           call g_1psi(npwx,npw,z(:,l),e(i))     
+           call g_1psi_ptr(npwx,npw,z(:,l),e(i))     
         end do
         !$acc end host_data
 
@@ -219,7 +219,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 !        CALL hs_1psi( npwx, npw, p(:,l), hp(:,l), sp(:,l) ) ! apply H to a single wavefunction (no bgrp parallelization here!)
 !     end do
      !$acc host_data use_device(p, hp, sp)
-     CALL hs_psi( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
+     CALL hs_psi_ptr( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
      !$acc end host_data
      CALL stop_clock( 'pcg:hs_1psi' )
 
@@ -269,7 +269,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
      !$acc host_data use_device(z, e)
      do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-        call g_1psi(npwx,npw,z(:,l),e(i))
+        call g_1psi_ptr(npwx,npw,z(:,l),e(i))
      end do
      !$acc end host_data
 

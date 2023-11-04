@@ -17,8 +17,7 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw, &
                                  lforce => tprnfor, tstress
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
-                                 g_d, gg_d, mill_d, gshells, &
-                                 gstart ! to be communicated to the Solvers if gamma_only
+                                 gshells, gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
   USE cell_base,          ONLY : alat, at, bg, set_h_ainv, omega
   USE cellmd,             ONLY : lmovecell
@@ -90,21 +89,12 @@ SUBROUTINE init_run()
   CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
+  !$acc update device(mill, g, gg)
   !
   IF (gamma_only) THEN
      ! ... Solvers need to know gstart
      call export_gstart_2_solvers(gstart)
   END IF
-
-#if defined(__CUDA)
-  IF ( use_gpu) THEN
-     ! All these variables are actually set by ggen which has intent out
-     mill_d = mill
-     g_d    = g
-     gg_d   = gg
-  END IF
-#endif
-  !$acc update device(mill, g, gg)
   !
   IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !

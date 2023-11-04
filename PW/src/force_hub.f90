@@ -27,24 +27,20 @@ SUBROUTINE force_hub( forceh )
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE symme,                ONLY : symvector
    USE wvfct,                ONLY : nbnd, npwx
-   USE control_flags,        ONLY : gamma_only
+   USE control_flags,        ONLY : gamma_only, offload_type
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
-                                    deallocate_bec_type
+   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type_acc, &
+                                    deallocate_bec_type_acc
    USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
    USE noncollin_module,     ONLY : noncolin, npol
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
-   USE becmod_gpum,          ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto, &
-                                    allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE uspp_init,            ONLY : init_us_2
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE constants,            ONLY : eps16
@@ -60,12 +56,9 @@ SUBROUTINE force_hub( forceh )
    !
    ! ... local variables
    !
-#if defined(__CUDA)
-   TYPE(bec_type_d) :: proj     ! proj(nwfcU,nbnd)
-#else
-   TYPE(bec_type) :: proj
-#endif
+   TYPE(bec_type) :: proj   ! proj(nwfcU,nbnd)
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
+   !$acc declare device_resident(spsi)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
    ! ---------- LUCA -------------------------------------
    COMPLEX (DP), ALLOCATABLE ::  dns_nc(:,:,:,:)
@@ -134,20 +127,13 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   !$acc data create(spsi) copyin(wfcU)
+   !$acc data copyin(wfcU)
    !
    ! ---------------- LUCA --------------
    IF (noncolin) THEN
       ALLOCATE (proj%k (nwfcU, nbnd))
-      CALL using_evc(0)
    ELSE
-#if defined(__CUDA)
-      CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
-      CALL using_evc_d(0)
-#else
-      CALL allocate_bec_type( nwfcU, nbnd, proj )
-      CALL using_evc(0)
-#endif
+      CALL allocate_bec_type_acc( nwfcU, nbnd, proj )
    ENDIF
    !
    ! ... poor-man parallelization over bands:
@@ -167,7 +153,6 @@ SUBROUTINE force_hub( forceh )
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
-      IF (nks > 1) CALL using_evc(2)
       IF (nks > 1) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
@@ -177,22 +162,14 @@ SUBROUTINE force_hub( forceh )
       !$acc update self(vkb)
       !
       ! ... Compute spsi = S * psi
-      CALL allocate_bec_type( nkb, nbnd, becp )
-      CALL using_becp_auto(2)
-      !
-#if defined(__CUDA)
-      CALL using_evc_d(0)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device(vkb,spsi)
-      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
-      CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi )
+      CALL allocate_bec_type_acc( nkb, nbnd, becp )
+      !$acc data copyin(evc)
+      Call calbec(offload_type, npw, vkb, evc, becp ) 
+      !$acc host_data use_device(spsi, evc)
+      CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
-#else
-      CALL calbec( npw, vkb, evc, becp )
-      CALL s_psi( npwx, npw, nbnd, evc, spsi )
-#endif
-      CALL deallocate_bec_type( becp )
-      CALL using_becp_auto(2)
+      !$acc end data
+      CALL deallocate_bec_type_acc( becp )
       !
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
@@ -212,28 +189,21 @@ SUBROUTINE force_hub( forceh )
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
          CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
       ELSE
-#if defined(__CUDA)
-         CALL using_becp_d_auto(2)
-         !$acc host_data use_device( spsi, wfcU )
-         CALL calbec_gpu( npw, wfcU, spsi, proj )
-         !$acc end host_data
-         !
-         IF ( gamma_only ) THEN
-            projrd = proj%r_d
-         ELSE
-            projkd = proj%k_d
-         ENDIF
-         !$acc data copyin(projrd,projkd,wfcatom,overlap_inv)
-#else
-         CALL calbec( npw, wfcU, spsi, proj )
+         CALL calbec( offload_type, npw, wfcU, spsi, proj )
       ENDIF
       !
       IF ( gamma_only ) THEN
+         !$acc kernels copyout(projrd)
          projrd = proj%r
+         !$acc end kernels
       ELSE
+         !$acc kernels copyout(projkd)
          projkd = proj%k
+         !$acc end kernels
       ENDIF
-#endif
+      !
+      !$acc data copyin(wfcatom,overlap_inv)
+      !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
       DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
@@ -406,11 +376,7 @@ SUBROUTINE force_hub( forceh )
    !
    CALL mp_sum( forceh, inter_pool_comm )
    !
-#if defined(__CUDA)
-   CALL deallocate_bec_type_gpu( proj )
-#else
-   CALL deallocate_bec_type( proj )
-#endif
+   CALL deallocate_bec_type_acc( proj )
    !
    IF (lda_plus_u_kind.EQ.0) THEN
    ! ------------------- LUCA -------------------------
@@ -476,7 +442,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE force_mod,            ONLY : doverlap_inv
    USE basis,                ONLY : natomwfc
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    !
@@ -516,15 +481,10 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL start_clock( 'dndtau' )
    !
-#if defined(__CUDA)
-  CALL using_evc(0)
-  CALL using_evc_d(0)
-#endif
-   !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(spsi,proj,wfcU) create(dproj,dproj_us)
+   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -883,7 +843,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj,spsi) create(dproj)
+   !$acc data create(dproj)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -998,7 +958,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE force_mod,            ONLY : doverlap_inv
    USE basis,                ONLY : natomwfc
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    !
@@ -1037,16 +996,11 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL start_clock( 'dngdtau' )
    !
-#if defined(__CUDA)
-   CALL using_evc(0)
-   CALL using_evc_d(0)
-#endif
-   !
    ALLOCATE( dproj1(nwfcU,nb_s:nb_e) )
    ALLOCATE( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(proj,spsi,wfcU) create(dproj1,dproj2,dproj_us)
+   !$acc data present_or_copyin(wfcU) create(dproj1,dproj2,dproj_us)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1057,8 +1011,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! ... Compute the phases for each atom at this ik
    !
    CALL phase_factor( ik )
-   !
-   !$acc update self(proj(:,nb_s:nb_e))
    !
    ! ... Compute the USPP contribution to dproj1:
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
@@ -1487,7 +1439,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj,spsi) create(dproj)
+   !$acc data create(dproj)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1671,7 +1623,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present_or_copyin(spsi,dproj)
+   !$acc data present_or_copyin(dproj)
    !
    nt  = ityp(na)
    npw = ngk(ik)
@@ -2098,12 +2050,12 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    USE uspp_param,           ONLY : nh, upf
    USE klist,                ONLY : igk_k, ngk
    USE becmod,               ONLY : calbec
-   USE wavefunctions_gpum,   ONLY : using_evc
-   USE noncollin_module,     ONLY : noncolin, npol, lspinorb  
+   USE gvect,                ONLY : g
+   USE control_flags,        ONLY : offload_type
+   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
    USE mp,                   ONLY : mp_sum   
    USE mp_bands,             ONLY : intra_bgrp_comm
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
-   USE gvect,                ONLY : g
+
    !
    IMPLICIT NONE
    !
@@ -2222,17 +2174,10 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                  npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), betaB, nh_nt*npol)
       CALL mp_sum( betaB(:, 1:lB) , intra_bgrp_comm )
    ELSE 
-#if defined(__CUDA)
-      !$acc host_data use_device(A,Abeta,B,betaB,aux)
-      CALL calbec_gpu( npw, A, aux, Abeta )
-      CALL calbec_gpu( npw, aux, B, betaB )
-      !$acc end host_data
-#else
       ! ... Calculate Abeta = <A|beta>
-      CALL calbec( npw, A, aux, Abeta )
+      CALL calbec( offload_type, npw, A, aux, Abeta )
       ! ... Calculate betaB = <beta|B>
-      CALL calbec( npw, aux, B, betaB )
-#endif
+      CALL calbec( offload_type, npw, aux, B, betaB )
    ENDIF
    !
    ! ... Calculate the derivative of the beta function
@@ -2269,17 +2214,11 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), dbetaB, nh(nt)*npol)
       CALL mp_sum( dbetaB(:, 1:lB) , intra_bgrp_comm )
    ELSE
-#if defined(__CUDA)
-      !$acc host_data use_device(A,Adbeta,B,dbetaB,aux)
-      CALL calbec_gpu( npw, A, aux, Adbeta )
-      CALL calbec_gpu( npw, aux, B, dbetaB )
-      !$acc end host_data
-#else
       ! ... Calculate Abeta = <A|beta>
-      CALL calbec( npw, A, aux, Adbeta )
+      CALL calbec( offload_type, npw, A, aux, Adbeta )
       ! ... Calculate betaB = <beta|B>
-      CALL calbec( npw, aux, B, dbetaB )
-#endif
+      CALL calbec( offload_type, npw, aux, B, dbetaB )
+      !
    ENDIF
    !$acc end data
    DEALLOCATE( aux )
@@ -2442,13 +2381,10 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   USE becmod_gpum,          ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
-   USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE control_flags,        ONLY : offload_type
    !
    IMPLICIT NONE
    !
@@ -2498,7 +2434,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present_or_copyin(dproj,spsi,wfcU)
+   !$acc data present_or_copyin(dproj,wfcU)
    !
    nt = ityp(alpha)
    npw = ngk(ik)
@@ -2593,17 +2529,10 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       ENDDO
    ENDDO
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(wfcU,dbeta,wfatbeta,betapsi0)
-   CALL calbec_gpu( npw, wfcU, dbeta, wfatbeta ) 
-   CALL using_evc_d(0)
-   CALL calbec_gpu( npw, dbeta, evc_d, betapsi0 )
-   !$acc end host_data
-#else
-   CALL calbec( npw, wfcU, dbeta, wfatbeta ) 
-   CALL using_evc(0)
-   CALL calbec( npw, dbeta, evc, betapsi0 )
-#endif
+   CALL calbec( offload_type, npw, wfcU, dbeta, wfatbeta ) 
+   !$acc data copyin(evc)
+   CALL calbec( offload_type, npw, dbeta, evc, betapsi0 )
+   !$acc end data
    !
    !$acc parallel loop collapse(2)
    DO ih = 1, nh(nt)
@@ -2614,17 +2543,11 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ENDDO
    !
 ! !omp end parallel do
-#if defined(__CUDA)
-   CALL using_evc_d(0)
-   !$acc host_data use_device(wfcU,dbeta,wfatdbeta,dbetapsi)
-   CALL calbec_gpu( npw, dbeta, evc_d, dbetapsi ) 
-   CALL calbec_gpu( npw, wfcU, dbeta, wfatdbeta ) 
-   !$acc end host_data
-#else
-   CALL using_evc(0)
-   CALL calbec( npw, dbeta, evc, dbetapsi ) 
-   CALL calbec( npw, wfcU, dbeta, wfatdbeta )
-#endif
+   !
+   !$acc data copyin(evc)
+   CALL calbec( offload_type, npw, dbeta, evc, dbetapsi ) 
+   !$acc end data
+   CALL calbec( offload_type, npw, wfcU, dbeta, wfatdbeta )
    !
    !$acc end data
    DEALLOCATE( dbeta )

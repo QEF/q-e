@@ -779,70 +779,71 @@ CONTAINS
       igcx   = xclib_get_id( 'GGA', 'EXCH' )
       igcc   = xclib_get_id( 'GGA', 'CORR' )
       !
-      IF (inlc==1) THEN
-        !
-        IF (iexch==1 .AND. icorr==4 .AND. igcx==4 .AND. igcc==0) THEN
-           shortname = 'VDW-DF'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==27 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-CX'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==29 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-CX0'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==31 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-CX0P'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==32 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-AHCX'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-C09'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==24 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-OB86'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==23 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-OBK8'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==40 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-C090'
-        ELSE
-           shortname = xclib_get_dft_short()
-           shortname = TRIM(shortname)//'-'//TRIM(nonlocc(1))
-        ENDIF
-        !
-      ELSEIF (inlc==2) THEN
-        !
-        IF (iexch==1 .AND. icorr==4  .AND. igcx==43 .AND. igcc==14) THEN
-           shortname = 'BEEF'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==13 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-C09'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==26 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-B86R'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==30 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-0'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-AH'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-AHBR'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-BR0'
-        ELSE
-           shortname = xclib_get_dft_short()
-           shortname = TRIM(shortname)//'-'//TRIM(nonlocc(2))
-        ENDIF
-        !
-      ELSEIF (inlc==3) THEN
-        !
+      ! ... inlc==1
+      !
+      IF (iexch==1 .AND. icorr==4 .AND. igcx==4 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==27 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-CX'
+      ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==29 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-CX0'
+      ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==31 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-CX0P'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==32 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-AHCX'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-C09'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==24 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-OB86'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==23 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-OBK8'
+      ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==40 .AND. igcc==0 .AND. inlc==1) THEN
+         shortname = 'VDW-DF-C090'
+      !
+      ! ... inlc==2
+      !
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==43 .AND. igcc==14 .AND. inlc==2) THEN
+         shortname = 'BEEF'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==13 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2-C09'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==26 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2-B86R'
+      ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==30 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2-0'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2-AH'
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2-AHBR'
+      ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0 .AND. inlc==2) THEN
+         shortname = 'VDW-DF2-BR0'
+      !
+      ! ... inlc==3
+      !
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==45 .AND. igcc==0 .AND. inlc==3) THEN
         shortname = 'VDW-DF3-OPT1'
-        !
-      ELSEIF (inlc==4) THEN
-        !
+      !
+      ! ... inlc==4
+      !
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==46 .AND. igcc==0 .AND. inlc==4) THEN
         shortname = 'VDW-DF3-OPT2'
-        !
-      ELSEIF (inlc==5) THEN
-        !
+      !
+      ! ... inlc==5
+      !
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==26 .AND. igcc==0 .AND. inlc==5) THEN
         shortname = 'VDW-DF-C6'
-        !
-      ELSEIF (inlc==26) THEN
-        !
+      !
+      ! ... inlc==26
+      !
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==13 .AND. igcc==4 .AND. inlc==26) THEN
         shortname = 'RVV10'
-        !
+      !
+      ! ... all the other combinations
+      !
+      ELSE
+        shortname = xclib_get_dft_short()
+        shortname = TRIM(shortname)//'-'//TRIM(nonlocc(inlc))
       ENDIF
       !
     ENDIF
