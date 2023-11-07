@@ -529,7 +529,7 @@ CONTAINS
     !
     ! beta, psi, betapsi, are assumed OpenACC data on GPU
     !
-    USE mp,        ONLY : mp_sum
+    USE mp,        ONLY : mp_sum, mp_size
     !
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -588,9 +588,11 @@ CONTAINS
         !
     ENDIF
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, 1:m ), comm )
-    !$acc end host_data
+    IF (mp_size(comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -609,7 +611,7 @@ CONTAINS
     !
     ! beta, psi, betapsi, are assumed OpenACC data on GPU
     !
-    USE mp,        ONLY : mp_sum
+    USE mp,        ONLY : mp_sum, mp_size
     !
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -669,9 +671,11 @@ CONTAINS
         !
     ENDIF
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, 1:m ), comm )
-    !$acc end host_data
+    IF (mp_size(comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -689,7 +693,7 @@ CONTAINS
     !
     ! beta, psi, betapsi, are assumed OpenACC data on GPU
     !
-    USE mp,        ONLY : mp_sum
+    USE mp,        ONLY : mp_sum, mp_size
     !
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -749,9 +753,11 @@ CONTAINS
         !
     ENDIF
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, 1:m ), comm )
-    !$acc end host_data
+    IF (mp_size(comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -842,7 +848,7 @@ CONTAINS
     !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -893,9 +899,11 @@ CONTAINS
        !
     ENDIF
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
-    !$acc end host_data
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -912,7 +920,7 @@ CONTAINS
     !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -964,9 +972,11 @@ CONTAINS
        !
     ENDIF
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
-    !$acc end host_data
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -982,7 +992,7 @@ CONTAINS
     !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -1034,9 +1044,11 @@ CONTAINS
        !
     ENDIF
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
-    !$acc end host_data
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -1136,7 +1148,7 @@ CONTAINS
     !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -1177,9 +1189,11 @@ CONTAINS
               npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
     !$acc end host_data
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
-    !$acc end host_data
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -1198,7 +1212,7 @@ CONTAINS
     !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -1240,9 +1254,11 @@ CONTAINS
               npwx, psi_d, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
     !$acc end host_data
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
-    !$acc end host_data
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
@@ -1260,7 +1276,7 @@ CONTAINS
     !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
@@ -1302,9 +1318,11 @@ CONTAINS
               npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
     !$acc end host_data
     !
-    !$acc host_data use_device(betapsi)
-    CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
-    !$acc end host_data
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
     !
     CALL stop_clock( 'calbec' )
     !
