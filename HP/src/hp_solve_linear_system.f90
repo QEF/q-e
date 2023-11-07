@@ -396,6 +396,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
               !
               CALL hp_stop_smoothly (.FALSE.)
               !
+           ENDIF
         ENDIF    
         !
      ENDIF

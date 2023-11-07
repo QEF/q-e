@@ -96,11 +96,10 @@ SUBROUTINE stres_hub ( sigmah )
    !
    !$acc data copyin(wfcU)
    !
-   ! ---------------- LUCA --------------
-   IF (noncolin) THEN
-      ALLOCATE (proj%k (nwfcU, nbnd))
+   IF (gamma_only) THEN
+      ALLOCATE( projrd(nwfcU,nbnd))
    ELSE
-      CALL allocate_bec_type_acc( nwfcU, nbnd, proj )
+      ALLOCATE( projkd(nwfcU,nbnd))
    ENDIF
    !
    ! ... poor-man parallelization over bands:
@@ -190,8 +189,8 @@ SUBROUTINE stres_hub ( sigmah )
       ! ----------------------- LUCA ------------------------------------
       IF (noncolin) THEN
          CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
-                    npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
-         CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
+                    npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  projkd, nwfcU)
+         CALL mp_sum( projkd( :, 1:nbnd ), intra_bgrp_comm )
       ELSE
          IF (gamma_only) THEN
             !$acc data create(projrd)
@@ -242,7 +241,7 @@ SUBROUTINE stres_hub ( sigmah )
                !
                ! ------------------- LUCA -------------------------------
                IF (noncolin) THEN          
-                  CALL dndepsilon_k_nc (ipol,jpol,ldim,proj%k,spsi,ik,nb_s,nb_e,mykey,1,dns_nc )
+                  CALL dndepsilon_k_nc (ipol,jpol,ldim,projkd,spsi,ik,nb_s,nb_e,mykey,1,dns_nc )
                   DO na = 1, nat
                      nt = ityp(na)
                      IF ( is_hubbard(nt) ) THEN
@@ -318,7 +317,7 @@ SUBROUTINE stres_hub ( sigmah )
                !
                ! ------------ LUCA (spawoc) ------------------
                IF (noncolin) THEN
-                  CALL dngdepsilon_k_nc(ipol,jpol,ldim,proj%k,&
+                  CALL dngdepsilon_k_nc(ipol,jpol,ldim,projkd,&
                                           spsi,ik,nb_s,nb_e,mykey,dnsg)
                   DO is = 1, npol
                      DO is2 = 1, npol
@@ -617,8 +616,6 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
                                  is_hubbard_back, Hubbard_l2, backall
-   USE wavefunctions_gpum,ONLY : using_evc
-   USE becmod_subs_gpum,  ONLY : using_becp_auto
 
    IMPLICIT NONE
    !
@@ -663,9 +660,6 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    REAL(DP) :: psum
    !
    ALLOCATE ( dproj(nwfcU,nbnd) )
-   !
-   CALL using_evc(0)
-   CALL using_becp_auto(2)
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
@@ -1399,7 +1393,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    gk(:,:), & ! k+G
    qm1(:),  & ! 1/|k+G|
    a1_temp(:), a2_temp(:) 
-   COMPLEX (DP) :: temp
+   COMPLEX (DP) :: temp, temp2
    !
    CALL start_clock_gpu('dprojdepsilon')
    ! 
