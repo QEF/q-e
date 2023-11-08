@@ -293,8 +293,6 @@ MODULE oscdft_forces_subs
          USE uspp,               ONLY : ofsbeta, qq_at
          USE uspp_param,         ONLY : nh
          USE becmod,             ONLY : becp
-!civn
-         !USE becmod_gpum,        ONLY : becp_d
          IMPLICIT NONE
 
          COMPLEX(DP), INTENT(OUT) :: betapsi(:,:)
