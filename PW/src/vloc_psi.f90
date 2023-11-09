@@ -178,7 +178,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   USE fft_wave
   USE control_flags,          ONLY : many_fft
   USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, tg_get_group_nr3
-  USE wavefunctions,          ONLY : psic
+  USE wavefunctions,          ONLY : psic, psicg
   !
   IMPLICIT NONE
   !
@@ -199,14 +199,13 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   !
   INTEGER :: ibnd, ebnd, j, incr, nnr
   INTEGER :: i, iin, right_nnr, right_nr3, right_inc
-  COMPLEX(DP), ALLOCATABLE :: vpsi(:,:)
   ! ... chunking parameters
   INTEGER, PARAMETER :: blocksize = 256
   INTEGER :: numblock
   ! ... Task Groups
   LOGICAL :: use_tg
   REAL(DP), ALLOCATABLE :: tg_v(:)
-  COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:), psicg(:)
+  COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:), vpsi(:,:)
   INTEGER :: v_siz, idx, brange, dffts_nnr, group_size, hm_vec(3), ierr, vszt
   !
   CALL start_clock( 'vloc_psi' )
@@ -227,11 +226,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   ELSEIF (many_fft>1) THEN
      v_siz = dffts%nnr
      vszt = v_siz*incr
-     ALLOCATE( psicg(vszt), vpsi(v_siz,incr) )
-!#if defined(__OPENMP_GPU)
-!     !$omp target enter data map(alloc:vpsi)
-!#endif
-     !
+     ALLOCATE( vpsi(v_siz,incr) )
   ELSE
      dffts_nnr = dffts%nnr
      ALLOCATE( vpsi(lda,1) )
@@ -300,7 +295,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
            ENDDO
         ENDDO
         !
-        CALL wave_r2g( psicg, vpsi, dffts, igk=igk_k(:,current_k), &
+        CALL wave_r2g( psicg, vpsi(1:v_siz,1:incr), dffts, igk=igk_k(:,current_k), &
                        howmany_set=hm_vec, omp_mod=0 )
         !
         !$omp target teams distribute parallel do collapse(2)
@@ -362,11 +357,8 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   IF ( use_tg ) THEN
      DEALLOCATE( tg_psic, tg_vpsi )
      DEALLOCATE( tg_v )
-  ELSEIF (many_fft>1) THEN
-!#if defined(__OPENMP_GPU)
-!     !$omp target exit data map(delete:vpsi)
-!#endif
-     DEALLOCATE( psicg, vpsi )
+  ELSEIF ( many_fft>1 ) THEN
+     DEALLOCATE( vpsi )
   ELSE
 #if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vpsi)

@@ -2152,6 +2152,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    COMPLEX(DP) :: dummy
 
    INTEGER, INTENT(IN) :: dfft_iss(:), dfft_nsw(:), dfft_nsp(:), dfft_ismap(:)
+   TYPE(C_PTR) :: addr_d, addr_h
 
 #if defined(__MPI)
    !
@@ -2292,12 +2293,12 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
 #endif
 !        !$omp target update to (f_aux2(kdest+1:kdest+sendsiz))
          !
-         !$omp target data use_device_ptr(f_aux)
-         istat = hipMemcpyAsync( int(sizeof(dummy)), c_loc(f_aux(kdest+1)), c_loc(f_aux2(kdest+1)), sendsiz,int(1,c_int), dfft%bstreams(batch_id) )
+         !$omp target data use_device_ptr(f_aux2)
+         addr_d = c_loc(f_aux2(kdest+1))
          !$omp end target data
-         !$omp target data use_device_ptr(f_aux2,f_aux)
-         istat = hipMemcpyAsync( int(sizeof(dummy)), c_loc(f_aux2(kdest+1)), c_loc(f_aux(kdest+1)), sendsiz,int(3,c_int), dfft%bstreams(batch_id) )
-         !$omp end target data
+         addr_h = c_loc(f_aux2(kdest+1))
+         istat = hipMemcpyAsync( int(sizeof(dummy)), addr_d, addr_h, &
+                                 sendsiz,int(1,c_int), dfft%bstreams(batch_id) )
       ENDIF
    ENDDO
 #endif
@@ -2387,6 +2388,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
 
 !-----------------------------------
    INTEGER, INTENT(IN) :: dfft_iss(:), dfft_nsw(:), dfft_nsp(:), dfft_ismap(:)
+   TYPE(C_PTR) :: addr_h, addr_d
 !--------------------------------------------
 
    INTEGER :: cuf_i, cuf_j, nswip
@@ -2498,11 +2500,11 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
          kdest = ( proc - 1 ) * sendsiz
 #endif
          !$omp target data use_device_ptr(f_aux2)
-         istat = hipMemcpyAsync( int(sizeof(dummy)), c_loc(f_aux(kdest+1)), c_loc(f_aux2(kdest+1)), &
-                                 sendsiz,int(2,c_int), dfft%bstreams(batch_id) )
+         addr_d = c_loc(f_aux2(kdest+1))
          !$omp end target data
-         istat = hipMemcpyAsync( int(sizeof(dummy)), c_loc(f_aux2(kdest+1)), c_loc(f_aux(kdest+1)), &
-                                 sendsiz,int(0,c_int), dfft%bstreams(batch_id) )
+         addr_h = c_loc(f_aux2(kdest+1))
+         istat = hipMemcpyAsync( int(sizeof(dummy)), addr_h, addr_d, &
+                                 sendsiz,int(2,c_int), dfft%bstreams(batch_id) )
       ENDIF
    ENDDO
 #endif

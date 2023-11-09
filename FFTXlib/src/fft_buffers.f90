@@ -50,10 +50,14 @@ CONTAINS
       current_size = desc%nnr * howmany_
       !
 #if defined(__OPENMP_GPU)
-      !$omp target exit data map(delete:aux)
-      !$omp target exit data map(delete:aux2)
-      IF( ALLOCATED( aux ) ) DEALLOCATE( aux )
-      IF( ALLOCATED( aux2 ) ) DEALLOCATE( aux2 )
+      IF( ALLOCATED( aux ) ) THEN
+         !$omp target exit data map(delete:aux)
+         DEALLOCATE( aux )
+      ENDIF
+      IF( ALLOCATED( aux2 ) ) THEN
+         !$omp target exit data map(delete:aux2)
+         DEALLOCATE( aux2 )
+      ENDIF
 #else
       IF( ALLOCATED( dev_space_fftparallel ) ) DEALLOCATE( dev_space_fftparallel )
       IF( ALLOCATED( pin_space_scatter_in  ) ) DEALLOCATE( pin_space_scatter_in  )
@@ -96,10 +100,14 @@ CONTAINS
   SUBROUTINE deallocate_buffers()
     current_size = 0
 #if defined(__OPENMP_GPU)
-    !$omp target exit data map(delete:aux)
-    !$omp target exit data map(delete:aux2)
-    IF( ALLOCATED( aux ) ) DEALLOCATE( aux )
-    IF( ALLOCATED( aux2 ) ) DEALLOCATE( aux2 )
+    IF( ALLOCATED( aux ) ) THEN
+       !$omp target exit data map(delete:aux)
+       DEALLOCATE( aux )
+    ENDIF
+    IF( ALLOCATED( aux2 ) ) THEN
+       !$omp target exit data map(delete:aux2)
+       DEALLOCATE( aux2 )
+    ENDIF
 #else
     IF( ALLOCATED( dev_space_fftparallel ) ) DEALLOCATE( dev_space_fftparallel )
     IF( ALLOCATED( pin_space_scatter_in  ) ) DEALLOCATE( pin_space_scatter_in  )

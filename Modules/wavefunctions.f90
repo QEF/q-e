@@ -46,7 +46,8 @@
      !! additional memory for FFT
      COMPLEX(DP) , ALLOCATABLE, TARGET :: psic_nc(:,:)
      !! additional memory for FFT for the noncolinear case
-     !
+     COMPLEX(DP) , ALLOCATABLE, TARGET :: psicg(:)
+     !! additional memory again for FFT
      !
      ! electronic wave functions, CPV code
      ! distributed over gvector and bands
@@ -82,6 +83,7 @@
 #endif
          DEALLOCATE( psic )
        ENDIF
+       IF( ALLOCATED( psicg ) ) DEALLOCATE( psicg )
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
 #if defined (__CUDA)
        IF( ALLOCATED( c0_d ) ) DEALLOCATE( c0_d )

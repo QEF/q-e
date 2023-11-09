@@ -22,9 +22,9 @@ SUBROUTINE allocate_fft
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
                                kedtau, create_scf_type
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, many_fft
   USE noncollin_module, ONLY : pointlist, factlist, report, noncolin, npol
-  USE wavefunctions,    ONLY : psic, psic_nc
+  USE wavefunctions,    ONLY : psic, psic_nc, psicg
 #if defined(__OPENMP_GPU)
   USE wavefunctions,    ONLY : pinned_alloc, ntraits, traits
   USE omp_lib
@@ -81,6 +81,12 @@ SUBROUTINE allocate_fft
 #if defined (__OPENMP_GPU)
   !$omp target enter data map(alloc:psic)
 #endif
+  IF (many_fft>1) THEN
+#if defined (__OPENMP_GPU)
+    !$omp allocate(psicg) allocator(pinned_alloc)
+#endif
+    ALLOCATE( psicg(dffts%nnr*many_fft) )
+  ENDIF
   ALLOCATE( vrs(dfftp%nnr,nspin) )
 #if defined (__OPENMP_GPU)
   !$omp target enter data map(alloc:vrs)
