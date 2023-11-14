@@ -1462,13 +1462,13 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                      offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l2(nt) - 1
                   ENDIF
                ENDIF
+               IF (m1>ldim_std .and. noncolin) CALL errore("dprojdepsilon_k", &
+                             " Stress with background and noncollinear is not supported",1)
                !$acc parallel loop
                DO ig = 1, npw
                   dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1_temp(ig) &
                              + at_dj(ig,offpm+m1) * a2_temp(ig)
-                  IF (noncolin) THEN
-                     IF (m1>ldim_std) CALL errore("dprojdepsilon_k", &
-                        " Stress with background and noncollinear is not supported",1)  
+                  IF (noncolin) THEN  
                      dwfc(ig+npwx,offpmU+m1+ldim_std) = &
                                         at_dy(ig+npwx,offpm+m1+ldim_std)*a1_temp(ig) & 
                                       + at_dj(ig+npwx,offpm+m1+ldim_std)*a2_temp(ig)
