@@ -21,6 +21,8 @@ MODULE d3hess_mod
   ! step for numerical differentiation
   REAL(DP) :: step = 2.d-5
   !
+  CHARACTER(LEN=14), PARAMETER :: AUTOMATIC_NAME = 'automatic.hess'
+  !
   CONTAINS
 !
 SUBROUTINE d3hess_sub(filhess)
