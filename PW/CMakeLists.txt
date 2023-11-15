@@ -243,6 +243,7 @@ set(src_pw
    src/wannier_check.f90 
    src/wannier_clean.f90 
    src/wannier_occ.f90
+   src/d3hess_mod.f90
    # GPU
    src/pwcom_gpu.f90
    src/scf_mod_gpu.f90

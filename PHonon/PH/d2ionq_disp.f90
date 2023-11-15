@@ -14,6 +14,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   USE constants,     ONLY: tpi
   USE control_lr,    ONLY: lgamma
   USE dftd3_qe,      ONLY: print_dftd3_hessian
+  USE d3hess_mod,    ONLY: d3hess_sub
   USE mp_images,     ONLY: intra_image_comm
   USE mp,            ONLY: mp_bcast
 
@@ -34,11 +35,32 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   INTEGER :: i, j, iat, jat, ixyz, jxyz
   INTEGER :: iprint
   CHARACTER(LEN=100) :: string
+  CHARACTER(LEN=256) :: outdir
   REAL(DP), ALLOCATABLE :: d3hess(:,:,:,:,:,:,:), buffer(:)
   COMPLEX(DP), ALLOCATABLE :: mmat(:,:,:,:)
   COMPLEX(DP) :: eiqr, tt(3)
   LOGICAL :: q_gamma ! whether the Hessian stored in the file has been computed for q=0,0,0 only 
+  LOGICAL :: do_run_d3hess = .FALSE. ! whether to run d3hess in the automatic mode
   ! 
+  IF ( ionode ) THEN
+    CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
+    IF ( TRIM( outdir ) == ' ' ) outdir = './'
+    !
+    INQUIRE (FILE=dftd3_hess, exist=do_run_d3hess)
+    IF ( .NOT.do_run_d3hess .AND. &
+        TRIM(dftd3_hess) .EQ. TRIM(outdir)//'automatic.hess' ) THEN
+      do_run_d3hess = .TRUE.
+      WRITE( stdout, '(/,5x,A)') 'Computing d3hess.'
+    END IF
+  !
+  END IF
+  !
+  CALL mp_bcast(do_run_d3hess, ionode_id, intra_image_comm)
+  !
+  IF (do_run_d3hess) THEN
+     CALL d3hess_sub(dftd3_hess)
+  END IF
+  !
   if( ionode ) then 
     !
     der2disp = (0._dp, 0._dp)
