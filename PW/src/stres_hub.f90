@@ -94,7 +94,7 @@ SUBROUTINE stres_hub ( sigmah )
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
    ENDIF
    !
-   !$acc data copyin(wfcU)
+   !$acc data create(spsi) copyin(wfcU)
    !
    IF (gamma_only) THEN
       ALLOCATE( projrd(nwfcU,nbnd))
@@ -102,7 +102,7 @@ SUBROUTINE stres_hub ( sigmah )
       ALLOCATE( projkd(nwfcU,nbnd))
    ENDIF
    !
-   ! ... poor-man parallelization over bands:
+   ! poor-man parallelization over bands
    ! - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0
    ! - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0
    ! - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
@@ -1969,10 +1969,10 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                                        Adbeta(mU,1), lA, &
                                        betaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                        A_dS_B(mU, lB_s), lA)
-                              CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                                       Abeta(mU,1), lA, &
-                                       dbetaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
-                                       A_dS_B(mU, lB_s), lA)
+                           CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                                    Abeta(mU,1), lA, &
+                                    dbetaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                                    A_dS_B(mU, lB_s), lA)
                            ! spin down
                            CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                                        Adbeta(mD, nt1), lA, &

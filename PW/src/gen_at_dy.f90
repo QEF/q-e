@@ -53,7 +53,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
       lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
    enddo
    !
-   ALLOCATE( q(npw), gk(3,npw), chiq(npwx,nwfcm,ntyp) )
+   ALLOCATE( q(npw), gk(3,npw), chiq(npw,nwfcm,ntyp) )
    !
    dwfcat(:,:) = (0.d0,0.d0)
    DO ig = 1,npw
@@ -78,7 +78,6 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    DEALLOCATE( dylm )
    !
    q(:) = SQRT(q(:))*tpiba
-   chiq(:,:,:) = 0.d0
    CALL interp_atwfc ( npw, q, nwfcm, chiq )
    !
    ALLOCATE( sk(npw), aux(npw)  )
