@@ -3040,6 +3040,10 @@ CONTAINS
          ELSEIF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) THEN
             ! DFT+U+V(+J0)
             lda_plus_u_kind = 2
+            ! 
+            ! ---------- LUCA ----------------------
+            IF (noncolin .and. ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J0 is not compatible with noncolin=.true.', i)
            ! ----------- LUCA (spawoc) ------------------------
            ! IF (noncolin) CALL errore('card_hubbard', &
            !         'Hubbard V is not supported with noncolin=.true.', i)
