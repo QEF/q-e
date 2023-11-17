@@ -88,21 +88,15 @@ SUBROUTINE potinit()
      ! ... Cases a) and b): the charge density is read from file
      ! ... this also reads rho%ns if DFT+U, rho%bec if PAW, rho%kin if metaGGA
      !
-     IF ( .NOT.lforcet ) THEN
-        CALL read_scf ( rho, nspin, gamma_only )
-     ELSE
-        !
-        ! ... 'force theorem' calculation of MAE: read rho only from previous
-        ! ... lsda calculation, set noncolinear magnetization from angles
-        ! ... (not if restarting! the charge density saved to file in that
-        ! ...  case has already the required magnetization direction)
-        ! ... FIXME: why not calling read_scf also in this case?
-        !
-        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
-             ig_l2g, nspin, rho%of_g, gamma_only )
-        IF ( .NOT. restart ) &
+     CALL read_scf ( rho, nspin, gamma_only )
+     !
+     ! ... 'force theorem' calculation of MAE: rho is read from previous
+     ! ... lsda calculation, noncolinear magnetization is set from angles
+     ! ... (not if restarting from interrupted run: the charge density
+     ! ... read from file already has the required magnetization direction)
+     !
+     IF ( lforcet .AND. .NOT. restart ) &
            CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
-     END IF
      !
      IF ( lscf ) THEN
         !
@@ -319,6 +313,8 @@ SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
   IMPLICIT NONE
   INTEGER, INTENT (in):: ngm, nspin
   COMPLEX(dp), INTENT (inout):: rho(ngm,nspin)
+  !
+  IF ( nspin < 4 ) RETURN
   !---  
   !  set up noncollinear m_x,y,z from collinear m_z (AlexS) 
   !
@@ -332,9 +328,9 @@ SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
   !         rho(3)=magn*sin(theta)*sin(phi)   y
   !         rho(4)=magn*cos(theta)            z
   !
-  rho(:,2) = rho(:,4)*sin(angle1(1))
+  rho(:,4) = rho(:,2)*cos(angle1(1))
+  rho(:,2) = rho(:,2)*sin(angle1(1))
   rho(:,3) = rho(:,2)*sin(angle2(1))
-  rho(:,4) = rho(:,4)*cos(angle1(1))
   rho(:,2) = rho(:,2)*cos(angle2(1))
   !
   RETURN

@@ -785,13 +785,6 @@ MODULE io_base
             rho(ig,ns) = rhoaux(ig)
          END DO
          ! 
-         IF ( nspin_ == 2 .AND. nspin == 4 .AND. ns == 2) THEN 
-            DO ig = 1, ngm 
-               rho(ig, 4 ) = rho(ig, 2) 
-               rho(ig, 2 ) = cmplx(0.d0,0.d0, KIND = DP) 
-               rho(ig, 3 ) = cmplx(0.d0,0.d0, KIND = DP)
-            END DO
-         END IF
       END DO
       !
 #if defined(__HDF5)
