@@ -258,7 +258,7 @@ SUBROUTINE qvan2_omp( ngy, ih, jh, np, qmod, qg, ylmk0 )
   !! qvan2 omp gpu double
   !
   USE upf_kinds,   ONLY: DP
-  USE uspp_data,   ONLY: dq, qrad
+  USE qrad_mod,    ONLY: dq, tab_qrad
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   !
@@ -303,7 +303,7 @@ SUBROUTINE qvan2_omp( ngy, ih, jh, np, qmod, qg, ylmk0 )
     qg(2,ig) = 0.0_DP
   ENDDO
   !
-  !$omp target data map(to:qrad)
+  !$omp target data map(to:tab_qrad)
   !
   DO lm = 1, lpx(ivl,jvl)
      lp = lpl(ivl,jvl,lm)
@@ -356,10 +356,10 @@ SUBROUTINE qvan2_omp( ngy, ih, jh, np, qmod, qg, ylmk0 )
         i3 = i0 + 3
         uvx = ux * vx * sixth
         pwx = px * wx * 0.5_DP
-        work = qrad(i0,ijv,l,np) * uvx * wx + &
-               qrad(i1,ijv,l,np) * pwx * vx - &
-               qrad(i2,ijv,l,np) * pwx * ux + &
-               qrad(i3,ijv,l,np) * px * uvx
+        work = tab_qrad(i0,ijv,l,np) * uvx * wx + &
+               tab_qrad(i1,ijv,l,np) * pwx * vx - &
+               tab_qrad(i2,ijv,l,np) * pwx * ux + &
+               tab_qrad(i3,ijv,l,np) * px * uvx
         qg(ind,ig) = qg(ind,ig) + sig * ylmk0(ig,lp) * work
      ENDDO
   ENDDO
