@@ -24,7 +24,11 @@ SUBROUTINE pz( rs, iflag, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   INTEGER, INTENT(IN) :: iflag
   !! see routine comments
@@ -85,7 +89,11 @@ SUBROUTINE pzKZK( rs, ec, vc, vol )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -199,7 +207,11 @@ SUBROUTINE vwn( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -247,7 +259,11 @@ SUBROUTINE vwn1_rpa( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -295,7 +311,11 @@ SUBROUTINE lyp( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -334,7 +354,11 @@ SUBROUTINE pw( rs, iflag, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -405,7 +429,11 @@ SUBROUTINE wignerc( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -440,7 +468,11 @@ SUBROUTINE hl( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -474,7 +506,11 @@ SUBROUTINE gl( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -511,7 +547,11 @@ SUBROUTINE pz_polarized( rs, ec, vc )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -567,7 +607,11 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -612,7 +656,11 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )
    !
    IMPLICIT NONE
    !
+#if defined(__OPENMP_GPU)
+   !$omp declare target
+#else
    !$acc routine seq
+#endif
    !
    REAL(DP), INTENT(IN) :: rs
    !! Wigner-Seitz radius
@@ -692,7 +740,11 @@ SUBROUTINE padefit_ParSet1( x, i, fit, dfit )
    !
    IMPLICIT NONE
    !
+#if defined(__OPENMP_GPU)
+   !$omp declare target
+#else
    !$acc routine seq
+#endif
    !
    REAL(DP) :: x
    !! input: x is SQRT(r_s)
@@ -744,7 +796,11 @@ SUBROUTINE padefit_ParSet2( x, i, fit, dfit )
    !
    IMPLICIT NONE
    !
+#if defined(__OPENMP_GPU)
+   !$omp declare target
+#else
    !$acc routine seq
+#endif
    !
    REAL(DP) :: x
    !! input: x is SQRT(r_s)
@@ -797,7 +853,11 @@ SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )
    !
    IMPLICIT NONE
    !
+#if defined(__OPENMP_GPU)
+   !$omp declare target
+#else
    !$acc routine seq
+#endif
    !
    REAL(DP), INTENT(IN) :: rs
    !! Wigner-Seitz radius
@@ -875,7 +935,11 @@ SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -987,7 +1051,11 @@ SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )
   !
   IMPLICIT NONE
   !
+#if defined(__OPENMP_GPU)
+  !$omp declare target
+#else
   !$acc routine seq
+#endif
   !
   REAL(DP), INTENT(IN) :: rho
   !! total charge density

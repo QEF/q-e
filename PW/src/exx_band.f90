@@ -1066,6 +1066,7 @@ MODULE exx_band
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
        !$acc update device(mill, g)
+       !$omp target update to(g)
        !
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
        allocate( mill_exx(3,ngm), nl_exx(ngm) )
@@ -1093,6 +1094,7 @@ MODULE exx_band
        gg = gg_exx
        mill = mill_exx
        !$acc update device(mill, g)
+       !$omp target update to(g)
        !
        ! workaround: here dfft?%nl* are unallocated
        ! some compilers go on and allocate, some others crash
@@ -1139,6 +1141,7 @@ MODULE exx_band
        gg = gg_loc
        mill = mill_loc
        !$acc update device(mill, g)
+       !$omp target update to(g)
        !
        dfftp%nl = nl_loc
        dffts%nl = nls_loc

@@ -73,9 +73,9 @@ SUBROUTINE rotate_xpsi_k( h_psi_ptr, s_psi_ptr, overlap, &
   ALLOCATE( hpsi( kdmx, nstart ) )
   IF ( overlap ) &
   ALLOCATE( spsi(kdmx, nstart ) )
-  ALLOCATE( hc( nstart, nstart) )    
-  ALLOCATE( sc( nstart, nstart) )    
-  ALLOCATE( vc( nstart, nstart) )    
+  ALLOCATE( hc( nstart, nstart) )
+  ALLOCATE( sc( nstart, nstart) )
+  ALLOCATE( vc( nstart, nstart) )
   ALLOCATE( en( nstart ) )
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -84,7 +84,15 @@ SUBROUTINE rotate_xpsi_k( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsik:hpsi')
   !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+  !$omp target update to(psi,hpsi)     
   CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
+  !$omp target update from(hpsi)    
+  !$omp end target data
+#else
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
+#endif
   !
   CALL stop_clock('rotxpsik:hpsi')
   !
@@ -287,9 +295,9 @@ SUBROUTINE protate_xpsi_k( h_psi_ptr, s_psi_ptr, overlap, &
   ALLOCATE( hpsi( kdmx, nstart ) )
   IF ( overlap ) &
   ALLOCATE( spsi( kdmx, nstart ) )
-  ALLOCATE( hc( nx, nx) )    
-  ALLOCATE( sc( nx, nx) )    
-  ALLOCATE( vc( nx, nx) )    
+  ALLOCATE( hc( nx, nx) )
+  ALLOCATE( sc( nx, nx) )
+  ALLOCATE( vc( nx, nx) )
   ALLOCATE( en( nstart ) )
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -298,7 +306,15 @@ SUBROUTINE protate_xpsi_k( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('protxpsik:hpsi')
   !
+#if defined(__OPENMP_GPU)
+  !$omp target enter data map(alloc:psi,hpsi)
+  !$omp target update to(psi,hpsi)     
   CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
+  !$omp target update from(hpsi)    
+  !$omp target exit data map(delete:psi,hpsi)
+#else
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
+#endif
   !
   CALL stop_clock('protxpsik:hpsi')
   !
@@ -319,7 +335,7 @@ SUBROUTINE protate_xpsi_k( h_psi_ptr, s_psi_ptr, overlap, &
   CALL stop_clock('protxpsik:hc')
   !
   CALL start_clock('protxpsik:sc')
-  !            
+  !
   IF ( overlap ) THEN
      !
      CALL compute_distmat( sc, psi, spsi )
@@ -327,7 +343,7 @@ SUBROUTINE protate_xpsi_k( h_psi_ptr, s_psi_ptr, overlap, &
   ELSE
      !
      CALL compute_distmat( sc, psi, psi )
-     ! 
+     !
   END IF
   !
   CALL stop_clock('protxpsik:sc')
@@ -391,7 +407,7 @@ CONTAINS
   SUBROUTINE compute_distmat( dm, v, w )
      !
      !  This subroutine compute <vi|wj> and store the
-     !  result in distributed matrix dm 
+     !  result in distributed matrix dm
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
@@ -403,7 +419,7 @@ CONTAINS
      !
      work = ( 0.0_DP, 0.0_DP )
      !
-     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs 
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
         nc = idesc_ip( LAX_DESC_NC, 1, ipc )
         ic = idesc_ip( LAX_DESC_IC, 1, ipc )
@@ -436,7 +452,6 @@ CONTAINS
      RETURN
   END SUBROUTINE compute_distmat
 
-
   SUBROUTINE refresh_evc( )
      !
      INTEGER :: ipc, ipr
@@ -467,7 +482,7 @@ CONTAINS
               IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
-                 ! 
+                 !
                  CALL mp_bcast( vc(:,1:nc), root, ortho_parent_comm )
                  !
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  &
@@ -483,7 +498,7 @@ CONTAINS
               ELSE
                  !
                  !  all other procs receive
-                 ! 
+                 !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  !
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  &
@@ -497,7 +512,7 @@ CONTAINS
                              spsi(1,ir), kdmx, vtmp, nx, beta, sevc(1,ic), kdmx )
                  !
               END IF
-              ! 
+              !
 
               beta = ( 1.D0, 0.D0 )
 

@@ -328,6 +328,9 @@ SUBROUTINE post_xml_init (  )
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart ) 
   !$acc update device(mill, g, gg)
+#if defined(__OPEMMP_GPU)
+  !$omp target update to(g)
+#endif
   !
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   CALL gshells ( lmovecell )

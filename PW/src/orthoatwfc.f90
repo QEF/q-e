@@ -380,13 +380,13 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   !
   IF (noncolin) THEN
      !$acc host_data use_device(wfc, swfc, overlap)
-     CALL MYZGEMM ('c', 'n', m, m, npwx*npol, (1.d0, 0.d0), wfc, &
-          npwx*npol, swfc, npwx*npol, (0.d0,0.d0), overlap, m)
+     CALL MYZGEMM2 ('c', 'n', m, m, npwx*npol, (1.d0, 0.d0), wfc, &
+          npwx*npol, swfc, npwx*npol, (0.d0,0.d0), overlap, m, .false.)
      !$acc end host_data
   ELSE
      !$acc host_data use_device(wfc, swfc, overlap)
-     CALL MYZGEMM ('c', 'n', m, m, npw, (1.d0, 0.d0), wfc, &
-          npwx, swfc, npwx, (0.d0, 0.d0), overlap, m)
+     CALL MYZGEMM2 ('c', 'n', m, m, npw, (1.d0, 0.d0), wfc, &
+          npwx, swfc, npwx, (0.d0, 0.d0), overlap, m, .false.)
      !$acc end host_data
   END IF
   !
@@ -471,7 +471,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
      IF(noncolin) THEN 
        !$acc host_data use_device(overlap, wfc, work)
-       CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       CALL MYZGEMM2('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
        !$acc end host_data
        !$acc parallel loop collapse(2) 
        DO i = 1, npwx*npol
@@ -481,7 +481,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
        END DO
      ELSE
        !$acc host_data use_device(overlap, wfc, work)
-       CALL MYZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       CALL MYZGEMM2('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
        !$acc end host_data
        !$acc parallel loop collapse(2)
        DO i = 1, npw
@@ -502,7 +502,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
      IF(noncolin) THEN 
        !$acc host_data use_device(overlap, swfc, work)
-       CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       CALL MYZGEMM2('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
        !$acc end host_data 
        !$acc parallel loop collapse(2)
        DO i = 1, npwx*npol
@@ -512,7 +512,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
        END DO
      ELSE
        !$acc host_data use_device(overlap, swfc, work)
-       CALL MYZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       CALL MYZGEMM2('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
        !$acc end host_data
        !$acc parallel loop collapse(2)
        DO i = 1, npw
@@ -573,13 +573,13 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !
   ! Compute aux = doverlap * work
   !$acc host_data use_device(doverlap, work, aux)
-  CALL MYZGEMM('N','N', m, m, m, (1.d0,0.d0), doverlap, &
-              m, work, m, (0.d0,0.d0), aux, m)
+  CALL MYZGEMM2('N','N', m, m, m, (1.d0,0.d0), doverlap, &
+              m, work, m, (0.d0,0.d0), aux, m, .false.)
   !$acc end host_data
   ! Compute (work^H) * aux
   !$acc host_data use_device(work, aux, doverlap)
-  CALL MYZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
-              m, aux, m, (0.d0,0.d0), doverlap, m)
+  CALL MYZGEMM2('C','N', m, m, m, (1.d0,0.d0), work, &
+              m, aux, m, (0.d0,0.d0), doverlap, m, .false.)
   !$acc end host_data
   !
   !$acc parallel loop collapse(2)
@@ -594,13 +594,13 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !
   ! Compute doverlap = aux * (work^H)
   !$acc host_data use_device(aux, work, doverlap)
-  CALL MYZGEMM('N','C', m, m, m, (1.d0,0.d0), aux, &
-              m, work, m, (0.d0,0.d0), doverlap, m)
+  CALL MYZGEMM2('N','C', m, m, m, (1.d0,0.d0), aux, &
+              m, work, m, (0.d0,0.d0), doverlap, m, .false.)
   !$acc end host_data
   ! Compute doverlap_inv = work * doverlap
   !$acc host_data use_device(work, doverlap, doverlap_inv)
-  CALL MYZGEMM('N','N', m, m, m, (-1.d0,0.d0), work, &
-              m, doverlap, m, (0.d0,0.d0), doverlap_inv, m)
+  CALL MYZGEMM2('N','N', m, m, m, (-1.d0,0.d0), work, &
+              m, doverlap, m, (0.d0,0.d0), doverlap_inv, m, .false.)
   !$acc end host_data
   !
   DEALLOCATE (aux)

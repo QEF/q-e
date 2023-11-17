@@ -95,6 +95,9 @@ SUBROUTINE init_run()
      ! ... Solvers need to know gstart
      call export_gstart_2_solvers(gstart)
   END IF
+#if defined(__OPENMP_GPU)
+  !$omp target update to(g)
+#endif
   !
   IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !

@@ -77,6 +77,9 @@
        !  allocate kinetic energy
        !
        ALLOCATE( g2kin(ngw) )
+#if defined(__OPENMP_GPU)
+       !$omp target enter data map(alloc:g2kin)
+#endif
        !$acc enter data create(g2kin)
        !
        RETURN 
@@ -102,6 +105,9 @@
        END IF
        !
        !$acc update device(g2kin)
+#if defined(__OPENMP_GPU)
+       !$omp target update to(g2kin)
+#endif
        !
        RETURN 
        !
@@ -109,6 +115,9 @@
      !
      SUBROUTINE deallocate_gvecw
        !$acc exit data delete(g2kin)
+#if defined(__OPENMP_GPU)
+       !$omp target exit data map(delete:g2kin)
+#endif
        IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
      END SUBROUTINE deallocate_gvecw
      !=----------------------------------------------------------------------------=!

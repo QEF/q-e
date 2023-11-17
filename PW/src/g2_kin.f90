@@ -35,6 +35,9 @@ SUBROUTINE g2_kin ( ik )
   xk3 = xk(3,ik)
   !
 !$acc parallel loop present(g2kin, g, igk_k)
+#if defined(__OPENMP_GPU)
+  !$omp target teams distribute parallel do 
+#endif
   DO i=1,npw
      g2kin(i) = ( ( xk1 + g(1,igk_k(i,ik)) )*( xk1 + g(1,igk_k(i,ik)) ) + &
                   ( xk2 + g(2,igk_k(i,ik)) )*( xk2 + g(2,igk_k(i,ik)) ) + &
@@ -45,6 +48,9 @@ SUBROUTINE g2_kin ( ik )
   IF ( qcutz > 0.D0 ) THEN
      !
 !$acc parallel loop present(g2kin)
+#if defined(__OPENMP_GPU)
+     !$omp target teams distribute parallel do 
+#endif
      DO ig = 1, npw
         !
         g2kin(ig) = g2kin(ig) + qcutz * &
@@ -55,6 +61,9 @@ SUBROUTINE g2_kin ( ik )
   END IF
   !
   !$acc update self(g2kin)
+#if defined(__OPENMP_GPU)
+  !$omp target update from(g2kin)
+#endif
   !
   RETURN
   !

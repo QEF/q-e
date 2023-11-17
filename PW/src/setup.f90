@@ -824,6 +824,9 @@ task:   do np = 2, maxtask
   ! matrices nbnd*nbnd are distributed into blocks of size > 100x100
   !
   if ( ndiag_ == 0 .AND. use_gpu ) ndiag_ = 1
+#if defined(__OPENMP_GPU)
+  if ( ndiag_ == 0 ) ndiag_ = 1
+#endif
   if ( ndiag_ == 0 ) then
      do np = nint(nbnd/100.), 1, -1
          if ( np**2 <= nproc_bgrp ) exit

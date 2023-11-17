@@ -251,3 +251,121 @@ subroutine compute_qqc ( tpiba, q, omega, qq_nt )
   enddo
   !
 end subroutine compute_qqc
+
+!-----------------------------------------------------------------------
+SUBROUTINE qvan2_omp( ngy, ih, jh, np, qmod, qg, ylmk0 )
+  !-----------------------------------------------------------------------
+  !! qvan2 omp gpu double
+  !
+  USE upf_kinds,   ONLY: DP
+  USE uspp_data,   ONLY: dq, qrad
+  USE uspp_param,  ONLY: lmaxq, nbetam
+  USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtolm
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: ngy, ih, jh, np
+  REAL(DP), INTENT(IN) :: ylmk0(ngy,lmaxq*lmaxq)
+  REAL(DP), INTENT(IN) :: qmod(ngy)
+  REAL(DP), INTENT(OUT) :: qg(2,ngy)
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: sig
+  REAL(DP), PARAMETER :: sixth = 1.0_DP / 6.0_DP
+  INTEGER :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
+  REAL(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work, qm1
+  !
+  !IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
+  !     ('qvan2', 'internal error: dimension of interpolation table', 1 )
+  !
+  dqi = 1.0_DP / dq
+  nb = indv(ih,np)
+  mb = indv(jh,np)
+  !
+  IF (nb >= mb) THEN
+     ijv = nb * (nb - 1) / 2 + mb
+  ELSE
+     ijv = mb * (mb - 1) / 2 + nb
+  ENDIF
+  !
+  ivl = nhtolm(ih,np)
+  jvl = nhtolm(jh,np)
+  !
+  IF (nb > nbetam .OR. mb > nbetam) &
+       CALL upf_error( ' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb) )
+  IF (ivl > nlx .OR. jvl > nlx) &
+       CALL upf_error( ' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl) )
+  !
+  !$omp target teams distribute parallel do
+  DO ig = 1, ngy
+    qg(1,ig) = 0.0_DP
+    qg(2,ig) = 0.0_DP
+  ENDDO
+  !
+  !$omp target data map(to:qrad)
+  !
+  DO lm = 1, lpx(ivl,jvl)
+     lp = lpl(ivl,jvl,lm)
+     IF ( lp < 1 .OR. lp > 49 ) CALL upf_error( 'qvan2', ' lp wrong ', MAX(lp,1) )
+     !
+     IF ( lp == 1 ) THEN
+        l = 1
+        sig = 1.0_DP
+        ind = 1
+     ELSEIF ( lp <=  4 ) THEN
+        l = 2
+        sig =-1.0_DP
+        ind = 2
+     ELSEIF ( lp <=  9 ) THEN
+        l = 3
+        sig =-1.0_DP
+        ind = 1
+     ELSEIF ( lp <= 16 ) THEN
+        l = 4
+        sig = 1.0_DP
+        ind = 2
+     ELSEIF ( lp <= 25 ) THEN
+        l = 5
+        sig = 1.0_DP
+        ind = 1
+     ELSEIF ( lp <= 36 ) THEN
+        l = 6
+        sig =-1.0_DP
+        ind = 2
+     ELSE
+        l = 7
+        sig =-1.0_DP
+        ind = 1
+     ENDIF
+     !
+     sig = sig * ap(lp, ivl, jvl)
+     !
+     qm1 = -1.0_DP !  any number smaller than qmod(1)
+     !
+     !$omp target teams distribute parallel do
+     DO ig = 1, ngy
+        qm = qmod(ig) * dqi
+        px = qm - INT(qm)
+        ux = 1.0_DP - px
+        vx = 2.0_DP - px
+        wx = 3.0_DP - px
+        i0 = INT(qm) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        uvx = ux * vx * sixth
+        pwx = px * wx * 0.5_DP
+        work = qrad(i0,ijv,l,np) * uvx * wx + &
+               qrad(i1,ijv,l,np) * pwx * vx - &
+               qrad(i2,ijv,l,np) * pwx * ux + &
+               qrad(i3,ijv,l,np) * px * uvx
+        qg(ind,ig) = qg(ind,ig) + sig * ylmk0(ig,lp) * work
+     ENDDO
+  ENDDO
+  !
+  !$omp end target data
+  !
+  RETURN
+  !
+END SUBROUTINE qvan2_omp

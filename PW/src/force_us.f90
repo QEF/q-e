@@ -246,9 +246,9 @@ SUBROUTINE force_us( forcenl )
                 ! ... this is \sum_j q_{ij} <beta_j|psi>
                 !
                 !$acc host_data use_device(aux, qq_at, becprd)
-                CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt),      &
-                              1.0_DP, qq_at(1,1,na), nhm, becprd(ijkb0+1,1), &
-                              nkb, 0.0_DP, aux, nh(nt) )
+                CALL MYDGEMM2( 'N','N', nh(nt), becp_nbnd_loc, nh(nt),      &
+                               1.0_DP, qq_at(1,1,na), nhm, becprd(ijkb0+1,1), &
+                               nkb, 0.0_DP, aux, nh(nt),.FALSE. )
                 !$acc end host_data
                 !
                 ! ... multiply by -\epsilon_n
@@ -271,9 +271,9 @@ SUBROUTINE force_us( forcenl )
                 ! ... add  \sum_j d_{ij} <beta_j|psi>
                 !
                 !$acc host_data use_device(aux, deeq, becprd)
-                CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt), &
-                              1.0_DP, deeq(1,1,na,current_spin), nhm, &
-                              becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt) )
+                CALL MYDGEMM2( 'N','N', nh(nt), becp_nbnd_loc, nh(nt), &
+                               1.0_DP, deeq(1,1,na,current_spin), nhm, &
+                               becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt),.FALSE. )
                 !$acc end host_data
                 !
                 ! ... Auxiliary variable to perform the reduction with gpu kernels

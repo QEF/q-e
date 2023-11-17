@@ -74,6 +74,7 @@ SUBROUTINE scale_h
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
   !$acc update device(g,gg)
+  !$omp target update to(g)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
   qmax = SQRT(gg_max)*tpiba
