@@ -58,9 +58,9 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
         CALL errore('d2ionq_dispd3', 'The Hessian file: '//TRIM(dftd3_hess)// &
                     ' is missing.', 1)
       END IF
-    !
+      !
     END IF
-  !
+    !
   END IF
   !
   CALL mp_bcast(do_run_d3hess, ionode_id, intra_image_comm)
