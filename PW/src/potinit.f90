@@ -88,15 +88,22 @@ SUBROUTINE potinit()
      ! ... Cases a) and b): the charge density is read from file
      ! ... this also reads rho%ns if DFT+U, rho%bec if PAW, rho%kin if metaGGA
      !
-     CALL read_scf ( rho, nspin, gamma_only )
-     !
-     ! ... 'force theorem' calculation of MAE: rho is read from previous
-     ! ... lsda calculation, noncolinear magnetization is set from angles
-     ! ... (not if restarting from interrupted run: the charge density
-     ! ... read from file already has the required magnetization direction)
-     !
-     IF ( lforcet .AND. .NOT. restart ) &
+     IF ( .NOT.lforcet ) THEN
+        CALL read_scf ( rho, nspin, gamma_only )
+     ELSE
+        IF ( okpaw )  CALL errore( 'potinit', &
+                                   'force theorem with PAW not implemented', 1 )
+        !
+        ! ... 'force theorem' calculation of MAE: read rho only from previous
+        ! ... lsda calculation, set noncolinear magnetization from angles
+        ! ... (not if restarting! the charge density saved to file in that
+        ! ...  case has already the required magnetization direction)
+        !
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
+             ig_l2g, nspin, rho%of_g, gamma_only )
+        IF ( .NOT. restart ) &
            CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
+     END IF
      !
      IF ( lscf ) THEN
         !
@@ -336,4 +343,3 @@ SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
   RETURN
   !
 END SUBROUTINE nc_magnetization_from_lsda
-
