@@ -1050,6 +1050,10 @@
       DO ibnd = 1, nbndfs
         IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
           !
+          ! nvfortran bug workaround https://gitlab.com/QEF/q-e/-/issues/593
+#if defined(__NVCOMPILER) && ( __NVCOMPILER_MAJOR__ > 23 || ( __NVCOMPILER_MAJOR__ == 23 &&  __NVCOMPILER_MINOR__ >= 3) )
+          !pgi$l novector
+#endif
           DO iw = 1, nsw ! loop over omega
             az2 = aznormp(iw, ibnd, ik) * aznormp(iw, ibnd, ik)
             ad2 = adeltap(iw, ibnd, ik) * adeltap(iw, ibnd, ik)
