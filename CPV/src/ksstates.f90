@@ -144,7 +144,7 @@ CONTAINS
         USE fft_rho, ONLY: rho_r2g
         USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id,&
              root_bgrp_id, root_bgrp
-        USE gvect, ONLY: ig_l2g, mill, ecutrho
+        USE gvect, ONLY: ig_l2g, mill
         USE io_base, ONLY: write_rhog
  
         IMPLICIT NONE
@@ -179,7 +179,7 @@ CONTAINS
         IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
                 ( file_name, root_bgrp, intra_bgrp_comm, &
                 bogus1, bogus2, bogus3, .true., &
-                mill, ig_l2g, rhog, ecutrho )
+                mill, ig_l2g, rhog )
 
         IF ( ionode ) THEN
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &

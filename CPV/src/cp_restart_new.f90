@@ -538,7 +538,7 @@ MODULE cp_restart_new
            CALL write_rhog &
                 ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
-                mill, ig_l2g, rhog, ecutrho )
+                mill, ig_l2g, rhog )
         ENDIF
         !
         DEALLOCATE ( rhog )
