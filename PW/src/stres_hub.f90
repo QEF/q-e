@@ -1533,7 +1533,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          DO m1 = 1, natomwfc
             temp = (0.0d0,0.0d0)
             temp2 = (0.0d0,0.0d0)
-            !$acc parallel loop reduction(+:temp)
+            !$acc parallel loop reduction(+:temp,temp2)
             DO ig = 1, npw
                temp = temp + CONJG((at_dy(ig,m1)*a1_temp(ig) + at_dj(ig,m1)*a2_temp(ig))) * swfcatom(ig,m2) &
                            + CONJG(swfcatom(ig,m1)) * (at_dy(ig,m2)*a1_temp(ig) + at_dj(ig,m2)*a2_temp(ig))

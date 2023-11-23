@@ -375,10 +375,13 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         ! Note: This check might be skipped, like in the PHonon code
         IF ( ABS(DBLE(def(1))) < 1.0d-18 .OR. ABS(DBLE(def(1))) > 5.0d0 ) THEN
            !
-           IF (noncolin .and. (ABS(DBLE(def(1))) > 5.0d0)) THEN
-              !
-              WRITE( stdout, '(/6x,"The Fermi energy shift too big!")')
-              CALL hp_stop_smoothly (.FALSE.)
+           IF (noncolin) THEN
+              IF (ABS(DBLE(def(1))) > 5.0d0) THEN
+                 WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift too big!")')
+                 WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') dos_ef
+                 WRITE( stdout, '(6x, "   Fermi_shift  = ",1x,2e12.4)') DBLE(def(1))
+                 CALL hp_stop_smoothly (.FALSE.)
+              ENDIF
            ELSE
               !
               WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is zero or too big!")')

@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -58,7 +58,6 @@ SUBROUTINE force_hub( forceh )
    !
    TYPE(bec_type) :: proj   ! proj(nwfcU,nbnd)
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
-   !$acc declare device_resident(spsi)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
    ! ---------- LUCA -------------------------------------
    COMPLEX (DP), ALLOCATABLE ::  dns_nc(:,:,:,:)
@@ -72,11 +71,10 @@ SUBROUTINE force_hub( forceh )
    LOGICAL :: save_flag
    INTEGER, EXTERNAL :: find_viz
    !
-   REAL(DP), ALLOCATABLE :: projrd(:,:)
-   COMPLEX(DP), ALLOCATABLE :: projkd(:,:)
    !
    CALL start_clock_gpu( 'force_hub' )
    !
+   !$acc data  present(vkb) copyin(wfcU) present_or_create(evc) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
@@ -117,6 +115,7 @@ SUBROUTINE force_hub( forceh )
    !
    ! -------------------- LUCA (added npol to the plane-wave size)-----------------------
    ALLOCATE( spsi(npwx*npol,nbnd) ) 
+   !$acc enter data create(spsi)
    ALLOCATE( wfcatom(npwx*npol,natomwfc) )
    ! ----------------------------------------------------------------
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
@@ -127,7 +126,6 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   !$acc data copyin(wfcU)
    !
    ! ---------------- LUCA --------------
    IF (noncolin) THEN
@@ -154,6 +152,7 @@ SUBROUTINE force_hub( forceh )
       npw = ngk(ik)
       !
       IF (nks > 1) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+      !$acc update device(evc) 
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
       ! ... FIXME check if this update is actually needed and in case comment
@@ -163,24 +162,16 @@ SUBROUTINE force_hub( forceh )
       !
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type_acc( nkb, nbnd, becp )
-      !$acc data copyin(evc)
       Call calbec(offload_type, npw, vkb, evc, becp ) 
       !$acc host_data use_device(spsi, evc)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
-      !$acc end data
       CALL deallocate_bec_type_acc( becp )
       !
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
       CALL orthoUwfc_k( ik, .TRUE. )
       !$acc update device(wfcU)
-      !
-      IF ( gamma_only ) THEN
-         ALLOCATE( projrd(nwfcU,nbnd) )
-      ELSE
-         ALLOCATE( projkd(nwfcU,nbnd) )
-      ENDIF
       !
       ! ... proj=<wfcU|S|evc>
       ! ----------------------- LUCA ------------------------------------
@@ -193,13 +184,9 @@ SUBROUTINE force_hub( forceh )
       ENDIF
       !
       IF ( gamma_only ) THEN
-         !$acc kernels copyout(projrd)
-         projrd = proj%r
-         !$acc end kernels
+         !$acc update self(proj%r) 
       ELSE
-         !$acc kernels copyout(projkd)
-         projkd = proj%k
-         !$acc end kernels
+         !$acc update self(proj%k)
       ENDIF
       !
       !$acc data copyin(wfcatom,overlap_inv)
@@ -264,10 +251,10 @@ SUBROUTINE force_hub( forceh )
                !
                IF (lhubb) THEN
                   IF ( gamma_only ) THEN
-                     CALL dndtau_gamma( ldimb, projrd, spsi, alpha, ijkb0, ipol, ik, &
+                     CALL dndtau_gamma( ldimb, proj%r, spsi, alpha, ijkb0, ipol, ik, &
                                         nb_s, nb_e, mykey, 2, dnsb )
                   ELSE
-                     CALL dndtau_k( ldimb, projkd, spsi, alpha, ijkb0, ipol, ik, &
+                     CALL dndtau_k( ldimb, proj%k, spsi, alpha, ijkb0, ipol, ik, &
                                     nb_s, nb_e, mykey, 2, dnsb )
                   ENDIF
                   !
@@ -366,11 +353,6 @@ SUBROUTINE force_hub( forceh )
       ENDDO ! alpha
       !
       !$acc end data
-      IF ( gamma_only ) THEN
-        DEALLOCATE( projrd )
-      ELSE
-        DEALLOCATE( projkd )
-      ENDIF
       !
    ENDDO ! ik
    !
@@ -392,6 +374,7 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    !$acc end data
+   !$acc exit data delete(spsi) finalize
    !
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
@@ -495,10 +478,8 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-      !$acc data copyin( evc )
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, jkb0, nwfcU, wfcU, &
                                      nbnd, evc, dproj_us, nb_s, nb_e, mykey )
-      !$acc end data
    ENDIF
    !
    ! ... In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
@@ -1016,10 +997,8 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-      !$acc data copyin(evc)
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, jkb0, nwfcU, wfcU, nbnd, &
                                      evc, dproj_us, nb_s, nb_e, mykey )
-      !$acc end data
    ENDIF
    !
    IF (Hubbard_projectors.EQ."atomic") THEN
@@ -1685,21 +1664,12 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
 ! !omp end parallel do
       !
       ! ------------------- LUCA -------------------------
-      IF (noncolin) THEN
-         ALLOCATE ( dproj0(ldim*npol,nbnd) )
-         CALL ZGEMM('C','N',ldim*npol, nbnd, npwx*npol, (1.d0,0.d0), &
+      ALLOCATE ( dproj0(ldim*npol,nbnd) )      
+      !$acc data create(dproj0)
+      !$acc host_data use_device(dwfc,spsi,dproj0)
+      CALL MYZGEMM('C','N',ldim*npol, nbnd, npwx*npol, (1.d0,0.d0), &
                      dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
-                     dproj0, ldim*npol)         
-      ELSE
-         ALLOCATE ( dproj0(ldim,nbnd) )
-         !$acc data create(dproj0)
-         !$acc host_data use_device(dwfc,spsi,dproj0)
-         CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                     dwfc, npwx, spsi, npwx, (0.d0,0.d0),  &
-                     dproj0, ldim )
-      ENDIF        
-      ! --------------------------------------------------
-      !
+                     dproj0, ldim*npol)   
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -2530,9 +2500,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ENDDO
    !
    CALL calbec( offload_type, npw, wfcU, dbeta, wfatbeta ) 
-   !$acc data copyin(evc)
    CALL calbec( offload_type, npw, dbeta, evc, betapsi0 )
-   !$acc end data
    !
    !$acc parallel loop collapse(2)
    DO ih = 1, nh(nt)
@@ -2544,9 +2512,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
 ! !omp end parallel do
    !
-   !$acc data copyin(evc)
    CALL calbec( offload_type, npw, dbeta, evc, dbetapsi ) 
-   !$acc end data
    CALL calbec( offload_type, npw, wfcU, dbeta, wfatdbeta )
    !
    !$acc end data
