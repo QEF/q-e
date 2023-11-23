@@ -832,8 +832,13 @@ SUBROUTINE read_ns()
   ELSE
      !
      IF (lda_plus_u_kind.EQ.0) THEN
-        rho%ns(:,:,:,:) = 0.D0
-        IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
+        !     -------- LUCA -------------
+        IF (noncolin) THEN
+           rho%ns_nc(:,:,:,:) = 0.D0
+        ELSE
+           rho%ns(:,:,:,:) = 0.D0
+           IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
+        ENDIF
      ELSEIF (lda_plus_u_kind.EQ.1) THEN
         IF (noncolin) THEN
            rho%ns_nc(:,:,:,:) = 0.D0
@@ -849,12 +854,13 @@ SUBROUTINE read_ns()
   CALL mp_bcast( ierr, ionode_id, intra_image_comm )
   !
   IF (lda_plus_u_kind.EQ.0) THEN
-     CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
      ! ---------- LUCA ---------------------------
      IF (noncolin) THEN
-        CALL v_hubbard (rho%ns, v%ns, eth)
+        CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
+        CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth) 
      ELSE
-        CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth)
+        CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
+        CALL v_hubbard (rho%ns, v%ns, eth)
      ENDIF
      ! --------------------------------------------
      IF (hub_back) THEN
