@@ -267,7 +267,8 @@ oscdft_functions.o \
 oscdft_occupations.o \
 oscdft_wfcO.o \
 oscdft_forces.o \
-oscdft_forces_subs.o
+oscdft_forces_subs.o \
+d3hess_mod.o
 
 
 # GPU versions of routines
