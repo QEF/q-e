@@ -479,7 +479,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    IF (okvan) THEN
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, jkb0, nwfcU, wfcU, &
-                                     nbnd, evc, dproj_us, nb_s, nb_e, mykey )
+                                     nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false. )
    ENDIF
    !
    ! ... In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
@@ -683,7 +683,7 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    IF (okvan) THEN
       ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
       CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
-                       nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
+                       nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false.)
    ENDIF
    !
    ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
@@ -998,7 +998,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    IF (okvan) THEN
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, jkb0, nwfcU, wfcU, nbnd, &
-                                     evc, dproj_us, nb_s, nb_e, mykey )
+                                     evc, dproj_us, nb_s, nb_e, mykey, .false. )
    ENDIF
    !
    IF (Hubbard_projectors.EQ."atomic") THEN
@@ -1235,7 +1235,7 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    IF (okvan) THEN
    ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
    CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
-      nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
+      nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false.)
    ENDIF
    !
    IF (Hubbard_projectors.EQ."atomic") THEN
@@ -2044,9 +2044,9 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !! lB start
    INTEGER, INTENT(IN) :: lB_e
    !! lB end
-   LOGICAL, OPTIONAL        :: flag  ! noncollinear: controlling whether 
-                                     ! calculating <phi|dS|PSI> 
-                                     ! or          <phi|dS|PHI> (= .true.)
+   LOGICAL, INTENT(IN) :: flag   ! noncollinear: controlling whether 
+                                 ! calculating <phi|dS|PSI> 
+                                 ! or          <phi|dS|PHI> (= .true.)
    COMPLEX(DP), INTENT(IN)  :: A(npwx*npol,lA)
    COMPLEX(DP), INTENT(IN)  :: B(npwx*npol,lB)
    COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB_s:lB_e)
@@ -2264,7 +2264,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
       ! ----------------------- LUCA ----------------------------
       IF (noncolin) THEN
          nt1 = nh(nt) + 1
-         IF ( .NOT.PRESENT(flag) ) THEN
+         IF ( .NOT.flag ) THEN
             DO na = 1, nat
                IF ( is_hubbard(ityp(na)) ) THEN
                   ldim = 2*hubbard_l(ityp(na)) + 1
@@ -2291,7 +2291,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                               A_dS_B(mD,lB_s), lA)   
                ENDIF    
             ENDDO 
-         ELSEIF ( PRESENT(flag) ) THEN
+         ELSEIF ( flag ) THEN
             CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                         Adbeta, lA, betaB(1,lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
                         A_dS_B(1,lB_s), lA)
