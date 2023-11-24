@@ -155,11 +155,11 @@ $ECHO " Compute B2pz-projected (Wfc6+Wfc10) fermi surfaces."
 $ECHO ""
 $FERMI_PROJ_COMMAND -in mgb2.proj.in > FS_b2pz.out
 check_failure $?
-$ECHO "mv proj.frmsf b2pz.frmsf"
-mv proj.frmsf b2pz.frmsf
+mv -v $TMP_DIR/mgb2_vfermi.frmsf $TMP_DIR/mgb2_proj.frmsf .
 
 $ECHO
-$ECHO "  Use 'fermisurfer results/b2pz.frmsf' to plot the Fermi Surface"
+$ECHO "  Use 'fermisurfer results/mgb2_vfermi.frmsf' to plot the Fermi velocity on Fermi surfaces, and"
+$ECHO "      'fermisurfer results/mgb2_proj.frmsf' to plot the B2pz character on Fermi surfaces"
 
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/mgb2.*

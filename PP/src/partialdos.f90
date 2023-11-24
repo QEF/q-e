@@ -9,13 +9,15 @@
 SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
   USE ions_base, ONLY : ityp, atm
   USE klist, ONLY: wk, nkstot, degauss, ngauss, lgauss, ltetra
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE wvfct, ONLY: et, nbnd
   USE constants, ONLY: rytoev
   USE ktetra, ONLY: tetra_type, opt_tetra_partialdos
+  USE mp, ONLY : mp_bcast
+  USE mp_images, ONLY : intra_image_comm
   !
   USE projections
   !
@@ -40,6 +42,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   nproj = SIZE(proj,1)
   !
   ! find band extrema
+  ! Only the first proc of the first pool (#0 in intra_image_comm) has whole et
   !
   Elw = et (1, 1)
   Eup = et (nbnd, 1)
@@ -47,6 +50,9 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      Elw = min (Elw, et (1, ik) )
      Eup = max (Eup, et (nbnd, ik) )
   ENDDO
+  CALL mp_bcast(Elw, 0, intra_image_comm)
+  CALL mp_bcast(Eup, 0, intra_image_comm)
+
   IF (degauss/=0.d0) THEN
      Eup = Eup + 3d0 * degauss
      Elw = Elw - 3d0 * degauss
@@ -178,7 +184,19 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
              'file extension not supporting so many atomic wfc', nwfc)
         END IF
         fileout = trim(filpdos)//trim(filextension)
-        OPEN (4,file=fileout,form='formatted', status='unknown')
+        !
+        ! Only IO-node outputs to a file
+        ! Other processes's output-units are connected to NULL
+        !
+        IF(ionode) THEN
+           OPEN (4,file=fileout,form='formatted', status='unknown')
+        ELSE
+#if defined(_WIN32)
+           OPEN (4,file='NUL:', status='unknown')
+#else
+           OPEN (4,file='/dev/null', status='unknown')
+#endif
+        ENDIF
 
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
@@ -229,7 +247,19 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      ENDIF
   ENDDO
   fileout = trim(filpdos)//".pdos_tot"
-  OPEN (4,file=fileout,form='formatted', status='unknown')
+  !
+  ! Only IO-node outputs to a file
+  ! Other processes's output-units are connected to NULL
+  !
+  IF(ionode) THEN
+     OPEN (4,file=fileout,form='formatted', status='unknown')
+  ELSE
+#if defined(_WIN32)
+     OPEN (4,file='NUL:', status='unknown')
+#else
+     OPEN (4,file='/dev/null', status='unknown')
+#endif
+  ENDIF
   IF (kresolveddos) THEN
      WRITE (4,'("# ik   ")', advance="NO")
   ELSE
@@ -265,7 +295,7 @@ END SUBROUTINE partialdos
 SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
   USE basis, ONLY : natomwfc
   USE ions_base, ONLY : ityp, atm
   USE klist, ONLY: wk, nkstot, degauss, ngauss, lgauss, ltetra
@@ -274,6 +304,8 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   USE constants, ONLY: rytoev
   USE ktetra, ONLY: opt_tetra_partialdos
   USE noncollin_module, ONLY: lspinorb
+  USE mp, ONLY : mp_bcast
+  USE mp_images, ONLY : intra_image_comm
   USE projections
   !
   IMPLICIT NONE
@@ -294,6 +326,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !
   !
   ! find band extrema
+  ! Only the first proc of the first pool (#0 in intra_image_comm) has whole et
   !
   Elw = et (1, 1)
   Eup = et (nbnd, 1)
@@ -301,6 +334,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
      Elw = min (Elw, et (1, ik) )
      Eup = max (Eup, et (nbnd, ik) )
   ENDDO
+  CALL mp_bcast(Elw, 0, intra_image_comm)
+  CALL mp_bcast(Eup, 0, intra_image_comm)
+
   IF (degauss/=0.d0) THEN
      Eup = Eup + 3d0 * degauss
      Elw = Elw - 3d0 * degauss
@@ -455,7 +491,19 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
              'file extension not supporting so many atomic wfc', nwfc)
         ENDIF
         fileout = trim(filpdos)//trim(filextension)
-        OPEN (4,file=fileout,form='formatted', status='unknown')
+        !
+        ! Only IO-node outputs to a file
+        ! Other processes's output-units are connected to NULL
+        !
+        IF(ionode) THEN
+           OPEN (4,file=fileout,form='formatted', status='unknown')
+        ELSE
+#if defined(_WIN32)
+           OPEN (4,file='NUL:', status='unknown')
+#else
+           OPEN (4,file='/dev/null', status='unknown')
+#endif
+        ENDIF
 
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
@@ -546,7 +594,19 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
      ENDIF
   ENDDO
   fileout = trim(filpdos)//".pdos_tot"
-  OPEN (4,file=fileout,form='formatted', status='unknown')
+  !
+  ! Only IO-node outputs to a file
+  ! Other processes's output-units are connected to NULL
+  !
+  IF(ionode) THEN
+     OPEN (4,file=fileout,form='formatted', status='unknown')
+  ELSE
+#if defined(_WIN32)
+     OPEN (4,file='NUL:', status='unknown')
+#else
+     OPEN (4,file='/dev/null', status='unknown')
+#endif
+  ENDIF
   IF (kresolveddos) THEN
      WRITE (4,'("# ik   ")', advance="NO")
   ELSE

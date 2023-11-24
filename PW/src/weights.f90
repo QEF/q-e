@@ -25,7 +25,7 @@ SUBROUTINE weights()
   USE wvfct,                ONLY : nbnd, wg, et, nbnd_cond
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
   USE mp_images,            ONLY : intra_image_comm
-  USE mp_pools,             ONLY : inter_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm, me_pool, my_pool_id
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
@@ -38,6 +38,7 @@ SUBROUTINE weights()
   !
   INTEGER :: ibnd, ik ! counters: bands, k-points
   REAL(DP) :: demet_up, demet_dw
+  REAL(DP),ALLOCATABLE :: et_col(:,:)
   !
   CALL using_et(0)
   CALL using_wg(2)
@@ -50,9 +51,9 @@ SUBROUTINE weights()
      ! ... broadcast to the other. All eigenvalues (et) must be present on
      ! ... the first pool: poolreduce must have been called for et
      !
-     IF ( ionode ) THEN
+     IF ( tfixed_occ ) THEN
         !
-        IF ( tfixed_occ ) THEN 
+        IF ( ionode ) THEN
            ! 
            ! ... occupancies are fixed to the values read from input
            !
@@ -68,43 +69,48 @@ SUBROUTINE weights()
               ENDDO
            ENDDO
            !
-        ELSE
+        ENDIF
+        !
+     ELSE
+        !
+        ! ... calculate weights for the metallic case using tetrahedra
+        !
+        ALLOCATE(et_col(nbnd, nkstot))
+        CALL poolcollect(nbnd, nks, et, nkstot, et_col)
+        !
+        IF (tetra_type == 0) THEN
            !
-           ! ... calculate weights for the metallic case using tetrahedra
+           ! Bloechl's tetrahedra
            !
-           IF (tetra_type == 0) THEN
+           IF (two_fermi_energies) THEN
               !
-              ! Bloechl's tetrahedra
-              !
-              IF (two_fermi_energies) THEN
-                 !
-                 CALL tetra_weights( nkstot, nspin, nbnd, nelup, et, ef_up, wg, 1, isk )
-                 CALL tetra_weights( nkstot, nspin, nbnd, neldw, et, ef_dw, wg, 2, isk )
-                 !
-              ELSE
-                 !
-                 CALL tetra_weights( nkstot, nspin, nbnd, nelec, et, ef, wg, 0, isk )
-                 !
-              ENDIF
+              CALL tetra_weights( nkstot, nspin, nbnd, nelup, et_col, ef_up, wg, 1, isk )
+              CALL tetra_weights( nkstot, nspin, nbnd, neldw, et_col, ef_dw, wg, 2, isk )
               !
            ELSE
               !
-              ! Linear or Optimized tetrahedra
+              CALL tetra_weights( nkstot, nspin, nbnd, nelec, et_col, ef, wg, 0, isk )
               !
-              IF (two_fermi_energies) THEN
-                 !
-                 CALL opt_tetra_weights( nkstot, nspin, nbnd, nelup, et, ef_up, wg, 1, isk )
-                 CALL opt_tetra_weights( nkstot, nspin, nbnd, neldw, et, ef_dw, wg, 2, isk )
-                 !
-              ELSE
-                 !             
-                 CALL opt_tetra_weights ( nkstot, nspin, nbnd, nelec, et, ef, wg, 0, isk )
-                 !
-              ENDIF
-              !
-           ENDIF ! tetra_type
+           ENDIF
            !
-        ENDIF
+        ELSE
+           !
+           ! Linear or Optimized tetrahedra
+           !
+           IF (two_fermi_energies) THEN
+              !
+              CALL opt_tetra_weights( nkstot, nspin, nbnd, nelup, et_col, ef_up, wg, 1, isk )
+              CALL opt_tetra_weights( nkstot, nspin, nbnd, neldw, et_col, ef_dw, wg, 2, isk )
+              !
+           ELSE
+              !
+              CALL opt_tetra_weights ( nkstot, nspin, nbnd, nelec, et_col, ef, wg, 0, isk )
+              !
+           ENDIF
+           !
+        ENDIF ! tetra_type
+        !
+        DEALLOCATE(et_col)
         !
      ENDIF
      !
@@ -214,8 +220,8 @@ SUBROUTINE weights_only()
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et, nbnd_cond
   USE mp_images,            ONLY : intra_image_comm
-  USE mp_pools,             ONLY : inter_pool_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_pools,             ONLY : inter_pool_comm, me_pool, my_pool_id
+  USE mp,                   ONLY : mp_sum, mp_bcast
   USE io_global,            ONLY : ionode, ionode_id
   USE two_chem,             ONLY : twochem, gweights_only_twochem
   !
@@ -227,6 +233,7 @@ SUBROUTINE weights_only()
   !
   INTEGER :: ibnd, ik ! counters: bands, k-points
   REAL(DP) :: demet_up, demet_dw
+  REAL(DP),ALLOCATABLE :: et_col(:,:)
   !
   CALL using_et(0)
   CALL using_wg(2)
@@ -239,9 +246,9 @@ SUBROUTINE weights_only()
      ! ... broadcast to the other. All eigenvalues (et) must be present on
      ! ... the first pool: poolreduce must have been called for et
      !
-     IF ( ionode ) THEN
+     IF ( tfixed_occ ) THEN
         !
-        IF ( tfixed_occ ) THEN 
+        IF ( ionode ) THEN
            ! 
            ! ... occupancies are fixed to the values read from input
            !
@@ -250,43 +257,46 @@ SUBROUTINE weights_only()
               IF ( nspin == 1 ) wg(:,ik) = wg(:,ik)/2.0_dp
            ENDDO
            !
-        ELSE
-           !
-           ! ... calculate weights for the metallic case using tetrahedra
-           !
-           IF (tetra_type == 0) then
-              !
-              ! Bloechl's tetrahedra
-              !
-              IF (two_fermi_energies) THEN
-                 !
-                 CALL tetra_weights_only( nkstot, nspin, 1, isk, nbnd, nelup, et, ef_up, wg )
-                 CALL tetra_weights_only( nkstot, nspin, 2, isk, nbnd, neldw, et, ef_dw, wg )
-                 !
-              ELSE
-                 !
-                 CALL tetra_weights_only( nkstot, nspin, 0, isk, nbnd, nelec, et, ef, wg )
-                 !
-              ENDIF
-              !
-           ELSE ! tetra_type == 1 .or. 2
-              !
-              ! Linear or Optimized tetrahedra
-              !
-              IF (two_fermi_energies) THEN
-                 !
-                 CALL opt_tetra_weights_only( nkstot, nspin, nbnd, et, ef_up, wg, 1, isk )
-                 CALL opt_tetra_weights_only( nkstot, nspin, nbnd, et, ef_dw, wg, 2, isk )
-                 !
-              ELSE
-                 !
-                 CALL opt_tetra_weights_only( nkstot, nspin, nbnd, et, ef, wg, 0, isk )
-                 !
-              ENDIF
-              !
-           ENDIF ! tetra_type
-           !
         ENDIF
+        !
+     ELSE
+        !
+        ! ... calculate weights for the metallic case using tetrahedra
+        !
+        ALLOCATE(et_col(nbnd, nkstot))
+        CALL poolcollect(nbnd, nks, et, nkstot, et_col)
+        !
+        IF (tetra_type == 0) then
+           !
+           ! Bloechl's tetrahedra
+           !
+           IF (two_fermi_energies) THEN
+              !
+              CALL tetra_weights_only( nkstot, nspin, 1, isk, nbnd, nelup, et_col, ef_up, wg )
+              CALL tetra_weights_only( nkstot, nspin, 2, isk, nbnd, neldw, et_col, ef_dw, wg )
+              !
+           ELSE
+              !
+              CALL tetra_weights_only( nkstot, nspin, 0, isk, nbnd, nelec, et_col, ef, wg )
+              !
+           ENDIF
+           !
+        ELSE ! tetra_type == 1 .or. 2
+           !
+           ! Linear or Optimized tetrahedra
+           !
+           IF (two_fermi_energies) THEN
+              !
+              CALL opt_tetra_weights_only( nkstot, nspin, nbnd, et_col, ef_up, wg, 1, isk )
+              CALL opt_tetra_weights_only( nkstot, nspin, nbnd, et_col, ef_dw, wg, 2, isk )
+              !
+           ELSE
+              !
+              CALL opt_tetra_weights_only( nkstot, nspin, nbnd, et_col, ef, wg, 0, isk )
+              !
+           ENDIF
+           !
+        ENDIF ! tetra_type
         !
      ENDIF
      !
