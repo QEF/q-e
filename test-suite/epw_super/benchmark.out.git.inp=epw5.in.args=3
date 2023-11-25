@@ -23,11 +23,13 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.5 starts on 19Nov2022 at 13:31:25 
+     Program EPW v.5.7 starts on 31Oct2023 at 16:47:10 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -41,8 +43,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     51982 MiB available memory on the printing compute node when the environment starts
-
+     184340 MiB available memory on the printing compute node when the environment starts
+ 
      Reading input from epw5.in
 
      Generating evenly spaced temperature list.
@@ -87,7 +89,7 @@
 
      site n.  atom      mass           positions (a_0 units)
 
-
+ 
      No symmetry!
 
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
@@ -101,15 +103,15 @@
 
      Finish reading a2f file
 
-     Electron-phonon coupling strength =    0.8713463
+     Electron-phonon coupling strength =    0.8713462
  
-     Estimated Allen-Dynes Tc =    26.400790 K for muc =    0.16000
+     Estimated Allen-Dynes Tc =    26.400775 K for muc =    0.16000
   
-     Estimated w_log in Allen-Dynes Tc =    61.479024 meV
+     Estimated w_log in Allen-Dynes Tc =    61.478993 meV
   
-     Estimated BCS superconducting gap =     4.004078 meV
+     Estimated BCS superconducting gap =     4.004075 meV
   
-     Estimated Tc from machine learning model =    31.488966 K
+     Estimated Tc from machine learning model =    31.488937 K
   
   
      WARNING WARNING WARNING 
@@ -127,47 +129,47 @@
              Temp.       Max.         nsiw     wscut    Nr. of iters
              (K)       eigenvalue    (itemp)   (eV)      to Converge
       -----------------------------------------------------------------
-             1.00      3.4468742      923      0.5000        5
-             2.00      2.9612223      462      0.5008        6
-             3.00      2.6781363      308      0.5011        6
-             4.00      2.4778609      231      0.5014        6
-             5.00      2.3229189      185      0.5022        6
-             6.00      2.1965847      154      0.5019        6
-             7.00      2.0900056      132      0.5022        6
-             8.00      1.9977932      115      0.5003        6
-             9.00      1.9167940      103      0.5044        6
-            10.00      1.8442137       92      0.5008        6
-            11.00      1.7788716       84      0.5033        6
-            12.00      1.7192419       77      0.5035        6
-            13.00      1.6644491       71      0.5033        6
-            14.00      1.6138431       66      0.5041        6
-            15.00      1.5669441       62      0.5076        6
-            16.00      1.5229311       58      0.5068        6
-            17.00      1.4827996       54      0.5016        7
-            18.00      1.4440442       51      0.5019        7
-            19.00      1.4076222       49      0.5092        7
-            20.00      1.3727918       46      0.5035        7
-            21.00      1.3399127       44      0.5060        7
-            22.00      1.3085554       42      0.5062        7
-            23.00      1.2785795       40      0.5044        7
-            24.00      1.2498657       38      0.5003        7
-            25.00      1.2226419       37      0.5076        7
-            26.00      1.1965038       36      0.5138        7
-            27.00      1.1709986       34      0.5044        7
-            28.00      1.1467670       33      0.5079        7
-            29.00      1.1233920       32      0.5103        7
-            30.00      1.0980990       31      0.5117        8
-            31.00      1.0760932       30      0.5119        8
-            32.00      1.0547449       29      0.5111        8
-            33.00      1.0340053       28      0.5092        8
-            34.00      1.0138301       27      0.5062        8
-            35.00      0.9941798       26      0.5022        8
-            36.00      0.9761513       26      0.5165        8
-            37.00      0.9613032       25      0.5109        9
-            38.00      0.9434874       24      0.5041        9
-            39.00      0.9270475       24      0.5173        9
-            40.00      0.9101102       23      0.5090        9
-            41.00      0.8905809       23      0.5217       10
+             1.00      3.4468736      923      0.5000        5
+             2.00      2.9612218      462      0.5008        6
+             3.00      2.6781358      308      0.5011        6
+             4.00      2.4778604      231      0.5014        6
+             5.00      2.3229184      185      0.5022        6
+             6.00      2.1965843      154      0.5019        6
+             7.00      2.0900051      132      0.5022        6
+             8.00      1.9977927      115      0.5003        6
+             9.00      1.9167936      103      0.5044        6
+            10.00      1.8442133       92      0.5008        6
+            11.00      1.7788711       84      0.5033        6
+            12.00      1.7192414       77      0.5035        6
+            13.00      1.6644487       71      0.5033        6
+            14.00      1.6138427       66      0.5041        6
+            15.00      1.5669437       62      0.5076        6
+            16.00      1.5229307       58      0.5068        6
+            17.00      1.4827992       54      0.5016        7
+            18.00      1.4440438       51      0.5019        7
+            19.00      1.4076218       49      0.5092        7
+            20.00      1.3727914       46      0.5035        7
+            21.00      1.3399123       44      0.5060        7
+            22.00      1.3085550       42      0.5062        7
+            23.00      1.2785791       40      0.5044        7
+            24.00      1.2498653       38      0.5003        7
+            25.00      1.2226415       37      0.5076        7
+            26.00      1.1965034       36      0.5138        7
+            27.00      1.1709982       34      0.5044        7
+            28.00      1.1467667       33      0.5079        7
+            29.00      1.1233916       32      0.5103        7
+            30.00      1.0980986       31      0.5117        8
+            31.00      1.0760928       30      0.5119        8
+            32.00      1.0547446       29      0.5111        8
+            33.00      1.0340049       28      0.5092        8
+            34.00      1.0138297       27      0.5062        8
+            35.00      0.9941795       26      0.5022        8
+            36.00      0.9761509       26      0.5165        8
+            37.00      0.9613028       25      0.5109        9
+            38.00      0.9434870       24      0.5041        9
+            39.00      0.9270471       24      0.5173        9
+            40.00      0.9101098       23      0.5090        9
+            41.00      0.8905806       23      0.5217       10
       -----------------------------------------------------------------
      Finish: Solving (isotropic) linearized Eliashberg equation
 
@@ -182,13 +184,60 @@
      Electron-Phonon interpolation
 
 
-     ELIASHBERG   :      2.91s CPU      2.93s WALL (       1 calls)
+     ELIASHBERG   :      1.73s CPU      1.74s WALL (       1 calls)
 
      Total program execution
-     EPW          :      2.91s CPU      2.93s WALL
+     EPW          :      1.73s CPU      1.74s WALL
 
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     Please consider citing the following papers.                                   
+                                                                                             
+     % Paper describing the method on which EPW relies                                       
+     @Article{Giustino2007                                                                   
+       Title   = {Electron-phonon interaction using Wannier functions},                      
+       Author  = {F. Giustino and M. L. Cohen and S. G. Louie},                              
+       Journal = {Phys. Rev. B},                                                             
+       Year    = {2007},                                                                     
+       Volume  = {76},                                                                       
+       Pages   = {165108},                                                                   
+       Doi     = {10.1103/PhysRevB.76.165108}                                                
+     }                                                                                       
+                                                                                             
+     % Papers describing the EPW software                                                    
+     @Article{Lee2023,                                                                       
+       Title   = {Electron--phonon physics from first principles using the EPW code},        
+       Author  = {H. Lee and S. Ponc\'e and K. Bushick and S. Hajinazar and J. Lafuente-Bartolome and J. Leveillee and C. Lian and J. Lihm and F. Macheda and H. Mori and H. Paudyal and W.H. Sio and S. Tiwari and M. Zacharias and X. Zhang and N. Bonini, Nicola and E. Kioupakis and E.R. Margine and F. Giustino},                                             
+       Journal = {npj Computational Materials},                                              
+       Year    = {2023},                                                                     
+       Volume  = {9},                                                                        
+       Pages   = {156},                                                                      
+       Doi     = {10.1038/s41524-023-01107-3}                                                
+     }                                                                                       
+                                                                                             
+     @Article{Ponce2016,                                                                     
+       Title   = {EPW: Electron–phonon coupling, transport and superconducting properties using maximally localized Wannier functions},
+       Author  = {S. Ponc\'e and E.R. Margine and C. Verdi and F. Giustino},                 
+       Journal = {Computer Physics Communications},                                          
+       Year    = {2016},                                                                     
+       Volume  = {209},                                                                      
+       Pages   = {116 - 133},                                                                
+       Doi     = {https://doi.org/10.1016/j.cpc.2016.07.028}                                 
+     }                                                                                       
+                                                                                               
+                                                                                             
+     % Since you used the [eliashberg] input, please consider also citing                    
+     @Article{Margine2013,                                                                   
+       Title   = {Anisotropic Migdal-Eliashberg theory using Wannier functions},             
+       Author  = {E. R. Margine and F. Giustino},                                            
+       Journal = {Phys. Rev. B},                                                             
+       Year    = {2013},                                                                     
+       Volume  = {87}                                                                        
+       Pages   = {024505},                                                                   
+       Doi     = {10.1103/PhysRevB.87.024505}                                                
+     }                                                                                       
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
      ===============================================================================
                                                                                     

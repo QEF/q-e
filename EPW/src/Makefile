@@ -44,9 +44,11 @@ eliashbergcom.o \
 supercond.o \
 supercond_iso.o \
 supercond_aniso.o \
+stop_epw.o \
 grid.o \
 bfield.o \
 rotate.o \
+rotate_wavefunction.o \
 transport.o \
 transport_iter.o \
 pw2wan2epw.o \
@@ -55,25 +57,26 @@ indabs.o \
 io_indabs.o\
 bcast_epw_input.o \
 bloch2wan.o \
+read_ahc_files.o \
 dvqpsi.o \
 eliashberg.o \
 elphel2_shuffle.o \
 elphon_shuffle.o \
 elphon_shuffle_wrap.o \
 selfen.o \
+selfen_ahc.o \
 spectral_func.o \
 ephwann_shuffle.o \
-ephwann_shuffle_mem.o \
 epw_init.o \
 epw_readin.o \
 epw_setup.o \
 epw_summary.o \
 loadumat.o \
-stop_epw.o \
 wannierEPW.o \
 loadbm.o \
 polaron.o \
-
+qdabs.o\
+wfpt_mod.o \
 #default : epw
 
 
@@ -82,6 +85,7 @@ W90LIB = ../../external/wannier90/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
+#SCALAPACK_LIBS = -lmkl_blacs_intelmpi_lp64 -lmkl_scalapack_lp64
 
 TLDEPS= pw ph pp
 
@@ -106,7 +110,7 @@ pp :
 	cd ../../ ; make pp
 
 wannier :
-	cd ../../ ; make w90 
+	cd ../../ ; make w90
 
 ld1 :
 	cd ../../ ; make ld1

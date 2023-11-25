@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -17,6 +18,81 @@
   !
   CONTAINS
     !
+    !----------------------------------------------------------------------------
+    SUBROUTINE selfen_ph_write()
+    !----------------------------------------------------------------------------
+    !! 
+    !! SP: Added lambda and phonon lifetime writing to file.
+    !! 
+    USE kinds,         ONLY : DP
+    USE elph2,         ONLY : gtemp, nqtotf, lambda_all, wf, gamma_all
+    USE constants_epw, ONLY : ryd2ev, kelvin2eV, ryd2mev
+    USE epwcom,        ONLY : nstemp
+    USE mp_world,      ONLY : mpime
+    USE io_global,     ONLY : ionode_id
+    USE io_var,        ONLY : lambda_phself, linewidth_phself
+    USE modes,         ONLY : nmodes
+    ! 
+    IMPLICIT NONE
+    !
+    ! Local variable
+    CHARACTER(LEN = 20) :: tp
+    !! string for temperature
+    CHARACTER(LEN = 256) :: filephselfen
+    !! file name of phonon selfenergy    
+    CHARACTER(LEN = 30)  :: myfmt
+    !! Variable used for formatting output    
+    CHARACTER(LEN = 256) :: filephlinewid
+    !! file name of phonon linewidth    
+    
+    INTEGER :: itempphen
+    !! Temperature counter for writing phonon selfen
+    INTEGER :: iqq
+    !! Counter on coarse q-point grid    
+    INTEGER :: imode
+    !! Counter on mode    
+    ! 
+    IF (mpime == ionode_id) THEN
+      !
+      DO itempphen = 1, nstemp
+        WRITE(tp, "(f8.3)") gtemp(itempphen) * ryd2ev / kelvin2eV
+        filephselfen = 'lambda.phself.' // trim(adjustl(tp)) // 'K'
+        OPEN(UNIT = lambda_phself, FILE = filephselfen)
+        WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
+        WRITE(lambda_phself, *) '#Modes     ',(imode, imode = 1, nmodes)
+        DO iqq = 1, nqtotf
+          !
+          myfmt = "(1000(3x,E15.5))"
+          WRITE(lambda_phself,'(i9,4x)', ADVANCE = 'no') iqq
+          WRITE(lambda_phself, FMT = myfmt) (REAL(lambda_all(imode, iqq, 1, itempphen)), imode = 1, nmodes)
+          !
+        ENDDO
+        CLOSE(lambda_phself)
+        !
+        ! SP - 03/2019
+        ! \Gamma = 1/\tau = phonon lifetime
+        ! \Gamma = - 2 * Im \Pi^R where \Pi^R is the retarted phonon self-energy.
+        ! Im \Pi^R = pi*k-point weight*[f(E_k+q) - f(E_k)]*delta[E_k+q - E_k - w_q]
+        ! Since gamma_all = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q] we have
+        ! \Gamma = 2 * gamma_all
+        filephlinewid = 'linewidth.phself.' // trim(adjustl(tp)) // 'K'
+        OPEN(UNIT = linewidth_phself, FILE = filephlinewid)
+        WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
+        WRITE(linewidth_phself, '(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
+        DO iqq = 1, nqtotf
+          DO imode = 1, nmodes
+            WRITE(linewidth_phself, '(i9,i6,E20.8,E22.10)') iqq, imode, &
+                                   ryd2mev * wf(imode, iqq), 2.0d0 * ryd2mev * REAL(gamma_all(imode, iqq, 1, itempphen))
+          ENDDO
+        ENDDO
+        CLOSE(linewidth_phself)
+      ENDDO ! itempphen
+    ENDIF ! mpime
+    !
+    !----------------------------------------------------------------------------
+    END SUBROUTINE selfen_ph_write
+    !----------------------------------------------------------------------------    
+    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE selfen_el_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
     !----------------------------------------------------------------------------

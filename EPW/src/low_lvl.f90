@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -1073,10 +1074,7 @@
     ! Local variables
     CHARACTER(LEN = 256) :: chunit
     !! Unit name
-    !!!!!
-    ! INTEGER :: imelt
     INTEGER(8) :: imelt
-    !!!!!
     !! Size in number of elements
     REAL(KIND = DP) :: rmelt
     !! Size in byte
@@ -1106,12 +1104,10 @@
     !!
     !!  This routine estimates the amount of memory taken up or
     !!  released by different arrays
-    !!!!! these comment lines are added
     !!
     !!  SH: The "imelt" variable type is changed to INTEGER(8) throughout the
     !!        code to avoid issues with large Nr of k-points, etc (Nov 2021).
     !!
-    !!!!!
     USE io_global,     ONLY : stdout
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : max_memlt
@@ -1124,10 +1120,7 @@
     !
     INTEGER, INTENT(in) :: vmelt
     !! 1 for integer variables and 2 for real variables
-    !!!!!
-    ! INTEGER, INTENT(in) :: imelt
     INTEGER(8), INTENT(in) :: imelt
-    !!!!!
     !! > 0 memory added or < 0 memory subtracted
     !
     REAL(KIND = DP) :: rmelt
@@ -1178,10 +1171,7 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : max_memlt, nqstep
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, nqfs, limag_fly, &
-                              !!!!!
-                              ! lacon_fly, memlt_pool
                               lacon_fly, memlt_pool, wsn
-                              !!!!!
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE division,      ONLY : fkbounds
@@ -1195,10 +1185,7 @@
     !! calculation type
     !
     !Local variables
-    !!!!!
-    ! INTEGER :: imelt
     INTEGER(8) :: imelt
-    !!!!!
     !! size array
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k parallelization
@@ -1220,12 +1207,10 @@
     imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2
     IF (cname == 'imag') THEN
       ! get the size of the akeri that needa to be stored in each pool
-      !!!!! first line is changed, and 3rd and 4th lines are added
       ! imelt = imelt * (2 * nsiw(itemp))
       !
       ! SH: This is adjusted to accommodate the sparse sampling case
       imelt = imelt * 2 * (wsn(nsiw(itemp)) + 1)
-      !!!!!
     ELSEIF (cname == 'acon') THEN
       ! get the size of a2fij that needs to be stored in each pool
       imelt = imelt * nqstep
@@ -1733,6 +1718,56 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE fix_sym
     !-----------------------------------------------------------------------
+    !--------------------------------------------------------------------------
+    SUBROUTINE prime_number_matrix(A, n)
+    !--------------------------------------------------------------------------
+    !!
+    !! Generating a n x n matrix A filled with prime numbers
+    !! For example, if n = 4, A =
+    !! |2   3  5  7|
+    !! |11 13 17 19|
+    !! |23 29 31 37|
+    !! |41 43 47 53|
+    !! Used to perturb the degenerate eigenstates
+    !! 2021 Chao Lian
+    !
+    USE kinds,         ONLY : DP
+    !  
+    IMPLICIT NONE
+    ! 
+    REAL(KIND = DP), INTENT(out) :: A(:, :)
+    !! Output matrix  
+    INTEGER, INTENT(in) :: n
+    !! Input matrix 
+    ! 
+    ! Local variables
+    INTEGER :: prime_numbers(60) = (/2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, &
+       & 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, &
+       & 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281/)
+    INTEGER :: i
+    !! x-matrix
+    INTEGER :: j
+    !! y-maxtrix
+    INTEGER :: k
+    !! Prime number index 
+    !  
+    k = 0
+    DO i = 1, n
+      DO j = i, n
+        k = k + 1
+        A(i, j) = REAL(prime_numbers(k), dp)
+      ENDDO
+    ENDDO
+    ! 
+    DO i = 1, n
+      DO j = 1, i
+        A(i, j) = (A(j, i))
+      ENDDO
+    ENDDO
+    ! 
+    !--------------------------------------------------------------------------
+    END SUBROUTINE
+    !--------------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE low_lvl
   !-------------------------------------------------------------------------

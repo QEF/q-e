@@ -12,6 +12,7 @@ tobesaved="HUSPBE.RRKJ3          \
 	   pb_s.UPF              \
 	   Si_r.upf              \
            C-q4.gth O-q6.gth H-q1.gth \
+	   Mo-PBE.upf S-PBE.upf \
            B-PBE.upf N-PBE.upf Fe.pz-n-nc.UPF "
 #
 # REASON:
@@ -22,6 +23,7 @@ tobesaved="HUSPBE.RRKJ3          \
 # pb_s.UPF  Si_r.upf : fully relativistic
 # C-q4.gth O-q6.gth H-q1.gth : GTH format 
 # Fe.pz-n-nc.UPF : used in test-suite/tddfpt_magnon_fe (should be replaced)
+# Mo-PBE.upf S-PBE.upf : norm-conserving for test-suite/epw_2D
 # B-PBE.upf N-PBE.upf  used in test-suite/ph_2d (should be replaced)
 
 mkdir .save

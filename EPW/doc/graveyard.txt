@@ -1,0 +1,294 @@
+#############
+# Graveyard #
+#############
+
+A place for potentially useful routines not yet part of the codes or removed.
+
+1) From ephwann_shuffle.f90
+  ! --------------------------------------------------------------------------------------------------------
+  ! SP - This is a possible optimization using a look-up table. Might be useful in some case. Do not remove.
+  !      Was remove from main implementation because only works when using homogeneous grids without symmetries.
+  !
+  ! SP: Create a look-up table for the exponential of the factor.
+  !     This can only work with homogeneous fine grids.
+  !
+  COMPLEX(KIND = DP) :: tablex (4*nkc1+1,nkf1)
+  ! Look-up table for the exponential (speed optimization) in the case of
+  ! homogeneous grids.
+  IF ((nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN
+    ! Make a check
+    IF ((nqf1>nkf1) .OR. (nqf2>nkf2) .OR. (nqf3>nkf3)) &
+            CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)
+    ! Along x
+    DO ikx = -2*nkc1, 2*nkc1
+      DO ikfx = 0, nkf1-1
+        !rdotk = twopi * ( xk(1)*irvec_kk(1,ir))
+        rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf1) * ikx )
+        tablex(ikx+2*nkc1+1,ikfx+1) = EXP(ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! For k+q
+    DO ikx = -2*nkc1, 2*nkc1
+      DO ikfx = 0, 2*nkf1
+        rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf1) * ikx )
+        tableqx(ikx+2*nkc1+1,ikfx+1) = EXP(ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! Along y
+    DO ikx = -2*nkc2, 2*nkc2
+      DO ikfx = 0, nkf2-1
+        rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf2) * ikx )
+        tabley(ikx+2*nkc2+1,ikfx+1) = EXP(ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! For k+q
+    DO ikx = -2*nkc2, 2*nkc2
+      DO ikfx = 0, 2*nkf2
+        rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf2) * ikx )
+        tableqy(ikx+2*nkc2+1,ikfx+1) = EXP(ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! Along z
+    DO ikx = -2*nkc3, 2*nkc3
+      DO ikfx = 0, nkf3-1
+        rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf3) * ikx )
+        tablez(ikx+2*nkc3+1,ikfx+1) = EXP(ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! For k+q
+    DO ikx = -2*nkc3, 2*nkc3
+      DO ikfx = 0, 2*nkf3
+        rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf3) * ikx )
+        tableqz(ikx+2*nkc3+1,ikfx+1) = EXP(ci*rdotk_scal )
+      ENDDO
+    ENDDO
+  ENDIF
+
+! --------------------------------------------------------------------------------------------------------
+2) From ephwann_shuffle.f90
+  ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+  ! + optimize the 2\pi r\cdot k with Blas
+  IF ((nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+     (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN
+    ! We need to use NINT (nearest INTEGER to x) rather than INT
+    xkk1 = NINT(xkk(1)*(nkf1)) + 1
+    xkk2 = NINT(xkk(2)*(nkf2)) + 1
+    xkk3 = NINT(xkk(3)*(nkf3)) + 1
+    xkq1 = NINT(xkq2(1)*(nkf1)) + 1
+    xkq2 = NINT(xkq2(2)*(nkf2)) + 1
+    xkq3 = NINT(xkq2(3)*(nkf3)) + 1
+    !
+    ! SP: Look-up table is more effecient than calling the exp function.
+    DO ir = 1, nrr_k
+      cfac(ir) = ( tablex(irvec_k(1,ir)+2*nkc1+1,xkk1) *&
+              tabley(irvec_k(2,ir)+2*nkc2+1,xkk2) * tablez(irvec_k(3,ir)+2*nkc3+1,xkk3) ) / ndegen_k(ir)
+      cfacq(ir) = ( tableqx(irvec_k(1,ir)+2*nkc1+1,xkq1) *&
+              tableqy(irvec_k(2,ir)+2*nkc2+1,xkq2) * tableqz(irvec_k(3,ir)+2*nkc3+1,xkq3) ) /  ndegen_k(ir)
+    ENDDO
+    !DBSP
+    !IF ((iq == 1) .AND. (ik ==12)) THEN
+    !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+    !  cfac1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
+    !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq2, 1, 0.0_DP, rdotk, 1 )
+    !  cfacq1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
+    !ENDIF
+  ELSE
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+    cfac(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq2, 1, 0.0_DP, rdotk, 1 )
+    cfacq(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
+  ENDIF
+  !
+
+! --------------------------------------------------------------------------------------------------------
+3) wan2bloch.f90 in the hamwan2bloch subroutine
+  ! This old random matrix generation is removed
+  ! Generate a pertubation matrix of size (nbnd x nbnd) made of random number
+  CALL init_random_seed()
+  ! SP: Using random_number does not work because the perturbation needs to be the
+  !     same when calling hamwan2bloch at k and k+q (see ephwann_shuffle).
+  !     Therefore I fix a "random" number 0.25644832 + 0.01 * ibnd and 0.11584272 + 0.025 * jbnd
+  P(:, :) = czero
+  DO ibnd = 1, nbnd
+    DO jbnd = 1, nbnd
+      !CALL random_number(rand1)
+      !CALL random_number(rand2)
+      rand1 = 0.25644832 + 0.01 * ibnd
+      rand2 = 0.11584272 + 0.025 * jbnd
+      P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP)
+    ENDDO
+  ENDDO
+  
+  ! Hermitize the Perturbation matrix and make it small
+  P = 0.5d0 * (P + TRANSPOSE(CONJG(P))) * ABS(MINVAL(w)) * 0.1d0
+! --------------------------------------------------------------------------------------------------------
+4) qdabs.f90 Renormalization of velocity matrix with scissor operator
+  !--------------------------------------------------------------------------
+  SUBROUTINE renorm_eig(ikk, ikq, nrr_k, dims, ndegen_k, irvec_k, irvec_r, cufkk, cufkq, cfac, cfacq)
+  !--------------------------------------------------------------------------
+  !!
+  !! This routine computes the renormalization of the eigenenergies to be applied
+  !! in case one read external eigenvalues.
+  !! The implementation follows Eq. 30 of  Phys. Rev. B 62, 4927 (2000)
+  !! Samuel Ponce, Kyle and Emmanouil Kioupakis
+  !! S. Tiwari: slight modification in case of scisso operator
+  USE kinds,         ONLY : DP
+  USE elph2,         ONLY : xkfd, chw, chw_ks, etf_ks, etf, vmef, nkqf
+  USE epwcom,        ONLY : use_ws, nbndsub
+  USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, eps6, ci, czero, one, ryd2ev
+  USE wan2bloch,     ONLY : hamwan2bloch, vmewan2bloch
+  USE io_global,     ONLY : stdout, ionode_id
+
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: ikk
+  !! Current k point on that core (ikk = 2 * ik + 1)
+  INTEGER, INTENT(in) :: ikq
+  !! k+q point on that core
+  INTEGER, INTENT(in) :: nrr_k
+  !! Number of WS points for electrons
+  INTEGER, INTENT(in) :: dims
+  !! Dims is either nbndsub if use_ws or 1 if not
+  INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
+  !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
+  INTEGER, INTENT(in) :: irvec_k(3, nrr_k)
+  !! Integer components of the ir-th Wigner-Seitz grid point in the basis of the lattice vectors for electrons
+  REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
+  !!  Wigner-Size supercell vectors, store in real instead of integer
+  COMPLEX(KIND = DP), INTENT(inout) :: cufkk(nbndsub, nbndsub)
+  !! Rotation matrix, fine mesh, points k
+  COMPLEX(KIND = DP), INTENT(inout) :: cufkq(nbndsub, nbndsub)
+  !! the same, for points k+q
+  COMPLEX(KIND = DP)  :: cufkkd(nbndsub,nbndsub)
+  !! Rotation matrix, shifted mesh, points k
+  COMPLEX(KIND = DP)  :: cufkqd(nbndsub,nbndsub)
+  !! Rotation matrix, shifted mesh, k+q
+  COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr_k, dims, dims)
+  !! Exponential factor
+  COMPLEX(KIND = DP), INTENT(in) :: cfacq(nrr_k, dims, dims)
+  !! Exponential factor
+  !
+  ! Local variables
+  INTEGER :: icounter
+  !! Integer counter for displaced points
+  INTEGER :: ibnd
+  !! Band index
+  INTEGER :: jbnd
+  !! Band index
+  INTEGER :: ir
+  !! Counter for WS loop
+  INTEGER :: iw
+  !! Counter on bands when use_ws == .TRUE.
+  INTEGER :: iw2
+  !! Counter on bands when use_ws == .TRUE.
+  REAL(KIND = DP) :: rdotk(nrr_k)
+  !! $r\cdot k$
+  REAL(KIND = DP) :: rdotk2(nrr_k)
+  !! $r\cdot k$
+  REAL(KIND = DP) :: etfd(nbndsub, nkqf, 6)
+  !! interpolated eigenvalues (nbnd, nkqf) eigenvalues for shifted grid in the case of eig_read
+  REAL(KIND = DP) :: etfd_ks(nbndsub, nkqf, 6)
+  !! interpolated eigenvalues (nbnd, nkqf) KS eigenvalues for shifted grid in the case of eig_read
+  COMPLEX(KIND = DP) :: cfacd(nrr_k, dims, dims, 6)
+  !! Used to store $e^{2\pi r \cdot k}$ exponential of displaced vector
+  COMPLEX(KIND = DP) :: cfacqd(nrr_k, dims, dims, 6)
+  !! Used to store $e^{2\pi r \cdot k+q}$ exponential of dispaced vector
+  !
+  cfacd(:, :, :, :) = czero
+  cfacqd(:, :, :, :)= czero
+  DO icounter = 1, 6
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:, ikk, icounter), 1, 0.0_DP, rdotk, 1)
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:, ikq, icounter), 1, 0.0_DP, rdotk2, 1)
+    IF (use_ws) THEN
+      DO iw = 1, dims
+        DO iw2 = 1, dims
+          DO ir = 1, nrr_k
+            IF (ndegen_k(ir, iw2, iw) > 0) THEN
+              cfacd(ir, iw2, iw, icounter)  = EXP(ci * rdotk(ir))  / ndegen_k(ir, iw2, iw)
+              cfacqd(ir, iw2, iw, icounter) = EXP(ci * rdotk2(ir)) / ndegen_k(ir, iw2, iw)
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDDO
+    ELSE
+      cfacd(:, 1, 1, icounter)  = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
+      cfacqd(:, 1, 1, icounter) = EXP(ci * rdotk2(:)) / ndegen_k(:, 1, 1)
+    ENDIF
+    !
+    CALL hamwan2bloch(nbndsub, nrr_k, cufkkd, etfd(:, ikk, icounter), chw, cfacd, dims)
+    CALL hamwan2bloch(nbndsub, nrr_k, cufkqd, etfd(:, ikq, icounter), chw, cfacqd, dims)
+    CALL hamwan2bloch(nbndsub, nrr_k, cufkkd, etfd_ks(:, ikk, icounter), chw_ks, cfacd, dims)
+    CALL hamwan2bloch(nbndsub, nrr_k, cufkqd, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
+  ENDDO ! icounter
+  ! -----------------------------------------------------------------------------------------
+  CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), &
+                    etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
+  CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), &
+                    etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
+  ! To Satisfy Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
+
+
+
+  DO ibnd = 1, nbndsub
+
+    !WRITE(stdout,'(/5x,a,I10,E22.14)')'etfd-etfd_KS',ibnd,etfd(ibnd,ikk,1)-etfd_ks(ibnd,ikk,1)*ryd2ev
+    !WRITE(stdout,'(/5x,a,I10,E22.14)')'etf-etf_KS',ibnd,etf(ibnd,ikk)-etf_ks(ibnd,ikk)*ryd2ev
+    DO jbnd = 1, nbndsub
+      IF (ABS(etfd_ks(ibnd, ikk, 1) - etfd_ks(jbnd, ikk, 2)) > eps6) THEN
+        vmef(1, ibnd, jbnd, ikk) = vmef(1, ibnd, jbnd, ikk) * (etfd(ibnd, ikk, 1) - etfd(jbnd, ikk, 2)) / &
+            (etfd_ks(ibnd, ikk, 1) - etfd_ks(jbnd, ikk, 2))
+      ENDIF
+      IF (ABS(etfd_ks(ibnd, ikk, 3) - etfd_ks(jbnd, ikk, 4)) > eps6) THEN
+        vmef(2, ibnd, jbnd, ikk) = vmef(2, ibnd, jbnd, ikk) * (etfd(ibnd, ikk, 3) - etfd(jbnd, ikk, 4)) / &
+            (etfd_ks(ibnd, ikk, 3) - etfd_ks(jbnd, ikk, 4))
+      ENDIF
+      IF (ABS(etfd_ks(ibnd, ikk, 5) - etfd_ks(jbnd, ikk, 6)) > eps6) THEN
+        vmef(3, ibnd, jbnd, ikk) = vmef(3, ibnd, jbnd, ikk) * (etfd(ibnd, ikk, 5) - etfd(jbnd, ikk, 6)) / &
+            (etfd_ks(ibnd, ikk, 5) - etfd_ks(jbnd, ikk, 6))
+      ENDIF
+      IF (ABS(etfd_ks(ibnd, ikq, 1) - etfd_ks(jbnd, ikq, 2)) > eps6) THEN
+        vmef(1, ibnd, jbnd, ikq) = vmef(1, ibnd, jbnd, ikq) * (etfd(ibnd, ikq, 1) - etfd(jbnd, ikq, 2)) / &
+            (etfd_ks(ibnd, ikq, 1) - etfd_ks(jbnd, ikq, 2))
+      ENDIF
+      IF (ABS(etfd_ks(ibnd, ikq, 3) - etfd_ks(jbnd, ikq, 4)) > eps6) THEN
+        vmef(2, ibnd, jbnd, ikq) = vmef(2, ibnd, jbnd, ikq) * (etfd(ibnd, ikq, 3) - etfd(jbnd, ikq, 4)) / &
+            (etfd_ks(ibnd, ikq, 3) - etfd_ks(jbnd, ikq, 4))
+      ENDIF
+      IF (ABS(etfd_ks(ibnd, ikq, 5) - etfd_ks(jbnd, ikq, 6)) > eps6) THEN
+        vmef(3, ibnd, jbnd, ikq) = vmef(3, ibnd, jbnd, ikq) * (etfd(ibnd, ikq, 5) - etfd(jbnd, ikq, 6) ) / &
+            (etfd_ks(ibnd, ikq, 5) - etfd_ks(jbnd, ikq, 6))
+      ENDIF
+    ENDDO
+  ENDDO
+  !
+  !-----------------------------------------------------------------------
+  END SUBROUTINE renorm_eig
+  !-----------------------------------------------------------------------
+
+5) from qdabs.f90, Subroutine build_quasi_eig for future implementation of adaptive grid
+  !-------------------------------------------------------------------------------------
+  IF ((initial_E > E_mesh(meshin)) .AND. (initial_E <= E_mesh(meshin + 1))) THEN
+    IF ((final_E <= (E_mesh(meshin + 1))) .AND. (final_E > (E_mesh(meshin)))) THEN
+      IF (cv == 10) THEN
+        check = INT(check_final(j, k_final, k_init, v, iq, imode, tot_pool, &
+             index_buf_pool(1:tot_pool, 1:5), nq, 2))
+      ELSE
+        check = INT(check_final(c, k_final, k_init, v, iq, imode, tot_pool, &
+             index_buf_pool(1:tot_pool, 1:5), nq, 2))
+      ENDIF
+      !  
+      IF (check == -1) THEN
+        suc = 2
+      ELSE
+        WRITE(stdout, '(5x,a)')'Found_match'
+      ENDIF
+
+    ELSE
+      suc = 0
+    ENDIF
+  ENDIF
+  !-------------------------------------------------------------------------------------
+
+

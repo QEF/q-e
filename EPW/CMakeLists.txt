@@ -40,7 +40,6 @@ set(sources
     src/selfen.f90
     src/spectral_func.f90
     src/ephwann_shuffle.f90
-    src/ephwann_shuffle_mem.f90
     src/epw_init.f90
     src/epw_readin.f90
     src/epw_setup.f90
@@ -52,6 +51,11 @@ set(sources
     src/bfield.f90
     src/io_indabs.f90
     src/polaron.f90
+    src/qdabs.f90
+    src/wfpt_mod.f90
+    src/rotate_wavefunction.f90
+    src/selfen_ahc.f90
+    src/read_ahc_files.f90
     )
 
 qe_add_library(qe_epw ${sources})

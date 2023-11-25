@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -17,10 +18,7 @@
   CONTAINS
     !
     !--------------------------------------------------------------------------
-!!!!!
-   !SUBROUTINE hamwan2bloch(nbnd, nrr, cuf, eig, chw, cfac, dims)
     SUBROUTINE hamwan2bloch(nbnd, nrr, cuf, eig, chw, cfac, dims, is_mirror)
-!!!!!
     !--------------------------------------------------------------------------
     !!
     !!  From the Hamiltonian in Wannier representation, find the corresponding
@@ -47,11 +45,8 @@
     !
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : czero, cone, zero, one, eps12, eps16
-    USE epwcom,        ONLY : use_ws
-    USE low_lvl,       ONLY : utility_zdotu, degen_sort
-!!!!!
-    USE epwcom,        ONLY : debug_plrn, lphase, lrot
-!!!!!
+    USE epwcom,        ONLY : use_ws, debug_plrn, lphase, lrot
+    USE low_lvl,       ONLY : utility_zdotu, degen_sort, prime_number_matrix
     !
     IMPLICIT NONE
     !
@@ -71,10 +66,8 @@
     !! Hamiltonian in Wannier basis
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nbnd, nbnd)
     !! Rotation matrix U^\dagger, fine mesh
-!!!!!
-    LOGICAL, INTENT(IN), OPTIONAL :: is_mirror
+    LOGICAL, INTENT(in), OPTIONAL :: is_mirror
     !! .true. if k-point is a time-reversal invariant point
-!!!!!
     !
     ! Local variables
     LOGICAL :: duplicates
@@ -105,6 +98,8 @@
     !! Degenerate group index
     INTEGER :: ierr
     !! Error status
+    INTEGER :: ibnd_max(1)
+    !! Index of the maximum element
     INTEGER, ALLOCATABLE :: iwork(:)
     !! IWORK(1) returns the optimal LIWORK.
     INTEGER, ALLOCATABLE :: degen_group(:, :)
@@ -115,6 +110,10 @@
     !! Random number
     REAL(KIND = DP) :: w(nbnd)
     !! Eigenvalues
+    REAL(KIND = DP) :: norm_vec(nbnd)
+    !! Real Hamiltonian matrix in Bloch basis for TRI k points
+    REAL(KIND = DP), ALLOCATABLE :: P_prime(:, :)
+    !! Perturbation matrix on the subspace
     REAL(KIND = DP), ALLOCATABLE :: wp(:)
     !! Perturbed eigenvalues on the degenerate subspace
     REAL(KIND = DP), ALLOCATABLE :: rwork(:)
@@ -127,22 +126,12 @@
     !! Perturbation matrix made of small complex random number on the full space
     COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
     !! Complex work variable
-!!!!!
-    ! COMPLEX(KIND = DP), ALLOCATABLE :: P_prime(:, :)
-    REAL(KIND = DP), ALLOCATABLE :: P_prime(:, :)
-!!!!!
-    !! Perturbation matrix on the subspace
     COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
     !! Rotation matrix on the full space
-!!!!!
-    INTEGER :: ibnd_max(1)
-    !! Index of the maximum element
-    REAL(KIND = DP) :: norm_vec(nbnd)
-    !! Real Hamiltonian matrix in Bloch basis for TRI k points
     COMPLEX(KIND = DP) :: cfac2(nrr, dims, dims)
     !! cfac for the time-reversial point if pointed
     COMPLEX(KIND = DP) :: fac_max
-!!!!!
+    !! Maximal normalized eigenvector.
     !
     CALL start_clock('HamW2B')
     !----------------------------------------------------------
@@ -158,31 +147,24 @@
     !  H~(k'+q') is chf( nbnd, nbnd, 2*ik   )
     !
     chf(:, :) = czero
-!!!!!!!
+    !
     ! Calculate the -k if this is a mirror point
     ! Do nothing if not specified
     cfac2 = cfac
     IF (PRESENT(is_mirror)) THEN
-        IF(is_mirror) cfac2 = CONJG(cfac)
-    END IF
-!!!!!!!
+      IF (is_mirror) cfac2 = CONJG(cfac)
+    ENDIF
     !
     IF (use_ws) THEN
       DO iw = 1, dims
         DO iw2 = 1, dims
           DO ir = 1, nrr
-!!!!!!!
-           !chf(iw, iw2) = chf(iw, iw2) + chw(iw, iw2, ir) * cfac(ir, iw, iw2)
             chf(iw, iw2) = chf(iw, iw2) + chw(iw, iw2, ir) * cfac2(ir, iw, iw2)
-!!!!!!!
           ENDDO
         ENDDO
       ENDDO
     ELSE
-!!!!!!!
-     !CALL ZGEMV('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac(:, 1, 1), 1, cone, chf, 1)
       CALL ZGEMV('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac2(:, 1, 1), 1, cone, chf, 1)
-!!!!!!!
     ENDIF
     !
     !---------------------------------------------------------------------
@@ -238,38 +220,13 @@
       degen_group(2, ig) = degen_group(1, ig) + degen_group(2, ig) -1
     ENDDO
     !
-!!!!!!!
-    ! This old random matrix generation is removed
-    ! Generate a pertubation matrix of size (nbnd x nbnd) made of random number
-    !CALL init_random_seed()
-    ! SP: Using random_number does not work because the perturbation needs to be the
-    !     same when calling hamwan2bloch at k and k+q (see ephwann_shuffle).
-    !     Therefore I fix a "random" number 0.25644832 + 0.01 * ibnd and 0.11584272 + 0.025 * jbnd
-    !P(:, :) = czero
-    !DO ibnd = 1, nbnd
-    !  DO jbnd = 1, nbnd
-    !    !CALL random_number(rand1)
-    !    !CALL random_number(rand2)
-    !    rand1 = 0.25644832 + 0.01 * ibnd
-    !    rand2 = 0.11584272 + 0.025 * jbnd
-    !    P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP)
-    !  ENDDO
-    !dENDDO
-    !
-    ! Hermitize the Perturbation matrix and make it small
-    !P = 0.5d0 * (P + TRANSPOSE(CONJG(P))) * ABS(MINVAL(w)) * 0.1d0
-!!!!!!!
-    !
     DO ig = 1, ndeg
       starting = degen_group(1, ig)
       ending   = degen_group(2, ig)
       ! Size of the degenerate subspace
       length   = ending - starting + 1
       !
-!!!!!!!
-      !ALLOCATE(rwork(1 + 5 * length + 2 * length**2), STAT = ierr)
       ALLOCATE(rwork(length**2 + 2 * length), STAT = ierr)
-!!!!!!!
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
       ALLOCATE(iwork(3 + 5 * length), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
@@ -284,18 +241,14 @@
       !
       Uk(:, :) = cz(:, starting:ending)
       ! Create a matrix filled with prime numbers
-!!!!!!
+      !
       ! P_prime = MATMUL(TRANSPOSE(CONJG(Uk)), MATMUL(P, Uk))
       CALL prime_number_matrix(P_prime, length)
-!!!!!!
+      !
       ! Diagonalization of P_prime
-!!!!!!
-!      CALL ZHEEVD('V', 'L', length, P_prime, length, wp, cwork, &
-!                2 * length + length**2, rwork, 1 + 5 * length + 2 * length**2, &
-!                iwork, 3 + 5 * length, info)
       CALL DSYEV('V', 'L', length, P_prime, length, wp, rwork, &
                 length**2 + 2 * length, info)
-!!!!!!
+      !
       ! On exiting P_prime is the eigenvector of the P_prime matrix and wp the eigenvector.
       !
       IF (lphase) cz(:, starting:ending) = MATMUL(Uk, P_prime)
@@ -314,19 +267,18 @@
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating wp', 1)
     ENDDO ! ig
     !
-!!!!!!
     ! Find the largest element and set it to pure real
-    IF(lrot) THEN
-       DO ibnd = 1, nbnd
-         DO jbnd = 1, nbnd
-            norm_vec(jbnd) = ABS(cz(jbnd, ibnd))
-         END DO
-         ibnd_max(:) = MAXLOC(norm_vec(1:nbnd))
-         fac_max = cz(ibnd_max(1), ibnd) / norm_vec(ibnd_max(1))
-         cz(1:nbnd, ibnd) = cz(1:nbnd, ibnd) * CONJG(fac_max)
-       END DO
-    END IF
-!!!!!!
+    IF (lrot) THEN
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
+          norm_vec(jbnd) = ABS(cz(jbnd, ibnd))
+        ENDDO
+        ibnd_max(:) = MAXLOC(norm_vec(1:nbnd))
+        fac_max = cz(ibnd_max(1), ibnd) / norm_vec(ibnd_max(1))
+        cz(1:nbnd, ibnd) = cz(1:nbnd, ibnd) * CONJG(fac_max)
+      ENDDO
+    ENDIF
+    !
     DO jbnd = 1, nbnd
       INNER : DO ibnd = 1, nbnd
         IF (ABS(cz(ibnd, jbnd)) > eps12) THEN
@@ -334,7 +286,7 @@
           cz(:, jbnd) = cz(:, jbnd) / SQRT(utility_zdotu(CONJG(cz(:, jbnd)), cz(:, jbnd)))
           EXIT INNER
         ENDIF
-      END DO INNER
+      ENDDO INNER
     ENDDO
     !
     ! Rotation matrix and Ham eigenvalues in Ryd [mind when comparing with wannier code (eV units)]
@@ -342,12 +294,11 @@
     !
     cuf = CONJG(TRANSPOSE(cz))
     eig = w
-!!!!!!
+    !
     ! Do the conjugate on eigenvector
     IF (PRESENT(is_mirror)) THEN
       IF(is_mirror) cuf = TRANSPOSE(cz)
-    END IF
-!!!!!!
+    ENDIF
     !
     CALL stop_clock('HamW2B')
     !
@@ -355,49 +306,8 @@
     END SUBROUTINE hamwan2bloch
     !--------------------------------------------------------------------------
     !
-!!!!!!
     !--------------------------------------------------------------------------
-    SUBROUTINE prime_number_matrix(A, n)
-    !--------------------------------------------------------------------------
-      !!
-      !! Generating a n x n matrix A filled with prime numbers
-      !! For example, if n = 4, A =
-      !! |2   3  5  7|
-      !! |11 13 17 19|
-      !! |23 29 31 37|
-      !! |41 43 47 53|
-      !! Used to perturb the degenerate eigenstates
-      !! 2021 Chao Lian
-      !
-      USE kinds,         ONLY : DP
-      IMPLICIT NONE
-      REAL(dp), INTENT(OUT) :: A(:, :)
-      INTEGER, INTENT(IN) :: n
-      INTEGER :: prime_numbers(60) = (/2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, &
-         & 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, &
-         & 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281/)
-
-      INTEGER :: i, j, k
-      k = 0
-      DO i = 1, n
-         DO j = i, n
-            k = k + 1
-            A(i, j) = REAL(prime_numbers(k), dp)
-         END DO
-      END DO
-
-      DO i = 1, n
-         DO j = 1, i
-            A(i, j) = (A(j, i))
-         END DO
-      END DO
-
-    END SUBROUTINE
-    !
-    !--------------------------------------------------------------------------
-    !SUBROUTINE dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig)
     SUBROUTINE dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig, is_mirror)
-!!!!!!
     !--------------------------------------------------------------------------
     !!
     !! From the Hamiltonian in Wannier representation, find the corresponding
@@ -415,16 +325,12 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE ions_base,     ONLY : amass, tau, nat, ityp
-    USE elph2,         ONLY : rdw, epsi, zstar, qrpl
+    USE elph2,         ONLY : rdw, epsi, zstar, qrpl, L
     USE epwcom,        ONLY : lpolar, lphase, lrot, use_ws, nqc1, nqc2, nqc3
-    USE epwcom,        ONLY : debug_plrn
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     USE rigid,         ONLY : cdiagh2
-    USE low_lvl,       ONLY : utility_zdotu
+    USE low_lvl,       ONLY : utility_zdotu, prime_number_matrix, degen_sort
     USE rigid_epw,     ONLY : rgd_blk
-!!!!!!
-    USE low_lvl,       ONLY : degen_sort
-!!!!!!
     !
     IMPLICIT NONE
     !
@@ -442,10 +348,8 @@
     !! interpolated dynamical matrix eigenvalues for this kpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
     !! Rotation matrix, fine mesh
-!!!!!!
-    LOGICAL, INTENT(IN), OPTIONAL :: is_mirror
+    LOGICAL, INTENT(in), OPTIONAL :: is_mirror
     !! .true. if q-point is a the mirror point of some original point
-!!!!!!
     !
     ! Local variables
     INTEGER :: imode
@@ -458,25 +362,6 @@
     !! Counter on atoms
     INTEGER :: nb
     !! Counter on atoms
-    REAL(KIND = DP) :: w(nmodes)
-    !! Eigenvalues
-    REAL(KIND = DP) :: xq(3)
-    !! Coordinates q-point
-    REAL(KIND = DP) :: rdotk
-    !! $$\mathbf{r}\cdot\mathbf{k}
-    REAL(KIND = DP) :: massfac
-    !! inverse square root of masses
-    COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
-    !! Complex Hamiltonian packed in upper triangle
-    COMPLEX(KIND = DP) :: cz(nmodes, nmodes)
-    !! Eigenvectors
-    COMPLEX(KIND = DP) :: chf(nmodes, nmodes)
-    ! Dynamical matrix in Bloch basis, fine mesh
-    COMPLEX(KIND = DP) :: cfac
-    !! Complex prefactor for Fourier transform.
-!!!!!!
-    INTEGER, ALLOCATABLE :: degen_group(:, :)
-    !! Index of degenerate subspace
     INTEGER :: ierr
     !! Error status
     INTEGER :: list_dup(nmodes)
@@ -487,33 +372,8 @@
     !! Returns if the bands contains degeneracices for that k-point.
     INTEGER :: ig
     !! Counter on real-space index
-    !JLB
     INTEGER :: info
     !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
-    REAL(KIND = DP) :: rwork_tri(3*nmodes)
-    !! Real work array for TRI q case
-    REAL(KIND = DP) :: rchf(nmodes, nmodes), norm_vec(nmodes)
-    !! Real Dynamical matrix in Bloch basis for TRI q points
-    INTEGER, ALLOCATABLE :: iwork(:)
-    !! IWORK(1) returns the optimal LIWORK.
-    REAL(KIND = DP) :: rand1
-    !! Random number
-    REAL(KIND = DP) :: rand2
-    !! Random number
-    REAL(KIND = DP), ALLOCATABLE :: wp(:)
-    !! Perturbed eigenvalues on the degenerate subspace
-    REAL(KIND = DP), ALLOCATABLE :: rwork(:)
-    !! RWORK(1) returns the optimal LRWORK.
-    COMPLEX(KIND = DP) :: P(nmodes, nmodes)
-    !! Perturbation matrix made of small complex random number on the full space
-    COMPLEX(KIND = DP) :: fac_max(1)
-    !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
-    !! Complex work variable
-    REAL(KIND = DP), ALLOCATABLE :: P_prime(:, :)
-    !! Perturbation matrix on the subspace
-    COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
-    !! Rotation matrix on the full space
     INTEGER :: starting
     !! Starting position
     INTEGER :: ending
@@ -522,7 +382,48 @@
     !! Size of the degenerate subspace
     INTEGER :: imode_max(1)
     !! Size of the degenerate subspace
-!!!!!!
+    INTEGER, ALLOCATABLE :: degen_group(:, :)
+    !! Index of degenerate subspace
+    INTEGER, ALLOCATABLE :: iwork(:)
+    !! IWORK(1) returns the optimal LIWORK.
+    REAL(KIND = DP) :: w(nmodes)
+    !! Eigenvalues
+    REAL(KIND = DP) :: xq(3)
+    !! Coordinates q-point
+    REAL(KIND = DP) :: rdotk
+    !! $$\mathbf{r}\cdot\mathbf{k}
+    REAL(KIND = DP) :: massfac
+    !! inverse square root of masses
+    REAL(KIND = DP) :: rwork_tri(3 * nmodes)
+    !! Real work array for TRI q case
+    REAL(KIND = DP) :: rchf(nmodes, nmodes), norm_vec(nmodes)
+    !! Real Dynamical matrix in Bloch basis for TRI q points
+    REAL(KIND = DP) :: rand1
+    !! Random number
+    REAL(KIND = DP) :: rand2
+    !! Random number
+    REAL(KIND = DP), ALLOCATABLE :: wp(:)
+    !! Perturbed eigenvalues on the degenerate subspace
+    REAL(KIND = DP), ALLOCATABLE :: rwork(:)
+    !! FIXME
+    REAL(KIND = DP), ALLOCATABLE :: P_prime(:, :)
+    !! Perturbation matrix on the subspace
+    COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
+    !! Complex Hamiltonian packed in upper triangle
+    COMPLEX(KIND = DP) :: cz(nmodes, nmodes)
+    !! Eigenvectors
+    COMPLEX(KIND = DP) :: chf(nmodes, nmodes)
+    ! Dynamical matrix in Bloch basis, fine mesh
+    COMPLEX(KIND = DP) :: cfac
+    !! Complex prefactor for Fourier transform.
+    COMPLEX(KIND = DP) :: P(nmodes, nmodes)
+    !! Perturbation matrix made of small complex random number on the full space
+    COMPLEX(KIND = DP) :: fac_max(1)
+    !! max factor
+    COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
+    !! Complex work variable
+    COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
+    !! Rotation matrix on the full space
     !
     CALL start_clock ('DynW2B')
     !----------------------------------------------------------
@@ -568,7 +469,7 @@
     !  add the long-range term to D(q)
     IF (lpolar .OR. qrpl) THEN
       ! xq has to be in 2pi/a
-      CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk(L, nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -605,7 +506,7 @@
     !             0, 0, -one, neig, w, cz, nmodes, cwork, &
     !             rwork, iwork, ifail, info)
     CALL cdiagh2(nmodes, chf, nmodes, w, cz)
-!!!!!!
+    !
     ! Find the degenerate eigenvalues w
     CALL degen_sort(w, SIZE(w), duplicates, list_dup)
     !
@@ -676,15 +577,14 @@
       DEALLOCATE(wp, STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating wp', 1)
     ENDDO ! ig
-!!!!!!
     !
     ! clean noise
-    DO jmode = 1,nmodes
-      DO imode = 1,nmodes
+    DO jmode = 1, nmodes
+      DO imode = 1, nmodes
         IF (ABS(cz(imode, jmode)) < eps12) cz(imode, jmode) = czero
       ENDDO
     ENDDO
-!!!!!!
+    !
     ! Find the largest element and set it to pure real
     IF(lrot) THEN
        DO imode = 1, nmodes
@@ -694,20 +594,19 @@
          imode_max(:) = MAXLOC(norm_vec(1:nmodes))
          fac_max(1) = cz(imode_max(1), imode)/norm_vec(imode_max(1))
          cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
-       END DO
-     END IF
-!!!!!!
+       ENDDO
+     ENDIF
     !
     ! DS - Impose phase
     IF (lphase) THEN
       DO jmode = 1,nmodes
-        INNER : DO imode = 1,nmodes
+        INNER : DO imode = 1, nmodes
           IF (ABS(cz(imode, jmode)) > eps12) THEN
             cz(:, jmode) = cz(:, jmode) * CONJG(cz(imode,jmode))
             cz(:, jmode) = cz(:, jmode) / SQRT(utility_zdotu(CONJG(cz(:, jmode)),cz(:, jmode)))
             EXIT INNER
           ENDIF
-        END DO INNER
+        ENDDO INNER
       ENDDO
     ENDIF
     !
@@ -715,11 +614,10 @@
     !
     cuf = cz
     eig = w
-!!!!!!
+    !
     IF(PRESENT(is_mirror)) THEN
       IF(is_mirror) cuf = CONJG(cz)
-    END IF
-!!!!!!
+    ENDIF
     !
     CALL stop_clock('DynW2B')
     !
@@ -728,10 +626,7 @@
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-!!!!!
-   !SUBROUTINE dynifc2blochf(nmodes, rws, nrws, xxq, cuf, eig)
     SUBROUTINE dynifc2blochf(nmodes, rws, nrws, xxq, cuf, eig, is_mirror)
-!!!!!
     !--------------------------------------------------------------------------
     !!
     !!  From the IFCs in the format of q2r, find the corresponding
@@ -740,18 +635,14 @@
     !!             with prime number matrix control tag : lphase
     !!             Rotate the the largest element in eigenvector to real axis. (lrot)
     !
-    USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg
-    USE ions_base, ONLY : amass, tau, nat, ityp
-    USE elph2,     ONLY : ifc, epsi, zstar, wscache, qrpl
-    USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3, lphase
-!!!!!!
-    USE epwcom,    ONLY : debug_plrn, lrot
-    USE low_lvl,   ONLY : degen_sort
-!!!!!!
-    USE io_global, ONLY : stdout
-    USE rigid_epw, ONLY : rgd_blk
-    USE low_lvl,       ONLY : utility_zdotu
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : at, bg
+    USE ions_base,     ONLY : amass, tau, nat, ityp
+    USE elph2,         ONLY : ifc, epsi, zstar, wscache, qrpl, L
+    USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3, lphase, lrot
+    USE io_global,     ONLY : stdout
+    USE rigid_epw,     ONLY : rgd_blk
+    USE low_lvl,       ONLY : utility_zdotu, degen_sort
     USE constants_epw, ONLY : twopi, czero, zero, one, eps8, eps12
     !
     IMPLICIT NONE
@@ -768,10 +659,8 @@
     !! interpolated phonon eigenvalues for this qpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
     !! Rotation matrix, fine mesh
-!!!!!!
-    LOGICAL, INTENT(IN), OPTIONAL :: is_mirror
+    LOGICAL, INTENT(in), OPTIONAL :: is_mirror
     !! .true. if q-point is a time-reversal point
-!!!!!!
     !
     ! Local variables
     LOGICAL, SAVE :: first = .TRUE.
@@ -802,6 +691,8 @@
     !! Counter on polarizations
     INTEGER :: jpol
     !! Counter on polarizations
+    INTEGER :: imode_max(1)
+    !! index of the max element
     REAL(KIND = DP) :: xq(3)
     !! Coordinates q-point
     REAL(KIND = DP) :: massfac
@@ -820,6 +711,8 @@
     !! Real-space vector
     REAL(KIND = DP) :: r_ws(3)
     !! Real space vector including fractional translation
+    REAL(KIND = DP) :: norm_vec(nmodes)
+    !! Vector for one eigenmode
     REAL(KIND = DP), EXTERNAL :: wsweight
     !! Wigner-Seitz weights
     COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
@@ -832,14 +725,8 @@
     !! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: dyn(3, 3, nat, nat)
     !! Dynamical matrix
-!!!!!
-    REAL(KIND = DP) :: norm_vec(nmodes)
-    !! Vector for one eigenmode
-    INTEGER :: imode_max(1)
-    !! index of the max element
     COMPLEX(KIND = DP) :: fac_max(1)
     !! value of the max element
-!!!!!
     !
     CALL start_clock('DynW2B')
     !
@@ -936,7 +823,7 @@
     !
     IF (lpolar .OR. qrpl) THEN
       ! xq has to be in 2pi/a
-      CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk(L, nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -969,19 +856,17 @@
     CALL zhpevx('V', 'A', 'U', nmodes, champ , zero, zero, &
                 0, 0, -one, neig, w, cz, nmodes, cwork, rwork, iwork, ifail, info)
     !
-!!!!!
     ! Find the largest element and set it to pure real
-    IF(lrot) THEN
-       DO imode = 1, nmodes
-         DO jmode = 1, nmodes
-            norm_vec(jmode) = ABS(cz(jmode, imode))
-         END DO
-         imode_max(:) = MAXLOC(norm_vec(1:nmodes))
-         fac_max(1) = cz(imode_max(1), imode)/norm_vec(imode_max(1))
-         cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
-       END DO
-    END IF
-!!!!!
+    IF (lrot) THEN
+      DO imode = 1, nmodes
+        DO jmode = 1, nmodes
+          norm_vec(jmode) = ABS(cz(jmode, imode))
+        END DO
+        imode_max(:) = MAXLOC(norm_vec(1:nmodes))
+        fac_max(1) = cz(imode_max(1), imode) / norm_vec(imode_max(1))
+        cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
+      ENDDO
+    ENDIF
     ! clean noise
     DO jmode = 1,nmodes
       DO imode = 1,nmodes
@@ -998,7 +883,7 @@
             cz(:, jmode) = cz(:, jmode) / SQRT(utility_zdotu(CONJG(cz(:, jmode)),cz(:, jmode)))
             EXIT INNER
           ENDIF
-        END DO INNER
+        ENDDO INNER
       ENDDO
     ENDIF
     !
@@ -1024,7 +909,7 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : tau, nat
-    USE elph2,     ONLY : ifc, epsi, zstar, wscache, qrpl
+    USE elph2,     ONLY : ifc, epsi, zstar, wscache, qrpl, L
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, czero, zero, eps8
     USE io_global, ONLY : stdout
@@ -1159,7 +1044,7 @@
     !
     IF (lpolar .OR. qrpl) THEN
       ! xq has to be in 2pi/a
-      CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk(L, nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -1168,7 +1053,7 @@
     !-----------------------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE dmewan2bloch(nbnd, nrr, cuf, dmef, etf, etf_ks, cfac, dims)
+    SUBROUTINE dmewan2bloch(nbnd, nrr, cuf, dmef, etf, etf_ks, cfac, dims, use_momentum)
     !--------------------------------------------------------------------------
     !!
     !!  From the Dipole in Wannier representation, find the corresponding
@@ -1177,6 +1062,7 @@
     !!  input  : number of bands nbnd
     !!           number of WS vectors, coordinates and degeneracy
     !!           Dipole in Wannier representation  cdmew(3,nbnd,nbnd,nrr)
+    !!           use_momentum: if .TRUE., use cpmew (momentum) instead of (default: .FALSE.)
     !!
     !!  output : interpolated dipole matrix elements (dmef)
     !!
@@ -1186,12 +1072,14 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : cdmew
+    USE elph2,         ONLY : cdmew, cpmew
     USE epwcom,        ONLY : eig_read, use_ws
     USE constants_epw, ONLY : cone, czero, eps4
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(in), OPTIONAL :: use_momentum
+    !! If .TRUE., use cpmew instead of cdmew (default: .FALSE.)
     INTEGER, INTENT(in) :: nbnd
     !! number of bands (possibly of the optimal subspace)
     INTEGER, INTENT(in) :: nrr
@@ -1211,6 +1099,8 @@
     !! Exponential factor
     !
     ! Local variables
+    LOGICAL :: use_momentum_
+    !! Value of use_momentum
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -1226,10 +1116,12 @@
     !
     COMPLEX( kind=DP ) :: cdmef(3, nbnd, nbnd)
     !! dipole matrix elements in Bloch basis, fine mesh
-    COMPLEX( kind=DP ) :: cdmef_tmp(nbnd, nbnd)
+    COMPLEX(KIND = DP) :: cdmef_tmp(nbnd, nbnd)
     !! dipole matrix elements in Bloch basis, fine mesh
     !
     ! Initialization
+    use_momentum_ = .FALSE.
+    IF (PRESENT(use_momentum)) use_momentum_ = use_momentum
     cdmef_tmp(:, :) = czero
     dmef(:, :, :)   = czero
     cdmef(:, :, :)  = czero
@@ -1246,16 +1138,30 @@
     !  p~(k'+q') is chf( nbnd, nbnd, 2*ik   )
     !
     ! SUM on ir of: cdmef(1,ibnd,jbnd) = cdmef(1,ibnd,jbnd) + cfac(ir) * cdmew(1,ibnd,jbnd,ir)
-    IF (use_ws) THEN
-      DO iw2 = 1, dims
-        DO iw = 1, dims
-          DO ir = 1, nrr
-            cdmef(:, iw, iw2) = cdmef(:, iw, iw2) + cdmew(:, iw, iw2, ir) * cfac(ir, iw, iw2)
+    IF (use_momentum_) THEN
+      IF (use_ws) THEN
+        DO iw2 = 1, dims
+          DO iw = 1, dims
+            DO ir = 1, nrr
+              cdmef(:, iw, iw2) = cdmef(:, iw, iw2) + cpmew(:, iw, iw2, ir) * cfac(ir, iw, iw2)
+            ENDDO
           ENDDO
         ENDDO
-      ENDDO
+      ELSE
+        CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, cpmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cdmef(:, :, :), 1)
+      ENDIF
     ELSE
-      CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, cdmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cdmef(:, :, :), 1)
+      IF (use_ws) THEN
+        DO iw2 = 1, dims
+          DO iw = 1, dims
+            DO ir = 1, nrr
+              cdmef(:, iw, iw2) = cdmef(:, iw, iw2) + cdmew(:, iw, iw2, ir) * cfac(ir, iw, iw2)
+            ENDDO
+          ENDDO
+        ENDDO
+      ELSE
+        CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, cdmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cdmef(:, :, :), 1)
+      ENDIF
     ENDIF
     !
     !----------------------------------------------------------
@@ -1588,7 +1494,6 @@
               ijbndc = ijbndc + 1
               jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
               ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
-!DBSP
               vmef(:, ibnd, jbnd) = vmef_deg(:, ibndc, jbndc)
             ENDIF
           ENDDO
@@ -1878,6 +1783,7 @@
     ENDIF ! lifc
     !
     ! add the long-range term to D(q)
+    ! FIXME: add support for quadrupoles
     IF (lpolar) THEN
       ! xq has to be in 2pi/a
       CALL rgd_blk_der(nqc1, nqc2, nqc3, nat, chf_a, xq, tau, epsi, zstar, +1.d0)
@@ -2004,6 +1910,79 @@
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE vmewan2blochp
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE rrwan2bloch(nbnd, nrr, cfac, dims, rrf)
+    !--------------------------------------------------------------------------
+    !!
+    !! Fourier interpolation of the position matrix elements
+    !! SP - 06/22
+    !!
+    USE kinds,         ONLY : DP
+    USE elph2,         ONLY : crrw
+    USE cell_base,     ONLY : at, alat, bg
+    USE epwcom,        ONLY : use_ws
+    USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one
+    !
+    IMPLICIT NONE
+    !
+    !  input variables
+    !
+    INTEGER, INTENT(in) :: nbnd
+    !! number of bands (possibly of the optimal subspace)
+    INTEGER, INTENT(in) :: nrr
+    !! number of WS points
+    INTEGER, INTENT(in) :: dims
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
+    !! Is equal to 1 otherwise.
+    COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
+    !! Exponential factor
+    COMPLEX(KIND = DP), INTENT(out) :: rrf(3, nbnd, nbnd)
+    !! interpolated position matrix element in Bloch basis, fine mesh
+    !
+    ! local variables
+    INTEGER :: ir, ibnd
+    !! Counter on real-space index
+    INTEGER :: iw
+    !! Counter on the number of Wannier functions
+    INTEGER :: iw2
+    !! Counter on the number of Wannier functions
+    !
+    ! Initialization
+    !
+    !----------------------------------------------------------
+    !  STEP 1: inverse Fourier transform to fine k and k+q meshes
+    !----------------------------------------------------------
+    !
+    !CALL cryst_to_cart(1, vector, at, 1)
+    !
+    CALL start_clock('rrwan2bloch')
+    !
+    rrf(:, :, :) = czero
+    !
+    IF (use_ws) THEN
+      DO iw2 = 1, dims
+        DO iw = 1, dims
+          DO ir = 1, nrr
+            rrf(:, iw, iw2) = rrf(:, iw, iw2) + crrw(:, iw, iw2, ir) * cfac(ir, iw, iw2)
+          ENDDO
+        ENDDO
+      ENDDO
+    ELSE
+      CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, crrw(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, rrf(:, :, :), 1)
+    ENDIF
+    !
+    !DO ibnd = 1, nbnd
+    !  rrf(:, ibnd, ibnd) = rrf(:, ibnd, ibnd) - vector * alat
+    !  print*,'rrf ',rrf(:, ibnd, ibnd)
+    !  print*,'vector alat ',vector * alat
+    !ENDDO
+    !CALL cryst_to_cart(1, vector, bg, -1)
+    !
+    CALL stop_clock('rrwan2bloch')
+    !--------------------------------------------------------------------------
+    END SUBROUTINE rrwan2bloch
     !--------------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------
@@ -2300,15 +2279,8 @@
     !
     CALL mp_sum(eptmp, world_comm)
     !
-    !----------------------------------------------------------
-    !  STEP 4: un-rotate to Bloch space, fine grid
-    !----------------------------------------------------------
+    epmatf = eptmp
     !
-    ! [Eqn. 22 of PRB 76, 165108 (2007)]
-    ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
-    !
-    Call ZGEMM('n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, &
-                nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k)
     !
     CALL stop_clock('ephW2Bp')
     !
@@ -2317,15 +2289,18 @@
     !---------------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch(nbnd, nrr, epmatw, cufkk, cufkq, epmatf, nmodes, cfac, dims)
+    SUBROUTINE ephwan2bloch(nbnd, nrr, epmatw, cufkk, cufkq, epmatf, nmodes, cfac, dims, q, rrf, longrange)
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon
     !! matrix elements
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : twopi, ci, czero, cone
-    USE epwcom,        ONLY : use_ws
+    USE constants_epw, ONLY : twopi, ci, czero, cone, one
+    USE epwcom,        ONLY : use_ws, lpolar, nqc1, nqc2, nqc3, system_2d
+    USE elph2,         ONLY : epsi, zstar, qrpl
+    USE rigid_epw,     ONLY : rgd_blk_epw_fine
+    USE io_global,     ONLY : stdout
     !
     IMPLICIT NONE
     !
@@ -2347,8 +2322,16 @@
     !! rotation matrix U(k+q)^\dagger, fine q mesh
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd, nmodes)
     !! e-p matrix in Bloch representation, fine grid
+    REAL(KIND = DP), INTENT(in) :: q(3)
+    !! q-vector from the full coarse or fine grid
+    COMPLEX(KIND = DP), INTENT(inout) :: rrf(3, nbnd, nbnd)
+    !! Position operator in Wannier basis.
+    LOGICAL, INTENT(IN), OPTIONAL :: longrange
+    !! If true, add long-range contribution. (Default: true)
     !
     ! Local variables
+    LOGICAL :: longrange_
+    !! Value of longrange
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -2360,6 +2343,11 @@
     COMPLEX(KIND = DP) :: eptmp(nbnd, nbnd)
     !! Temporary variable
     CALL start_clock('ephW2B')
+    !
+    longrange_ = .TRUE.
+    IF (PRESENT(longrange)) THEN
+      longrange_ = longrange
+    ENDIF
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform of g to fine k mesh
@@ -2386,6 +2374,14 @@
         CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :, imode), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :, imode), 1)
       ENDIF
     ENDDO
+    !
+    IF (longrange_) THEN
+      IF (lpolar .OR. qrpl) THEN
+        IF (system_2d /= 'dipole_sh') THEN
+        CALL rgd_blk_epw_fine(nqc1, nqc2, nqc3, q, epmatf, nmodes, epsi, zstar, rrf(:, :, :), one)
+        ENDIF
+      ENDIF
+    ENDIF
     !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
@@ -2484,9 +2480,6 @@
     !
     !  [Eqn. 22 of PRB 76, 165108 (2007)]
     !  g(k',q') = U(k'+q') * g~(k',q') * U(k')^\dagger
-    !
-    !  RM - this is what is calculated
-    !  g(k',q') = U(k'+q')^\dagger * g~(k',q') * U(k')
     !
     !  the two zgemm calls perform the following ops:
     !  epmatf  = [ cufkq * epmatf ] * cufkk^\dagger
@@ -2693,6 +2686,190 @@
     END SUBROUTINE ephwan2blochp_mem
     !--------------------------------------------------------------------------
     !
+    !--------------------------------------------------------------------------
+    SUBROUTINE dwwan2blochp(nbnd, dwmatef, cuf, dwmatpf, nmodes)
+    !--------------------------------------------------------------------------
+    !!
+    !! Interpolation from Wannier to the fine Bloch grid of the Debye-Waller
+    !! matrix elements
+    !!
+    !! dwmatef(i, j, jdir, imode)
+    !! = i * <\psi_i(k)| [dV_SCF^{imode}(q=0), p_jdir] |\psi_j(k)>
+    !! where imode = 3 * (iatm - 1) + idir is in Cartesian basis.
+    !!
+    !! For q == Gamma, the output dwmatpf should be
+    !! dwmatpf(i,j,kmode)
+    !! = sum_{iatm,idir,jdir} i * <\psi_i(k)| [dV_SCF^{iatm, idir}, p_jdir] |\psi_j(k)>
+    !!                        * CONJG(cuf(imode, kmode)) * cuf(jmode, kmode)
+    !! = sum_{iatm,idir,jdir} dwmatef(i, j, jdir, imode)
+    !!                        * CONJG(cuf(imode, kmode)) * cuf(jmode, kmode)
+    !! where jmode = 3 * (iatm - 1) + jdir
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : ci, czero, cone
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nbnd
+    !! number of bands (possibly in the optimal subspace)
+    INTEGER, INTENT(in) :: nmodes
+    !! number of phonon modes
+    COMPLEX(KIND = DP), INTENT(in) :: dwmatef(nbnd, nbnd, 3, nmodes)
+    !! e-p matrix in electron Bloch, phonon Cartesian representation
+    COMPLEX(KIND = DP), INTENT(in) :: cuf(nmodes, nmodes)
+    !! phonon eigenmode
+    COMPLEX(KIND = DP), INTENT(out) :: dwmatpf(nbnd, nbnd, nmodes)
+    !! e-p matrix in electron Bloch, phonon eigenmode representation
+    !
+    ! Local variables
+    INTEGER :: iatm
+    !! Counter on atoms
+    INTEGER :: idir
+    !! Counter on Cartesian direction
+    INTEGER :: jdir
+    !! Counter on Cartesian direction
+    INTEGER :: imode
+    !! Counter on phonon modes
+    INTEGER :: jmode
+    !! Counter on phonon modes
+    INTEGER :: kmode
+    !! Counter on phonon modes
+    !
+    CALL start_clock('dwW2Bp')
+    !
+    !----------------------------------------------------------
+    !  STEP 1: rotate phonon basis from Cartesian to eigenmode
+    !----------------------------------------------------------
+    !
+    ! dwmatpf(:,:,kmode) = dwmatef(:,:,jdir,imode)
+    !                    * CONJG(cuf(imode, kmode)) * cuf(jmode, kmode)
+    !
+    ! imode, jmode : Cartesian (Wannier) representation
+    ! kmode        : eigenmode (Bloch) representation
+    !
+    dwmatpf = czero
+    !
+    DO imode = 1, nmodes
+      idir = MOD(imode - 1, 3) + 1
+      iatm = (imode - 1) / 3 + 1
+      DO jdir = 1, 3
+        jmode = 3 * (iatm - 1) + jdir
+        !
+        DO kmode = 1, nmodes
+          dwmatpf(:, :, kmode) = dwmatpf(:, :, kmode) &
+            + dwmatef(:, :, jdir, imode) * CONJG(cuf(imode, kmode)) * cuf(jmode, kmode)
+        ENDDO
+        !
+      ENDDO
+    ENDDO
+    !
+    CALL stop_clock('dwW2Bp')
+    !
+    !---------------------------------------------------------------------------
+    END SUBROUTINE dwwan2blochp
+    !---------------------------------------------------------------------------
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE sthwan2blochp(nbnd, sthmatef, cuf, sthmatpf, nmodes)
+    !---------------------------------------------------------------------------
+    !!
+    !! Interpolation from Wannier to the fine Bloch grid of the Sternheimer
+    !! matrix elements
+    !!
+    !! sthmatpf(:, :, imode) = sum_{jmode, kmode} sthmatef(:, :, kmode, jmode)
+    !!                       * CONJG(cuf(kmode, imode)) * cuf(jmode, imode)
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : ci, czero, cone
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nbnd
+    !! number of bands (possibly in the optimal subspace)
+    INTEGER, INTENT(in) :: nmodes
+    !! number of phonon modes
+    COMPLEX(KIND = DP), INTENT(in) :: sthmatef(nbnd, nbnd, nmodes, nmodes)
+    !! Sterheimer matrix in electron Bloch, phonon Cartesian representation
+    COMPLEX(KIND = DP), INTENT(in) :: cuf(nmodes, nmodes)
+    !! phonon eigenmode
+    COMPLEX(KIND = DP), INTENT(out) :: sthmatpf(nbnd, nbnd, nmodes)
+    !! Sterheimer matrix in electron Bloch, phonon eigenmode representation
+    !
+    ! Local variables
+    INTEGER :: imode
+    !! Counter on phonon modes
+    INTEGER :: jmode
+    !! Counter on phonon modes
+    INTEGER :: kmode
+    !! Counter on phonon modes
+    CALL start_clock('sthW2Bp')
+    !
+    sthmatpf = czero
+    !
+    DO imode = 1, nmodes
+      DO jmode = 1, nmodes
+        DO kmode = 1, nmodes
+          sthmatpf(:, :, imode) = sthmatpf(:, :, imode) &
+            + sthmatef(:, :, kmode, jmode) &
+            * CONJG(cuf(kmode, imode)) * cuf(jmode, imode)
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    CALL stop_clock('sthW2Bp')
+    !
+    !---------------------------------------------------------------------------
+    END SUBROUTINE sthwan2blochp
+    !---------------------------------------------------------------------------
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE dgwan2blochp(nbnd, dgmatef, cuf, dgmatpf, nmodes)
+    !---------------------------------------------------------------------------
+    !!
+    !! Interpolation from Wannier to the fine Bloch grid of the delta g
+    !! matrix elements
+    !!
+    !! dgmatpf(:, :, imode) = sum_{jmode} dgmatef(:, :, jmode)
+    !!                      * cuf(jmode, imode)
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : ci, czero, cone
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nbnd
+    !! number of bands (possibly in the optimal subspace)
+    INTEGER, INTENT(in) :: nmodes
+    !! number of phonon modes
+    COMPLEX(KIND = DP), INTENT(in) :: dgmatef(nbnd, nbnd, nmodes)
+    !! delta g matrix in electron Bloch, phonon Cartesian representation
+    COMPLEX(KIND = DP), INTENT(in) :: cuf(nmodes, nmodes)
+    !! phonon eigenmode
+    COMPLEX(KIND = DP), INTENT(out) :: dgmatpf(nbnd, nbnd, nmodes)
+    !! delta g matrix in electron Bloch, phonon eigenmode representation
+    !
+    ! Local variables
+    INTEGER :: imode
+    !! Counter on phonon modes
+    INTEGER :: jmode
+    !! Counter on phonon modes
+    CALL start_clock('dgW2Bp')
+    !
+    dgmatpf = czero
+    !
+    DO imode = 1, nmodes
+      DO jmode = 1, nmodes
+          dgmatpf(:, :, imode) = dgmatpf(:, :, imode) &
+            + dgmatef(:, :, jmode) * cuf(jmode, imode)
+      ENDDO
+    ENDDO
+    !
+    CALL stop_clock('dgW2Bp')
+    !
+    !---------------------------------------------------------------------------
+    END SUBROUTINE dgwan2blochp
+    !---------------------------------------------------------------------------
+  !
   !--------------------------------------------------------------------------
   END MODULE wan2bloch
   !--------------------------------------------------------------------------

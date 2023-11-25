@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -32,6 +33,9 @@
   REAL(KIND = DP), PARAMETER :: pibytwo  = pi / 2.0E0_DP
   REAL(KIND = DP), PARAMETER :: one      = 1.0E0_DP
   REAL(KIND = DP), PARAMETER :: two      = 2.0E0_DP
+  REAL(KIND = DP), PARAMETER :: thre     = 3.0E0_DP
+  REAL(KIND = DP), PARAMETER :: four     = 4.0E0_DP
+  REAL(KIND = DP), PARAMETER :: half     = 0.5E0_DP
   REAL(KIND = DP), PARAMETER :: zero     = 0.0E0_DP
   REAL(KIND = DP), PARAMETER :: e2       = 2.0E0_DP             ! the square of the electron charge
   COMPLEX(KIND = DP), PARAMETER :: ci    = (0.0E0_DP, 1.0E0_DP)

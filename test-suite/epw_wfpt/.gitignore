@@ -1,0 +1,9 @@
+BAs.*
+decay.*
+BAs_ahc.dyn*
+*.fmt
+save/
+EPW.bib
+BAs_hr.dat
+BAs_wsvec.dat
+matdyn.modes
