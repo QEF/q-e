@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -117,15 +118,15 @@
     !! Routine to write files on real-space grid for fine grid interpolation
     !!
     USE kinds,     ONLY : DP
-    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
+    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, wfpt
     USE pwcom,     ONLY : ef, nelec
-    USE elph2,     ONLY : chw, rdw, cdmew, cvmew, chw_ks, &
-                          zstar, epsi, epmatwp
+    USE elph2,     ONLY : chw, rdw, cdmew, cvmew, chw_ks, zstar, epsi, &
+                          epmatwp, crrw, L, do_cutoff_2D_epw, dwmatwe, cpmew
     USE ions_base, ONLY : amass, ityp, nat, tau
     USE cell_base, ONLY : at, bg, omega, alat
     USE modes,     ONLY : nmodes
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
-                          crystal
+                          crystal, iudwwe, iupmwe
     USE noncollin_module, ONLY : noncolin
     USE io_files,  ONLY : prefix, diropn, tmp_dir
     USE mp,        ONLY : mp_barrier
@@ -190,7 +191,9 @@
       WRITE(crystal,*) amass
       WRITE(crystal,*) ityp
       WRITE(crystal,*) noncolin
+      WRITE(crystal,*) do_cutoff_2D_epw
       WRITE(crystal,*) w_centers
+      WRITE(crystal,*) L
       !
       WRITE(epwdata,*) ef
       WRITE(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
@@ -204,6 +207,7 @@
             DO ipol = 1, 3
               IF (vme == 'wannier') THEN
                 WRITE(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
+                WRITE(iunvmedata,*) crrw(ipol, ibnd, jbnd, irk)
               ELSE
                 WRITE(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
               ENDIF
@@ -243,6 +247,23 @@
         CLOSE(iunepmatwp)
       ENDIF
       !
+      ! Sternheimer and hopping correction matrices are written inside the loop
+      ! over q-points in ephwann_shuffle
+      !
+      ! Write Debye-Waller and momentum matrices
+      !
+      IF (wfpt) THEN
+        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * 3
+        CALL diropn(iupmwe, 'cpmew', lrepmatw, exst)
+        CALL davcio(cpmew, lrepmatw, iupmwe, 1, +1)
+        CLOSE(iupmwe)
+        !
+        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * 3 * nmodes
+        CALL diropn(iudwwe, 'dwmatwe', lrepmatw, exst)
+        CALL davcio(dwmatwe, lrepmatw, iudwwe, 1, +1)
+        CLOSE(iudwwe)
+      ENDIF ! wfpt
+      !
       CLOSE(epwdata)
       CLOSE(crystal)
       IF (vme == 'wannier') THEN
@@ -252,7 +273,7 @@
       ENDIF
       IF (eig_read) CLOSE(iunksdata)
       !
-    ENDIF
+    ENDIF ! ionode
     !--------------------------------------------------------------------------------
     END SUBROUTINE epw_write
     !--------------------------------------------------------------------------------
@@ -264,14 +285,16 @@
     !! Routine to read the real space quantities for fine grid interpolation
     !!
     USE kinds,     ONLY : DP
-    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
+    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc, wfpt
     USE pwcom,     ONLY : ef
-    USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
+    USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, &
+                          epsi, crrw, dwmatwe, cpmew
     USE ions_base, ONLY : nat
     USE modes,     ONLY : nmodes
     USE io_global, ONLY : stdout
     USE io_files,  ONLY : prefix, diropn, tmp_dir
-    USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
+    USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, &
+                          iunepmatwp, iudwwe, iupmwe
     USE constants_epw, ONLY : czero, zero
 #if defined(__NAG)
     USE f90_unix_io,ONLY : flush
@@ -363,6 +386,9 @@
     IF (vme == 'wannier') THEN
       ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cvmew', 1)
+      ALLOCATE(crrw(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error allocating crrw', 1)
+      crrw(:, :, :, :) = czero
     ELSE
       ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cdmew', 1)
@@ -378,6 +404,7 @@
            DO ipol = 1,3
              IF (vme == 'wannier') THEN
                READ(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
+               READ(iunvmedata,*) crrw(ipol, ibnd, jbnd, irk)
              ELSE
                READ(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
              ENDIF
@@ -405,6 +432,7 @@
     !
     IF (vme == 'wannier') THEN
       CALL mp_bcast(cvmew, ionode_id, world_comm)
+      CALL mp_bcast(crrw, ionode_id, world_comm)
     ELSE
       CALL mp_bcast(cdmew, ionode_id, world_comm)
     ENDIF
@@ -443,6 +471,37 @@
       CALL mp_bcast(epmatwp, ionode_id, world_comm)
       !
     ENDIF
+    !
+    ! Sternheimer and hopping correction matrices are read inside the loop over
+    ! q-points in ephwann_shuffle
+    !
+    ! Read Debye-Waller and momentum matrices
+    !
+    IF (wfpt) THEN
+      ALLOCATE(cpmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cdmew', 1)
+      cpmew = czero
+      !
+      ALLOCATE(dwmatwe(nbndsub, nbndsub, nrr_k, 3, nmodes), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating dwmatwe', 1)
+      dwmatwe = czero
+      !
+      IF (mpime == ionode_id) THEN
+        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * 3
+        CALL diropn(iupmwe, 'cpmew', lrepmatw, exst)
+        CALL davcio(cpmew, lrepmatw, iupmwe, 1, -1)
+        CLOSE(iupmwe)
+        !
+        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * 3 * nmodes
+        CALL diropn(iudwwe, 'dwmatwe', lrepmatw, exst)
+        CALL davcio(dwmatwe, lrepmatw, iudwwe, 1, -1)
+        CLOSE(iudwwe)
+      ENDIF ! ionode
+      !
+      CALL mp_bcast(cpmew, ionode_id, world_comm)
+      CALL mp_bcast(dwmatwe, ionode_id, world_comm)
+      !
+    ENDIF ! wfpt
     !
     !CALL mp_barrier(inter_pool_comm)
     IF (mpime == ionode_id) THEN

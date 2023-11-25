@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -31,22 +32,16 @@
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
                               assume_metal, etf_mem, nqf1, nqf2, nqf3, system_2d,    &
-                              !!!!!
-                              !mob_maxfreq, mob_nfreq
                               mob_maxfreq, mob_nfreq, ii_g, ii_scattering, ii_n,     &
                               ii_only
-                              !!!!!
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             &
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
                               wkf, dmef, vmef, eta, gtemp, lower_bnd, dos,        &
                               nbndfst, nktotf, vkk_all, carrier_density,          &
                               inv_tau_all_mode, inv_tau_allcb_mode,               &
-                              !!!!!
-                              !inv_tau_all_freq, inv_tau_allcb_freq
                               inv_tau_all_freq, inv_tau_allcb_freq, eimpf17,      &
                               epstf_therm, partion, eta_imp
-                              !!!!!
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, &
                               eps6, eps20, bohr2ang, ang2cm, hbarJ, eps160, cc2cb
     USE constants,     ONLY : electronvolt_si
@@ -192,10 +187,8 @@
     !! Weights from all the cores
     REAL(KIND = DP) :: inv_eta(nmodes, nbndfst, nktotf)
     !! Inverse of the eta for speed purposes
-    !!!!!
     REAL(KIND = DP) :: inv_eta_imp(nbndfst, nktotf)
     !! Inverse of the eta impurity for speed purposes
-    !!!!!
     REAL(KIND = DP) :: etf_all(nbndfst, nktotf)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
     REAL(KIND = DP) :: epf2_deg(nbndfst, nbndfst, nmodes)
@@ -230,7 +223,6 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
-    !!!!!
     REAL(KIND = DP) :: w0gimp
     !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q}] $$
     REAL(KIND = DP) :: impurity_density
@@ -241,11 +233,13 @@
     !! Eimpc in degeneracies
     REAL(KIND = DP) :: tmpimp
     !! Temporary variable
-    !!!!!
     !
-    inv_cell = 1.0d0 / omega
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
     !
     ! Weight of the q-points
     IF (etf_mem == 3) THEN
@@ -264,7 +258,6 @@
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
       WRITE(stdout, '(5x,"Scattering rate for IBTE")')
       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
-      !!!!!
       IF (ii_scattering) THEN
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
         WRITE(stdout, '(5x,"Including ionized impurity scattering")')
@@ -276,7 +269,6 @@
         WRITE(stdout, '(5x,"Detected ii_only=.true., omitting carrier-phonon scattering")')
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
       ENDIF
-      !!!!!
       WRITE(stdout, '(5x,"Restart and restart_step inputs deactivated (restart point at every q-points).")')
       WRITE(stdout, '(5x,"No intermediate mobility will be shown.")')
       !
@@ -342,15 +334,11 @@
       !
       ! To avoid if branching in the loop
       inv_eta(:, :, :) = zero
-      !!!!!
       inv_eta_imp(:, :) = zero
-      !!!!!
       IF (adapt_smearing) THEN
         DO ik = 1, nkf
           DO ibnd = 1, nbndfst
-            !!!!!
             inv_eta_imp(ibnd, ik) = 1.0d0 / (DSQRT(2.0d0) * eta_imp(ibnd, ik))
-            !!!!!
             DO imode = 1, nmodes
               inv_eta(imode, ibnd, ik) = 1.0d0 / (DSQRT(2d0) * eta(imode, ibnd, ik))
             ENDDO
@@ -384,7 +372,7 @@
               n   = 0
               DO pbnd = 1, nbndfst
                 w_2 = etf(ibndmin - 1 + pbnd, ikk)
-                IF (ABS(w_2-w_1) < eps6) THEN
+                IF (ABS(w_2 - w_1) < eps6) THEN
                   n = n + 1
                   g2 = g2 + ABS(epf17(jbnd, pbnd, nu, ik))**two
                 ENDIF
@@ -416,9 +404,8 @@
         !
         ! Note that we already took the square above
         epf17(:, :, :, ik) = epf2_deg(:, :, :)
-        !!!!!
         !
-        !! average impurity matrix elements
+        ! average impurity matrix elements
         !
         IF (ii_g .AND. ii_scattering) THEN
           DO jbnd = 1, nbndfst
@@ -436,11 +423,10 @@
               eimpf2_deg(jbnd, ibnd) = DSQRT(g2 / FLOAT(n))
             ENDDO
           ENDDO
-          !ENDDO
+          !
           eimpf17(:, :, ik) = eimpf2_deg(:, :)
           !
           ! Average over the k+q electrons
-          !DO nu = 1, nmodes
           DO jbnd = 1, nbndfst
             DO ibnd = 1, nbndfst
               w_1 = etf(ibndmin - 1 + jbnd, ikq)
@@ -456,13 +442,11 @@
               eimpf2_deg(jbnd, ibnd) = g2 / FLOAT(n)
             ENDDO
           ENDDO
-          !ENDDO
           !
           ! Note that we already took the square above
           eimpf17(:, :, ik) = eimpf2_deg(:, :)
         ENDIF
         !
-        !!!!!
       ENDDO ! ik
       !
       trans_prob(:)    = zero
@@ -480,23 +464,17 @@
       etf_all(:, :)    = zero
       ind(:)           = 0
       indcb(:)         = 0
-      !!!!!
       !
       ! compute impurities per unit cell
-      !impurity_density = ii_n * omega / 6.74822779181357d24
+      ! impurity_density = ii_n * omega / 6.74822779181357d24
       !
-      !!!!!
       ! loop over temperatures
       DO itemp = 1, nstemp
-        !!!!!!
         impurity_density = partion(itemp)*ii_n*omega / cc2cb
-        !!!!!!
         ! Define the inverse so that we can efficiently multiply instead of dividing
         etemp = gtemp(itemp)
         inv_etemp = 1.0 / etemp
-        !!!!!
         invepst2 = (1.0 / epstf_therm(itemp))**2.0d0
-        !!!!!
         !
         ! Now pre-treat phonon modes for efficiency for this specific current q-point.
         ! Treat phonon frequency and Bose occupation
@@ -546,41 +524,13 @@
                   ! We perform a sum over the modes
                   tmp  = zero
                   tmp2 = zero
-                  !!!!!
+                  !
                   tmpimp = zero
                   IF (ii_scattering .AND. ii_g) THEN
                     w0gimp = w0gauss((ekk - ekq) * inv_eta_imp(ibnd, ik), 0) * inv_eta_imp(ibnd, ik)
                     tmpimp = tmpimp + two * pi * wqf_loc * impurity_density * invepst2 * REAL(eimpf17(jbnd, ibnd, ik)) * w0gimp
                   ENDIF
-                  !!!!!
-                  !!!!!
-                  !DO imode = 1, nmodes
-                  !  !
-                  !  ! Here we take into account the zero-point DSQRT(hbar/2M\omega)
-                  !  ! with hbar = 1 and M already contained in the eigenmodes
-                  !  ! g2 is Ry^2, wkf must already account for the spin factor
-                  !  ! Note that epf17 has already been squared above during averaging.
-                  !  g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
-                  !  !
-                  !  ! delta[E_k - E_k+q + w_q]
-                  !  w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
-                  !  ! delta[E_k - E_k+q - w_q]
-                  !  w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
-                  !  !
-                  !  ! Transition probability - See Eq. 41 of arXiv:1908.01733 (2019).
-                  !  ! (2 pi/hbar) * (k+q-point weight) * g2 *
-                  !  ! { [f(E_k) + n(w_q)] * delta[E_k - E_k+q - w_q] +
-                  !  !   [1 - f(E_k) + n(w_q)] * delta[E_k - E_k+q + w_q] }
-                  !  !
-                  !  ! This is summed over modes
-                  !  tmp = tmp + two * pi * wqf_loc * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
-                  !  !
-                  !  ! Here we compute the scattering rate - Eq. 64 of arXiv:1908.01733 (2019).
-                  !  ! inv_tau = (2 pi/hbar) * (k+q-point weight) * g2 *
-                  !  ! { [f(E_k+q) + n(w_q)] * delta[E_k - E_k+q + w_q] + [1 - f(E_k+q) + n(w_q)] * delta[E_k - E_k+q - w_q] }
-                  !  tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
-                  !  !
-                  !ENDDO !imode
+                  ! 
                   IF (.NOT. ii_only) THEN
                     DO imode = 1, nmodes
                       !
@@ -615,24 +565,16 @@
                       !
                     ENDDO !imode
                   ENDIF
-                  !!!!!
-                  !!!!!
-                  !inv_tau_all(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_all(ibnd, ik + lower_bnd - 1, itemp) + tmp2
+                  !
                   inv_tau_all(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_all(ibnd, ik + lower_bnd - 1, itemp) + tmp2 + tmpimp
-                  !!!!!
                   !
                   ! Only save the elements that really contribute
                   ! The check is made on the SERTA mobility - See Eq. 44 of arXiv:1908.01733 (2019).
-                  !!!!!
-                  !IF (ABS(tmp2 * dfnk) > threshold) THEN
+                  ! 
                   IF (ABS((tmp2+tmpimp) * dfnk) > threshold) THEN
-                  !!!!!
                     !
                     ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
-                    !!!!!
-                    !trans_prob(ind(my_pool_id + 1)) = tmp
                     trans_prob(ind(my_pool_id + 1)) = tmp + tmpimp
-                    !!!!!
                     sparse_q(ind(my_pool_id + 1)) = iq
                     sparse_k(ind(my_pool_id + 1)) = ik + lower_bnd - 1
                     sparse_i(ind(my_pool_id + 1)) = ibnd
@@ -670,8 +612,10 @@
                       ELSE
                         ifreq = 1
                       ENDIF
-                      inv_tau_all_freq(ifreq, ibnd, ik + lower_bnd - 1) = inv_tau_all_freq(ifreq, ibnd, ik + lower_bnd - 1) &
-                          + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                      IF(ifreq <= mob_nfreq) THEN
+                        inv_tau_all_freq(ifreq, ibnd, ik + lower_bnd - 1) = inv_tau_all_freq(ifreq, ibnd, ik + lower_bnd - 1) &
+                            + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                      ENDIF
                     ENDDO !imode
                   ENDDO ! jbnd
                   DO j = 1, 3
@@ -710,22 +654,12 @@
                   !
                   tmp  = zero
                   tmp2 = zero
-                  !!!!!
                   tmpimp = zero
                   IF (ii_scattering .AND. ii_g) THEN
                     w0gimp = w0gauss((ekk - ekq) * inv_eta_imp(ibnd, ik), 0) * inv_eta_imp(ibnd, ik)
                     tmpimp = tmpimp + two * pi * wqf_loc * impurity_density * invepst2 * REAL(eimpf17(jbnd, ibnd, ik)) * w0gimp
                   ENDIF
-                  !!!!!
-                  !!!!!
-                  !DO imode = 1, nmodes
-                  !  ! Same as above but for conduction bands (electrons)
-                  !  g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
-                  !  w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
-                  !  w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
-                  !  tmp = tmp  + two * pi * wqf_loc * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
-                  !  tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
-                  !ENDDO ! imode
+                  ! 
                   IF (.NOT. ii_only) THEN
                     DO imode = 1, nmodes
                       ! Same as above but for conduction bands (electrons)
@@ -736,21 +670,12 @@
                       tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                     ENDDO ! imode
                   ENDIF
-                  !!!!!
-                  !!!!!
-                  !inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) + tmp2
-                  inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) + tmp2 + tmpimp
-                  !!!!!
                   !
-                  !!!!!
-                  !IF (ABS(tmp2 * dfnk) > threshold) THEN
+                  inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) + tmp2 + tmpimp
+                  ! 
                   IF (ABS((tmp2+tmpimp) * dfnk) > threshold) THEN
-                  !!!!!
                     indcb (my_pool_id + 1) = indcb(my_pool_id + 1) + 1
-                    !!!!!
-                    !trans_probcb(indcb(my_pool_id + 1)) = tmp
                     trans_probcb(indcb(my_pool_id + 1)) = tmp + tmpimp
-                    !!!!!
                     sparsecb_q(indcb(my_pool_id + 1)) = iq
                     sparsecb_k(indcb(my_pool_id + 1)) = ik + lower_bnd - 1
                     sparsecb_i(indcb(my_pool_id + 1)) = ibnd
@@ -1081,10 +1006,10 @@
         carrier_density(:) = zero
         IF (ncarrier < 0.0) THEN ! VB
           CALL carr_density(carrier_density, etf_all, wkf_all, ef0)
-          IF (system_2d) THEN
-            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          IF (system_2d == 'no') THEN
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3.0d0)
           ELSE
-            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
           ENDIF
           DO itemp = 1, nstemp
             etemp = gtemp(itemp)
@@ -1092,10 +1017,10 @@
           ENDDO
         ELSE ! CB
           CALL carr_density(carrier_density, etf_all, wkf_all, efcb)
-          IF (system_2d) THEN
-            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          IF (system_2d == 'no') THEN
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3.0d0)
           ELSE
-            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
           ENDIF
           DO itemp = 1, nstemp
             etemp = gtemp(itemp)

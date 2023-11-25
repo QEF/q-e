@@ -477,6 +477,13 @@ This test is to compare electron-phonon matrix element produced directly by the 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 
 
+####################
+# epw_qdpt: Si #
+####################
+The following features are tested:
+- The quasidegenerate perturbation theory for single-particle optical absorption
+in presence of phonons.
+
 #################################################################
 # KCW tests
 #################################################################

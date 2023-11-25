@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
   !
@@ -130,6 +131,7 @@
         READ(crystal, *) ityp
         READ(crystal, *) noncolin
         READ(crystal, *) !w_centers
+        READ(crystal, *) !L
         !
         ! no need further
         DEALLOCATE(tau, STAT = ierr)
@@ -252,11 +254,12 @@
     USE modes,         ONLY : nmodes
     USE cell_base,     ONLY : bg
     USE control_flags, ONLY : iverbosity
-    USE elph2,         ONLY : nqtotf, wqf, wf
+    USE elph2,         ONLY : nqtotf, wqf, wf, bztoibz
     USE epwcom,        ONLY : fsthick, eps_acustic, nqstep, degaussq, delta_qsmear, nqsmear, &
                               degaussw, nkf1, nkf2, nkf3
     USE eliashbergcom, ONLY : nkfs, nbndfs, g2, ixkqf, ixqfs, nqfs, w0g, ekfs, ef0, dosef, wsph, &
-                              wkfs, dwsph, ixkff
+                              wkfs, dwsph, ixkff, ekfs_all, nbndfs_all, ibnd_kfs_all_to_kfs, &
+                              ixkf, nkfs_all
     USE constants_epw, ONLY : ryd2ev, eps2, zero, eps16
     USE io_global,     ONLY : stdout, ionode_id
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
@@ -271,6 +274,8 @@
     !
     INTEGER :: ik
     !! Counter on k-points
+    INTEGER :: ikfs
+    !! Counter on k-points: ikfs = ixkf(bztoibz(ik))
     INTEGER :: iq
     !! Counter on q-points
     INTEGER :: iq0
@@ -310,6 +315,8 @@
     !! factors in lambda_eph and a2f
     REAL(KIND = DP) :: sigma
     !! smearing in delta function
+    REAL(KIND = DP) :: rdum
+    !! Dummy for real numbers
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
     REAL(KIND = DP) :: lambda_max(npool)
@@ -609,8 +616,41 @@
         WRITE(iufillambdaFS, '(3f12.6)') (bg(i, 1), i = 1, 3)
         WRITE(iufillambdaFS, '(3f12.6)') (bg(i, 2), i = 1, 3)
         WRITE(iufillambdaFS, '(3f12.6)') (bg(i, 3), i = 1, 3)
-        WRITE(iufillambdaFS, '(6f12.6)') ((ekfs(ibnd, ixkff(ik)) - ef0, ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
-        WRITE(iufillambdaFS, '(6f12.6)') ((lambda_k(ixkff(ik), ibnd), ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+        ! HM: Outputting a dummy value in the .frmsf file may form fake Fermi surfaces.
+        !     To avoid using a dummy value for the states outside of fsthick window, 
+        !     use ekfs_all instead of ekfs.
+        !WRITE(iufillambdaFS, '(6f12.6)') ((ekfs(ibnd, ixkff(ik)) - ef0, ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+        !WRITE(iufillambdaFS, '(6f12.6)') ((lambda_k(ixkff(ik), ibnd), ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+        i = 1
+        DO ibnd = 1, nbndfs_all
+          DO ik = 1, nkf1 * nkf2 * nkf3
+            IF (i == 6) THEN
+              WRITE(iufillambdaFS, '(f12.6)') ekfs_all(ibnd, bztoibz(ik)) - ef0
+            ELSE
+              WRITE(iufillambdaFS, '(f12.6)', advance='no') ekfs_all(ibnd, bztoibz(ik)) - ef0
+            ENDIF
+            i = i + 1
+            IF (i == 7) i = 1
+          ENDDO
+        ENDDO
+        i = 1
+        DO ibnd = 1, nbndfs_all
+          DO ik = 1, nkf1 * nkf2 * nkf3
+            ikfs = ixkf(bztoibz(ik))
+            IF (ikfs == 0) THEN
+              rdum = 0.0d0
+            ELSE
+              rdum = lambda_k(ikfs, ibnd_kfs_all_to_kfs(ibnd, ikfs)) * 1000.d0
+            ENDIF
+            IF (i == 6) THEN
+              WRITE(iufillambdaFS, '(f12.6)') rdum
+            ELSE
+              WRITE(iufillambdaFS, '(f12.6)', advance='no') rdum
+            ENDIF
+            i = i + 1
+            IF (i == 7) i = 1
+          ENDDO
+        ENDDO
         CLOSE(iufillambdaFS)
         !
       ENDIF

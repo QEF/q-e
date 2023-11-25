@@ -1,0 +1,60 @@
+
+     Program Q2R v.7.2 starts on 23Oct2023 at 12:42:58 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     22060 MiB available memory on the printing compute node when the environment starts
+ 
+
+  reading grid info from file BAs.dyn0    
+
+  reading force constants from file BAs.dyn1
+ macroscopic fields = T
+  20.35449   0.00000   0.00000
+   0.00000  20.35449   0.00000
+   0.00000   0.00000  20.35449
+  na=            1
+  -1.91932   0.00000   0.00000
+   0.00000  -1.91932   0.00000
+   0.00000   0.00000  -1.91932
+  na=            2
+  -1.62058   0.00000   0.00000
+   0.00000  -1.62058   0.00000
+   0.00000   0.00000  -1.62058
+  Norm of the difference between old and new effective charges:    4.33548409367600484643
+  nqs=            1
+ q=   0.00000000  0.00000000  0.00000000
+  reading force constants from file BAs.dyn2
+  nqs=            4
+ q=   0.50000000 -0.50000000  0.50000000
+ q=  -0.50000000  0.50000000  0.50000000
+ q=   0.50000000  0.50000000 -0.50000000
+ q=  -0.50000000 -0.50000000 -0.50000000
+  reading force constants from file BAs.dyn3
+  nqs=            3
+ q=   0.00000000 -1.00000000  0.00000000
+ q=   0.00000000  0.00000000 -1.00000000
+ q=  -1.00000000  0.00000000  0.00000000
+
+      q-space grid ok, #points =    8
+
+      fft-check success (sum of imaginary terms < 10^-12)
+ 
+     Q2R          :      0.01s CPU      0.01s WALL
+
+ 
+   This run was terminated on:  12:42:58  23Oct2023            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

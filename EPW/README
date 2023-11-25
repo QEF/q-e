@@ -22,46 +22,42 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                     
- EPW v4 is part of the open-source Quantum ESPRESSO suite
- for quantum simulation of materials; please cite
+ EPW v5.8 is an open-source community code for ab initio calculations of electron-phonon 
+ interactions using Density-Functional Perturbation Theory and Maximally Localized Wannier 
+ Functions.
+ EPW is distributed as part of the Quantum ESPRESSO suite, therefore please cite
      "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
       URL http://www.quantum-espresso.org",
  in publications or presentations arising from this work. More details at
  http://www.quantum-espresso.org/quote
-
  Please also consider citing the EPW papers:
  1) F. Giustino, M. L. Cohen, and S. G. Louie, Phys. Rev. B 76, 165108 (2007)
- 2) S. Ponc\'e, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016)
-
- The software tree of EPW v4 is composed of
+ 2) For calculations performed using EPW v4 through v5.6: 
+      S. Ponc\'e, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016).
+    For calculations performed using EPW v5.7 and beyond:
+      H. Lee, S. Ponc\'e, K. Bushick, S. Hajinazar, J. Lafuente-Bartolome, J. Leveillee, 
+      C. Lian, J.-M. Lihm, F. Macheda, H. Mori, H. Paudyal, W. H. Sio, S. Tiwari, M. Zacharias, 
+      X. Zhang, N. Bonini, E. Kioupakis, E. R. Margine, and F. Giustino, 
+      npj Comput.  Mater. 9, 156 (2023).
+    
+ The software tree of EPW v5.8 is composed of
  /bin ==> Contains the epw.x soft link to the EPW executable.
  /examples  ==> Contains a lists of examples that are connected to the tutorials. The 
           tutorials can be found at http://epw.org.uk/Documentation/Tutorial
  /src ==> Contains all the EPW source files.
- /tests ==> Small tests useful for debugging and checking if the code works. Those tests are used
-          by the test farm. Do not expect physically relevant results out of it. 
-
+ ../test-suite/epw_* ==> Small tests useful for debugging and checking if the code works. 
+          Those tests are used by the test farm. Do not expect physically relevant results out of it. 
+ /ZG  ==> A set of codes for calculations of electron-phonon interactions via the
+          special displacement method.
  Installation
  ------------
  To compile the code you first need to issue ./configure in /espresso. 
  Indeed EPW rely on the make.sys file created by QE. 
  Then you can run ./make inside espresso/EPW.
-
  EPW dedicated website and forum
  -------------------------------
- EPW has a dedicated website that you can access at http://epw.org.uk/
+ EPW has a dedicated website that you can access at https://epw-code.org
+ Detailed documentation and tutorials can be found here: https://docs.epw-code.org
+ If you have any questions, please use the forum at https://forum.epw-code.org
+ @ The EPW Collaboration, Aug 2023
  
- If you have any questions, please use the forum at http://epwforum.uk/
-
- Initial release inside Quantum ESPRESSO
- ---------------------------------------
- SP, ERM, CV, FG, 1 March 2016 
-
-
-
-
-
-
-
-
-

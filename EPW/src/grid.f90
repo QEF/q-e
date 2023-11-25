@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -69,7 +70,7 @@
     !! rest from the division of nr of q-points over pools
     INTEGER :: ierr
     !! Error status
-    INTEGER :: iRp1, iRp2, iRp3, Rpmax, nRp 
+    INTEGER :: iRp1, iRp2, iRp3, Rpmax, nRp
     !! Number of unit cells within supercell
     INTEGER :: Rp_crys_p(3)
     !! Unit cell vectors in primitive crystal coordinates
@@ -200,7 +201,7 @@
         ! Write Rp-s in supercell to file
         IF (mpime == ionode_id) THEN
           OPEN(UNIT = iunRpscell, FILE = 'Rp.scell.plrn', ACTION = 'write')
-          WRITE(iunRpscell, *) nRp 
+          WRITE(iunRpscell, *) nRp
           DO iRp1 = 1, nRp
             WRITE(iunRpscell, *) Rp(1:3, iRp1)
           END DO
@@ -231,7 +232,7 @@
                 nGs = nGs + 1
                 Gs(1:3, nGs) = Gs_crys_p
               END IF
-            END DO  
+            END DO
           END DO
         END DO
         WRITE(stdout, '(a, 3i6)') '     Number of k-points needed:', nGs
@@ -278,7 +279,7 @@
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
           ! get size of the mp_mesh in the irr wedge
-          WRITE(stdout, '(a,3i4)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i5)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
           !
           ! The call to this routine computes the IBZ point xkf_irr, wkf_irr and
           ! returns the number of irr points nkqtotf
@@ -317,7 +318,7 @@
           !
         ELSE ! mp_mesh_k
           !
-          WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i5)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           nkqtotf = 2 * nkf1 * nkf2 * nkf3
           ALLOCATE(xkf_(3, nkqtotf), STAT = ierr)
@@ -365,11 +366,11 @@
           wkf_(ikk) = 2.d0 / DBLE(nkqtotf)
           wkf_(ikq) = 0.d0
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xkf_(:, ikk))
+          ELSE
             CALL random_number(xkf_(1:2, ikk))
             xkf_(3, ikk) = 0.d0
-          ELSE
-            CALL random_number(xkf_(:, ikk))
           ENDIF
           xkf_(:, ikq) = xkf_(:, ikk)
         ENDDO
@@ -578,7 +579,7 @@
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
           ! get size of the mp_mesh in the irr wedge
-          WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i5)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
@@ -624,7 +625,7 @@
           !
           nkqtotf = 2 * nkqtotf
         ELSE
-          WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           nkqtotf = 2 * nkf1 * nkf2 * nkf3
           ALLOCATE(xkf(3, nkqtotf), STAT = ierr)
@@ -669,11 +670,11 @@
           wkf(ikk) = 2.d0 / DBLE(nkqtotf)
           wkf(ikq) = 0.d0
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xkf(:, ikk))
+          ELSE
             CALL random_number(xkf(1:2, ikk))
             xkf(3, ikk) = 0.d0
-          ELSE
-            CALL random_number(xkf(:, ikk))
           ENDIF
           !
           xkf(:, ikq) = xkf(:, ikk)
@@ -1748,7 +1749,7 @@
           !
         ELSE
           !
-          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf =  nqf1 * nqf2 * nqf3
           ALLOCATE(xqf_(3, nqtotf), wqf_(nqtotf) , STAT = ierr)
@@ -1788,13 +1789,13 @@
           !
           wqf_(iq) = 1.d0 / DBLE(nqtotf)
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xqf_(:, iq))
+            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(:, iq) = xqf_(:, iq) - 0.5d0
+          ELSE
             CALL random_number(xqf_(1:2, iq))
             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(1:2, iq) = xqf_(1:2, iq) - 0.5d0
             xqf_(3, iq) = 0.d0
-          ELSE
-            CALL random_number(xqf_(:, iq))
-            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(:, iq) = xqf_(:, iq) - 0.5d0
           ENDIF
           !
         ENDDO
@@ -1904,7 +1905,7 @@
     !! Status integer
     INTEGER :: ierr
     !! Error status
-    INTEGER :: iRp1, iRp2, iRp3, Rpmax, nRp 
+    INTEGER :: iRp1, iRp2, iRp3, Rpmax, nRp
     !! Number of unit cells within supercell
     INTEGER :: Rp_crys_p(3)
     !! Unit cell vectors in primitive crystal coordinates
@@ -2040,7 +2041,7 @@
                 nGs = nGs + 1
                 Gs(1:3, nGs) = Gs_crys_p
               END IF
-            END DO  
+            END DO
           END DO
         END DO
         WRITE(stdout, '(a, 3i6)') '     Number of q-points needed:', nGs
@@ -2066,7 +2067,7 @@
         IF (mp_mesh_q) THEN
           IF (lscreen) CALL errore ('loadqmesh', 'If lscreen=.TRUE. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge
-          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
@@ -2092,7 +2093,7 @@
         ELSE
           ! currently no offset.
           ! q's are in crystal coordinates in xqf
-          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf = nqf1 * nqf2 * nqf3
           ALLOCATE(xqf (3, nqtotf), STAT = ierr)
@@ -2131,13 +2132,13 @@
         !
         DO iq = 1, nqtotf
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xqf(:, iq))
+            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(:, iq) = xqf(:, iq) - 0.5d0
+          ELSE
             CALL random_number(xqf(1:2, iq))
             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(1:2, iq) = xqf(1:2, iq) - 0.5d0
             xqf(3, iq) = 0.d0
-          ELSE
-            CALL random_number(xqf(:, iq))
-            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(:, iq) = xqf(:, iq) - 0.5d0
           ENDIF
           !
         ENDDO
@@ -2252,10 +2253,112 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, &
+    SUBROUTINE qwindow_wrap(totq, nrr_k, dims, ndegen_k, irvec_r, cufkk, cufkq)
+    !-----------------------------------------------------------------------
+    !!
+    !! Author: S. Ponc\'e
+    !! This routine determines which q-points falls within the fsthick windows
+    !! Store the result in the selecq.fmt file
+    !! If the file exists, automatically restart from the file
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, plrn, &
+                              scell_mat_plrn, nbndsub, selecqread
+    USE elph2,         ONLY : selecq, nqf
+    USE mp_world,      ONLY : mpime, world_comm
+    USE io_global,     ONLY : ionode_id, stdout
+    USE mp,            ONLY : mp_bcast
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(inout) :: totq
+    !! Total number of q-points computed
+    INTEGER, INTENT(in) :: nrr_k
+    !! Number of WS points for electrons
+    INTEGER, INTENT(in) :: dims
+    !! Dims is either nat if use_ws or 1 if not
+    INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
+    REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    COMPLEX(KIND = DP), INTENT(out) :: cufkk(nbndsub, nbndsub)
+    !! Rotation matrix, fine mesh, points k
+    COMPLEX(KIND = DP), INTENT(out) :: cufkq(nbndsub, nbndsub)
+    !! the same, for points k+q
+    !
+    ! Local
+    LOGICAL :: homogeneous
+    !! Check if the grids are homogeneous and commensurate
+    LOGICAL :: exst
+    !! If the file exist
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: iq
+    !! Counter on fine q-point grid
+    !
+    !
+    homogeneous = .FALSE.
+    IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN
+      IF ((MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
+        homogeneous = .TRUE.
+      ENDIF
+    ELSE
+      homogeneous = .FALSE.
+    ENDIF
+    !
+    totq = 0
+    !
+    IF (plrn .OR. scell_mat_plrn) THEN
+      ! For polaron calculations, all the q points have to be included
+      totq = nqf
+      ALLOCATE(selecq(nqf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('qwindow_wrap', 'Error allocating selecq', 1)
+      DO iq = 1, nqf
+        selecq(iq) = iq
+      ENDDO
+      !
+    ELSE
+      ! Check if the file has been pre-computed
+      IF (mpime == ionode_id) THEN
+        INQUIRE(FILE = 'selecq.fmt', EXIST = exst)
+      ENDIF
+      CALL mp_bcast(exst, ionode_id, world_comm)
+      !
+      IF (exst) THEN
+        IF (selecqread) THEN
+          WRITE(stdout, '(5x,a)')' '
+          WRITE(stdout, '(5x,a)')'Reading selecq.fmt file. '
+          CALL qwindow(exst, nrr_k, dims, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+        ELSE
+          WRITE(stdout, '(5x,a)')' '
+          WRITE(stdout, '(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .FALSE. '
+          CALL qwindow(.FALSE., nrr_k, dims, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+        ENDIF
+      ELSE ! exst
+        IF (selecqread) THEN
+          CALL errore( 'qwindow_wrap', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 )
+        ELSE
+          CALL qwindow(exst, nrr_k, dims, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+        ENDIF
+      ENDIF
+      !
+      WRITE(stdout, '(5x,a,i8,a)')'We only need to compute ', totq, ' q-points'
+      WRITE(stdout, '(5x,a)')' '
+      !
+    ENDIF ! plrn .OR. scell_mat_plrn
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE qwindow_wrap
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE qwindow(exst, nrr_k, dims, irvec_r, ndegen_k, &
                        cufkk, cufkq, homogeneous)
     !-----------------------------------------------------------------------
     !!
+    !! Author: S. Ponc\'e
     !! This routine pre-computes the q-points that falls within the fstichk.
     !! If at least 1 k-point is such that at least one k+q eigenenergy falls
     !! within the user-defined fstichk, then the q-point is taken.
@@ -2263,7 +2366,8 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : nqf, xqf, xkf, chw, nkf, nqtotf, &
-                              map_rebal, nktotf, bztoibz, map_fst
+                              map_rebal, nktotf, bztoibz, map_fst, totq, &
+                              selecq
     USE io_global,     ONLY : ionode_id, stdout
     USE io_var,        ONLY : iunselecq
     USE mp_global,     ONLY : npool, world_comm, my_pool_id
@@ -2289,10 +2393,6 @@
     !! Number of WS points for electrons
     INTEGER, INTENT(in) :: dims
     !! Dims is either nat if use_ws or 1 if not
-    INTEGER, INTENT(inout) :: totq
-    !! Total number of q-points inside fsthick
-    INTEGER, ALLOCATABLE, INTENT(out) :: selecq(:)
-    !! List of selected q-points
     INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
     !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
@@ -2709,6 +2809,7 @@
     SUBROUTINE load_rebal()
     !-----------------------------------------------------------------------
     !!
+    !! Author: S. Ponc\'e
     !! Routine used to rebalance the load on k-points.
     !! At the moment this routines is only called in the case of IBTE
     !! using k-point symmetry and an homogeneous grid.

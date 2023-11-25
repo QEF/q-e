@@ -184,12 +184,19 @@ clean:
 		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib \
 		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup.fmt \
 		epw_*/inv_taucb.fmt epw_*/inv_tau.fmt epw_*/restart.fmt epw_*/vmedata.fmt \
-		epw_*/selecq.fmt epw_*/dmedata.fmt
+		epw_*/selecq.fmt epw_*/dmedata.fmt epw_*/band.eig epw_*/ksdata.fmt \
+        epw_*/inv_tau_freq.fmt epw_*/inv_taucb_freq.fmt epw_*/inv_taucb_mode.fmt \
+        epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau_mode.fmt \
+        epw_*/*.dos epw_*/*.dmat* epw_*/*.qmap epw_*/*.dwmatwe* epw_*/*.symk \
+        epw_*/*.sthmatwe* epw_*/*.xqc* epw_*/*.dgmatwe* epw_*/*.cpmew*
 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
 		epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
-		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
+		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save \
+		epw_qdpt/save epw_2D/save epw_hall/save epw_qdpt/*.dat epw_wfpt/save \
+		epw_wfpt/matdyn.modes epw_plrn/*.plrn epw_plrn/plrn_tmp epw_plrn/save \
+		epw_plrn/dtau.plrn.xsf
 
 # Cleaning IMAGE final files
 	@rm -rf image_*/_ph0 image_*/*.save image_*/*.xml image_*/*.dyn? image_*/*.dyn??  \

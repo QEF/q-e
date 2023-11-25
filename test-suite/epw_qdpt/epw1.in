@@ -1,0 +1,56 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+
+  elph        = .true.
+  epbwrite    = .true.
+  epbread     = .false.
+  epwwrite    = .true.
+  epwread     = .false.
+  etf_mem     = 1
+
+  nbndsub     =  8
+
+  asr_typ     = 'crystal'
+  use_ws      = .true.
+  wannierize  = .true.
+  num_iter    = 5000
+  iprint      = 2
+  dis_win_max = 24
+  dis_froz_max= 9
+  proj(1)  = 'Si:sp3'
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
+  wdata(4) = 'G 0.00 0.00 0.00 X 0.50 0.50 0.00'
+  wdata(5) = 'end kpoint_path'
+  wdata(6) = 'bands_plot_format = gnuplot'
+  wdata(7) = 'use_ws_distance = T'
+  wdata(8) = 'dis_num_iter      = 5000'
+  wdata(9) = 'num_print_cycles  = 100'
+  wdata(10) = 'dis_mix_ratio     = 1.0'
+
+  !wdata(8) = 'exclude_bands=13-16' 
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  fsthick     = 1.2 ! eV
+  temps      = 1 ! K
+  degaussw    = 0.005 ! eV
+
+  dvscf_dir   = './save'
+
+  band_plot   = .true.
+  filkf       = './LGX.txt'
+  filqf       = './LGX.txt'
+ 
+  nk1         = 4
+  nk2         = 4
+  nk3         = 4
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+ /

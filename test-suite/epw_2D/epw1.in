@@ -1,0 +1,72 @@
+--
+&inputepw
+  prefix      = 'mos2'
+  outdir      = './'
+
+  elph        = .true.
+  epbwrite    = .true.
+  epbread     = .false.
+  epwwrite    = .true.
+  epwread     = .false.
+
+  etf_mem     = 1
+  lpolar      = .true.
+  vme         = 'wannier'
+  
+  use_ws      = .false.
+  lifc        = .false.
+
+  nbndsub     =  10
+  bands_skipped = 'exclude_bands = 1-24'
+
+  system_2d   = 'quadrupole'
+
+  wannierize  = .true.
+  num_iter    = 5000
+  iprint      = 2
+  dis_win_max = -0.8
+  dis_win_min = -6.8
+  dis_froz_max= -3.6
+  proj(1)     = 'Mo:d'
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'G 0.00 0.00 0.00 M 0.50 0.00 0.00'
+  wdata(4) = 'M 0.50 0.00 0.00 K 0.333333333333 0.333333333333 0.00'
+  wdata(5) = 'K 0.333333333333 0.333333333333 0.00 G 0.0 0.0 0.00'
+  wdata(6) = 'end kpoint_path'
+  wdata(7) = 'bands_plot_format = gnuplot'
+  wdata(8) = 'dis_num_iter      = 5000'
+  wdata(9) = 'num_print_cycles  = 10'
+  wdata(10) = 'dis_mix_ratio     = 1.0'
+  wdata(11) = 'conv_tol = 1E-12'
+  wdata(12) = 'conv_window = 4'
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  fsthick     = 20 ! eV
+  nstemp      = 1
+  temps       = 300
+  degaussw    = 0.01 ! eV
+
+  dvscf_dir   = './save'
+
+  band_plot   = .false.
+  prtgkk      = .true.
+
+  nkf1         = 1
+  nkf2         = 1
+  nkf3         = 1
+  nqf1         = 6
+  nqf2         = 1
+  nqf3         = 1
+
+  nk1         = 4
+  nk2         = 4
+  nk3         = 1
+  nq1         = 2
+  nq2         = 2
+  nq3         = 1
+ /
+

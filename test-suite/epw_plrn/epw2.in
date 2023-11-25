@@ -1,0 +1,40 @@
+--------
+&inputepw
+  prefix        = 'lif'
+  outdir        = './'
+
+  elph          = .true.
+  epwread       = .true.
+  
+  lpolar        = .true.
+  nbndsub       =  3
+  dvscf_dir     = './save/'
+
+  bands_skipped = 'exclude_bands = 1, 5:30'
+  wannierize    = .false.
+
+  plrn              = .true.
+  type_plrn         = 1
+  init_plrn         = 1
+  init_sigma_plrn   = 0.1
+  niter_plrn        = 500
+  conv_thr_plrn     = 1.0D-4
+  ethrdg_plrn       = 1.0D-7
+  adapt_ethrdg_plrn = .true.
+  init_ethrdg_plrn  = 1.0D-4
+  nethrdg_plrn      = 20
+
+  nkf1          = 8
+  nkf2          = 8
+  nkf3          = 8
+  nqf1          = 8
+  nqf2          = 8
+  nqf3          = 8
+  
+  nk1           = 4
+  nk2           = 4
+  nk3           = 4
+  nq1           = 4
+  nq2           = 4
+  nq3           = 4
+ /

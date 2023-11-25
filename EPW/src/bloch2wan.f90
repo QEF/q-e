@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -240,7 +241,7 @@
     !
     !--------------------------------------------------------------------------
     SUBROUTINE dmebloch2wan(nbnd, nbndsub, nks, nkstot, dmec, xk, cu, &
-                            nrr, irvec, wslen, lwin, exband)
+                            nrr, irvec, wslen, lwin, exband, cdmew)
     !--------------------------------------------------------------------------
     !!
     !!  From the Dipole in Bloch representationi (coarse mesh),
@@ -249,7 +250,7 @@
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
-    USE elph2,         ONLY : cdmew, nbndep
+    USE elph2,         ONLY : nbndep
     USE io_var,        ONLY : iudecayP
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
     USE io_global,     ONLY : ionode_id
@@ -283,6 +284,8 @@
     !! Dipole matrix elements on coarse mesh
     COMPLEX(KIND = DP), INTENT(in) :: cu(nbndep, nbndsub, nks)
     !! rotation matrix from wannier code
+    COMPLEX(KIND = DP), INTENT(inout) :: cdmew(3, nbndsub, nbndsub, nrr)
+    !! Dipole matrix elements in Wannier basis
     !
     LOGICAL, INTENT(in) :: lwin(nbndep, nks)
     !! Bands at k within outer energy window
@@ -478,11 +481,11 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
-    USE elph2,         ONLY : rdw, epsi, zstar, qrpl
-    USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
+    USE elph2,         ONLY : rdw, epsi, zstar, qrpl, L
+    USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3, system_2d
     USE io_var,        ONLY : iudecaydyn
-    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
-    USE io_global,     ONLY : ionode_id
+    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, fpi, eps6
+    USE io_global,     ONLY : ionode_id, stdout
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier
     USE mp_global,     ONLY : inter_pool_comm
@@ -510,18 +513,61 @@
     !! Counter on k-point
     INTEGER :: ir
     !! Counter on WS points
+    INTEGER :: i
+    !! Index for the trisection iteration
+    INTEGER, PARAMETER :: maxiter = 30
+    !! Maximum interation
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
     REAL(KIND = DP) :: tmp
     !! Temporary variables
+    REAL(KIND = DP) :: Lmin, Lmax, L1, L2
+    !! Min and max value of L
+    REAL(KIND = DP) :: ifc1, ifc2, ifc
+    !! sum of IFC for a given L
+    REAL(KIND = DP) :: c
+    !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
     !
-    !  subtract the long-range term from D(q)
+    ! In the case of 2D, one need to compute the optimal range separation length L [Eq. 63 of PRB 107, 155424 (2023)]
+    IF (system_2d == 'dipole_sp' .OR. system_2d == 'quadrupole') THEN
+      WRITE(stdout, '(5x, a)') 'Find optimal range separation length L'
+      WRITE(stdout, '(5x, a)') ' '
+      ! We find the L that minimize the sum of the real-space IFC using trisection [bisection useless for parabolas].
+      Lmin = 1
+      Lmax = 80 ! Bohr
+      !
+      DO WHILE (Lmax - Lmin > eps6)
+        L1 = Lmin + (Lmax - Lmin) / 3.0d0
+        L2 = Lmin + (Lmax - Lmin) *2.0d0 / 3.0d0
+        CALL findL(L1, nmodes, nq, xk, dynq, nrr, irvec, ifc1)
+        CALL findL(L2, nmodes, nq, xk, dynq, nrr, irvec, ifc2)
+        ! Trisection
+        IF (ifc1 < ifc2) THEN
+          Lmax = L2
+        ELSE
+          Lmin = L1
+        ENDIF
+        L = (Lmin + Lmax) / 2.0_dp
+        CALL findL(L, nmodes, nq, xk, dynq, nrr, irvec, ifc)
+        WRITE(stdout, '(5x, a, f12.5, a, f20.12)') 'L ', L, ' Bohr with IFC = ', ifc
+      ENDDO
+      c = alat / bg(3, 3)
+      WRITE(stdout, *) '     '
+      WRITE(stdout, *) '     In-plane polarizability in cartesian axis'
+      WRITE(stdout, *) '     ', (epsi(1, 1) - 1.0) * c / fpi, '  ',epsi(1, 2) * c / fpi
+      WRITE(stdout, *) '     ', epsi(2, 1) * c / fpi, '  ',(epsi(2, 2) - 1.0) * c / fpi
+      WRITE(stdout, *) '     Out-of-plane polarizability in cartesian axis ',&
+                                (epsi(3, 3) - 1.0) * c / fpi
+      WRITE(stdout, *) ' '
+    ENDIF
+    !
+    ! Subtract the long-range term from D(q)
     IF (lpolar .OR. qrpl) THEN
       DO ik = 1, nq
         !xk has to be in cart. coord.
-        CALL rgd_blk(nqc1, nqc2, nqc3, nat, dynq(:, :, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
+        CALL rgd_blk(L, nqc1, nqc2, nqc3, nat, dynq(:, :, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
         !
       ENDDO
     ENDIF
@@ -580,20 +626,120 @@
     END SUBROUTINE dynbloch2wan
     !--------------------------------------------------------------------------
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE findL(L, nmodes, nq, xk, dynq, nrr, irvec, ifc)
+    !------------------------------------------------------------------------
+    !!
+    !! Compute the sum of the IFC in real space for a given separation length L
+    !! See Eq. 63 of PRB 107, 155424 (2023).
+    !!
+    !
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : at, bg, alat
+    USE ions_base,     ONLY : nat, tau
+    USE elph2,         ONLY : epsi, zstar, qrpl
+    USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3, system_2d
+    USE io_var,        ONLY : iudecaydyn
+    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
+    USE io_global,     ONLY : ionode_id
+    USE mp_world,      ONLY : mpime
+    USE mp,            ONLY : mp_barrier
+    USE mp_global,     ONLY : inter_pool_comm
+    USE rigid_epw,     ONLY : rgd_blk
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nmodes
+    !! number of branches
+    INTEGER, INTENT(in) :: nq
+    !! number of qpoints
+    INTEGER, INTENT(in) :: nrr
+    !! number of WS points
+    INTEGER, INTENT(in) :: irvec(3, nrr)
+    !! coordinates of WS points
+    REAL(KIND = DP), INTENT(in) :: L
+    !! Range separation length in Bohr
+    REAL(KIND = DP), INTENT(in) :: xk(3, nq)
+    !! kpoint coordinates (cartesian in units of 2piba)
+    COMPLEX(KIND = DP), INTENT(in) :: dynq(nmodes, nmodes, nq)
+    !! dynamical matrix in bloch representation (Cartesian coordinates)
+    REAL(KIND = DP), INTENT(inout) :: ifc
+    !! Sum of real space IFC
+    !
+    ! Local variables
+    INTEGER :: ik
+    !! Counter on k-point
+    INTEGER :: ir
+    !! Counter on WS points
+    INTEGER :: iat, jat, i, j
+    !! Counter mode index
+    REAL(KIND = DP) :: rdotk
+    !! $$ mathbf{r}\cdot\mathbf{k} $$
+    COMPLEX(KIND = DP) :: cfac
+    !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+    COMPLEX(KIND = DP) :: dynq_tmp(nmodes, nmodes, nq)
+    !! dynamical matrix in bloch representation (Cartesian coordinates)
+    COMPLEX(KIND = DP) :: rdw(nmodes, nmodes, nrr)
+    !! Real-space IFC
+    !
+    dynq_tmp(:, :, :) = dynq(:, :, :)
+    !
+    ! Subtract the long-range term from D(q)
+    DO ik = 1, nq
+      !xk has to be in cart. coord.
+      CALL rgd_blk(L, nqc1, nqc2, nqc3, nat, dynq_tmp(:, :, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
+      !
+    ENDDO
+    !
+    CALL cryst_to_cart(nq, xk, at, -1)
+    rdw(:, :, :) = 0.d0
+    DO ir = 1, nrr
+      DO ik = 1, nq
+        rdotk = twopi * DOT_PRODUCT(xk(:, ik), DBLE(irvec(:, ir)))
+        cfac = EXP(-ci * rdotk)/ DBLE(nq)
+        rdw(:, :, ir) = rdw(:, :, ir) +  cfac * dynq_tmp(:, :, ik)
+      ENDDO
+    ENDDO
+    CALL cryst_to_cart(nq, xk, bg, 1)
+    !
+    ifc = 0.d0
+    DO ir = 1, nrr
+      DO iat = 1, nat
+        DO i = 1, 3
+          DO jat = 1, nat
+            DO j = 1, 3
+              ! We have to exclude the l=0, \kappa=\kappa' term.
+              IF (iat == jat .AND. ir == INT((nrr + 1) / 2) ) THEN
+                continue
+              ELSE
+                ifc = ifc + ABS(DBLE(rdw(3 * (iat - 1) + i, 3 * (jat - 1) + j, ir))) / 2.0d0
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+    ifc = ifc / nrr
+    !
     !--------------------------------------------------------------------------
-    SUBROUTINE vmebloch2wan(nbnd, nbndsub, nks, nkstot, xk, cu, &
-                            nrr, irvec, wslen, lwin, exband)
+    END SUBROUTINE findL
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE vmebloch2wan(dims, nbnd, nbndsub, nks, nkstot, xk, cu, &
+                            nrr, irvec, wslen, lwin, exband, A, w_centers, ndegen_k)
     !--------------------------------------------------------------------------
     !!
-    !!  Calculate the velocity matrix elements in the Wannier basis
-    !!  at no point do we actually have the coarse mesh v-ME.
+    !! Calculate the velocity matrix elements in the Wannier basis
+    !! at no point do we actually have the coarse mesh v-ME.
     !!
     !! RM 03/2018: debugged and updated
     !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg, alat
-    USE elph2,     ONLY : cvmew, nbndep
+    USE elph2,     ONLY : cvmew, nbndep, crrw, qrpl
     USE constants_epw, ONLY : twopi, one, zero, ci, czero, cone, bohr2ang
+    USE epwcom,    ONLY : use_ws
     USE io_var,    ONLY : iummn, iubvec, iudecayv
     USE io_files,  ONLY : prefix
     USE io_global, ONLY : ionode_id, stdout
@@ -610,6 +756,8 @@
     !! Bands at k within outer energy window
     LOGICAL, INTENT(in) :: exband(nbnd)
     !! Bands excluded from the calculation of overlap and projection matrices
+    INTEGER, INTENT(in) :: dims
+    !! Dims is either nat if use_ws or 1 if not
     INTEGER, INTENT(in) :: nbnd
     !! number of bands
     INTEGER, INTENT(in) :: nbndsub
@@ -622,12 +770,18 @@
     !! number of WS points
     INTEGER, INTENT(in) :: irvec(3, nrr)
     !! Coordinate of Wannier space points
+    INTEGER, INTENT(in) :: ndegen_k(nrr, dims, dims)
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     REAL(KIND = DP), INTENT(in) :: xk(3, nks)
     !! kpoint coordinates (cartesian in units of 2piba)
     REAL(KIND = DP), INTENT(in) :: wslen(nrr)
     !! WS vectors length (alat units)
+    REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
+    !! Wannier centers
     COMPLEX(KIND = DP), INTENT(in) :: cu(nbndep, nbndsub, nks)
     !! rotation matrix from wannier code
+    COMPLEX(KIND = DP), INTENT(inout) :: A(3, nbndsub, nbndsub, nks)
+    !! Berry connection in Wannier representation
     !
     ! Local variables
     CHARACTER(LEN = 256) :: tempfile
@@ -635,6 +789,8 @@
     INTEGER :: ipol
     !! Counter on polarization
     INTEGER :: ik
+    !! Counter on k-point
+    INTEGER :: jk
     !! Counter on k-point
     INTEGER :: ir
     !! Counter on WS points
@@ -676,6 +832,12 @@
     !! Number of k-point to test
     INTEGER :: ierr
     !! Error status
+    INTEGER :: iw
+    !! Counter on bands when use_ws == .TRUE.
+    INTEGER :: iw2
+    !! Counter on bands when use_ws == .TRUE.
+    REAL(KIND = DP) :: bvec_crys(3)
+    !! b vector in crystal coordinate
     REAL(KIND = DP), ALLOCATABLE :: bvec(:, :, :)
     !! b-vectors connecting each k-point to its nearest neighbors
     REAL(KIND = DP), ALLOCATABLE :: wb(:)
@@ -686,6 +848,8 @@
     !! Temporary variables
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+    COMPLEX(KIND = DP) :: cfac2
+    !! $$ e^{-ib(rn-rm - R)/2}
     COMPLEX(KIND = DP) :: cu_big(nbndep, nbndsub, nkstot)
     !! rotation matrix from wannier code
     REAL(KIND = DP) ::  b_tmp(3)
@@ -694,6 +858,12 @@
     !! temporary zero vector
     REAL(KIND = DP) :: delta
     !! \delta_nm = 1 if n == m and 0 if n /= m
+    REAL(KIND = DP) :: xk_cart(3, nks)
+    !! kpoint coordinates (cartesian in units of 2piba)
+    REAL(KIND = DP) :: xk_crys(3, nks)
+    !! kpoint coordinates (cartesian in units of 2piba)
+    REAL(KIND = DP) :: w_centers_crys(3, nbndsub)
+    !! Wannier centers
     COMPLEX(KIND = DP) :: Apos(3, nbndsub, nbndsub, nks)
     !! A^W_{mn,\alpha}(k)
     COMPLEX(KIND = DP), ALLOCATABLE :: M_mn(:, :, :, :)
@@ -704,6 +874,15 @@
     !! M_mn in smooth Bloch basis, coarse k-mesh
     COMPLEX(KIND = DP) :: M_mn_utmp(nbndep, nbndsub)
     !! M_mn after multiplication with the Wannier rotation matrix cu.
+    COMPLEX(KIND = DP) :: rr(3, nbndsub, nbndsub, nrr)
+    !! Position
+    !
+    xk_cart(:, :) = xk(:, :)
+    xk_crys(:, :) = xk(:, :)
+    CALL cryst_to_cart(nks, xk_crys, at, -1)
+    !
+    w_centers_crys(:, :) = w_centers(:, :)
+    CALL cryst_to_cart(nbndsub, w_centers_crys, bg, -1)
     !
     ! setup rotation matrix - we need access to all for the k+b
     cu_big = czero
@@ -808,7 +987,7 @@
     !
     IF (nexband_tmp > 0) THEN
       DO ik = 1, nks
-        CALL ktokpmq(xk(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
+        CALL ktokpmq(xk_cart(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
         !
         jbnd = 0
         jbnd1 = 0
@@ -832,7 +1011,7 @@
       ENDDO
     ELSE
       DO ik = 1, nks
-        CALL ktokpmq(xk(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
+        CALL ktokpmq(xk_cart(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
         !
         jbnd = 0
         DO j = 1, nbndep
@@ -870,13 +1049,13 @@
     !
     DO ik = 1, nks
       !
-      CALL ktokpmq(xk(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
+      CALL ktokpmq(xk_cart(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
       !
       DO ib = 1, nnb
         !
         ! bring bvec to units of 2piba since xk is cartesian units of 2piba
         b_tmp(:) = alat / (twopi) * bvec(:, ib, nkk_abs)
-        CALL ktokpmq(xk(:, ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
+        CALL ktokpmq(xk_cart(:, ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
         ! M_mn_utmp(:, :) = MATMUL( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
         ! cvs(:,:,ib,ik) = MATMUL( CONJG(transpose(cu(:,:,ik))), M_mn_utmp(:, :) )
@@ -898,7 +1077,7 @@
     !
     DO ik = 1, nks
       !
-      CALL ktokpmq(xk(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
+      CALL ktokpmq(xk_cart(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
       !
       DO ib = 1, nnb
         !
@@ -919,12 +1098,11 @@
       !
     ENDDO
     !
-    DEALLOCATE(bvec, STAT = ierr)
-    IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error deallocating bvec', 1)
-    DEALLOCATE(wb, STAT = ierr)
-    IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error deallocating wb', 1)
     !
     CALL stop_clock('Velocity: step 1')
+    !
+    WRITE(stdout,'(/5x,a)') 'Inside velocity step 1'
+    WRITE(stdout,'(a)') ' '
     !
     !----------------------------------------------------------
     ! STEP 2: Fourier transform to go into Wannier basis
@@ -937,7 +1115,7 @@
     !
     ! bring xk in crystal coordinates
     !
-    CALL cryst_to_cart(nks, xk, at, -1)
+    !CALL cryst_to_cart(nks, xk, at, -1)
     !
     ! r_{\alpha}(R) is cvmew(3,nbndsub,nbndsub,nrr)
     !
@@ -946,7 +1124,7 @@
     DO ir = 1, nrr
       DO ik = 1, nks
         !
-        rdotk = twopi * DOT_PRODUCT(xk(:, ik), DBLE(irvec(:, ir)))
+        rdotk = twopi * DOT_PRODUCT(xk_crys(:, ik), DBLE(irvec(:, ir)))
         cfac = EXP(-ci * rdotk) / DBLE(nkstot)
         cvmew(:, :, :, ir) = cvmew(:, :, :, ir) + cfac * Apos(:, :, :, ik)
         !
@@ -955,9 +1133,87 @@
     !
     CALL mp_sum(cvmew, inter_pool_comm)
     !
-    ! bring xk back into cart coord
+    ! Now compute the position operator r_ijR
+    !print*,'(INT(nrr/2) + MOD(nrr,2)) ',(INT(nrr/2) + MOD(nrr,2))
+    !print*,'irvec(:, ir) ',irvec(:, (INT(nrr/2) + MOD(nrr,2)))
     !
-    CALL cryst_to_cart(nks, xk, bg, 1)
+    crrw(:,:,:,:) = czero
+    A(:, :, :, :) = czero
+    ! The Berry connection is only computed in case of quadrupole
+    IF (qrpl) THEN
+      DO ir = 1, nrr
+        DO ik = 1, nks
+          CALL ktokpmq(xk_cart(:, ik), zero_vect, +1, ipool, nkk, nkk_abs)
+          rdotk = twopi * DOT_PRODUCT(xk_crys(:, ik), DBLE(irvec(:, ir)))
+          cfac = EXP(-ci * rdotk) / DBLE(nkstot)
+          DO ib = 1, nnb
+            bvec_crys(:) = bvec(:, ib, nkk_abs) * alat / (twopi)
+            CALL cryst_to_cart(1, bvec_crys, at, -1)
+
+            DO jbnd = 1, nbndsub
+              DO ibnd = 1, nbndsub
+                DO ipol = 1, 3
+                  cfac2 = EXP(twopi * ci * DOT_PRODUCT(bvec_crys(:), &
+                             (w_centers_crys(:, ibnd) + w_centers_crys(:, jbnd) - DBLE(irvec(:, ir)))/2.0d0))
+                  crrw(ipol, ibnd, jbnd, ir) = crrw(ipol, ibnd, jbnd, ir) + ci * cfac * wb(ib) * bvec(ipol, ib, nkk_abs) &
+                                           * cfac2 * cvs(ibnd, jbnd, ib, ik)
+                ENDDO ! ipol
+              ENDDO ! ibnd
+            ENDDO ! jbnd
+          ENDDO ! ib
+        ENDDO ! ik
+      ENDDO ! ir
+      !
+      CALL mp_sum(crrw, inter_pool_comm)
+      !
+      ! For the diagonal part at R=\Gamma, which is half the nrr
+      DO ibnd = 1, nbndsub
+        DO ipol = 1, 3
+          crrw(ipol, ibnd, ibnd, (INT(nrr/2) + MOD(nrr,2))) = w_centers(ipol, ibnd) * alat
+        ENDDO ! ipol
+      ENDDO ! ibnd
+      !
+      !print*,'crrw(3, 2, 2, R=0) ',crrw(3, 2, 2, (INT(nrr/2) + MOD(nrr,2)))
+      !write(100,'(a)') 'ir   ibnd  jbnd  ipol   Re r_ij   Im r_ij '
+      !DO ir=1, nrr
+      !  DO ibnd = 1, nbndsub
+      !    DO jbnd = 1, nbndsub
+      !      DO ipol = 1, 3
+      !        write(100,'(4i9, 2f20.10)') ir, ibnd, jbnd, ipol, REAL(crrw(ipol, ibnd, ibnd, ir)), AIMAG(crrw(ipol, ibnd, ibnd, ir))
+      !      ENDDO
+      !    ENDDO
+      !  ENDDO
+      !ENDDO
+      !
+      ! Fourier transform A_nmk^(W)
+      DO ik = 1, nks
+        IF (use_ws) THEN
+          DO iw = 1, dims
+            DO iw2 = 1, dims
+              DO ir = 1, nrr
+                IF (ndegen_k(ir, iw2, iw) > 0) THEN
+                  rdotk = twopi * DOT_PRODUCT(xk_crys(:, ik), DBLE(irvec(:, ir)))
+                  cfac = EXP(ci * rdotk) / ndegen_k(ir, iw2, iw)
+                  A(:, iw, iw2, ik) = A(:, iw, iw2, ik) + cfac * crrw(:, iw, iw2, ir)
+                ENDIF
+              ENDDO ! ir
+            ENDDO
+          ENDDO ! iw
+        ELSE ! use_ws
+          DO ir = 1, nrr
+            rdotk = twopi * DOT_PRODUCT(xk_crys(:, ik), DBLE(irvec(:, ir)))
+            cfac = EXP(ci * rdotk) / ndegen_k(ir, 1, 1)
+            A(:, :, :, ik) = A(:, :, :, ik) + cfac * crrw(:, :, :, ir)
+          ENDDO
+        ENDIF ! use_ws
+      ENDDO ! ik
+    ENDIF ! qrpl
+    !
+    !
+    DEALLOCATE(bvec, STAT = ierr)
+    IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error deallocating bvec', 1)
+    DEALLOCATE(wb, STAT = ierr)
+    IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error deallocating wb', 1)
     !
     ! check spatial decay of position matrix elements in Wannier basis
     !
@@ -977,7 +1233,19 @@
       !
       CLOSE(iudecayv)
     ENDIF
-    CALL mp_barrier(inter_pool_comm)
+    IF (mpime == ionode_id) then
+      OPEN(UNIT = iudecayv, FILE = 'decay.r')
+      WRITE(iudecayv, '(a)') '# Spatial decay of Position matrix element in Wannier basis'
+      WRITE(iudecayv, '(a)') '# R_e [Ang]       max_{a,m,n} |v(a,m,n)| [Bohr/2.418E-17s]    '
+      DO ir = 1, nrr
+        !
+        tmp =  MAXVAL(ABS(crrw(:, :, :, ir)))
+        WRITE(iudecayv, *) wslen(ir) * alat * bohr2ang, tmp
+        !
+      ENDDO
+      !
+      CLOSE(iudecayv)
+    ENDIF
     !
     CALL stop_clock('Velocity: step 2')
     !
@@ -989,8 +1257,8 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE ephbloch2wane(nbnd, nbndsub, nks, nkstot, xk, &
-         cu, cuq, epmatk, nrr, irvec, wslen, epmatw)
+    SUBROUTINE ephbloch2wane(iq, xq, nbnd, nbndsub, nmodes, nks, nkstot, xk, &
+         cu, cuq, epmatk, nrr, irvec, wslen, epmatw, A, is_dw)
     !-----------------------------------------------------------------------
     !!
     !!  From the EP matrix elements in Bloch representation (coarse
@@ -999,22 +1267,30 @@
     !!
     !-----------------------------------------------------------------------
     !
-    USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, alat
-    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
-    USE io_global, ONLY : ionode_id
-    USE mp_global, ONLY : inter_pool_comm
-    USE mp       , ONLY : mp_sum
-    USE mp_world,  ONLY : mpime
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : at, bg, alat
+    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone, eps8, one
+    USE io_global,     ONLY : ionode_id
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp       ,     ONLY : mp_sum
+    USE mp_world,      ONLY : mpime
+    USE elph2,         ONLY : epmatq, zstar, epsi, qrpl
+    USE epwcom,        ONLY : lpolar
+    USE rigid_epw,     ONLY : rgd_blk_epw
+    USE epwcom,        ONLY : nqc1, nqc2, nqc3, system_2d
     !
     IMPLICIT NONE
     !
     !  input variables
     !
+    INTEGER, INTENT(in) :: iq
+    !! Q-point index.
     INTEGER, INTENT(in) :: nbnd
     !! Number of bands
     INTEGER, INTENT(in) :: nbndsub
     !! Number of bands in the optimal subspace
+    INTEGER, INTENT(in) :: nmodes
+    !! Number of modes
     INTEGER, INTENT(in) :: nks
     !! Number of kpoints in this pool
     INTEGER, INTENT(in) :: nrr
@@ -1024,38 +1300,64 @@
     INTEGER, INTENT(in) :: irvec(3, nrr)
     !! Coordinates of WS points
     !
+    REAL(KIND = DP), INTENT(in) :: xq(3)
+    !! Current coarse q-point
     REAL(KIND = DP), INTENT(in) :: xk(3, nks)
     !! kpoint coordinates (cartesian in units of 2piba)
     REAL(KIND = DP), INTENT(in) :: wslen(nrr)
     !! WS vectors length (alat units)
     !
-    COMPLEX(KIND = DP), INTENT(in) :: cu(nbnd, nbndsub, nks)
+    COMPLEX(KIND = DP), INTENT(inout) :: cu(nbnd, nbndsub, nks)
     !! Rotation matrix from wannier code
-    COMPLEX(KIND = DP), INTENT(in) :: cuq(nbnd, nbndsub, nks)
+    COMPLEX(KIND = DP), INTENT(inout) :: cuq(nbnd, nbndsub, nks)
     !! Rotation matrix from wannier code
-    COMPLEX(KIND = DP), INTENT(in) :: epmatk(nbnd, nbnd, nks)
+    COMPLEX(KIND = DP), INTENT(inout) :: epmatk(nbnd, nbnd, nks, nmodes)
     !! e-p matrix in bloch representation, coarse mesh
+    COMPLEX(KIND = DP), INTENT(inout), OPTIONAL :: A(3, nbndsub, nbndsub, nks)
+    !! Berry connection in Wannier representation
+    !
+    LOGICAL, INTENT(in), OPTIONAL :: is_dw
+    !! If .true., Fourier transforming the Debye-Waller matrix element
     !
     ! output variables
     !
-    COMPLEX(KIND = DP), INTENT(out) :: epmatw(nbndsub, nbndsub, nrr)
+    COMPLEX(KIND = DP), INTENT(out) :: epmatw(nbndsub, nbndsub, nrr, nmodes)
     ! EP vertex (Wannier el and Bloch ph)
     !
     ! Work variables
     !
+    LOGICAL :: is_dw_
+    !! If .true., the input is Debye-Waller matrix element. Default is false.
     INTEGER :: ik
     !! Counter on k-point
     INTEGER :: ir
     !! Counter on WS points
+    INTEGER :: ibnd
+    !! Band index
+    INTEGER :: jbnd
+    !! Band index
+    INTEGER :: imode
+    !! Mode index
+    INTEGER :: iun
+    !! Unit for the decay file
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
+    REAL(KIND = DP) :: tmp
+    !! Max electron-phonon value
     !
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
-    COMPLEX(KIND = DP) :: epmats(nbndsub, nbndsub, nks)
+    COMPLEX(KIND = DP) :: epmats(nbndsub, nbndsub, nks, nmodes)
+    !!  e-p matrix  in smooth Bloch basis, coarse mesh
+    COMPLEX(KIND = DP) :: epmats2(nbndsub, nbndsub, nks, nmodes)
+    !!  e-p matrix  in smooth Bloch basis, coarse mesh
+    COMPLEX(KIND = DP) :: epmats3(nbndsub, nbndsub, nks, nmodes)
     !!  e-p matrix  in smooth Bloch basis, coarse mesh
     COMPLEX(KIND = DP) :: eptmp(nbndsub, nbnd)
     !!  e-p matrix, temporary
+    !
+    is_dw_ = .FALSE.
+    IF (PRESENT(is_dw)) is_dw_ = is_dw
     !
     !----------------------------------------------------------
     !  STEP 1: rotation to optimally smooth Bloch states
@@ -1069,23 +1371,38 @@
     !
     CALL start_clock ('ep: step 1')
     !
-    DO ik = 1, nks
-      !
-      ! the two zgemm calls perform the following ops:
-      ! epmats  = [ cu(ikq)^\dagger * epmatk ] * cu(ikk)
-      ! [here we have a size-reduction from nbnd*nbnd to nbndsub*nbndsub]
-      !
-      CALL ZGEMM('c', 'n', nbndsub, nbnd, nbnd, cone, cuq(:, :, ik),  &
-                nbnd, epmatk(:, :, ik), nbnd, czero, eptmp, nbndsub)
-      CALL ZGEMM('n', 'n', nbndsub, nbndsub, nbnd, cone, eptmp,     &
-                nbndsub, cu(:, :, ik), nbnd, czero, epmats(:, :, ik), nbndsub)
-      !
+    epmats(:, :, :, :) = czero
+    DO imode = 1, nmodes
+      DO ik = 1, nks
+        !
+        ! the two zgemm calls perform the following ops:
+        ! epmats  = [ cu(ikq)^\dagger * epmatk ] * cu(ikk)
+        ! [here we have a size-reduction from nbnd*nbnd to nbndsub*nbndsub]
+        !
+        CALL ZGEMM('c', 'n', nbndsub, nbnd, nbnd, cone, cuq(:, :, ik),  &
+                  nbnd, epmatk(:, :, ik, imode), nbnd, czero, eptmp, nbndsub)
+        CALL ZGEMM('n', 'n', nbndsub, nbndsub, nbnd, cone, eptmp,     &
+                  nbndsub, cu(:, :, ik), nbnd, czero, epmats(:, :, ik, imode), nbndsub)
+        !
+      ENDDO
     ENDDO
     !
     CALL stop_clock ('ep: step 1')
     !
+    !----------------------------------------------------------
+    ! STEP 2: First remove long range.
+    !----------------------------------------------------------
+    !
+    IF ((.NOT. is_dw_) .AND. (lpolar .OR. qrpl)) THEN
+      IF (system_2d /= 'dipole_sh') THEN
+      DO ik = 1, nks
+        CALL rgd_blk_epw(nqc1, nqc2, nqc3, xq, epmats(:, :, ik, :), nmodes, epsi, zstar, A(:, :, :, ik), nbnd, nbndsub, -one)
+      ENDDO
+      ENDIF
+    ENDIF
+    !
     !----------------------------------------------------------------------
-    !  STEP 2: Fourier transform to obtain matrix elements in electron wannier basis
+    !  STEP 3: Fourier transform to obtain matrix elements in electron wannier basis
     !----------------------------------------------------------------------
     !
     ! [Eqn. 24 of PRB 76, 165108 (2007)]
@@ -1094,19 +1411,21 @@
     !
     CALL start_clock('ep: step 2')
     !
-    epmatw(:, :, :) = czero
+    epmatw(:, :, :, :) = czero
     !
     ! bring xk in crystal coordinates
     !
     CALL cryst_to_cart(nks, xk, at, -1)
     !
-    DO ir = 1, nrr
-      DO ik = 1, nks
-        !
-        rdotk = twopi * DOT_PRODUCT(xk(:, ik), DBLE(irvec(:, ir)))
-        cfac = EXP(-ci * rdotk) / DBLE(nkstot)
-        epmatw( :, :, ir) = epmatw( :, :, ir) + cfac * epmats(:, :, ik)
-        !
+    DO imode = 1, nmodes
+      DO ir = 1, nrr
+        DO ik = 1, nks
+          !
+          rdotk = twopi * DOT_PRODUCT(xk(:, ik), DBLE(irvec(:, ir)))
+          cfac = EXP(-ci * rdotk) / DBLE(nkstot)
+          epmatw( :, :, ir, imode) = epmatw( :, :, ir, imode) + cfac * epmats(:, :, ik, imode)
+          !
+        ENDDO
       ENDDO
     ENDDO
     !
@@ -1115,6 +1434,26 @@
     ! bring xk back into cart coord
     !
     CALL cryst_to_cart(nks, xk, bg, 1)
+    !
+    !
+    !  Check spatial decay of EP matrix elements in electron-Wannier basis
+    !  the unit in r-space is angstrom, and I am plotting
+    !  the matrix for the first mode only
+    !
+    IF ((mpime == ionode_id) .AND. is_dw_) THEN
+      OPEN(NEWUNIT = iun, FILE = 'decay.dwwane')
+      WRITE(iun, '(a)') '# Spatial decay of Debye-Waller matrix elements in electron Wannier basis'
+      DO ir = 1, nrr
+        !
+        tmp = MAXVAL(ABS(epmatw(:, :, ir, :)))
+        WRITE(iun, *) wslen(ir) * alat * bohr2ang, tmp
+        !
+      ENDDO
+      !
+      CLOSE(iun)
+    ENDIF
+    !
+    CALL stop_clock ('ep: step 2')
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE ephbloch2wane
@@ -1515,6 +1854,506 @@
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE ephbloch2wanp_mem
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE dgbloch2wane(nbnd, nbndsub, nks, nkstot, etk, etq, &
+      ahc_win_min, ahc_win_max, xk, xq, cu, cuq, epmatk, nrr, &
+      irvec, wslen, dgmatw)
+    !--------------------------------------------------------------------------
+    !!
+    !! From the electron-phonon matrix elements in Bloch representation
+    !! (coarse mesh), find the deltaH elements in Wannier representation
+    !!
+    !! dg_pq(k, q) = U(k+q)^dagger_pm * E_{m,k+q} * Q(k+q)_mp
+    !!             * g(k,q)_pn / (E_{n,k} - E_{p,k+q}) * U(k)_nq
+    !!
+    !! Sum over n is done only for bands inside the frozen window
+    !!
+    !! Only bands inside the outer window are considered. Bands outside the
+    !! outer window need not be included. They are already removed from the
+    !! input matrices.
+    !!
+    !! dg_pq(R_e, q) = (1/nkc) sum_k e^{-ikR_e} dg_pq(k, q)
+    !!
+    !! Q(k+q) is a projection out of the Wannier subspace:
+    !! Q(k+q)_mn = delta_mn - sum_p U(k+q)_np U(k+q)^dagger_pm
+    !!
+    !--------------------------------------------------------------------------
+    !
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : rytoev
+    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
+    USE mp,        ONLY : mp_sum
+    USE mp_world,  ONLY : mpime
+    USE mp_global, ONLY : inter_pool_comm
+    USE io_global, ONLY : ionode_id
+    USE io_var,    ONLY : iuwane
+    USE cell_base, ONLY : at, alat
+    !
+    IMPLICIT NONE
+    !
+    !  input variables
+    !
+    INTEGER, INTENT(in) :: nbnd
+    !! Number of bands (nbndep)
+    INTEGER, INTENT(in) :: nbndsub
+    !! Number of bands in the optimal subspace
+    INTEGER, INTENT(in) :: nks
+    !! Number of kpoints in this pool
+    INTEGER, INTENT(in) :: nrr
+    !! Number of WS points
+    INTEGER, INTENT(in) :: nkstot
+    !! Total number of kpoints
+    INTEGER, INTENT(in) :: irvec(3, nrr)
+    !! Coordinates of WS points
+    !
+    REAL(KIND = DP), INTENT(in) :: etk(nbnd, nks)
+    !! Hamiltonian eigenvalues at k within the outer window
+    REAL(KIND = DP), INTENT(in) :: etq(nbnd, nks)
+    !! Hamiltonian eigenvalues at k+q within the outer window
+    REAL(KIND = DP), INTENT(in) :: ahc_win_min
+    !! AHC window of Wannierization (in eV)
+    REAL(KIND = DP), INTENT(in) :: ahc_win_max
+    !! AHC window of Wannierization (in eV)
+    REAL(KIND = DP), INTENT(in) :: xk(3, nks)
+    !! kpoint coordinates (cartesian in units of 2piba)
+    REAL(KIND = DP), INTENT(in) :: xq(3)
+    !! qpoint coordinates (cartesian in units of 2piba)
+    REAL(KIND = DP), INTENT(in) :: wslen(nrr)
+    !! WS vectors length (alat units)
+    !
+    COMPLEX(KIND = DP), INTENT(in) :: cu(nbnd, nbndsub, nks)
+    !! Rotation matrix from wannier code
+    COMPLEX(KIND = DP), INTENT(in) :: cuq(nbnd, nbndsub, nks)
+    !! Rotation matrix from wannier code
+    COMPLEX(KIND = DP), INTENT(in) :: epmatk(nbnd, nbnd, nks)
+    !! e-p matrix in bloch representation, coarse mesh
+    !
+    ! output variables
+    !
+    COMPLEX(KIND = DP), INTENT(out) :: dgmatw(nbndsub, nbndsub, nrr)
+    !! delta g matrix in Wannier basis
+    !
+    ! Work variables
+    !
+    LOGICAL :: inside_froz_etq(nbnd, nks)
+    !! True if etq(ibnd, ik) is inside the frozen window
+    LOGICAL :: inside_froz_etk(nbnd, nks)
+    !! True if et(ibnd, ik) is inside the frozen window
+    INTEGER :: ik
+    !! Counter on k-point
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: kbnd
+    !! Counter on bands
+    INTEGER :: ir
+    !! Counter on WS points
+    REAL(KIND = DP) :: xk_cry(3, nks)
+    !! k point coordniates in crystal coordinate
+    REAL(KIND = DP) :: xq_cry(3)
+    !! q point coordniates in crystal coordinate
+    REAL(KIND = DP) :: rdotk
+    !! $$ mathbf{r}\cdot\mathbf{k} $$
+    REAL(KIND = DP) :: tmp
+    !! Temporary variables
+    !
+    COMPLEX(KIND = DP) :: qmat(nbnd, nbnd)
+    !! I - U(k+q) * U(k+q)^\dagger
+    COMPLEX(KIND = DP) :: cfac
+    !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+    COMPLEX(KIND = DP) :: dgmats(nbndsub, nbndsub, nks)
+    !!  delta g matrix in smooth Bloch basis, coarse mesh
+    COMPLEX(KIND = DP) :: eptmp(nbndsub, nbnd)
+    !!  e-p matrix, temporary
+    COMPLEX(KIND = DP) :: eptmp1(nbnd, nbnd)
+    !!  e-p matrix, temporary
+    COMPLEX(KIND = DP) :: eptmp2(nbnd, nbnd)
+    !!  e-p matrix, temporary
+    !
+    !----------------------------------------------------------
+    !  STEP 1: rotation to optimally smooth Bloch states
+    !----------------------------------------------------------
+    !
+    ! dg_pq(k, q) = U(k+q)^dagger_pm * E_{m,k+q} * Q(k+q)_mp
+    !             * g(k,q)_pn / (E_{n,k} - E_{p,k+q}) * U(k)_nq
+    !
+    ! Sum over n is done only for bands inside the frozen window
+    ! Sum over m and p can be done only for bands outside the frozen window
+    !
+    ! g(k,q)      is epmatk (ibnd, jbnd, ik)
+    ! dg_pq(k,q)  is dgmats (ibnd, jbnd, ik)
+    !
+    CALL start_clock ('dg: step 1')
+    !
+    dgmats = czero
+    !
+    ! .true. if energy inside the frozen window
+    inside_froz_etq = (etq > ahc_win_min / rytoev) .AND. (etq < ahc_win_max / rytoev)
+    inside_froz_etk = (etk > ahc_win_min / rytoev) .AND. (etk < ahc_win_max / rytoev)
+    !
+    DO ik = 1, nks
+      !
+      ! qmat = I - U(k+q) * U(k+q)^\dagger
+      !
+      CALL ZGEMM('n', 'c', nbnd, nbnd, nbndsub, &
+        cone, cuq(:, :, ik), nbnd, cuq(:, :, ik), nbnd, czero, qmat, nbnd)
+      !
+      qmat = -qmat
+      DO ibnd = 1, nbnd
+        qmat(ibnd, ibnd) = qmat(ibnd, ibnd) + cone
+      ENDDO
+      !
+      ! Compute Q(k+q)_jk * g(k,q)_ki / (E_{i,k} - E_{k,k+q})
+      !
+      ! i : inside frozen window
+      ! j, k: outside frozen window
+      !
+      eptmp1 = czero
+      !
+      ! Compute and use eptmp1(k, i) = g(k,q)_ki / (E_{i,k} - E_{k,k+q})
+      !
+      DO ibnd = 1, nbnd
+        IF (.NOT. inside_froz_etk(ibnd, ik)) CYCLE
+        !
+        DO kbnd = 1, nbnd
+          IF (inside_froz_etq(kbnd, ik)) CYCLE
+          !
+          eptmp1(kbnd, ibnd) = epmatk(kbnd, ibnd, ik) / (etk(ibnd, ik) - etq(kbnd, ik))
+          !
+        ENDDO ! kbnd
+      ENDDO ! ibnd
+      !
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, qmat, nbnd, &
+          eptmp1, nbnd, czero, eptmp2, nbnd)
+      !
+      DO ibnd = 1, nbnd
+        eptmp2(ibnd, :) = eptmp2(ibnd, :) * etq(ibnd, ik)
+      ENDDO
+      !
+      ! the two zgemm calls perform the following ops:
+      ! dgmats  = [ cu(ikq)^\dagger * eptmp2 ] * cu(ikk)
+      ! [here we have a size-reduction from nbnd*nbnd to nbndsub*nbndsub]
+      !
+      CALL ZGEMM('c', 'n', nbndsub, nbnd, nbnd, cone, cuq(:, :, ik), &
+                nbnd, eptmp2, nbnd, czero, eptmp, nbndsub)
+      CALL ZGEMM('n', 'n', nbndsub, nbndsub, nbnd, cone, eptmp, &
+                nbndsub, cu(:, :, ik), nbnd, czero, dgmats(:, :, ik), nbndsub)
+      !
+    ENDDO
+    !
+    CALL stop_clock ('dg: step 1')
+    !
+    !----------------------------------------------------------------------
+    !  STEP 2: Fourier transform to obtain matrix elements in wannier basis
+    !----------------------------------------------------------------------
+    !
+    ! dg_pq(R_e, q) = (1/nkc) sum_k e^{-ikR_e} dg_pq(k, q)
+    !               + (1/nkc) sum_k e^{-i(k+q)R_e} [dg_pq(k, q)]^*
+    ! dg_pq(R_e, q) is dgmatw (nbndsub, nbndsub, ir)
+    ! dg_pq(k, q)   is dgmats (nbndsub, nbndsub, nks)
+    !
+    CALL start_clock('dg: step 2')
+    !
+    dgmatw(:, :, :) = czero
+    !
+    ! bring xk and xq in crystal coordinates
+    !
+    xk_cry = xk
+    xq_cry = xq
+    CALL cryst_to_cart(nks, xk_cry, at, -1)
+    CALL cryst_to_cart(1, xq_cry, at, -1)
+    !
+    DO ir = 1, nrr
+      DO ik = 1, nks
+        !
+        ! First term (1/nkc) sum_k e^{-ikR_e} dg_pq(k, q)
+        rdotk = twopi * DOT_PRODUCT(xk_cry(:, ik), REAL(irvec(:, ir), DP))
+        cfac = EXP(-ci * rdotk) / DBLE(nkstot)
+        dgmatw(:, :, ir) = dgmatw(:, :, ir) + cfac * dgmats(:, :, ik)
+        !
+        ! Second term (1/nkc) sum_k e^{-i(k+q)R_e} [dg_pq(k, q)]^*
+        rdotk = twopi * DOT_PRODUCT((xk_cry(:, ik) + xq_cry(:)), REAL(irvec(:, ir), DP))
+        cfac = EXP(-ci * rdotk) / DBLE(nkstot)
+        dgmatw(:, :, ir) = dgmatw(:, :, ir) + cfac * CONJG(dgmats(:, :, ik))
+        !
+      ENDDO
+    ENDDO
+    !
+    CALL mp_sum(dgmatw, inter_pool_comm)
+    !
+    !  Check spatial decay of matrix elements in Wannier basis
+    !  the unit in r-space is angstrom, and I am plotting
+    !  the matrix for the first mode only
+    !
+    IF (mpime == ionode_id) THEN
+      OPEN(UNIT = iuwane, FILE = 'decay.dgwane')
+      WRITE(iuwane, '(a)') '# Spatial decay of delta g matrix elements in Wannier basis'
+      WRITE(iuwane, '(a)') '# Contains only the Sternheimer contribution, not the epmat part.'
+      DO ir = 1, nrr
+        !
+        tmp = MAXVAL(ABS(dgmatw(:, :, ir)))
+        WRITE(iuwane, *) wslen(ir) * alat * bohr2ang, tmp
+        !
+      ENDDO
+      !
+      CLOSE(iuwane)
+    ENDIF
+    !
+    CALL stop_clock ('dg: step 2')
+    !
+    ! -------------------------------------------------------------------------
+    END SUBROUTINE dgbloch2wane
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE sthbloch2wane(nbnd, nbndsub, nks, nkstot, etk, etq, &
+      ahc_win_min, ahc_win_max, xk, cu, cuq, epmatk1, epmatk2, sthmatk, &
+      nrr, irvec, wslen, sthmatw)
+    !--------------------------------------------------------------------------
+    !!
+    !! From the Sternheimer matrix elements in Bloch representation
+    !! (coarse mesh), find the Sternheimer matrix in Wannier representation
+    !!
+    !! s_pq(k, q) = sum_{m in F, n}U(k+q)^dagger_pm * s_mn(k, q) * U(k)_mq
+    !! s_mn(k, q) = sthmatk_mn(k,q)
+    !!            + sum_{a,b} [g1_am(k,q)]^* * Q_ab(k+q) * g2_bn(k,q)
+    !!              / (E_{m,k} - E_{a,k+q})
+    !!
+    !! Sum over m is done only for bands inside the frozen window
+    !! Sum over a and b is done only for bands outside the frozen window
+    !!
+    !! Only bands inside the outer window are considered. Bands outside the
+    !! outer window need not be included. They are already removed from the
+    !! input matrices.
+    !!
+    !! s_pq(R_e, q) = (1/nkc) sum_k e^{-ikR_e} s_pq(k, q)
+    !!
+    !! Q(k+q) is a projection out of the Wannier subspace:
+    !! Q(k+q)_mn = delta_mn - sum_p U(k+q)_np U(k+q)^dagger_pm
+    !!
+    !! See Eqs. (8, 32) of Lihm and Park, PRX 11, 041053 (2021)
+    !!
+    !--------------------------------------------------------------------------
+    !
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : rytoev
+    USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
+    USE mp,        ONLY : mp_sum
+    USE mp_world,  ONLY : mpime
+    USE mp_global, ONLY : inter_pool_comm
+    USE io_var,    ONLY : iuwane
+    USE io_global, ONLY : ionode_id
+    USE cell_base, ONLY : at, alat
+    !
+    IMPLICIT NONE
+    !
+    !  input variables
+    !
+    INTEGER, INTENT(in) :: nbnd
+    !! Number of bands (nbndep)
+    INTEGER, INTENT(in) :: nbndsub
+    !! Number of bands in the optimal subspace
+    INTEGER, INTENT(in) :: nks
+    !! Number of kpoints in this pool
+    INTEGER, INTENT(in) :: nrr
+    !! Number of WS points
+    INTEGER, INTENT(in) :: nkstot
+    !! Total number of kpoints
+    INTEGER, INTENT(in) :: irvec(3, nrr)
+    !! Coordinates of WS points
+    !
+    REAL(KIND = DP), INTENT(in) :: etk(nbnd, nks)
+    !! Hamiltonian eigenvalues at k within the outer window
+    REAL(KIND = DP), INTENT(in) :: etq(nbnd, nks)
+    !! Hamiltonian eigenvalues at k+q within the outer window
+    REAL(KIND = DP), INTENT(in) :: ahc_win_min
+    !! AHC window of Wannierization (in eV)
+    REAL(KIND = DP), INTENT(in) :: ahc_win_max
+    !! AHC window of Wannierization (in eV)
+    REAL(KIND = DP), INTENT(in) :: xk(3, nks)
+    !! kpoint coordinates (cartesian in units of 2piba)
+    REAL(KIND = DP), INTENT(in) :: wslen(nrr)
+    !! WS vectors length (alat units)
+    !
+    COMPLEX(KIND = DP), INTENT(in) :: cu(nbnd, nbndsub, nks)
+    !! Rotation matrix from wannier code
+    COMPLEX(KIND = DP), INTENT(in) :: cuq(nbnd, nbndsub, nks)
+    !! Rotation matrix from wannier code
+    COMPLEX(KIND = DP), INTENT(in) :: epmatk1(nbnd, nbnd, nks)
+    !! e-p matrix in bloch representation, coarse mesh
+    COMPLEX(KIND = DP), INTENT(in) :: epmatk2(nbnd, nbnd, nks)
+    !! e-p matrix in bloch representation, coarse mesh
+    COMPLEX(KIND = DP), INTENT(in) :: sthmatk(nbnd, nbnd, nks)
+    !! Sternheimer matrix in bloch representation, coarse mesh
+    !
+    ! output variables
+    !
+    COMPLEX(KIND = DP), INTENT(out) :: sthmatw(nbndsub, nbndsub, nrr)
+    !! Sternheimer matrix in Wannier basis
+    !
+    ! Work variables
+    !
+    LOGICAL :: inside_froz_etq(nbnd, nks)
+    !! True if etq(ibnd, ik) is inside the frozen window
+    LOGICAL :: inside_froz_etk(nbnd, nks)
+    !! True if et(ibnd, ik) is inside the frozen window
+    INTEGER :: ik
+    !! Counter on k-point
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: jbnd
+    !! Counter on bands
+    INTEGER :: ir
+    !! Counter on WS points
+    REAL(KIND = DP) :: xk_cry(3, nks)
+    !! k point coordniates in crystal coordinate
+    REAL(KIND = DP) :: rdotk
+    !! $$ mathbf{r}\cdot\mathbf{k} $$
+    REAL(KIND = DP) :: tmp
+    !! Temporary variables
+    !
+    COMPLEX(KIND = DP) :: qmat(nbnd, nbnd)
+    !! I - U(k+q) * U(k+q)^\dagger
+    COMPLEX(KIND = DP) :: cfac
+    !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+    COMPLEX(KIND = DP) :: sthmats(nbndsub, nbndsub, nks)
+    !! Sternheimer matrix in smooth Bloch basis, coarse mesh
+    COMPLEX(KIND = DP) :: eptmp(nbndsub, nbnd)
+    !! e-p matrix, temporary
+    COMPLEX(KIND = DP) :: eptmp1(nbnd, nbnd)
+    !! e-p matrix, temporary
+    COMPLEX(KIND = DP) :: eptmp2(nbnd, nbnd)
+    !! e-p matrix, temporary
+    !
+    !----------------------------------------------------------
+    !  STEP 1: rotation to optimally smooth Bloch states
+    !----------------------------------------------------------
+    !
+    !  s_pq(k, q) = sum_{m in F, n} U(k+q)^dagger_pm *
+    !  [ sthmatk_mn(k,q)
+    !   + sum_{a,b} [g1_am(k,q)]^* * Q_ab(k+q) * g2_bn(k,q) / (E_{m,k} - E_{a,k+q})
+    !  ] * U(k)_mq
+    !
+    ! Sum over n is done only for bands inside the frozen window
+    ! Sum over a and b can be done only for bands outside the frozen window
+    !
+    ! g1(k,q)      is epmatk1 (ibnd, jbnd, ik)
+    ! g2(k,q)      is epmatk2 (ibnd, jbnd, ik)
+    ! sthmatk(k,q) is sthmatk (ibnd, jbnd, ik)
+    ! s_pq(k,q)    is sthmats (ibnd, jbnd, ik)
+    !
+    CALL start_clock ('sth: step 1')
+    !
+    sthmats = czero
+    !
+    ! True if energy inside the frozen window
+    inside_froz_etq = (etq > ahc_win_min / rytoev) .AND. (etq < ahc_win_max / rytoev)
+    inside_froz_etk = (etk > ahc_win_min / rytoev) .AND. (etk < ahc_win_max / rytoev)
+    !
+    DO ik = 1, nks
+      !
+      ! qmat = I - U(k+q) * U(k+q)^\dagger
+      !
+      CALL ZGEMM('n', 'c', nbnd, nbnd, nbndsub, cone, cuq(:, :, ik), &
+                nbnd, cuq(:, :, ik), nbnd, czero, qmat, nbnd)
+      !
+      qmat = -qmat
+      DO ibnd = 1, nbnd
+        qmat(ibnd, ibnd) = qmat(ibnd, ibnd) + cone
+      ENDDO
+      !
+      eptmp1 = czero
+      !
+      ! Compute and use eptmp1(i, j) = [g1_ji]^* / (E_{i,k} - E_{j,k+q})
+      !
+      DO ibnd = 1, nbnd
+        IF (.NOT. inside_froz_etk(ibnd, ik)) CYCLE
+        !
+        DO jbnd = 1, nbnd
+          IF (inside_froz_etq(jbnd, ik)) CYCLE
+          !
+          eptmp1(ibnd, jbnd) = CONJG(epmatk1(jbnd, ibnd, ik)) / (etk(ibnd, ik) - etq(jbnd, ik))
+          !
+        ENDDO ! jbnd
+      ENDDO ! ibnd
+      !
+      ! Compute eptmp1_ma * Q_ab(k+q) * g2_bn(k,q)
+      !
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, &
+        cone, eptmp1, nbnd, qmat, nbnd, czero, eptmp2, nbnd)
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, &
+        cone, eptmp2, nbnd, epmatk2(:, :, ik), nbnd, czero, eptmp1, nbnd)
+      !
+      ! Add sthmatk part to eptmp1
+      !
+      eptmp1 = eptmp1 + sthmatk(:, :, ik)
+      !
+      ! the two zgemm calls perform the following ops:
+      ! sthmats  = [ cu(ikq)^\dagger * eptmp1 ] * cu(ikk)
+      ! [here we have a size-reduction from nbnd*nbnd to nbndsub*nbndsub]
+      !
+      CALL ZGEMM('c', 'n', nbndsub, nbnd, nbnd, cone, cu(:, :, ik), nbnd, &
+          eptmp1, nbnd, czero, eptmp, nbndsub)
+      CALL ZGEMM('n', 'n', nbndsub, nbndsub, nbnd, cone, eptmp, nbndsub, &
+          cu(:, :, ik), nbnd, czero, sthmats(:, :, ik), nbndsub)
+      !
+    ENDDO
+    !
+    CALL stop_clock ('sth: step 1')
+    !
+    !----------------------------------------------------------------------
+    !  STEP 2: Fourier transform to obtain matrix elements in wannier basis
+    !----------------------------------------------------------------------
+    !
+    ! sth_pq(R_e, q) = (1/nkc) sum_k e^{-ikR_e} sth_pq(k, q)
+    !
+    ! sth_pq(R_e, q) is sthmatw(1:nbndsub, 1:nbndsub, ir)
+    ! sth_pq(k, q)   is sthmats(1:nbndsub, 1:nbndsub, ik)
+    !
+    CALL start_clock('sth: step 2')
+    !
+    sthmatw(:, :, :) = czero
+    !
+    ! bring xk and xq in crystal coordinates
+    !
+    xk_cry = xk
+    CALL cryst_to_cart(nks, xk_cry, at, -1)
+    !
+    DO ir = 1, nrr
+      DO ik = 1, nks
+        !
+        rdotk = twopi * DOT_PRODUCT(xk_cry(:, ik), REAL(irvec(:, ir), DP))
+        cfac = EXP(-ci * rdotk) / DBLE(nkstot)
+        !
+        sthmatw(:, :, ir) = sthmatw(:, :, ir) + cfac * sthmats(:, :, ik)
+        !
+      ENDDO
+    ENDDO
+    !
+    CALL mp_sum(sthmatw, inter_pool_comm)
+    !
+    !  Check spatial decay of matrix elements in Wannier basis
+    !  the unit in r-space is angstrom, and I am plotting
+    !  the matrix for the first mode only
+    !
+    IF (mpime == ionode_id) THEN
+      OPEN(UNIT = iuwane, FILE = 'decay.sthwane')
+      WRITE(iuwane, '(a)') '# Spatial decay of Sternheimer matrix elements in Wannier basis'
+      DO ir = 1, nrr
+        !
+        tmp = MAXVAL(ABS(sthmatw(:, :, ir)))
+        WRITE(iuwane, *) wslen(ir) * alat * bohr2ang, tmp
+        !
+      ENDDO
+      !
+      CLOSE(iuwane)
+    ENDIF
+    !
+    CALL stop_clock ('sth: step 2')
+    !
+    ! -------------------------------------------------------------------------
+    END SUBROUTINE sthbloch2wane
     !--------------------------------------------------------------------------
     !
   !----------------------------------------------------------------------------

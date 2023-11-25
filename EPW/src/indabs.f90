@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -918,7 +919,7 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, evbm, ecbm
     USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                               zero, eps80, eps6
     USE noncollin_module, ONLY : noncolin
@@ -980,10 +981,6 @@
     !! Argument of the exponential
     REAL(KIND = DP) :: inv_cell
     !! Inverse of the volume in [Bohr^{-3}]
-    REAL(KIND = DP) :: evbm
-    !! Energy of the VBM
-    REAL(KIND = DP) :: ecbm
-    !! Energy of the CBM
     REAL(KIND = DP) :: ef_tmp
     !! Energy of the current Fermi level for the bisection method
     REAL(KIND = DP) :: elw
@@ -1017,10 +1014,13 @@
     ef_tmp  = zero
     fermi   = zero
     fermicb = zero
-    inv_cell = 1.0d0 / omega
     !
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE 
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
     ! vbm index
     IF (noncolin) THEN
       ivbm = FLOOR(nelec / 1.0d0)
@@ -1348,9 +1348,12 @@
     REAL(KIND = DP) :: sr(3, 3)
     !! Rotation matrix
     !
-    inv_cell = 1.0d0 / omega
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE 
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
     !
     conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
     !
@@ -1494,6 +1497,37 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE conduc_fca
     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    SUBROUTINE prepare_indabs()
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE io_var,        ONLY : iuindabs
+    USE modes,         ONLY : nmodes
+    USE epwcom,        ONLY : nstemp, omegamin, omegamax, omegastep,     &
+                              nomega, neta, restart
+
+    USE elph2,         ONLY : epsilon2_abs, epsilon2_abs_lorenz,         &
+                              epsilon2_abs_all, epsilon2_abs_lorenz_all
+    !
+    IMPLICIT NONE
+    !
+    INTEGER  :: ierr
+    !! error in allocation
+    !                    
+    ! Calculate the number of frequency points
+    nomega = INT((omegamax - omegamin) / omegastep) + 1
+    ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('prepare_indabs', 'Error allocating epsilon2_abs', 1)
+    ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('prepare_indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+    ALLOCATE(epsilon2_abs_all(3, nomega, neta, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('prepare_indabs', 'Error allocating epsilon2_abs_all', 1)
+    ALLOCATE(epsilon2_abs_lorenz_all(3, nomega, neta, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('prepare_indabs', 'Error allocating & 
+                              &epsilon2_abs_lorenz_all', 1)
+    !-------------------------------------------------------------------------
+    END SUBROUTINE prepare_indabs 
+    !-------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   END MODULE indabs
