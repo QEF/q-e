@@ -23,12 +23,14 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    USE wvfct,       ONLY: npwx
    USE uspp_param,  ONLY: upf, nwfcm
    USE basis,       ONLY: natomwfc
+   USE noncollin_module,     ONLY: noncolin, npol
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: ik
    !! k-point index
-   COMPLEX(DP), INTENT(OUT) :: dwfcat(npwx,natomwfc)
+   ! ------------ LUCA (added npol to the plane-wave size) -----------
+   COMPLEX(DP), INTENT(OUT) :: dwfcat(npwx*npol,natomwfc)
    !! the derivative of the atomic wfcs (all)
    !
    ! ... local variables
@@ -37,7 +39,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    REAL(DP) :: arg
    COMPLEX(DP) :: phase, pref
    REAL(DP),    ALLOCATABLE :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
-   COMPLEX(DP), ALLOCATABLE :: sk(:)
+   COMPLEX(DP), ALLOCATABLE :: sk(:), aux(:)
    ! 
    npw = ngk(ik)
    ! calculate max angular momentum required in wavefunctions
@@ -66,7 +68,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    DEALLOCATE( q, gk )
    !
-   ALLOCATE( sk(npw) )
+   ALLOCATE( sk(npw),  aux(npw) )
    !
    iatw = 0
    DO na=1,nat
@@ -87,13 +89,23 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
          IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
             l = upf(nt)%lchi(nb)
             pref = (0.d0,1.d0)**l
-            DO m = 1,2*l+1
-               lm = l*l+m
-               iatw = iatw+1
-               DO ig=1,npw
-                  dwfcat(ig,iatw) = djl(ig,nb,nt)*sk(ig)*ylm(ig,lm)*pref
+            ! --------------------- LUCA ------------------------
+            IF (noncolin) THEN
+               IF ( upf(nt)%has_so ) THEN
+                   CALL dj_wfc_atom( .TRUE. )
+               ELSE
+                   CALL dj_wfc_atom( .FALSE. )
+               ENDIF
+            ELSE        
+               DO m = 1,2*l+1
+                  lm = l*l+m
+                  iatw = iatw+1
+                  DO ig=1,npw
+                     dwfcat(ig,iatw) = djl(ig,nb,nt)*sk(ig)*ylm(ig,lm)*pref
+                  ENDDO
                ENDDO
-            ENDDO
+            ENDIF
+         ! ------------------------------------------------------   
          ENDIF
       ENDDO
    ENDDO
@@ -103,9 +115,85 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
       CALL errore( 'gen_at_dj', 'unexpected error', 1 )
    ENDIF
 
-   DEALLOCATE( sk       )
+   DEALLOCATE( sk, aux  )
    DEALLOCATE( djl, ylm )
    !
    RETURN
+   !
+   ! ------------------- LUCA -------------------------
+   CONTAINS
+      !
+      SUBROUTINE dj_wfc_atom( soc )
+      !---------------------------
+      !
+      LOGICAL :: soc
+      !! .TRUE. if the fully-relativistic pseudo
+      !
+      ! ... local variables
+      !
+      REAL(DP) :: j
+      REAL(DP), ALLOCATABLE :: chiaux(:)
+      INTEGER :: nc, ib
+      COMPLEX(DP) :: lphase
+      !
+      ! ... If SOC go on only if j=l+1/2
+      IF (soc) j = upf(nt)%jchi(nb)
+      IF (soc .AND. ABS(j-l+0.5_DP)<1.d-4 ) RETURN
+      !
+      ALLOCATE( chiaux(npw) )
+      lphase = (0.0,1.0)**l
+      !
+      IF (soc) THEN
+        !
+        ! ... Find the index for j=l-1/2
+        !
+        IF (l == 0)  THEN
+           chiaux(:)=djl(:,nb,nt)
+        ELSE
+           DO ib=1, upf(nt)%nwfc
+              IF ((upf(nt)%lchi(ib) == l) .AND. &
+                           (ABS(upf(nt)%jchi(ib)-l+0.5_DP)<1.d-4)) THEN
+                 nc=ib
+                 exit
+              ENDIF
+           ENDDO
+           !
+           ! ... Average the two radial functions
+           !
+           chiaux(:) = (djl(:,nb,nt)*(l+1.0_DP)+djl(:,nc,nt)*l)/(2.0_DP*l+1.0_DP)
+        ENDIF
+        !
+      ELSE
+        !
+        chiaux(:) = djl(:,nb,nt)
+        !
+      ENDIF
+      !
+      DO m = 1, 2*l+1
+         lm = l**2 + m
+         iatw = iatw + 1
+
+         IF (iatw + 2*l+1 > natomwfc) CALL errore &
+               ('dj_wfc_atom', 'internal error: too many wfcs', 1)
+         DO ig = 1, npw
+            aux(ig) = lphase*sk(ig)*ylm(ig,lm)*chiaux(ig)
+         ENDDO
+         !
+         DO ig = 1, npw
+            !
+            dwfcat(ig,iatw) = aux(ig)
+            dwfcat(ig+npwx,iatw) = 0.d0
+            !
+            dwfcat(ig,iatw+2*l+1) = 0.d0
+            dwfcat(ig+npwx,iatw+2*l+1) = aux(ig)
+            !
+         ENDDO
+      ENDDO
+      !
+      iatw = iatw + 2*l+1
+      !
+      DEALLOCATE( chiaux )
+      !
+   END SUBROUTINE dj_wfc_atom
    !
 END SUBROUTINE gen_at_dj

@@ -23,6 +23,8 @@ SUBROUTINE hp_dealloc_q()
   USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
   USE ldaU_lr,             ONLY : swfcatomk, swfcatomkpq
+  USE qpoint_aux,          ONLY : ikmks, ikmkmqs, becpt
+  USE hp_nc_mag_aux,       ONLY : deeq_nc_save 
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -39,10 +41,15 @@ SUBROUTINE hp_dealloc_q()
   if (allocated(nbnd_occ))  deallocate (nbnd_occ)
   if (allocated(ikks))      deallocate (ikks)
   if (allocated(ikqs))      deallocate (ikqs)
+  ! ----------- LUCA ----------------
+  if (allocated(ikmks))     deallocate (ikmks)
+  if (allocated(ikmkmqs))   deallocate (ikmkmqs)
+  ! --------------------------------
   if (allocated(m_loc))     deallocate (m_loc)
   !
   IF (okvan) THEN 
      if (allocated(eigqts)) deallocate (eigqts)
+     !
      if (allocated(becp1))  then
         do ik=1,size(becp1)
            call deallocate_bec_type ( becp1(ik) )
@@ -50,6 +57,15 @@ SUBROUTINE hp_dealloc_q()
         deallocate(becp1)
      endif
   ENDIF
+  ! -------------- LUCA -----------------
+  if (allocated(becpt)) then  
+      do ik=1,size(becpt)
+         call deallocate_bec_type ( becpt(ik) )
+      enddo
+      deallocate(becpt)
+  endif
+  if (allocated(deeq_nc_save)) deallocate(deeq_nc_save)
+! -------------------------------------
   !
   ! GGA-specific arrays
   !

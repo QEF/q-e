@@ -27,14 +27,13 @@ SUBROUTINE c_bands_nscf_ph( )
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_lr,           ONLY : lgamma
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   USE noncollin_module,     ONLY : noncolin, npol, domag
-  USE save_ph,              ONLY : tmp_dir_save
   USE io_files,             ONLY : tmp_dir, prefix
   USE uspp_init,            ONLY : init_us_2
   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
@@ -83,6 +82,11 @@ SUBROUTINE c_bands_nscf_ph( )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     ! ---------- LUCA (spawoc) -----------------
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     ! ------------------------------------
+     !
      IF ( lsda ) current_spin = isk(ik)
 
      CALL g2_kin( ik )
@@ -179,3 +183,4 @@ SUBROUTINE c_bands_nscf_ph( )
 9000 FORMAT( '     total cpu time spent up to now is ',F10.1,' secs' )
   !
 END SUBROUTINE c_bands_nscf_ph
+

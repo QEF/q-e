@@ -3040,14 +3040,29 @@ CONTAINS
          ELSEIF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) THEN
             ! DFT+U+V(+J0)
             lda_plus_u_kind = 2
-            IF (noncolin) CALL errore('card_hubbard', &
-                    'Hubbard V is not supported with noncolin=.true.', i)
-         ELSEIF (ANY(ABS(Hubbard_U(:))>eps16) .AND. noncolin) THEN
+            ! 
+            ! ---------- LUCA ----------------------
+            IF (noncolin .and. ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J0 is not compatible with noncolin=.true.', i)
+           ! ----------- LUCA (spawoc) ------------------------
+           ! IF (noncolin) CALL errore('card_hubbard', &
+           !         'Hubbard V is not supported with noncolin=.true.', i)
+           ! ------------------------------------------
+         !ELSEIF (ANY(Hubbard_U(:)>eps16) .AND. noncolin) THEN
             ! DFT+U
-            lda_plus_u_kind = 1
-         ELSEIF (ANY(ABS(Hubbard_U(:))>eps16) .OR. ANY(ABS(Hubbard_J0(:))>eps16)) THEN
+            ! ------------ LUCA (spawoc) --------------
+         !   IF(ANY(Hubbard_J0(:)>eps16)) THEN
+         !       lda_plus_u_kind = 1
+         !   ELSE
+         !       lda_plus_u_kind = 0    
+         !   ENDIF
+            ! ------------------------------------
+         ELSEIF (ANY(Hubbard_U(:)>eps16) .OR. ANY(Hubbard_J0(:)>eps16)) THEN
             ! DFT+U(+J0)
             lda_plus_u_kind = 0
+            ! ---------- LUCA ----------------------
+            IF (noncolin .and. ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J0 is not compatible with noncolin=.true.', i)
          ELSE
             CALL errore('card_hubbard', 'Unknown case for lda_plus_u_kind...', i)
          ENDIF

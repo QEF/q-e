@@ -535,7 +535,7 @@ loopisym:     DO isym = 1, nsym
                     WRITE( stdout, * ) ns(m2,m1,j,na)  
                     CALL errore( 'new_ns', 'non hermitean matrix', 1 )
                  ELSE  
-                    ns(m2,m1,j,na) = CONJG( ns(m1,m2,i,na) )
+                   ns(m2,m1,j,na) = CONJG( ns(m1,m2,i,na) )
                  ENDIF
               ENDDO
             ENDDO

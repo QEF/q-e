@@ -103,13 +103,19 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                  ENDIF
                  ! For FR-PPs, hubbard_occ cannot be used here because it does not
                  ! allow to distinguish between the occupied and unoccupied channels.
-                 IF (noncolin .AND. upf(nt)%has_so) THEN
-                    IF (upf(nt)%oc(n) > 0.D0) THEN
-                       hubbard_wfc = .TRUE.
-                    ELSE
-                       hubbard_wfc = .FALSE.
-                    ENDIF
-                 ENDIF
+                 !
+                 ! NOTE: the following lines should not be needed, because when 
+                 ! only the j = l-1/2 is full, the j = l+1/2 would be considered 
+                 ! as empty and then not counted, thus leading to inconsistencies
+                 ! with the nonrelativistic case
+                 !  
+                 ! IF (noncolin .AND. upf(nt)%has_so) THEN
+                 !   IF (upf(nt)%oc(n) > 0.D0) THEN
+                 !      hubbard_wfc = .TRUE.
+                 !   ELSE
+                 !      hubbard_wfc = .FALSE.
+                 !   ENDIF
+                 ! ENDIF
               ENDIF
            ENDIF
            !

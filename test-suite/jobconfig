@@ -251,6 +251,18 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[hp_soc_U_nc_nonmagn/]
+program = HP
+inputs_args = ('au.scf.in', '1'), ('au.hp.in', '3'), ('au.scf.in', '2'), ('au.hp.in', '4')
+
+[hp_soc_U_us_magn/]
+program = HP
+inputs_args = ('bn.scf.in', '1'), ('bn.hp.in', '3'), ('bn.scf.in', '2'), ('bn.hp.in', '4')
+
+[hp_soc_UV_paw_magn/]
+program = HP
+inputs_args = ('bn.scf.in', '1'), ('bn.hp.in', '3'), ('bn.scf.in', '2'), ('bn.hp.in', '4')
+
 [kcw_wann/]
 program = KCW
 inputs_args = ('Si.scf.in', '1'), ('Si.win', '2'), ('Si.pw2wann.in', '3'), ('Si.win', '4'), ('Si.kcw-wann2kcw.in', '5'), ('Si.kcw-screen.in', '6'), ('Si.kcw-ham.in', '7')

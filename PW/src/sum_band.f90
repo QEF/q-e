@@ -34,7 +34,8 @@ SUBROUTINE sum_band()
                                    becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag, lspinorb
+  USE upf_spinorb,          ONLY : fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -119,7 +120,15 @@ SUBROUTINE sum_band()
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind==0) THEN
        !
-       CALL new_ns( rho%ns )
+       ! --- LUCA -----
+       IF (noncolin) THEN
+          CALL new_ns_nc(rho%ns_nc)
+       ELSE
+       ! ---------------        
+          CALL new_ns(rho%ns)
+       ! ----LUCA ------------   
+       ENDIF 
+       ! -----------------  
        !
        DO nt = 1, ntyp
           IF (is_hubbard_back(nt)) CALL new_nsb( rho%nsb )
@@ -135,7 +144,12 @@ SUBROUTINE sum_band()
        !
     ELSEIF (lda_plus_u_kind==2) THEN 
        !
-       CALL new_nsg()
+       ! ----LUCA (spawoc)------------
+      IF (noncolin) THEN
+          CALL new_nsg_nc()
+      ELSE
+          CALL new_nsg() 
+      ENDIF
        !
     ENDIF
   ENDIF

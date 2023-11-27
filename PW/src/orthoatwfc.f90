@@ -166,7 +166,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
-  USE noncollin_module, ONLY : noncolin 
+  USE noncollin_module, ONLY : noncolin, npol
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik ! the k point under consideration
@@ -204,7 +204,8 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ENDIF
   !
   IF (Hubbard_projectors=="ortho-atomic") THEN
-     ALLOCATE(aux(npwx,natomwfc))
+   ! LUCA -------------- added npol ------------------- 
+     ALLOCATE(aux(npwx*npol,natomwfc))
      ! Copy atomic wfcs (phi)
      aux(:,:) = wfcatom(:,:)
   ENDIF

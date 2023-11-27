@@ -224,11 +224,12 @@ SUBROUTINE dns_sum_q (xq_)
         !
         IF (is_hubbard(nt)) THEN
            !
+          ! ----------- LUCA (m2, instead of starting from m1, starts from 1)
            DO is = 1, nspin
               !
               DO m1 = 1, 2 * Hubbard_l(nt) + 1
                  !
-                 DO m2 = m1, 2 * Hubbard_l(nt) + 1
+                 DO m2 = 1, 2 * Hubbard_l(nt) + 1
                     !
                     dnsscf_tot(m1,m2,is,na,icell) = dnsscf_tot(m1,m2,is,na,icell) + &
                                                     & fac * phase * dnsscf_rot(m1,m2,is,na)

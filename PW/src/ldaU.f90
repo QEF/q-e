@@ -315,8 +315,13 @@ CONTAINS
              ll(l0b+1:l0b+2*Hubbard_l3(nt)+1,nt) = &
              Hubbard_l3(nt)
           ENDIF
-       ENDDO   
-       !
+       ENDDO  
+       ! ---- LUCA -------
+       IF (noncolin) THEN
+          IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
+          CALL comp_dspinldau()
+       ENDIF
+       ! -------------------
     ELSEIF ( lda_plus_u_kind == 1 ) THEN
        !
        ! DFT+U(+J) : Liechtenstein's formulation
@@ -379,6 +384,13 @@ CONTAINS
        lba = .FALSE.
        !
        DO nt = 1, ntyp
+          !
+          ! ---- LUCA (spawoc) -------
+          IF (noncolin) THEN
+             IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
+             CALL comp_dspinldau()
+          ENDIF
+          ! -------------------
           !
           ! Here we account for the remaining cases when we need to 
           ! setup is_hubbard
