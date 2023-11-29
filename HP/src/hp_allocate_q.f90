@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -45,8 +45,7 @@ subroutine hp_allocate_q
   ALLOCATE (dvpsi(npwx*npol,nbnd))
   ALLOCATE (dpsi(npwx*npol,nbnd))
   ALLOCATE (dmuxc(dfftp%nnr,nspin_mag,nspin_mag))
-  ! -------------- LUCA ---------------------------
-  ! NB: based on subroutine allocate_phq
+  !
   IF (noncolin.AND.domag) THEN
     ALLOCATE (becpt(nksq))
     DO ik=1,nksq
@@ -56,8 +55,6 @@ subroutine hp_allocate_q
        ALLOCATE (deeq_nc_save( nhm, nhm, nat, nspin, 2))
     ENDIF
   ENDIF
-  ! -----------------------------------------------
-  !
   !
   IF (okvan) THEN
      ALLOCATE (eigqts(nat))
@@ -67,7 +64,6 @@ subroutine hp_allocate_q
      ENDDO
   ENDIF
   !
-  ! ---------- LUCA (added npol) -------------------
   ALLOCATE (swfcatomk(npwx*npol,nwfcU))     
   IF (lgamma) THEN
      swfcatomkpq  => swfcatomk

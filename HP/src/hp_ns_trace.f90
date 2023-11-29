@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,26 +49,22 @@ SUBROUTINE hp_ns_trace
            !
            DO is = 1, nspin/npol
               DO m1 = 1, ldim
-               ! ------------ LUCA --------------
                  IF (noncolin) then
                      nsaux(na,is) = nsaux(na,is) + rho%ns_nc(m1,m1,is**npol,na)
                  ELSE
                      nsaux(na,is) = nsaux(na,is) + rho%ns(m1,m1,is,na)
                  ENDIF
-                 ! -------------------------------
               ENDDO
            ENDDO
            !
            IF (nspin==1) THEN
               ns(na) = 2.0d0 * nsaux(na,1) 
-              ! ------------ LUCA ---------------
            ELSEIF(nspin==2) THEN
               ns(na)   = nsaux(na,1) + nsaux(na,2)
               magn(na) = nsaux(na,1) - nsaux(na,2)
            ELSE
               ns(na)   = nsaux(na,1) + nsaux(na,4)
            ENDIF
-           ! --------------------------------
            !
         ENDIF
         !
@@ -90,7 +86,6 @@ SUBROUTINE hp_ns_trace
                  ENDDO
                  IF (nspin==1) THEN
                     ns(na1) = 2.0d0 * nsaux(na1,1)
-                    ! ---------- LUCA (spawoc) ---------------
                  ELSEIF (nspin==2) THEN
                     ns(na1)   = nsaux(na1,1) + nsaux(na1,2)
                     magn(na1) = nsaux(na1,1) - nsaux(na1,2)

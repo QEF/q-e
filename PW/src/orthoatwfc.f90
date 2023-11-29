@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -204,7 +204,6 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ENDIF
   !
   IF (Hubbard_projectors=="ortho-atomic") THEN
-   ! LUCA -------------- added npol ------------------- 
      ALLOCATE(aux(npwx*npol,natomwfc))
      ! Copy atomic wfcs (phi)
      aux(:,:) = wfcatom(:,:)

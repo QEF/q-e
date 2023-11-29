@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,7 +29,6 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    INTEGER, INTENT(IN) :: ik
    !! k-point index
-   ! ------------ LUCA (added npol to the plane-wave size) -----------
    COMPLEX(DP), INTENT(OUT) :: dwfcat(npwx*npol,natomwfc)
    !! the derivative of the atomic wfcs (all)
    !
@@ -89,7 +88,6 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
          IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
             l = upf(nt)%lchi(nb)
             pref = (0.d0,1.d0)**l
-            ! --------------------- LUCA ------------------------
             IF (noncolin) THEN
                IF ( upf(nt)%has_so ) THEN
                    CALL dj_wfc_atom( .TRUE. )
@@ -105,7 +103,6 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
                   ENDDO
                ENDDO
             ENDIF
-         ! ------------------------------------------------------   
          ENDIF
       ENDDO
    ENDDO
@@ -120,11 +117,9 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    RETURN
    !
-   ! ------------------- LUCA -------------------------
    CONTAINS
       !
       SUBROUTINE dj_wfc_atom( soc )
-      !---------------------------
       !
       LOGICAL :: soc
       !! .TRUE. if the fully-relativistic pseudo

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -84,14 +84,9 @@ SUBROUTINE hp_run_nscf (do_band)
   CALL init_run()
   !
   IF (do_band) THEN
-     ! ------------- LUCA  ---------------------
      IF (noncolin.AND.domag) THEN
-        ! this subroutine calls c_bands_ph.f90 within PH, which applies 
-        ! the time-reversal operator.
-        ! NOTE: this subroutine does not call of phase_factor() [updated]
-        !  ----------- LUCA (spawoc) ------------------
-        !IF (lda_plus_u_kind.NE.0) CALL errore("hp_run_nscf", &
-        !        "Noncollinear with this lda_plus_u_kind is not implemented",1)
+        ! this subroutine calls c_bands_ph, which applies 
+        ! the time-reversal operator
         CALL non_scf_ph()
      ELSE     
         CALL non_scf()

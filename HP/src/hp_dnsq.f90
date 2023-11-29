@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -79,7 +79,6 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   ios = 0 
   ! 
-  ! ---------- LUCA (added npol) ----------------
   ALLOCATE (dpsi(npwx*npol,nbnd))
   ALLOCATE (proj1(nbnd,nwfcU))
   ALLOCATE (proj2(nbnd,nwfcU))
@@ -104,18 +103,18 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      ENDIF
   ENDDO
   ! 
-  ! ----------------------- LUCA -----------------
   nsolv = 1 
   IF (noncolin.AND.domag) nsolv = 2
-  ! ----------------------------------------------
+  !
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
      ikq  = ikqs(ik)
      npw  = ngk(ikk)
      npwq = ngk(ikq)
-     ! ------------ LUCA --------------------
+     !
      DO isolv = 1, nsolv
+        !
         IF (isolv == 2) THEN
            ikmk = ikmks(ik)
         ELSE
@@ -125,22 +124,12 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
         IF (lsda) current_spin = isk (ikk)
         !
         ! Read unperturbed KS wfc's psi(k)
-        ! ---------- LUCA (ikmk instead of ikk) -----------------
         IF (nksq.GT.1) CALL get_buffer (evc, lrwfc, iuwfc, ikmk)
         !
         ! Read atomic wfc's : S(k)*phi(k) and S(k+q)*phi(k+q) 
         CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ikk)
         IF (.NOT.lgamma) CALL get_buffer (swfcatomkpq, nwordwfcU, iuatswfc, ikq)
-        !write(stdout,*) 'swfcatomk1', swfcatomk(1:10,1)
-        !write(stdout,*) 'swfcatomk2', swfcatomk(1:10,2)
-        ! ---------- LUCA --------------
-        IF( isolv == 2 ) then
-           !CALL apply_trev(swfcatomk, ikk, ikk, size(swfcatomk, 2))
-           !CALL apply_trev(swfcatomkpq, ikq, ikq, size(swfcatomkpq, 2))
-        ENDIF
         !
-        !write(stdout,*) 'swfcatomk3', swfcatomk(1:10,1)
-        !write(stdout,*) 'swfcatomk4', swfcatomk(1:10,2)
         ! At each SCF iteration for each ik read dpsi from file
         nrec = ik + (isolv - 1) * nksq 
         CALL get_buffer (dpsi, lrdwf, iudwf, nrec)
@@ -159,24 +148,20 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                  !  proj2(ibnd, ihubst) = < S(k+q)*phi(k+q) | dpsi(k+q) > 
                  ! FIXME: use ZGEMM instead of dot_product
                  DO ibnd = 1, nbnd_occ(ikk)
-                    ! --------------------- LUCA ----------------------
                     proj1(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst), &
-                                                  evc(1:npwx*npol,ibnd) )
+                                                       evc(1:npwx*npol,ibnd) )
                     proj2(ibnd, ihubst) = DOT_PRODUCT( swfcatomkpq(1:npwx*npol,ihubst), &
-                                                  dpsi(1:npwx*npol,ibnd) )
-                    !-------------------------------------------
+                                                       dpsi(1:npwx*npol,ibnd) )
                  ENDDO
               ENDDO 
            ENDIF
            !
         ENDDO
-         !
-         CALL mp_sum(proj1, intra_pool_comm)  
-         CALL mp_sum(proj2, intra_pool_comm)
-         !
-         IF (noncolin) then
-            ! --------------------- LUCA ----------------------------
-            ! NB: put the following in a subroutine
+        !
+        CALL mp_sum(proj1, intra_pool_comm)  
+        CALL mp_sum(proj2, intra_pool_comm)
+        !
+        IF (noncolin) THEN
             DO na = 1, nat
                nt = ityp(na)
                IF ( is_hubbard(nt) ) THEN
@@ -201,14 +186,14 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                                  ENDIF
                
                                  ! 
-                                 ! to be added the correction for metals at q=0
+                                 ! correction for metals at q=0
                                  IF (lmetq0.and.isolv==1) then
-                                      !
-                                      ! wdelta: smeared delta function at the Fermi level
+                                    !
+                                    ! wdelta: smeared delta function at the Fermi level
                                     wdelta = w0gauss ( (ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
                                     weight = wk(ikk)  
                                     w1 = weight * wdelta
-                                      !
+                                    !
                                     dnsq(m1, m2, is, na) = dnsq(m1, m2, is, na) +  &
                                                 w1 * def(1) * CONJG(proj1(ibnd,ihubst1+ldim*(is1-1))) &
                                                                   * proj1(ibnd,ihubst2+ldim*(is2-1))
@@ -220,8 +205,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                   ENDDO
                ENDIF
             ENDDO
-            ! --------------------------------------------------------
-         ELSE
+        ELSE
             DO na = 1, nat
                nt = ityp(na)
                IF (is_hubbard(nt)) THEN
@@ -262,8 +246,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   ! dnsq is symmetric: filling the m1 m2 lower triangular part 
   !
-  ! --------------- LUCA -------------
-  IF (.not.noncolin) then
+  IF (.NOT.noncolin) THEN
      ldim = 2 * Hubbard_lmax + 1
      DO m1 = 2, ldim
         DO m2 = 1, m1-1
@@ -336,7 +319,6 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
         trace_dns(:) = 0.d0
         DO is = 1, nspin/npol
            DO m = 1, ldim
-            ! ------------ LUCA (added npol) -------------------
               trace_dns(is) = trace_dns(is) + dnsq(m,m,is**npol,na)/rytoev
            ENDDO
            trace_dns_tot(na) = trace_dns_tot(na) + trace_dns(is)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -83,9 +83,7 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      current_k = ik
      !
-     ! ---------- LUCA (spawoc) -----------------
      IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
-     ! ------------------------------------
      !
      IF ( lsda ) current_spin = isk(ik)
 

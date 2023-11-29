@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -83,15 +83,11 @@ MODULE io_rho_xml
             OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='unknown' )
             IF (lda_plus_u_kind.EQ.0) THEN
-               ! ------- LUCA ----------
                IF (noncolin) THEN
                    WRITE( iunocc, * , iostat = ierr) rho%ns_nc
                ELSE   
-               ! ------------------
                   WRITE( iunocc, * , iostat = ierr) rho%ns
-               ! ------- LUCA ----------   
                ENDIF
-               ! --------------------------
                IF (hub_back) WRITE( iunocc, * , iostat = ierr) rho%nsb
             ELSEIF (lda_plus_u_kind.EQ.1) THEN
                IF (noncolin) THEN
@@ -190,15 +186,11 @@ MODULE io_rho_xml
             OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
             IF (lda_plus_u_kind.EQ.0) THEN
-               ! --------- LUCA ------------
                IF (noncolin) THEN
                   READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
                ELSE        
-               ! ----------------                    
                   READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
-               ! --------- LUCA ------------   
                ENDIF   
-               ! ----------------
                IF (hub_back) READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsb
             ELSEIF (lda_plus_u_kind.EQ.1) THEN
                IF (noncolin) THEN
@@ -218,15 +210,11 @@ MODULE io_rho_xml
             CLOSE( UNIT = iunocc, STATUS = 'KEEP')
          ELSE
             IF (lda_plus_u_kind.EQ.0) THEN
-               ! ------ LUCA ---------
                IF (noncolin) THEN
                   rho%ns_nc(:,:,:,:) = 0.D0      
                ELSE        
-               ! --------------------     
                   rho%ns(:,:,:,:) = 0.D0
-               ! ------ LUCA ---------
                ENDIF
-               ! --------------------   
                IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
             ELSEIF (lda_plus_u_kind.EQ.1) THEN
                IF (noncolin) THEN
@@ -240,15 +228,11 @@ MODULE io_rho_xml
          ENDIF
          !
          IF (lda_plus_u_kind.EQ.0) THEN
-            ! ------ LUCA ---------
             IF (noncolin) THEN
                 CALL mp_sum(rho%ns_nc, intra_image_comm)
             ELSE    
-            ! -------------------- 
                 CALL mp_sum(rho%ns, intra_image_comm)
-            ! ------ LUCA ---------    
             ENDIF    
-            ! --------------------
             IF (hub_back) CALL mp_sum(rho%nsb, intra_image_comm)   
          ELSEIF (lda_plus_u_kind.EQ.1) THEN
             IF (noncolin) THEN

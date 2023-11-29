@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -168,9 +168,8 @@ subroutine hp_sym_dmag (dmagtosym)
        term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
     enddo
     !
-    ! --------- LUCA ---------------
-    ! NOTE: could it be written as in sym_dmag.f90 ? 
-   IF (noncolin) then
+    ! LB: could it be written as in sym_dmag.f90 ? 
+    IF (noncolin) THEN
       gi_t = 0.d0 
       aq   = xq
       call cryst_to_cart (1, aq, at, - 1)
@@ -188,7 +187,7 @@ subroutine hp_sym_dmag (dmagtosym)
          call cryst_to_cart (1, wrk, bg, 1)
          gi_t (:, isym) = wrk (:)
       enddo
-   ENDIF
+    ENDIF
    !
    DO isym = 1, nsymq
       ggf (isym) = 0.d0
@@ -203,7 +202,6 @@ subroutine hp_sym_dmag (dmagtosym)
       ENDIF
       phase2 (isym) = CMPLX( cos( ggf(isym) ), -sin( ggf(isym) ), kind=DP)
     ENDDO
-    ! --------------------------
     !
     !
     dmagsym(:,:,:,:) = (0.d0, 0.d0)

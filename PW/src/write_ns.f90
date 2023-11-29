@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -628,7 +628,6 @@ SUBROUTINE write_nsg
   !
 END SUBROUTINE write_nsg 
 !
-! ---------------- LUCA (spawoc) ---------------------------
 SUBROUTINE write_nsg_nc
    !-----------------------------------------------------------------------
    !
@@ -707,47 +706,42 @@ SUBROUTINE write_nsg_nc
          !
          ALLOCATE (f(2*ldim1,2*ldim1), vet(2*ldim1,2*ldim1), lambda(2*ldim1))
          !
-         !DO is = 1, nspin   
-            !
-            DO viz = 1, neighood(na1)%num_neigh
-               na2 = neighood(na1)%neigh(viz)
-               IF (na2.EQ.na1) THEN
-                  DO m1 = 1, ldim1
-                     DO m2 = 1, ldim1
-                        f(m1,m2)              = nsgnew(m1,m2,viz,na1,1)
-                        f(m1, ldim1+m2)       = nsgnew(m1,m2,viz,na1,2)
-                        f(ldim1+m1, m2)       = nsgnew(m1,m2,viz,na1,3)
-                        f(ldim1+m1, ldim1+m2) = nsgnew(m1,m2,viz,na1,4)
-                     ENDDO
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            IF (na2.EQ.na1) THEN
+               DO m1 = 1, ldim1
+                  DO m2 = 1, ldim1
+                     f(m1,m2)              = nsgnew(m1,m2,viz,na1,1)
+                     f(m1, ldim1+m2)       = nsgnew(m1,m2,viz,na1,2)
+                     f(ldim1+m1, m2)       = nsgnew(m1,m2,viz,na1,3)
+                     f(ldim1+m1, ldim1+m2) = nsgnew(m1,m2,viz,na1,4)
                   ENDDO
-                  GO TO 4
-               ENDIF
-            ENDDO
-            !
-4           CONTINUE
-            !
-            ! This will only print the on-site blocks of the matrix. 
-            ! The diagonalization will not give components on states of other atoms. 
-            ! To be improved for periodic systems.
-            !
-            CALL cdiagh(2*ldim1, f, 2*ldim1, lambda, vet)
-            !
-            !IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
-            WRITE( stdout,'(5x,"eigenvalues:")')
-            WRITE( stdout,'(5x,14f7.3)') (lambda(m1), m1=1, 2*ldim1)
-            !
-            WRITE( stdout,'(5x,"eigenvectors (columns):")')
-            DO m1 = 1, 2*ldim1
-               WRITE( stdout,'(5x,14f7.3)') ( DBLE(vet(m1,m2)), m2=1, 2*ldim1 )
-            ENDDO
-            !
-            WRITE( stdout,'(5x,"occupations, | n_(i1, i2)^(sigma1, sigma2) |:")')
-            DO m1 = 1, 2*ldim1
-               WRITE( stdout,'(5x,14f7.3)') ( DSQRT(DBLE(f(m1,m2))**2 + &
-                                             AIMAG(f(m1,m2))**2), m2=1, 2*ldim1)               
-            ENDDO
-            !
-         !ENDDO ! is
+               ENDDO
+               GO TO 4
+            ENDIF
+         ENDDO
+         !
+4        CONTINUE
+         !
+         ! This will only print the on-site blocks of the matrix. 
+         ! The diagonalization will not give components on states of other atoms. 
+         ! To be improved for periodic systems.
+         !
+         CALL cdiagh(2*ldim1, f, 2*ldim1, lambda, vet)
+         !
+         WRITE( stdout,'(5x,"eigenvalues:")')
+         WRITE( stdout,'(5x,14f7.3)') (lambda(m1), m1=1, 2*ldim1)
+         !
+         WRITE( stdout,'(5x,"eigenvectors (columns):")')
+         DO m1 = 1, 2*ldim1
+            WRITE( stdout,'(5x,14f7.3)') ( DBLE(vet(m1,m2)), m2=1, 2*ldim1 )
+         ENDDO
+         !
+         WRITE( stdout,'(5x,"occupations, | n_(i1, i2)^(sigma1, sigma2) |:")')
+         DO m1 = 1, 2*ldim1
+            WRITE( stdout,'(5x,14f7.3)') ( DSQRT(DBLE(f(m1,m2))**2 + &
+                                           AIMAG(f(m1,m2))**2), m2=1, 2*ldim1)               
+         ENDDO
          !
          DEALLOCATE (f, vet, lambda)
          !
@@ -832,7 +826,6 @@ SUBROUTINE read_ns()
   ELSE
      !
      IF (lda_plus_u_kind.EQ.0) THEN
-        !     -------- LUCA -------------
         IF (noncolin) THEN
            rho%ns_nc(:,:,:,:) = 0.D0
         ELSE
@@ -854,7 +847,6 @@ SUBROUTINE read_ns()
   CALL mp_bcast( ierr, ionode_id, intra_image_comm )
   !
   IF (lda_plus_u_kind.EQ.0) THEN
-     ! ---------- LUCA ---------------------------
      IF (noncolin) THEN
         CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
         CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth) 
@@ -862,7 +854,6 @@ SUBROUTINE read_ns()
         CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
         CALL v_hubbard (rho%ns, v%ns, eth)
      ENDIF
-     ! --------------------------------------------
      IF (hub_back) THEN
         CALL mp_bcast(rho%nsb, ionode_id, intra_image_comm)
         CALL v_hubbard_b (rho%nsb, v%nsb, eth1)
@@ -878,7 +869,6 @@ SUBROUTINE read_ns()
      ENDIF
   ELSEIF (lda_plus_u_kind.EQ.2) THEN
      CALL mp_bcast(nsg, ionode_id, intra_image_comm)
-     ! ------------ LUCA (spawoc) -------------------------
      IF (noncolin) THEN
         CALL v_hubbard_extended_nc (nsg, v_nsg, eth)
      ELSE

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -54,10 +54,9 @@ SUBROUTINE hp_prepare_q (iq, do_iq, setup_pw)
   !
   ! Check if the NSCF calculation must be performed
   !
-  ! --------------- LUCA (added condition noncolin.and.domag) ------------------------
   setup_pw = .NOT.lgamma .OR. &            ! perform NCSF calculation for all q\=0
              (lgamma .AND. recalc_sym) &   ! perform NCSF calculation also for q=0
-             .OR.(noncolin.and.domag)      ! only if the number of symmetries was reduced
+             .OR.(noncolin.AND.domag)      ! only if the number of symmetries was reduced
                                            ! (which may lead to the increase in the number of k points)
   !
   ! If setup_pw=.TRUE. then tetra is initialized through setup_nscf.

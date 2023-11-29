@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -563,7 +563,6 @@ END SUBROUTINE vhpsi
 !-------------------------------------------------------------------------
 
 !-------------------------------------------------------------------------
-! ----------------- LUCA (spawoc) ---------------------
 SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   !-----------------------------------------------------------------------
   !! Noncollinear version of \(\texttt{vhpsi} routine (A. Smogunov).
@@ -605,15 +604,7 @@ SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   ALLOCATE( proj(nwfcU, mps) )
   proj(:,:) = (0.0_dp,0.0_dp)
   !
-  !-- FIXME: to be replaced with ZGEMM
-  !DO ibnd = 1, mps 
-    !DO na = 1, nwfcU
-    !   proj(na, ibnd) = dot_product( wfcU(1:ldap*npol, na), psip(1:ldap*npol, ibnd))
-    !ENDDO
-  !ENDDO
-  !
   ! calculate <psi_at | phi_k> 
-  ! ------ LUCA (spawoc) implemented calculation with ZGEMM
   CALL ZGEMM ('C', 'N', nwfcU, mps, ldap*npol, (1.0_DP, 0.0_DP), wfcU, &
                     ldap*npol, psip, ldap*npol, (0.0_DP, 0.0_DP),  proj, nwfcU)
 #if defined(__MPI)
@@ -823,11 +814,8 @@ SUBROUTINE vhpsi_UV_nc ()
                            CALL ZGEMM ('n','n', ldim2*npol,mps,ldim1*npol, (1.0_dp,0.0_dp), &
                                  vaux,ldimx*npol, projauxc,ldimx*npol, (0.0_dp,0.0_dp), ctemp, ldimx*npol)
                            !
-                                 ! ---- LUCA (spawoc) restore all ZGEMM -------------
                            CALL ZGEMM ('n','n', ldap*npol, mps, ldim2*npol, CONJG(phase), &
                                  wfcUaux, ldap*npol, ctemp, ldimx*npol, (1.0_dp,0.0_dp), hpsi, ldap*npol)
-                          !    ENDDO
-                          ! ENDDO
                            !
                         ENDIF
                      ENDDO 

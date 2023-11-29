@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -93,6 +93,14 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
            !
            l = upf(nt)%lchi(n)
            !
+           ! Note: For FR-PPs, the j = l-1/2 is full, the j = l+1/2 is empty.
+           ! For example, for Eu-4f one 4f orbital has non-zero occupancy, while 
+           ! other 4f orbital is empty. However, hubbard_occ is defined as a sum
+           ! of both occupied and empty 4f orbitals (see determine_hubbard_occ).
+           ! Therefore, both occupied and empty 4f states will be considered in 
+           ! the calculation (the full 4f shell), which is consistent with the 
+           ! NR/SR case where the full 4f shell is considered. 
+           !
            IF (is_hubbard(nt)) THEN
               IF (label(n)==label_hub) THEN
                  IF (hubbard_occ(nt,1) > 0.D0) THEN
@@ -101,21 +109,6 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
                             &zero occupations is not allowed',1) 
                  ENDIF
-                 ! For FR-PPs, hubbard_occ cannot be used here because it does not
-                 ! allow to distinguish between the occupied and unoccupied channels.
-                 !
-                 ! NOTE: the following lines should not be needed, because when 
-                 ! only the j = l-1/2 is full, the j = l+1/2 would be considered 
-                 ! as empty and then not counted, thus leading to inconsistencies
-                 ! with the nonrelativistic case
-                 !  
-                 ! IF (noncolin .AND. upf(nt)%has_so) THEN
-                 !   IF (upf(nt)%oc(n) > 0.D0) THEN
-                 !      hubbard_wfc = .TRUE.
-                 !   ELSE
-                 !      hubbard_wfc = .FALSE.
-                 !   ENDIF
-                 ! ENDIF
               ENDIF
            ENDIF
            !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum_ESPRESSO group
+! Copyright (C) 2001-2023 Quantum_ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -76,7 +76,6 @@ SUBROUTINE calcchi (dns_, chi_, name_)
            !
            ! Divide by rytoev -> conversion of units from Ry to eV
            !
-           ! ---------- LUCA (added npol) --------------------
            DO is = 1, nspin/npol
               DO m = 1, 2 * Hubbard_l(nt) + 1
                  trace_dns(is) = trace_dns(is) + dns_(m,m,is**npol,na,icell)/rytoev

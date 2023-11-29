@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -469,7 +469,6 @@ SUBROUTINE new_nsg()
   !
 END SUBROUTINE new_nsg 
 !
-! --------- LUCA (spawoc) ------------------------
 SUBROUTINE new_nsg_nc()
    !-----------------------------------------------------------------------
    !! This routine computes the new value for nsgnew (the occupation matrices)
@@ -532,13 +531,11 @@ SUBROUTINE new_nsg_nc()
    nrg_nc(:,:,:,:,:,:) = (0.d0, 0.d0)
    nsgnew (:,:,:,:,:) = (0.d0, 0.d0)
    !
-   ! -------------- LUCA (spawoc) ---------------------
    IF (noncolin) THEN
       ALLOCATE (proj%k (nwfcU, nbnd))      
    ELSE        
       CALL allocate_bec_type ( nwfcU, nbnd, proj )
    ENDIF  
-   ! -----------------------------------------
    !
    ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
    !
@@ -592,7 +589,6 @@ SUBROUTINE new_nsg_nc()
                   ! 
                   IF (na1.GT.na2) THEN
                      !
-                     ! ----------- LUCA (spawoc) -------- 
                      DO m1 = 1, ldim1
                         DO m2 = 1, ldim2
                            DO is1 = 1, npol
@@ -603,7 +599,6 @@ SUBROUTINE new_nsg_nc()
                            ENDDO
                         ENDDO
                      ENDDO
-                     ! ----------------------------------------
                      !
                   ELSE
                      !
@@ -619,7 +614,6 @@ SUBROUTINE new_nsg_nc()
                            !
                            DO is3 = 1, npol
                               DO is4 = 1, npol
-                                 ! ---------- LUCA (spawoc) --------------
                                  IF (domag.or.lspinorb) then
                                     nrg_nc(m2,m1,viz,na1,is4,is3) = &
                                     nrg_nc(m2,m1,viz,na1,is4,is3) + &
@@ -631,7 +625,6 @@ SUBROUTINE new_nsg_nc()
                                     dble( wg(ibnd,ik) * ( proj%k(off1+ldim1*(is4-1),ibnd) * &
                                     CONJG(proj%k(off2+ldim2*(is3-1),ibnd) * phase) ) )
                                  ENDIF
-                                 ! ------------------------------------
                               ENDDO
                            ENDDO
                            !

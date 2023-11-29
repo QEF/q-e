@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -120,15 +120,11 @@ SUBROUTINE sum_band()
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind==0) THEN
        !
-       ! --- LUCA -----
        IF (noncolin) THEN
           CALL new_ns_nc(rho%ns_nc)
        ELSE
-       ! ---------------        
           CALL new_ns(rho%ns)
-       ! ----LUCA ------------   
        ENDIF 
-       ! -----------------  
        !
        DO nt = 1, ntyp
           IF (is_hubbard_back(nt)) CALL new_nsb( rho%nsb )
@@ -144,7 +140,6 @@ SUBROUTINE sum_band()
        !
     ELSEIF (lda_plus_u_kind==2) THEN 
        !
-       ! ----LUCA (spawoc)------------
       IF (noncolin) THEN
           CALL new_nsg_nc()
       ELSE

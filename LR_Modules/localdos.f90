@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -106,7 +106,6 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !
   !$acc data create(psic, psic_nc) copy(ldoss) 
   do ik = 1, nksq
-   ! ------------ LUCA (added ikks(ik) instead of ik)---------------
      if (lsda) current_spin = isk (ikks(ik))
      npw = ngk(ikks(ik))
      weight = wk (ikks(ik))

@@ -1,4 +1,4 @@
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -455,7 +455,7 @@ CONTAINS
          IF (n_starting_wfc + 2*l+1 > natomwfc) CALL errore &
                ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
          DO ig = 1, npw
-            ! ---------- LUCA (spawoc) phase factor for DFT +U +V-------------
+            ! LB: phase factor for DFT+U+V
             aux(ig) = lphase*sk(ig)*ylm(ig,lm)*chiaux(ig)
          ENDDO
          ! 
