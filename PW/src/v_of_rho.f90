@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -86,15 +86,11 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         !
         ! DFT+U (simplified)
         !
-        ! ---------------- LUCA ------------
         IF (noncolin) THEN 
            CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth)
         ELSE  
-        ! ----------------------------        
            CALL v_hubbard (rho%ns, v%ns, eth)
-        ! ---------------- LUCA ------------   
         ENDIF   
-        ! -------------------------------
         !
         ! Background
         IF (ldmx_b.GT.0) THEN
@@ -116,13 +112,11 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         !
         ! DFT+U+V (simplified)
         !
-        ! ------------ LUCA (spawoc) --------------------------
         IF (noncolin) THEN
            CALL v_hubbard_extended_nc (nsg, v_nsg, eth)
         ELSE
            CALL v_hubbard_extended (nsg, v_nsg, eth)
         ENDIF
-        ! ------------------------------------
      ELSE
         !
         CALL errore('v_of_rho', 'Not allowed value of lda_plus_u_kind',1)
@@ -875,7 +869,6 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
 END SUBROUTINE v_hubbard
 !-----------------------------------------------------------------------
 
-!--- LUCA
 !----------------------------------------------------------------------
 SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
   !---------------------------------------------------------------------
@@ -963,7 +956,6 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
            ENDIF
         ENDDO  
      ENDIF
-     !---------------------------------------
      !
   ENDDO
   !
@@ -1575,7 +1567,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   !
 END SUBROUTINE v_hubbard_extended
 !---------------------------------------------------------------------
-! -------------- LUCA (spawoc) ------------------------------
+
 SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    !-----------------------------------------------------------------------------------
    !
@@ -1707,8 +1699,6 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    !
    IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
       WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
-      !write(stdout,*) "check", check
-      !write(stdout,*) "check_en", check_en
    ENDIF
    !
    RETURN

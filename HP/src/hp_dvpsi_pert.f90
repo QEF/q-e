@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -89,24 +89,22 @@ subroutine hp_dvpsi_pert (ik, nrec)
   !
   DO na = 1, nat
      IF ( perturbed_atom(na) ) THEN
-      ! -------------- LUCA -----------------
-      nt = ityp(na)
-      ldim = (2 * Hubbard_l(nt) + 1) * npol 
-      IF (noncolin) then
-         ihubst = offsetU(na) + 1
-         CALL ZGEMM('C','N', ldim, nbnd, npwx*npol, (1.d0,0.d0), &
-                  swfcatomk(1,ihubst), npwx*npol, evc, npwx*npol,&
-                  (0.d0,0.d0), proj(ihubst,1), nwfcU)
-      ELSE
-        DO m = 1, ldim
-           ihubst = offsetU(na) + m   ! I m index
-           DO ibnd = 1, nbnd
-              ! FIXME: use ZGEMM instead of dot_product
-              proj(ihubst, ibnd) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst ), evc(1:npwx*npol,ibnd) )
+        nt = ityp(na)
+        ldim = (2 * Hubbard_l(nt) + 1) * npol 
+        IF (noncolin) then
+           ihubst = offsetU(na) + 1
+           CALL ZGEMM('C','N', ldim, nbnd, npwx*npol, (1.d0,0.d0), &
+                    swfcatomk(1,ihubst), npwx*npol, evc, npwx*npol,&
+                    (0.d0,0.d0), proj(ihubst,1), nwfcU)
+        ELSE
+           DO m = 1, ldim
+              ihubst = offsetU(na) + m   ! I m index
+              DO ibnd = 1, nbnd
+                 ! FIXME: use ZGEMM instead of dot_product
+                 proj(ihubst, ibnd) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst ), evc(1:npwx*npol,ibnd) )
+              ENDDO
            ENDDO
-        ENDDO
-      ENDIF
-      ! ------------------------------
+        ENDIF
      ENDIF
   ENDDO
   !
@@ -124,11 +122,9 @@ subroutine hp_dvpsi_pert (ik, nrec)
               DO ig = 1, npwx
                  dvpsi(ig, ibnd) = dvpsi(ig, ibnd) + &
                         & swfcatomkpq(ig,ihubst) * proj(ihubst,ibnd)
-                 ! -------------- LUCA --------------------
                  IF (noncolin) &
                     dvpsi(ig+npwx, ibnd) = dvpsi(ig+npwx, ibnd) + &
                         & swfcatomkpq(ig+npwx,ihubst) * proj(ihubst,ibnd)
-                  !-----------------------------------------
               ENDDO
            ENDDO
         ENDDO
@@ -137,9 +133,7 @@ subroutine hp_dvpsi_pert (ik, nrec)
   !
   ! Write dvpsi on file.
   !
-  ! ------------- LUCA (added nrec) -------------
   CALL save_buffer(dvpsi, lrdvwfc, iudvwfc, nrec)
-  ! ----------------------------------
   !
   DEALLOCATE (proj)
   !

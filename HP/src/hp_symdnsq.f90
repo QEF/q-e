@@ -22,7 +22,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   USE symm_base,    ONLY : d1, d2, d3, nsym, irt, t_rev, s
   USE qpoint,       ONLY : xq
   USE lr_symm_base, ONLY : nsymq, minus_q, irotmq, rtau, gi
-  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU, hubbard_occ, d_spin_ldau
+  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, d_spin_ldau
   USE ldaU_hp,      ONLY : nah_pert
   USE noncollin_module, ONLY: npol, noncolin, domag
   USE cell_base,        ONLY : bg, at
@@ -33,13 +33,11 @@ SUBROUTINE hp_symdnsq (dnsq)
   !
   ! Local variables
   !
-  INTEGER :: nt, n, counter, l
+  INTEGER :: nt, n, l
   INTEGER :: na, nb, is, is2, i, j, m1, m2, m0, m00, ldim, is1, is3, is4, m3, m4
   INTEGER :: isym, irot, isym2
-  ! -------- LUCA ---------------
   COMPLEX(DP), ALLOCATABLE :: dnr(:,:,:,:), dnraux(:,:,:,:), &
                               dnr_nc(:,:,:,:,:), dnr1_nc(:,:,:,:,:), dnraux_nc(:,:,:,:,:)
-  ! -----------------------------------------------
   COMPLEX(DP) :: phase, phase2(0:1)
   REAL(DP) :: arg, arg2, gi_t(3, 48), aq (3), raq (3), wrk (3)
   !
@@ -50,53 +48,18 @@ SUBROUTINE hp_symdnsq (dnsq)
   ldim = 2 * Hubbard_lmax + 1
   !
   ! Initialization
-  ! ---- LUCA -------
   IF (noncolin) THEN
      IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
      CALL comp_dspinldau()
   ENDIF
-  ! -------------------
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
-  !
-  counter = 0  
-  DO na = 1, nat
-     nt = ityp(na)
-     IF (.NOT.is_hubbard(nt)) CYCLE
-     DO n = 1, upf(nt)%nwfc
-        l = upf(nt)%lchi(n)
-        ! ------------- LUCA ---------------------
-        IF (hubbard_occ(nt,1) > 0.d0 .AND. l == Hubbard_l(nt)) then
-           !     
-           IF (noncolin) then
-              IF ( upf(nt)%has_so ) THEN
-                 !     
-                 ! j = l-1/2, degeneracy 2l
-                 counter = counter + 2 * l
-                 !
-                 ! j = l+1/2, degeneracy 2*l+2
-                 IF (ABS( upf(nt)%jchi(n)-l-0.5D0 ) < 1.D-6) then
-                    counter = counter + 2
-                 ENDIF
-                 counter = counter + 2*l + 2
-              ELSE
-                 counter = counter + 2 * ( 2 * l + 1 )     
-              ENDIF
-           ELSE
-              counter = counter + 2 * l + 1
-           ENDIF
-        ENDIF
-        ! ----------------------------------
-     ENDDO
-  ENDDO
-  IF (counter.NE.nwfcU) CALL errore ('hp_symdnsq', 'nwfcU<>counter', 1)
   !
   ! Allocate auxiliary arrays
   !
   ALLOCATE( dnraux(ldim, ldim, nspin, nat) )  
   dnraux(:,:,:,:) = (0.d0,0.d0)
   !
-  ! --------- LUCA ------------------
   IF (noncolin) then
     ALLOCATE( dnr_nc(ldim, ldim, npol, npol, nat) )  
     dnr_nc(:,:,:,:,:) = (0.d0,0.d0)  
@@ -113,7 +76,6 @@ SUBROUTINE hp_symdnsq (dnsq)
   ! and put it in dnr zeroing dnsq
   ! IT: Hermiticity is already imposed by construction
   !
-  ! ------------ LUCA ---------------
   IF (noncolin) then
     DO na = 1, nat
        nt = ityp (na)
@@ -239,8 +201,7 @@ SUBROUTINE hp_symdnsq (dnsq)
           ! where G = Sq - q, and tau_pert is the position
           ! of the perturbed atom 
           !
-          ! --------- LUCA ---------------
-          IF (noncolin) then
+          IF (noncolin) THEN
              gi_t = 0.d0 
              aq   = xq
              call cryst_to_cart (1, aq, at, - 1)
@@ -260,7 +221,6 @@ SUBROUTINE hp_symdnsq (dnsq)
              enddo
           ENDIF
           !
-          ! --------------------------
           phase2 = 0.0
           IF (t_rev(irot) == 1) then
             arg2 = ( gi_t(1, irot) * tau(1, nah_pert) + &
@@ -274,8 +234,7 @@ SUBROUTINE hp_symdnsq (dnsq)
             phase2(0) = CMPLX (cos(arg2), -sin(arg2), kind=DP)
           ENDIF
           !
-          ! ---------------- LUCA -----------------------
-          IF (noncolin) then
+          IF (noncolin) THEN
             DO m1 = 1, 2 * Hubbard_l(nt) + 1  
                DO m2 = 1, 2 * Hubbard_l(nt) + 1
                   DO is1 = 1, npol
@@ -350,47 +309,45 @@ SUBROUTINE hp_symdnsq (dnsq)
                ENDDO
             ENDDO
           ELSE
-          DO is = 1, nspin
-             !
-             DO m1 = 1, 2 * Hubbard_l(nt) + 1  
-                DO m2 = 1, 2 * Hubbard_l(nt) + 1  
-                   DO m0 = 1, 2 * Hubbard_l(nt) + 1  
-                      DO m00 = 1, 2 * Hubbard_l(nt) + 1  
-                         !
-                         IF (Hubbard_l(nt).EQ.0) THEN
-                            dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
-                                     dnr(m0,m00,is,nb) * phase * phase2(0)
-                         ELSEIF (Hubbard_l(nt).EQ.1) THEN
-                            dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) +       &
-                                     d1(m0,m1,irot) * d1(m00,m2,irot) * &
-                                     dnr(m0,m00,is,nb) * phase * phase2(0)
-                         ELSEIF (Hubbard_l(nt).EQ.2) THEN
-                            dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) +       &
-                                     d2(m0,m1,irot) * d2(m00,m2,irot) * &
-                                     dnr(m0,m00,is,nb) * phase * phase2(0)
-                         ELSEIF (Hubbard_l(nt).EQ.3) THEN
-                            dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) +       &
-                                     d3(m0,m1,irot) * d3(m00,m2,irot) * &
-                                     dnr(m0,m00,is,nb) * phase * phase2(0)
-                         ELSE
-                            CALL errore ('hp_symdnsq', 'angular momentum not implemented', &
+            DO is = 1, nspin
+               !
+               DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+                  DO m2 = 1, 2 * Hubbard_l(nt) + 1  
+                     DO m0 = 1, 2 * Hubbard_l(nt) + 1  
+                        DO m00 = 1, 2 * Hubbard_l(nt) + 1  
+                           !
+                           IF (Hubbard_l(nt).EQ.0) THEN
+                              dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
+                                       dnr(m0,m00,is,nb) * phase * phase2(0)
+                           ELSEIF (Hubbard_l(nt).EQ.1) THEN
+                              dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) +       &
+                                       d1(m0,m1,irot) * d1(m00,m2,irot) * &
+                                       dnr(m0,m00,is,nb) * phase * phase2(0)
+                           ELSEIF (Hubbard_l(nt).EQ.2) THEN
+                              dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) +       &
+                                       d2(m0,m1,irot) * d2(m00,m2,irot) * &
+                                       dnr(m0,m00,is,nb) * phase * phase2(0)
+                           ELSEIF (Hubbard_l(nt).EQ.3) THEN
+                              dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) +       &
+                                       d3(m0,m1,irot) * d3(m00,m2,irot) * &
+                                       dnr(m0,m00,is,nb) * phase * phase2(0)
+                           ELSE
+                              CALL errore ('hp_symdnsq', 'angular momentum not implemented', &
                                         ABS(Hubbard_l(nt)) )
-                         ENDIF
-                         !
-                      ENDDO ! m00
-                   ENDDO ! m0
-                ENDDO ! m2
-             ENDDO ! m1
-             !
-          ENDDO ! is
+                           ENDIF
+                           !
+                        ENDDO ! m00
+                     ENDDO ! m0
+                  ENDDO ! m2
+               ENDDO ! m1
+               !
+            ENDDO ! is
           ENDIF
-          ! ----------------------------------------------------
           !
        ENDIF 
        !
     ENDDO ! na
     !
-    ! ---------- LUCA ------------
     IF (noncolin) then
        dnraux_nc = dnraux_nc + dnr1_nc / nsymq
     ELSE
@@ -398,39 +355,38 @@ SUBROUTINE hp_symdnsq (dnsq)
     ENDIF
     !
   ENDDO ! isym
-  ! -------- LUCA --------------
-  !-- Setup the output matrix ns with combined spin index 
   !
-  IF (noncolin) then
+  ! Setup the output matrix ns with combined spin index 
+  !
+  IF (noncolin) THEN
       DO na = 1, nat
          nt = ityp (na)
          IF ( is_hubbard(nt) ) THEN
             DO is1 = 1, npol
-            DO is2 = 1, npol
-               i = npol*(is1-1) + is2
-               DO m1 = 1, 2*Hubbard_l(nt)+1
-                  DO m2 = 1, 2*Hubbard_l(nt)+1
-                     dnsq(m1,m2,i,na) = dnraux_nc(m1,m2,is1,is2,na)
+               DO is2 = 1, npol
+                  i = npol*(is1-1) + is2
+                  DO m1 = 1, 2*Hubbard_l(nt)+1
+                     DO m2 = 1, 2*Hubbard_l(nt)+1
+                        dnsq(m1,m2,i,na) = dnraux_nc(m1,m2,is1,is2,na)
+                     ENDDO
                   ENDDO
                ENDDO
             ENDDO
-            ENDDO
          ENDIF
       ENDDO
-   ELSE
+  ELSE
       dnsq = dnraux
-   ENDIF
+  ENDIF
   !
-  ! ---------- LUCA ----------------
-  IF (noncolin) then
-    DEALLOCATE (dnr_nc)
-    DEALLOCATE (dnr1_nc)
-    DEALLOCATE (dnraux_nc)
-    IF ( ALLOCATED (d_spin_ldau) ) DEALLOCATE( d_spin_ldau )
+  IF (noncolin) THEN
+     DEALLOCATE (dnr_nc)
+     DEALLOCATE (dnr1_nc)
+     DEALLOCATE (dnraux_nc)
+     IF ( ALLOCATED (d_spin_ldau) ) DEALLOCATE( d_spin_ldau )
   ELSE
      DEALLOCATE (dnr)
   ENDIF
-  ! ------------------------------
+  !
   DEALLOCATE (dnraux)
   !
   CALL stop_clock('hp_symdnsq')

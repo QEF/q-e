@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -65,9 +65,8 @@ SUBROUTINE hp_init_q()
         eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) ,kind=DP)
      ENDDO
   ENDIF
-  ! ------------ LUCA ------------------------------
+  !
   IF (noncolin.AND.domag) ALLOCATE(tevc(npwx*npol,nbnd))
-  ! ------------------------------------------------
   !
   DO ik = 1, nksq
      !
@@ -97,10 +96,10 @@ SUBROUTINE hp_init_q()
      ! is not an integer number (as a consequence some k pools will have nksq=1).
      !
      CALL get_buffer (evc, lrwfc, iuwfc, ikk)
-     ! ----------------- LUCA (to be CHECKED) ---------------------------
+     !
      IF (noncolin .and. domag) &
          CALL get_buffer (tevc, lrwfc, iuwfc, ikmks(ik) )
-     ! ---------------------------------------------------    
+     !
      IF (.NOT.lgamma .AND. nksq.EQ.1) CALL get_buffer (evq, lrwfc, iuwfc, ikq)
      !
      ! 2) USPP: Compute the becp terms which are used in the rest of the code
@@ -116,10 +115,8 @@ SUBROUTINE hp_init_q()
         ! becp1 = <vkb|evc>
         !
         CALL calbec (npw, vkb, evc, becp1(ik))
-        ! ----------------- LUCA ---------------------------
         IF (noncolin .and. domag) &
-        CALL calbec (npw, vkb, tevc, becpt(ik) )
-        ! --------------------------------------------------- 
+           CALL calbec (npw, vkb, tevc, becpt(ik) )
         !
      ENDIF
      !
@@ -129,10 +126,8 @@ SUBROUTINE hp_init_q()
   !
   CALL lr_orthoUwfc (.FALSE.)
   !
-  ! ----------- LUCA -----------------
-  ! to be CHECKED 
   IF (noncolin.AND.domag) DEALLOCATE( tevc )
-  !---------------------------------------
+  !
   CALL stop_clock ( 'hp_init_q' )
   !
   RETURN

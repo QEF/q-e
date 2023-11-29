@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,7 +49,6 @@ SUBROUTINE init_nsg
          !
          totoc = hubbard_occ(nt,1)
          !
-         ! --- LUCA (spawoc) changed condition on magnetization --------
          IF (nspin .GE. 2) THEN
             IF (starting_magnetization(nt).GT.0.d0) THEN 
                nm = .FALSE.
@@ -65,7 +64,6 @@ SUBROUTINE init_nsg
          IF (.NOT.nm) THEN
             ! Atom is magnetic
             ! 
-            ! ------------ LUCA (spawoc) -----------------
             IF (noncolin) THEN
                !-- parameters for rotating occ. matrix
                cosin   = COS(angle1(nt)) 
@@ -108,7 +106,6 @@ SUBROUTINE init_nsg
             ENDIF
          ELSE  
             ! Atom is non-magnetic
-            ! ------------- LUCA (spawoc) -------------
             IF (noncolin) THEN
                DO m1 = 1, ldim
                   nsg (m1,m1,viz,na,1) = totoc / 2.d0 / ldim
@@ -121,7 +118,6 @@ SUBROUTINE init_nsg
                   ENDDO  
                ENDDO  
             ENDIF
-            ! --------------------------------------
          ENDIF  
          !
          ! Background part

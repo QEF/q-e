@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -31,7 +31,6 @@ SUBROUTINE hp_openfil_q()
   !
   IF (LEN_TRIM(prefix) == 0) CALL errore ('hp_openfil_q', 'wrong prefix', 1)
   !
-  ! ------------- LUCA -----------------------
   IF (lgamma .AND. .NOT.recalc_sym.and. .not.(noncolin.and.domag)) THEN
      tmp_dir = tmp_dir_save
   ELSE

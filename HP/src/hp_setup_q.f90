@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -76,7 +76,7 @@ SUBROUTINE hp_setup_q()
   !
   IMPLICIT NONE
   INTEGER :: ir, isym, ik, it, na
-  LOGICAL :: sym(48), magnetic_sym, is_symmorphic
+  LOGICAL :: sym(48), magnetic_sym
   !
   CALL start_clock ('hp_setup_q')
   !
@@ -92,7 +92,7 @@ SUBROUTINE hp_setup_q()
   !    This is needed in find_sym
   !
   IF (.NOT.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
-  ! ----------- LUCA ----------------------------
+  !
   IF (noncolin.and.domag) THEN
      DO na = 1, nat
        !
@@ -104,12 +104,11 @@ SUBROUTINE hp_setup_q()
                      COS( angle1(ityp(na)) )
      END DO
      ux=0.0_DP
-     ! IF (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+     !
+     ! Change the sign of the magnetic field in the screened US coefficients
+     ! and save also the coefficients computed with -B_xc.
+     !
      IF (okvan) THEN
-       !
-       !  Change the sign of the magnetic field in the screened US coefficients
-       !  and save also the coefficients computed with -B_xc.
-       !
        deeq_nc_save(:,:,:,:,1)=deeq_nc(:,:,:,:)
        v%of_r(:,2:4)=-v%of_r(:,2:4)
        CALL newd()
@@ -118,8 +117,6 @@ SUBROUTINE hp_setup_q()
        deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
      ENDIF
   ENDIF
-  ! ------------------------------------------------
-  !
   ! 
   ! 4) Compute the derivative of the XC potential (dmuxc)
   !
@@ -149,33 +146,17 @@ SUBROUTINE hp_setup_q()
   ! The small group of q was already determined. At q\=0 it is calculated
   ! by set_nscf, at q=0 it coincides with the point group and we take nsymq=nsym
   !
-  ! ---------- LUCA --------------------------
-!  IF (noncolin .and. domag) then
-      ! NOTE: maybe this (if it works) can be extended
-      !       also to the collinear nonrelativistic case 
-!      IF (lgamma) THEN
-!         nsymq = nsym
-!         minus_q = .TRUE.
-!      ENDIF
-      !
-!      modenum = 0
-!      IF (nsymq == 0)  CALL set_small_group_of_q (nsymq, invsymq, minus_q)
-!      IF (.NOT. time_reversal) minus_q = .FALSE.
-!  ELSE 
-      IF (lgamma) THEN
-         !
-         nsymq   = nsym
-         !
-         IF ( time_reversal ) THEN
-            minus_q = .TRUE.
-         ELSE
-            minus_q = .FALSE.
-         ENDIF
-         !
-      ENDIF
-      minus_q = .FALSE.
- ! ENDIF 
-  ! ---------------------------------------------------
+  IF (lgamma) THEN
+     !
+     nsymq   = nsym
+     !
+     IF ( time_reversal ) THEN
+         minus_q = .TRUE.
+     ELSE
+         minus_q = .FALSE.
+     ENDIF
+     !
+  ENDIF
   !
   ! Calculate rtau (the Bravais lattice vector associated to a rotation) 
   ! with the new symmetry order
@@ -186,25 +167,6 @@ SUBROUTINE hp_setup_q()
   ! If minus_q=.true. calculate also irotmq and the G associated to Sq=-q+G
   !
   CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
-  !
-  ! Check if there are fractional translations
-  ! Note: Try to use PH/symmorphic_or_nzb ?
-  !
-  !  LUCA: to be CHECKED with what is done in PHonon/PH/phq_setup.f90
-  is_symmorphic = .NOT.( ANY( ABS(ft(:,1:nsymq)) > 1.d-8 ) )
-  !
-  !IF (skip_equivalence_q) THEN
-  !   search_sym = .FALSE.
-  !ELSE
-  !   search_sym = .TRUE.
-  !   IF (.NOT.is_symmorphic) THEN
-  !      DO isym = 1, nsymq
-  !         search_sym = ( search_sym.AND.(ABS(gi(1,isym))<1.d-8).and.  &
-  !                                       (ABS(gi(2,isym))<1.d-8).and.  &
-  !                                       (ABS(gi(3,isym))<1.d-8) )
-  !      ENDDO
-  !   ENDIF
-  !ENDIF
   !
   ! 10) Setup the parameters alpha_mix
   !

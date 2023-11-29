@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -146,7 +146,6 @@ subroutine newdq (dvscf, npe)
   ! Sum of the USPP and PAW terms 
   ! (see last two terms in Eq.(12) in PRB 81, 075123 (2010))
   !
-! ------------- LUCA (spawoc PAW) --------------
   IF (okpaw) int3 = int3 + int3_paw
   !
   IF (noncolin) CALL set_int3_nc(npe)

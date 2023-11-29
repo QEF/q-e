@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2022 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -53,9 +53,7 @@ SUBROUTINE stres_hub ( sigmah )
    INTEGER :: ipol, jpol, na, nt, is, is2, m1, m2, na1, nt1, na2, nt2, viz, ik, npw
    INTEGER :: ldim, ldim1, ldim2, ldimb, equiv_na2, nb_s, nb_e, mykey, i
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
-   ! ---------- LUCA -------------------------------------
    COMPLEX (DP), ALLOCATABLE ::  dns_nc(:,:,:,:)
-   ! -----------------------------------------------------   
    REAL(DP) :: xyz(3,3)
    COMPLEX(DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    !! the derivative of the atomic occupations
@@ -82,7 +80,6 @@ SUBROUTINE stres_hub ( sigmah )
    !
    sigmah(:,:) = 0.d0
    !
-   ! -------------------- LUCA (added npol to the plane-wave sizes)-----------------------
    ALLOCATE (spsi(npwx*npol,nbnd))
    ALLOCATE (wfcatom(npwx*npol,natomwfc))
    ALLOCATE (at_dy(npwx*npol,natomwfc), at_dj(npwx*npol,natomwfc))
@@ -112,13 +109,11 @@ SUBROUTINE stres_hub ( sigmah )
    !
    IF (lda_plus_u_kind.EQ.0) THEN
       ldim = 2 * Hubbard_lmax + 1
-      ! ---------------------- LUCA -----------------------
       IF (noncolin) then
          ALLOCATE ( dns_nc(ldim, ldim, nspin, nat) )
       ELSE
          ALLOCATE (dns(ldim,ldim,nspin,nat))
       ENDIF
-      ! --------------------------------------------------      
       lhubb = .FALSE.
       DO nt = 1, ntyp
          IF (is_hubbard_back(nt)) lhubb = .TRUE.
@@ -186,7 +181,6 @@ SUBROUTINE stres_hub ( sigmah )
       !$acc update device(wfcU)
       !
       ! proj=<wfcU|S|evc>
-      ! ----------------------- LUCA ------------------------------------
       IF (noncolin) THEN
          CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  projkd, nwfcU)
@@ -204,7 +198,6 @@ SUBROUTINE stres_hub ( sigmah )
             !$acc end data
          ENDIF
       ENDIF
-      ! ----------------------------------------------------------------      
       !
       ! Compute derivatives of spherical harmonics and spherical Bessel functions
       !
@@ -239,7 +232,6 @@ SUBROUTINE stres_hub ( sigmah )
                !
                ! Compute the derivative of the occupation matrix w.r.t epsilon
                !
-               ! ------------------- LUCA -------------------------------
                IF (noncolin) THEN          
                   CALL dndepsilon_k_nc (ipol,jpol,ldim,projkd,spsi,ik,nb_s,nb_e,mykey,1,dns_nc )
                   DO na = 1, nat
@@ -279,7 +271,6 @@ SUBROUTINE stres_hub ( sigmah )
                      ENDIF
                   ENDDO
                ENDIF
-               ! ---------------------------------------------------------
                !
                ! The background part
                !
@@ -315,7 +306,6 @@ SUBROUTINE stres_hub ( sigmah )
                !
                ! Compute the derivative of the occupation matrix w.r.t epsilon
                !
-               ! ------------ LUCA (spawoc) ------------------
                IF (noncolin) THEN
                   CALL dngdepsilon_k_nc(ipol,jpol,ldim,projkd,&
                                           spsi,ik,nb_s,nb_e,mykey,dnsg)
@@ -417,7 +407,6 @@ SUBROUTINE stres_hub ( sigmah )
    ENDIF
    !
    IF (ALLOCATED(dns))  DEALLOCATE (dns)
-   ! ----------------- LUCA ---------------------------
    IF (ALLOCATED(dns_nc)) DEALLOCATE(dns_nc)
    IF (ALLOCATED(dnsb)) DEALLOCATE (dnsb)
    IF (ALLOCATED(dnsg)) DEALLOCATE (dnsg)
@@ -597,7 +586,6 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
    !
 END SUBROUTINE dndepsilon_k
 !
-! ---------------------- LUCA ------------------------------------
 SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns_nc )
    !-----------------------------------------------------------------------------
    !! This routine computes the derivative of the ns_nc atomic occupations with
@@ -1039,7 +1027,6 @@ SUBROUTINE dngdepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
    !
 END SUBROUTINE dngdepsilon_k
 !
-! ------------ LUCA (spawoc) --------------------
 SUBROUTINE dngdepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
    !-----------------------------------------------------------------------
    !! This routine computes the derivative of the nsg atomic occupations with
@@ -1358,7 +1345,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ! I/O variables 
    !
-   ! --------------------------- LUCA (added npol to the plane-wave size) ------------------
    COMPLEX(DP), INTENT(IN)  :: spsi(npwx*npol,nbnd)
    !! S|evc>
    INTEGER, INTENT(IN) :: ik
@@ -1409,7 +1395,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! At first the derivatives of the atomic wfcs: we compute the term
    ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>
    !
-   ! --------------------------- LUCA (added npol to the plane-wave size) ------------------
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
    ALLOCATE ( dwfc(npwx*npol,nwfcU) )
    ALLOCATE (a1_temp(npw), a2_temp(npw))
@@ -1448,7 +1433,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       nt = ityp(na)
       ldim_std = 2*Hubbard_l(nt)+1
       IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
-         ! --------------------------- LUCA -----------------------
          IF (Hubbard_projectors.EQ."atomic") THEN
             DO m1 = 1, ldim_u(nt)
                IF (m1.LE.ldim_std) THEN
@@ -1497,12 +1481,10 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                ENDDO
             ENDDO
          ENDIF
-         ! --------------------------------------------------------
       ENDIF
    ENDDO
    !
    ! The diagonal term
-   ! ----------------- LUCA -----------------------------
    IF (ipol.EQ.jpol) THEN
       !$acc kernels 
       dwfc(1:npw,:) = dwfc(1:npw,:) - wfcU(1:npw,:)*0.5d0
@@ -1626,7 +1608,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ENDIF
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
-   ! ---------------- LUCA ----------------------
    IF (noncolin) THEN
       CALL ZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
             dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
@@ -1699,7 +1680,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    INTEGER, INTENT(IN)      :: lA, lB, lB_s, lB_e
    ! There is a possibility to parallelize over lB,
    ! where lB_s (start) and lB_e (end)
-   ! ------------------ LUCA --------------------------------
    LOGICAL, INTENT(IN)      :: flag  ! noncollinear: controlling whether 
                                      ! calculating <phi|dS|PSI> 
                                      ! or          <phi|dS|PHI> (= .true.)   
@@ -1753,7 +1733,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    !$acc data copyin(us_dj, qq_at, a1_temp, a2_temp)
    DO nt = 1, ntyp
       !
-      ! ------------------- LUCA (added npol) -------------------------------
       ALLOCATE ( Adbeta(lA,npol*nh(nt)) )
       ALLOCATE ( Abeta(lA,npol*nh(nt)) )
       ALLOCATE ( dbetaB(npol*nh(nt),lB) )
@@ -1767,7 +1746,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
          !
          IF ( ityp(na).EQ.nt ) THEN
             !
-            ! ----------- LUCA ----------------------------
             IF (noncolin) THEN
                IF ( upf(nt)%has_so ) THEN
                   qq(1:nh(nt),1:nh(nt)) = qq_so(:,:,1,nt)
@@ -1790,7 +1768,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             ENDIF
             !
             ! aux is used as a workspace
-            ! ------------ LUCA (added npol) -------------------------
             ALLOCATE ( aux(npwx*npol,nh(nt)*npol) )
             !$acc data create(aux)
             aux=(0.0,0.0)
@@ -1799,12 +1776,9 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             DO ih = 1, nh_nt !nh(nt)
                ! now we compute the true dbeta function
                DO ig = 1, npw
-                  !
-                  ! ----------------------- LUCA ---------------------
                   aux(ig,ih) = us_dy(ig,ijkb0+ih) * a1_temp(ig) + us_dj(ig,ijkb0+ih) * a2_temp(ig)
                   IF (noncolin) aux(ig+npwx,ih+nh(nt)) = us_dy(ig,ijkb0+ih) * a1_temp(ig) &
                                                 + us_dj(ig,ijkb0+ih) * a2_temp(ig)  
-                  ! ----------------------------------------------------
                ENDDO
             ENDDO
             !
@@ -1813,14 +1787,11 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                DO ih = 1, nh_nt !nh(nt)
                   DO ig = 1, npw
                      aux(ig,ih) = aux(ig,ih) - vkb(ig,ijkb0+ih)*0.5d0
-                     ! ----------------------- LUCA ---------------------
                      IF (noncolin) aux(ig+npwx,ih+nh(nt)) = aux(ig+npwx,ih+nh(nt)) &
                                    - vkb(ig,ijkb0+ih)*0.5d0
-                     ! ----------------------------------------------------
                   ENDDO
                ENDDO   
             ENDIF 
-            ! ------------------------------- LUCA ---------------------------
             IF (noncolin) THEN
                ! Calculate betaB = <dbeta|B>
                ! dbetaB(:,1       : nh(nt))      = spin up
@@ -1850,13 +1821,10 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             DO ih = 1, nh_nt  !nh(nt)
                DO ig = 1, npw
                   aux(ig,ih) = vkb(ig,ijkb0+ih)
-                  ! -------------------------- LUCA ---------------------------
                   IF (noncolin) aux(ig+npwx,ih+nh(nt)) = vkb(ig,ijkb0+ih)
-                  ! -------------------------------------------------------------------
                ENDDO
             ENDDO
             !
-            ! --------------------- LUCA ---------------------------------
             IF (noncolin) THEN
                 ! Calculate Abeta = <A|beta>      
                 ! (same as Adbeta)
@@ -1880,7 +1848,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ! Calculate betaB = <beta|B>
                CALL calbec( offload_type, npw, aux, B, betaB )
              ENDIF
-            ! ------------------------------------------------------------
             !
             !$acc end data
             DEALLOCATE ( aux )
@@ -1889,7 +1856,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !$acc data create(aux)
             aux(:,:)=(0.0,0.0)            
             !
-            ! ----------------------- LUCA ----------------------------
             IF (noncolin) THEN
                ! aux(:, 1:nh(nt))             = \sum_jh qq(1,jh)*dbetaB(1,jh) + qq(2,jh)*dbetaB(2,jh)
                ! aux(:, 1+nh(nt):nh(nt)*npol) = \sum_jh qq(3,jh)*dbetaB(1,jh) + qq(4,jh)*dbetaB(2,jh)
@@ -1912,12 +1878,10 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                             aux(1,lB_s), nh(nt))
                !$acc end host_data
             ENDIF
-            ! ----------------------------------------------------------
             !$acc kernels
             dbetaB(:,:) = aux(:,:)
             !$acc end kernels
             !
-            ! ----------------------- LUCA ----------------------------
             IF (noncolin) THEN
                ! (same as dbetaB)     
                !
@@ -1939,7 +1903,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                             aux(1,lB_s), nh(nt))
               !$acc end host_data
             ENDIF
-            ! ----------------------------------------------------------
+            !
             !$acc kernels
             betaB(:,:) = aux(:,:)
             !$acc end kernels
@@ -1954,7 +1918,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             ! Only A_dS_B(:,lB_s:lB_e) are calculated
             !
             IF ( mykey == 0 ) THEN
-               ! ----------------------- LUCA ----------------------------
                IF (noncolin) THEN
                   nt1 = nh(nt) + 1
                   IF ( flag ) THEN
@@ -2003,7 +1966,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                   !$acc end host_data   
                   !
                ENDIF
-               ! ----------------------------------------------------------
             ENDIF
          ENDIF
          !

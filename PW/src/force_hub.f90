@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2022 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -59,9 +59,7 @@ SUBROUTINE force_hub( forceh )
    TYPE(bec_type) :: proj   ! proj(nwfcU,nbnd)
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
-   ! ---------- LUCA -------------------------------------
    COMPLEX (DP), ALLOCATABLE ::  dns_nc(:,:,:,:)
-   ! -----------------------------------------------------
    COMPLEX (DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
    INTEGER :: npw, alpha, na, nt, is, is2, m1, m2, ipol, ldim, ik, ijkb0
@@ -89,21 +87,17 @@ SUBROUTINE force_hub( forceh )
       ! ... DFT+U
       lhubb = .FALSE.
       ldim = 2*Hubbard_lmax + 1
-      ! ---------------------- LUCA -----------------------
       IF (noncolin) then
          ALLOCATE ( dns_nc(ldim, ldim, nspin, nat) ) 
       ELSE        
          ALLOCATE ( dns(ldim, ldim, nspin, nat) )
       ENDIF
-      ! --------------------------------------------------
       DO nt = 1, ntyp
          IF (is_hubbard_back(nt)) lhubb = .TRUE.
       ENDDO
 
       IF (lhubb) THEN
-         ! ------------ LUCA ------------------     
          IF (noncolin) CALL errore ("force_hub","Noncollinear and background are not supported",1)     
-         ! ------------------------------
          ldimb = ldmx_b
          ALLOCATE( dnsb(ldimb,ldimb,nspin,nat) )
       ENDIF
@@ -113,21 +107,16 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( dnsg(ldim,ldim,max_num_neighbors,nat,nspin) )
    ENDIF
    !
-   ! -------------------- LUCA (added npol to the plane-wave size)-----------------------
    ALLOCATE( spsi(npwx*npol,nbnd) ) 
    !$acc enter data create(spsi)
    ALLOCATE( wfcatom(npwx*npol,natomwfc) )
-   ! ----------------------------------------------------------------
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      ! ----------- LUCA (added npol) ---------------------------
       ALLOCATE( swfcatom(npwx*npol,natomwfc) )
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   !
-   ! ---------------- LUCA --------------
    IF (noncolin) THEN
       ALLOCATE (proj%k (nwfcU, nbnd))
    ELSE
@@ -174,7 +163,6 @@ SUBROUTINE force_hub( forceh )
       !$acc update device(wfcU)
       !
       ! ... proj=<wfcU|S|evc>
-      ! ----------------------- LUCA ------------------------------------
       IF (noncolin) THEN
          CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
@@ -201,7 +189,6 @@ SUBROUTINE force_hub( forceh )
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
-               ! ---------------------------- LUCA --------------------------------
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)
                IF (noncolin) THEN  
                   CALL dndtau_k_nc ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
@@ -245,7 +232,6 @@ SUBROUTINE force_hub( forceh )
                   ENDDO                              
                ENDIF
                !
-               ! -------------------------------------------------------------------
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)               
 ! !omp end parallel do
                !
@@ -280,7 +266,6 @@ SUBROUTINE force_hub( forceh )
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
-               ! ------------ LUCA (spawoc) ----------
                IF (noncolin) then
                   CALL dngdtau_k_nc  ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
@@ -344,7 +329,6 @@ SUBROUTINE force_hub( forceh )
                      ENDDO ! na1
                   ENDDO ! is
                ENDIF
-               ! --------------------------------------------
                !
             ENDDO ! ipol
             !
@@ -361,13 +345,11 @@ SUBROUTINE force_hub( forceh )
    CALL deallocate_bec_type_acc( proj )
    !
    IF (lda_plus_u_kind.EQ.0) THEN
-   ! ------------------- LUCA -------------------------
-   IF (noncolin) THEN
-      DEALLOCATE(dns_nc)
-   ELSE        
-      DEALLOCATE(dns)
-   ENDIF   
-   ! --------------------------------------------------   
+      IF (noncolin) THEN
+         DEALLOCATE(dns_nc)
+      ELSE        
+         DEALLOCATE(dns)
+      ENDIF   
       IF (ALLOCATED(dnsb)) DEALLOCATE(dnsb)
    ELSEIF (lda_plus_u_kind==2) THEN
       DEALLOCATE(dnsg)
@@ -600,7 +582,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 END SUBROUTINE dndtau_k
 !
-! ------------------------------- LUCA -----------------------------------------
 SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                       nb_e, mykey, lpuk, dns_nc )
    !---------------------------------------------------------------------------
@@ -633,7 +614,6 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !! ldim = 2*Hubbard_lmax+1
    COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
    !! projection
-   ! ----------- LUCA (added npol to the size of spsi) -----------------------
    COMPLEX(DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
    !! \(S|\ \text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
@@ -1153,7 +1133,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 END SUBROUTINE dngdtau_k
 !
-! -------------- LUCA (spawoc) --------------
 SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    nb_e, mykey, dnsg)
    !-------------------------------------------------------------------------
@@ -1567,7 +1546,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    ! I/O variables
    !
-   ! ---------------- LUCA (added npol to the size of spsi) ---------------------
    COMPLEX(DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
    !! \(S\ |\text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
@@ -1655,15 +1633,12 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
             ENDIF
             dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offpm)
-            ! --------------------- LUCA -------------------
             IF (noncolin) dwfc(ig+npwx,m1+ldim) = (0.d0,-1.d0) * gvec * wfcU(ig+npwx,offpm+ldim)
-            ! -------------------------------------------
          ENDDO
          !
       ENDDO
 ! !omp end parallel do
       !
-      ! ------------------- LUCA -------------------------
       ALLOCATE ( dproj0(ldim*npol,nbnd) )      
       !$acc data create(dproj0)
       !$acc host_data use_device(dwfc,spsi,dproj0)
@@ -1687,9 +1662,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
          !$acc parallel loop
          DO ibnd = nb_s, nb_e
             dproj(offpm,ibnd) = dproj0(m1,ibnd)
-            ! ----------------- LUCA --------------------------------
             IF (noncolin) dproj(offpm+ldim,ibnd) = dproj0(m1+ldim,ibnd)
-            ! -------------------------------------------------------
          ENDDO
       ENDDO
       !
@@ -1713,7 +1686,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       IF (is_hubbard_back(nt)) CALL errore( "dprojdtau_k", &
                  " Forces with background and  ortho-atomic are not supported", 1 )
       !
-      ! ------------- LUCA (added npol) -------------------------------
       ALLOCATE( dwfc(npwx*npol,ldim*npol) )
       !$acc data create(dwfc) present_or_copyin(wfcatom,overlap_inv)
       !
@@ -1744,7 +1716,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
             DO m2 = m_start, m_end
                dwfc(ig,m1) = dwfc(ig,m1) + (0.d0,-1.d0) * gvec * &
                              overlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
-               ! ---------- LUCA -----------------
                !
                IF (noncolin) dwfc(ig+npwx,m1) = dwfc(ig+npwx,m1) + (0.d0,-1.d0) * gvec * &
                         overlap_inv(offpm+m1,m2) * wfcatom(ig+npwx,m2)
@@ -1791,9 +1762,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
          DO ibnd = nb_s, nb_e
             DO m1 = 1, ldim
                dproj(offpm+m1,ibnd) = dproj0(m1,ibnd)
-               ! ----------------- LUCA --------------------------------
                IF (noncolin) dproj(offpm+m1+ldim,ibnd) = dproj0(m1+ldim,ibnd)
-               ! -------------------------------------------------------
             ENDDO
          ENDDO
       ENDIF
@@ -1845,7 +1814,6 @@ SUBROUTINE natomwfc_per_atom( alpha, m_start, m_end )
       DO nb = 1, upf(nt)%nwfc
          IF (upf(nt)%oc(nb) >= 0.d0) THEN
             l = upf(nt)%lchi(nb)
-            ! ----------------- LUCA -----------------------
             IF (noncolin.and.(.not.upf(nt)%has_so)) THEN
                counter = counter + 2*(2*l + 1)        
             ELSEIF (upf(nt)%has_so.and.(l==0)) THEN
@@ -1853,7 +1821,6 @@ SUBROUTINE natomwfc_per_atom( alpha, m_start, m_end )
             ELSE        
                counter = counter + 2*l + 1
             ENDIF
-            ! -----------------------------------
          ENDIF
       ENDDO
       IF (na == alpha) THEN
@@ -1943,7 +1910,6 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
             gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
             temp = temp + (0.d0,1.d0) * gvec * CONJG(wfcatom(ig,m1)) *&
                           swfcatom(ig,m2)
-            ! --------- LUCA -------------------
             IF (noncolin) temp = temp + (0.d0,1.d0) * gvec &
                      * CONJG(wfcatom(ig+npwx,m1))  * swfcatom(ig+npwx,m2)
          ENDDO
@@ -1960,7 +1926,6 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
             gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
             temp = temp + (0.d0,-1.d0) * gvec * CONJG(swfcatom(ig,m1)) *&
                           wfcatom(ig,m2)
-            ! --------------------- LUCA -------------------
             IF (noncolin) temp = temp + (0.d0,-1.d0) * gvec &
                             * CONJG(swfcatom(ig+npwx,m1))  * wfcatom(ig+npwx,m2)  
          ENDDO
@@ -2069,7 +2034,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    npw = ngk(ik)
    nh_nt = nh(nt)
    !
-   ! ------------------- LUCA (added npol) -------------------------------
    ALLOCATE( Adbeta(lA,npol*nh(nt)) )
    ALLOCATE( Abeta(lA,npol*nh(nt))  )
    ALLOCATE( dbetaB(npol*nh(nt),lB) )
@@ -2080,7 +2044,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !$acc parallel loop collapse(2) present(qq_at)
    DO jh = 1, nh_nt
       DO ih = 1, nh_nt
-         ! ----------- LUCA ----------------------------
          IF (noncolin) THEN
             IF ( upf(nt)%has_so ) THEN     
                qq(ih,jh) =             qq_so(ih,jh,1,nt)
@@ -2103,7 +2066,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ALLOCATE( aux(npwx*npol,nh(nt)*npol) )
    !$acc data create(aux)
    !
-   ! ---------------- LUCA ---------------------
    !$acc parallel loop collapse(2) 
    DO ih = 1, nh_nt*npol
       DO ig = 1, npwx*npol
@@ -2117,14 +2079,11 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    DO ih = 1, nh_nt
       DO ig = 1, npw
          aux(ig,ih) = vkb(ig,ijkb0+ih)
-         ! ------------------ LUCA ------------------
          IF (noncolin) aux(ig+npwx,ih+nh_nt) = vkb(ig,ijkb0+ih)
-         ! ------------------------------------------
       ENDDO
    ENDDO
 ! !omp end parallel do
    !
-   ! ------------------------------- LUCA ---------------------------
    IF (noncolin) THEN
       ! Calculate Abeta = <A|beta>
       ! Abeta(:,1       : nh(nt))      = spin up
@@ -2158,15 +2117,12 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
       DO ig = 1, npw
          gvec = g(ipol,igk_k(ig,ik)) * tpiba
          aux(ig,ih) = (0.d0,-1.d0) * aux(ig,ih) * gvec
-         ! -------------------------- LUCA ---------------------------
          IF (noncolin) aux(ig+npwx,ih+nh(nt)) = &
                     (0.d0,-1.d0) * aux(ig+npwx,ih+nh(nt)) * gvec
-         ! -------------------------------------------------------------------
       ENDDO
    ENDDO
 ! !omp end parallel do
    !
-   ! ------------------------------- LUCA ---------------------------
    IF (noncolin) THEN
       ! Calculate Adbeta = <A|dbeta>      
       ! (same as Abeta)
@@ -2195,7 +2151,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ALLOCATE( aux(nh(nt)*npol,lB) )
    !$acc data create(aux)
    !
-   ! ----------------------- LUCA ----------------------------
    IF (noncolin) THEN    
       aux(:,:) = (0.0,0.0)
       ! aux(:, 1:nh(nt))             = \sum_jh qq(1,jh)*dbetaB(1,jh) + qq(2,jh)*dbetaB(2,jh)     
@@ -2219,12 +2174,11 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                   aux(1,lB_s), nh(nt) )
       !$acc end host_data
    ENDIF
-   ! ------------------------------------------------------------
+   !
    !$acc kernels
    dbetaB(:,:) = aux(:,:)
    !$acc end kernels
    !
-   ! ----------------------- LUCA ----------------------------
    IF (noncolin) THEN
       aux(:,:) = (0.0,0.0)
       ! (same as dbetaB)     
@@ -2247,7 +2201,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                   aux(1,lB_s), nh(nt) )
       !$acc end host_data
    ENDIF
-   ! --------------------------------------------------------
    !
    !$acc kernels
    betaB(:,:) = aux(:,:)
@@ -2261,7 +2214,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ! ... Only A_dS_B(:,lB_s:lB_e) are calculated
    !
    IF ( mykey == 0 ) THEN
-      ! ----------------------- LUCA ----------------------------
       IF (noncolin) THEN
          nt1 = nh(nt) + 1
          IF ( .NOT.flag ) THEN
@@ -2310,7 +2262,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
          !$acc end host_data
       ENDIF
    ENDIF
-   ! ------------------------------------------------------------------
    !
    !$acc end data
    DEALLOCATE( Abeta  )

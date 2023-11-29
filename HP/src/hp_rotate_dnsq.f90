@@ -24,7 +24,7 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   USE symm_base,    ONLY : d1, d2, d3, irt, invs, t_rev
   USE qpoint,       ONLY : xq
   USE lr_symm_base, ONLY : rtau, gi, minus_q, irotmq
-  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU, hubbard_occ, d_spin_ldau
+  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU, d_spin_ldau
   USE ldaU_hp,      ONLY : nah_pert
   USE noncollin_module, ONLY : npol, noncolin, domag
   !
@@ -34,13 +34,11 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   COMPLEX(DP), INTENT(OUT) :: dns(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat) 
   INTEGER,  INTENT(IN) :: isym    ! selected symmetry
   REAL(DP), INTENT(IN) :: sxq(3)  ! q point from the star
-  ! ---------------- LUCA -------------
   COMPLEX(DP), ALLOCATABLE :: dnr_nc(:,:,:,:,:), dnr1_nc(:,:,:,:,:)
-  !
   !
   ! Local variables
   !
-  INTEGER :: counter, n, l, na, sna, nt, ism1, is, m1, m2, m0, m00, ldim, &
+  INTEGER :: n, l, na, sna, nt, ism1, is, m1, m2, m0, m00, ldim, &
              is1, is2, is3, is4, m3, m4, i
   COMPLEX(DP) :: phase, phase2
   REAL(DP) :: arg, arg2
@@ -48,74 +46,35 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   CALL start_clock('hp_rotate_dnsq')
   !
   dns = (0.0d0, 0.0d0)
-  ! ---- LUCA -------
-  !noncolin = .false.
+  !
   IF (noncolin) THEN
-    IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
-    CALL comp_dspinldau()
-   ALLOCATE( dnr_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, npol, npol, nat) )  
-   dnr_nc(:,:,:,:,:) = (0.d0,0.d0)  
-   ALLOCATE( dnr1_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, npol, npol, nat) )  
-   dnr1_nc(:,:,:,:,:) = (0.d0,0.d0) 
- ENDIF
-! -------------------
-  !
-  ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
-  !
-  ! Check
-  !
-  counter = 0
-  DO na = 1, nat
-     nt = ityp(na)
-     IF (.NOT.is_hubbard(nt)) CYCLE
-     DO n = 1, upf(nt)%nwfc
-        l = upf(nt)%lchi(n)
-        ! ------------- LUCA ---------------------
-        IF (hubbard_occ(nt,1) > 0.d0 .AND. l == Hubbard_l(nt)) then
-           !     
-           IF (noncolin) then
-              IF ( upf(nt)%has_so ) THEN
-                 !     
-                 ! j = l-1/2, degeneracy 2l
-                 counter = counter + 2 * l
-                 !
-                 ! j = l+1/2, degeneracy 2*l+2
-                 IF (ABS( upf(nt)%jchi(n)-l-0.5D0 ) < 1.D-6) then
-                    counter = counter + 2
-                 ENDIF
-                 counter = counter + 2*l + 2
-              ELSE
-                 counter = counter + 2 * ( 2 * l + 1 )
-              ENDIF
-           ELSE
-              counter = counter + 2 * l + 1
-           ENDIF
-        ENDIF
-        ! ----------------------------------------
-     ENDDO
-  ENDDO
-  IF (counter.NE.nwfcU) CALL errore ('hp_rotate_dnsq', 'nwfcU<>counter', 1)
-  !
-  ! ------------ LUCA ---------------
-  IF (noncolin) then
-    DO na = 1, nat
-       nt = ityp (na)
-       IF ( is_hubbard(nt) ) THEN
+     IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
+     CALL comp_dspinldau()
+     ALLOCATE( dnr_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, npol, npol, nat) )  
+     dnr_nc(:,:,:,:,:) = (0.d0,0.d0)  
+     ALLOCATE( dnr1_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, npol, npol, nat) )  
+     dnr1_nc(:,:,:,:,:) = (0.d0,0.d0) 
+     !
+     ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
+     !
+     DO na = 1, nat
+        nt = ityp (na)
+        IF ( is_hubbard(nt) ) THEN
           DO is1 = 1, npol
             DO is2 = 1, npol
               i = npol*(is1-1) + is2
               ldim = 2*Hubbard_l(nt)+1
               DO m1 = 1, ldim
                 DO m2 = 1, ldim
-                  !
                    dnr_nc(m1,m2,is1,is2,na) =  dnr(m1, m2, i, na) 
                 ENDDO
               ENDDO
             ENDDO
           ENDDO
-       ENDIF
-    ENDDO
+        ENDIF
+     ENDDO
   ENDIF
+  !
   ! Rotate the response occupation matrix.
   ! Note: here we perform a rotation using the index
   ! of the inverse symmetry operation S^{-1}_isym=S(invs(isym)).
@@ -148,8 +107,7 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
                 (sxq(3) - xq(3)) * tau(3,nah_pert) ) * tpi
         phase2 = CMPLX (cos(arg2), -sin(arg2), kind=DP)
         !
-        ! ------------- LUCA (added nspin_mag) --------------------
-        IF (noncolin) then
+        IF (noncolin) THEN
             DO m1 = 1, 2 * Hubbard_l(nt) + 1  
                DO m2 = 1, 2 * Hubbard_l(nt) + 1
                   DO is1 = 1, npol
@@ -224,73 +182,70 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
                ENDDO
             ENDDO
         ELSE
-        DO is = 1, nspin
-           !
-           ldim = 2 * Hubbard_l(nt) + 1
-           DO m1 = 1, ldim
-              DO m2 = 1, ldim
-                 DO m0 = 1, ldim
-                    DO m00 = 1, ldim
-                       !
-                       IF (Hubbard_l(nt).EQ.0) THEN
-                          dns(m1,m2,is,sna) = dns(m1,m2,is,sna) + &
-                                   dnr(m0,m00,is,na) * phase * phase2
-                       ELSEIF (Hubbard_l(nt).EQ.1) THEN
-                          dns(m1,m2,is,sna) = dns(m1,m2,is,sna) +       &
-                                   d1(m0,m1,ism1) * d1(m00,m2,ism1) * &
-                                   dnr(m0,m00,is,na) * phase * phase2
-                       ELSEIF (Hubbard_l(nt).EQ.2) THEN
-                          dns(m1,m2,is,sna) = dns(m1,m2,is,sna) +       &
-                                   d2(m0,m1,ism1) * d2(m00,m2,ism1) * &
-                                   dnr(m0,m00,is,na) * phase * phase2
-                       ELSEIF (Hubbard_l(nt).EQ.3) THEN
-                          dns(m1,m2,is,sna) = dns(m1,m2,is,sna) +       &
-                                   d3(m0,m1,ism1) * d3(m00,m2,ism1) * &
-                                   dnr(m0,m00,is,na) * phase * phase2
-                       ELSE
-                          CALL errore ('hp_rotate_dnsq', 'angular momentum not implemented', &
+            DO is = 1, nspin
+               !
+               ldim = 2 * Hubbard_l(nt) + 1
+               DO m1 = 1, ldim
+                  DO m2 = 1, ldim
+                     DO m0 = 1, ldim
+                        DO m00 = 1, ldim
+                           !
+                           IF (Hubbard_l(nt).EQ.0) THEN
+                              dns(m1,m2,is,sna) = dns(m1,m2,is,sna) + &
+                                      dnr(m0,m00,is,na) * phase * phase2
+                           ELSEIF (Hubbard_l(nt).EQ.1) THEN
+                              dns(m1,m2,is,sna) = dns(m1,m2,is,sna) +       &
+                                      d1(m0,m1,ism1) * d1(m00,m2,ism1) * &
+                                      dnr(m0,m00,is,na) * phase * phase2
+                           ELSEIF (Hubbard_l(nt).EQ.2) THEN
+                              dns(m1,m2,is,sna) = dns(m1,m2,is,sna) +       &
+                                      d2(m0,m1,ism1) * d2(m00,m2,ism1) * &
+                                      dnr(m0,m00,is,na) * phase * phase2
+                           ELSEIF (Hubbard_l(nt).EQ.3) THEN
+                              dns(m1,m2,is,sna) = dns(m1,m2,is,sna) +       &
+                                      d3(m0,m1,ism1) * d3(m00,m2,ism1) * &
+                                      dnr(m0,m00,is,na) * phase * phase2
+                           ELSE
+                              CALL errore ('hp_rotate_dnsq', 'angular momentum not implemented', &
                                       ABS(Hubbard_l(nt)) )
-                       ENDIF
-                       !
-                    ENDDO ! m00
-                 ENDDO ! m0
-              ENDDO ! m2
-           ENDDO ! m1
-           !
-        ENDDO ! is
+                           ENDIF
+                           !
+                        ENDDO ! m00
+                     ENDDO ! m0
+                  ENDDO ! m2
+               ENDDO ! m1
+               !
+            ENDDO ! is
         ENDIF
         !
      ENDIF
      !
   ENDDO ! na
-
-  ! --- LUCA --------
-  if (noncolin) then
-   DO na = 1, nat
-      nt = ityp (na)
-      IF ( is_hubbard(nt) ) THEN
-         DO is1 = 1, npol
-         DO is2 = 1, npol
-            i = npol*(is1-1) + is2
-            DO m1 = 1, 2*Hubbard_l(nt)+1
-               DO m2 = 1, 2*Hubbard_l(nt)+1
-                  dns(m1,m2,i,na) = dnr1_nc(m1,m2,is1,is2,na)
-               ENDDO
-            ENDDO
-         ENDDO
-         ENDDO
-      ENDIF
-   ENDDO
-endif
   !
-  ! ---------- LUCA ----------------
-IF (noncolin) then
-   DEALLOCATE (dnr_nc)
-   DEALLOCATE (dnr1_nc)
-   IF ( ALLOCATED (d_spin_ldau) ) DEALLOCATE( d_spin_ldau )
- ENDIF
- ! ------------------------------
- !noncolin = .true.
+  IF (noncolin) THEN
+     DO na = 1, nat
+        nt = ityp (na)
+        IF ( is_hubbard(nt) ) THEN
+           DO is1 = 1, npol
+              DO is2 = 1, npol
+                 i = npol*(is1-1) + is2
+                 DO m1 = 1, 2*Hubbard_l(nt)+1
+                    DO m2 = 1, 2*Hubbard_l(nt)+1
+                       dns(m1,m2,i,na) = dnr1_nc(m1,m2,is1,is2,na)
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDIF
+  !
+  IF (noncolin) THEN
+     DEALLOCATE (dnr_nc)
+     DEALLOCATE (dnr1_nc)
+     IF ( ALLOCATED (d_spin_ldau) ) DEALLOCATE( d_spin_ldau )
+  ENDIF
+  !
   CALL stop_clock('hp_rotate_dnsq')
   !
   RETURN

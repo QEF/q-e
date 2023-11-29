@@ -1,5 +1,12 @@
 New in development version:
   * Experimental support for pseudopotentials in PSML format
+  * Noncollinear implementation of DFT+U and DFT+U+V in the 
+    Dudarev's formulation, including the calculation of Hubbard
+    forces, stresses, and Hubbard parameters (L. Binci and N. Marzari, 
+    Phys. Rev. B 108, 115157 (2023)). Experimental stage. 
+    If J is not specified in the input, then this new implementation 
+    is used, otherwise the Liechtenstein implementation is used 
+    (see Doc/Hubbard_input for more details).
 
 Incompatible changes in development version:
   * Small changes in options "iprint" and "disk_io" of PWscf

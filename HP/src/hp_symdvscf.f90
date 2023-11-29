@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -122,25 +122,24 @@ SUBROUTINE hp_symdvscf (dvtosym)
   ! where G = Sq - q, and tau_pert is the position
   ! of the perturbed atom
   !
-  ! --------- LUCA ---------------
-  IF (noncolin) then
-    gi_t = 0.d0 
-    aq   = xq
-    call cryst_to_cart (1, aq, at, - 1)
-    do isym = 1, nsymq
-       raq = 0.d0
-       do i = 1, 3
-          do j = 1, 3
-             raq (i) = raq (i) + DBLE (s (i, j, isym) ) * &
-                 aq (j)
-         enddo
-       enddo
-       do i = 1, 3
-          IF (t_rev(isym)==1) wrk (i) = aq (i) - raq (i)
-       enddo
-       call cryst_to_cart (1, wrk, bg, 1)
-       gi_t (:, isym) = wrk (:)
-    enddo
+  IF (noncolin) THEN
+     gi_t = 0.d0 
+     aq   = xq
+     call cryst_to_cart (1, aq, at, - 1)
+     do isym = 1, nsymq
+        raq = 0.d0
+        do i = 1, 3
+           do j = 1, 3
+              raq (i) = raq (i) + DBLE (s (i, j, isym) ) * &
+                  aq (j)
+           enddo
+        enddo
+        do i = 1, 3
+           IF (t_rev(isym)==1) wrk (i) = aq (i) - raq (i)
+        enddo
+        call cryst_to_cart (1, wrk, bg, 1)
+        gi_t (:, isym) = wrk (:)
+     enddo
   ENDIF
   !
   DO isym = 1, nsymq
@@ -156,7 +155,7 @@ SUBROUTINE hp_symdvscf (dvtosym)
         phase2(isym) = CMPLX( cos(gf2), -sin(gf2), kind=DP)
      ENDIF
   ENDDO
-  ! --------------------------
+  !
   DO is = 1, nspin_lsda
      !
      dvsym(:,:,:) = (0.d0, 0.d0)
@@ -182,15 +181,13 @@ SUBROUTINE hp_symdvscf (dvtosym)
                  !
                  ! Calculate drho(S^-1 * r - ftau) * exp(iG*(r-tau_pert))
                  !
-                 ! ------------ LUCA ------------------
-                 IF ( t_rev(isym) == 0 ) then
+                 IF ( t_rev(isym) == 0 ) THEN
                     dvsym(i,j,k) = dvsym(i,j,k) + & 
                               dvtosym(ri,rj,rk,is) * phase(isym) * phase2(isym) 
                  ELSE
                     dvsym(i,j,k) = dvsym(i,j,k) + & 
                        conjg( dvtosym(ri,rj,rk,is) * phase(isym) ) * phase2(isym)  
                  ENDIF
-                 ! ------------------------------------------
                  !
               enddo
               !

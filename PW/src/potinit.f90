@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -154,15 +154,11 @@ SUBROUTINE potinit()
      IF (lda_plus_u) THEN
         !
         IF (lda_plus_u_kind == 0) THEN    
-           ! --- LUCA ---------------
            IF (noncolin) THEN
               CALL init_ns_nc() 
            ELSE 
-           ! ---------------------        
               CALL init_ns()
-           ! --- LUCA -------------   
            ENDIF   
-           ! ----------------------
         ELSEIF (lda_plus_u_kind == 1) THEN
            IF (noncolin) THEN
               CALL init_ns_nc()
@@ -293,15 +289,11 @@ SUBROUTINE potinit()
      WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
-        ! ----- LUCA ------------
         IF (noncolin) THEN
            CALL write_ns_nc() 
         ELSE   
-        ! ----------------------     
            CALL write_ns()
-        ! ----- LUCA ------------
         ENDIF
-        ! ----------------------        
      ELSEIF (lda_plus_u_kind == 1) THEN
         IF (noncolin) THEN
            CALL write_ns_nc()
@@ -310,13 +302,11 @@ SUBROUTINE potinit()
         ENDIF
      ELSEIF (lda_plus_u_kind == 2) THEN
         nsgnew = nsg
-        ! ---------- LUCA (spawoc) --------------
         IF(noncolin) THEN
            CALL write_nsg_nc()
         ELSE
            CALL write_nsg()
         ENDIF
-        !-----------------
      ENDIF
      !
   END IF

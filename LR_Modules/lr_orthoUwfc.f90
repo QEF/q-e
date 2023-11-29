@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -210,7 +210,6 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   IMPLICIT NONE
   INTEGER,     INTENT(IN)  :: npw_
   INTEGER,     INTENT(IN)  :: ik_
-  ! --------- LUCA (added npol) ---------------
   COMPLEX(DP), INTENT(IN)  :: wfc  (npwx*npol, natomwfc)
   COMPLEX(DP), INTENT(OUT) :: swfc (npwx*npol, natomwfc)
   !

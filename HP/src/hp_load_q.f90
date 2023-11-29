@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,9 +24,8 @@ SUBROUTINE hp_load_q()
   !
   ! ... nksq is the number of k-points, NOT including k+q points
   !
-  ! --------------- LUCA ----------------------------
   IF ( lgamma ) THEN
-     !
+      !
       IF (noncolin.AND.domag) THEN
          nksq = nks/2
          ALLOCATE(ikks(nksq), ikqs(nksq))
@@ -45,29 +44,29 @@ SUBROUTINE hp_load_q()
             ikqs(ik) = ik
          ENDDO
       ENDIF   
-     !
+      !
   ELSE
-     !
-   IF (noncolin.AND.domag) THEN
-      nksq = nks / 4
-      ALLOCATE(ikks(nksq), ikqs(nksq))
-      ALLOCATE(ikmks(nksq), ikmkmqs(nksq))
-      DO ik=1,nksq
-         ikks(ik) = 4 * ik - 3
-         ikqs(ik) = 4 * ik - 2
-         ikmks(ik) = 4 * ik - 1
-         ikmkmqs(ik) = 4 * ik 
-      ENDDO      
-   ELSE
-      nksq = nks / 2
-      ALLOCATE(ikks(nksq), ikqs(nksq))
-      DO ik=1,nksq
-         ikks(ik) = 2 * ik - 1
-         ikqs(ik) = 2 * ik
-      ENDDO
-   ENDIF
-     !
-  END IF
+      !
+      IF (noncolin.AND.domag) THEN
+         nksq = nks / 4
+         ALLOCATE(ikks(nksq), ikqs(nksq))
+         ALLOCATE(ikmks(nksq), ikmkmqs(nksq))
+         DO ik=1,nksq
+            ikks(ik) = 4 * ik - 3
+            ikqs(ik) = 4 * ik - 2
+            ikmks(ik) = 4 * ik - 1
+            ikmkmqs(ik) = 4 * ik 
+         ENDDO      
+      ELSE
+         nksq = nks / 2
+         ALLOCATE(ikks(nksq), ikqs(nksq))
+         DO ik=1,nksq
+            ikks(ik) = 2 * ik - 1
+            ikqs(ik) = 2 * ik
+         ENDDO
+      ENDIF
+      !
+  ENDIF
   ! -------------------------------------------------------
   !
   ! Allocate various arrays

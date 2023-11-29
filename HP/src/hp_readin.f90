@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -206,12 +206,6 @@ SUBROUTINE input_sanity()
      CALL errore("hp_readin", &
      " The HP code for this Hubbard_projectors type is not implemented",1)
   !   
-  ! ---------- LUCA (spawoc PAW) -----------------------------
-  !IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
-  !IF ((noncolin.and.okpaw)) CALL errore('hp_readin','HP with PAW and noncolin &
-  !                                       not available yet',1) 
-  ! -------------------------------------------------                                         
-  !
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
   !
   IF (nbgrp > 1) CALL errore('hp_readin', &
