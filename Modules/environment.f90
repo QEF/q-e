@@ -349,8 +349,14 @@ SUBROUTINE print_cuda_info(check_use_gpu)
   IF ( PRESENT(check_use_gpu) ) THEN 
     IF (check_use_gpu) use_gpu = use_gpu_ 
   END IF 
+  !
+  ierr = cudaGetDevice( idev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
+  ierr = cudaGetDeviceCount( ndev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
+  !
   IF (use_gpu) THEN
-     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE on ",i2," GPU/node")' ) ndev
 #if defined(__GPU_MPI)
      WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
 #endif
@@ -358,11 +364,6 @@ SUBROUTINE print_cuda_info(check_use_gpu)
   ELSE
      WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
   END IF
-  !
-  ierr = cudaGetDevice( idev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
-  ierr = cudaGetDeviceCount( ndev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
   !
   ! User friendly, approximated warning.
   ! In order to get this done right, one needs an intra_node communicator
