@@ -1845,13 +1845,14 @@
     COMPLEX(KIND = c_double) :: inter
     !! Interaction strength e-p
     COMPLEX(KIND = c_double),ALLOCATABLE :: al(:,:), zl(:,:), WORK(:), &
+                                            buff(:,:), H_f(:,:)
     !! Hamiltonian distributed over processors, eigenvectors, ZGEEV Work,
     !! Buffer array, full Hamiltonian
 #else
     REAL(KIND = DP), ALLOCATABLE         :: ev(:),RWORK(:)
     !! Eigenvaues and RWORK for ZGEEV
     COMPLEX(KIND = DP),ALLOCATABLE       :: al(:,:), zl(:,:), WORK(:), &
-                                            buff(:,:),H_f(:,:)
+                                            buff(:,:), H_f(:,:)
     !! Hamiltonian distributed over processors, eigenvectors, ZGEEV Work,
     !! Buffer array, full Hamiltonian
 #endif

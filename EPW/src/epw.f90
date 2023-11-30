@@ -11,7 +11,7 @@
   PROGRAM epw
   !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v5.7
+  !! version: v5.8
   !! license: GNU
   !! summary: EPW main driver
   !!
