@@ -32,7 +32,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, &
                            qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
-  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx, &
+  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
                            transform_qq_so
   USE qrad_mod,     ONLY : init_tab_qrad
   USE paw_variables,ONLY : okpaw
@@ -269,7 +269,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
     !$acc update device(qq_at)
      if (is_spinorbit) then
         dvan_so_d=dvan_so
-        fcoef_d=fcoef
+      !$acc update device(fcoef)
       !$acc update device(qq_so)
      else
         dvan_d=dvan
