@@ -411,7 +411,7 @@ SUBROUTINE newd_gpu( )
     SUBROUTINE newd_so_gpu(nt)
       !------------------------------------------------------------------------
       !
-      USE upf_spinorb,    ONLY : fcoef_d
+      USE upf_spinorb,    ONLY : fcoef
       USE ions_base,      ONLY : nat
       !
       IMPLICIT NONE
@@ -430,7 +430,7 @@ SUBROUTINE newd_gpu( )
             ijs = ijs + 1
             !
             IF (domag) THEN
-               !$acc parallel loop collapse(3) present(deeq_nc,deeq)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -447,17 +447,17 @@ SUBROUTINE newd_gpu( )
                                  !
                                  deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
                                       deeq(kh,lh,na,1)*         &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) + &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt)) + &
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) + &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
                                    deeq(kh,lh,na,2)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt) + &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,1,is2,nt)) + &
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt) + &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
                                    (0.D0,-1.D0)*deeq(kh,lh,na,3)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt) - &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,1,is2,nt)) + &
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt) - &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
                                    deeq(kh,lh,na,4)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) - &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt))   
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) - &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
                                  !
                               END DO
                               !
@@ -472,7 +472,7 @@ SUBROUTINE newd_gpu( )
                !
             ELSE
                !
-               !$acc parallel loop collapse(3) present(deeq_nc,deeq)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -489,8 +489,8 @@ SUBROUTINE newd_gpu( )
                                  !
                                  deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) + &
                                       deeq(kh,lh,na,1)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) + &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt) ) 
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) + &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt) ) 
                                  !
                               END DO
                               !

@@ -1,23 +1,22 @@
 
 # Library of pseudopotential code
 
-This directory contains a library of pseudopotential-related code,
+This directory contains the "upflib" library of pseudopotential-related code,
 extracted from the Quantum ESPRESSO distribution. This library depends only
 upon module mp.f90 of UtilXlib and upon a few modules and routines of devXlib;
 upon a few LAPACK routines; requires a suitable `../make.inc` file in Makefile. 
 Other than this, it can be independently compiled.
 
-Currently, it includes
+Currently, upflib includes
 - basic definitions of the UPF (Unified Pseudopotential File) format
 - basic I/O operations on UPF files
 - setup of the interpolation tables and of other basic variables 
 - interpolation of pseudopotentials
 - generation of various pseudopotentials matrix elements
 - utilities: spherical harmonics and Bessel functions, integration routines
-Old UPF specifications can NO LONGER be found here:
-http://www.quantum-espresso.org/pseudopotentials/unified-pseudopotential-format
-The xml schema for the newer UPF definition can NOT YET be found here:
-http://www.quantum-espresso.org/ns/qes/qe_pp-1.0.xsd
+
+The available information on pseudopotential formats can be found here:
+https://gitlab.com/QEF/q-e/-/wikis/Developers/Format-of-pp-files
 
 In addition to the `libupf.a` library, executable utilities are produced:
 

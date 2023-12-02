@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -970,6 +970,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
   USE wvfct_gpum,         ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
+  USE upf_spinorb,        ONLY : fcoef
   !
   ! Used to avoid unnecessary memcopy
   USE xc_lib,             ONLY : xclib_dft_is
@@ -1173,7 +1174,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
                  CALL add_becsum_nc_gpu (na, np, aux_nc_d, becsum_d )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN
-                 CALL add_becsum_so_gpu (na, np, aux_nc_d, becsum_d )
+!$acc host_data use_device(fcoef)
+                 CALL add_becsum_so_gpu (na, np, fcoef, aux_nc_d, becsum_d )
+!$acc end host_data
               ELSE
                  !
                  !$cuf kernel do(2) <<<*,*>>>
@@ -1294,7 +1297,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
 END SUBROUTINE add_becsum_nc_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
+SUBROUTINE add_becsum_so_gpu( na, np, fcoef_d, becsum_nc_d, becsum_d )
   !----------------------------------------------------------------------------
   !! This routine multiplies \(\text{becsum_nc}\) by the identity and the Pauli
   !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
@@ -1308,10 +1311,12 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : npol, nspin_mag, domag
   USE uspp,                 ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
-  USE upf_spinorb,          ONLY : fcoef_d
   IMPLICIT NONE
   
   INTEGER, INTENT(IN) :: na, np
+  COMPLEX(DP), INTENT(IN) :: fcoef_d(nhm,nhm,2,2,ntyp)
+  !! function needed to account for spinors.
+!$acc declare deviceptr(fcoef_d)
   COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
   REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
   !
@@ -1319,9 +1324,8 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   !
   INTEGER :: ih, jh, lh, kh, ijh, is1, is2, nhnt
   COMPLEX(DP) :: fac
-
 #if defined(__CUDA)
-  attributes (DEVICE) :: becsum_nc_d, becsum_d
+  attributes (DEVICE) :: fcoef_d, becsum_nc_d, becsum_d
 #endif
   !
   nhnt = nh(np)

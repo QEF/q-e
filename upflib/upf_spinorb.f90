@@ -26,11 +26,6 @@ MODULE upf_spinorb
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
   !! function needed to account for spinors.
   !
-  ! GPU vars
-  COMPLEX(DP), ALLOCATABLE :: fcoef_d(:,:,:,:,:)
-#if defined(__CUDA)
-  attributes (DEVICE) :: fcoef_d
-#endif
   INTERFACE transform_qq_so
      MODULE PROCEDURE transform_qqr_so, transform_qqc_so
   END INTERFACE transform_qq_so
