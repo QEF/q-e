@@ -1,0 +1,290 @@
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pprism.x {
+
+    toc {}
+
+    intro {
+        @b {Purpose of pprism.x:} data analysis and plotting for 3D-RISM or Laue-RISM.
+
+        The code performs two steps:
+
+        (1) reads the output file produced by pw.x, extract and calculate
+            solvent's quantities (solvent charge, solvent potential, ...)
+
+        (2) writes solvent's quantities to file in a suitable format for
+            various types of plotting and various plotting programs
+
+        The input data of this program is read from standard input
+        or from file and has the following format:
+
+        NAMELIST @b &INPUTPP
+           containing the variables for step (1), followed by
+
+        NAMELIST @b &PLOT
+           containing the variables for step (2)
+
+        The two steps can be performed independently. In order to perform
+        only step (2), leave namelist &INPUTPP blank. In order to perform
+        only step (1), do not specify namelist &PLOT
+
+        Intermediate results from step 1 can be saved to disk (see
+        variable @ref filplot in &INPUTPP) and later read in step 2.
+        Since the file with intermediate results is formatted, it
+        can be safely transferred to a different machine.
+
+        All output quantities are in ATOMIC (RYDBERG) UNITS unless
+        otherwise explicitly specified.
+    }
+
+    namelist INPUTPP {
+
+        var prefix -type CHARACTER {
+            default { 'pwscf' }
+            info {
+                prefix of files saved by program pw.x
+            }
+        }
+
+        var outdir -type CHARACTER {
+            info {
+                directory containing the input data, i.e. the same as in pw.x
+            }
+            default {
+                value of the @tt ESPRESSO_TMPDIR environment variable if set;
+                current directory ('./') otherwise
+            }
+        }
+
+        var filplot -type CHARACTER {
+            default { "@ref prefix".pprism }
+            info {
+                file "filplot" contains solvent's quantities
+                (can be saved for further processing)
+            }
+        }
+
+        var lpunch -type LOGICAL {
+            default { .FALSE. }
+            info {
+                punch solvent's quantities to @ref fileplot, or not
+            }
+        }
+
+    }
+
+    namelist PLOT {
+
+        var iflag -type INTEGER {
+            status { REQUIRED }
+            info {
+                0 1D plot of the spherical average
+                1 1D plot
+                2 2D plot
+                3 3D plot
+                4 2D polar plot on a sphere
+            }
+        }
+
+        var output_format -type INTEGER {
+            status { REQUIRED }
+            info {
+                (ignored on 1D plot)
+
+                0  = format suitable for gnuplot   (1D)
+
+                1  = obsolete format no longer supported
+
+                2  = format suitable for plotrho   (2D)
+
+                3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
+
+                4  = obsolete format no longer supported
+
+                5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
+
+                6  = format as gaussian cube file  (3D)
+                     (can be read by many programs)
+
+                7  = format suitable for gnuplot   (2D) x, y, f(x,y)
+            }
+        }
+
+        var fileout -type CHARACTER {
+            default { "@ref prefix".3drism }
+            info {
+                name of the file to which the plot is written
+            }
+        }
+
+        var interpolation -type CHARACTER {
+            default { 'fourier' }
+            options {
+                info {
+                    Type of interpolation:
+                }
+                opt -val 'fourier' {}
+                opt -val 'bspline' { (EXPERIMENTAL) }
+            }
+        }
+
+        choose {
+
+            when -test "iflag = 0" {
+                label { the following variables are REQUIRED: }
+
+                dimension x0 -start 1 -end 3  -type REAL {
+                    info {
+                        3D vector, origin of the line
+                        (in alat units)
+                    }
+                }
+
+                var nx -type INTEGER {
+                    info {
+                        number of radial grids
+                    }
+                }
+
+                var lebedev -type INTEGER {
+                    info {
+                        number of spherical grids of Lebedev quadrature
+                        (only for @ref interpolation = 'bspline')
+                    }
+                }
+            }
+
+            elsewhen -test "iflag = 1" {
+                label { the following variables are REQUIRED: }
+
+                dimension e1 -start 1 -end 3 -type REAL {
+                    info {
+                        3D vector which determines the plotting line
+                        (in alat units)
+                    }
+                }
+
+                dimension x0 -start 1 -end 3  -type REAL {
+                    info {
+                        3D vector, origin of the line (in alat units)
+                    }
+                }
+
+                var nx -type INTEGER {
+                    info {
+                        number of points in the line:
+
+                        rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
+                    }
+                }
+            }
+
+            elsewhen -test "iflag = 2" {
+                label { the following variables are REQUIRED: }
+
+                dimensiongroup -start 1 -end 3 -type REAL {
+                    dimension e1
+                    dimension e2
+                    info {
+                        3D vectors which determine the plotting plane (in alat units)
+
+                        BEWARE: @b e1 and @b e2 must be orthogonal
+                    }
+                }
+
+                dimension x0 -start 1 -end 3 -type REAL {
+                    info {
+                        3D vector, origin of the plane (in alat units)
+                    }
+                }
+
+                vargroup -type INTEGER {
+                    var nx
+                    var ny
+                    info {
+                        Number of points in the plane:
+
+                        rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
+                                   + e2 * (j-1)/(ny-1) ), i=1,nx ; j=1,ny
+                    }
+                }
+            }
+
+            elsewhen -test "iflag = 3" {
+                label { the following variables are OPTIONAL: }
+
+                dimensiongroup -start 1 -end 3 -type REAL {
+                    dimension e1
+                    dimension e2
+                    dimension e3
+                    info {
+                        3D vectors which determine the plotting parallelepiped
+                        (if present, must be orthogonal)
+
+                        @ref e1, @ref e2, and @ref e3 are in alat units !
+                    }
+                }
+
+                dimension x0 -start 1 -end 3 -type REAL {
+                    info {
+                        3D vector, origin of the parallelepiped
+
+                        @ref x0 is in alat units !
+                    }
+                }
+
+                vargroup -type INTEGER {
+                    var nx
+                    var ny
+                    var nz
+                    info {
+                        Number of points in the parallelepiped:
+
+                        rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
+                                         + e2 * (j-1)/ny
+                                         + e3 * (k-1)/nz ),
+                                    i = 1, nx ; j = 1, ny ; k = 1, nz
+
+                        - If @ref output_format = 3 (XCRYSDEN), the above variables
+                          are used to determine the grid to plot.
+
+                        - If @ref output_format = 5 (XCRYSDEN), the above variables
+                          are ignored, the entire FFT grid is written in the
+                          XCRYSDEN format - works for any crystal axis (VERY FAST)
+
+                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present, 
+                          and @ref e1, @ref e2, @ref e3 are parallel to xyz 
+                          and parallel to crystal axis, a subset of the FFT 
+                          grid that approximately covers the parallelepiped
+                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is 
+                          written - untested, might be obsolete
+
+                        - Otherwise, the required 3D grid is generated from the
+                          Fourier components (may be VERY slow)
+                    }
+                }
+            }
+
+            elsewhen -test "iflag = 4" {
+                label { the following variables are REQUIRED: }
+
+                var radius -type REAL {
+                    info {
+                        Radius of the sphere (alat units), centered at (0,0,0)
+                    }
+                }
+
+                vargroup -type INTEGER {
+                    var nx
+                    var ny
+                    info {
+                        Number of points in the polar plane:
+
+                        phi(i)   = 2 pi * (i - 1)/(nx-1), i=1, nx
+                        theta(j) =   pi * (j - 1)/(ny-1), j=1, ny
+                    }
+                }
+            }
+
+        }
+
+    }
+}

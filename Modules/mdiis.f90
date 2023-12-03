@@ -266,6 +266,43 @@ CONTAINS
       END DO
     END SUBROUTINE make_rmat
     !
+#if defined (__MDIIS_DGETRF)
+    SUBROUTINE inverse(n, amat, ierr)
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN)    :: n
+      REAL(DP), INTENT(INOUT) :: amat(n, n)
+      INTEGER,  INTENT(OUT)   :: ierr
+      !
+      INTEGER,  ALLOCATABLE :: ipiv(:)
+      INTEGER               :: lwork
+      REAL(DP), ALLOCATABLE :: work(:)
+      !
+      EXTERNAL :: dgetrf
+      EXTERNAL :: dgetri
+      !
+      ierr = 0
+      lwork = 3 * n
+      ALLOCATE(ipiv(n))
+      ALLOCATE(work(lwork))
+      !
+      CALL dgetrf(n, n, amat, n, ipiv, ierr)
+      IF (ierr /= 0) THEN
+        ierr = ABS(ierr)
+        GOTO 100
+      END IF
+      !
+      CALL dgetri(n, amat, n, ipiv, work, lwork, ierr)
+      IF (ierr /= 0) THEN
+        ierr = ABS(ierr)
+        GOTO 100
+      END IF
+      !
+100   CONTINUE
+      DEALLOCATE(ipiv)
+      DEALLOCATE(work)
+    END SUBROUTINE inverse
+    !
+#else
     SUBROUTINE inverse(n, amat, ierr)
       IMPLICIT NONE
       INTEGER,  INTENT(IN)    :: n
@@ -321,6 +358,7 @@ CONTAINS
       DEALLOCATE(eval)
     END SUBROUTINE inverse
     !
+#endif
     SUBROUTINE solve_mdiis(ierr)
       IMPLICIT NONE
       INTEGER, INTENT(OUT) :: ierr

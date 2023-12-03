@@ -55,19 +55,15 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( gpu_args ) THEN
     !
     !$acc data present( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-    !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                       v2c, v3c )
-    !$acc end host_data
     !$acc end data
     !
   ELSE
     !
     !$acc data copyin( rho, grho, tau ), copyout( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-    !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                       v2c, v3c )
-    !$acc end host_data
     !$acc end data
     !
   ENDIF  
@@ -92,7 +88,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   USE kind_l,               ONLY: DP
   USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,&
                                   grho2_threshold_mgga, tau_threshold_mgga,   &
-                                  scan_exx, exx_started, exx_fraction
+                                  ishybrid, exx_started, exx_fraction
   USE qe_drivers_mgga
   !
   IMPLICIT NONE
@@ -139,7 +135,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in QE
   !
-  REAL(DP) :: rh, ggrho2, atau
+  REAL(DP) :: rh, ggrho2, atau, xcoef
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -147,9 +143,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
 #endif
 #endif
   !
-  !$acc data deviceptr( rho(length,ns), grho(3,length,ns), tau(length,ns), ex(length), &
-  !$acc&                ec(length), v1x(length,ns), v2x(length,ns), v3x(length,ns),    &
-  !$acc&                v1c(length,ns), v2c(np,length,ns), v3c(length,ns) )
+  !$acc data present( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !
 #if defined(__LIBXC)
   lengthxc = length
@@ -225,10 +219,8 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     IF (ns == 1) THEN
       !
-      !$acc host_data use_device( sigma )
       CALL tau_xc( length, rho(:,1), sigma, tau(:,1), ex, ec, v1x(:,1), &
                    v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
-      !$acc end host_data
       !
     ELSEIF (ns == 2) THEN
       !
@@ -251,6 +243,9 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
       ex_lxc = 0.d0 
     ENDIF
     !
+    xcoef = 1.d0
+    IF ( ishybrid .AND. exx_started .AND. exx_fraction>0.d0) xcoef = 1.d0-exx_fraction
+    !
     !$acc data copyin( ex_lxc, vx_rho, vx_sigma, vx_tau )
     IF ( ns==1 ) THEN
       !$acc parallel loop
@@ -262,10 +257,10 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
           CYCLE
         ENDIF  
-        ex(k) = ex_lxc(k) * rho_lxc(k)
-        v1x(k,1) = vx_rho(k)
-        v2x(k,1) = vx_sigma(k) * 2.0_DP
-        v3x(k,1) = vx_tau(k)
+        ex(k) = xcoef * ex_lxc(k) * rho_lxc(k)
+        v1x(k,1) = xcoef * vx_rho(k)
+        v2x(k,1) = xcoef * vx_sigma(k) * 2.0_DP
+        v3x(k,1) = xcoef * vx_tau(k)
       ENDDO
     ELSE
       !$acc parallel loop
@@ -276,22 +271,22 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v1x(k,2) = 0.d0 ; v2x(k,2) = 0.d0 ; v3x(k,2) = 0.d0
           CYCLE
         ENDIF
-        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
+        ex(k) = xcoef * ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
         IF ( ABS(rho_lxc(2*k-1))>rho_threshold_mgga .AND. &
              sigma(3*k-2)>grho2_threshold_mgga      .AND. &
              ABS(tau_lxc(2*k-1))>tau_threshold_mgga ) THEN
-          v1x(k,1) = vx_rho(2*k-1)
-          v2x(k,1) = vx_sigma(3*k-2)*2.d0
-          v3x(k,1) = vx_tau(2*k-1)
+          v1x(k,1) = xcoef * vx_rho(2*k-1)
+          v2x(k,1) = xcoef * vx_sigma(3*k-2)*2.d0
+          v3x(k,1) = xcoef * vx_tau(2*k-1)
         ELSE
           v1x(k,1) = 0.d0 ; v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
         ENDIF
         IF ( ABS(rho_lxc(2*k))>rho_threshold_mgga .AND. &
              sigma(3*k)>grho2_threshold_mgga      .AND. &
              ABS(tau_lxc(2*k))>tau_threshold_mgga ) THEN
-          v1x(k,2) = vx_rho(2*k)
-          v2x(k,2) = vx_sigma(3*k)*2.d0
-          v3x(k,2) = vx_tau(2*k)
+          v1x(k,2) = xcoef * vx_rho(2*k)
+          v2x(k,2) = xcoef * vx_sigma(3*k)*2.d0
+          v3x(k,2) = xcoef * vx_tau(2*k)
         ELSE
           v1x(k,2) = 0.d0 ; v2x(k,2) = 0.d0 ; v3x(k,2) = 0.d0
         ENDIF
@@ -376,7 +371,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   ALLOCATE( grho2(length,ns) )
   !$acc data create( grho2 )
-  !$acc host_data use_device( grho2 )
   !
   !$acc parallel loop collapse(2)
   DO is = 1, ns
@@ -397,7 +391,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
      !
   ENDIF
   !
-  !$acc end host_data
   !$acc end data
   DEALLOCATE( grho2 )
   !

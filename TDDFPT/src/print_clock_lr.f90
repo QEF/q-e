@@ -18,6 +18,11 @@ SUBROUTINE print_clock_lr()
    USE lr_variables,     ONLY : davidson, eels, magnons
    USE xc_lib,           ONLY : xclib_dft_is
    !
+#if defined (__ENVIRON)
+   USE plugin_flags,        ONLY : use_environ
+   USE environ_base_module, ONLY : print_environ_clocks
+#endif
+   !
    IMPLICIT NONE
    !
    WRITE( stdout, * )
@@ -119,7 +124,9 @@ SUBROUTINE print_clock_lr()
    WRITE( stdout, * )
 #endif
    !
-   CALL plugin_clock()
+#if defined (__ENVIRON)
+   IF (use_environ) CALL print_environ_clocks()
+#endif
    !
    IF (xclib_dft_is('hybrid')) THEN
     !

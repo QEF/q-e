@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -43,6 +43,7 @@ PROGRAM lr_magnons_main
   USE uspp,                  ONLY : okvan
   USE clib_wrappers,         ONLY : memstat
   USE klist,                 ONLY : igk_k
+  USE control_flags,         ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -55,13 +56,11 @@ PROGRAM lr_magnons_main
   LOGICAL             :: rflag
   INTEGER             :: kilobytes
   LOGICAL, EXTERNAL   :: test_restart
+  LOGICAL, EXTERNAL   :: check_gpu_support
   !
   pol_index = 1
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, intra_bgrp_comm, do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start ( code3 )
   !
@@ -75,6 +74,7 @@ PROGRAM lr_magnons_main
   !
   magnons  = .TRUE.
   !
+  use_gpu = check_gpu_support()
   ! Reading input file and PWSCF xml, some initialisation
   ! Read the input variables for TDDFPT;
   ! allocate space for all quantities already computed
@@ -241,12 +241,11 @@ SUBROUTINE lr_print_preamble_magnons()
 
     IMPLICIT NONE
 
-    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
+    WRITE( stdout, '(/5x,"--------------------------------------------------------------------------------------------------")' )
     WRITE( stdout, '(/5x,"Please cite this project as:")' )
-    WRITE( stdout, '(/5x,"T. Gorni, I. Timrov, and S. Baroni,", &
-                   & /5x,"Spin dynamics from time-dependent density functional perturbation theory,", &
-                   & /5x,"Eur. Phys. J. B 91, 249 (2018).")')
-    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
+    WRITE( stdout, '(/5x,"T. Gorni, I. Timrov, S. Baroni, Eur. Phys. J. B 91, 249 (2018).")')
+    WRITE( stdout, '(/5x,"T. Gorni, O. Baseggio, P. Delugas, S. Baroni, I. Timrov, Comput. Phys. Commun. 280, 108500 (2022).")')
+    WRITE( stdout, '(/5x,"--------------------------------------------------------------------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
     !

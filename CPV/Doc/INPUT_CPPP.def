@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package CP -program cppp.x {
+input_description -distribution {Quantum ESPRESSO} -package CP -program cppp.x {
 
     toc {} 
 

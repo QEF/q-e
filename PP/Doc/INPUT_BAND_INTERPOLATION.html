@@ -1,0 +1,496 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>band_interpolation.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      band_interpolation.x / PWscf / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.2)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm12">&amp;INTERPOLATION</a></p>
+<blockquote>
+<a href="#idm13">method</a> | <a href="#idm29">miller_max</a> | <a href="#idm33">check_periodicity</a> | <a href="#idm38">p_metric</a> | <a href="#idm42">scale_sphere</a>
+</blockquote>
+   <p><a href="#idm47">ROUGHNESS</a></p>
+<blockquote>
+<a href="#idm57">RoughN</a> | <a href="#idm65">RoughC</a>
+</blockquote>
+   <p><a href="#idm66">USER_STARS</a></p>
+<blockquote>
+<a href="#idm71">NUser</a> | <a href="#idm77">vec_x</a> | <a href="#idm78">vec_y</a> | <a href="#idm79">vec_z</a>
+</blockquote>
+   <p><a href="#idm82">K_POINTS</a></p>
+<blockquote>
+<a href="#idm93">nks</a> | <a href="#idm98">xk_x</a> | <a href="#idm99">xk_y</a> | <a href="#idm100">xk_z</a> | <a href="#idm101">wk</a>
+</blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Purpose of band_interpolation.x:</b>
+  This contains four band energies interpolation methods,
+  to be advantageously (but not necessarly) used for EXX band structure computations.
+
+  The PP/src/band_interpolation.x post-processing subprogram reads the band energies
+  stored in the pwscf.xml file after an SCF calculation on a uniform Monkhorst-Pack grid,
+  and interpolates the eigenvalues to an arbitrary set of k-points provided in input.
+
+  The workflow is just:
+
+        (1) do an SCF on a uniform grid
+        (2) call the interpolator from the folder in which the pwscf.xml
+             file is present (band_interpolation.x &lt; input)
+
+  For large EXX calculations the first step can be splitted in two substeps:
+
+        (1) do an SCF calculation on a uniform grid with occupied bands only
+        (2) do a NSCF (or Bands) calculation on the same uniform grid adding virtual orbitals
+        (3) call the interpolator from the folder in which the pwscf.xml file is present
+
+  Four interpolation methods have been included (see <a href="#method">method</a>).
+
+  The interpolated band structure in eV units is written in a file named [method].dat
+  (e.g. fourier-diff.dat for the fourier-diff method) that is plottable with Grace or Gnuplot
+  (e.g. xmgrace -nxy fourier-diff.dat)
+
+<b>Structure of the input data:</b>
+============================
+
+   <b>&amp;INTERPOLATION</b>
+     ...
+   <b>/</b>
+
+   [ <b>ROUGHNESS</b>
+        RoughN
+        'automatic' or RoughC(1) RoughC(2) RoughC(3) ... RoughC(RoughN) ]
+
+   [ <b>USER_STARS</b>
+        NUser
+        vec_X vec_Y vec_Z ]
+
+   <b>K_POINTS</b> { tpiba_b }
+      nks
+      xk_x, xk_y, xk_z,  wk
+   </pre></blockquote>
+</blockquote>
+   <a name="idm12"></a><a name="INTERPOLATION"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INTERPOLATION</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm13"></a><a name="method"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">method</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'fourier-diff'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> The interpolation method to be used
+         </pre></blockquote></td></tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;"> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'fourier-diff'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+band energies, as functions of k, are expanded in reciprocal space using a Star function basis set
+(algorithm from Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988,
+ <a href="https://link.aps.org/doi/10.1103/PhysRevB.38.2721">https://link.aps.org/doi/10.1103/PhysRevB.38.2721</a> ).
+WARNING: The pwscf.xml file must be generated with <a href="#nosym">nosym</a> == .false. .
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'fourier'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+band energies, as functions of k, are expanded in reciprocal space using a Star function basis set
+(algorithm from D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986).
+ <a href="https://ui.adsabs.harvard.edu/abs/1986JCoPh..67..253K">https://ui.adsabs.harvard.edu/abs/1986JCoPh..67..253K</a> ).
+WARNING: The pwscf.xml file must be generated with <a href="#nosym">nosym</a> == .false. .
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'idw'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+inverse distance weighting interpolation with Shepard metric
+(ACM 68: Proceedings of the 1968 23rd ACM national conference, January 1968, Pages 517â524,
+ <a href="https://doi.org/10.1145/800186.810616">https://doi.org/10.1145/800186.810616</a> ).
+WARNING: The pwscf.xml file must be generated with <a href="#nosym">nosym</a> == .true. .
+WARNING: This method is REALLY simple and provides only a very rough estimate of the band structure.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'idw-sphere'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+inverse distance weighting interpolation inside a sphere of given radius.
+WARNING: The pwscf.xml file must be generated with <a href="#nosym">nosym</a> == .true. .
+WARNING: This method is REALLY simple and provides only a very rough estimate of the band structure.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm29"></a><a name="miller_max"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">miller_max</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 6
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The maximum Miller index used to automatically generate the set of symmetry inequivalent Star vectors
+                  (only for <a href="#method">method</a> == 'fourier-diff' or 'fourier')
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm33"></a><a name="check_periodicity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">check_periodicity</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE. a (time consuming) step is performed, to check whether all the Star functions have
+                  the correct lattice periodicity (only for <a href="#method">method</a> == 'fourier-diff' or 'fourier') .
+
+                  For automatically generated Star functions this should never occur by construction, and the program
+                  will stop and exit in case one Star function with wrong periodicity is found (useful for
+                  debugging and program sanity check).
+
+                  If additional user-defined Star vectors are specified (see optional card <a href="#USER_STARS">USER_STARS</a>),
+                  the program will print a WARNING in case one Star function with wrong periodicity is found.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm38"></a><a name="p_metric"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">p_metric</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 2
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> The exponent of the distance in the IDW method ( only for <a href="#method">method</a> == 'idw' or 'idw-sphere')
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm42"></a><a name="scale_sphere"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">scale_sphere</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 4.0d0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The search radius for <a href="#method">method</a> == 'idw-sphere', is Rmin * scale_sphere, where Rmin is the
+                  minimum distance found between the uniform grid of k-points.
+
+                  If scale_sphere is too small, some k-points of the path might not see enough uniform grid points
+                  to average energies, whereas for large values the method becomes equal to <a href="#method">method</a> == 'idw'.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm47"></a><a name="ROUGHNESS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">ROUGHNESS</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b> Optional card, used only if <a href="#method">method</a> == 'fourier-diff', or 'fourier', ignored otherwise!
+      </b></p>
+<p><pre>
+This card can be used to change the roughness functional that is minimized
+                 in the <a href="#method">method</a> == 'fourier-diff' and 'fourier'.
+                 In case <a href="#method">method</a> == 'fourier-diff', or 'fourier' and card ROUGHNESS is not specified the default
+                 roughness will be used with <a href="#RoughN">RoughN</a> == 1 and <a href="#RoughC">RoughC</a>(1) == 1.0d0.
+      </pre></p>
+<h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">ROUGHNESS </b><br><div class="syntax">
+<i><a href="#idm57">RoughN</a></i>  <br><a name="idm60"></a><table><tr>
+<td align="right" style="white-space:nowrap"></td>
+<td> <i><a href="#idm65">RoughC(1)</a></i> </td>
+<td> <i><a href="#idm65">RoughC(2)</a></i> </td>
+<td> . . .</td>
+<td> <i><a href="#idm65">RoughC(RoughN)</a></i> </td>
+<td align="left" style="white-space:nowrap"></td>
+</tr></table>
+</div>
+</blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm57"></a><a name="RoughN"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">RoughN</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Number of terms included in the roughness functional
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; "><a name="RoughC"><a name="idm65">RoughC</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.0d0
+                  </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Coefficients for the terms included in the roughness functional.
+                                They can be explicitely given or 'automatic' can be specified instead of numbers
+                                to use default coefficients.
+                  </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <a name="idm66"></a><a name="USER_STARS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">USER_STARS</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b> Optional card, used only if <a href="#method">method</a> == 'fourier-diff', or 'fourier', ignored otherwise !
+      </b></p>
+<h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">USER_STARS </b><br><div class="syntax">
+<i><a href="#idm71">NUser</a></i>  <br><a name="idm74"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm77">vec_x(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm78">vec_y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm79">vec_z(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm77">vec_x(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm78">vec_y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm79">vec_z(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm77">vec_x(NUser)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm78">vec_y(NUser)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm79">vec_z(NUser)</a></i> </td>
+</tr>
+</table>
+</div>
+</blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm71"></a><a name="NUser"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">NUser</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Number of supplied additional Star vectors.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
+<a name="vec_x"><a name="idm77">vec_x</a></a>, <a name="vec_y"><a name="idm78">vec_y</a></a>, <a name="vec_z"><a name="idm79">vec_z</a></a>
+</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Additional user-defined Star vectors that are added to the
+automatically generated ones to augment the Star functions
+basis set.
+You might also want to check <a href="#check_periodicity">check_periodicity</a> when providing
+user-defined Star vectors.
+                  </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <a name="idm82"></a><a name="K_POINTS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">K_POINTS</span> { <span class="flag">tpiba_b</span> } </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>tpiba_b</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">K_POINTS  tpiba_b </b><br><div class="syntax">
+<i><a href="#idm93">nks</a></i>  <br><a name="idm95"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm98">xk_x(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm99">xk_y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm100">xk_z(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm101">wk(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm98">xk_x(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm99">xk_y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm100">xk_z(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm101">wk(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm98">xk_x(nks)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm99">xk_y(nks)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm100">xk_z(nks)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm101">wk(nks)</a></i> </td>
+</tr>
+</table>
+</div>
+</blockquote>
+         </td></tr></table></blockquote>
+</td></tr></table></td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm83"></a><a name="kpoint_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "><i>Card's options:</i></th>
+<th style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; "><span class="flag">tpiba_b</span></th>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> none
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+All K_POINTS options other than tpiba_b have been disabled in the interpolation.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">tpiba_b</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Used for band-structure plots.
+See Doc/brillouin_zones.pdf for usage of BZ labels;
+otherwise, k-points are in units of  2 pi/a.
+nks points specify nks-1 lines in reciprocal space.
+Every couple of points identifies the initial and
+final point of a line. pw.x generates N intermediate
+points of the line where N is the weight of the first point.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<a name="idm93"></a><a name="nks"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nks</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Number of supplied special k-points.
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
+<a name="xk_x"><a name="idm98">xk_x</a></a>, <a name="xk_y"><a name="idm99">xk_y</a></a>, <a name="xk_z"><a name="idm100">xk_z</a></a>, <a name="wk"><a name="idm101">wk</a></a>
+</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Special k-points (xk_x/y/z) in the irreducible Brillouin Zone
+(IBZ) of the lattice (with all symmetries) and weights (wk)
+See the literature for lists of special points and
+the corresponding weights.
+
+If the symmetry is lower than the full symmetry
+of the lattice, additional points with appropriate
+weights are generated. Notice that such procedure
+assumes that ONLY k-points in the IBZ are provided in input
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Sat Mar 18 15:50:15 CET 2023.
+	</small>
+</body>
+</html>

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -29,14 +30,15 @@
     USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
-                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme, &
+                          scell_mat_plrn, scell_mat, as, bs
     USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq, &
                           xkf_irr, wkf_irr, bztoibz, s_bztoibz
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, nsym
-    USE io_var,    ONLY : iunkf
-    USE low_lvl,   ONLY : init_random_seed
-    USE constants_epw, ONLY : eps4
+    USE io_var,    ONLY : iunkf, iunRpscell, iunkgridscell
+    USE low_lvl,   ONLY : init_random_seed, matinv3
+    USE constants_epw, ONLY : eps4, eps8
     USE noncollin_module, ONLY : noncolin
 # if defined(__MPI)
     USE parallel_include, ONLY : MPI_INTEGER2
@@ -68,10 +70,32 @@
     !! rest from the division of nr of q-points over pools
     INTEGER :: ierr
     !! Error status
+    INTEGER :: iRp1, iRp2, iRp3, Rpmax, nRp
+    !! Number of unit cells within supercell
+    INTEGER :: Rp_crys_p(3)
+    !! Unit cell vectors in primitive crystal coordinates
+    INTEGER, ALLOCATABLE :: Rp(:, :)
+    !! List of unit cell vectors within supercell in primitive crystal coords
+    INTEGER :: iGs1, iGs2, iGs3, Gsmax, nGs
+    !! Number of supercell G-vectors within primitive reciprocal unit cell
+    INTEGER :: Gs_crys_s(3)
+    !! Supercell G-vectors in supercell reciprocal coordinates
+    REAL(KIND = DP) :: ap(3, 3), bp(3, 3)
+    !! Auxiliary definitions of real and reciprocal primitive cell vector matrix
     REAL(KIND = DP), ALLOCATABLE :: xkf_(:, :)
     !! coordinates k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_(:)
     !! weights k-points
+    REAL(KIND = DP) :: scell_mat_b(3, 3)
+    !! Reciprocal lattice transformation matrix
+    REAL(KIND = DP) :: p2s(3, 3), bs2p(3, 3)
+    !! Transformation matrix from primitive to supercell crystal coordinates
+    REAL(KIND = DP) :: Rp_crys_s(3)
+    !! Unit cell vectors in supercell crystal coordinates
+    REAL(KIND = DP) :: Gs_crys_p(3)
+    !! Supercell G-vectors in primitive crystal coordinates
+    REAL(KIND = DP), ALLOCATABLE :: Gs(:, :)
+    !! Supercell G-vectors within primitive reciprocal unit cell
     !
     IF (mpime == ionode_id) THEN
       IF (filkf /= '') THEN ! load from file
@@ -114,10 +138,148 @@
           CALL cryst_to_cart(nkqtotf, xkf_, at, -1)
         ENDIF
         !
+      !JLB
+      ELSEIF (scell_mat_plrn) THEN
+        !
+        WRITE(stdout, '(a)') ' '
+        WRITE(stdout, '(a)') '     Supercell transformation activated (k), as=S*at'
+        WRITE(stdout, '(a,3i4)') '     S(1, 1:3): ', scell_mat(1, 1:3)
+        WRITE(stdout, '(a,3i4)') '     S(2, 1:3): ', scell_mat(2, 1:3)
+        WRITE(stdout, '(a,3i4)') '     S(3, 1:3): ', scell_mat(3, 1:3)
+        !
+        ap = TRANSPOSE(at)
+        as = MATMUL(scell_mat,ap)
+        !
+        WRITE(stdout, '(a)') '     Transformed lattice vectors (alat units):'
+        WRITE(stdout, '(a,3f12.6)') '     as(1, 1:3): ', as(1, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     as(2, 1:3): ', as(2, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     as(3, 1:3): ', as(3, 1:3)
+        !
+        scell_mat_b = matinv3(REAL(scell_mat, DP))
+        scell_mat_b = TRANSPOSE(scell_mat_b)
+        !
+        WRITE(stdout, '(a)') '     Reciprocal lattice transformation matrix, Sbar = (S^{-1})^{t}:'
+        WRITE(stdout, '(a,3f12.6)') '     Sbar(1, 1:3): ', scell_mat_b(1, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     Sbar(2, 1:3): ', scell_mat_b(2, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     Sbar(3, 1:3): ', scell_mat_b(3, 1:3)
+        !
+        bp = TRANSPOSE(bg)
+        bs = MATMUL(scell_mat_b, bp)
+        !
+        WRITE(stdout, '(a)') '     Transformed reciprocal lattice vectors (2pi/alat units):'
+        WRITE(stdout, '(a,3f12.6)') '     bs(1, 1:3): ', bs(1, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     bs(2, 1:3): ', bs(2, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     bs(3, 1:3): ', bs(3, 1:3)
+        WRITE(stdout, '(a)') '  '
+        !
+        ! Define transformation matrix from primitive crystal coordinates
+        ! to supercell crystal coordinates Rp_crys_s = ((a_s)^{T})^{-1} (a_p)^{T} Rp_crys_p
+        p2s = matinv3(TRANSPOSE(as))
+        p2s = MATMUL(p2s,TRANSPOSE(ap))
+        !
+        ! Find how many unit cells are contained within the supercell
+        Rpmax = 5*MAXVAL(scell_mat) ! This should be large enough to find all
+        ALLOCATE(Rp(3, Rpmax**3), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating Rp', 1)
+        Rp  = 0
+        nRp = 0
+        DO iRp1 = -Rpmax, Rpmax
+          DO iRp2 = -Rpmax, Rpmax
+            DO iRp3 = -Rpmax, Rpmax
+              Rp_crys_p = (/iRp1, iRp2, iRp3/)
+              Rp_crys_s = MATMUL(p2s, Rp_crys_p)
+              ! Unit cell within supercell if Rp\in(0,1) in supercell crystal coordinates
+              IF (ALL(Rp_crys_s > -eps8) .AND. ALL(Rp_crys_s < 1.d0-eps8)) THEN
+                nRp = nRp + 1
+                Rp(1:3, nRp) = Rp_crys_p
+              END IF
+            END DO
+          END DO
+        END DO
+        WRITE(stdout, '(a, 3i6)') '     Number of unit cells within supercell:', nRp
+        !
+        ! Write Rp-s in supercell to file
+        IF (mpime == ionode_id) THEN
+          OPEN(UNIT = iunRpscell, FILE = 'Rp.scell.plrn', ACTION = 'write')
+          WRITE(iunRpscell, *) nRp
+          DO iRp1 = 1, nRp
+            WRITE(iunRpscell, *) Rp(1:3, iRp1)
+          END DO
+          CLOSE(iunRpscell)
+        ENDIF
+        !
+        IF (ALLOCATED(Rp)) DEALLOCATE(Rp)
+        !
+        ! Define transformation matrix from reciprocal supercell crystal coordinates
+        ! to reciprocal primitive crystal coordinates
+        ! Gs_crys_p = ((bp)^{T})^{-1} (bs)^{T} Gs_crys_s
+        bs2p = matinv3(TRANSPOSE(bp))
+        bs2p = MATMUL(bs2p, TRANSPOSE(bs))
+        !
+        ! Find how many k-points lie within primitive reciprocal cell
+        Gsmax = Rpmax ! This should be large enough to find all
+        ALLOCATE(Gs(3, Gsmax**3), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating Gs', 1)
+        Gs = 0.d0
+        nGs = 0
+        DO iGs1 = -Gsmax, Gsmax
+          DO iGs2 = -Gsmax, Gsmax
+            DO iGs3 = -Gsmax, Gsmax
+              Gs_crys_s = (/iGs1, iGs2, iGs3/)
+              Gs_crys_p = MATMUL(bs2p, Gs_crys_s)
+              ! Gs within primitive reciprocal unit cell if Gs\in(0,1) in crys_p coords.
+              IF (ALL(Gs_crys_p > -eps8) .AND. ALL(Gs_crys_p < 1.d0-eps8)) THEN
+                nGs = nGs + 1
+                Gs(1:3, nGs) = Gs_crys_p
+              END IF
+            END DO
+          END DO
+        END DO
+        WRITE(stdout, '(a, 3i6)') '     Number of k-points needed:', nGs
+        !DO iGs1 = 1, nGs
+        !  WRITE(stdout, '(3f12.6)') Gs(1:3, iGs1)
+        !END DO
+        !
+        ! Write Gs-s within unit cell BZ (k-grid) to file
+        IF (mpime == ionode_id) THEN
+          OPEN(UNIT = iunkgridscell, FILE = 'kgrid.scell.plrn', ACTION = 'write')
+          WRITE(iunkgridscell, *) nGs
+          DO iGs1 = 1, nGs
+            WRITE(iunkgridscell, '(3f12.6)') Gs(1:3, iGs1)
+          END DO
+          CLOSE(iunkgridscell)
+        ENDIF
+        !
+        ! Save list of needed k-points
+        nkqtotf = nGs
+        ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
+        ALLOCATE(wkf_(2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
+        !
+        DO ik = 1, nkqtotf
+          !
+          ikk = 2 * ik - 1
+          ikq = ikk + 1
+          !
+          xkf_(:, ikk) = Gs(1:3, ik)
+          wkf_(ikk) = 1.d0 ! weight not important for polaron
+          !
+          xkf_(:, ikq) = xkf_(:, ikk)
+          wkf_(ikq) = 0.d0
+          !
+        ENDDO
+        !
+        ! redefine nkqtotf to include the k+q points
+        nkqtotf = 2 * nkqtotf
+        !
+        IF (ALLOCATED(Gs)) DEALLOCATE(Gs)
+        !
+      !JLB
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
           ! get size of the mp_mesh in the irr wedge
-          WRITE(stdout, '(a,3i4)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i5)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
           !
           ! The call to this routine computes the IBZ point xkf_irr, wkf_irr and
           ! returns the number of irr points nkqtotf
@@ -156,7 +318,7 @@
           !
         ELSE ! mp_mesh_k
           !
-          WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i5)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           nkqtotf = 2 * nkf1 * nkf2 * nkf3
           ALLOCATE(xkf_(3, nkqtotf), STAT = ierr)
@@ -204,11 +366,11 @@
           wkf_(ikk) = 2.d0 / DBLE(nkqtotf)
           wkf_(ikq) = 0.d0
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xkf_(:, ikk))
+          ELSE
             CALL random_number(xkf_(1:2, ikk))
             xkf_(3, ikk) = 0.d0
-          ELSE
-            CALL random_number(xkf_(:, ikk))
           ENDIF
           xkf_(:, ikq) = xkf_(:, ikk)
         ENDDO
@@ -417,7 +579,7 @@
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
           ! get size of the mp_mesh in the irr wedge
-          WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i5)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
@@ -463,7 +625,7 @@
           !
           nkqtotf = 2 * nkqtotf
         ELSE
-          WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           nkqtotf = 2 * nkf1 * nkf2 * nkf3
           ALLOCATE(xkf(3, nkqtotf), STAT = ierr)
@@ -508,11 +670,11 @@
           wkf(ikk) = 2.d0 / DBLE(nkqtotf)
           wkf(ikq) = 0.d0
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xkf(:, ikk))
+          ELSE
             CALL random_number(xkf(1:2, ikk))
             xkf(3, ikk) = 0.d0
-          ELSE
-            CALL random_number(xkf(:, ikk))
           ENDIF
           !
           xkf(:, ikq) = xkf(:, ikk)
@@ -1463,18 +1625,12 @@
         sa(:, :) = DBLE(s(:, :, nb))
         xkf_rot = MATMUL(sa, xkf_tmp(:, ik + lower_bnd - 1))
         !
-        DO i = 1, 3
-          IF (xkf_rot(1) < - eps8) xkf_rot(1) = xkf_rot(1) + 1.0d0
-          IF (xkf_rot(2) < - eps8) xkf_rot(2) = xkf_rot(2) + 1.0d0
-          IF (xkf_rot(3) < - eps8) xkf_rot(3) = xkf_rot(3) + 1.0d0
-        ENDDO
-        !
         ! Check that the point xkf_rot is part of the orginal xkf_in
         found = .FALSE.
         DO jk = 1, nkpt_bzfst
-          IF ((ABS(xkf_rot(1) - xkf_in(1, jk)) < eps8) .AND. &
-              (ABS(xkf_rot(2) - xkf_in(2, jk)) < eps8) .AND. &
-              (ABS(xkf_rot(3) - xkf_in(3, jk)) < eps8)) THEN
+          IF ((ABS(xkf_rot(1) - xkf_in(1, jk) - NINT(xkf_rot(1) - xkf_in(1, jk))) < eps8) .AND. &
+              (ABS(xkf_rot(2) - xkf_in(2, jk) - NINT(xkf_rot(2) - xkf_in(2, jk))) < eps8) .AND. &
+              (ABS(xkf_rot(3) - xkf_in(3, jk) - NINT(xkf_rot(3) - xkf_in(3, jk))) < eps8)) THEN
              found = .TRUE.
              EXIT
           ENDIF
@@ -1593,7 +1749,7 @@
           !
         ELSE
           !
-          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf =  nqf1 * nqf2 * nqf3
           ALLOCATE(xqf_(3, nqtotf), wqf_(nqtotf) , STAT = ierr)
@@ -1633,13 +1789,13 @@
           !
           wqf_(iq) = 1.d0 / DBLE(nqtotf)
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xqf_(:, iq))
+            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(:, iq) = xqf_(:, iq) - 0.5d0
+          ELSE
             CALL random_number(xqf_(1:2, iq))
             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(1:2, iq) = xqf_(1:2, iq) - 0.5d0
             xqf_(3, iq) = 0.d0
-          ELSE
-            CALL random_number(xqf_(:, iq))
-            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(:, iq) = xqf_(:, iq) - 0.5d0
           ENDIF
           !
         ENDDO
@@ -1722,16 +1878,18 @@
     USE mp_global, ONLY : inter_pool_comm
     USE mp,        ONLY : mp_bcast
     USE mp_world,  ONLY : mpime
+    USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
                           rand_q, rand_nq, mp_mesh_q, system_2d, lscreen, &
-                          plselfen, specfun_pl
+                          plselfen, specfun_pl, &
+                          scell_mat_plrn, scell_mat, as, bs
     USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, nsym
     USE io_var,    ONLY : iunqf
-    USE low_lvl,   ONLY : init_random_seed
-    USE constants_epw, ONLY : eps4
+    USE low_lvl,   ONLY : init_random_seed, matinv3
+    USE constants_epw, ONLY : eps4, eps8
     !
     IMPLICIT NONE
     !
@@ -1747,6 +1905,28 @@
     !! Status integer
     INTEGER :: ierr
     !! Error status
+    INTEGER :: iRp1, iRp2, iRp3, Rpmax, nRp
+    !! Number of unit cells within supercell
+    INTEGER :: Rp_crys_p(3)
+    !! Unit cell vectors in primitive crystal coordinates
+    INTEGER, ALLOCATABLE :: Rp(:, :)
+    !! List of unit cell vectors within supercell in primitive crystal coords
+    INTEGER :: iGs1, iGs2, iGs3, Gsmax, nGs
+    !! Number of supercell G-vectors within primitive reciprocal unit cell
+    INTEGER :: Gs_crys_s(3)
+    !! Supercell G-vectors in supercell reciprocal coordinates
+    REAL(KIND = DP) :: ap(3, 3), bp(3, 3)
+    !! Auxiliary definitions of real and reciprocal primitive cell vector matrix
+    REAL(KIND = DP) :: scell_mat_b(3, 3)
+    !! Reciprocal lattice transformation matrix
+    REAL(KIND = DP) :: p2s(3, 3), bs2p(3, 3)
+    !! Transformation matrix from primitive to supercell crystal coordinates
+    REAL(KIND = DP) :: Rp_crys_s(3)
+    !! Unit cell vectors in supercell crystal coordinates
+    REAL(KIND = DP) :: Gs_crys_p(3)
+    !! Supercell G-vectors in primitive crystal coordinates
+    REAL(KIND = DP), ALLOCATABLE :: Gs(:, :)
+    !! Supercell G-vectors within primitive reciprocal unit cell
     !
     IF (mpime == ionode_id) THEN
       IF (filqf /= '') THEN ! load from file
@@ -1777,11 +1957,117 @@
           CALL cryst_to_cart(nqtotf, xqf, at, -1)
         ENDIF
         !
+      !JLB
+      ELSEIF (scell_mat_plrn) THEN
+        !
+        WRITE(stdout, '(a)') ' '
+        WRITE(stdout, '(a)') '     Supercell transformation activated (q), as=S*at'
+        WRITE(stdout, '(a,3i4)') '     S(1, 1:3): ', scell_mat(1, 1:3)
+        WRITE(stdout, '(a,3i4)') '     S(2, 1:3): ', scell_mat(2, 1:3)
+        WRITE(stdout, '(a,3i4)') '     S(3, 1:3): ', scell_mat(3, 1:3)
+        !
+        ap = TRANSPOSE(at)
+        as = MATMUL(scell_mat,ap)
+        !
+        WRITE(stdout, '(a)') '     Transformed lattice vectors (alat units):'
+        WRITE(stdout, '(a,3f12.6)') '     as(1, 1:3): ', as(1, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     as(2, 1:3): ', as(2, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     as(3, 1:3): ', as(3, 1:3)
+        !
+        scell_mat_b = matinv3(REAL(scell_mat, DP))
+        scell_mat_b = TRANSPOSE(scell_mat_b)
+        !
+        WRITE(stdout, '(a)') '     Reciprocal lattice transformation matrix, Sbar = (S^{-1})^{t}:'
+        WRITE(stdout, '(a,3f12.6)') '     Sbar(1, 1:3): ', scell_mat_b(1, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     Sbar(2, 1:3): ', scell_mat_b(2, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     Sbar(3, 1:3): ', scell_mat_b(3, 1:3)
+        !
+        bp = TRANSPOSE(bg)
+        bs = MATMUL(scell_mat_b, bp)
+        !
+        WRITE(stdout, '(a)') '     Transformed reciprocal lattice vectors (2pi/alat units):'
+        WRITE(stdout, '(a,3f12.6)') '     bs(1, 1:3): ', bs(1, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     bs(2, 1:3): ', bs(2, 1:3)
+        WRITE(stdout, '(a,3f12.6)') '     bs(3, 1:3): ', bs(3, 1:3)
+        WRITE(stdout, '(a)') '  '
+        !
+        ! Define transformation matrix from primitive crystal coordinates
+        ! to supercell crystal coordinates Rp_crys_s = ((a_s)^{T})^{-1} (a_p)^{T} Rp_crys_p
+        p2s = matinv3(TRANSPOSE(as))
+        p2s = MATMUL(p2s,TRANSPOSE(ap))
+        !
+        ! Find how many unit cells are contained within the supercell
+        Rpmax = 5*MAXVAL(scell_mat) ! This should be large enough to find all
+        ALLOCATE(Rp(3, Rpmax**3), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating Rp', 1)
+        Rp  = 0
+        nRp = 0
+        DO iRp1 = -Rpmax, Rpmax
+          DO iRp2 = -Rpmax, Rpmax
+            DO iRp3 = -Rpmax, Rpmax
+              Rp_crys_p = (/iRp1, iRp2, iRp3/)
+              Rp_crys_s = MATMUL(p2s, Rp_crys_p)
+              ! Unit cell within supercell if Rp\in(0,1) in supercell crystal coordinates
+              IF (ALL(Rp_crys_s > -eps8) .AND. ALL(Rp_crys_s < 1.d0-eps8)) THEN
+                nRp = nRp + 1
+                Rp(1:3, nRp) = Rp_crys_p
+              END IF
+            END DO
+          END DO
+        END DO
+        WRITE(stdout, '(a, 3i6)') '     Number of unit cells within supercell:', nRp
+        !
+        IF (ALLOCATED(Rp)) DEALLOCATE(Rp)
+        !
+        ! Define transformation matrix from reciprocal supercell crystal coordinates
+        ! to reciprocal primitive crystal coordinates
+        ! Gs_crys_p = ((bp)^{T})^{-1} (bs)^{T} Gs_crys_s
+        bs2p = matinv3(TRANSPOSE(bp))
+        bs2p = MATMUL(bs2p, TRANSPOSE(bs))
+        !
+        ! Find how many q-points lie within primitive reciprocal cell
+        Gsmax = Rpmax ! This should be large enough to find all
+        ALLOCATE(Gs(3, Gsmax**3), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating Gs', 1)
+        Gs = 0.d0
+        nGs = 0
+        DO iGs1 = -Gsmax, Gsmax
+          DO iGs2 = -Gsmax, Gsmax
+            DO iGs3 = -Gsmax, Gsmax
+              Gs_crys_s = (/iGs1, iGs2, iGs3/)
+              Gs_crys_p = MATMUL(bs2p, Gs_crys_s)
+              ! Gs within primitive reciprocal unit cell if Gs\in(0,1) in crys_p coords.
+              IF (ALL(Gs_crys_p > -eps8) .AND. ALL(Gs_crys_p < 1.d0-eps8)) THEN
+                nGs = nGs + 1
+                Gs(1:3, nGs) = Gs_crys_p
+              END IF
+            END DO
+          END DO
+        END DO
+        WRITE(stdout, '(a, 3i6)') '     Number of q-points needed:', nGs
+        !
+        ! Save list of needed q-points
+        nqtotf = nGs
+        ALLOCATE(xqf(3, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
+        ALLOCATE(wqf(nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
+        !
+        DO iq = 1, nqtotf
+          !
+          xqf(:, iq) = Gs(1:3, iq)
+          wqf(iq) = 1.d0 ! weight not important for polaron
+          !
+        ENDDO
+        !
+        IF (ALLOCATED(Gs)) DEALLOCATE(Gs)
+        !
+      !JLB
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
           IF (lscreen) CALL errore ('loadqmesh', 'If lscreen=.TRUE. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge
-          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
@@ -1807,7 +2093,7 @@
         ELSE
           ! currently no offset.
           ! q's are in crystal coordinates in xqf
-          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          WRITE (stdout, '(a,3i5)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf = nqf1 * nqf2 * nqf3
           ALLOCATE(xqf (3, nqtotf), STAT = ierr)
@@ -1846,13 +2132,13 @@
         !
         DO iq = 1, nqtotf
           !
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            CALL random_number(xqf(:, iq))
+            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(:, iq) = xqf(:, iq) - 0.5d0
+          ELSE
             CALL random_number(xqf(1:2, iq))
             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(1:2, iq) = xqf(1:2, iq) - 0.5d0
             xqf(3, iq) = 0.d0
-          ELSE
-            CALL random_number(xqf(:, iq))
-            IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(:, iq) = xqf(:, iq) - 0.5d0
           ENDIF
           !
         ENDDO
@@ -1967,10 +2253,112 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, &
+    SUBROUTINE qwindow_wrap(totq, nrr_k, dims, ndegen_k, irvec_r, cufkk, cufkq)
+    !-----------------------------------------------------------------------
+    !!
+    !! Author: S. Ponc\'e
+    !! This routine determines which q-points falls within the fsthick windows
+    !! Store the result in the selecq.fmt file
+    !! If the file exists, automatically restart from the file
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, plrn, &
+                              scell_mat_plrn, nbndsub, selecqread
+    USE elph2,         ONLY : selecq, nqf
+    USE mp_world,      ONLY : mpime, world_comm
+    USE io_global,     ONLY : ionode_id, stdout
+    USE mp,            ONLY : mp_bcast
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(inout) :: totq
+    !! Total number of q-points computed
+    INTEGER, INTENT(in) :: nrr_k
+    !! Number of WS points for electrons
+    INTEGER, INTENT(in) :: dims
+    !! Dims is either nat if use_ws or 1 if not
+    INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
+    REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    COMPLEX(KIND = DP), INTENT(out) :: cufkk(nbndsub, nbndsub)
+    !! Rotation matrix, fine mesh, points k
+    COMPLEX(KIND = DP), INTENT(out) :: cufkq(nbndsub, nbndsub)
+    !! the same, for points k+q
+    !
+    ! Local
+    LOGICAL :: homogeneous
+    !! Check if the grids are homogeneous and commensurate
+    LOGICAL :: exst
+    !! If the file exist
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: iq
+    !! Counter on fine q-point grid
+    !
+    !
+    homogeneous = .FALSE.
+    IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN
+      IF ((MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
+        homogeneous = .TRUE.
+      ENDIF
+    ELSE
+      homogeneous = .FALSE.
+    ENDIF
+    !
+    totq = 0
+    !
+    IF (plrn .OR. scell_mat_plrn) THEN
+      ! For polaron calculations, all the q points have to be included
+      totq = nqf
+      ALLOCATE(selecq(nqf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('qwindow_wrap', 'Error allocating selecq', 1)
+      DO iq = 1, nqf
+        selecq(iq) = iq
+      ENDDO
+      !
+    ELSE
+      ! Check if the file has been pre-computed
+      IF (mpime == ionode_id) THEN
+        INQUIRE(FILE = 'selecq.fmt', EXIST = exst)
+      ENDIF
+      CALL mp_bcast(exst, ionode_id, world_comm)
+      !
+      IF (exst) THEN
+        IF (selecqread) THEN
+          WRITE(stdout, '(5x,a)')' '
+          WRITE(stdout, '(5x,a)')'Reading selecq.fmt file. '
+          CALL qwindow(exst, nrr_k, dims, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+        ELSE
+          WRITE(stdout, '(5x,a)')' '
+          WRITE(stdout, '(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .FALSE. '
+          CALL qwindow(.FALSE., nrr_k, dims, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+        ENDIF
+      ELSE ! exst
+        IF (selecqread) THEN
+          CALL errore( 'qwindow_wrap', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 )
+        ELSE
+          CALL qwindow(exst, nrr_k, dims, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+        ENDIF
+      ENDIF
+      !
+      WRITE(stdout, '(5x,a,i8,a)')'We only need to compute ', totq, ' q-points'
+      WRITE(stdout, '(5x,a)')' '
+      !
+    ENDIF ! plrn .OR. scell_mat_plrn
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE qwindow_wrap
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE qwindow(exst, nrr_k, dims, irvec_r, ndegen_k, &
                        cufkk, cufkq, homogeneous)
     !-----------------------------------------------------------------------
     !!
+    !! Author: S. Ponc\'e
     !! This routine pre-computes the q-points that falls within the fstichk.
     !! If at least 1 k-point is such that at least one k+q eigenenergy falls
     !! within the user-defined fstichk, then the q-point is taken.
@@ -1978,7 +2366,8 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : nqf, xqf, xkf, chw, nkf, nqtotf, &
-                              map_rebal, nktotf, bztoibz, map_fst
+                              map_rebal, nktotf, bztoibz, map_fst, totq, &
+                              selecq
     USE io_global,     ONLY : ionode_id, stdout
     USE io_var,        ONLY : iunselecq
     USE mp_global,     ONLY : npool, world_comm, my_pool_id
@@ -2004,10 +2393,6 @@
     !! Number of WS points for electrons
     INTEGER, INTENT(in) :: dims
     !! Dims is either nat if use_ws or 1 if not
-    INTEGER, INTENT(inout) :: totq
-    !! Total number of q-points inside fsthick
-    INTEGER, ALLOCATABLE, INTENT(out) :: selecq(:)
-    !! List of selected q-points
     INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
     !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
@@ -2424,6 +2809,7 @@
     SUBROUTINE load_rebal()
     !-----------------------------------------------------------------------
     !!
+    !! Author: S. Ponc\'e
     !! Routine used to rebalance the load on k-points.
     !! At the moment this routines is only called in the case of IBTE
     !! using k-point symmetry and an homogeneous grid.

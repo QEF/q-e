@@ -16,8 +16,7 @@
 SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                b1, b2, b3, Uall, what1, wfc, jw, ibrav )
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine calculates overlap matrices
+  !! This routine calculates overlap matrices.
   !
   ! ... routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
   !
@@ -54,8 +53,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE mp_global,                ONLY : nproc_bgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   USE fft_interfaces,           ONLY : invfft
   USE fft_base,                 ONLY : dfftp, dfftb
-  USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
-                                       printout_base_close
+  USE printout_base,            ONLY : printout_base_open, printout_base_close
   USE cp_main_variables,        ONLY : nfi, iprint_stdout
   USE time_step,                ONLY : tps
   USE input_parameters,         ONLY : tcpbo
@@ -699,10 +697,10 @@ END SUBROUTINE wf
 !----------------------------------------------------------------------------
 SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
-  ! ... This part of the subroutine wf has been added by Manu. It performes
-  ! ... Damped Dynamics on the A matrix to get the Unitary transformation to
-  ! ... obtain the wannier function at time(t+delta). It also updates the
-  ! ... quantities bec
+  !! This subroutine performes Damped Dynamics on the A matrix to get the Unitary 
+  !! transformation to obtain the Wannier function at time(t+delta).
+  !! It also updates the quantities \(\text{bec}\).
+  ! This part has been added by Manu.
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : ionode, stdout
@@ -713,8 +711,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iverbosity,conv_elec
   USE mp_global,        ONLY : me_bgrp
-  USE printout_base,    ONLY : printout_base_open, printout_base_unit, &
-                               printout_base_close
+  USE printout_base,    ONLY : printout_base_open, printout_base_close
   USE cp_main_variables,        ONLY : nfi, iprint_stdout
   USE time_step,                ONLY : tps
   USE input_parameters,         ONLY : tcpbo
@@ -913,8 +910,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
      IF ( ionode ) THEN
-        iunit = printout_base_unit( "spr" )
-        CALL printout_base_open( "spr" )
+        iunit = printout_base_open( ".spr" )
         IF (.NOT.tcpbo) THEN
            WRITE( iunit, '(I8,f16.8)' )nfi,tps
         ELSE   
@@ -950,7 +946,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
-     IF ( ionode ) CALL printout_base_close( "spr" )
+     IF ( ionode ) CALL printout_base_close( iunit )
   END IF
 
   spread=spread/m
@@ -1319,9 +1315,8 @@ END SUBROUTINE grid_map
 !----------------------------------------------------------------------------
 SUBROUTINE setwfg( ibrav, b1, b2, b3 )
   !----------------------------------------------------------------------------
-  !
+  !! Find G vectors for a given ibrav and celldms.
   ! ... added by Young-Su Lee ( Nov 2006 )
-  ! Find G vectors for a given ibrav and celldms
   !
   USE kinds,              ONLY : DP
   USE cell_base,          ONLY : tpiba, celldm
@@ -1703,10 +1698,9 @@ END SUBROUTINE setwfg
 !----------------------------------------------------------------------------
 SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
   !----------------------------------------------------------------------------
-  !
-  ! ... This subroutine computes the weights to be used for
-  ! ... R.P. translations in the WF calculation in the case
-  ! ... of ibrav=0 or ibrav=14
+  !! This subroutine computes the weights to be used for
+  !! R.P. translations in the WF calculation in the case
+  !! of ibrav=0 or ibrav=14.
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : pi
@@ -1794,13 +1788,12 @@ END SUBROUTINE tric_wts
 !----------------------------------------------------------------------------
 SUBROUTINE tric_wts2( rp1, rp2, rp3, nw, wfg, weight )
   !----------------------------------------------------------------------------
+  !! Find the least square solutions of weights for G vectors.  
+  !! If the set of G vectors and calculated weights do not conform to the condition,
+  !! \(\sum_i \text{weight}_i G_{ia} G_{ib} = \text{delta}_{ab} \)
+  !! the code stops.
   !
   ! ... added by Young-Su Lee ( Nov 2006 )
-  !
-  ! Find the least square solutions of weights for G vectors
-  ! If the set of G vectors and calculated weights do not conform to the condition,
-  !  SUM_i weight_i G_ia G_ib = delta_ab
-  ! the code stops.
   !
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
@@ -2347,8 +2340,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi, bohr_radius_angs
   USE mp_global,              ONLY : me_bgrp
-  USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
-                                     printout_base_close
+  USE printout_base,          ONLY : printout_base_open, printout_base_close
   USE cp_main_variables,      ONLY : nfi, iprint_stdout
   USE time_step,              ONLY : tps
   USE input_parameters,         ONLY : tcpbo
@@ -2648,8 +2640,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
      IF ( ionode ) THEN
-        iunit = printout_base_unit( "spr" )
-        CALL printout_base_open( "spr" )
+        iunit = printout_base_open( ".spr" )
         IF (.NOT.tcpbo) THEN
            WRITE( iunit, '(I8,f16.8)' )nfi,tps
         ELSE   
@@ -2685,7 +2676,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
-     IF ( ionode ) CALL printout_base_close( "spr" )
+     IF ( ionode ) CALL printout_base_close( iunit )
   END IF
 
   spread=spread/DBLE(m)
@@ -2705,8 +2696,8 @@ END SUBROUTINE wfsteep
 !----------------------------------------------------------------------------
 SUBROUTINE write_psi( c, jw )
   !----------------------------------------------------------------------------
+  !! Collect wavefunctions on first node and write to file.
   ! ... for calwf 5             - M.S
-  ! ... collect wavefunctions on first node and write to file
   !
   USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout, ionode
@@ -2776,6 +2767,8 @@ END SUBROUTINE write_psi
 !----------------------------------------------------------------------------
 SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
+  !! Jacobi rotations method is used to minimize the spread.  
+  !! F. Gygi, J.-L. Fatterbert and E. Schwegler, Comput. Phys. Commun. 155, 1 (2003)
   !
   USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout
@@ -2783,8 +2776,7 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
   USE mp_global,              ONLY : me_bgrp
-  USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
-                                     printout_base_close
+  USE printout_base,          ONLY : printout_base_open, printout_base_close
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2986,10 +2978,10 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
 END SUBROUTINE jacobi_rotation
 !==============================================================================
 
-    SUBROUTINE ddyn_u(nbsp, O, U, iss)
+    SUBROUTINE ddyn_u( nbsp, O, U, iss )
 
-! input: the overlap matrix O
-! ouput: the unitary transformation matrix U
+       !! It takes as input the overlap matrix O and provides as ouput the
+       !! unitary transformation matrix U.
 
        USE kinds,            ONLY : DP
        USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, weight, nw, wfdt
@@ -2997,7 +2989,7 @@ END SUBROUTINE jacobi_rotation
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
        USE cp_main_variables, ONLY: idesc
-       USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
+       USE printout_base,     ONLY : printout_base_open, printout_base_close
        USE cp_main_variables, ONLY : nfi, iprint_stdout
        USE time_step,         ONLY : tps
        USE input_parameters,  ONLY : tcpbo
@@ -3152,8 +3144,7 @@ END SUBROUTINE jacobi_rotation
      !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
      IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
         IF ( ionode ) THEN
-           iunit = printout_base_unit( "spr" )
-           CALL printout_base_open( "spr" )
+           iunit = printout_base_open( ".spr" )
            IF (.NOT.tcpbo) THEN
               WRITE( iunit, '(I8,f16.8)' )nfi,tps
            ELSE   
@@ -3185,7 +3176,7 @@ END SUBROUTINE jacobi_rotation
 
      !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
      IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
-        IF ( ionode ) CALL printout_base_close( "spr" )
+        IF ( ionode ) CALL printout_base_close( iunit )
      END IF
 
      spread=spread/nbsp

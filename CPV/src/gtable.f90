@@ -6,19 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-subroutine gtable( ipol, ctable)
-
-  ! this subroutine prepares the correspondence array to
-  ! compute the operator exp(iG_ipol.r)
-
-  !   ctable : output correspondence table
-  !    in (ig,1) correspondence for g+1
-  !    in (ig,2) correspondence for (-g)+1
-  !    we use the rule: if non point ngw+1
-  !    if found positive = normal
-  !    negative = conjugate
-  !   ipol   : input polarization direction
-  !            a orthorombic primitive cell is supposed
+subroutine gtable( ipol, ctable )
+  
+  !! This subroutine prepares the correspondence array to
+  !! compute the operator \(\exp(iG_\text{ipol}\cdot r)\).
+  
   use kinds, only: dp
   use gvecw, only: ngw  
   use gvect, only: mill
@@ -27,8 +19,20 @@ subroutine gtable( ipol, ctable)
   use mp_global, only: intra_bgrp_comm 
 
   implicit none
-  integer :: ipol, ctable(ngw,2)
-  !local variables
+  
+  integer :: ipol
+  !! Input polarization direction.
+  !! A orthorombic primitive cell is supposed
+  integer :: ctable(ngw,2)
+  !! output correspondence table:  
+  !! - in (ig,1) correspondence for g+1;  
+  !! - in (ig,2) correspondence for (-g)+1.  
+  !! We use the rule:  
+  !! if non point ngw+1;  
+  !! if found positive = normal,  
+  !! negative = conjugate.
+  
+  ! ... local variables
   integer :: i,j,k, ig, jg
   logical :: found
   real(dp) :: test
@@ -104,14 +108,8 @@ end subroutine gtable
 
 subroutine gtablein( ipol, ctabin)
   
-  ! this subroutine prepare the inverse correspondence array to
-  ! compute the operator exp(iG_ipol.r)
-  
-  !   ctabin(ngw,2) : output correspondence table
-  !   if negative to take complex conjugate, 1 g'+1, 2 g' -1
-  !   if not found = ngw+1
-  !   ipol   : input polarization direction
-  !            a orthorombic primitive cell is supposed
+  !! This subroutine prepare the inverse correspondence array to
+  !! compute the operator \(\exp(iG_\text{ipol}\cdot r) \).
 
   use kinds, only: dp
   use gvecw, only: ngw  
@@ -122,9 +120,15 @@ subroutine gtablein( ipol, ctabin)
 
   implicit none
 
-  integer :: ipol, ctabin(ngw,2)
-
-  !local variables
+  integer :: ipol
+  !! Input polarization direction.  
+  !! A orthorombic primitive cell is supposed
+  integer :: ctabin(ngw,2)
+  !! Output correspondence table.  
+  !! If negative to take complex conjugate, 1 g'+1, 2 g' -1.  
+  !! If not found = ngw+1.
+  
+  ! ... local variables
   integer :: i,j,k, ig, jg
   logical :: found
   real(dp) :: test
@@ -189,7 +193,8 @@ end subroutine gtablein
 
 
 subroutine find_whose_is_g
-!this subroutine set the correspondence G-->Proc
+
+  !! This subroutine set the correspondence \(G\rightarrow \text{Proc}\).
 
   USE gvecw,              ONLY : ngw, ngw_g
   USE gvect,              ONLY : ig_l2g, mill_g, mill

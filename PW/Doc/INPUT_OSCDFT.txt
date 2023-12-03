@@ -1,0 +1,694 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pw.x with OS-CDFT / PWscf / Quantum ESPRESSO (version: 7.2)
+------------------------------------------------------------------------
+
+
+
+::::  ABOUT 
+
+   OS-CDFT allows control of the oxidation state of a transition metal element by
+   constraining the occupation numbers.
+   For information on the method, see ""://doi.org/10.1021/acs.jctc.9b00281
+   C. Ku, P. H. L. Sit, J. Chem. Theory Comput. 2019, 15, 9, 4781-4789
+   
+
+
+::::  COMPILATION 
+
+   Using autoconf:
+       ./configure ...
+       nano make.inc # append -D__OSCDFT into DFLAGS = ... (or MANUAL_DFLAGS = ...)
+       make pw pp ...
+   
+   Using cmake:
+       cmake -DQE_ENABLE_OSCDFT=ON ... <path-to-qe-source>
+       make pw pp ...
+   
+
+
+::::  USAGE 
+
+   Requires oscdft.in file, described below, in the same directory as where the pw.x command is ran.
+       pw.x -inp <input-file> -oscdft ...
+   
+
+Input data format: { } = optional, [ ] = it depends, | = or
+
+Structure of the oscdft.in file:
+===============================================================================
+
+    &OSCDFT
+      ...
+    /
+
+    TARGET_OCCUPATION_NUMBERS
+      see "TARGET_OCCUPATION_NUMBERS"
+
+    [ GAMMA_VAL
+      gamma_val(1)
+      ...
+      gamma_val(n_oscdft) ]
+
+
+
+========================================================================
+NAMELIST: &OSCDFT
+
+   +--------------------------------------------------------------------
+   Variable:       n_oscdft
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    Number of entries of the "TARGET_OCCUPATION_NUMBERS" card.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       get_ground_state_first
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., perform an scf calculation to convergence before applying constraint.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       warm_up_niter
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    Runs warm_up_niter scf iterations first before applying constraint.
+                   If "get_ground_state_first" is .TRUE. then scf convergence is achieved first
+                   before running "warm_up_niter" scf iterations without applying the constraints.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       convergence_type
+   
+   Type:           CHARACTER
+   Default:        'gradient'
+   Description:   
+                   The variable that is checked for convergence with the convergence threshold.
+    
+                   'multipliers' :
+                        Converges when the change in multipliers between iterations
+                        is less than the threshold.
+    
+                   'gradient' :
+                        Converges when (occupation number - target occupation number)
+                        is less than the threshold.
+    
+                   'energy' :
+                        Converges when the change in total energy between iterations
+                        is less than the threshold.
+    
+                   'always_false' :
+                        Never converges (for debugging).
+    
+                   'always_true' :
+                        Always converges (for debugging).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       iteration_type
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:   
+                   Order of charge density and OS-CDFT multipliers optimizations.
+    
+                   0 :
+                        OS-CDFT multipliers optimization is a micro-iteration inside
+                        the charge density iteration. The convergence threshold of the
+                        OS-CDFT multipliers iterations can be set to start loose at
+                        "max_conv_thr" and gradually tighten to a minimum of "min_conv_thr"
+                        by multiplying the threshold with "conv_thr_multiplier" after
+                        every successful OS-CDFT multipliers iteration. A final
+                        convergence threshold of "final_conv_thr" can also be set
+                        to prevent the charge density iteration from converging when
+                        the OS-CDFT convergence test is larger than "final_conv_thr".
+    
+                   1 :
+                        Charge density optimization is a micro-iteration inside the
+                        OS-CDFT multiplier optimization. The convergence threshold of
+                        the OS-CDFT multipliers is set by "max_conv_thr".
+                        "min_conv_thr", "conv_thr_multiplier", and "final_conv_thr" are
+                        ignored.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       optimization_method
+   
+   Type:           CHARACTER
+   Default:        'gradient descent'
+   Description:   
+                   Method to update the OS-CDFT multipliers.
+    
+                   'gradient descent'  :
+                        multipliers -= "min_gamma_n"
+                                       * (occupation number - target occupation number)
+    
+                   'gradient descent2'  :
+                        multipliers -= "gamma_val" * "min_gamma_n"
+                                       * (occupation number - target occupation number)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       array_convergence_func
+   
+   Type:           CHARACTER
+   Default:        'maxval'
+   Description:   
+                   Specify the method of multiple values to scalar for convergence test
+                   when "convergence_type" is either 'gradient' or 'multipliers'.
+    
+                   'maxval' :
+                        Takes the maximum of the "convergence_type" before comparing with
+                        threshold.
+    
+                   'norm' :
+                        Takes the root sum squared of the "convergence_type" before
+                        comparing with threshold.
+    
+                   'rms' :
+                        Takes the root mean squared of the "convergence_type" before
+                        comparing with threshold.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       max_conv_thr
+   
+   Type:           DOUBLE
+   Default:        1.D-1
+   Description:    If "iteration_type" is 0, this is the starting convergence threshold.
+                   If "iteration_type" is 1, this is the convergence threshold.
+                   See "iteration_type" for more explanations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       min_conv_thr
+   
+   Type:           DOUBLE
+   Default:        1.D-3
+   Description:    If "iteration_type" is 0, this is the minimum convergence threshold.
+                   If "iteration_type" is 1, this is ignored.
+                   See "iteration_type" for more explanations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       final_conv_thr
+   
+   Type:           DOUBLE
+   Default:        -1.D0
+   Description:    If "iteration_type" is 0 and "final_conv_thr" > 0.D0, the charge density
+                   convergence is prevented when the OS-CDFT convergence test is
+                   larger than "final_conv_thr". Otherwise, this is ignored.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       conv_thr_multiplier
+   
+   Type:           DOUBLE
+   Default:        0.5D0
+   Description:    If "iteration_type" is 0, see "iteration_type" for explanations.
+                   Otherwise, this is ignored.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       print_occupation_matrix
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., prints the occupation matrices.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       print_occupation_eigenvectors
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., prints the occupation eigenvectors.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       min_gamma_n
+   
+   Type:           DOUBLE
+   Default:        1.D0
+   Description:    Learning rate of optimizations. See "optimization_method".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       has_min_multiplier
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., sets the minimum value of the OS-CDFT multipliers
+                   to "min_multiplier".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       min_multiplier
+   
+   Type:           DOUBLE
+   Status:         REQUIRED if "has_min_multiplier" is .TRUE.
+   Description:    Minimum value of the OS-CDFT multipliers.
+                   Enabled using "has_min_multiplier"
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       has_max_multiplier
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., sets the maximum value of the OS-CDFT multipliers
+                   to "max_multiplier".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       max_multiplier
+   
+   Type:           DOUBLE
+   Status:         REQUIRED if "has_max_multiplier" is .TRUE.
+   Description:    Maximum value of the OS-CDFT multipliers.
+                   Enabled using "has_max_multiplier"
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       miniter
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    Minimum OS-CDFT iterations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       maxiter
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    Maximum OS-CDFT iterations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       swapping_technique
+   
+   Type:           CHARACTER
+   Default:        'none'
+   Description:   
+                   See ""://doi.org/10.1021/acs.jctc.9b00281
+    
+                   'none' :
+                        No swapping technique.
+                        Always chooses the occupation number in ascending order.
+    
+                   'permute' :
+                        Chooses the occupation number associated with the
+                        occupation eigenvector that is most similar compared
+                        to previous iteration (using dot product)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       print_debug
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., prints additional debug informations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       orthogonalize_swfc
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., uses Lowdin orthogonalized atomic orbitals.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       normalize_swfc
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., uses Lowdin normalized atomic orbitals.
+                   Atomic orbitals are not orthogonalized in this case.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+========================================================================
+CARD: TARGET_OCCUPATION_NUMBERS 
+
+   SPECIFIES THE OS-CDFT CONSTRAINT TO APPLY.
+   ALSO ALLOWS PRINTING OF OCCUPATION MATRIX WITHOUT APPLYING OS-CDFT CONSTRAINTS.
+   
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+      TARGET_OCCUPATION_NUMBERS 
+         applied(1)         spin(1)         orbital_desc(1)         [  constr_idx(1)         target(1)         start_mul(1)         {  start_index(1)         }  ]  
+         applied(2)         spin(2)         orbital_desc(2)         [  constr_idx(2)         target(2)         start_mul(2)         {  start_index(2)         }  ]  
+         . . . 
+         applied(n_oscdft)  spin(n_oscdft)  orbital_desc(n_oscdft)  [  constr_idx(n_oscdft)  target(n_oscdft)  start_mul(n_oscdft)  {  start_index(n_oscdft)  }  ]  
+   
+   /////////////////////////////////////////
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Variable:       applied
+      
+      Type:           CHARACTER
+      Status:         REQUIRED
+      Description:   
+                      T :
+                           Applies a constraint.
+                           
+                           "spin", "orbital_desc", "constr_idx", "target",
+                           and "start_mul" are requried.
+                           "spin" is optional.
+       
+                      F :
+                           Just prints the occupation number.
+                           
+                           Only "spin" and "orbital_desc" are requried.
+                           Others are ignored.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       spin
+      
+      Type:           CHARACTER
+      Status:         REQUIRED
+      Description:   
+                      1, UP  :
+                           Spin up channel
+       
+                      2, DOWN  :
+                           Spin down channel
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       orbital_desc
+      
+      Type:           CHARACTER
+      Status:         REQUIRED
+      Description:    Orbitals included in the occupation number
+                      
+                      Syntax of the orbital descriptor:
+                           atom_index(manifold...)...
+                      
+                      Where:
+                      atom_index = atom index in the order of ATOMIC_POSITIONS
+                      manifold   = principal and azimuthal quantum numbers
+                                      (can specify more than one manifolds)
+                                      (eg. 3d, 2s2p)
+                      
+                      Examples:
+                      5(3d)   describes a 5x5 occupation matrix which includes:
+                      - 3d orbital of atom 5.
+                      
+                      3(2s2p) describes a 4x4 occupation matrix which includes:
+                      - 2s orbital of atom 3.
+                      - 2p orbital of atom 3.
+                      
+                      Additional notes: See ADDITIONAL NOTES below.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       constr_idx
+      
+      Type:           VARIOUS
+      Status:         REQUIRED if "applied"(I) == T
+      Description:    Specifies how the constraint is applied:
+                      
+                      To apply a constraint on an occupation number:
+                        Write the index of the occupation numbers, sorted in ascending order,
+                        where the OS-CDFT constraint is applied.
+                        See "swapping_technique".
+                      
+                        Example:
+                        Apply a constraint to the 5th spin-up occupation number of
+                        the 3d orbital of atom 2 to a target of 0.9
+                        &OSCDFT
+                          n_oscdft=1
+                          ...
+                        /
+                        TARGET_OCCUPATION_NUMBERS
+                          T UP 2(3d) 5 0.9 0.0
+                      
+                      To apply a constraint on the trace of the occupation matrix:
+                        Write trace for this variable.
+                        "swapping_technique" is ignored when this is used.
+                      
+                        Example:
+                        Apply a constraint to the trace of the spin-up occupation number of
+                        the 3d orbital of atom 2 to a target of 3.2
+                        &OSCDFT
+                          n_oscdft=1
+                          ...
+                        /
+                        TARGET_OCCUPATION_NUMBERS
+                          T UP 2(3d) trace 3.2 0.0
+                      
+                      To apply a cosntraint on the sum of occupation numbers:
+                        sum number orbital_index row_index(1) ... row_index(number-1)
+                        Applies constraint on orbital_index-th occupation number
+                        of the occupation matrix.
+                        However, the occupation number inputted to the optimization subroutines
+                        is the sum of this orbital index along with the occupation number of
+                        row_index(1) ... row_index(number-1)
+                        "swapping_technique" is ignored when this is used.
+                      
+                        Example:
+                        Apply a constraint to the sum of the 3rd, 4th, and 5th
+                        occupation numbers of the 3d orbital of atom 2 to a target of 2.8
+                        &OSCDFT
+                          n_oscdft=3
+                          ...
+                        /
+                        TARGET_OCCUPATION_NUMBERS
+                          T UP 2(3d) sum 3 3 2 3 2.8 0.0
+                          T UP 2(3d) sum 3 4 1 3 2.8 0.0
+                          T UP 2(3d) sum 3 5 1 2 2.8 0.0
+                      
+                        Explanation:
+                        Row 1: Applies constraint to 3rd occupation number. However, the multiplier is
+                               optimized until the sum of the 3rd occupation number, along with the
+                               occupation numbers of row 2 and row 3 of the "TARGET_OCCUPATION_NUMBERS"
+                               card equals 2.8
+                        Row 2: Applies constraint to 4th occupation number. However, the multiplier is
+                               optimized until the sum of the 4th occupation number, along with the
+                               occupation numbers of row 1 and row 3 of the "TARGET_OCCUPATION_NUMBERS"
+                               card equals 2.8
+                        Row 3: Applies constraint to 5th occupation number. However, the multiplier is
+                               optimized until the sum of the 5th occupation number, along with the
+                               occupation numbers of row 1 and row 2 of the "TARGET_OCCUPATION_NUMBERS"
+                               card equals 2.8
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       target
+      
+      Type:           DOUBLE
+      Status:         REQUIRED if "applied"(I) == T
+      Description:    The target occupation number for the constraint.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       start_mul
+      
+      Type:           DOUBLE
+      Status:         REQUIRED if "applied"(I) == T
+      Description:    Starting value of the multiplier.
+                      For normal operations, set this to 0.D0.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       start_index
+      
+      Type:           INTEGER
+      Default:        1
+      Description:    If "iteration_type" is 0, delays the application of this
+                      row of OS-CDFT constraint until the rest of the constraint is
+                      converged. Otherwise, this is ignored.
+                      
+                      Example ("n_oscdft" = 4):
+                      TARGET_OCCUPATION_NUMBERS
+                        T UP 3(3d) 5 0.9 0.0 1
+                        T UP 4(3d) 5 0.9 0.0 1
+                        T UP 5(3d) 5 0.9 0.0 2
+                        T UP 6(3d) 5 0.9 0.0 3
+                      The constraints on atom 3 and 4 are applied first until convergence.
+                      Then, the constraints on atom 3, 4, and 5 are applied until convergence.
+                      Finally, the constraints on atom 3, 4, 5, and 6 are applied until convergence.
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+========================================================================
+CARD: GAMMA_VAL 
+
+   CONDITIONAL CARD, USED ONLY IF "OPTIMIZATION_METHOD" == 'GRADIENT DESCENT2', IGNORED OTHERWISE !
+   
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+      GAMMA_VAL 
+         gamma_val(1)         
+         gamma_val(2)         
+         . . . 
+         gamma_val(n_oscdft)  
+   
+   /////////////////////////////////////////
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Variable:       gamma_val
+      
+      Type:           DOUBLE
+      Status:         REQUIRED if "optimization_method" == 'gradient descent2'
+      Description:    This sets the learning rate for each multipliers,
+                      allowing different learning rate for each multipliers.
+                      See "optimization_method" for more details.
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+
+::::  ADDITIONAL NOTES 
+
+   1. The default values are the recommeded options for "convergence_type"
+      and "array_convergence_func"
+   
+   2. When using diagonalization='davidson', OS-CDFT may fail with
+      'S matrix not positive definite' as an error. When that occurs,
+      use diagonalization='cg'.
+   
+   3. Use "iteration_type"=0 for most cases. "iteration_type"=0 is faster,
+      due to the ability to gradually tighten the convergence threshold.
+      However, "iteration_type"=1 is more robust.
+   
+   4. "orbital_desc" in the "TARGET_OCCUPATION_NUMBERS" card:
+      While one "orbital_desc" can be composed of multiple atoms,
+      the occupation number may not be accurate.
+      For example, 5(3d)6(2s2p) will be accepted, however the
+      atomic wavefunction of atom 5 and atom 6 may not be orthogonal.
+      (unless "orthogonalize_swfc" is .true.)
+   
+
+
+::::  ADDITIONAL EXAMPLES FOR TARGET_OCCUPATION_NUMBERS 
+
+   Input File:
+   &OSCDFT
+     n_oscdft=2
+     ...
+   /
+   TARGET_OCCUPATION_NUMBERS
+     T UP   5(3d) 5 0.9075202 0.0
+     F DOWN 5(3d)
+   Explanations:
+   Row 1: Apply a constraint on the 5th spin-up occupation number of the
+          3d orbital of atom 5 to a target of 0.9075202
+   Row 2: Print the occupation numbers of the spin-down occupation numbers
+          of the 3d orbital of atom 5
+   
+   
+   Input File:
+   &OSCDFT
+     n_oscdft=2
+     ...
+   /
+   TARGET_OCCUPATION_NUMBERS
+     F UP   1(3d)
+     T DOWN 1(3d) 5 0.9369434 0.0
+     F UP   2(3d)
+     T DOWN 2(3d) 5 0.261727 0.0
+   Explanations:
+   Row 1: Print the occupation numbers of the spin-up occupation numbers of the
+          3d orbital of atom 1
+   Row 2: Apply a constraint on the 5th spin-down occupation number of the
+          3d orbital of atom 1 to a target of 0.9369434
+   Row 3: Print the occupation numbers of the spin-up occupation numbers of the
+          3d orbital of atom 2
+   Row 4: Apply a constraint on the 5th spin-down occupation number of the
+          3d orbital of atom 2 to a target of 0.261727
+   
+   
+   Input File:
+   &OSCDFT
+     n_oscdft=7
+     ...
+   /
+   TARGET_OCCUPATION_NUMBERS
+     T UP    9(3d) sum 4 2 2 3 4 4.0135939 0.0
+     T UP    9(3d) sum 4 3 1 3 4 4.0135939 0.0
+     T UP    9(3d) sum 4 4 1 2 4 4.0135939 0.0
+     T UP    9(3d) sum 4 5 1 2 3 4.0135939 0.0
+     F DOWN  9(3d)
+     F UP   16(3d)
+     F DOWN 16(3d)
+   Explanations:
+   Row 1-4: Apply a constraint on the sum of the 2nd, 3rd, 4th, and 5th spin-up
+            occupation number of the 3d orbital of atom 9 to a target of 4.0135939
+   Row 5  : Print the occupation numbers of the spin-down occupation numbers of the
+            3d orbital of atom 9
+   Row 6  : Print the occupation numbers of the spin-up occupation numbers of the
+            3d orbital of atom 16
+   Row 7  : Print the occupation numbers of the spin-down occupation numbers of the
+            3d orbital of atom 16
+   
+   
+   Input File:
+   &OSCDFT
+     n_oscdft=7
+     ...
+   /
+   TARGET_OCCUPATION_NUMBERS
+     F UP    9(3d)
+     F DOWN  9(3d)
+     T UP   16(3d) sum 4 2 4 5 6 4.0135939 0.0
+     T UP   16(3d) sum 4 3 3 5 6 4.0135939 0.0
+     T UP   16(3d) sum 4 4 3 4 6 4.0135939 0.0
+     T UP   16(3d) sum 4 5 3 4 5 4.0135939 0.0
+     F DOWN 16(3d)
+   Explanations:
+   Row 1  : Print the occupation numbers of the spin-up occupation numbers of the
+            3d orbital of atom 9
+   Row 2  : Print the occupation numbers of the spin-down occupation numbers of the
+            3d orbital of atom 9
+   Row 3-6: Apply a constraint on the sum of the 2nd, 3rd, 4th, and 5th spin-up
+            occupation number of the 3d orbital of atom 16 to a target of 4.0135939
+   Row 7  : Print the occupation numbers of the spin-down occupation numbers of the
+            3d orbital of atom 16
+   
+   
+   Input File:
+   &OSCDFT
+     n_oscdft=7
+     ...
+   /
+   TARGET_OCCUPATION_NUMBERS
+     T UP   39(3d) sum 4 2 2 3 4 4.0135939 0.0
+     T UP   39(3d) sum 4 3 1 3 4 4.0135939 0.0
+     T UP   39(3d) sum 4 4 1 2 4 4.0135939 0.0
+     T UP   39(3d) sum 4 5 1 2 3 4.0135939 0.0
+     T DOWN 39(3d) sum 3 3 6 7   3.0020503 0.0
+     T DOWN 39(3d) sum 3 4 5 7   3.0020503 0.0
+     T DOWN 39(3d) sum 3 5 5 6   3.0020503 0.0
+   Explanations:
+   Row 1-4: Apply a constraint on the sum of the 2nd, 3rd, 4th, and 5th spin-up
+            occupation number of the 3d orbital of atom 39 to a target of 4.0135939
+   Row 5-7: Apply a constraint on the sum of the 3rd, 4th, and 5th spin-down
+            occupation number of the 3d orbital of atom 39 to a target of 3.0020503
+   
+
+This file has been created by helpdoc utility on Sat Mar 18 16:00:16 CET 2023

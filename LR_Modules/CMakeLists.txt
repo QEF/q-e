@@ -5,6 +5,9 @@ set(sources
     addusdbec_nc.f90
     apply_dpot.f90
     apply_dpot_mod.f90
+    apply_trev.f90
+    non_scf_ph.f90
+    c_bands_ph.f90
     addusldos.f90
     adddvepsi_us.f90
     cft_wave.f90
@@ -60,15 +63,25 @@ set(sources
     addusddenseq.f90
     response_kernels.f90
     efermi_shift.f90)
-
+qe_enable_cuda_fortran("${sources}")
 qe_add_library(qe_lr_modules ${sources})
 target_link_libraries(qe_lr_modules
     PRIVATE
+        qe_openacc_fortran
+	qe_openmp_fortran
+	qe_mpi_fortran
         qe_modules
         qe_pw
         qe_upflib
         qe_fftx
-        qe_xclib)
+        qe_xclib
+	qe_device_lapack)
+
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::cublas)
+endif()
 
 ###########################################################
 

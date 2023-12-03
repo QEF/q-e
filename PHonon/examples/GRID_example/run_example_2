@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -172,7 +172,7 @@ Electron-phonon coefficients for Al
   start_q=$q
   last_q=$q
   electron_phonon='interpolated',
-  el_ph_sigma=0.005, 
+  el_ph_sigma=0.005,
   el_ph_nsigma=10,
   trans=.true.,
   ldisp=.true.
@@ -180,7 +180,7 @@ Electron-phonon coefficients for Al
  /
 EOF
 $ECHO "  running the el-ph calculation q = "$q"...\c"
-$PH_COMMAND < al.elph.in.$q > al.elph.out.$q 
+$PH_COMMAND < al.elph.in.$q > al.elph.out.$q
 check_failure $?
 $ECHO "  done"
 done

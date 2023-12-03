@@ -13,6 +13,7 @@ PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libd
 LRMODS = ../../LR_Modules/liblrmod.a
 
 LROBJS= \
+environ_td_module.o \
 lr_variables.o \
 lr_charg_resp.o \
 bcast_lr_input.o \

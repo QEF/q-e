@@ -56,6 +56,11 @@ SUBROUTINE summary()
   USE london_module,   ONLY : print_london
   USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : print_environ_summary
+#endif
+  !
   IMPLICIT NONE
   !
   ! ... declaration of the local variables
@@ -153,8 +158,13 @@ SUBROUTINE summary()
           &  'width of the smooth step-function  =',F21.4,' Ry',/ )
      !
   END IF
-  !
+  !  
+#if defined(__LEGACY_PLUGINS)
   CALL plugin_summary()
+#endif
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
   !
   ! ... CUDA
   !
@@ -164,13 +174,13 @@ SUBROUTINE summary()
   !
   IF ( do_comp_esm )  CALL esm_summary()
   !
-  ! ... FCP (Ficticious charge particle)
-  !
-  IF ( lfcp )  CALL fcp_summary()
-  !
   ! ... GC-SCF (Grand-Canonical SCF)
   !
   IF ( lgcscf )  CALL gcscf_summary()
+  !
+  ! ... FCP (Ficticious charge particle)
+  !
+  IF ( lfcp )  CALL fcp_summary()
   !
   IF ( do_comp_mt )  WRITE( stdout, &
             '(5X, "Assuming isolated system, Martyna-Tuckerman method",/)')

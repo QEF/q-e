@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.3.1 starts on 27May2021 at 11:18:27 
+     Program EPW v.5.5 starts on 19Nov2022 at 12:48:31 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -41,6 +41,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
+     52520 MiB available memory on the printing compute node when the environment starts
+
      Reading input from epw11.in
 
      Reading supplied temperature list.
@@ -197,9 +199,9 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
      Using radial grid of  461 points,  2 beta functions with: 
                 l(1) =   0
                 l(2) =   1
-     EPW          :      0.08s CPU      0.09s WALL
+     EPW          :      0.04s CPU      0.04s WALL
 
-     EPW          :      0.10s CPU      0.10s WALL
+     EPW          :      0.05s CPU      0.05s WALL
 
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
@@ -310,7 +312,7 @@ write_plot: wannier_plot_supercell =    3    3    3
 
   cube files written
      -------------------------------------------------------------------
-     WANNIER      :      2.81s CPU      2.81s WALL (       1 calls)
+     WANNIER      :      2.17s CPU      2.18s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Unfolding on the coarse grid
@@ -327,7 +329,7 @@ write_plot: wannier_plot_supercell =    3    3    3
 
 
      Total program execution
-     EPW          :      2.91s CPU      2.91s WALL
+     EPW          :      2.22s CPU      2.23s WALL
 
      ===============================================================================
      The functionality-dependent EPW.bib file was created with suggested citations. 

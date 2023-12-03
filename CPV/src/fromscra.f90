@@ -9,10 +9,12 @@
 SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
+    USE atomic_wfc_init,      ONLY : atomic_wfc_cp
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, force_pairing, tcap
+    USE input_parameters,     ONLY : startingwfc
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm, &
                                      taum 
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp, &
@@ -21,7 +23,7 @@ SUBROUTINE from_scratch( )
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp, tempw
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, velh, at, alat
+                                     cell_force, velh, at, alat, tpiba
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx, nudx
@@ -29,12 +31,11 @@ SUBROUTINE from_scratch( )
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE dener,                ONLY : denl, denl6, dekin6, detot
-    USE pseudo_base,          ONLY : vkb_d
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan, nlcc_any
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : rhoc
     USE gvecw,                ONLY : ngw
-    USE gvect,                ONLY : gg
+    USE gvect,                ONLY : gg, g
     USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
@@ -48,6 +49,7 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
+    USE upf_ions,             ONLY : n_atom_wfc
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
@@ -61,6 +63,12 @@ SUBROUTINE from_scratch( )
     USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
     USE device_memcpy_m,        ONLY : dev_memcpy
+    USE uspp_param,             ONLY : upf, nwfcm
+
+#if defined (__ENVIRON)
+    USE plugin_flags,         ONLY : use_environ
+    USE environ_base_module,  ONLY : update_environ_ions
+#endif
 
     !
     IMPLICIT NONE
@@ -82,7 +90,7 @@ SUBROUTINE from_scratch( )
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
-    INTEGER                  :: i1, i2 
+    INTEGER                  :: i1, i2, natomwfc
     !
     ! ... Subroutine body
     !
@@ -125,7 +133,12 @@ SUBROUTINE from_scratch( )
     !
     !     pass ions informations to plugins
     !
-    CALL plugin_init_ions( tau0 )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif
+#if defined (__ENVIRON)
+    IF (use_environ) CALL update_environ_ions(tau0)
+#endif
     !
     !     wfc initialization with random numbers
     !     
@@ -133,13 +146,23 @@ SUBROUTINE from_scratch( )
     !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+
+    ! if asked, use as much atomic wavefunctions as possible
+    if ( trim(startingwfc) == 'atomic') then
+       if ( ionode ) &
+         WRITE (stdout, '("Using also atomic wavefunctions as much as possible")') 
+       natomwfc = n_atom_wfc ( nat, ityp )
+       call atomic_wfc_cp(cm_bgrp, omega, tpiba, nat, nsp, ityp, tau0, natomwfc, &
+                   mill, eigts1, eigts2, eigts3, g, iupdwn, ngw, upf, nwfcm, nspin )
+    endif
+
+
     !
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-    CALL dev_memcpy( vkb_d, vkb )
-#endif
+    !
+    !$acc update device(vkb)
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
@@ -263,7 +286,11 @@ SUBROUTINE from_scratch( )
       !
       IF( ttforce ) THEN
 #if defined (__CUDA)
-         CALL nlfq_bgrp( cm_d, vkb_d, bec_bgrp, becdr_bgrp, fion )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL nlfq_bgrp( cm_d, vkb, bec_bgrp, becdr_bgrp, fion )
+         !$acc end host_data 
+         !$acc end data 
 #else
          CALL nlfq_bgrp( cm_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
 #endif
@@ -273,7 +300,11 @@ SUBROUTINE from_scratch( )
       !     the electron mass rises with g**2
       !
 #if defined (__CUDA)
-      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb_d, phi, nbspx_bgrp, ema0bg )
+      !$acc data present(vkb)
+      !$acc host_data use_device(vkb)
+      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      !$acc end host_data 
+      !$acc end data 
 #else
       CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
 #endif
@@ -285,7 +316,11 @@ SUBROUTINE from_scratch( )
       !
       if( tortho ) then
 #if defined (__CUDA)
-         CALL ortho( vkb_d, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL ortho( vkb, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc end host_data 
+         !$acc end data 
 #else
          CALL ortho( vkb, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif

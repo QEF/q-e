@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -310,13 +311,13 @@
     !! SP - Sep. 2019: Cleaning.
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, nbndep, qrpl
-    USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
+    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, nbndep
+    USE epwcom,        ONLY : nqc1, nqc2, nqc3, lpolar, system_2d
     USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
     USE pwcom,         ONLY : nbnd, nks
     USE ions_base,     ONLY : amass, ityp
-    USE rigid_epw,     ONLY : rgd_blk_epw
+    USE rigid_epw,     ONLY : rgd_blk_epw_sh
     !
     IMPLICIT NONE
     !
@@ -415,10 +416,10 @@
           CALL ZGEMV('t', nmodes, nmodes, cone, cz1, nmodes,  &
                      epmatq_opt(ibnd, jbnd, ik, :), 1, czero, eptmp, 1)
           !
-          IF (lpolar .OR. qrpl) THEN
-            IF ((ABS(xq(1)) > eps8) .OR. (ABS(xq(2)) > eps8) .OR. (ABS(xq(3)) > eps8)) THEN
-              CALL rgd_blk_epw(nqc1, nqc2, nqc3, xq, cz2t, eptmp, &
-                       nmodes, epsi, zstar, bmat(ibnd, jbnd, ik, iq), -one)
+          IF (lpolar .AND. (system_2d == 'dipole_sh') ) THEN
+            IF ( (ABS(xq(1)) > eps8) .OR. (ABS(xq(2)) > eps8) .OR. (ABS(xq(3)) > eps8) ) THEN
+              CALL rgd_blk_epw_sh(nqc1, nqc2, nqc3, xq, cz2t, eptmp, &
+                                  nmodes, zstar, bmat(ibnd, jbnd, ik, iq), -one)
             ENDIF
           ENDIF
           !

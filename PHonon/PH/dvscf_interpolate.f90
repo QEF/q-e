@@ -690,8 +690,7 @@ MODULE dvscf_interpolate
     USE fft_base,       ONLY : dfftp
     USE fft_interfaces, ONLY : invfft, fft_interpolate
     USE gvect,          ONLY : g, eigts1, eigts2, eigts3, mill, ngm
-    USE atom,           ONLY : msh, rgrid
-    USE m_gth,          ONLY : setlocq_gth
+    USE atom,           ONLY : rgrid
     USE cell_base,      ONLY : tpiba, tpiba2, omega
     USE ions_base,      ONLY : ntyp => nsp, tau, nat, ityp
     USE uspp_param,     ONLY : upf

@@ -93,7 +93,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   CALL dev_buf%lock_buffer(  vq_d, npw_, istat(4) )
   CALL dev_buf%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat(5) )
   CALL dev_buf%lock_buffer(  gk_d, (/ 3, npw_ /), istat(6) )
-  IF (ANY(istat /= 0)) CALL upf_error( 'init_us_2_gpu', 'cannot allocate buffers', -1 )
+  IF (ANY(istat /= 0)) CALL upf_error( 'init_us_2_gpu', 'cannot allocate buffers', 1 )
   !
   q1 = q_(1)
   q2 = q_(2)

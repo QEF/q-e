@@ -132,7 +132,9 @@ subroutine dvpsi_e (ik, ipol)
      allocate (spsi ( npwx*npol, nbnd))
      if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .and. nbnd>1 ) then
         call divide(inter_bgrp_comm,nbnd,n_start,n_end)
-        if (n_end >= n_start) CALL calbec (npw, vkb, dvpsi(:,n_start:n_end), becp , n_end-n_start+1 )
+        if (n_end >= n_start) then
+                CALL calbec (npw, vkb, dvpsi(:,n_start:n_end), becp , n_end-n_start+1 )
+        endif
      else
         CALL calbec (npw, vkb, dvpsi, becp )
      end if

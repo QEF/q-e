@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,11 +33,11 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
-  USE control_flags,        ONLY : lscf, gamma_only, restart
+  USE control_flags,        ONLY : lscf, gamma_only, restart, sic
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE xc_lib,               ONLY : xclib_dft_is
-  USE ener,                 ONLY : ehart, etxc, vtxc, epaw
+  USE ener,                 ONLY : ehart, etxc, vtxc, epaw, esol, vsol
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
                                    nsg, nsgnew
@@ -57,6 +57,12 @@ SUBROUTINE potinit()
   !
   USE scf_gpum,             ONLY : using_vrs
   USE pwcom,                ONLY : report_mag 
+  USE rism_module,          ONLY : lrism, rism_init3d, rism_calc3d
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_pw_module,    ONLY : calc_environ_potential
+#endif
   !
   IMPLICIT NONE
   !
@@ -85,12 +91,13 @@ SUBROUTINE potinit()
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
      ELSE
+        IF ( okpaw )  CALL errore( 'potinit', &
+                                   'force theorem with PAW not implemented', 1 )
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
         ! ... (not if restarting! the charge density saved to file in that
         ! ...  case has already the required magnetization direction)
-        ! ... FIXME: why not calling read_scf also in this case?
         !
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
@@ -146,8 +153,12 @@ SUBROUTINE potinit()
      !
      IF (lda_plus_u) THEN
         !
-        IF (lda_plus_u_kind == 0) THEN
-           CALL init_ns()
+        IF (lda_plus_u_kind == 0) THEN    
+           IF (noncolin) THEN
+              CALL init_ns_nc() 
+           ELSE 
+              CALL init_ns()
+           ENDIF   
         ELSEIF (lda_plus_u_kind == 1) THEN
            IF (noncolin) THEN
               CALL init_ns_nc()
@@ -209,6 +220,14 @@ SUBROUTINE potinit()
   !
   CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
   !
+  ! .... initialize polaron density as spin-density
+  !
+  IF(sic) THEN
+     rho%pol_g(:,1) = rho%of_g(:,2)
+     rho%pol_g(:,2) = rho%of_g(:,2)
+     CALL rho_g2r (dfftp, rho%pol_g, rho%pol_r)
+  END IF   
+  !
   IF  ( xclib_dft_is('meta') ) THEN
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
@@ -230,15 +249,28 @@ SUBROUTINE potinit()
      !
   END IF
   !
+  ! ... initialize 3D-RISM
+  !
+  IF (lrism) CALL rism_init3d()
+  !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_scf_potential(rho, .FALSE., -1.d0, vltot)
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
+#endif
   !
   ! ... compute the potential and store it in v
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+  !
+  ! ... calculate 3D-RISM to get the solvation potential
+  !
+  IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, -1.0_DP)
   !
   ! ... define the total local potential (external+scf)
   !
@@ -257,7 +289,11 @@ SUBROUTINE potinit()
      WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
-        CALL write_ns()
+        IF (noncolin) THEN
+           CALL write_ns_nc() 
+        ELSE   
+           CALL write_ns()
+        ENDIF
      ELSEIF (lda_plus_u_kind == 1) THEN
         IF (noncolin) THEN
            CALL write_ns_nc()
@@ -266,7 +302,11 @@ SUBROUTINE potinit()
         ENDIF
      ELSEIF (lda_plus_u_kind == 2) THEN
         nsgnew = nsg
-        CALL write_nsg()
+        IF(noncolin) THEN
+           CALL write_nsg_nc()
+        ELSE
+           CALL write_nsg()
+        ENDIF
      ENDIF
      !
   END IF
@@ -292,6 +332,8 @@ SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
   IMPLICIT NONE
   INTEGER, INTENT (in):: ngm, nspin
   COMPLEX(dp), INTENT (inout):: rho(ngm,nspin)
+  !
+  IF ( nspin < 4 ) RETURN
   !---  
   !  set up noncollinear m_x,y,z from collinear m_z (AlexS) 
   !
@@ -305,12 +347,11 @@ SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
   !         rho(3)=magn*sin(theta)*sin(phi)   y
   !         rho(4)=magn*cos(theta)            z
   !
-  rho(:,2) = rho(:,4)*sin(angle1(1))
+  rho(:,4) = rho(:,2)*cos(angle1(1))
+  rho(:,2) = rho(:,2)*sin(angle1(1))
   rho(:,3) = rho(:,2)*sin(angle2(1))
-  rho(:,4) = rho(:,4)*cos(angle1(1))
   rho(:,2) = rho(:,2)*cos(angle2(1))
   !
   RETURN
   !
 END SUBROUTINE nc_magnetization_from_lsda
-

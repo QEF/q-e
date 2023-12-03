@@ -28,7 +28,7 @@ SUBROUTINE lr_alloc_init()
   USE realus,               ONLY : tg_psic
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
   USE wavefunctions,        ONLY : evc
-  USE becmod,               ONLY : allocate_bec_type, bec_type, becp
+  USE becmod,               ONLY : allocate_bec_type_acc, becp
   USE lrus,                 ONLY : int3, int3_nc, becp1
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
   USE qpoint,               ONLY : nksq, eigqts
@@ -269,7 +269,7 @@ CONTAINS
     !
     IF (nkb > 0) THEN
        !
-       IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
+       IF (.not. allocated(becp%r)) CALL allocate_bec_type_acc(nkb,nbnd,becp)
        !
        ALLOCATE(becp_1(nkb,nbnd))
        becp_1(:,:) = 0.0d0
@@ -289,7 +289,7 @@ CONTAINS
     !
     IF (nkb > 0) THEN
        !
-       IF(.not. allocated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
+       IF(.not. allocated(becp%k)) CALL allocate_bec_type_acc(nkb,nbnd,becp)
        !
        IF (.NOT.eels) THEN
           ALLOCATE(becp1_c(nkb,nbnd,nks))

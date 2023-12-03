@@ -56,6 +56,18 @@ SUBROUTINE block_distribute( nat, me, nproc, ia_s, ia_e, mykey )
 END SUBROUTINE
 !
 !
+FUNCTION block_size(ia, nat, nproc) RESULT (res) 
+   !! counts how many procs have the same ia   
+   IMPLICIT NONE 
+   !
+   INTEGER   :: res
+   INTEGER,INTENT(IN) :: ia, nat, nproc 
+   !            
+   res  = nproc/nat
+   IF (ia <= MOD(nproc,nat)) res = res + 1   
+END FUNCTION block_size  
+!
+!
 SUBROUTINE GRID2D_DIMS( grid_shape, nproc, nprow, npcol )
    !
    ! This subroutine factorizes the number of processors (NPROC)

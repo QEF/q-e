@@ -7,6 +7,7 @@ set(src_pp
     src/atomic_wfc_nc_proj.f90
     src/chdens_module.f90
     src/chdens_bspline.f90
+    src/chdens_bspline_sphere.f90
     src/compute_ppsi.f90
     src/compute_sigma_avg.f90
     src/cube.f90
@@ -27,8 +28,10 @@ set(src_pp
     src/projections_mod.f90
     src/projwfc_box.f90
     src/punch_plot.f90
+    src/punch_rism.f90
     src/read_proj.f90
     src/smallgk.f90
+    src/solvdens.f90
     src/stm.f90
     src/stop_pp.f90
     src/sum_band_kin.f90
@@ -41,7 +44,14 @@ set(src_pp
     src/write_p_avg.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
-    src/xc_vdW_scale_mod.f90)
+    src/xc_vdW_scale_mod.f90
+    src/fft_interpolation_mod.f90)
+# OSCDFT
+if (QE_ENABLE_OSCDFT)
+    list(APPEND src_pp
+        src/oscdft_pp_mod.f90
+        src/oscdft_et_mod.f90)
+endif()
 qe_enable_cuda_fortran("${src_pp}")
 
 qe_add_library(qe_pp ${src_pp})
@@ -223,6 +233,7 @@ target_link_libraries(qe_pp_projwfc_exe
 # pw2wannier90.x
 ###########################################################
 set(src_pw2wannier90_x src/pw2wannier90.f90)
+qe_enable_cuda_fortran("${src_pw2wannier90_x}")
 qe_add_executable(qe_pp_pw2wannier90_exe ${src_pw2wannier90_x})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
@@ -230,6 +241,7 @@ target_link_libraries(qe_pp_pw2wannier90_exe
         qe_pw
         qe_modules
         qe_pp
+        qe_lax
         qe_fftx
         qe_upflib
         qe_xclib
@@ -478,6 +490,20 @@ target_link_libraries(qe_pp_st_ef_exe
         qe_openmp_fortran)
 
 ###########################################################
+# pprism.x
+###########################################################
+set(sources src/postrism.f90)
+qe_add_executable(qe_pp_rism_exe ${sources})
+set_target_properties(qe_pp_rism_exe PROPERTIES OUTPUT_NAME pprism.x)
+target_link_libraries(qe_pp_rism_exe
+    PRIVATE
+        qe_pw
+        qe_fftx
+        qe_modules
+        qe_pp
+        qe_xclib)
+
+###########################################################
 # fermi_int_1.x
 ###########################################################
 set(src_fermi_int_1_x
@@ -491,6 +517,44 @@ set_target_properties(qe_pp_st_fermiint1_exe PROPERTIES OUTPUT_NAME fermi_int_1.
 target_link_libraries(qe_pp_st_ef_exe
     PRIVATE
         qe_openmp_fortran)
+
+###########################################################
+# oscdft_pp.x
+###########################################################
+if (QE_ENABLE_OSCDFT)
+    set(src_oscdft_pp_x src/oscdft_pp.f90)
+    qe_add_executable(qe_oscdft_pp_exe ${src_oscdft_pp_x})
+    set_target_properties(qe_oscdft_pp_exe PROPERTIES OUTPUT_NAME oscdft_pp.x)
+    target_link_libraries(qe_oscdft_pp_exe
+        PRIVATE
+            qe_pw
+            qe_modules
+            qe_pp
+            qe_fftx
+            qe_upflib
+            qe_mpi_fortran
+            qe_lapack
+            qe_xclib)
+endif()
+
+###########################################################
+# oscdft_et.x
+###########################################################
+if (QE_ENABLE_OSCDFT)
+    set(src_oscdft_et_x src/oscdft_et.f90)
+    qe_add_executable(qe_oscdft_et_exe ${src_oscdft_et_x})
+    set_target_properties(qe_oscdft_et_exe PROPERTIES OUTPUT_NAME oscdft_et.x)
+    target_link_libraries(qe_oscdft_et_exe
+        PRIVATE
+            qe_pw
+            qe_modules
+            qe_pp
+            qe_fftx
+            qe_upflib
+            qe_mpi_fortran
+            qe_lapack
+            qe_xclib)
+endif()
 
 ###########################################################
 
@@ -527,7 +591,14 @@ set(PP_EXE_TARGETS
     qe_pp_st_ef_exe
     qe_pp_st_dos_exe
     qe_pp_st_fermiint0_exe
-    qe_pp_st_fermiint1_exe)
+    qe_pp_st_fermiint1_exe
+    qe_pp_rism_exe)
+
+if (QE_ENABLE_OSCDFT)
+    list(APPEND PP_EXE_TARGETS
+        qe_oscdft_pp_exe
+        qe_oscdft_et_exe)
+endif()
 
 qe_install_targets(
     # Libraries
@@ -539,4 +610,4 @@ add_custom_target(pp
     DEPENDS
         ${PP_EXE_TARGETS}
     COMMENT
-        "postprocessing programs")
+        "post-processing applications for analysis and property calculations")

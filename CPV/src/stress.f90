@@ -180,13 +180,16 @@ DEV_ACC end data
 !------------------------------------------------------------------------------!
    SUBROUTINE stress_kin_x( dekin, c0_bgrp, occ_bgrp ) 
 !------------------------------------------------------------------------------!
+      !! This routine computes the kinetic energy contribution to the stress 
+      !! tensor.
+      !
+      !! \[ \text{dekin}(:) = - 2 (\sum_i) f(i) \cdot 
+      !!    (\sum_g) \text{gagb}(:,g) \text{c0}(g,i)^*\cdot \text{c0}(g,i) \]
 
-!  this routine computes the kinetic energy contribution to the stress 
-!  tensor
-!
-!  dekin(:) = - 2 (sum over i) f(i) * 
-!    ( (sum over g) gagb(:,g) CONJG( c0(g,i) ) c0(g,i) )
-!                       
+      !
+      !  dekin(:) = - 2 (sum over i) f(i) * 
+      !    ( (sum over g) gagb(:,g) CONJG( c0(g,i) ) c0(g,i) )
+      !
 
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: q2sigma, ecfixed, qcutz, ngw
@@ -373,15 +376,18 @@ DEV_ACC end data
 !------------------------------------------------------------------------------!
    SUBROUTINE stress_hartree_x(deht, ehr, sfac, rhot, drhot, gagb, omega ) 
 !------------------------------------------------------------------------------!
-
-      ! This subroutine computes: d E_hartree / dh  =
-      !   E_hartree * h^t + 
-      !   4pi omega rho_t * CONJG( rho_t ) / G^2 / G^2 * G_alpha * G_beta +
-      !   4pi omega Re{ CONJG( rho_t ) * drho_t / G^2 }
-      ! where:
-      !   rho_t  = rho_e + rho_I
-      !   drho_t = d rho_t / dh = -rho_e + d rho_hard / dh  + d rho_I / dh
-
+      !! This subroutine computes:
+      !
+      !! \[ d E_\text{hartree} / dh  =
+      !!    E_\text{hartree} \cdot h^t + 
+      !!    4\pi \Omega \rho_t \cdot \rho_t^* / G^2 / G^2 \cdot G_\alpha \cdot G_\beta +
+      !!    4\pi \Omega \text{Re}[ \rho_t^* \cdot d\rho_t / G^2 ] \]
+      !
+      !! where:  
+      !! \( \rho_t  = \rho_e + \rho_I \);  
+      !! \( d\rho_t = d\rho_t \);  
+      !! \( dh = -\rho_e + d\rho_\text{hard} / dh + d\rho_I / dh \).
+      !
       use kinds,              only: DP
       use ions_base,          only: nsp, rcmax
       use mp_global,          ONLY: me_bgrp, root_bgrp
@@ -576,7 +582,7 @@ DEV_ACC end data
       SUBROUTINE compute_gagb_x( gagb, g, ngm, tpiba2 )
 !------------------------------------------------------------------------------!
 
-         ! ... compute G_alpha * G_beta  
+         !! Compute \( G_\alpha \cdot G_\beta \).
 
          USE kinds,        ONLY: DP
          USE stress_param, ONLY: alpha, beta

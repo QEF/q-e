@@ -9,7 +9,7 @@
 !-----------------------------------------------------
 MODULE xclib_utils_and_para
 !-----------------------------------------------------
-!! MPI stuff
+!! MPI stuff and error vars.
 !
 #if defined (__MPI)
         !
@@ -26,10 +26,17 @@ MODULE xclib_utils_and_para
         INTEGER, PARAMETER :: MPI_COMM_NULL  = -1
         INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
-        ! standard output unit
         INTEGER, PARAMETER :: stdout = 6
+        !! standard output unit
         !
-        ! switch for warning messages
         LOGICAL :: nowarning = .FALSE.
+        !! switch for warning messages
+        !
+        CHARACTER(LEN=35) :: error_msg(5)
+        DATA error_msg / 'Bad args. in EXPINT function       ', &
+                         'Series failed in EXPINT function   ', &
+                         'wgga_analy_erfc: not coded Wcx part', &
+                         'Sorting GGA-AHs failed             ', &
+                         'Sorting vdW-DF-AHs failed          '  /
         !
 END MODULE xclib_utils_and_para

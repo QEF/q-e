@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -40,10 +41,10 @@
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
                             broyden_beta, conv_thr_raxis, temps, tempsmin, tempsmax,   &
-                            broyden_ndim, wscut, wsfc, nqstep, limag, lreal, muc,      &
-                            gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst, nswfc, &
-                            epwread, eliashberg, imag_read, kerread, kerwrite, lunif,  &
-                            fermi_energy, efermi_read, max_memlt, fila2f, pwc, nswc,   &
+                            broyden_ndim, wscut, nqstep, limag, lreal, muc,            &
+                            gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst,        &
+                            epwread, eliashberg, imag_read, kerread, kerwrite,         &
+                            fermi_energy, efermi_read, max_memlt, fila2f, sigma_ref,   &
                             ep_coupling, nw_specfun, wmax_specfun, wmin_specfun,       &
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
@@ -54,17 +55,37 @@
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
                             restart_filq, prtgkk, nel, meff, epsiheg, lphase,          &
-                            omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  &
+                            omegamin, omegamax, omegastep, lindabs, mob_maxiter,       &
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
-                            epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
-                            bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,    &
-                            mob_maxfreq, mob_nfreq
+                            epw_tr, epw_nosym, epw_noinv, epw_crysym, mob_maxfreq,     &
+                            bfieldx, bfieldy, bfieldz, ii_eda, ii_partion, ii_eps0,    &
+                            ii_g, ii_charge, ii_n, ii_scattering, ii_only, ii_lscreen, &
+                            wfpt, compute_dmat, elecselfen_ahc, ahc_nbnd, ahc_nbndskip,&
+                            ahc_win_min, ahc_win_max, mob_nfreq, plrn, restart_plrn,   &
+                            conv_thr_plrn, end_band_plrn, init_sigma_plrn,             &
+                            cal_psir_plrn, start_band_plrn,  type_plrn, nstate_plrn,   &
+                            interp_Ank_plrn, interp_Bqu_plrn, init_k0_plrn,            &
+                            full_diagon_plrn, mixing_Plrn, init_plrn, niter_plrn,      &
+                            nDOS_plrn, edos_max_plrn, edos_min_plrn, edos_sigma_plrn,  &
+                            pdos_sigma_plrn, pdos_max_plrn, pdos_min_plrn,             &
+                            seed_plrn, ethrdg_plrn, time_rev_A_plrn, nhblock_plrn,     &
+                            beta_plrn, Mmn_plrn, recal_Mmn_plrn, r0_plrn, debug_plrn,  &
+                            time_rev_U_plrn,  g_start_band_plrn, g_end_band_plrn,      &
+                            g_start_energy_plrn, g_end_energy_plrn, lrot,              &
+                            model_vertex_plrn, model_enband_plrn, model_phfreq_plrn,   &
+                            kappa_plrn, omega_LO_plrn, m_eff_plrn, step_wf_grid_plrn,  &
+                            g_power_order_plrn, g_tol_plrn, io_lvl_plrn,               &
+                            scell_mat_plrn, scell_mat, init_ntau_plrn, nethrdg_plrn,   &
+                            adapt_ethrdg_plrn, init_ethrdg_plrn, gridsamp, griddens,   &
+                            tc_linear, tc_linear_solver, fbw, dos_del, muchem,         &
+                            len_mesh, meshnum, wf_quasi, do_CHBB, nq_init, a_gap0,     &
+                            start_mesh, DW, loptabs, mode_res, QD_min, QD_bin
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
-  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
+  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp, qrpl
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m, one
   USE constants,     ONLY : electron_si
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
@@ -75,36 +96,27 @@
   USE mp_pools,      ONLY : my_pool_id, me_pool, npool
   USE mp_images,     ONLY : nimage
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, qestdin, stdout
-  USE io_var,        ONLY : iunkf, iunqf
-  USE noncollin_module, ONLY : npol, noncolin
+  USE io_var,        ONLY : iunkf, iunqf, iuquad
   USE wvfct,         ONLY : npwx
   USE paw_variables, ONLY : okpaw
   USE io_epw,        ONLY : param_get_range_vector
+  USE noncollin_module, ONLY : npol, noncolin
   USE open_close_input_file, ONLY : open_input_file, close_input_file
-  !
-  ! ---------------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-  USE epwcom,        ONLY : wfcelec, restart_polaron, spherical_cutoff,                &
-                            model_vertex, conv_thr_polaron, n_dop,                     &
-                            polaron_wf, r01, r02, r03, num_cbands, start_band,         &
-                            start_mode, cb_shift, polaron_interpol, polaron_bq,        &
-                            polaron_dos, electron_dos, phonon_dos, diag_mode,          &
-                            restart_polaron_mode, polaron_type, nPlrn, wfcelec_old,    &
-                            sigma_plrn, ethr_Plrn, full_diagon_plrn, mixing_Plrn,      &
-                            init_plrn_wf, niterPlrn, nDOS_plrn, emax_plrn, emin_plrn,  &
-                            sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
-  ! -------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
+  LOGICAL :: exst
+  !! Find if a file exists.
   LOGICAL, EXTERNAL :: imatches
   !! Does the title match
   CHARACTER(LEN = 256) :: outdir
   !! Output directory
   CHARACTER(LEN = 512) :: line
   !! Line in input file
-  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(LEN = 256), EXTERNAL :: trimcheck
+  !! Trim the file name
+  CHARACTER(LEN = 256) :: dummy
+  !! Dummy character reading
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: ios2
@@ -133,46 +145,58 @@
   !! Error status
   INTEGER :: unit_loc = 5
   !! Unit for input file
+  INTEGER :: idir
+  !! Cartesian direction
   REAL(kind = DP) :: b_abs
   !! Absolute magnetic field
   !
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf, rand_q, rand_nq, rand_k,   &
-       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub, rand_nk, specfun_pl, nswc, &
-       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, nswfc,    &
+       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub, rand_nk, specfun_pl,       &
+       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem,                  &
        eig_read, wepexst, epexst, vme, elecselfen, phonselfen, use_ws, nc,     &
        degaussw, fsthick, nsmear, delta_smear, nqf1, nqf2, nqf3, nkf1, nkf2,   &
        dvscf_dir, ngaussw, epmatkqread, selecqread, nkf3, mp_mesh_k, mp_mesh_q,&
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max, nswi, &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn, ephwrite,      &
        wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen, filqf, filkf,      &
-       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep, pwc,    &
+       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep,         &
        broyden_beta, broyden_ndim, nstemp, temps, bfieldx, bfieldy, bfieldz,   &
-       conv_thr_raxis, conv_thr_iaxis, conv_thr_racon, wsfc, wscut, system_2d, &
+       conv_thr_raxis, conv_thr_iaxis, conv_thr_racon, wscut, system_2d,       &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
        npade, lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,      &
-       lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
+       lifc, asr_typ, kerwrite, kerread, imag_read, eliashberg,                &
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
-       epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           &
+       epsiheg, lphase, omegamin, omegamax, omegastep, lindabs, sigma_ref,     &
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, epw_crysym,         &
-       tc_linear, tc_linear_solver, mob_maxfreq, mob_nfreq,                    &
-  !---------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-       wfcelec, restart_polaron, spherical_cutoff, model_vertex, start_mode,   &
-       conv_thr_polaron, polaron_wf, r01, r02, r03, num_cbands, start_band,    &
-       cb_shift, polaron_interpol, polaron_bq, polaron_dos, electron_dos ,     &
-       phonon_dos, diag_mode, restart_polaron_mode, polaron_type,              &
-       niterPlrn, wfcelec_old, sigma_plrn, ethr_Plrn, full_diagon_plrn,        &
-       mixing_Plrn, init_plrn_wf, nPlrn, nDOS_plrn, emax_plrn, emin_plrn,      &
-       sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
+       mob_maxfreq, mob_nfreq, lrot,                                           &
+       ii_g, ii_charge, ii_n, ii_scattering, ii_only, ii_lscreen, ii_eda,      &
+       ii_partion, ii_eps0, plrn, restart_plrn, conv_thr_plrn, end_band_plrn,  &
+       cal_psir_plrn, start_band_plrn,  type_plrn, nstate_plrn,                &
+       interp_Ank_plrn, interp_Bqu_plrn, init_sigma_plrn, init_k0_plrn,        &
+       full_diagon_plrn, mixing_Plrn, init_plrn, niter_plrn,                   &
+       nDOS_plrn, edos_max_plrn, edos_min_plrn, edos_sigma_plrn,               &
+       pdos_sigma_plrn, pdos_max_plrn, pdos_min_plrn,                          &
+       seed_plrn, ethrdg_plrn, time_rev_A_plrn, nhblock_plrn,                  &
+       beta_plrn, Mmn_plrn, recal_Mmn_plrn, r0_plrn, debug_plrn,               &
+       time_rev_U_plrn,  g_start_band_plrn, g_end_band_plrn,                   &
+       g_start_energy_plrn, g_end_energy_plrn,                                 &
+       model_vertex_plrn, model_enband_plrn, model_phfreq_plrn,                &
+       kappa_plrn, omega_LO_plrn, m_eff_plrn, step_wf_grid_plrn,               &
+       g_power_order_plrn, g_tol_plrn, io_lvl_plrn,                            &
+       scell_mat_plrn, scell_mat, init_ntau_plrn,                              &
+       adapt_ethrdg_plrn, init_ethrdg_plrn, nethrdg_plrn,                      &
+       tc_linear, tc_linear_solver, gridsamp, griddens, fbw, dos_del, muchem,  &
+       loptabs, len_mesh, meshnum, wf_quasi, nq_init, start_mesh, DW,          &
+       mode_res, QD_min, QD_bin, do_CHBB, wfpt, compute_dmat, ahc_nbnd,        &
+       ahc_nbndskip, elecselfen_ahc, ahc_win_min, ahc_win_max, a_gap0
   ! --------------------------------------------------------------------------------
   !
   ! amass    : atomic masses
@@ -244,10 +268,6 @@
   ! delta_qsmear: change in energy for each additional smearing in the a2f (units of meV)
   ! nqsmear     : number of smearings used to calculate a2f
   ! nqstep      : number of bins for frequency used to calculate a2f
-  ! nswfc       : nr. of grid points between (0,wsfc) in Eliashberg equations
-  ! nswc        : nr. of grid points between (wsfc,wscut)
-  ! pwc         : power used to define nswc for non-uniform grid real-axis calculations
-  ! wsfc        : intermediate freqeuncy used for integration in Eliashberg equations (at least 2-3 times wsphmax)
   ! wscut       : upper limit for frequency integration in Eliashberg equations (at least 5 times wsphmax) (units of eV)
   ! broyden_beta : mixing factor for broyden mixing
   ! broyden_ndim : number of iterations used in mixing scheme
@@ -270,7 +290,6 @@
   !                Eliashberg equtions to real-axis
   ! liso         : if .TRUE. solve isotropic case
   ! laniso       : if .TRUE. solve anisotropic case
-  ! lunif        : if .TRUE. a uniform grid is defined between wsfc and wscut for real-axis calculations
   ! kerwrite     : if .TRUE. write kp and km to files .ker for real-axis calculations
   ! kerread      : if .TRUE. read kp and km from files .ker for real-axis calculations
   ! imag_read    : if .TRUE. read from files Delta and Znorm on the imaginary-axis
@@ -283,8 +302,22 @@
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction (units of eV)
   ! wmax_specfun : max frequency in electron spectral function due to e-p interaction (units of eV)
   ! nw_specfun   : nr. of bins for frequency in electron spectral function due to e-p interaction
-  ! system_2d    : if .TRUE. two-dimensional system (vaccum is in z-direction)
   ! delta_approx : if .TRUE. the double delta approximation is used to compute the phonon self-energy
+  !
+  ! Added by Samad Hajinazar
+  ! tc_linear        : if .TRUE. linearized Eliashberg eqn. for Tc will be solved
+  ! tc_linear_solver : Algorithm to solve eigenvalue problem for Tc (default='power', 'lapack')
+  ! gridsamp         : Type of the Matsubara freq. sampling (-1=read from file;0=uniform;1=sparse)
+  ! griddens         : Measure of sparsity of the grid (default=1.d0, larger values give denser mesh)
+  ! fbw              : if .TRUE. full-bandwidth calculations will be performed
+  ! dos_del          : Delta_E in electronic dos for Fermi window (in eV)
+  ! muchem           : if .TRUE. chem. pot. is updated in fbw calculations
+  !
+  ! Added by Hitoshi Mori
+  ! a_gap0           : This determines the shape of initial guess of gap function
+  !                    a_gap0 = negative, step function will be used.
+  !                    a_gap0 = 0.0, we will use an initial guess with no frequency-dependence.
+  !                    a_gap0 > eps8, we will use the Lorentzian: f(iw) = gap0 / (1 + a_gap0 * (iw / wsphmax)**2).
   !
   ! Added by Carla Verdi & Samuel Pon\'e
   ! lpolar     : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
@@ -326,7 +359,8 @@
   ! prtgkk          : Print the vertex |g| [meV]. This generates huge outputs.
   ! etf_mem         : if 0 no optimization, if 1 less memory is used for the fine grid interpolation
   !                   When etf_mem == 2, an additional loop is done on mode for the fine grid interpolation
-  !                   part. This reduces the memory further by a factor "nmodes".
+  !                   part. This reduces the memory further by a factor "nmodes". [This is now depreciated]
+  !                   when etf_mem == 3 is used, the fine grid interpolation is reduced. At the moment only for transport.
   ! plselfen        : Calculate the electron-plasmon self-energy.
   ! nel             : Fractional number of electrons in the unit cell
   ! meff            : Density of state effective mass (in unit of the electron mass)
@@ -338,12 +372,19 @@
   ! selecqread      : If .TRUE., restart from the selecq.fmt file
   ! nc              : Number of carrier for the Ziman resistivity formula (can be fractional)
   ! bfieldx, y, z   : Value of the magnetic field in Tesla along x, y, z direction.
+  ! system_2d       : if 'no' then 3D bulk materials [default]
+  !                   if 'gaussian' then the long-range terms include dipoles only and the range separation
+  !                   function is approximated by a Gaussian following Ref. Phys. Rev. B 94, 085415 (2016)
+  !                   if 'dipole_sp' then the long-range terms include dipoles following PRB 107, 155424 (2023)
+  !                   if 'quadrupole' then the long-range terms include dipoles and quadrupoles terms
+  !                   following PRL 130, 166301 (2023) and requires the presence of a "quadrupole.fmt" file.
+  !                   if 'dipole_sh' then the long-range terms include dipoles following [PRB 105, 115414 (2022)]
   !
   ! Added by Manos Kioupakis
   ! omegamin        : Photon energy minimum
   ! omegamax        : Photon energy maximum
   ! omegastep       : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
-  ! n_r             : Constant refractive index
+  ! sigma_ref       : Reference conductivity for resistive contribution of FCA
   ! lindabs         : If .TRUE., do phonon-assisted absorption
   !
   ! Added by Felix Goudreault
@@ -363,6 +404,14 @@
   !     : Note: Before v5.4, vme = .FALSE. was the velocity in the local approximation as <\psi_mk|p|\psi_nk>
   !             Before v5.4, vme = .TRUE. was = to 'wannier'
   !
+  ! Added by Jae-Mo Lihm for Wannier function perturbation theory
+  ! wfpt : enable Wannier function perturbation theory calculations
+  ! compute_dmat: compute dmat, the overlap matrix between psi(Sk) and S*psi(k)
+  ! elecselfen_ahc: if .TRUE. calculate Allen-Heine-Cardona electron self-energy
+  ! ahc_nbnd: Number of bands included in ph.x Allen-Heine-Cardona calculation
+  ! ahc_nbndskip: Number of low-lying bands excluded in ph.x AHC calculation
+  ! ahc_win_min : Lower bound of AHC window for the lower Fan term.
+  ! ahc_win_max : Upper bound of AHC window for the lower Fan term.
   !
   IF ( npool * nimage /= nproc ) THEN
     CALL errore("epw_readin", "Number of processes must be equal to product "//&
@@ -496,7 +545,6 @@
   delta_qsmear = 0.05d0 ! meV
   degaussq     = 0.05d0 ! meV
   lreal        = .FALSE.
-  lunif        = .TRUE.
   limag        = .FALSE.
   lpade        = .FALSE.
   lacon        = .FALSE.
@@ -518,12 +566,14 @@
   ep_coupling  = .TRUE.
   tc_linear    = .FALSE.
   tc_linear_solver = 'power'
-  nswfc        = 0
-  nswc         = 0
+  gridsamp     = 0
+  griddens     = 1.d0
+  fbw          = .FALSE.
+  dos_del      = 1.d-03
+  muchem       = .FALSE.
+  a_gap0       = 1.0d0
   nswi         = 0
-  pwc          = 1.d0
   wscut        = 0.d0
-  wsfc         = 0.5d0 * wscut
   broyden_beta = 0.7d0
   broyden_ndim = 8
   conv_thr_raxis = 5.d-04
@@ -542,7 +592,7 @@
   wmin_specfun = 0.d0 ! eV
   wmax_specfun = 0.3d0 ! eV
   nw_specfun   = 100
-  system_2d    = .FALSE.
+  system_2d    = 'no'   ! Previously was .FALSE.
   scattering   = .FALSE.
   scattering_serta = .FALSE.
   scatread     = .FALSE.
@@ -559,10 +609,11 @@
   meff         = 1.d0
   epsiheg      = 1.d0
   lphase       = .FALSE.
+  lrot         = .FALSE.
   omegamin     = 0.d0  ! eV
   omegamax     = 10.d0 ! eV
   omegastep    = 1.d0  ! eV
-  n_r          = 1.d0
+  sigma_ref    = 1.d0  ! 1/(Ohm m)
   lindabs      = .FALSE.
   mob_maxiter  = 50
   use_ws       = .FALSE.
@@ -581,49 +632,91 @@
   bfieldz      = 0.d0  ! Tesla
   mob_maxfreq  = 100 ! Maximum frequency for spectral decomposition in meV
   mob_nfreq    = 100 ! Number of frequency for the spectral decomposition
+  ii_g         = .FALSE.
+  ii_charge    = 1.0d0
+  ii_n         = 0.0d0
+  ii_scattering = .FALSE.
+  ii_only      = .FALSE.
+  ii_lscreen   = .TRUE.
+  ii_eda       = 0.0d0
+  ii_partion   = .FALSE.
+  ii_eps0      = 0.0d0
   !
-  ! --------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-  nPlrn = 1
-  niterPlrn = 50
-  n_dop = 0.d0
-  smear_rpa = 1.d0
-  wfcelec = .false.
-  wfcelec_old = .false.
-  restart_polaron = .false.
-  spherical_cutoff = 100.d0
-  model_vertex = .false.
-  conv_thr_polaron = 1E-5
-  polaron_wf       = .false.
-  polaron_interpol = .false.
-  polaron_bq       = .false.
-  polaron_dos      = .false.
-  r01        = 0.d0
-  r02        = 0.d0
-  r03        = 0.d0
-  num_cbands = 1 !2
-  start_band = 4 !11
-  start_mode = 1 !1
-  cb_shift   = 0 !0
-  electron_dos = .false.
-  phonon_dos = .false.
-  full_diagon_plrn = .false.
-  mixing_Plrn = 1.0
-  diag_mode = 1
-  init_plrn_wf = 2
-  nDOS_plrn = 1000
-  emin_plrn = zero
-  pmin_plrn = zero
-  emax_plrn = 1.d0
-  pmax_plrn = 1d-2
-  sigma_edos_plrn = 0.1d0
-  sigma_pdos_plrn = 1d-3
-  restart_polaron_mode = 1
-  polaron_type = -1
-  sigma_plrn  = 4.6
-  ethr_Plrn = 1E-3
-  ! ---------------------------------------------------------------------------------
+  ! Added for polaron calculations by Chao Lian
+  nstate_plrn  = 1
+  niter_plrn   = 50
+  plrn         = .FALSE.
+  restart_plrn = .FALSE.
+  model_vertex_plrn = .false.
+  model_enband_plrn = .false.
+  model_phfreq_plrn = .false.
+  kappa_plrn    = 0.0
+  omega_LO_plrn = 0.0
+  m_eff_plrn    = 0.0
+  conv_thr_plrn = 1E-5
+  g_power_order_plrn = 1
+  step_wf_grid_plrn  = 1
+  cal_psir_plrn      = .FALSE.
+  interp_Ank_plrn    = .FALSE.
+  interp_Bqu_plrn    = .FALSE.
+
+  start_band_plrn   = 0
+  end_band_plrn     = 0
+  g_start_band_plrn = 0
+  g_end_band_plrn   = 0
+  g_start_energy_plrn = -10.0
+  g_end_energy_plrn   = 10.0
+
+  full_diagon_plrn = .FALSE.
+  mixing_Plrn      = 1.0
+  init_plrn        = 1
+  Mmn_plrn         = .FALSE.
+  recal_Mmn_plrn   = .FALSE.
+  debug_plrn       = .FALSE.
+  r0_plrn          = 0.0
+  nDOS_plrn        = 1000
+  edos_min_plrn    = 0.0 ! eV
+  pdos_min_plrn    = 0.0 ! meV
+  edos_max_plrn    = 0.0 ! eV
+  pdos_max_plrn    = 0.0 ! meV
+  edos_sigma_plrn  = 0.01d0 ! eV
+  pdos_sigma_plrn  = 0.1 ! meV
+  type_plrn        = -1
+  init_sigma_plrn  = 4.6
+  init_k0_plrn     = (/1000.d0, 1000.d0, 1000.d0/)
+  ethrdg_plrn      = 1E-6
+  time_rev_A_plrn  = .FALSE.
+  time_rev_U_plrn  = .FALSE.
+  nhblock_plrn     = 1
+  beta_plrn        = 0.0
+  g_tol_plrn       = -0.01
+  io_lvl_plrn      = 0
+  scell_mat_plrn   = .FALSE.
+  scell_mat(1, 1:3) = (/1, 0, 0/)
+  scell_mat(2, 1:3) = (/0, 1, 0/)
+  scell_mat(3, 1:3) = (/0, 0, 1/)
+  init_ntau_plrn    = 1
+  adapt_ethrdg_plrn = .FALSE.
+  init_ethrdg_plrn  = 1.d-2
+  nethrdg_plrn      = 11
+  loptabs     = .FALSE.
+  do_CHBB     = .FALSE.
+  len_mesh    = 1
+  meshnum     = 1
+  wf_quasi    = -1
+  nq_init     = -1
+  start_mesh  = 0
+  DW          = 0
+  mode_res    = 0
+  QD_bin      = 0.0
+  QD_min      = 0.005
+  wfpt         = .FALSE.
+  compute_dmat = .FALSE.
+  elecselfen_ahc = .FALSE.
+  ahc_nbnd       = -1
+  ahc_nbndskip   = 0
+  ahc_win_min    = -9999.d0
+  ahc_win_max    = -9999.d0
   !
   ! Reading the namelist inputepw and check
   IF (meta_ionode) THEN
@@ -759,9 +852,7 @@
       'Error: longrange and shortrange cannot be both true.', 1)
   IF (.NOT. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin', &
       'Error: Either epwread or epwwrite needs to be true. ', 1)
-  IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2', 1)
-  IF (ABS(degaussw) < eps16 .AND. etf_mem == 2) CALL errore('epw_readin', &
-      'Error: adapt_smearing not implemented with etf_mem=2', 1)
+  IF (etf_mem == 2) CALL errore('epw_readin', 'Error: the option etf_mem=2 is depreciated.', 1)
   IF (etf_mem == 3) THEN
     IF (.NOT. mp_mesh_k) CALL errore('epw_readin', 'When etf_mem == 3, you have to use mp_mesh_k == .true.', 1)
     IF (.NOT. efermi_read) CALL errore('epw_readin', 'When etf_mem == 3, you have to use efermi_read == .true.', 1)
@@ -773,7 +864,18 @@
     ENDIF
   ENDIF
   !
-  IF (etf_mem > 3 .OR. etf_mem < 0) CALL errore('epw_readin', 'etf_mem can only be 0, 1, 2 or 3.', 1)
+  IF (etf_mem > 3 .OR. etf_mem < 0) CALL errore('epw_readin', 'etf_mem can only be 0, 1, or 3.', 1)
+  !
+  IF (wfpt .AND. (ahc_nbnd <= 0)) CALL errore('epw_readin', &
+      'Error: ahc_nbnd must be set if wfpt is used.', 1)
+  IF (elecselfen_ahc .AND. (ahc_win_min < -9990.d0)) CALL errore('epw_readin', &
+      'Error: ahc_win_min must be set if elecselfen_ahc is used.', 1)
+  IF (elecselfen_ahc .AND. (ahc_win_max < -9990.d0)) CALL errore('epw_readin', &
+      'Error: ahc_win_max must be set if elecselfen_ahc is used.', 1)
+  IF (elecselfen_ahc .AND. (fsthick < 1.d8)) CALL errore('epw_readin', &
+      'Error: fsthick cannot be used with elecselfen_ahc.', 1)
+  IF (wfpt) compute_dmat = .TRUE.
+  !
   ! Make sure the files exists
   !
   IF (meta_ionode) THEN
@@ -805,13 +907,25 @@
     WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
   ENDIF
   !
-  ! 2D interpolation - currently experimental feature
-  IF (system_2d) THEN
-    WRITE(stdout, '(5x,a)') "WARNING - 2D - WARNING - 2D - WARNING - 2D - WARNING - 2D"
-    WRITE(stdout, '(5x,a)') "The use of 2D interpolation is experimental for now"
-    WRITE(stdout, '(5x,a)') "Use with caution"
-    WRITE(stdout, '(5x,a)') "WARNING - 2D - WARNING - 2D - WARNING - 2D - WARNING - 2D"
-    CALL errore('epw_readin', '2D interpolation is under developement.', 1)
+  ! 2D interpolation
+  IF ( ALL((/system_2d /= 'no', system_2d /= 'gaussian', system_2d /= 'dipole_sp', &
+            system_2d /= 'quadrupole', system_2d /= 'dipole_sh'/)) ) THEN
+    CALL errore('epw_readin', 'invalid value system_2d = "'//TRIM(system_2d)//'"', 1)
+  ENDIF
+  CALL mp_bcast(system_2d, meta_ionode_id, world_comm)
+  IF (system_2d == 'quadrupole' .OR. system_2d =='no') THEN
+    ! If quadrupole file exist, read it
+    IF (meta_ionode) THEN
+      INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
+    ENDIF
+    CALL mp_bcast(exst, meta_ionode_id, world_comm)
+    !
+    qrpl = .FALSE.
+    IF (exst) qrpl = .TRUE.
+    IF (system_2d == 'quadrupole' .AND. .NOT. exst) CALL errore('epw_readin', 'Error: the file "quadrupole.fmt" was not found.', 1)
+  ENDIF ! system_2d
+  IF (system_2d == 'quadrupole' .AND. vme == 'dipole') THEN
+    CALL errore('epw_readin', 'Quadrupole calulation not implemented with vme == dipole', 1)
   ENDIF
   !
   IF (etf_mem == 3) THEN
@@ -880,10 +994,44 @@
     WRITE(stdout, '(/,5x,a)') 'WARNING: You are using ngaussw == -99 (Fermi-Dirac).'
     WRITE(stdout, '(/,5x,a)') '         You probably need assume_metal == .true '
   ENDIF
+  !!!!!
+  ! Some controls on impurity scattering input
+  IF (assume_metal .AND. ii_g) THEN
+    CALL errore('epw_readin', 'Error: impurity matrix elements not compatable with metals', 1)
+  ENDIF
+  IF (ii_scattering .AND. .NOT. ii_g) THEN
+    CALL errore('epw_readin', 'Error: ii_g must = .true. if ii_scattering = .true.', 1)
+  ENDIF
+  IF (ii_g .AND. ii_eps0 < eps20) THEN
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: default value detected for ii_eps0, setting equal to 0.0d0.'
+    WRITE(stdout, '(/,5x,a)') 'Using high-frequency dielectric constant from epsil to screen carrier-impurity matrix elements.'
+    WRITE(stdout, '(/,5x,a)') 'For polar materials, please provide average ii_eps0 = eps_inf + eps_lat from dynmat.x run.'
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+  ENDIF
+  IF (ii_partion .AND. ii_eda < eps20) THEN
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: ii_partion == .TRUE. but dopant ionization energy ii_eda == 0.0 eV.'
+    WRITE(stdout, '(/,5x,a)') 'Results for partial ionizaton may not be physical.'
+    WRITE(stdout, '(/,5x,a)') 'if ii_partion == .true., please set ii_eda to a reasonable physical ionization energy in eV.'
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+  ENDIF
+  IF (ii_partion .AND. ii_eda > one) THEN
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: dopant ionization energy ii_eda > 1.0 eV.'
+    WRITE(stdout, '(/,5x,a)') 'Please check if correct, results may not be physical.'
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+  ENDIF
+  IF (ii_n < zero) CALL errore('epw_readin', 'Error: Ionized impurity density ii_n must be > 0', 1) 
+  !IF (degaussw == 0.0 .AND. ii_scattering) THEN
+  !  WRITE(stdout, '(/,5x,a)') 'Error: degaussw must be > 0.0 eV when using including ionized impurity scattering'
+  !  CALL errore('epw_readin', 'Error: adaptive broadening not implemented yet with impurity scattering', 1)
+  !ENDIF
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd
   fsthick     = fsthick / ryd2ev
   degaussw    = degaussw / ryd2ev
+  ii_eda      = ii_eda / ryd2ev
   delta_smear = delta_smear / ryd2ev
   !
   ! smearing of phonon in a2f
@@ -1054,7 +1202,7 @@
     IF (amass(it) <= 0.d0) CALL errore('epw_readin', 'Wrong masses', it)
   ENDDO
   !
-  !  broadcast the values of nq1, nq2, nq3
+  ! broadcast the values of nq1, nq2, nq3
   !
   CALL mp_bcast(nq1, meta_ionode_id, world_comm)
   CALL mp_bcast(nq2, meta_ionode_id, world_comm)
@@ -1062,27 +1210,13 @@
   CALL mp_bcast(nk1, meta_ionode_id, world_comm)
   CALL mp_bcast(nk2, meta_ionode_id, world_comm)
   CALL mp_bcast(nk3, meta_ionode_id, world_comm)
-  !
-  ! ---------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-  CALL mp_bcast(nPlrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(niterPlrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(spherical_cutoff, meta_ionode_id, world_comm)
-  CALL mp_bcast(conv_thr_polaron, meta_ionode_id, world_comm)
-  CALL mp_bcast(restart_polaron, meta_ionode_id, world_comm)
-  CALL mp_bcast(polaron_type, meta_ionode_id, world_comm)
-  CALL mp_bcast(sigma_plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(full_diagon_plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(mixing_Plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(ethr_Plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(init_plrn_wf, meta_ionode_id, world_comm)
-  CALL mp_bcast(sigma_edos_plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(sigma_pdos_plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(pmax_plrn, meta_ionode_id, world_comm)
-  CALL mp_bcast(pmin_plrn, meta_ionode_id, world_comm)
-  ! ---------------------------------------------------------------------------------
-  !
+  CALL mp_bcast(g_tol_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(io_lvl_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(init_ntau_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(init_k0_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(adapt_ethrdg_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(init_ethrdg_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(nethrdg_plrn, meta_ionode_id, world_comm)
   amass = AMU_RY * amass
   !
   !-----------------------------------------------------------------------

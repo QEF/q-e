@@ -36,6 +36,11 @@ PROGRAM open_grid
   USE control_flags,      ONLY : gamma_only, io_level
   USE start_k, ONLY : init_start_k
   USE extfield,           ONLY : gate
+  USE esm,                ONLY : esm_z_inv
+  USE rism_module,        ONLY : lrism
+  USE command_line_options, ONLY : nband_, ntg_ 
+  USE mp_pools,             ONLY : intra_pool_comm 
+  USE mp_exx,               ONLY : mp_start_exx
   ! 
   IMPLICIT NONE
   !
@@ -123,14 +128,16 @@ PROGRAM open_grid
                       COS( angle1(ityp(na)) )
      ENDDO
   ENDIF
-  CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
+  CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, &
+                & gate .OR. (.NOT. esm_z_inv(lrism)) )
 
   nq1 = -1
   nq2 = -1
   nq3 = -1
   ecutfock = 4*ecutwfc
   use_ace = .false.
-  
+ 
+  CALL mp_start_exx (nband_, ntg_, intra_pool_comm)
   CALL exx_grid_init()
   CALL exx_mp_init()
   !

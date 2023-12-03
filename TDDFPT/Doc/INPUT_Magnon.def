@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package turboMAGNON -program turbo_magnon.x {
+input_description -distribution {Quantum ESPRESSO} -package turboMAGNON -program turbo_magnon.x {
 
     toc {}
 

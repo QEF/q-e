@@ -1,0 +1,73 @@
+
+     Program KC_PP_Self-Hartree v.7.1 starts on 31Aug2022 at  8:55:15 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     697 MiB available memory on the printing compute node when the environment starts
+ 
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          73      73     22                  821      821     152
+     Max          74      74     23                  823      823     153
+     Sum         295     295     91                 3287     3287     609
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: Coulomb q+G=0 treatment:
+     INFO: Divergence            none    
+     INFO: q-grid dimension         2   2   2
+     INFO: cell volume               270.256360799503
+     INFO: Gamma Extrapolation       F
+     INFO: extrapolation q->0 term not estimated
+     INFO: Bare Coulomb q+G=0            0.00000E+00
+
+     INFO: READING Wannier-orbital Densities ...
+
+     INFO: READING Wannier-orbital Densities ... DONE
+
+     INFO: WANNIER orbital SH 
+
+     orb, Self hartree     1     0.274422
+     orb, Self hartree     2     0.274422
+     orb, Self hartree     3     0.274422
+     orb, Self hartree     4     0.274422
+     orb, Self hartree     5     0.095359
+     orb, Self hartree     6     0.095359
+     orb, Self hartree     7     0.095359
+     orb, Self hartree     8     0.095359
+ 
+     KC_PP_Self-H :      0.09s CPU      0.11s WALL
+
+ 
+   This run was terminated on:   8:55:15  31Aug2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

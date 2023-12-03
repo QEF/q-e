@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -452,10 +453,20 @@
     !
     dw = ABS(ww_as(1)-ww_as(2))
     !
-    drek = (sigmar(iek+1) - sigmar(iek-1)) / (two * dw)
-    dimk = (sigmai(iek+1) - sigmai(iek-1)) / (two * dw)
-    d2imk = (sigmai(iek+1) - two * sigmai(iek) + sigmai(iek-1)) / &
-            (dw**two)
+    IF (((iek-1) > 0) .AND. ((iek+1) <= nw_specfun)) THEN
+      drek = (sigmar(iek+1) - sigmar(iek-1)) / (two * dw)
+      dimk = (sigmai(iek+1) - sigmai(iek-1)) / (two * dw)
+      d2imk = (sigmai(iek+1) - two * sigmai(iek) + sigmai(iek-1)) / &
+              (dw**two)
+    ELSE
+      ! If iek+1 (or iek-1) is out of bounds, 
+      ! skip calculating a_ce, a_qp, a_s1
+      zeta = zero
+      a_ce(:) = zero
+      a_qp(:) = zero
+      a_s1(:) = zero
+      RETURN
+    ENDIF
     !
     !
     !  Calculate Z_k and alpha_k factors
@@ -493,18 +504,28 @@
           !
           ! This is Eq.(67) in [1] for k<k_F
           !
-          IF (sigmai(iw-iek+i0) > 0.d0) THEN
-            a_s(iw) = (sigmai(iw) - (imk + (ww_as(iw) - ek) * dimk ) ) / &
-                      (ww_as(iw) - ek)**two / pi
+          !S. Tiwari; Quick fix for out of bound error in GNU compiler
+          ! 
+          IF (((iw-iek+i0) > 0) .AND. ((iw-iek+i0) <= nw_specfun))THEN 
+            !
+            IF (sigmai(iw-iek+i0) > 0.d0) THEN
+              a_s(iw) = (sigmai(iw) - (imk + (ww_as(iw) - ek) * dimk ) ) / &
+                        (ww_as(iw) - ek)**two / pi
+            ENDIF
+            !
           ENDIF
           !
           ELSE ! Greater self-energy
           !
           ! This is Eq.(67) in [1] for k>k_F
           !
-          IF (sigmai(iw-i0+iek) < 0.d0) THEN
-            a_s(iw) = (-sigmai(iw) - (-imk - (ww_as(iw) - ek) * dimk ) ) / &
+          IF (((iw-i0+iek) > 0) .AND. ((iw-i0+iek) <= nw_specfun))THEN           
+            !
+            IF (sigmai(iw-i0+iek) < 0.d0) THEN
+              a_s(iw) = (-sigmai(iw) - (-imk - (ww_as(iw) - ek) * dimk ) ) / &
                       (ww_as(iw) - ek)**two / pi
+            ENDIF
+            ! 
           ENDIF
           !
         ENDIF
@@ -523,7 +544,9 @@
         !
         icoul = i0 + iw - iw2
         !
-        a_s1(iw) = a_s1(iw) + a_qp(iw2) * a_s(icoul) * dw
+        IF ((icoul > 0) .AND. (icoul <= nw_specfun)) THEN
+          a_s1(iw) = a_s1(iw) + a_qp(iw2) * a_s(icoul) * dw
+        ENDIF
         !
       ENDDO
       !
@@ -539,7 +562,9 @@
         !
         icoul = i0 + iw - iw2
         !
-        a_s2(iw) = a_s2(iw) + a_s1(iw2) * a_s(icoul) * dw
+        IF ((icoul > 0) .AND. (icoul <= nw_specfun)) THEN
+          a_s2(iw) = a_s2(iw) + a_s1(iw2) * a_s(icoul) * dw
+        ENDIF
         !
       ENDDO
       !
@@ -555,7 +580,9 @@
         !
         icoul = i0 + iw - iw2
         !
-        a_s3(iw) = a_s3(iw) + a_s2(iw2) * a_s(icoul) * dw
+        IF ((icoul > 0) .AND. (icoul <= nw_specfun)) THEN
+          a_s3(iw) = a_s3(iw) + a_s2(iw2) * a_s(icoul) * dw
+        ENDIF
         !
       ENDDO
       !

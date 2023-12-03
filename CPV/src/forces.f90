@@ -16,16 +16,20 @@
 #endif
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE dforce_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
-!-----------------------------------------------------------------------
-!computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
-!          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=cmplx(cr,ci,kind=DP)
-!
-!     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
-!              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
-!                                 e^-ig.r_i < beta_i,j | c_n >}
-!
+      SUBROUTINE dforce_x ( i, bec, vkb, c, df_out, da, v, ldv, ispin, f, n, nspin, v1 )
+      !-----------------------------------------------------------------------
+      !! Computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
+      !!           electron state at the gamma point of the Brillouin zone
+      !!           represented by the vector c=cmplx(cr,ci,kind=DP).
+      !
+      !! \[ d_n(g) = f_n { 0.5 g^2 c_n(g) + [\text{vc}_n](g) +
+      !!             \sum_{i,ij} d^q_{i,ij} (-i)^l \beta_{i,'i}(g) 
+      !!                          e^{-ig} r_i \langle \beta_{i,j} | c_n \rangle}  \]
+      !
+      ! d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
+      !          sum_i,ij d^q_i,ij (-i)**l beta_i,`i(g) 
+      !                         e^-ig.r_i < beta_i,j | c_n >}
+      !
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
@@ -50,7 +54,7 @@
       REAL(DP)                   :: bec(:,:)
       COMPLEX(DP)                :: vkb(:,:)
       COMPLEX(DP)                :: c(:,:)
-      COMPLEX(DP)                :: df(:), da(:)
+      COMPLEX(DP)                :: df_out(:), da(:)
       INTEGER,     INTENT(IN)    :: ldv
       REAL(DP)                   :: v( ldv, * )
       INTEGER                    :: ispin( : )
@@ -62,7 +66,7 @@
       !
       INTEGER     :: iv, jv, ia, is, iss1, iss2, ir, ig, inl, jnl
       INTEGER     :: igno, igrp, ierr
-      INTEGER     :: idx, eig_offset, nogrp_ , inc, tg_nr3
+      INTEGER     :: idx, eig_offset, nogrp_ , inc, tg_nr3, szdf
       REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
 #if defined(__INTEL_COMPILER)
@@ -75,6 +79,9 @@
       REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
       REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:) ! Lingzhu Kong      
       !
+      
+      COMPLEX(DP), ALLOCATABLE :: df(:,:)
+      
       CALL start_clock( 'dforce' ) 
       !
 !=======================================================================
@@ -85,13 +92,16 @@
       END IF
 !=======================================================================
 
+      szdf=SIZE(df_out(:))
+      ALLOCATE( df(szdf,1) )
+
       nogrp_ = fftx_ntgrp(dffts)
       IF( nogrp_ > 1 ) THEN
          CALL errore('dforce','Task group not supported',1)
       END IF
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
-      CALL c2psi_gamma( dffts, psi, c(:,i), c(:,i+1) )
+      CALL fftx_c2psi_gamma( dffts, psi, c(:,i:i), c(:,i+1) )
       !
       CALL invfft( 'Wave', psi, dffts )
       !
@@ -236,15 +246,15 @@
                fip = -0.5d0*f(i+idx)
             endif
             CALL fftx_psi2c_gamma( dffts, psi(eig_offset+1:eig_offset+inc), &
-                                   df(igno:igno+ngw-1), da(igno:igno+ngw-1))
+                                   df(igno:igno+ngw-1,1:1), da(igno:igno+ngw-1))
             IF( dffts%has_task_groups ) THEN
                DO ig=1,ngw
-                  df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1))
+                  df(ig+igno-1,1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1,1))
                   da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + da(ig+igno-1))
                END DO
             ELSE
                DO ig=1,ngw
-                  df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df(ig))
+                  df(ig,1)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df(ig,1))
                   da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da(ig))
                END DO
             END IF
@@ -269,7 +279,7 @@
             fi = -0.5d0*f(i)
             fip = -0.5d0*f(i+1)
          endif
-         CALL dforce_meta(c(1,i),c(1,i+1),df,da,psi,iss1,iss2,fi,fip) !METAGGA
+         CALL dforce_meta(c(1,i),c(1,i+1),df(:,1),da,psi,iss1,iss2,fi,fip) !METAGGA
       END IF
 
 
@@ -323,7 +333,7 @@
          END DO
 
          IF( ngw > 0 ) THEN
-           CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
+           CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df(:,1), 2*ngw)
            CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
          END IF
          !
@@ -331,6 +341,8 @@
          !
       ENDIF
 !
+      df_out=df(:,1)
+      DEALLOCATE(df)
       IF(xclib_dft_is('hybrid').AND.exx_is_active()) DEALLOCATE(exx_a, exx_b)
       DEALLOCATE( psi )
 !
@@ -342,15 +354,9 @@
 #if defined (__CUDA)
 !-------------------------------------------------------------------------
       SUBROUTINE dforce_gpu_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin )
-!-----------------------------------------------------------------------
-!computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
-!          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=cmplx(cr,ci,kind=DP)
-!
-!     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
-!              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
-!                                 e^-ig.r_i < beta_i,j | c_n >}
-!
+      !-----------------------------------------------------------------------
+      !! GPU double of \(\texttt{dforce_x}\).
+      !
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
@@ -358,7 +364,7 @@
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
-      USE gvecw,                  ONLY: ngw, g2kin_d
+      USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
       USE xc_lib,                 ONLY: xclib_dft_is, exx_is_active
@@ -492,10 +498,10 @@
                fip = -0.5d0*f(i+idx)
             endif
             CALL fftx_psi2c_gamma_gpu( dffts, psi( 1+ioff : ioff+dffts%nnr ), df_d(1+igno:igno+ngw), da_d(1+igno:igno+ngw))
-!$cuf kernel do(1)
+!$acc parallel loop present(g2kin, da_d, df_d, c)
             DO ig=1,ngw
-               df_d(ig+igno)= fi*(tpiba2*g2kin_d(ig)* c(ig,idx+i-1)+df_d(ig+igno))
-               da_d(ig+igno)=fip*(tpiba2*g2kin_d(ig)* c(ig,idx+i  )+da_d(ig+igno))
+               df_d(ig+igno)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df_d(ig+igno))
+               da_d(ig+igno)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da_d(ig+igno))
             END DO
          END IF
 

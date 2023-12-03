@@ -44,6 +44,7 @@ MODULE additional_kpoints
      INTEGER :: k1_old,  k2_old,  k3_old
      INTEGER :: nqtot, i,j,k, iq, jq
      REAL(DP) :: xq(3), rq(3)
+     REAL(DP) :: almost_zero = 1.d-8
      LOGICAL, EXTERNAL  :: matches
      !
 !     IF(.not.allocated(xk) .or. .not.allocated(wk))&
@@ -70,7 +71,7 @@ MODULE additional_kpoints
        xk(:,1:nkstot_old) = xk_old
        xk(:,nkstot_old+1:nkstot_old+nkstot_add) = xk_add
        wk(1:nkstot_old) = wk_old
-       wk(nkstot_old+1:nkstot_old+nkstot_add) = 0._dp
+       wk(nkstot_old+1:nkstot_old+nkstot_add) = almost_zero
        nqtot=1
      ELSE
      ! Difficult case: EXX with a finite grid of q-points. Ideally, we would want to use
@@ -95,13 +96,15 @@ MODULE additional_kpoints
          DO jq = 1, nkstot_add
             iq = iq + 1
            xk(:,iq) = xk_add(:,jq)  + xq
-           wk(iq)=0.0d0
+           wk(iq)=almost_zero
          ENDDO
        ENDDO
        ENDDO
        ENDDO
      ENDIF
-   
+  
+     ! renormalize 
+     wk(1:nkstot) = wk(1:nkstot)/SUM(wk(1:nkstot))
      
      WRITE(stdout,"(5x,a)")    " --- Additional k-points: --- "
      WRITE(stdout,"(5x,a,i6,a)")    "A request of ",nkstot_add," k-points with zero weight added to list"

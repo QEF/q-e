@@ -35,15 +35,7 @@ pbecor.o \
 beefun.o
 
 XCT = \
-qe_kind.o \
-qe_constants.o \
-xclib_utils_and_para.o \
-dft_setting_params.o \
-dft_setting_routines.o \
-qe_dft_list.o \
-qe_dft_refs.o \
-xc_beef_interface.o \
-xc_lib.o
+qe_dft_refs.o
 
 all: xc_lib.a
 
@@ -61,7 +53,9 @@ xclib_test.x : xclib_test.o $(XCT) xc_lib.a
 		xclib_test.o $(XCT) xc_lib.a ../upflib/libupf.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
-test : xclib_test.x xc_infos.x
+infos : xc_infos.x
+
+test : xclib_test.x
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
+SUBROUTINE rotate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
                          npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
@@ -45,10 +45,10 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   REAL(DP),    ALLOCATABLE :: en(:)
   INTEGER :: n_start, n_end, my_n
   !
-  EXTERNAL  h_psi,    s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -76,7 +76,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('rotwfck:hpsi'); !write(*,*) 'start rotwfck:hpsi';FLUSH(6)
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   call stop_clock('rotwfck:hpsi') ; !write(*,*) 'stop rotwfck:hpsi';FLUSH(6)
   !
   call start_clock('rotwfck:hc'); !write(*,*) 'start rotwfck:hc';FLUSH(6)
@@ -92,7 +92,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   sc=(0.D0,0.D0)
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
      if (n_start .le. n_end) &
      CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
      !
@@ -144,7 +144,7 @@ END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
+SUBROUTINE protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
                           npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
@@ -192,10 +192,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
-  EXTERNAL  h_psi,    s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -230,7 +230,7 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('protwfck:hpsi')
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   call stop_clock('protwfck:hpsi')
   !
   call start_clock('protwfck:hc')
@@ -238,7 +238,7 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   !            
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
      CALL compute_distmat( sc, psi, aux )
      !
   ELSE

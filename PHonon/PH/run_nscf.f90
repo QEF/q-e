@@ -27,7 +27,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
-  USE io_global,       ONLY : stdout
+  USE io_global,       ONLY : stdout, ionode
   !USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
@@ -44,6 +44,9 @@ SUBROUTINE run_nscf(do_band, iq)
   USE ahc,             ONLY : elph_ahc
   USE mp_images,       ONLY : intra_image_comm
   USE mp,              ONLY : mp_barrier
+  USE rism_module,     ONLY : lrism, rism_set_restart
+  USE two_chem,        ONLY : twochem
+
   !
   IMPLICIT NONE
   !
@@ -95,10 +98,13 @@ SUBROUTINE run_nscf(do_band, iq)
   ethr_nscf      = 1.0D-9 / nelec 
   ! threshold for diagonalization ethr_nscf - should be good for all cases
   !
+  IF (lrism) CALL rism_set_restart()
+  !
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
   CALL setup_nscf ( newgrid, xq, elph_mat .OR. elph_ahc )
+  !
   !
   CALL init_run()
   !
@@ -109,7 +115,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
 !°°°°°°°°°°°°°°°°°END OF ACFDT TEST °°°°°°°°°°°°°°°°°°°°°°
 !
-  IF (do_band) CALL non_scf_ph ( )
+  IF (do_band.and..not.elph_mat) CALL non_scf_ph ( )
 
 
   IF ( check_stop_now() ) THEN

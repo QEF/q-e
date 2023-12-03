@@ -954,24 +954,22 @@ MODULE exx_band
     !! * is_exx = .TRUE. - change to the EXX data structure;
     !! * is_exx = .FALSE. - change to the local data strucutre.
     !
-    USE cell_base,      ONLY : at, bg, tpiba2
-    USE cellmd,         ONLY : lmovecell
-    USE wvfct,          ONLY : npwx
-    USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, mill_d, &
-                               gstart, gvect_init, deallocate_gvect_exx, gshells
-    USE gvect,          ONLY : g_d, gg_d
-    USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init
-    USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
-    USE klist,          ONLY : xk, nks, ngk
-    USE mp_bands,       ONLY : intra_bgrp_comm, ntask_groups, nyfft
-    USE mp_exx,         ONLY : intra_egrp_comm, me_egrp, exx_mode, nproc_egrp, &
-                               negrp, root_egrp
-    USE io_global,      ONLY : stdout
-    USE fft_base,       ONLY : dfftp, dffts, smap, fft_base_info
-    USE fft_types,      ONLY : fft_type_init
-    USE recvec_subs,    ONLY : ggen, ggens
-    !
-    USE command_line_options, ONLY : nmany_
+    USE cell_base,            ONLY : at, bg, tpiba2
+    USE cellmd,               ONLY : lmovecell
+    USE wvfct,                ONLY : npwx
+    USE gvect,                ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, &
+                                     gstart, gvect_init, deallocate_gvect_exx, gshells
+    USE gvecs,                ONLY : gcutms, ngms, ngms_g, gvecs_init
+    USE gvecw,                ONLY : gkcut, ecutwfc, gcutw
+    USE klist,                ONLY : xk, nks, ngk
+    USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups, nyfft
+    USE mp_exx,               ONLY : intra_egrp_comm, me_egrp, exx_mode, nproc_egrp, &
+                                     negrp, root_egrp
+    USE io_global,            ONLY : stdout
+    USE fft_base,             ONLY : dfftp, dffts, smap, fft_base_info
+    USE fft_types,            ONLY : fft_type_init
+    USE recvec_subs,          ONLY : ggen, ggens
+    USE command_line_options, ONLY : nmany_, pencil_decomposition_
     !
     !
     IMPLICIT NONE
@@ -1025,9 +1023,10 @@ MODULE exx_band
 
           CALL fft_type_init( dffts_exx, smap_exx, "wave", gamma_only, &
                lpara, intra_egrp_comm, at, bg, gkcut, gcutms/gkcut, &
-               nyfft=ntask_groups, nmany=nmany_ )
+               nyfft=ntask_groups, nmany=nmany_, use_pd=pencil_decomposition_ )
           CALL fft_type_init( dfftp_exx, smap_exx, "rho", gamma_only, &
-               lpara, intra_egrp_comm, at, bg,  gcutm, nyfft=nyfft, nmany=nmany_ )
+               lpara, intra_egrp_comm, at, bg, gcutm, nyfft=nyfft, nmany=nmany_, &
+               use_pd=pencil_decomposition_ )
           CALL fft_base_info( ionode, stdout )
           ngs_ = dffts_exx%ngl( dffts_exx%mype + 1 )
           ngm_ = dfftp_exx%ngl( dfftp_exx%mype + 1 )
@@ -1064,13 +1063,8 @@ MODULE exx_band
        CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
             g, gg, mill, ig_l2g, gstart )
        CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
-#if defined(__CUDA)
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
-       mill_d = mill
-       g_d    = g
-       gg_d   = gg
-#endif
        !$acc update device(mill, g)
        !
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
@@ -1098,12 +1092,6 @@ MODULE exx_band
        g = g_exx
        gg = gg_exx
        mill = mill_exx
-#if defined(__CUDA)
-       ! Sync duplicated data
-       mill_d = mill
-       g_d    = g
-       gg_d   = gg
-#endif
        !$acc update device(mill, g)
        !
        ! workaround: here dfft?%nl* are unallocated
@@ -1150,12 +1138,6 @@ MODULE exx_band
        g = g_loc
        gg = gg_loc
        mill = mill_loc
-#if defined(__CUDA)
-       ! Sync duplicated data
-       mill_d = mill
-       g_d    = g
-       gg_d   = gg
-#endif
        !$acc update device(mill, g)
        !
        dfftp%nl = nl_loc

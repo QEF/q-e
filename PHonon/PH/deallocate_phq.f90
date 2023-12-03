@@ -12,7 +12,8 @@ subroutine deallocate_phq
   !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
   !
   USE noncollin_module, ONLY : m_loc
-  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
+  USE becmod,           ONLY: becp, deallocate_bec_type_acc, &
+                              deallocate_bec_type
   USE wavefunctions,    ONLY: evc
   USE ramanm,       ONLY: ramtns
   USE modes,        ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
@@ -43,8 +44,8 @@ subroutine deallocate_phq
                            dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE becmod,       ONLY : deallocate_bec_type
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
+  USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
 
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -53,7 +54,7 @@ subroutine deallocate_phq
   if (lgamma) then
      if(associated(evq)) nullify(evq)
   else
-     if(associated(evq)) deallocate(evq)
+     if(associated(evq)) deallocate(evq)   !why not if allocated? 
   end if
 
   if(allocated(dvpsi)) deallocate (dvpsi)
@@ -138,7 +139,7 @@ subroutine deallocate_phq
      ENDDO
      DEALLOCATE(becpt)
   ENDIF
-  call deallocate_bec_type ( becp )
+  call deallocate_bec_type_acc ( becp )
 
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)
   if(allocated(el_ph_mat_nc_mag)) deallocate (el_ph_mat_nc_mag)
@@ -194,6 +195,6 @@ subroutine deallocate_phq
      !
   ENDIF
 
-  RETURN
-
+  call deallocate_2d_arrays ()
+ 
 end subroutine deallocate_phq

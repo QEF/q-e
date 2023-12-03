@@ -1,5 +1,5 @@
 !
-SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
+SUBROUTINE ppcg_gamma( h_psi_ptr, s_psi_ptr, overlap, precondition, &
                  npwx, npw, nbnd, psi, e, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
@@ -66,10 +66,10 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   INTEGER                  ::  print_info     ! If > 0 then iteration information is printed
   REAL(DP), EXTERNAL :: DLANGE, DDOT
 
-  EXTERNAL h_psi, s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
 
@@ -133,8 +133,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   !    set Im[ psi(G=0) ] -  needed for numerical stability
   call start_clock('ppcg:hpsi')
   IF ( gstart == 2 ) psi(1,1:nbnd) = CMPLX( DBLE( psi(1,1:nbnd) ), 0.D0, kind=DP)
-  CALL h_psi( npwx, npw, nbnd, psi, hpsi )
-  if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi)
+  CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
+  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi)
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
   !
@@ -235,11 +235,11 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      call start_clock('ppcg:hpsi')
      IF ( gstart == 2 ) w(1,act_idx(1:nact)) = CMPLX( DBLE( w(1,act_idx(1:nact)) ), 0.D0, kind=DP)
      call threaded_assign( buffer1, w, npwx, nact, act_idx )
-     CALL h_psi( npwx, npw, nact, buffer1, buffer )
+     CALL h_psi_ptr( npwx, npw, nact, buffer1, buffer )
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      call threaded_backassign( hw, act_idx, buffer, npwx, nact )
      if (overlap) then ! ... Compute s*w
-        CALL s_psi( npwx, npw, nact, buffer1, buffer )
+        CALL s_psi_ptr( npwx, npw, nact, buffer1, buffer )
 !        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
         call threaded_backassign( sw, act_idx, buffer, npwx, nact )
      end if

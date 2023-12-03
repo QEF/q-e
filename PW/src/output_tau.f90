@@ -1,9 +1,59 @@
 !
-! Copyright (C) 2003-2009 Quantum ESPRESSO group
+! Copyright (C) 2003-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Atomic position conversion utilities from input to internal to output format
+!
+!-----------------------------------------------------------------------
+SUBROUTINE convert_tau( tau_format, nat, tau )
+  !-----------------------------------------------------------------------
+  !! Convert input atomic positions to internally used format \(\text{tau}\)
+  !! in \(\text{a0}\) units - needs lattice vectors (at) to be set.
+  !
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : bohr_radius_angs
+  USE cell_base,     ONLY : at, alat
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=*), INTENT(IN) :: tau_format
+  INTEGER, INTENT(IN) :: nat
+  REAL(DP), INTENT(INOUT) :: tau(3,nat)
+  !
+  SELECT CASE( tau_format )
+  CASE( 'alat' )
+     !
+     ! ... input atomic positions are divided by a0: do nothing
+     !
+  CASE( 'bohr' )
+     !
+     ! ... input atomic positions are in a.u.: divide by alat
+     !
+     tau = tau / alat
+     !
+  CASE( 'crystal' )
+     !
+     ! ... input atomic positions are in crystal axis
+     !
+     CALL cryst_to_cart( nat, tau, at, 1 )
+     !
+  CASE( 'angstrom' )
+     !
+     ! ... atomic positions in A: convert to a.u. and divide by alat
+     !
+     tau = tau / bohr_radius_angs / alat
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys','unknown tau_format=' // &
+                & trim( tau_format ) // ' not implemented', 1 )
+     !
+  END SELECT
+  !
+END SUBROUTINE convert_tau
 !
 !----------------------------------------------------------------------------
 SUBROUTINE output_tau( print_lattice, print_final )
@@ -99,13 +149,13 @@ SUBROUTINE output_tau( print_lattice, print_final )
      !
      IF ( ALLOCATED( if_pos ) ) THEN
         IF ( ANY( if_pos(:,na) == 0 ) ) THEN
-           WRITE( stdout,'(A3,3X,3F20.10,1X,3i4)') &
+           WRITE( stdout,'(A6,3X,3F20.10,1X,3i4)') &
                         atm(ityp(na)), tau_out(:,na), if_pos(:,na)
         ELSE
-           WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau_out(:,na)
+           WRITE( stdout,'(A6,3X,3F20.10)') atm(ityp(na)), tau_out(:,na)
         END IF
      ELSE
-        WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau_out(:,na)
+        WRITE( stdout,'(A6,3X,3F20.10)') atm(ityp(na)), tau_out(:,na)
      ENDIF
      !
   ENDDO
@@ -137,13 +187,13 @@ SUBROUTINE output_tau_rescaled(rescale)
      !
      IF ( ALLOCATED( if_pos ) ) THEN
         IF ( ANY( if_pos(:,na) == 0 ) ) THEN
-           WRITE( stdout,'(A3,3X,3F20.10,1X,3i4)') &
+           WRITE( stdout,'(A6,3X,3F20.10,1X,3i4)') &
                         atm(ityp(na)), tau(:,na)*rescale, if_pos(:,na)
         ELSE
-           WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
+           WRITE( stdout,'(A6,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
         END IF
      ELSE
-        WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
+        WRITE( stdout,'(A6,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
      ENDIF
      !
   ENDDO

@@ -23,12 +23,10 @@ addusdynmat.o \
 allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \
-apply_trev.o \
 yambo.o \
 ahc.o \
 dvscf_interpolate.o \
 bcast_ph_input.o \
-c_bands_ph.o \
 cch_psi_all.o \
 check_if_partial_dyn.o \
 check_initial_status.o \
@@ -99,7 +97,6 @@ init_representations.o \
 io_dyn_mat.o \
 io_dyn_mat_old.o \
 io_pattern.o \
-non_scf_ph.o \
 obsolete.o \
 openfilq.o \
 phcom.o \

@@ -12,8 +12,8 @@ SUBROUTINE force_us( forcenl )
   !! The nonlocal potential contribution to forces.
   !
   USE kinds,                ONLY : DP
-  USE control_flags,        ONLY : gamma_only
-  USE cell_base,            ONLY : at, bg, tpiba
+  USE control_flags,        ONLY : gamma_only, offload_type
+  USE cell_base,            ONLY : tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
@@ -26,14 +26,12 @@ SUBROUTINE force_us( forcenl )
   USE noncollin_module,     ONLY : npol, noncolin
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
-  USE becmod,               ONLY : calbec, becp, bec_type, allocate_bec_type, &
-                                   deallocate_bec_type
+  USE becmod,               ONLY : calbec, becp, bec_type, &
+                                   allocate_bec_type, deallocate_bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
-  USE wavefunctions_gpum,   ONLY : using_evc
-  USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
@@ -44,55 +42,100 @@ SUBROUTINE force_us( forcenl )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
+  !$acc declare device_resident(vkb1)
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
-  REAL(DP), ALLOCATABLE :: deff(:,:,:)
+  REAL(DP),    ALLOCATABLE :: deff(:,:,:)
   TYPE(bec_type) :: dbecp                 ! contains <dbeta|psi>
-  INTEGER    :: npw, ik, ipol, ig, jkb
-  !
+  INTEGER :: npw, ik, ipol, ig, jkb
+  INTEGER :: itot, nt, na
+  INTEGER, ALLOCATABLE :: nt_list(:), na_list(:)
+  LOGICAL, ALLOCATABLE :: ismulti_np(:)
+  COMPLEX(DP), ALLOCATABLE :: becpnc(:,:,:),  becpk(:,:), &
+                              dbecpnc(:,:,:), dbecpk(:,:)
+  !$acc declare device_resident(becpnc,becpk,dbecpnc,dbecpk)
+  !civn: these buffers are kept here instead of inside force_us_k to
+  !      save allocation/deallocation overhead inside the ik,ipol loops
   !
   forcenl(:,:) = 0.D0
   !
-  CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )   
-  CALL using_becp_auto(2)
-  CALL allocate_bec_type( nkb, nbnd, dbecp, intra_bgrp_comm )   
+  CALL allocate_bec_type_acc( nkb, nbnd, becp, intra_bgrp_comm )
+  CALL allocate_bec_type_acc( nkb, nbnd, dbecp, intra_bgrp_comm )
   !
-  ALLOCATE( vkb1( npwx, nkb ) )   
-  !
+  ALLOCATE( vkb1(npwx,nkb) )
   IF (noncolin) THEN
-     ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
+    ALLOCATE( becpnc(nkb,npol,nbnd), dbecpnc(nkb,npol,nbnd) )
+    ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
   ELSEIF (.NOT. gamma_only ) THEN
-     ALLOCATE( deff(nhm,nhm,nat) )
+    ALLOCATE( becpk(nkb,nbnd), dbecpk(nkb,nbnd) )
+    ALLOCATE( deff(nhm,nhm,nat) )
   ENDIF
+  ! 
+  !$acc data create(deff,deff_nc) copyin(evc)
+  !
+  ALLOCATE( nt_list(nat), na_list(nat), ismulti_np(nat) )
+  !
+  itot = 0
+  DO nt = 1, ntyp
+     DO na = 1, nat
+        IF ( ityp(na)==nt ) THEN
+           itot = itot + 1
+           nt_list(itot) = nt
+           na_list(itot) = na
+           ismulti_np(itot) = upf(nt)%tvanp .OR. upf(nt)%is_multiproj
+        ENDIF
+     ENDDO
+  ENDDO
+  IF (itot /= nat) CALL errore( 'force_us', 'Something wrong in atoms counting', 1 )
   !
   ! ... the forces are a sum over the K points and over the bands
-  !   
-  CALL using_evc(0)
   !
   DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
-     npw = ngk (ik)
-
+     npw = ngk(ik)
+     !
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        CALL using_evc(1)
-        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
      ENDIF
      !
-     CALL using_becp_auto(2)
-     CALL calbec( npw, vkb, evc, becp )
+     !$acc update device( evc )
+     CALL calbec( offload_type, npw, vkb, evc, becp )
+     IF (noncolin) THEN
+       !$acc kernels
+       becpnc = becp%nc
+       !$acc end kernels
+     ELSEIF (.NOT. gamma_only ) THEN
+       !$acc kernels
+       becpk = becp%k
+       !$acc end kernels
+     ENDIF
      !
      DO ipol = 1, 3
-!$omp parallel do collapse(2) private(ig)
+        !
+#if defined(_OPENACC)
+        !$acc parallel loop collapse(2)
+#else
+        !$omp parallel do collapse(2) private(ig)
+#endif
         DO jkb = 1, nkb
            DO ig = 1, npw
               vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk_k(ig,ik))
            ENDDO
         ENDDO
-!$omp end parallel do
         !
-        CALL calbec( npw, vkb1, evc, dbecp )
+        CALL calbec( offload_type, npw, vkb1, evc, dbecp )
+        IF (noncolin) THEN
+          !$acc kernels
+          dbecpnc = dbecp%nc
+          !$acc end kernels
+        ELSEIF (.NOT. gamma_only ) THEN
+          !$acc kernels
+          dbecpk = dbecp%k
+          !$acc end kernels
+        ENDIF
         !
+        !$acc data copyin(nt_list,na_list,ismulti_np)
         IF ( gamma_only ) THEN
            !
            CALL force_us_gamma( forcenl )
@@ -102,25 +145,25 @@ SUBROUTINE force_us( forcenl )
            CALL force_us_k( forcenl )
            !
         ENDIF
+        !$acc end data
+        !
      ENDDO
   ENDDO
   !
   ! ... if sums over bands are parallelized over the band group
   !
-  CALL using_becp_auto(1)
   IF ( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
   !
-  IF (noncolin) THEN
+  !$acc end data
+  DEALLOCATE( vkb1 )
+  IF ( noncolin ) THEN
      DEALLOCATE( deff_nc )
-  ELSEIF ( .NOT. GAMMA_ONLY) THEN
+  ELSEIF ( .NOT. gamma_only ) THEN
      DEALLOCATE( deff )
   ENDIF
   !
-  DEALLOCATE( vkb1 )
-  !
-  CALL deallocate_bec_type( dbecp )
-  CALL deallocate_bec_type( becp )
-  CALL using_becp_auto(2)
+  CALL deallocate_bec_type_acc( dbecp )
+  CALL deallocate_bec_type_acc( becp )
   !
   ! ... collect contributions across pools from all k-points
   !
@@ -137,6 +180,14 @@ SUBROUTINE force_us( forcenl )
   !
   CALL symvector( nat, forcenl )
   !
+  DEALLOCATE( nt_list, na_list, ismulti_np )
+  !   
+  IF ( noncolin ) THEN
+    DEALLOCATE( becpnc, dbecpnc )
+  ELSEIF (.NOT. gamma_only ) THEN
+    DEALLOCATE( becpk, dbecpk )
+  ENDIF
+  !
   RETURN
   !
   CONTAINS
@@ -144,7 +195,15 @@ SUBROUTINE force_us( forcenl )
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_gamma( forcenl )
        !-----------------------------------------------------------------------
-       !! Nonlocal contributiuon. Calculation at gamma.
+       !! Nonlocal contribution to the force. Calculation at Gamma.
+       !
+       ! Important notice about parallelization over the band group of processors:
+       ! 1) internally, "calbec" parallelises on plane waves over the band group
+       ! 2) the results of "calbec" are distributed across processors of the band
+       !    group: the band index of becp, dbecp is distributed
+       ! 3) the band group is subsequently used to parallelize over bands
+       !
+       USE uspp,     ONLY : qq_at, deeq
        !
        IMPLICIT NONE
        !
@@ -154,64 +213,108 @@ SUBROUTINE force_us( forcenl )
        ! ... local variables
        !
        REAL(DP), ALLOCATABLE :: aux(:,:)
-       INTEGER ::  nt, na, ibnd, ibnd_loc, ih, jh, ijkb0 ! counters
+       REAL(DP) :: forcenl_ipol
+       INTEGER :: nt, na, ibnd, ibnd_loc, ih, jh, ijkb0
+       INTEGER :: nh_nt, becp_ibnd_begin, becp_nbnd_loc, nbnd_siz
+       REAL(DP), ALLOCATABLE :: dbecprd(:,:), becprd(:,:)
+       !$acc declare device_resident(dbecprd, becprd)
        !
-       ! ... Important notice about parallelization over the band group of processors:
-       ! ... 1) internally, "calbec" parallelises on plane waves over the band group
-       ! ... 2) the results of "calbec" are distributed across processors of the band
-       ! ...    group: the band index of becp, dbecp is distributed
-       ! ... 3) the band group is subsequently used to parallelize over bands
+       nbnd_siz = nbnd / becp%nproc
+       ALLOCATE( becprd(nkb,nbnd_siz), dbecprd(nkb,nbnd_siz) )
        !
+       !$acc kernels
+       dbecprd = dbecp%r
+       becprd  = becp%r
+       !$acc end kernels
+       becp_nbnd_loc = becp%nbnd_loc
+       becp_ibnd_begin = becp%ibnd_begin
        !
-       CALL using_et(0)
+       !$acc data copyin( et, wg )
        !
        DO nt = 1, ntyp
+          !
           IF ( nh(nt) == 0 ) CYCLE
-          ALLOCATE( aux(nh(nt),becp%nbnd_loc) )
+          !
+          ALLOCATE( aux(nh(nt), becp%nbnd_loc) )
+          !$acc data create(aux)
+          !
+          nh_nt = nh(nt)
+          !
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
                 ijkb0 = ofsbeta(na)
-                ! this is \sum_j q_{ij} <beta_j|psi>
-                CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt),        &
-                            1.0_dp, qq_at(1,1,na), nhm, becp%r(ijkb0+1,1), &
-                            nkb, 0.0_dp, aux, nh(nt) )
-                ! multiply by -\epsilon_n
+                ! ... this is \sum_j q_{ij} <beta_j|psi>
                 !
+                !$acc host_data use_device(aux, qq_at, becprd)
+                CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt),      &
+                              1.0_DP, qq_at(1,1,na), nhm, becprd(ijkb0+1,1), &
+                              nkb, 0.0_DP, aux, nh(nt) )
+                !$acc end host_data
+                !
+                ! ... multiply by -\epsilon_n
+                !
+#if defined(_OPENACC)
+                !$acc parallel loop collapse(2)
+#else
                 !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)
-                DO ih = 1, nh(nt)
-                   DO ibnd_loc = 1, becp%nbnd_loc
-                      ibnd = ibnd_loc + becp%ibnd_begin - 1
+#endif
+                DO ih = 1, nh_nt
+                   DO ibnd_loc = 1, becp_nbnd_loc
+                      ibnd = ibnd_loc + becp_ibnd_begin - 1
                       aux(ih,ibnd_loc) = - et(ibnd,ik) * aux(ih,ibnd_loc)
                    ENDDO
                 ENDDO
+#if !defined(_OPENACC)
                 !$omp end parallel do
+#endif
                 !
-                ! add  \sum_j d_{ij} <beta_j|psi>
-                CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt), &
-                            1.0_dp, deeq(1,1,na,current_spin), nhm, &
-                            becp%r(ijkb0+1,1), nkb, 1.0_dp, aux, nh(nt) )
-                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
-                DO ih = 1, nh(nt)
-                   DO ibnd_loc = 1, becp%nbnd_loc
-                      ibnd = ibnd_loc + becp%ibnd_begin - 1
-                      forcenl(ipol,na) = forcenl(ipol,na) -    &
-                           2.0_dp * tpiba * aux(ih,ibnd_loc) * &
-                           dbecp%r(ijkb0+ih,ibnd_loc) * wg(ibnd,ik)
+                ! ... add  \sum_j d_{ij} <beta_j|psi>
+                !
+                !$acc host_data use_device(aux, deeq, becprd)
+                CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt), &
+                              1.0_DP, deeq(1,1,na,current_spin), nhm, &
+                              becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt) )
+                !$acc end host_data
+                !
+                ! ... Auxiliary variable to perform the reduction with gpu kernels
+                forcenl_ipol = 0.0_DP
+#if defined(_OPENACC)
+                !$acc parallel loop collapse(2) reduction(+:forcenl_ipol)
+#else
+                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl_ipol)
+#endif
+                DO ih = 1, nh_nt
+                   DO ibnd_loc = 1, becp_nbnd_loc
+                      ibnd = ibnd_loc + becp_ibnd_begin - 1
+                      forcenl_ipol = forcenl_ipol - 2.0_DP*tpiba * aux(ih,ibnd_loc) *&
+                      dbecprd(ijkb0+ih,ibnd_loc) * wg(ibnd,ik)
                    ENDDO
                 ENDDO
+#if !defined(_OPENACC)
                 !$omp end parallel do
+#endif
+                !
+                forcenl(ipol,na) = forcenl(ipol,na) + forcenl_ipol
                 !
              ENDIF
           ENDDO
+          !
+          !$acc end data
           DEALLOCATE( aux )
+          !
        ENDDO
        !
+       !$acc end data
+       !
+       DEALLOCATE( becprd, dbecprd )
+       !
      END SUBROUTINE force_us_gamma
-     !     
+     !
+     !
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_k( forcenl )
        !-----------------------------------------------------------------------
-       !! Nonlocal contributiuon. Calculation for k-points.
+       !! Nonlocal contribution to the force. Calculation for k-points.
        !
        IMPLICIT NONE
        !
@@ -221,9 +324,11 @@ SUBROUTINE force_us( forcenl )
        ! ... local variables
        !
        REAL(DP) :: fac
+       REAL(DP) :: forcenl_p1, forcenl_p2
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
+       INTEGER  :: nh_nt, it
        !
-       CALL using_et(0)
+       !$acc data copy(forcenl)
        !
        DO ibnd = 1, nbnd
           !
@@ -235,77 +340,108 @@ SUBROUTINE force_us( forcenl )
           !
           fac = wg(ibnd,ik)*tpiba
           !
-          DO nt = 1, ntyp
-             DO na = 1, nat
-                ijkb0 = ofsbeta(na)
-                IF ( ityp(na) == nt ) THEN
-                   DO ih = 1, nh(nt)
-                      ikb = ijkb0 + ih
-                      IF (noncolin) THEN
-                         ijs=0
-                         DO is = 1, npol
-                            DO js = 1, npol
-                               ijs=ijs+1
-                               forcenl(ipol,na) = forcenl(ipol,na)- &
-                                    deff_nc(ih,ih,na,ijs)*fac*(     &
-                                    CONJG(dbecp%nc(ikb,is,ibnd))*   &
-                                    becp%nc(ikb,js,ibnd)+           &
-                                    CONJG(becp%nc(ikb,is,ibnd))*    &
-                                    dbecp%nc(ikb,js,ibnd) )
-                            ENDDO
-                         ENDDO
-                      ELSE
-                         forcenl(ipol,na) = forcenl(ipol,na) -   &
-                              2.D0 * fac * deff(ih,ih,na)*       &
-                              DBLE( CONJG( dbecp%k(ikb,ibnd) ) * &
-                              becp%k(ikb,ibnd) )
-                      ENDIF
+#if defined(_OPENACC)
+          !$acc parallel loop gang reduction(+:forcenl_p2)
+#else
+          !$omp parallel do private(nt,na,ijkb0,nh_nt,forcenl_p1,forcenl_p2,ih,&
+          !$omp                     ikb,is,js,ijs,jkb)
+#endif
+          DO it = 1, nat
+             !
+             nt = nt_list(it)
+             na = na_list(it)
+             ijkb0 = ofsbeta(na)
+             nh_nt = nh(nt)
+             !
+             forcenl_p2 = 0.d0
+             !$acc loop vector reduction(+:forcenl_p2)
+             DO ih = 1, nh_nt
+                !
+                ikb = ijkb0 + ih
+                IF (noncolin) THEN
+                   forcenl_p1 = 0.d0
+                   !$acc loop seq collapse(2) reduction(+:forcenl_p1)
+                   DO is = 1, npol
+                     DO js = 1, npol
+                       ijs = (is-1)*npol+js
+                       forcenl_p1 = forcenl_p1 - &
+                                    deff_nc(ih,ih,na,ijs)*fac*(  &
+                                    CONJG(dbecpnc(ikb,is,ibnd))* &
+                                    becpnc(ikb,js,ibnd)+         &
+                                    CONJG(becpnc(ikb,is,ibnd))*  &
+                                    dbecpnc(ikb,js,ibnd) )
+                     ENDDO
                    ENDDO
+                ELSE
+                   forcenl_p1 = -2.D0 * fac * deff(ih,ih,na) *    &
+                                DBLE( CONJG( dbecpk(ikb,ibnd) ) * &
+                                becpk(ikb,ibnd) )
+                ENDIF
+                !
+                forcenl_p2 = forcenl_p2 + forcenl_p1
+                !
+             ENDDO
+             !
+             forcenl(ipol,na) = forcenl(ipol,na) + forcenl_p2
+             !
+             IF ( ismulti_np(it) ) THEN
+                !
+                forcenl_p2 = 0.d0
+                !$acc loop vector reduction(+:forcenl_p2)
+                DO ih = 1, nh_nt
+                   ikb = ijkb0 + ih
                    !
-                   IF ( upf(nt)%tvanp .OR. upf(nt)%is_multiproj ) THEN
-                      DO ih = 1, nh(nt)
-                         ikb = ijkb0 + ih
-                         !
-                         ! ... in US case there is a contribution for jh<>ih. 
-                         ! ... We use here the symmetry in the interchange 
-                         ! ... of ih and jh
-                         !
-                         DO jh = ( ih + 1 ), nh(nt)
-                            jkb = ijkb0 + jh
-                            IF (noncolin) THEN
-                               ijs=0
-                               DO is = 1, npol
-                                  DO js = 1, npol
-                                     ijs = ijs + 1
-                                     forcenl(ipol,na) = forcenl(ipol,na)- &
-                                          deff_nc(ih,jh,na,ijs)*fac*(     &
-                                          CONJG(dbecp%nc(ikb,is,ibnd))*   &
-                                          becp%nc(jkb,js,ibnd)+           &
-                                          CONJG(becp%nc(ikb,is,ibnd))*    &
-                                          dbecp%nc(jkb,js,ibnd))-         &
-                                          deff_nc(jh,ih,na,ijs)*fac*(     &
-                                          CONJG(dbecp%nc(jkb,is,ibnd))*   &
-                                          becp%nc(ikb,js,ibnd)+           &
-                                          CONJG(becp%nc(jkb,is,ibnd))*    &
-                                          dbecp%nc(ikb,js,ibnd) )
-                                  ENDDO
-                               ENDDO
-                            ELSE
-                               forcenl(ipol,na) = forcenl(ipol,na) -     &
-                                    2.D0 * fac * deff(ih,jh,na) *        &
-                                    DBLE( CONJG( dbecp%k(ikb,ibnd) ) *   &
-                                    becp%k(jkb,ibnd) + dbecp%k(jkb,ibnd) &
-                                    * CONJG( becp%k(ikb,ibnd) ) )
-                            ENDIF
-                         ENDDO !jh
-                      ENDDO !ih
-                   ENDIF ! tvanp
+                   ! ... in US case there is a contribution for jh<>ih. 
+                   ! ... We use here the symmetry in the interchange 
+                   ! ... of ih and jh
                    !
-                ENDIF ! ityp(na) == nt
-             ENDDO ! nat
-          ENDDO ! ntyp
+                   forcenl_p1 = 0.d0
+                   !$acc loop seq
+                   DO jh = ih+1, nh_nt
+                      jkb = ijkb0 + jh
+                      IF (noncolin) THEN
+                        !$acc loop seq collapse(2) reduction(+:forcenl_p1)
+                        DO is = 1, npol
+                          DO js = 1, npol
+                             ijs = (is-1)*npol+js
+                             forcenl_p1 = forcenl_p1 - &
+                                          deff_nc(ih,jh,na,ijs)*fac*(  &
+                                          CONJG(dbecpnc(ikb,is,ibnd))* &
+                                          becpnc(jkb,js,ibnd) +        &
+                                          CONJG(becpnc(ikb,is,ibnd))*  &
+                                          dbecpnc(jkb,js,ibnd)) -      &
+                                          deff_nc(jh,ih,na,ijs)*fac*(  &
+                                          CONJG(dbecpnc(jkb,is,ibnd))* &
+                                          becpnc(ikb,js,ibnd) +        &
+                                          CONJG(becpnc(jkb,is,ibnd))*  &
+                                          dbecpnc(ikb,js,ibnd) )
+                          ENDDO
+                        ENDDO
+                      ELSE
+                        forcenl_p1 = forcenl_p1 - &
+                                     2.D0 * fac * deff(ih,jh,na) *      &
+                                     DBLE( CONJG( dbecpk(ikb,ibnd) ) *  &
+                                     becpk(jkb,ibnd) + dbecpk(jkb,ibnd) &
+                                     * CONJG( becpk(ikb,ibnd) ) )
+                      ENDIF
+                   ENDDO !jh
+                   !
+                   forcenl_p2 = forcenl_p2 + forcenl_p1
+                   !
+                ENDDO !ih
+                !
+                forcenl(ipol,na) = forcenl(ipol,na) + forcenl_p2
+                !
+             ENDIF ! tvanp
+             !
+          ENDDO ! it=nt|na
+#if !defined(_OPENACC)
+          !$omp end parallel do
+#endif
+          !
        ENDDO ! nbnd
        !
+       !$acc end data
        !
      END SUBROUTINE force_us_k
      !

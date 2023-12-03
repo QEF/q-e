@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.6.7GPU starts on  1Jul2021 at 13: 1:12 
+     Program TDDFPT_PP v.7.0 starts on  1Jun2022 at 15:35:44 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -11,52 +11,28 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     8 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       8
-     28937 MiB available memory on the printing compute node when the environment starts
+     501 MiB available memory on the printing compute node when the environment starts
  
 
-     Reading   1600 Lanczos steps for direction 1
-       1600 steps will be considered
+     Reading    150 Lanczos steps for direction 1
+        150 steps will be considered
 
-
-     Polarization direction:1
-     Lanczos coefficients:
-     Average =    13.88229229
-     Average oscillation amplitude =    -0.01933565
-     Average alpha =    -0.00027223     0.00000000
-     Average alpha oscillation amplitude =    -0.00070543     0.00000000
-     Average gamma =    13.88229229    -0.00000000
-     Average gamma oscillation amplitude =    -0.01933565    -0.00000000
-     Extrapolation =                      osc
-      ip =   1
-     Average beta =    13.88229229
-     Average beta oscillation amplitude =    -0.01933565
-     Average alpha =     0.00000000     0.00000000
-     Average alpha oscillation amplitude =     0.00000000     0.00000000
-     Average gamma =    13.88229229     0.00000000
-     Average gamma oscillation amplitude =    -0.01933565     0.00000000
 
      Data ready, starting to calculate observables...
 
-     Broadening =      0.00100000 Ry
+     Broadening =      0.50000000 meV
 
      Output file name: Fe.plot_chi.dat     
 
-     Output file name for the oscillator strength S  Fe.plot_S.dat       
-
-     chi_i_j: dipole polarizability tensor  in units of e^2*a_0^2/energy
-
-     Insufficent info for S
-
-     Functions are reported in \hbar.\omega  Energy unit is (eV)
+     chi_i_j: magnetization-magnetization tensor  in units of mu_B^2 / meV
  
-     TDDFPT_PP    :      1.39s CPU      1.50s WALL
+     TDDFPT_PP    :      0.01s CPU      0.01s WALL
 
  
-   This run was terminated on:  13: 1:14   1Jul2021            
+   This run was terminated on:  15:35:44   1Jun2022            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

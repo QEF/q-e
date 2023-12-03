@@ -403,7 +403,7 @@ MODULE io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_rhog ( filename, root_in_group, intra_group_comm, &
-         b1, b2, b3, gamma_only, mill, ig_l2g, rho, ecutrho )
+         b1, b2, b3, gamma_only, mill, ig_l2g, rho )
       !------------------------------------------------------------------------
       !! Collects rho(G), distributed on "intra_group_comm", writes it
       !! together with related information to file "filename".*
@@ -436,9 +436,6 @@ MODULE io_base
       !! if true, only the upper half of G-vectors (z >=0) is present
       COMPLEX(dp),      INTENT(IN) :: rho(:,:)
       !! rho(G) on this processor
-      REAL(DP),OPTIONAL,INTENT(IN) :: ecutrho
-      !! cut-off parameter for G-vectors, only the one in root node is
-      !! used, hopefully the same as in the other nodes.  
       !
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
       !! Local rho(G), with LSDA workaround
@@ -785,13 +782,6 @@ MODULE io_base
             rho(ig,ns) = rhoaux(ig)
          END DO
          ! 
-         IF ( nspin_ == 2 .AND. nspin == 4 .AND. ns == 2) THEN 
-            DO ig = 1, ngm 
-               rho(ig, 4 ) = rho(ig, 2) 
-               rho(ig, 2 ) = cmplx(0.d0,0.d0, KIND = DP) 
-               rho(ig, 3 ) = cmplx(0.d0,0.d0, KIND = DP)
-            END DO
-         END IF
       END DO
       !
 #if defined(__HDF5)

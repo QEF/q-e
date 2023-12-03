@@ -1,0 +1,19 @@
+&OSCDFT
+  warm_up_niter=5,
+  convergence_type='gradient',
+  optimization_method='gradient descent',
+  iteration_type=0,
+  min_conv_thr=0.1,
+  max_conv_thr=0.5,
+  final_conv_thr=0.001,
+  conv_thr_multiplier=0.9,
+  print_occupation_matrix=.true.,
+  print_occupation_eigenvectors=.true.,
+  min_gamma_n=0.3,
+  get_ground_state_first=.false.,
+  debug_print=.true.,
+  n_oscdft=2,
+/
+TARGET_OCCUPATION_NUMBER
+T 1 2(3d) 5 0.9 0.0
+F 2 2(3d)

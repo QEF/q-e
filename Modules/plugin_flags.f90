@@ -29,5 +29,6 @@ MODULE plugin_flags
   LOGICAL, PUBLIC :: use_pw2casino
   LOGICAL, PUBLIC :: use_environ
   LOGICAL, PUBLIC :: use_partn
+  LOGICAL, PUBLIC :: use_oscdft
   !
 END MODULE plugin_flags

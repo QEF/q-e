@@ -698,8 +698,11 @@ SUBROUTINE calculate_Hubbard_parameters()
   ! This routine calculates Hubbard parameters (U and V) from the inverse matrices
   ! of the susceptibility and writes them to file.
   !
+  USE upf_utils, ONLY : l_to_spdf
   IMPLICIT NONE
   INTEGER :: nt1, nt2
+  CHARACTER(len=2) :: Hubbard_manifold
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   ! Calculate the matrix of Hubbard parametres: CHI0^{-1} - CHI^{-1}
   !
@@ -719,18 +722,20 @@ SUBROUTINE calculate_Hubbard_parameters()
   !
   ! Write Hubbard U (i.e. diagonal elements of the Hubbard matrix)
   !
-  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------=",/)')
-  WRITE(unithub,'(27x,"Hubbard U parameters:",/)')
-  WRITE(unithub, '(7x,"site n.",2x,"type",2x,"label",2x,"spin",2x,"new_type",2x,"new_label",2x,"Hubbard U (eV)")')
+  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------------------=",/)')
+  WRITE(unithub,'(33x,"Hubbard U parameters:",/)')
+  WRITE(unithub, '(7x,"site n.",2x,"type",2x,"label",2x,"spin",2x,"new_type",2x,"new_label",2x,"manifold",2x,"Hubbard U (eV)")')
   DO na = 1, nat
      nt1 = ityp(na)
      nt2 = ityp_new(na)
      IF ( is_hubbard(nt1) ) THEN
-        WRITE(unithub,'(7x,i3,6x,i3,3x,a4,4x,i2,4x,i3,9x,a4,3x,f10.4)') &
-                & na, nt1, atm(nt1), spin(na), nt2, atm_new(nt2), Hubbard_matrix(na,na)
+        Hubbard_manifold = TRIM(int_to_char(Hubbard_n(nt1))) // &
+                                              l_to_spdf(Hubbard_l(nt1),.FALSE.)
+        WRITE(unithub,'(7x,i3,6x,i3,3x,a4,4x,i2,4x,i3,9x,a4,7x,a2,3x,f10.4)') &
+                & na, nt1, atm(nt1), spin(na), nt2, atm_new(nt2), Hubbard_manifold, Hubbard_matrix(na,na)
      ENDIF
   ENDDO
-  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------=",/)')
+  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------------------=",/)')
   !
   ! Write Hubbard parameters to file that can be directly used in the pw.x calculation
   !
@@ -800,7 +805,8 @@ SUBROUTINE write_uv (lflag)
   ! Write the Hubbard V parameters to file.
   ! V's are written in the order of increasing interatomic distances.
   !
-  USE parameters,   ONLY : sc_size
+  USE parameters, ONLY : sc_size
+  USE upf_utils,  ONLY : l_to_spdf
   !
   IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: dist(:), distord(:)
@@ -811,7 +817,6 @@ SUBROUTINE write_uv (lflag)
                     ! if .false. then do not write V to file
   CHARACTER(len=2) :: Hubbard_manifold, Hubbard_manifold2
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
   !
   ! Find and open unit to write info
   unithub2 = find_free_unit()

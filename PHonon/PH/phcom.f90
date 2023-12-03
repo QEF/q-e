@@ -112,8 +112,8 @@ MODULE nlcc_ph
   !
   SAVE
   !
-  COMPLEX (DP), ALLOCATABLE, TARGET :: drc(:,:) ! (ngm, ntyp)
-  !! contain the rhoc (without structure fac) for all atomic types.
+  REAL (DP), ALLOCATABLE, TARGET :: drc(:,:) ! (ngm, ntyp)
+  !! contain rho core (without structure fac) for all atomic types.
   !
 END MODULE nlcc_ph
 !
@@ -185,7 +185,21 @@ MODULE partial
   !! TRUE if this irr.rep. has been done
   LOGICAL :: all_comp
   !! if TRUE all representation have been computed
-  !
+  INTERFACE 
+    SUBROUTINE set_local_atomo(nat, nat_todo_, atomo_, nsym, irt,  nat_l, atomo_l) 
+      IMPLICIT NONE 
+      INTEGER,INTENT(IN)               :: nat, nat_todo_, nsym, atomo_(nat_todo_), irt(48,nat)
+      !! :nat: total number of atoms
+      !! :nat_todo: number of atoms effectively displaced 
+      !! :nsym: number of symmetries in the system
+      !! :atomo: list of atoms to be displaced before symmetrization 
+      !! :irt: atoms corresponding atom for each sym operation and atom
+      INTEGER,INTENT(OUT)              :: nat_l 
+      !! actual number of atoms to be displaced considering symmetries
+      INTEGER,ALLOCATABLE,INTENT(OUT)  :: atomo_l(:)
+      !! list with the indeces of all the atoms to be displaced 
+    END SUBROUTINE set_local_atomo
+  END INTERFACE
 END MODULE partial
 !
 MODULE gamma_gamma
@@ -216,7 +230,7 @@ MODULE control_ph
   !
   SAVE
   !
-  INTEGER, PARAMETER :: maxter = 100
+  INTEGER, PARAMETER :: maxter = 150
   !! maximum number of iterations
   INTEGER :: niter_ph
   !! maximum number of iterations (read from input)
@@ -320,6 +334,9 @@ MODULE control_ph
   !! if TRUE use new k-point grid nk1,nk2,nk3
   INTEGER :: nk1,nk2,nk3, k1,k2,k3
   !! new Monkhorst-Pack k-point grid
+  !
+  CHARACTER(LEN=256) :: dftd3_hess 
+  ! file from where the dftd3 hessian is read
   !
 END MODULE control_ph
 !

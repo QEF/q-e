@@ -6,7 +6,7 @@
 #  Jozef Stefan Institute, Ljubljana, Slovenia
 #  Email: tone.kokalj@ijs.si
 # ======================================================================
-#  Copyright (c) 2003--2022 Anton Kokalj
+#  Copyright (c) 2003--2023 Anton Kokalj
 # ======================================================================
 #
 #

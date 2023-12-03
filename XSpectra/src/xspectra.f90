@@ -71,6 +71,11 @@ PROGRAM X_Spectra
   USE edge_energy, ONLY: getE
   !</CG>
 
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : print_environ_clocks
+#endif
+
   IMPLICIT NONE 
   !
   ! ... local variables
@@ -106,6 +111,8 @@ PROGRAM X_Spectra
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'XSpectra' )
+
+  CALL plugin_arguments()
 
   CALL banner_xspectra()
 
@@ -409,6 +416,10 @@ PROGRAM X_Spectra
 
   CALL stop_clock( calculation  )
   CALL print_clock( calculation )
+
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_clocks()
+#endif
 
   WRITE (stdout, 1000)
   WRITE (stdout,'(5x,a)') '                           END JOB XSpectra'

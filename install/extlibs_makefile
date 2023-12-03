@@ -19,12 +19,7 @@ all: libcuda
 # LAPACK (includes BLAS)
 ###################################
 
-liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
-
-# lapack is external: don't do anything
-liblapack_external : 
-
-liblapack_internal:
+liblapack:
 	$(call update_submodule,external,lapack)
 	if test ! -e $(TOPDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
 	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \

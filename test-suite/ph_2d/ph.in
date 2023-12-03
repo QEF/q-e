@@ -1,0 +1,14 @@
+---
+ &inputph
+  recover=.false.
+  tr2_ph=1.0d-16,
+  prefix='bn',
+  amass(1)=10.811,
+  amass(2)=14.0067,
+  outdir='./',
+  fildyn='bn.dyn',
+  fildvscf='dvscf'
+  ldisp=.true.,
+  epsil=.true.,
+  nq1=2, nq2=2, nq3=1
+ /

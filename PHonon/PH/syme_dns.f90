@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,7 +32,7 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   !
   ! ... local variables
   !
-  INTEGER :: nt, n, counter, l, ip, jp, na, nb, is, m1, m2, &
+  INTEGER :: nt, n, l, ip, jp, na, nb, is, m1, m2, &
              m0, m00, isym, irot
   COMPLEX(DP), ALLOCATABLE :: dnr(:,:,:,:,:), dnraux(:,:,:,:,:)
   !
@@ -41,18 +41,6 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   ! Initialization
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
-  !
-  counter = 0  
-  DO na = 1, nat
-     nt = ityp(na)
-     IF (.NOT.is_hubbard(nt)) CYCLE
-     DO n = 1, upf(nt)%nwfc
-        l = upf(nt)%lchi(n)
-        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) &
-           counter = counter + 2 * l + 1
-     ENDDO
-  ENDDO
-  IF (counter.NE.nwfcU) CALL errore ('syme_dns', 'nwfcU<>counter', 1)
   !
   ALLOCATE (dnraux(ldim,ldim,nspin,nat,npe))  
   ALLOCATE (dnr(ldim,ldim,nspin,nat,npe))  

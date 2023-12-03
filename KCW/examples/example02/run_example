@@ -1,0 +1,214 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, kcw.x"
+$ECHO "to calculate the KI electronic structure of the H2O molecule. "
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x kcw.x"
+PSEUDO_LIST="H_ONCV_PBE-1.0.upf  O_ONCV_PBE-1.0.upf"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+#Overwrite NETWORK_PSEUDO
+NETWORK_PSEUDO=http://www.quantum-simulation.org/potentials/sg15_oncv/upf/
+
+# check for pseudopotentials
+$ECHO "  checking that pseudopotentials files exist      ...\c"
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+KCW_COMMAND="$PARA_PREFIX $BIN_DIR/kcw.x $PARA_POSTFIX"
+KCW_COMMAND_noPOSTFIX="$PARA_PREFIX $BIN_DIR/kcw.x"
+$ECHO
+$ECHO "  running pw.x as:   $PW_COMMAND"
+$ECHO "  running kcw.x as:   $KCW_COMMAND_noPOSTFIX"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='h2o'
+
+# self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+&CONTROL
+  calculation='scf'
+  restart_mode='from_scratch',
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  pseudo_dir = '$PSEUDO_DIR/'
+  verbosity='high'
+ /
+&SYSTEM
+  ecutwfc =   45.0
+  ibrav = 0
+  input_dft = 'PBE'
+  nat = 3
+  nspin = 2
+  ntyp = 2
+  nbnd = 8
+  assume_isolated='mt'
+  tot_magnetization = 0.0
+/
+&ELECTRONS
+  diagonalization='david'
+  mixing_mode = 'plain'
+  mixing_beta = 0.7
+  conv_thr =  0.5d-12
+/
+ATOMIC_SPECIES
+H 1 H_ONCV_PBE-1.0.upf
+O 1 O_ONCV_PBE-1.0.upf
+
+ATOMIC_POSITIONS angstrom
+O 6.7571 6.0000 5.9023166667
+H 7.5142 6.0000 6.4884166667
+H 6.0000 6.0000 6.4884166667
+
+CELL_PARAMETERS angstrom
+9.5142 0.0 0.0
+0.0 8.0 0.0
+0.0 0.0 8.5861
+
+K_POINTS automatic
+1 1 1 0 0 0
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX...\c"
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+cat > $PREFIX.kcw-wann2kcw.in << EOF
+W2K h2o
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  kcw_iverbosity = 2
+  kcw_at_ks=.true.
+  read_unitary_matrix = .false.
+  calculation = 'wann2kcw'
+  mp1 = 1
+  mp2 = 1
+  mp3 = 1
+/
+EOF
+
+$ECHO "  Running the interface to KCW for $PREFIX...\c"
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-wann2kcw.in > $PREFIX.kcw-wann2kcw.out
+$ECHO " done"
+
+
+
+cat > $PREFIX.kcw-screen.in << EOF
+KCW h2o screen
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  kcw_iverbosity = 2
+  kcw_at_ks=.true.
+  read_unitary_matrix = .false.
+  assume_isolated = 'mt'
+  calculation = 'screen'
+  lrpa =.false.
+  mp1 = 1
+  mp2 = 1
+  mp3 = 1
+/
+&screen
+  tr2    =1.0d-18
+  nmix   = 4
+  niter  = 33
+ /
+EOF
+
+$ECHO "  Running the screening parameter calculation for $PREFIX...\c"
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-screen.in > $PREFIX.kcw-screen.out
+$ECHO " done"
+
+cat > $PREFIX.kcw-ham.in << EOF
+KCW H2O KI hamiltonian
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR'
+  kcw_iverbosity = 1
+  kcw_at_ks=.true.
+  homo_only = .false.
+  read_unitary_matrix = .false.
+  assume_isolated = 'mt'
+  calculation = 'ham'
+  lrpa =.false.
+  mp1 = 1
+  mp2 = 1
+  mp3 = 1
+/
+&ham
+  do_bands = .false.
+  use_ws_distance = .false.
+  write_hr = .true.
+  l_alpha_corr = .true.
+/
+EOF
+
+$ECHO "  Running the KI hamiltonian calculation for $PREFIX...\c"
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
+$ECHO " done"

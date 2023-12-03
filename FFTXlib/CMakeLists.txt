@@ -125,6 +125,10 @@ SET(BLA_VENDOR ${BLA_VENDOR_SAVED})
 
 add_subdirectory(src)
 
+###########################################################
+# Tests
+# TODO move all tests to a proper location
+###########################################################
 if(QE_ENABLE_TEST)
     add_subdirectory(tests)
 endif()

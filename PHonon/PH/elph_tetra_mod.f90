@@ -82,7 +82,7 @@ SUBROUTINE elph_tetra_lambda()
   ! list of vectors in the star of q
   COMPLEX(DP) :: dyn22(3*nat,3*nat)
   CHARACTER(LEN=256) :: elph_dir
-  LOGICAL  :: exst, xmldyn_save
+  LOGICAL  :: xmldyn_save
   !  
   DO irr=1,nirr
      IF (.NOT.done_elph(irr)) RETURN
@@ -228,9 +228,7 @@ SUBROUTINE elph_tetra_lambda()
   !    Prepare interface to q2r and matdyn
   !
   elph_dir='elph_dir/'
-  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, intra_image_comm) 
-  IF (.NOT.exst) CALL create_directory( elph_dir )
+  CALL create_directory( elph_dir )
   !
   call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
   !
@@ -543,7 +541,7 @@ SUBROUTINE elph_tetra_gamma()
   ! list of vectors in the star of q
   COMPLEX(DP) :: dyn22(3*nat,3*nat)
   CHARACTER(LEN=256) :: elph_dir
-  LOGICAL  :: exst, xmldyn_save
+  LOGICAL  :: xmldyn_save
   !
   DO irr=1,nirr
      IF (.NOT.done_elph(irr)) RETURN
@@ -687,9 +685,7 @@ SUBROUTINE elph_tetra_gamma()
   !    Prepare interface to q2r and matdyn
   !
   elph_dir='elph_dir/'
-  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, intra_image_comm) 
-  IF (.NOT.exst) CALL create_directory( elph_dir )
+  CALL create_directory( elph_dir )
   !
   call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
   !

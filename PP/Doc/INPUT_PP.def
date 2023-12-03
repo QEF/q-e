@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program pp.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x {
 
     toc {}
 
@@ -206,6 +206,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         in pw.x calculation.
                     }
                 }
+
+                var use_gauss_ldos -type LOGICAL {
+                    default {.false.}
+                    status OPTIONAL
+                    info {
+                        If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
+
+                        Defaults .false., in which case the broadening scheme
+                        of the pw.x calculation will be used.
+                    }
+                }
+
             }
             
             elsewhen -test "plot_num=5" {

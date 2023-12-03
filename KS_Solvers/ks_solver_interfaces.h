@@ -6,8 +6,8 @@
 !
 
 INTERFACE rotate_xpsi
-  SUBROUTINE rotate_xpsi_driver &
-    ( npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e, use_para_diag, gamma_only )
+  SUBROUTINE rotate_xpsi_driver ( h_psi_ptr, s_psi_ptr, &
+      npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e, use_para_diag, gamma_only )
     !
     IMPORT :: DP  
     IMPLICIT NONE
@@ -31,10 +31,11 @@ INTERFACE rotate_xpsi
     !! if true parallel diagonalization will be used 
     LOGICAL,INTENT(IN) :: gamma_only
     !! set to true when H  is real 
+    EXTERNAL :: h_psi_ptr, s_psi_ptr
   END SUBROUTINE rotate_xpsi_driver 
 #if defined (__CUDA) 
-  SUBROUTINE rotate_xpsi_driver_cuf & 
-    ( npwx, npw, nstart, nbnd, psi_d, npol, overlap, evc_d, hevc_d, sevc_d, e_d, use_para_diag, gamma_only )
+  SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dptr, &
+      npwx, npw, nstart, nbnd, psi_d, npol, overlap, evc_d, hevc_d, sevc_d, e_d, use_para_diag, gamma_only )
   !! Driver routine for Hamiltonian diagonalization in the subspace 
   !! spanned by nstart states psi ( atomic or random wavefunctions ).
   !! Interface for the CUDA-Fortran case. 
@@ -64,6 +65,7 @@ INTERFACE rotate_xpsi
   LOGICAL, INTENT(IN) :: gamma_only 
   !! set to true if H matrix is real 
   attributes(DEVICE)       :: psi_d, evc_d, hevc_d, sevc_d, e_d
+  EXTERNAL :: h_psi_hptr, h_psi_dptr, s_psi_hptr, s_psi_dptr 
 END SUBROUTINE rotate_xpsi_driver_cuf
 #endif 
 END INTERFACE 

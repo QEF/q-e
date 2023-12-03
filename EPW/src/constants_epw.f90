@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -32,6 +33,9 @@
   REAL(KIND = DP), PARAMETER :: pibytwo  = pi / 2.0E0_DP
   REAL(KIND = DP), PARAMETER :: one      = 1.0E0_DP
   REAL(KIND = DP), PARAMETER :: two      = 2.0E0_DP
+  REAL(KIND = DP), PARAMETER :: thre     = 3.0E0_DP
+  REAL(KIND = DP), PARAMETER :: four     = 4.0E0_DP
+  REAL(KIND = DP), PARAMETER :: half     = 0.5E0_DP
   REAL(KIND = DP), PARAMETER :: zero     = 0.0E0_DP
   REAL(KIND = DP), PARAMETER :: e2       = 2.0E0_DP             ! the square of the electron charge
   COMPLEX(KIND = DP), PARAMETER :: ci    = (0.0E0_DP, 1.0E0_DP)
@@ -61,6 +65,7 @@
   REAL(KIND = DP), PARAMETER :: mev2invps= 1.0 / mev2ps               ! 1.51926746069
   REAL(KIND = DP), PARAMETER :: byte2Mb  = 7.62939453125E-6_DP        ! 8 / (1024 * 1024) because 8 bytes per number, value in Mb
   REAL(KIND = DP), PARAMETER :: kb       = k_boltzmann_si / electronvolt_si ! 8.6173324d-05 eV/K
+  REAL(KIND = DP), PARAMETER :: cc2cb    = 6.74822779181357d24        ! cubic cm to cubic bohr 
   !
   ! ... zero up to a given accuracy
   !

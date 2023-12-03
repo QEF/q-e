@@ -27,17 +27,26 @@ PROGRAM lr_dav_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,  ONLY : psic
-  USE control_flags,         ONLY : do_makov_payne
+  USE control_flags,         ONLY : do_makov_payne, use_gpu
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE xc_lib,                ONLY : xclib_dft_is
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : print_environ_summary
+#endif
+  !
   IMPLICIT NONE
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
   LOGICAL            :: rflag, nomsg
   complex(dp)            :: temp
+  LOGICAL, EXTERNAL  :: check_gpu_support
+
+  use_gpu = check_gpu_support()
+  if(use_gpu) Call errore('lr_dav_main', 'turbo_davidson with GPU NYI', 1)
 
 #if defined(__MPI)
   CALL mp_startup ( )
@@ -55,7 +64,9 @@ PROGRAM lr_dav_main
 
   ! Writing a summary of plugin variables
 
-  CALL plugin_summary()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
 
   CALL check_stop_init()
 

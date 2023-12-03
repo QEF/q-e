@@ -26,6 +26,13 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   USE parameters,         ONLY : npk
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, nspin
   USE constants,          ONLY : degspin
+  USE rism_module,        ONLY : lrism, rism_set_restart
+
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : read_environ_input, init_environ_setup, &
+                                  print_environ_summary
+#endif
 
   IMPLICIT NONE 
 
@@ -36,7 +43,15 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   CALL read_k_points()
   
   nkstot=nks
-  
+
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+    CALL read_environ_input()
+    CALL init_environ_setup("XS")
+    CALL print_environ_summary()
+  END IF
+#endif
+
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
 
   ! ... Setting the values for the nscf run
@@ -44,6 +59,8 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   startingconfig    = 'input'
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
+  !
+  IF (lrism) CALL rism_set_restart()
   !
   ! DFT+U(+V) case
   !
@@ -55,7 +72,6 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
      !
      ! ... Reallocate and set-up Hubbard-related quantities
      !
-     IF (lda_plus_u_kind == 2) CALL read_V  
      CALL init_hubbard ( upf(1:ntyp)%psd, nspin, noncolin )
      !
      ! ... Initialize d1, d2, and d3 to rotate the spherical harmonics

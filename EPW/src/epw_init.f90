@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -34,7 +35,6 @@
   USE wavefunctions,    ONLY : evc
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag, lspinorb
   USE uspp_param,       ONLY : upf, nhm
-  USE m_gth,            ONLY : setlocq_gth
   USE units_lr,         ONLY : lrwfc, iuwfc
   USE phcom,            ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
@@ -48,6 +48,8 @@
   USE poolgathering,    ONLY : poolgather_int, poolgather_int1
   USE io_epw,           ONLY : readwfc
   USE dvqpsi,           ONLY : dvanqq2
+  USE Coul_cut_2D,      ONLY : do_cutoff_2D
+  USE Coul_cut_2D_ph,   ONLY : cutoff_lr_Vlocq, cutoff_fact_qg
   USE scf,              ONLY : v, vltot
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft
@@ -55,7 +57,6 @@
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
-  USE epwcom,           ONLY : polaron_wf
   USE grid,             ONLY : loadqmesh_serial, loadkmesh_para
   ! --------------------------------------------------------------------------------
   !
@@ -158,20 +159,10 @@
   IF (nlcc_any) CALL set_drhoc(xq, drc)
   !
   ! ... b) the fourier components of the local potential at q+G
+  !        From PHonon/PH/phq_init.f90
   !
-  vlocq(:, :) = zero
-  !
-  DO nt = 1, ntyp
-    !
-    IF (upf(nt)%is_gth) THEN
-      CALL setlocq_gth(nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1, nt))
-    ELSE
-      CALL setlocq(xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
-                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1, nt))
-    ENDIF
-    !
-  END DO
-  !
+  CALL init_vlocq ( xq ) 
+  ! 
   IF (first_run) THEN
     ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_init', 'Error allocating igk_k_all', 1)
@@ -236,16 +227,6 @@
     CALL dvanqq2()
   ENDIF
   !
-  ! ------------------------------------------------------------------------------- 
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use. 
-  ! IF (polaron_wf) then
-  !   CALL loadqmesh_serial
-  !    CALL loadkmesh_para
-  !    CALL KSstate_extract()
-  !   STOP
-  ! ENDIF
-  ! -------------------------------------------------------------------------------
   !
   CALL stop_clock('epw_init')
   !

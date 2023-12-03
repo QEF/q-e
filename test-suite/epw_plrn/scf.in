@@ -1,0 +1,29 @@
+&CONTROL
+  calculation  = 'scf'
+  pseudo_dir   = '../../pseudo/',
+  outdir       = './',
+  prefix       = 'lif',
+  tprnfor      = .true.,
+  tstress      = .true.,
+/
+&SYSTEM
+  ibrav        = 2,
+  celldm(1)    = 7.560876585,
+  nat          = 2, 
+  ntyp         = 2, 
+  ecutwfc      = 60.0,
+  occupations  = 'fixed'
+/
+&ELECTRONS
+  diagonalization = 'david'
+  mixing_beta     = 0.7
+  conv_thr        = 1.0d-12
+/
+ATOMIC_SPECIES
+  Li    6.941       Li.pbe-mt_fhi.UPF
+  F    18.998403    F.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS crystal
+  Li  0.0 0.0 0.0
+  F   0.5 0.5 0.5
+K_POINTS automatic
+  4 4 4 0 0 0

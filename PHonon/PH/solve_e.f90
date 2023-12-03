@@ -94,18 +94,22 @@ subroutine solve_e
   !! the becsum with dpsi
   COMPLEX(DP), ALLOCATABLE :: mixin(:), mixout(:)
   !! auxiliary for paw mixing
+  INTEGER :: nnr
   !
   call start_clock ('solve_e')
   !
   !  This routine is task group aware
   !
   allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
+  nnr = dfftp%nnr
   dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin_mag, 3))
+     nnr = dffts%nnr
   else
      dvscfins => dvscfin
   endif
+  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1:3))
   allocate (dvscfout(dfftp%nnr, nspin_mag, 3))
   IF (okpaw) THEN
      ALLOCATE (mixin(dfftp%nnr*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
@@ -161,7 +165,8 @@ subroutine solve_e
            CALL get_buffer(evc, lrwfc, iuwfc, ikk)
         ENDIF
         !
-        CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb)
+        CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb, .true.)
+        !$acc update host(vkb)
         !
         ! computes P_c^+ x psi_kpoint, written to buffer iuebar.
         !
@@ -319,6 +324,7 @@ subroutine solve_e
      DEALLOCATE(mixin)
      DEALLOCATE(mixout)
   ENDIF
+  !$acc exit data delete(dvscfins)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -127,11 +127,10 @@ EOF
     check_failure $?
     $ECHO " done"
 
-    #calculation of head 
+    #calculation of head
     cat > si_head.in << EOF
 calculation of head
  &inputph
-  trans=.false.
   l_head=.true.
   tr2_ph=1.d-4,
   prefix='si',
@@ -193,9 +192,9 @@ EOF
 
 
 
-    #pw4gww calculations 
+    #pw4gww calculations
     cat > si_pw4gww.in << EOF
-&inputpw4gww    
+&inputpw4gww
     prefix='si'
     num_nbndv(1)=16
     num_nbnds=32
@@ -246,7 +245,7 @@ EOF
     $ECHO  "copying self-energy files..\c"
     cp $TMP_DIR/si-im_on_im* .
     cp $TMP_DIR/si-re_on_im* .
-	 
+
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"

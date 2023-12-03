@@ -8,6 +8,7 @@ namespace eval ::helpdoc::schema {
     proc attribute   {name code} { uplevel 1 [list ::helpdoc::attribute $name $code] }
     proc @           {name code} { uplevel 1 [list ::helpdoc::@ $name $code] }
     
+    proc empty       {}          { uplevel 1 [list ::helpdoc::empty] }
     proc word        {}          { uplevel 1 [list ::helpdoc::word] }
     proc string      {}          { uplevel 1 [list ::helpdoc::String] }
     proc text        {}          { uplevel 1 [list ::helpdoc::text] }
@@ -513,9 +514,9 @@ proc ::helpdoc::xml_atTags {content} {
 
 
 proc ::helpdoc::txt_atTags {content} {
-    # PURPOSE: either ignore all specially treat all instances of
-    # @tag's within the $content with as to get read of @tags in the
-    # generated TXT representation
+    # PURPOSE: either ignore or process all instances of @tag's within
+    # the $content as to get read of @tags in the generated TXT
+    # representation
     variable xml_re
 
     # special processing for tag: hr

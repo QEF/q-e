@@ -21,6 +21,7 @@ SUBROUTINE add_shift_cc (shift_cc)
   USE gvect, ONLY: ngm, gstart, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
+  USE rhoc_mod, ONLY : interp_rhc
   USE scf, ONLY: rho, rho_core, rhog_core
   USE control_flags, ONLY: gamma_only
   USE wavefunctions,    ONLY : psic
@@ -87,8 +88,7 @@ SUBROUTINE add_shift_cc (shift_cc)
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
 
-        CALL drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
-             rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
+        CALL interp_rhc (nt, ngl, gl, tpiba2, rhocg)
         DO na = 1, nat
            IF (nt == ityp (na) ) THEN
               IF (gstart==2)  shift_(na) = omega * rhocg (igtongl (1) ) * &

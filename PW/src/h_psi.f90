@@ -87,14 +87,14 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp, calbec
+  USE becmod,                  ONLY: becp, calbec
   USE lsda_mod,                ONLY: current_spin
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin
   USE uspp,                    ONLY: vkb, nkb
   USE ldaU,                    ONLY: lda_plus_u, Hubbard_projectors
   USE gvect,                   ONLY: gstart
-  USE control_flags,           ONLY: gamma_only
+  USE control_flags,           ONLY: gamma_only, scissor
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                                      calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,  &
@@ -103,11 +103,15 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
+  USE sci_mod,                 ONLY: p_psi
   USE fft_helper_subroutines
   !
-  USE wvfct_gpum,              ONLY: using_g2kin
   USE scf_gpum,                ONLY: using_vrs
-  USE becmod_subs_gpum,        ONLY: using_becp_auto
+#if defined(__OSCDFT)
+  USE plugin_flags,            ONLY : use_oscdft
+  USE oscdft_base,             ONLY : oscdft_ctx
+  USE oscdft_functions,        ONLY : oscdft_h_psi
+#endif
   !
   IMPLICIT NONE
   !
@@ -130,7 +134,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
 
-  CALL using_g2kin(0)
   CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
 
 
@@ -155,7 +158,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( gamma_only ) THEN
      ! 
      IF ( real_space .AND. nkb > 0  ) THEN
-        CALL using_becp_auto(1)
         !
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
@@ -195,8 +197,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        CALL using_becp_auto(1)  ! WHY IS THIS HERE?
-
         IF ( dffts%has_task_groups ) &
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
         !
@@ -229,8 +229,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
-     CALL using_becp_auto(1)
-     !
      CALL start_clock( 'h_psi:calbec' )
      CALL calbec( n, vkb, psi, becp, m )
      CALL stop_clock( 'h_psi:calbec' )
@@ -254,6 +252,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   ENDIF
   !
+  ! ... apply scissor operator
+  !
+  IF (scissor) call p_psi(lda,n,m,psi,hpsi) 
+  !
   ! ... Here the exact-exchange term Vxx psi
   !
   IF ( exx_is_active() ) THEN
@@ -264,7 +266,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL vexxace_k( lda, m, psi, ee, hpsi )
         ENDIF
      ELSE
-        CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi, hpsi, becp )
      ENDIF
   ENDIF
@@ -282,6 +283,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      ENDIF
      !
   ENDIF
+#if defined(__OSCDFT)
+  IF ( use_oscdft ) THEN
+     CALL oscdft_h_psi(oscdft_ctx, lda, n, m, psi, hpsi)
+  END IF
+#endif
   !
   ! ... With Gamma-only trick, Im(H*psi)(G=0) = 0 by definition,
   ! ... but it is convenient to explicitly set it to 0 to prevent trouble

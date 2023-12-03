@@ -11,8 +11,6 @@ rotate_HSpsi_k.o \
 rotate_wfc_gamma.o \
 rotate_wfc_k.o \
 rotate_driver.o \
-rotate_HSpsi_gamma_gpu.o \
-rotate_HSpsi_k_gpu.o \
 rotate_wfc_gamma_gpu.o \
 rotate_wfc_k_gpu.o \
 rotate_driver_cuf.o \

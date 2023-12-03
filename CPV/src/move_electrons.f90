@@ -10,8 +10,7 @@
 SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
             enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine updates the electronic degrees of freedom
+  !! This routine updates the electronic degrees of freedom.
   !
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
@@ -20,7 +19,6 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
                                    drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp,  &
                                    taub, lambda, lambdam, lambdap, vpot, dbec, idesc
   USE cell_base,            ONLY : omega, ibrav, h, press
-  USE pseudo_base,          ONLY : vkb_d
   USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp, nbsp_bgrp
@@ -157,10 +155,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      CALL newd( vpot, becsum, fion, tprint )
      !
-     CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-     CALL dev_memcpy( vkb_d, vkb )
-#endif
+     CALL prefor( eigr, vkb ) 
+     !
+     !$acc update device(vkb)
      !
      IF( force_pairing ) THEN
         !
@@ -185,7 +182,11 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
 #if defined (__CUDA)
-        CALL nlfq_bgrp( c0_d, vkb_d, bec_bgrp, becdr_bgrp, fion )
+        !$acc data present(vkb)
+        !$acc host_data use_device(vkb)
+        CALL nlfq_bgrp( c0_d, vkb, bec_bgrp, becdr_bgrp, fion )
+        !$acc end host_data 
+        !$acc end data 
 #else
         CALL nlfq_bgrp( c0_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
 #endif
@@ -212,7 +213,11 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      ! ... the electron mass rises with g**2
      !
 #if defined (__CUDA)
-     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb_d, phi, nbspx_bgrp, ema0bg )
+     !$acc data present(vkb)
+     !$acc host_data use_device(vkb)
+     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+     !$acc end host_data
+     !$acc end data
 #else
      CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
 #endif
