@@ -5396,7 +5396,7 @@ SUBROUTINE compute_amn_with_scdm
    USE mp,              ONLY : mp_bcast, mp_barrier, mp_sum
    USE mp_world,        ONLY : world_comm
    USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, my_pool_id, &
-                               me_pool, root_pool
+                               me_pool, root_pool, nproc_pool
    USE wvfct,           ONLY : nbnd, et, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions,   ONLY : evc, psic, psic_nc
@@ -5417,7 +5417,7 @@ SUBROUTINE compute_amn_with_scdm
    !
    INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, ib, gamma_idx, &
               minmn, minmn2, ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, &
-              nxxs, count_piv_spin_up, m, ibnd_m
+              nxxs, count_piv_spin_up, m, ibnd_m, ipol
    REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3), rpos_cart(3)
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp
@@ -5463,11 +5463,6 @@ SUBROUTINE compute_amn_with_scdm
    !
    CALL start_clock( 'compute_amn' )
    !
-   ! vv: Error for using SCDM with Ultrasoft pseudopotentials
-   !IF (okvan) THEN
-   !   call errore('pw2wannier90','The SCDM method does not work with Ultrasoft pseudopotential yet.',1)
-   !ENDIF
-   !
    ALLOCATE(et_k(num_bands))
    ALLOCATE(evc_k(npol*npwx, num_bands))
    !
@@ -5487,45 +5482,43 @@ SUBROUTINE compute_amn_with_scdm
 #if defined(__SCALAPACK_QRCP)
    ! Dimensions of the process grid
    nprow = 1
-   npcol = nproc
+   npcol = nproc_pool
    ! Initialization of a default BLACS context and the processes grid
    call blacs_get( -1, 0, context )
    call blacs_gridinit( context, 'Row-major', nprow, npcol )
    call blacs_gridinfo( context, nprow, npcol, myrow, mycol )
-   call descinit(descG, numbands, npol*nrtot, minmn, minmn, 0, 0, context, max(1,minmn), info)
+   call descinit(descG, num_bands, npol*nrtot, minmn, minmn, 0, 0, context, max(1,minmn), info)
    ! Global blocks
    nblocks = npol*nrtot / minmn
    rem = MOD(npol*nrtot, minmn)
    IF (rem > 0) nblocks = nblocks + 1
    ! Local blocks
-   nblocks_loc = nblocks / nproc
-   rem_loc = MOD(nblocks, nproc)
-   IF (mpime < rem_loc) nblocks_loc = nblocks_loc + 1
-   ALLOCATE(piv_p(minmn*nblocks_loc))
-   piv_p(:) = 0
+   nblocks_loc = nblocks / nproc_pool
+   rem_loc = MOD(nblocks, nproc_pool)
+   IF (me_pool < rem_loc) nblocks_loc = nblocks_loc + 1
    ALLOCATE(psi_gamma(minmn*nblocks_loc,minmn))
    ALLOCATE(piv(minmn))
 #else
    ALLOCATE(piv(npol*nrtot))
-   ALLOCATE(rwork(2*npol*nrtot))
    ALLOCATE(psi_gamma(npol*nrtot,num_bands))
    piv(:) = 0
-   rwork(:) = 0.0_DP
 #endif
    !
-   minmn2 = MIN(numbands,n_wannier)
+   minmn2 = MIN(num_bands,n_wannier)
    ALLOCATE(rwork2(5*minmn2))
    !
    ALLOCATE(piv_pos(n_wannier))
    ALLOCATE(piv_spin(n_wannier))
    ALLOCATE(rpos(3, n_wannier))
    ALLOCATE(psic_all(nxxs, npol))
+   ALLOCATE(psic_1d(npol * nrtot))
    ALLOCATE(phase(n_wannier))
    ALLOCATE(singval(n_wannier))
    ALLOCATE(Umat(num_bands,n_wannier))
    ALLOCATE(VTmat(n_wannier,n_wannier))
    ALLOCATE(Amat(num_bands,n_wannier))
    ALLOCATE(phase_g(npwx, n_wannier))
+   ALLOCATE(nowfc(n_wannier, num_bands))
    !
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
    !
@@ -5612,11 +5605,13 @@ SUBROUTINE compute_amn_with_scdm
          !
          ! vv: Gamma only
          ! vv: Build Psi_k = Unk * focc
-         norm_psi = SQRT(SUM( ABS(psic_all(1:nrtot, 1))**2 ))
+         norm_psi = SQRT(SUM( ABS(psic_1d)**2 ))
 #if defined(__SCALAPACK_QRCP)
+         CALL mp_bcast(norm_psi, root_pool, intra_pool_comm)
+         CALL mp_bcast(psic_1d, root_pool, intra_pool_comm)
          DO ibl = 0, nblocks_loc-1
             psi_gamma(minmn*ibl+1:minmn*(ibl+1), ibnd) = &
-               psic_1d(minmn*(ibl*nproc+mpime)+1:minmn*(ibl*nproc+mpime+1)) * (focc / norm_psi)
+               psic_1d(minmn*(ibl*nproc_pool+me_pool)+1:minmn*(ibl*nproc_pool+me_pool+1)) * (focc / norm_psi)
          ENDDO
 #else
          psi_gamma(1:nrtot, ibnd) = psic_1d(1:nrtot) * (focc / norm_psi)
@@ -5627,8 +5622,11 @@ SUBROUTINE compute_amn_with_scdm
       ! Run QRCP
       !
 #if defined(__SCALAPACK_QRCP)
-      WRITE(stdout, '(5x,A,I4,A)') "Running QRCP in parallel, using ", nproc, " cores"
-      CALL PZGEQPF( numbands, nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
+      WRITE(stdout, '(5x,A,I4,A)') "Running QRCP in parallel, using ", nproc_pool, " cores"
+      ALLOCATE(piv_p(minmn*nblocks_loc))
+      piv_p(:) = 0
+      !
+      CALL PZGEQPF( num_bands, npol*nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
                     tmp_cwork, -1, tmp_rwork, -1, info )
       !
       lcwork = AINT(REAL(tmp_cwork(1)))
@@ -5638,26 +5636,29 @@ SUBROUTINE compute_amn_with_scdm
       rwork(:) = 0.0
       cwork(:) = CMPLX(0.0, 0.0)
       !
-      CALL PZGEQPF( numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), 1, 1, descG, piv_p, qr_tau, &
+      CALL PZGEQPF( num_bands, npol*nrtot, TRANSPOSE(CONJG(psi_gamma)), 1, 1, descG, piv_p, qr_tau, &
                     cwork, lcwork, rwork, lrwork, info )
       !
-      IF (ionode) piv(1:minmn) = piv_p(1:minmn)
-      CALL mp_bcast(piv(1:minmn), ionode_id, world_comm)
+      IF (me_pool == root_pool) piv(1:minmn) = piv_p(1:minmn)
+      CALL mp_bcast(info, root_pool, intra_pool_comm)
+      CALL mp_bcast(piv, root_pool, intra_pool_comm)
       DEALLOCATE(piv_p)
-      DEALLOCATE(rwork)
       DEALLOCATE(cwork)
+      DEALLOCATE(rwork)
 #else
       WRITE(stdout, '(5x, "Running QRCP in serial")')
 #if defined(__SCALAPACK)
       WRITE(stdout, '(10x, A)') "Program compiled with ScaLAPACK but not using it for QRCP."
       WRITE(stdout, '(10x, A)') "To enable ScaLAPACK for QRCP, use valid versions"
       WRITE(stdout, '(10x, A)') "(ScaLAPACK >= 2.1.0 or MKL >= 2020) and set the argument"
-      WRITE(stdout, '(10x, A)') "'with-scalapack_version' in configure."
+      WRITE(stdout, '(10x, A)') "'with-scalapack-qrcp' in configure."
 #endif
       ! vv: Perform QR factorization with pivoting on Psi_Gamma
       ! vv: Preliminary call to define optimal values for lwork and cwork size
       ! Perform QR factorization only in a single processer
       IF(me_pool == root_pool) THEN
+         ALLOCATE(rwork(2*npol*nrtot))
+         rwork(:) = 0.0_DP
          CALL ZGEQP3(num_bands, npol*nrtot, TRANSPOSE(CONJG(psi_gamma)), num_bands, &
             piv, qr_tau, tmp_cwork, -1, rwork, info)
          IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
@@ -5667,6 +5668,7 @@ SUBROUTINE compute_amn_with_scdm
          CALL ZGEQP3(num_bands, npol*nrtot, TRANSPOSE(CONJG(psi_gamma)), num_bands, &
             piv, qr_tau, cwork, lcwork, rwork, info)
          DEALLOCATE(cwork)
+         DEALLOCATE(rwork)
       ENDIF
       CALL mp_bcast(info, root_pool, intra_pool_comm)
       CALL mp_bcast(piv, root_pool, intra_pool_comm)
@@ -5848,7 +5850,6 @@ SUBROUTINE compute_amn_with_scdm
    DEALLOCATE(piv_pos)
    DEALLOCATE(piv_spin)
    DEALLOCATE(qr_tau)
-   DEALLOCATE(rwork)
    DEALLOCATE(rwork2)
    DEALLOCATE(rpos)
    DEALLOCATE(Umat)
