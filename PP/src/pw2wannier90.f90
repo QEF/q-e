@@ -5884,616 +5884,595 @@ SUBROUTINE compute_amn_with_scdm
 END SUBROUTINE compute_amn_with_scdm
 
 SUBROUTINE compute_amn_with_atomproj
-  ! Use internal UPF atomic projectors or external projectors
-  ! to compute amn matrices.
-  !
-  ! The code is roughly the same as projwfc.x with some entensions:
-  ! 1. allow using external projectors (i.e. custom radial functions)
-  ! 2. allow skipping orthogonalization of projectors
-  ! 3. allow excluding projectors specified by user
-  ! 4. allow excluding bands specified by user
-  !
-  USE kinds, ONLY: DP
-  USE io_global, ONLY: stdout, ionode, ionode_id
-  USE ions_base, ONLY: nat, ityp, atm, nsp
-  USE basis, ONLY: natomwfc, swfcatom
-  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
-  USE lsda_mod, ONLY: nspin
-  USE noncollin_module, ONLY: noncolin, npol, lspinorb, domag
-  USE wvfct, ONLY: npwx, nbnd
-  USE uspp, ONLY: nkb, vkb
-  USE uspp_init, ONLY : init_us_2
-  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files, ONLY: prefix, restart_dir, tmp_dir
-  USE control_flags, ONLY: gamma_only, use_para_diag
-  USE pw_restart_new, ONLY: read_collected_wfc
-  USE wavefunctions, ONLY: evc
-  !
-  USE projections, ONLY: nlmchi, fill_nlmchi, compute_mj, &
-                         sym_proj_g, sym_proj_k, sym_proj_nc, sym_proj_so, &
-                         compute_zdistmat, compute_ddistmat, &
-                         wf_times_overlap, wf_times_roverlap
-  !
-  USE mp, ONLY: mp_bcast
-  USE mp_pools, ONLY: me_pool, root_pool, intra_pool_comm
-  USE mp_world, ONLY: world_comm
-  USE wannier
-  USE atproj, ONLY: atom_proj_dir, atom_proj_ext, atom_proj_ortho, &
-                    atom_proj_sym, natproj, nexatproj, nexatproj_max, &
-                    atproj_excl, atproj_typs, &
-                    atom_proj_exclude, write_file_amn, &
-                    allocate_atproj_type, read_atomproj, init_tab_atproj, &
-                    deallocate_atproj, atomproj_wfc
-  !
-  IMPLICIT NONE
-  !
-  INCLUDE 'laxlib.fh'
-  !
-  INTEGER :: npw, npw_, ik, ibnd, nwfc, lmax_wfc
-  INTEGER :: i, j, k, it, l, m
-  REAL(DP), ALLOCATABLE :: e(:)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :), wfcatomall(:, :)
-  COMPLEX(DP), ALLOCATABLE :: proj0(:, :), proj0all(:, :), proj(:, :, :)
-  COMPLEX(DP), ALLOCATABLE :: e_work_d(:, :)
-  ! Some workspace for gamma-point calculation ...
-  REAL(DP), ALLOCATABLE :: rproj0(:, :), rproj0all(:, :)
-  COMPLEX(DP), ALLOCATABLE :: overlap_d(:, :), work_d(:, :), diag(:, :), vv(:, :)
-  REAL(DP), ALLOCATABLE :: roverlap_d(:, :)
-  !
-  LOGICAL :: freeswfcatom
-  !
-  INTEGER :: idesc(LAX_DESC_SIZE)
-  INTEGER, ALLOCATABLE :: idesc_ip(:, :, :)
-  INTEGER, ALLOCATABLE :: rank_ip(:, :)
-  ! matrix distribution descriptors
-  INTEGER :: nx, nrl, nrlx
-  ! maximum local block dimension
-  LOGICAL :: la_proc
-  ! flag to distinguish procs involved in linear algebra
-  INTEGER, ALLOCATABLE :: notcnv_ip(:)
-  INTEGER, ALLOCATABLE :: ic_notcnv(:)
-  LOGICAL :: do_distr_diag_inside_bgrp
-  INTEGER :: nproc_ortho
-  ! distinguishes active procs in parallel linear algebra
-  CHARACTER(len=256) :: err_str
-  LOGICAL :: has_excl_proj
-  INTEGER :: ierr
-
-  CALL start_clock('compute_amn')
-
-  IF (wan_mode == 'library') THEN
-    CALL errore('pw2wannier90', 'have not tested with library mode', 1)
-  END IF
-
-  IF (atom_proj_ext) THEN
-    if (domag) &
-      CALL errore('pw2wannier90', &
-                  'does not support magnetism with external projectors', 1)
-
-    if (noncolin) &
-      CALL errore('pw2wannier90', &
-                  'does not support non-collinear magnetism with external projectors', 1)
-
-    IF (atom_proj_sym) &
-      CALL errore('pw2wannier90', &
-                  'does not support symmetrization with external projectors', 1)
-  END IF
-
-  IF (atom_proj_ext) THEN
-    ALLOCATE (atproj_typs(nsp), stat=ierr)
-    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_typs', 1)
-  END IF
-
-  IF (ionode) THEN
-    IF (atom_proj_ext) THEN
-      WRITE (stdout, '(a)') '  Using atomic projectors from dir '//TRIM(atom_proj_dir)
-      WRITE (stdout, *) ''
-
-      CALL read_atomproj(atproj_typs)
-
-      n_proj = 0
-      DO i = 1, nat
-        it = ityp(i)
-        DO nwfc = 1, atproj_typs(it)%nproj
-          l = atproj_typs(it)%l(nwfc)
-          DO m = 1, 2*l+1
-            n_proj = n_proj + 1
+   ! Use internal UPF atomic projectors or external projectors
+   ! to compute amn matrices.
+   !
+   ! The code is roughly the same as projwfc.x with some entensions:
+   ! 1. allow using external projectors (i.e. custom radial functions)
+   ! 2. allow skipping orthogonalization of projectors
+   ! 3. allow excluding projectors specified by user
+   ! 4. allow excluding bands specified by user
+   !
+   USE kinds, ONLY: DP
+   USE io_global, ONLY: stdout, ionode, ionode_id
+   USE ions_base, ONLY: nat, ityp, atm, nsp
+   USE basis, ONLY: natomwfc, swfcatom
+   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
+   USE lsda_mod, ONLY: nspin
+   USE noncollin_module, ONLY: noncolin, npol, lspinorb, domag
+   USE wvfct, ONLY: npwx, nbnd
+   USE uspp, ONLY: nkb, vkb
+   USE uspp_init, ONLY : init_us_2
+   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
+   USE io_files, ONLY: prefix, restart_dir, tmp_dir
+   USE control_flags, ONLY: gamma_only, use_para_diag
+   USE pw_restart_new, ONLY: read_collected_wfc
+   USE wavefunctions, ONLY: evc
+   !
+   USE projections, ONLY: nlmchi, fill_nlmchi, compute_mj, &
+                          sym_proj_g, sym_proj_k, sym_proj_nc, sym_proj_so, &
+                          compute_zdistmat, compute_ddistmat, &
+                          wf_times_overlap, wf_times_roverlap
+   !
+   USE mp, ONLY: mp_bcast
+   USE mp_pools, ONLY: me_pool, root_pool, intra_pool_comm
+   USE mp_world, ONLY: world_comm
+   USE wannier
+   USE atproj, ONLY: atom_proj_dir, atom_proj_ext, atom_proj_ortho, &
+                     atom_proj_sym, natproj, nexatproj, nexatproj_max, &
+                     atproj_excl, atproj_typs, &
+                     atom_proj_exclude, write_file_amn, &
+                     allocate_atproj_type, read_atomproj, init_tab_atproj, &
+                     deallocate_atproj, atomproj_wfc
+   !
+   IMPLICIT NONE
+   !
+   INCLUDE 'laxlib.fh'
+   !
+   INTEGER :: npw, npw_, ik, ibnd, nwfc, lmax_wfc
+   INTEGER :: i, j, k, it, l, m
+   REAL(DP), ALLOCATABLE :: e(:)
+   COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :), wfcatomall(:, :)
+   COMPLEX(DP), ALLOCATABLE :: proj0(:, :), proj0all(:, :), proj(:, :, :)
+   COMPLEX(DP), ALLOCATABLE :: e_work_d(:, :)
+   ! Some workspace for gamma-point calculation ...
+   REAL(DP), ALLOCATABLE :: rproj0(:, :), rproj0all(:, :)
+   COMPLEX(DP), ALLOCATABLE :: overlap_d(:, :), work_d(:, :), diag(:, :), vv(:, :)
+   REAL(DP), ALLOCATABLE :: roverlap_d(:, :)
+   !
+   LOGICAL :: freeswfcatom
+   !
+   INTEGER :: idesc(LAX_DESC_SIZE)
+   INTEGER, ALLOCATABLE :: idesc_ip(:, :, :)
+   INTEGER, ALLOCATABLE :: rank_ip(:, :)
+   ! matrix distribution descriptors
+   INTEGER :: nx, nrl, nrlx
+   ! maximum local block dimension
+   LOGICAL :: la_proc
+   ! flag to distinguish procs involved in linear algebra
+   INTEGER, ALLOCATABLE :: notcnv_ip(:)
+   INTEGER, ALLOCATABLE :: ic_notcnv(:)
+   LOGICAL :: do_distr_diag_inside_bgrp
+   INTEGER :: nproc_ortho
+   ! distinguishes active procs in parallel linear algebra
+   CHARACTER(len=256) :: err_str
+   LOGICAL :: has_excl_proj
+   INTEGER :: ierr
+   !
+   CALL start_clock('compute_amn')
+   !
+   IF (wan_mode == 'library') THEN
+     CALL errore('pw2wannier90', 'have not tested with library mode', 1)
+   ENDIF
+   !
+   IF (atom_proj_ext) THEN
+      IF (domag) CALL errore('pw2wannier90', &
+                   'does not support magnetism with external projectors', 1)
+      IF (noncolin) CALL errore('pw2wannier90', &
+                   'does not support non-collinear magnetism with external projectors', 1)
+      IF (atom_proj_sym) CALL errore('pw2wannier90', &
+                   'does not support symmetrization with external projectors', 1)
+   ENDIF
+   !
+   IF (atom_proj_ext) THEN
+      ALLOCATE (atproj_typs(nsp), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_typs', 1)
+   ENDIF
+   !
+   IF (ionode) THEN
+      IF (atom_proj_ext) THEN
+         WRITE (stdout, '(a)') '  Using atomic projectors from dir '//TRIM(atom_proj_dir)
+         WRITE (stdout, *) ''
+         !
+         CALL read_atomproj(atproj_typs)
+         !
+         n_proj = 0
+         DO i = 1, nat
+            it = ityp(i)
+            DO nwfc = 1, atproj_typs(it)%nproj
+               l = atproj_typs(it)%l(nwfc)
+               DO m = 1, 2*l+1
+                  n_proj = n_proj + 1
+                  WRITE (stdout, 1000, ADVANCE="no") n_proj, i, atproj_typs(it)%atsym, nwfc, l
+                  WRITE (stdout, '(" m=", i2, ")")') m
+               ENDDO
+            ENDDO
+         ENDDO
+         WRITE (stdout, *) ''
+      ELSE
+         WRITE (stdout, '(a)') '  Use atomic projectors from UPF'
+         WRITE (stdout, *) ''
+         WRITE (stdout, '( 5x,"(read from pseudopotential files):"/)')
+         CALL fill_nlmchi(natomwfc, lmax_wfc)
+         DO nwfc = 1, natomwfc
             WRITE (stdout, 1000, ADVANCE="no") &
-              n_proj, i, atproj_typs(it)%atsym, nwfc, l
-            WRITE (stdout, 1003) m
-          END DO
-        END DO
-      END DO
-      WRITE (stdout, *) ''
-    ELSE
-      WRITE (stdout, '(a)') '  Use atomic projectors from UPF'
-      WRITE (stdout, *) ''
-      WRITE (stdout, '( 5x,"(read from pseudopotential files):"/)')
-      CALL fill_nlmchi(natomwfc, lmax_wfc)
-      DO nwfc = 1, natomwfc
-        WRITE (stdout, 1000, ADVANCE="no") &
-          nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-          nlmchi(nwfc)%n, nlmchi(nwfc)%l
-        IF (lspinorb) THEN
-          WRITE (stdout, 1001) nlmchi(nwfc)%jj, &
-            compute_mj(nlmchi(nwfc)%jj, nlmchi(nwfc)%l, nlmchi(nwfc)%m)
-        ELSE IF (noncolin) THEN
-          WRITE (stdout, 1002) nlmchi(nwfc)%m, &
-            0.5D0 - INT(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l + 2))
-        ELSE
-          WRITE (stdout, 1003) nlmchi(nwfc)%m
-        END IF
-      END DO
-      WRITE (stdout, *) ''
-      n_proj = natomwfc
-    END IF
+               nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+               nlmchi(nwfc)%n, nlmchi(nwfc)%l
+            IF (lspinorb) THEN
+               WRITE (stdout, '(" j=", f3.1, " m_j=", f4.1, ")")') &
+                  nlmchi(nwfc)%jj, compute_mj(nlmchi(nwfc)%jj, nlmchi(nwfc)%l, nlmchi(nwfc)%m)
+            ELSE IF (noncolin) THEN
+                WRITE (stdout, '(" m=", i2, " s_z=", f4.1, ")")') &
+                  nlmchi(nwfc)%m, 0.5D0 - INT(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l + 2))
+            ELSE
+               WRITE (stdout, '(" m=", i2, ")")') nlmchi(nwfc)%m
+           ENDIF
+         ENDDO
+         WRITE (stdout, *) ''
+         n_proj = natomwfc
+      ENDIF
 1000  FORMAT(5X, "state #", i4, ": atom ", i3, " (", a3, "), wfc ", i2, &
              " (l=", i1)
-1001  FORMAT(" j=", f3.1, " m_j=", f4.1, ")")
-1002  FORMAT(" m=", i2, " s_z=", f4.1, ")")
-1003  FORMAT(" m=", i2, ")")
-
-    IF (n_proj <= 0) CALL errore('pw2wannier90', &
-                                 'Cannot project on zero atomic projectors!', 1)
-
-    ! check exclude
-    allocate(atproj_excl(n_proj), stat=ierr)
-    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
-    atproj_excl = .false.
-
-    DO i = 1, nexatproj_max
-      IF (atom_proj_exclude(i) > n_proj) THEN
-        WRITE (err_str, *) 'atom_proj_exclude(', i, ') = ', &
-          atom_proj_exclude(i), &
-          '> total number of projectors (', n_proj, ')'
-        CALL errore('pw2wannier90', err_str, i)
-      else if (atom_proj_exclude(i) < 0) then
-        CYCLE
-      else
-        atproj_excl(atom_proj_exclude(i)) = .true.
-      END IF
-    END DO
-
-    nexatproj = COUNT(atproj_excl)
-    IF (nexatproj > 0) THEN
-      has_excl_proj = .TRUE.
-    ELSE
-      has_excl_proj = .FALSE.
-    END IF
-
-    natproj = n_proj
-
-    IF (has_excl_proj) THEN
-      WRITE (stdout, *) '    excluded projectors: '
-      j = 0 ! how many elements have been written
-      DO i = 1, n_proj
-        if (atproj_excl(i)) THEN
-          WRITE (stdout, '(i8)', advance='no') i
-          j = j + 1
-          IF (MOD(j, 10) == 0) WRITE (stdout, *)
-        END IF
-      END DO
-      WRITE (stdout, *) ''
-      n_proj = n_proj - nexatproj
-    END IF
-
-    IF (gamma_only) &
-      WRITE (stdout, '(5x,"gamma-point specific algorithms are used")')
-
-    FLUSH (stdout)
-  END IF
-
-  ! MPI related calls
-  IF (atom_proj_ext) THEN
-    DO it = 1, nsp
-      i = atproj_typs(it)%ngrid
-      j = atproj_typs(it)%nproj
-      call mp_bcast(i, ionode_id, world_comm)
-      call mp_bcast(j, ionode_id, world_comm)
-      if (.NOT. ionode) &
-        call allocate_atproj_type(atproj_typs(it), i, j)
-
-      CALL mp_bcast(atproj_typs(it)%atsym, ionode_id, world_comm)
-      CALL mp_bcast(atproj_typs(it)%xgrid, ionode_id, world_comm)
-      CALL mp_bcast(atproj_typs(it)%rgrid, ionode_id, world_comm)
-      CALL mp_bcast(atproj_typs(it)%l, ionode_id, world_comm)
-      CALL mp_bcast(atproj_typs(it)%radial, ionode_id, world_comm)
-    END DO
-
-    call init_tab_atproj(world_comm)
-  ELSE
-    ! need to access nlmchi, natomwfc, lmax_wfc on each core,
-    ! the root node has been filled already
-    IF (.NOT. ionode) CALL fill_nlmchi(natomwfc, lmax_wfc)
-  END IF
-  CALL mp_bcast(natproj, ionode_id, world_comm)
-  CALL mp_bcast(n_proj, ionode_id, world_comm)
-  CALL mp_bcast(nexatproj, ionode_id, world_comm)
-  CALL mp_bcast(has_excl_proj, ionode_id, world_comm)
-  if (.not. ionode) then
-     allocate(atproj_excl(n_proj+nexatproj), stat=ierr)
-     IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
-  end if
-  CALL mp_bcast(atproj_excl, ionode_id, world_comm)
-  !
-  !   Initialize parallelism for linear algebra
-  !
-  CALL set_para_diag(n_proj, use_para_diag)
-  !
-  CALL desc_init(n_proj, nx, la_proc, idesc, rank_ip, idesc_ip)
-  CALL laxlib_getval(nproc_ortho=nproc_ortho)
-  use_para_diag = (nproc_ortho > 1)
-  IF (ionode .AND. use_para_diag) THEN
-    WRITE (stdout, &
-           '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
-  END IF
-  !
-  IF (ionode) THEN
-    !
-    !   nbnd = num_bands + nexband
-    ! For UPF projectors:
-    !   natomwfc = n_proj + nexatproj
-    !
-    WRITE (stdout, *)
-    WRITE (stdout, *) '    Problem Sizes '
-    WRITE (stdout, *) '      n_proj    = ', n_proj
-    IF (atom_proj_ext) THEN
-      WRITE (stdout, *) '      natproj   = ', natproj
-    ELSE
-      WRITE (stdout, *) '      natomwfc  = ', natomwfc
-    END IF
-    WRITE (stdout, *) '      num_bands = ', num_bands
-    WRITE (stdout, *) '      nbnd      = ', nbnd
-    WRITE (stdout, *) '      nkstot    = ', nkstot
-    IF (use_para_diag) WRITE (stdout, *) '      nx        = ', nx
-    WRITE (stdout, *) '      npwx      = ', npwx
-    WRITE (stdout, *) '      nkb       = ', nkb
-    WRITE (stdout, *)
-  END IF
-  !
-  ALLOCATE (proj(num_bands, n_proj, nkstot))
-  !
-  IF (.NOT. ALLOCATED(swfcatom)) THEN
-    ALLOCATE (swfcatom(npwx*npol, n_proj), stat=ierr)
-    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating swfcatom', 1)
-    freeswfcatom = .TRUE.
-  ELSE
-    freeswfcatom = .FALSE.
-  END IF
-
-  ALLOCATE (wfcatom(npwx*npol, n_proj), stat=ierr)
-  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatom', 1)
-  IF (has_excl_proj) THEN
-    ! additional space for excluded projectors, for atomic_wfc(), etc.
-    IF (atom_proj_ext) THEN
-      ALLOCATE (wfcatomall(npwx*npol, natproj), stat=ierr)
-      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatomall', 1)
-    ELSE
-      ALLOCATE (wfcatomall(npwx*npol, natomwfc), stat=ierr)
-      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatomall', 1)
-   END IF
-  END IF
-  ALLOCATE (e(n_proj), stat=ierr)
-  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e', 1)
-  !
-  !    loop on k points
-  !
-  WRITE (stdout, '(a,i8)') '  AMN: iknum = ', iknum
-  DO ik = 1, nks
-    !
-    IF (ionode) THEN
-      WRITE (stdout, '(i8)', advance='no') ik
-      IF (MOD(ik, 10) == 0) WRITE (stdout, *)
-      FLUSH (stdout)
-    END IF
-    !
-    npw = ngk(ik)
-    CALL read_collected_wfc(restart_dir(), ik, evc)
-    !
-    ! exclude bands
-    IF (nexband > 0) THEN
-      i = 1
-      DO j = 1, nbnd
-        IF (excluded_band(j)) CYCLE
-        IF (i /= j) evc(:, i) = evc(:, j)
-        i = i + 1
-      END DO
-      evc(:, (num_bands + 1):nbnd) = (0.0_DP, 0.0_DP)
-    END IF
-    !
-    wfcatom(:, :) = (0.0_DP, 0.0_DP)
-    IF (atom_proj_ext) THEN
-      IF (.NOT. has_excl_proj) THEN
-        CALL atomproj_wfc(ik, wfcatom)
-      ELSE
-        wfcatomall(:, :) = (0.0_DP, 0.0_DP)
-        CALL atomproj_wfc(ik, wfcatomall)
-        ! exclude projectors
-        i = 1 ! counter for wfcatom
-        DO j = 1, natproj ! counter for wfcatomall
-          IF (atproj_excl(j)) CYCLE
-          wfcatom(:, i) = wfcatomall(:, j)
-          i = i + 1
-        END DO
-        IF ((i - 1) /= n_proj) THEN
-          CALL errore('compute_amn_with_atomproj', &
-                      'internal error when excluding projectors', i)
-        END IF
-      END IF
-    ELSE
-      IF (.NOT. has_excl_proj) THEN
-        IF (noncolin) THEN
-          CALL atomic_wfc_nc_proj(ik, wfcatom)
-        ELSE
-          CALL atomic_wfc(ik, wfcatom)
-        END IF
-      ELSE
-        wfcatomall(:, :) = (0.0_DP, 0.0_DP)
-        IF (noncolin) THEN
-          CALL atomic_wfc_nc_proj(ik, wfcatomall)
-        ELSE
-          CALL atomic_wfc(ik, wfcatomall)
-        END IF
-        ! exclude projectors
-        i = 1 ! counter for wfcatom
-        DO j = 1, natomwfc ! counter for wfcatomall
-          IF (atproj_excl(j)) CYCLE
-          wfcatom(:, i) = wfcatomall(:, j)
-          i = i + 1
-        END DO
-        IF ((i - 1) /= n_proj) THEN
-          CALL errore('compute_amn_with_atomproj', &
-                      'internal error when excluding projectors', i)
-        END IF
-      END IF
-    END IF
-    !
-    CALL allocate_bec_type(nkb, n_proj, becp)
-    !
-    CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
-    CALL calbec(npw, vkb, wfcatom, becp)
-    CALL s_psi(npwx, npw, n_proj, wfcatom, swfcatom)
-    !
-    CALL deallocate_bec_type(becp)
-    !
-    ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
-    ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
-    !
-    IF (atom_proj_ortho) THEN
-      IF (la_proc) THEN
-        ALLOCATE (overlap_d(nx, nx), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
-      ELSE
-        ALLOCATE (overlap_d(1, 1), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
-      END IF
-      overlap_d = (0.D0, 0.D0)
-      npw_ = npw
-      IF (noncolin) npw_ = npol*npwx
-      IF (gamma_only) THEN
-        !
-        ! in the Gamma-only case the overlap matrix (real) is copied
-        ! to a complex one as for the general case - easy but wasteful
-        !
-        IF (la_proc) THEN
-          ALLOCATE (roverlap_d(nx, nx), stat=ierr)
-          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating roverlap_d', 1)
-        ELSE
-          ALLOCATE (roverlap_d(1, 1), stat=ierr)
-          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating roverlap_d', 1)
-        END IF
-        roverlap_d = 0.D0
-        CALL compute_ddistmat(npw, n_proj, nx, wfcatom, swfcatom, roverlap_d, &
-                              idesc, rank_ip, idesc_ip)
-        overlap_d(:, :) = CMPLX(roverlap_d(:, :), 0.0_DP, kind=dp)
-      ELSE
-        CALL compute_zdistmat(npw_, n_proj, nx, wfcatom, swfcatom, overlap_d, &
-                              idesc, rank_ip, idesc_ip)
-      END IF
       !
-      ! diagonalize the overlap matrix
+      IF (n_proj <= 0) CALL errore('pw2wannier90', &
+            'Cannot project on zero atomic projectors!', 1)
       !
-      IF (la_proc) THEN
-        !
-        ALLOCATE (work_d(nx, nx), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating work_d', 1)
-
-        nrl = idesc(LAX_DESC_NRL)
-        nrlx = idesc(LAX_DESC_NRLX)
-
-        ALLOCATE (diag(nrlx, n_proj), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating diag', 1)
-        ALLOCATE (vv(nrlx, n_proj), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating vv', 1)
-        !
-        !  re-distribute the overlap matrix for parallel diagonalization
-        !
-        CALL blk2cyc_redist(n_proj, diag, nrlx, n_proj, overlap_d, nx, nx, idesc)
-        !
-        ! parallel diagonalization
-        !
-        CALL zhpev_drv('V', diag, nrlx, e, vv, nrlx, nrl, n_proj, &
-                       idesc(LAX_DESC_NPC)*idesc(LAX_DESC_NPR), &
-                       idesc(LAX_DESC_MYPE), idesc(LAX_DESC_COMM))
-        !
-        !  bring distributed eigenvectors back to original distribution
-        !
-        CALL cyc2blk_redist(n_proj, vv, nrlx, n_proj, work_d, nx, nx, idesc)
-        !
-        DEALLOCATE (vv)
-        DEALLOCATE (diag)
-        !
-      ELSE
-        ALLOCATE (work_d(1, 1), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating work_d', 1)
-      END IF
-
-      CALL mp_bcast(e, root_pool, intra_pool_comm)
-
-      ! calculate O^{-1/2} (actually, its transpose)
-
-      DO i = 1, n_proj
-        e(i) = 1.D0/dsqrt(e(i))
-      END DO
-
-      IF (la_proc) THEN
-        ALLOCATE (e_work_d(nx, nx), stat=ierr)
-        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e_work_d', 1)
-        DO j = 1, idesc(LAX_DESC_NC)
-          DO i = 1, idesc(LAX_DESC_NR)
-            e_work_d(i, j) = e(j + idesc(LAX_DESC_IC) - 1)*work_d(i, j)
-          END DO
-        END DO
-        CALL sqr_mm_cannon('N', 'C', n_proj, (1.0_DP, 0.0_DP), e_work_d, &
-                           nx, work_d, nx, (0.0_DP, 0.0_DP), overlap_d, nx, idesc)
-        CALL laxlib_zsqmher(n_proj, overlap_d, nx, idesc)
-        DEALLOCATE (e_work_d)
-      END IF
+      ! check exclude
+      ALLOCATE(atproj_excl(n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
+      atproj_excl = .false.
       !
-      DEALLOCATE (work_d)
+      DO i = 1, nexatproj_max
+         IF (atom_proj_exclude(i) > n_proj) THEN
+            WRITE (err_str, *) 'atom_proj_exclude(', i, ') = ', atom_proj_exclude(i), &
+                               '> total number of projectors (', n_proj, ')'
+            CALL errore('pw2wannier90', err_str, i)
+         ELSEIF (atom_proj_exclude(i) < 0) THEN
+           CYCLE
+         ELSE
+            atproj_excl(atom_proj_exclude(i)) = .true.
+         ENDIF
+      ENDDO
       !
-      ! calculate wfcatom = O^{-1/2} \hat S | phi>
+      nexatproj = COUNT(atproj_excl)
+      has_excl_proj = (nexatproj > 0)
       !
-      IF (gamma_only) THEN
-        roverlap_d(:, :) = REAL(overlap_d(:, :), DP)
-        CALL wf_times_roverlap(nx, npw, swfcatom, roverlap_d, wfcatom, &
-                               idesc, rank_ip, idesc_ip, la_proc)
-        DEALLOCATE (roverlap_d)
-      ELSE
-        CALL wf_times_overlap(nx, npw_, swfcatom, overlap_d, wfcatom, &
-                              idesc, rank_ip, idesc_ip, la_proc)
-      END IF
-      DEALLOCATE (overlap_d)
-    END IF
-    !
-    ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>,
-    ! symmetrize the projections if required
-    !
-    IF (gamma_only) THEN
+      natproj = n_proj
       !
-      ALLOCATE (rproj0(n_proj, num_bands), stat=ierr)
-      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rproj0', 1)
-      CALL calbec(npw, wfcatom, evc, rproj0, nbnd=num_bands)
-      ! haven't tested symmetrization with external projectors, so
-      ! I disable these for now.
-      ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
-      !   IF (has_excl_proj) THEN
-      !     ALLOCATE (rproj0all(natomwfc, num_bands))
-      !     rproj0all = 0.0_DP
-      !     ! expand the size to natomwfc so I can call sym_proj_g
-      !     ! the excluded part is just 0.0
-      !     i = 1 ! counter for rproj0
-      !     DO j = 1, natomwfc ! counter for rproj0all
-      !       IF (atproj_excl(j)) CYCLE
-      !       rproj0all(j, :) = rproj0(i, :)
-      !       i = i + 1
-      !     END DO
-      !     !
-      !     CALL sym_proj_g(rproj0all)
-      !     !
-      !     ! exclude projectors
-      !     i = 1 ! counter for rproj0
-      !     DO j = 1, natomwfc ! counter for rproj0all
-      !       IF (atproj_excl(j)) CYCLE
-      !       rproj0(i, :) = rproj0all(j, :)
-      !       i = i + 1
-      !     END DO
-      !     !
-      !     DEALLOCATE (rproj0all)
-      !   ELSE
-      !     CALL sym_proj_g(rproj0)
-      !   END IF
-      ! END IF
-
-      ! Note the CONJG, I need <psi|g>, while rpoj0 = <g|psi>
-      proj(:, :, ik) = TRANSPOSE(rproj0(:, :))
-      DEALLOCATE (rproj0)
+      IF (has_excl_proj) THEN
+         WRITE (stdout, *) '    excluded projectors: '
+         j = 0 ! how many elements have been written
+         DO i = 1, n_proj
+            IF (atproj_excl(i)) THEN
+               WRITE (stdout, '(i8)', advance='no') i
+               j = j + 1
+               IF (MOD(j, 10) == 0) WRITE (stdout, *)
+           ENDIF
+         ENDDO
+         WRITE (stdout, *) ''
+         n_proj = n_proj - nexatproj
+      ENDIF
       !
+      IF (gamma_only) WRITE (stdout, '(5x,"gamma-point specific algorithms are used")')
+      !
+   ENDIF ! ionode
+   !
+   ! MPI related calls
+   IF (atom_proj_ext) THEN
+      DO it = 1, nsp
+         i = atproj_typs(it)%ngrid
+         j = atproj_typs(it)%nproj
+         CALL mp_bcast(i, ionode_id, world_comm)
+         CALL mp_bcast(j, ionode_id, world_comm)
+         IF (.NOT. ionode) CALL allocate_atproj_type(atproj_typs(it), i, j)
+         !
+         CALL mp_bcast(atproj_typs(it)%atsym, ionode_id, world_comm)
+         CALL mp_bcast(atproj_typs(it)%xgrid, ionode_id, world_comm)
+         CALL mp_bcast(atproj_typs(it)%rgrid, ionode_id, world_comm)
+         CALL mp_bcast(atproj_typs(it)%l, ionode_id, world_comm)
+         CALL mp_bcast(atproj_typs(it)%radial, ionode_id, world_comm)
+      ENDDO
+      !
+      CALL init_tab_atproj(world_comm)
    ELSE
+      ! need to access nlmchi, natomwfc, lmax_wfc on each core,
+      ! the root node has been filled already
+      IF (.NOT. ionode) CALL fill_nlmchi(natomwfc, lmax_wfc)
+   ENDIF ! atom_proj_ext
+   CALL mp_bcast(natproj, ionode_id, world_comm)
+   CALL mp_bcast(n_proj, ionode_id, world_comm)
+   CALL mp_bcast(nexatproj, ionode_id, world_comm)
+   CALL mp_bcast(has_excl_proj, ionode_id, world_comm)
+   IF (.NOT. ionode) THEN
+      ALLOCATE(atproj_excl(n_proj+nexatproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
+   ENDIF
+   CALL mp_bcast(atproj_excl, ionode_id, world_comm)
+   !
+   !   Initialize parallelism for linear algebra
+   !
+   CALL set_para_diag(n_proj, use_para_diag)
+   !
+   CALL desc_init(n_proj, nx, la_proc, idesc, rank_ip, idesc_ip)
+   CALL laxlib_getval(nproc_ortho=nproc_ortho)
+   use_para_diag = (nproc_ortho > 1)
+   IF (ionode .AND. use_para_diag) THEN
+      WRITE (stdout, '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
+   ENDIF
+   !
+   IF (ionode) THEN
       !
-      ALLOCATE (proj0(n_proj, num_bands), stat=ierr)
-      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj0', 1)
-      CALL calbec(npw_, wfcatom, evc, proj0, nbnd=num_bands)
+      !   nbnd = num_bands + nexband
+      ! For UPF projectors:
+      !   natomwfc = n_proj + nexatproj
       !
-      ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
-      !   IF (has_excl_proj) THEN
-      !     ALLOCATE (proj0all(natomwfc, num_bands))
-      !     proj0all = (0.0_DP, 0.0_DP)
-      !     ! expand the size to natomwfc so I can call sym_proj_*
-      !     ! the exclude part is just 0.0
-      !     i = 1 ! counter for proj0
-      !     DO j = 1, natomwfc ! counter for proj0all
-      !       IF (atproj_excl(j)) CYCLE
-      !       proj0all(j, :) = proj0(i, :)
-      !       i = i + 1
-      !     END DO
-      !     !
-      !     IF (lspinorb) THEN
-      !       CALL sym_proj_so(domag, proj0all)
-      !     ELSE IF (noncolin) THEN
-      !       CALL sym_proj_nc(proj0all)
-      !     ELSE
-      !       CALL sym_proj_k(proj0all)
-      !     END IF
-      !     !
-      !     ! exclude projectors
-      !     i = 1 ! counter for proj0
-      !     DO j = 1, natomwfc ! counter for proj0all
-      !       IF (atproj_excl(j)) CYCLE
-      !       proj0(i, :) = proj0all(j, :)
-      !       i = i + 1
-      !     END DO
-      !     !
-      !     DEALLOCATE (proj0all)
-      !   ELSE
-      !     IF (lspinorb) THEN
-      !       CALL sym_proj_so(domag, proj0)
-      !     ELSE IF (noncolin) THEN
-      !       CALL sym_proj_nc(proj0)
-      !     ELSE
-      !       CALL sym_proj_k(proj0)
-      !     END IF
-      !   END IF
-      ! END IF
-
-      ! Note the CONJG, I need <psi|g>, while proj0 = <g|psi>
-      proj(:, :, ik) = TRANSPOSE(CONJG(proj0(:, :)))
-      DEALLOCATE (proj0)
-      !
+      WRITE (stdout, *)
+      WRITE (stdout, *) '    Problem Sizes '
+      WRITE (stdout, *) '      n_proj    = ', n_proj
+      IF (atom_proj_ext) THEN
+        WRITE (stdout, *) '      natproj   = ', natproj
+      ELSE
+        WRITE (stdout, *) '      natomwfc  = ', natomwfc
+      END IF
+      WRITE (stdout, *) '      num_bands = ', num_bands
+      WRITE (stdout, *) '      nbnd      = ', nbnd
+      WRITE (stdout, *) '      nkstot    = ', nkstot
+      IF (use_para_diag) WRITE (stdout, *) '      nx        = ', nx
+      WRITE (stdout, *) '      npwx      = ', npwx
+      WRITE (stdout, *) '      nkb       = ', nkb
+      WRITE (stdout, *)
    END IF
-  END DO ! on k-points
-  !
-  call deallocate_atproj()
-  DEALLOCATE (e)
-  DEALLOCATE (wfcatom)
-  IF (freeswfcatom) DEALLOCATE (swfcatom)
-  IF (has_excl_proj) THEN
-    DEALLOCATE (wfcatomall)
-  END IF
-  DEALLOCATE (idesc_ip)
-  DEALLOCATE (rank_ip)
-  !
-  !   vector proj are distributed across the pools
-  !   collect data for all k-points to the first pool
-  !
-  CALL poolrecover(proj, 2*num_bands*n_proj, nkstot, nks)
-  !
-  ! write to standard output and to file
-  !
-  IF (ionode) THEN
-    CALL write_file_amn(proj)
-    !
-    WRITE (stdout, '(/)')
-    WRITE (stdout, *) ' AMN calculated'
-  END IF
-  !
-  DEALLOCATE (proj)
-  CALL laxlib_end()
-
-  CALL stop_clock('compute_amn')
-
-  RETURN
-
+   !
+   ALLOCATE (proj(num_bands, n_proj, nkstot))
+   !
+   IF (.NOT. ALLOCATED(swfcatom)) THEN
+      ALLOCATE (swfcatom(npwx*npol, n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating swfcatom', 1)
+      freeswfcatom = .TRUE.
+   ELSE
+     freeswfcatom = .FALSE.
+   ENDIF
+   !
+   ALLOCATE (wfcatom(npwx*npol, n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatom', 1)
+   IF (has_excl_proj) THEN
+      ! additional space for excluded projectors, for atomic_wfc(), etc.
+      IF (atom_proj_ext) THEN
+         ALLOCATE (wfcatomall(npwx*npol, natproj), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatomall', 1)
+      ELSE
+         ALLOCATE (wfcatomall(npwx*npol, natomwfc), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatomall', 1)
+      ENDIF
+   ENDIF
+   ALLOCATE (e(n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e', 1)
+   !
+   !    loop on k points
+   !
+   WRITE (stdout, '(a,i8)') '  AMN: iknum = ', iknum
+   DO ik = 1, nks
+      !
+      IF (ionode) THEN
+         WRITE (stdout, '(i8)', advance='no') ik
+         IF (MOD(ik, 10) == 0) WRITE (stdout, *)
+         FLUSH (stdout)
+      END IF
+      !
+      npw = ngk(ik)
+      CALL read_collected_wfc(restart_dir(), ik, evc)
+      !
+      ! exclude bands
+      IF (nexband > 0) THEN
+         i = 1
+         DO j = 1, nbnd
+            IF (excluded_band(j)) CYCLE
+            IF (i /= j) evc(:, i) = evc(:, j)
+            i = i + 1
+         END DO
+         evc(:, (num_bands + 1):nbnd) = (0.0_DP, 0.0_DP)
+      END IF
+      !
+      wfcatom(:, :) = (0.0_DP, 0.0_DP)
+      IF (atom_proj_ext) THEN
+         IF (.NOT. has_excl_proj) THEN
+            CALL atomproj_wfc(ik, wfcatom)
+         ELSE
+            wfcatomall(:, :) = (0.0_DP, 0.0_DP)
+            CALL atomproj_wfc(ik, wfcatomall)
+            ! exclude projectors
+            i = 1 ! counter for wfcatom
+            DO j = 1, natproj ! counter for wfcatomall
+               IF (atproj_excl(j)) CYCLE
+               wfcatom(:, i) = wfcatomall(:, j)
+               i = i + 1
+            END DO
+            IF ((i - 1) /= n_proj) THEN
+               CALL errore('compute_amn_with_atomproj', &
+                          'internal error when excluding projectors', 1)
+            ENDIF
+         ENDIF
+      ELSE
+         IF (.NOT. has_excl_proj) THEN
+            IF (noncolin) THEN
+               CALL atomic_wfc_nc_proj(ik, wfcatom)
+            ELSE
+               CALL atomic_wfc(ik, wfcatom)
+            END IF
+         ELSE
+            wfcatomall(:, :) = (0.0_DP, 0.0_DP)
+            IF (noncolin) THEN
+               CALL atomic_wfc_nc_proj(ik, wfcatomall)
+            ELSE
+               CALL atomic_wfc(ik, wfcatomall)
+            ENDIF
+            ! exclude projectors
+            i = 1 ! counter for wfcatom
+            DO j = 1, natomwfc ! counter for wfcatomall
+               IF (atproj_excl(j)) CYCLE
+               wfcatom(:, i) = wfcatomall(:, j)
+               i = i + 1
+            END DO
+            IF ((i - 1) /= n_proj) CALL errore('compute_amn_with_atomproj', &
+                        'internal error when excluding projectors', 1)
+            !
+         ENDIF
+      ENDIF ! atom_proj_ext
+      !
+      CALL allocate_bec_type(nkb, n_proj, becp)
+      !
+      CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
+      CALL calbec(npw, vkb, wfcatom, becp)
+      CALL s_psi(npwx, npw, n_proj, wfcatom, swfcatom)
+      !
+      CALL deallocate_bec_type(becp)
+      !
+      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
+      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
+      !
+      IF (atom_proj_ortho) THEN
+         IF (la_proc) THEN
+            ALLOCATE (overlap_d(nx, nx), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
+         ELSE
+            ALLOCATE (overlap_d(1, 1), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
+         ENDIF
+         overlap_d = (0.D0, 0.D0)
+         npw_ = npw
+         IF (noncolin) npw_ = npol*npwx
+         IF (gamma_only) THEN
+            !
+            ! in the Gamma-only case the overlap matrix (real) is copied
+            ! to a complex one as for the general case - easy but wasteful
+            !
+            IF (la_proc) THEN
+               ALLOCATE (roverlap_d(nx, nx), stat=ierr)
+               IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating roverlap_d', 1)
+            ELSE
+               ALLOCATE (roverlap_d(1, 1), stat=ierr)
+               IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating roverlap_d', 1)
+            END IF
+            roverlap_d = 0.D0
+            CALL compute_ddistmat(npw, n_proj, nx, wfcatom, swfcatom, roverlap_d, &
+                                 idesc, rank_ip, idesc_ip)
+            overlap_d(:, :) = CMPLX(roverlap_d(:, :), 0.0_DP, kind=dp)
+         ELSE
+            CALL compute_zdistmat(npw_, n_proj, nx, wfcatom, swfcatom, overlap_d, &
+                                 idesc, rank_ip, idesc_ip)
+         ENDIF
+         !
+         ! diagonalize the overlap matrix
+         !
+         IF (la_proc) THEN
+            !
+            ALLOCATE (work_d(nx, nx), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating work_d', 1)
+            !
+            nrl = idesc(LAX_DESC_NRL)
+            nrlx = idesc(LAX_DESC_NRLX)
+            !
+            ALLOCATE (diag(nrlx, n_proj), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating diag', 1)
+            ALLOCATE (vv(nrlx, n_proj), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating vv', 1)
+            !
+            !  re-distribute the overlap matrix for parallel diagonalization
+            !
+            CALL blk2cyc_redist(n_proj, diag, nrlx, n_proj, overlap_d, nx, nx, idesc)
+            !
+            ! parallel diagonalization
+            !
+            CALL zhpev_drv('V', diag, nrlx, e, vv, nrlx, nrl, n_proj, &
+                           idesc(LAX_DESC_NPC)*idesc(LAX_DESC_NPR), &
+                           idesc(LAX_DESC_MYPE), idesc(LAX_DESC_COMM))
+            !
+            !  bring distributed eigenvectors back to original distribution
+            !
+            CALL cyc2blk_redist(n_proj, vv, nrlx, n_proj, work_d, nx, nx, idesc)
+            !
+            DEALLOCATE (vv)
+            DEALLOCATE (diag)
+            !
+         ELSE
+            ALLOCATE (work_d(1, 1), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating work_d', 1)
+         END IF
+         !
+         CALL mp_bcast(e, root_pool, intra_pool_comm)
+         !
+         ! calculate O^{-1/2} (actually, its transpose)
+         !
+         DO i = 1, n_proj
+           e(i) = 1.D0/dsqrt(e(i))
+         END DO
+         !
+         IF (la_proc) THEN
+            ALLOCATE (e_work_d(nx, nx), stat=ierr)
+            IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e_work_d', 1)
+            DO j = 1, idesc(LAX_DESC_NC)
+               DO i = 1, idesc(LAX_DESC_NR)
+                  e_work_d(i, j) = e(j + idesc(LAX_DESC_IC) - 1)*work_d(i, j)
+               END DO
+            END DO
+            CALL sqr_mm_cannon('N', 'C', n_proj, (1.0_DP, 0.0_DP), e_work_d, &
+                               nx, work_d, nx, (0.0_DP, 0.0_DP), overlap_d, nx, idesc)
+            CALL laxlib_zsqmher(n_proj, overlap_d, nx, idesc)
+            DEALLOCATE (e_work_d)
+         END IF
+         !
+         DEALLOCATE (work_d)
+         !
+         ! calculate wfcatom = O^{-1/2} \hat S | phi>
+         !
+         IF (gamma_only) THEN
+            roverlap_d(:, :) = REAL(overlap_d(:, :), DP)
+            CALL wf_times_roverlap(nx, npw, swfcatom, roverlap_d, wfcatom, &
+                                   idesc, rank_ip, idesc_ip, la_proc)
+            DEALLOCATE (roverlap_d)
+         ELSE
+            CALL wf_times_overlap(nx, npw_, swfcatom, overlap_d, wfcatom, &
+                                  idesc, rank_ip, idesc_ip, la_proc)
+         END IF
+         DEALLOCATE (overlap_d)
+      ENDIF ! atom_proj_ortho
+      !
+      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>,
+      ! symmetrize the projections if required
+      !
+      IF (gamma_only) THEN
+         !
+         ALLOCATE (rproj0(n_proj, num_bands), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rproj0', 1)
+         CALL calbec(npw, wfcatom, evc, rproj0, nbnd=num_bands)
+         ! haven't tested symmetrization with external projectors, so
+         ! I disable these for now.
+         ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
+         !   IF (has_excl_proj) THEN
+         !     ALLOCATE (rproj0all(natomwfc, num_bands))
+         !     rproj0all = 0.0_DP
+         !     ! expand the size to natomwfc so I can call sym_proj_g
+         !     ! the excluded part is just 0.0
+         !     i = 1 ! counter for rproj0
+         !     DO j = 1, natomwfc ! counter for rproj0all
+         !       IF (atproj_excl(j)) CYCLE
+         !       rproj0all(j, :) = rproj0(i, :)
+         !       i = i + 1
+         !     END DO
+         !     !
+         !     CALL sym_proj_g(rproj0all)
+         !     !
+         !     ! exclude projectors
+         !     i = 1 ! counter for rproj0
+         !     DO j = 1, natomwfc ! counter for rproj0all
+         !       IF (atproj_excl(j)) CYCLE
+         !       rproj0(i, :) = rproj0all(j, :)
+         !       i = i + 1
+         !     END DO
+         !     !
+         !     DEALLOCATE (rproj0all)
+         !   ELSE
+         !     CALL sym_proj_g(rproj0)
+         !   END IF
+         ! END IF
+         !
+         ! Note the CONJG, I need <psi|g>, while rpoj0 = <g|psi>
+         proj(:, :, ik) = TRANSPOSE(rproj0(:, :))
+         DEALLOCATE (rproj0)
+         !
+      ELSE
+         !
+         ALLOCATE (proj0(n_proj, num_bands), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj0', 1)
+         CALL calbec(npw_, wfcatom, evc, proj0, nbnd=num_bands)
+         !
+         ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
+         !   IF (has_excl_proj) THEN
+         !     ALLOCATE (proj0all(natomwfc, num_bands))
+         !     proj0all = (0.0_DP, 0.0_DP)
+         !     ! expand the size to natomwfc so I can call sym_proj_*
+         !     ! the exclude part is just 0.0
+         !     i = 1 ! counter for proj0
+         !     DO j = 1, natomwfc ! counter for proj0all
+         !       IF (atproj_excl(j)) CYCLE
+         !       proj0all(j, :) = proj0(i, :)
+         !       i = i + 1
+         !     END DO
+         !     !
+         !     IF (lspinorb) THEN
+         !       CALL sym_proj_so(domag, proj0all)
+         !     ELSE IF (noncolin) THEN
+         !       CALL sym_proj_nc(proj0all)
+         !     ELSE
+         !       CALL sym_proj_k(proj0all)
+         !     END IF
+         !     !
+         !     ! exclude projectors
+         !     i = 1 ! counter for proj0
+         !     DO j = 1, natomwfc ! counter for proj0all
+         !       IF (atproj_excl(j)) CYCLE
+         !       proj0(i, :) = proj0all(j, :)
+         !       i = i + 1
+         !     END DO
+         !     !
+         !     DEALLOCATE (proj0all)
+         !   ELSE
+         !     IF (lspinorb) THEN
+         !       CALL sym_proj_so(domag, proj0)
+         !     ELSE IF (noncolin) THEN
+         !       CALL sym_proj_nc(proj0)
+         !     ELSE
+         !       CALL sym_proj_k(proj0)
+         !     END IF
+         !   END IF
+         ! END IF
+         !
+         ! Note the CONJG, I need <psi|g>, while proj0 = <g|psi>
+         proj(:, :, ik) = TRANSPOSE(CONJG(proj0(:, :)))
+         DEALLOCATE (proj0)
+         !
+      ENDIF ! gamma_only
+   ENDDO ! on k-points
+   !
+   CALL deallocate_atproj()
+   DEALLOCATE (e)
+   DEALLOCATE (wfcatom)
+   IF (freeswfcatom) DEALLOCATE (swfcatom)
+   IF (has_excl_proj) DEALLOCATE (wfcatomall)
+   DEALLOCATE (idesc_ip)
+   DEALLOCATE (rank_ip)
+   !
+   !   vector proj are distributed across the pools
+   !   collect data for all k-points to the first pool
+   !
+   CALL poolrecover(proj, 2*num_bands*n_proj, nkstot, nks)
+   !
+   ! write to standard output and to file
+   !
+   IF (ionode) THEN
+      CALL write_file_amn(proj)
+      !
+      WRITE (stdout, '(/)')
+      WRITE (stdout, *) ' AMN calculated'
+   END IF
+   !
+   DEALLOCATE (proj)
+   CALL laxlib_end()
+   !
+   CALL stop_clock('compute_amn')
+   !
+   RETURN
+   !
 END SUBROUTINE compute_amn_with_atomproj
 
 subroutine orient_gf_spinor(npw)
