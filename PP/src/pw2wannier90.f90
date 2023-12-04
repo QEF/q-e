@@ -545,53 +545,6 @@ CONTAINS
       RETURN
    END SUBROUTINE skip_comments
 
-   !-----------------------------------------------------------------------
-   SUBROUTINE write_file_amn(proj)
-      !-----------------------------------------------------------------------
-      ! On input proj has dimension num_bands x num_projs x num_kpoints
-      !
-      USE kinds, ONLY: DP
-      USE io_global, ONLY: stdout, ionode
-      USE wannier, ONLY: seedname, iun_amn, header_len, irr_bz
-
-      IMPLICIT NONE
-
-      COMPLEX(DP), INTENT(IN) :: proj(:, :, :)
-      !
-      INTEGER :: nbnd, nprj, nkpt
-      INTEGER :: ib, ip, ik
-      CHARACTER(len=9) :: cdate, ctime
-      CHARACTER(len=header_len) :: header
-
-      IF (ionode) THEN
-         nbnd = SIZE(proj, 1)
-         nprj = SIZE(proj, 2)
-         nkpt = SIZE(proj, 3)
-
-         IF (irr_bz) THEN
-            OPEN(NEWUNIT=iun_amn, file=TRIM(seedname)//".iamn", form='formatted')
-         ELSE
-            OPEN(NEWUNIT=iun_amn, file=TRIM(seedname)//".amn", form='formatted')
-         ENDIF
-         CALL date_and_tim(cdate, ctime)
-         header = 'Created on '//cdate//' at '//ctime
-         WRITE (iun_amn, *) header
-         WRITE (iun_amn, *) nbnd, nkpt, nprj
-
-         DO ik = 1, nkpt
-            DO ip = 1, nprj
-               DO ib = 1, nbnd
-                  WRITE (iun_amn, '(3i5,2f18.12)') ib, ip, ik, proj(ib, ip, ik)
-               END DO
-            END DO
-         END DO
-
-         CLOSE (iun_amn)
-      END IF
-
-      RETURN
-   END SUBROUTINE write_file_amn
-
    SUBROUTINE allocate_atproj_type(typ, ngrid, nproj)
       !
       IMPLICIT NONE
@@ -5894,6 +5847,9 @@ SUBROUTINE compute_amn_with_atomproj
    ! 4. allow excluding bands specified by user
    !
    USE kinds, ONLY: DP
+   USE mp, ONLY: mp_bcast, mp_barrier
+   USE mp_pools, ONLY: me_pool, root_pool, intra_pool_comm
+   USE mp_world, ONLY: world_comm
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE ions_base, ONLY: nat, ityp, atm, nsp
    USE basis, ONLY: natomwfc, swfcatom
@@ -5904,41 +5860,36 @@ SUBROUTINE compute_amn_with_atomproj
    USE uspp, ONLY: nkb, vkb
    USE uspp_init, ONLY : init_us_2
    USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-   USE io_files, ONLY: prefix, restart_dir, tmp_dir
+   USE io_files, ONLY: prefix, restart_dir, tmp_dir, nwordwfc, iunwfc
    USE control_flags, ONLY: gamma_only, use_para_diag
    USE pw_restart_new, ONLY: read_collected_wfc
    USE wavefunctions, ONLY: evc
-   !
    USE projections, ONLY: nlmchi, fill_nlmchi, compute_mj, &
                           sym_proj_g, sym_proj_k, sym_proj_nc, sym_proj_so, &
                           compute_zdistmat, compute_ddistmat, &
                           wf_times_overlap, wf_times_roverlap
-   !
-   USE mp, ONLY: mp_bcast
-   USE mp_pools, ONLY: me_pool, root_pool, intra_pool_comm
-   USE mp_world, ONLY: world_comm
-   USE wannier
    USE atproj, ONLY: atom_proj_dir, atom_proj_ext, atom_proj_ortho, &
                      atom_proj_sym, natproj, nexatproj, nexatproj_max, &
-                     atproj_excl, atproj_typs, &
-                     atom_proj_exclude, write_file_amn, &
+                     atproj_excl, atproj_typs, atom_proj_exclude, &
                      allocate_atproj_type, read_atomproj, init_tab_atproj, &
                      deallocate_atproj, atomproj_wfc
+   USE wannier
    !
    IMPLICIT NONE
    !
    INCLUDE 'laxlib.fh'
    !
    INTEGER :: npw, npw_, ik, ibnd, nwfc, lmax_wfc
-   INTEGER :: i, j, k, it, l, m
+   INTEGER :: i, j, k, it, l, m, ib, ip, ik_g_w90, ibnd1
    REAL(DP), ALLOCATABLE :: e(:)
    COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :), wfcatomall(:, :)
-   COMPLEX(DP), ALLOCATABLE :: proj0(:, :), proj0all(:, :), proj(:, :, :)
+   COMPLEX(DP), ALLOCATABLE :: proj0(:, :), proj0all(:, :), proj(:, :)
    COMPLEX(DP), ALLOCATABLE :: e_work_d(:, :)
    ! Some workspace for gamma-point calculation ...
    REAL(DP), ALLOCATABLE :: rproj0(:, :), rproj0all(:, :)
    COMPLEX(DP), ALLOCATABLE :: overlap_d(:, :), work_d(:, :), diag(:, :), vv(:, :)
    REAL(DP), ALLOCATABLE :: roverlap_d(:, :)
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
    !
    LOGICAL :: freeswfcatom
    !
@@ -5959,6 +5910,8 @@ SUBROUTINE compute_amn_with_atomproj
    LOGICAL :: has_excl_proj
    INTEGER :: ierr
    !
+   INTEGER, EXTERNAL :: global_kpoint_index
+   !
    CALL start_clock('compute_amn')
    !
    IF (wan_mode == 'library') THEN
@@ -5973,6 +5926,8 @@ SUBROUTINE compute_amn_with_atomproj
       IF (atom_proj_sym) CALL errore('pw2wannier90', &
                    'does not support symmetrization with external projectors', 1)
    ENDIF
+   !
+   ALLOCATE(evc_k(npol*npwx, num_bands))
    !
    IF (atom_proj_ext) THEN
       ALLOCATE (atproj_typs(nsp), stat=ierr)
@@ -6020,7 +5975,7 @@ SUBROUTINE compute_amn_with_atomproj
          ENDDO
          WRITE (stdout, *) ''
          n_proj = natomwfc
-      ENDIF
+      ENDIF ! atom_proj_ext
 1000  FORMAT(5X, "state #", i4, ": atom ", i3, " (", a3, "), wfc ", i2, &
              " (l=", i1)
       !
@@ -6089,6 +6044,7 @@ SUBROUTINE compute_amn_with_atomproj
       ! the root node has been filled already
       IF (.NOT. ionode) CALL fill_nlmchi(natomwfc, lmax_wfc)
    ENDIF ! atom_proj_ext
+   !
    CALL mp_bcast(natproj, ionode_id, world_comm)
    CALL mp_bcast(n_proj, ionode_id, world_comm)
    CALL mp_bcast(nexatproj, ionode_id, world_comm)
@@ -6133,14 +6089,14 @@ SUBROUTINE compute_amn_with_atomproj
       WRITE (stdout, *)
    END IF
    !
-   ALLOCATE (proj(num_bands, n_proj, nkstot))
+   ALLOCATE (proj(num_bands, n_proj))
    !
    IF (.NOT. ALLOCATED(swfcatom)) THEN
       ALLOCATE (swfcatom(npwx*npol, n_proj), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating swfcatom', 1)
       freeswfcatom = .TRUE.
    ELSE
-     freeswfcatom = .FALSE.
+      freeswfcatom = .FALSE.
    ENDIF
    !
    ALLOCATE (wfcatom(npwx*npol, n_proj), stat=ierr)
@@ -6158,30 +6114,30 @@ SUBROUTINE compute_amn_with_atomproj
    ALLOCATE (e(n_proj), stat=ierr)
    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e', 1)
    !
-   !    loop on k points
+   CALL utility_open_output_file("amn", .TRUE., iun_amn)
+   IF (ionode) WRITE(iun_amn, *) num_bands, iknum, n_proj
    !
-   WRITE (stdout, '(a,i8)') '  AMN: iknum = ', iknum
+   ! loop on k points
+   !
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   !
    DO ik = 1, nks
       !
-      IF (ionode) THEN
-         WRITE (stdout, '(i8)', advance='no') ik
-         IF (MOD(ik, 10) == 0) WRITE (stdout, *)
-         FLUSH (stdout)
-      END IF
+      CALL print_progress(ik, nks)
       !
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       npw = ngk(ik)
-      CALL read_collected_wfc(restart_dir(), ik, evc)
       !
-      ! exclude bands
-      IF (nexband > 0) THEN
-         i = 1
-         DO j = 1, nbnd
-            IF (excluded_band(j)) CYCLE
-            IF (i /= j) evc(:, i) = evc(:, j)
-            i = i + 1
-         END DO
-         evc(:, (num_bands + 1):nbnd) = (0.0_DP, 0.0_DP)
-      END IF
+      ! Read wavefunctions at k, exclude the excluded bands
+      !
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1 )
+      !
+      ibnd1 = 0
+      DO ibnd = 1, nbnd
+         IF (excluded_band(ibnd)) CYCLE
+         ibnd1 = ibnd1 + 1
+         evc_k(:, ibnd1) = evc(:, ibnd)
+      ENDDO
       !
       wfcatom(:, :) = (0.0_DP, 0.0_DP)
       IF (atom_proj_ext) THEN
@@ -6354,7 +6310,7 @@ SUBROUTINE compute_amn_with_atomproj
          !
          ALLOCATE (rproj0(n_proj, num_bands), stat=ierr)
          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rproj0', 1)
-         CALL calbec(npw, wfcatom, evc, rproj0, nbnd=num_bands)
+         CALL calbec(npw, wfcatom, evc_k, rproj0, nbnd=num_bands)
          ! haven't tested symmetrization with external projectors, so
          ! I disable these for now.
          ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
@@ -6387,14 +6343,14 @@ SUBROUTINE compute_amn_with_atomproj
          ! END IF
          !
          ! Note the CONJG, I need <psi|g>, while rpoj0 = <g|psi>
-         proj(:, :, ik) = TRANSPOSE(rproj0(:, :))
+         proj(:, :) = TRANSPOSE(rproj0(:, :))
          DEALLOCATE (rproj0)
          !
       ELSE
          !
          ALLOCATE (proj0(n_proj, num_bands), stat=ierr)
          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj0', 1)
-         CALL calbec(npw_, wfcatom, evc, proj0, nbnd=num_bands)
+         CALL calbec(npw_, wfcatom, evc_k, proj0, nbnd=num_bands)
          !
          ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
          !   IF (has_excl_proj) THEN
@@ -6438,11 +6394,31 @@ SUBROUTINE compute_amn_with_atomproj
          ! END IF
          !
          ! Note the CONJG, I need <psi|g>, while proj0 = <g|psi>
-         proj(:, :, ik) = TRANSPOSE(CONJG(proj0(:, :)))
+         proj(:, :) = TRANSPOSE(CONJG(proj0(:, :)))
          DEALLOCATE (proj0)
          !
       ENDIF ! gamma_only
+      !
+      ! Write amn to file
+      !
+      IF (me_pool == root_pool) THEN
+         DO ip = 1, n_proj
+            DO ib = 1, num_bands
+               WRITE (iun_amn, '(3i5,2f18.12)') ib, ip, ik_g_w90, proj(ib, ip)
+            ENDDO
+         ENDDO
+      ENDIF
+      !
    ENDDO ! on k-points
+   !
+   IF (me_pool == root_pool) CLOSE (iun_amn, STATUS="KEEP")
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   CALL utility_merge_files("amn", .TRUE.)
    !
    CALL deallocate_atproj()
    DEALLOCATE (e)
@@ -6452,16 +6428,9 @@ SUBROUTINE compute_amn_with_atomproj
    DEALLOCATE (idesc_ip)
    DEALLOCATE (rank_ip)
    !
-   !   vector proj are distributed across the pools
-   !   collect data for all k-points to the first pool
-   !
-   CALL poolrecover(proj, 2*num_bands*n_proj, nkstot, nks)
-   !
    ! write to standard output and to file
    !
    IF (ionode) THEN
-      CALL write_file_amn(proj)
-      !
       WRITE (stdout, '(/)')
       WRITE (stdout, *) ' AMN calculated'
    END IF
@@ -6470,8 +6439,6 @@ SUBROUTINE compute_amn_with_atomproj
    CALL laxlib_end()
    !
    CALL stop_clock('compute_amn')
-   !
-   RETURN
    !
 END SUBROUTINE compute_amn_with_atomproj
 
@@ -6540,10 +6507,10 @@ SUBROUTINE generate_guiding_functions(ik)
 
    INTEGER, INTENT(in) :: ik
    INTEGER, PARAMETER :: lmax=3, lmax2=(lmax+1)**2
-   INTEGER :: npw, iw, ig, bgtau(3), isph, l, mesh_r
+   INTEGER :: npw, iw, ig, l
    INTEGER :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
-   real(DP) :: arg, fac, alpha_w2, yy, alfa, ddot
-   COMPLEX(DP) :: zdotc, kphase, lphase, gff, lph
+   real(DP) :: arg
+   COMPLEX(DP) :: lphase
    real(DP), ALLOCATABLE :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    !
