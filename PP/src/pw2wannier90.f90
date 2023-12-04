@@ -552,13 +552,11 @@ CONTAINS
       !
       USE kinds, ONLY: DP
       USE io_global, ONLY: stdout, ionode
-      USE wannier, ONLY: seedname, iun_amn, header_len
+      USE wannier, ONLY: seedname, iun_amn, header_len, irr_bz
 
       IMPLICIT NONE
 
       COMPLEX(DP), INTENT(IN) :: proj(:, :, :)
-      !
-      INTEGER, EXTERNAL :: find_free_unit
       !
       INTEGER :: nbnd, nprj, nkpt
       INTEGER :: ib, ip, ik
@@ -570,8 +568,11 @@ CONTAINS
          nprj = SIZE(proj, 2)
          nkpt = SIZE(proj, 3)
 
-         iun_amn = find_free_unit()
-         OPEN (unit=iun_amn, file=TRIM(seedname)//".amn", form='formatted')
+         IF (irr_bz) THEN
+            OPEN(NEWUNIT=iun_amn, file=TRIM(seedname)//".iamn", form='formatted')
+         ELSE
+            OPEN(NEWUNIT=iun_amn, file=TRIM(seedname)//".amn", form='formatted')
+         ENDIF
          CALL date_and_tim(cdate, ctime)
          header = 'Created on '//cdate//' at '//ctime
          WRITE (iun_amn, *) header
@@ -626,21 +627,17 @@ CONTAINS
       !
       TYPE(atproj_type), INTENT(INOUT) :: typs(nsp)
       !
-      INTEGER, EXTERNAL :: find_free_unit
-      !
       INTEGER :: i, j, it
       LOGICAL :: file_exists
       CHARACTER(len=256) :: filename
       INTEGER :: ngrid, nproj
-
-      iun_atproj = find_free_unit()
 
       DO it = 1, nsp
          filename = TRIM(atom_proj_dir)//'/'//TRIM(atm(it))//".dat"
          INQUIRE (FILE=TRIM(filename), EXIST=file_exists)
          IF (.NOT. file_exists) &
             CALL errore('pw2wannier90', 'file not exists: '//TRIM(filename), 1)
-         OPEN (unit=iun_atproj, file=TRIM(filename), form='formatted')
+         OPEN (NEWUNIT=iun_atproj, file=TRIM(filename), form='formatted')
          CALL skip_comments(iun_atproj)
 
          READ (iun_atproj, *) ngrid, nproj
@@ -3280,7 +3277,6 @@ SUBROUTINE compute_mmn_ibz
    !
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL      :: find_free_unit
    COMPLEX(DP), EXTERNAL  :: zdotc
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
@@ -3310,11 +3306,10 @@ SUBROUTINE compute_mmn_ibz
    !
    CALL save_sym_info()
    !
-   iun_mmn = find_free_unit()
    CALL date_and_tim( cdate, ctime )
    header='IBZ Mmn created on '//cdate//' at '//ctime
    IF (ionode) THEN
-      OPEN (unit=iun_mmn, file=trim(seedname)//".immn",form='formatted')
+      OPEN(NEWUNIT=iun_mmn, file=trim(seedname)//".immn",form='formatted')
       WRITE (iun_mmn,*) header
       WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
    ENDIF
@@ -3511,8 +3506,6 @@ SUBROUTINE compute_mmn_ibz
       USE start_k,         ONLY : k1, k2, k3, nk1, nk2, nk3
       USE wannier,         ONLY : seedname, n_wannier, nexband
       !
-      INTEGER, EXTERNAL        :: find_free_unit
-      !
       INTEGER                  :: i, m, n, iun_sym, mi, ni, a, ncount
       CHARACTER (len=9)        :: cdate,ctime
       REAL(DP)                 :: srt(3,3)
@@ -3527,10 +3520,9 @@ SUBROUTINE compute_mmn_ibz
       !
       ! save repmat
       !
-      iun_sym = find_free_unit()
       CALL date_and_tim( cdate, ctime )
       IF (ionode) THEN
-         OPEN(unit=iun_sym, file=trim(seedname)//".isym", form='formatted')
+         OPEN(NEWUNIT=iun_sym, file=trim(seedname)//".isym", form='formatted')
          !
          ! save symmetry operation
          !
@@ -5210,7 +5202,11 @@ SUBROUTINE compute_amn
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands, n_wannier, iknum))
    !
    IF (wan_mode=='standalone') THEN
-      CALL utility_open_output_file("amn", .TRUE., iun_amn)
+      IF (irr_bz) THEN
+         CALL utility_open_output_file("iamn", .TRUE., iun_amn)
+      ELSE
+         CALL utility_open_output_file("amn", .TRUE., iun_amn)
+      ENDIF
       IF (ionode) WRITE(iun_amn, *) num_bands, iknum, n_proj
    ENDIF
    !
@@ -5372,7 +5368,11 @@ SUBROUTINE compute_amn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("amn", .TRUE.)
+   IF (irr_bz) THEN
+      CALL utility_merge_files("iamn", .TRUE.)
+   ELSE
+      CALL utility_merge_files("amn", .TRUE.)
+   ENDIF
    !
    DEALLOCATE(sgf)
    DEALLOCATE(csph)
@@ -6632,7 +6632,11 @@ SUBROUTINE write_band
    !
    IF (wan_mode == 'standalone') THEN
       IF (me_pool == root_pool) THEN
-         filename = TRIM(seedname) // ".eig"
+         IF (irr_bz) THEN
+            filename = TRIM(seedname) // ".ieig"
+         ELSE
+            filename = TRIM(seedname) // ".eig"
+         ENDIF
          IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
          OPEN(NEWUNIT=iun_band, FILE=TRIM(filename), FORM='FORMATTED', STATUS='REPLACE')
       ENDIF
