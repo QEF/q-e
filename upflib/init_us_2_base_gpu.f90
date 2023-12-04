@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2021-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE uspp_data,    ONLY : nqx, dq, tab_d
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   USE device_fbuff_m,   ONLY : dev_buf
@@ -121,24 +120,9 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
 
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
-  do nt = 1, nsp
+  do nt = 1, nsp     
      do nb = 1, upf(nt)%nbeta
-        !$cuf kernel do(1) <<<*,*>>>
-        do ig = 1, npw_
-           rv_d = qg_d(ig)
-           px = rv_d / dq - int (rv_d / dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = INT( rv_d / dq ) + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           vq_d (ig) = ux * vx * (wx * tab_d(i0, nb, nt) + px * tab_d(i3, nb, nt)) / 6.d0 + &
-                       px * wx * (vx * tab_d(i1, nb, nt) - ux * tab_d(i2, nb, nt)) * 0.5d0
-                          
-        enddo
-
+        CALL interp_beta ( nt, nb, npw_, qg_d, vq_d )
         ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
         do ih = 1, nh (nt)
            if (nb.eq.indv (ih, nt) ) then
@@ -207,3 +191,45 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   !
   return
 end subroutine init_us_2_base_gpu
+!
+!-----------------------------------------------------------------------
+SUBROUTINE interp_beta ( nt, nb, npw, qg, vq )
+  !-----------------------------------------------------------------------
+  !
+  ! computes vq: radial fourier transform of beta functions
+  !
+  USE upf_kinds,  ONLY : dp
+  USE uspp_data,  ONLY : dq, tab_beta
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN)  :: nt
+  INTEGER, INTENT(IN)  :: npw
+  INTEGER, INTENT(IN)  :: nb
+  REAL(dp), INTENT(IN) :: qg(npw)
+  REAL(dp), INTENT(OUT):: vq(npw)
+  !
+  INTEGER :: ig
+  INTEGER :: i0, i1, i2, i3
+  REAL(dp):: qgr, px, ux, vx, wx
+  !
+  !$acc data present(tab_beta) deviceptr(qg, vq)
+  !$acc parallel loop
+  DO ig = 1, npw
+     qgr = qg(ig)
+     px = qgr / dq - DBLE(INT(qgr/dq))
+     ux = 1.d0 - px
+     vx = 2.d0 - px
+     wx = 3.d0 - px
+     i0 = INT(qgr/dq) + 1
+     i1 = i0 + 1
+     i2 = i0 + 2
+     i3 = i0 + 3
+     vq(ig) = &
+          tab_beta(i0,nb,nt) * ux * vx * wx / 6.d0 + &
+          tab_beta(i1,nb,nt) * px * vx * wx / 2.d0 - &
+          tab_beta(i2,nb,nt) * px * ux * wx / 2.d0 + &
+          tab_beta(i3,nb,nt) * px * ux * vx / 6.d0
+  END DO
+  !$acc end data
+END SUBROUTINE interp_beta

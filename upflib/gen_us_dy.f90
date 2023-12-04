@@ -19,7 +19,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_kinds,   ONLY: dp
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,   ONLY: nqx, tab, dq
+  USE uspp_data,   ONLY: nqx, tab_beta, dq
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
   !
   IMPLICIT NONE
@@ -142,7 +142,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   q(:) = SQRT(q(:)) * tpiba
   !$acc end kernels
   !
-  !$acc data copyin( tab )
+  !$acc data present ( tab_beta )
   DO nt = 1, ntyp
      nbm = upf(nt)%nbeta
      !$acc parallel loop collapse(2)
@@ -156,10 +156,10 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3
-           vkb0(ig,nb,nt) = tab(i0,nb,nt) * ux * vx * wx / 6._DP + &
-                            tab(i1,nb,nt) * px * vx * wx / 2._DP - &
-                            tab(i2,nb,nt) * px * ux * wx / 2._DP + &
-                            tab(i3,nb,nt) * px * ux * vx / 6._DP
+           vkb0(ig,nb,nt) = tab_beta(i0,nb,nt) * ux * vx * wx / 6._DP + &
+                            tab_beta(i1,nb,nt) * px * vx * wx / 2._DP - &
+                            tab_beta(i2,nb,nt) * px * ux * wx / 2._DP + &
+                            tab_beta(i3,nb,nt) * px * ux * vx / 6._DP
        ENDDO
     ENDDO
   ENDDO

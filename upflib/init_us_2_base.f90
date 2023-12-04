@@ -15,7 +15,7 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE uspp_data,    ONLY : nqx, dq, tab
+  USE uspp_data,    ONLY : nqx, dq, tab_beta
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   !
@@ -105,7 +105,7 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
      !
      ! This should not happen, but better to check
      !
-     IF ( INT(qg(realblocksize)/dq)+4 > size(tab,1) ) CALL upf_error &
+     IF ( INT(qg(realblocksize)/dq)+4 > size(tab_beta,1) ) CALL upf_error &
         ('init_us_2', 'internal error: dimension of interpolation table', 1 )
      !
      ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
@@ -124,10 +124,10 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
               i1 = i0 + 1
               i2 = i0 + 2
               i3 = i0 + 3
-              vq(ig) = tab(i0,nb,nt) * ux * vx * wx / 6.d0 + &
-                       tab(i1,nb,nt) * px * vx * wx / 2.d0 - &
-                       tab(i2,nb,nt) * px * ux * wx / 2.d0 + &
-                       tab(i3,nb,nt) * px * ux * vx / 6.d0
+              vq(ig) = tab_beta(i0,nb,nt) * ux * vx * wx / 6.d0 + &
+                       tab_beta(i1,nb,nt) * px * vx * wx / 2.d0 - &
+                       tab_beta(i2,nb,nt) * px * ux * wx / 2.d0 + &
+                       tab_beta(i3,nb,nt) * px * ux * vx / 6.d0
            ENDDO
            ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
            DO ih = 1, nh(nt)

@@ -18,7 +18,7 @@ subroutine init_gipaw_1
   USE cell_base ,  ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants,   ONLY : fpi
-  USE uspp_data,   ONLY : dq, nqx, tab
+  USE uspp_data,   ONLY : dq, nqx
   USE paw_gipaw,   ONLY : paw_recon, paw_nkb, paw_lmaxkb, nbrx
   USE splinelib
   USE uspp,        ONLY : ap, aainit

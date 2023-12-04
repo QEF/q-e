@@ -23,7 +23,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   !      spherical harmonics in the Q expansion
   !   f) It computes the interpolation table "qrad" for Q(G)
   !   g) It computes the qq terms which define the S matrix.
-  !   h) It fills the interpolation table "tab" for the beta functions
+  !   h) It fills the interpolation table "tab_beta" for the beta functions
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
