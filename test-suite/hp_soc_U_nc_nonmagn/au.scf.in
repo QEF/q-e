@@ -1,6 +1,5 @@
 &CONTROL
   calculation = 'scf'
-  outdir = 'tmp'
   prefix = 'au'
   pseudo_dir = '../../pseudo/'
   tstress = .true.

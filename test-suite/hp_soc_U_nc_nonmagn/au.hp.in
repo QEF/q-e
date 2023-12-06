@@ -1,6 +1,5 @@
  &inputhp
    prefix = 'au',
-   outdir = 'tmp'
    nq1    = 2,
    nq2    = 2,
    nq3    = 2,
