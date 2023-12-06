@@ -1,7 +1,6 @@
 &control
       calculation = 'scf'
       prefix = 'bn'
-      outdir = 'tmp'
       tprnfor = .true.
       tstress = .true.
    /
@@ -11,8 +10,8 @@
       celldm(3) = 4.3,
       nat = 2
       ntyp = 2
-      ecutwfc = 30
-      ecutrho = 300.0
+      ecutwfc = 35
+      ecutrho = 350.0
       occupations = 'smearing'
       smearing = 'gauss'
       degauss = 0.01

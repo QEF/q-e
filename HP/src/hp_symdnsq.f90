@@ -48,7 +48,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   ldim = 2 * Hubbard_lmax + 1
   !
   ! Initialization
-  IF (noncolin) THEN
+  IF (noncolin.and.domag) THEN
      IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
      CALL comp_dspinldau()
   ENDIF
@@ -60,7 +60,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   ALLOCATE( dnraux(ldim, ldim, nspin, nat) )  
   dnraux(:,:,:,:) = (0.d0,0.d0)
   !
-  IF (noncolin) then
+  IF (noncolin.and.domag) then
     ALLOCATE( dnr_nc(ldim, ldim, npol, npol, nat) )  
     dnr_nc(:,:,:,:,:) = (0.d0,0.d0)  
     ALLOCATE( dnr1_nc(ldim, ldim, npol, npol, nat) )  
@@ -76,7 +76,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   ! and put it in dnr zeroing dnsq
   ! IT: Hermiticity is already imposed by construction
   !
-  IF (noncolin) then
+  IF (noncolin.and.domag) then
     DO na = 1, nat
        nt = ityp (na)
        IF ( is_hubbard(nt) ) THEN
@@ -178,7 +178,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   DO isym = 1, nsymq
     !
     dnsq(:,:,:,:) = (0.d0,0.d0)
-    if (noncolin) dnr1_nc(:,:,:,:,:) = (0.d0,0.d0)
+    if (noncolin.and.domag) dnr1_nc(:,:,:,:,:) = (0.d0,0.d0)
     !
     irot = isym
     !
@@ -201,7 +201,7 @@ SUBROUTINE hp_symdnsq (dnsq)
           ! where G = Sq - q, and tau_pert is the position
           ! of the perturbed atom 
           !
-          IF (noncolin) THEN
+          IF (noncolin.and.domag) THEN
              gi_t = 0.d0 
              aq   = xq
              call cryst_to_cart (1, aq, at, - 1)
@@ -234,7 +234,7 @@ SUBROUTINE hp_symdnsq (dnsq)
             phase2(0) = CMPLX (cos(arg2), -sin(arg2), kind=DP)
           ENDIF
           !
-          IF (noncolin) THEN
+          IF (noncolin.and.domag) THEN
             DO m1 = 1, 2 * Hubbard_l(nt) + 1  
                DO m2 = 1, 2 * Hubbard_l(nt) + 1
                   DO is1 = 1, npol
@@ -348,7 +348,7 @@ SUBROUTINE hp_symdnsq (dnsq)
        !
     ENDDO ! na
     !
-    IF (noncolin) then
+    IF (noncolin.and.domag) then
        dnraux_nc = dnraux_nc + dnr1_nc / nsymq
     ELSE
        dnraux = dnraux + dnsq / nsymq
@@ -358,7 +358,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   !
   ! Setup the output matrix ns with combined spin index 
   !
-  IF (noncolin) THEN
+  IF (noncolin.and.domag) THEN
       DO na = 1, nat
          nt = ityp (na)
          IF ( is_hubbard(nt) ) THEN
@@ -378,7 +378,7 @@ SUBROUTINE hp_symdnsq (dnsq)
       dnsq = dnraux
   ENDIF
   !
-  IF (noncolin) THEN
+  IF (noncolin.and.domag) THEN
      DEALLOCATE (dnr_nc)
      DEALLOCATE (dnr1_nc)
      DEALLOCATE (dnraux_nc)

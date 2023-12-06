@@ -1,7 +1,6 @@
 &control
       calculation = 'scf'
       prefix = 'bn'
-      outdir = 'tmp'
       tprnfor = .true.
       tstress = .true.
    /
