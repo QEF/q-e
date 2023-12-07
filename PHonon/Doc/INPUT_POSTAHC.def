@@ -45,7 +45,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
             Directory where the binary files are located.
         }
     }
-    var use_irr_q  -type CHARACTER {
+    var use_irr_q  -type LOGICAL {
         default { .false. }
         info {
             If .true., assume that the q points are on the irreducible grid. In this case,
