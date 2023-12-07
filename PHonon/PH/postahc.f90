@@ -26,7 +26,10 @@ PROGRAM postahc
   USE mp_pools,    ONLY : npool, nproc_pool, me_pool, intra_pool_comm
   USE io_global,   ONLY : ionode_id, ionode, stdout
   USE io_files,    ONLY : tmp_dir, prefix
+  USE io_global,   ONLY : meta_ionode, meta_ionode_id, qestdin
   USE environment, ONLY : environment_start, environment_end
+  USE read_namelists_module, ONLY : check_namelist_read
+  USE open_close_input_file, ONLY : open_input_file
   USE klist,       ONLY : nks, xk
   USE symm_base,   ONLY : s, invs, nsym
   USE cell_base,   ONLY : at, bg
@@ -213,9 +216,18 @@ PROGRAM postahc
   !
   ! Reading input
   !
-  IF (ionode) CALL input_from_file()
+  IF (meta_ionode) THEN
+    !
+    ! Input from file (ios=0) or standard input (ios=-1) on unit "qestdin"
+    !
+    ios = open_input_file (  )
+    !
+  ENDIF
   !
-  ! Default values of input arguments
+  CALL mp_bcast(ios, meta_ionode_id, world_comm )
+  CALL errore('postahc', 'reading input file ', ABS( ios ) )
+  !
+  ! Set default values for variables in namelist
   !
   prefix = 'pwscf'
   CALL get_environment_variable('ESPRESSO_TMPDIR', outdir)
@@ -234,11 +246,17 @@ PROGRAM postahc
   ahc_win_min_eV = -1.d8
   ahc_win_max_eV = 1.d8
   !
-  ! Read input file
+  ! Read the namelist input
   !
-  IF (ionode) READ (5, input, IOSTAT=ios)
-  CALL mp_bcast(ios, ionode_id, world_comm)
-  CALL errore('postahc','error reading input namelist', ABS(ios))
+  IF (meta_ionode) THEN
+     READ( qestdin, INPUT, IOSTAT = ios )
+  ENDIF
+  CALL check_namelist_read(ios, qestdin, "input")
+  !
+  CALL mp_bcast(ios, meta_ionode_id, world_comm )
+  IF ( ABS(ios) /= 0 ) THEN
+    CALL errore( 'postahc', 'reading input namelist', ABS( ios ) )
+  ENDIF
   !
   ! Broadcast input arguments
   !
