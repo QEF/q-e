@@ -30,6 +30,7 @@ PROGRAM postahc
   USE environment, ONLY : environment_start, environment_end
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file
+  USE run_info,    ONLY : title
   USE klist,       ONLY : nks, xk
   USE symm_base,   ONLY : s, invs, nsym
   USE cell_base,   ONLY : at, bg
@@ -199,6 +200,7 @@ PROGRAM postahc
   COMPLEX(DP), ALLOCATABLE :: selfen_diag_avg(:, :, :)
   !! Diagonal self-energy averaged over degenerate states
   !
+  LOGICAL, EXTERNAL  :: imatches
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(len=6), EXTERNAL :: int_to_char
   REAL(DP), EXTERNAL :: wgauss
@@ -218,14 +220,29 @@ PROGRAM postahc
   !
   IF (meta_ionode) THEN
     !
-    ! Input from file (ios=0) or standard input (ios=-1) on unit "qestdin"
+    ! ... Input from file (ios=0) or standard input (ios=-1) on unit "qestdin"
     !
     ios = open_input_file (  )
+    !
+    ! ... Read the first line of the input file
+    !
+    IF ( ios <= 0 ) READ( qestdin, '(A)', IOSTAT = ios ) title
     !
   ENDIF
   !
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
-  CALL errore('postahc', 'reading input file ', ABS( ios ) )
+  CALL errore( 'postahc', 'reading input file ', ABS( ios ) )
+  CALL mp_bcast(title, meta_ionode_id, world_comm  )
+  !
+  ! Rewind the input if the title is actually the beginning of inputph namelist
+  !
+  IF( imatches("&input", title) ) THEN
+    WRITE(stdout,'(6x,a)') "Title line not specified: using 'default'."
+    title = 'default'
+    IF (meta_ionode) REWIND(qestdin, iostat=ios)
+    CALL mp_bcast(ios, meta_ionode_id, world_comm  )
+    CALL errore('postahc', 'Title line missing from input.', abs(ios))
+  ENDIF
   !
   ! Set default values for variables in namelist
   !
@@ -629,7 +646,7 @@ PROGRAM postahc
         selfen_diag = selfen_diag / REAL(count, KIND=DP)
         !
         DO ibnd = 1, ahc_nbnd
-          WRITE(stdout, '(5x, 2I6, 6F13.8)') ikirr, ibnd, &
+          WRITE(stdout, '(5x, 2I6, 6ES13.4)') ikirr, ibnd, &
               REAL(selfen_diag(ibnd, :))  * RYTOEV, &
               AIMAG(selfen_diag(ibnd, 1)) * RYTOEV
         ENDDO
@@ -640,7 +657,7 @@ PROGRAM postahc
       !
       DO ik = 1, nks
         DO ibnd = 1, ahc_nbnd
-          WRITE(stdout, '(5x, 2I6, 6F13.8)') ik, ibnd, &
+          WRITE(stdout, '(5x, 2I6, 6ES13.4)') ik, ibnd, &
               REAL(selfen_diag_avg(ibnd, :, ik))  * RYTOEV, &
               AIMAG(selfen_diag_avg(ibnd, 1, ik)) * RYTOEV
         ENDDO
@@ -679,7 +696,7 @@ PROGRAM postahc
       DO ik = 1, nks
         DO jbnd = 1, ahc_nbnd
           DO ibnd = 1, ahc_nbnd
-            WRITE(iun, '(3I6, 5F12.7)') ik, ibnd, jbnd, &
+            WRITE(iun, '(3I6, 5ES16.7)') ik, ibnd, jbnd, &
               REAL(selfen_tot(ibnd, jbnd, ik))   * RYTOEV, &
               REAL(selfen_dw(ibnd, jbnd, ik))    * RYTOEV, &
               REAL(selfen_fan(ibnd, jbnd, ik))   * RYTOEV, &
@@ -698,7 +715,7 @@ PROGRAM postahc
       DO ik = 1, nks
         DO jbnd = 1, ahc_nbnd
           DO ibnd = 1, ahc_nbnd
-            WRITE(iun, '(3I6, 5F12.7)') ik, ibnd, jbnd, &
+            WRITE(iun, '(3I6, 5ES16.7)') ik, ibnd, jbnd, &
               AIMAG(selfen_tot(ibnd, jbnd, ik))   * RYTOEV, &
               AIMAG(selfen_dw(ibnd, jbnd, ik))    * RYTOEV, &
               AIMAG(selfen_fan(ibnd, jbnd, ik))   * RYTOEV, &

@@ -1034,7 +1034,6 @@ SUBROUTINE elph_ahc_setup()
   REAL(DP), ALLOCATABLE :: et_collect(:, :, :)
   !! energy eigenvalues at k and k+q for all k points
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  INTEGER, EXTERNAL :: find_free_unit
   !
   IF (ahc_nbndskip + ahc_nbnd > nbnd) CALL errore('elph_ahc_setup', &
      'ahc_nbndskip + ahc_nbnd cannot be greater than nbnd', 1)
@@ -1101,12 +1100,10 @@ SUBROUTINE elph_ahc_setup()
     filoutetq = TRIM(ahc_dir) // 'ahc_etq_iq' // TRIM(int_to_char(current_iq)) // '.bin'
     INQUIRE(IOLENGTH=recl) et_collect(:, :, 1)
     !
-    iunetk = find_free_unit()
-    OPEN(UNIT=iunetk, FILE=TRIM(filoutetk), FORM='unformatted', &
+    OPEN(NEWUNIT=iunetk, FILE=TRIM(filoutetk), FORM='unformatted', &
         ACCESS='direct', RECL=recl)
     !
-    iunetq = find_free_unit()
-    OPEN(UNIT=iunetq, FILE=TRIM(filoutetq), FORM='unformatted', &
+    OPEN(NEWUNIT=iunetq, FILE=TRIM(filoutetq), FORM='unformatted', &
         ACCESS='direct', RECL=recl)
     !
     DO ik = 1, nksqtot
@@ -1187,7 +1184,6 @@ SUBROUTINE elph_do_ahc()
   COMPLEX(DP), ALLOCATABLE :: dvpsi_gauged(:, :)
   !! Temporary storage of \(\text{dvpsi}\) for rotating to Cartesian
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  INTEGER, EXTERNAL :: find_free_unit
   !
   WRITE(stdout, *) ""
   WRITE(stdout, '(5x,a)') "Begin electron-phonon calculation for AHC theory"

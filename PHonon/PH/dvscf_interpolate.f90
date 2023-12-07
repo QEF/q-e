@@ -110,7 +110,6 @@ MODULE dvscf_interpolate
     !! Average of Born effective charge. Used for charge neutrality correction.
     REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
     !! Specific quadrupole values read from file.
-    INTEGER, EXTERNAL :: find_free_unit
     !
     IF (nspin_mag /= 1) CALL errore(' dvscf_r2q', ' magnetism not implemented',1)
     IF (nspin == 2) CALL errore(' dvscf_r2q', ' LSDA magnetism not implemented',1)
@@ -172,8 +171,7 @@ MODULE dvscf_interpolate
       ALLOCATE(zeu_r2q(3, 3, nat))
       !
       IF (ionode) THEN
-        iun = find_free_unit()
-        OPEN(iun, FILE=TRIM(wpot_dir)//'tensors.dat', FORM='formatted', &
+        OPEN(NEWUNIT=iun, FILE=TRIM(wpot_dir)//'tensors.dat', FORM='formatted', &
           STATUS='old', ACTION='read', IOSTAT=ios)
         IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
             'problem opening tensors.dat', ios)
@@ -235,8 +233,7 @@ MODULE dvscf_interpolate
     ! read rlatt.txt file to parse real space unit cell grid
     !
     IF (ionode) THEN
-      iun = find_free_unit()
-      OPEN(iun, FILE=TRIM(wpot_dir)//'rlatt.txt', FORM='formatted', &
+      OPEN(NEWUNIT=iun, FILE=TRIM(wpot_dir)//'rlatt.txt', FORM='formatted', &
         STATUS='old', ACTION='read', IOSTAT=ios)
       IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
           'problem reading rlatt.txt', ios)
@@ -354,7 +351,6 @@ MODULE dvscf_interpolate
     !! temporary storage of gathered w_pot
     !
     LOGICAL, EXTERNAL :: has_xml
-    INTEGER, EXTERNAL :: find_free_unit
     !
     CALL mp_barrier(intra_image_comm)
     !

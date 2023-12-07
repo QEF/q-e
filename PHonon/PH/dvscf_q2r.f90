@@ -317,9 +317,7 @@ PROGRAM dvscf_q2r
     !
     WRITE(stdout,'(/,4x," Reading grid info from file ",a)') TRIM(fildyn)//'0'
     !
-    iun = find_free_unit()
-    !
-    OPEN(UNIT=iun, FILE=TRIM(fildyn)//'0', STATUS='old', FORM='formatted', &
+    OPEN(NEWUNIT=iun, FILE=TRIM(fildyn)//'0', STATUS='old', FORM='formatted', &
          IOSTAT=ios)
     IF (ios /= 0) CALL errore('dvscf_q2r', 'problem opening fildyn0', ios)
     !
@@ -378,8 +376,7 @@ PROGRAM dvscf_q2r
     ! Write zeu and epsil to file. To be read in dvscf_r2q
     !
     IF (ionode) THEN
-      iun = find_free_unit()
-      OPEN(iun, FILE=TRIM(wpot_dir)//'tensors.dat', FORM='formatted', &
+      OPEN(NEWUNIT=iun, FILE=TRIM(wpot_dir)//'tensors.dat', FORM='formatted', &
           ACTION='write', IOSTAT=ios)
       IF (ios /= 0) CALL errore('dvscf_q2r', &
           'problem opening tensors.dat file for writing zeu and epsil', ios)
@@ -657,8 +654,7 @@ PROGRAM dvscf_q2r
   WRITE(stdout, '(5x,a)') "Fourier transforming dvscf to w_pot, writing to file"
   !
   IF (ionode) THEN
-    iunrlatt = find_free_unit()
-    OPEN(iunrlatt, FILE=TRIM(wpot_dir)//'rlatt.txt', FORM='formatted', &
+    OPEN(NEWUNIT=iunrlatt, FILE=TRIM(wpot_dir)//'rlatt.txt', FORM='formatted', &
       ACTION='write')
     WRITE(iunrlatt, '(a)') "# Real space unit cell index for w_pot"
     WRITE(iunrlatt, '(a)') "#     ir     ir1     ir2     ir3"
