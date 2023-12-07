@@ -113,9 +113,12 @@ CONTAINS
     CALL read_pp_full_wfc ( upf, ierr )
     if ( ierr > 0 ) go to 10
     !
-    allocate( upf%rho_at(1:upf%mesh) )
+    ALLOCATE( upf%rho_at(1:upf%mesh) )
     CALL xmlr_readtag( capitalize_if_v2('pp_rhoatom'), &
          upf%rho_at(1:upf%mesh) )
+    !
+    CALL read_pp_metagga ( upf, ierr)
+    if ( ierr > 0 ) go to 10
     !
     CALL read_pp_spinorb ( upf, ierr )
     if ( ierr > 0 ) go to 10
@@ -186,6 +189,7 @@ CONTAINS
     CALL xmlr_readtag( 'has_gipaw', upf%has_gipaw )
     CALL xmlr_readtag( 'paw_as_gipaw', upf%paw_as_gipaw)
     CALL xmlr_readtag( 'core_correction', upf%nlcc)
+    CALL xmlr_readtag( 'with_metagga_info', upf%with_metagga_info )
     CALL xmlr_readtag( 'total_psenergy', upf%etotps )
     CALL xmlr_readtag( 'wfc_cutoff', upf%ecutwfc )
     CALL xmlr_readtag( 'rho_cutoff', upf%ecutrho )
@@ -225,6 +229,7 @@ CONTAINS
     CALL get_attr ('has_gipaw', upf%has_gipaw)
     CALL get_attr ('paw_as_gipaw', upf%paw_as_gipaw)
     CALL get_attr ('core_correction', upf%nlcc)
+    CALL get_attr( 'with_metagga_info', upf%with_metagga_info )
     CALL get_attr ('functional', upf%dft)
     CALL get_attr ('z_valence', upf%zp)
     CALL get_attr ('total_psenergy', upf%etotps)
@@ -651,6 +656,24 @@ CONTAINS
     END IF
     !
   END SUBROUTINE read_pp_full_wfc
+  !
+  !--------------------------------------------------------
+  SUBROUTINE read_pp_metagga ( upf, ierr )
+    !--------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
+    !
+    ierr = 0
+    if ( .NOT. upf%with_metagga_info ) RETURN
+    !
+    allocate ( upf%tau_core(upf%mesh) )
+    allocate ( upf%tau_atom(upf%mesh) )
+    CALL xmlr_readtag( capitalize_if_v2('pp_taumod'), upf%tau_core(:) )
+    CALL xmlr_readtag( capitalize_if_v2('pp_tauatom'), upf%tau_atom(:) )
+    !
+  END SUBROUTINE read_pp_metagga
   !
   !--------------------------------------------------------
   SUBROUTINE read_pp_spinorb ( upf, ierr )
