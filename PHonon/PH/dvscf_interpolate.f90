@@ -182,13 +182,18 @@ MODULE dvscf_interpolate
         IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
             'problem reading tensors.dat', ios)
         !
-        READ(iun, *, IOSTAT=ios) epsilon_r2q
-        IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
-            'problem reading epsil from tensors.dat', ios)
-        !
-        READ(iun, *, IOSTAT=ios) zeu_r2q
-        IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
-            'problem reading zeu from tensors.dat', ios)
+        DO i = 1, 3
+          READ(iun, '(3e25.13)', IOSTAT=ios) epsilon_r2q(:, i)
+          IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
+              'problem reading epsil from tensors.dat', ios)
+        ENDDO
+        DO iatm = 1, nat
+          DO i = 1, 3
+            READ(iun, '(3e25.13)', IOSTAT=ios) zeu_r2q(:, i, iatm)
+            IF (ios /= 0) CALL errore('dvscf_interpol_setup', &
+                'problem reading zeu from tensors.dat', ios)
+          ENDDO
+        ENDDO
         !
         CLOSE(iun, STATUS='keep')
         !

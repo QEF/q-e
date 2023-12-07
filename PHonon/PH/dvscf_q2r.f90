@@ -383,9 +383,15 @@ PROGRAM dvscf_q2r
           ACTION='write', IOSTAT=ios)
       IF (ios /= 0) CALL errore('dvscf_q2r', &
           'problem opening tensors.dat file for writing zeu and epsil', ios)
-      WRITE(iun, *) '# dielectric constant epsil and Born effective charge zeu'
-      WRITE(iun, *) epsil
-      WRITE(iun, *) zeu
+      WRITE(iun,'(a)') '# dielectric constant epsil and Born effective charge zeu'
+      DO i = 1, 3
+        WRITE(iun, '(3e25.13)') epsil(:, i)
+      ENDDO
+      DO iat = 1, nat
+        DO i = 1, 3
+          WRITE(iun, '(3e25.13)') zeu(:, i, iat)
+        ENDDO
+      ENDDO
       CLOSE(iun, STATUS='KEEP')
     ENDIF
     !
