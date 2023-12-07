@@ -1230,27 +1230,19 @@ SUBROUTINE elph_do_ahc()
     filoutdw = TRIM(ahc_dir) // 'ahc_dw.bin'
     filoutp = TRIM(ahc_dir) // 'ahc_p.bin'
     !
-    ! iungkk = find_free_unit()
-    ! INQUIRE(IOLENGTH=recl) ahc_gkk
-    ! OPEN(UNIT=iungkk, FILE=TRIM(filoutgkk), FORM='unformatted', &
-    !      ACCESS='direct', RECL=recl)
-    CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutgkk), +1, iungkk, ierr)
+    INQUIRE(IOLENGTH=recl) ahc_gkk
+    CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutgkk), +1, recl, iungkk, ierr)
     !
     IF (.NOT. skip_upperfan) THEN
-      ! iunupfan = find_free_unit()
-      ! INQUIRE(IOLENGTH=recl) ahc_upfan
-      ! OPEN(UNIT=iunupfan, FILE=TRIM(filoutupfan), FORM='unformatted', &
-      !      ACCESS='direct', RECL=recl)
-      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutupfan), +1, iunupfan, ierr)
+      INQUIRE(IOLENGTH=recl) ahc_upfan
+      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutupfan), +1, recl, iunupfan, ierr)
     ENDIF
     !
     IF (lgamma) THEN
-      ! iundw = find_free_unit()
-      ! INQUIRE(IOLENGTH=recl) ahc_dw
-      ! OPEN(UNIT=iundw, FILE=TRIM(filoutdw), FORM='unformatted', &
-      !     ACCESS='direct', RECL=recl)
-      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutdw), +1, iundw, ierr)
-      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutp), +1, iunp, ierr)
+      INQUIRE(IOLENGTH=recl) ahc_dw
+      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutdw), +1, recl, iundw, ierr)
+      INQUIRE(IOLENGTH=recl) ahc_p
+      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutp), +1, recl, iunp, ierr)
     ENDIF
   ENDIF ! root_pool
   !
@@ -1331,13 +1323,17 @@ SUBROUTINE elph_do_ahc()
   ! Close output file units
   !
   IF (me_pool == root_pool) THEN
-    ! CLOSE(iungkk, STATUS='KEEP')
-    ! IF (.NOT. skip_upperfan) CLOSE(iunupfan, STATUS='KEEP')
-    ! IF (lgamma) CLOSE(iundw, STATUS='KEEP')
+#if defined(__MPI)
     CALL MPI_FILE_CLOSE(iungkk, ierr)
     IF (.NOT. skip_upperfan) CALL MPI_FILE_CLOSE(iunupfan, ierr)
     IF (lgamma) CALL MPI_FILE_CLOSE(iundw, ierr)
     IF (lgamma) CALL MPI_FILE_CLOSE(iunp, ierr)
+#else
+    CLOSE(iungkk, STATUS='KEEP')
+    IF (.NOT. skip_upperfan) CLOSE(iunupfan, STATUS='KEEP')
+    IF (lgamma) CLOSE(iundw, STATUS='KEEP')
+    IF (lgamma) CLOSE(iunp, STATUS='KEEP')
+#endif
   ENDIF ! root_pool
   !
   CALL stop_clock('ahc_elph')
@@ -1346,15 +1342,17 @@ END SUBROUTINE elph_do_ahc
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
-SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, iun, ierr)
+SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, dim, iun, ierr)
    !---------------------------------------------------------------------------
    !! Wrapper for MPI_FILE_OPEN
    !! If io == +1, open file for writing.
    !! If io == -1, open file for reading.
    !---------------------------------------------------------------------------
    USE kinds,            ONLY : DP
+#if defined(__MPI)
    USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, &
                                 MPI_MODE_RDONLY, MPI_INFO_NULL
+#endif
    !
    IMPLICIT NONE
    !
@@ -1364,6 +1362,8 @@ SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, iun, ierr)
    !! name of the file to open
    INTEGER, INTENT(IN) :: io
    !! +1 for writing, -1 for reading
+   INTEGER, INTENT(IN) :: dim
+   !! Size of the array
    INTEGER, INTENT(OUT) :: iun
    !! Unit for reading file
    INTEGER, INTENT(out) :: ierr
@@ -1373,11 +1373,21 @@ SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, iun, ierr)
    !
    IF (io == 1) THEN
      ! Open for writing
+#if defined(__MPI)
      CALL MPI_FILE_OPEN(comm, filename, MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, iun, ierr)
+#else
+    OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted', &
+         ACCESS='direct', RECL=dim, IOSTAT=ierr)
+#endif
      !
    ELSE IF (io == -1) THEN
      ! Open for reading
+#if defined(__MPI)
      CALL MPI_FILE_OPEN(comm, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, iun, ierr)
+#else
+     OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted', &
+         ACCESS='direct', STATUS='OLD', RECL=dim, IOSTAT=ierr)
+#endif
      !
    ELSE
      CALL errore('MY_MPI_FILE_OPEN', 'io value must be +1 or -1', 1)
@@ -1395,8 +1405,10 @@ SUBROUTINE MY_MPI_FILE_WRITE_AT(array, dim, ind, iun, ierr)
    !! Wraps MPI_FILE_WRITE_AT (blocking, noncollective write).
    !--------------------------------------------------------------------------
    USE kinds,            ONLY : DP
+#if defined(__MPI)
    USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION, &
                                 MPI_STATUS_IGNORE
+#endif
    !
    IMPLICIT NONE
    !
@@ -1411,13 +1423,16 @@ SUBROUTINE MY_MPI_FILE_WRITE_AT(array, dim, ind, iun, ierr)
    COMPLEX(KIND = DP), INTENT(inout) :: array(dim)
    !! Output array
    !
+#if defined(__MPI)
    INTEGER(KIND = MPI_OFFSET_KIND) :: lrsize
    !! Size of the data to write
    INTEGER(KIND = MPI_OFFSET_KIND) :: lroffset
    !! Offset for writing the data
+#endif
    !
    CALL start_clock('MPI_WRITE_AT')
    !
+#if defined(__MPI)
    lrsize = 2_MPI_OFFSET_KIND * INT(dim, KIND = MPI_OFFSET_KIND)
    !
    lroffset = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND &
@@ -1425,6 +1440,9 @@ SUBROUTINE MY_MPI_FILE_WRITE_AT(array, dim, ind, iun, ierr)
             * INT(ind, KIND = MPI_OFFSET_KIND)
    !
    CALL MPI_FILE_WRITE_AT(iun, lroffset, array, lrsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else
+   WRITE(iun, REC=ind+1, IOSTAT=ierr) array
+#endif
    !
    CALL stop_clock('MPI_WRITE_AT')
 !

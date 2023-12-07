@@ -550,7 +550,7 @@ PROGRAM postahc
     WRITE(stdout, *)
     WRITE(stdout, '(5x,a)') 'Diagonal electron self-energy in eV'
     WRITE(stdout, '(5x,a)') 'Self-energy of degenerate states are averaged.'
-    WRITE(stdout, '(5x,a)') 'The DW and Upper_Fan terms are real-valed by construction.'
+    WRITE(stdout, '(5x,a)') 'The DW and Upper_Fan terms are real-valued by construction.'
     WRITE(stdout, '(5x,a)') 'Total_Fan = Upper_Fan + Lower_Fan'
     WRITE(stdout, '(5x,a)') 'Total = Total_Fan + DW'
     WRITE(stdout, *)

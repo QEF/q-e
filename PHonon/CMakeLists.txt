@@ -399,6 +399,7 @@ set_target_properties(qe_phonon_postahc_exe PROPERTIES OUTPUT_NAME postahc.x)
 target_link_libraries(qe_phonon_postahc_exe
     PRIVATE
         qe_modules
+        qe_pw
         qe_phonon_ph)
 
 ###########################################################
