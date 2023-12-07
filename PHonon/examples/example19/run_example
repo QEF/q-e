@@ -364,7 +364,7 @@ electron-phonon of diamond on a fine 444 grid
   ahc_nbnd = 8
 
   ahc_dir = 'ahc_dir_fine'
-  skip_upperfan = .true.
+  skip_upper = .true.
  /
 EOF
 mkdir dyn_dir_ahc_fine

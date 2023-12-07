@@ -77,7 +77,7 @@ MODULE ahc
   !! Number of bands to exclude when computing the self-energy. The
   !! self-energy is computed for ibnd from \(\text{ahc_nbndskip} + 1\)
   !! to \(\text{ahc_nbndskip} + \text{ahc_nbnd}\).
-  LOGICAL :: skip_upperfan = .FALSE.
+  LOGICAL :: skip_upper = .FALSE.
   !! If TRUE, skip the calculation of upper Fan self-energy,
   !! which involves solving the Sternheimer equation.
   !
@@ -1229,7 +1229,7 @@ SUBROUTINE elph_do_ahc()
     INQUIRE(IOLENGTH=recl) ahc_gkk
     CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutgkk), +1, recl, iungkk, ierr)
     !
-    IF (.NOT. skip_upperfan) THEN
+    IF (.NOT. skip_upper) THEN
       INQUIRE(IOLENGTH=recl) ahc_upfan
       CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutupfan), +1, recl, iunupfan, ierr)
     ENDIF
@@ -1294,7 +1294,7 @@ SUBROUTINE elph_do_ahc()
     !
     CALL ahc_do_gkk(ik)
     !
-    IF (.NOT. skip_upperfan) THEN
+    IF (.NOT. skip_upper) THEN
       CALL ahc_do_upperfan(ik)
     ENDIF
     !
@@ -1321,12 +1321,12 @@ SUBROUTINE elph_do_ahc()
   IF (me_pool == root_pool) THEN
 #if defined(__MPI)
     CALL MPI_FILE_CLOSE(iungkk, ierr)
-    IF (.NOT. skip_upperfan) CALL MPI_FILE_CLOSE(iunupfan, ierr)
+    IF (.NOT. skip_upper) CALL MPI_FILE_CLOSE(iunupfan, ierr)
     IF (lgamma) CALL MPI_FILE_CLOSE(iundw, ierr)
     IF (lgamma) CALL MPI_FILE_CLOSE(iunp, ierr)
 #else
     CLOSE(iungkk, STATUS='KEEP')
-    IF (.NOT. skip_upperfan) CLOSE(iunupfan, STATUS='KEEP')
+    IF (.NOT. skip_upper) CLOSE(iunupfan, STATUS='KEEP')
     IF (lgamma) CLOSE(iundw, STATUS='KEEP')
     IF (lgamma) CLOSE(iunp, STATUS='KEEP')
 #endif

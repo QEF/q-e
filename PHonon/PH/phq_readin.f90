@@ -76,7 +76,7 @@ SUBROUTINE phq_readin()
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
   USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-      skip_upperfan
+      skip_upper
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE el_phon,       ONLY : kx, ky, kz, elph_print
@@ -128,7 +128,7 @@ SUBROUTINE phq_readin()
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upperfan, dftd3_hess, kx, ky, kz
+                       skip_upper, dftd3_hess, kx, ky, kz
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -210,7 +210,7 @@ SUBROUTINE phq_readin()
   ! ahc_dir: Directory where the output binary files for AHC e-ph coupling are written
   ! ahc_nbnd: Number of bands where the electron self-energy is to be computed.
   ! ahc_nbndskip: Number of bands to exclude when computing the self-energy.
-  ! skip_upperfan: If .true., skip the calculation of upper Fan self-energy.
+  ! skip_upper: If .true., skip the calculation of upper Fan self-energy.
   !
   ! dftd3_hess: file from where the dftd3 hessian is read
   !
@@ -325,7 +325,7 @@ SUBROUTINE phq_readin()
   ahc_dir = ' '
   ahc_nbnd = 0
   ahc_nbndskip = 0
-  skip_upperfan = .FALSE.
+  skip_upper = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'

@@ -48,12 +48,12 @@ PROGRAM postahc
   !! Directory containing input, output, and scratch files
   LOGICAL :: skip_upper
   !! Skip calculation of upper Fan and Debye-Waller self-energy
-  LOGICAL :: skip_upperfan
-  !! Skip calculation of upper Fan self-energy
   LOGICAL :: skip_dw
   !! Skip calculation of Debye-Waller self-energy
+  LOGICAL :: truncate_fan
+  !! Truncate Fan self energy to states inside the AHC window
   LOGICAL :: truncate_dw
-  !! Truncate Debye-Waller matrix element to states inside the AHC
+  !! Truncate Debye-Waller matrix element to states inside the AHC window
   LOGICAL :: use_irr_q
   !! Use q points from the irreducible Brillouin zone.
   INTEGER :: ahc_nbnd
@@ -297,7 +297,7 @@ PROGRAM postahc
   ahc_dir = trimcheck(ahc_dir)
   !
   truncate_dw = skip_upper
-  skip_upperfan = skip_upper
+  truncate_fan = skip_upper
   temperature = temp_kelvin / ry_to_kelvin
   ahc_win_min = ahc_win_min_eV / RYTOEV
   ahc_win_max = ahc_win_max_eV / RYTOEV
@@ -327,9 +327,9 @@ PROGRAM postahc
   !
   IF (npool > 1) CALL errore('postahc', 'pools not implemented', npool)
   !
-  IF (skip_upperfan .neqv. truncate_dw) THEN
+  IF (truncate_fan .neqv. truncate_dw) THEN
     WRITE(stdout, '(5x, a)') "WARNING: For double-grid calculations, it is strongly advised"
-    WRITE(stdout, '(5x, a)') "to set skip_upperfan and truncate_dw to the same value because"
+    WRITE(stdout, '(5x, a)') "to set truncate_fan and truncate_dw to the same value because"
     WRITE(stdout, '(5x, a)') "otherwise the double-grid result converge much slowly."
     WRITE(stdout, *) ""
   ENDIF
@@ -549,7 +549,7 @@ PROGRAM postahc
     !
     IF (.NOT. skip_dw) CALL calc_debye_waller(iq, selfen_dw)
     !
-    IF (.NOT. skip_upperfan) CALL calc_upper_fan(iq, selfen_upfan)
+    IF (.NOT. truncate_fan) CALL calc_upper_fan(iq, selfen_upfan)
     !
     CALL calc_lower_fan(iq, selfen_lofan)
     !
