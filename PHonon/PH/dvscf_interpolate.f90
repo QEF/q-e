@@ -10,7 +10,7 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   !!
   !! Module for Fourier interpolation of phonon potential dvscf.
-  !! Uses the output of \(\texttt{dvscf_q2r.x}\) program to compute the induced 
+  !! Uses the output of \(\texttt{dvscf_q2r.x}\) program to compute the induced
   !! part of \(\text{dvscf}\) at each q point.
   !
   ! See header of dvscf_q2r.f90 for details.
@@ -37,6 +37,8 @@ MODULE dvscf_interpolate
   !
   LOGICAL, SAVE :: shift_half(3)
   !! true when the center of the supercell is at (0.5).
+  LOGICAL, SAVE :: qrpl
+  !! If true use quadrupole during interpolation
   INTEGER, SAVE :: nrtot
   !! Total number of unit cell grid points. Read from rlatt.txt
   INTEGER, SAVE :: nrlocal
@@ -54,6 +56,9 @@ MODULE dvscf_interpolate
   !! Dielectric matrix. Read from tensors.dat.
   REAL(DP), ALLOCATABLE, SAVE :: zeu_r2q(:, :, :)
   !! Born effective charge tensor. Read from tensors.dat.
+  REAL(DP), ALLOCATABLE, SAVE :: Qmat(:, :, :, :)
+  !! Quadrupole tensor
+  !
   !
   CONTAINS
   !----------------------------------------------------------------------------
@@ -81,11 +86,13 @@ MODULE dvscf_interpolate
     !
     IMPLICIT NONE
     !
+    LOGICAL :: exst
+    !! Find if a file exists.
     INTEGER :: iun
     !! Index for reading tensors.dat and rlatt.txt files
-    INTEGER :: i, j
+    INTEGER :: i, j, idir
     !! Index for directions
-    INTEGER :: iatm
+    INTEGER :: iatm, na
     !! Atom index
     INTEGER :: ir, ir_, ir1, ir2, ir3
     !! Real space unit cell index
@@ -95,8 +102,14 @@ MODULE dvscf_interpolate
     !! variable used for calculating nrlocal
     INTEGER :: ios
     !! iostat
+    INTEGER :: ierr
+    !! Error index when reading/writing a file
+    CHARACTER(LEN = 256) :: dummy
+    !! Dummy character reading
     REAL(DP) :: zeu_r2q_avg(3,3)
     !! Average of Born effective charge. Used for charge neutrality correction.
+    REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+    !! Specific quadrupole values read from file.
     INTEGER, EXTERNAL :: find_free_unit
     !
     IF (nspin_mag /= 1) CALL errore(' dvscf_r2q', ' magnetism not implemented',1)
@@ -108,6 +121,51 @@ MODULE dvscf_interpolate
     CALL start_clock('dvscf_setup')
     !
     IF (do_long_range) THEN
+      ! If quadrupole file exist, read it
+      IF (ionode) THEN
+        INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
+      ENDIF
+      CALL mp_bcast(exst, ionode_id, intra_image_comm)
+      !
+      qrpl = .FALSE.
+      ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
+      IF (ierr /= 0) CALL errore('dvscf_interpolate', 'Error allocating Qmat', 1)
+      Qmat(:, :, :, :) = 0.0d0
+      IF (exst) THEN
+        qrpl = .TRUE.
+        IF (ionode) THEN
+          OPEN(UNIT = iun, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
+          READ(iun, *) dummy
+          DO i = 1, 3 * nat
+            READ(iun, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+            Qmat(na, idir, 1, 1) = Qxx
+            Qmat(na, idir, 2, 2) = Qyy
+            Qmat(na, idir, 3, 3) = Qzz
+            Qmat(na, idir, 2, 3) = Qyz
+            Qmat(na, idir, 3, 2) = Qyz
+            Qmat(na, idir, 1, 3) = Qxz
+            Qmat(na, idir, 3, 1) = Qxz
+            Qmat(na, idir, 1, 2) = Qxy
+            Qmat(na, idir, 2, 1) = Qxy
+          ENDDO
+          CLOSE(iun)
+        ENDIF ! mpime == ionode_id
+        CALL mp_bcast(Qmat, ionode_id, intra_image_comm)
+        WRITE(stdout, '(a)') '     '
+        WRITE(stdout, '(a)') '     ------------------------------------ '
+        WRITE(stdout, '(a)') '     Quadrupole tensor is correctly read: '
+        WRITE(stdout, '(a)') '     ------------------------------------ '
+        WRITE(stdout, '(a)') '     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy'
+        DO na = 1, nat
+          WRITE(stdout, '(i8, a,6f10.5)' ) na, '        x    ', Qmat(na, 1, 1, 1), Qmat(na, 1, 2, 2), Qmat(na, 1, 3, 3), &
+                                                                Qmat(na, 1, 2, 3), Qmat(na, 1, 1, 3), Qmat(na, 1, 1, 2)
+          WRITE(stdout, '(i8, a,6f10.5)' ) na, '        y    ', Qmat(na, 2, 1, 1), Qmat(na, 2, 2, 2), Qmat(na, 2, 3, 3), &
+                                                                Qmat(na, 2, 2, 3), Qmat(na, 2, 1, 3), Qmat(na, 2, 1, 2)
+          WRITE(stdout, '(i8, a,6f10.5)' ) na, '        z    ', Qmat(na, 3, 1, 1), Qmat(na, 3, 2, 2), Qmat(na, 3, 3, 3), &
+                                                                Qmat(na, 3, 2, 3), Qmat(na, 3, 1, 3), Qmat(na, 3, 1, 2)
+        ENDDO
+        WRITE(stdout, '(a)') '     '
+      ENDIF ! exst
       !
       ! Read tensors.dat file for epsil and zeu
       !
@@ -235,14 +293,14 @@ MODULE dvscf_interpolate
   SUBROUTINE dvscf_r2q(xq, u_in, dvscf)
     !--------------------------------------------------------------------------
     !! Read inverse Fourier transformed potential w_pot (written by
-    !! \(\texttt{dvscf_q2r.x}\)) and Fourier transform to compute 
+    !! \(\texttt{dvscf_q2r.x}\)) and Fourier transform to compute
     !! \(\text{dvscf}\) at given q point.
     !
-    !! Originally proposed by [1], long-range part described in [2].  
-    !! [1] Eiguren and Ambrosch-Draxl, PRB 78, 045124 (2008)  
+    !! Originally proposed by [1], long-range part described in [2].
+    !! [1] Eiguren and Ambrosch-Draxl, PRB 78, 045124 (2008)
     !! [2] Xavier Gonze et al, Comput. Phys. Commun., 107042 (2019)
     !
-    !! $$ \text{dvscf}(r,q) = \text{exp}(-iqr) (\text{dvlong}(r,q) + 
+    !! $$ \text{dvscf}(r,q) = \text{exp}(-iqr) (\text{dvlong}(r,q) +
     !!    \sum_R \text{exp}(iqR) \text{w_pot}(r,R)) $$
     !
     !! In this subroutine, pool parallelization is used to distribute R points
@@ -464,7 +522,11 @@ MODULE dvscf_interpolate
     !
     DEALLOCATE(iunwpot)
     !
-    IF (do_long_range) DEALLOCATE(zeu_r2q)
+    IF (do_long_range) THEN
+      DEALLOCATE(zeu_r2q)
+      DEALLOCATE(Qmat)
+    ENDIF
+
     !
   !----------------------------------------------------------------------------
   END SUBROUTINE dvscf_interpol_close
@@ -473,8 +535,8 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   SUBROUTINE dvscf_shift_center(dvscf_q, xq, shift_half, sign)
   !----------------------------------------------------------------------------
-  !! Shift center of phonon potential.  
-  !! If sign = +1, shift center from origin to tau (used in dvscf_r2q).  
+  !! Shift center of phonon potential.
+  !! If sign = +1, shift center from origin to tau (used in dvscf_r2q).
   !! If sign = -1, shift center from tau to origin (used in dvscf_q2r).
   !
   !! For ipol = 1, 2, 3, if shift_half(ipol) is true, the origin is set at
@@ -611,8 +673,12 @@ MODULE dvscf_interpolate
     COMPLEX(DP) :: dvscf_long(dfftp%nnr, nspin_mag, 3*nat)
     !! Output: long-range part of the potential, for all modes in Cartesian basis
     !
-    INTEGER :: iatm, idir, imode, jdir, ig
+    INTEGER :: iatm, idir, imode, jdir, ig, ipol, jpol
     REAL(DP) :: xq_g(3), epsilon_denom, arg
+    REAL(KIND = DP) :: zaq
+    !! Z^* \cdot (q+g)
+    REAL(KIND = DP) :: Qqq
+    !! Quadrupole
     COMPLEX(DP) :: phase
     COMPLEX(DP), ALLOCATABLE :: aux(:)
     !! (dfftp%nnr) long-range part in G space
@@ -647,7 +713,21 @@ MODULE dvscf_interpolate
         arg = tpi * SUM(xq_g(:) * tau(:,iatm))
         phase = CMPLX(COS(arg), -SIN(arg), KIND=DP)
         !
-        aux(dfftp%nl(ig)) = SUM(zeu(:, idir, iatm) * xq_g(:)) * phase / epsilon_denom
+        zaq = 0.0d0
+        DO ipol = 1, 3
+          zaq = zaq + xq_g(ipol) * zeu(ipol, idir, iatm)
+        ENDDO
+        !
+        Qqq = 0.0d0
+        IF (qrpl) THEN
+          DO ipol = 1, 3
+            DO jpol = 1, 3
+              Qqq = Qqq + 0.5 * xq_g(ipol) * xq_g(jpol) * Qmat(iatm, idir, ipol, jpol)
+            ENDDO
+          ENDDO
+        ENDIF
+        !
+        aux(dfftp%nl(ig)) = (zaq - (0.d0, 1.d0) * Qqq) * phase / epsilon_denom
         !
       ENDDO
       !

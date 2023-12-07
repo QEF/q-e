@@ -292,7 +292,7 @@ PROGRAM postahc
   !
   IF (npool > 1) CALL errore('postahc', 'pools not implemented', npool)
   !
-  IF (skip_upperfan /= truncate_dw) THEN
+  IF (skip_upperfan .neqv. truncate_dw) THEN
     WRITE(stdout, '(5x, a)') "WARNING: For double-grid calculations, it is strongly advised"
     WRITE(stdout, '(5x, a)') "to set skip_upperfan and truncate_dw to the same value because"
     WRITE(stdout, '(5x, a)') "otherwise the double-grid result converge much slowly."

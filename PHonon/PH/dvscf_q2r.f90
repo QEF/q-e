@@ -133,6 +133,7 @@ PROGRAM dvscf_q2r
   USE efield_mod,  ONLY : zstareu, zstarue, zstarue0, zstareu0, epsilon
   USE dvscf_interpolate, ONLY : dvscf_shift_center, dvscf_bare_calc, &
                                 dvscf_long_range, multiply_iqr
+  USE mp_images,   ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -153,6 +154,8 @@ PROGRAM dvscf_q2r
   ! --------------------------------------------------------------------
   CHARACTER(LEN=256) :: wpot_file
   !! filename of the w_pot binary file
+  CHARACTER(LEN = 256) :: dummy
+  !! Dummy character reading
   LOGICAL :: verbose
   !! if verbosity == 'high', set to .true.
   LOGICAL :: exst
@@ -161,6 +164,8 @@ PROGRAM dvscf_q2r
   !! do not need to read wavefunction data
   LOGICAL :: xmldyn
   !! is fildyn xml format
+  LOGICAL :: qrpl
+  !! If true use quadrupole during interpolation
   INTEGER :: iq, iq1, iq2, iq3, irc, irc1, irc2, irc3, imode, lrwpot, rest, &
              ierr, iat, idir, nt, is
   !! indices
@@ -191,10 +196,16 @@ PROGRAM dvscf_q2r
   !! Unit for writing rlatt.txt file
   INTEGER :: iunwpot
   !! Unit for writing w_pot binary file
+  INTEGER :: na
+  !! Atom index
+  INTEGER :: i, j
+  !! Index for directions
   REAL(DP) :: epsil(3,3)
   !! dynamical matrix, read from fildyn
   REAL(DP) :: arg, xq_cart(3), w_pot_sum(3), coeff, epsil_q, zeu_avg(3, 3)
   !!
+  REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+  !! Specific quadrupole values read from file.
   COMPLEX(DP) :: phase
   !!
   REAL(DP), ALLOCATABLE :: xqirr(:, :)
@@ -203,6 +214,8 @@ PROGRAM dvscf_q2r
   !! Born effective charge tensor, read from fildyn
   REAL(DP), ALLOCATABLE :: xqs_cry_global(:, :)
   !! (3, nqtot) coarse grid for phonon calculations, in crystal coordinate
+  REAL(DP), ALLOCATABLE :: Qmat(:, :, :, :)
+  !! Quadrupole tensor
   COMPLEX(DP), ALLOCATABLE :: aux(:)
   ! (dfftp%nnr) auxiliary variable for multiplying exp(iqr)
   COMPLEX(DP), ALLOCATABLE :: dvscf(:, :, :, :)
@@ -518,6 +531,51 @@ PROGRAM dvscf_q2r
   ! Subtract long-range part (dipole potential) from
   ! When charge neutrality renormalization is done, zeu must be modified
   IF (do_long_range) THEN
+    ! If quadrupole file exist, read it
+    IF (ionode) THEN
+      INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
+    ENDIF
+    CALL mp_bcast(exst, ionode_id, intra_image_comm)
+    !
+    qrpl = .FALSE.
+    ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvscf_q2r', 'Error allocating Qmat', 1)
+    Qmat(:, :, :, :) = 0.0d0
+    IF (exst) THEN
+      qrpl = .TRUE.
+      IF (ionode) THEN
+        OPEN(UNIT = iun, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
+        READ(iun, *) dummy
+        DO i = 1, 3 * nat
+          READ(iun, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+          Qmat(na, idir, 1, 1) = Qxx
+          Qmat(na, idir, 2, 2) = Qyy
+          Qmat(na, idir, 3, 3) = Qzz
+          Qmat(na, idir, 2, 3) = Qyz
+          Qmat(na, idir, 3, 2) = Qyz
+          Qmat(na, idir, 1, 3) = Qxz
+          Qmat(na, idir, 3, 1) = Qxz
+          Qmat(na, idir, 1, 2) = Qxy
+          Qmat(na, idir, 2, 1) = Qxy
+        ENDDO
+        CLOSE(iun)
+      ENDIF ! mpime == ionode_id
+      CALL mp_bcast(Qmat, ionode_id, intra_image_comm)
+      WRITE(stdout, '(a)') '     '
+      WRITE(stdout, '(a)') '     ------------------------------------ '
+      WRITE(stdout, '(a)') '     Quadrupole tensor is correctly read: '
+      WRITE(stdout, '(a)') '     ------------------------------------ '
+      WRITE(stdout, '(a)') '     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy'
+      DO na = 1, nat
+        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        x    ', Qmat(na, 1, 1, 1), Qmat(na, 1, 2, 2), Qmat(na, 1, 3, 3), &
+                                                              Qmat(na, 1, 2, 3), Qmat(na, 1, 1, 3), Qmat(na, 1, 1, 2)
+        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        y    ', Qmat(na, 2, 1, 1), Qmat(na, 2, 2, 2), Qmat(na, 2, 3, 3), &
+                                                              Qmat(na, 2, 2, 3), Qmat(na, 2, 1, 3), Qmat(na, 2, 1, 2)
+        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        z    ', Qmat(na, 3, 1, 1), Qmat(na, 3, 2, 2), Qmat(na, 3, 3, 3), &
+                                                              Qmat(na, 3, 2, 3), Qmat(na, 3, 1, 3), Qmat(na, 3, 1, 2)
+      ENDDO
+      WRITE(stdout, '(a)') '     '
+    ENDIF ! exst
     !
     WRITE(stdout, *)
     WRITE(stdout, '(5x,a)') "Computing and subtracting long-range part of dvscf"
@@ -539,6 +597,8 @@ PROGRAM dvscf_q2r
     ENDDO
     !
     DEALLOCATE(dvscf_long)
+    DEALLOCATE(Qmat, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvscf_q2r', 'Error deallocating Qmat', 1)
     !
     WRITE(stdout, '(5x,a)') "Long-range part done"
     !
