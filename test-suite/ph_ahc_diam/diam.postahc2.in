@@ -1,6 +1,7 @@
 &input
   prefix = 'diam'
   outdir = '.'
+  reduce_io = .true.
 
   ahc_dir = 'ahc_dir.2/'
   flvec = 'diam.modes2'
