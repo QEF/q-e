@@ -563,6 +563,21 @@ PROGRAM postahc
   CALL mp_sum(selfen_upfan, intra_pool_comm)
   CALL mp_sum(selfen_dw, intra_pool_comm)
   !
+  ! If the energy is outside the AHC window, set all values to zero because
+  ! the results (in particular the upper Fan self-energy) are meaningless
+  DO ik = 1, nks
+    DO ibnd = 1, ahc_nbnd
+      IF (etk(ibnd, ik) < ahc_win_min .OR. etk(ibnd, ik) > ahc_win_max) THEN
+        selfen_lofan(:, ibnd, ik) = (0.d0, 0.d0)
+        selfen_lofan(ibnd, :, ik) = (0.d0, 0.d0)
+        selfen_upfan(:, ibnd, ik) = 0.d0
+        selfen_upfan(ibnd, :, ik) = 0.d0
+        selfen_dw(:, ibnd, ik) = 0.d0
+        selfen_dw(ibnd, :, ik) = 0.d0
+      ENDIF
+    ENDDO
+  ENDDO
+  !
   selfen_fan = selfen_lofan + selfen_upfan
   selfen_tot = selfen_fan + selfen_dw
   !
@@ -586,6 +601,7 @@ PROGRAM postahc
     WRITE(stdout, '(5x,a)') 'Diagonal electron self-energy in eV'
     WRITE(stdout, '(5x,a)') 'Self-energy of degenerate states are averaged.'
     WRITE(stdout, '(5x,a)') 'The DW and Upper_Fan terms are real-valued by construction.'
+    WRITE(stdout, '(5x,a)') 'For states with energy outside the AHC window, all output are zero.'
     WRITE(stdout, '(5x,a)') 'Total_Fan = Upper_Fan + Lower_Fan'
     WRITE(stdout, '(5x,a)') 'Total = Total_Fan + DW'
     WRITE(stdout, *)
