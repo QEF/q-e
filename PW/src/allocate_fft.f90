@@ -82,10 +82,17 @@ SUBROUTINE allocate_fft
   !$omp target enter data map(alloc:psic)
 #endif
   IF (many_fft>1) THEN
+    IF (gamma_only) THEN
 #if defined (__OPENMP_GPU)
-    !$omp allocate(psicg) allocator(pinned_alloc)
+      !$omp allocate(psicg) allocator(pinned_alloc)
 #endif
-    ALLOCATE( psicg(dffts%nnr*many_fft) )
+      ALLOCATE( psicg(dffts%nnr*2*many_fft) )
+    ELSE
+#if defined (__OPENMP_GPU)
+      !$omp allocate(psicg) allocator(pinned_alloc)
+#endif
+      ALLOCATE( psicg(dffts%nnr*many_fft) )
+    ENDIF
   ENDIF
   ALLOCATE( vrs(dfftp%nnr,nspin) )
 #if defined (__OPENMP_GPU)

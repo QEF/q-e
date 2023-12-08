@@ -445,11 +445,52 @@ CONTAINS
      !
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
      INTEGER :: ig, igmax0, igmax
+     INTEGER :: idx, n, v_siz, pack_size, remainder, howmany, &
+                group_size
      !
      IF (PRESENT(howmany_set)) THEN
        !
-       ! ... should never be true (for the moment) with OPENMP_GPU
-       STOP
+       group_size= howmany_set(1)
+       n = howmany_set(2)
+       v_siz = desc%nnr
+       pack_size = (group_size/2) ! This is FLOOR(group_size/2)
+       remainder = group_size - 2*pack_size
+       howmany   = pack_size + remainder
+       !
+       igmax = desc%nnr*howmany
+       !$omp target teams distribute parallel do
+       DO ig = 1, igmax
+         psi(ig) = (0.0d0,0.d0)
+       ENDDO
+       !
+       ! ... two ffts at the same time (remember, v_siz = dffts%nnr)
+       IF ( pack_size > 0 ) THEN
+          !
+          ! *** PROVISIONAL DUPLICATION OF LOOPS DUE TO COMPILER BUG ***
+          !
+          !$omp target teams distribute parallel do collapse(2)
+          DO idx = 0, pack_size-1
+             DO ig = 1, n
+                psi(desc%nl(ig) + idx*v_siz) = c(ig,2*idx+1) + (0.d0,1.d0)*c(ig,2*idx+2)
+                !psi(desc%nlm(ig) + idx*v_siz) = CONJG(c(ig,2*idx+1) - (0.d0,1.d0)*c(ig,2*idx+2))
+             ENDDO
+          ENDDO
+          !$omp target teams distribute parallel do collapse(2)
+          DO idx = 0, pack_size-1
+             DO ig = 1, n
+                !psi(desc%nl(ig) + idx*v_siz) = c(ig,2*idx+1) + (0.d0,1.d0)*c(ig,2*idx+2)
+                psi(desc%nlm(ig) + idx*v_siz) = CONJG(c(ig,2*idx+1) - (0.d0,1.d0)*c(ig,2*idx+2))
+             ENDDO
+          ENDDO
+       ENDIF
+       !
+       IF (remainder > 0) THEN
+          !$omp target teams distribute parallel do
+          DO ig = 1, n
+             psi(desc%nl(ig) + pack_size*v_siz) = c(ig,group_size)
+             psi(desc%nlm(ig) + pack_size*v_siz) = CONJG(c(ig,group_size))
+          ENDDO
+       ENDIF
        !
      ELSE
        !
@@ -940,14 +981,51 @@ CONTAINS
      INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
      !
      COMPLEX(DP) :: fp, fm
-     INTEGER :: ig, igmax
+     INTEGER :: ig, igmax, idx, n, v_siz, pack_size, remainder, howmany, &
+                group_size, ioff
      !
      igmax = desc%ngw
      !
      IF (PRESENT(howmany_set)) THEN
        !
-       ! ... should never be true (for the moment) with OPENMP_GPU
-       STOP
+       group_size = howmany_set(1)
+       n = howmany_set(2)
+       v_siz = desc%nnr
+       pack_size = (group_size/2)
+       remainder = group_size - 2*pack_size
+       howmany = pack_size + remainder
+       !
+       IF ( pack_size > 0 ) THEN
+         !
+         ! *** PROVISIONAL DUPLICATION OF LOOPS DUE TO COMPILER BUG ***
+         !
+         !$omp target teams distribute parallel do collapse(2)
+         DO idx = 0, pack_size-1
+           DO ig = 1, n
+             ioff = idx*v_siz
+             fp = (vin(ioff+desc%nl(ig)) + vin(ioff+desc%nlm(ig)))*0.5d0
+             fm = (vin(ioff+desc%nl(ig)) - vin(ioff+desc%nlm(ig)))*0.5d0
+             vout1(ig,idx*2+1)   = CMPLX(DBLE(fp),AIMAG(fm),KIND=DP)
+             !vout1(ig,idx*2+2) = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
+           ENDDO
+         ENDDO
+         !$omp target teams distribute parallel do collapse(2)
+         DO idx = 0, pack_size-1
+           DO ig = 1, n
+             ioff = idx*v_siz
+             fp = (vin(ioff+desc%nl(ig)) + vin(ioff+desc%nlm(ig)))*0.5d0
+             fm = (vin(ioff+desc%nl(ig)) - vin(ioff+desc%nlm(ig)))*0.5d0
+             !vout1(ig,idx*2+1)   = CMPLX(DBLE(fp),AIMAG(fm),KIND=DP)
+             vout1(ig,idx*2+2) = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
+           ENDDO
+         ENDDO
+       ENDIF
+       IF (remainder > 0) THEN
+         !$omp target teams distribute parallel do
+         DO ig = 1, n
+           vout1(ig,group_size) = vin(pack_size*v_siz+desc%nl(ig))
+         ENDDO
+       ENDIF
        !
      ELSE
        !

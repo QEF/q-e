@@ -13,10 +13,11 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   !
   USE parallel_include
   USE kinds,                   ONLY : DP
+  USE control_flags,           ONLY : many_fft
   USE mp_bands,                ONLY : me_bgrp
   USE fft_base,                ONLY : dffts
   USE fft_wave
-  USE wavefunctions,           ONLY : psic
+  USE wavefunctions,           ONLY : psic, psicg
   USE fft_helper_subroutines,  ONLY : fftx_ntgrp, tg_get_group_nr3, &
                                       tg_get_recip_inc
   !
@@ -38,6 +39,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   ! ... local variables
   !
   INTEGER :: ibnd, j, incr, right_nr3, right_inc, nnr
+  INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(3), ierr
   COMPLEX(DP) :: fp, fm
   COMPLEX(DP), ALLOCATABLE :: vpsi(:,:) 
   ! ... Variables for task groups
@@ -48,7 +50,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:)
   !
   CALL start_clock( 'vloc_psi' )
-  incr = 2
+  incr = 2*many_fft
   nnr = dffts%nnr
   !
   use_tg = dffts%has_task_groups 
@@ -62,6 +64,8 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      incr = 2*fftx_ntgrp(dffts)
      ALLOCATE( tg_vpsi(n,incr) )
      CALL stop_clock( 'vloc_psi:tg_gather' )
+  ELSEIF (many_fft>1) THEN
+    ALLOCATE( vpsi(dffts%nnr,incr) )
   ELSE
      ALLOCATE( vpsi(n,incr) )
 #if defined(__OPENMP_GPU)
@@ -107,6 +111,58 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         !
      ENDDO
      !
+    ELSEIF (many_fft > 1) THEN
+     !
+     !$omp target data map(alloc:psicg,vpsi)
+     DO ibnd = 1, m, incr
+        !
+        group_size = MIN(2*many_fft, m-(ibnd-1))
+        pack_size = (group_size/2) ! This is FLOOR(group_size/2)
+        remainder = group_size - 2*pack_size
+        howmany = pack_size + remainder
+        hm_vec(1)=group_size ; hm_vec(2)=n ; hm_vec(3)=howmany
+        !
+        CALL wave_g2r( psi(:,ibnd:ibnd+group_size-1), psicg, dffts, &
+                       howmany_set=hm_vec, omp_mod=0 )
+        !
+        !$omp target teams distribute parallel do collapse(2)
+        DO idx = 0, howmany-1
+          DO j = 1, nnr
+            psicg(idx*nnr+j) = psicg(idx*nnr+j) * v(j)
+          ENDDO
+        ENDDO
+        !
+        CALL wave_r2g( psicg, vpsi(1:n,1:group_size), dffts, howmany_set=hm_vec, omp_mod=0 )
+        !
+        IF ( pack_size > 0 ) THEN
+           !*** PROVISIONAL DUPLICATION OF LOOPS DUE TO COMPILER BUG ***
+           !$omp target teams distribute parallel do collapse(2)
+           DO idx = 0, pack_size-1
+              DO j = 1, n
+                 hpsi(j,ibnd+idx*2)   = hpsi(j,ibnd+idx*2)   + vpsi(j,idx*2+1)
+                 !hpsi(j,ibnd+idx*2+1) = hpsi(j,ibnd+idx*2+1) + vpsi(j,idx*2+2)
+              ENDDO
+           ENDDO
+           !$omp target teams distribute parallel do collapse(2)
+           DO idx = 0, pack_size-1
+              DO j = 1, n
+                 !hpsi(j,ibnd+idx*2)   = hpsi(j,ibnd+idx*2)   + vpsi(j,idx*2+1)
+                 hpsi(j,ibnd+idx*2+1) = hpsi(j,ibnd+idx*2+1) + vpsi(j,idx*2+2)
+              ENDDO
+           ENDDO
+        ENDIF
+        !
+        IF (remainder > 0) THEN
+           !$omp target teams distribute parallel do
+           DO j = 1, n
+              hpsi(j,ibnd+group_size-1) = hpsi(j,ibnd+group_size-1) + &
+                                          vpsi(j,group_size)
+           ENDDO
+        ENDIF
+        !
+     ENDDO
+     !$omp end target data
+     !   
   ELSE
      !
      DO ibnd = 1, m, incr
@@ -146,6 +202,8 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_psic )
      DEALLOCATE( tg_v )
      DEALLOCATE( tg_vpsi )
+  ELSEIF ( many_fft>1 ) THEN
+     DEALLOCATE( vpsi )
   ELSE
 #if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vpsi)

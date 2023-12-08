@@ -114,7 +114,19 @@ CONTAINS
     IF (gamma_only) THEN
       !
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_psi2c_gamma( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+        IF (omp_offload) THEN
+#if defined (__OPENMP_GPU)
+          IF (omp_map) THEN
+            !$omp target data map(to:f_in) map(from:f_out)
+            CALL fftx_psi2c_gamma_omp( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+            !$omp end target data
+          ELSE
+            CALL fftx_psi2c_gamma_omp( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+          ENDIF
+#endif
+        ELSE
+          CALL fftx_psi2c_gamma( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+        ENDIF
       ELSE
         IF (omp_offload) THEN
 #if defined (__OPENMP_GPU)
@@ -234,7 +246,19 @@ CONTAINS
     IF (gamma_only) THEN
       !
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+        IF(omp_offload) THEN
+#if defined (__OPENMP_GPU)
+          IF(omp_map) THEN
+            !$omp target data map(to:f_in) map(from:f_out)
+            CALL fftx_c2psi_gamma_omp( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+            !$omp end target data
+          ELSE
+            CALL fftx_c2psi_gamma_omp( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+          ENDIF
+#endif
+        ELSE
+          CALL fftx_c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+        ENDIF
       ELSE
         IF(omp_offload) THEN
 #if defined (__OPENMP_GPU)
