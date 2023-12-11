@@ -519,13 +519,18 @@ PROGRAM postahc
   ! Loop over q points and calculate self-energy
   !
   WRITE(stdout, *)
-  WRITE(stdout,'(5x,a)') 'Calculating electron self-energy. Loop over q points'
+  WRITE(stdout,'(5x,a,I8,a)') 'Calculating electron self-energy. Loop over ', &
+                              iq_to - iq_from + 1, ' q points'
   !
   DO iq = iq_from, iq_to
     !
-    WRITE(stdout, '(i8)', ADVANCE='no') iq
-    IF(MOD(iq, 10) == 0 ) WRITE(stdout,*)
-    FLUSH(stdout)
+    ! Print progress
+    !
+    IF (MOD(iq, 10) == 0) THEN
+      WRITE(stdout, '(i8)', ADVANCE='no') iq
+      IF(MOD(iq, 100) == 0 ) WRITE(stdout,*)
+      FLUSH(stdout)
+    ENDIF
     !
     lgamma = .FALSE.
     IF ( ALL( ABS(xq(:, iq)) < 1.d-4 ) ) lgamma = .TRUE.
@@ -592,9 +597,9 @@ PROGRAM postahc
                               &is set to zero'
     ENDIF
     IF (skip_upper) THEN
-      WRITE(stdout, '(5x,a)') 'skip_upper = .true.: upper Fan self-energy is set &
-                              &to zero.'
-      WRITE(stdout, '(5x,a)') 'In addition, Debye-Waller self-energy is truncated.'
+      WRITE(stdout, '(5x,a)') 'skip_upper = .true.: the upper Fan self-energy is set &
+                              &to zero, and the'
+      WRITE(stdout, '(5x,a)') '                     Debye-Waller self-energy is truncated.'
     ENDIF
     !
     WRITE(stdout, *)
