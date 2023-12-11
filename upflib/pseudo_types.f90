@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -56,6 +56,7 @@ MODULE pseudo_types
      LOGICAL :: is_gth             ! .true. if Goedecker-Teter-Hutter
      LOGICAL :: is_multiproj       ! .true. if multiple projectors per l
      ! (for NC PP only; US-PP and PAW are assumed to be multi-projector)
+     LOGICAL  :: with_metagga_info ! true if PP contains meta-GGA data
      CHARACTER(LEN=25) :: dft      ! Exch-Corr type
      REAL(DP) :: zp                ! z valence
      REAL(DP) :: etotps            ! total energy
@@ -125,6 +126,10 @@ MODULE pseudo_types
      ! Analitycal coeffs cor small r expansion of qfunc (Vanderbilt's code)
      REAL(DP), ALLOCATABLE :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
      ! coefficients for Q for |r|<r_L
+     !
+     ! META-GGA variables (not yet implemented!)
+     REAL(DP), ALLOCATABLE :: tau_core(:)
+     REAL(DP), ALLOCATABLE :: tau_atom(:)
      ! All electron and pseudo wavefunction, pswfc differ from chi as they are
      ! one for each beta, not just some choosen for initial conditions
      LOGICAL           :: has_wfc    ! if true, UPF contain AE and PS wfc for each beta
@@ -198,6 +203,36 @@ CONTAINS
     paw%augshape = ' '
   END SUBROUTINE deallocate_paw_in_upf
   !
+  SUBROUTINE deallocate_gipaw_in_upf ( upf )
+    TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+    !
+    IF ( ALLOCATED ( upf%gipaw_core_orbital_n ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital_n )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital_l ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital_l )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital_el ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital_el )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital )
+    IF ( ALLOCATED ( upf%gipaw_vlocal_ae ) ) &
+         DEALLOCATE ( upf%gipaw_vlocal_ae )
+    IF ( ALLOCATED ( upf%gipaw_vlocal_ps ) ) &
+         DEALLOCATE ( upf%gipaw_vlocal_ps )
+    IF ( ALLOCATED ( upf%gipaw_wfs_el ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_el )
+    IF ( ALLOCATED ( upf%gipaw_wfs_ll ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_ll )
+    IF ( ALLOCATED ( upf%gipaw_wfs_ae ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_ae )
+    IF ( ALLOCATED ( upf%gipaw_wfs_rcut ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_rcut )
+    IF ( ALLOCATED ( upf%gipaw_wfs_rcutus ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_rcutus )
+    IF ( ALLOCATED ( upf%gipaw_wfs_ps ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_ps )
+    !
+   END SUBROUTINE deallocate_gipaw_in_upf
+   !
    SUBROUTINE deallocate_pseudo_config(conf)
       TYPE(pseudo_config),INTENT(INOUT) :: conf
       IF ( ALLOCATED(conf%els)   ) DEALLOCATE(conf%els)
@@ -209,10 +244,10 @@ CONTAINS
       IF ( ALLOCATED(conf%enls)  ) DEALLOCATE(conf%enls)
    END SUBROUTINE deallocate_pseudo_config
 
-
-
-  SUBROUTINE deallocate_pseudo_upf( upf )
+   SUBROUTINE deallocate_pseudo_upf( upf )
+    !
     TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+    !
     CALL deallocate_paw_in_upf( upf%paw )
     IF( ALLOCATED( upf%els ) )     DEALLOCATE( upf%els )
     IF( ALLOCATED( upf%lchi ) )    DEALLOCATE( upf%lchi )
@@ -246,31 +281,19 @@ CONTAINS
     IF( ALLOCATED( upf%qfcoef ) )  DEALLOCATE( upf%qfcoef )
     IF( ALLOCATED( upf%chi ) )     DEALLOCATE( upf%chi )
     IF( ALLOCATED( upf%rho_at ) )  DEALLOCATE( upf%rho_at )
-    IF ( ALLOCATED ( upf%gipaw_core_orbital_n ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital_n )
-    IF ( ALLOCATED ( upf%gipaw_core_orbital_l ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital_l )
-    IF ( ALLOCATED ( upf%gipaw_core_orbital_el ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital_el )
-    IF ( ALLOCATED ( upf%gipaw_core_orbital ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital )
-    IF ( ALLOCATED ( upf%gipaw_vlocal_ae ) ) &
-         DEALLOCATE ( upf%gipaw_vlocal_ae )
-    IF ( ALLOCATED ( upf%gipaw_vlocal_ps ) ) &
-         DEALLOCATE ( upf%gipaw_vlocal_ps )
-    IF ( ALLOCATED ( upf%gipaw_wfs_el ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_el )
-    IF ( ALLOCATED ( upf%gipaw_wfs_ll ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_ll )
-    IF ( ALLOCATED ( upf%gipaw_wfs_ae ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_ae )
-    IF ( ALLOCATED ( upf%gipaw_wfs_rcut ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_rcut )
-    IF ( ALLOCATED ( upf%gipaw_wfs_rcutus ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_rcutus )
-    IF ( ALLOCATED ( upf%gipaw_wfs_ps ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_ps )
-  !
+    IF( ALLOCATED( upf%tau_core ) )  DEALLOCATE( upf%tau_core )
+    IF( ALLOCATED( upf%tau_atom ) )  DEALLOCATE( upf%tau_atom )
+    !
+    CALL deallocate_gipaw_in_upf( upf )
+    !    
+    CALL reset_upf ( upf)
+    !
+  END SUBROUTINE deallocate_pseudo_upf
+
+  SUBROUTINE reset_upf( upf )
+    !
+    TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+    !
     upf%tvanp = .false.
     upf%tcoulombp = .false.
     upf%nlcc = .false.
@@ -301,10 +324,11 @@ CONTAINS
     upf%tpawp = .false.
     upf%has_gipaw = .false.
     upf%paw_as_gipaw = .false.
+    upf%with_metagga_info = .false.
     upf%gipaw_data_format = 0
     upf%gipaw_ncore_orbitals = 0
     upf%gipaw_wfs_nchannels = 0
 
-  END SUBROUTINE deallocate_pseudo_upf
+  END SUBROUTINE reset_upf
 
 END MODULE pseudo_types

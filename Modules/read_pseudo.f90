@@ -44,7 +44,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE mp,           ONLY: mp_bcast
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
-  USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
+  USE pseudo_types, ONLY: pseudo_upf, reset_upf, deallocate_pseudo_upf
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, get_inlc
   USE xc_lib,       ONLY: xclib_get_id
   USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
@@ -88,6 +88,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   END IF
   !
   DO nt = 1, ntyp
+     !
+     CALL reset_upf( upf(nt) )
      !
      ! try first pseudo_dir_cur if set: in case of restart from file,
      ! this is where PP files should be located
@@ -297,6 +299,7 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   CALL mp_bcast (upf%has_gipaw, ionode_id, comm )
   CALL mp_bcast (upf%paw_as_gipaw, ionode_id, comm )
   CALL mp_bcast (upf%nlcc, ionode_id, comm )
+  CALL mp_bcast (upf%with_metagga_info, ionode_id, comm )
   CALL mp_bcast (upf%dft, ionode_id, comm )
   CALL mp_bcast (upf%zp, ionode_id, comm )
   CALL mp_bcast (upf%etotps, ionode_id, comm )
@@ -447,7 +450,14 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   !
   IF ( .not. ionode) ALLOCATE( upf%rho_at(upf%mesh) )
   CALL mp_bcast (upf%rho_at,ionode_id,comm )
-  
+  !
+  IF ( upf%with_metagga_info ) THEN
+     IF ( .not. ionode) ALLOCATE( upf%tau_core(upf%mesh) )
+     CALL mp_bcast (upf%tau_core,ionode_id,comm )
+     IF ( .not. ionode) ALLOCATE( upf%tau_atom(upf%mesh) )
+     CALL mp_bcast (upf%tau_atom,ionode_id,comm )
+  END IF
+  !  
   IF (upf%has_so) THEN
      IF ( .NOT. ionode) THEN
         ALLOCATE (upf%jchi(upf%nwfc))

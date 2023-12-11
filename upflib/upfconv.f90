@@ -26,7 +26,7 @@ PROGRAM upfconv
   !          if available, core wavefunctions from GIPAW section
   !     - convert to CASINO tabulated format (obsolete?)
   !
-  USE pseudo_types, ONLY : pseudo_upf, deallocate_pseudo_upf
+  USE pseudo_types, ONLY : pseudo_upf, reset_upf, deallocate_pseudo_upf
   USE casino_pp,    ONLY : conv_upf2casino, write_casino_tab
   USE write_upf_new,ONLY : write_upf
   !
@@ -106,7 +106,9 @@ PROGRAM upfconv
      STOP
   END IF
   WRITE(*,*) 'input file: ' // trim(filein), ', output file: ' // trim(fileout)
- 
+  !
+  CALL reset_upf( upf )
+  !
   CALL read_ps_new ( filein, upf, .false., ierr )
   IF ( ierr > 0  ) THEN
      WRITE(*,*) 'Cannot read file, stopping'
