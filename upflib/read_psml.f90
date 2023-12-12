@@ -41,8 +41,9 @@ CONTAINS
   !
   CHARACTER(len=*), INTENT(IN) :: filename
   !! input : name of file in psml format
-  TYPE(pseudo_upf), INTENT(OUT) :: upf
+  TYPE(pseudo_upf), INTENT(INOUT) :: upf
   !! the derived type storing the pseudo data
+  !! INOUT because many variables are reset to default values in input
   INTEGER, INTENT(OUT) :: ierr
   !! error code (0 if correctly read)
   CHARACTER(len=30) :: tag

@@ -44,7 +44,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE mp,           ONLY: mp_bcast
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
-  USE pseudo_types, ONLY: pseudo_upf, reset_upf, deallocate_pseudo_upf
+  USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, get_inlc
   USE xc_lib,       ONLY: xclib_get_id
   USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
@@ -88,8 +88,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   END IF
   !
   DO nt = 1, ntyp
-     !
-     CALL reset_upf( upf(nt) )
      !
      ! try first pseudo_dir_cur if set: in case of restart from file,
      ! this is where PP files should be located

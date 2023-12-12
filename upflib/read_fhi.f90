@@ -57,7 +57,8 @@ CONTAINS
     !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: iunps
-  TYPE(pseudo_upf), INTENT(out) :: upf
+  TYPE(pseudo_upf), INTENT(inout) :: upf
+  ! INOUT because many variables are reset to default values in input
   !
   CALL read_fhi(iunps)
   CALL convert_fhi(upf)
@@ -180,7 +181,8 @@ SUBROUTINE convert_fhi (upf)
   !
   IMPLICIT NONE
   !
-  TYPE(pseudo_upf), INTeNT(out) :: upf
+  TYPE(pseudo_upf), INTENT(inout) :: upf
+  ! INOUT because many variables are reset to default values in input
   !
   REAL(dp), ALLOCATABLE :: aux(:)
   REAL(dp) :: vll
