@@ -232,18 +232,18 @@ SUBROUTINE potinit()
      !
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
+        fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
         IF ( nspin == 1) THEN
-           rho%kin_r(:,1) = rho%of_r(:,is)
+           rho%kin_r(:,1) = fact * abs(rho%of_r(:,1))**(5.0/3.0)
         ELSE ! IF ( nspin == 2) THEN 
            ! ... NB: for LSDA rho is (tot,magn), rho_kin is (up,down) 
            rho%kin_r(:,1) = ( rho%of_r(:,1) + rho%of_r(:,2) ) / 2.0_dp
            rho%kin_r(:,2) = ( rho%of_r(:,1) - rho%of_r(:,2) ) / 2.0_dp
+           ! FIXME: why the multiplication times nspin ?
+           DO is = 1, nspin
+              rho%kin_r(:,is) = fact * abs(rho%kin_r(:,is)*nspin)**(5.0/3.0)/nspin
+           END DO
         END IF
-        fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
-        ! FIXME: why the multiplication times nspin ?
-        DO is = 1, nspin
-           rho%kin_r(:,is) = fact * abs(rho%kin_r(:,is)*nspin)**(5.0/3.0)/nspin
-        END DO
         ! ... bring it to g-space
         CALL rho_r2g (dfftp, rho%kin_r, rho%kin_g)
      ELSE
