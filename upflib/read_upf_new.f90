@@ -35,8 +35,9 @@ CONTAINS
     IMPLICIT NONE
     CHARACTER(len=*), INTENT(IN) :: filename  
     !! i/o filename
-    TYPE(pseudo_upf),INTENT(OUT) :: upf
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf
     !! the derived type storing the pseudo data
+    !! INOUT because many variables are reset to default values in input
     INTEGER, INTENT(OUT) :: ierr
     !! ierr= -2 : UPF v.2
     !! ierr=  0 : xml schema
