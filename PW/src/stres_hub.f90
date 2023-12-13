@@ -1002,7 +1002,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
-   USE control_flags,        ONLY : offload_type, offload_cpu
+   USE control_flags,        ONLY : offload_type, offload_cpu, use_gpu
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj
    USE mp_bands,             ONLY : intra_bgrp_comm
@@ -1228,9 +1228,9 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
             offpmU = offsetU(na)
             offpm  = oatwfc(na)
             !$acc host_data use_device(wfcatom, doverlap_inv, dwfc)
-            CALL MYZGEMM('N','N', npw, ldim_u(nt), natomwfc, (1.d0,0.d0), &
+            CALL MYZGEMM2('N','N', npw, ldim_u(nt), natomwfc, (1.d0,0.d0), &
                   wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim_u(nt)), &
-                  natomwfc, (1.d0,0.d0), dwfc(:,offpmU+1:offpmU+ldim_u(nt)), npwx)
+                  natomwfc, (1.d0,0.d0), dwfc(:,offpmU+1:offpmU+ldim_u(nt)), npwx, use_gpu)
             !$acc end host_data
          ENDIF
       ENDDO
