@@ -42,7 +42,7 @@ module wannier
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
    complex(DP), allocatable :: gf_spinor(:,:)
    complex(DP), allocatable :: sgf_spinor(:,:)
-   integer               :: ispinw, ikstart, ikstop, iknum
+   integer               :: ispinw, ikstart, ikstop, iknum, reduce_unk_factor
    character(LEN=15)     :: wan_mode    ! running mode
    logical               :: logwann, wvfn_formatted, write_unk, write_eig, &
    ! begin change Lopez, Thonhauser, Souza
@@ -933,8 +933,8 @@ PROGRAM pw2wannier90
   NAMELIST / inputpp / outdir, prefix, spin_component, wan_mode, &
        seedname, write_unk, write_amn, write_mmn, write_spn, write_eig,&
    ! begin change Lopez, Thonhauser, Souza
-       wvfn_formatted, reduce_unk, write_unkg, write_uhu,&
-       write_dmn, read_sym, & !YN:
+       wvfn_formatted, reduce_unk, reduce_unk_factor, &
+       write_unkg, write_uhu, write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
    ! shc
@@ -995,6 +995,7 @@ PROGRAM pw2wannier90
      sIu_formatted=.false.
      ! end shc
      reduce_unk= .false.
+     reduce_unk_factor = 2
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
@@ -1047,6 +1048,7 @@ PROGRAM pw2wannier90
   ! end shc
   CALL mp_bcast(write_spn,ionode_id, world_comm)
   CALL mp_bcast(reduce_unk,ionode_id, world_comm)
+  CALL mp_bcast(reduce_unk_factor,ionode_id, world_comm)
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   CALL mp_bcast(write_dmn,ionode_id, world_comm)
   CALL mp_bcast(read_sym,ionode_id, world_comm)
@@ -1074,6 +1076,8 @@ PROGRAM pw2wannier90
   !
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
+  !
+  if (reduce_unk_factor < 1) call errore('pw2wannier90', 'reduce_unk_factor < 1', 1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -6822,13 +6826,10 @@ SUBROUTINE write_plot
    evc_r = (0.0_DP, 0.0_DP)
    !
    IF (reduce_unk) THEN
-      ! JQ TODO: Enable factor different from 2
-      ! FIXME: Check if dffts%nr1 is divisible by 2
-      ! FIXME: Is +1 needed?
       WRITE(stdout,'(3(a,i5))') 'nr1s=',dffts%nr1,' nr2s=',dffts%nr2,' nr3s=',dffts%nr3
-      nr1 = (dffts%nr1+1)/2
-      nr2 = (dffts%nr2+1)/2
-      nr3 = (dffts%nr3+1)/2
+      nr1 = (dffts%nr1 - 1) / reduce_unk_factor + 1
+      nr2 = (dffts%nr2 - 1) / reduce_unk_factor + 1
+      nr3 = (dffts%nr3 - 1) / reduce_unk_factor + 1
       WRITE(stdout,'(3(a,i5))') 'n1by2=', nr1, ' n2by2=', nr2, ' n3by2=', nr3
       ALLOCATE(psic_small(nr1*nr2*nr3, npol), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_small', 1)
@@ -6892,9 +6893,9 @@ SUBROUTINE write_plot
          !
          IF (reduce_unk) THEN
             pos = 0
-            DO k = 1, dffts%nr3, 2
-               DO j = 1, dffts%nr2, 2
-                  DO i = 1, dffts%nr1, 2
+            DO k = 1, dffts%nr3, reduce_unk_factor
+               DO j = 1, dffts%nr2, reduce_unk_factor
+                  DO i = 1, dffts%nr1, reduce_unk_factor
                      idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos = pos + 1
                      DO ipol = 1, npol
