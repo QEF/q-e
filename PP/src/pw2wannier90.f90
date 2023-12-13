@@ -277,6 +277,8 @@ module wannier
       !! Temporary storage for phase e&{i * G_kpb * r}
       COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
       !! Temporary storage for wavefunction at k+b
+      INTEGER :: ierr
+      !! Error number
       !
       INTEGER, EXTERNAL :: global_kpoint_index
       !
@@ -285,8 +287,10 @@ module wannier
       !
       CALL start_clock("compute_u_kb")
       !
-      ALLOCATE(phase(dffts%nnr))
-      ALLOCATE(evc_b(npol*npwx, nbnd))
+      ALLOCATE(phase(dffts%nnr), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
+      ALLOCATE(evc_b(npol*npwx, nbnd), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_b', 1)
       !
       evc_kb = (0.0_DP, 0.0_DP)
       !
@@ -399,7 +403,7 @@ module wannier
       !
       CHARACTER(LEN=256) :: filename
       CHARACTER(LEN=256) :: line
-      INTEGER :: ipool, iun, iun2, i
+      INTEGER :: ipool, iun, iun2, i, ierr
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       COMPLEX(DP), ALLOCATABLE :: arr(:)
       !
@@ -421,15 +425,16 @@ module wannier
             DO WHILE (.TRUE.)
                READ(iun2, '(A)', END=200) line
                WRITE(iun, '(A)') TRIM(line)
-         ENDDO
-200      CLOSE(iun2, STATUS="DELETE")
+            ENDDO
+200         CLOSE(iun2, STATUS="DELETE")
          ENDDO
          !
          CLOSE(iun, STATUS="KEEP")
          !
       ELSE ! .NOT. formatted
          !
-         ALLOCATE(arr(ndata))
+         ALLOCATE(arr(ndata), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating arr', 1)
          !
          filename = TRIM(seedname) // "." // TRIM(postfix)
          OPEN (NEWUNIT=iun, file=TRIM(filename), form='unformatted', STATUS="OLD", POSITION="APPEND")
@@ -830,7 +835,7 @@ CONTAINS
       !
       INTEGER, INTENT(IN) :: intra_bgrp_comm
       !
-      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm
+      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm, ierr
       !
       REAL(DP), ALLOCATABLE :: aux(:), vchi(:), rab(:)
       REAL(DP) :: vqint, pref, q
@@ -841,7 +846,8 @@ CONTAINS
         ndm = MAX(ndm, atproj_typs(nt)%ngrid)
         nwfcm = MAX(nwfcm, atproj_typs(nt)%nproj)
       END DO
-      ALLOCATE (aux(ndm), vchi(ndm), rab(ndm))
+      ALLOCATE (aux(ndm), vchi(ndm), rab(ndm), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux/vchi/rab', 1)
       !
       ! chiq = radial fourier transform of atomic orbitals chi
       !
@@ -850,7 +856,8 @@ CONTAINS
       CALL divide(intra_bgrp_comm, nqx, startq, lastq)
       !
       ! nqx = INT( (SQRT(ecutwfc) / dq + 4) )
-      ALLOCATE (tab_at(nqx, nwfcm, nsp))
+      ALLOCATE (tab_at(nqx, nwfcm, nsp), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating tab_at', 1)
       tab_at(:, :, :) = 0.0_DP
       !
       DO nt = 1, nsp
@@ -918,7 +925,7 @@ PROGRAM pw2wannier90
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  INTEGER :: ios
+  INTEGER :: ios, ierr
   CHARACTER(len=4) :: spin_component
   CHARACTER(len=256) :: outdir
 
@@ -1090,11 +1097,11 @@ PROGRAM pw2wannier90
         (trim(scdm_entanglement) /= 'gaussian')) then
         call errore('pw2wannier90', &
              'Can not recognize the choice for scdm_entanglement. ' &
-                    //'Valid options are: isolated, erfc and gaussian')
+             //'Valid options are: isolated, erfc and gaussian', 1)
     ENDIF
   ENDIF
   IF (scdm_sigma <= 0._dp) &
-    call errore('pw2wannier90','Sigma in the SCDM method must be positive.')
+    call errore('pw2wannier90','Sigma in the SCDM method must be positive.', 1)
   IF (irr_bz) THEN
      IF (gamma_only) CALL errore('pw2wannier90', "irr_bz and gamma_only are not compatible", 1)
      IF (write_spn) CALL errore('pw2wannier90', "irr_bz and write_spn not implemented", 1)
@@ -1138,7 +1145,8 @@ PROGRAM pw2wannier90
   END SELECT
   !
   ! Setup for pool parallelization
-  ALLOCATE(xk_all(3, nkstot))
+  ALLOCATE(xk_all(3, nkstot), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating xk_all', 1)
   CALL poolcollect(3, nks, xk, nkstot, xk_all)
   !
   CALL stop_clock( 'init_pw2wan' )
@@ -1405,7 +1413,7 @@ SUBROUTINE setup_nnkp
 
   IMPLICIT NONE
   real(DP) :: g_(3), gg_
-  INTEGER  :: ik, ib, ig, iw, ia, indexb, TYPE
+  INTEGER  :: ik, ib, ig, iw, ia, indexb, TYPE, ierr
   INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xnorm, znorm, coseno
   INTEGER  :: exclude_bands(nbnd)
@@ -1432,12 +1440,17 @@ SUBROUTINE setup_nnkp
   !    atcart              atoms_cart
   !    atsym               atom_symbols
 
-  ALLOCATE( kpt_latt(3,iknum) )
-  ALLOCATE( atcart(3,nat), atsym(nat) )
-  ALLOCATE( kpb(iknum,num_nnmax), g_kpb(3,iknum,num_nnmax) )
+  ALLOCATE( kpt_latt(3,iknum), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating kpt_latt', 1)
+  ALLOCATE( atcart(3,nat), atsym(nat), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atcart/atsym', 1)
+  ALLOCATE( kpb(iknum,num_nnmax), g_kpb(3,iknum,num_nnmax), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating kpb/g_kpb', 1)
   ALLOCATE( center_w(3,nbnd), alpha_w(nbnd), l_w(nbnd), &
-       mr_w(nbnd), r_w(nbnd), zaxis(3,nbnd), xaxis(3,nbnd) )
-  ALLOCATE( excluded_band(nbnd) )
+       mr_w(nbnd), r_w(nbnd), zaxis(3,nbnd), xaxis(3,nbnd), stat=ierr)
+       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating center_w/alpha_w/l_w/...', 1)
+  ALLOCATE( excluded_band(nbnd), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating excluded_band', 1)
 
   ! real lattice (Cartesians, Angstrom)
   rlatt(:,:) = transpose(at(:,:))*alat*bohr
@@ -1488,7 +1501,8 @@ SUBROUTINE setup_nnkp
      n_proj=n_wannier
   ENDIF
 
-  ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
+  ALLOCATE( gf(npwx,n_proj), csph(16,n_proj), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating gf/csph', 1)
 
   WRITE(stdout,'("  - Number of wannier functions is (",i3,")")') n_wannier
 
@@ -1530,8 +1544,10 @@ SUBROUTINE setup_nnkp
   nnbx=0
   nnb=max(nnbx,nnb)
 
-  ALLOCATE( ig_(iknum,nnb), ig_check(iknum,nnb) )
-  ALLOCATE( zerophase(iknum,nnb) )
+  ALLOCATE( ig_(iknum,nnb), ig_check(iknum,nnb), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ig_/ig_check', 1)
+  ALLOCATE( zerophase(iknum,nnb), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating zerophase', 1)
   zerophase = .false.
 
   DO ik=1, iknum
@@ -1583,11 +1599,18 @@ SUBROUTINE run_wannier
 
   IMPLICIT NONE
 
-  ALLOCATE(u_mat(n_wannier,n_wannier,iknum))
-  ALLOCATE(u_mat_opt(num_bands,n_wannier,iknum))
-  ALLOCATE(lwindow(num_bands,iknum))
-  ALLOCATE(wann_centers(3,n_wannier))
-  ALLOCATE(wann_spreads(n_wannier))
+  INTEGER :: ierr
+
+  ALLOCATE(u_mat(n_wannier,n_wannier,iknum), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating u_mat', 1)
+  ALLOCATE(u_mat_opt(num_bands,n_wannier,iknum), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating u_mat_opt', 1)
+  ALLOCATE(lwindow(num_bands,iknum), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating lwindow', 1)
+  ALLOCATE(wann_centers(3,n_wannier), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wann_centers', 1)
+  ALLOCATE(wann_spreads(n_wannier), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wann_spreads', 1)
 
 #if defined(__WANLIB)
   IF (ionode) THEN
@@ -1688,7 +1711,7 @@ SUBROUTINE read_nnkp
   !
   real(DP) :: g_(3), gg_
   INTEGER :: ik, ib, ig, ipol, iw, idum, indexb
-  INTEGER numk, i, j
+  INTEGER :: numk, i, j, ierr
   INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xx(3), xnorm, znorm, coseno
   LOGICAL :: have_nnkp,found
@@ -1766,7 +1789,8 @@ SUBROUTINE read_nnkp
      endif
      READ(iun_nnkp,*) numk
      IF(irr_bz) THEN
-        ALLOCATE(xkc_full(3,numk))
+        ALLOCATE(xkc_full(3,numk), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating xkc_full', 1)
         DO i=1,numk
            READ(iun_nnkp,*) xkc_full(:,i)
         END DO
@@ -1847,9 +1871,11 @@ SUBROUTINE read_nnkp
 
   ALLOCATE( center_w(3,n_proj), alpha_w(n_proj), gf(npwx,n_proj), &
        l_w(n_proj), mr_w(n_proj), r_w(n_proj), &
-       zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj) )
+       zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj), stat=ierr)
+       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating center_w/alpha_w/...', 1)
   if (noncolin) then
-     ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) )
+     ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj), stat=ierr)
+     IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating spin_eig/spin_qaxis', 1)
   endif
 
   IF (ionode) THEN   ! read from ionode only
@@ -1939,7 +1965,7 @@ SUBROUTINE read_nnkp
   IF (.not. scdm_proj) WRITE(stdout,*) ' - All guiding functions are given '
   !
   WRITE(stdout,*)
-  WRITE(stdout,*) 'Projections:'
+  WRITE(stdout,*) ' Projections:'
   DO iw=1,n_proj
      WRITE(stdout,'(3f12.6,3i3,f12.6)') &
           center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
@@ -1960,8 +1986,10 @@ SUBROUTINE read_nnkp
   nnbx = max (nnbx, nnb )
   !
   ALLOCATE ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),&
-             ig_(iknum,nnbx), ig_check(iknum,nnbx) )
-  ALLOCATE( zerophase(iknum,nnbx) )
+             ig_(iknum,nnbx), ig_check(iknum,nnbx), stat=ierr)
+             IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating kpb/g_kpb/...', 1)
+  ALLOCATE( zerophase(iknum,nnbx), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating zerophase', 1)
   zerophase = .false.
 
   !  read data about neighbours
@@ -2013,7 +2041,8 @@ SUBROUTINE read_nnkp
   WRITE(stdout,*) ' All neighbours are found '
   WRITE(stdout,*)
 
-  ALLOCATE( excluded_band(nbnd) )
+  ALLOCATE( excluded_band(nbnd), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating excluded_band', 1)
 
   IF (ionode) THEN     ! read from ionode only
      CALL scan_file_to('exclude_bands',found)
@@ -2038,7 +2067,8 @@ SUBROUTINE read_nnkp
   CALL mp_bcast(num_bands,ionode_id, world_comm)
 
   !
-  ALLOCATE( bvec(3,nnb), xbvec(3,nnb) )
+  ALLOCATE( bvec(3,nnb), xbvec(3,nnb), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating bvec/xbvec', 1)
   IF (ionode) THEN
      xbvec = 0
      IF (irr_bz) THEN
@@ -2105,7 +2135,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    INTEGER, allocatable :: s_in(:,:,:)
    REAL(DP), allocatable:: ft_in(:,:)
    INTEGER :: nxxs, nr1,nr2,nr3, nr1x,nr2x,nr3x
-   INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir
+   INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir, ierr
    LOGICAL :: ispresent(nsym)
    !
    nr1 = dffts%nr1
@@ -2117,7 +2147,8 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    nxxs = nr1x*nr2x*nr3x
    !
    !  sr -> s
-   ALLOCATE(s_in(3,3,nsym), ft_in(3,nsym))
+   ALLOCATE(s_in(3,3,nsym), ft_in(3,nsym), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating s_in/ft_in', 1)
    IF(read_sym ) THEN
       IF(allfrac) THEN
          call errore("pw2wan_set_symm", "use_all_frac = .true. + read_sym = .true. not supported", 1)
@@ -2275,7 +2306,7 @@ SUBROUTINE compute_dmn
    logical, ALLOCATABLE     :: lfound(:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3),v1(3),v2(3),v3(3),v4(3),v5(3),err,ermx,dvec(3,32),dwgt(32),dvec2(3,32),dmat(3,3)
-   INTEGER                  :: nn,inn,loop,loop2
+   INTEGER                  :: nn,inn,loop,loop2,ierr
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m,nsym, nxxs
@@ -2312,7 +2343,8 @@ SUBROUTINE compute_dmn
          read(iun_sym,*) nsym
       end if
       call mp_bcast(nsym,ionode_id, world_comm)
-      allocate(invs(nsym),sr(3,3,nsym),tvec(3,nsym))
+      allocate(invs(nsym),sr(3,3,nsym),tvec(3,nsym), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating invs/sr/tvec', 1)
       invs=-999
       if(ionode) then
          DO isym = 1, nsym
@@ -2335,7 +2367,8 @@ SUBROUTINE compute_dmn
       end do
    else
       nsym=nsymin
-      allocate(sr(3,3,nsym),invs(nsym),tvec(3,nsym))
+      allocate(sr(3,3,nsym),invs(nsym),tvec(3,nsym), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sr/invs/tvec', 1)
       ! original sr corresponds to transpose(s)
       ! so here we use sr = transpose(original sr)
       DO isym = 1, nsym
@@ -2385,12 +2418,15 @@ SUBROUTINE compute_dmn
    ! Setup iks2k and iks2g, such that symmetry operation isym moves
    ! k(iks2k(ik,isym)) to k(ik) + G(iks2g(ik,isym)).
    !
-   ALLOCATE(iks2k(iknum, nsym))
-   ALLOCATE(iks2g(iknum, nsym))
+   ALLOCATE(iks2k(iknum, nsym), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating iks2k', 1)
+   ALLOCATE(iks2g(iknum, nsym), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating iks2g', 1)
    iks2k(:, :) = -999
    iks2g(:, :) = -999
    !
-   ALLOCATE(lfound(MAX(iknum, ngm)))
+   ALLOCATE(lfound(MAX(iknum, ngm)), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating lfound', 1)
    DO isym = 1, nsym
       lfound(:) = .FALSE.
       DO ik = 1, iknum
@@ -2430,8 +2466,10 @@ SUBROUTINE compute_dmn
    ! ik2ir: Gives irreducible-k points from regular-k points. (Global k index)
    ! ir2ik: Gives regular-k points from irreducible-k points. (Global k index)
    !
-   ALLOCATE(ik2ir(iknum))
-   ALLOCATE(ir2ik(iknum))
+   ALLOCATE(ik2ir(iknum), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ik2ir', 1)
+   ALLOCATE(ir2ik(iknum), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ir2ik', 1)
    ik2ir(:) = -999
    ir2ik(:) = -999
    !
@@ -2454,8 +2492,10 @@ SUBROUTINE compute_dmn
    ! The Wannier center of iw-th Wannier function is equal to that of
    ! the ip2iw(iw2ip(iw))-th Wannier function.
    !
-   ALLOCATE(iw2ip(n_wannier))
-   ALLOCATE(ip2iw(n_wannier))
+   ALLOCATE(iw2ip(n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating iw2ip', 1)
+   ALLOCATE(ip2iw(n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ip2iw', 1)
    !
    np = 0
    DO iw = 1, n_wannier
@@ -2476,8 +2516,10 @@ SUBROUTINE compute_dmn
       ENDIF
    ENDDO
    !
-   ALLOCATE(ips2p(np, nsym))
-   ALLOCATE(lfound(np))
+   ALLOCATE(ips2p(np, nsym), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ips2p', 1)
+   ALLOCATE(lfound(np), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating lfound', 1)
    ips2p(:, :) = -999
    DO isym = 1, nsym
       lfound=.false.
@@ -2502,7 +2544,8 @@ SUBROUTINE compute_dmn
          end if
       end do
    end do
-   allocate(vps2t(3,np,nsym)) !See above.
+   allocate(vps2t(3,np,nsym), stat=ierr) !See above.
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating vps2t', 1)
    DO isym = 1, nsym
       do ip=1,np
          v1=center_w(:,ip2iw(ip))
@@ -2520,7 +2563,8 @@ SUBROUTINE compute_dmn
    dwgt(1:12)=pwg(1)
    dwgt(13:32)=pwg(2)
    !write(stdout,*) sum(dwgt) !Checking the weight sum to be 1.
-   allocate(dylm(32,5),vaxis(3,3,n_wannier))
+   allocate(dylm(32,5),vaxis(3,3,n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating dylm', 1)
    dylm=0d0
    vaxis=0d0
    do ip=1,5
@@ -2529,7 +2573,8 @@ SUBROUTINE compute_dmn
    !do ip=1,5
    !   write(stdout,"(5f25.15)") (sum(dylm(:,ip)*dylm(:,jp)*dwgt)*2d0*tpi,jp=1,5)
    !end do !Checking spherical integral.
-   allocate(wws(n_wannier,n_wannier,nsym))
+   allocate(wws(n_wannier,n_wannier,nsym), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wws', 1)
    wws=0d0
    DO iw = 1, n_wannier
       call set_u_matrix (xaxis(:,iw),zaxis(:,iw),vaxis(:,:,iw))
@@ -2578,7 +2623,8 @@ SUBROUTINE compute_dmn
    ! Compute and write d matrix for Wannier functions to file
    !
    IF (ionode) THEN
-      ALLOCATE(phs(n_wannier, n_wannier))
+      ALLOCATE(phs(n_wannier, n_wannier), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phs', 1)
       phs = (0.d0, 0.d0)
       WRITE(stdout,'(/)')
       WRITE(stdout,'(a,i8)') '  DMN(d_matrix_wann): nir = ', nir
@@ -2606,10 +2652,14 @@ SUBROUTINE compute_dmn
    !
    ! Compute d matrix for Kohn-Sham wavefunctions
    !
-   ALLOCATE(phase(dffts%nnr))
-   ALLOCATE(aux(npwx))
-   ALLOCATE(evc_k(npol*npwx, num_bands))
-   ALLOCATE(evc_sk(npol*npwx, num_bands))
+   ALLOCATE(phase(dffts%nnr), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
+   ALLOCATE(aux(npwx), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux', 1)
+   ALLOCATE(evc_k(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_k', 1)
+   ALLOCATE(evc_sk(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_sk', 1)
    !
    !
    !   USPP
@@ -2620,16 +2670,20 @@ SUBROUTINE compute_dmn
       IF (gamma_only) THEN
          call errore("compute_dmn", "gamma-only mode not implemented", 1)
       ELSE
-         ALLOCATE ( becp2(nkb,nbnd) )
+         ALLOCATE ( becp2(nkb,nbnd), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating becp2', 1)
       ENDIF
    ENDIF
    !
    !     qb is  FT of Q(r)
    !
    IF(okvan) THEN
-      ALLOCATE(dxk(3))
-      ALLOCATE(ylm(lmaxq*lmaxq) )
-      ALLOCATE(qb(nhm, nhm, ntyp))
+      ALLOCATE(dxk(3), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating dxk', 1)
+      ALLOCATE(ylm(lmaxq*lmaxq), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ylm', 1)
+      ALLOCATE(qb(nhm, nhm, ntyp), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qb', 1)
       !
       ! Unlike in compute_mmn, here dxk is always 0 because we compute overlap between
       ! |psi(k)> and S^{-1}*|psi(Sk)>, which both have periodicity exp(ikr).
@@ -2655,12 +2709,15 @@ SUBROUTINE compute_dmn
       !
    ENDIF
    !
-   ALLOCATE(Mkb(num_bands, nbnd))
-   ALLOCATE( workg(npwx) )
+   ALLOCATE(Mkb(num_bands, nbnd), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating Mkb', 1)
+   ALLOCATE( workg(npwx), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating workg', 1)
    !
    ! Set up variables and stuff needed to rotate wavefunctions
    nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x
-   ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
+   ALLOCATE(psic_all(nxxs), temppsic_all(nxxs), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all', 1)
    !
    ! Pool parallelization: divide irreducible k points, not regular k points
    CALL divide(inter_pool_comm, nir, ir_start, ir_end)
@@ -2928,9 +2985,15 @@ SUBROUTINE compute_mmn
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux', 1)
    ENDIF
 
-   IF (gamma_only) ALLOCATE(evc_kb_m(npwx, num_bands))
+   IF (gamma_only) THEN
+      ALLOCATE(evc_kb_m(npwx, num_bands), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_kb_m', 1)
+   ENDIF
 
-   IF (wan_mode=='library') ALLOCATE(m_mat(num_bands, num_bands, nnb, iknum))
+   IF (wan_mode=='library') THEN
+      ALLOCATE(m_mat(num_bands, num_bands, nnb, iknum))
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating m_mat', 1)
+   ENDIF
 
    IF (wan_mode=='standalone') THEN
       CALL utility_open_output_file("mmn", .TRUE., iun_mmn)
@@ -2945,13 +3008,19 @@ SUBROUTINE compute_mmn
       !
       !     qb is  FT of Q(r)
       !
-      ALLOCATE(qg(nnb))
-      ALLOCATE(dxk(3, nnb, nks))
-      ALLOCATE(ylm(nnb, lmaxq*lmaxq))
-      ALLOCATE(qgm(nnb))
-      ALLOCATE(qb(nhm, nhm, ntyp, nnb, nks))
-      ALLOCATE(qq_so(nhm, nhm, 4, ntyp))
+      ALLOCATE(qg(nnb), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qg', 1)
+      ALLOCATE(dxk(3, nnb, nks), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating dxk', 1)
+      ALLOCATE(ylm(nnb, lmaxq*lmaxq), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ylm', 1)
+      ALLOCATE(qgm(nnb), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qgm', 1)
+      ALLOCATE(qb(nhm, nhm, ntyp, nnb, nks), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qb', 1)
       qb = (0.0_DP, 0.0_DP)
+      ALLOCATE(qq_so(nhm, nhm, 4, ntyp), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qq_so', 1)
       !
       DO ik = 1, nks
          IF (lsda .AND. isk(ik) /= ispinw) CYCLE
@@ -2986,7 +3055,7 @@ SUBROUTINE compute_mmn
       !
    ENDIF
    !
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
@@ -3236,7 +3305,7 @@ SUBROUTINE compute_mmn_ibz
    !
    INTEGER                  :: ik, ib, ikp, ikevc1, ikevc2, isym, m, n, iun_mmn
    INTEGER                  :: ih, jh, nt, na, ikb, jkb, ijkb0
-   INTEGER                  :: npw, npwq
+   INTEGER                  :: npw, npwq, ierr
    INTEGER, ALLOCATABLE     :: rir(:,:)
    CHARACTER (len=9)        :: cdate, ctime
    CHARACTER (len=header_len) :: header
@@ -3270,14 +3339,16 @@ SUBROUTINE compute_mmn_ibz
    WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    IF (okvan) THEN
-      ALLOCATE(qb(nhm, nhm, ntyp, nnb), qq_so(nhm, nhm, 4, ntyp, nnb))
+      ALLOCATE(qb(nhm, nhm, ntyp, nnb), qq_so(nhm, nhm, 4, ntyp, nnb), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qb/qq_so', 1)
       CALL init_qb_so(qb, qq_so)
       CALL allocate_bec_type(nkb, nbnd, becp)
       CALL allocate_bec_type(nkb, nbnd, becp1)
       CALL allocate_bec_type(nkb, nbnd, becp2)
    END IF
    !
-   ALLOCATE( evc2(npwx*npol,nbnd), evc_kb(npwx*npol,nbnd), Mkb(nbnd,nbnd) )
+   ALLOCATE( evc2(npwx*npol,nbnd), evc_kb(npwx*npol,nbnd), Mkb(nbnd,nbnd), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc2/evc_kb/Mkb', 1)
    !
    ! calculate <psi_k | e^{-ibr} | psi_k+b>
    ! ik : <psi_k|
@@ -3465,10 +3536,12 @@ SUBROUTINE compute_mmn_ibz
       COMPLEX(DP)              :: tr, u_spin(2,2)
       COMPLEX(DP), ALLOCATABLE :: rotmat(:,:,:), repmat(:,:,:,:)
       !
-      ALLOCATE( repmat(nbnd, nbnd, nsym2, nkstot) )
+      ALLOCATE( repmat(nbnd, nbnd, nsym2, nkstot), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating repmat', 1)
       CALL get_representation_matrix(repmat)
       !
-      ALLOCATE( rotmat(n_wannier, n_wannier, nsym2) )
+      ALLOCATE( rotmat(n_wannier, n_wannier, nsym2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rotmat', 1)
       CALL get_rotation_matrix(rotmat)
       !
       ! save repmat
@@ -3590,13 +3663,15 @@ SUBROUTINE compute_mmn_ibz
       !
       repmat = 0
       !
-      ALLOCATE(xkc(3,nkstot))
+      ALLOCATE(xkc(3,nkstot), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating xkc', 1)
       xkc(:,1:nkstot)=xk(:,1:nkstot)
       CALL cryst_to_cart(nkstot,xkc,at,-1)
       !
       IF (okvan) CALL allocate_bec_type(nkb, nbnd, becp)
       !
-      ALLOCATE (spsi(npwx*npol,nbnd), gpsi(npwx*npol,nbnd))
+      ALLOCATE (spsi(npwx*npol,nbnd), gpsi(npwx*npol,nbnd), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating spsi/gpsi', 1)
       !
       DO ik=1, nkstot
          k = xkc(:,ik)
@@ -3716,7 +3791,8 @@ SUBROUTINE compute_mmn_ibz
       dwgt(13:32)=pwg(2)
       !
       !Conversion table between Wannier and position indexes.
-      allocate(iw2ip(n_wannier),ip2iw(n_wannier))
+      allocate(iw2ip(n_wannier),ip2iw(n_wannier), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating iw2ip/ip2iw', 1)
       np=0
       do iw=1,n_wannier
          v1=center_w(:,iw)
@@ -3736,7 +3812,8 @@ SUBROUTINE compute_mmn_ibz
          end if
       end do
       !
-      allocate(ips2p(np,nsym2),lfound(np))
+      allocate(ips2p(np,nsym2),lfound(np), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ips2p/lfound', 1)
       ips2p=-999 ! < 0
       do isym=1,nsym2
          lfound=.false.
@@ -3762,7 +3839,8 @@ SUBROUTINE compute_mmn_ibz
          end do
       end do
       !
-      allocate( vaxis(3,3,n_wannier) )
+      allocate( vaxis(3,3,n_wannier), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating vaxis', 1)
       rotmat=0.0d0
       do iw=1,n_wannier
          call set_u_matrix (xaxis(:,iw),zaxis(:,iw),vaxis(:,:,iw))
@@ -3801,7 +3879,8 @@ SUBROUTINE compute_mmn_ibz
       end do
       deallocate(vaxis)
       deallocate(ips2p, lfound, iw2ip, ip2iw)
-      allocate(check_mat(n_wannier, n_wannier))
+      allocate(check_mat(n_wannier, n_wannier), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating check_mat', 1)
       do isym=1,nsym2
          if(t_rev2(isym) == 0) then
             ! rotmat(:,:,isym) is unitary
@@ -3897,8 +3976,10 @@ SUBROUTINE compute_mmn_ibz
       COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
       !
       nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x
-      ALLOCATE( psic_all(nxxs), temppsic_all(nxxs), gpsi_tmp(npwx,2) )
-      ALLOCATE( phase(dffts%nnr) )
+      ALLOCATE( psic_all(nxxs), temppsic_all(nxxs), gpsi_tmp(npwx,2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all/temppsic_all/gpsi_tmp', 1)
+      ALLOCATE( phase(dffts%nnr), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
       !
       ! for spin space rotation (only used for noncollinear case)
       !
@@ -4038,7 +4119,8 @@ SUBROUTINE compute_mmn_ibz
       REAL(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
       COMPLEX(DP), ALLOCATABLE :: qgm(:), qq_so_tmp(:,:,:,:)
       !
-      ALLOCATE( ylm(nnb, lmaxq*lmaxq), qg(nnb), qgm(nnb), qq_so_tmp(nhm, nhm, 4, ntyp) )
+      ALLOCATE( ylm(nnb, lmaxq*lmaxq), qg(nnb), qgm(nnb), qq_so_tmp(nhm, nhm, 4, ntyp), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ylm/qg/qgm/qq_so_tmp', 1)
       !
       DO ib=1, nnb
          qg(ib) = dot_product(bvec(:,ib), bvec(:,ib))
@@ -4219,10 +4301,12 @@ SUBROUTINE compute_mmn_ibz
       !
       nxxs = nr1x*nr2x*nr3x
       !
-      ALLOCATE( rir(nxxs,nsym2) )
+      ALLOCATE( rir(nxxs,nsym2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rir', 1)
       !
       rir = 0
-      ALLOCATE ( ftau(3,nsym2), s_scaled(3,3,nsym2) )
+      ALLOCATE ( ftau(3,nsym2), s_scaled(3,3,nsym2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ftau/s_scaled', 1)
       CALL scale_sym_ops (nsym2, s2, ft2, nr1, nr2, nr3, s_scaled, ftau)
 
       DO isym = 1, nsym2
@@ -4291,7 +4375,7 @@ SUBROUTINE compute_spin
    real(DP)                 :: arg, g_(3)
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
-   INTEGER                  :: istart,iend
+   INTEGER                  :: istart,iend, ierr
    COMPLEX(DP)              :: sigma_x,sigma_y,sigma_z,cdum1,cdum2
    complex(DP), allocatable :: spn(:, :), spn_aug(:, :)
    !
@@ -4315,13 +4399,18 @@ SUBROUTINE compute_spin
    !
    IF (okvan) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp )
-      ALLOCATE(be_n(nhm,2))
-      ALLOCATE(be_m(nhm,2))
-      ALLOCATE(spn_aug(3, (num_bands*(num_bands+1))/2))
+      ALLOCATE(be_n(nhm,2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating be_n', 1)
+      ALLOCATE(be_m(nhm,2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating be_m', 1)
+      ALLOCATE(spn_aug(3, (num_bands*(num_bands+1))/2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating spn_aug', 1)
    ENDIF
    !
-   ALLOCATE(evc_k(npol*npwx, num_bands))
-   ALLOCATE(spn(3, (num_bands*(num_bands+1))/2))
+   ALLOCATE(evc_k(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_k', 1)
+   ALLOCATE(spn(3, (num_bands*(num_bands+1))/2), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating spn', 1)
    !
    !ivo
    ! not sure this is really needed
@@ -4339,7 +4428,7 @@ SUBROUTINE compute_spin
       ENDIF
    ENDIF
    !
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
@@ -4528,7 +4617,7 @@ SUBROUTINE compute_orb
    !
    IMPLICIT NONE
    !
-   INTEGER                  :: ik, npw, m, n
+   INTEGER                  :: ik, npw, m, n, ierr
    INTEGER                  :: i_b, i_b1, i_b2
    COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :)
    !! Wavefunction at k+b for all b vectors
@@ -4569,19 +4658,26 @@ SUBROUTINE compute_orb
         'write_uhu, and write_uIu not meant to work library mode',1)
 !endivo
    !
-   ALLOCATE(evc_b(npol*npwx, num_bands, nnb))
-   ALLOCATE(evc_b1(npol*npwx, num_bands))
-   ALLOCATE(evc_b2(npol*npwx, num_bands))
-   ALLOCATE(arr(num_bands, num_bands))
+   ALLOCATE(evc_b(npol*npwx, num_bands, nnb), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_b', 1)
+   ALLOCATE(evc_b1(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_b1', 1)
+   ALLOCATE(evc_b2(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_b2', 1)
+   ALLOCATE(arr(num_bands, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating arr', 1)
    !
    IF (write_uHu) THEN
-      ALLOCATE(H_evc_b2(npol*npwx, num_bands))
-      ALLOCATE(uHu(num_bands, num_bands, nnb, nnb))
+      ALLOCATE(H_evc_b2(npol*npwx, num_bands), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating H_evc_b2', 1)
+      ALLOCATE(uHu(num_bands, num_bands, nnb, nnb), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating uHu', 1)
       uHu = (0.d0, 0.d0)
    ENDIF
    !
    IF (write_uIu) THEN
-      ALLOCATE(uIu(num_bands, num_bands, nnb, nnb))
+      ALLOCATE(uIu(num_bands, num_bands, nnb, nnb), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating uIu', 1)
       uIu = (0.d0, 0.d0)
    ENDIF
    !
@@ -4621,7 +4717,7 @@ SUBROUTINE compute_orb
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
    CALL allocate_bec_type(nkb, num_bands, becp)
    !
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks ! loop over k points
       !
@@ -4769,7 +4865,7 @@ END SUBROUTINE compute_orb
 SUBROUTINE compute_shc
    !-----------------------------------------------------------------------
    !!
-   !! Calculate and write uHu and uIu matrix, which are defined as follows.
+   !! Calculate and write sHu and sIu matrix, which are defined as follows.
    !! sHu(n, m, ispol, ib, ik) = <u_{m,k}|S(ispol) H(k)|u_{n,k+b}>
    !! sIu(n, m, ispol, ib, ik) = <u_{m,k}|S(ispol)|u_{n,k+b}>
    !!
@@ -4805,7 +4901,7 @@ SUBROUTINE compute_shc
    !
    COMPLEX(DP), parameter :: cmplx_i = (0.0_DP, 1.0_DP)
    !
-   INTEGER :: ik, npw, m, n, ibnd_m, ispol, i_b
+   INTEGER :: ik, npw, m, n, ibnd_m, ispol, i_b, ierr
    COMPLEX(DP) :: sigma_x, sigma_y, sigma_z, cdum1, cdum2
    !
    COMPLEX(DP), ALLOCATABLE :: evc_kb(:, :), H_evc_kb(:, :)
@@ -4835,14 +4931,21 @@ SUBROUTINE compute_shc
    IF (.NOT. noncolin) CALL errore('pw2wannier90', &
       'write_sHu and write_sIu only works with noncolin == .true.', 1)
    !
-   ALLOCATE(evc_k(npol*npwx, num_bands))
-   ALLOCATE(evc_kb(npol*npwx, num_bands))
+   ALLOCATE(evc_k(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_k', 1)
+   ALLOCATE(evc_kb(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_kb', 1)
    !
    IF (write_sHu) THEN
-      ALLOCATE(sHu(num_bands, num_bands, 3))
-      ALLOCATE(H_evc_kb(npol*npwx, num_bands))
+      ALLOCATE(sHu(num_bands, num_bands, 3), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sHu', 1)
+      ALLOCATE(H_evc_kb(npol*npwx, num_bands), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating H_evc_kb', 1)
    ENDIF
-   IF (write_sIu) ALLOCATE(sIu(num_bands, num_bands, 3))
+   IF (write_sIu) THEN
+      ALLOCATE(sIu(num_bands, num_bands, 3), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sIu', 1)
+   ENDIF
    !
    !
    IF (write_sHu) THEN
@@ -4873,7 +4976,7 @@ SUBROUTINE compute_shc
    CALL allocate_bec_type(nkb, num_bands, becp)
    !
    WRITE(stdout, *)
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks ! loop over k points
       !
@@ -5139,20 +5242,30 @@ SUBROUTINE compute_amn
    !! Wavefunction at k. Contains only the included bands.
    INTEGER :: ik, npw, ibnd, ibnd1, iw, i, nt, ipol, ik_g_w90
    LOGICAL            :: opnd, exst,spin_z_pos, spin_z_neg
-   INTEGER            :: istart
+   INTEGER            :: istart, ierr
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    REAL(DP), EXTERNAL :: ddot
    !
    CALL start_clock( 'compute_amn' )
    !
-   ALLOCATE(amn(num_bands, n_proj))
-   ALLOCATE(sgf(npwx,n_proj))
-   ALLOCATE(gf_spinor(2*npwx, n_proj))
-   ALLOCATE(sgf_spinor(2*npwx, n_proj))
-   ALLOCATE(evc_k(npol*npwx, num_bands))
+   ALLOCATE(amn(num_bands, n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating amn', 1)
+   ALLOCATE(sgf(npwx,n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sgf', 1)
+   IF (noncolin) THEN
+      ALLOCATE(gf_spinor(2*npwx, n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating gf_spinor', 1)
+      ALLOCATE(sgf_spinor(2*npwx, n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sgf_spinor', 1)
+   ENDIF
+   ALLOCATE(evc_k(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_k', 1)
    !
-   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands, n_wannier, iknum))
+   IF (wan_mode=='library') THEN
+      ALLOCATE(a_mat(num_bands, n_wannier, iknum), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating a_mat', 1)
+   ENDIF
    !
    IF (wan_mode=='standalone') THEN
       IF (irr_bz) THEN
@@ -5165,7 +5278,7 @@ SUBROUTINE compute_amn
    !
    IF (okvan) CALL allocate_bec_type(nkb, n_proj, becp)
    !
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
@@ -5329,8 +5442,10 @@ SUBROUTINE compute_amn
    !
    DEALLOCATE(sgf)
    DEALLOCATE(csph)
-   DEALLOCATE(sgf_spinor)
-   DEALLOCATE(gf_spinor)
+   IF (noncolin) THEN
+      DEALLOCATE(sgf_spinor)
+      DEALLOCATE(gf_spinor)
+   ENDIF
    DEALLOCATE(amn)
    !
    IF(okvan) THEN
@@ -5370,7 +5485,7 @@ SUBROUTINE compute_amn_with_scdm
    !
    INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, ib, gamma_idx, &
               minmn, minmn2, ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, &
-              nxxs, count_piv_spin_up, m, ibnd_m, ipol
+              nxxs, count_piv_spin_up, m, ibnd_m, ipol, ierr
    REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3), rpos_cart(3)
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp
@@ -5407,21 +5522,23 @@ SUBROUTINE compute_amn_with_scdm
    !
    ! vv: Write info about SCDM in output
    IF (TRIM(scdm_entanglement) == 'isolated') THEN
-      WRITE(stdout,'(1x,a,a/)') 'Case  : ',trim(scdm_entanglement)
+      WRITE(stdout,'(2x,a,a/)') 'Case  : ',trim(scdm_entanglement)
    ELSEIF (TRIM(scdm_entanglement) == 'erfc' .OR. &
         TRIM(scdm_entanglement) == 'gaussian') THEN
-      WRITE(stdout,'(1x,a,a)') 'Case  : ',trim(scdm_entanglement)
-      WRITE(stdout,'(1x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+      WRITE(stdout,'(2x,a,a)') 'Case  : ',trim(scdm_entanglement)
+      WRITE(stdout,'(2x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
    ENDIF
    !
    CALL start_clock( 'compute_amn' )
    !
-   ALLOCATE(et_k(num_bands))
-   ALLOCATE(evc_k(npol*npwx, num_bands))
+   ALLOCATE(et_k(num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating et_k', 1)
+   ALLOCATE(evc_k(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_k', 1)
    !
    ! vv: Error for using SCDM with gamma_only
    IF (gamma_only) THEN
-      call errore('pw2wannier90','The SCDM method does not work with gamma_only calculations.',1)
+      call errore('pw2wannier90', 'The SCDM method does not work with gamma_only calculations.', 1)
    ENDIF
    ! vv: Allocate all the variables for the SCDM method:
    !     1)For the QR decomposition
@@ -5431,7 +5548,8 @@ SUBROUTINE compute_amn_with_scdm
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
    info = 0
    minmn = MIN(num_bands, npol*nrtot)
-   ALLOCATE(qr_tau(2*minmn))
+   ALLOCATE(qr_tau(2*minmn), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qr_tau', 1)
 #if defined(__SCALAPACK_QRCP)
    ! Dimensions of the process grid
    nprow = 1
@@ -5449,31 +5567,51 @@ SUBROUTINE compute_amn_with_scdm
    nblocks_loc = nblocks / nproc_pool
    rem_loc = MOD(nblocks, nproc_pool)
    IF (me_pool < rem_loc) nblocks_loc = nblocks_loc + 1
-   ALLOCATE(psi_gamma(minmn*nblocks_loc,minmn))
-   ALLOCATE(piv(minmn))
+   ALLOCATE(psi_gamma(minmn*nblocks_loc,minmn), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psi_gamma', 1)
+   ALLOCATE(piv(minmn), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating piv', 1)
 #else
-   ALLOCATE(piv(npol*nrtot))
-   ALLOCATE(psi_gamma(npol*nrtot,num_bands))
+   ALLOCATE(piv(npol*nrtot), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating piv', 1)
+   ALLOCATE(psi_gamma(npol*nrtot,num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psi_gamma', 1)
    piv(:) = 0
 #endif
    !
    minmn2 = MIN(num_bands,n_wannier)
-   ALLOCATE(rwork2(5*minmn2))
+   ALLOCATE(rwork2(5*minmn2), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rwork2', 1)
    !
-   ALLOCATE(piv_pos(n_wannier))
-   ALLOCATE(piv_spin(n_wannier))
-   ALLOCATE(rpos(3, n_wannier))
-   ALLOCATE(psic_all(nxxs, npol))
-   ALLOCATE(psic_1d(npol * nrtot))
-   ALLOCATE(phase(n_wannier))
-   ALLOCATE(singval(n_wannier))
-   ALLOCATE(Umat(num_bands,n_wannier))
-   ALLOCATE(VTmat(n_wannier,n_wannier))
-   ALLOCATE(Amat(num_bands,n_wannier))
-   ALLOCATE(phase_g(npwx, n_wannier))
-   ALLOCATE(nowfc(n_wannier, num_bands))
+   ALLOCATE(piv_pos(n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating piv_pos', 1)
+   ALLOCATE(piv_spin(n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating piv_spin', 1)
+   ALLOCATE(rpos(3, n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rpos', 1)
+   ALLOCATE(psic_all(nxxs, npol), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all', 1)
+   ALLOCATE(psic_1d(npol * nrtot), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_1d', 1)
+   ALLOCATE(phase(n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
+   ALLOCATE(singval(n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating singval', 1)
+   ALLOCATE(Umat(num_bands,n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating Umat', 1)
+   ALLOCATE(VTmat(n_wannier,n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating VTmat', 1)
+   ALLOCATE(Amat(num_bands,n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating Amat', 1)
+   ALLOCATE(phase_g(npwx, n_wannier), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase_g', 1)
+   ALLOCATE(nowfc(n_wannier, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating nowfc', 1)
    !
-   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
+   IF (wan_mode=='library') THEN
+      ALLOCATE(a_mat(num_bands,n_wannier,iknum), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating a_mat', 1)
+   ENDIF
    !
    IF (wan_mode == 'standalone') THEN
       ! TODO: append ' with SCDM ' to header
@@ -5488,7 +5626,7 @@ SUBROUTINE compute_amn_with_scdm
    !vv: Find Gamma-point index in the list of k-vectors
    gamma_idx = -1
    DO ik = 1, nkstot
-      IF (ALL(xk_all(:, ik) < 1.D-8)) THEN
+      IF (ALL(ABS(xk_all(:, ik)) < 1.D-8)) THEN
          gamma_idx = ik
          EXIT
       ENDIF
@@ -5576,7 +5714,8 @@ SUBROUTINE compute_amn_with_scdm
       !
 #if defined(__SCALAPACK_QRCP)
       WRITE(stdout, '(5x,A,I4,A)') "Running QRCP in parallel, using ", nproc_pool, " cores"
-      ALLOCATE(piv_p(minmn*nblocks_loc))
+      ALLOCATE(piv_p(minmn*nblocks_loc), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating piv_p', 1)
       piv_p(:) = 0
       !
       CALL PZGEQPF( num_bands, npol*nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
@@ -5584,8 +5723,10 @@ SUBROUTINE compute_amn_with_scdm
       !
       lcwork = AINT(REAL(tmp_cwork(1)))
       lrwork = AINT(REAL(tmp_rwork(1)))
-      ALLOCATE(rwork(lrwork))
-      ALLOCATE(cwork(lcwork))
+      ALLOCATE(rwork(lrwork), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rwork', 1)
+      ALLOCATE(cwork(lcwork), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating cwork', 1)
       rwork(:) = 0.0
       cwork(:) = CMPLX(0.0, 0.0)
       !
@@ -5605,19 +5746,22 @@ SUBROUTINE compute_amn_with_scdm
       WRITE(stdout, '(10x, A)') "To enable ScaLAPACK for QRCP, use valid versions"
       WRITE(stdout, '(10x, A)') "(ScaLAPACK >= 2.1.0 or MKL >= 2020) and set the argument"
       WRITE(stdout, '(10x, A)') "'with-scalapack-qrcp' in configure."
+      WRITE(stdout, '(10x, A)') ""
 #endif
       ! vv: Perform QR factorization with pivoting on Psi_Gamma
       ! vv: Preliminary call to define optimal values for lwork and cwork size
       ! Perform QR factorization only in a single processer
       IF(me_pool == root_pool) THEN
-         ALLOCATE(rwork(2*npol*nrtot))
+         ALLOCATE(rwork(2*npol*nrtot), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rwork', 1)
          rwork(:) = 0.0_DP
          CALL ZGEQP3(num_bands, npol*nrtot, TRANSPOSE(CONJG(psi_gamma)), num_bands, &
             piv, qr_tau, tmp_cwork, -1, rwork, info)
          IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
          lcwork = AINT(REAL(tmp_cwork(1)))
          piv(:) = 0
-         ALLOCATE(cwork(lcwork))
+         ALLOCATE(cwork(lcwork), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating cwork', 1)
          CALL ZGEQP3(num_bands, npol*nrtot, TRANSPOSE(CONJG(psi_gamma)), num_bands, &
             piv, qr_tau, cwork, lcwork, rwork, info)
          DEALLOCATE(cwork)
@@ -5648,12 +5792,12 @@ SUBROUTINE compute_amn_with_scdm
             piv_spin(iw) = -1
          ENDIF
       ENDDO
-      WRITE(stdout, '(a,I5)') " Number of pivot points with spin up  : ", count_piv_spin_up
-      WRITE(stdout, '(a,I5)') " Number of pivot points with spin down: ", n_wannier - count_piv_spin_up
+      WRITE(stdout, '(a,I5)') "  Number of pivot points with spin up  : ", count_piv_spin_up
+      WRITE(stdout, '(a,I5)') "  Number of pivot points with spin down: ", n_wannier - count_piv_spin_up
    ELSE
       piv_pos(1:n_wannier) = piv(1:n_wannier)
       piv_spin(:) = 0
-      WRITE(stdout, '(a,i8)') ' Number of pivot points: ', n_wannier
+      WRITE(stdout, '(a,i8)') '  Number of pivot points: ', n_wannier
    ENDIF
    !
    ! vv: Compute the points in 3d grid
@@ -5671,9 +5815,9 @@ SUBROUTINE compute_amn_with_scdm
    !
    ! Print pivot positions (and spin indices)
    IF (noncolin) THEN
-      WRITE(stdout, '(a)') ' Pivot point positions (alat units) and spin indices:'
+      WRITE(stdout, '(a)') '  Pivot point positions (alat units) and spin indices:'
    ELSE
-      WRITE(stdout, '(a)') ' Pivot point positions (alat units):'
+      WRITE(stdout, '(a)') '  Pivot point positions (alat units):'
    ENDIF
    DO iw = 1, n_wannier
       rpos_cart(:) = rpos(:, iw)
@@ -5686,7 +5830,7 @@ SUBROUTINE compute_amn_with_scdm
    ENDDO
    WRITE(stdout, *)
    !
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
@@ -5767,7 +5911,8 @@ SUBROUTINE compute_amn_with_scdm
          CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands, &
             singval, Umat, num_bands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
          lcwork = AINT(REAL(tmp_cwork(1)))
-         ALLOCATE(cwork(lcwork))
+         ALLOCATE(cwork(lcwork), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating cwork', 1)
          ! vv: SVD to generate orthogonal projections
          CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands, &
             singval, Umat, num_bands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
@@ -5854,7 +5999,7 @@ SUBROUTINE compute_amn_with_atomproj
    USE ions_base, ONLY: nat, ityp, atm, nsp
    USE basis, ONLY: natomwfc, swfcatom
    USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
-   USE lsda_mod, ONLY: nspin
+   USE lsda_mod, ONLY: nspin, lsda, isk
    USE noncollin_module, ONLY: noncolin, npol, lspinorb, domag
    USE wvfct, ONLY: npwx, nbnd
    USE uspp, ONLY: nkb, vkb
@@ -5927,7 +6072,8 @@ SUBROUTINE compute_amn_with_atomproj
                    'does not support symmetrization with external projectors', 1)
    ENDIF
    !
-   ALLOCATE(evc_k(npol*npwx, num_bands))
+   ALLOCATE(evc_k(npol*npwx, num_bands), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_k', 1)
    !
    IF (atom_proj_ext) THEN
       ALLOCATE (atproj_typs(nsp), stat=ierr)
@@ -6089,7 +6235,8 @@ SUBROUTINE compute_amn_with_atomproj
       WRITE (stdout, *)
    END IF
    !
-   ALLOCATE (proj(num_bands, n_proj))
+   ALLOCATE (proj(num_bands, n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj', 1)
    !
    IF (.NOT. ALLOCATED(swfcatom)) THEN
       ALLOCATE (swfcatom(npwx*npol, n_proj), stat=ierr)
@@ -6119,11 +6266,13 @@ SUBROUTINE compute_amn_with_atomproj
    !
    ! loop on k points
    !
-   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
       CALL print_progress(ik, nks)
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       npw = ngk(ik)
@@ -6507,7 +6656,7 @@ SUBROUTINE generate_guiding_functions(ik)
 
    INTEGER, INTENT(in) :: ik
    INTEGER, PARAMETER :: lmax=3, lmax2=(lmax+1)**2
-   INTEGER :: npw, iw, ig, l
+   INTEGER :: npw, iw, ig, l, ierr
    INTEGER :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
    real(DP) :: arg
    COMPLEX(DP) :: lphase
@@ -6515,7 +6664,8 @@ SUBROUTINE generate_guiding_functions(ik)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    !
    npw = ngk(ik)
-   ALLOCATE( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
+   ALLOCATE( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating gk/qg/ylm/sk/radial', 1)
    !
    DO ig = 1, npw
       gk (1,ig) = xk(1, ik) + g(1, igk_k(ig,ik) )
@@ -6571,7 +6721,7 @@ SUBROUTINE write_band
    IMPLICIT NONE
    !
    CHARACTER(LEN=256) :: filename
-   INTEGER :: ik, ibnd, ibnd1, ikevc, ikevc_g
+   INTEGER :: ik, ibnd, ibnd1, ikevc, ikevc_g, ierr
    !
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
    INTEGER, EXTERNAL :: global_kpoint_index
@@ -6587,7 +6737,8 @@ SUBROUTINE write_band
          OPEN(NEWUNIT=iun_band, FILE=TRIM(filename), FORM='FORMATTED', STATUS='REPLACE')
       ENDIF
    ELSEIF (wan_mode == 'library') THEN
-      ALLOCATE(eigval(num_bands, iknum))
+      ALLOCATE(eigval(num_bands, iknum), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating eigval', 1)
       eigval = 0.0_DP
    ELSE
       CALL errore('write_band', 'value of wan_mode not recognised', 1)
@@ -6646,7 +6797,7 @@ SUBROUTINE write_plot
    INTEGER :: ik, npw, ibnd, ik_g_w90, i1, j, spin, ipol, nxxs
    INTEGER :: nr1, nr2, nr3
    !! Real space grid sizes for the wavefunction data written to file
-   INTEGER :: i, k, idx, pos
+   INTEGER :: i, k, idx, pos, ierr
    !! aam: 1/5/06: for writing smaller unk files
    COMPLEX(DP), ALLOCATABLE :: evc_r(:, :)
    !! Distributed real-space wavefunction.
@@ -6658,21 +6809,24 @@ SUBROUTINE write_plot
    CALL start_clock( 'write_unk' )
    !
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
-   ALLOCATE(psic_all(nxxs, npol) )
-   ALLOCATE(evc_r(dffts%nnr, npol))
+   ALLOCATE(psic_all(nxxs, npol), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all', 1)
+   ALLOCATE(evc_r(dffts%nnr, npol), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_r', 1)
    psic_all = (0.0_DP, 0.0_DP)
    evc_r = (0.0_DP, 0.0_DP)
    !
    IF (reduce_unk) THEN
-      ! TODO: Enable factor different from 2
+      ! JQ TODO: Enable factor different from 2
       ! FIXME: Check if dffts%nr1 is divisible by 2
       ! FIXME: Is +1 needed?
-      WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
+      WRITE(stdout,'(3(a,i5))') 'nr1s=',dffts%nr1,' nr2s=',dffts%nr2,' nr3s=',dffts%nr3
       nr1 = (dffts%nr1+1)/2
       nr2 = (dffts%nr2+1)/2
       nr3 = (dffts%nr3+1)/2
-      WRITE(stdout,'(3(a,i5))') 'n1by2=', nr1, 'n2by2=', nr2, 'n3by2=', nr3
-      ALLOCATE(psic_small(nr1*nr2*nr3, npol))
+      WRITE(stdout,'(3(a,i5))') 'n1by2=', nr1, ' n2by2=', nr2, ' n3by2=', nr3
+      ALLOCATE(psic_small(nr1*nr2*nr3, npol), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_small', 1)
       psic_small = (0.0_DP, 0.0_DP)
    ELSE
       psic_small => psic_all
@@ -6681,7 +6835,7 @@ SUBROUTINE write_plot
       nr3 = dffts%nr3
    ENDIF
    !
-   WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
+   WRITE(stdout, '(a,i8)') '  Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
@@ -6791,7 +6945,7 @@ SUBROUTINE write_parity
    !
    IMPLICIT NONE
    !
-   INTEGER :: npw, ibnd, ig, kgamma, ik, i, ig_target, num_G
+   INTEGER :: npw, ibnd, ig, kgamma, ik, i, ig_target, num_G, ierr
    !!
    INTEGER :: g_target(3, 32)
    !! List of G vectors to find
@@ -6861,7 +7015,8 @@ SUBROUTINE write_parity
    !
    ! Run calculation only on the pool with k = Gamma.
    IF (kgamma /= -1) THEN
-      ALLOCATE(evc_target(32, nbnd))
+      ALLOCATE(evc_target(32, nbnd), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_target', 1)
       evc_target = (0.d0, 0.d0)
       !
       ! building the evc array corresponding to the Gamma point
@@ -6929,15 +7084,17 @@ SUBROUTINE wan2sic
 
   IMPLICIT NONE
 
-  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc, npw
+  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc, npw, ierr
   COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
 
   OPEN (20, file = trim(seedname)//".dat" , form = 'formatted', status = 'unknown')
   WRITE(stdout,*) ' wannier plot '
 
-  ALLOCATE ( u_matrix( n_wannier, n_wannier, nkstot) )
-  ALLOCATE ( orbital( npwx, n_wannier) )
+  ALLOCATE ( u_matrix( n_wannier, n_wannier, nkstot), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating u_matrix', 1)
+  ALLOCATE ( orbital( npwx, n_wannier), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating orbital', 1)
 
   !
   DO i = 1, n_wannier
@@ -6986,12 +7143,14 @@ SUBROUTINE ylm_expansion
    IMPLICIT NONE
    ! local variables
    INTEGER, PARAMETER :: lmax2=16
-   INTEGER ::  lm, i, ir, iw, m
+   INTEGER ::  lm, i, ir, iw, m, ierr
    real(DP), ALLOCATABLE :: r(:,:), rr(:), rp(:,:), ylm_w(:), ylm(:,:), mly(:,:)
    real(DP) :: u(3,3)
 
-   ALLOCATE (r(3,lmax2), rp(3,lmax2), rr(lmax2), ylm_w(lmax2))
-   ALLOCATE (ylm(lmax2,lmax2), mly(lmax2,lmax2) )
+   ALLOCATE (r(3,lmax2), rp(3,lmax2), rr(lmax2), ylm_w(lmax2), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating r/rp/rr/ylm_w', 1)
+   ALLOCATE (ylm(lmax2,lmax2), mly(lmax2,lmax2), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ylm/mly', 1)
 
    ! generate a set of nr=lmax2 random vectors
    DO ir=1,lmax2
@@ -7039,9 +7198,10 @@ SUBROUTINE check_inverse(lmax2, ylm, mly)
    ! local variables
    real(DP), ALLOCATABLE :: uno(:,:)
    real(DP) :: capel
-   INTEGER :: lm
+   INTEGER :: lm, ierr
    !
-   ALLOCATE (uno(lmax2,lmax2) )
+   ALLOCATE (uno(lmax2,lmax2), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating uno', 1)
    uno = MATMUL(mly, ylm)
    capel = 0.d0
    DO lm = 1, lmax2
@@ -7370,12 +7530,14 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   real(DP), PARAMETER :: xmin=-6.d0, dx=0.025d0, rmax=10.d0
 
   real(DP) :: rad_int, pref, x
-  INTEGER :: l, lp1, ir, ig, mesh_r
+  INTEGER :: l, lp1, ir, ig, mesh_r, ierr
   real(DP), ALLOCATABLE :: bes(:), func_r(:), r(:), rij(:), aux(:)
 
   mesh_r = nint ( ( log ( rmax ) - xmin ) / dx + 1 )
-  ALLOCATE ( bes(mesh_r), func_r(mesh_r), r(mesh_r), rij(mesh_r) )
-  ALLOCATE ( aux(mesh_r))
+  ALLOCATE ( bes(mesh_r), func_r(mesh_r), r(mesh_r), rij(mesh_r), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating bes/func_r/r/rij', 1)
+  ALLOCATE ( aux(mesh_r), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux', 1)
   !
   !    compute the radial mesh
   !
