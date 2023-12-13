@@ -915,8 +915,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
   USE kinds,              ONLY : DP
-  USE becmod,             ONLY : becp, calbec, allocate_bec_type, calbec_omp
-  USE control_flags,      ONLY : gamma_only, tqr
+  USE becmod,             ONLY : becp, calbec, allocate_bec_type
+  USE control_flags,      ONLY : gamma_only, tqr, offload_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta
   USE uspp_param,         ONLY : upf, nh, nhm
@@ -932,6 +932,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,                 ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,         ONLY : using_et
+  USE paw_variables,      ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -962,13 +963,11 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   IF ( .NOT. real_space ) THEN
     ! calbec computes becp = <vkb_i|psi_j>
     IF ((.NOT.gamma_only).AND.(.NOT. noncolin).AND.(.NOT.okpaw)) THEN
-#if defined(__OPENMP_GPU)
+!civn: this should work with omp and cpu.
+!      acc passes through sum_band_gpu
       !$omp target data map(to:vkb)
-      CALL calbec_omp( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+      CALL calbec( offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
       !$omp end target data
-#else
-      CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
-#endif
     ELSE
       CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
     ENDIF

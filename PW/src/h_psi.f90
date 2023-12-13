@@ -91,14 +91,14 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: becp, calbec, calbec_omp
+  USE becmod,                  ONLY: becp, calbec
   USE lsda_mod,                ONLY: current_spin
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin
   USE uspp,                    ONLY: vkb, nkb
   USE ldaU,                    ONLY: lda_plus_u, Hubbard_projectors
   USE gvect,                   ONLY: gstart
-  USE control_flags,           ONLY: gamma_only, scissor
+  USE control_flags,           ONLY: gamma_only, scissor, offload_type
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                                      calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,  &
@@ -263,13 +263,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:calbec' )
-#if defined(__OPENMP_GPU)
+!civn: this should work for omp and cpu case. 
+!      acc case passes through h_psi_gpu
      !$omp target data map(to:vkb)
-     CALL calbec_omp( n, vkb, psi, becp, m )
+     CALL calbec( offload_type, n, vkb, psi, becp, m )
      !$omp end target data
-#else
-     CALL calbec( n, vkb, psi, becp, m )
-#endif
      CALL stop_clock( 'h_psi:calbec' )
      CALL add_vuspsi( lda, n, m, hpsi )
      !

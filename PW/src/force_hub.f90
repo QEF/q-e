@@ -27,7 +27,7 @@ SUBROUTINE force_hub( forceh )
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE symme,                ONLY : symvector
    USE wvfct,                ONLY : nbnd, npwx
-   USE control_flags,        ONLY : gamma_only, offload_type
+   USE control_flags,        ONLY : gamma_only, offload_type, offload_cpu 
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type_acc, &
@@ -141,11 +141,16 @@ SUBROUTINE force_hub( forceh )
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type_acc( nkb, nbnd, becp )
       !$acc data copyin(evc)
+#if defined (__OPENMP_GPU)
+      Call calbec(offload_cpu, npw, vkb, evc, becp ) 
+      CALL s_psi( npwx, npw, nbnd, evc, spsi )
+#else
       Call calbec(offload_type, npw, vkb, evc, becp ) 
       !$acc host_data use_device(spsi, evc)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
       !$acc end data
+#endif
       CALL deallocate_bec_type_acc( becp )
       !
       ! ... Set up various quantities, in particular wfcU which 
@@ -161,7 +166,11 @@ SUBROUTINE force_hub( forceh )
       !
       ! ... proj=<wfcU|S|evc>
       !
+#if defined (__OPENMP_GPU)
+      CALL calbec( offload_cpu, npw, wfcU, spsi, proj )
+#else
       CALL calbec( offload_type, npw, wfcU, spsi, proj )
+#endif
       !
       IF ( gamma_only ) THEN
          !$acc kernels copyout(projrd)
@@ -1537,7 +1546,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    USE klist,                ONLY : igk_k, ngk
    USE becmod,               ONLY : calbec
    USE gvect,                ONLY : g
-   USE control_flags,        ONLY : offload_type
+   USE control_flags,        ONLY : offload_type, offload_cpu
    !
    IMPLICIT NONE
    !
@@ -1613,9 +1622,14 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
 ! !omp end parallel do
    !
    ! ... Calculate Abeta = <A|beta>
+#if defined (__OPENMP_GPU)
+   CALL calbec( offload_cpu, npw, A, aux, Abeta )
+   CALL calbec( offload_cpu, npw, aux, B, betaB )
+#else
    CALL calbec( offload_type, npw, A, aux, Abeta )
    ! ... Calculate betaB = <beta|B>
    CALL calbec( offload_type, npw, aux, B, betaB )
+#endif
    !
    ! ... Calculate the derivative of the beta function
 ! !omp parallel do default(shared) private(ig,ih)
@@ -1630,9 +1644,14 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
 ! !omp end parallel do
    !
    ! ... Calculate Abeta = <A|beta>
+#if defined (__OPENMP_GPU)
+   CALL calbec( offload_cpu, npw, A, aux, Adbeta )
+   CALL calbec( offload_cpu, npw, aux, B, dbetaB )
+#else
    CALL calbec( offload_type, npw, A, aux, Adbeta )
    ! ... Calculate betaB = <beta|B>
    CALL calbec( offload_type, npw, aux, B, dbetaB )
+#endif
    !
    !$acc end data
    DEALLOCATE( aux )
@@ -1719,7 +1738,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
-   USE control_flags,        ONLY : offload_type
+   USE control_flags,        ONLY : offload_type, offload_cpu
    !
    IMPLICIT NONE
    !
@@ -1864,10 +1883,15 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       ENDDO
    ENDDO
    !
+#if defined(__OPENMP_GPU)
+   CALL calbec( offload_cpu, npw, wfcU, dbeta, wfatbeta ) 
+   CALL calbec( offload_cpu, npw, dbeta, evc, betapsi0 )
+#else
    CALL calbec( offload_type, npw, wfcU, dbeta, wfatbeta ) 
    !$acc data copyin(evc)
    CALL calbec( offload_type, npw, dbeta, evc, betapsi0 )
    !$acc end data
+#endif
    !
    !$acc parallel loop collapse(2)
    DO ih = 1, nh(nt)
@@ -1879,10 +1903,15 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
 ! !omp end parallel do
    !
+#if defined(__OPENMP_GPU)
+   CALL calbec( offload_cpu, npw, dbeta, evc, dbetapsi ) 
+   CALL calbec( offload_cpu, npw, wfcU, dbeta, wfatdbeta )
+#else
    !$acc data copyin(evc)
    CALL calbec( offload_type, npw, dbeta, evc, dbetapsi ) 
    !$acc end data
    CALL calbec( offload_type, npw, wfcU, dbeta, wfatdbeta )
+#endif
    !
    !$acc end data
    DEALLOCATE( dbeta )

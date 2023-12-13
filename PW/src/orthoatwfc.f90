@@ -32,7 +32,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                          bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only, use_gpu, offload_type
+  USE control_flags,    ONLY : gamma_only, use_gpu, offload_type, offload_cpu
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
   USE uspp_init,        ONLY : init_us_2
@@ -106,10 +106,15 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ENDIF
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
+#if defined(__OPENMP_GPU)
+     CALL calbec (offload_cpu, npw, vkb, wfcatom, becp)
+     CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
+#else
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
      !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
      !$acc end host_data
+#endif
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
@@ -270,7 +275,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   USE uspp,             ONLY : nkb, vkb
   USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only, use_gpu, offload_type
+  USE control_flags,    ONLY : gamma_only, use_gpu, offload_type, offload_cpu
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
@@ -309,10 +314,15 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      !
+#if defined(__OPENMP_GPU)
+     CALL calbec (offload_cpu, npw, vkb, wfcatom, becp)     
+     CALL s_psi( npwx, npw, natomwfc, wfcatom, swfcatom )
+#else
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)     
      !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc( npwx, npw, natomwfc, wfcatom, swfcatom )
      !$acc end host_data
+#endif
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !

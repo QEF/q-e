@@ -49,6 +49,7 @@ MODULE becmod
 !                             - beta, psi, betapsi can be CPU, OpenACC (or OpenMP5), 
 !                             - CPU, OpenACC (and OpenMP5) cases are distinguished by type(offload_type)
                       calbec_k_acc, calbec_gamma_acc, calbec_gamma_nocomm_acc, calbec_nc_acc, calbec_bec_type_acc, &
+                      calbec_k_omp, calbec_gamma_omp, calbec_gamma_nocomm_omp, calbec_nc_omp, calbec_bec_type_omp, &
                       calbec_k_cpu, calbec_gamma_cpu, calbec_gamma_nocomm_cpu, calbec_nc_cpu, calbec_bec_type_cpu, &
 !                     usage: call calbec( beta, psi, betapsi ) ("old" way to call calbec on CPU)
 !                             - beta, psi, betapsi are CPU-only 
@@ -80,12 +81,6 @@ MODULE becmod
   INTERFACE becscal
      !
      MODULE PROCEDURE becscal_nck, becscal_gamma
-     !
-  END INTERFACE
-
-  INTERFACE calbec_omp
-     !
-     MODULE PROCEDURE calbec_k_omp, calbec_gamma_omp, calbec_gamma_nocomm_omp, calbec_nc_omp, calbec_bec_type_omp
      !
   END INTERFACE
   !
@@ -1794,7 +1789,7 @@ CONTAINS
   END SUBROUTINE becupdate_2D_acc
 
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_bec_type_omp ( npw, beta, psi, betapsi, nbnd )
+  SUBROUTINE calbec_bec_type_omp ( offload, npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !_
     USE mp_bands, ONLY: intra_bgrp_comm
@@ -1809,6 +1804,7 @@ CONTAINS
     ! INOUT : betapsi is on the host
     !         betapsi is mapped to,from in children
     !
+    TYPE(offload_kind_omp), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
                                                !  the allocatd array is lost
@@ -1830,7 +1826,7 @@ CONTAINS
        !
        IF( betapsi%comm == mp_get_comm_null() ) THEN
           !
-          CALL calbec_gamma_omp ( npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
+          CALL calbec_gamma_omp ( offload, npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
           !
        ELSE
           !
@@ -1841,7 +1837,7 @@ CONTAINS
              m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
              IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
              IF( m_loc > 0 ) THEN
-                CALL calbec_gamma_omp ( npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                CALL calbec_gamma_omp ( offload, npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
                 IF( ip == betapsi%mype ) THEN
                    nkb = SIZE( betapsi%r, 1 )
                    DO j = 1, m_loc
@@ -1859,11 +1855,11 @@ CONTAINS
        !
     ELSEIF ( noncolin) THEN
        !
-       CALL  calbec_nc_omp ( npw, beta, psi, betapsi%nc, local_nbnd )
+       CALL  calbec_nc_omp ( offload, npw, beta, psi, betapsi%nc, local_nbnd )
        !
     ELSE
        !
-       CALL  calbec_k_omp ( npw, beta, psi, betapsi%k, local_nbnd )
+       CALL  calbec_k_omp ( offload, npw, beta, psi, betapsi%k, local_nbnd )
        !
     ENDIF
     !
@@ -1871,10 +1867,11 @@ CONTAINS
     !
   END SUBROUTINE calbec_bec_type_omp
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_nocomm_omp ( npw, beta, psi, betapsi, nbnd )
+  SUBROUTINE calbec_gamma_nocomm_omp ( offload, npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     USE mp_bands, ONLY: intra_bgrp_comm
     IMPLICIT NONE
+    TYPE(offload_kind_omp), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
@@ -1885,12 +1882,12 @@ CONTAINS
     ELSE
         m = size ( psi, 2)
     ENDIF
-    CALL calbec_gamma_omp ( npw, beta, psi, betapsi, m, intra_bgrp_comm )
+    CALL calbec_gamma_omp ( offload, npw, beta, psi, betapsi, m, intra_bgrp_comm )
     RETURN
     !
   END SUBROUTINE calbec_gamma_nocomm_omp
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_omp ( npw, beta, psi, betapsi, nbnd, comm )
+  SUBROUTINE calbec_gamma_omp ( offload, npw, beta, psi, betapsi, nbnd, comm )
     !-----------------------------------------------------------------------
     !! matrix times matrix with summation index (k=1,npw) running on
     !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
@@ -1900,6 +1897,7 @@ CONTAINS
     USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
+    TYPE(offload_kind_omp), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
@@ -1963,7 +1961,7 @@ CONTAINS
   END SUBROUTINE calbec_gamma_omp
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_k_omp ( npw, beta, psi, betapsi, nbnd )
+  SUBROUTINE calbec_k_omp ( offload, npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! Matrix times matrix with summation index (k=1,npw) running on
     !! G-vectors or PWs:
@@ -1973,6 +1971,7 @@ CONTAINS
     USE mp,       ONLY : mp_sum
 
     IMPLICIT NONE
+    TYPE(offload_kind_omp), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     COMPLEX (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
@@ -2027,7 +2026,7 @@ CONTAINS
   END SUBROUTINE calbec_k_omp
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_nc_omp ( npw, beta, psi, betapsi, nbnd )
+  SUBROUTINE calbec_nc_omp ( offload, npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! Matrix times matrix with summation index (k below) running on
     !! G-vectors or PWs corresponding to two different polarizations:
@@ -2039,6 +2038,7 @@ CONTAINS
     USE mp,       ONLY : mp_sum
 
     IMPLICIT NONE
+    TYPE(offload_kind_omp), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)
     INTEGER, INTENT (in) :: npw

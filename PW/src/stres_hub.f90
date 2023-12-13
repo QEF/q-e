@@ -35,7 +35,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE io_global,          ONLY : stdout
    USE mp_pools,           ONLY : inter_pool_comm, me_pool, nproc_pool
    USE mp,                 ONLY : mp_sum
-   USE control_flags,      ONLY : gamma_only, offload_type
+   USE control_flags,      ONLY : gamma_only, offload_type, offload_cpu
    USE mp_bands,           ONLY : use_bgrp_in_hpsi
    USE noncollin_module,   ONLY : noncolin
    USE force_mod,          ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
@@ -160,12 +160,17 @@ SUBROUTINE stres_hub ( sigmah )
       ! Compute spsi = S * psi
       CALL allocate_bec_type_acc ( nkb, nbnd, becp)
       !
+#if defined(__OPENMP_GPU)
+      CALL calbec( offload_cpu, npw, vkb, evc, becp )
+      CALL s_psi( npwx, npw, nbnd, evc, spsi )
+#else
       !$acc data present_or_copyin(evc)
       CALL calbec( offload_type, npw, vkb, evc, becp )
       !$acc host_data use_device(evc, spsi)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
       !$acc end data
+#endif
       !
       CALL deallocate_bec_type_acc (becp)
       !
@@ -176,15 +181,23 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! proj=<wfcU|S|evc>
       IF (gamma_only) THEN
+#if defined(__OPENMP_GPU)
+         CALL calbec( offload_cpu, npw, wfcU, spsi, projrd )
+#else
          !$acc data create(projrd)
          CALL calbec( offload_type, npw, wfcU, spsi, projrd )
          !$acc update self(projrd)
          !$acc end data
+#endif
       ELSE
+#if defined(__OPENMP_GPU)
+         CALL calbec( offload_cpu, npw, wfcU, spsi, projkd )
+#else
          !$acc data create(projkd)
          CALL calbec( offload_type, npw, wfcU, spsi, projkd )
          !$acc update self(projkd)
          !$acc end data
+#endif
       ENDIF
       !
       ! Compute derivatives of spherical harmonics and spherical Bessel functions
@@ -989,7 +1002,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
-   USE control_flags,        ONLY : offload_type
+   USE control_flags,        ONLY : offload_type, offload_cpu
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj
    USE mp_bands,             ONLY : intra_bgrp_comm
@@ -1231,7 +1244,11 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ENDIF
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
+#if defined(__OPENMP_GPU)
+   CALL calbec( offload_cpu, npw, dwfc, spsi, dproj )
+#else
    CALL calbec( offload_type, npw, dwfc, spsi, dproj )
+#endif
    !
    !$acc end data
    !$acc end data
@@ -1279,7 +1296,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   USE control_flags,        ONLY : offload_type
+   USE control_flags,        ONLY : offload_type, offload_cpu, use_gpu
    USE klist,                ONLY : xk, igk_k, ngk
    USE force_mod,            ONLY : us_dy, us_dj
    !
@@ -1385,11 +1402,16 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ENDDO   
             ENDIF        
             !
+#if defined(__OPENMP_GPU)
+            CALL calbec(offload_cpu, npw, aux, B, dbetaB )
+            CALL calbec(offload_cpu, npw, A, aux, Adbeta )
+#else
             ! Calculate dbetaB = <dbeta|B> 
             CALL calbec(offload_type, npw, aux, B, dbetaB )
             !
             ! Calculate Adbeta = <A|dbeta>
             CALL calbec(offload_type, npw, A, aux, Adbeta )
+#endif
             !
             ! aux is now used as a work space to store vkb
             !$acc parallel loop collapse(2)
@@ -1399,11 +1421,16 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ENDDO
             ENDDO
             !
+#if defined(__OPENMP_GPU)
+            CALL calbec( offload_cpu, npw, A, aux, Abeta )
+            CALL calbec( offload_cpu, npw, aux, B, betaB )
+#else
             ! Calculate Abeta = <A|beta>
             CALL calbec( offload_type, npw, A, aux, Abeta )
             !
             ! Calculate betaB = <beta|B>
             CALL calbec( offload_type, npw, aux, B, betaB )
+#endif
             !
             !$acc end data
             DEALLOCATE ( aux )
@@ -1412,10 +1439,11 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !$acc data create(aux)
             ! 
             ! Calculate \sum_jh qq(ih,jh) * dbetaB(jh)
+!civn: use_gpu is false for CPU and OMP5 execution
             !$acc host_data use_device(qq,dbetaB,aux)
-            CALL MYZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+            CALL MYZGEMM2('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                        qq, nh(nt), dbetaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
-                       aux(1,lB_s), nh(nt))
+                       aux(1,lB_s), nh(nt), use_gpu)
             !$acc end host_data 
             !$acc kernels  
             dbetaB(:,:) = aux(:,:)
@@ -1423,9 +1451,9 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !
             ! Calculate \sum_jh qq(ih,jh) * betaB(jh)
             !$acc host_data use_device(qq,betaB,aux)
-            CALL MYZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+            CALL MYZGEMM2('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                        qq, nh(nt), betaB(1,lB_s),     nh(nt), (0.0d0,0.0d0), &
-                       aux(1,lB_s), nh(nt))
+                       aux(1,lB_s), nh(nt), use_gpu)
             !$acc end host_data 
             !$acc kernels   
             betaB(:,:) = aux(:,:)
@@ -1442,12 +1470,12 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !
             IF ( mykey == 0 ) THEN
               !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)      
-              CALL MYZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+              CALL MYZGEMM2('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                          Adbeta, lA, betaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                         A_dS_B(1,lB_s), lA)
-              CALL MYZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA, use_gpu)
+              CALL MYZGEMM2('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                          Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                         A_dS_B(1,lB_s), lA)
+                         A_dS_B(1,lB_s), lA, use_gpu)
               !$acc end host_data   
               !
             ENDIF
@@ -1497,7 +1525,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
-   USE control_flags,        ONLY : offload_type
+   USE control_flags,        ONLY : offload_type, offload_cpu, use_gpu
    USE force_mod,            ONLY : at_dy, at_dj, us_dy, us_dj
    !
    IMPLICIT NONE
@@ -1620,7 +1648,11 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
       !$acc end kernels
    ENDIF
    !
+#if defined(__OPENMP_GPU)
+   CALL calbec ( offload_cpu, npw, dwfc, spsi, dproj )
+#else
    CALL calbec ( offload_type, npw, dwfc, spsi, dproj )
+#endif
    !
    !$acc end data
    !
@@ -1662,10 +1694,16 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   ENDDO
                ENDIF   
                !
+#if defined(__OPENMP_GPU)
+               CALL calbec(offload_cpu, npw, dbeta, evc, dbetapsi )
+               CALL calbec(offload_cpu, npw, wfcU, dbeta, wfatdbeta )
+#else
                !$acc data present_or_copyin(evc)
                CALL calbec(offload_type, npw, dbeta, evc, dbetapsi )
                !$acc end data
                CALL calbec(offload_type, npw, wfcU, dbeta, wfatdbeta )
+#endif
+
                !
                ! dbeta is now used as work space to store vkb
                !$acc parallel loop collapse(2)
@@ -1675,10 +1713,15 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   ENDDO
                ENDDO
                !
+#if defined(__OPENMP_GPU)
+               CALL calbec(offload_cpu, npw, wfcU, dbeta, wfatbeta )
+               CALL calbec(offload_cpu, npw, dbeta, evc, betapsi0 )
+#else
                CALL calbec(offload_type, npw, wfcU, dbeta, wfatbeta )
                !$acc data present_or_copyin(evc)
                CALL calbec(offload_type, npw, dbeta, evc, betapsi0 )
                !$acc end data
+#endif
                !
                ! here starts band parallelization
                ! beta is here used as work space to calculate dbetapsi
@@ -1721,12 +1764,12 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                !
                IF ( mykey == 0 .AND. nh(nt) > 0 ) THEN
                   !$acc host_data use_device(wfatdbeta,betapsi,dproj,wfatbeta,dbetapsi)
-                  CALL MYDGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
+                  CALL MYDGEMM2('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
                        wfatdbeta, nwfcU, betapsi(1,nb_s), nh(nt), 1.0_dp,&
-                       dproj(1,nb_s), nwfcU)
-                  CALL MYDGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
+                       dproj(1,nb_s), nwfcU, use_gpu)
+                  CALL MYDGEMM2('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
                        wfatbeta, nwfcU, dbetapsi(1,nb_s), nh(nt), 1.0_dp,&
-                       dproj(1,nb_s), nwfcU)
+                       dproj(1,nb_s), nwfcU, use_gpu)
                   !$acc end host_data
                ENDIF
                ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
