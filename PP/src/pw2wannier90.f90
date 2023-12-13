@@ -6345,6 +6345,9 @@ SUBROUTINE compute_amn_with_atomproj
       ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
       ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
       !
+      npw_ = npw
+      IF (noncolin) npw_ = npol*npwx
+      !
       IF (atom_proj_ortho) THEN
          IF (la_proc) THEN
             ALLOCATE (overlap_d(nx, nx), stat=ierr)
@@ -6354,8 +6357,6 @@ SUBROUTINE compute_amn_with_atomproj
             IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
          ENDIF
          overlap_d = (0.D0, 0.D0)
-         npw_ = npw
-         IF (noncolin) npw_ = npol*npwx
          IF (gamma_only) THEN
             !
             ! in the Gamma-only case the overlap matrix (real) is copied
@@ -6419,7 +6420,7 @@ SUBROUTINE compute_amn_with_atomproj
          ! calculate O^{-1/2} (actually, its transpose)
          !
          DO i = 1, n_proj
-           e(i) = 1.D0/dsqrt(e(i))
+            e(i) = 1.D0/dsqrt(e(i))
          END DO
          !
          IF (la_proc) THEN
@@ -6450,16 +6451,20 @@ SUBROUTINE compute_amn_with_atomproj
                                   idesc, rank_ip, idesc_ip, la_proc)
          END IF
          DEALLOCATE (overlap_d)
+      ELSE
+         wfcatom = swfcatom
       ENDIF ! atom_proj_ortho
       !
-      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>,
-      ! symmetrize the projections if required
+      ! make the projection
+      !   <psi_i| O^{-1/2} \hat S | phi_j> (if atom_proj_ortho)
+      !   <psi_i| \hat S | phi_j> (if not atom_proj_ortho)
+      ! symmetrize the projections if required (not implemented yet)
       !
       IF (gamma_only) THEN
          !
          ALLOCATE (rproj0(n_proj, num_bands), stat=ierr)
          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rproj0', 1)
-         CALL calbec(npw, wfcatom, evc_k, rproj0, nbnd=num_bands)
+         CALL calbec(npw_, wfcatom, evc_k, rproj0, nbnd=num_bands)
          ! haven't tested symmetrization with external projectors, so
          ! I disable these for now.
          ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
@@ -6553,7 +6558,7 @@ SUBROUTINE compute_amn_with_atomproj
       IF (me_pool == root_pool) THEN
          DO ip = 1, n_proj
             DO ib = 1, num_bands
-               WRITE (iun_amn, '(3i5,2f18.12)') ib, ip, ik_g_w90, proj(ib, ip)
+               WRITE (iun_amn, '(3i10,2f18.12)') ib, ip, ik_g_w90, proj(ib, ip)
             ENDDO
          ENDDO
       ENDIF
