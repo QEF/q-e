@@ -38,6 +38,7 @@ pseudo :
 	@./check_pseudo.sh ph_
 	@./check_pseudo.sh QEHeat_
 	@./check_pseudo.sh kcw_
+	@./check_pseudo.sh oscdft_
 
 run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-epw run-tests-hp run-tests-tddfpt run-tests-kcw
 
@@ -74,6 +75,9 @@ run-tests-kcw : prolog pseudo
 run-tests-all_currents : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
+run-tests-oscdft : prolog pseudo
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=oscdft_all
+
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
@@ -99,6 +103,9 @@ create-reference-epw : pseudo prolog
 
 create-reference-all_currents : pseudo prolog
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
+
+create-reference-oscdft : pseudo prolog
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=oscdft_all make-benchmarks
 
 compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp compare-all_currents
 
@@ -193,6 +200,8 @@ clean:
 
 # Cleaning TDDFPT final files
 	@rm -rf tddfpt_*/*.plot_chi.dat tddfpt_*/*.plot_eps.dat tddfpt_*/out/ tddfpt_*/turbo_spectrum.out
+# Cleaning OS-CDFT final files
+	@rm -rf oscdft_*/*.out oscdft_*/*.save oscdft_*/*.xml oscdft_*/test* oscdft_*/*.md oscdft_*/*.bfgs oscdft_*/*.mix* oscdft_*/*.wfc* oscdft_*/oscdft.in oscdft_*/*.tmp
 # all_currents files
 	@for x in `find QEHeat_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find QEHeat_* -name "CRASH"`; do rm -rf $$x; done

@@ -267,6 +267,18 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
                                ! when available
+  !
+  TYPE(offload_kind_acc), PUBLIC :: offload_acc  ! flag to select CUF/OpenACC offload type
+  TYPE(offload_kind_omp), PUBLIC :: offload_omp  ! flag to select OpenMP5 offload type
+  TYPE(offload_kind_cpu), PUBLIC :: offload_cpu  ! flag to select no offload type (CPU execution)
+#if defined(__CUDA)
+  TYPE(offload_kind_acc), PUBLIC :: offload_type ! flag to point the actual currently used offload type 
+#elif defined(__OPENMP_GPU)
+  TYPE(offload_kind_omp), PUBLIC :: offload_type
+#else
+  TYPE(offload_kind_cpu), PUBLIC :: offload_type
+#endif
+  !
   INTEGER, PUBLIC :: &
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.

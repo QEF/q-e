@@ -24,6 +24,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE fft_base,           ONLY: dfftp
   USE uspp,               ONLY: okvan, nkb, vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
+  USE upf_spinorb,        ONLY: transform_qq_so
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
   USE klist
@@ -93,7 +94,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
    !REAL(DP) :: gvec
    REAL(DP), ALLOCATABLE :: ln(:,:,:)
    REAL(DP), ALLOCATABLE  :: ln0(:,:,:)!map g-space global to g-space k-point dependent
-   REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    COMPLEX(DP), ALLOCATABLE :: aux(:)
    COMPLEX(DP), ALLOCATABLE  :: aux0(:)
    ! Also for noncollinear calculation
@@ -280,45 +280,12 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
          ! CALL calc_btq( dkmod, qrad_dk, 0 ) no longer needed
          !
-         !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-         dk2 = dk(1)**2 + dk(2)**2 + dk(3)**2
-         CALL ylmr2( lmaxq*lmaxq, 1, dk, dk2, ylm_dk )
-         !
-         !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-         q_dk = (0.d0,0.d0)
-         DO np = 1, ntyp
-            IF ( upf(np)%tvanp ) THEN
-               DO iv = 1, nh(np)
-                  DO jv = iv, nh(np)
-                     CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
-                     q_dk(iv,jv,np) = omega*pref
-                     q_dk(jv,iv,np) = omega*pref
-                  ENDDO
-               ENDDO
-            ENDIF
-         ENDDO
+         CALL compute_qqc ( tpiba, dk, omega, q_dk )
          IF (lspinorb) CALL transform_qq_so( q_dk, q_dk_so )
          !
          !  --- Calculate the q-space real spherical harmonics at -dk [Y_LM] --- 
          !
-         dk2 = dkm(1)**2 + dkm(2)**2 + dkm(3)**2
-         CALL ylmr2( lmaxq*lmaxq, 1, dkm, dk2, ylm_dk )
-         !
-         !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-         !
-         q_dkp = (0.d0,0.d0)
-         DO np = 1, ntyp
-            IF ( upf(np)%tvanp ) THEN
-               DO iv = 1, nh(np)
-                  DO jv = iv, nh(np)
-                     CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
-                     q_dkp(iv,jv,np) = omega*pref
-                     q_dkp(jv,iv,np) = omega*pref
-                  ENDDO
-               ENDDO
-            ENDIF
-         ENDDO
-         !
+         CALL compute_qqc ( tpiba, dkm, omega, q_dkp )
          IF (lspinorb) CALL transform_qq_so( q_dkp, q_dkp_so )
          !
       ENDIF

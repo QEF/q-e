@@ -60,7 +60,6 @@ divide_class_so.o \
 divide_et_impera.o \
 rotate_wfc.o \
 run_driver.o \
-dvloc_of_g.o \
 dynamics_module.o \
 efermig.o \
 efermit.o \
@@ -195,6 +194,7 @@ ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
 s_psi.o \
+s_psi_acc.o \
 s_psi_omp.o \
 save_in_cbands.o \
 save_in_electrons.o \
@@ -235,7 +235,6 @@ symmetrize_at.o \
 tetra.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
-transform_qq_so.o \
 trnvecc.o \
 update_pot.o \
 us_exx.o \
@@ -244,7 +243,6 @@ v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
-vloc_of_g.o \
 vloc_psi.o \
 utils.o \
 xdm_dispersion.o \
@@ -279,7 +277,6 @@ PWLIBS += \
   g_psi_gpu.o \
   h_psi_gpu.o \
   vhpsi_gpu.o \
-  s_psi_gpu.o \
   vloc_psi_gpu.o \
   pwcom_gpu.o \
   scf_mod_gpu.o \
@@ -295,10 +292,7 @@ PWLIBS += \
   s_1psi_gpu.o \
   utils_gpu.o \
   atomic_wfc_gpu.o \
-  oscdft_wavefunction_subs_gpu.o \
-  oscdft_wfcO_gpu.o \
-  oscdft_functions_gpu.o \
-  additional_cusolver_subs.o
+  oscdft_functions_gpu.o
 
 
 

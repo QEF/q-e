@@ -96,8 +96,12 @@ subroutine init_representations()
      CALL mp_bcast (num_rap_mode, root, world_comm)
 
      CALL ph_writefile('data_u',iq,0,ierr)
-     write(stdout, '(5x,i3, 3f14.9,i8)') iq,x_q(1,iq),x_q(2,iq),x_q(3,iq),nirr
-     write(stdout, '(5x,18(i4))') (npert(irr), irr=1,nirr)
+     WRITE(stdout, '(5x,i3, 3f14.9,i8)') iq,x_q(1,iq),x_q(2,iq),x_q(3,iq),nirr
+     IF ( ALL(npert(1:nirr) == 1) ) THEN
+        WRITE(stdout, '(5x,"No degeneracy")')
+     ELSE
+        WRITE(stdout, '(5x,18(i4))') (npert(irr), irr=1,nirr)
+     ENDIF
   ENDDO
   u_from_file=.TRUE.
   search_sym=search_sym_save

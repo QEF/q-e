@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
+SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
                               npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e )
   !----------------------------------------------------------------------------
   !
@@ -51,10 +51,10 @@ SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
   COMPLEX(DP), ALLOCATABLE :: tpsi(:,:), hpsi(:,:), spsi(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  EXTERNAL :: h_psi, s_psi
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
 
@@ -88,11 +88,11 @@ SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,hpsi)
   !$omp target update to(psi,hpsi)     
-  CALL h_psi( npwx, npw, nstart, psi, hpsi )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
   !$omp target update from(hpsi)    
   !$omp end target data
 #else
-  CALL h_psi( npwx, npw, nstart, psi, hpsi )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
 #endif
   !
   CALL stop_clock('rotxpsig:hpsi')
@@ -101,7 +101,7 @@ SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
      !
      CALL start_clock('rotxpsig:spsi')
      !
-     CALL s_psi( npwx, npw, nstart, psi, spsi )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, spsi )
      !
      CALL stop_clock('rotxpsig:spsi')
      !
@@ -224,7 +224,7 @@ END SUBROUTINE rotate_xpsi_gamma
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_xpsi_gamma( h_psi, s_psi, overlap, &
+SUBROUTINE protate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
                                npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e )
   !----------------------------------------------------------------------------
   !
@@ -279,10 +279,10 @@ SUBROUTINE protate_xpsi_gamma( h_psi, s_psi, overlap, &
   INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
-  EXTERNAL :: h_psi, s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -319,7 +319,7 @@ SUBROUTINE protate_xpsi_gamma( h_psi, s_psi, overlap, &
   !
   !$omp target data map(alloc:psi,hpsi)
   !$omp target update to(psi,hpsi)     
-  CALL h_psi( npwx, npw, nstart, psi, hpsi )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
   !$omp target update from(hpsi)    
   !$omp end target data
   !
@@ -329,7 +329,7 @@ SUBROUTINE protate_xpsi_gamma( h_psi, s_psi, overlap, &
      !
      CALL start_clock('protxpsig:spsi')
      !
-     CALL s_psi( npwx, npw, nstart, psi, spsi )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, spsi )
      !
      CALL stop_clock('protxpsig:spsi')
      !

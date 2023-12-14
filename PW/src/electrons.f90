@@ -426,7 +426,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, conv_elec, sic, &
+                                   conv_elec, sic, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
@@ -539,8 +539,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   REAL(DP), EXTERNAL :: ewald, get_clock
   REAL(DP) :: etot_cmp_paw(nat,2,2)
   ! 
-  REAL(DP) :: latvecs(3,3)
-  !! auxiliary variables for grimme-d3
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
+  !! atomic positions centered around r=0 - for grimme-d3
   INTEGER:: atnum(1:nat), na
   !! auxiliary variables for grimme-d3
   LOGICAL :: lhb
@@ -586,14 +586,18 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   IF (ldftd3) THEN
      CALL start_clock('energy_dftd3')
-     latvecs(:,:)=at(:,:)*alat
-     tau(:,:)=tau(:,:)*alat
+     ! taupbc are atomic positions in alat units, centered around r=0
+     ALLOCATE ( taupbc(3,nat) )
+     taupbc(:,:) = tau(:,:)
+     CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+     taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+     CALL cryst_to_cart( nat, taupbc, at,  1 ) 
      DO na = 1, nat
         atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
      ENDDO
-     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,edftd3)
+     call dftd3_pbc_dispersion(dftd3, alat*taupbc, atnum, alat*at, edftd3)
      edftd3=edftd3*2.d0
-     tau(:,:)=tau(:,:)/alat
+     DEALLOCATE( taupbc)
      CALL stop_clock('energy_dftd3')
   ELSE
      edftd3= 0.0
@@ -1008,7 +1012,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      ENDIF  
 
      !
-     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 .OR. dmft_updated ) THEN
+     IF ( conv_elec .OR. dmft_updated ) THEN
         !
         ! iverbosity == 0 for the PW code
         ! iverbosity >  2 for the HP code
@@ -1183,14 +1187,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
 10  FLUSH( stdout )
   !
-  ! ... exiting: write (unless disabled) the charge density to file
-  ! ... (also write ldaU ns coefficients and PAW becsum)
+  ! ... exiting: unless disabled by user (disk_io='minimal' or 'none'),
+  ! ... write charge density (also ldaU ns coefficients and PAW becsum) 
   !
-  IF ( io_level > -1 ) CALL write_scf( rho, nspin )
+  IF ( io_level > -2 ) CALL write_scf( rho, nspin )
   !
-  ! ... delete mixing info if converged, keep it if not
+  ! ... keep mixing info if no converged achieved, delete it otherwise
   !
-  IF ( conv_elec ) THEN
+  IF ( conv_elec .or. io_level < 0 ) THEN
      CALL close_mix_file( iunmix, 'delete' )
   ELSE
      CALL close_mix_file( iunmix, 'keep' )
@@ -1563,7 +1567,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
    
        IF ( printout == 0 ) RETURN
-       IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
+       IF ( conv_elec .AND. printout > 1 ) THEN
           !
           WRITE( stdout, 9081 ) etot
           IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy

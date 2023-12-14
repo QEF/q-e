@@ -24,6 +24,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY : invfft
   USE gvect,      ONLY : gstart, ngl, ngm, g, gg, gl, igtongl
+  USE rhoc_mod,   ONLY : interp_rhc
   USE vlocal,     ONLY: vloc
   USE wvfct,      ONLY: nbnd, npwx
   USE wavefunctions,  ONLY: evc, psic

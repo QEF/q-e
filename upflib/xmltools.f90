@@ -827,13 +827,24 @@ CONTAINS
     REAL(DP_XML), INTENT(OUT)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
+    CHARACTER(LEN=90) :: cval
     !
-    CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0 .or. ier_ == -10 ) then
-       READ(xmlunit, *) rvec
-       CALL xmlr_closetag ( )
+    if ( SIZE(rvec) <= 3 ) then
+       ! allow for <name>r1 r2 r3</name> on a single line
+       CALL readtag_c (name, cval, ier_ )
+       if ( ier_ == 0 .and. len_trim(cval) > 0 ) then
+          READ (cval, *, iostat=ier_) rvec
+       else
+          rvec = 0.0_DP_XML
+       end if
     else
-       rvec = 0.0_DP_XML
+       CALL xmlr_opentag (name, ier_)
+       if ( ier_ == 0 .or. ier_ == -10 ) then
+          READ(xmlunit, *, iostat=ier_) rvec
+          CALL xmlr_closetag ( )
+       else
+          rvec = 0.0_DP_XML
+       end if
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -997,6 +1008,7 @@ CONTAINS
           if ( i < 1 ) then
              ! </tag> not found on this line: read value and continue
              cval = trim(cval) // adjustl(trim(line(j:)))
+             eot = MAXLINE+1
           else
              ! possible end tag found
              lt = len_trim(tag)

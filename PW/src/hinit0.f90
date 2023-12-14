@@ -14,14 +14,12 @@ SUBROUTINE hinit0()
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, nsp, ityp, tau
   USE basis,            ONLY : startingconfig
-  USE cell_base,        ONLY : alat, at, bg, omega
-  USE cellmd,           ONLY : omega_old, at_old, lmovecell, calc
+  USE cell_base,        ONLY : alat, at, bg, omega, tpiba
+  USE cellmd,           ONLY : omega_old, at_old, lmovecell, calc, cell_factor
   USE dynamics_module,  ONLY : verlet_read_tau_from_conf
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ecutrho, ngm, g, gg, eigts1, eigts2, eigts3
-#if defined (__CUDA)
-  USE gvect,            ONLY : eigts1_d, eigts2_d, eigts3_d
-#endif
+  USE gvect,            ONLY : ecutrho, ngm, g, gl, eigts1, eigts2, eigts3
+  USE klist,            ONLY : qnorm
   USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
@@ -43,7 +41,7 @@ SUBROUTINE hinit0()
 #endif
   !
   IMPLICIT NONE
-  REAL (dp) :: alat_old
+  REAL (dp) :: alat_old, qmax
   LOGICAL   :: is_tau_read = .FALSE.
   !
 #if defined (__ENVIRON)
@@ -61,7 +59,11 @@ SUBROUTINE hinit0()
   !
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
+  qmax = (qnorm + sqrt(ecutrho))*cell_factor
+  ! qmax is the maximum needed |q+G|, increased by a factor (20% or so)
+  ! to avoid too frequent reallocations in variable-cell calculations
+  ! (qnorm=max|q| may be needed for hybrid EXX or phonon calculations)
+  CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
   IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc (omega, intra_bgrp_comm)
   !
@@ -104,11 +106,6 @@ SUBROUTINE hinit0()
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                    strf, eigts1, eigts2, eigts3 )
   ! sync duplicated version
-#if defined(__CUDA)
-  eigts1_d = eigts1
-  eigts2_d = eigts2
-  eigts3_d = eigts3
-#endif
   !$acc update device(eigts1, eigts2, eigts3) 
   !
   ! these routines can be used to patch quantities that are dependent

@@ -73,7 +73,6 @@ MODULE oscdft_pp_mod
          USE becmod,                   ONLY : allocate_bec_type,&
                                               deallocate_bec_type,&
                                               becp, calbec, bec_type
-         USE becmod_subs_gpum,         ONLY : using_becp_auto
          USE symm_base,                ONLY : nsym
          USE oscdft_wavefunction_subs, ONLY : oscdft_ortho_swfc, oscdft_get_overlap,&
                                               oscdft_write_overlap,&
@@ -110,7 +109,6 @@ MODULE oscdft_pp_mod
          IF (wfcS%n > 0) THEN
             ALLOCATE(wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc))
             CALL allocate_bec_type(nkb, natomwfc, becp)
-            CALL using_becp_auto(2)
             DO ik=1,nks
                CALL atomic_wfc(ik, wfcatom)
                npw = ngk(ik)
@@ -131,7 +129,6 @@ MODULE oscdft_pp_mod
                END IF
             END DO
             CALL deallocate_bec_type(becp)
-            CALL using_becp_auto(2)
             DEALLOCATE(wfcatom, swfcatom)
          END IF
          IF (inp%orthogonalize_ns) THEN

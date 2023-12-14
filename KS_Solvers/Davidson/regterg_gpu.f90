@@ -24,7 +24,7 @@ end SUBROUTINE pregterg_gpu
 !  Wrapper for subroutine with distributed matrixes (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &  
+SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &  
                     npw, npwx, nvec, nvecx, evc_d, ethr, &
                     e_d, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
@@ -132,13 +132,13 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   REAL(DP), EXTERNAL :: ddot
   !
-  EXTERNAL  h_psi_gpu, s_psi_gpu, g_psi_gpu
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr, s_psi_ptr, g_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
-    ! g_psi(npwx,npw,notcnv,psi,e)
+    ! g_psi_ptr(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   INTEGER :: info
@@ -278,10 +278,10 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi_gpu( npwx, npw, nvec, psi_d, hpsi_d )  ; nhpsi = nvec
+  CALL h_psi_ptr( npwx, npw, nvec, psi_d, hpsi_d )  ; nhpsi = nvec
   hpsi = hpsi_d
   !
-  IF ( uspp ) CALL s_psi_gpu( npwx, npw, nvec, psi_d, spsi_d )
+  IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi_d, spsi_d )
   IF ( uspp ) spsi = spsi_d
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
@@ -356,7 +356,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ew_d = ew
      psi_d = psi
-     CALL g_psi_gpu( npwx, npw, notcnv, 1, psi_d(1,nb1), ew_d(nb1) )
+     CALL g_psi_ptr( npwx, npw, notcnv, 1, psi_d(1,nb1), ew_d(nb1) )
      psi = psi_d
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
@@ -386,10 +386,10 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ! ... here compute the hpsi and spsi of the new functions
      !
      psi_d = psi
-     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
+     CALL h_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
      hpsi = hpsi_d
      !
-     IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
+     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
      IF ( uspp ) spsi = spsi_d
      !
      ! ... update the reduced hamiltonian
@@ -660,7 +660,7 @@ CONTAINS
                     END IF
                  END IF
                  !
-                 ! ... for use in g_psi
+                 ! ... for use in g_psi_ptr
                  !
                  ew(nbase+np) = e(n)
                  !   

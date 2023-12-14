@@ -50,7 +50,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE realus,               ONLY : real_space, invfft_orbital_gamma,&
                                    & initialisation_level,&
                                    & fwfft_orbital_gamma,&
-                                   & calbec_rs_gamma, newq_r, &
+                                   & newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
                                    & s_psir_gamma, &
                                    & betasave, box_beta, box0, maxbox_beta
@@ -59,7 +59,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE mp,                   ONLY : mp_sum, mp_barrier
   USE mp_global,            ONLY : intra_bgrp_comm
   USE noncollin_module,     ONLY : npol
-  USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
   USE dv_of_drho_lr
   USE xc_lib,               ONLY : start_exx, stop_exx
@@ -565,7 +564,7 @@ CONTAINS
 #if defined(__CUDA)
        !$acc data copyin(evc1) copyout(spsi1)
        !$acc host_data use_device(evc1, spsi1)
-       CALL s_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
+       CALL s_psi_acc (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
        !$acc end host_data
        !$acc end data
 #else            

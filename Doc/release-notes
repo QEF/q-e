@@ -2,7 +2,8 @@ New in development version:
   * Experimental support for pseudopotentials in PSML format
 
 Incompatible changes in development version:
-  * None known
+  * Small changes in options "iprint" and "disk_io" of PWscf
+  * More pseudopotential-related code restructured and moved to upflib/
 
 Fixed in development version:
   * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.

@@ -1,5 +1,5 @@
 !
-SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
+SUBROUTINE ppcg_gamma( h_psi_ptr, s_psi_ptr, overlap, precondition, &
                  npwx, npw, nbnd, psi, e, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
@@ -66,10 +66,10 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   INTEGER                  ::  print_info     ! If > 0 then iteration information is printed
   REAL(DP), EXTERNAL :: DLANGE, DDOT
 
-  EXTERNAL h_psi, s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
 
@@ -136,13 +136,13 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,hpsi)
   !$omp target update to(psi,hpsi)     
-  CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+  CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
   !$omp target update from(hpsi)    
   !$omp end target data
 #else
-  CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+  CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
 #endif
-  if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi)
+  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi)
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
   !
@@ -246,16 +246,16 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
 #if defined(__OPENMP_GPU)
      !$omp target data map(alloc:buffer1,buffer)
      !$omp target update to(buffer1,buffer)  
-     CALL h_psi( npwx, npw, nact, buffer1, buffer )
+     CALL h_psi_ptr( npwx, npw, nact, buffer1, buffer )
      !$omp target update from(buffer) 
      !$omp end target data
 #else
-     CALL h_psi( npwx, npw, nact, buffer1, buffer )
+     CALL h_psi_ptr( npwx, npw, nact, buffer1, buffer )
 #endif
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      call threaded_backassign( hw, act_idx, buffer, npwx, nact )
      if (overlap) then ! ... Compute s*w
-        CALL s_psi( npwx, npw, nact, buffer1, buffer )
+        CALL s_psi_ptr( npwx, npw, nact, buffer1, buffer )
 !        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
         call threaded_backassign( sw, act_idx, buffer, npwx, nact )
      end if

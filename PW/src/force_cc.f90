@@ -27,6 +27,7 @@ SUBROUTINE force_cc( forcecc )
   USE noncollin_module,     ONLY : noncolin
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+  USE rhoc_mod,             ONLY : interp_rhc
   !
   IMPLICIT NONE
   !
@@ -81,7 +82,7 @@ SUBROUTINE force_cc( forcecc )
   ! ... vaux contains now Vxc(G)
   !
   ALLOCATE( rhocg(ngl) )
-  !$acc data create(rhocg) copyin(igtongl)
+  !$acc data create(rhocg) present(igtongl)
   !
   ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   !     g = 0 term gives no contribution

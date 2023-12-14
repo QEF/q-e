@@ -17,7 +17,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE cell_base,        ONLY : omega, tpiba
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,            ONLY : natomwfc
-  USE gvect,            ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm
@@ -38,7 +38,6 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
              i0, i1, i2, i3, npw
   COMPLEX(DP) :: kphase, lphase
   REAL(DP)    :: arg, px, ux, vx, wx
-  INTEGER     :: mil1, mil2, mil3
   !
   REAL(DP) :: xk1, xk2, xk3, qgr
   REAL(DP), ALLOCATABLE :: chiq(:,:,:), qg(:)
@@ -66,17 +65,17 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   xk2 = xk(2,ik)
   xk3 = xk(3,ik)
   !
-  !$cuf kernel do (1) <<<*,*>>>
+  !$acc parallel loop
   DO ig = 1, npw
      iig = igk_k_d(ig,ik)
-     gk_d(1,ig) = xk1 + g_d(1,iig)
-     gk_d(2,ig) = xk2 + g_d(2,iig)
-     gk_d(3,ig) = xk3 + g_d(3,iig)
+     gk_d(1,ig) = xk1 + g(1,iig)
+     gk_d(2,ig) = xk2 + g(2,iig)
+     gk_d(3,ig) = xk3 + g(3,iig)
   END DO
   !
   !  ylm = spherical harmonics
   !
-  !$acc data create(chiq)
+  !$acc data create(chiq) present(eigts1,eigts2,eigts3,mill)
   !$acc data create(qg)
   !$acc parallel loop
   DO ig = 1, npw
@@ -113,15 +112,12 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
      !
      !     sk is the structure factor
      !
-     !$cuf kernel do (1) <<<*,*>>>
+     !$acc parallel loop
      DO ig = 1, npw
         iig = igk_k_d(ig,ik)
-        mil1 = mill_d(1,iig)
-        mil2 = mill_d(2,iig)
-        mil3 = mill_d(3,iig)
-        sk_d(ig) = kphase * eigts1_d(mil1,na) * &
-                            eigts2_d(mil2,na) * &
-                            eigts3_d(mil3,na)
+        sk_d(ig) = kphase * eigts1(mill(1,iig),na) * &
+                            eigts2(mill(2,iig),na) * &
+                            eigts3(mill(3,iig),na)
      END DO
      !
      nt = ityp(na)

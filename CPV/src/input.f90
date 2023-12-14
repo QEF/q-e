@@ -794,7 +794,6 @@ MODULE input
      USE ions_nose,        ONLY : ions_nose_init
      USE wave_base,        ONLY : grease_ => grease
      USE electrons_nose,   ONLY : electrons_nose_init
-     USE printout_base,    ONLY : printout_base_init
      USE efield_module,    ONLY : efield_init
      USE cg_module,        ONLY : cg_init
      USE pres_ai_mod,      ONLY : pres_ai_init

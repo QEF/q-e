@@ -49,7 +49,6 @@ SUBROUTINE sum_band()
   USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE fft_interfaces,       ONLY : invfft
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
@@ -152,7 +151,6 @@ SUBROUTINE sum_band()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
-  IF ( okvan ) CALL using_becp_auto(2)
   !
   IF (xclib_dft_is('meta') .OR. lxdm) THEN
      ALLOCATE( kplusg_evc(npwx,2) )
@@ -184,7 +182,6 @@ SUBROUTINE sum_band()
     DEALLOCATE( kplusg )
   ENDIF
   IF ( okvan ) CALL deallocate_bec_type ( becp )
-  IF ( okvan ) CALL using_becp_auto(2)
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -918,8 +915,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
   USE kinds,              ONLY : DP
-  USE becmod,             ONLY : becp, calbec, allocate_bec_type, calbec_omp
-  USE control_flags,      ONLY : gamma_only, tqr
+  USE becmod,             ONLY : becp, calbec, allocate_bec_type
+  USE control_flags,      ONLY : gamma_only, tqr, offload_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta
   USE uspp_param,         ONLY : upf, nh, nhm
@@ -935,7 +932,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,                 ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,         ONLY : using_et
-  USE becmod_subs_gpum,   ONLY : using_becp_auto
   USE paw_variables,      ONLY : okpaw
   !
   IMPLICIT NONE
@@ -961,20 +957,17 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
-  CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
     ! calbec computes becp = <vkb_i|psi_j>
     IF ((.NOT.gamma_only).AND.(.NOT. noncolin).AND.(.NOT.okpaw)) THEN
-#if defined(__OPENMP_GPU)
+!civn: this should work with omp and cpu.
+!      acc passes through sum_band_gpu
       !$omp target data map(to:vkb)
-      CALL calbec_omp( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+      CALL calbec( offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
       !$omp end target data
-#else
-      CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
-#endif
     ELSE
       CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
     ENDIF

@@ -206,7 +206,6 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   USE kinds,          ONLY : DP
   USE becmod,         ONLY : calbec, becp
   USE uspp_init,        ONLY : init_us_2
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   INTEGER,     INTENT(IN)  :: npw_
@@ -231,7 +230,6 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   ! Compute the product of beta functions vkb
   ! with the functions wfc : becp = <vkb|wfc>
   !
-  Call using_becp_auto(2)
   CALL calbec (npw_, vkb, wfc, becp)
   !
   ! Calculate S*|wfc> = |wfc> + \sum qq * |vkb> * becp 

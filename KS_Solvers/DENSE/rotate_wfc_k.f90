@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
+SUBROUTINE rotate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
                          npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
@@ -45,10 +45,10 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   REAL(DP),    ALLOCATABLE :: en(:)
   INTEGER :: n_start, n_end, my_n, i, j
   !
-  EXTERNAL  h_psi,    s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -79,10 +79,10 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,aux,hc,sc,vc) map(tofrom:evc)
   !$omp target update to(psi,aux)
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   !$omp target update from(aux)
 #else
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
 #endif
   call stop_clock('rotwfck:hpsi') ; !write(*,*) 'stop rotwfck:hpsi';FLUSH(6)
   !
@@ -105,7 +105,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   sc=(0.D0,0.D0)
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
      if (n_start .le. n_end) THEN
      CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, &
                                                            (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
@@ -195,7 +195,7 @@ END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
+SUBROUTINE protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
                           npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
@@ -243,10 +243,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
-  EXTERNAL  h_psi,    s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -284,11 +284,11 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,aux)
   !$omp target update to(psi,aux)
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   !$omp target update from(aux)
   !$omp end target data
 #else
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
 #endif
   call stop_clock('protwfck:hpsi')
   !
@@ -297,7 +297,7 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   !            
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
      CALL compute_distmat( sc, psi, aux )
      !
   ELSE

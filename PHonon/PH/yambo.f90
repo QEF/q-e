@@ -79,9 +79,8 @@ SUBROUTINE elph_yambo_eval_and_IO( )
   USE qpoint,      ONLY : xq, nksq, ikks
   USE modes,       ONLY : u,nmodes
   USE dynmat,      ONLY : w2,dyn
-  USE io_global,   ONLY : ionode, ionode_id
+  USE io_global,   ONLY : ionode
   USE io_files,    ONLY : create_directory
-  USE mp_images,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
   USE control_lr,  ONLY : lgamma
   USE control_ph,  ONLY : current_iq
@@ -96,14 +95,11 @@ SUBROUTINE elph_yambo_eval_and_IO( )
 &                   y_pol_vec(3*nat,nat,3)
   !
   INTEGER  :: ik, ikk, ikq,  ibnd, jbnd,  mu, i,j
-  LOGICAL  :: exst
   !
   CHARACTER(LEN=256) :: elph_dir
   !
   elph_dir='elph_dir/'
-  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, intra_image_comm)
-  IF (.NOT.exst) CALL create_directory( elph_dir )
+  CALL create_directory( elph_dir )
   !
   WRITE (6, '(5x,"electron-phonon interaction (to be used in YAMBO)  ..."/)')
   !

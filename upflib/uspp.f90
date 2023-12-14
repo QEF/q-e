@@ -463,13 +463,5 @@ CONTAINS
     !
   END SUBROUTINE deallocate_uspp
   !
-  ! In the following, allocations are not checked and assume
-  ! to be dimensioned correctly.
-  !
-  ! intento is used to specify what the variable will  be used for :
-  !  0 -> in , the variable needs to be synchronized but won't be changed
-  !  1 -> inout , the variable needs to be synchronized AND will be changed
-  !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
-  ! 
 END MODULE uspp
 

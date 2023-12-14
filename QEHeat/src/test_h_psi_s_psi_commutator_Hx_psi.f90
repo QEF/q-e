@@ -21,7 +21,6 @@ module test_h_psi
    USE uspp, ONLY: nkb, vkb
    use cell_base, only: omega, at
    use mp_bands, only: intra_bgrp_comm
-   use gvect, only: ngm, gg, g
    USE ions_base, ONLY: nat, nsp, ityp, tau
    USE uspp_init,            ONLY : init_us_2
 
@@ -52,7 +51,6 @@ contains
       spsi = (0.d0, 0.d0)
       chxpsi = (0.d0, 0.d0)
       npw = npwx
-      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
 
       call allocate_bec_type(nkb, nbnd, becp)

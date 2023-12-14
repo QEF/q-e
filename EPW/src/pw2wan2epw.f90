@@ -1911,6 +1911,7 @@
     USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
     USE uspp,            ONLY : nkb, vkb
     USE uspp_param,      ONLY : upf, lmaxq, nh, nhm
+    USE upf_spinorb,     ONLY : transform_qq_so
     USE becmod,          ONLY : becp, calbec, allocate_bec_type, &
                                 deallocate_bec_type
     USE noncollin_module,ONLY : noncolin, npol, lspinorb

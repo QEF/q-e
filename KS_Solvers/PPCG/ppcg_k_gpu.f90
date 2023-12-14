@@ -1,5 +1,5 @@
 !
-SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
+SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
                  npwx, npw, nbnd, npol, psi_d, e_d, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
@@ -70,10 +70,10 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   LOGICAL                  ::  clean
   REAL(DP), EXTERNAL :: ZLANGE
 
-  EXTERNAL h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
 
@@ -162,8 +162,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   call start_clock('ppcg:hpsi')
   psi_d = psi
   if (clean)  psi_d(npw+1:npwx,:) = C_ZERO
-  CALL h_psi_gpu( npwx, npw, nbnd, psi_d, hpsi_d )             ; if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO
-  if (overlap) CALL s_psi_gpu( npwx, npw, nbnd, psi_d, spsi_d) ; if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
+  CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )             ; if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO
+  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d) ; if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
 
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
@@ -276,7 +276,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
      ! ... Compute h*w
      call start_clock('ppcg:hpsi')
      call gpu_threaded_assign( buffer1_d, w_d, kdimx, nact, .true., act_idx_d, .false. )
-     CALL h_psi_gpu( npwx, npw, nact, buffer1_d, buffer_d )     
+     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )     
      if(clean) then 
 !$cuf kernel do(2)
        DO i = npw+1, npwx   
@@ -292,7 +292,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        END DO 
      END DO 
      if (overlap) then ! ... Compute s*w
-        CALL s_psi_gpu( npwx, npw, nact, buffer1_d, buffer_d )   
+        CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )   
         IF (clean) THEN 
 !$cuf kernel do(2)
           DO i = npw+1, npwx   

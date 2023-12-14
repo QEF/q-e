@@ -29,7 +29,7 @@ SUBROUTINE hs_psi_gpu( lda, n, m, psi, hpsi, spsi )
   CALL start_clock( 'hs_psi' )
   ! 
   CALL h_psi__gpu ( lda, n, m, psi, hpsi ) ! apply H to m wfcs (no bgrp parallelization here)
-  CALL s_psi__gpu ( lda, n, m, psi, spsi ) ! apply S to m wfcs (no bgrp parallelization here)
+  CALL s_psi__acc ( lda, n, m, psi, spsi ) ! apply S to m wfcs (no bgrp parallelization here)
   !
   CALL stop_clock( 'hs_psi' )
   !

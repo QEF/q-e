@@ -51,6 +51,7 @@ MODULE oscdft_wavefunction
          offset = this%offset(isym_,iorb) + ioff
          RETURN
       END FUNCTION get_offset_ioscdft
+
       FUNCTION get_offset_iconstr(this, constr, m, iconstr, isym) RESULT(offset)
          USE oscdft_indices, ONLY : oscdft_constr_indices_type
          IMPLICIT NONE
@@ -79,6 +80,7 @@ MODULE oscdft_wavefunction
          offset = this%offset(isym_,iorb) + ioff
          RETURN
       END FUNCTION get_offset_iconstr
+
       SUBROUTINE check_bec_type_unallocated(bec)
          USE becmod, ONLY : bec_type
          IMPLICIT NONE
@@ -92,18 +94,5 @@ MODULE oscdft_wavefunction
             CALL errore("check_bec_type_unallocated", "bec%k allocated", 1)
          END IF
       END SUBROUTINE check_bec_type_unallocated
-      SUBROUTINE check_bec_type_unallocated_gpu(bec_d)
-         USE becmod_gpum, ONLY : bec_type_d
-         IMPLICIT NONE
-
-         TYPE(bec_type_d), INTENT(INOUT) :: bec_d
-
-         IF (ALLOCATED(bec_d%r_d)) THEN
-            CALL errore("check_bec_type_unallocated_gpu", "bec_d%r_d allocated", 1)
-         END IF
-         IF (ALLOCATED(bec_d%k_d)) THEN
-            CALL errore("check_bec_type_unallocated_gpu", "bec_d%k_d allocated", 1)
-         END IF
-      END SUBROUTINE check_bec_type_unallocated_gpu
 #endif
 END MODULE oscdft_wavefunction
