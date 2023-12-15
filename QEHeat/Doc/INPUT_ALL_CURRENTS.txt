@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: all_currents.x / QEHeat / Quantum ESPRESSO (version: 7.2)
+Program: all_currents.x / QEHeat / Quantum ESPRESSO (version: 7.3)
 ------------------------------------------------------------------------
 
 
@@ -373,4 +373,4 @@ NAMELIST: &ENERGY_CURRENT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Mar 18 13:46:52 CET 2023
+This file has been created by helpdoc utility on Fri Dec 15 09:57:20 CET 2023

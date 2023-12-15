@@ -1,4 +1,4 @@
-New in development version:
+New in 7.3 version:
   * Experimental support for pseudopotentials in PSML format
   * Noncollinear implementation of DFT+U and DFT+U+V in the 
     Dudarev's formulation, including the calculation of Hubbard
@@ -8,11 +8,11 @@ New in development version:
     is used, otherwise the Liechtenstein implementation is used 
     (see Doc/Hubbard_input for more details).
 
-Incompatible changes in development version:
+Incompatible changes in 7.3 version:
   * Small changes in options "iprint" and "disk_io" of PWscf
   * More pseudopotential-related code restructured and moved to upflib/
 
-Fixed in development version:
+Fixed in 7.3  version:
   * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.
     May cause crashes (but not bad numbers). Reported by Jibiao Li.
   * Wrong output from Libxc-based gga-exchange functionals (gga_x) due to

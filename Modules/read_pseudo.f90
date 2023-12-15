@@ -297,6 +297,7 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   CALL mp_bcast (upf%has_gipaw, ionode_id, comm )
   CALL mp_bcast (upf%paw_as_gipaw, ionode_id, comm )
   CALL mp_bcast (upf%nlcc, ionode_id, comm )
+  CALL mp_bcast (upf%with_metagga_info, ionode_id, comm )
   CALL mp_bcast (upf%dft, ionode_id, comm )
   CALL mp_bcast (upf%zp, ionode_id, comm )
   CALL mp_bcast (upf%etotps, ionode_id, comm )
@@ -447,7 +448,14 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   !
   IF ( .not. ionode) ALLOCATE( upf%rho_at(upf%mesh) )
   CALL mp_bcast (upf%rho_at,ionode_id,comm )
-  
+  !
+  IF ( upf%with_metagga_info ) THEN
+     IF ( .not. ionode) ALLOCATE( upf%tau_core(upf%mesh) )
+     CALL mp_bcast (upf%tau_core,ionode_id,comm )
+     IF ( .not. ionode) ALLOCATE( upf%tau_atom(upf%mesh) )
+     CALL mp_bcast (upf%tau_atom,ionode_id,comm )
+  END IF
+  !  
   IF (upf%has_so) THEN
      IF ( .NOT. ionode) THEN
         ALLOCATE (upf%jchi(upf%nwfc))

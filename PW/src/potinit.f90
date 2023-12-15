@@ -229,17 +229,21 @@ SUBROUTINE potinit()
   END IF   
   !
   IF  ( xclib_dft_is('meta') ) THEN
+     !
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
-        ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
         fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
-        DO is = 1, nspin
-           rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
-        END DO
-        !if (nspin==2) then
-        !     rho%kin_r(:,1) = fact * abs(rho%of_r(:,1)+rho%of_r(:,2))**(5.0/3.0)/2.0
-        !     rho%kin_r(:,2) = fact * abs(rho%of_r(:,1)-rho%of_r(:,2))**(5.0/3.0)/2.0
-        !endif
+        IF ( nspin == 1) THEN
+           rho%kin_r(:,1) = fact * abs(rho%of_r(:,1))**(5.0/3.0)
+        ELSE ! IF ( nspin == 2) THEN 
+           ! ... NB: for LSDA rho is (tot,magn), rho_kin is (up,down) 
+           rho%kin_r(:,1) = ( rho%of_r(:,1) + rho%of_r(:,2) ) / 2.0_dp
+           rho%kin_r(:,2) = ( rho%of_r(:,1) - rho%of_r(:,2) ) / 2.0_dp
+           ! FIXME: why the multiplication times nspin ?
+           DO is = 1, nspin
+              rho%kin_r(:,is) = fact * abs(rho%kin_r(:,is)*nspin)**(5.0/3.0)/nspin
+           END DO
+        END IF
         ! ... bring it to g-space
         CALL rho_r2g (dfftp, rho%kin_r, rho%kin_g)
      ELSE

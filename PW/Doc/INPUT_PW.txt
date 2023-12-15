@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum ESPRESSO (version: 7.2)
+Program: pw.x / PWscf / Quantum ESPRESSO (version: 7.3)
 ------------------------------------------------------------------------
 
 
@@ -1387,11 +1387,6 @@ NAMELIST: &SYSTEM
                    three Hubbard manifolds per Hubbard atom. However, if you want
                    to specify three manifolds then the second and the third manifolds
                    will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
-                   
-                   Note: Hubbard_occ cannot be used together with fully-relativistic pseudopotentials
-                   (i.e. when noncolin=.true. and lspinorb=.true.) since this variable does not
-                   allow to distinguish between the occupied and unoccupied channels (this is
-                   needed when determining the atomic orbital offsets).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -4826,4 +4821,4 @@ CARD: HUBBARD atomic | ortho-atomic | norm-atomic | wf | pseudo
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Tue Nov 21 14:59:43 CET 2023
+This file has been created by helpdoc utility on Fri Dec 15 09:52:02 CET 2023

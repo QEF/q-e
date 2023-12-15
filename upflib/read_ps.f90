@@ -24,7 +24,7 @@ SUBROUTINE read_ps_new ( psfile, upf, printout, ierr )
   !! Should be executed on a single processor
   !
   USE upf_io,             ONLY: stdout
-  USE pseudo_types,       ONLY: pseudo_upf
+  USE pseudo_types,       ONLY: pseudo_upf, reset_upf
   USE read_upf_v1_module, ONLY: read_upf_v1
   USE read_upf_new_module,ONLY: read_upf_new
   USE read_uspp_module,   ONLY: readvan, readrrkj
@@ -40,6 +40,7 @@ SUBROUTINE read_ps_new ( psfile, upf, printout, ierr )
   INTEGER :: iunps, l, lm3, lm4, lm5
   !
   !
+  CALL reset_upf( upf )
   CALL read_upf_new( psfile, upf, ierr )
   !
   !! start reading - check  first if file is readable as xml file
