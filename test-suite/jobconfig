@@ -15,7 +15,7 @@ inputs_args = ('berry.in', ''), ('berry-1.in', ''), ('berry-2.in','')
 
 [pw_cluster/]
 program = PW
-inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in','')
+inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in',''), ('cluster5.in',''), ('cluster6.in',''),
 
 [pw_lsda/]
 program = PW
@@ -43,7 +43,7 @@ inputs_args = ('plugin-pw2casino_1.in', '1'), ('plugin-pw2casino_2.in', '1')
 
 [pw_scf/]
 program = PW
-inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-rmm-gamma.in',''), ('scf-rmm-paro-gamma.in',''), ('scf-rmm-k.in',''), ('scf-rmm-paro-k.in',''), ('scf-ppcg-gamma.in',''), ('scf-ppcg-k.in','')
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-rmm-gamma.in',''), ('scf-rmm-paro-gamma.in',''), ('scf-rmm-k.in',''), ('scf-rmm-paro-k.in',''), ('scf-ppcg-gamma.in',''), ('scf-ppcg-k.in',''), ('scf-gth.in','')
 
 [pw_spinorbit/]
 program = PW
@@ -125,9 +125,11 @@ inputs_args = ('O2.scf.1.in', '1'), ('O2.scf.2.in', '1'), ('O2.phG.in', '2')
 program = PH
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', '8'), ('q2r2.in', '3'), ('matdyn2.in', '8')
 
+
+
 [epw_base/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw12.in', '3'), ('epw13.in', '3'), ('epw7.in', '3'), ('epw8.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw12.in', '3'), ('epw13.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')
 
 [epw_trev/]
 program = EPW
@@ -155,11 +157,15 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.i
 
 [epw_polar/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw3.in', '3')
 
 [epw_pl/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3')
+
+[epw_plrn/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
 
 [epw_mob/]
 program = EPW
@@ -179,7 +185,19 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1')
 
 [epw_hall/]
 program = EPW
-inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5')
+
+[epw_qdpt/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+
+[epw_2D/]
+program = EPW
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf_epw.in', '0'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5'), ('epw5.in', '5'), ('epw6.in', '5')
+
+[epw_wfpt/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('matdyn.in', '6'), ('scf.in', '1'), ('nscf1.in', '1'), ('ahc1.in', '7'), ('epw11.in', '3'), ('epw12.in', '3'),  ('nscf2.in', '1'), ('ahc2.in', '7'), ('epw21.in', '3'), ('epw22.in', '3'), ('epw23.in', '3')
 
 ####[epw_scdm/]
 ####program = EPW
@@ -233,6 +251,18 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[hp_soc_U_nc_nonmagn/]
+program = HP
+inputs_args = ('au.scf.in', '1'), ('au.hp.in', '3'), ('au.scf.in', '2'), ('au.hp.in', '4')
+
+[hp_soc_U_us_magn/]
+program = HP
+inputs_args = ('bn.scf.in', '1'), ('bn.hp.in', '3'), ('bn.scf.in', '2'), ('bn.hp.in', '4')
+
+[hp_soc_UV_paw_magn/]
+program = HP
+inputs_args = ('bn.scf.in', '1'), ('bn.hp.in', '3'), ('bn.scf.in', '2'), ('bn.hp.in', '4')
+
 [kcw_wann/]
 program = KCW
 inputs_args = ('Si.scf.in', '1'), ('Si.win', '2'), ('Si.pw2wann.in', '3'), ('Si.win', '4'), ('Si.kcw-wann2kcw.in', '5'), ('Si.kcw-screen.in', '6'), ('Si.kcw-ham.in', '7')
@@ -282,6 +312,13 @@ program = QEHeat_h2o_mol_t
 [image_*/]
 program = IMAGE
 
+[oscdft_pw]
+program = OSCDFT
+inputs_args = ('nooscdft.in', '1'), ('view.in', '2 view.oscdft.in'), ('scf.in', '2 scf.oscdft.in'), ('relax.in', '2 scf.oscdft.in'), ('k.in', '2 k.oscdft.in'), ('normcons.in', '2 normcons.oscdft.in')
+
+[oscdft_pp]
+program = OSCDFT_PP
+inputs_args = ('view.in', '3 view.oscdft.in pw.in'), ('normalize.in', '3 normalize.oscdft.in pw.in')
 
 
 [categories]
@@ -291,10 +328,11 @@ ph_all = ph_*??
 pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
-epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob epw_hall
+epw_partial = epw_qdpt epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob epw_hall
 zg_all = zg_*??
 tddfpt_all = tddfpt_*??
 image_all = image_*??
 all_currents_all = QEHeat_*
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*?? all_currents_*??
 kcw_all = kcw_*??
+oscdft_all = oscdft_pw oscdft_pp

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2020-2020 Quantum ESPRESSO group
+! Copyright (C) 2020-2023 Quantum ESPRESSO group
 !
 ! This file is distributed under the terms of the GNU General Public
 ! License. See the file `LICENSE' in the root directory of the
@@ -121,7 +121,6 @@ PROGRAM dvscf_q2r
   USE cell_base,   ONLY : at, bg
   USE fft_base,    ONLY : dfftp
   USE lsda_mod,    ONLY : nspin
-  USE gvect,       ONLY : ngm
   USE noncollin_module, ONLY : nspin_mag
   USE uspp,        ONLY : nlcc_any
   USE paw_variables, ONLY : okpaw
@@ -284,9 +283,7 @@ PROGRAM dvscf_q2r
   !
   ! Create output directory
   !
-  IF (ionode) INQUIRE(FILE=TRIM(wpot_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, world_comm)
-  IF (.NOT. exst) CALL create_directory(wpot_dir)
+  CALL create_directory(wpot_dir)
   !
   ! ---------------------------------------------------------------------------
   !
@@ -1181,16 +1178,10 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
   !!
   !----------------------------------------------------------------------------
   USE kinds,       ONLY : DP
-  USE constants,   ONLY : tpi
-  USE cell_base,   ONLY : tpiba2, omega
-  USE ions_base,   ONLY : ntyp => nsp, nat, tau
-  USE eqv,         ONLY : vlocq
+  USE ions_base,   ONLY : nsp, nat, tau
   USE qpoint,      ONLY : eigqts
-  USE atom,        ONLY : rgrid, msh
-  USE gvect,       ONLY : g, ngm
-  USE uspp,        ONLY : nlcc_any
-  USE uspp_param,  ONLY : upf
-  USE m_gth,       ONLY : setlocq_gth
+  USE gvect,       ONLY : ngm
+  USE eqv,         ONLY : vlocq
   !
   IMPLICIT NONE
   !
@@ -1200,8 +1191,7 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
   INTEGER :: na, nt
   REAL(DP) :: arg
   !
-  ! First, calculate vlocq
-  ! Adapted from PH/phq_init.f90, step 0, a and b
+  ! Adapted from PH/phq_init.f90, step 0 and b
   !
   ALLOCATE(eigqts(nat))
   !
@@ -1215,24 +1205,10 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
     !
   END DO
   !
-  ! ... b) the fourier components of the local potential at q+G
+  ALLOCATE ( vlocq (ngm, nsp) ) 
+  CALL init_vlocq ( xq ) 
   !
-  ALLOCATE(vlocq(ngm , ntyp))
-  vlocq(:,:) = 0.D0
-  !
-  DO nt = 1, ntyp
-     !
-     IF (upf(nt)%tcoulombp) THEN
-        CALL setlocq_coul( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt))
-     ELSE IF (upf(nt)%is_gth) THEN
-        CALL setlocq_gth( nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
-     ELSE
-        CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
-                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
-                   vlocq(1,nt) )
-     ENDIF
-     !
-  END DO
+  RETURN
   !
 !------------------------------------------------------------------------------
 END SUBROUTINE init_phq_dvscf_q2r

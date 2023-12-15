@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
+subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   !----------------------------------------------------------------------
   !
   !   This routine performs the following tasks:
@@ -27,36 +27,34 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
-  USE atom,         ONLY : rgrid
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, &
                            qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
-  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx
+  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
+                           transform_qq_so
+  USE qrad_mod,     ONLY : init_tab_qrad
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
   implicit none
   !
   integer,  intent(in) :: nat
   integer,  intent(in) :: ityp(nat)
+  real(DP), intent(in) :: qmax
   real(DP), intent(in) :: omega
-  integer,  intent(in) :: ngm
-  real(DP), intent(in) :: g(3,ngm), gg(ngm)
   integer,  intent(in) :: intra_bgrp_comm
   !
   !     here a few local variables
   !
   integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, ia
   ! various counters
-  real(DP), allocatable :: ylmk0 (:)
-  ! the spherical harmonics
   real(DP) ::  j
   ! J=L+S (noninteger!)
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
              lk, mk, vk, kh, lh, ijkb0, na
   integer, external :: sph_ind
-  complex(DP) :: coeff, qgm(1)
+  complex(DP) :: coeff
   real(DP) :: ji, jk
   real(DP), EXTERNAL :: spinor
   !
@@ -238,67 +236,14 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL init_tab_qrad(omega, intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL init_tab_qrad(qmax, omega, intra_bgrp_comm, ir)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
   !
-#if defined(__MPI)
-  if (gg (1) > 1.0d-8) goto 100
-#endif
-  allocate (ylmk0( lmaxq * lmaxq))
-  call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
-  do nt = 1, nsp
-    if ( upf(nt)%tvanp ) then
-      if (upf(nt)%has_so) then
-        do ih=1,nh(nt)
-          do jh=1,nh(nt)
-            call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-            qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
-            do kh=1,nh(nt)
-              do lh=1,nh(nt)
-                ijs=0
-                do is1=1,2
-                  do is2=1,2
-                    ijs=ijs+1
-                    do is=1,2
-                      qq_so(kh,lh,ijs,nt) = qq_so(kh,lh,ijs,nt)       &
-                          + omega* DBLE(qgm(1))*fcoef(kh,ih,is1,is,nt)&
-                                               *fcoef(jh,lh,is,is2,nt)
-                    enddo
-                  enddo
-                enddo
-              enddo
-            enddo
-          enddo
-        enddo
-      else
-        do ih = 1, nh (nt)
-          do jh = ih, nh (nt)
-             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-             if (is_spinorbit) then
-                 qq_so (ih, jh, 1, nt) = omega *  DBLE (qgm (1) )
-                 qq_so (jh, ih, 1, nt) = qq_so (ih, jh, 1, nt)
-                 qq_so (ih, jh, 4, nt) = qq_so (ih, jh, 1, nt)
-                 qq_so (jh, ih, 4, nt) = qq_so (ih, jh, 4, nt)
-             endif
-             qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
-             qq_nt(jh,ih,nt) = omega * DBLE(qgm (1) )
-          enddo
-        enddo
-      endif
-    endif
-  enddo
-  deallocate (ylmk0)
-#if defined(__MPI)
-100 continue
-  if (is_spinorbit) then
-    call mp_sum(  qq_so , intra_bgrp_comm )
-    call mp_sum(  qq_nt, intra_bgrp_comm )
-  else
-    call mp_sum(  qq_nt, intra_bgrp_comm )
-  endif
-#endif
+  call compute_qqr ( 1.0_dp, [0.0_dp, 0.0_dp, 0.0_dp], omega, qq_nt )
+  if ( is_spinorbit ) call transform_qq_so( qq_nt, qq_so )
+  !
   ! finally we set the atomic specific qq_at matrices
   if ( nhm > 0 ) then
      do na=1, nat
@@ -306,7 +251,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      end do
   end if
   !
-  ! fill interpolation table tab
+  ! fill interpolation table for beta functions 
   !
   CALL init_tab_beta ( omega, intra_bgrp_comm )
   !
@@ -321,9 +266,11 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      nhtoj_d=nhtoj
      ijtoh_d=ijtoh
      qq_nt_d=qq_nt
+    !$acc update device(qq_at)
      if (is_spinorbit) then
         dvan_so_d=dvan_so
-        fcoef_d=fcoef
+      !$acc update device(fcoef)
+      !$acc update device(qq_so)
      else
         dvan_d=dvan
      endif
@@ -331,14 +278,6 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   ofsbeta_d=ofsbeta
   !
 #endif
-  !
-  if (nhm>0) then
-    !$acc update device(qq_at)
-    if (is_spinorbit) then
-      !$acc update device(qq_so)
-    endif
-  endif
-  !
   call stop_clock ('init_us_1')
   return
   !

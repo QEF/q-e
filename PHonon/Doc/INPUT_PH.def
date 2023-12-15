@@ -120,7 +120,12 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
         var dftd3_hess -type CHARACTER { 
             default { 'prefix.hess' }
-            info { File where the D3 dispersion hessian matrix is read. }
+            info {
+                File where the D3 dispersion hessian matrix is read. Set to
+                'automatic.hess' to enable automatic mode (experimental). In
+                this mode, D3 Hessian is computed if 'automatic.hess' file is
+                missing.
+            }
         }
 
         var fildyn -type CHARACTER { 

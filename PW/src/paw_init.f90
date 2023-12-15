@@ -267,7 +267,6 @@ MODULE paw_init
                                    rad, paw_is_init, vs_rad, &
                                    total_core_energy, only_paw
     USE atom,               ONLY : g => rgrid
-    USE radial_grids,       ONLY : do_mesh
     USE uspp_param,         ONLY : upf
     USE lsda_mod,           ONLY : nspin
     USE noncollin_module,   ONLY : noncolin, domag

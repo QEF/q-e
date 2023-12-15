@@ -127,7 +127,7 @@ MODULE oscdft_occupations
                   IF (inp%orthogonalize_ns) THEN
                      nrtemp = (0.D0,0.D0)
                   END IF
-                  DO col=1,curr_dim 
+                  DO col=1,curr_dim
                      col_off = wfcS%get_offset(idx%orbs, col, ioscdft, isym)
                      DO row=col,curr_dim
                         row_off = wfcS%get_offset(idx%orbs, row, ioscdft, isym)
@@ -339,19 +339,18 @@ MODULE oscdft_occupations
       SUBROUTINE new_ns_normal_gpu(inp, idx, wfcS, nst, wfc_evc)
          USE klist,               ONLY : nks, ngk
          USE wvfct,               ONLY : nbnd, wg
-         USE wvfct_gpum,          ONLY : wg_d, using_wg_d
          USE io_files,            ONLY : nwordwfc, iunwfc
          USE buffers,             ONLY : get_buffer
-         USE becmod_gpum,         ONLY : bec_type_d
-         USE becmod_subs_gpum,    ONLY : calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
          USE lsda_mod,            ONLY : isk, nspin
          USE wavefunctions,       ONLY : evc
-         USE wavefunctions_gpum,  ONLY : using_evc, using_evc_d, evc_d
-         USE control_flags,       ONLY : gamma_only
+         USE control_flags,       ONLY : gamma_only, offload_type
          USE mp_pools,            ONLY : inter_pool_comm
          USE mp,                  ONLY : mp_sum
-         USE symm_base,           ONLY : nsym, irt, d1, d2, d3
-         USE oscdft_wavefunction, ONLY : check_bec_type_unallocated_gpu
+         USE symm_base,           ONLY : nsym
+         USE oscdft_wavefunction, ONLY : check_bec_type_unallocated
+         USE becmod,              ONLY : bec_type, calbec,&
+                                         allocate_bec_type_acc,&
+                                         deallocate_bec_type_acc
 
          IMPLICIT NONE
          TYPE(oscdft_input_type),                  INTENT(INOUT) :: inp
@@ -359,7 +358,7 @@ MODULE oscdft_occupations
          TYPE(oscdft_wavefunction_type), TARGET,   INTENT(INOUT) :: wfcS
          TYPE(oscdft_ns_type),                     INTENT(INOUT) :: nst
          TYPE(oscdft_wavefunction_type), OPTIONAL, INTENT(INOUT) :: wfc_evc
-         TYPE(bec_type_d), TARGET                                :: proj_d
+         TYPE(bec_type), TARGET                                  :: proj
          REAL(DP)                                                :: temp
          REAL(DP),    ALLOCATABLE                                :: nr(:,:,:,:)
          COMPLEX(DP), ALLOCATABLE                                :: nrtemp(:,:), nrtemp2(:,:)
@@ -368,17 +367,21 @@ MODULE oscdft_occupations
                                                                     col_off, row_off
          TYPE(oscdft_orbital_indices_type), POINTER              :: orbs
          COMPLEX(DP), POINTER :: wfcS_wfc(:,:)
-         COMPLEX(DP), POINTER :: proj_k_d(:,:)
-         REAL(DP),    POINTER :: proj_r_d(:,:)
-#if defined(__CUDA)
-         ATTRIBUTES(DEVICE) :: proj_k_d, proj_r_d
-#endif
+         REAL(DP),    POINTER :: proj_r(:,:)
+         COMPLEX(DP), POINTER :: proj_k(:,:)
 
          orbs => idx%orbs
 
-         CALL start_clock("oscdftGns")
-         CALL check_bec_type_unallocated_gpu(proj_d)
-         CALL allocate_bec_type_gpu(wfcS%n, nbnd, proj_d)
+         CALL start_clock_gpu("oscdft_ns")
+         CALL check_bec_type_unallocated(proj)
+         CALL allocate_bec_type_acc(wfcS%n, nbnd, proj)
+
+         IF (gamma_only) THEN
+            proj_r => proj%r
+         ELSE
+            proj_k => proj%k
+         END IF
+
          maxl = idx%max_ns_dim
          ALLOCATE(nr(maxl,maxl,nsym,inp%noscdft))
          IF (inp%orthogonalize_ns) THEN
@@ -389,20 +392,13 @@ MODULE oscdft_occupations
             CALL errore("oscdft_new_ns", "evc not allocated", 1)
          END IF
 
-         IF (gamma_only) THEN
-            proj_r_d => proj_d%r_d
-         ELSE
-            proj_k_d => proj_d%k_d
-         END IF
-
          wfcS_wfc => wfcS%wfc
-         !$acc data create(wfcS_wfc(:,:))
+         !$acc data create(wfcS_wfc(:,:)) present_or_create(evc) present_or_copyin(wg)
 
          nr(:,:,:,:) = 0.D0
          DO ik=1,nks
             npw = ngk(ik)
             IF (nks > 1) THEN
-               CALL using_evc(2)
                IF (PRESENT(wfc_evc)) THEN
                   CALL get_buffer(evc, wfc_evc%nword, wfc_evc%iun, ik)
                ELSE
@@ -410,14 +406,10 @@ MODULE oscdft_occupations
                END IF
                CALL oscdft_get_buffer(wfcS, ik)
             END IF
-
+            !$acc update device(evc)
             !$acc update device(wfcS_wfc(:,:))
 
-            CALL using_evc_d(1)
-            CALL using_wg_d(1)
-            !$acc host_data use_device(wfcS_wfc(:,:))
-            CALL calbec_gpu(npw, wfcS_wfc, evc_d, proj_d)
-            !$acc end host_data
+            CALL calbec(offload_type, npw, wfcS_wfc, evc, proj)
             DO ioscdft=1,inp%noscdft
                IF (inp%spin_index(ioscdft) /= isk(ik)) CYCLE
                curr_dim = idx%ns_dim(ioscdft)
@@ -431,18 +423,18 @@ MODULE oscdft_occupations
                         row_off = wfcS%get_offset(idx%orbs, row, ioscdft, isym)
                         temp = 0.D0
                         IF (gamma_only) THEN
-                           !$acc parallel loop reduction(+:temp) present(proj_r_d, wg_d)
+                           !$acc parallel loop reduction(+:temp) present(wg, proj_r)
                            DO ibnd=1,nbnd
-                              temp = temp + proj_r_d(col_off,ibnd)*&
-                                            proj_r_d(row_off,ibnd)*&
-                                            wg_d(ibnd,ik)
+                              temp = temp + proj_r(col_off,ibnd)*&
+                                            proj_r(row_off,ibnd)*&
+                                            wg(ibnd,ik)
                            END DO
                         ELSE
-                           !$acc parallel loop reduction(+:temp) present(proj_k_d, wg_d)
+                           !$acc parallel loop reduction(+:temp) present(wg, proj_k)
                            DO ibnd=1,nbnd
-                              temp = temp + DBLE(proj_k_d(col_off,ibnd)*&
-                                                 CONJG(proj_k_d(row_off,ibnd)))*&
-                                            wg_d(ibnd,ik)
+                              temp = temp + DBLE(proj_k(col_off,ibnd)*&
+                                                 CONJG(proj_k(row_off,ibnd)))*&
+                                            wg(ibnd,ik)
                            END DO
                         END IF
                         IF (inp%orthogonalize_ns) THEN
@@ -468,7 +460,7 @@ MODULE oscdft_occupations
             END DO
          END DO
          !$acc end data
-         CALL deallocate_bec_type_gpu(proj_d)
+         CALL deallocate_bec_type_acc(proj)
          CALL mp_sum(nr, inter_pool_comm)
 
          IF (inp%orthogonalize_ns) THEN
@@ -478,7 +470,7 @@ MODULE oscdft_occupations
          CALL oscdft_fill_nr_upper(inp, idx, nr)
          CALL oscdft_symmetrize_ns(inp, idx, nst%ns, nr)
          DEALLOCATE(nr)
-         CALL stop_clock("oscdftGns")
+         CALL stop_clock_gpu("oscdft_ns")
       END SUBROUTINE new_ns_normal_gpu
 
       FUNCTION get_occ_sum(numbers, index_sum, ioscdft) RESULT(res)
@@ -498,15 +490,11 @@ MODULE oscdft_occupations
       END FUNCTION get_occ_sum
 
       SUBROUTINE get_occ(inp, indx, nst, skip_print_occ)
-#if defined(__CUDA)
-         USE additional_cusolver_subs, ONLY : cuSolverHandle, init_cusolver_handle
-         USE cusolverdn
-#endif
          IMPLICIT NONE
 
          TYPE(oscdft_input_type),   INTENT(INOUT)         :: inp
          TYPE(oscdft_indices_type), INTENT(INOUT), TARGET :: indx
-         TYPE(oscdft_ns_type),     INTENT(INOUT)         :: nst
+         TYPE(oscdft_ns_type),      INTENT(INOUT)         :: nst
          LOGICAL,                   INTENT(IN)            :: skip_print_occ
          TYPE(oscdft_orbital_indices_type), POINTER       :: orbs
 
@@ -526,60 +514,14 @@ MODULE oscdft_occupations
             'UP  ', 'DOWN' /)
          CHARACTER(LEN=3) :: constr_label(0:8)=(/&
             'F  ', 'T  ', 'LE ', 'GE ', 'LE2', 'GE2', 'LE3', 'GE3', 'D  '/)
-#if defined(__CUDA)
-         REAL(DP), ALLOCATABLE, DEVICE :: work_d(:), eigval_d(:), eigvect_d(:,:)
-         INTEGER, DEVICE :: devInfo_d
-         INTEGER :: devInfo, lwork_request, lwork
-#endif
 
          orbs => indx%orbs
 
          lda = indx%max_ns_dim
-#if defined(__CUDA)
-         CALL init_cusolver_handle
-         ALLOCATE(eigval_d(lda), eigvect_d(lda, lda))
-         lwork = 0
-         info = cusolverDnDsyevd_bufferSize(cuSolverHandle,&
-            CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER,&
-            lda, eigvect_d, lda, eigval_d, lwork)
-         IF (info /= CUSOLVER_STATUS_SUCCESS) CALL errore("get_occ", "cusolverDnDsyevd_bufferSize fail", ABS(info))
-         IF (lwork > 0) ALLOCATE(work_d(lwork))
-#endif
-
          iconstr = 0
          DO ioscdft=1,inp%noscdft
             IF (inp%constraint_applied(ioscdft) /= 0) iconstr = iconstr + 1
             curr_dim = indx%ns_dim(ioscdft)
-#if defined(__CUDA)
-            eigvect_d(1:curr_dim,1:curr_dim) = nst%ns(1:curr_dim,1:curr_dim,ioscdft)
-
-            ! just in case
-            info = cusolverDnDsyevd_bufferSize(cuSolverHandle,&
-               CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER,&
-               curr_dim, eigvect_d, lda, eigval_d, lwork_request)
-            IF (info /= CUSOLVER_STATUS_SUCCESS) CALL errore("get_occ", "cusolverDnDsyevd_bufferSize fail", ABS(info))
-            IF (lwork < lwork_request) THEN
-               IF (lwork > 0) DEALLOCATE(work_d)
-               lwork = lwork_request
-               IF (lwork > 0) ALLOCATE(work_d(lwork))
-            END IF
-
-            info = cusolverDnDsyevd(cuSolverHandle,&
-               CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER,&
-               curr_dim, eigvect_d, lda, eigval_d, work_d, lwork, devInfo_d)
-            IF (info /= CUSOLVER_STATUS_SUCCESS) THEN
-               WRITE(stdout, "('ERROR: cusolverDnDsyevd info: ', I0)") info
-               CALL errore("get_occ", "cusolverDnDsyevd fail", ABS(info))
-            END IF
-            devInfo = devInfo_d
-            IF (devInfo /= 0) THEN
-               WRITE(stdout, "('ERROR: cusolverDnDsyevd devInfo: ', I0)") devInfo
-               CALL errore("get_occ", "cusolverDnDsyevd fail", ABS(devInfo))
-            END IF
-
-            eigvect(1:curr_dim,1:curr_dim) = eigvect_d(1:curr_dim,1:curr_dim)
-            eigval(1:curr_dim) = eigval_d(1:curr_dim)
-#else
             eigvect(1:curr_dim,1:curr_dim) = nst%ns(1:curr_dim,1:curr_dim,ioscdft)
             CALL DSYEV("V", "U",&
                        curr_dim, eigvect, lda,&
@@ -588,7 +530,6 @@ MODULE oscdft_occupations
                WRITE(stdout, *) 'OSCDFT ERROR: dsyev info: ', info
                CALL errore("get_occupation_number", "dsyev fail", abs(info))
             END IF
-#endif
 
             CALL mp_bcast(eigval(:),    ionode_id, intra_image_comm)
             CALL mp_bcast(eigvect(:,:), ionode_id, intra_image_comm)
@@ -629,11 +570,6 @@ MODULE oscdft_occupations
                nst%numbers(ioscdft) = eigval(oidx)
             END IF
          END DO
-
-#if defined(__CUDA)
-         IF (lwork > 0) DEALLOCATE(work_d)
-         DEALLOCATE(eigval_d, eigvect_d)
-#endif
 
          IF (inp%swapping_technique == OSCDFT_PERMUTE .AND. &
              ANY(inp%occup_index(indx%iconstr2ioscdft) > 0) .AND. &

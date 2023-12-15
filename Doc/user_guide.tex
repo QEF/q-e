@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{7.2}
+\def\version{7.3}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -417,9 +417,9 @@ environment, that is: a command shell (e.g., bash, sh) and utilities \make,
 libraries from scratch, you will also need \texttt{git} v.2.13 or later.
 For MS-Windows, see Sec.\ref{SubSec:Windows}.
 If you prefer installation with CMake (supported since v.6.7), 
-you will need a recent (v.3.14 or later) working CMake software;
-otherwise you will need the \configure\ command from autoconf and,
-for FoX compilation, \texttt{m4}.
+you will need a recent (v.3.20 or later) working CMake software;
+otherwise you will need the \configure\ command from autoconf
+(and, for FoX compilation only, \texttt{m4}).
 
 Note that the scripts contained
 in the distribution assume that the local  language is set to the
@@ -441,8 +441,8 @@ avoiding nonstandard extensions and newer features that are not
 widespread or stabilized. If however your compiler is older than
 a few ($\sim 5$) years, it is likely that something will not work.
 The same applies to mathematical and MPI libraries.
-For GPU compilation, you need v.19.10 or later of the NVidia HPC SDK
-(previous versions are no longer supported).
+For GPU compilation, you need v.21.7 or later of the NVidia HPC SDK
+(previous versions may or may not work).
 
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines
@@ -604,6 +604,7 @@ is between bracket:\\
 \texttt{--enable-debug}&        compile with debug flags (no)\\
 \texttt{--enable-pedantic}&     compile with gfortran pedantic flags on (no)\\
 \texttt{--enable-signals}&      enable signal trapping (no)\\
+\texttt{--enable-exit-status}&  enable returning exit status (no)\\
 \end{tabular}\\
 \\
 and the following optional packages:\\
@@ -633,27 +634,35 @@ and the following optional packages:\\
 \end{tabular}\\
 \\
 In order to compile the code for NVidia GPU's you will need a recent version
-(v.19.10 or later: the more recent, the better) of the NVidia HPC software
-development kit (SDK). OpenMP should be enabled. Enabling faster communications
-between GPUs, via NVlink or Infiniband RDMA, is essential for optimal
-performance. If your MPI library is built to be CUDA-aware, then enable it
-with \texttt{--with-cuda-mpi=yes}. The following \configure\ options are
-available:\\
+(v.21.7 or later) of the NVidia HPC software development kit (SDK). Beware:
+some versions are known to miscompile QE. Ensure that all needed environmental
+variables
+are properly defined, e.g. by running the "module" file provided in the HPC SDK with command
+\texttt{module}. Specify \texttt{--with-cuda} and \texttt{--with-cuda-cc} as explained 
+below. Other options below
+are optional. Enabling faster communications between GPUs, via NVlink or Infiniband RDMA, 
+is essential for optimal parallel performance. 
+
+The following \configure\ options are available:\\
 \begin{tabular}{ll}
 \texttt{--with-cuda=value}&         enable compilation of GPU-accelerated subroutines.\\
                           &         \texttt{value} should point the path where the CUDA toolkit \\
-                          &         is installed, e.g. \texttt{/opt/cuda} (default: no)\\
+                          &         is installed, e.g. \texttt{\$NVHPC\_CUDA\_HOME}\\
 \texttt{--with-cuda-cc=value}&      sets the compute capabilities for the compilation\\
                              &      of the accelerated subroutines. \\
                              &      \texttt{value} must be consistent with the hardware and the\\
                              &      NVidia driver installed on the workstation or on the\\
                              &      compute nodes of the HPC facility (default: 35)\\
-\texttt{--with-cuda-runtime=value}& sets the version of the CUDA toolkit used \\
+\texttt{--with-cuda-runtime=value}& (optional) sets the version of the CUDA toolkit used \\
                                   & for the compilation of the accelerated code.\\
                                   & \texttt{value} must be consistent with the\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
-\texttt{--with-cuda-mpi=value}    & enable usage of a CUDA-aware MPI library (default: no).\\
+\texttt{--with-cuda-mpi=value}    & \texttt{yes} enables the usage of CUDA-aware MPI library.\\
+                                  & Beware: if you have no fast inter-GPU communications, e.g.,\\
+				  & NVlink or Infiniband RDMA, you may get a crash at run time.\\
+				  & Important for optimal parallel performances (default: no).\\
+\texttt{--enable-nvtx=value}      & enable NVTX profiling (for developers, default: no).\\
 \end{tabular}
 
 To modify or extend \configure\ (advanced users only!), see the Wiki pages
@@ -1113,8 +1122,7 @@ Gfortran v.4.8.5, still found on CentOS machines, no longer compiles
 convention for Fortran functions that return complex values [...]
 If your code crashes during a call to \texttt{zdotc},
 recompile \qe\ using the internal BLAS and LAPACK routines
-(using \configure\ options \texttt{--with-internal-blas} and
-\texttt{--with-internal-lapack})
+(...)
 to see if the problem disappears; or, add the \texttt{-ff2c} flag"
 (info by Giovanni Pizzi, Jan. 2013).
 You may also consider replacing the offending calls to \texttt{zdotc}

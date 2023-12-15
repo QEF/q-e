@@ -175,9 +175,6 @@ set(src_ph
     PH/raman.f90
     PH/dhdrhopsi.f90
     PH/set_dvscf.f90
-    PH/non_scf_ph.f90
-    PH/apply_trev.f90
-    PH/c_bands_ph.f90
     PH/dvscf_interpolate.f90
     PH/ahc.f90)
 qe_enable_cuda_fortran("${src_ph}")

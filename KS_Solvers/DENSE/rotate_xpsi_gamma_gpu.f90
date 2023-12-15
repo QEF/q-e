@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
+SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
                               npwx, npw, nstart, nbnd, psi_d, evc_d, hevc_d, sevc_d, e_d )
   !----------------------------------------------------------------------------
   !
@@ -63,10 +63,10 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   attributes(DEVICE) :: hr_d, sr_d, vr_d, tpsi_d, hpsi_d, spsi_d, en_d
 #endif
   !
-  EXTERNAL :: h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
 
@@ -102,7 +102,7 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   CALL start_clock('rotxpsig:hpsi')
   !
-  CALL h_psi_gpu( npwx, npw, nstart, psi_d, hpsi_d)
+  CALL h_psi_ptr( npwx, npw, nstart, psi_d, hpsi_d)
   !
   CALL stop_clock('rotxpsig:hpsi')
   !
@@ -110,7 +110,7 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
      !
      CALL start_clock('rotxpsig:spsi')
      !
-     CALL s_psi_gpu( npwx, npw, nstart, psi_d, spsi_d )
+     CALL s_psi_ptr( npwx, npw, nstart, psi_d, spsi_d )
      !
      CALL stop_clock('rotxpsig:spsi')
      !

@@ -19,7 +19,7 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   USE kinds,             ONLY : DP
   USE constants,         ONLY : tpi
   USE ions_base,         ONLY : nat, ityp
-  USE ldaU,              ONLY : Hubbard_l, is_hubbard, nwfcU, Hubbard_lmax, hubbard_occ
+  USE ldaU,              ONLY : Hubbard_l, is_hubbard, nwfcU, Hubbard_lmax
   USE lsda_mod,          ONLY : lsda, nspin
   USE lr_symm_base,      ONLY : nsymq, irgq, minus_q, irotmq, rtau
   USE uspp_param,        ONLY : upf
@@ -32,7 +32,7 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   !
   ! ... local variables
   !
-  INTEGER :: nt, n, counter, l, ip, jp, na, nb, is, m1, m2, &
+  INTEGER :: nt, n, l, ip, jp, na, nb, is, m1, m2, &
              m0, m00, isym, irot
   COMPLEX(DP), ALLOCATABLE :: dnr(:,:,:,:,:), dnraux(:,:,:,:,:)
   !
@@ -41,18 +41,6 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   ! Initialization
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
-  !
-  counter = 0  
-  DO na = 1, nat
-     nt = ityp(na)
-     IF (.NOT.is_hubbard(nt)) CYCLE
-     DO n = 1, upf(nt)%nwfc
-        l = upf(nt)%lchi(n)
-        IF (hubbard_occ(nt,1) > 0.d0 .AND. l == Hubbard_l(nt)) &
-           counter = counter + 2 * l + 1
-     ENDDO
-  ENDDO
-  IF (counter.NE.nwfcU) CALL errore ('syme_dns', 'nwfcU<>counter', 1)
   !
   ALLOCATE (dnraux(ldim,ldim,nspin,nat,npe))  
   ALLOCATE (dnr(ldim,ldim,nspin,nat,npe))  

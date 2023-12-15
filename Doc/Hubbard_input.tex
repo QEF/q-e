@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\def\version{7.1}
+\def\version{7.3}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 %\usepackage{html}
@@ -642,6 +642,21 @@ It is possible to fix the pseudopotentials that do not contain the atomic ``labe
 The orbital quantum number and the occupation of the corresponding level are reported (l=``0" and occupation=`` 2.0000") so it is easy to guess that this is the ``S'' orbital. In order to guess what is the principal quantum number (n="6" in this example) one has to check what is the electronic structure for a given atom in the Periodic table and what atomic orbitals were included in the valence region. 
 
 
+\section{Noncollinear DFT+Hubbard}
+
+The Dudarev's formulation of DFT+$U$ and DFT+$U$+$V$ has been extended to the noncollinear framework~\cite{Binci:2023} starting from \qe\ v7.3. This includes also the calculation of Hubbard forces and Hubbard stresses by \texttt{pw.x}. Moreover, the calculation of Hubbard $U$ and $V$ parameters using the \textsc{HP} code has been also extended to the noncollinear Dudarev's framework.
+
+Therefore, now in \qe\ there are two noncollinear implementations of DFT+$U$: 
+\begin{itemize}
+ \item Dudarev's framework (\texttt{lda\_plus\_u\_kind=0})
+ \item Liechtenstein's framework (\texttt{lda\_plus\_u\_kind=1})
+\end{itemize}
+How to activate these frameworks? Note, when $J=0$ these two frameworks are equivalent. If $J$ is not specified in the input, then the Dudarev's formulation is activated. If instead (nonzero) $J$ is specified in the input, then the Liechtenstein's framework is activated. This is true also for the collinear and non-spinpolarized case. 
+
+Noncollinear DFT+$U$+$V$ is available only in the Dudarev's formulation. 
+
+
+
 \begin{thebibliography}{100}
   
   \bibitem{Anisimov:1991} V.I. Anisimov, J. Zaanen, and O.K. Andersen, \textit{Band theory and Mott insulators: Hubbard $U$ instead of Stoner $I$}, Phys. Rev. B. {\bf 44}, 943 (1991).
@@ -689,6 +704,8 @@ The orbital quantum number and the occupation of the corresponding level are rep
   \bibitem{Yu:2014} K. Yu and E.A. Carter, \textit{Communication: Comparing ab initio methods of obtaining effective U parameters for closed-shell materials}, J. Chem. Phys. {\bf 140}, 121105 (2014).
   
   \bibitem{QE} https://www.quantum-espresso.org/users-forum/
+
+  \bibitem{Binci:2023} L. Binci and N. Marzari, \textit{Noncollinear DFT+$U$ and Hubbard parameters with fully relativistic ultrasoft pseudopotentials}, Phys. Rev. B {\bf 108}, 115157 (2023).
   
 \end{thebibliography}
 

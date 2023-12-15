@@ -54,7 +54,7 @@ MODULE cp_restart_new
                              vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ0, occm,  &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
                              et, rho, c02, cm2, ctot, iupdwn, nupdwn,        &
-                             iupdwn_tot, nupdwn_tot, wfc )
+                             iupdwn_tot, nupdwn_tot, wfc, dt )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
@@ -112,6 +112,7 @@ MODULE cp_restart_new
       LOGICAL,               INTENT(IN) :: ascii        !
       INTEGER,               INTENT(IN) :: nfi          ! index of the current step
       REAL(DP),              INTENT(IN) :: simtime      ! simulated time
+      REAL(DP),              INTENT(IN) :: dt           ! integration timestep
       REAL(DP),              INTENT(IN) :: acc(:)       !  
       INTEGER,               INTENT(IN) :: nk           ! number of kpoints
       REAL(DP),              INTENT(IN) :: xk(:,:)      ! k-points coordinates 
@@ -449,7 +450,7 @@ MODULE cp_restart_new
          CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
               epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
               force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
-              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
+              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm, dt)
          !
          ! Wannier function centers
          !
@@ -537,7 +538,7 @@ MODULE cp_restart_new
            CALL write_rhog &
                 ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
-                mill, ig_l2g, rhog, ecutrho )
+                mill, ig_l2g, rhog )
         ENDIF
         !
         DEALLOCATE ( rhog )
@@ -563,7 +564,7 @@ MODULE cp_restart_new
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-                            ekincm, c02, cm2, wfc )
+                            ekincm, c02, cm2, wfc, dt )
       !------------------------------------------------------------------------
       !! Read XML file.
       !
@@ -600,6 +601,7 @@ MODULE cp_restart_new
       LOGICAL,               INTENT(IN)    :: ascii        !
       INTEGER,               INTENT(INOUT) :: nfi          ! index of the current step
       REAL(DP),              INTENT(INOUT) :: simtime      ! simulated time
+      REAL(DP),              INTENT(INOUT) :: dt           ! integration timestep
       REAL(DP),              INTENT(INOUT) :: acc(:)       !
       INTEGER,               INTENT(IN)    :: nk           ! number of kpoints
       REAL(DP),              INTENT(INOUT) :: xk(:,:)      ! k-points coordinates
@@ -731,7 +733,7 @@ MODULE cp_restart_new
       CALL cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,  &
            cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
            htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm,&
-           ierr )
+           dt, ierr )
       md_found = ( ierr == 0 )
       IF ( ierr > 0 ) CALL errore ('cp_readcp','bad CP section read',ierr)
       !
@@ -846,7 +848,7 @@ MODULE cp_restart_new
        ekin, eht, esr, eself, epseu, enl, exc, vave, enthal, &
        acc, stau0, svel0, taui, cdmi, force, nhpcl, nhpdim, &
        xnhp0, vnhp, ekincm, xnhe0, vnhe, ht, htvel, gvel, xnhh0, vnhh,      &
-       staum, svelm, xnhpm, xnhem, htm, xnhhm) !
+       staum, svelm, xnhpm, xnhem, htm, xnhhm, dt) !
     !------------------------------------------------------------------------
     !! Cell related variables, CP-specific.
     !
@@ -880,6 +882,7 @@ MODULE cp_restart_new
     REAL(DP), INTENT(IN) :: xnhem
     REAL(DP), INTENT(IN) :: htm(3,3)
     REAL(DP), INTENT(IN) :: xnhhm(3,3)
+    REAL(DP), INTENT(IN) :: dt !last simulation integration timestep used
     !
     !
     IF ( ionode ) THEN
@@ -897,6 +900,11 @@ MODULE cp_restart_new
        CALL xml_addAttribute( xf, "UNITS", "pico-seconds")
        CALL xml_addCharacters( xf, simtime )
        CALL xml_EndElement(xf, "TIME")
+       !
+       CALL xml_NewElement ( xf, "DT")
+       CALL xml_addAttribute( xf, "UNITS", "Hartree-time-atomic-units")
+       CALL xml_addCharacters( xf, dt )
+       CALL xml_EndElement(xf, "DT")
        !
        CALL xml_NewElement ( xf, "TITLE")
        CALL xml_addCharacters ( xf, "temporary title")
@@ -1173,7 +1181,7 @@ MODULE cp_restart_new
   SUBROUTINE cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,&
        cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht, &
        htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm, &
-       ierr )
+       dt, ierr )
     !
     !------------------------------------------------------------------------
     !! Cell related variables, CP-specific:
@@ -1213,6 +1221,7 @@ MODULE cp_restart_new
     REAL(DP), INTENT(out) :: xnhem
     REAL(DP), INTENT(out) :: htm(3,3)
     REAL(DP), INTENT(out) :: xnhhm(3,3)
+    REAL(DP), INTENT(out) :: dt
     INTEGER,  INTENT(out) :: ierr
     !
     LOGICAL :: found
@@ -1239,6 +1248,11 @@ MODULE cp_restart_new
     found = ASSOCIATED(n2Pointer)
     IF ( .NOT.found ) RETURN
     CALL extractDataContent( n2Pointer, simtime)
+    !
+    n2Pointer => item( getElementsByTagname( n1Pointer, "DT"), 0)
+    found = ASSOCIATED(n2Pointer)
+    IF ( .NOT.found ) RETURN
+    CALL extractDataContent( n2Pointer, dt)
     !
     ! ... read MD timesteps variables
     !
@@ -1463,7 +1477,7 @@ MODULE cp_restart_new
     REAL(DP)         :: a1_(3), a2_(3), a3_(3)
     REAL(DP)         :: b1_(3), b2_(3), b3_(3)
     REAL(DP), ALLOCATABLE :: tau_(:,:) 
-    CHARACTER(LEN=3) :: atm_(ntypx)
+    CHARACTER(LEN=6) :: atm_(ntypx)
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
     !

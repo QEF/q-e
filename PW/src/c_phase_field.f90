@@ -30,6 +30,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE gvect,                ONLY: ngm, g, gcutm, ngm_g
    USE uspp,                 ONLY: nkb, vkb, okvan
    USE uspp_param,           ONLY: upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY: transform_qq_so
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY: npwx, nbnd
@@ -111,7 +112,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    REAL(DP) :: weight
    REAL(DP) :: pola, pola_ion
    REAL(DP), ALLOCATABLE :: wstring(:)
-   REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    REAL(DP) :: zeta_mod
    COMPLEX(DP), ALLOCATABLE :: aux(:,:)
    COMPLEX(DP), ALLOCATABLE :: aux0(:,:)
@@ -308,30 +308,14 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    IF (okvan) THEN
       !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
       ! CALL calc_btq(dkmod,qrad_dk,0) is no longer needed, see bp_c_phase
-      !
-      !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dk2 = dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2(lmaxq*lmaxq, 1, dk, dk2, ylm_dk)
-      !
-      !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-      q_dk=(0.d0,0.d0)
-      DO np =1, ntyp
-         IF ( upf(np)%tvanp ) THEN
-            DO iv = 1, nh(np)
-               DO jv = iv, nh(np)
-                  CALL qvan2(1,iv,jv,np,dkmod,pref,ylm_dk)
-                  q_dk(iv,jv,np) = omega*pref
-                  q_dk(jv,iv,np) = omega*pref
-               ENDDO
-            ENDDO
-         ENDIF
-      ENDDO
+      CALL compute_qqc ( tpiba, dk, omega, q_dk )
       IF (lspinorb) CALL transform_qq_so(q_dk,q_dk_so)
+      !
    ENDIF
    !
-   !  -------------------------------------------------------------------------   !
-   !                   electronic polarization: strings phases                    !
-   !  -------------------------------------------------------------------------   !
+   !  -------------------------------------------------------------------------    !
+   !                   electronic polarization: strings phases                     !
+   !  -------------------------------------------------------------------------    !
    !
    el_loc=0.d0
    kpoint=0
@@ -482,9 +466,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                aux=(0.d0,0.d0)
                IF ( noncolin ) aux_2=(0.d0,0.d0)
                DO mb=1,nbnd
-                  IF ( .NOT. l_cal(mb) ) THEN
-                     mat(mb,mb)=(0.d0, 0.d0)
-                  ELSE
+                  IF ( l_cal(mb) ) THEN
                      IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                         DO ig=1,npw1
                            aux(igk1(ig),mb)=psi1(ig,mb)
@@ -527,19 +509,8 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                ENDDO
                CALL ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0,ngm,aux,ngm,(0.d0,0.d0),mat,nbnd)
                IF (noncolin) CALL ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0_2,ngm,aux_2,ngm,(1.d0,0.d0),mat,nbnd)
-               CALL  mp_sum( mat, intra_bgrp_comm )
-               DO mb=1,nbnd
-                  DO nb=1,nbnd
-                     IF ( .NOT.l_cal(mb) .OR. .NOT.l_cal(nb) ) THEN
-                        IF(mb==nb) THEN
-                           mat(mb,nb)=(1.d0,0.d0)
-                        ELSE
-                           mat(mb,nb)=(0.d0,0.d0)
-                        END IF
-                     ENDIF
-                  ENDDO
-               END DO
                !
+               CALL  mp_sum( mat, intra_bgrp_comm )
                !
                ! --- Calculate the augmented part: ij=KB projectors, ---
                ! --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
@@ -581,6 +552,10 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                      ENDDO
                   ENDDO
                ENDIF
+               !
+               DO mb=1,nbnd
+                  IF ( .NOT.l_cal(mb) ) mat(mb,mb)=(1.d0,0.d0)
+               END DO
                !
                !  --- Calculate matrix determinant ---
                !

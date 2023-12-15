@@ -601,6 +601,7 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   USE io_global, ONLY : stdout, ionode
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
+  USE fft_interpolation_mod, ONLY: fft_1d_interpolate, fft_spherical_average 
 
   IMPLICIT NONE
   INTEGER :: nx, ngm, iflag, ounit
@@ -608,14 +609,13 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   ! number of G vectors
   ! type of plot
   ! output unit
-
   real(DP) :: e (3), x0 (3), m1, alat, g (3, ngm)
+  real(DP),ALLOCATABLE :: line(:,:)
   ! vector defining the line
   ! origin of the line
   ! modulus of e
   ! lattice parameter
   ! G-vectors
-
   COMPLEX(DP) :: rhog (ngm)
   ! rho or polarization in G space
   INTEGER :: i, ig
@@ -628,58 +628,19 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   ! steps along the line
   ! the argument of the exponential
   ! |G|*|r|
-
+  !
   COMPLEX(DP) :: rho0g, carica (nx)
-
+  !
   deltax = m1 / (nx - 1)
-  carica(:) = (0.d0,0.d0)
+  carica(:) = cmplx (0.d0,0.d0, KIND = DP)
+  line = reshape([(x0 + (i - 1 )* deltax * e, i =1, nx)],[3,nx])  
   IF (iflag == 1) THEN
-     DO i = 1, nx
-        xi = x0 (1) + (i - 1) * deltax * e (1)
-        yi = x0 (2) + (i - 1) * deltax * e (2)
-        zi = x0 (3) + (i - 1) * deltax * e (3)
-        !
-        !     for each point we compute the charge from the Fourier components
-        !
-        DO ig = 1, ngm
-           !
-           !     NB: G are in 2pi/alat units, r are in alat units
-           !
-           arg = 2.d0 * pi * ( xi*g(1,ig) + yi*g(2,ig) + zi*g(3,ig) )
-           carica(i) = carica(i) + rhog (ig) * cmplx(cos(arg),sin(arg),kind=DP)
-        ENDDO
-     ENDDO
+     CALL fft_1d_interpolate(rhog, g, line, carica) 
   ELSEIF (iflag == 0) THEN
-     !
-     !     spherically averaged charge: rho0(|r|) = int rho(r) dOmega
-     !     rho0(r) = 4pi \sum_G rho(G) j_0(|G||r|)
-     !
-     !     G =0 term
-     gg=sqrt(g(1,1)**2+g(2,1)**2+g(3,1)**2)
-     IF (gg<1.d-10) THEN
-        DO i = 1, nx
-           carica (i) = 4.d0 * pi * rhog (1)
-        ENDDO
-     ENDIF
-     !     G!=0 terms
-     DO ig = 2, ngm
-        arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
-        !     This displaces the origin into x0
-        rho0g = rhog (ig) * cmplx(cos(arg),sin(arg),kind=DP)
-        !     r =0 term
-        carica (1) = carica (1) + 4.d0 * pi * rho0g
-        !     r!=0 terms
-        DO i = 2, nx
-           gr = 2.d0 * pi * sqrt(g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2) * &
-                       (i-1) * deltax
-           carica (i) = carica (i) + 4.d0 * pi * rho0g * sin (gr) / gr
-        ENDDO
-
-     ENDDO
+      CALL fft_spherical_average(rhog, g, x0, deltax, carica)
   ELSE
      CALL errore ('plot_1d', ' bad type of plot', 1)
   ENDIF
-  CALL mp_sum( carica, intra_bgrp_comm )
   !
   !    Here we check the value of the resulting charge
   !
@@ -730,6 +691,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   USE io_global, ONLY : stdout, ionode
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
+  USE fft_interpolation_mod, ONLY : fft_2d_interpolate
   IMPLICIT NONE
   INTEGER :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
   ! number of points along x
@@ -758,37 +720,15 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! integrated imaginary charge
   ! steps along e1
   ! steps along e2
-  COMPLEX(DP), ALLOCATABLE :: eigx (:), eigy (:), carica(:,:)
+  COMPLEX(DP), ALLOCATABLE :: carica(:,:)
 
-  ALLOCATE (eigx(  nx))
-  ALLOCATE (eigy(  ny))
   ALLOCATE (carica( nx , ny))
 
   deltax = m1 / (nx - 1)
   deltay = m2 / (ny - 1)
 
   carica(:,:) = (0.d0,0.d0)
-  DO ig = 1, ngm
-     !
-     ! eigx=exp(iG*e1+iGx0), eigy=(iG*e2)
-     ! These factors are calculated and stored in order to save CPU time
-     !
-     DO i = 1, nx
-        eigx (i) = exp ( (0.d0, 1.d0) * 2.d0 * pi * ( (i - 1) * deltax * &
-             (e1(1) * g(1,ig) + e1(2) * g(2,ig) + e1(3) * g(3,ig) ) + &
-             (x0 (1) * g(1,ig) + x0 (2) * g(2,ig) + x0 (3) * g(3,ig) ) ) )
-     ENDDO
-     DO j = 1, ny
-        eigy (j) = exp ( (0.d0, 1.d0) * 2.d0 * pi * (j - 1) * deltay * &
-             (e2(1) * g(1,ig) + e2(2) * g(2,ig) + e2(3) * g(3,ig) ) )
-     ENDDO
-     DO j = 1, ny
-        DO i = 1, nx
-           carica (i, j) = carica (i, j) + rhog (ig) * eigx (i) * eigy (j)
-        ENDDO
-     ENDDO
-  ENDDO
-  CALL mp_sum( carica, intra_bgrp_comm )
+  CALL fft_2d_interpolate(rhog, g, nx, ny, x0, m1*e1, m2*e2, carica)
   !
   !    Here we check the value of the resulting charge
   !
@@ -859,8 +799,6 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ENDIF
 
   DEALLOCATE (carica)
-  DEALLOCATE (eigy)
-  DEALLOCATE (eigx)
   RETURN
 END SUBROUTINE plot_2d
 !

@@ -15,7 +15,8 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       mbd_vdw, force_pairing, use_para_diag
+                                       mbd_vdw, force_pairing, use_para_diag, &
+                                       dt_xml_old
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -64,7 +65,6 @@ SUBROUTINE init_run()
   USE wannier_module,           ONLY : allocate_wannier  
   USE io_files,                 ONLY : tmp_dir, create_directory, restart_dir
   USE io_global,                ONLY : ionode, stdout
-  USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE ions_base,                ONLY : ions_reference_positions, cdmi
@@ -115,10 +115,7 @@ SUBROUTINE init_run()
 
   IF( nbgrp > 1 .AND. force_pairing ) &
      CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
-  !
-  ! ... Open files containing MD information
-  !
-  CALL printout_base_init( )
+ 
   !
   ! ... Create main restart directory
   !
@@ -361,7 +358,8 @@ SUBROUTINE init_run()
      CALL readfile( i, h, hold, nfi, c0_bgrp, cm_bgrp, taus,   &
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                     vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
-                    vnhh, velh, fion, tps, z0t, f )
+                    vnhh, velh, fion, tps, z0t, f, dt_xml_old )
+     WRITE (stdout,*) 'old dt (from xml) = ', dt_xml_old
      !
      CALL from_restart( )
      !

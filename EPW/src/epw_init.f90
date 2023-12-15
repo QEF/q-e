@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -34,7 +35,6 @@
   USE wavefunctions,    ONLY : evc
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag, lspinorb
   USE uspp_param,       ONLY : upf, nhm
-  USE m_gth,            ONLY : setlocq_gth
   USE units_lr,         ONLY : lrwfc, iuwfc
   USE phcom,            ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
@@ -159,32 +159,9 @@
   IF (nlcc_any) CALL set_drhoc(xq, drc)
   !
   ! ... b) the fourier components of the local potential at q+G
+  !        From PHonon/PH/phq_init.f90
   !
-  vlocq(:, :) = zero
-  !
-  DO nt = 1, ntyp
-    !
-    IF (upf(nt)%is_gth) THEN
-      CALL setlocq_gth(nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1, nt))
-    ELSE
-      CALL setlocq(xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
-                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1, nt))
-    ENDIF
-    !
-  END DO
-  !
-  ! From PHonon/PH/phq_init.f90
-  ! SP: For 2d calculations, we need to initialize the fact for the q+G
-  ! component of the cutoff of the Coulomb interaction
-  IF (do_cutoff_2D) call cutoff_fact_qg()
-  !
-  ! In 2D calculations the long range part of vlocq(g) (erf/r part)
-  ! was not re-added in g-space because everything is caclulated in
-  ! radial coordinates, which is not compatible with 2D cutoff.
-  ! It will be re-added each time vlocq(g) is used in the code.
-  ! Here, this cutoff long-range part of vlocq(g) is computed only once
-  ! by the routine below and stored
-  IF (do_cutoff_2D) call cutoff_lr_Vlocq()
+  CALL init_vlocq ( xq ) 
   ! 
   IF (first_run) THEN
     ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)

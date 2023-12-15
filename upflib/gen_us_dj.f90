@@ -23,7 +23,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: npw
-  !! number ok plane waves 
+  !! number ok plane waves
   INTEGER, INTENT(IN) :: npwx
   !! max number ok plane waves across k-points
   INTEGER, INTENT(IN) :: igk(npw)
@@ -199,8 +199,8 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
       lm = nhtolm(ih,nt)
       pref = (0._DP,-1._DP)**l
       !
-      dvkb(ig,ikb) = CMPLX(djl(ig,nb,nt)) * sk(ig,na) * &
-                     CMPLX(ylm(ig,lm)) * pref
+      dvkb(ig,ikb) = CMPLX(djl(ig,nb,nt),KIND=DP) * sk(ig,na) * &
+                     CMPLX(ylm(ig,lm),KIND=DP) * pref
     ENDDO
   ENDDO
   !

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public

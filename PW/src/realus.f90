@@ -741,7 +741,8 @@ MODULE realus
                      dqxyz(:) = dqtot_int*tabp(ia)%xyz(:,ir) / &
                                      tabp(ia)%dist(ir)
                   ELSE
-                     dqxyz(:) = 0.0_dp
+                     !dqxyz(:) = 0.0_dp
+                     dqxyz(:) = dqtot_int
                   ENDIF
                   !
                   ijh = 0
@@ -1741,12 +1742,11 @@ MODULE realus
     USE wavefunctions,         ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh
-    USE becmod,                ONLY : bec_type, becp
+    USE becmod,                ONLY : becp
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
     USE uspp,                  ONLY : ofsbeta
-    USE becmod_gpum,           ONLY : using_becp_k
     !
     IMPLICIT NONE
     !
@@ -1760,7 +1760,6 @@ MODULE realus
     REAL(DP), EXTERNAL :: ddot
     !
     CALL start_clock( 'calbec_rs' )
-    CALL using_becp_k(1) ! intento=2?
     !
     IF( dffts%has_task_groups ) CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
@@ -1844,9 +1843,8 @@ MODULE realus
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
       USE uspp,                   ONLY : qq_at, ofsbeta
-      USE becmod,                 ONLY : bec_type, becp
+      USE becmod,                 ONLY : becp
       USE fft_base,               ONLY : dffts
-      USE becmod_gpum,            ONLY : using_becp_r
       !
       IMPLICIT NONE
       !
@@ -1859,9 +1857,6 @@ MODULE realus
       CALL start_clock( 's_psir' )
 
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
-
-      ! Sync
-      CALL using_becp_r(0)
 
       ALLOCATE( w1(nhm), w2(nhm) )
       IF ( ibnd+1 > last) w2 = 0.D0
@@ -1924,9 +1919,8 @@ MODULE realus
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
       USE uspp,                   ONLY : qq_at, ofsbeta
-      USE becmod,                 ONLY : bec_type, becp
+      USE becmod,                 ONLY : becp
       USE fft_base,               ONLY : dffts
-      USE becmod_gpum,            ONLY : using_becp_k
       !
       IMPLICIT NONE
       !
@@ -1942,9 +1936,6 @@ MODULE realus
       CALL start_clock( 's_psir' )
    
       IF( dffts%has_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
-
-      ! Sync
-      CALL using_becp_k(0)
 
       call set_xkphase(current_k)
       !
@@ -2010,9 +2001,8 @@ MODULE realus
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq, ofsbeta
-  USE becmod,                 ONLY : bec_type, becp
+  USE becmod,                 ONLY : becp
   USE fft_base,               ONLY : dffts
-  USE becmod_gpum,            ONLY : using_becp_r
   !
   IMPLICIT NONE
   !
@@ -2025,9 +2015,6 @@ MODULE realus
   CALL start_clock( 'add_vuspsir' )
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
-
-  ! Sync
-  CALL using_becp_r(0)
   !
   fac = sqrt(omega)
   !
@@ -2093,9 +2080,8 @@ MODULE realus
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq, ofsbeta
-  USE becmod,                 ONLY : bec_type, becp
+  USE becmod,                 ONLY : becp
   USE fft_base,               ONLY : dffts
-  USE becmod_gpum,            ONLY : using_becp_k
   !
   IMPLICIT NONE
   !
@@ -2109,8 +2095,6 @@ MODULE realus
   CALL start_clock( 'add_vuspsir' )
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
-  !
-  CALL using_becp_k(0)
   !
   call set_xkphase(current_k)
   !

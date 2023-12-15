@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,7 +28,11 @@ SUBROUTINE hp_run_nscf (do_band)
   USE control_lr,      ONLY : lgamma
   USE lr_symm_base,    ONLY : nsymq, invsymq
   USE ldaU_hp,         ONLY : tmp_dir_save, tmp_dir_hp
+  USE noncollin_module,ONLY : noncolin, domag
+  USE ldaU,            ONLY : lda_plus_u_kind
   USE rism_module,     ONLY : lrism, rism_set_restart
+  USE noncollin_module,     ONLY : noncolin, domag
+  USE ldaU,                 ONLY : lda_plus_u_kind
   !
   IMPLICIT NONE
   !
@@ -80,7 +84,13 @@ SUBROUTINE hp_run_nscf (do_band)
   CALL init_run()
   !
   IF (do_band) THEN
-     CALL non_scf()
+     IF (noncolin.AND.domag) THEN
+        ! this subroutine calls c_bands_ph, which applies 
+        ! the time-reversal operator
+        CALL non_scf_ph()
+     ELSE     
+        CALL non_scf()
+     ENDIF   
      CALL punch( 'all' )
   ENDIF
   !

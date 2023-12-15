@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,27 +50,32 @@ SUBROUTINE hp_setup_q()
   USE ions_base,        ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,        ONLY : at, bg
   USE io_global,        ONLY : stdout
-  USE lsda_mod,         ONLY : nspin
+  USE lsda_mod,         ONLY : nspin, starting_magnetization
   USE scf,              ONLY : v, vrs, vltot, rho, kedtau
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
-  USE symm_base,        ONLY : nrot, nsym, s, irt, time_reversal, &
+  USE symm_base,        ONLY : nrot, nsym, s, ft, irt, time_reversal, &
                                inverse_s, d1, d2, d3
   USE uspp_param,       ONLY : upf
-  USE uspp,             ONLY : nlcc_any
+  USE uspp,             ONLY : nlcc_any, okvan, deeq_nc
   USE constants,        ONLY : degspin, pi, rytoev
-  USE noncollin_module, ONLY : noncolin, domag, m_loc, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, m_loc, nspin_mag, &
+                               angle1, angle2, ux
   USE wvfct,            ONLY : nbnd, et
   USE control_flags,    ONLY : noinv
   USE eqv,              ONLY : dmuxc
   USE qpoint,           ONLY : xq
   USE control_lr,       ONLY : lgamma
   USE lr_symm_base,     ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
-  USE ldaU_hp,          ONLY : niter_max, alpha_mix
+  USE ldaU_hp,          ONLY : niter_max, alpha_mix, skip_equivalence_q
+  ! USE funct,            ONLY : dft_is_gradient
+  USE control_flags,    ONLY : modenum
+  USE hp_nc_mag_aux,    ONLY : deeq_nc_save
+  USE dfunct,           ONLY : newd
   !
   IMPLICIT NONE
-  INTEGER :: ir, isym, ik, it
+  INTEGER :: ir, isym, ik, it, na
   LOGICAL :: sym(48), magnetic_sym
   !
   CALL start_clock ('hp_setup_q')
@@ -87,6 +92,31 @@ SUBROUTINE hp_setup_q()
   !    This is needed in find_sym
   !
   IF (.NOT.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
+  !
+  IF (noncolin.and.domag) THEN
+     DO na = 1, nat
+       !
+       m_loc(1,na) = starting_magnetization(ityp(na)) * &
+                     SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
+       m_loc(2,na) = starting_magnetization(ityp(na)) * &
+                     SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
+       m_loc(3,na) = starting_magnetization(ityp(na)) * &
+                     COS( angle1(ityp(na)) )
+     END DO
+     ux=0.0_DP
+     !
+     ! Change the sign of the magnetic field in the screened US coefficients
+     ! and save also the coefficients computed with -B_xc.
+     !
+     IF (okvan) THEN
+       deeq_nc_save(:,:,:,:,1)=deeq_nc(:,:,:,:)
+       v%of_r(:,2:4)=-v%of_r(:,2:4)
+       CALL newd()
+       v%of_r(:,2:4)=-v%of_r(:,2:4)
+       deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
+       deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+     ENDIF
+  ENDIF
   ! 
   ! 4) Compute the derivative of the XC potential (dmuxc)
   !
@@ -121,9 +151,9 @@ SUBROUTINE hp_setup_q()
      nsymq   = nsym
      !
      IF ( time_reversal ) THEN
-        minus_q = .TRUE.
+         minus_q = .TRUE.
      ELSE
-        minus_q = .FALSE.
+         minus_q = .FALSE.
      ENDIF
      !
   ENDIF

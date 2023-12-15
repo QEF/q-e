@@ -1,4 +1,7 @@
 set(qe_test_categories "pw" "cp" "ph" "epw" "tddfpt" "hp")
+if(QE_ENABLE_OSCDFT)
+  list(APPEND qe_test_categories "oscdft")
+endif()
 
 set(ESPRESSO_PSEUDO "${qe_SOURCE_DIR}/pseudo" CACHE STRING "Pseudopotential files")
 set(NETWORK_PSEUDO "https://pseudopotentials.quantum-espresso.org/upf_files" CACHE STRING "URL to remote pseudopotential folder")

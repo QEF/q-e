@@ -209,7 +209,7 @@ CONTAINS
     type(node), pointer :: next
     ! local variables
     type(node), pointer :: prev
-    integer :: n, nl, n1, n2, m
+    integer :: n, nl, n1, n2, n3, m
     logical :: is_found
     !
     ! Initialization
@@ -234,15 +234,15 @@ CONTAINS
           if ( line(n:n2) == ']]>' ) then
              in_comment = .false.
              n = n+3
-             ! print *, 'debug: cdata ended'
+             ! print *, 'debug: cdata ends'
           else if ( line(n:n2) == '-->' ) then
              in_comment = .false.
              n = n+3
-             ! print *, 'debug: comment ended'
+             ! print *, 'debug: comment ends'
           else if ( line(n:n1) == '?>' ) then
              in_comment = .false.
              n = n+2
-             ! print *, 'debug: process ended'
+             ! print *, 'debug: process ends'
           else
              n = n+1
           end if
@@ -251,14 +251,19 @@ CONTAINS
              ! trick to avoid trespassing the EOL
              n1 = min (n+1,nl)
              n2 = min (n+3,nl)
+             n3 = min (n+8,nl)
              if ( line(n1:n2) == '!--' ) then
                 n = n+4
                 in_comment = .true.
-                ! print *, 'debug: comment begin'
+                ! print *, 'debug: comment begins'
+             else if ( line(n1:n3) == '![CDATA[' ) then
+                n = n+9
+                in_comment = .true.
+                ! print *, 'debug: cdata begins'
              else if ( line(n1:n1) == '?' ) then
                 n = n+2
                 in_comment = .true.
-                ! print *, 'debug: process begin'
+                ! print *, 'debug: process begins'
              else if ( line(n1:n1) == '/' ) then
                 ! tag = trim( open_tags(nlevel) )
                 tag = curr%tag

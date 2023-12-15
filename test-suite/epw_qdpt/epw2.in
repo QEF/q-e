@@ -1,0 +1,60 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+
+  elph        = .true.
+  epbwrite    = .false.
+  epbread     = .false.
+  epwwrite    = .false.
+  epwread     = .true.
+  etf_mem     = 1
+
+  mp_mesh_k = .true.
+  !lindabs = .true.
+  loptabs= .true.
+  efermi_read = .true.
+  fermi_energy = 6.5
+
+  omegamin = 0.05
+  omegamax = 4.0
+  omegastep = 0.05
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  fsthick     = 5.5 ! eV
+  temps       = 300 ! K
+  degaussw    = 0.1 ! eV
+
+  dvscf_dir   = './save'
+
+  nkf1        = 8
+  nkf2        = 8
+  nkf3        = 8
+  nqf1        = 4
+  nqf2        = 4
+  nqf3        = 4
+
+  nk1         = 4
+  nk2         = 4
+  nk3         = 4
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+  nbndsub     =  8
+  use_ws      = .true.
+  asr_typ     = 'crystal'
+  
+
+  wannierize  = .false.
+
+  !len_mesh=11
+  !meshnum=10
+  !start_mesh=9
+  nq_init=-2
+  QD_min=2.0
+  !QD_bin=0.2	
+ /

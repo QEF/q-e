@@ -20,8 +20,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
                                        tolp, ortho_eps, ortho_max,             &
-                                       tfirst, tlast !moved here to make
-                                                     !autopilot work
+                                       tfirst, tlast, do_makov_payne
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
@@ -54,7 +53,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh,         &
                                        wmass, press, iforceh, cell_force
-  USE local_pseudo,             ONLY : allocate_local_pseudo
+  USE local_pseudo,             ONLY : allocate_local_pseudo, vps
   USE io_global,                ONLY : stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
@@ -123,6 +122,7 @@ USE cp_main_variables,        ONLY : eigr_d
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
   USE extffield,                ONLY : apply_extffield_CP,close_extffield
+  USE makovpayne,               ONLY : makov_payne
   !
 #if defined (__ENVIRON)
   USE plugin_flags,             ONLY : use_environ
@@ -814,14 +814,25 @@ USE cp_main_variables,        ONLY : eigr_d
      !
      IF ( tstdout) CALL spinsq ( c0_bgrp, bec_bgrp, rhor )
      !
+     !
      CALL printout_new( nfi, tfirst, tfile, tprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
                         enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, vnhe, xnhe0, atot, &
                         ekin, epot, tprnfor, tpre, tstdout )
-     !
      if (abivol) etot = etot + P_ext*volclu
      if (abisur) etot = etot + Surf_t*surfclu
      !
+     ! Makov-Payne correction to the total energy (isolated systems only)
+     ! vacuum level produces strange number, never tested in CP. disabled.
+     IF( do_makov_payne .AND. tprint .AND. nspin .eq. 2 ) CALL makov_payne( etot, taus, &
+            rhor(:,1) + rhor(:,2), rhog(:,1) + rhog(:,2), &
+            sfac, vps, .true., etot_in_hartree = .true., output_in_hartree = .true., &
+            vacuum_level = .false. )
+     IF( do_makov_payne .AND. tprint .AND. nspin .eq. 1 ) CALL makov_payne( etot, taus, &
+            rhor(:,1), rhog(:,1), &
+            sfac, vps, .true., etot_in_hartree = .true., output_in_hartree = .true., &
+            vacuum_level = .false. )
+     !             
      IF( tfor ) THEN
         !
         ! ... new variables for next step
@@ -907,14 +918,14 @@ USE cp_main_variables,        ONLY : eigr_d
           CALL writefile( h, hold ,nfi, c0_bgrp, c0old, taus, tausm,  &
                           vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
-                          xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
+                          xnhhm, vnhh, velh, fion, tps, z0t, f, rhor, delt )
            !
         ELSE
            !
            CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, idesc, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim, ekincm,&
-                           xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
+                           xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor, delt )
            !
         END IF
         !
@@ -992,7 +1003,7 @@ USE cp_main_variables,        ONLY : eigr_d
         END IF
         !
      END IF
-     !
+     ! wf_closing_options calls writefile internally
      IF ( lwf ) &
         CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb,&
                                  taub, irb, ibrav, bg(:,1), bg(:,2), bg(:,3), &
@@ -1000,7 +1011,7 @@ USE cp_main_variables,        ONLY : eigr_d
                                  velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutrho,  &
-                                 ecutwfc,delt,celldm, fion, tps, z0t, f, rhor )
+                                 ecutwfc,delt,celldm, fion, tps, z0t, f, rhor, delt )
      !
      IF ( tstop ) EXIT main_loop
      !
@@ -1025,7 +1036,7 @@ USE cp_main_variables,        ONLY : eigr_d
   CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus, tausm, &
                   vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
-                  vnhh, velh, fion, tps, z0t, f, rhor )
+                  vnhh, velh, fion, tps, z0t, f, rhor, delt )
   !
   IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !

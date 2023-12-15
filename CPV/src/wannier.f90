@@ -664,7 +664,7 @@ MODULE wannier_subroutines
                                  velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,   &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm,&
                                  xnhh0, xnhhm, vnhh, velh, ecut, ecutw, delt, &
-                                 celldm, fion, tps, mat_z, occ_f, rho )
+                                 celldm, fion, tps, mat_z, occ_f, rho, dt )
     !--------------------------------------------------------------------------
     !! More Wannier Function options.
     !
@@ -698,7 +698,7 @@ MODULE wannier_subroutines
     REAL(DP)    :: velh(:,:)
     REAL(DP)    :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
     REAL(DP)    :: ecut, ecutw, delt, celldm(:)
-    REAL(DP)    :: fion(:,:), tps
+    REAL(DP)    :: fion(:,:), tps, dt
     REAL(DP)    :: mat_z(:,:,:), occ_f(:), rho(:,:)
     !
     CALL start_clock('wf_close_opt')
@@ -724,7 +724,7 @@ MODULE wannier_subroutines
        CALL writefile( h, hold, nfi, c0, cm, taus, &
                        tausm, vels, velsm,acc, lambda, lambdam, idesc, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
-                       vnhh, velh, fion, tps, mat_z, occ_f, rho )
+                       vnhh, velh, fion, tps, mat_z, occ_f, rho, dt )
        !
        CALL stop_clock('wf_close_opt')
        CALL stop_cp_run( )

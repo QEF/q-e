@@ -1,0 +1,160 @@
+
+     Program OSCDFT_PP v.7.2 starts on 19Oct2023 at  4:12:33 
+        Git branch: oscdft_unify_calbec_reboot
+        Last git commit: f0d5c9d0f559bcfc1f89133dacc61ed06192ba3c-dirty
+        Last git commit date: Wed Oct 18 12:50:11 2023 +0200
+        Last git commit subject: Update stres_hub with the new calbec
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       8 processor cores
+     Number of MPI processes:                 8
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+     5193 MiB available memory on the printing compute node when the environment starts
+ 
+OSCDFT: Reading data from directory:../oscdft_view/
+
+     Reading xml data from directory:
+
+     ../oscdft_view/anatase.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         120      59     14                 7188     2529     306
+     Max         122      62     16                 7206     2554     320
+     Sum         973     489    121                57589    20319    2519
+ 
+     Using Slab Decomposition
+ 
+OSCDFT: Copying wfc to wfc
+OSCDFT: Reading wfc from ../oscdft_view/anatase.save/                                                                                                                                                                                                                                    
+ 
+OSCDFT DEBUG: ===UPF pseudopotentials===
+OSCDFT DEBUG: nt:  1; psd: Ti
+OSCDFT DEBUG: |-  1: 3S (n =  3; l =  0)
+OSCDFT DEBUG: |-  2: 3P (n =  3; l =  1)
+OSCDFT DEBUG: |-  3: 4S (n =  4; l =  0)
+OSCDFT DEBUG: |-  4: 3D (n =  3; l =  2)
+OSCDFT DEBUG: nt:  2; psd: Ti
+OSCDFT DEBUG: |-  1: 3S (n =  3; l =  0)
+OSCDFT DEBUG: |-  2: 3P (n =  3; l =  1)
+OSCDFT DEBUG: |-  3: 4S (n =  4; l =  0)
+OSCDFT DEBUG: |-  4: 3D (n =  3; l =  2)
+OSCDFT DEBUG: nt:  3; psd: O 
+OSCDFT DEBUG: |-  1: 2S (n =  2; l =  0)
+OSCDFT DEBUG: |-  2: 2P (n =  2; l =  1)
+OSCDFT DEBUG: ==========================
+ 
+OSCDFT: Orbital Information
+OSCDFT: ioscdft:     1 spin: UP
+OSCDFT: |-  1: atom #    2; orbital 3d(z2,xz,yz,x2-y2,xy)
+OSCDFT: ioscdft:     2 spin: DW
+OSCDFT: |-  2: atom #    2; orbital 3d(z2,xz,yz,x2-y2,xy)
+ 
+OSCDFT DEBUG: iorb2isocdft:   1   2
+OSCDFT DEBUG: nconstr:   0
+OSCDFT DEBUG: iconstr2ioscdft: 
+OSCDFT DEBUG: ioscdft2iconstr:   0   0
+OSCDFT DEBUG: ns_dim:   5   5
+OSCDFT DEBUG: max_ns_dim:   5
+OSCDFT DEBUG: occupation index:   0   0
+OSCDFT DEBUG: isym:   1; atom_sym:   2   2
+OSCDFT DEBUG: isym:   2; atom_sym:   2   2
+OSCDFT DEBUG: isym:   3; atom_sym:   2   2
+OSCDFT DEBUG: isym:   4; atom_sym:   2   2
+OSCDFT DEBUG: isym:   5; atom_sym:   2   2
+OSCDFT DEBUG: isym:   6; atom_sym:   2   2
+OSCDFT DEBUG: isym:   7; atom_sym:   2   2
+OSCDFT DEBUG: isym:   8; atom_sym:   2   2
+OSCDFT DEBUG: constr%norb:   0
+OSCDFT DEBUG: constr%icorb2iorb: 
+OSCDFT DEBUG: constr%iorb2icorb:   0   0
+OSCDFT DEBUG: constr%icorb_start: 
+OSCDFT DEBUG: constr%icorb_end: 
+OSCDFT DEBUG: ns_dim  (:,    1):     5
+OSCDFT DEBUG: ins2iorb(:,    1):     1     1     1     1     1
+OSCDFT DEBUG: ins2ioff(:,    1):     1     2     3     4     5
+OSCDFT DEBUG: ns_dim  (:,    2):     5
+OSCDFT DEBUG: ins2iorb(:,    2):     2     2     2     2     2
+OSCDFT DEBUG: ins2ioff(:,    2):     1     2     3     4     5
+OSCDFT DEBUG: wfcS: 5 atomic wfcs; desc: S*atwfc to calc ns
+OSCDFT DEBUG: |-offset( 1): 0 0
+OSCDFT DEBUG: |-offset( 2): 0 0
+OSCDFT DEBUG: |-offset( 3): 0 0
+OSCDFT DEBUG: |-offset( 4): 0 0
+OSCDFT DEBUG: |-offset( 5): 0 0
+OSCDFT DEBUG: |-offset( 6): 0 0
+OSCDFT DEBUG: |-offset( 7): 0 0
+OSCDFT DEBUG: |-offset( 8): 0 0
+OSCDFT DEBUG: |-source( 1): 15 15
+OSCDFT DEBUG: |-source( 2): 15 15
+OSCDFT DEBUG: |-source( 3): 15 15
+OSCDFT DEBUG: |-source( 4): 15 15
+OSCDFT DEBUG: |-source( 5): 15 15
+OSCDFT DEBUG: |-source( 6): 15 15
+OSCDFT DEBUG: |-source( 7): 15 15
+OSCDFT DEBUG: |-source( 8): 15 15
+ 
+ 
+OSCDFT: occupation #  1: F   UP 2(3D); tr[ns]:   1.5612
+OSCDFT: eigenvalue
+OSCDFT:    0.2509  0.2970  0.2970  0.3233  0.3930
+OSCDFT: eigenvector (column)
+OSCDFT:   -0.0000 -0.0000 -0.0000  0.0000  1.0000
+OSCDFT:   -0.0000 -0.6924 -0.7215 -0.0000 -0.0000
+OSCDFT:   -0.0000 -0.7215  0.6924 -0.0000 -0.0000
+OSCDFT:    0.0000  0.0000  0.0000 -1.0000  0.0000
+OSCDFT:    1.0000 -0.0000  0.0000  0.0000  0.0000
+OSCDFT: matrix (before diag.)
+OSCDFT:    0.3930 -0.0000 -0.0000  0.0000  0.0000
+OSCDFT:   -0.0000  0.2970 -0.0000  0.0000  0.0000
+OSCDFT:   -0.0000 -0.0000  0.2970  0.0000  0.0000
+OSCDFT:    0.0000  0.0000  0.0000  0.3233 -0.0000
+OSCDFT:    0.0000  0.0000  0.0000 -0.0000  0.2509
+OSCDFT: occupation #  2: F DOWN 2(3D); tr[ns]:   1.2785
+OSCDFT: eigenvalue
+OSCDFT:    0.0000  0.2866  0.2866  0.3193  0.3861
+OSCDFT: eigenvector (column)
+OSCDFT:   -0.0000  0.0000  0.0000  0.0000  1.0000
+OSCDFT:   -0.0000  0.6674  0.7447 -0.0000 -0.0000
+OSCDFT:   -0.0000  0.7447 -0.6674 -0.0000 -0.0000
+OSCDFT:    0.0000 -0.0000 -0.0000 -1.0000  0.0000
+OSCDFT:    1.0000  0.0000  0.0000  0.0000  0.0000
+OSCDFT: matrix (before diag.)
+OSCDFT:    0.3861 -0.0000 -0.0000  0.0000  0.0000
+OSCDFT:   -0.0000  0.2866 -0.0000  0.0000  0.0000
+OSCDFT:   -0.0000 -0.0000  0.2866  0.0000  0.0000
+OSCDFT:    0.0000  0.0000  0.0000  0.3193 -0.0000
+OSCDFT:    0.0000  0.0000  0.0000 -0.0000  0.0000
+
+     OSCDFT_PP routines
+     oscdft_init  :      0.18s CPU      0.26s WALL (       1 calls)
+     oscdft_wfcO  :      0.00s CPU      0.00s WALL (       1 calls)
+     oscdft_ns    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+     OSCDFT_PP    :      0.19s CPU      0.27s WALL
+
+ 
+   This run was terminated on:   4:12:34  19Oct2023            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

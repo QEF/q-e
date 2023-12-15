@@ -475,7 +475,6 @@
          !
          REAL(DP), DEVICE, ALLOCATABLE    :: rhos_d(:,:)
          COMPLEX(DP), DEVICE, ALLOCATABLE :: psis(:)
-         COMPLEX(DP), DEVICE, ALLOCATABLE :: ptmp(:,:)
          INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
 
          ALLOCATE( psis( dffts%nnr * many_fft ) )  ! dffts%nnr * many_fft
@@ -546,7 +545,6 @@
 
          DEALLOCATE( rhos_d )
          DEALLOCATE( psis ) 
-         DEALLOCATE( ptmp ) 
 
          RETURN
       END SUBROUTINE loop_over_states_gpu

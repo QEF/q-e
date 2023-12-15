@@ -91,30 +91,29 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
 #if defined(__CUDA)
   USE cudafor
+  USE becmod,                  ONLY: calbec_cuf
 #endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp, calbec
-  USE becmod_gpum,             ONLY: becp_d
+  USE becmod,                  ONLY: bec_type, becp
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
   USE gvect,                   ONLY: gstart
-  USE control_flags,           ONLY: gamma_only
+  USE control_flags,           ONLY: gamma_only, offload_type
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                                      calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,  &
                                      fwfft_orbital_k, calbec_rs_k, add_vuspsir_k,           & 
                                      v_loc_psir_inplace
   USE fft_base,                ONLY: dffts
-  USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
+  USE exx,                     ONLY: use_ace, vexx, vexxace_gamma_gpu, vexxace_k_gpu
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
   USE wvfct,                   ONLY: g2kin  
-  USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
 #if defined(__OSCDFT)
   USE plugin_flags,            ONLY : use_oscdft
   USE oscdft_base,             ONLY : oscdft_ctx
@@ -135,7 +134,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   attributes(PINNED) :: psi_host, hpsi_host
 #endif
   !
-  INTEGER     :: ipol, ibnd, incr, i
+  INTEGER     :: ipol, ibnd, i
   REAL(dp)    :: ee
   !
   LOGICAL     :: need_host_copy
@@ -147,8 +146,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                      xclib_dft_is('meta') .OR. &
-                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) .OR. &
-                    exx_is_active() .OR. lelfield
+                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo") .OR. &
+                    (exx_is_active() .AND. .NOT. use_ace) .OR. lelfield
 
 
   IF (need_host_copy) THEN
@@ -190,15 +189,14 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         !
         IF ( dffts%has_task_groups ) &
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
-
-        CALL using_becp_auto(1)
         DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi_host, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock_gpu( 'h_psi:calbec' ) 
+           CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_gamma( ibnd, m, becp%r )
-     CALL stop_clock_gpu( 'h_psi:calbec' )
+           !$acc update device(becp%r)
+           CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m ) 
            ! ... psic (hpsi) -> psic + vusp
@@ -232,9 +230,10 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_k(psi_host, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock_gpu( 'h_psi:calbec' )
+           CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_k( ibnd, m )
-     CALL stop_clock_gpu( 'h_psi:calbec' )
+           !$acc update device(becp%k)
+           CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
@@ -259,14 +258,10 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
-     CALL using_becp_d_auto(2)
-!ATTENTION HERE: calling without (:,:) causes segfaults
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
-     CALL calbec_gpu ( n, vkb(:,:), psi_d, becp_d, m )
-!$acc end host_data
-!$acc end data
-!
+#if defined(__CUDA)
+!civn: remove evc_d and use calbec instead
+     Call calbec_cuf(offload_type, n, vkb, psi_d, becp, m )
+#endif
      CALL stop_clock_gpu( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !
@@ -302,18 +297,17 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ! ... Here the exact-exchange term Vxx psi
   !
   IF ( exx_is_active() ) THEN
-     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
      IF ( use_ace) THEN
         IF (gamma_only) THEN
-           CALL vexxace_gamma(lda,m,psi_host,ee,hpsi_host)
+           CALL vexxace_gamma_gpu(lda,m,psi_d,ee,hpsi_d)
         ELSE
-           CALL vexxace_k(lda,m,psi_host,ee,hpsi_host) 
+           CALL vexxace_k_gpu(lda,m,psi_d,ee,hpsi_d)
         END IF
      ELSE
-        CALL using_becp_auto(0)
+        CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
         CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
+        CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      END IF
-     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
   END IF
   !
   ! ... electric enthalpy if required

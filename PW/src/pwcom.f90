@@ -390,12 +390,15 @@ MODULE force_mod
   REAL(DP) :: sigma(3,3)
   !! the stress acting on the system
   REAL(DP), ALLOCATABLE :: eigenval(:)
+  !$acc declare device_resident(eigenval)
   !! eigenvalues of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
+  !$acc declare device_resident(eigenvect)
   !! eigenvectors of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: overlap_inv(:,:)
   !! overlap matrix (transposed): (O^{-1/2})^T
   COMPLEX(DP), ALLOCATABLE :: doverlap_inv(:,:)
+  !$acc declare device_resident(doverlap_inv)
   !! derivative of the overlap matrix (not transposed): d(O^{-1/2})
   COMPLEX (DP), ALLOCATABLE :: at_dy(:,:), at_dj(:,:)
   !! derivatives of spherical harmonics and spherical Bessel functions (for atomic functions)

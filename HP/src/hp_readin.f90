@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,8 +26,9 @@ SUBROUTINE hp_readin()
                                perturb_only_atom, sum_pertq, determine_num_pert_only,  &
                                skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter,&
+                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter, &
                                determine_q_mesh_only
+  USE paw_variables,    ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -204,9 +205,7 @@ SUBROUTINE input_sanity()
   IF (Hubbard_projectors.NE."atomic" .AND. Hubbard_projectors.NE."ortho-atomic") &
      CALL errore("hp_readin", &
      " The HP code for this Hubbard_projectors type is not implemented",1)
-  !
-  IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
-  !
+  !   
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
   !
   IF (nbgrp > 1) CALL errore('hp_readin', &

@@ -23,7 +23,6 @@ MODULE oscdft_wfcO
          USE oscdft_occupations,       ONLY : oscdft_get_occupation_numbers
          USE oscdft_wavefunction_subs, ONLY : oscdft_init_wavefunctions,&
                                               oscdft_debug_print_wavefunctions
-         USE oscdft_wfcO_gpu,          ONLY : orthoOwfc_gpu
          IMPLICIT NONE
 
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
@@ -53,7 +52,7 @@ MODULE oscdft_wfcO
             iunat  = 0
             iunsat = 0
 
-            IF (inp%debug_print) THEN 
+            IF (inp%debug_print) THEN
                WRITE(stdout, *) ""
                WRITE(stdout, 200) "OSCDFT_INIT_WFCO"
             END IF
@@ -74,11 +73,7 @@ MODULE oscdft_wfcO
             ctx%wfc_allocated = .true.
          END IF
 
-         IF (use_gpu) THEN
-            CALL orthoOwfc_gpu(ctx)
-         ELSE
-            CALL orthoOwfc(ctx)
-         END IF
+         CALL orthoOwfc(ctx)
 
          100 FORMAT("OSCDFT DEBUG: ", A, ": ", I6)
          101 FORMAT("OSCDFT DEBUG: ", A, ": ", ES14.7)
@@ -89,15 +84,15 @@ MODULE oscdft_wfcO
       END SUBROUTINE oscdft_init_wfcO
 
       SUBROUTINE orthoOwfc(ctx)
+         USE control_flags,            ONLY : offload_type, use_gpu
          USE buffers,                  ONLY : get_buffer, save_buffer
          USE klist,                    ONLY : nks, xk, ngk, igk_k
          USE wvfct,                    ONLY : npwx
          USE uspp,                     ONLY : nkb, vkb
          USE uspp_param,               ONLY : upf
-         USE becmod,                   ONLY : allocate_bec_type,&
-                                              deallocate_bec_type,&
+         USE becmod,                   ONLY : allocate_bec_type_acc,&
+                                              deallocate_bec_type_acc,&
                                               becp, calbec, bec_type
-         USE becmod_subs_gpum,         ONLY : using_becp_auto
          USE noncollin_module,         ONLY : npol
          USE basis,                    ONLY : natomwfc
          USE ions_base,                ONLY : nat, ityp
@@ -105,20 +100,21 @@ MODULE oscdft_wfcO
          USE uspp_init,                ONLY : init_us_2
          USE oscdft_wavefunction,      ONLY : check_bec_type_unallocated
          USE oscdft_wavefunction_subs, ONLY : oscdft_fill_wavefunctions,&
+                                              oscdft_poolrecover_overlap,&
                                               oscdft_ortho_swfc,&
                                               oscdft_get_overlap,&
-                                              oscdft_poolrecover_overlap,&
                                               oscdft_lowdin_ortho_overlap
          IMPLICIT NONE
 
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
          INTEGER                                          :: ik, npw
-         COMPLEX(DP), ALLOCATABLE                         :: wfcatom(:,:), swfcatom(:,:)
          TYPE(oscdft_input_type),           POINTER       :: inp
          TYPE(oscdft_indices_type),         POINTER       :: idx
          TYPE(oscdft_orbital_indices_type), POINTER       :: orbs
          TYPE(oscdft_constr_indices_type),  POINTER       :: constr
          TYPE(oscdft_wavefunction_type),    POINTER       :: wfcO, wfcS, wfcF
+
+         COMPLEX(DP), ALLOCATABLE                         :: wfcatom(:,:), swfcatom(:,:)
 
 
          IF (.NOT.ctx%wfc_allocated) THEN
@@ -137,15 +133,29 @@ MODULE oscdft_wfcO
 
          ctx%nst%eigvects_set = .false.
          ALLOCATE(wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc))
+         !$acc data create(wfcatom, swfcatom) present(vkb)
+
          CALL check_bec_type_unallocated(becp)
-         CALL allocate_bec_type(nkb, natomwfc, becp)
-         CALL using_becp_auto(2)
+         CALL allocate_bec_type_acc(nkb, natomwfc, becp)
+
          DO ik=1,nks
-            CALL atomic_wfc(ik, wfcatom)
+            IF (use_gpu) THEN
+               !$acc host_data use_device(wfcatom)
+               CALL atomic_wfc_gpu(ik, wfcatom)
+               !$acc end host_data
+            ELSE
+               CALL atomic_wfc(ik, wfcatom)
+            END IF
             npw = ngk(ik)
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
-            CALL calbec(npw, vkb, wfcatom, becp)
-            CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
+            CALL calbec(offload_type, npw, vkb, wfcatom, becp)
+            IF (use_gpu) THEN
+               !$acc host_data use_device(wfcatom, swfcatom)
+               CALL s_psi_acc(npwx, npw, natomwfc, wfcatom, swfcatom)
+               !$acc end host_data
+            ELSE
+               CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
+            END IF
 
             IF (inp%orthogonalize_swfc) THEN
                CALL oscdft_ortho_swfc(npwx, npw, natomwfc, wfcatom, swfcatom, .false.)
@@ -153,6 +163,7 @@ MODULE oscdft_wfcO
                CALL oscdft_ortho_swfc(npwx, npw, natomwfc, wfcatom, swfcatom, .true.)
             END IF
 
+            !$acc update host(wfcatom, swfcatom)
             CALL oscdft_fill_wavefunctions(idx, wfcO, ik, wfcatom, swfcatom)
             CALL oscdft_fill_wavefunctions(idx, wfcS, ik, wfcatom, swfcatom)
             CALL oscdft_fill_wavefunctions(idx, wfcF, ik, wfcatom, swfcatom)
@@ -161,9 +172,10 @@ MODULE oscdft_wfcO
                CALL oscdft_get_overlap(ctx, ik, wfcS%source, wfcatom, swfcatom)
             END IF
          END DO
-         CALL deallocate_bec_type(becp)
-         CALL using_becp_auto(2)
+         CALL deallocate_bec_type_acc(becp)
+         !$acc end data
          DEALLOCATE(wfcatom, swfcatom)
+
          IF (inp%orthogonalize_ns) THEN
             CALL oscdft_poolrecover_overlap(idx)
             CALL oscdft_lowdin_ortho_overlap(ctx)
@@ -171,10 +183,6 @@ MODULE oscdft_wfcO
          END IF
 
          CALL stop_clock("oscdft_wfcO")
-         200 FORMAT("OSCDFT DEBUG: iconstr_orb: ", I5, "; m: ", I5, ":", I5, "; n: ",  I5, ":", I5)
-         201 FORMAT("OSCDFT DEBUG: isym: ", I5, ", iorb: ", I5, "; m: ", I5, ":", I5, "; n: ",  I5, ":", I5)
-         202 FORMAT("OSCDFT DEBUG: isym: ", I5, ", iconstr_orb: ", I5, ", iorb: ", I5, "; m: ", I5, ":", I5, "; n: ",  I5, ":", I5)
-         101 FORMAT("OSCDFT DEBUG: orthoOwfc ik: ", I5)
       END SUBROUTINE orthoOwfc
 #endif
 END MODULE oscdft_wfcO

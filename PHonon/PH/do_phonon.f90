@@ -32,7 +32,7 @@ SUBROUTINE do_phonon(auxdyn)
   USE control_flags,   ONLY : use_gpu
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
                               only_wfc, rec_code, where_rec, reduce_io
-  USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
+  USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa, elph_print
   !
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo
@@ -154,7 +154,9 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elph_scdft()
         ELSEIF( elph_ahc ) THEN
            CALL elph_do_ahc()
-        ELSE 
+        ELSEIF( elph_print ) THEN
+           CALL elph_prt()
+        ELSE
            CALL elphsum()
         END IF
         !

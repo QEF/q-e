@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -16,7 +17,6 @@
   !
   CONTAINS
     !
-    !!!!!
     !-----------------------------------------------------------------------
     SUBROUTINE mix_wrap(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
     !-----------------------------------------------------------------------
@@ -60,11 +60,7 @@
         CALL mix_linear(ndim, deltaout, deltain, alphamix)
       ENDIF
     ELSE
-      IF ((iter <= 3) .AND. (alphamix > 0.2d0)) THEN
-        CALL mix_broyden(ndim, deltaout, deltain, 0.2d0, iter, n_iter, conv, df, dv)
-      ELSE
-        CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
-      ENDIF
+      CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
     ENDIF
     !
     RETURN
@@ -105,7 +101,6 @@
     END SUBROUTINE mix_linear
     !-----------------------------------------------------------------------
     !
-    !!!!!
     !-----------------------------------------------------------------------
     SUBROUTINE mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
     !-----------------------------------------------------------------------
@@ -340,7 +335,7 @@
     DO p = 1, N
       IF (p == 1) THEN
         DO i = 1, N
-           g(p, i) = u(i)
+          g(p, i) = u(i)
         ENDDO
       ELSE
         DO i = p, N
@@ -410,9 +405,9 @@
     INTEGER :: i
     !! Counter over Pade' approximants
     COMPLEX(KIND = DP) :: acap(0:N)
-    !!
+    !! FIXME
     COMPLEX(KIND = DP) :: bcap(0:N)
-    !!
+    !! FIXME
     !
     acap(0) = zero
     acap(1) = a(1)
@@ -454,6 +449,7 @@
     !
     ! Local variables
     REAL(KIND = DP), EXTERNAL :: dos_ef
+    !! DOS at the Fermi level
     !
     ! divide by two to have DOS/spin
     IF (ABS(degaussw) < eps16) THEN
@@ -679,13 +675,12 @@
       IF (SQRT(DOT_PRODUCT(vmek(:, ibnd),vmek(:,ibnd))) < eps40) THEN
         eta(ibnd, ik) = 1.0d0 / ryd2mev
       ELSE
-        !eta(ibnd, ik) = 1.0d0 / ryd2mev
-        eta_tmp(1) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd),bg(:, 1)) / DBLE(nkf1))
-        eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd),bg(:, 2)) / DBLE(nkf2))
-        eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd),bg(:, 3)) / DBLE(nkf3))
-        eta(ibnd, ik) = (1.0d0/SQRT(12.0d0))*(1.0d0/3.0d0)*(eta_tmp(1)+eta_tmp(2)+eta_tmp(3))
+        eta_tmp(1) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd), bg(:, 1)) / DBLE(nkf1))
+        eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd), bg(:, 2)) / DBLE(nkf2))
+        eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd), bg(:, 3)) / DBLE(nkf3))
+        eta(ibnd, ik) = (1.0d0 / SQRT(12.0d0)) * (1.0d0 / 3.0d0) * (eta_tmp(1) + eta_tmp(2) + eta_tmp(3))
       ENDIF
-      IF (eta(ibnd, ik)*ryd2mev < 1.0d0) THEN
+      IF (eta(ibnd, ik) * ryd2mev < 1.0d0) THEN
         eta(ibnd, ik) = 1.0d0 / ryd2mev
       ENDIF
     ENDDO
@@ -706,7 +701,7 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, partion
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, partion, evbm, ecbm
     USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                               zero, eps80
     USE noncollin_module, ONLY : noncolin
@@ -745,7 +740,7 @@
     !! Index of the VBM
     INTEGER :: icbm
     !! Index of the CBM
-    INTEGER, PARAMETER :: maxiter = 500 ! 300
+    INTEGER, PARAMETER :: maxiter = 900 ! 300
     !! Maximum interation
     REAL(KIND = DP) :: fermi
     !! Fermi level returned
@@ -768,10 +763,6 @@
     !! Argument of the exponential
     REAL(KIND = DP) :: inv_cell
     !! Inverse of the volume in [Bohr^{-3}]
-    REAL(KIND = DP) :: evbm
-    !! Energy of the VBM
-    REAL(KIND = DP) :: ecbm
-    !! Energy of the CBM
     REAL(KIND = DP) :: ef_tmp
     !! Energy of the current Fermi level for the bisection method
     REAL(KIND = DP) :: elw
@@ -787,7 +778,7 @@
     REAL(KIND = DP) :: ncarrierp
     !! ncarrier*fraction of ionized impurities
     !
-    ncarrierp = ncarrier*partion(itemp)
+    ncarrierp = ncarrier * partion(itemp)
     !
     IF (assume_metal) THEN
       !! set conduction band chemical potential to 0 since it is irrelevent
@@ -799,10 +790,13 @@
     ef_tmp  = zero
     fermi   = zero
     fermicb = zero
-    inv_cell = 1.0d0 / omega
     !
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
     ! vbm index
     IF (noncolin) THEN
       ivbm = FLOOR(nelec / 1.0d0)
@@ -987,13 +981,13 @@
     !
     ! Case 2 :
     ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)
-    IF (system_2d) THEN
-      factor = inv_cell * (bohr2ang * ang2cm)**(-2.d0)
-    ELSE
+    IF (system_2d == 'no') THEN
       factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    ELSE  
+      factor = inv_cell * (bohr2ang * ang2cm)**(-2.d0)
     ENDIF
     eup = 1d-160 ! e^(-large) = 0.0 (small)
-    elw = 1.0d40 ! e^0 = 1
+    elw = 1.0d80 ! e^0 = 1
     IF (ncarrierp < -1E5 .OR. (int_mob .AND. carrier)) THEN
       IF (int_mob .AND. carrier) ncarrierp = -ABS(ncarrierp)
       ! Use bisection method
@@ -1042,7 +1036,7 @@
     ENDIF
     !
     ! Case 3 : Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)
-    eup = 1.0d-40 ! e^(0) =1
+    eup = 1.0d-80 ! e^(0) =1
     elw = 1.0d80 ! e^large yields fnk = 1
     IF (ncarrierp > 1E5 .OR. (int_mob .AND. carrier)) THEN
       IF (int_mob .AND. carrier) ncarrierp = ABS(ncarrierp)
@@ -1162,7 +1156,6 @@
     END SUBROUTINE fermicarrier
     !-----------------------------------------------------------------------
     !
-    !!!!
     !-----------------------------------------------------------------------
     SUBROUTINE calcpartion(itemp, etemp, ctype)
     !-----------------------------------------------------------------------
@@ -1175,8 +1168,8 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, partion
-    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, partion, evbm, ecbm
+    USE constants_epw,    ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                               zero, eps80, cc2cb
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
@@ -1209,7 +1202,7 @@
     !! Index of the VBM
     INTEGER :: icbm
     !! Index of the CBM
-    INTEGER, PARAMETER :: maxiter = 500 ! 300
+    INTEGER, PARAMETER :: maxiter = 900 ! 300
     !! Maximum interation
     REAL(KIND = DP) :: fermi
     !! Fermi level returned
@@ -1232,10 +1225,6 @@
     !! Argument of the exponential
     REAL(KIND = DP) :: inv_cell
     !! Inverse of the volume in [Bohr^{-3}]
-    REAL(KIND = DP) :: evbm
-    !! Energy of the VBM
-    REAL(KIND = DP) :: ecbm
-    !! Energy of the CBM
     REAL(KIND = DP) :: ef_tmp
     !! Energy of the current Fermi level for the bisection method
     REAL(KIND = DP) :: elw
@@ -1276,20 +1265,16 @@
       RETURN
     ENDIF
     IF (assume_metal) THEN
-      !! set conduction band chemical potential to 0 since it is irrelevent
-      !!ctype = -1  ! act like it's for holes
-      !!efcb(itemp) = zero
-      !!ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
       WRITE(stdout, '(5x, "Warning! No partial ionization for metallic systems, exiting")')
       RETURN
     ENDIF
-    !ef_tmp  = zero
-    !fermi   = zero
-    !fermicb = zero
-    inv_cell = 1.0d0 / omega
     !
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
     ! vbm index
     IF (noncolin) THEN
       ivbm = FLOOR(nelec / 1.0d0)
@@ -1374,14 +1359,14 @@
       DO ik = 1, nkf
         ikk = 2 * ik - 1
         DO ibnd = 1, nbndsub
-          dummy1 = dummy1 + (1.0d0 - (1.0d0 / (EXP((etf(ibnd, ikk)-eimp)/(etemp))+1.0d0)))*wkf(ikk)
+          dummy1 = dummy1 + (1.0d0 - (1.0d0 / (EXP((etf(ibnd, ikk) - eimp) / (etemp)) + 1.0d0))) * wkf(ikk)
         ENDDO
       ENDDO
       CALL mp_sum(dummy1, inter_pool_comm)
-      !! now calculate fraction of ionized impurities in partion(itemp)
-      partion(itemp) = SQRT(impurity_density*dummy1) / impurity_density
-      !! equation will give values greater than 1, 
-      !! enforce fraction == 1.0 for full ionization
+      ! now calculate fraction of ionized impurities in partion(itemp)
+      partion(itemp) = SQRT(impurity_density * dummy1) / impurity_density
+      ! equation will give values greater than 1, 
+      ! enforce fraction == 1.0 for full ionization
       IF ( partion(itemp) > 1.0d0 ) THEN
         partion(itemp) = 1.0d0
       ENDIF
@@ -1397,18 +1382,16 @@
       DO ik = 1, nkf
         ikk = 2 * ik - 1
         DO ibnd = 1, nbndsub
-          dummy1 = dummy1 + (1.0d0 / (EXP((etf(ibnd, ikk)-eimp)/(etemp))+1.0d0))*wkf(ikk)
+          dummy1 = dummy1 + (1.0d0 / (EXP((etf(ibnd, ikk) - eimp) / (etemp)) + 1.0d0)) * wkf(ikk)
         ENDDO
       ENDDO
       CALL mp_sum(dummy1, inter_pool_comm)
-      !! now calculate fraction of ionized impurities in partion(itemp)
-      partion(itemp) = SQRT(impurity_density*dummy1) / impurity_density
-      !! equation will give values greater than 1, 
-      !! enforce fraction == 1.0 for full ionization
+      ! now calculate fraction of ionized impurities in partion(itemp)
+      partion(itemp) = SQRT(impurity_density * dummy1) / impurity_density
+      ! equation will give values greater than 1, enforce fraction == 1.0 for full ionization
       IF ( partion(itemp) > 1.0d0 ) THEN
         partion(itemp) = 1.0d0
       ENDIF
-      !WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp * ryd2ev / kelvin2eV
       WRITE(stdout, '(/5x, "Fraction of ionized impurities at ", f8.3," K: ", f16.12)' ) etemp * ryd2ev / kelvin2eV, partion(itemp)
     ENDIF
     !
@@ -1417,7 +1400,6 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE calcpartion
     !-----------------------------------------------------------------------
-    !!!!!
     !
     !-----------------------------------------------------------------------
     SUBROUTINE fermiwindow()
@@ -1449,7 +1431,7 @@
     REAL(KIND = DP) :: ebndmax
     !! Maximum eigenvalue
     REAL(KIND = DP) :: tmp
-    !
+    !! Temporary variable
     !
     ibndmin = 100000
     ibndmax = 0

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,7 +32,10 @@ SUBROUTINE hp_init_q()
   USE control_lr,           ONLY : lgamma
   USE units_lr,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
+  USE qpoint_aux,           ONLY : becpt, ikmks
+  USE noncollin_module,     ONLY : npol, noncolin, domag 
   USE uspp_init,            ONLY : init_us_2
+  USE wvfct,                ONLY : nbnd, npwx
   !
   IMPLICIT NONE
   !
@@ -48,6 +51,7 @@ SUBROUTINE hp_init_q()
     ! number of plane waves at k
   REAL(DP) :: arg
     ! the argument of the phase
+  COMPLEX(DP), ALLOCATABLE :: tevc(:,:)
   !
   CALL start_clock( 'hp_init_q' )
   !
@@ -61,6 +65,8 @@ SUBROUTINE hp_init_q()
         eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) ,kind=DP)
      ENDDO
   ENDIF
+  !
+  IF (noncolin.AND.domag) ALLOCATE(tevc(npwx*npol,nbnd))
   !
   DO ik = 1, nksq
      !
@@ -90,6 +96,10 @@ SUBROUTINE hp_init_q()
      ! is not an integer number (as a consequence some k pools will have nksq=1).
      !
      CALL get_buffer (evc, lrwfc, iuwfc, ikk)
+     !
+     IF (noncolin .and. domag) &
+         CALL get_buffer (tevc, lrwfc, iuwfc, ikmks(ik) )
+     !
      IF (.NOT.lgamma .AND. nksq.EQ.1) CALL get_buffer (evq, lrwfc, iuwfc, ikq)
      !
      ! 2) USPP: Compute the becp terms which are used in the rest of the code
@@ -105,6 +115,8 @@ SUBROUTINE hp_init_q()
         ! becp1 = <vkb|evc>
         !
         CALL calbec (npw, vkb, evc, becp1(ik))
+        IF (noncolin .and. domag) &
+           CALL calbec (npw, vkb, tevc, becpt(ik) )
         !
      ENDIF
      !
@@ -113,6 +125,8 @@ SUBROUTINE hp_init_q()
   ! 3) Calculate and write to file S\phi for k and k+q
   !
   CALL lr_orthoUwfc (.FALSE.)
+  !
+  IF (noncolin.AND.domag) DEALLOCATE( tevc )
   !
   CALL stop_clock ( 'hp_init_q' )
   !

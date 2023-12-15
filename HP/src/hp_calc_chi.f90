@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum_ESPRESSO group
+! Copyright (C) 2001-2023 Quantum_ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,6 +19,7 @@ SUBROUTINE hp_calc_chi
   USE io_global,    ONLY : stdout
   USE ldaU_hp,      ONLY : nqsh, nath_sc, nah_pert, chi0, chi, &
                            dnsscf_tot, dns0_tot
+  USE noncollin_module,  ONLY : npol
   !
   IMPLICIT NONE
   !
@@ -75,9 +76,9 @@ SUBROUTINE calcchi (dns_, chi_, name_)
            !
            ! Divide by rytoev -> conversion of units from Ry to eV
            !
-           DO is = 1, nspin
+           DO is = 1, nspin/npol
               DO m = 1, 2 * Hubbard_l(nt) + 1
-                 trace_dns(is) = trace_dns(is) + dns_(m,m,is,na,icell)/rytoev
+                 trace_dns(is) = trace_dns(is) + dns_(m,m,is**npol,na,icell)/rytoev
               ENDDO
               trace_dns_tot = trace_dns_tot + trace_dns(is)
            ENDDO

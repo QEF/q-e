@@ -84,36 +84,23 @@ gipaw_distclean:
 # wannier90
 ###########################################################
 
-w90: uncompress-w90 configure-w90
-	if test -d ../W90; then \
-	cd ../W90; $(MAKE) || exit 1; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
-	-(cd ../bin; ln -fs ../W90/wannier90.x .)
-	touch make-w90
-
-uncompress-w90:
-	$(call download_and_unpack,$(W90),$(W90_URL),W90,wannier90)
-	touch uncompress-w90
-
-configure-w90: 
-	cd ../W90 ; \
-	if (test -e ../install/make_wannier90.inc) || (test -d ../W90); then \
-	(cp ../install/make_wannier90.inc ../W90/make.inc); fi 
-	touch ./configure-w90
+w90:
+	$(call update_submodule,external,wannier90)
+	if test -e make_wannier90.inc; then \
+	(cp make_wannier90.inc \
+	    ../external/wannier90/make.inc ); else \
+	(echo "no make.inc file found for Wannier90"); fi
+	cd ../external/wannier90; $(MAKE) lib || exit 1
+	-(cd ../bin; ln -fs ../external/wannier90/wannier90.x .)
 
 w90_clean:
-	if test -d ../W90; then (cd ../W90; \
+	if test -d $(TOPDIR)/external/wannier90; then \
+	(cd $(TOPDIR)/external/wannier90; \
 	$(MAKE) veryclean); fi
-	rm -f ../bin/wannier90.x
-	rm -rf ./make-w90 ./configure-w90
+	rm -f $(TOPDIR)/bin/wannier90.x
 
 w90_veryclean: w90_clean
-	if test -d ../W90; then (rm -R -f ../W90); fi
-	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
-	rm -f ../bin/wannier90.x
-	rm -rf ./uncompress-w90
-
-w90_distclean:
-	rm -f ../archive/$(W90).tar.gz
+	rm $(TOPDIR)/external/wannier90/make.inc
 
 ###########################################################
 # WANT

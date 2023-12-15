@@ -37,7 +37,8 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub  
+            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub,       &
+            dt_xml_old
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -107,6 +108,11 @@ MODULE control_flags
   ! This variable is used whenever a timestep change is requested
   !
   REAL(DP) :: dt_old = -1.0_DP
+  !
+  ! This is necessary to mantain compatibility with the old way of changing the molecular dynamics integration timestep.
+  ! The code needs to check, in case the old method is used, that the input old timestep and the xml old timestep are the same
+  !
+  REAL(DP) :: dt_xml_old = -1.0_DP 
   !
   ! ... Wave function randomization
   !
@@ -261,6 +267,18 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
                                ! when available
+  !
+  TYPE(offload_kind_acc), PUBLIC :: offload_acc  ! flag to select CUF/OpenACC offload type
+  TYPE(offload_kind_omp), PUBLIC :: offload_omp  ! flag to select OpenMP5 offload type
+  TYPE(offload_kind_cpu), PUBLIC :: offload_cpu  ! flag to select no offload type (CPU execution)
+#if defined(__CUDA)
+  TYPE(offload_kind_acc), PUBLIC :: offload_type ! flag to point the actual currently used offload type 
+#elif defined(__OPENMP_GPU)
+  TYPE(offload_kind_omp), PUBLIC :: offload_type
+#else
+  TYPE(offload_kind_cpu), PUBLIC :: offload_type
+#endif
+  !
   INTEGER, PUBLIC :: &
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.

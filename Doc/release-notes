@@ -1,3 +1,27 @@
+New in 7.3 version:
+  * Experimental support for pseudopotentials in PSML format
+  * Noncollinear implementation of DFT+U and DFT+U+V in the 
+    Dudarev's formulation, including the calculation of Hubbard
+    forces, stresses, and Hubbard parameters (L. Binci and N. Marzari, 
+    Phys. Rev. B 108, 115157 (2023)). Experimental stage. 
+    If J is not specified in the input, then this new implementation 
+    is used, otherwise the Liechtenstein implementation is used 
+    (see Doc/Hubbard_input for more details).
+
+Incompatible changes in 7.3 version:
+  * Small changes in options "iprint" and "disk_io" of PWscf
+  * More pseudopotential-related code restructured and moved to upflib/
+
+Fixed in 7.3  version:
+  * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.
+    May cause crashes (but not bad numbers). Reported by Jibiao Li.
+  * Wrong output from Libxc-based gga-exchange functionals (gga_x) due to
+    a bad multiplicative factor (v7.2 only, noticed by Peter Kraus).
+    The exchange+correlation ones (gga_xc) were not affected.
+  * The seed for random numbers was not set after the first run. As a result,
+    all subsequent runs used the same sequence of random numbers. Affects only
+    thermostats in Verlet dynamics for pw.x. Noticed by Han Hsu, NCU Taiwan.
+
 New in v.7.2:
   * Oxidation state constrained DFT [Ku and Sit, JCTC 15, 4781 (2019)]
   * Self-consistent calculation with a two-chemical potential approach

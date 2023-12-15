@@ -44,7 +44,8 @@ set(src_pp
     src/write_p_avg.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
-    src/xc_vdW_scale_mod.f90)
+    src/xc_vdW_scale_mod.f90
+    src/fft_interpolation_mod.f90)
 # OSCDFT
 if (QE_ENABLE_OSCDFT)
     list(APPEND src_pp
@@ -232,6 +233,7 @@ target_link_libraries(qe_pp_projwfc_exe
 # pw2wannier90.x
 ###########################################################
 set(src_pw2wannier90_x src/pw2wannier90.f90)
+qe_enable_cuda_fortran("${src_pw2wannier90_x}")
 qe_add_executable(qe_pp_pw2wannier90_exe ${src_pw2wannier90_x})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
@@ -239,6 +241,7 @@ target_link_libraries(qe_pp_pw2wannier90_exe
         qe_pw
         qe_modules
         qe_pp
+        qe_lax
         qe_fftx
         qe_upflib
         qe_xclib
@@ -529,6 +532,8 @@ if (QE_ENABLE_OSCDFT)
             qe_pp
             qe_fftx
             qe_upflib
+            qe_mpi_fortran
+            qe_lapack
             qe_xclib)
 endif()
 
@@ -546,6 +551,8 @@ if (QE_ENABLE_OSCDFT)
             qe_pp
             qe_fftx
             qe_upflib
+            qe_mpi_fortran
+            qe_lapack
             qe_xclib)
 endif()
 

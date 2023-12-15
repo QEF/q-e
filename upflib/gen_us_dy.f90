@@ -25,7 +25,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: npw
-  !! number ok plane waves 
+  !! number ok plane waves
   INTEGER, INTENT(IN) :: npwx
   !! max number ok plane waves across k-points
   INTEGER, INTENT(IN) :: igk(npw)
@@ -180,7 +180,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   ENDDO
   ENDDO
   !
-  
+
   ALLOCATE( sk(npw,nat) )
   !$acc data create( sk )
   !
@@ -238,10 +238,10 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
       lm = nhtolm(ih,nt)
       pref = (0._DP,-1._DP)**l
       !
-      dvkb(ig,ikb) = CMPLX(vkb0(ig,nb,nt)) * sk(ig,na) * &
-                     CMPLX(dylm_u(ig,lm))  * pref / CMPLX(tpiba) 
+      dvkb(ig,ikb) = CMPLX(vkb0(ig,nb,nt),KIND=DP) * sk(ig,na) * &
+                     CMPLX(dylm_u(ig,lm),KIND=DP)  * pref / CMPLX(tpiba,KIND=DP)
     ENDDO
-  ENDDO  
+  ENDDO
   !
   !$acc end data
   !$acc end data

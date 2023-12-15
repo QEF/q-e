@@ -698,11 +698,11 @@ SUBROUTINE calculate_Hubbard_parameters()
   ! This routine calculates Hubbard parameters (U and V) from the inverse matrices
   ! of the susceptibility and writes them to file.
   !
+  USE upf_utils, ONLY : l_to_spdf
   IMPLICIT NONE
   INTEGER :: nt1, nt2
   CHARACTER(len=2) :: Hubbard_manifold
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
   !
   ! Calculate the matrix of Hubbard parametres: CHI0^{-1} - CHI^{-1}
   !
@@ -805,7 +805,8 @@ SUBROUTINE write_uv (lflag)
   ! Write the Hubbard V parameters to file.
   ! V's are written in the order of increasing interatomic distances.
   !
-  USE parameters,   ONLY : sc_size
+  USE parameters, ONLY : sc_size
+  USE upf_utils,  ONLY : l_to_spdf
   !
   IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: dist(:), distord(:)
@@ -816,7 +817,6 @@ SUBROUTINE write_uv (lflag)
                     ! if .false. then do not write V to file
   CHARACTER(len=2) :: Hubbard_manifold, Hubbard_manifold2
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
   !
   ! Find and open unit to write info
   unithub2 = find_free_unit()

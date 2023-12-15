@@ -29,6 +29,7 @@ hp_init_q.o \
 hp_load_q.o \
 hp_ns_trace.o \
 hp_openfil_q.o \
+hp_psym_dmag.o \
 hp_psymdvscf.o \
 hp_postproc.o \
 hp_prepare_q.o \
@@ -43,6 +44,7 @@ hp_run_nscf.o \
 hp_solve_linear_system.o \
 hp_symdnsq.o \
 hp_symdvscf.o \
+hp_sym_dmag.o \
 hp_setup_q.o \
 hp_summary.o \
 hp_summary_q.o \

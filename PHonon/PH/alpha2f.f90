@@ -187,8 +187,7 @@ SUBROUTINE read_lam()
         IF (omg(im,iq) > 0.0_dp) THEN
            omg(im,iq) = SQRT(omg(im,iq))
         ELSE
-           omg(im,iq) = 1.0_dp
-           lam(im,iq) = 0.0_dp
+           CALL errore ('read_lam', "Imaginary frequency", iq )
         END IF
      END DO
      !
@@ -375,6 +374,8 @@ PROGRAM alpha2f
   USE environment,    ONLY : environment_start, environment_end
   USE elph_tetra_mod, ONLY : in_alpha2f
   USE io_global,      ONLY : qestdin, ionode
+  USE modes,          ONLY : nmodes
+  USE ions_base,      ONLY : nat
   !
   USE alpha2f_vals,     ONLY : nfreq
   USE alpha2f_routines, ONLY : read_lam, compute_a2f, compute_lambda, read_polarization
@@ -393,6 +394,7 @@ PROGRAM alpha2f
   in_alpha2f = .TRUE.
   !
   CALL phq_readin()
+  nmodes = 3 * nat
   !
   IF(ionode) READ( qestdin, INPUTA2F )
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -252,6 +252,7 @@ SUBROUTINE vhpsi_UV ()
   ! has been already computed elsewhere.
   !
   USE ldaU,      ONLY : ldim_u, neighood, at_sc, phase_fac, Hubbard_V, v_nsg
+  USE io_global,     ONLY : stdout
   !
   IMPLICIT NONE
   COMPLEX(DP) :: phase
@@ -565,15 +566,18 @@ END SUBROUTINE vhpsi
 SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   !-----------------------------------------------------------------------
   !! Noncollinear version of \(\texttt{vhpsi} routine (A. Smogunov).
+  !! Extended to DFT+U+V and reorganised by L. Binci 
   !
   USE kinds,            ONLY: DP
-  USE ldaU,             ONLY: Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU, &
-                              wfcU, offsetU
+  USE ldaU,             ONLY: Hubbard_lmax, Hubbard_l, is_Hubbard, nwfcU, &
+                              wfcU, offsetU, lda_plus_u_kind
   USE scf,              ONLY: v
   USE ions_base,        ONLY: nat, ntyp => nsp, ityp
   USE noncollin_module, ONLY: npol
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
+  USE lsda_mod,         ONLY: nspin
+  USE io_global,     ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -593,51 +597,245 @@ SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   INTEGER :: ibnd, na, nwfc, is1, is2, nt, m1, m2
   COMPLEX(DP) :: temp
   COMPLEX(DP), ALLOCATABLE :: proj(:,:)
+  COMPLEX(DP), ALLOCATABLE :: ctemp(:,:), vaux(:,:)
   !
   CALL start_clock('vhpsi')
   !
   ALLOCATE( proj(nwfcU, mps) )
+  proj(:,:) = (0.0_dp,0.0_dp)
   !
-!-- FIXME: to be replaced with ZGEMM
-! calculate <psi_at | phi_k> 
-  DO ibnd = 1, mps
-    DO na = 1, nwfcU
-       proj(na, ibnd) = dot_product( wfcU(1:ldap*npol, na), psip(1:ldap*npol, ibnd))
-    ENDDO
-  ENDDO
+  ! calculate <psi_at | phi_k> 
+  CALL ZGEMM ('C', 'N', nwfcU, mps, ldap*npol, (1.0_DP, 0.0_DP), wfcU, &
+                    ldap*npol, psip, ldap*npol, (0.0_DP, 0.0_DP),  proj, nwfcU)
 #if defined(__MPI)
   CALL mp_sum ( proj, intra_bgrp_comm )
 #endif
 !--
-
-  do ibnd = 1, mps  
-    do na = 1, nat  
-       nt = ityp (na)  
-       if ( is_hubbard(nt) ) then  
-          nwfc = 2 * Hubbard_l(nt) + 1
-
-          do is1 = 1, npol
-           do m1 = 1, nwfc 
-             temp = 0.d0
-             do is2 = 1, npol
-              do m2 = 1, nwfc  
-                temp = temp + v%ns_nc( m1, m2, npol*(is1-1)+is2, na) * &
-                              proj(offsetU(na)+(is2-1)*nwfc+m2, ibnd)
-              enddo
-             enddo
-             call zaxpy (ldap*npol, temp, wfcU(1,offsetU(na)+(is1-1)*nwfc+m1),&
-                         1, hpsi(1,ibnd),1)
-           enddo
-          enddo
-
-       endif
-    enddo
-  enddo
-
+  !
+  IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
+     CALL vhpsi_U_nc ()  ! DFT+U
+  ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
+     CALL vhpsi_UV_nc () ! DFT+U+V
+  ENDIF
+  !
   deallocate (proj)
   CALL stop_clock('vhpsi')
 
   return
   !
+CONTAINS
+  !
+  ! -----------------------------
+  !
+SUBROUTINE vhpsi_U_nc ()
+   !
+   IMPLICIT NONE
+   INTEGER :: na, nt, ldim
+   !
+   DO nt = 1, ntyp
+      !
+      ! Compute the action of the Hubbard potential on the KS wave functions:
+      ! V_Hub |psip > = \sum v%ns |wfcU> <wfcU|psip>
+      ! where v%ns = U ( delta/2 - rho%ns ) is computed in v_of_rho
+      !
+      IF ( is_hubbard(nt) ) THEN
+         !  
+         ldim = 2*Hubbard_l(nt) + 1
+         !
+         ALLOCATE ( ctemp(ldim*npol,mps) )
+         ALLOCATE ( vaux (ldim*npol,ldim*npol) )
+         !
+         DO na = 1, nat
+            IF ( nt == ityp(na) ) THEN
+               !
+               vaux(:,:) = (0.0_dp,0.0_dp)
+               do is1 =1 , npol
+                  do is2 =1 , npol
+                     !DO m1 = 1, ldim1
+                     !   DO m2 = 1, ldim2
+                     vaux(1+ldim*(is1-1):ldim+ldim*(is1-1), &
+                          1+ldim*(is2-1):ldim+ldim*(is2-1)) &
+                           = v%ns_nc(1:ldim,1:ldim,npol*(is1-1)+is2,na)
+                     !   ENDDO
+                     !ENDDO
+                  enddo 
+               enddo
+               !
+               ctemp(:,:) = (0.0_dp,0.0_dp)
+               !
+               CALL ZGEMM ('n','n', ldim*npol, mps, ldim*npol, (1.0_dp,0.0_dp), &
+                     vaux, ldim*npol, proj(offsetU(na)+1,1),&
+                     nwfcU,(0.0_dp,0.0_dp),ctemp,ldim*npol)
+               
+               CALL ZGEMM ('n','n', ldap*npol, mps, ldim*npol, (1.0_dp,0.0_dp), &
+                     wfcU(1,offsetU(na)+1), ldap*npol, ctemp, ldim*npol, &
+                     (1.0_dp,0.0_dp), hpsi, ldap*npol)
+               !
+            ENDIF
+         ENDDO
+         !
+         DEALLOCATE(vaux)
+         DEALLOCATE ( ctemp )
+         !
+      ENDIF
+      !
+      !
+   ENDDO
+   !
+   !
+  RETURN
+  !
+END SUBROUTINE vhpsi_U_nc 
+  !
+  !---------------------------------------------
+  ! 
+SUBROUTINE vhpsi_UV_nc ()
+   !
+   USE ldaU,      ONLY : ldim_u, neighood, at_sc, phase_fac, Hubbard_V, v_nsg
+   !
+   IMPLICIT NONE
+   COMPLEX(DP) :: phase
+   INTEGER :: ldim2, ldimx, ldim1,  m1, m2, equiv_na2, &
+              off1, off2, ig, viz, na1, na2, nt1, nt2
+   COMPLEX(DP), ALLOCATABLE :: projauxc(:,:), wfcUaux(:,:)
+   !
+   ! Find the maximum number of magnetic quantum numbers [i.e. MAX(2l+1)]
+   !
+   ldimx = 0
+   DO nt1 = 1, ntyp
+      IF ( is_hubbard(nt1) ) THEN
+         ldim1 = ldim_u(nt1)
+         ldimx = MAX(ldimx,ldim1)
+      ENDIF
+   ENDDO
+   !
+   ALLOCATE (ctemp(ldimx*npol,mps))
+   ALLOCATE (projauxc(ldimx*npol,mps))
+   ALLOCATE (vaux(ldimx*npol,ldimx*npol))
+   !
+   ALLOCATE (wfcUaux(ldap*npol,ldimx*npol))
+   !
+   DO nt1 = 1, ntyp
+      ldim1 = ldim_u(nt1)
+      IF ( is_hubbard(nt1) ) THEN
+         DO na1 = 1, nat
+            IF (ityp(na1).EQ.nt1) THEN
+                     DO viz = 1, neighood(na1)%num_neigh
+                        !
+                        na2 = neighood(na1)%neigh(viz)
+                        equiv_na2 = at_sc(na2)%at
+                        nt2 = ityp(equiv_na2)
+                        phase = phase_fac(na2)
+                        ldim2 = ldim_u(nt2)
+                        !
+                        IF ( (is_hubbard(nt2) ) .AND. &
+                          (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
+                           ANY(v_nsg(:,:,viz,na1,:).NE.0.0d0)) ) THEN
+                           !
+                           ! Compute the first part of the Hubbard potential, namely:
+                           ! - \sum_IJ (J\=I) \sum_{m1,m2} V_IJ/2 
+                           !      * n^IJ_{m1,m2} * |phi^I_m1><phi^J_m2|psi_nk> 
+                           ! where
+                           ! - V_IJ * n^IJ_{m1,m2}   = CONJG(v_nsg)
+                           !      <phi^J_m2|Psi_nk>  = proj
+                           !         |phi^I_m1>      = wfcU
+                           !
+                            !  DO is1 = 1, npol
+                            !     DO is2 = 1, npol
+                           wfcUaux(:,:) = (0.0_dp, 0.0_dp)
+                           !
+                           off1 = offsetU(na1)
+                           DO m1 = 1, ldim1*npol
+                              DO ig = 1, ldap*npol
+                                 wfcUaux(ig,m1) = wfcU(ig,off1+m1)
+                              ENDDO
+                           ENDDO
+                           !write(stdout,*) "phase, wfcUaux(1,1:ldim1)", phase, wfcUaux(1,1:ldim1*npol)
+                           !
+                           off2 = offsetU(equiv_na2)
+                           vaux(:,:) = (0.0_dp, 0.0_dp)
+                           projauxc(:,:) = (0.0_dp, 0.0_dp)
+                           do is1 =1 , npol
+                              do is2 =1 , npol
+                                 DO m1 = 1, ldim1
+                                    DO m2 = 1, ldim2
+                                       vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = &
+                                          CONJG( (v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1))) * 0.5d0
+                                    ENDDO
+                                 ENDDO
+                              enddo 
+                           enddo
+                           !
+                           DO m2 = 1, ldim2*npol
+                              projauxc(m2,:) = proj(off2+m2,:)
+                           ENDDO
+                           ctemp(:,:) = (0.0_dp,0.0_dp)
+                           !
+                           CALL ZGEMM ('t','n', ldim1*npol,mps,ldim2*npol, (1.0_dp,0.0_dp), &
+                                vaux,ldimx*npol, projauxc,ldimx*npol, (0.0_dp,0.0_dp), ctemp, ldimx*npol)
+                           !
+                           CALL ZGEMM ('n','n', ldap*npol, mps, ldim1*npol, phase, &
+                                wfcUaux, ldap*npol, ctemp, ldimx*npol, (1.0_dp,0.0_dp), hpsi, ldap*npol)
+                           !
+                           ! Compute the second part of the Hubbard potential, namely:
+                           ! - \sum_IJ (J\=I) \sum_m1m2 V_IJ/2 * n^JI_m2m1 * |phi^J_m2><phi^I_m1|Psi_nk>
+                           ! where
+                           ! - V_IJ * n^JI_m2m1   = v_nsg
+                           !   <phi^I_m1|Psi_nk>  = proj
+                           !      |phi^J_m2>      = wfcU
+                           !
+                           wfcUaux(:,:) = (0.0_dp, 0.0_dp)
+                           off2 = offsetU(equiv_na2)   
+                           DO m2 = 1, ldim2*npol
+                              DO ig = 1, ldap*npol
+                                 wfcUaux(ig,m2) = wfcU(ig,off2+m2)
+                              ENDDO
+                           ENDDO 
+                           ! 
+                           off1 = offsetU(na1)
+                           projauxc(:,:) = (0.0_dp,0.0_dp)
+                           do m1 = 1,ldim1*npol
+                              projauxc(m1,:) = proj(off1+m1,:)
+                           enddo
+                           vaux(:,:) = (0.0_dp,0.0_dp)
+                           do is1=1,npol
+                              do is2=1,npol
+                                 DO m1 = 1,ldim1
+                                    DO m2 = 1,ldim2
+                                       vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = &
+                                            v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1) * 0.5d0
+                                    ENDDO
+                                 ENDDO
+                              enddo
+                           enddo
+                           !
+                           ctemp(:,:) = (0.0_dp,0.0_dp)
+                           !
+                           CALL ZGEMM ('n','n', ldim2*npol,mps,ldim1*npol, (1.0_dp,0.0_dp), &
+                                 vaux,ldimx*npol, projauxc,ldimx*npol, (0.0_dp,0.0_dp), ctemp, ldimx*npol)
+                           !
+                           CALL ZGEMM ('n','n', ldap*npol, mps, ldim2*npol, CONJG(phase), &
+                                 wfcUaux, ldap*npol, ctemp, ldimx*npol, (1.0_dp,0.0_dp), hpsi, ldap*npol)
+                           !
+                        ENDIF
+                     ENDDO 
+            ENDIF
+         ENDDO
+      ENDIF
+   !   
+   !   
+   ENDDO
+   !
+   DEALLOCATE (ctemp)
+   DEALLOCATE (projauxc)
+   DEALLOCATE (vaux)
+   !
+   DEALLOCATE (wfcUaux)
+   !
+   RETURN
+   !
+END SUBROUTINE vhpsi_UV_nc
+  !
+  ! --------------------------------------------
 END SUBROUTINE vhpsi_nc
 

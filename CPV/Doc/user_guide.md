@@ -682,7 +682,9 @@ If you used a method that computes the ionic velocities and the electronic veloc
                H 1.00d0 h.ps
                
 If you want to change the timestep, for example because you used a big timestep in a small
-CG thermalization performed in the relaxation step, you must specify the following additional parameters:
+CG thermalization performed in the relaxation step, it is not necessary since version 7.3 to
+specify the 'change_step' and to set the tolp parameter. The code understand automatically what
+to do :
 
                &control
                     dt    = 5.0d0, ! new integration timestep
@@ -691,8 +693,7 @@ CG thermalization performed in the relaxation step, you must specify the followi
                   electron_velocities = 'change_step' ! if you have wfc velocities
                /
                &ions
-                  ion_velocities = 'change_step' ! if you have velocities
-                  tolp = 20.d0 ! old integration timestep
+                  ! no additional inputs needed
                /
 
 If you want to specify a new set of initial velocities for ions, you have to set

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -39,10 +40,18 @@
   CHARACTER(LEN = 10) :: vme
   !! if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
   !! if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
-  !!!!!
+  CHARACTER(LEN = 10) :: system_2d
+  !! if 'no' then 3D bulk materials [default]
+  !! if 'gaussian' then the long-range terms include dipoles only and the range separation
+  !! function is approximated by a Gaussian following PRB 94, 085415 (2016)
+  !! if 'dipole_sp' then the long-range terms include dipoles only following PRB 107, 155424 (2023)
+  !! if 'quadrupole' then the long-range terms include dipoles and quadrupoles terms
+  !! following PRL 130, 166301 (2023) and requires the presence of a "quadrupole.fmt" file.
+  !! if 'dipole_sh' then the long-range terms include dipoles only following [PRB 105, 115414 (2022)]
   CHARACTER(LEN = 10) :: tc_linear_solver
   !! algorithm to solve T_c eigenvalue problem
-  !!!!!
+  CHARACTER(LEN = 255) :: wannier_plot_list
+  !! Field read for parsing Wannier function list
   !
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
@@ -112,8 +121,6 @@
   !! if .TRUE. run e-p coupling calculation
   LOGICAL :: efermi_read
   !! if .TRUE. fermi energy is read from the input file
-  LOGICAL :: system_2d
-  !! if .TRUE. the system is 2 dimensional (vaccum is in z-direction)
   LOGICAL :: prtgkk
   !! if .TRUE. print the |g| vertex in [meV].
   LOGICAL :: lphase
@@ -130,8 +137,6 @@
   !! if .TRUE. restart from the selecq.fmt file
   LOGICAL :: assume_metal
   !! if .TRUE. we are dealing with a metal.
-  !
-  ! Superconductivity
   LOGICAL :: ephwrite
   !! if .TRUE. write e-ph matrix elements on the fine mesh to file
   LOGICAL :: lreal
@@ -142,16 +147,11 @@
   !! if .TRUE. use pade approximants to continue imag-axis Eliashberg equtions
   !to real-axis
   LOGICAL :: lacon
-  !! if .TRUE. use analytic continuation to continue imag-axis Eliashberg
-  !equtions to real-axis
+  !! if .TRUE. use analytic continuation to continue imag-axis Eliashberg eqs to real-axis
   LOGICAL :: liso
   !! if .TRUE. solve isotropic case
   LOGICAL :: laniso
   !! if .TRUE. solve anisotropic case
-  !!!!!
-  !  LOGICAL :: lunif
-  !  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
-  !!!!!
   LOGICAL :: kerwrite
   !! if .TRUE. write kp and km to files .ker for real-axis calculations
   LOGICAL :: kerread
@@ -162,16 +162,10 @@
   !! if .TRUE. solve the Eliashberg equations
   LOGICAL :: tc_linear
   !! if .TRUE. linearized Eliashberg eqn. for T_c will be solved
-  !!!!!
-  ! CHARACTER(LEN = 10) :: tc_linear_solver
-  ! !! algorithm to solve T_c eigenvalue problem
   LOGICAL :: fbw
   !! if .TRUE. full-bandwidth calculations will be performed
   LOGICAL :: muchem
   !! if .TURE. the chem. pot. is updated in fbw calculations
-  !!!!!
-  !
-  ! Conductivity
   LOGICAL :: scattering
   !! if .TRUE. scattering rates are calculated
   LOGICAL :: scattering_serta
@@ -202,6 +196,65 @@
   !! If .TRUE. set imq to non-zero value
   LOGICAL :: epw_crysym
   !! If .TRUE. calculate the symmetry of the crystal
+  LOGICAL :: wannier_plot
+  !! if .TRUE. plot Wannier functions
+  LOGICAL :: reduce_unk
+  !! if .TRUE. plot Wannier functions on reduced grids
+  LOGICAL :: ii_g
+  !! If .TRUE. calculate the ionized impurity matrix elements
+  LOGICAL :: ii_scattering
+  !! If .TRUE. calculate the carrier-impurity scattering rate
+  LOGICAL :: ii_only
+  !! If .TRUE., calculate only the ionized-impurity-limitted mobility
+  LOGICAL :: ii_lscreen
+  !! If .TRUE. (DEFAULT), calculate and use free-carrier
+  !! screening of ii_g matrix elements, if .FALSE., calculations will diverge with
+  !! increasing density of k-point due to 1/(q^4) divergence for ionized impurity
+  !! scattering rate
+  LOGICAL :: ii_partion
+  !! If .TRUE., account for partial ionization
+  LOGICAL :: plrn
+  !! if .true. calculates perturbated part of the wavefunction
+  LOGICAL :: model_vertex_plrn
+  !! if .true. calculates vertex model
+  LOGICAL :: model_enband_plrn
+  !! if .true. calculates vertex model
+  LOGICAL :: model_phfreq_plrn
+  !! if .true. calculates vertex model
+  LOGICAL :: restart_plrn
+  !! if .true. Using Ack from written outputs
+  LOGICAL :: full_diagon_plrn
+  !! if .true. diagonalizing the polaron Hamiltonian with direct diagonalization
+  LOGICAL :: cal_psir_plrn
+  !! if .true. Generating a 3D-plot for polaron wavefunction
+  LOGICAL :: interp_Ank_plrn
+  !! if .true. interpolating polaron A(k) from A(Re)
+  LOGICAL :: interp_Bqu_plrn
+  !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
+  LOGICAL :: debug_plrn
+  !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
+  LOGICAL :: time_rev_A_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: time_rev_U_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: Mmn_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: recal_Mmn_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: scell_mat_plrn
+  !! if .true. activate supercell transformation for polaron
+  LOGICAL :: adapt_ethrdg_plrn
+  !! if .true. activate adaptive threshold in polaron davidson diagonalization
+  LOGICAL :: loptabs
+  ! If Quasi absorption or indirect absorption
+  LOGICAL :: do_CHBB
+  ! Do CHBB calculation within qdabs module
+  LOGICAL :: wfpt
+  !! if .TRUE. enable Wannier function perturbation theory calculations
+  LOGICAL :: compute_dmat
+  !! if .TRUE. compute dmat, the overlap matrix between psi(Sk) and S*psi(k)
+  LOGICAL :: elecselfen_ahc
+  !! if .TRUE. calculate Allen-Heine-Cardona self-energy due to e-p interaction
   !
   INTEGER :: ngaussw
   !! smearing type for Fermi surface average in e-ph coupling after wann. interp.
@@ -247,14 +300,6 @@
   !! Maximum number of iteration for the IBTE
   INTEGER :: nstemp
   !! nr. of temperature points for temperature dependent caclulations
-  REAL(KIND = DP) :: tempsmin
-  !! min. temperature in Eliashberg equations - deprecated as an input parameter
-  REAL(KIND = DP) :: tempsmax
-  !! max. temperature - deprecated as an input parameter
-  REAL(KIND = DP) :: temps(50)
-  !! input temperature array (units of Kelvin)
-  !
-  ! Superconductivity
   INTEGER :: nswi
   !! nr. of grid points for Eliashberg equations of imaginary axis
   INTEGER :: nsiter
@@ -267,163 +312,16 @@
   !! nr. of bins for frequency in electron spectral function due to e-p interaction
   INTEGER :: restart_step
   !! Create a restart point during the interpolation part every restart_step q/k-points.
-  !!!!!
   INTEGER :: gridsamp
   !! Type of the Matsubara freq. sampling (-1= read from file; 0= uniform; 1= sparse)
-  !!!!!
-  !
-  REAL(KIND = DP) :: degaussw
-  !! smearing width for Fermi surface average in e-ph coupling after wann interp
-  REAL(KIND = DP) :: fsthick
-  !! thickness of the Fermi shell for averaging the e-ph matrix element
-  REAL(KIND = DP) :: wmin
-  !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
-  REAL(KIND = DP) :: wmax
-  !! max frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
-  REAL(KIND = DP) :: delta_smear
-  !! change in energy for each additional smearing in the selfen_phon
-  !
-  ! Wannierization
-  CHARACTER(LEN = 255) :: wannier_plot_list
-  !! Field read for parsing Wannier function list
-  LOGICAL :: wannier_plot
-  !! if .TRUE. plot Wannier functions
-  LOGICAL :: reduce_unk
-  !! if .TRUE. plot Wannier functions on reduced grids
   INTEGER :: wannier_plot_supercell(3)
   !! Size of supercell for plotting Wannier functions
-  REAL(KIND = DP) :: dis_win_min
-  !! min energy of the Wannier disentanglement window
-  REAL(KIND = DP) :: dis_win_max
-  !! max energy of the Wannier disentanglement window
-  REAL(KIND = DP) :: dis_froz_min
-  !! min energy of the frozen Wannier disentanglement window
-  REAL(KIND = DP) :: dis_froz_max
-  !! max energy of the frozen Wannier disentanglement window
-  REAL(KIND = DP) :: scdm_mu
-  !! parameter for Wannier functions via SCDM algorithm
-  REAL(KIND = DP) :: scdm_sigma
-  !! parameter for Wannier functions via SCDM algorithm
-  REAL(KIND = DP) :: wannier_plot_scale
-  !! Scaling parameter for cube files
-  REAL(KIND = DP) :: wannier_plot_radius
-  !! Cut-off radius for plotting Wannier functions
-  !
-  ! Superconductivity
-  REAL(KIND = DP) :: eps_acustic
-  !! min. phonon frequency for e-p and a2f calculations
-  REAL(KIND = DP) :: degaussq
-  !! smearing for sum over q in e-ph coupling
-  REAL(KIND = DP) :: delta_qsmear
-  !! change in energy for each additional smearing in the a2f
-  REAL(KIND = DP) :: muc
-  !! effective Coulomb potential in Eliashberg equations
-  !!!!!
-  !  REAL(KIND = DP) :: wsfc
-  !  !! intermediate freqeuncy between (0,wscut)
-  !  REAL(KIND = DP) :: pwc
-  !  !! power used to define a non-uniform grid between wsfc and wscut
-  !!!!!
-  REAL(KIND = DP) :: wscut
-  !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
-  REAL(KIND = DP) :: broyden_beta
-  !! mixing factor for broyden mixing
-  REAL(KIND = DP) :: conv_thr_raxis
-  !! convergence threshold for iterative solution of real-axis Eliashberg equations
-  REAL(KIND = DP) :: conv_thr_iaxis
-  !! convergence threshold for iterative solution of imag-axis Eliashberg equations
-  REAL(KIND = DP) :: conv_thr_racon
-  !! convergence threshold for iterative solution of analytic continuation of
-  !! Eliashberg equations from imag- to real-axis
-  REAL(KIND = DP) :: gap_edge
-  !! initial guess of the superconducting gap
-  REAL(KIND = DP) :: max_memlt
-  !! maximum memory that can be allocated per pool
-  REAL(KIND = DP) :: fermi_energy
-  !! fermi energy is given in the input file
-  REAL(KIND = DP) :: wmin_specfun
-  !! min frequency in electron spectral function due to e-p interaction
-  REAL(KIND = DP) :: wmax_specfun
-  !! max frequency in electron spectral function due to e-p `interaction
-  !!!!!
-  REAL(KIND = DP) :: dos_del
-  !! Delta_E in electronic dos for Fermi window (in eV)
-  REAL(KIND = DP) :: griddens
-  !! Measure of sparsity of the grid
-  !!!!!
-  !
-  ! Conductivity
   INTEGER :: mob_nfreq
   !! Number of frequency for the spectral decomposition of mobility
-  REAL(KIND = DP) :: scissor
-  !! Value of the scissor shift in eV.
-  REAL(KIND = DP) :: ncarrier
-  !! Amount of carrier concentration in cm^-3 when doping a semiconductors
-  REAL(KIND = DP) :: nc
-  !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
-  REAL(KIND = DP) :: bfieldx
-  !! Magnetic field along the x-direction
-  REAL(KIND = DP) :: bfieldy
-  !! Magnetic field along the y-direction
-  REAL(KIND = DP) :: bfieldz
-  !! Magnetic field along the z-direction
-  REAL(KIND = DP) :: mob_maxfreq
-  !! Maximum frequency for the spectral decomposition of mobility. Typically that freq. is the highest phonon freq.
-  !!!!!
-  !
-  ! Conductivity - ionized impurity scattering
-  LOGICAL :: ii_g
-  !! If .TRUE. calculate the ionized impurity matrix elements
-  LOGICAL :: ii_scattering
-  !! If .TRUE. calculate the carrier-impurity scattering rate
-  LOGICAL :: ii_only
-  !! If .TRUE., calculate only the ionized-impurity-limitted mobility
-  LOGICAL :: ii_lscreen
-  !! If .TRUE. (DEFAULT), calculate and use free-carrier
-  !! screening of ii_g matrix elements, if .FALSE., calculations will diverge with 
-  !! increasing density of k-point due to 1/(q^4) divergence for ionized impurity 
-  !! scattering rate
-  LOGICAL :: ii_partion
-  !! If .TRUE., account for partial ionization 
-  REAL(KIND = DP) :: ii_charge
-  !! charge of the ionized impurities, units of electron charge for input
-  REAL(KIND = DP) :: ii_n
-  !! density of impurities, input in units of cm^-3
-  REAL(KIND = DP) :: ii_eda
-  !! ionization energy of the donor or accpetor impurity, for partial ionization calcs
-  REAL(KIND = DP) :: ii_eps0
-  !! low frequency dielectric constant
-  !!!!! 
-  !
-  ! Plasmon
-  REAL(KIND = DP) :: nel
-  !! fractional number of electrons in the unit cell
-  REAL(KIND = DP) :: meff
-  !! Density-of-state effective mass (in unit of the electron mass)
-  REAL(KIND = DP) :: epsiheg
-  !! Dielectric constant at zero doping.
-  REAL(KIND = DP) :: fermi_diff
-  !! difference between Fermi energy and band edge (in eV)
-  REAL(KIND = DP) :: smear_rpa
-  !! smearing for the calculation of the Lindhard function (in eV)
-  !
-  ! Phonon-assisted absorption
   INTEGER :: neta = 9
   !! Number of broadening parameters
   INTEGER :: nomega
   !! Number of frequency (photon energy) points
-  REAL(KIND = DP) :: omegamin
-  !! Photon energy minimum (in eV)
-  REAL(KIND = DP) :: omegamax
-  !! Photon energy maximum (in eV)
-  REAL(KIND = DP) :: omegastep
-  !! Photon energy step (in eV)
-  REAL(KIND = DP) :: sigma_ref
-  !! Reference conductivity for Drude dielectric function
-  !
-  ! ----------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
   INTEGER :: start_band_plrn, end_band_plrn
   !! Start and end band index in matrix element
   INTEGER :: nstate_plrn
@@ -449,9 +347,133 @@
   INTEGER :: scell_mat(3,3)
   !! Supercell transformation matrix for polaron
   INTEGER :: init_ntau_plrn
-  !! Number of displacements to be read from file to calculate polaron energy landscape  
+  !! Number of displacements to be read from file to calculate polaron energy landscape
   INTEGER :: nethrdg_plrn
   !! Number of steps in the diagonalization if adaptive_ethrdg_plrn=.true.
+  INTEGER :: len_mesh
+  ! The number of meshgrids for QD
+  INTEGER :: meshnum
+  ! Last meshgrid for QD calculation (restart)
+  INTEGER :: start_mesh
+  ! Starting mesh point for restart calculations
+  INTEGER :: DW
+  ! Second order term of QDPT
+  INTEGER :: nq_init
+  ! Temperature integration method
+  INTEGER :: wf_quasi
+  ! Write Eigenvectors for QD
+  INTEGER :: mode_res
+  ! Number of modes to resolve
+  INTEGER :: ahc_nbnd
+  !! Number of bands included in ph.x Allen-Heine-Cardona calculation
+  INTEGER :: ahc_nbndskip
+  !! Number of low-lying bands exclude in ph.x Allen-Heine-Cardona calculation
+  !
+  REAL(KIND = DP) :: tempsmin
+  !! min. temperature in Eliashberg equations - deprecated as an input parameter
+  REAL(KIND = DP) :: tempsmax
+  !! max. temperature - deprecated as an input parameter
+  REAL(KIND = DP) :: temps(50)
+  !! input temperature array (units of Kelvin)
+  REAL(KIND = DP) :: degaussw
+  !! smearing width for Fermi surface average in e-ph coupling after wann interp
+  REAL(KIND = DP) :: fsthick
+  !! thickness of the Fermi shell for averaging the e-ph matrix element
+  REAL(KIND = DP) :: wmin
+  !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
+  REAL(KIND = DP) :: wmax
+  !! max frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
+  REAL(KIND = DP) :: delta_smear
+  !! change in energy for each additional smearing in the selfen_phon
+  REAL(KIND = DP) :: dis_win_min
+  !! min energy of the Wannier disentanglement window
+  REAL(KIND = DP) :: dis_win_max
+  !! max energy of the Wannier disentanglement window
+  REAL(KIND = DP) :: dis_froz_min
+  !! min energy of the frozen Wannier disentanglement window
+  REAL(KIND = DP) :: dis_froz_max
+  !! max energy of the frozen Wannier disentanglement window
+  REAL(KIND = DP) :: scdm_mu
+  !! parameter for Wannier functions via SCDM algorithm
+  REAL(KIND = DP) :: scdm_sigma
+  !! parameter for Wannier functions via SCDM algorithm
+  REAL(KIND = DP) :: wannier_plot_scale
+  !! Scaling parameter for cube files
+  REAL(KIND = DP) :: wannier_plot_radius
+  !! Cut-off radius for plotting Wannier functions
+  REAL(KIND = DP) :: eps_acustic
+  !! min. phonon frequency for e-p and a2f calculations
+  REAL(KIND = DP) :: degaussq
+  !! smearing for sum over q in e-ph coupling
+  REAL(KIND = DP) :: delta_qsmear
+  !! change in energy for each additional smearing in the a2f
+  REAL(KIND = DP) :: muc
+  !! effective Coulomb potential in Eliashberg equations
+  REAL(KIND = DP) :: wscut
+  !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
+  REAL(KIND = DP) :: broyden_beta
+  !! mixing factor for broyden mixing
+  REAL(KIND = DP) :: conv_thr_raxis
+  !! convergence threshold for iterative solution of real-axis Eliashberg equations
+  REAL(KIND = DP) :: conv_thr_iaxis
+  !! convergence threshold for iterative solution of imag-axis Eliashberg equations
+  REAL(KIND = DP) :: conv_thr_racon
+  !! convergence threshold for iterative solution of analytic continuation of
+  !! Eliashberg equations from imag- to real-axis
+  REAL(KIND = DP) :: gap_edge
+  !! initial guess of the superconducting gap
+  REAL(KIND = DP) :: max_memlt
+  !! maximum memory that can be allocated per pool
+  REAL(KIND = DP) :: fermi_energy
+  !! fermi energy is given in the input file
+  REAL(KIND = DP) :: wmin_specfun
+  !! min frequency in electron spectral function due to e-p interaction
+  REAL(KIND = DP) :: wmax_specfun
+  !! max frequency in electron spectral function due to e-p `interaction
+  REAL(KIND = DP) :: dos_del
+  !! Delta_E in electronic dos for Fermi window (in eV)
+  REAL(KIND = DP) :: griddens
+  !! Measure of sparsity of the grid
+  REAL(KIND = DP) :: scissor
+  !! Value of the scissor shift in eV.
+  REAL(KIND = DP) :: ncarrier
+  !! Amount of carrier concentration in cm^-3 when doping a semiconductors
+  REAL(KIND = DP) :: nc
+  !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
+  REAL(KIND = DP) :: bfieldx
+  !! Magnetic field along the x-direction
+  REAL(KIND = DP) :: bfieldy
+  !! Magnetic field along the y-direction
+  REAL(KIND = DP) :: bfieldz
+  !! Magnetic field along the z-direction
+  REAL(KIND = DP) :: mob_maxfreq
+  !! Maximum frequency for the spectral decomposition of mobility. Typically that freq. is the highest phonon freq.
+  REAL(KIND = DP) :: ii_charge
+  !! charge of the ionized impurities, units of electron charge for input
+  REAL(KIND = DP) :: ii_n
+  !! density of impurities, input in units of cm^-3
+  REAL(KIND = DP) :: ii_eda
+  !! ionization energy of the donor or accpetor impurity, for partial ionization calcs
+  REAL(KIND = DP) :: ii_eps0
+  !! low frequency dielectric constant
+  REAL(KIND = DP) :: nel
+  !! fractional number of electrons in the unit cell
+  REAL(KIND = DP) :: meff
+  !! Density-of-state effective mass (in unit of the electron mass)
+  REAL(KIND = DP) :: epsiheg
+  !! Dielectric constant at zero doping.
+  REAL(KIND = DP) :: fermi_diff
+  !! difference between Fermi energy and band edge (in eV)
+  REAL(KIND = DP) :: smear_rpa
+  !! smearing for the calculation of the Lindhard function (in eV)
+  REAL(KIND = DP) :: omegamin
+  !! Photon energy minimum (in eV)
+  REAL(KIND = DP) :: omegamax
+  !! Photon energy maximum (in eV)
+  REAL(KIND = DP) :: omegastep
+  !! Photon energy step (in eV)
+  REAL(KIND = DP) :: sigma_ref
+  !! Reference conductivity for Drude dielectric function
   REAL(KIND = DP) :: conv_thr_plrn
   !!  convergent threshold for polaron calculation
   REAL(KIND = DP) :: edos_min_plrn, edos_max_plrn, edos_sigma_plrn
@@ -483,47 +505,23 @@
   REAL(KIND = DP) :: m_eff_plrn
   !! effective mass in LP model
   REAL(KIND = DP) :: g_tol_plrn
-  !!
+  !! FIXME
   REAL(KIND = DP) :: as(3,3)
   !! Supercell lattice vectors transformed by Smat, as=S*at
   REAL(KIND = DP) :: bs(3,3)
-  !! Supercell reciprocal lattice vectors transformed by Sbar=transpose(inverse(Smat), bs=Sbar*bg  
+  !! Supercell reciprocal lattice vectors transformed by Sbar=transpose(inverse(Smat), bs=Sbar*bg
   REAL(KIND = DP) :: init_ethrdg_plrn
-  !! Initial coarse threshold to be used if adaptive_ethrdg_plrn=.true. 
-  !!
-  LOGICAL :: plrn
-  !! if .true. calculates perturbated part of the wavefunction
-  LOGICAL :: model_vertex_plrn
-  !! if .true. calculates vertex model
-  LOGICAL :: model_enband_plrn
-  !! if .true. calculates vertex model
-  LOGICAL :: model_phfreq_plrn
-  !! if .true. calculates vertex model
-  LOGICAL :: restart_plrn
-  !! if .true. Using Ack from written outputs
-  LOGICAL :: full_diagon_plrn
-  !! if .true. diagonalizing the polaron Hamiltonian with direct diagonalization
-  LOGICAL :: cal_psir_plrn
-  !! if .true. Generating a 3D-plot for polaron wavefunction
-  LOGICAL :: interp_Ank_plrn
-  !! if .true. interpolating polaron A(k) from A(Re)
-  LOGICAL :: interp_Bqu_plrn
-  !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
-  LOGICAL :: debug_plrn
-  !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
-  LOGICAL :: time_rev_A_plrn
-  !! if .true. time_rev_A_plrn
-  LOGICAL :: time_rev_U_plrn
-  !! if .true. time_rev_A_plrn
-  LOGICAL :: Mmn_plrn
-  !! if .true. time_rev_A_plrn
-  LOGICAL :: recal_Mmn_plrn
-  !! if .true. time_rev_A_plrn
-  LOGICAL :: scell_mat_plrn
-  !! if .true. activate supercell transformation for polaron
-  LOGICAL :: adapt_ethrdg_plrn
-  !! if .true. activate adaptive threshold in polaron davidson diagonalization
-  ! ----------------------------------------------------------------------------------
+  !! Initial coarse threshold to be used if adaptive_ethrdg_plrn=.true.
+  REAL(KIND=DP) :: QD_min
+  ! scaling factor for g-matrix scaling
+  REAL(KIND=DP) :: QD_bin
+  ! scaling factor for g-matrix scaling
+  REAL(KIND = DP) :: ahc_win_min
+  !! Lower bound of AHC window for the lower Fan term.
+  REAL(KIND = DP) :: ahc_win_max
+  !! Upper bound of AHC window for the lower Fan term.
+  REAL(KIND = DP) :: a_gap0
+  !! This determines the shape of initial guess of gap functio
   !
   !-----------------------------------------------------------------------
   END MODULE control_epw

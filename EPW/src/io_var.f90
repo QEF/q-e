@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
   ! Copyright (C) 2002-2013 Quantum ESPRESSO group
@@ -24,14 +25,12 @@
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,  &
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,  &
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
-            !!!!!
-            ! iuint3paw
             iuint3paw, iufildos, iufilmat
-            !!!!!
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
             iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, iufilFS,  &
-            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
+            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2, &
+            iudwwe, iudgwe, iusthwe, iupmwe, iuxqc, iuqmap, iudmat
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
             iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,   &
@@ -44,7 +43,8 @@
             iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,                &
             iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,            &
             iunsparsekcb_merge, iunepmat_merge
-  PUBLIC :: iunRpscell, iunkgridscell, iunpsirscell
+  PUBLIC :: iunRpscell, iunkgridscell, iunpsirscell, iepfall, ihamil, iMmn, irho,  &
+            iUmn, iekanu
 
   !
   ! Output of physically relevant quantities (60-100)
@@ -77,10 +77,8 @@
   INTEGER :: iudvscf         = 80  ! Unit for the dvscf_q file
   INTEGER :: iudyn           = 81  ! Unit for the dynamical matrix file
   INTEGER :: iufilkqmap      = 82  ! Map of k+q
-  !!!!!
   INTEGER :: iufilmat        = 87  ! Matsubara indices
   INTEGER :: iufildos        = 88  ! electronic DOS in Fermi windows [prefix.dos]
-  !!!!!
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
   INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis
                                    ! Electrons + phonons [epmat_wanep]
@@ -136,6 +134,14 @@
   INTEGER :: iuqpeig         = 144  ! Reading quasi-particle eigenenergies from file
   INTEGER :: iunpattern      = 145  ! Unit for reading the pattern files.
   INTEGER :: iufilFS         = 146  ! Unit for Fermi surface files
+  INTEGER :: iudwwe          = 147  ! Debye-Waller matrix in Wannier representation (.dwmatwe)
+  INTEGER :: iudgwe          = 148  ! delta g (hopping correction) matrix in Wannier representation (.dgmatwe)
+  INTEGER :: iusthwe         = 149  ! Sternheimer matrix in Wannier representation (.sthmatwe)
+  INTEGER :: iupmwe          = 150  ! Momentum matrix element (.cpmew)
+  INTEGER :: iuxqc           = 151  ! coarse q points (.xqc)
+  INTEGER :: iuqmap          = 152  ! File for the symmetry relation of q-points.
+                                    ! Needed for unfolding the upper Fan term.
+  INTEGER :: iudmat          = 153  ! Symmetry matrix elements
   !
   ! Output quantites related to Wannier (201-250)
   !
@@ -173,15 +179,20 @@
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
   INTEGER :: iuindabs_all    = 302 ! Indirect absorption read/write
   INTEGER :: iudirabs        = 303 ! Direct absorption data
-  ! 
+  !
   ! Miscellaneous (326-350)
   INTEGER :: epwbib          = 326 ! EPW bibliographic file.
   !
   ! Output quantities related to polaron (350-400)
-  !JLB: All the other polaron I/O units should also be defined here for consistency
   INTEGER :: iunRpscell      = 351 ! Rp unit cell list within polaron supercell
   INTEGER :: iunkgridscell   = 352 ! Gs k-grid used for transformed supercell
   INTEGER :: iunpsirscell    = 353 ! Polaron wf in real space for transformed supercell
+  INTEGER :: iepfall         = 354 ! Polaron
+  INTEGER :: ihamil          = 355 ! Polaron
+  INTEGER :: iMmn            = 356 ! Polaron
+  INTEGER :: irho            = 357 ! Polaron
+  INTEGER :: iUmn            = 358 ! Polaron
+  INTEGER :: iekanu          = 359 ! Polaron
   !
   ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
@@ -706,9 +707,12 @@
     ENDIF
     CALL start_clock('MOB')
     !
-    inv_cell = 1.0d0 / omega
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE 
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
     !
     ! We can read the scattering rate from files.
     IF (scatread) THEN
@@ -763,10 +767,10 @@
         IF (int_mob .OR. (ncarrier < -1E5)) THEN
           IF (itemp == 1) THEN
             WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-            IF (system_2d) THEN
-              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-2]  Hole mobility [cm^2/Vs]")')
-            ELSE
+            IF (system_2d == 'no') THEN
               WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+            ELSE 
+              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-2]  Hole mobility [cm^2/Vs]")')
             ENDIF
             WRITE(stdout, '(5x,a/)') REPEAT('=',67)
           ENDIF
@@ -827,10 +831,10 @@
           mobility_zz  = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3.0d0)
+          ELSE 
             carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
-          ELSE
-            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
           ENDIF
           WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV, &
                   ef0(itemp) * ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
@@ -844,10 +848,10 @@
         IF (int_mob .OR. (ncarrier > 1E5)) THEN
           IF (itemp == 1) THEN
             WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-            IF (system_2d) THEN
-              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-2]  Electron mobility [cm^2/Vs]")')
-            ELSE
+            IF (system_2d == 'no') THEN
               WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-3]  Electron mobility [cm^2/Vs]")')
+            ELSE 
+              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-2]  Electron mobility [cm^2/Vs]")')
             ENDIF
             WRITE(stdout, '(5x,a/)') REPEAT('=',67)
           ENDIF
@@ -910,10 +914,10 @@
           mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3.0d0)
+          ELSE 
             carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
-          ELSE
-            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
           ENDIF
           WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV, &
                   ef0(itemp) * ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
@@ -1095,10 +1099,10 @@
         conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
         !
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-        IF (system_2d) THEN
-          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-2]  Hole mobility [cm^2/Vs]")')
-        ELSE
+        IF (system_2d == 'no') THEN
           WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+        ELSE 
+          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-2]  Hole mobility [cm^2/Vs]")')
         ENDIF
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
         !
@@ -1152,10 +1156,10 @@
           mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
-          IF (system_2d) THEN
+          IF (system_2d == 'no') THEN
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3.0d0)
+          ELSE 
             carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
-          ELSE
-            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
           ENDIF
           WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV, &
                   ef0(itemp) * ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
@@ -1384,10 +1388,10 @@
         !
         conv_factor1 = electron_si / ( hbar * bohr2ang * Ang2m )
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-        IF (system_2d) THEN
-          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-2]  Elec mobility [cm^2/Vs]")')
-        ELSE
+        IF (system_2d == 'no') THEN
           WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
+        ELSE 
+          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-2]  Elec mobility [cm^2/Vs]")')
         ENDIF
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
         DO itemp = 1, nstemp

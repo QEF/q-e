@@ -1,0 +1,61 @@
+
+     Program Q2R v.7.2 starts on 28Aug2023 at 16:12: 2 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       1 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+     21817 MiB available memory on the printing compute node when the environment starts
+ 
+
+  reading grid info from file si.dyn0    
+
+  reading force constants from file si.dyn1
+ macroscopic fields = T
+  33.26160   0.00000   0.00000
+   0.00000  33.26160   0.00000
+   0.00000   0.00000  33.26160
+  na=            1
+  -2.38566   0.00000   0.00000
+   0.00000  -2.38566   0.00000
+   0.00000   0.00000  -2.38566
+  na=            2
+  -2.38566   0.00000   0.00000
+   0.00000  -2.38566   0.00000
+   0.00000   0.00000  -2.38566
+  nqs=            1
+ q=   0.00000000  0.00000000  0.00000000
+  reading force constants from file si.dyn2
+  nqs=            4
+ q=   0.50000000 -0.50000000  0.50000000
+ q=   0.50000000  0.50000000 -0.50000000
+ q=  -0.50000000 -0.50000000 -0.50000000
+ q=   0.50000000 -0.50000000 -0.50000000
+  reading force constants from file si.dyn3
+  nqs=            3
+ q=   0.00000000 -1.00000000  0.00000000
+ q=  -1.00000000  0.00000000  0.00000000
+ q=   0.00000000  0.00000000  1.00000000
+
+      q-space grid ok, #points =    8
+
+      fft-check success (sum of imaginary terms < 10^-12)
+ 
+     Q2R          :      0.00s CPU      0.14s WALL
+
+ 
+   This run was terminated on:  16:12: 2  28Aug2023            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

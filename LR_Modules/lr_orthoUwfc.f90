@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -113,8 +113,11 @@ SUBROUTINE lr_orthoUwfc (lflag)
      !
      ! Orthonormalize or normalize the atomic orbitals (if needed) 
      !
-     IF (orthogonalize_wfc) &
+     IF (orthogonalize_wfc) THEN
+        !$acc data copy(wfcatom, swfcatom)
         CALL ortho_swfc (npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag)
+        !$acc end data
+     END IF
      !
      ! If lflag=.TRUE. copy the result from (orthonormalized) wfcatom 
      ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
@@ -155,8 +158,11 @@ SUBROUTINE lr_orthoUwfc (lflag)
         !
         ! Orthonormalize or normalize the atomic orbitals (if needed)
         !
-        IF (orthogonalize_wfc) &
+        IF (orthogonalize_wfc) THEN 
+           !$acc data copy(wfcatom, swfcatom)
            CALL ortho_swfc (npwq, normalize_only, natomwfc, wfcatom, swfcatom, lflag)
+           !$acc end data
+        END IF
         !
         ! If lflag=.TRUE. copy the result from (orthonormalized) wfcatom 
         ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
@@ -200,7 +206,6 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   USE kinds,          ONLY : DP
   USE becmod,         ONLY : calbec, becp
   USE uspp_init,        ONLY : init_us_2
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   INTEGER,     INTENT(IN)  :: npw_
@@ -225,7 +230,6 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   ! Compute the product of beta functions vkb
   ! with the functions wfc : becp = <vkb|wfc>
   !
-  Call using_becp_auto(2)
   CALL calbec (npw_, vkb, wfc, becp)
   !
   ! Calculate S*|wfc> = |wfc> + \sum qq * |vkb> * becp 

@@ -1,0 +1,17 @@
+
+  =-------------------------------------------------------------------------------=
+
+                                 Hubbard U parameters:
+
+       site n.  type  label  spin  new_type  new_label  manifold  Hubbard U (eV)
+         1        1   N        1      1         N          2p       3.4220
+         2        2   B        1      2         B          2p       0.7621
+
+  =-------------------------------------------------------------------------------=
+
+
+                           Hubbard V parameters:
+                      (adapted for a supercell 3x3x3)
+
+            Atom 1     Atom 2    Distance (Bohr)  Hubbard V (eV)
+ 

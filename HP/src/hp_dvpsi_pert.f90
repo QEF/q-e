@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine hp_dvpsi_pert (ik)
+subroutine hp_dvpsi_pert (ik, nrec)
   !----------------------------------------------------------------------
   !
   ! This routine performes an action of the perturbing DFT+U potential on to
@@ -38,13 +38,18 @@ subroutine hp_dvpsi_pert (ik)
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, offsetU, nwfcU
   USE ldaU_hp,              ONLY : nqsh, perturbed_atom, iudvwfc, lrdvwfc
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
+  USE noncollin_module,     ONLY : noncolin, npol, domag
+  USE qpoint_aux,           ONLY : ikmks, ikmkmqs
+  USE io_global,            ONLY : stdout
+  USE mp_bands,             ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ik
-  ! given k point
+  INTEGER, INTENT(IN) :: ik, nrec
+  ! ik:    given k point
+  ! nrec:  record number for evc and dvpsi 
   !
-  INTEGER :: ikk, ikq, na, nt, m, ihubst, ibnd, ig, counter
+  INTEGER :: ikk, ikq, na, nt, m, ihubst, ibnd, ig, counter, ldim
   INTEGER :: npw, npwq
   ! number of plane waves at k and k+q
   COMPLEX (DP), ALLOCATABLE :: proj(:,:) 
@@ -63,7 +68,8 @@ subroutine hp_dvpsi_pert (ik)
   !
   ! Compute dvpsi for ik and write on buffer iudvwfc
   !
-  ALLOCATE (proj(nbnd,nwfcU))
+  ALLOCATE (proj(nwfcU,nbnd))
+  proj(:,:) = (0.0d0, 0.0d0)
   !
   ikk = ikks(ik)
   ikq = ikqs(ik)
@@ -75,34 +81,50 @@ subroutine hp_dvpsi_pert (ik)
   CALL get_buffer(swfcatomk, nwordwfcU, iuatswfc, ikk)
   IF (.NOT.lgamma)  CALL get_buffer(swfcatomkpq, nwordwfcU, iuatswfc, ikq)
   !
+  IF ( nrec > nksq ) then
+   !CALL apply_trev(swfcatomk, ikk, ikk, size(swfcatomk, 2))
+   !CALL apply_trev(swfcatomkpq, ikq, ikq, size(swfcatomkpq, 2))
+  ENDIF
   ! Calculate proj(ibnd, ihubst) = < S(k)*phi(k,I,m)| psi(ibnd,k) >
   !
   DO na = 1, nat
-     nt = ityp(na)
      IF ( perturbed_atom(na) ) THEN
-        DO m = 1, 2 * Hubbard_l(nt) + 1
-           ihubst = offsetU(na) + m   ! I m index
-           DO ibnd = 1, nbnd
-              ! FIXME: use ZGEMM instead of dot_product
-              proj(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npw,ihubst ), evc(1:npw,ibnd) )
+        nt = ityp(na)
+        ldim = (2 * Hubbard_l(nt) + 1) * npol 
+        IF (noncolin) then
+           ihubst = offsetU(na) + 1
+           CALL ZGEMM('C','N', ldim, nbnd, npwx*npol, (1.d0,0.d0), &
+                    swfcatomk(1,ihubst), npwx*npol, evc, npwx*npol,&
+                    (0.d0,0.d0), proj(ihubst,1), nwfcU)
+        ELSE
+           DO m = 1, ldim
+              ihubst = offsetU(na) + m   ! I m index
+              DO ibnd = 1, nbnd
+                 ! FIXME: use ZGEMM instead of dot_product
+                 proj(ihubst, ibnd) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst ), evc(1:npwx*npol,ibnd) )
+              ENDDO
            ENDDO
-        ENDDO
+        ENDIF
      ENDIF
   ENDDO
   !
 #if defined (__MPI)
-  CALL mp_sum(proj, intra_pool_comm)
+  CALL mp_sum(proj, intra_pool_comm)  
 #endif
   !
   DO na = 1, nat
-     nt = ityp(na)
      IF ( perturbed_atom(na) ) THEN
-        DO m = 1, 2 * Hubbard_l(nt) + 1
+        nt = ityp(na)
+        ldim = (2 * Hubbard_l(nt) + 1) * npol
+        DO m = 1, ldim
            ihubst = offsetU(na) + m
            DO ibnd = 1, nbnd
-              DO ig = 1, npwq
+              DO ig = 1, npwx
                  dvpsi(ig, ibnd) = dvpsi(ig, ibnd) + &
-                        & swfcatomkpq(ig,ihubst) * proj(ibnd,ihubst)
+                        & swfcatomkpq(ig,ihubst) * proj(ihubst,ibnd)
+                 IF (noncolin) &
+                    dvpsi(ig+npwx, ibnd) = dvpsi(ig+npwx, ibnd) + &
+                        & swfcatomkpq(ig+npwx,ihubst) * proj(ihubst,ibnd)
               ENDDO
            ENDDO
         ENDDO
@@ -111,7 +133,7 @@ subroutine hp_dvpsi_pert (ik)
   !
   ! Write dvpsi on file.
   !
-  CALL save_buffer(dvpsi, lrdvwfc, iudvwfc, ik)
+  CALL save_buffer(dvpsi, lrdvwfc, iudvwfc, nrec)
   !
   DEALLOCATE (proj)
   !

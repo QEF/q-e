@@ -1,4 +1,4 @@
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,8 +11,8 @@ SUBROUTINE stres_loc( sigmaloc )
   !! Calculate the local term of the stress.
   !
   USE kinds,                ONLY : DP
+  USE vloc_mod,             ONLY : dvloc_of_g
   USE atom,                 ONLY : msh, rgrid
-  USE m_gth,                ONLY : dvloc_gth
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
   USE fft_base,             ONLY : dfftp
@@ -24,6 +24,7 @@ SUBROUTINE stres_loc( sigmaloc )
   USE uspp_param,           ONLY : upf
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+  USE esm,                  ONLY : do_comp_esm, esm_bc
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc, &
                                    cutoff_stres_sigmaloc 
   !
@@ -38,6 +39,7 @@ SUBROUTINE stres_loc( sigmaloc )
   ! counter on atomic type
   ! counter on angular momentum
   ! counter on spin components
+  LOGICAL :: modified_coulomb
   REAL(DP) :: sigma11, sigma21, sigma22, spart, &
               sigma31, sigma32, sigma33
   !
@@ -47,8 +49,9 @@ SUBROUTINE stres_loc( sigmaloc )
   !$acc data create(rhog)
   CALL rho_r2g( dfftp, rho%of_r(:,1), rhog )
   !
-  !$acc data copyin(vloc,strf,gl,igtongl) create(dvloc)
+  !$acc data copyin(vloc,strf,gl) present(igtongl) create(dvloc)
   !
+  modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
   IF (gamma_only) THEN
      fact = 2.d0
   ELSE
@@ -79,28 +82,8 @@ SUBROUTINE stres_loc( sigmaloc )
   !
   DO nt = 1, ntyp
      !
-     IF ( upf(nt)%is_gth ) THEN
-        !
-        ! special case: GTH pseudopotential
-        !
-        CALL dvloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
-        !
-     ELSEIF ( upf(nt)%tcoulombp ) THEN
-        !
-        ! special case: pseudopotential is coulomb 1/r potential
-        !
-        CALL dvloc_coul( upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
-        !
-     ELSE
-        !
-        ! normal case: dvloc contains dV_loc(G)/dG
-        !
-        CALL dvloc_of_g( rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
-                         upf(nt)%vloc(:), upf(nt)%zp, tpiba2, ngl, gl, omega, &
-                         dvloc )
-        !
-     ENDIF
-     ! ... no G=0 contribution
+     CALL dvloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, dvloc )
+     !
      sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
      sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
      !

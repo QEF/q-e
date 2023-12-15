@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2012-2013 Quantum ESPRESSO group
+! Copyright (C) 2012-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -196,7 +196,7 @@ SUBROUTINE check_initial_status(auxdyn)
   IF (fildvscf /= ' ') THEN
     WRITE(stdout, '(5x,a)')
     WRITE(stdout, '(5x,a)') 'Saving dvscf to file. Distribute only q points, &
-                            &not irreducible represetations.'
+                            &not irreducible representations.'
     distribute_irrep = .FALSE.
   ENDIF
 !

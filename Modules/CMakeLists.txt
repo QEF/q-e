@@ -35,6 +35,7 @@ set(src_modules
     ions_base.f90 
     kind.f90 
     lmdif.f90
+    makov_payne.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -51,6 +52,7 @@ set(src_modules
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
+    printout_base.f90
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 
@@ -200,8 +202,6 @@ set(src_modules
     deviatoric.f90
     # GPU
     wavefunctions_gpu.f90
-    becmod_gpu.f90
-    becmod_subs_gpu.f90
     random_numbers_gpu.f90
     cuda_subroutines.f90)
 qe_enable_cuda_fortran("${src_modules}")
@@ -223,6 +223,7 @@ endif()
 
 target_link_libraries(qe_modules
     PRIVATE
+        qe_device_lapack  
         qe_modules_c
         qe_openmp_fortran
         qe_fftx

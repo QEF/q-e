@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,11 +11,13 @@ SUBROUTINE hp_load_q()
   !
   ! This is a driver to the HP initialization routines.
   !
-  USE klist,        ONLY : nks
-  USE io_global,    ONLY : stdout
-  USE qpoint,       ONLY : nksq, ikks, ikqs
-  USE control_lr,   ONLY : lgamma
-  USE ldaU_hp,      ONLY : code
+  USE klist,            ONLY : nks
+  USE io_global,        ONLY : stdout
+  USE qpoint,           ONLY : nksq, ikks, ikqs
+  USE control_lr,       ONLY : lgamma
+  USE ldaU_hp,          ONLY : code
+  USE qpoint_aux,       ONLY : ikmks, ikmkmqs  
+  USE noncollin_module, ONLY : noncolin, domag
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -23,24 +25,49 @@ SUBROUTINE hp_load_q()
   ! ... nksq is the number of k-points, NOT including k+q points
   !
   IF ( lgamma ) THEN
-     !
-     nksq = nks
-     ALLOCATE(ikks(nksq), ikqs(nksq))
-     DO ik=1,nksq
-        ikks(ik) = ik
-        ikqs(ik) = ik
-     ENDDO
-     !
+      !
+      IF (noncolin.AND.domag) THEN
+         nksq = nks/2
+         ALLOCATE(ikks(nksq), ikqs(nksq))
+         ALLOCATE(ikmks(nksq), ikmkmqs(nksq))
+         DO ik=1,nksq
+            ikks(ik) = 2*ik-1
+            ikqs(ik) = 2*ik-1
+            ikmks(ik) = 2*ik
+            ikmkmqs(ik) = 2*ik
+         ENDDO
+      ELSE   
+         nksq = nks
+         ALLOCATE(ikks(nksq), ikqs(nksq))
+         DO ik=1,nksq
+            ikks(ik) = ik
+            ikqs(ik) = ik
+         ENDDO
+      ENDIF   
+      !
   ELSE
-     !
-     nksq = nks / 2
-     ALLOCATE(ikks(nksq), ikqs(nksq))
-     DO ik=1,nksq
-        ikks(ik) = 2 * ik - 1
-        ikqs(ik) = 2 * ik
-     ENDDO
-     !
-  END IF
+      !
+      IF (noncolin.AND.domag) THEN
+         nksq = nks / 4
+         ALLOCATE(ikks(nksq), ikqs(nksq))
+         ALLOCATE(ikmks(nksq), ikmkmqs(nksq))
+         DO ik=1,nksq
+            ikks(ik) = 4 * ik - 3
+            ikqs(ik) = 4 * ik - 2
+            ikmks(ik) = 4 * ik - 1
+            ikmkmqs(ik) = 4 * ik 
+         ENDDO      
+      ELSE
+         nksq = nks / 2
+         ALLOCATE(ikks(nksq), ikqs(nksq))
+         DO ik=1,nksq
+            ikks(ik) = 2 * ik - 1
+            ikqs(ik) = 2 * ik
+         ENDDO
+      ENDIF
+      !
+  ENDIF
+  ! -------------------------------------------------------
   !
   ! Allocate various arrays
   !

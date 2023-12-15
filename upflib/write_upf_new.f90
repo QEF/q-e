@@ -120,6 +120,8 @@ CONTAINS
     CALL add_attr( 'size', upf%mesh )
     CALL xmlw_writetag( capitalize_if_v2('pp_rhoatom'), upf%rho_at(1:upf%mesh))
     !
+    CALL write_pp_metagga ( upf )
+    !
     CALL write_pp_spinorb ( upf )
     !
     CALL write_pp_paw ( upf )
@@ -249,6 +251,7 @@ CONTAINS
     CALL xmlw_writetag( 'has_gipaw', upf%has_gipaw )
     CALL xmlw_writetag( 'paw_as_gipaw', upf%paw_as_gipaw)
     CALL xmlw_writetag( 'core_correction', upf%nlcc)
+    CALL xmlw_writetag( 'with_metagga_info', upf%with_metagga_info)
     CALL xmlw_writetag( 'total_psenergy', upf%etotps )
     CALL xmlw_writetag( 'wfc_cutoff', upf%ecutwfc )
     CALL xmlw_writetag( 'rho_cutoff', upf%ecutrho )
@@ -378,6 +381,7 @@ CONTAINS
     call add_attr("has_gipaw", upf%has_gipaw )
     call add_attr("paw_as_gipaw", upf%paw_as_gipaw )
     call add_attr("core_correction", upf%nlcc )
+    call add_attr("with_metagga_info", upf%with_metagga_info)
     call add_attr("functional", upf%dft )
     call add_attr("z_valence", upf%zp )
     call add_attr("total_psenergy", upf%etotps )
@@ -472,7 +476,7 @@ CONTAINS
              IF ( l > 0 .AND. ABS(upf%jjj(nb)-l-0.5_dp) < 0.001_dp ) ind = 2
           END IF
           IF ( v2 ) THEN
-             tag = 'PP_VNL.'//i2c(ind)
+             tag = 'PP_VNL.'//i2c(l)
           ELSE
              tag = 'vnl'
           END IF
@@ -667,7 +671,7 @@ CONTAINS
        call add_attr( 'label', upf%els(nw) )
        call add_attr( 'l', upf%lchi(nw) )
        IF ( upf%has_so) THEN
-          call add_attr( 'nn', upf%nn(nw) )
+          call add_attr( 'nn', upf%nchi(nw) )
           call add_attr( 'jchi', upf%jchi(nw) )
        END IF
        call add_attr( 'occupation', upf%oc(nw) )
@@ -751,6 +755,20 @@ CONTAINS
   END SUBROUTINE write_pp_full_wfc
   !
   !--------------------------------------------------------
+  SUBROUTINE write_pp_metagga ( upf )
+    !--------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
+    !
+    if ( .NOT. upf%with_metagga_info ) RETURN
+    !
+    CALL xmlw_writetag( capitalize_if_v2('pp_taumod'), upf%tau_core(:) )
+    CALL xmlw_writetag( capitalize_if_v2('pp_tauatom'), upf%tau_atom(:) )
+    !
+  END SUBROUTINE write_pp_metagga
+  !
+  !--------------------------------------------------------
   SUBROUTINE write_pp_spinorb ( upf )
     !--------------------------------------------------------
     !
@@ -764,7 +782,7 @@ CONTAINS
     DO nw = 1,upf%nwfc
        CALL add_attr( 'index' , nw )
        CALL add_attr( 'els',   upf%els(nw) )
-       CALL add_attr( 'nn',    upf%nn(nw) )
+       CALL add_attr( 'nn',    upf%nchi(nw) )
        CALL add_attr( 'lchi',  upf%lchi(nw) )
        CALL add_attr( 'jchi',  upf%jchi(nw) )
        CALL add_attr( 'oc',    upf%oc(nw) )
