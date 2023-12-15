@@ -23,6 +23,7 @@ extract_program = XXXXXX/test-suite/extract-cp.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program -input tc.input tc.args > tc.output 2> tc.error
 tolerance = ( (1.0e-5, 1.0e-5, 'e1'),
+              (1.0e-5, 1.0e-5, 'mp1'),
               (5.0e-4, 1.0e-4, 's1'),
               (1.0e-2, 1.0e-2, 'v1u'),
               (1.0e-2, 1.0e-2, 'v1d'),
@@ -110,7 +111,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-2, 5.0e-2, 'l_a2f'),
               (1.0e-5, 1.0e-5, 'efm'),
               (5.0e-4, 5.0e-4, 'elph'),
-              (2.0e-2, 5.0e-4, 'allDyn'),
+              (4.0e-2, 1.5e-3, 'allDyn'),
               (2.0e-3, 5.0e-4, 'pi'),
               (1.0e-2, 5.0e-2, 'bcsgap'),
               (1.0e-2, 5.0e-2, 'max_eigenvalue'),
@@ -123,7 +124,8 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e+10,1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
               (1.5e+3,   None, 'indabs'),
-              (1.0e-4,   None, 'ratmax'))
+              (1.0e-4,   None, 'ratmax'),
+              (5.0e-2, 1.0e-2, 'eplrn'))
 
 skip_program = grep
 skip_args = 'not present in this version'
@@ -133,7 +135,7 @@ exe = XXXXXX/test-suite/run-zg.sh
 extract_program = XXXXXX/test-suite/extract-zg.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
-tolerance = ( (1.0e-6, 5.0e-3, 'conf') )
+tolerance = ( (5.0e-4, 2.5e-1, 'conf') )
 
 skip_program = grep
 skip_args = 'not present in this version'
@@ -262,3 +264,29 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (5.0e-3, 1.0e-4, 'gap_kc'))
 skip_program = grep
 skip_args = 'not present in this version'
+
+[OSCDFT]
+exe = XXXXXX/test-suite/run-oscdft.sh
+extract_program = XXXXXX/test-suite/extract-pw.sh
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
+              (8.0e+0, 1.0e+1, 'n1'),
+              (1.0e-3, None,   'f1'),
+              (2.0e+0, None,   'p1'),
+              (8.0e-2, 2.0e-2, 'ef1'),
+              (1.0e-2, 1.0e-2, 'eh1'),
+              (1.0e-2, 2.0e-2, 'ehl1'),
+              (2.0e-1, None,   'band'),
+              (1.0e-2, 1.0e-2, 'tf1'),
+              (1.0e-1, None,   'vol'),
+              (5.0e-3, None,   'geom') )
+skip_program = grep
+skip_args = 'not present in this version\|libxc needed for this functional'
+
+[OSCDFT_PP]
+exe = XXXXXX/test-suite/run-oscdft.sh
+extract_program = XXXXXX/test-suite/extract-oscdft-pp.sh
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1e-3, None) )
+skip_program = grep
+skip_args = 'not present in this version\|libxc needed for this functional'

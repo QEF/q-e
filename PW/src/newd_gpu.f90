@@ -29,8 +29,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_rho,              ONLY : rho_r2g
-  USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3,&
-                                   g_d, gg_d, mill_d, eigts1_d, eigts2_d, eigts3_d
+  USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -55,14 +54,14 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt, ierr
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux_d(:,:), qgm_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux_d(:,:), qgm(:,:)
     ! work space
-  REAL(DP), ALLOCATABLE :: ylmk0_d(:,:), qmod_d(:), deeaux_d(:,:)
+  REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux_d(:,:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d, aux_d, qgm_d, ylmk0_d, qmod_d, deeaux_d
+  attributes(DEVICE) :: deeq_d, aux_d, deeaux_d
 #endif
   ! variable to map index of atoms of the same type
   INTEGER, ALLOCATABLE :: na_to_nab_h(:)
@@ -92,17 +91,19 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ngm_l = ngm_e-ngm_s+1
   ! for the extraordinary unlikely case of more processors than G-vectors
   !
-  IF ( ngm_l > 0 ) THEN
-     ALLOCATE( vaux(ngm_l,nspin_mag), qmod_d(ngm_l), ylmk0_d( ngm_l, lmaxq*lmaxq ) )
-     !
-     CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
-     !$cuf kernel do
-     DO ig = 1, ngm_l
-        qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
-     ENDDO
-  END IF
-  !$acc data create( vaux )
+  IF ( ngm_l <= 0 ) GO TO 10
   !
+  ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0( ngm_l, lmaxq*lmaxq ) )
+  !$acc data create( vaux, qmod, ylmk0 )
+  !
+  !$acc host_data use_device(ylmk0, g, gg)
+  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
+  !$acc end host_data
+  !
+  !$acc parallel loop
+  DO ig = 1, ngm_l
+     qmod (ig) = SQRT(gg(ngm_s+ig-1))*tpiba
+  ENDDO
   ! ... Fourier transform of the total effective potential
   !
   DO is = 1, nspin_mag
@@ -136,7 +137,8 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         !
         nhnt = nh(nt)
         nij = nh(nt)*(nh(nt)+1)/2
-        ALLOCATE ( qgm_d(ngm_l,nij) )
+        ALLOCATE ( qgm(ngm_l,nij) )
+        !$acc data create( qgm ) present(eigts1, eigts2, eigts3, mill)
         !
         ! ... Compute and store Q(G) for this atomic species 
         ! ... (without structure factor)
@@ -145,11 +147,12 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         DO ih = 1, nhnt
            DO jh = ih, nhnt
               ijh = ijh + 1
-              CALL qvan2_gpu ( ngm_l, ih, jh, nt, qmod_d, qgm_d(1,ijh), ylmk0_d )
+              CALL qvan2 ( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
            END DO
         END DO
         !
         ALLOCATE ( aux_d (ngm_l, nab ), deeaux_d(nij, nab) )
+        !$acc host_data use_device(qgm)
         !
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
@@ -160,18 +163,18 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
                  nb = na_to_nab_d(na)
                  IF (nb > 0) &
                     aux_d(ig,nb) = vaux(ig,is) * CONJG ( &
-                      eigts1_d(mill_d(1,ngm_s+ig-1),na) * &
-                      eigts2_d(mill_d(2,ngm_s+ig-1),na) * &
-                      eigts3_d(mill_d(3,ngm_s+ig-1),na) )
+                      eigts1(mill(1,ngm_s+ig-1),na) * &
+                      eigts2(mill(2,ngm_s+ig-1),na) * &
+                      eigts3(mill(3,ngm_s+ig-1),na) )
               END DO
            END DO
            !
            ! ... here we compute the integral Q*V for all atoms of this kind
            !
-           CALL cublasDGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm_d, 2*ngm_l, aux_d, &
+           CALL MYDGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, aux_d, &
                     2*ngm_l, 0.0_dp, deeaux_d, nij )
            IF ( gamma_only .AND. gstart == 2 ) &
-                CALL cudaDGER(nij, nab,-1.0_dp, qgm_d, 2*ngm_l,aux_d,2*ngm_l,deeaux_d,nij)
+                CALL MYDGER(nij, nab,-1.0_dp, qgm, 2*ngm_l,aux_d,2*ngm_l,deeaux_d,nij)
            !
            nhnt = nh(nt)
            !$cuf kernel do(3)
@@ -189,17 +192,21 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
            END DO
            !
         END DO
+        !$acc end host_data
         !
-        DEALLOCATE ( deeaux_d, aux_d, qgm_d )
+        DEALLOCATE ( deeaux_d, aux_d )
+        !$acc end data
+        DEALLOCATE ( qgm )
         !
      END IF
      !
   END DO
   !
   !$acc end data
-  DEALLOCATE( qmod_d, ylmk0_d, vaux )
-  DEALLOCATE(na_to_nab_h); CALL buffer%release_buffer(na_to_nab_d, ierr)
+  DEALLOCATE( qmod, ylmk0, vaux )
   !
+  10 CONTINUE
+  DEALLOCATE(na_to_nab_h); CALL buffer%release_buffer(na_to_nab_d, ierr)
   ! REPLACE THIS WITH THE NEW allgather with type or use CPU variable! OPTIMIZE HERE
   CALL mp_sum( deeq_d( :, :, :, 1:nspin_mag ), inter_pool_comm )
   CALL mp_sum( deeq_d( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
@@ -404,7 +411,7 @@ SUBROUTINE newd_gpu( )
     SUBROUTINE newd_so_gpu(nt)
       !------------------------------------------------------------------------
       !
-      USE upf_spinorb,    ONLY : fcoef_d
+      USE upf_spinorb,    ONLY : fcoef
       USE ions_base,      ONLY : nat
       !
       IMPLICIT NONE
@@ -423,7 +430,7 @@ SUBROUTINE newd_gpu( )
             ijs = ijs + 1
             !
             IF (domag) THEN
-               !$acc parallel loop collapse(3) present(deeq_nc,deeq)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -440,17 +447,17 @@ SUBROUTINE newd_gpu( )
                                  !
                                  deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
                                       deeq(kh,lh,na,1)*         &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) + &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt)) + &
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) + &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
                                    deeq(kh,lh,na,2)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt) + &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,1,is2,nt)) + &
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt) + &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
                                    (0.D0,-1.D0)*deeq(kh,lh,na,3)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt) - &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,1,is2,nt)) + &
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt) - &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
                                    deeq(kh,lh,na,4)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) - &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt))   
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) - &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
                                  !
                               END DO
                               !
@@ -465,7 +472,7 @@ SUBROUTINE newd_gpu( )
                !
             ELSE
                !
-               !$acc parallel loop collapse(3) present(deeq_nc,deeq)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -482,8 +489,8 @@ SUBROUTINE newd_gpu( )
                                  !
                                  deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) + &
                                       deeq(kh,lh,na,1)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) + &
-                                   fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt) ) 
+                                   (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) + &
+                                   fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt) ) 
                                  !
                               END DO
                               !

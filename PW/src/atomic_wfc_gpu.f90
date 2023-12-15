@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE cell_base,        ONLY : omega, tpiba
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,            ONLY : natomwfc
-  USE gvect,            ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm
@@ -38,15 +38,14 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
              i0, i1, i2, i3, npw
   COMPLEX(DP) :: kphase, lphase
   REAL(DP)    :: arg, px, ux, vx, wx
-  INTEGER     :: mil1, mil2, mil3
   !
   REAL(DP) :: xk1, xk2, xk3, qgr
-  REAL(DP), ALLOCATABLE :: chiq_d(:,:,:)
-  REAL(DP), ALLOCATABLE :: ylm_d(:,:), gk_d(:,:), qg_d(:)
+  REAL(DP), ALLOCATABLE :: chiq(:,:,:), qg(:)
+  REAL(DP), ALLOCATABLE :: ylm_d(:,:), gk_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: sk_d(:), aux_d(:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: wfcatom_d, ylm_d, gk_d, qg_d, sk_d, chiq_d, aux_d
+  attributes(DEVICE) :: wfcatom_d, ylm_d, gk_d, sk_d, aux_d
 #endif  
   !
   CALL start_clock( 'atomic_wfc' )
@@ -59,60 +58,66 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !
   npw = ngk(ik)
   !
-  ALLOCATE( ylm_d(npw,(lmax_wfc+1)**2), gk_d(3,npw), qg_d(npw) )
-  ALLOCATE( chiq_d(npw,nwfcm,ntyp), sk_d(npw) )
+  ALLOCATE( ylm_d(npw,(lmax_wfc+1)**2), gk_d(3,npw), sk_d(npw) ) 
+  ALLOCATE( chiq(npw,nwfcm,ntyp), qg(npw) )
   !
   xk1 = xk(1,ik)
   xk2 = xk(2,ik)
   xk3 = xk(3,ik)
   !
-  !$cuf kernel do (1) <<<*,*>>>
+  !$acc parallel loop
   DO ig = 1, npw
      iig = igk_k_d(ig,ik)
-     gk_d(1,ig) = xk1 + g_d(1,iig)
-     gk_d(2,ig) = xk2 + g_d(2,iig)
-     gk_d(3,ig) = xk3 + g_d(3,iig)
-     qg_d(ig) = gk_d(1,ig)**2 +  gk_d(2,ig)**2 + gk_d(3,ig)**2
+     gk_d(1,ig) = xk1 + g(1,iig)
+     gk_d(2,ig) = xk2 + g(2,iig)
+     gk_d(3,ig) = xk3 + g(3,iig)
   END DO
   !
   !  ylm = spherical harmonics
   !
-  CALL ylmr2_gpu( (lmax_wfc+1)**2, npw, gk_d, qg_d, ylm_d )
+  !$acc data create(chiq) present(eigts1,eigts2,eigts3,mill)
+  !$acc data create(qg)
+  !$acc parallel loop
+  DO ig = 1, npw
+     qg(ig) = gk_d(1,ig)**2 +  gk_d(2,ig)**2 + gk_d(3,ig)**2
+  END DO
+  !$acc host_data use_device(qg)
+  CALL ylmr2_gpu( (lmax_wfc+1)**2, npw, gk_d, qg, ylm_d )
+  !$acc end host_data
   !
   ! set now q=|k+G| in atomic units
   !
-  !$cuf kernel do (1) <<<*,*>>>
+  !$acc parallel loop
   DO ig = 1, npw
-     qg_d(ig) = SQRT( qg_d(ig) )*tpiba
+     qg(ig) = SQRT( qg(ig) )*tpiba
   END DO
   !
   n_starting_wfc = 0
   !
   ! chiq = radial fourier transform of atomic orbitals chi
   !
-  CALL interp_atwfc_gpu ( npw, qg_d, nwfcm, chiq_d )
+  CALL interp_atwfc ( npw, qg, nwfcm, chiq )
   !
-  DEALLOCATE( qg_d, gk_d )
+  !$acc end data
+  DEALLOCATE( qg, gk_d )
   !
   IF (noncolin) ALLOCATE( aux_d(npw) )
   !
   wfcatom_d(:,:,:) = (0.0_dp, 0.0_dp)
   !
+  !$acc host_data use_device(chiq)
   DO na = 1, nat
      arg = (xk1*tau(1,na) + xk2*tau(2,na) + xk3*tau(3,na)) * tpi
      kphase = CMPLX( COS(arg), - SIN(arg) ,KIND=DP)
      !
      !     sk is the structure factor
      !
-     !$cuf kernel do (1) <<<*,*>>>
+     !$acc parallel loop
      DO ig = 1, npw
         iig = igk_k_d(ig,ik)
-        mil1 = mill_d(1,iig)
-        mil2 = mill_d(2,iig)
-        mil3 = mill_d(3,iig)
-        sk_d(ig) = kphase * eigts1_d(mil1,na) * &
-                            eigts2_d(mil2,na) * &
-                            eigts3_d(mil3,na)
+        sk_d(ig) = kphase * eigts1(mill(1,iig),na) * &
+                            eigts2(mill(2,iig),na) * &
+                            eigts3(mill(3,iig),na)
      END DO
      !
      nt = ityp(na)
@@ -129,20 +134,20 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
               IF ( upf(nt)%has_so ) THEN
                  !
                  IF (starting_spin_angle.OR..NOT.domag) THEN
-                    CALL atomic_wfc_so_gpu( )
+                    CALL atomic_wfc_so_gpu( chiq )
                  ELSE
-                    CALL atomic_wfc_so_mag_gpu( )
+                    CALL atomic_wfc_so_mag_gpu( chiq )
                  END IF
                  !
               ELSE
                  !
-                 CALL atomic_wfc_nc_gpu( )
+                 CALL atomic_wfc_nc_gpu( chiq )
                  !
               END IF
               !
            ELSE
               !
-              CALL atomic_wfc___gpu( )
+              CALL atomic_wfc___gpu( chiq )
               !
            END IF
            !
@@ -151,19 +156,22 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
      END DO
      !
   END DO
+  !$acc end host_data
 
   IF ( n_starting_wfc /= natomwfc) call errore ('atomic_wfc', &
        'internal error: some wfcs were lost ', 1 )
 
   IF (noncolin) DEALLOCATE( aux_d )
-  DEALLOCATE( sk_d, chiq_d, ylm_d )
-
+  DEALLOCATE( sk_d, ylm_d )
+  !$acc end data
+  DEALLOCATE (chiq)
+  
   CALL stop_clock( 'atomic_wfc' )
   RETURN
 
 CONTAINS
 !----------------------------------------------------------------
-  SUBROUTINE atomic_wfc_so_gpu( )
+  SUBROUTINE atomic_wfc_so_gpu( chiq_d )
    !------------------------------------------------------------
    !! Spin-orbit case.
    !
@@ -171,6 +179,10 @@ CONTAINS
    COMPLEX(DP) :: rot_ylm_in1
    REAL(DP), EXTERNAL :: spinor
    INTEGER :: ind, ind1, n1, is, sph_ind
+   REAL(DP) :: chiq_d(:,:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: chiq_d
+#endif  
    !
    j = upf(nt)%jchi(nb)
    DO m = -l-1, l
@@ -193,7 +205,7 @@ CONTAINS
                     !$cuf kernel do (1) <<<*,*>>>
                     DO ig = 1, npw
                       aux_d(ig) = aux_d(ig) + rot_ylm_in1 * &
-                                  CMPLX(ylm_d(ig,ind1))
+                                  CMPLX(ylm_d(ig,ind1), KIND=DP)
                     ENDDO
                   ENDIF
                ENDDO
@@ -201,7 +213,7 @@ CONTAINS
                DO ig = 1, npw
                   wfcatom_d(ig,is,n_starting_wfc) = lphase * &
                                 sk_d(ig)*aux_d(ig)*CMPLX(fact_is* &
-                                chiq_d(ig,nb,nt))
+                                chiq_d(ig,nb,nt), KIND=DP)
                END DO
             ELSE
                 wfcatom_d(:,is,n_starting_wfc) = (0.d0,0.d0)
@@ -213,7 +225,7 @@ CONTAINS
    !
   END SUBROUTINE atomic_wfc_so_gpu
   ! 
-  SUBROUTINE atomic_wfc_so_mag_gpu( )
+  SUBROUTINE atomic_wfc_so_mag_gpu( chiq_d )
    !
    !! Spin-orbit case, magnetization along "angle1" and "angle2"
    !! In the magnetic case we always assume that magnetism is much larger
@@ -226,9 +238,10 @@ CONTAINS
    COMPLEX(DP) :: fup, fdown  
    REAL(DP), ALLOCATABLE :: chiaux_d(:)
    INTEGER :: nc, ib, ig
-   !
+   REAL(DP) :: chiq_d(:,:,:)
 #if defined(__CUDA)
-   ATTRIBUTES(DEVICE) :: chiaux_d
+  attributes(DEVICE) :: chiq_d
+  ATTRIBUTES(DEVICE) :: chiaux_d
 #endif
    !
    j = upf(nt)%jchi(nb)
@@ -279,7 +292,7 @@ CONTAINS
       !
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-        aux_d(ig) = sk_d(ig)* CMPLX(ylm_d(ig,lm)*chiaux_d(ig))
+        aux_d(ig) = sk_d(ig)* CMPLX(ylm_d(ig,lm)*chiaux_d(ig), KIND=DP)
       END DO
       !
       ! now, rotate wfc as needed
@@ -287,31 +300,31 @@ CONTAINS
       !
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-         fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*alpha), KIND=DP)*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=DP)*aux_d(ig)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
          !
          ! second: rotation with angle gamma around (OZ)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         fup = CMPLX(COS(0.5d0*(alpha+pi)))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux_d(ig)
          fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux_d(ig)
          !
          ! second, rotation with angle gamma around (OZ)
          !
-         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0 *gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0 *gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
       END DO
    END DO
    !
@@ -322,13 +335,17 @@ CONTAINS
   END SUBROUTINE atomic_wfc_so_mag_gpu
   !
   !
-  SUBROUTINE atomic_wfc_nc_gpu( )
+  SUBROUTINE atomic_wfc_nc_gpu( chiq_d )
    !
    !! noncolinear case, magnetization along "angle1" and "angle2"
    !
    REAL(DP) :: alpha, gamman
    COMPLEX(DP) :: fup, fdown
    INTEGER :: m, lm, ig  
+   REAL(DP) :: chiq_d(:,:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: chiq_d
+#endif
    !
    alpha = angle1(nt)
    gamman = - angle2(nt) + 0.5d0*pi
@@ -340,7 +357,7 @@ CONTAINS
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-         aux_d(ig) = sk_d(ig)*CMPLX(ylm_d(ig,lm)*chiq_d(ig,nb,nt))
+         aux_d(ig) = sk_d(ig)*CMPLX(ylm_d(ig,lm)*chiq_d(ig,nb,nt), KIND=DP)
       END DO
       !
       ! now, rotate wfc as needed
@@ -348,31 +365,31 @@ CONTAINS
       !
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-         fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*alpha), KIND=DP)*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=DP)*aux_d(ig)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
          !
          ! second: rotation with angle gamma around (OZ)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         fup = CMPLX(COS(0.5d0*(alpha+pi)))*aux_d(ig)
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)), KIND=DP)*aux_d(ig)
          !
          ! second, rotation with angle gamma around (OZ)
          !
-         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
       END DO
    END DO
    n_starting_wfc = n_starting_wfc + 2*l+1
@@ -380,10 +397,15 @@ CONTAINS
   END SUBROUTINE atomic_wfc_nc_gpu
   !
   !
-  SUBROUTINE atomic_wfc___gpu( )
-   !
-   ! ... LSDA or nonmagnetic case
-   !
+  SUBROUTINE atomic_wfc___gpu( chiq_d )
+    !
+    ! ... LSDA or nonmagnetic case
+    !
+    REAL(dp) :: chiq_d(:,:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: chiq_d
+#endif
+
    INTEGER :: m, lm, ig
    !
    DO m = 1, 2 * l + 1
@@ -395,7 +417,7 @@ CONTAINS
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
          wfcatom_d(ig,1,n_starting_wfc) = lphase * &
-            sk_d(ig) * CMPLX(ylm_d(ig,lm) * chiq_d(ig,nb,nt))
+            sk_d(ig) * CMPLX(ylm_d(ig,lm) * chiq_d(ig,nb,nt), KIND=DP)
       ENDDO
       !
    END DO

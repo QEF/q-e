@@ -125,3 +125,12 @@ MODULE ldaU_hp
   INTEGER, ALLOCATABLE :: ityp_new(:)       ! Types of atoms
   !
 END MODULE ldaU_hp
+
+MODULE hp_nc_mag_aux
+  USE kinds,      ONLY : DP
+  SAVE
+
+  COMPLEX (DP), ALLOCATABLE ::  &
+                               deeq_nc_save(:,:,:,:,:), &
+                               int3_save(:, :, :, :, :, :)
+END MODULE hp_nc_mag_aux

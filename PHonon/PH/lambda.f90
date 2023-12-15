@@ -22,7 +22,7 @@ program elph
   !! formula.
 
   implicit none
-  integer, parameter:: npk=200, nsigx=50, nmodex=100, nex=200
+  integer, parameter:: npk=200, nsigx=50, nmodex=100, nex=2000
   integer :: nks, ios, iuelph, ngauss, ngauss1, ngaussq, nsig, nmodes
   integer :: ik, ng, mu, nu, i
   real(kind=8) :: q(3,npk), wk(npk), degauss(nsigx), w2(nmodex), &
@@ -56,7 +56,7 @@ program elph
   ! OUTPUT in xmgr-readable format: files 'lambda.dat' and 'alpha2F.dat'
   !
 
-  real*8 mustar, omegalog(20), Tc, x
+  real*8 mustar, omegalog(nsigx), Tc, x
 
   read(5,*) emax, degaussq, ngaussq
   deltae=emax/(nex-1)

@@ -125,7 +125,11 @@ run.
       <var name="dftd3_hess" type="CHARACTER" >
          <default> &apos;prefix.hess&apos;
          </default>
-         <info> File where the D3 dispersion hessian matrix is read.
+         <info>
+File where the D3 dispersion hessian matrix is read. Set to
+&apos;automatic.hess&apos; to enable automatic mode (experimental). In
+this mode, D3 Hessian is computed if &apos;automatic.hess&apos; file is
+missing.
          </info>
       </var>
       <var name="fildyn" type="CHARACTER" >

@@ -28,7 +28,7 @@
   epmatkqread  = .false.
 
   nstemp      = 2
-  temps       = 100 300
+  temps       = 200 300
 
   lpolar      = .true.
   use_ws      = .true.
@@ -77,13 +77,13 @@
 
   dvscf_dir   = './save/'
 
-  nkf1         = 12
-  nkf2         = 12
-  nkf3         = 12
+  nkf1         = 20
+  nkf2         = 20
+  nkf3         = 20
 
-  nqf1         = 12
-  nqf2         = 12
-  nqf3         = 12
+  nqf1         = 20
+  nqf2         = 20
+  nqf3         = 20
 
   nk1         = 2
   nk2         = 2

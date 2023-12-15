@@ -41,27 +41,19 @@
 
      REAL(DP), ALLOCATABLE, TARGET :: gg(:) 
      !! \(G^2\) in increasing order (in units of \(\text{tpiba2}=(2\pi/a)^2\) )
-     REAL(DP), ALLOCATABLE         :: gg_d(:)
-     !! device
 
      REAL(DP), POINTER, PROTECTED :: gl(:)
      !! gl(i) = i-th shell of G^2 (in units of tpiba2)
      INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
      !! igtongl(n) = shell index for n-th G-vector
      
-     ! Duplicate of the above variables (new style duplication).
-     REAL(DP), ALLOCATABLE                   :: gl_d(:)      ! device
-     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:) ! device
-     !
      REAL(DP), ALLOCATABLE, TARGET :: g(:,:) 
      !! G-vectors cartesian components ( in units \(\text{tpiba} =(2\pi/a)\) )
-     REAL(DP), ALLOCATABLE         :: g_d(:,:)   ! device
      !
      INTEGER, ALLOCATABLE, TARGET :: mill(:,:)
      !! miller index of G vectors (local to each processor)
      !! G(:) = mill(1)*bg(:,1)+mill(2)*bg(:,2)+mill(3)*bg(:,3) 
      !! where bg are the reciprocal lattice basis vectors.
-     INTEGER, ALLOCATABLE         :: mill_d(:,:) ! device
      !
      INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:)
      !! converts a local G-vector index into the global index
@@ -74,14 +66,7 @@
      COMPLEX(DP), ALLOCATABLE :: eigts1(:,:)
      !! the phases \(e^{-iG\text{tau}_s}\) used to calculate structure factors.
      COMPLEX(DP), ALLOCATABLE :: eigts2(:,:), eigts3(:,:)
-     COMPLEX(DP), ALLOCATABLE :: eigts1_d(:,:)    ! device
-     COMPLEX(DP), ALLOCATABLE :: eigts2_d(:,:)
-     COMPLEX(DP), ALLOCATABLE :: eigts3_d(:,:)
      !   
-#if defined(__CUDA)
-     attributes(DEVICE) :: gl_d, igtongl_d
-     attributes(DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
-#endif
    CONTAINS
 
      SUBROUTINE gvect_init( ngm_ , comm )
@@ -114,13 +99,8 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
-       !
-       IF (use_gpu) THEN
-          ALLOCATE( mill_d(3, ngm) )
-          ALLOCATE( igtongl_d(ngm) )
-          ALLOCATE( gl_d(ngm) )
-       ENDIF  
-       !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm) ) 
+       ! FIXME  why dimensions in the following directive?
+       !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm), igtongl(1:ngm) ) 
        !
        RETURN 
        !
@@ -155,7 +135,10 @@
 !$acc    exit data delete(mill) 
          DEALLOCATE( mill )
        END IF 
-       IF( ALLOCATED( igtongl )) DEALLOCATE( igtongl )
+       IF( ALLOCATED( igtongl )) THEN
+!$acc    exit data delete(igtongl)         
+         DEALLOCATE( igtongl )
+       END IF
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( eigts1 ) ) THEN
 !$acc    exit data delete(eigts1)         
@@ -170,22 +153,13 @@
          DEALLOCATE( eigts3 )
        END IF 
        !
-       ! GPU vars
-       IF (use_gpu) THEN
-          IF (ALLOCATED( igtongl_d )) DEALLOCATE( igtongl_d )
-          IF (ALLOCATED( gl_d ) )     DEALLOCATE( gl_d )
-          IF (ALLOCATED( gg_d ) )     DEALLOCATE( gg_d )
-          IF (ALLOCATED( g_d ) )      DEALLOCATE( g_d )
-          IF (ALLOCATED( mill_d ) )   DEALLOCATE( mill_d )
-          IF (ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
-          IF (ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
-          IF (ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
-       ENDIF
-       ! 
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()
-       IF( ALLOCATED( gg ) )      DEALLOCATE( gg )
+       IF( ALLOCATED( gg ) ) THEN
+!$acc    exit data delete(gg)
+         DEALLOCATE( gg )
+       END IF
        IF( ALLOCATED( g ) )  THEN
 !$acc    exit data delete(g) 
          DEALLOCATE( g )
@@ -194,7 +168,10 @@
 !$acc    exit data delete(mill) 
          DEALLOCATE( mill )
        END IF 
-       IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
+       IF( ALLOCATED( igtongl ) ) THEN
+!$acc    exit data delete(igtongl)         
+         DEALLOCATE( igtongl )
+       END IF
        IF( ALLOCATED( ig_l2g ) )  DEALLOCATE( ig_l2g )
      END SUBROUTINE deallocate_gvect_exx
      !
@@ -249,8 +226,7 @@
            IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
 
         ENDIF
-        IF (use_gpu)      gl_d = gl
-        IF (use_gpu) igtongl_d = igtongl
+!$acc update device(igtongl)         
      END SUBROUTINE gshells
 !=----------------------------------------------------------------------------=!
    END MODULE gvect

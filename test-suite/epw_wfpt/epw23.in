@@ -1,0 +1,47 @@
+--
+&inputepw
+  prefix      = 'BAs'
+  amass(1)    = 10.81
+  amass(2)    = 74.922
+  dvscf_dir   = './save/'
+  elph        = .true.
+
+  iverbosity  = 0
+  etf_mem     = 0
+  use_ws = .true.
+  lpolar = .true.
+
+  degaussw = 0.05 ! eV
+  temps = 0.01  600.0
+
+  filkf = 'kpath.GammaX.txt'
+  nqf1 = 5
+  nqf2 = 5
+  nqf3 = 5
+
+  nbndsub     =  8
+
+  wfpt = .true.
+  elecselfen_ahc = .true.
+  ahc_nbnd = 9
+  ahc_win_max = 13.0
+  ahc_win_min = -100.0
+
+  lifc        = .true.
+
+  efermi_read = .true.
+  fermi_energy = 8.70
+
+  wannierize  = .false.
+  epbread = .false.
+  epwread = .true.
+
+  nk1         = 2
+  nk2         = 2
+  nk3         = 2
+
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+ /
+

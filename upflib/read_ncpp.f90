@@ -7,17 +7,19 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine read_ncpp (iunps, np, upf)
+subroutine read_ncpp (iunps, upf, ierr)
   !-----------------------------------------------------------------------
   !
   USE upf_kinds,  only: dp
   USE upf_params, ONLY: lmaxx
+  USE upf_io    , ONLY: stdout
   USE pseudo_types
 
   implicit none
   !
-  TYPE (pseudo_upf) :: upf
-  integer :: iunps, np
+  TYPE (pseudo_upf)  :: upf
+  integer, intent(in) :: iunps
+  integer, intent(out):: ierr
   !
   real(DP) :: cc(2), alpc(2), aps(6,0:3), alps(3,0:3), &
        a_nlcc, b_nlcc, alpha_nlcc
@@ -25,21 +27,26 @@ subroutine read_ncpp (iunps, np, upf)
   real(DP), allocatable:: vnl(:,:)
   real(DP), parameter :: rcut = 10.d0, e2 = 2.d0
   integer :: nlc, nnl, lmax, lloc, ll(1) 
-  integer :: nb, i, l, ir, ios=0
+  integer :: nb, i, l, ir, ios = 0
   logical :: bhstype,  numeric
   !
   !====================================================================
   ! read norm-conserving PPs
   !
+  ierr = 1
+  !
   read (iunps, *, end=300, err=300, iostat=ios) upf%dft
   if (upf%dft(1:2) .eq.'**') upf%dft = 'PZ'
   read (iunps, *, err=300, iostat=ios) upf%psd, upf%zp, lmax, nlc, &
                                        nnl, upf%nlcc, lloc, bhstype
-  if (nlc > 2 .or. nnl > 3) &
-       call upf_error ('read_ncpp', 'Wrong nlc or nnl', np)
-  if (nlc*nnl < 0) call upf_error ('read_ncpp', 'nlc*nnl < 0 ? ', np)
-  if (upf%zp <= 0d0 .or. upf%zp > 100 ) &
-       call upf_error ('read_ncpp', 'Wrong zp ', np)
+  if (nlc > 2 .or. nnl > 3 .or. nlc*nnl < 0 ) then
+     write(stdout,'(5x,"read_ncpp: Wrong nlc and/or nnl")')
+     return
+  end if
+  if (upf%zp <= 0d0 .or. upf%zp > 100 ) then
+     write(stdout,'(5x,"read_ncpp: Wrong zp")')
+     return
+  end if
   !
   !   In numeric pseudopotentials both nlc and nnl are zero.
   !
@@ -49,16 +56,20 @@ subroutine read_ncpp (iunps, np, upf)
   if (lloc < 0 .or. lmax < 0 .or. &
        .not.numeric .and. (lloc > min(lmax+1,lmaxx+1) .or. &
        lmax > max(lmaxx,lloc)) .or. &
-       numeric .and. (lloc > lmax .or. lmax > lmaxx) ) &
-       call upf_error ('read_ncpp', 'wrong lmax and/or lloc', np)
+       numeric .and. (lloc > lmax .or. lmax > lmaxx) ) then
+     write(stdout,'(5x,"read_ncpp: Wrong lmax and/or lloc")')
+     return
+  end if
   if (.not.numeric  ) then
      !
      !   read here pseudopotentials in analytic form
      !
      read (iunps, *, err=300, iostat=ios) &
           (alpc(i), i=1,2), (cc(i), i=1,2)
-     if (abs (cc(1)+cc(2)-1.d0) > 1.0d-6) &
-          call upf_error ('read_ncpp', 'wrong pseudopotential coefficients', 1)
+     if (abs (cc(1)+cc(2)-1.d0) > 1.0d-6) then
+        write(stdout,'(5x,"read_ncpp: Wrong PP coefficients")')
+        return
+     end if
      do l = 0, lmax
         read (iunps, *, err=300, iostat=ios) (alps(i,l), i=1,3), &
                                              (aps(i,l),  i=1,6)
@@ -66,17 +77,24 @@ subroutine read_ncpp (iunps, np, upf)
      if (upf%nlcc ) then
         read (iunps, *, err=300, iostat=ios) &
              a_nlcc, b_nlcc, alpha_nlcc
-        if (alpha_nlcc <= 0.d0) call upf_error('read_ncpp','alpha_nlcc=0',np)
+        if (alpha_nlcc <= 0.d0) then
+           write(stdout,'(5x,"read_ncpp: wrong alpha_nlcc")')
+           return
+        end if
      endif
   endif
   read (iunps, *, err=300, iostat=ios) upf%zmesh, upf%xmin, upf%dx, &
                                        upf%mesh, upf%nwfc 
-  if ( upf%mesh <= 0) &
-       call upf_error ('read_ncpp', 'wrong number of mesh points', np)
+  if ( upf%mesh <= 0) then
+     write(stdout,'(5x,"read_ncpp: wrong number of mesh points")')
+     return
+  end if
   if ( upf%nwfc < 0 .or. &
        (upf%nwfc < lmax   .and. lloc == lmax) .or. & 
-       (upf%nwfc < lmax+1 .and. lloc /= lmax) ) &
-       call upf_error ('read_ncpp', 'wrong no. of wfcts', np)
+       (upf%nwfc < lmax+1 .and. lloc /= lmax) ) then
+     write(stdout,'(5x,"read_ncpp: wrong number of wavefunctions")')
+     return
+  end if
   !
   !  Here pseudopotentials in numeric form are read
   !
@@ -102,17 +120,24 @@ subroutine read_ncpp (iunps, np, upf)
      !
      !     Test lchi and occupation numbers
      !
-     if (nb <= lmax .and. upf%lchi(nb)+1 /= nb) &
-          call upf_error ('read_ncpp', 'order of wavefunctions', 1)
-     if (upf%lchi(nb) > lmaxx .or. upf%lchi(nb) < 0) &
-                      call upf_error ('read_ncpp', 'wrong lchi', np)
-     if (upf%oc(nb) < 0.d0 .or. upf%oc(nb) > 2.d0*(2*upf%lchi(nb)+1)) &
-          call upf_error ('read_ncpp', 'wrong oc', np)
+     if (nb <= lmax .and. upf%lchi(nb)+1 /= nb) then
+        write(stdout,'(5x,"read_ncpp: wrong order of wavefunctions")')
+        return
+     end if
+     if (upf%lchi(nb) > lmaxx .or. upf%lchi(nb) < 0) then
+        write(stdout,'(5x,"read_ncpp: wrong lchi")')
+        return
+     end if
+     if (upf%oc(nb) < 0.d0 .or. upf%oc(nb) > 2.d0*(2*upf%lchi(nb)+1)) then
+        write(stdout,'(5x,"read_ncpp: wrong oc")')
+        return
+     end if
      read (iunps, *, err=300, iostat=ios) ( upf%chi(ir,nb), ir=1,upf%mesh )
   enddo
   !
+  ierr = 0
   !====================================================================
-  ! PP read: now setup 
+  ! PP succesfully read: now setup 
   !
   IF ( numeric ) THEN
      upf%generated='Generated by old ld1 code (numerical format)'
@@ -250,8 +275,13 @@ subroutine read_ncpp (iunps, np, upf)
   upf%is_multiproj=.false.
   !
   ! Set additional, not present, variables to dummy values
-  allocate(upf%els(upf%nwfc))
-  upf%els(:) = 'nX'
+  allocate(upf%els(upf%nwfc), upf%nchi(upf%nwfc), upf%epseu(upf%nwfc))
+  upf%els(:)  = 'nX'
+  upf%nchi(:) = 0
+  upf%epseu(:)= 0._dp
+  allocate(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
+  upf%rcut_chi(:) = 0._dp
+  upf%rcutus_chi(:) = 0._dp
   allocate(upf%els_beta(upf%nbeta))
   upf%els_beta(:) = 'nX'
   allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
@@ -260,7 +290,7 @@ subroutine read_ncpp (iunps, np, upf)
   !
   return
 
-300 call upf_error ('read_ncpp', 'pseudo file is empty or wrong', abs (np) )
+300 write(stdout,'(5x,"read_ncpp: PP file is empty or wrong")')
 end subroutine read_ncpp
 !
 !----------------------------------------------------------------------

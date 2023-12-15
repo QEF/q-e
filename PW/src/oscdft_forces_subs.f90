@@ -53,16 +53,16 @@ MODULE oscdft_forces_subs
          USE ions_base,          ONLY : nat, ityp
          USE lsda_mod,           ONLY : isk, lsda
          USE klist,              ONLY : ngk, nks, igk_k, xk
-         USE becmod,             ONLY : bec_type, becp, calbec, allocate_bec_type, &
-                                        deallocate_bec_type
+         USE becmod,             ONLY : bec_type, becp, calbec,&
+                                        allocate_bec_type_acc, &
+                                        deallocate_bec_type_acc
          USE uspp_param,         ONLY : upf, nh
          USE wavefunctions,      ONLY : evc
-         USE control_flags,      ONLY : gamma_only
+         USE control_flags,      ONLY : gamma_only, use_gpu, offload_type
          USE io_files,           ONLY : iunwfc, nwordwfc
-         USE wvfct,              ONLY : nbnd, npwx
+         USE wvfct,              ONLY : nbnd, npwx, wg
          USE uspp,               ONLY : nkb, vkb, ofsbeta, qq_at
          USE oscdft_wfcO,        ONLY : orthoOwfc
-         USE oscdft_wfcO_gpu,    ONLY : orthoOwfc_gpu
          USE oscdft_occupations, ONLY : oscdft_new_ns,&
                                         oscdft_get_occupation_numbers
          USE buffers,            ONLY : get_buffer
@@ -71,17 +71,6 @@ MODULE oscdft_forces_subs
          USE mp_images,          ONLY : intra_image_comm
          USE symm_base,          ONLY : nsym
          USE uspp_init,          ONLY : init_us_2
-         USE control_flags,      ONLY : use_gpu
-         USE becmod_subs_gpum,   ONLY : using_becp_auto, using_becp_d_auto
-         USE wavefunctions_gpum, ONLY : using_evc
-#if defined(__CUDA)
-         USE becmod_gpum,        ONLY : bec_type_d, becp_d
-         USE becmod_subs_gpum,   ONLY : allocate_bec_type_gpu,&
-                                        deallocate_bec_type_gpu,&
-                                        calbec_gpu
-         USE wvfct_gpum,         ONLY : using_wg_d
-         USE wavefunctions_gpum, ONLY : evc_d, using_evc_d
-#endif
 
          IMPLICIT NONE
 
@@ -98,11 +87,7 @@ MODULE oscdft_forces_subs
                                      curr_dim, h, k, ibnd, iconstr, ih, jh,&
                                      ijkb0, ik, ioscdft, ipos, na, nt, ierr, oidx, i,&
                                      isum, osum, angular_momentum, isym
-#if defined(__CUDA)
-         TYPE(bec_type_d)         :: proj
-#else
          TYPE(bec_type)           :: proj
-#endif
          REAL(DP)                 :: multiplier
          COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
          REAL(DP),    ALLOCATABLE :: force_oscdft_sym(:,:,:),&
@@ -120,19 +105,11 @@ MODULE oscdft_forces_subs
          CALL start_clock("oscdft_force")
 
          ! recalculate atomic wavefunctions
-         IF (use_gpu) THEN
-            CALL orthoOwfc_gpu(ctx)
-         ELSE
-            CALL orthoOwfc(ctx)
-         END IF
+         CALL orthoOwfc(ctx)
 
-         CALL allocate_bec_type(nkb, nbnd, becp) ! using_becp_auto takes care of allocating becp_d?
-         CALL using_becp_auto(2)
-#if defined(__CUDA)
-         CALL allocate_bec_type_gpu(wfcF%n, nbnd, proj)
-#else
-         CALL allocate_bec_type(wfcF%n, nbnd, proj)
-#endif
+         CALL allocate_bec_type_acc(nkb, nbnd, becp)
+         CALL allocate_bec_type_acc(wfcF%n, nbnd, proj)
+
          ! allocate derivatives
          IF (gamma_only) THEN
             CALL oscdft_derivatives_gamma_alloc(forces%deriv_gamma,&
@@ -150,10 +127,7 @@ MODULE oscdft_forces_subs
          ALLOCATE(force_oscdft_sym(3,nsym,nat),&
                   dns(2*idx%max_ns_dim+1,2*idx%max_ns_dim+1,nsym,idx%nconstr))
          wfcF_wfc => wfcF%wfc
-         !$acc data create(spsi, wfcF_wfc(:,:))
-#if defined(__CUDA)
-         CALL using_wg_d(1)
-#endif
+         !$acc data create(spsi, wfcF_wfc(:,:)) present_or_create(evc) present_or_copyin(wg)
 
          force_oscdft_sym(:,:,:) = 0.D0
          ispin = 1
@@ -162,33 +136,28 @@ MODULE oscdft_forces_subs
             npw = ngk(ik)
 
             IF (nks > 1) THEN
-               CALL using_evc(2)
                CALL get_buffer(evc, nwordwfc, iunwfc, ik)
                CALL oscdft_get_buffer(wfcF, ik)
             ENDIF
-            !$acc update device(wfcF_wfc(:,:))
+            !$acc update device(wfcF_wfc(:,:), evc)
 
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             ! proj = <wfcF|S|psi>
-#if defined(__CUDA)
-            CALL using_evc_d(0)
-            CALL using_becp_d_auto(2)
-            !$acc host_data use_device(vkb,spsi,wfcF_wfc(:,:))
-            CALL calbec_gpu(npw, vkb, evc_d, becp_d)
-            CALL s_psi_gpu(npwx, npw, nbnd, evc_d, spsi)
-            CALL calbec_gpu(npw, wfcF_wfc, spsi, proj)
-            !$acc end host_data
-#else
-            CALL calbec(npw, vkb, evc, becp)
-            CALL s_psi(npwx, npw, nbnd, evc, spsi)
-            CALL calbec(npw, wfcF_wfc, spsi, proj)
-#endif
+            CALL calbec(offload_type, npw, vkb, evc, becp)
+            IF (use_gpu) THEN
+               !$acc host_data use_device(evc, spsi)
+               CALL s_psi_acc(npwx, npw, nbnd, evc, spsi)
+               !$acc end host_data
+            ELSE
+               CALL s_psi(npwx, npw, nbnd, evc, spsi)
+            END IF
+            CALL calbec(offload_type, npw, wfcF_wfc, spsi, proj)
 
             ! calculate <beta|psi>
             IF (gamma_only) THEN
-               CALL calc_betapsi_gamma(forces%deriv_gamma%betapsi)
+               CALL calc_betapsi_gamma(forces%deriv_gamma%betapsi, becp%r)
             ELSE
-               CALL calc_betapsi_k(forces%deriv_k%betapsi)
+               CALL calc_betapsi_k(forces%deriv_k%betapsi, becp%k)
             END IF
 
             DO ipos=1,3 ! x y z
@@ -198,19 +167,10 @@ MODULE oscdft_forces_subs
                   CALL oscdft_get_derivatives_k(ctx, spsi, ik, ispin, ipos)
                ENDIF
                DO na=1,nat
-                  !TODO: proj
                   IF (gamma_only) THEN
-#if defined(__CUDA)
-                     CALL oscdft_dndtau_gamma(ctx, forces%deriv_gamma, proj%r_d, na, ipos, ispin, ik, dns)
-#else
                      CALL oscdft_dndtau_gamma(ctx, forces%deriv_gamma, proj%r, na, ipos, ispin, ik, dns)
-#endif
                   ELSE
-#if defined(__CUDA)
-                     CALL oscdft_dndtau_k(ctx, forces%deriv_k, proj%k_d, na, ipos, ispin, ik, dns)
-#else
                      CALL oscdft_dndtau_k(ctx, forces%deriv_k, proj%k, na, ipos, ispin, ik, dns)
-#endif
                   ENDIF
                   DO iconstr=1,idx%nconstr
                      ioscdft = idx%iconstr2ioscdft(iconstr)
@@ -262,13 +222,8 @@ MODULE oscdft_forces_subs
          !$acc end data
          DEALLOCATE(spsi, dns)
 
-         CALL deallocate_bec_type(becp)
-         CALL using_becp_auto(2)
-#if defined(__CUDA)
-         CALL deallocate_bec_type_gpu(proj)
-#else
-         CALL deallocate_bec_type(proj)
-#endif
+         CALL deallocate_bec_type_acc(becp)
+         CALL deallocate_bec_type_acc(proj)
 
          CALL mp_sum(force_oscdft_sym, inter_pool_comm)
 
@@ -286,31 +241,22 @@ MODULE oscdft_forces_subs
          700 FORMAT(*(ES14.7, " "))
       END SUBROUTINE oscdft_get_forces
 
-      SUBROUTINE calc_betapsi_gamma(betapsi)
+      SUBROUTINE calc_betapsi_gamma(betapsi, becp_r)
          USE wvfct,              ONLY : nbnd
          USE ions_base,          ONLY : nat, ityp
          USE uspp,               ONLY : ofsbeta, qq_at
          USE uspp_param,         ONLY : nh
          USE becmod,             ONLY : becp
-         USE becmod_gpum,        ONLY : becp_d
          IMPLICIT NONE
 
          REAL(DP), INTENT(OUT) :: betapsi(:,:)
+         REAL(DP), INTENT(IN)  :: becp_r(:,:)
          INTEGER               :: ibnd, na, nt, ijkb0, ih, jh
          REAL(DP)              :: temp
 
-#if defined(__CUDA)
-         REAL(DP), POINTER, DEVICE :: becp_r_d(:,:)
-#endif
 
 
-         !$acc data present(betapsi)
-         !$acc data present(qq_at)
-
-#if defined(__CUDA)
-         becp_r_d => becp_d%r_d
-         !$acc data present(becp_r_d)
-#endif
+         !$acc data present(betapsi, qq_at, becp_r)
 
          !$acc kernels
          betapsi(:,:) = 0.D0
@@ -329,11 +275,7 @@ MODULE oscdft_forces_subs
                      DO ih=1,nh(nt)
                         temp = 0.D0
                         DO jh=1,nh(nt)
-#if defined(__CUDA)
-                           temp = temp + qq_at(ih,jh,na) * becp_r_d(ijkb0+jh,ibnd)
-#else
-                           temp = temp + qq_at(ih,jh,na) * becp%r(ijkb0+jh,ibnd)
-#endif
+                           temp = temp + qq_at(ih,jh,na) * becp_r(ijkb0+jh,ibnd)
                         END DO
                         betapsi(ijkb0+ih,ibnd) = betapsi(ijkb0+ih,ibnd) + temp
                      END DO
@@ -342,39 +284,25 @@ MODULE oscdft_forces_subs
 #if !defined(__CUDA)
 !$omp end parallel do
 #endif
-#if defined(__CUDA)
-         !$acc end data
-#endif
-
-         !$acc end data
          !$acc end data
       END SUBROUTINE calc_betapsi_gamma
 
-      SUBROUTINE calc_betapsi_k(betapsi)
+      SUBROUTINE calc_betapsi_k(betapsi, becp_k)
          USE wvfct,              ONLY : nbnd
          USE ions_base,          ONLY : nat, ityp
          USE uspp,               ONLY : ofsbeta, qq_at
          USE uspp_param,         ONLY : nh
          USE becmod,             ONLY : becp
-         USE becmod_gpum,        ONLY : becp_d
          IMPLICIT NONE
 
          COMPLEX(DP), INTENT(OUT) :: betapsi(:,:)
+         COMPLEX(DP), INTENT(IN)  :: becp_k(:,:)
          INTEGER                  :: ibnd, na, nt, ijkb0, ih, jh
          COMPLEX(DP)              :: temp
 
-#if defined(__CUDA)
-         COMPLEX(DP), POINTER, DEVICE :: becp_k_d(:,:)
-#endif
 
 
-         !$acc data present(betapsi)
-         !$acc data present(qq_at)
-
-#if defined(__CUDA)
-         becp_k_d => becp_d%k_d
-         !$acc data present(becp_k_d)
-#endif
+         !$acc data present(betapsi, qq_at, becp_k)
 
          !$acc kernels
          betapsi(:,:) = 0.D0
@@ -392,11 +320,7 @@ MODULE oscdft_forces_subs
                      DO ih=1,nh(nt)
                         temp = (0.D0, 0.D0)
                         DO jh=1,nh(nt)
-#if defined(__CUDA)
-                           temp = temp + qq_at(ih,jh,na) * becp_k_d(ijkb0+jh,ibnd)
-#else
-                           temp = temp + qq_at(ih,jh,na) * becp%k(ijkb0+jh,ibnd)
-#endif
+                           temp = temp + qq_at(ih,jh,na) * becp_k(ijkb0+jh,ibnd)
                         END DO
                         betapsi(ijkb0+ih,ibnd) = betapsi(ijkb0+ih,ibnd) + temp
                      END DO
@@ -405,11 +329,6 @@ MODULE oscdft_forces_subs
 #if !defined(__CUDA)
 !$omp end parallel do
 #endif
-#if defined(__CUDA)
-         !$acc end data
-#endif
-
-         !$acc end data
          !$acc end data
       END SUBROUTINE calc_betapsi_k
 
@@ -472,10 +391,7 @@ MODULE oscdft_forces_subs
          USE gvect,         ONLY : g
          USE symm_base,     ONLY : nsym
          USE mp_bands,      ONLY : intra_bgrp_comm
-#if defined(__CUDA)
-         USE becmod_subs_gpum,   ONLY : calbec_gpu
-         USE wavefunctions_gpum, ONLY : evc_d
-#endif
+         USE control_flags, ONLY : offload_type
 
          IMPLICIT NONE
 
@@ -507,7 +423,7 @@ MODULE oscdft_forces_subs
          wfcF   => ctx%forces%wfcO
          deriv  => ctx%forces%deriv_gamma
          wfcF_wfc => ctx%forces%wfcO%wfc
-                                                   
+
          npw = ngk(ik)
 
          dwfatpsi  => deriv%dwfatpsi
@@ -555,13 +471,7 @@ MODULE oscdft_forces_subs
             END IF
          END DO
 
-#if defined(__CUDA)
-         !$acc host_data use_device(dwfc, spsi, dwfatpsi)
-         CALL calbec_gpu(npw, dwfc, spsi, dwfatpsi)
-         !$acc end host_data
-#else
-         CALL calbec(npw, dwfc, spsi, dwfatpsi)
-#endif
+         CALL calbec(offload_type, npw, dwfc, spsi, dwfatpsi)
          !$acc end data
          DEALLOCATE(dwfc)
 
@@ -572,13 +482,7 @@ MODULE oscdft_forces_subs
          dbetapsi_temp = (0.D0, 0.D0)
          !$acc end kernels
 
-#if defined(__CUDA)
-         !$acc host_data use_device(vkb, wfatbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, wfcF_wfc, vkb, wfatbeta)
-         !$acc end host_data
-#else
-         CALL calbec(npw, wfcF_wfc, vkb, wfatbeta)
-#endif
+         CALL calbec(offload_type, npw, wfcF_wfc, vkb, wfatbeta)
 
 #if defined(__CUDA)
          !$acc parallel loop collapse(2) present(g, igk_k, vkb, dbeta)
@@ -595,15 +499,8 @@ MODULE oscdft_forces_subs
 #endif
          END DO
 
-#if defined(__CUDA)
-         !$acc host_data use_device(dbeta, dbetapsi_temp, wfatdbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi_temp)
-         CALL calbec_gpu(npw, wfcF_wfc, dbeta, wfatdbeta)
-         !$acc end host_data
-#else
-         CALL calbec(npw, dbeta, evc, dbetapsi_temp)
-         CALL calbec(npw, wfcF_wfc, dbeta, wfatdbeta)
-#endif
+         CALL calbec(offload_type, npw, dbeta, evc, dbetapsi_temp)
+         CALL calbec(offload_type, npw, wfcF_wfc, dbeta, wfatdbeta)
 
 #if defined(__CUDA)
 !$acc parallel loop private(na, nt, ijkb0, ih, jh, temp)
@@ -619,7 +516,6 @@ MODULE oscdft_forces_subs
                   DO jh=1,nh(nt)
                      temp = temp + qq_at(ih,jh,na) * dbetapsi_temp(ijkb0+jh,ibnd)
                   END DO
-                  ! TODO: check whether this is assignment or addition
                   dbetapsi(ijkb0+ih,ibnd) = dbetapsi(ijkb0+ih,ibnd) + temp
                END DO
             END DO
@@ -646,10 +542,7 @@ MODULE oscdft_forces_subs
          USE gvect,         ONLY : g
          USE uspp_param,    ONLY : nh
          USE symm_base,     ONLY : nsym
-#if defined(__CUDA)
-         USE becmod_subs_gpum,   ONLY : calbec_gpu
-         USE wavefunctions_gpum, ONLY : evc_d
-#endif
+         USE control_flags, ONLY : offload_type
 
          IMPLICIT NONE
 
@@ -675,7 +568,7 @@ MODULE oscdft_forces_subs
                                      dbetapsi(:,:)
 
          COMPLEX(DP), POINTER :: wfcF_wfc(:,:)
-                                                   
+
          inp    => ctx%inp
          idx    => ctx%idx
          wfcF   => ctx%forces%wfcO
@@ -729,13 +622,7 @@ MODULE oscdft_forces_subs
             END IF
          END DO
 
-#if defined(__CUDA)
-         !$acc host_data use_device(dwfc, spsi, dwfatpsi)
-         CALL calbec_gpu(npw, dwfc, spsi, dwfatpsi)
-         !$acc end host_data
-#else
-         CALL calbec(npw, dwfc, spsi, dwfatpsi)
-#endif
+         CALL calbec(offload_type, npw, dwfc, spsi, dwfatpsi)
          !$acc end data
          DEALLOCATE(dwfc)
 
@@ -746,13 +633,7 @@ MODULE oscdft_forces_subs
          dbetapsi_temp = (0.D0, 0.D0)
          !$acc end kernels
 
-#if defined(__CUDA)
-         !$acc host_data use_device(vkb, wfatbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, wfcF_wfc, vkb, wfatbeta)
-         !$acc end host_data
-#else
-         CALL calbec(npw, wfcF_wfc, vkb, wfatbeta)
-#endif
+         CALL calbec(offload_type, npw, wfcF_wfc, vkb, wfatbeta)
 
 #if defined(__CUDA)
          !$acc parallel loop collapse(2) present(g, igk_k, vkb, dbeta)
@@ -769,17 +650,8 @@ MODULE oscdft_forces_subs
 #endif
          ENDDO
 
-#if defined(__CUDA)
-         !$acc data present(evc_d)
-         !$acc host_data use_device(dbeta, dbetapsi_temp, wfatdbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi_temp)
-         CALL calbec_gpu(npw, wfcF_wfc, dbeta, wfatdbeta)
-         !$acc end host_data
-         !$acc end data
-#else
-         CALL calbec(npw, dbeta, evc, dbetapsi_temp)
-         CALL calbec(npw, wfcF%wfc, dbeta, wfatdbeta)
-#endif
+         CALL calbec(offload_type, npw, dbeta, evc, dbetapsi_temp)
+         CALL calbec(offload_type, npw, wfcF_wfc, dbeta, wfatdbeta)
 
 #if defined(__CUDA)
 !$acc parallel loop private(na, nt, ijkb0, ih, jh, temp)
@@ -795,7 +667,6 @@ MODULE oscdft_forces_subs
                   DO jh=1,nh(nt)
                      temp = temp + qq_at(ih,jh,na) * dbetapsi_temp(ijkb0+jh,ibnd)
                   END DO
-                  ! TODO: check whether this is assignment or addition
                   dbetapsi(ijkb0+ih,ibnd) = dbetapsi(ijkb0+ih,ibnd) + temp
                END DO
             END DO
@@ -810,15 +681,11 @@ MODULE oscdft_forces_subs
       END SUBROUTINE oscdft_get_derivatives_k
 
       SUBROUTINE oscdft_dndtau_gamma(ctx, deriv, proj, na, ipos, ispin, ik, dns)
-         !TODO: should use BLAS
          USE wvfct,      ONLY : nbnd, npwx, wg
          USE uspp,       ONLY : nkb, ofsbeta
          USE ions_base,  ONLY : ityp
          USE uspp_param, ONLY : nh
          USE symm_base,  ONLY : nsym
-#if defined(__CUDA)
-         USE wvfct_gpum, ONLY : wg_d
-#endif
          IMPLICIT NONE
 
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET   :: ctx
@@ -834,9 +701,6 @@ MODULE oscdft_forces_subs
          INTEGER               :: curr_dim, iconstr, ioscdft, ibnd, m1, m2,&
                                   ijkb0, nt, isym, m1_off, m2_off, m1_na, m2_na
          REAL(DP)              :: temp, temp2
-#if defined(__CUDA)
-         ATTRIBUTES(DEVICE) :: proj
-#endif
 
          REAL(DP), POINTER        :: dwfatpsi(:,:),&
                                      wfatbeta(:,:),&
@@ -858,7 +722,9 @@ MODULE oscdft_forces_subs
          betapsi   => deriv%betapsi
          wfatdpsi  => deriv%wfatdpsi
 
-         !$acc data present(dwfatpsi, wfatbeta, wfatdbeta, dbetapsi, betapsi, wfatdpsi)
+         !$acc data present(dwfatpsi, wfatbeta, wfatdbeta,&
+         !$acc&             dbetapsi, betapsi, wfatdpsi,&
+         !$acc&             proj) present_or_copyin(wg)
 
          ijkb0 = ofsbeta(na)
          nt = ityp(na)
@@ -891,20 +757,10 @@ MODULE oscdft_forces_subs
                         m2_na  = orbs%iat_sym(isym,constr%ins2iorb(m2,iconstr))
                         temp = 0.D0
 #if defined(__CUDA)
-                        !$acc parallel loop reduction(+:temp) present(wg_d, proj) private(temp2)
-                        DO ibnd=1,nbnd
-                           temp2 = (proj(m1_off,ibnd)*wfatdpsi(m2_off,ibnd)+&
-                              wfatdpsi(m1_off,ibnd)*proj(m2_off,ibnd))
-                           IF (m1_na.EQ.na) THEN
-                              temp2 = temp2 + dwfatpsi(m1_off,ibnd)*proj(m2_off,ibnd)
-                           END IF
-                           IF (m2_na.EQ.na) THEN
-                              temp2 = temp2 + proj(m1_off,ibnd)*dwfatpsi(m2_off,ibnd)
-                           END IF
-                           temp = temp + wg_d(ibnd,ik)*temp2
-                        END DO
+                        !$acc parallel loop reduction(+:temp) private(temp2)
 #else
-!$omp parallel do reduction(+:temp) private(temp2)
+                        !$omp parallel do reduction(+:temp) private(temp2)
+#endif
                         DO ibnd=1,nbnd
                            temp2 = (proj(m1_off,ibnd)*wfatdpsi(m2_off,ibnd)+&
                               wfatdpsi(m1_off,ibnd)*proj(m2_off,ibnd))
@@ -914,16 +770,10 @@ MODULE oscdft_forces_subs
                            IF (m2_na.EQ.na) THEN
                               temp2 = temp2 + proj(m1_off,ibnd)*dwfatpsi(m2_off,ibnd)
                            END IF
-
                            temp = temp + wg(ibnd,ik)*temp2
-                           ! IF (na_constr.EQ.na) THEN
-                           !    dns(m1,m2,isym,iconstr) =&
-                           !       dns(m1,m2,isym,iconstr) + wg(ibnd,ik)*&
-                           !          (proj(m1_off,ibnd)*deriv%dwfatpsi(m2_off,ibnd)+&
-                           !           deriv%dwfatpsi(m1_off,ibnd)*proj(m2_off,ibnd))
-                           ! END IF
                         END DO
-!$omp end parallel do
+#if !defined(__CUDA)
+                        !$omp end parallel do
 #endif
                         dns(m1,m2,isym,iconstr) = temp
                         IF (m1.NE.m2) THEN
@@ -938,15 +788,11 @@ MODULE oscdft_forces_subs
       END SUBROUTINE oscdft_dndtau_gamma
 
       SUBROUTINE oscdft_dndtau_k(ctx, deriv, proj, na, ipos, ispin, ik, dns)
-         !TODO: should use BLAS
          USE wvfct,      ONLY : nbnd, npwx, wg
          USE uspp,       ONLY : nkb, ofsbeta
          USE ions_base,  ONLY : ityp
          USE uspp_param, ONLY : nh
          USE symm_base,  ONLY : nsym
-#if defined(__CUDA)
-         USE wvfct_gpum, ONLY : wg_d
-#endif
          IMPLICIT NONE
 
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
@@ -962,9 +808,6 @@ MODULE oscdft_forces_subs
          INTEGER                  :: curr_dim, iconstr, ioscdft, ibnd, m1, m2,&
                                      ijkb0, nt, isym, m1_off, m2_off, m1_na, m2_na
          REAL(DP)                 :: temp, temp2
-#if defined(__CUDA)
-         ATTRIBUTES(DEVICE) :: proj
-#endif
          COMPLEX(DP), POINTER     :: dwfatpsi(:,:),&
                                      wfatbeta(:,:),&
                                      wfatdbeta(:,:),&
@@ -984,7 +827,9 @@ MODULE oscdft_forces_subs
          dbetapsi  => deriv%dbetapsi
          betapsi   => deriv%betapsi
          wfatdpsi  => deriv%wfatdpsi
-         !$acc data present(dwfatpsi, wfatbeta, wfatdbeta, dbetapsi, betapsi, wfatdpsi)
+         !$acc data present(dwfatpsi, wfatbeta, wfatdbeta,&
+         !$acc&             dbetapsi, betapsi, wfatdpsi,&
+         !$acc&             proj) present_or_copyin(wg)
 
          ijkb0 = ofsbeta(na)
          nt = ityp(na)
@@ -1017,20 +862,10 @@ MODULE oscdft_forces_subs
                         m2_na  = orbs%iat_sym(isym,constr%ins2iorb(m2,iconstr))
                         temp = (0.D0, 0.D0)
 #if defined(__CUDA)
-                        !$acc parallel loop reduction(+:temp) present(wg_d, proj) private(temp2)
-                        DO ibnd=1,nbnd
-                           temp2 = DBLE(proj(m1_off,ibnd)*CONJG(wfatdpsi(m2_off,ibnd))+&
-                              wfatdpsi(m1_off,ibnd)*CONJG(proj(m2_off,ibnd)))
-                           IF (m1_na.EQ.na) THEN
-                              temp2 = temp2 + DBLE(dwfatpsi(m1_off,ibnd)*CONJG(proj(m2_off,ibnd)))
-                           END IF
-                           IF (m2_na.EQ.na) THEN
-                              temp2 = temp2 + DBLE(proj(m1_off,ibnd)*CONJG(dwfatpsi(m2_off,ibnd)))
-                           END IF
-                           temp = temp + wg_d(ibnd,ik)*temp2
-                        END DO
+                        !$acc parallel loop reduction(+:temp) private(temp2)
 #else
-!$omp parallel do reduction(+:temp) private(temp2)
+                        !$omp parallel do reduction(+:temp) private(temp2)
+#endif
                         DO ibnd=1,nbnd
                            temp2 = DBLE(proj(m1_off,ibnd)*CONJG(wfatdpsi(m2_off,ibnd))+&
                               wfatdpsi(m1_off,ibnd)*CONJG(proj(m2_off,ibnd)))
@@ -1042,7 +877,8 @@ MODULE oscdft_forces_subs
                            END IF
                            temp = temp + wg(ibnd,ik)*temp2
                         END DO
-!$omp end parallel do
+#if !defined(__CUDA)
+                        !$omp end parallel do
 #endif
                         dns(m1,m2,isym,iconstr) = temp
                         IF (m1.NE.m2) THEN

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -268,6 +269,8 @@
     !!
     REAL(KIND = DP) :: xxq(3)
     !! Current q-point
+    REAL(KIND = DP) :: w_centers(3, n_wannier)
+    !! Wannier center
     REAL(KIND = DP), ALLOCATABLE :: proj_wf(:, :)
     !! Projection
     COMPLEX(KIND = DP), ALLOCATABLE :: cu(:, :, :)
@@ -298,7 +301,7 @@
     IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating cuq', 1)
     ALLOCATE(xkq(3, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating xkq', 1)
-    CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband)
+    CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
     DEALLOCATE(xkq, STAT = ierr)
     IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating xkq', 1)
     !

@@ -15,8 +15,8 @@ MODULE becmod
   !! components) or \( \text{betapsi}(i,s,j)= \langle\text{beta}(i)|\text{psi}(s,j)
   !! \rangle\) (s=polarization index).
   !
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : gamma_only, smallmem
+  USE kinds,            ONLY : DP, offload_kind_acc, offload_kind_cpu, offload_kind_omp
+  USE control_flags,    ONLY : gamma_only, smallmem, offload_acc, offload_cpu, offload_omp
   USE gvect,            ONLY : gstart
   USE noncollin_module, ONLY : noncolin, npol
   !
@@ -44,20 +44,300 @@ MODULE becmod
   !
   INTERFACE calbec
      !
-     MODULE PROCEDURE calbec_k, calbec_gamma, calbec_gamma_nocomm, calbec_nc, calbec_bec_type
+     MODULE PROCEDURE &
+!                     usage: call calbec( offload_type, beta, psi, betapsi )
+!                             - beta, psi, betapsi can be CPU, OpenACC (or OpenMP5), 
+!                             - CPU, OpenACC (and OpenMP5) cases are distinguished by type(offload_type)
+                      calbec_k_acc, calbec_gamma_acc, calbec_gamma_nocomm_acc, calbec_nc_acc, calbec_bec_type_acc, &
+                      calbec_k_cpu, calbec_gamma_cpu, calbec_gamma_nocomm_cpu, calbec_nc_cpu, calbec_bec_type_cpu, &
+!                     usage: call calbec( beta, psi, betapsi ) ("old" way to call calbec on CPU)
+!                             - beta, psi, betapsi are CPU-only 
+!                             - this allows to keep unchanged ALL the "old" calbec calls in the code
+                      calbec_k,     calbec_gamma,     calbec_gamma_nocomm,     calbec_nc,     calbec_bec_type
      !
   END INTERFACE
-
+  !
+#if defined(__CUDA)
+  INTERFACE calbec_cuf
+!civn: this is a TEMPORARY interface used only in
+!          PW/src/h_psi_gpu.f90
+!          PW/src/s_1psi_gpu.f90 
+!          PW/src/vhpsi_gpu.f90 
+!          PW/src/oscdft_functions_gpu.f90
+!      to avoid too many data movements with evc_d. 
+!      TO BE REMOVED AS SOON evc_d will be removed!
+  MODULE PROCEDURE calbec_k_cuf, calbec_gamma_cuf, calbec_gamma_nocomm_cuf, calbec_nc_cuf, calbec_bec_type_cuf,&
+!                     usage: call calbec( offload_type, beta, psi_d, betapsi )
+!                             - beta and betapsi are OpenACC, psi_d is CUDA Fortran 
+!                             - this allows to call calbec passing evc_d 
+                   calbec_k_cuf2, calbec_gamma_cuf2, calbec_gamma_nocomm_cuf2, calbec_nc_cuf2, calbec_bec_type_cuf2
+!                     usage: call calbec( offload_type, beta_d, psi, betapsi )
+!                             - psi and betapsi are OpenACC, beta_d is CUDA Fortran
+!                             - this allows to call calbec passing beta_d
+  END INTERFACE
+#endif
+  !
   INTERFACE becscal
      !
      MODULE PROCEDURE becscal_nck, becscal_gamma
      !
   END INTERFACE
   !
-  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
-            beccopy, becscal, is_allocated_bec_type
+  INTERFACE becupdate
+     !
+     MODULE PROCEDURE becupdate_0D_cpu, becupdate_1D_cpu, becupdate_2D_cpu, &
+                      becupdate_0D_acc, becupdate_1D_acc, becupdate_2D_acc 
+     !
+  END INTERFACE
+  !
+  PUBLIC :: bec_type, becp, calbec, beccopy, becscal, becupdate, is_allocated_bec_type, &
+            allocate_bec_type,     deallocate_bec_type, &
+            allocate_bec_type_acc, deallocate_bec_type_acc
   !
 CONTAINS
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_bec_type_acc ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp_bands, ONLY: intra_bgrp_comm
+    USE mp,       ONLY: mp_get_comm_null
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
+                                               !  the allocatd array is lost
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: local_nbnd
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: m_loc, m_begin, ip
+    REAL(DP), ALLOCATABLE :: dtmp(:,:)
+    !$acc declare device_resident(dtmp)
+    !
+    IF ( present (nbnd) ) THEN
+        local_nbnd = nbnd
+    ELSE
+        local_nbnd = size ( psi, 2)
+    ENDIF
+
+    IF ( gamma_only ) THEN
+       !
+       IF( betapsi%comm == mp_get_comm_null() ) THEN
+          !
+          CALL calbec_gamma_acc ( offload_acc, npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
+          !
+       ELSE
+          !
+          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), SIZE( betapsi%r, 2 ) ) )
+          !
+          DO ip = 0, betapsi%nproc - 1
+             m_loc   = ldim_block( betapsi%nbnd , betapsi%nproc, ip )
+             m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
+             IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
+             IF( m_loc > 0 ) THEN
+                CALL calbec_gamma_acc ( offload_acc, npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                IF( ip == betapsi%mype ) THEN
+                   !$acc kernels
+                   betapsi%r(:,1:m_loc) = dtmp(:,1:m_loc)
+                   !$acc end kernels
+                END IF
+             END IF
+          END DO
+
+          DEALLOCATE( dtmp )
+          !
+       END IF
+       !
+    ELSEIF ( noncolin) THEN
+       !
+       CALL  calbec_nc_acc ( offload_acc, npw, beta, psi, betapsi%nc, local_nbnd )
+       !
+    ELSE
+       !
+       CALL  calbec_k_acc ( offload_acc, npw, beta, psi, betapsi%k, local_nbnd )
+       !
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_bec_type_acc
+  !
+#if defined(__CUDA)
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_bec_type_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    ! beta and betapsi, are assumed OpenACC data on GPU
+    ! psi_d if CUF
+    !
+    USE mp_bands, ONLY: intra_bgrp_comm
+    USE mp,       ONLY: mp_get_comm_null
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:)
+    COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
+    TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
+                                               !  the allocatd array is lost
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: local_nbnd
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: m_loc, m_begin, ip
+    REAL(DP), ALLOCATABLE :: dtmp(:,:)
+    !$acc declare device_resident(dtmp)
+    !
+    IF ( present (nbnd) ) THEN
+        local_nbnd = nbnd
+    ELSE
+        local_nbnd = size ( psi_d, 2)
+    ENDIF
+
+    IF ( gamma_only ) THEN
+       !
+       IF( betapsi%comm == mp_get_comm_null() ) THEN
+          !
+          CALL calbec_gamma_cuf ( offload_acc, npw, beta, psi_d, betapsi%r, local_nbnd, intra_bgrp_comm )
+          !
+       ELSE
+          !
+          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), SIZE( betapsi%r, 2 ) ) )
+          !
+          DO ip = 0, betapsi%nproc - 1
+             m_loc   = ldim_block( betapsi%nbnd , betapsi%nproc, ip )
+             m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
+             IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
+             IF( m_loc > 0 ) THEN
+                CALL calbec_gamma_cuf ( offload_acc, npw, beta, psi_d(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                IF( ip == betapsi%mype ) THEN
+                   !$acc kernels
+                   betapsi%r(:,1:m_loc) = dtmp(:,1:m_loc)
+                   !$acc end kernels
+                END IF
+             END IF
+          END DO
+
+          DEALLOCATE( dtmp )
+          !
+       END IF
+       !
+    ELSEIF ( noncolin) THEN
+       !
+       CALL  calbec_nc_cuf ( offload_acc, npw, beta, psi_d, betapsi%nc, local_nbnd )
+       !
+    ELSE
+       !
+       CALL  calbec_k_cuf ( offload_acc, npw, beta, psi_d, betapsi%k, local_nbnd )
+       !
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_bec_type_cuf
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_bec_type_cuf2 ( offload, npw, beta_d, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    ! psi and betapsi, are assumed OpenACC data on GPU
+    ! beta if CUF
+    !
+    USE mp_bands, ONLY: intra_bgrp_comm
+    USE mp,       ONLY: mp_get_comm_null
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), DEVICE, INTENT (in) :: beta_d(:,:)
+    COMPLEX (DP), INTENT (in) :: psi(:,:)
+    TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
+                                               !  the allocatd array is lost
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: local_nbnd
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: m_loc, m_begin, ip
+    REAL(DP), ALLOCATABLE :: dtmp(:,:)
+    !$acc declare device_resident(dtmp)
+    !
+    IF ( present (nbnd) ) THEN
+        local_nbnd = nbnd
+    ELSE
+        local_nbnd = size ( psi, 2)
+    ENDIF
+
+    IF ( gamma_only ) THEN
+       !
+       IF( betapsi%comm == mp_get_comm_null() ) THEN
+          !
+          CALL calbec_gamma_cuf2 ( offload_acc, npw, beta_d, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
+          !
+       ELSE
+          !
+          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), SIZE( betapsi%r, 2 ) ) )
+          !
+          DO ip = 0, betapsi%nproc - 1
+             m_loc   = ldim_block( betapsi%nbnd , betapsi%nproc, ip )
+             m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
+             IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
+             IF( m_loc > 0 ) THEN
+                CALL calbec_gamma_cuf2 ( offload_acc, npw, beta_d, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                IF( ip == betapsi%mype ) THEN
+                   !$acc kernels
+                   betapsi%r(:,1:m_loc) = dtmp(:,1:m_loc)
+                   !$acc end kernels
+                END IF
+             END IF
+          END DO
+
+          DEALLOCATE( dtmp )
+          !
+       END IF
+       !
+    ELSEIF ( noncolin) THEN
+       !
+       CALL  calbec_nc_cuf2 ( offload_acc, npw, beta_d, psi, betapsi%nc, local_nbnd )
+       !
+    ELSE
+       !
+       CALL  calbec_k_cuf2 ( offload_acc, npw, beta_d, psi, betapsi%k, local_nbnd )
+       !
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_bec_type_cuf2
+#endif
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_bec_type_cpu ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_cpu), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
+                                               !  the allocatd array is lost
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    !
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    Call calbec_bec_type ( npw, beta, psi, betapsi, m )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_bec_type_cpu
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_bec_type ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
@@ -122,6 +402,103 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE calbec_bec_type
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_nocomm_acc ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp_bands, ONLY: intra_bgrp_comm
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    CALL calbec_gamma_acc ( offload_acc, npw, beta, psi, betapsi, m, intra_bgrp_comm )
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_nocomm_acc
+  !
+#if defined(__CUDA)
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_nocomm_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp_bands, ONLY: intra_bgrp_comm
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:)
+    COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi_d, 2)
+    ENDIF
+    CALL calbec_gamma_cuf ( offload_acc, npw, beta, psi_d, betapsi, m, intra_bgrp_comm )
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_nocomm_cuf
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_nocomm_cuf2 ( offload, npw, beta_d, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp_bands, ONLY: intra_bgrp_comm
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), DEVICE, INTENT (in) :: beta_d(:,:)
+    COMPLEX (DP), INTENT (in) :: psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    CALL calbec_gamma_cuf2 ( offload_acc, npw, beta_d, psi, betapsi, m, intra_bgrp_comm )
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_nocomm_cuf2
+#endif
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_nocomm_cpu ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    USE mp_bands, ONLY: intra_bgrp_comm
+    IMPLICIT NONE
+    TYPE(offload_kind_cpu), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    Call calbec_gamma_nocomm ( npw, beta, psi, betapsi, m )
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_nocomm_cpu
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_gamma_nocomm ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
@@ -141,6 +518,269 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE calbec_gamma_nocomm
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_acc ( offload, npw, beta, psi, betapsi, nbnd, comm )
+    !-----------------------------------------------------------------------
+    !! matrix times matrix with summation index (k=1,npw) running on
+    !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
+    !
+    !! $$ betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j) $$
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp,        ONLY : mp_sum, mp_size
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in) :: comm 
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    m = nbnd
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:)=0.0_DP
+      !$acc end kernels
+    END IF
+    npwx= size (beta, 1)
+    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec gamma'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+        !
+        !$acc host_data use_device(beta,psi,betapsi)
+        CALL MYDGEMV( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi, 1, 0.0_DP, &
+                     betapsi, 1 )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+          !$acc kernels
+          betapsi(:,1) = betapsi(:,1) - beta(1,:)*psi(1,1)
+          !$acc end kernels
+        END IF
+        !
+    ELSE
+        !
+        !$acc host_data use_device(beta,psi,betapsi)
+        CALL MYDGEMM( 'C', 'N', nkb, m, 2*npw, 2.0_DP, beta, 2*npwx, psi, &
+                    2*npwx, 0.0_DP, betapsi, nkb )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+          !$acc host_data use_device(beta,psi,betapsi)
+          CALL MYDGER( nkb, m, -1.0_DP, beta, 2*npwx, psi, 2*npwx, betapsi, nkb )
+          !$acc end host_data
+        END IF
+        !
+    ENDIF
+    !
+    IF (mp_size(comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_acc
+  !
+#if defined(__CUDA)
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_cuf ( offload, npw, beta, psi_d, betapsi, nbnd, comm )
+    !-----------------------------------------------------------------------
+    !! matrix times matrix with summation index (k=1,npw) running on
+    !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
+    !
+    !! $$ betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j) $$
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp,        ONLY : mp_sum, mp_size
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:)
+    COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in) :: comm 
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    m = nbnd
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:)=0.0_DP
+      !$acc end kernels
+    END IF
+    npwx= size (beta, 1)
+    IF ( npwx /= size (psi_d, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec gamma'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+        !
+        !$acc host_data use_device(beta,betapsi)
+        CALL MYDGEMV( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi_d, 1, 0.0_DP, &
+                     betapsi, 1 )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+          !$acc kernels deviceptr(psi_d)
+          betapsi(:,1) = betapsi(:,1) - beta(1,:)*psi_d(1,1)
+          !$acc end kernels
+        END IF
+        !
+    ELSE
+        !
+        !$acc host_data use_device(beta,betapsi)
+        CALL MYDGEMM( 'C', 'N', nkb, m, 2*npw, 2.0_DP, beta, 2*npwx, psi_d, &
+                    2*npwx, 0.0_DP, betapsi, nkb )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+          !$acc host_data use_device(beta,betapsi)
+          CALL MYDGER( nkb, m, -1.0_DP, beta, 2*npwx, psi_d, 2*npwx, betapsi, nkb )
+          !$acc end host_data
+        END IF
+        !
+    ENDIF
+    !
+    IF (mp_size(comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_cuf
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_cuf2 ( offload, npw, beta_d, psi, betapsi, nbnd, comm )
+    !-----------------------------------------------------------------------
+    !! matrix times matrix with summation index (k=1,npw) running on
+    !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
+    !
+    !! $$ betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j) $$
+    !
+    ! beta, psi, betapsi, are assumed OpenACC data on GPU
+    !
+    USE mp,        ONLY : mp_sum, mp_size
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), DEVICE, INTENT (in) :: beta_d(:,:)
+    COMPLEX (DP), INTENT (in) :: psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in) :: comm
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    m = nbnd
+    !
+    nkb = size (beta_d, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:)=0.0_DP
+      !$acc end kernels
+    END IF
+    npwx= size (beta_d, 1)
+    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec gamma'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+        !
+        !$acc host_data use_device(psi,betapsi)
+        CALL MYDGEMV( 'C', 2*npw, nkb, 2.0_DP, beta_d, 2*npwx, psi, 1, 0.0_DP, &
+                     betapsi, 1 )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+          !$acc kernels deviceptr(beta_d)
+          betapsi(:,1) = betapsi(:,1) - beta_d(1,:)*psi(1,1)
+          !$acc end kernels
+        END IF
+        !
+    ELSE
+        !
+        !$acc host_data use_device(psi,betapsi)
+        CALL MYDGEMM( 'C', 'N', nkb, m, 2*npw, 2.0_DP, beta_d, 2*npwx, psi, &
+                    2*npwx, 0.0_DP, betapsi, nkb )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+          !$acc host_data use_device(psi,betapsi)
+          CALL MYDGER( nkb, m, -1.0_DP, beta_d, 2*npwx, psi, 2*npwx, betapsi, nkb )
+          !$acc end host_data
+        END IF
+        !
+    ENDIF
+    !
+    IF (mp_size(comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_cuf2
+#endif
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_cpu ( offload, npw, beta, psi, betapsi, nbnd, comm )
+    !-----------------------------------------------------------------------
+    IMPLICIT NONE
+    TYPE(offload_kind_cpu), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in) :: comm 
+    !
+    Call calbec_gamma ( npw, beta, psi, betapsi, nbnd, comm )
+    !
+  END SUBROUTINE calbec_gamma_cpu
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd, comm )
     !-----------------------------------------------------------------------
@@ -201,6 +841,246 @@ CONTAINS
   END SUBROUTINE calbec_gamma
   !
   !-----------------------------------------------------------------------
+  SUBROUTINE calbec_k_acc ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k=1,npw) running on
+    !! G-vectors or PWs:
+    !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum, mp_size
+
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:)=(0.0_DP,0.0_DP)
+      !$acc end kernels
+    END IF
+    npwx= size (beta, 1)
+    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec k'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+       !
+       !$acc host_data use_device(beta, psi, betapsi)
+       CALL MYZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
+                   (0.0_DP, 0.0_DP), betapsi, 1 )
+       !$acc end host_data
+       !
+    ELSE
+       !
+       !$acc host_data use_device(beta, psi, betapsi)
+       CALL MYZGEMM( 'C', 'N', nkb, m, npw, (1.0_DP,0.0_DP), &
+                 beta, npwx, psi, npwx, (0.0_DP,0.0_DP), betapsi, nkb )
+       !$acc end host_data
+       !
+    ENDIF
+    !
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_k_acc
+  !
+#if defined(__CUDA)
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_k_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k=1,npw) running on
+    !! G-vectors or PWs:
+    !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum, mp_size
+
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:)
+    COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:)=(0.0_DP,0.0_DP)
+      !$acc end kernels
+    END IF
+    npwx= size (beta, 1)
+    IF ( npwx /= size (psi_d, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi_d, 2)
+    ENDIF
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec k'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+       !
+       !$acc host_data use_device(beta, betapsi)
+       CALL MYZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi_d, 1, &
+                   (0.0_DP, 0.0_DP), betapsi, 1 )
+       !$acc end host_data
+       !
+    ELSE
+       !
+       !$acc host_data use_device(beta, betapsi)
+       CALL MYZGEMM( 'C', 'N', nkb, m, npw, (1.0_DP,0.0_DP), &
+                 beta, npwx, psi_d, npwx, (0.0_DP,0.0_DP), betapsi, nkb )
+       !$acc end host_data
+       !
+    ENDIF
+    !
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_k_cuf
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_k_cuf2 ( offload, npw, beta_d, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k=1,npw) running on
+    !! G-vectors or PWs:
+    !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum, mp_size
+
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), DEVICE, INTENT (in) :: beta_d(:,:)
+    COMPLEX (DP), INTENT (in) :: psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    nkb = size (beta_d, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:)=(0.0_DP,0.0_DP)
+      !$acc end kernels
+    END IF
+    npwx= size (beta_d, 1)
+    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec k'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+       !
+       !$acc host_data use_device(psi, betapsi)
+       CALL MYZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta_d, npwx, psi, 1, &
+                   (0.0_DP, 0.0_DP), betapsi, 1 )
+       !$acc end host_data
+       !
+    ELSE
+       !
+       !$acc host_data use_device(psi, betapsi)
+       CALL MYZGEMM( 'C', 'N', nkb, m, npw, (1.0_DP,0.0_DP), &
+                 beta_d, npwx, psi, npwx, (0.0_DP,0.0_DP), betapsi, nkb )
+       !$acc end host_data
+       !
+    ENDIF
+    !
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_k_cuf2
+#endif
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_k_cpu ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_cpu), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    !
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    Call calbec_k ( npw, beta, psi, betapsi, m )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_k_cpu
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE calbec_k ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! Matrix times matrix with summation index (k=1,npw) running on
@@ -257,6 +1137,222 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE calbec_k
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_nc_acc ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k below) running on
+    !! G-vectors or PWs corresponding to two different polarizations:
+    !
+    !! * \(betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)\)
+    !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum, mp_size
+
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, npol, m
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock ('calbec')
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:,:)=(0.0_DP,0.0_DP)
+      !$acc end kernels
+    END IF
+    npwx= size (beta, 1)
+    IF ( 2*npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    npol= size (betapsi, 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec nc'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 3)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 3) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    !$acc host_data use_device(beta, psi, betapsi)
+    CALL MYZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
+              npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
+    !$acc end host_data
+    !
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_nc_acc
+  !
+#if defined(__CUDA)
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_nc_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k below) running on
+    !! G-vectors or PWs corresponding to two different polarizations:
+    !
+    !! * \(betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)\)
+    !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum, mp_size
+
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:)
+    COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, npol, m
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock ('calbec')
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:,:)=(0.0_DP,0.0_DP)
+      !$acc end kernels
+    END IF
+    npwx= size (beta, 1)
+    IF ( 2*npwx /= size (psi_d, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi_d, 2)
+    ENDIF
+    npol= size (betapsi, 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec nc'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 3)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 3) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    !$acc host_data use_device(beta, betapsi)
+    CALL MYZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
+              npwx, psi_d, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
+    !$acc end host_data
+    !
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_nc_cuf
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_nc_cuf2 ( offload, npw, beta_d, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k below) running on
+    !! G-vectors or PWs corresponding to two different polarizations:
+    !
+    !! * \(betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)\)
+    !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum, mp_size
+
+    IMPLICIT NONE
+    TYPE(offload_kind_acc), INTENT(IN) :: offload
+    COMPLEX (DP), DEVICE, INTENT (in) :: beta_d(:,:)
+    COMPLEX (DP), INTENT (in) :: psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, npol, m
+    !
+    nkb = size (beta_d, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock ('calbec')
+    IF ( npw == 0 ) THEN
+      !$acc kernels
+      betapsi(:,:,:)=(0.0_DP,0.0_DP)
+      !$acc end kernels
+    END IF
+    npwx= size (beta_d, 1)
+    IF ( 2*npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    npol= size (betapsi, 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec nc'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 3)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 3) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    !$acc host_data use_device(psi, betapsi)
+    CALL MYZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta_d, &
+              npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
+    !$acc end host_data
+    !
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
+      !$acc host_data use_device(betapsi)
+      CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+      !$acc end host_data
+    END IF
+    !
+    CALL stop_clock( 'calbec' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_nc_cuf2
+#endif
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_nc_cpu ( offload, npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(offload_kind_cpu), INTENT(IN) :: offload
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    !
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    Call calbec_nc ( npw, beta, psi, betapsi, m )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_nc_cpu
   !
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_nc ( npw, beta, psi, betapsi, nbnd )
@@ -325,6 +1421,73 @@ CONTAINS
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
+  SUBROUTINE allocate_bec_type_acc ( nkb, nbnd, bec, comm )
+    !-----------------------------------------------------------------------
+    USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    INTEGER, INTENT (in) :: nkb, nbnd
+    INTEGER, INTENT (in), OPTIONAL :: comm
+    INTEGER :: ierr, nbnd_siz
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    !
+    nbnd_siz = nbnd
+    bec%comm = mp_get_comm_null()
+    bec%nbnd = nbnd
+    bec%mype = 0
+    bec%nproc = 1
+    bec%nbnd_loc = nbnd
+    bec%ibnd_begin = 1
+    !
+    IF( PRESENT( comm ) .AND. gamma_only .AND. smallmem ) THEN
+       bec%comm = comm
+       bec%nproc = mp_size( comm )
+       IF( bec%nproc > 1 ) THEN
+          nbnd_siz   = nbnd / bec%nproc
+          IF( MOD( nbnd, bec%nproc ) /= 0 ) nbnd_siz = nbnd_siz + 1
+          bec%mype  = mp_rank( bec%comm )
+          bec%nbnd_loc   = ldim_block( becp%nbnd , bec%nproc, bec%mype )
+          bec%ibnd_begin = gind_block( 1,  becp%nbnd, bec%nproc, bec%mype )
+       END IF
+    END IF
+    !
+    !$acc enter data copyin(bec)
+    !
+    IF ( gamma_only ) THEN
+       !
+       ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate bec%r ', ABS(ierr) )
+       !
+       bec%r(:,:)=0.0D0
+       !$acc enter data copyin(bec%r)
+       !
+    ELSEIF ( noncolin) THEN
+       !
+       ALLOCATE( bec%nc( nkb, npol, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate bec%nc ', ABS(ierr) )
+       !
+       bec%nc(:,:,:)=(0.0D0,0.0D0)
+       !$acc enter data copyin(bec%nc)
+       !
+    ELSE
+       !
+       ALLOCATE( bec%k( nkb, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate bec%k ', ABS(ierr) )
+       !
+       bec%k(:,:)=(0.0D0,0.0D0)
+       !$acc enter data copyin(bec%k)
+       !
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE allocate_bec_type_acc
+  !
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
     !-----------------------------------------------------------------------
     USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
@@ -386,6 +1549,37 @@ CONTAINS
   END SUBROUTINE allocate_bec_type
   !
   !-----------------------------------------------------------------------
+  SUBROUTINE deallocate_bec_type_acc (bec)
+    !-----------------------------------------------------------------------
+    !
+    USE mp, ONLY: mp_get_comm_null
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    !
+    bec%comm = mp_get_comm_null()
+    bec%nbnd = 0
+    !
+    IF (allocated(bec%r))  THEN
+      !$acc exit data delete(bec%r)
+      DEALLOCATE(bec%r)
+    END IF
+    IF (allocated(bec%nc)) THEN
+       !$acc exit data delete(bec%nc)
+       DEALLOCATE(bec%nc)
+    END IF
+    IF (allocated(bec%k))  THEN
+      !$acc exit data delete(bec%k)
+      DEALLOCATE(bec%k)
+    END IF
+    !
+    !$acc exit data delete(bec)
+    !
+    RETURN
+    !
+  END SUBROUTINE deallocate_bec_type_acc
+
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE deallocate_bec_type (bec)
     !-----------------------------------------------------------------------
     !
@@ -396,9 +1590,15 @@ CONTAINS
     bec%comm = mp_get_comm_null()
     bec%nbnd = 0
     !
-    IF (allocated(bec%r))  DEALLOCATE(bec%r)
-    IF (allocated(bec%nc)) DEALLOCATE(bec%nc)
-    IF (allocated(bec%k))  DEALLOCATE(bec%k)
+    IF (allocated(bec%r))  THEN
+      DEALLOCATE(bec%r)
+    END IF
+    IF (allocated(bec%nc)) THEN
+       DEALLOCATE(bec%nc)
+    END IF
+    IF (allocated(bec%k))  THEN
+      DEALLOCATE(bec%k)
+    END IF
     !
     RETURN
     !
@@ -468,5 +1668,123 @@ CONTAINS
 
     RETURN
   END SUBROUTINE becscal_gamma
+
+  SUBROUTINE becupdate_0D_cpu( offload, bec_host, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_cpu), INTENT(IN)  :: offload 
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_0D_cpu
+
+  SUBROUTINE becupdate_1D_cpu( offload, bec_host, idx, ni, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_cpu), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni  
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni)
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_1D_cpu
+
+  SUBROUTINE becupdate_2D_cpu( offload, bec_host, idx, ni, jdx, nj, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_cpu), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni, jdx, nj
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni,nj)
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_2D_cpu
+
+  SUBROUTINE becupdate_0D_acc( offload, bec_host, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_acc), INTENT(IN)  :: offload 
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host
+  !
+  !$acc data copy(bec_host) present(bec_device)
+  !
+  if(allocated(bec_device%r)) then
+    !$acc kernels copyout(bec_host%r)
+    bec_host%r(:,:) = bec_device%r(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%k)) then
+    !$acc kernels copyout(bec_host%k)
+    bec_host%k(:,:) = bec_device%k(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%nc)) then
+    !$acc kernels copyout(bec_host%nc)
+    bec_host%nc(:,:,:) = bec_device%nc(:,:,:)
+    !$acc end kernels
+  endif  
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_0D_acc
+
+  SUBROUTINE becupdate_1D_acc( offload, bec_host, idx, ni, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_acc), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni  
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni)
+  !
+  !$acc data copy(bec_host(idx)) present(bec_device)
+  !
+  if(allocated(bec_device%r)) then
+    !$acc kernels copyout(bec_host(idx)%r)
+    bec_host(idx)%r(:,:) = bec_device%r(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%k)) then
+    !$acc kernels copyout(bec_host(idx)%k)
+    bec_host(idx)%k(:,:) = bec_device%k(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%nc)) then
+    !$acc kernels copyout(bec_host(idx)%nc)
+    bec_host(idx)%nc(:,:,:) = bec_device%nc(:,:,:)
+    !$acc end kernels
+  endif  
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_1D_acc
+
+  SUBROUTINE becupdate_2D_acc( offload, bec_host, idx, ni, jdx, nj, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_acc), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni, jdx, nj
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni,nj)
+  !
+  !$acc data copy(bec_host(idx,jdx)) present(bec_device)
+  !
+  if(allocated(bec_device%r)) then
+    !$acc kernels copyout(bec_host(idx,jdx)%r)
+    bec_host(idx,jdx)%r(:,:) = bec_device%r(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%k)) then
+    !$acc kernels copyout(bec_host(idx,jdx)%k)
+    bec_host(idx,jdx)%k(:,:) = bec_device%k(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%nc)) then
+    !$acc kernels copyout(bec_host(idx,jdx)%nc)
+    bec_host(idx,jdx)%nc(:,:,:) = bec_device%nc(:,:,:)
+    !$acc end kernels
+  endif  
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_2D_acc
 
 END MODULE becmod

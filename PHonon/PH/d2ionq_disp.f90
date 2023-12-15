@@ -14,11 +14,12 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   USE constants,     ONLY: tpi
   USE control_lr,    ONLY: lgamma
   USE dftd3_qe,      ONLY: print_dftd3_hessian
+  USE d3hess_mod,    ONLY: q_gamma, d3hess_sub, AUTOMATIC_NAME
   USE mp_images,     ONLY: intra_image_comm
   USE mp,            ONLY: mp_bcast
-
+  !
   IMPLICIT NONE
-
+  !
   REAL(DP), INTENT(IN) :: alat
   !! cell parameter (celldm(1))
   INTEGER, INTENT(IN) :: nat
@@ -34,11 +35,42 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   INTEGER :: i, j, iat, jat, ixyz, jxyz
   INTEGER :: iprint
   CHARACTER(LEN=100) :: string
+  CHARACTER(LEN=256) :: outdir
   REAL(DP), ALLOCATABLE :: d3hess(:,:,:,:,:,:,:), buffer(:)
   COMPLEX(DP), ALLOCATABLE :: mmat(:,:,:,:)
   COMPLEX(DP) :: eiqr, tt(3)
-  LOGICAL :: q_gamma ! whether the Hessian stored in the file has been computed for q=0,0,0 only 
+  LOGICAL :: do_run_d3hess = .FALSE. ! whether to run d3hess in the automatic mode
   ! 
+  IF ( ionode ) THEN
+    CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
+    IF ( TRIM( outdir ) == ' ' ) outdir = './'
+    !
+    INQUIRE (FILE=dftd3_hess, exist=do_run_d3hess)
+    IF ( do_run_d3hess ) THEN
+      ! Hessian file exists, don't need to run d3hess.
+      do_run_d3hess = .FALSE.
+    ELSE
+      !
+      IF ( TRIM(dftd3_hess) .EQ. TRIM(outdir)//AUTOMATIC_NAME ) THEN
+        do_run_d3hess = .TRUE.
+        WRITE( stdout, '(/,5x,A)') 'Computing d3hess.'
+      ELSE
+        CALL errore('d2ionq_dispd3', 'The Hessian file: '//TRIM(dftd3_hess)// &
+                    ' is missing.', 1)
+      END IF
+      !
+    END IF
+    !
+  END IF
+  !
+  CALL mp_bcast(do_run_d3hess, ionode_id, intra_image_comm)
+  !
+  IF (do_run_d3hess) THEN
+     ! Set correct d3hess_mod's q_gamma value
+     q_gamma = lgamma
+     CALL d3hess_sub(dftd3_hess)
+  END IF
+  !
   if( ionode ) then 
     !
     der2disp = (0._dp, 0._dp)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO groups
+! Copyright (C) 2002-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -349,8 +349,14 @@ SUBROUTINE print_cuda_info(check_use_gpu)
   IF ( PRESENT(check_use_gpu) ) THEN 
     IF (check_use_gpu) use_gpu = use_gpu_ 
   END IF 
+  !
+  ierr = cudaGetDevice( idev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
+  ierr = cudaGetDeviceCount( ndev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
+  !
   IF (use_gpu) THEN
-     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE. ",i2," visible GPUs per MPI rank")' ) ndev
 #if defined(__GPU_MPI)
      WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
 #endif
@@ -359,12 +365,7 @@ SUBROUTINE print_cuda_info(check_use_gpu)
      WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
   END IF
   !
-  ierr = cudaGetDevice( idev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
-  ierr = cudaGetDeviceCount( ndev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
-  !
-  ! User friendly, approximated warning.
+  ! User friendly, approximated warning. FIXME: does it really work?
   ! In order to get this done right, one needs an intra_node communicator
   !
   IF (nproc > ndev * nnode * 2) &

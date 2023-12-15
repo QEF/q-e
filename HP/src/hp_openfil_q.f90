@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE hp_openfil_q()
   USE io_files,         ONLY : prefix, tmp_dir, iunhub, nwordwfcU
   USE control_flags,    ONLY : io_level
   USE wvfct,            ONLY : nbnd, npwx
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, noncolin, domag
   USE buffers,          ONLY : open_buffer
   USE qpoint,           ONLY : nksq
   USE control_lr,       ONLY : lgamma
@@ -31,7 +31,7 @@ SUBROUTINE hp_openfil_q()
   !
   IF (LEN_TRIM(prefix) == 0) CALL errore ('hp_openfil_q', 'wrong prefix', 1)
   !
-  IF (lgamma .AND. .NOT.recalc_sym) THEN
+  IF (lgamma .AND. .NOT.recalc_sym.and. .not.(noncolin.and.domag)) THEN
      tmp_dir = tmp_dir_save
   ELSE
      tmp_dir = tmp_dir_hp

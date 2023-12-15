@@ -74,7 +74,6 @@ set(src_cpv
     src/potentials.f90
     src/pres_ai_mod.f90
     src/print_out.f90
-    src/printout_base.f90
     src/problem_size.f90
     src/pseudo_base.f90
     src/pseudopot.f90
@@ -102,7 +101,6 @@ set(src_cpv
     src/wave_base.f90
     src/wave_types.f90
     src/wf.f90
-    src/makov_payne.f90
     src/entropy.f90)
 qe_enable_cuda_fortran("${src_cpv}")
 

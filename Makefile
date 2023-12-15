@@ -267,7 +267,6 @@ links : bindir
 	[ -f ../WANT/wannier/bands.x ] && \
 		ln -fs ../WANT/wannier/bands.x ../bin/bands_want.x ; \
 	[ -f ../PP/src/dos.x ] &&  ln -fs ../PP/src/bands.x ../bin/bands.x ; \
-	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ;\
 	)
 
 #############################################################

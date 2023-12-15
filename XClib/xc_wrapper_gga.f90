@@ -353,6 +353,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       ex_lxc = 0.d0
     ENDIF
     !
+    xcoef = 1.d0
+    IF ( ishybrid .AND. exx_started .AND. exx_fraction>0.d0) xcoef = 1.d0-exx_fraction
+    !
     !$acc data copyin( ex_lxc, vx_rho, vx_sigma )
     IF (.NOT. POLARIZED) THEN
       !$acc parallel loop

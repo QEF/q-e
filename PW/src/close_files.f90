@@ -31,15 +31,22 @@ SUBROUTINE close_files( lflag )
   !
   LOGICAL, INTENT(IN) :: lflag
   !
+  CHARACTER(LEN=6) :: close_option
   LOGICAL :: opnd
+  !
+  !  ... delete buffers 
+  !  ... 1) at convergence, unless high disk I/O is required
+  !  ... 2) always, if minimal disk I/O is required
+  !
+  IF ( (lflag .AND. io_level == 0) .OR. (io_level < 0) ) THEN
+     close_option = 'DELETE'
+  ELSE
+     close_option = 'KEEP'
+  END IF
   !
   !  ... close buffer/file containing wavefunctions
   !
-  IF ( lflag .AND. (io_level <= 0) ) THEN
-     CALL close_buffer ( iunwfc, 'DELETE' )
-  ELSE
-     CALL close_buffer ( iunwfc, 'KEEP' )
-  END IF
+  CALL close_buffer ( iunwfc, close_option )
   !
   ! ... close files associated with the EXX calculation
   !
@@ -50,42 +57,25 @@ SUBROUTINE close_files( lflag )
   ! ... iunhub  as above, only for wfcs * S having an associated Hubbard U
   !
   IF ( lda_plus_u .AND. (Hubbard_projectors /= 'pseudo') ) THEN
-     IF ( io_level < 0 ) THEN
-        CALL close_buffer( iunhub, 'DELETE' )
-     ELSE
-        CALL close_buffer( iunhub, 'KEEP' )
-     END IF
+     CALL close_buffer( iunhub, close_option )
   END IF
   !
   IF ( use_wannier .OR. one_atom_occupations ) THEN
-     IF ( io_level < 0 ) THEN
-        CALL close_buffer( iunsat,'DELETE' )
-     ELSE
-        CALL close_buffer( iunsat,'KEEP' )
-     END IF
+     CALL close_buffer( iunsat, close_option )
   END IF
   !
   ! ... close unit for electric field if needed
   !
   IF ( lelfield ) THEN
-     !
-     IF ( io_level < 0 ) THEN
-        CALL close_buffer( iunefield, 'DELETE' )
-        CALL close_buffer( iunefieldm,'DELETE' )
-        CALL close_buffer( iunefieldp,'DELETE' )
-     ELSE
-        CALL close_buffer( iunefield, 'KEEP' )
-        CALL close_buffer( iunefieldm,'KEEP' )
-        CALL close_buffer( iunefieldp,'KEEP' )
-     ENDIF
-     !
+     CALL close_buffer( iunefield,  close_option )
+     CALL close_buffer( iunefieldm, close_option )
+     CALL close_buffer( iunefieldp, close_option )
   END IF
 #if defined (__OSCDFT)
   IF (use_oscdft) CALL oscdft_close_files(oscdft_ctx)
 #endif
   !
   CALL mp_barrier( intra_image_comm )  
-  !
   !
   RETURN
   !

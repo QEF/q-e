@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -315,8 +315,11 @@ CONTAINS
              ll(l0b+1:l0b+2*Hubbard_l3(nt)+1,nt) = &
              Hubbard_l3(nt)
           ENDIF
-       ENDDO   
-       !
+       ENDDO  
+       IF (noncolin) THEN
+          IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
+          CALL comp_dspinldau()
+       ENDIF
     ELSEIF ( lda_plus_u_kind == 1 ) THEN
        !
        ! DFT+U(+J) : Liechtenstein's formulation
@@ -379,6 +382,11 @@ CONTAINS
        lba = .FALSE.
        !
        DO nt = 1, ntyp
+          !
+          IF (noncolin) THEN
+             IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
+             CALL comp_dspinldau()
+          ENDIF
           !
           ! Here we account for the remaining cases when we need to 
           ! setup is_hubbard

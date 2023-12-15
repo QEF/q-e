@@ -1,5 +1,5 @@
-!
-! Copyright (C) 2002-2022 Quantum ESPRESSO group
+
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,29 +27,27 @@ SUBROUTINE force_hub( forceh )
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE symme,                ONLY : symvector
    USE wvfct,                ONLY : nbnd, npwx
-   USE control_flags,        ONLY : gamma_only
+   USE control_flags,        ONLY : gamma_only, offload_type
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
-                                    deallocate_bec_type
+   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type_acc, &
+                                    deallocate_bec_type_acc
    USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
-   USE noncollin_module,     ONLY : noncolin
+   USE noncollin_module,     ONLY : noncolin, npol
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
-   USE becmod_gpum,          ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto, &
-                                    allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE uspp_init,            ONLY : init_us_2
+   USE mp_bands,             ONLY : intra_bgrp_comm
    USE constants,            ONLY : eps16
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, me_pool, &
                                     nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE mp_bands,             ONLY : intra_bgrp_comm
    !
    IMPLICIT NONE
    !
@@ -58,34 +56,30 @@ SUBROUTINE force_hub( forceh )
    !
    ! ... local variables
    !
-#if defined(__CUDA)
-   TYPE(bec_type_d) :: proj     ! proj(nwfcU,nbnd)
-#else
-   TYPE(bec_type) :: proj
-#endif
+   TYPE(bec_type) :: proj   ! proj(nwfcU,nbnd)
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
+   COMPLEX (DP), ALLOCATABLE ::  dns_nc(:,:,:,:)
    COMPLEX (DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
-   INTEGER :: npw, alpha, na, nt, is, m1, m2, ipol, ldim, ik, ijkb0
+   INTEGER :: npw, alpha, na, nt, is, is2, m1, m2, ipol, ldim, ik, ijkb0
    INTEGER :: na1, na2, equiv_na2, nt1, nt2, ldim1, ldim2, viz
    INTEGER :: nb_s, nb_e, mykey, ldimb
    LOGICAL :: lhubb
    LOGICAL :: save_flag
+   INTEGER, EXTERNAL :: find_viz
    !
-   REAL(DP), ALLOCATABLE :: projrd(:,:)
-   COMPLEX(DP), ALLOCATABLE :: projkd(:,:)
    !
    CALL start_clock_gpu( 'force_hub' )
    !
+   !$acc data  present(vkb) copyin(wfcU) present_or_create(evc) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
       CALL errore( "force_hub", &
                    " forces for this Hubbard_projectors type not implemented", 1 )
    !
-   IF (noncolin) CALL errore( "forceh","Noncollinear case is not supported", 1 )
-   !
+   ! IF (noncolin) CALL errore( "forceh","Noncollinear case is not supported", 1 )
    IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore( "force_hub", &
                    " forces in the DFT+U+J scheme are not implemented", 1 )
    !
@@ -93,11 +87,17 @@ SUBROUTINE force_hub( forceh )
       ! ... DFT+U
       lhubb = .FALSE.
       ldim = 2*Hubbard_lmax + 1
-      ALLOCATE( dns(ldim,ldim,nspin,nat) )
+      IF (noncolin) then
+         ALLOCATE ( dns_nc(ldim, ldim, nspin, nat) ) 
+      ELSE        
+         ALLOCATE ( dns(ldim, ldim, nspin, nat) )
+      ENDIF
       DO nt = 1, ntyp
          IF (is_hubbard_back(nt)) lhubb = .TRUE.
       ENDDO
+
       IF (lhubb) THEN
+         IF (noncolin) CALL errore ("force_hub","Noncollinear and background are not supported",1)     
          ldimb = ldmx_b
          ALLOCATE( dnsb(ldimb,ldimb,nspin,nat) )
       ENDIF
@@ -107,24 +107,21 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( dnsg(ldim,ldim,max_num_neighbors,nat,nspin) )
    ENDIF
    !
-   ALLOCATE( spsi(npwx,nbnd) ) 
-   ALLOCATE( wfcatom(npwx,natomwfc) )
+   ALLOCATE( spsi(npwx*npol,nbnd) ) 
+   !$acc enter data create(spsi)
+   ALLOCATE( wfcatom(npwx*npol,natomwfc) )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      ALLOCATE( swfcatom(npwx,natomwfc) )
+      ALLOCATE( swfcatom(npwx*npol,natomwfc) )
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   !$acc data create(spsi) copyin(wfcU)
-   !
-#if defined(__CUDA)
-   CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
-   CALL using_evc_d(0)
-#else
-   CALL allocate_bec_type( nwfcU, nbnd, proj )
-   CALL using_evc(0)
-#endif
+   IF (noncolin) THEN
+      ALLOCATE (proj%k (nwfcU, nbnd))
+   ELSE
+      CALL allocate_bec_type_acc( nwfcU, nbnd, proj )
+   ENDIF
    !
    ! ... poor-man parallelization over bands:
    !      - if nproc_pool=1 : nb_s=1, nb_e=nbnd, mykey=0;
@@ -143,8 +140,8 @@ SUBROUTINE force_hub( forceh )
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
-      IF (nks > 1) CALL using_evc(2)
       IF (nks > 1) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+      !$acc update device(evc) 
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
       ! ... FIXME check if this update is actually needed and in case comment
@@ -153,56 +150,35 @@ SUBROUTINE force_hub( forceh )
       !$acc update self(vkb)
       !
       ! ... Compute spsi = S * psi
-      CALL allocate_bec_type( nkb, nbnd, becp )
-      CALL using_becp_auto(2)
-      !
-#if defined(__CUDA)
-      CALL using_evc_d(0)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device(vkb,spsi)
-      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
-      CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi )
+      CALL allocate_bec_type_acc( nkb, nbnd, becp )
+      Call calbec(offload_type, npw, vkb, evc, becp ) 
+      !$acc host_data use_device(spsi, evc)
+      CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
-#else
-      CALL calbec( npw, vkb, evc, becp )
-      CALL s_psi( npwx, npw, nbnd, evc, spsi )
-#endif
-      CALL deallocate_bec_type( becp )
-      CALL using_becp_auto(2)
+      CALL deallocate_bec_type_acc( becp )
       !
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
       CALL orthoUwfc_k( ik, .TRUE. )
       !$acc update device(wfcU)
       !
-      IF ( gamma_only ) THEN
-         ALLOCATE( projrd(nwfcU,nbnd) )
-      ELSE
-         ALLOCATE( projkd(nwfcU,nbnd) )
-      ENDIF
-      !
       ! ... proj=<wfcU|S|evc>
-#if defined(__CUDA)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device( spsi, wfcU )
-      CALL calbec_gpu( npw, wfcU, spsi, proj )
-      !$acc end host_data
+      IF (noncolin) THEN
+         CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
+                    npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
+         CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
+      ELSE
+         CALL calbec( offload_type, npw, wfcU, spsi, proj )
+      ENDIF
       !
       IF ( gamma_only ) THEN
-         projrd = proj%r_d
+         !$acc update self(proj%r) 
       ELSE
-         projkd = proj%k_d
+         !$acc update self(proj%k)
       ENDIF
-      !$acc data copyin(projrd,projkd,wfcatom,overlap_inv)
-#else
-      CALL calbec( npw, wfcU, spsi, proj )
       !
-      IF ( gamma_only ) THEN
-         projrd = proj%r
-      ELSE
-         projkd = proj%k
-      ENDIF
-#endif
+      !$acc data copyin(wfcatom,overlap_inv)
+      !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
       DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
@@ -213,36 +189,58 @@ SUBROUTINE force_hub( forceh )
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
-               IF ( gamma_only ) THEN
-                  CALL dndtau_gamma( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
-                                         nb_s, nb_e, mykey, 1, dns )
-               ELSE
-                  CALL dndtau_k( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
-                                     nb_s, nb_e, mykey, 1, dns )
-               ENDIF
-               !
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)
-               DO na = 1, nat                
-                  nt = ityp(na)
-                  IF ( is_hubbard(nt) ) THEN
-                     DO is = 1, nspin
-                        DO m2 = 1, 2*Hubbard_l(nt)+1
-                           DO m1 = 1, 2*Hubbard_l(nt)+1
-                              forceh(ipol,alpha) = forceh(ipol,alpha) -    &
-                                 v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
+               IF (noncolin) THEN  
+                  CALL dndtau_k_nc ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                      nb_s, nb_e, mykey, 1, dns_nc )                  
+                  DO na = 1, nat
+                     nt = ityp(na)
+                     IF ( is_hubbard(nt) ) THEN
+                        DO is = 1, npol
+                           DO is2 = 1, npol
+                              DO m2 = 1, 2*Hubbard_l(nt)+1
+                                 DO m1 = 1, 2*Hubbard_l(nt)+1
+                                    forceh(ipol,alpha) = forceh(ipol,alpha)      -   &
+                                           dble( v%ns_nc(m2, m1, npol*(is-1)+is2, na)  *   &
+                                           dns_nc(m1, m2, npol*(is2-1)+is, na) )
+                                 ENDDO
+                              ENDDO
                            ENDDO
                         ENDDO
-                     ENDDO
-                  ENDIF
-               ENDDO
+                     ENDIF
+                  ENDDO                              
+               ELSE
+                  IF ( gamma_only ) THEN
+                      CALL dndtau_gamma ( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                         nb_s, nb_e, mykey, 1, dns )
+                  ELSE            
+                      CALL dndtau_k    ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                         nb_s, nb_e, mykey, 1, dns )
+                  ENDIF            
+                  DO na = 1, nat
+                     nt = ityp(na)
+                     IF ( is_hubbard(nt) ) THEN
+                        DO is = 1, nspin
+                           DO m2 = 1, 2*Hubbard_l(nt)+1
+                              DO m1 = 1, 2*Hubbard_l(nt)+1
+                                 forceh(ipol,alpha) = forceh(ipol,alpha) -    &
+                                    v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
+                              ENDDO
+                            ENDDO
+                        ENDDO
+                     ENDIF
+                  ENDDO                              
+               ENDIF
+               !
+! !omp parallel do default(shared) private(na,nt,m1,m2,is)               
 ! !omp end parallel do
                !
                IF (lhubb) THEN
                   IF ( gamma_only ) THEN
-                     CALL dndtau_gamma( ldimb, projrd, spsi, alpha, ijkb0, ipol, ik, &
+                     CALL dndtau_gamma( ldimb, proj%r, spsi, alpha, ijkb0, ipol, ik, &
                                         nb_s, nb_e, mykey, 2, dnsb )
                   ELSE
-                     CALL dndtau_k( ldimb, projkd, spsi, alpha, ijkb0, ipol, ik, &
+                     CALL dndtau_k( ldimb, proj%k, spsi, alpha, ijkb0, ipol, ik, &
                                     nb_s, nb_e, mykey, 2, dnsb )
                   ENDIF
                   !
@@ -268,39 +266,69 @@ SUBROUTINE force_hub( forceh )
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
-               IF ( gamma_only ) THEN
-                  CALL dngdtau_gamma( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
+               IF (noncolin) then
+                  CALL dngdtau_k_nc  ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
-               ELSE
-                  CALL dngdtau_k( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
-                                  nb_s, nb_e, mykey, dnsg )
-               ENDIF
-               !
-               DO is = 1, nspin
-                  DO na1 = 1, nat
-                     nt1 = ityp(na1)
-                     IF ( is_hubbard(nt1) ) THEN
-                        ldim1 = ldim_u(nt1)
-                        DO viz = 1, neighood(na1)%num_neigh
-                           na2 = neighood(na1)%neigh(viz)
-                           equiv_na2 = at_sc(na2)%at
-                           nt2 = ityp(equiv_na2)
-                           ldim2 = ldim_u(nt2)
-                           IF (Hubbard_V(na1,na2,1)/=0.d0 .OR. &
-                               Hubbard_V(na1,na2,2)/=0.d0 .OR. &
-                               Hubbard_V(na1,na2,3)/=0.d0 .OR. &
-                               Hubbard_V(na1,na2,4)/=0.d0 ) THEN
-                               DO m1 = 1, ldim1
-                                  DO m2 = 1, ldim2
-                                     forceh(ipol,alpha) = forceh(ipol,alpha) &
-                                        - DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is))
-                                  ENDDO 
-                               ENDDO 
+                  DO is = 1, npol
+                     do is2 = 1, npol
+                        DO na1 = 1, nat
+                           nt1 = ityp(na1)
+                           IF ( is_hubbard(nt1) ) THEN
+                              ldim1 = ldim_u(nt1)
+                              DO viz = 1, neighood(na1)%num_neigh
+                                 na2 = neighood(na1)%neigh(viz)
+                                 equiv_na2 = at_sc(na2)%at
+                                 nt2 = ityp(equiv_na2)
+                                 ldim2 = ldim_u(nt2)
+                                 IF (Hubbard_V(na1,na2,1).NE.0.d0) THEN
+                                    DO m1 = 1, ldim1
+                                       DO m2 = 1, ldim2
+                                          forceh(ipol,alpha) = forceh(ipol,alpha) &
+                                             - DBLE((v_nsg(m2,m1,viz,na1,npol*(is-1)+is2)) &
+                                                   * (dnsg(m2,m1,viz,na1,npol*(is-1)+is2)))
+                                       ENDDO 
+                                    ENDDO 
+                                 ENDIF
+                              ENDDO ! viz
                            ENDIF
-                        ENDDO ! viz
-                     ENDIF
-                  ENDDO ! na1
-               ENDDO ! is
+                        ENDDO ! na1
+                     ENDDO
+                  ENDDO ! is
+               ELSE
+                  IF ( gamma_only ) THEN
+                     CALL dngdtau_gamma ( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                       nb_s, nb_e, mykey, dnsg )
+                  ELSE
+                     CALL dngdtau_k     ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                       nb_s, nb_e, mykey, dnsg )
+                  ENDIF
+                  !
+                  DO is = 1, nspin
+                     DO na1 = 1, nat
+                        nt1 = ityp(na1)
+                        IF ( is_hubbard(nt1) ) THEN
+                           ldim1 = ldim_u(nt1)
+                           DO viz = 1, neighood(na1)%num_neigh
+                              na2 = neighood(na1)%neigh(viz)
+                              equiv_na2 = at_sc(na2)%at
+                              nt2 = ityp(equiv_na2)
+                              ldim2 = ldim_u(nt2)
+                              IF (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
+                                 DO m1 = 1, ldim1
+                                    DO m2 = 1, ldim2
+                                       forceh(ipol,alpha) = forceh(ipol,alpha) &
+                                          - DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is))
+                                    ENDDO 
+                                 ENDDO 
+                              ENDIF
+                           ENDDO ! viz
+                        ENDIF
+                     ENDDO ! na1
+                  ENDDO ! is
+               ENDIF
                !
             ENDDO ! ipol
             !
@@ -309,30 +337,26 @@ SUBROUTINE force_hub( forceh )
       ENDDO ! alpha
       !
       !$acc end data
-      IF ( gamma_only ) THEN
-        DEALLOCATE( projrd )
-      ELSE
-        DEALLOCATE( projkd )
-      ENDIF
       !
    ENDDO ! ik
    !
    CALL mp_sum( forceh, inter_pool_comm )
    !
-#if defined(__CUDA)
-   CALL deallocate_bec_type_gpu( proj )
-#else
-   CALL deallocate_bec_type( proj )
-#endif
+   CALL deallocate_bec_type_acc( proj )
    !
-   IF (lda_plus_u_kind==0) THEN
-      DEALLOCATE( dns )
-      IF (ALLOCATED(dnsb)) DEALLOCATE( dnsb )
+   IF (lda_plus_u_kind.EQ.0) THEN
+      IF (noncolin) THEN
+         DEALLOCATE(dns_nc)
+      ELSE        
+         DEALLOCATE(dns)
+      ENDIF   
+      IF (ALLOCATED(dnsb)) DEALLOCATE(dnsb)
    ELSEIF (lda_plus_u_kind==2) THEN
-      DEALLOCATE( dnsg )
+      DEALLOCATE(dnsg)
    ENDIF
    !
    !$acc end data
+   !$acc exit data delete(spsi) finalize
    !
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
@@ -383,7 +407,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE force_mod,            ONLY : doverlap_inv
    USE basis,                ONLY : natomwfc
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    !
@@ -423,15 +446,10 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL start_clock( 'dndtau' )
    !
-#if defined(__CUDA)
-  CALL using_evc(0)
-  CALL using_evc_d(0)
-#endif
-   !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(spsi,proj,wfcU) create(dproj,dproj_us)
+   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -442,10 +460,8 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-      !$acc data copyin( evc )
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, jkb0, nwfcU, wfcU, &
-                                     nbnd, evc, dproj_us, nb_s, nb_e, mykey )
-      !$acc end data
+                                     nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false. )
    ENDIF
    !
    ! ... In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
@@ -454,7 +470,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
-   !$acc data copyin(doverlap_inv)
    !
    ! ... Band parallelization. If each band appears more than once
    ! ... compute its contribution only once (i.e. when mykey=0)
@@ -536,7 +551,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 ! !omp end parallel do
    !
    !$acc end data
-   !$acc end data
    DEALLOCATE( dproj )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
    IF (okvan) DEALLOCATE( dproj_us )
@@ -568,7 +582,171 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 END SUBROUTINE dndtau_k
 !
-
+SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+                      nb_e, mykey, lpuk, dns_nc )
+   !---------------------------------------------------------------------------
+   !! This routine computes the derivative of the ns with respect to the ionic
+   !! displacement \(u(\text{alpha,ipol})\) used to obtain the Hubbard 
+   !! contribution to the atomic forces.
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE lsda_mod,             ONLY : nspin, current_spin
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
+                                    is_hubbard_back, offsetU_back, ldim_u, &
+                                    offsetU_back1, ldim_back, Hubbard_l2, &
+                                    backall, Hubbard_projectors, wfcU
+   USE noncollin_module,     ONLY : npol                            
+   USE wvfct,                ONLY : nbnd, npwx, wg
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
+   USE mp_bands,             ONLY : intra_bgrp_comm
+   USE mp,                   ONLY : mp_sum
+   USE wavefunctions,        ONLY : evc
+   USE uspp,                 ONLY : okvan
+   USE force_mod,            ONLY : doverlap_inv
+   USE basis,                ONLY : natomwfc
+   !
+   IMPLICIT NONE
+   !
+   ! I/O variables
+   !
+   INTEGER, INTENT(IN) :: ldim
+   !! ldim = 2*Hubbard_lmax+1
+   COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
+   !! projection
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
+   !! \(S|\ \text{evc}\rangle\)
+   INTEGER, INTENT(IN) :: alpha
+   !! the displaced atom index
+   INTEGER, INTENT(IN) :: jkb0
+   !! positions of beta functions for atom alpha
+   INTEGER, INTENT(IN) :: ipol
+   !! the component of displacement
+   INTEGER, INTENT(IN) :: ik
+   !! k-point index
+   INTEGER, INTENT(IN) :: nb_s
+   !! starting band number (for band parallelization)
+   INTEGER, INTENT(IN) :: nb_e
+   !! ending band number (for band parallelization)
+   INTEGER, INTENT(IN) :: mykey
+   !! If each band appears more than once
+   !! compute its contribution only once (i.e. when mykey=0)
+   INTEGER, INTENT(IN) :: lpuk
+   !! index to control the standard (lpuk=1) or 
+   !! background (lpuk=2) contribution to the force
+   COMPLEX(DP), INTENT(OUT) :: dns_nc(ldim,ldim,nspin,nat)
+   !! the derivative of the atomic occupations
+   !
+   ! ... local variables
+   !
+   INTEGER ::  ibnd, is1, is2, na, nt, m1, m2, off1, off2, m11, m22, ldim1, i, j
+   REAL(DP) :: psum 
+   COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
+   !
+   CALL start_clock( 'dndtau' )
+   !
+   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
+   !
+   ! Compute the derivative of occupation matrices (the quantities dns_nc(m1,m2,i))
+   ! of the atomic orbitals. They are complex quantities as well as dns_nc(m1,m2,i).
+   !
+   dns_nc(:,:,:,:) = 0.d0
+   !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
+   IF ( mykey /= 0 ) GO TO 10
+   !
+   ! Compute the USPP contribution to dproj:
+   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   !
+   IF (okvan) THEN
+      ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+      CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+                       nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false.)
+   ENDIF
+   !
+   ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
+   !
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+   ENDIF
+   !
+! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
+   DO na = 1, nat
+      nt = ityp(na)
+      IF ( is_hubbard(nt) ) THEN
+         !
+         ! Compute the second contribution to dproj due to the derivative of 
+         ! (ortho-)atomic orbitals
+         CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+         IF (okvan) dproj = dproj + dproj_us
+         !
+         ldim1 = 2*Hubbard_l(nt)+1
+         DO is1 = 1, npol
+            DO is2 = 1, npol
+               i = npol*(is1-1) + is2
+               DO m1 = 1, ldim1
+                  DO m2 = 1, ldim1
+                     DO ibnd = nb_s, nb_e
+                        dns_nc(m1,m2,i,na) = dns_nc(m1,m2,i,na) + &
+                            wg(ibnd,ik) * &
+                            dcmplx(CONJG(dproj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
+                                          proj(offsetU(na)+m1+ldim1*(is1-1),ibnd)  + &
+                                    CONJG(proj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
+                                         dproj(offsetU(na)+m1+ldim1*(is1-1),ibnd)) 
+                     ENDDO                        
+                  ENDDO
+               ENDDO   
+            ENDDO
+         ENDDO
+      ENDIF
+   ENDDO
+! !omp end parallel do
+   !
+10 DEALLOCATE( dproj )
+   IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
+   IF (okvan) DEALLOCATE (dproj_us)
+   !
+   CALL mp_sum( dns_nc, intra_pool_comm )
+   !
+   ! Impose hermiticity of dns_nc{m1,m2,i}
+   !
+! !omp parallel do default(shared) private(na,is,m1,m2)
+   DO na = 1, nat
+      nt = ityp (na)
+      IF ( is_hubbard(nt) ) THEN
+         DO is1 = 1, npol
+           DO is2 = 1, npol
+             i = npol*(is1-1) + is2
+             j = is1 + npol*(is2-1)
+             ldim1 = 2*Hubbard_l(nt)+1
+             DO m1 = 1, ldim1
+               DO m2 = 1, ldim1
+                  psum = ABS( dns_nc(m1,m2,i,na) - CONJG(dns_nc(m2,m1,j,na)) )
+                  IF (psum.GT.1.d-10) THEN
+                      ! print*, na, m1, m2, is1, is2
+                      ! print*, dns_nc(m1,m2,i,na)
+                      ! print*, dns_nc(m2,m1,j,na)
+                     CALL errore( 'dns_nc', 'non hermitean matrix', 1 )
+                  ELSE
+                     dns_nc(m2,m1,j,na) = CONJG( dns_nc(m1,m2,i,na) )
+                  ENDIF
+               ENDDO
+             ENDDO
+           ENDDO
+         ENDDO
+      ENDIF
+   ENDDO
+! !omp end parallel do
+   !
+   CALL stop_clock( 'dndtau' )
+   !
+   RETURN
+   !
+END SUBROUTINE dndtau_k_nc
+!-------------------------------------------------------------------------------
 !-----------------------------------------------------------------------
 SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
                          nb_s, nb_e, mykey, lpuk, dns )
@@ -626,7 +804,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj,spsi) create(dproj)
+   !$acc data create(dproj)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -741,7 +919,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE force_mod,            ONLY : doverlap_inv
    USE basis,                ONLY : natomwfc
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    !
@@ -780,16 +957,11 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL start_clock( 'dngdtau' )
    !
-#if defined(__CUDA)
-   CALL using_evc(0)
-   CALL using_evc_d(0)
-#endif
-   !
    ALLOCATE( dproj1(nwfcU,nb_s:nb_e) )
    ALLOCATE( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(proj,spsi,wfcU) create(dproj1,dproj2,dproj_us)
+   !$acc data present_or_copyin(wfcU) create(dproj1,dproj2,dproj_us)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -801,16 +973,12 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL phase_factor( ik )
    !
-   !$acc update self(proj(:,nb_s:nb_e))
-   !
    ! ... Compute the USPP contribution to dproj1:
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-      !$acc data copyin(evc)
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, jkb0, nwfcU, wfcU, nbnd, &
-                                     evc, dproj_us, nb_s, nb_e, mykey )
-      !$acc end data
+                                     evc, dproj_us, nb_s, nb_e, mykey, .false. )
    ENDIF
    !
    IF (Hubbard_projectors.EQ."atomic") THEN
@@ -836,7 +1004,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
-   !$acc data copyin(doverlap_inv)
    !
    ! ... Band parallelization. If each band appears more than once
    ! ... compute its contribution only once (i.e. when mykey=0)
@@ -920,7 +1087,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 ! !omp end parallel do
    !
    !$acc end data
-   !$acc end data
    DEALLOCATE( dproj1 )
    DEALLOCATE( dproj2 )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
@@ -967,6 +1133,212 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 END SUBROUTINE dngdtau_k
 !
+SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+   nb_e, mykey, dnsg)
+   !-------------------------------------------------------------------------
+   !! This routine computes the derivative of the nsg (generalized occupation
+   !! matrix of the noncollinear DFT+U+V scheme) with respect to the ionic
+   !! displacement \(u(\text{alpha,ipol})\) used to obtain the generalized 
+   !! Hubbard contribution to the atomic forces.
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE lsda_mod,             ONLY : nspin, current_spin
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, at_sc,  &
+                  offsetU_back, offsetU_back1, Hubbard_l2,   &
+                  backall, max_num_neighbors, phase_fac, ldim_u, &
+                  neighood, Hubbard_projectors, wfcU
+   USE wvfct,                ONLY : nbnd, npwx, npw, wg
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
+   USE mp,                   ONLY : mp_sum
+   USE wavefunctions,        ONLY : evc
+   USE uspp,                 ONLY : okvan
+   USE force_mod,            ONLY : doverlap_inv
+   USE basis,                ONLY : natomwfc
+   USE noncollin_module,     ONLY : npol 
+   USE io_global,  ONLY : stdout
+   ! 
+   IMPLICIT NONE
+   !
+   ! I/O variables
+   !
+   INTEGER, INTENT(IN) :: ldim
+   !! ldim = 2*Hubbard_lmax+1
+   COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
+   !! projection
+   COMPLEX (DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
+   !! \(S|\ \text{evc}\rangle\)
+   INTEGER, INTENT(IN) :: alpha
+   !! the displaced atom index
+   INTEGER, INTENT(IN) :: jkb0
+   !! positions of beta functions for atom alpha
+   INTEGER, INTENT(IN) :: ipol
+   !! the component of displacement
+   INTEGER, INTENT(IN) :: ik
+   !! k-point index
+   INTEGER, INTENT(IN) :: nb_s
+   !! starting band number (for band parallelization)
+   INTEGER, INTENT(IN) :: nb_e
+   !! ending band number (for band parallelization)
+   INTEGER, INTENT(IN) :: mykey
+   !! If each band appears more than once
+   !! compute its contribution only once (i.e. when mykey=0)
+   COMPLEX (DP), INTENT (OUT) :: dnsg(ldim,ldim,max_num_neighbors,nat,nspin)
+   !! the derivative of the generalized atomic occupations
+   !
+   ! ... local variables
+   !
+   INTEGER :: ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, &
+   ldim1, ldim2, eq_na2, na1, na2, nt1, nt2, viz, is1, is2, i, j
+   COMPLEX (DP), ALLOCATABLE :: dproj1(:,:), dproj2(:,:), dproj_us(:,:)
+   INTEGER, EXTERNAL :: find_viz
+   !
+   CALL start_clock('dngdtau')
+   !
+   ALLOCATE ( dproj1(nwfcU,nb_s:nb_e) )
+   ALLOCATE ( dproj2(nwfcU,nb_s:nb_e) )
+   !
+   ! Compute the derivative of the generalized occupation matrices 
+   ! (the quantities dnsg(m1,m2)) of the atomic orbitals. 
+   ! They are complex quantities as well as nsg(m1,m2).
+   !
+   dnsg(:,:,:,:,:) = (0.d0, 0.d0)
+   !
+   ! Compute the phases for each atom at this ik
+   !
+   CALL phase_factor(ik)
+   !
+   ! Compute the USPP contribution to dproj1:
+   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   !
+   IF (okvan) THEN
+   ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+   CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+      nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false.)
+   ENDIF
+   !
+   IF (Hubbard_projectors.EQ."atomic") THEN
+      ! In the 'atomic' case the calculation must be performed only once (when na=alpha)
+      CALL dprojdtau_k ( spsi, alpha, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+      IF (okvan) dproj1 = dproj1 + dproj_us
+      dproj2 = dproj1
+   ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
+      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+   ENDIF
+   !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
+   ! !omp parallel do default(shared) private(na1,viz,m1,m2,ibnd)
+   DO na1 = 1, nat
+      nt1 = ityp(na1)
+      IF ( is_hubbard(nt1) ) THEN
+         ! Compute the second contribution to dproj1 due to the derivative of 
+         ! ortho-atomic orbitals
+         IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+            CALL dprojdtau_k ( spsi, alpha, na1, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+            IF (okvan) dproj1 = dproj1 + dproj_us
+         ENDIF
+         ldim1 = ldim_u(nt1)
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            eq_na2 = at_sc(na2)%at
+            nt2 = ityp(eq_na2)
+            ldim2 = ldim_u(nt2)
+            ! Compute the second contribution to dproj2 due to the derivative of 
+            ! ortho-atomic orbitals
+            IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+               CALL dprojdtau_k ( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
+               IF (okvan) dproj2 = dproj2 + dproj_us
+            ENDIF
+            IF (mykey==0) THEN
+               IF (na1.GT.na2) THEN 
+                  DO is1 = 1, npol
+                     DO is2 = 1, npol
+                        i = npol*(is2-1) + is1
+                        j = npol*(is1-1) + is2
+                        DO m1 = 1, ldim1
+                           DO m2 = 1, ldim2
+                              dnsg(m2,m1,viz,na1,i) = &
+                              CONJG(dnsg(m1,m2,find_viz(na2,na1),na2,j))
+                           ENDDO
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ELSE
+                  DO is1 = 1, npol
+                     DO is2 = 1, npol
+                        i = npol*(is2-1) + is1
+                        DO m1 = 1, ldim1
+                           off1 = offsetU(na1) + m1+ldim1*(is2-1)
+                           DO m2 = 1, ldim2
+                              off2 = offsetU(eq_na2) + m2+ldim2*(is1-1)
+                              DO ibnd = nb_s, nb_e
+                                 dnsg(m2,m1,viz,na1,i) =  &
+                                       dnsg(m2,m1,viz,na1,i) + &
+                                       wg(ibnd,ik)*dcmplx( CONJG(phase_fac(na2))*&
+                                       (proj(off1,ibnd) * CONJG(dproj2(off2,ibnd)) + &
+                                      dproj1(off1,ibnd)  *  CONJG(proj(off2,ibnd)) ) )
+                              ENDDO
+                           ENDDO
+                        ENDDO ! ibnd
+                     ENDDO ! m2
+                 ENDDO  ! m1
+               ENDIF
+            ENDIF
+         ENDDO ! viz          
+      ENDIF
+   ENDDO ! na1
+   ! !omp end parallel do
+   !
+   DEALLOCATE ( dproj1 ) 
+   DEALLOCATE ( dproj2 ) 
+   IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
+   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
+   !
+   CALL mp_sum(dnsg, intra_pool_comm)
+   !
+   ! Impose hermiticity of dnsg_{m1,m2}
+   !
+   ! !omp parallel do default(shared) private(na1,viz,m1,m2)
+   DO na1 = 1, nat
+      nt1 = ityp (na1)
+      IF ( is_hubbard(nt1) ) THEN
+         ldim1 = ldim_u(nt1)
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            IF (na1.GT.na2) THEN
+               eq_na2 = at_sc(na2)%at
+               nt2 = ityp (eq_na2)
+               ldim2 = ldim_u(nt2)
+               DO is1 = 1, npol
+                  DO is2 = 1, npol
+                     i = npol*(is2-1) + is1
+                     j = npol*(is1-1) + is2
+                     DO m1 = 1, ldim1
+                        DO m2 = 1, ldim2
+                           dnsg(m2,m1,viz,na1,i) = &
+                              (dnsg(m2,m1,viz,na1,i) + &
+                              CONJG(dnsg(m1,m2,find_viz(na2,na1),na2,j)) )*0.5d0
+                           dnsg(m1,m2,find_viz(na2,na1),na2,j) = &
+                              CONJG(dnsg(m2,m1,viz,na1,i))
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDIF
+         ENDDO
+      ENDIF
+   ENDDO
+   ! !omp end parallel do
+   !
+   CALL stop_clock('dngdtau')
+   !
+   RETURN
+   !
+END SUBROUTINE dngdtau_k_nc
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
@@ -1025,7 +1397,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj,spsi) create(dproj)
+   !$acc data create(dproj)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1154,22 +1526,27 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
-   USE klist,                ONLY : nks, xk, ngk, igk_k
-   USE ldaU,                 ONLY : nwfcU, wfcU, offsetU, is_hubbard_back,   &
-                                    Hubbard_l2, offsetU_back, offsetU_back1, &
-                                    ldim_u, backall, lda_plus_u_kind, Hubbard_l,&
-                                    Hubbard_projectors, oatwfc, is_hubbard
+   USE klist,                ONLY : xk, ngk, igk_k
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU, &
+                                    is_hubbard_back, Hubbard_l2, offsetU_back, &
+                                    offsetU_back1, ldim_u, backall, lda_plus_u_kind, &
+                                    Hubbard_projectors, oatwfc
+   USE noncollin_module,     ONLY : noncolin, npol                         
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : okvan, nkb
    USE uspp_param,           ONLY : nh
-   USE basis,                ONLY : natomwfc, wfcatom
-   USE force_mod,            ONLY : overlap_inv, doverlap_inv
+   USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
+   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
+   USE wavefunctions_gpum,   ONLY : using_evc
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, offsetU
    !
    IMPLICIT NONE
    !
-   COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
+   ! I/O variables
+   !
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
    !! \(S\ |\text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom
@@ -1203,7 +1580,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present_or_copyin(spsi,dproj)
+   !$acc data present_or_copyin(dproj)
    !
    nt  = ityp(na)
    npw = ngk(ik)
@@ -1227,7 +1604,8 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... localized nature of atomic wfc).
       ! ... Note: parallelization here is over plane waves, not over bands!
       !
-      ALLOCATE( dwfc(npwx,ldim) )
+      ALLOCATE ( dwfc(npwx*npol,ldim*npol) )
+      dwfc(:,:) = (0.d0, 0.d0)
       !$acc data create(dwfc)
       !
       !$acc kernels
@@ -1255,17 +1633,18 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
             ENDIF
             dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offpm)
+            IF (noncolin) dwfc(ig+npwx,m1+ldim) = (0.d0,-1.d0) * gvec * wfcU(ig+npwx,offpm+ldim)
          ENDDO
          !
       ENDDO
 ! !omp end parallel do
       !
-      ALLOCATE ( dproj0(ldim,nbnd) )
+      ALLOCATE ( dproj0(ldim*npol,nbnd) )      
       !$acc data create(dproj0)
       !$acc host_data use_device(dwfc,spsi,dproj0)
-      CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                    dwfc, npwx, spsi, npwx, (0.d0,0.d0),  &
-                    dproj0, ldim )
+      CALL MYZGEMM('C','N',ldim*npol, nbnd, npwx*npol, (1.d0,0.d0), &
+                     dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
+                     dproj0, ldim*npol)   
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -1283,6 +1662,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
          !$acc parallel loop
          DO ibnd = nb_s, nb_e
             dproj(offpm,ibnd) = dproj0(m1,ibnd)
+            IF (noncolin) dproj(offpm+ldim,ibnd) = dproj0(m1+ldim,ibnd)
          ENDDO
       ENDDO
       !
@@ -1306,7 +1686,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       IF (is_hubbard_back(nt)) CALL errore( "dprojdtau_k", &
                  " Forces with background and  ortho-atomic are not supported", 1 )
       !
-      ALLOCATE( dwfc(npwx,ldim) )
+      ALLOCATE( dwfc(npwx*npol,ldim*npol) )
       !$acc data create(dwfc) present_or_copyin(wfcatom,overlap_inv)
       !
       !$acc kernels
@@ -1332,10 +1712,13 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !$acc parallel loop
       DO ig = 1, npw
          gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
-         DO m1 = 1, ldim
+         DO m1 = 1, ldim*npol
             DO m2 = m_start, m_end
                dwfc(ig,m1) = dwfc(ig,m1) + (0.d0,-1.d0) * gvec * &
                              overlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
+               !
+               IF (noncolin) dwfc(ig+npwx,m1) = dwfc(ig+npwx,m1) + (0.d0,-1.d0) * gvec * &
+                        overlap_inv(offpm+m1,m2) * wfcatom(ig+npwx,m2)
             ENDDO
          ENDDO
       ENDDO
@@ -1352,23 +1735,22 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
       ! ... where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      !$acc data present_or_copyin(doverlap_inv)
       !$acc host_data use_device(wfcatom,doverlap_inv,dwfc)
-      CALL MYZGEMM( 'N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
-                    wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
-                    natomwfc, (1.d0,0.d0), dwfc, npwx )
+      CALL MYZGEMM( 'N','N', npwx*npol, ldim*npol, natomwfc, (1.d0,0.d0), &
+                    wfcatom, npwx*npol, doverlap_inv(:,offpm+1:offpm+ldim*npol), &
+                    natomwfc, (1.d0,0.d0), dwfc, npwx*npol )
       !$acc end host_data
-      !$acc end data
       !
       ! ... 3. Final step: compute dproj0 = <dwfc|spsi>
       !
-      ALLOCATE( dproj0(ldim,nbnd) )
+      ALLOCATE( dproj0(ldim*npol,nbnd) )
+      dproj0(:,:) = (0.0d0, 0.0d0)
       !$acc data create(dproj0)
       !
       !$acc host_data use_device(dwfc,spsi,dproj0)
-      CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                    dwfc, npwx, spsi, npwx,  (0.d0,0.d0), &
-                    dproj0, ldim )         
+      CALL MYZGEMM( 'C','N',ldim*npol, nbnd, npwx*npol, (1.d0,0.d0), &
+                    dwfc, npwx*npol, spsi, npwx*npol,  (0.d0,0.d0), &
+                    dproj0, ldim*npol )         
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -1380,6 +1762,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
          DO ibnd = nb_s, nb_e
             DO m1 = 1, ldim
                dproj(offpm+m1,ibnd) = dproj0(m1,ibnd)
+               IF (noncolin) dproj(offpm+m1+ldim,ibnd) = dproj0(m1+ldim,ibnd)
             ENDDO
          ENDDO
       ENDIF
@@ -1410,6 +1793,7 @@ SUBROUTINE natomwfc_per_atom( alpha, m_start, m_end )
    USE uspp_param,   ONLY : upf
    USE ldaU,         ONLY : Hubbard_l
    USE io_global,    ONLY : stdout
+   USE noncollin_module,     ONLY : noncolin, npol   
    !
    IMPLICIT NONE
    !
@@ -1430,7 +1814,13 @@ SUBROUTINE natomwfc_per_atom( alpha, m_start, m_end )
       DO nb = 1, upf(nt)%nwfc
          IF (upf(nt)%oc(nb) >= 0.d0) THEN
             l = upf(nt)%lchi(nb)
-            counter = counter + 2*l + 1
+            IF (noncolin.and.(.not.upf(nt)%has_so)) THEN
+               counter = counter + 2*(2*l + 1)        
+            ELSEIF (upf(nt)%has_so.and.(l==0)) THEN
+               counter = counter + 2
+            ELSE        
+               counter = counter + 2*l + 1
+            ENDIF
          ENDIF
       ENDDO
       IF (na == alpha) THEN
@@ -1456,6 +1846,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !! This routine computes the derivative of \(O^{-1/2}\) transposed.
    !
    USE kinds,            ONLY : DP
+   USE wvfct,             ONLY : npwx
+   USE noncollin_module,  ONLY : noncolin
    USE cell_base,        ONLY : tpiba
    USE gvect,            ONLY : g
    USE uspp,             ONLY : okvan
@@ -1493,8 +1885,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    !
-   !$acc data present_or_copyin(wfcatom,swfcatom,eigenval) &
-   !$acc&          create(doverlap_inv,eigenvect)
+   !$acc data present_or_copyin(wfcatom,swfcatom) 
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
@@ -1519,6 +1910,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
             gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
             temp = temp + (0.d0,1.d0) * gvec * CONJG(wfcatom(ig,m1)) *&
                           swfcatom(ig,m2)
+            IF (noncolin) temp = temp + (0.d0,1.d0) * gvec &
+                     * CONJG(wfcatom(ig+npwx,m1))  * swfcatom(ig+npwx,m2)
          ENDDO
          doverlap(m1,m2) = temp
       ENDDO
@@ -1533,6 +1926,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
             gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
             temp = temp + (0.d0,-1.d0) * gvec * CONJG(swfcatom(ig,m1)) *&
                           wfcatom(ig,m2)
+            IF (noncolin) temp = temp + (0.d0,-1.d0) * gvec &
+                            * CONJG(swfcatom(ig+npwx,m1))  * wfcatom(ig+npwx,m2)  
          ENDDO
          doverlap(m1,m2) = doverlap(m1,m2) + temp
       ENDDO
@@ -1552,7 +1947,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
       !$acc data create(doverlap_us)
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, natomwfc, &
                                      wfcatom, natomwfc, wfcatom,       &
-                                     doverlap_us, 1, natomwfc, 0 )
+                                     doverlap_us, 1, natomwfc, 0, .true. )
       !$acc kernels
       doverlap(:,:) = doverlap(:,:) + doverlap_us(:,:)
       !$acc end kernels
@@ -1563,19 +1958,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ! ... Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
    ! ... Note the transposition!
    !
-   !$acc update device(eigenvect)
-   !
-#if defined(__CUDA)
-   !$acc host_data use_device(eigenval,eigenvect,doverlap,doverlap_inv)
-   CALL calculate_doverlap_inv_gpu( natomwfc, eigenval, eigenvect, &
-                                    doverlap, doverlap_inv )
-   !$acc end host_data
-#else
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
-#endif
-   !
-   !$acc update self(doverlap_inv)
    !
    !$acc end data
    !$acc end data
@@ -1586,22 +1970,27 @@ END SUBROUTINE calc_doverlap_inv
 !
 !----------------------------------------------------------------------
 SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
-                                     lB, B, A_dS_B, lB_s, lB_e, mykey )
+                                     lB, B, A_dS_B, lB_s, lB_e, mykey, flag )
    !--------------------------------------------------------------------
    !! This routine computes the matrix element \(\langle A | 
    !! dS/d\tau(\alpha,\text{ipol}) | B \rangle\).  
    !! Written by I. Timrov (2020).
    !
+   USE ldaU,                 ONLY : is_hubbard, hubbard_l, offsetU   
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, okvan, vkb, qq_at
-   USE uspp_param,           ONLY : nh
+   USE uspp,                 ONLY : nkb, vkb, qq_at, qq_so, okvan
+   USE uspp_param,           ONLY : nh, upf
    USE klist,                ONLY : igk_k, ngk
    USE becmod,               ONLY : calbec
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE gvect,                ONLY : g
+   USE control_flags,        ONLY : offload_type
+   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
+   USE mp,                   ONLY : mp_sum   
+   USE mp_bands,             ONLY : intra_bgrp_comm
+
    !
    IMPLICIT NONE
    !
@@ -1620,14 +2009,17 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !! lB start
    INTEGER, INTENT(IN) :: lB_e
    !! lB end
-   COMPLEX(DP), INTENT(IN)  :: A(npwx,lA)
-   COMPLEX(DP), INTENT(IN)  :: B(npwx,lB)
+   LOGICAL, INTENT(IN) :: flag   ! noncollinear: controlling whether 
+                                 ! calculating <phi|dS|PSI> 
+                                 ! or          <phi|dS|PHI> (= .true.)
+   COMPLEX(DP), INTENT(IN)  :: A(npwx*npol,lA)
+   COMPLEX(DP), INTENT(IN)  :: B(npwx*npol,lB)
    COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB_s:lB_e)
    INTEGER, INTENT(IN) :: mykey
    !
    ! ... local variables
    !
-   INTEGER :: npw, nt, ih, jh, ig, iA, iB, nh_nt
+   INTEGER :: npw, nt, ih, jh, ig, iA, iB, mU, mD, nt1, ldim, na, nh_nt
    REAL(DP) :: gvec
    COMPLEX(DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), dbetaB(:,:), &
                                betaB(:,:), aux(:,:), qq(:,:)
@@ -1642,23 +2034,44 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    npw = ngk(ik)
    nh_nt = nh(nt)
    !
-   ALLOCATE( Adbeta(lA,nh(nt)) )
-   ALLOCATE( Abeta(lA,nh(nt))  )
-   ALLOCATE( dbetaB(nh(nt),lB) )
-   ALLOCATE( betaB(nh(nt),lB)  )
-   ALLOCATE( qq(nh(nt),nh(nt)) )
+   ALLOCATE( Adbeta(lA,npol*nh(nt)) )
+   ALLOCATE( Abeta(lA,npol*nh(nt))  )
+   ALLOCATE( dbetaB(npol*nh(nt),lB) )
+   ALLOCATE( betaB(npol*nh(nt),lB)  )
+   ALLOCATE( qq(npol*nh(nt),npol*nh(nt)) )
    !$acc data create(Adbeta,Abeta,dbetaB,betaB,qq)
    !
    !$acc parallel loop collapse(2) present(qq_at)
    DO jh = 1, nh_nt
       DO ih = 1, nh_nt
-         qq(ih,jh) = CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)
+         IF (noncolin) THEN
+            IF ( upf(nt)%has_so ) THEN     
+               qq(ih,jh) =             qq_so(ih,jh,1,nt)
+               qq(ih,jh+nh_nt) =       qq_so(ih,jh,2,nt)
+               qq(ih+nh_nt,jh) =       qq_so(ih,jh,3,nt)
+               qq(ih+nh_nt,jh+nh_nt) = qq_so(ih,jh,4,nt)
+            ELSE
+               qq(ih,jh) =             CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)
+               qq(ih,jh+nh_nt) =       (0.0,0.0)
+               qq(ih+nh_nt,jh) =       (0.0,0.0)
+               qq(ih+nh_nt,jh+nh_nt) = CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)     
+            ENDIF   
+         ELSE
+            qq(ih,jh) = CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)
+         ENDIF
       ENDDO
    ENDDO
    !
    ! ... aux is used as a workspace
-   ALLOCATE( aux(npwx,nh(nt)) )
+   ALLOCATE( aux(npwx*npol,nh(nt)*npol) )
    !$acc data create(aux)
+   !
+   !$acc parallel loop collapse(2) 
+   DO ih = 1, nh_nt*npol
+      DO ig = 1, npwx*npol
+         aux(ig,ih) = (0.0d0, 0.0d0)
+      ENDDO
+   ENDDO
    !
    ! ... Beta function
 ! !omp parallel do default(shared) private(ig,ih)
@@ -1666,27 +2079,35 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    DO ih = 1, nh_nt
       DO ig = 1, npw
          aux(ig,ih) = vkb(ig,ijkb0+ih)
-      ENDDO
-   ENDDO
-   !$acc parallel loop collapse(2) 
-   DO ih = 1, nh_nt
-      DO ig = npw+1, npwx
-         aux(ig,ih) = (0.0d0, 0.0d0)
+         IF (noncolin) aux(ig+npwx,ih+nh_nt) = vkb(ig,ijkb0+ih)
       ENDDO
    ENDDO
 ! !omp end parallel do
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(A,Abeta,B,betaB,aux)
-   CALL calbec_gpu( npw, A, aux, Abeta )
-   CALL calbec_gpu( npw, aux, B, betaB )
-   !$acc end host_data
-#else
-   ! ... Calculate Abeta = <A|beta>
-   CALL calbec( npw, A, aux, Abeta )
-   ! ... Calculate betaB = <beta|B>
-   CALL calbec( npw, aux, B, betaB )
-#endif
+   IF (noncolin) THEN
+      ! Calculate Abeta = <A|beta>
+      ! Abeta(:,1       : nh(nt))      = spin up
+      ! Abeta(:,1+nh(nt): nh(nt)*npol) = spin down      
+      !
+      Abeta=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', lA, nh_nt*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
+                 npwx*npol, aux, npwx*npol, (0.0_DP, 0.0_DP), Abeta, lA)
+      CALL mp_sum( Abeta(:, 1:nh_nt*npol) , intra_bgrp_comm )
+      !
+      ! Calculate betaB = <beta|B>
+      ! betaB(:,1       : nh(nt))      = spin up
+      ! betaB(:,1+nh(nt): nh(nt)*npol) = spin down
+      !      
+      betaB=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', nh_nt*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
+                 npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), betaB, nh_nt*npol)
+      CALL mp_sum( betaB(:, 1:lB) , intra_bgrp_comm )
+   ELSE 
+      ! ... Calculate Abeta = <A|beta>
+      CALL calbec( offload_type, npw, A, aux, Abeta )
+      ! ... Calculate betaB = <beta|B>
+      CALL calbec( offload_type, npw, aux, B, betaB )
+   ENDIF
    !
    ! ... Calculate the derivative of the beta function
 ! !omp parallel do default(shared) private(ig,ih)
@@ -1696,42 +2117,91 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
       DO ig = 1, npw
          gvec = g(ipol,igk_k(ig,ik)) * tpiba
          aux(ig,ih) = (0.d0,-1.d0) * aux(ig,ih) * gvec
+         IF (noncolin) aux(ig+npwx,ih+nh(nt)) = &
+                    (0.d0,-1.d0) * aux(ig+npwx,ih+nh(nt)) * gvec
       ENDDO
    ENDDO
 ! !omp end parallel do
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(A,Adbeta,B,dbetaB,aux)
-   CALL calbec_gpu( npw, A, aux, Adbeta )
-   CALL calbec_gpu( npw, aux, B, dbetaB )
-   !$acc end host_data
-#else
-   ! ... Calculate Abeta = <A|beta>
-   CALL calbec( npw, A, aux, Adbeta )
-   ! ... Calculate betaB = <beta|B>
-   CALL calbec( npw, aux, B, dbetaB )
-#endif
+   IF (noncolin) THEN
+      ! Calculate Adbeta = <A|dbeta>      
+      ! (same as Abeta)
+      !
+      Adbeta=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
+               npwx*npol, aux, npwx*npol, (0.0_DP, 0.0_DP), Adbeta, lA)
+      CALL mp_sum( Adbeta(:, 1:nh(nt)*npol) , intra_bgrp_comm )
+      !
+      ! Calculate dbetaB = <dbeta|B>
+      ! (same as betaB)
+      !
+      dbetaB=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
+               npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), dbetaB, nh(nt)*npol)
+      CALL mp_sum( dbetaB(:, 1:lB) , intra_bgrp_comm )
+   ELSE
+      ! ... Calculate Abeta = <A|beta>
+      CALL calbec( offload_type, npw, A, aux, Adbeta )
+      ! ... Calculate betaB = <beta|B>
+      CALL calbec( offload_type, npw, aux, B, dbetaB )
+      !
+   ENDIF
    !$acc end data
    DEALLOCATE( aux )
-   ALLOCATE( aux(nh(nt),lB) )
+   ALLOCATE( aux(nh(nt)*npol,lB) )
    !$acc data create(aux)
    !
-   ! ... Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
-   !$acc host_data use_device(qq,dbetaB,aux)
-   CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                 qq, nh(nt), dbetaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
-                 aux(1,lB_s), nh(nt) )
-   !$acc end host_data
+   IF (noncolin) THEN    
+      aux(:,:) = (0.0,0.0)
+      ! aux(:, 1:nh(nt))             = \sum_jh qq(1,jh)*dbetaB(1,jh) + qq(2,jh)*dbetaB(2,jh)     
+      ! aux(:, 1+nh(nt):nh(nt)*npol) = \sum_jh qq(3,jh)*dbetaB(1,jh) + qq(4,jh)*dbetaB(2,jh)
+      !
+      ! spin up
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1, 1), nh(nt)*npol, &
+                 dbetaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1, lB_s), nh(nt)*npol)
+      ! spin down   
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1+nh(nt), 1), nh(nt)*npol, &
+                 dbetaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1+nh(nt), lB_s), nh(nt)*npol)
+   ELSE
+      ! ... Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
+      !$acc host_data use_device(qq,dbetaB,aux)
+      CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                  qq, nh(nt), dbetaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
+                  aux(1,lB_s), nh(nt) )
+      !$acc end host_data
+   ENDIF
+   !
    !$acc kernels
    dbetaB(:,:) = aux(:,:)
    !$acc end kernels
    !
-   ! ... Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
-   !$acc host_data use_device(qq,betaB,aux)
-   CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                 qq, nh(nt), betaB(1,lB_s),     nh(nt), (0.0d0,0.0d0), &
-                 aux(1,lB_s), nh(nt) )
-   !$acc end host_data
+   IF (noncolin) THEN
+      aux(:,:) = (0.0,0.0)
+      ! (same as dbetaB)     
+      !
+      ! spin up 
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1, 1), nh(nt)*npol, &
+                 betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1, lB_s), nh(nt)*npol)
+      ! spin down   
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1+nh(nt), 1), nh(nt)*npol, &
+                 betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1+nh(nt), lB_s), nh(nt)*npol)
+   ELSE 
+      ! ... Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
+      !$acc host_data use_device(qq,betaB,aux)
+      CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                  qq, nh(nt), betaB(1,lB_s),     nh(nt), (0.0d0,0.0d0), &
+                  aux(1,lB_s), nh(nt) )
+      !$acc end host_data
+   ENDIF
+   !
    !$acc kernels
    betaB(:,:) = aux(:,:)
    !$acc end kernels
@@ -1744,14 +2214,53 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ! ... Only A_dS_B(:,lB_s:lB_e) are calculated
    !
    IF ( mykey == 0 ) THEN
-      !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)
-      CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                    Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
-                    A_dS_B(1,lB_s), lA )
-      CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                    Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                    A_dS_B(1,lB_s), lA )
-      !$acc end host_data
+      IF (noncolin) THEN
+         nt1 = nh(nt) + 1
+         IF ( .NOT.flag ) THEN
+            DO na = 1, nat
+               IF ( is_hubbard(ityp(na)) ) THEN
+                  ldim = 2*hubbard_l(ityp(na)) + 1
+                  mU = offsetU(na) + 1
+                  mD = mU + ldim 
+                  !
+                  ! spin up
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                           Adbeta(mU,1), lA, &
+                           betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                           A_dS_B(mU, lB_s), lA)
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                           Abeta(mU,1), lA, &
+                           dbetaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                           A_dS_B(mU, lB_s), lA)        
+                  ! spin down
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                              Adbeta(mD, nt1), lA, &
+                              betaB(nt1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                              A_dS_B(mD,lB_s), lA)
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                              Abeta(mD, nt1), lA, &
+                              dbetaB(nt1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                              A_dS_B(mD,lB_s), lA)   
+               ENDIF    
+            ENDDO 
+         ELSEIF ( flag ) THEN
+            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                        Adbeta, lA, betaB(1,lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                        A_dS_B(1,lB_s), lA)
+            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                        Abeta, lA, dbetaB(1,lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                        A_dS_B(1,lB_s), lA)
+         ENDIF        
+      ELSE
+         !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)
+         CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                     Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
+                     A_dS_B(1,lB_s), lA )
+         CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                     Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                     A_dS_B(1,lB_s), lA )
+         !$acc end host_data
+      ENDIF
    ENDIF
    !
    !$acc end data
@@ -1793,13 +2302,10 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   USE becmod_gpum,          ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
-   USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE control_flags,        ONLY : offload_type
    !
    IMPLICIT NONE
    !
@@ -1849,7 +2355,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present_or_copyin(dproj,spsi,wfcU)
+   !$acc data present_or_copyin(dproj,wfcU)
    !
    nt = ityp(alpha)
    npw = ngk(ik)
@@ -1944,17 +2450,8 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       ENDDO
    ENDDO
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(wfcU,dbeta,wfatbeta,betapsi0)
-   CALL calbec_gpu( npw, wfcU, dbeta, wfatbeta ) 
-   CALL using_evc_d(0)
-   CALL calbec_gpu( npw, dbeta, evc_d, betapsi0 )
-   !$acc end host_data
-#else
-   CALL calbec( npw, wfcU, dbeta, wfatbeta ) 
-   CALL using_evc(0)
-   CALL calbec( npw, dbeta, evc, betapsi0 )
-#endif
+   CALL calbec( offload_type, npw, wfcU, dbeta, wfatbeta ) 
+   CALL calbec( offload_type, npw, dbeta, evc, betapsi0 )
    !
    !$acc parallel loop collapse(2)
    DO ih = 1, nh(nt)
@@ -1965,17 +2462,9 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ENDDO
    !
 ! !omp end parallel do
-#if defined(__CUDA)
-   CALL using_evc_d(0)
-   !$acc host_data use_device(wfcU,dbeta,wfatdbeta,dbetapsi)
-   CALL calbec_gpu( npw, dbeta, evc_d, dbetapsi ) 
-   CALL calbec_gpu( npw, wfcU, dbeta, wfatdbeta ) 
-   !$acc end host_data
-#else
-   CALL using_evc(0)
-   CALL calbec( npw, dbeta, evc, dbetapsi ) 
-   CALL calbec( npw, wfcU, dbeta, wfatdbeta )
-#endif
+   !
+   CALL calbec( offload_type, npw, dbeta, evc, dbetapsi ) 
+   CALL calbec( offload_type, npw, wfcU, dbeta, wfatdbeta )
    !
    !$acc end data
    DEALLOCATE( dbeta )

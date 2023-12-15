@@ -1,36 +1,43 @@
-              Marios Zacharias [1] & Feliciano Giustino [2,3], May 2022
+              Marios Zacharias [1] & Feliciano Giustino [2,3], September 2023
 
-[1] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
-    P.O. Box 50329, 3603 Limassol, Cyprus 
-[2] Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin,
-Austin, Texas 78712, USA 
+[1] Univ Rennes, INSA Rennes, CNRS, Institut FOTON - UMR 6082, F-35000 Rennes, France 
+[2] Oden Institute for Computational Engineering and Sciences, The University of Texas 
+    at Austin, Austin, Texas 78712, USA 
 [3] Department of Physics, The University of Texas at Austin, Austin, Texas 78712, USA
 ---------------------------------------------------------------------------------------------------
 
-If you use ZG.x or bands_unfold.x please do cite the following work:
+If you use ZG.x for the special displacement method (SDM) please do cite the following work:
 
-[1] Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020).
-[2] Marios Zacharias and Feliciano Giustino, Phys. Rev. B 94, 075125, (2016).
+[a] M. Zacharias and F. Giustino, Phys. Rev. Research 2, 013357, (2020).
+[b] M. Zacharias and F. Giustino, Phys. Rev. B 94, 075125, (2016).
 
-If you use disca.x please do cite the following work:
+If you use ZG.x for the anhamonic special displacement method (A-SDM) please do cite the 
+following work:
 
-[1] Marios Zacharias, Feliciano Giustino et al., Phys. Rev. B 104, 205109, (2021)
-[2] Marios Zacharias, Feliciano Giustino et al., Phys. Rev. Lett. 127, 207401, (2021)
+[a] M. Zacharias, G. Volonakis, F. Giustino, and J. Even, Phys. Rev. B 108, 035155 (2023)
+
+If you use disca.x for inelastic scattering please do cite the following work:
+
+[a] M. Zacharias, F. Giustino et al., Phys. Rev. B 104, 205109, (2021)
+[b] M. Zacharias, F. Giustino et al., Phys. Rev. Lett. 127, 207401, (2021)
 
 ---------------------------------------------------------------------------------------------------
 
-Acknowledgement: We thank Hyungjun Lee, Oden Institute for Computational Engineering and Sciences, 
-                 for help packaging this release.
+Acknowledgement: We thank Hyungjun Lee and Sabyasachi Tiwari, Oden Institute for Computational 
+                 Engineering and Sciences, for help packaging this release. M.Z. acknowledges
+                 funding from European Union (project ULTRA-2DPK / HORIZON-MSCA-2022-PF-01 /
+                 Grant Agreement No. 101106654)
 
 ---------------------------------------------------------------------------------------------------
 
-Executables in ZG folder
-------------------------
-ZG.x             ---> for generating ZG configurations, ZG diffuse scattering, phonon unflolding
+Executables in the ZG folder
+-----------------------------
+
+ZG.x             ---> for generating ZG configurations, A-SDM, ZG diffuse scattering, phonon unflolding
 bands_unfold.x   ---> for performing band structure unfolding in supercell calculations
 pp_spctrlfn.x    ---> for obtaining the electron spectral function after bands_unfold.x
 epsilon_Gaus.x   ---> for calculating optical properties as in epsilon.x but Gaussian broadening
-disca.x          ---> for calculating one-phonon and all-phonon inelastic scattering intensities
+disca.x          ---> for calculating one-phonon and multiphonon inelastic scattering intensities
 pp_disca.x       ---> for applying broadening and setting a resolution of scattering patterns
 src/local folder ---> for post-processing. Compile them by "./compile_gfortran.sh"
 
@@ -42,16 +49,16 @@ zachariasmarios@gmail.com
 
 Links for input flags and tutorials:
 
-https://epwdoc.gitlab.io/source/doc/InputsZG.html
-https://epwdoc.gitlab.io/source/doc/TutorialZG.html
+https://docs.epw-code.org/doc/InputsZG.html
+https://docs.epw-code.org/doc/School2023.html
 
 ---------------------------------------------------------------------------------------------------
-Instructions for the construction of the Zacharias-Giustino "ZG" displacement following 
-Eq. (2) of Phys. Rev. Research 2, 013357, 2020. The approach for generating the ZG-displacement 
-is based on the generalized theory of the special displacement method as in 
-Phys. Rev. Research 2, 013357, (2020). 
 
-STEPS for generating the "ZG-displacement" for the calculation of temperature-dependent properties of solids: 
+Instructions for the construction of the Zacharias-Giustino "ZG" displacements following Eq. (2) of 
+Phys. Rev. Research 2, 013357 (2020). The approach for generating the ZG displacements is based on 
+the generalized theory of the special displacement method as in Phys. Rev. Research 2, 013357 (2020). 
+
+STEPS for generating the ZG displacements to calculate temperature-dependent properties of solids: 
 
 0.  Compile the version of Quantum Espresso 6.6.0 or later; PW, PH, and PP subroutines
     are required to run all executables, e.g. "make pw ph pp".
@@ -71,11 +78,10 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
 
 3.  Run "/path_to_your_espresso/bin/q2r.x <q2r.in> q2r.out".
     The input "q2r.in" has the standard format of Quantum Espresso for calculating the 
-    interatomic force constant matrix elements to be used to construct the 
-    "ZG-configuration.dat" file. 
+    interatomic force constant matrix elements to be used to construct "ZG-configuration.dat".
 
 4.  Calculate the phonon dispersion with "matdyn.x" and make sure that your phonon dispersion is
-    correct (compare to other literature results). This is not a necessary step for the construction of the 
+    correct (compare to other literature results). This is not a necessary step for generating the 
     "ZG-configuration". However, you need to ensure that the phonons, to be used for the construction 
     of the "ZG-configuration", are those you expect. For a polar material, LO-TO splitting should be 
     included.   
@@ -86,7 +92,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     "dim3", and the list of q-points (optional, see below). "ZG.in" has the standard 
     format as a "matdyn.in" file for Quantum Espresso. Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
-    i) "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
+    i) "ZG_conf"            : Logical flag that enables the creation of the ZG displacements. 
                               (default .true.) 
        "flscf"              : String for the name of the scf input file used to calculate the phonons. The 
                               code will read information for preparing the input file of the supercell calculation. 
@@ -107,7 +113,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               Use for example "qhat_in(1) = 0.1, qhat_in(2) =0.0, qhat_in(3) = 0.0"
                               to account for LO-TO splitting from the direction [1 0 0]. 
                               (default 0.1,0.1,0.1)
-       "synch"              : Logical flag that enables the synchronization of the modes. 
+       "synch"              : Logical flag that enables a smooth Berry connection between the modes. 
                               (default .false.)
        "niters"             : Integer for the number of iterations the algorithm needs to 
                               go through for finding the optimum configuration. The algorithm 
@@ -126,7 +132,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               (default .true.)
        "error_thresh"       : Real number indicating the error at which the algorithm stops while it's 
                               looking for possible combinations of signs. Once this limit is reached, 
-                              the ZG-displacement is constructed. The threshold is usually chosen 
+                              the ZG displacements are constructed. The threshold is usually chosen 
                               to be less than 5% of the diagonal terms, i.e. those terms that contribute 
                               to the calculation of temperature-dependent properties. 
                               (default 0.05)
@@ -148,55 +154,60 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
        "qlist_AB.txt"       : This file contains the external q-list in crystal coordinates as in the "ZG_444.in" example,
                               after the input flags. It corresponds to the q-points commensurate to the supercell size. 
                               Only one of the q-point time-reversal partners is kept for the construction of the 
-                              ZG-displacement. The calculations, for the moment, assume systems with time-reversal symmetry. 
+                              ZG displacements. The calculations, for the moment, assume systems with time-reversal symmetry. 
                               For the generation of the "qlist_AB.txt" set the q-gird in file 
                               "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out".
                               One can modify the "create_qlist.f90" to generate a different path for consecutive q-points.
                               Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input. Set the flag 
                               q_external = .true. for the code to read the list.  
-   
-       "ph_unfold"          : Logical flag to activate phonon unfolding procedure. (default: .false.). To perform phonon 
+       "ASDM"               : Logical flag that enables the iterative procedure for evaluating anharmonic IFCs.
+                              (default .false.)
+       "na_ifc"             : Logical flag that adds the non analitic contributions to the interatomic force constants 
+                              if the finite displacement method is used, as in Wang et al. Phys. Rev. B 85, 224303 (2012).
+                              Important if "ASDM" flad is true. 
+                              (default .false.)
+       "ph_unfold"          : Logical flag to activate phonon unfolding procedure. To perform phonon 
                               unfolding ZG_conf must be set to .false.. If ph_unfold = .true. then q_external = .true. 
-  
-       "flfrq"              : Output file for frequencies to printed with unfolding weights (default: 'frequencies.dat')
-  
-       "flweights"          : Output file for unfolding weights to printed with frequncies (default: 'unfold_weights.dat')
-  
+                              (default: .false.)
+       "flfrq"              : Output file for phonon frequencies to printed with the spectral weights.
+                              (default: 'frequencies.dat')
+       "flweights"          : Output file for the spectral weights to printed with phonon frequncies. 
+                              (default: 'unfold_weights.dat')
       "ng1","ng2","ng3"     : Integers corresponding to the (h k l) indices of the reciprocal lattice vector g.  
                               Increase their values to check convergence. Default is a good starting point. 
                               (default 10,10,10)
   
-    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG.in> ZG.out".
+    ii)  To generate the ZG displacements run "/path_to_your_espresso/bin/ZG.x <ZG.in> ZG.out".
          This generates three output files: the "equil_pos.dat", "ZG-configuration.dat" and "ZG-velocities.dat". 
-         The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
-         that define the ZG-displacement for a particular temperature and supercell size. 
-         The third one has the ZG-velocities or momenta of the nuclei generated in the same spirit with the ZG displacement. 
-    iii) The calculation of the ZG-displacement should usually takes a few seconds to few minutes with one processor. 
+         The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear
+         coordinates that define the ZG displacements for a particular temperature and supercell size. 
+         The third one has the ZG velocities of the nuclei generated in the same spirit with ZG displacements. 
 
-6. VERY IMPORTANT NOTE: It is perfectly reasonable to find different ZG-displacements / ZG-configurations,
+    iii) The calculation of the ZG displacements should usually take a few seconds to few minutes with one processor. 
+
+6. VERY IMPORTANT NOTE: It is perfectly reasonable to find different ZG displacements / ZG-configurations,
    since the modes obtained  by diagonalizing the dynamical matrix can differ by a phase factor 
    (or a unitary matrix in case of degeneracy) if the processor, or compiler, or libraries have changed. 
    The eigenvalues of course should remain the same in all cases. The synchronization routine should align the sign
    of the modes with respect to a reference mode, but the sign of this reference depends on the machine,
    and degeneracy is not taken into account. The best way to check the validity of your configuration is 
-   by comparing the anisotropic displacement tensor with the exact values, both obtained at the end of the 
-   "ZG-configuration.dat". Reducing the value of "threshold" should bring the anisotropic displacement tensor
-   closer to the exact values. 
+   by comparing the anisotropic displacement tensor with the exact values, both printed in "ZG.out". 
+   Reducing the value of "threshold" should bring the anisotropic displacement tensor closer to the exact values. 
 
-7. The ZG-displacement can be employed for the calculation of any temperature-dependent 
+7. The ZG displacements can be employed for the calculation of any temperature-dependent 
    observable that is described by the Fermi Golden rule. The procedure is exactly the same as for 
    the calculation of the observable obtained with the nuclei clamped at their equilibrium positions, 
-   but now, instead, using the ZG-displacement (supercell) that incorporates automatically 
+   but now, instead, using the ZG displacements (supercell) that incorporates automatically 
    the electron-phonon interaction and quantum zero-point motion. 
 
-8. The ZG-displacement can also be employed for the calculation of full temperature-dependent
+8. The ZG displacements can also be employed for the calculation of full temperature-dependent
    band structures using the unfolding technique for supercell calculations. 
 
 ----------------------------------------------------------------------------------------------------------
 
-   Example using the ZG-displacement and JDOS
+   Example using the ZG displacements and JDOS
 
-Here we show a simple example on how to use the ZG-displacement for calculating the temperature dependence 
+Here we show a simple example on how to use the ZG displacement for calculating the temperature dependence 
 of the JDOS and eventually extract the zero-point renormalization and temperature dependence of the band gap.
 
 Steps: 
@@ -216,7 +227,7 @@ Steps:
    lines containing the eigenvalues exist, after the string match "eigenvalues size" in the ".xml" file.
 
 4. Use the output file "data_one_column.dat" to calculate the joint-density of states (JDOS) via the executable 
-   "JDOS_Gaus.x" located in the "src/JDOS" folder. Command:  "/path_to/JDOS_Gaus.x <JDOS_Gaus.in > JDOS_Gaus.out". 
+   "JDOS_Gaus.x" located in the "src/local" folder. Command:  "/path_to/JDOS_Gaus.x <JDOS_Gaus.in > JDOS_Gaus.out". 
    For extracting the band gap from the joint-density of states follow the procedure in Ref.[Phys. Rev. B 94, 075125, (2016)].
 
 5. Compare your results with the data in the directory 'example/silicon/JDOS/outputs/333'. 
@@ -238,7 +249,12 @@ Steps:
 
 Other capabilities of ZG.x: 
 
-1.  ZG.x can also be used to generate displaced configurations along single phonon modes.
+1.  ZG.x can be used to generate self-consistent anharmonic special displacements (i.e. the A-SDM method). 
+    These displacement essentially minimize the Gibbs free energy of a strongly anharmonic system, and can 
+    be used to incorporare the effect of anharmonic electron-phonon coupling in one-shot DFT-ZG calculations. 
+    On how to apply A-SDM please refer to exercise 3 of the tutorial. 
+
+2.  ZG.x can also be used to generate displaced configurations along single phonon modes.
     Please see "single_phonon_displ" flag. 
     Find an example in:
     "example/silicon/single_ph_displ/444/inputs/".

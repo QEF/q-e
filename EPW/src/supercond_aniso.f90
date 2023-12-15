@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
   !
@@ -440,12 +441,13 @@
     !!
     USE kinds,             ONLY : DP
     USE elph2,             ONLY : wqf, gtemp
-    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem, imag_read
+    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem, &
+                                  imag_read, a_gap0
     USE eliashbergcom,     ONLY : ixkqf, ixqfs, nqfs, wkfs, w0g, ekfs, nkfs, nbndfs, dosef, ef0, &
                                   nsiw, wsn, wsi, wsphmax, gap0, agap, akeri, limag_fly, &
                                   deltai, znormi, shifti, adeltai, adeltaip, aznormi, aznormip, &
                                   naznormi, ashifti, ashiftip, muintr
-    USE constants_epw,     ONLY : kelvin2eV, zero, one
+    USE constants_epw,     ONLY : kelvin2eV, zero, one, eps8
     USE constants,         ONLY : pi
     USE io_global,         ONLY : stdout, ionode_id
     USE mp_global,         ONLY : inter_pool_comm
@@ -595,10 +597,17 @@
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
             DO iw = 1, nsiw(itemp)
-              IF (wsi(iw) < 2.d0 * wsphmax) THEN
+              ! a_gap0 is set to 1.0d0 as default
+              IF (a_gap0 <= -eps8) THEN
+                IF (ABS(wsi(iw)) < 2.d0 * wsphmax) THEN
+                  adeltaip(iw, ibnd, ik) = gap0
+                ELSE
+                  adeltaip(iw, ibnd, ik) = zero
+                ENDIF
+              ELSEIF (ABS(a_gap0) < eps8) THEN
                 adeltaip(iw, ibnd, ik) = gap0
               ELSE
-                adeltaip(iw, ibnd, ik) = zero
+                adeltaip(iw, ibnd, ik) = gap0 / (one + a_gap0 * (wsi(iw) / wsphmax)**2)
               ENDIF
             ENDDO
           ENDIF
@@ -965,6 +974,8 @@
     REAL(KIND = DP) :: a2f_tmp(nqstep)
     !! Temporary variable for Eliashberg spectral function
     !
+    REAL(KIND = DP) :: root_im
+    !! Temporary variable 
     COMPLEX(KIND = DP) :: az2, ad2, esqrt, root
     !! Temporary variables
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
@@ -1050,11 +1061,16 @@
       DO ibnd = 1, nbndfs
         IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
           !
+          ! nvfortran bug workaround https://gitlab.com/QEF/q-e/-/issues/593
+#if defined(__NVCOMPILER) && ( __NVCOMPILER_MAJOR__ > 23 || ( __NVCOMPILER_MAJOR__ == 23 &&  __NVCOMPILER_MINOR__ >= 3) )
+          !pgi$l novector
+#endif
           DO iw = 1, nsw ! loop over omega
             az2 = aznormp(iw, ibnd, ik) * aznormp(iw, ibnd, ik)
             ad2 = adeltap(iw, ibnd, ik) * adeltap(iw, ibnd, ik)
             root = SQRT(az2 * (ws(iw) * ws(iw) - ad2))
-            IF (AIMAG(root) < zero) & 
+            root_im = AIMAG(root)
+            IF (root_im < zero) & 
               root = CONJG(root)
             esqrt = aznormp(iw, ibnd, ik) / root
             aznormp(iw, ibnd, ik) = esqrt

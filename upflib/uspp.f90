@@ -21,7 +21,7 @@ MODULE uspp
   !
   USE upf_kinds,   ONLY: DP
   USE upf_params,  ONLY: lmaxx, lqmax
-  USE upf_spinorb, ONLY: is_spinorbit, fcoef, fcoef_d 
+  USE upf_spinorb, ONLY: is_spinorbit, fcoef
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -33,7 +33,7 @@ MODULE uspp
             dvan_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
-  PUBLIC :: dvan_so_d, fcoef_d
+  PUBLIC :: dvan_so_d
   PUBLIC :: dbeta
   !
   PUBLIC :: allocate_uspp, deallocate_uspp
@@ -366,6 +366,7 @@ CONTAINS
        !$acc enter data create(qq_so)
        allocate( dvan_so(nhm,nhm,nspin,nsp) )
        allocate( fcoef(nhm,nhm,2,2,nsp) )
+       !$acc enter data create(fcoef)
     else
        allocate( dvan(nhm,nhm,nsp) )
     endif
@@ -388,7 +389,6 @@ CONTAINS
         allocate( qq_nt_d(nhm,nhm,nsp) )
         if ( lspinorb ) then
            allocate( dvan_so_d(nhm,nhm,nspin,nsp) )
-           allocate( fcoef_d(nhm,nhm,2,2,nsp) )
         else
            allocate( dvan_d(nhm,nhm,nsp) )
         endif
@@ -440,7 +440,10 @@ CONTAINS
       !$acc exit data delete( deeq_nc )
       DEALLOCATE( deeq_nc )
     ENDIF
-    IF( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
+    IF( ALLOCATED( fcoef ) ) THEN
+      !$acc exit data delete( fcoef )
+      DEALLOCATE( fcoef )
+    ENDIF
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
@@ -459,17 +462,8 @@ CONTAINS
     IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
     IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
-    IF( ALLOCATED( fcoef_d ) )    DEALLOCATE( fcoef_d )
     !
   END SUBROUTINE deallocate_uspp
   !
-  ! In the following, allocations are not checked and assume
-  ! to be dimensioned correctly.
-  !
-  ! intento is used to specify what the variable will  be used for :
-  !  0 -> in , the variable needs to be synchronized but won't be changed
-  !  1 -> inout , the variable needs to be synchronized AND will be changed
-  !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
-  ! 
 END MODULE uspp
 

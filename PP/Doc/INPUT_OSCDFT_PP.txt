@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: oscdft_pp.x / PWscf / Quantum ESPRESSO (version: 7.2)
+Program: oscdft_pp.x / PWscf / Quantum ESPRESSO (version: 7.3)
 ------------------------------------------------------------------------
 
 
@@ -45,4 +45,4 @@ NAMELIST: &OSCDFT_PP_NAMELIST
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Mar 18 15:50:16 CET 2023
+This file has been created by helpdoc utility on Fri Dec 15 09:55:20 CET 2023

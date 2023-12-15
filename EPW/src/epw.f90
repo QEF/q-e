@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -10,12 +11,14 @@
   PROGRAM epw
   !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v5.7
+  !! version: v5.8
   !! license: GNU
   !! summary: EPW main driver
   !!
   !! This is the main EPW driver which sets the phases on the wavefunctions,
   !! calls [[wann_run]] and [[elphon_shuffle_wrap]]
+  !!
+  !! Initial release inside Quantum ESPRESSO made on the 1st of March 2016.
   !!
   USE io_global,       ONLY : stdout, ionode
   USE mp,              ONLY : mp_bcast, mp_barrier
@@ -29,17 +32,17 @@
   USE elph2,           ONLY : elph
   USE close_epw,       ONLY : close_final, deallocate_epw
   USE cum_mod,         ONLY : spectral_cumulant
-!  USE wannierization,  ONLY : setphases_wrap, wann_run
   USE wannierization,  ONLY : wann_run
   USE io_epw,          ONLY : openfilepw
+  USE epw_stop,        ONLY : stop_epw
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN = 12) :: code = 'EPW'
-  LOGICAL,EXTERNAL    :: check_gpu_support 
+  LOGICAL,EXTERNAL    :: check_gpu_support
   !! Name of the program
   !
-  version_number = '5.7'
+  version_number = '5.8'
   !
   CALL init_clocks(.TRUE.)
   !
@@ -78,8 +81,10 @@
     WRITE(stdout, '(a)') "   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   "
     WRITE(stdout, '(a)') "   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   "
     WRITE(stdout, '(a)') "                                                                                      "
-    WRITE(stdout, '(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 "
-    WRITE(stdout, '(a)') "                                                Comput. Phys. Commun. 209, 116 (2016) "
+    WRITE(stdout, '(a)') " Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,"
+    WRITE(stdout, '(a)') "    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      "
+    WRITE(stdout, '(a)') " Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., "
+    WRITE(stdout, '(a)') "                                                     npj Comput Mater 9, 156 (2023)   "
     WRITE(stdout, '(a)') "                                                                                      "
   ENDIF
   !

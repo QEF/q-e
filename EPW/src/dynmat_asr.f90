@@ -1,4 +1,5 @@
-  !-----------------------------------------------------------------------
+  !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   SUBROUTINE dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
                               invs, s, irt, rtau, sumr)
   !-----------------------------------------------------------------------

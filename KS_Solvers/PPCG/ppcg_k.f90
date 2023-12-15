@@ -1,5 +1,5 @@
 !
-SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
+SUBROUTINE ppcg_k( h_psi_ptr, s_psi_ptr, overlap, precondition, &
                  npwx, npw, nbnd, npol, psi, e, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
@@ -66,10 +66,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   LOGICAL                  ::  clean
   REAL(DP), EXTERNAL :: ZLANGE
 
-  EXTERNAL h_psi, s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
 
@@ -133,8 +133,8 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !
   call start_clock('ppcg:hpsi')
                                                          if (clean)  psi(npw+1:npwx,:) = C_ZERO
-  CALL h_psi( npwx, npw, nbnd, psi, hpsi )             ; if (clean) hpsi(npw+1:npwx,:) = C_ZERO
-  if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi) ; if (clean) spsi(npw+1:npwx,:) = C_ZERO
+  CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )             ; if (clean) hpsi(npw+1:npwx,:) = C_ZERO
+  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi) ; if (clean) spsi(npw+1:npwx,:) = C_ZERO
 
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
@@ -232,10 +232,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      ! ... Compute h*w
      call start_clock('ppcg:hpsi')
      call threaded_assign( buffer1, w, kdimx, nact, act_idx )
-     CALL h_psi( npwx, npw, nact, buffer1, buffer )       ; if (clean) buffer (npw+1:npwx,1:nact) = C_ZERO
+     CALL h_psi_ptr( npwx, npw, nact, buffer1, buffer )       ; if (clean) buffer (npw+1:npwx,1:nact) = C_ZERO
      hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      if (overlap) then ! ... Compute s*w
-        CALL s_psi( npwx, npw, nact, buffer1, buffer )    ; if (clean) buffer(npw+1:npwx,1:nact) = C_ZERO
+        CALL s_psi_ptr( npwx, npw, nact, buffer1, buffer )    ; if (clean) buffer(npw+1:npwx,1:nact) = C_ZERO
         sw(:,act_idx(1:nact)) = buffer(:,1:nact)
      end if
      avg_iter = avg_iter + nact/dble(nbnd)

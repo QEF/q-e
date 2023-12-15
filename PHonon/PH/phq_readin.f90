@@ -79,6 +79,7 @@ SUBROUTINE phq_readin()
       skip_upperfan
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file, close_input_file
+  USE el_phon,       ONLY : kx, ky, kz, elph_print
   !
   IMPLICIT NONE
   !
@@ -126,7 +127,7 @@ SUBROUTINE phq_readin()
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upperfan, dftd3_hess
+                       skip_upperfan, dftd3_hess, kx, ky, kz
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -308,6 +309,10 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
+
+  kx = 0.D0
+  ky = 0.D0
+  kz = 0.D0
   !
   ! dvscf_interpolate
   ldvscf_interpolate = .FALSE.
@@ -388,6 +393,10 @@ SUBROUTINE phq_readin()
   CALL mp_bcast(nogg, meta_ionode_id, world_comm  )
   CALL mp_bcast(q2d, meta_ionode_id, world_comm  )
   CALL mp_bcast(q_in_band_form, meta_ionode_id, world_comm  )
+
+  CALL mp_bcast(kx, meta_ionode_id, world_comm )
+  CALL mp_bcast(ky, meta_ionode_id, world_comm )
+  CALL mp_bcast(kz, meta_ionode_id, world_comm )
   !
   drho_star%dir=trimcheck(drho_star%dir)
   dvscf_star%dir=trimcheck(dvscf_star%dir)
@@ -465,6 +474,9 @@ SUBROUTINE phq_readin()
      elph_ahc = .true.
      trans = .false.
      nogg = .true.
+  CASE( 'prt' )
+     elph = .true.
+     elph_print=.true.
   CASE DEFAULT
      elph=.false.
   END SELECT
@@ -809,11 +821,16 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
-       'el-ph with wannier requires fildvscf',1)
 
-  IF(elph_mat.and.npool.ne.1) call errore('phq_readin',&
-       'el-ph with wannier : pools not implemented',1)
+  IF(elph_mat) THEN
+    if(fildvscf.eq.' ') call errore('phq_readin',&
+      'el-ph with wannier requires fildvscf',1)
+    IF(npool.ne.1) call errore('phq_readin',&
+      'el-ph with wannier : pools not implemented',1)
+    IF ((elph_nbnd_min .eq. 1).and.(elph_nbnd_max .eq. 0))&
+      call errore('phq_readin',&
+      'el-ph with wannier : specify bands range with elph_nbnd_min,elph_nbnd_max',1)
+  END IF
 
   IF (elph .AND. okpaw) CALL errore('phq_readin',&
      'Electron-phonon calculations with PAW not tested',1)
@@ -900,7 +917,7 @@ SUBROUTINE phq_readin()
   !
   !YAMBO >
   IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
-      .AND. .NOT. (elph_yambo .OR. elph_ahc).and..not.elph_mat) &
+      .AND. .NOT. (elph_yambo .OR. elph_ahc .OR. elph_print).and..not.elph_mat) &
           CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &

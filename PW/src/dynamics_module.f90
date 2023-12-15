@@ -37,7 +37,7 @@ MODULE dynamics_module
    PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
              fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
-   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
+   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, elapsed_time
    ! FIRE parameters
    PUBLIC :: fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init, fire_falpha, fire_dtmax
    !
@@ -105,6 +105,8 @@ MODULE dynamics_module
    REAL(DP), ALLOCATABLE :: radial_distr(:,:)
    !! radial distribution
    !
+   REAL(DP)  :: elapsed_time
+   !! elapsed time in ps (picoseconds)
    INTEGER, PARAMETER :: hist_len = 1000
    !
    ! Restart type
@@ -192,7 +194,7 @@ CONTAINS
       ! ... local variables
       !
       REAL(DP) :: ekin, etotold
-      REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
+      REAL(DP) :: total_mass, temp_new, temp_av
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
 ! FIXME: is it useful to keep trace of this possibility?
@@ -237,7 +239,7 @@ CONTAINS
             is_restart = .FALSE.
          ENDIF
       ENDIF
-
+      !
       IF (.NOT.is_restart) THEN
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
@@ -711,17 +713,13 @@ CONTAINS
          USE symm_base,      ONLY : invsym, nsym, irt
          USE cell_base,      ONLY : alat
          USE ions_base,      ONLY : nat, if_pos
-         USE random_numbers, ONLY : gauss_dist, set_random_seed
+         USE random_numbers, ONLY : gauss_dist
          !
          IMPLICIT NONE
          !
          INTEGER  :: na, nb
          REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
          !
-         ! ... next command prevents different MD runs to start
-         ! ... with exactly the same "random" velocities
-         !
-         CALL set_random_seed( )
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution

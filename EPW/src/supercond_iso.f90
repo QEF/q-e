@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
   !
@@ -582,6 +583,8 @@
     !
     COMPLEX(KIND = DP) :: esqrt, root
     !! Temporary variables
+    REAL(KIND = DP) :: root_im
+    !! Temporary variable
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
@@ -626,9 +629,14 @@
     !
     ! RM - calculate esqrt (esqrt is stored as znormp to avoid allocation of a new array)
     ! Z(w \pm w') / sqrt{[Z(w \pm w')]^2 * [(w \pm w')^2] - [D(w \pm w')]^2]}
+    ! nvfortran bug workaround https://gitlab.com/QEF/q-e/-/issues/593
+#if defined(__NVCOMPILER) && ( __NVCOMPILER_MAJOR__ > 23 || ( __NVCOMPILER_MAJOR__ == 23 &&  __NVCOMPILER_MINOR__ >= 3) )
+    !pgi$l novector
+#endif
     DO iw = 1, nsw
       root = SQRT(znormp(iw) * znormp(iw) * (ws(iw) * ws(iw) - deltap(iw) * deltap(iw)))
-      IF (AIMAG(root) < zero) &
+      root_im=AIMAG(root)
+      IF (root_im < zero) &
         root = CONJG(root)
       esqrt = znormp(iw) / root
       znormp(iw) = esqrt

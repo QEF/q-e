@@ -22,7 +22,7 @@ subroutine allocate_phq
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
-  USE becmod,        ONLY : bec_type, becp, allocate_bec_type
+  USE becmod,        ONLY : becp, allocate_bec_type, allocate_bec_type_acc
   USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw
   USE uspp_param,    ONLY : nhm
@@ -30,9 +30,6 @@ subroutine allocate_phq
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
                             int4, int4_nc, int5, int5_so, becsumort, &
                             alphasum, alphasum_nc, becsum_nc, alphap
-#if defined(__CUDA)
-  USE phus,          ONLY : alphap_d
-#endif
   USE efield_mod,    ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
   USE units_ph,      ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat,        ONLY : dyn00, dyn, dyn_rec, w2
@@ -40,9 +37,6 @@ subroutine allocate_phq
   USE el_phon,       ONLY : el_ph_mat, el_ph_mat_nc_mag, elph
   USE freq_ph,       ONLY : polar, nfs
   USE lrus,          ONLY : becp1, dpqq, dpqq_so
-#if defined(__CUDA)
-  USE lrus,          ONLY : becp1_d
-#endif
   USE qpoint,        ONLY : nksq, eigqts, xk_col
   USE eqv,           ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base,  ONLY : rtau
@@ -53,11 +47,6 @@ subroutine allocate_phq
                             sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
-#if defined(__CUDA)
-  USE becmod_gpum,      ONLY: becp_d
-  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
-  USE qpoint_aux,    ONLY : becpt_d, alphapt_d
-#endif
 
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
@@ -107,20 +96,10 @@ subroutine allocate_phq
   IF (noncolin.AND.domag) THEN
      ALLOCATE (becpt(nksq))
      ALLOCATE (alphapt(3,nksq))
-#if defined(__CUDA)
-     ALLOCATE (becpt_d(nksq))
-     ALLOCATE (alphapt_d(3,nksq))
-#endif
      DO ik=1,nksq
         CALL allocate_bec_type ( nkb, nbnd, becpt(ik) )
-#if defined(__CUDA)
-        CALL allocate_bec_type_gpu ( nkb, nbnd, becpt_d(ik) )
-#endif
         DO ipol=1,3
            CALL allocate_bec_type ( nkb, nbnd, alphapt(ipol,ik) )
-#if defined(__CUDA)
-           CALL allocate_bec_type_gpu ( nkb, nbnd, alphapt_d(ipol,ik) )
-#endif
         ENDDO
      ENDDO
      IF (okvan) THEN
@@ -161,29 +140,15 @@ subroutine allocate_phq
   endif
   allocate (this_pcxpsi_is_on_file(nksq,3))
   this_pcxpsi_is_on_file(:,:)=.false.
-
   ALLOCATE (becp1(nksq))
   ALLOCATE (alphap(3,nksq))
-#if defined(__CUDA)
-  ALLOCATE (becp1_d(nksq))
-  ALLOCATE (alphap_d(3,nksq))
-#endif
   DO ik=1,nksq
      call allocate_bec_type ( nkb, nbnd, becp1(ik) )
-#if defined(__CUDA)
-     CALL allocate_bec_type_gpu ( nkb, nbnd, becp1_d(ik) )
-#endif
      DO ipol=1,3
         call allocate_bec_type ( nkb, nbnd, alphap(ipol,ik) )
-#if defined(__CUDA)
-        call allocate_bec_type_gpu ( nkb, nbnd, alphap_d(ipol,ik) )
-#endif
      ENDDO
   END DO
-  CALL allocate_bec_type ( nkb, nbnd, becp )
-#if defined(__CUDA)
-  CALL allocate_bec_type_gpu ( nkb, nbnd, becp_d )
-#endif
+  CALL allocate_bec_type_acc ( nkb, nbnd, becp )
 
   if (elph) then
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))

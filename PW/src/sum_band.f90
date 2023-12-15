@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,8 @@ SUBROUTINE sum_band()
                                    becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag, lspinorb
+  USE upf_spinorb,          ONLY : fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -49,7 +50,6 @@ SUBROUTINE sum_band()
   USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE fft_interfaces,       ONLY : invfft
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
@@ -120,7 +120,11 @@ SUBROUTINE sum_band()
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind==0) THEN
        !
-       CALL new_ns( rho%ns )
+       IF (noncolin) THEN
+          CALL new_ns_nc(rho%ns_nc)
+       ELSE
+          CALL new_ns(rho%ns)
+       ENDIF 
        !
        DO nt = 1, ntyp
           IF (is_hubbard_back(nt)) CALL new_nsb( rho%nsb )
@@ -136,7 +140,11 @@ SUBROUTINE sum_band()
        !
     ELSEIF (lda_plus_u_kind==2) THEN 
        !
-       CALL new_nsg()
+      IF (noncolin) THEN
+          CALL new_nsg_nc()
+      ELSE
+          CALL new_nsg() 
+      ENDIF
        !
     ENDIF
   ENDIF
@@ -152,7 +160,6 @@ SUBROUTINE sum_band()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
-  IF ( okvan ) CALL using_becp_auto(2)
   !
   IF (xclib_dft_is('meta') .OR. lxdm) THEN
      ALLOCATE( kplusg_evc(npwx,2) )
@@ -184,7 +191,6 @@ SUBROUTINE sum_band()
     DEALLOCATE( kplusg )
   ENDIF
   IF ( okvan ) CALL deallocate_bec_type ( becp )
-  IF ( okvan ) CALL using_becp_auto(2)
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -422,8 +428,8 @@ SUBROUTINE sum_band()
                 DO j = 1, 3
                    DO i = 1, npw
                      kplusgi = (xk(j,ik)+g(j,i)) * tpiba
-                     kplusg_evc(i,1) = CMPLX(0.D0,kplusgi) * evc(i,ibnd)
-                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0.d0,kplusgi) * evc(i,ibnd+1)
+                     kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
+                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd+1)
                    ENDDO
                    !
                    ebnd = ibnd
@@ -712,7 +718,7 @@ SUBROUTINE sum_band()
                    DO j = 1, 3
                       DO i = 1, npw
                         kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
-                        kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(i,ibnd)
+                        kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
                       ENDDO
                       !
                       CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, igk=igk_k(:,ik) )
@@ -877,7 +883,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,                 ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,         ONLY : using_et
-  USE becmod_subs_gpum,   ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -902,7 +907,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
-  CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)

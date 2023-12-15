@@ -135,7 +135,7 @@ CONTAINS
     !
     TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
     INTEGER, INTENT(in) :: nsp 
-    CHARACTER(LEN = 3), INTENT(in) :: atm(:)
+    CHARACTER(LEN = 6), INTENT(in) :: atm(:)
     !
     INTEGER, INTENT(out)  :: nat, ibrav
     REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:)
@@ -317,6 +317,7 @@ CONTAINS
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
+    USE upf_utils,        ONLY : spdf_to_l
     !
     IMPLICIT NONE 
     TYPE ( dft_type ),INTENT(in) :: dft_obj
@@ -351,7 +352,6 @@ CONTAINS
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
     INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich
-    INTEGER, EXTERNAL :: spdf_to_l
     !
     dft_name = TRIM(dft_obj%functional)
     IF ( dft_obj%hybrid_ispresent ) THEN

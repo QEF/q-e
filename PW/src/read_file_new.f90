@@ -176,7 +176,6 @@ SUBROUTINE read_file_new ( needwf )
   !
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
-  USE gvect,          ONLY : ngm, g
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
   USE lsda_mod,       ONLY : isk
@@ -258,8 +257,8 @@ SUBROUTINE post_xml_init (  )
   USE ions_base,            ONLY : nat, nsp, tau, ityp
   USE cell_base,            ONLY : omega
   USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, mill_d, &
-          ngm_g, ig_l2g, eigts1, eigts2, eigts3, gstart, gshells, g_d, gg_d
+  USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, ngm_g, &
+                                   ig_l2g, eigts1, eigts2, eigts3, gstart, gshells
   USE gvecs,                ONLY : ngms, gcutms 
   USE gvecw,                ONLY : ecutwfc
   USE fft_rho,              ONLY : rho_g2r
@@ -286,7 +285,7 @@ SUBROUTINE post_xml_init (  )
   !
   IMPLICIT NONE
   !
-  REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
+  REAL(DP) :: ehart, etxc, vtxc, etotefield, charge, qmax
   CHARACTER(LEN=37) :: dft_name
   !
   ! ... initialize Libxc if needed
@@ -328,12 +327,6 @@ SUBROUTINE post_xml_init (  )
   CALL allocate_fft()
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart ) 
-#if defined(__CUDA)
-  ! FIXME: to be moved inside ggen
-  mill_d = mill
-  g_d    = g
-  gg_d   = gg
-#endif
   !$acc update device(mill, g, gg)
   !
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
@@ -366,7 +359,8 @@ SUBROUTINE post_xml_init (  )
   CALL init_vloc()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
+  qmax = sqrt(ecutrho)*cell_factor
+  CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
   IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc(omega, intra_bgrp_comm)
   !

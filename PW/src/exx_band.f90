@@ -957,9 +957,8 @@ MODULE exx_band
     USE cell_base,            ONLY : at, bg, tpiba2
     USE cellmd,               ONLY : lmovecell
     USE wvfct,                ONLY : npwx
-    USE gvect,                ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, mill_d, &
+    USE gvect,                ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, &
                                      gstart, gvect_init, deallocate_gvect_exx, gshells
-    USE gvect,                ONLY : g_d, gg_d
     USE gvecs,                ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,                ONLY : gkcut, ecutwfc, gcutw
     USE klist,                ONLY : xk, nks, ngk
@@ -1064,13 +1063,8 @@ MODULE exx_band
        CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
             g, gg, mill, ig_l2g, gstart )
        CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
-#if defined(__CUDA)
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
-       mill_d = mill
-       g_d    = g
-       gg_d   = gg
-#endif
        !$acc update device(mill, g)
        !
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
@@ -1098,12 +1092,6 @@ MODULE exx_band
        g = g_exx
        gg = gg_exx
        mill = mill_exx
-#if defined(__CUDA)
-       ! Sync duplicated data
-       mill_d = mill
-       g_d    = g
-       gg_d   = gg
-#endif
        !$acc update device(mill, g)
        !
        ! workaround: here dfft?%nl* are unallocated
@@ -1150,12 +1138,6 @@ MODULE exx_band
        g = g_loc
        gg = gg_loc
        mill = mill_loc
-#if defined(__CUDA)
-       ! Sync duplicated data
-       mill_d = mill
-       g_d    = g
-       gg_d   = gg
-#endif
        !$acc update device(mill, g)
        !
        dfftp%nl = nl_loc

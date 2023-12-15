@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,7 @@ subroutine hp_allocate_q
   USE ions_base,            ONLY : nat
   USE wvfct,                ONLY : nbnd, npwx
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE noncollin_module,     ONLY : npol, nspin_mag, noncolin, domag
   USE fft_base,             ONLY : dfftp
   USE wavefunctions,        ONLY : evc
   USE becmod,               ONLY : allocate_bec_type
@@ -27,10 +27,9 @@ subroutine hp_allocate_q
   USE control_lr,           ONLY : lgamma
   USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
-#if defined(__CUDA)
-  USE becmod_gpum,      ONLY: becp_d
-  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
-#endif  
+  USE qpoint_aux,           ONLY : becpt
+  USE hp_nc_mag_aux,        ONLY : deeq_nc_save 
+  USE uspp_param,           ONLY : nhm 
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -47,22 +46,29 @@ subroutine hp_allocate_q
   ALLOCATE (dpsi(npwx*npol,nbnd))
   ALLOCATE (dmuxc(dfftp%nnr,nspin_mag,nspin_mag))
   !
+  IF (noncolin.AND.domag) THEN
+    ALLOCATE (becpt(nksq))
+    DO ik=1,nksq
+       CALL allocate_bec_type ( nkb, nbnd, becpt(ik) )
+    ENDDO
+    IF (okvan) THEN
+       ALLOCATE (deeq_nc_save( nhm, nhm, nat, nspin, 2))
+    ENDIF
+  ENDIF
+  !
   IF (okvan) THEN
      ALLOCATE (eigqts(nat))
      ALLOCATE (becp1(nksq))
      DO ik = 1,nksq
         CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
-#if defined(__CUDA)
-        CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
-#endif
      ENDDO
   ENDIF
   !
-  ALLOCATE (swfcatomk(npwx,nwfcU))     
+  ALLOCATE (swfcatomk(npwx*npol,nwfcU))     
   IF (lgamma) THEN
      swfcatomkpq  => swfcatomk
   ELSE
-     ALLOCATE (swfcatomkpq(npwx,nwfcU))
+     ALLOCATE (swfcatomkpq(npwx*npol,nwfcU))
   ENDIF
   !
   RETURN

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -27,18 +28,20 @@
   USE mp_world,      ONLY : mpime
   USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_barrier, mp_bcast
-  USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
-  USE uspp_data,     ONLY : nqxq, dq, qrad
-  USE gvect,         ONLY : gcutm, ngm, g, gg
+  USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id,     &
+                            ionode
+  USE qrad_mod,      ONLY : init_tab_qrad, deallocate_tab_qrad
+  USE gvect,         ONLY : gcutm
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
-  USE io_files,      ONLY : prefix, tmp_dir
+  USE io_files,      ONLY : prefix, tmp_dir, diropn
   USE wavefunctions, ONLY : evc
   USE wvfct,         ONLY : npwx
   USE eqv,           ONLY : vlocq, dmuxc
   USE ions_base,     ONLY : nat, nsp, tau, ityp, amass
   USE control_flags, ONLY : iverbosity
-  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iunpattern, iuquad
+  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iunpattern, iuquad, iuxqc, &
+                            iuqmap
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
@@ -51,16 +54,17 @@
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar,         &
-                            fixsym, epw_noinv, system_2d
+                            fixsym, epw_noinv, system_2d, compute_dmat, wfpt
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
                             ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
-                            gmap, g0vec_all_r, Qmat, qrpl
-  USE klist_epw,     ONLY : et_loc, et_all
+                            gmap, g0vec_all_r, qrpl, Qmat, L, do_cutoff_2D_epw
+  USE klist_epw,     ONLY : et_loc, et_all, xk_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
   USE noncollin_module, ONLY : m_loc, npol, noncolin, lspinorb
+  USE epw_stop,      ONLY : stop_epw
   USE division,      ONLY : fkbounds
   USE uspp,          ONLY : okvan
   USE lrus,          ONLY : becp1
@@ -71,9 +75,12 @@
   USE ph_restart,    ONLY : read_disp_pattern_only
   USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
-  USE rigid_epw,     ONLY : compute_umn_c !, find_gmin ! Temporarily commented by H. Lee
+  !USE rigid_epw,     ONLY : find_gmin ! Temporarily commented by H. Lee
+  USE rigid_epw,     ONLY : compute_umn_c, epsi_thickn_2d
   USE rotate,        ONLY : rotate_epmat, rotate_eigenm, star_q2, gmap_sym
   USE pw2wan2epw,    ONLY : compute_pmn_para
+  USE rotate_wavefunction, ONLY : setup_rotate_wavefunction, write_qmap, &
+                            calc_rotation_gauge, rotate_wfn_deallocate
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -105,6 +112,10 @@
   !! non_symmorphic == TRUE if it has fractional translation.
   LOGICAL :: exst
   !! Find if a file exists.
+  LOGICAL :: kmesh_symmetry
+  !! Whether the k mesh have the symmetry
+  LOGICAL, EXTERNAL :: check_q_points_sym
+  !! Check symmetry of the mesh (Here, applied to the k point mesh)
   INTEGER :: sym_smallq(48)
   !! Set of all symmetries for the small group of one q.
   !! This is a subset of total crystal symmetries that remains
@@ -113,10 +124,6 @@
   !! Number of qpoints in the irreducible wedge
   INTEGER :: nqc
   !! Number of qpoints on the uniform grid
-  INTEGER :: maxvalue
-  !! Temporary INTEGER for max value
-  INTEGER :: nqxq_tmp
-  !! Maximum G+q length
   INTEGER :: ik
   !! Total k-point index
   INTEGER :: ios
@@ -191,6 +198,8 @@
   !! Wannier centers
   REAL(KIND = DP) :: qnorm_tmp
   !! Absolute value of xqc_irr
+  REAL(KIND = DP) :: qmax
+  !! Max value of q for interpoplation table
   REAL(KIND = DP) :: sumr(2, 3, nat, 3)
   !! Sum to impose the ASR
   REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
@@ -218,6 +227,7 @@
     CONTINUE
   ELSE
     IF (vme == 'dipole') CALL compute_pmn_para
+    IF (wfpt) CALL compute_pmn_para(.FALSE.)
     !
     ! Regenerate qpoint list
     !
@@ -234,29 +244,18 @@
     xqc_irr(:, :) = xqc(:, 1:nqc_irr)
     xqc(:, :) = zero
     !
-    ! fix for uspp
-    ! this is needed to get the correct size of the interpolation table 'qrad'
-    ! for the non-local part of the pseudopotential in PW/src/allocate_nlpot.f90
+    ! ensure that the size of the interpolation table 'tab_qrad' for the Q(r)
+    ! Q(r) of ultrasoft pseudopotentials is sufficient; re-initialize otherwise
     !
     IF (.NOT. epbread .AND. .NOT. epwread) THEN
-      maxvalue = nqxq
+      qnorm_tmp = 0.0_dp
       DO iq_irr = 1, nqc_irr
-        qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
-        nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) * tpiba / dq + 4) * cell_factor)
-        IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
+        qnorm_tmp = MAX( qnorm_tmp, xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
       ENDDO
-      !
-      IF (maxvalue > nqxq) THEN
-        DEALLOCATE(qrad, STAT = ierr)
-        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
-        ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
-        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
-        !
-        qrad(:, :, :, :) = zero
-        ! RM - need to call init_us_1 to re-calculate qrad
-        ! PG - maybe it would be sufficient to call init_tab_qrad?
-        CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      ENDIF
+      qmax = (SQRT(gcutm) + SQRT(qnorm_tmp)) * tpiba * cell_factor
+      ! FIXME: I don't think cell_factor should be there
+      CALL init_tab_qrad(qmax, omega, intra_bgrp_comm, ierr)
+      
     ENDIF
     !
     IF (nkstot /= nkc1 * nkc2 * nkc3) CALL errore('elphon_shuffle_wrap', 'nscf run inconsistent with epw input', 1)
@@ -361,7 +360,9 @@
       IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ityp', 1)
       READ(crystal, *) ityp
       READ(crystal, *) noncolin
+      READ(crystal, *) do_cutoff_2D_epw
       READ(crystal, *) w_centers
+      READ(crystal, *) L
       !
     ENDIF ! mpime == ionode_id
     CALL mp_bcast(nat      , ionode_id, world_comm)
@@ -378,23 +379,22 @@
     CALL mp_bcast(ityp     , ionode_id, world_comm)
     CALL mp_bcast(noncolin , ionode_id, world_comm)
     CALL mp_bcast(w_centers, ionode_id, world_comm)
+    CALL mp_bcast(L        , ionode_id, world_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
   ENDIF ! epwread
   !
-  ! If quadrupole file exist, read it
-  IF (mpime == ionode_id) THEN
-    INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
+  IF (system_2d /= 'no') THEN
+    area = omega * bg(3, 3) / alat
+    WRITE(stdout, '(5x, a, F14.8, a)') 'Area is', area, ' [Bohr^2]'
   ENDIF
   CALL mp_bcast(exst, ionode_id, world_comm)
   !
-  qrpl = .FALSE.
   ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating Qmat', 1)
   Qmat(:, :, :, :) = zero
-  IF (exst) THEN
-    qrpl = .TRUE.
+  IF (qrpl) THEN
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iuquad, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iuquad, *) dummy
@@ -429,9 +429,6 @@
     WRITE(stdout, '(a)') '     '
   ENDIF ! exst
   !
-  IF (system_2d) area = omega * bg(3, 3) / alat
-  IF (system_2d) WRITE(stdout, * ) '  Area is [Bohr^2] ', area
-  !
   IF (lifc) THEN
     ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
@@ -449,6 +446,7 @@
   WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
   !
   ! Setup crystal symmetry
+  IF (.NOT. ALLOCATED(m_loc)) ALLOCATE(m_loc(3, nat))
   CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
   IF (fixsym) CALL fix_sym(.FALSE.)
   WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
@@ -541,6 +539,36 @@
     !
     CALL gmap_sym(nsym, s, ft, gmapsym, eigv)
     !
+    ! Setup for compute_dmat
+    !
+    IF (compute_dmat) THEN
+      !
+      ! Check k mesh have symmetry. If not, raise error.
+      kmesh_symmetry = check_q_points_sym(nkstot, xk_all, at, bg, nsym, &
+                                          s, invs, nkc1, nkc2, nkc3)
+      !
+      IF (.NOT. kmesh_symmetry) THEN
+        CALL errore('elphon_shuffle_wrap', &
+            'k mesh breaks the symmetry. Cannot compute dmat.', 1)
+      ENDIF
+      !
+      ! Load lwin from ukk file
+      !
+      xq(:) = zero
+      CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
+      !
+      ! Group et_all into degenerate groups
+      !
+      CALL setup_rotate_wavefunction(nsym, s, ft, invs)
+      !
+      ! Compute gauge matrix for symmetry operation
+      !
+      CALL calc_rotation_gauge(nsym, s, invs, gmapsym, eigv, lwin)
+      !
+      IF (meta_ionode) OPEN(iuqmap, FILE = TRIM(prefix) // '.qmap', FORM = 'formatted')
+      !
+    ENDIF
+    !
     DO iq_irr = 1, nqc_irr
       u_from_file = .TRUE.
       !tmp_dir_ph = './_ph0/'
@@ -614,6 +642,9 @@
       ! now dynq is the cartesian dyn mat (not divided by the masses)
       !
       minus_q = (iswitch > -3)
+      !
+      ! Calculate effective dielectric constant and thickness for 2D system (V.-A.H)
+      IF (lpolar .AND. (system_2d == 'dipole_sh') .AND. (iq_irr == 1)) CALL epsi_thickn_2d()
       !
       !  loop over the q points of the star
       !
@@ -762,11 +793,11 @@
           ENDIF
         ENDDO
         !
+        ! Write symmetry data to .qmap file.
+        !
+        IF (compute_dmat) CALL write_qmap(nqc, iq_irr, iq_first, isym, isym1, s, ft, .FALSE.)
         !
         CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
-        !
-        ! Calculate overlap U_k+q U_k^\dagger
-        IF (lpolar .OR. qrpl) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
         !
         !   calculate the sandwiches
         !
@@ -776,6 +807,7 @@
         ! are equal to 5+ digits).
         ! For any volunteers, please write to giustino@civet.berkeley.edu
         !
+        IF (system_2d == 'dipole_sh') CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
         CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .FALSE.)
         !
         !  bring epmatq in the mode representation of iq_first,
@@ -809,6 +841,10 @@
           IF (iq == 1) WRITE(stdout, *)
           WRITE(stdout,5) nqc, xq
           !
+          ! Write symmetry data to .qmap file.
+          !
+          IF (compute_dmat) CALL write_qmap(nqc, iq_irr, iq_first, isym, isym1, s, ft, .TRUE.)
+          !
           !  prepare the kmap for the refolding
           !
           CALL createkmap(xq)
@@ -816,8 +852,7 @@
           CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
           !
           ! Calculate overlap U_k+q U_k^\dagger
-          IF (lpolar .OR. qrpl) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
-          !
+          IF (system_2d == 'dipole_sh') CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
           xq0 = -xq0
           !
           CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .TRUE.)
@@ -839,6 +874,14 @@
     ENDDO ! irr-q loop
     !
     IF (nqc /= nqc1 * nqc2 * nqc3) CALL errore('elphon_shuffle_wrap', 'nqc /= nq1*nq2*nq3', nqc)
+    !
+    ! Write xqc to file. This is needed for wfpt
+    !
+    IF (wfpt .AND. ionode) THEN
+      CALL diropn(iuxqc, 'xqc', 3 * nqc, exst)
+      CALL davcio(xqc, 3 * nqc, iuxqc, 1, +1)
+      CLOSE(iuxqc)
+    ENDIF
     !
     IF (lifc) THEN
       DEALLOCATE(wscache, STAT = ierr)
@@ -898,6 +941,10 @@
     ENDDO
     DEALLOCATE(becp1, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating becp1', 1)
+    IF (compute_dmat) THEN
+      CALL rotate_wfn_deallocate()
+      IF (meta_ionode) CLOSE(iuqmap)
+    ENDIF
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0) THEN
@@ -957,9 +1004,10 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc_irr', 1)
   ENDIF
   !
-  IF ((maxvalue > nqxq) .AND. (.NOT. epbread .AND. .NOT. epwread)) THEN
-    DEALLOCATE(qrad, STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
+  IF ( .NOT. epbread .AND. .NOT. epwread ) THEN
+     ! FIXME: the original instruction was "deallocate qrad if re-allocated above"
+     ! FIXME: I don't see any reason not to deallocate here if qrad no longer needed
+     CALL deallocate_tab_qrad ( )
   ENDIF
   !
   IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
@@ -988,18 +1036,7 @@
   !END
   !
   ! The electron-phonon wannier interpolation
-  IF(etf_mem == 2) THEN
-#if defined(__MPI)
-    CALL ephwann_shuffle_mem(nqc, xqc, w_centers)
-#else
-    WRITE(stdout, '(/5x, a)') 'WARNING: etf_mem==2 only works with MPI'
-    WRITE(stdout, '(5x, a)')  '         Changing to etf_mem == 1 and continue ...'
-    etf_mem = 1
-    CALL ephwann_shuffle(nqc, xqc, w_centers)
-#endif
-  ELSE ! etf_mem == 0, 1 or 4
-    CALL ephwann_shuffle(nqc, xqc, w_centers)
-  ENDIF
+  CALL ephwann_shuffle(nqc, xqc, w_centers)
   !
   DEALLOCATE(xqc, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc', 1)

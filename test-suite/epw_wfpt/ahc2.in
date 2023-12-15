@@ -1,0 +1,17 @@
+--
+&inputph
+  prefix   = 'BAs'
+  reduce_io = .true.
+  epsil    = .true.
+  fildyn   = './BAs_ahc.dyn'
+  ldisp    = .true.
+  fildvscf = 'dvscf'
+  trans    = .false.
+  nq1 = 2
+  nq2 = 2
+  nq3 = 2
+  electron_phonon = 'ahc'
+  ahc_nbnd = 9
+
+  ahc_dir = './save/ahc_dir/'
+ /

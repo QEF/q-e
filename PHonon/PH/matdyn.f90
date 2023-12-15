@@ -1125,7 +1125,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
                total_weight, rws(0:3,nrws), alat
   REAL(DP), EXTERNAL :: wsweight
   REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
   LOGICAL,SAVE :: first=.true.
   LOGICAL :: fd
   !
@@ -1162,10 +1161,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
     ENDDO
   ENDIF FIRST_TIME
   !
-  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
-  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
-  ttt(:,:,:,:,:)=0.d0
-
   DO na=1, nat
      DO nb=1, nat
         DO n1=-nr1_,nr1_
@@ -1193,11 +1188,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
                     !
                     ! FOURIER TRANSFORM
                     !
-                    do i=1,3
-                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                    end do
-
                     arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
                     DO ipol=1, 3
                        DO jpol=1, 3

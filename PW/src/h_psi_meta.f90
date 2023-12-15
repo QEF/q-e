@@ -66,8 +66,8 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,i)) * tpiba
-              psi_g(i,1) = CMPLX(0.D0,kplusgi) * psip(i,im)
-              IF ( im < mp ) psi_g(i,2) = CMPLX(0.d0,kplusgi) * psip(i,im+1)
+              psi_g(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * psip(i,im)
+              IF ( im < mp ) psi_g(i,2) = CMPLX(0._DP,kplusgi,KIND=DP) * psip(i,im+1)
            ENDDO
            !
            ebnd = im
@@ -98,7 +98,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba
-              psi_g(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * psip(i,im)
+              psi_g(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * psip(i,im)
            ENDDO
            !
            CALL wave_g2r( psi_g(1:np,1:1), psic, dffts, igk=igk_k(:,current_k) )
@@ -109,7 +109,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba
-              hpsi(i,im) = hpsi(i,im) - CMPLX(0.D0,kplusgi,KIND=DP) * psi_g(i,1)
+              hpsi(i,im) = hpsi(i,im) - CMPLX(0._DP,kplusgi,KIND=DP) * psi_g(i,1)
            ENDDO
            !
         ENDDO

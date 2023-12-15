@@ -17,7 +17,7 @@ SUBROUTINE stress( sigma )
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,        ONLY : ry_kbar
   USE ener,             ONLY : etxc, vtxc
-  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl, gl_d
+  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl
   USE fft_base,         ONLY : dfftp
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
@@ -58,7 +58,7 @@ SUBROUTINE stress( sigma )
   ! ... Auxiliary variables for Grimme-D3
   !
   INTEGER  :: atnum(1:nat)
-  REAL(DP) :: latvecs(3,3)
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:)
   !
   WRITE( stdout, '(//5x,"Computing stress (Cartesian axis) and pressure"/)' )
@@ -71,9 +71,7 @@ SUBROUTINE stress( sigma )
   CALL start_clock( 'stress' )
   !
   !$acc update device( g, gg )
-#if defined(__CUDA)
-  gl_d = gl
-#endif
+  !FIXME: I don't think the above line is needed
   !
   ! ... contribution from local potential
   !
@@ -137,13 +135,17 @@ SUBROUTINE stress( sigma )
     CALL start_clock('stres_dftd3')
     ALLOCATE( force_d3(3,nat) )
     force_d3( : , : ) = 0.0_DP
-    latvecs(:,:) = at(:,:)*alat
-    tau(:,:) = tau(:,:)*alat
+    ! taupbc are atomic positions in alat units, centered around r=0
+    ALLOCATE ( taupbc(3,nat) )
+    taupbc(:,:) = tau(:,:)
+    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
     atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, tau, atnum, latvecs, &
+    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
                          force_d3, sigmad23 )
     sigmad23 = 2.d0*sigmad23
-    tau(:,:)=tau(:,:)/alat
+    DEALLOCATE( taupbc )
     DEALLOCATE( force_d3 )
     CALL stop_clock('stres_dftd3')
   END IF

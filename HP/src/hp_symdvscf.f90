@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,13 +16,17 @@ SUBROUTINE hp_symdvscf (dvtosym)
   USE constants,        ONLY : tpi
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at
-  USE symm_base,        ONLY : s, ft
+  USE symm_base,        ONLY : s, ft, t_rev
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE ions_base,        ONLY : tau
   USE qpoint,           ONLY : xq
   USE lr_symm_base,     ONLY : minus_q, irotmq, nsymq, gi, gimq
   USE ldaU_hp,          ONLY : nah_pert
-  
+  USE qpoint,           ONLY : xq
+  USE symm_base,        ONLY : s
+  USE cell_base,        ONLY : bg, at
+  USE noncollin_module, ONLY : noncolin
+
   implicit none
 
   complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
@@ -30,7 +34,7 @@ SUBROUTINE hp_symdvscf (dvtosym)
   integer :: ftau(3,48), s_scaled(3,3,48)
   integer :: is, ri, rj, rk, i, j, k, ipol, isym, irot
   !  counters
-  real(DP) :: gf(3), gf2, n(3)
+  real(DP) :: gf(3), gf2, n(3), gi_t(3, 48), aq (3), raq (3), wrk (3)
   !  temp variables
   complex(DP), allocatable :: dvsym (:,:,:)
   ! the symmetrized potential
@@ -118,11 +122,38 @@ SUBROUTINE hp_symdvscf (dvtosym)
   ! where G = Sq - q, and tau_pert is the position
   ! of the perturbed atom
   !
+  IF (noncolin) THEN
+     gi_t = 0.d0 
+     aq   = xq
+     call cryst_to_cart (1, aq, at, - 1)
+     do isym = 1, nsymq
+        raq = 0.d0
+        do i = 1, 3
+           do j = 1, 3
+              raq (i) = raq (i) + DBLE (s (i, j, isym) ) * &
+                  aq (j)
+           enddo
+        enddo
+        do i = 1, 3
+           IF (t_rev(isym)==1) wrk (i) = aq (i) - raq (i)
+        enddo
+        call cryst_to_cart (1, wrk, bg, 1)
+        gi_t (:, isym) = wrk (:)
+     enddo
+  ENDIF
+  !
   DO isym = 1, nsymq
-     gf2 = ( gi(1,isym) * tau(1,nah_pert) + &
-             gi(2,isym) * tau(2,nah_pert) + &
-             gi(3,isym) * tau(3,nah_pert) ) * tpi
-     phase2(isym) = CMPLX( cos(gf2), -sin(gf2), kind=DP)
+     IF (t_rev(isym) == 1) then
+        gf2 = ( gi_t(1,isym) * tau(1,nah_pert) + &
+                gi_t(2,isym) * tau(2,nah_pert) + &
+                gi_t(3,isym) * tau(3,nah_pert) ) * tpi
+         phase2(isym) = CMPLX( cos(gf2), -sin(gf2), kind=DP)
+     ELSE
+        gf2 = ( gi(1,isym) * tau(1,nah_pert) + &
+                gi(2,isym) * tau(2,nah_pert) + &
+                gi(3,isym) * tau(3,nah_pert) ) * tpi
+        phase2(isym) = CMPLX( cos(gf2), -sin(gf2), kind=DP)
+     ENDIF
   ENDDO
   !
   DO is = 1, nspin_lsda
@@ -150,7 +181,13 @@ SUBROUTINE hp_symdvscf (dvtosym)
                  !
                  ! Calculate drho(S^-1 * r - ftau) * exp(iG*(r-tau_pert))
                  !
-                 dvsym(i,j,k) = dvsym(i,j,k) + dvtosym(ri,rj,rk,is) * phase(isym) * phase2(isym)
+                 IF ( t_rev(isym) == 0 ) THEN
+                    dvsym(i,j,k) = dvsym(i,j,k) + & 
+                              dvtosym(ri,rj,rk,is) * phase(isym) * phase2(isym) 
+                 ELSE
+                    dvsym(i,j,k) = dvsym(i,j,k) + & 
+                       conjg( dvtosym(ri,rj,rk,is) * phase(isym) ) * phase2(isym)  
+                 ENDIF
                  !
               enddo
               !

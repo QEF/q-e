@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,24 +29,21 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE lsda_mod,         ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,            ONLY : nbnd, npwx, et
-  USE becmod,           ONLY : calbec, bec_type, allocate_bec_type, deallocate_bec_type
+  USE becmod,           ONLY : calbec, bec_type, allocate_bec_type_acc, deallocate_bec_type_acc
   USE wavefunctions,    ONLY : evc, psic, psic_nc
 #if defined(__CUDA)
   USE wavefunctions_gpum,   ONLY : evc_d
 #endif
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : upf, nh, nhm
-  USE qpoint,           ONLY : nksq
+  USE qpoint,           ONLY : nksq, ikks
   USE control_lr,       ONLY : nbnd_occ
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_delta
   USE uspp_init,        ONLY : init_us_2
-#if defined(__CUDA)
-  USE becmod_gpum,      ONLY: bec_type_d
-  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu, synchronize_bec_type_gpu
-#endif
+  USE control_flags,    ONLY : offload_type
 
   implicit none
 
@@ -55,7 +52,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! output: the local density of states at Ef without augmentation
   REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin_mag)
   ! output: the local becsum at ef
-  real(DP) :: dos_ef
+  real(DP) :: dos_ef, check
   ! output: the density of states at Ef
   !
   !    local variables for Ultrasoft PP's
@@ -64,9 +61,6 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! counters
   complex(DP), allocatable :: becsum1_nc(:,:,:,:)
   TYPE(bec_type) :: becp
-#if defined(__CUDA)
-  TYPE(bec_type_d) :: becp_d
-#endif
   !
   ! local variables
   !
@@ -101,10 +95,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      becsum1_nc=(0.d0,0.d0)
   ENDIF
 
-  call allocate_bec_type (nkb, nbnd, becp)
-#if defined(__CUDA)
-  call allocate_bec_type_gpu (nkb, nbnd, becp_d)
-#endif
+  call allocate_bec_type_acc (nkb, nbnd, becp)
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -115,34 +106,30 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !
   !$acc data create(psic, psic_nc) copy(ldoss) 
   do ik = 1, nksq
-     if (lsda) current_spin = isk (ik)
-     npw = ngk(ik)
-     weight = wk (ik)
+     if (lsda) current_spin = isk (ikks(ik))
+     npw = ngk(ikks(ik))
+     weight = wk (ikks(ik))
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
      if (nksq > 1) then
-             call get_buffer (evc, lrwfc, iuwfc, ik)
+             call get_buffer (evc, lrwfc, iuwfc, ikks(ik))
 #if defined(__CUDA)
              evc_d = evc
 #endif
      endif
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, .true.)
+     call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb, .true.)
      !
-#if defined(__CUDA)
-     !$acc host_data use_device(vkb)
-     call calbec_gpu ( npw, vkb(:,:), evc_d, becp_d)
-     !$acc end host_data
-     CALL synchronize_bec_type_gpu( becp_d, becp, 'h')
-#else
-     call calbec ( npw, vkb, evc, becp)
-#endif
-     do ibnd = 1, nbnd_occ (ik)
+     !$acc data copyin(evc) present(vkb, becp)
+     call calbec ( offload_type, npw, vkb, evc, becp)
+     !$acc end data
+     !
+     do ibnd = 1, nbnd_occ (ikks(ik))
         !
         if(ltetra) then
-           wdelta = dfpt_tetra_delta(ibnd,ik)
+           wdelta = dfpt_tetra_delta(ibnd,ikks(ik))
         else
-           wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
+           wdelta = w0gauss ( (ef-et(ibnd,ikks(ik))) / degauss, ngauss) / degauss
         end if
         !
         w1 = weight * wdelta / omega
@@ -156,11 +143,11 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
            !$acc parallel loop present(igk_k, psic_nc)
            do ig = 1, npw
 #if defined(__CUDA)
-              psic_nc (nl_d (igk_k(ig,ik)), 1 ) = evc_d (ig, ibnd)
-              psic_nc (nl_d (igk_k(ig,ik)), 2 ) = evc_d (ig+npwx, ibnd)
+              psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc_d (ig, ibnd)
+              psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc_d (ig+npwx, ibnd)
 #else
-              psic_nc (nl_d (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
-              psic_nc (nl_d (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
+              psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc (ig, ibnd)
+              psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc (ig+npwx, ibnd)
 #endif
            enddo
            !$acc end parallel loop
@@ -201,9 +188,9 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
            !$acc parallel loop present(psic)
            do ig = 1, npw
 #if defined(__CUDA)
-              psic (nl_d (igk_k(ig,ik) ) ) = evc_d (ig, ibnd)
+              psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc_d (ig, ibnd)
 #else
-              psic (nl_d (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+              psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc (ig, ibnd)
 #endif
            enddo
            !$acc end parallel loop
@@ -219,6 +206,12 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         END IF
         !
         !    If we have a US pseudopotential we compute here the becsum term
+        !
+        if(noncolin) then
+        !$acc update self(becp%nc)
+        else
+        !$acc update self(becp%k)
+        endif
         !
         w1 = weight * wdelta
         ijkb0 = 0
@@ -320,10 +313,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !check
   !
   IF (noncolin) deallocate(becsum1_nc)
-  call deallocate_bec_type(becp)
-#if defined(__CUDA)
-  call deallocate_bec_type_gpu(becp_d)
-#endif
+  call deallocate_bec_type_acc(becp)
 
   call stop_clock ('localdos')
   return

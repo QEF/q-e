@@ -5,66 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!----------------------------------------------------------------------------
-SUBROUTINE aceinit0()
-  !----------------------------------------------------------------------------
-  !
-  ! ... This routine reads the ACE potential from files in non-scf calculations
-  !
-  USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, nkstot
-  USE control_flags,        ONLY : lscf, restart
-  USE io_files,             ONLY : restart_dir
-  USE wvfct,                ONLY : nbnd
-  USE pw_restart_new,       ONLY : read_collected_wfc
-  USE exx,                  ONLY : xi, domat
-  USE xc_lib,               ONLY : start_exx, exx_is_active
-  USE noncollin_module,     ONLY : npol
-  USE wvfct,                ONLY : npwx
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: ierr
-  INTEGER :: ik
-  CHARACTER (LEN=256)  :: dirname
-  !
-  CALL start_clock( 'aceinit0' )
-  !
-  IF(lscf.and..not.restart) THEN
-    !
-    WRITE( stdout, '(5X,"EXX: ACE will be initialized later")' )
-    !
-  ELSE
-    !
-    WRITE( stdout, '(5X,"EXX: initializing ACE and reading from file")' )
-    !
-    Call start_exx()
-    !
-    IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbnd,nkstot) )
-    !
-    xi=(0.0d0, 0.0d0)
-    !
-    dirname = restart_dir ( )
-    !
-    DO ik = 1, nks
-       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace", ierr )
-       IF ( ierr /= 0 ) CALL errore ('aceinit0', &
-            'file with ACE potential not found or not readable',ik)
-    END DO
-    !
-    WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
-    !
-  END IF 
-  !
-  domat = .FALSE.
-  !
-  CALL stop_clock( 'aceinit0' )  
-  !
-  RETURN
-  !
-END SUBROUTINE aceinit0
-!
 !----------------------------------------------------------------------------
 SUBROUTINE wfcinit()
   !----------------------------------------------------------------------------
@@ -96,6 +36,7 @@ SUBROUTINE wfcinit()
   USE qes_libs_module,      ONLY : qes_reset
   USE wavefunctions_gpum,   ONLY : using_evc
   USE uspp_init,            ONLY : init_us_2
+  USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -157,7 +98,7 @@ SUBROUTINE wfcinit()
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
            starting_wfc = 'atomic+random'
         END IF
-        !   
+        !
      ELSE IF ( exst_sum /= 0 ) THEN
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
@@ -238,7 +179,7 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , use_gpu)
      !
      ! ... Needed for DFT+U
      !
@@ -250,7 +191,7 @@ SUBROUTINE wfcinit()
      IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
      !
      ! ... calculate starting wavefunctions (calls Hpsi)
-     !
+     ! 
      CALL init_wfc ( ik )
      !
      ! ... write  starting wavefunctions to file
@@ -275,6 +216,7 @@ SUBROUTINE init_wfc ( ik )
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
   USE basis,                ONLY : natomwfc, starting_wfc
@@ -284,16 +226,22 @@ SUBROUTINE init_wfc ( ik )
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
+#if defined(__CUDA)
+  USE random_numbers_gpum,  ONLY : randy_vect_gpu => randy_vect_debug_gpu
+                                                  ! use '=>randy_vect_debug_gpu'
+                                                  ! to adopt the same (slower) PRNG
+                                                  ! used on the CPU.
+#else
   USE random_numbers,       ONLY : randy
+#endif
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
-  USE wavefunctions_gpum,   ONLY : using_evc
-  USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
-  USE control_flags,        ONLY : lscf
+  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
+  USE wvfct_gpum,           ONLY : using_et, using_et_d, et_d
+  USE control_flags,        ONLY : lscf, use_gpu
   !
   IMPLICIT NONE
   !
@@ -302,11 +250,18 @@ SUBROUTINE init_wfc ( ik )
   INTEGER :: ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
   LOGICAL :: lelfield_save
   !
-  REAL(DP) :: rr, arg
+  INTEGER :: rnd_idx, ngk_ik
+  REAL(DP) :: rr1, rr2, arg, xk_1, xk_2, xk_3
   REAL(DP), ALLOCATABLE :: etatom(:) ! atomic eigenvalues
+  !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
+  !$acc declare device_resident(wfcatom)
   !
+#if defined(__CUDA)
+  REAL(DP),    ALLOCATABLE :: randy_vec(:) ! data for random
+  !$acc declare device_resident(randy_vec)
+#endif
   !
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
@@ -327,12 +282,24 @@ SUBROUTINE init_wfc ( ik )
      !
   END IF
   !
+  ngk_ik  = ngk(ik)
+  xk_1 = xk(1,ik); xk_2 = xk(2,ik); xk_3 = xk(3,ik)
+  !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
+#if defined(__CUDA)
+  ALLOCATE(randy_vec(2 * n_starting_wfc * npol * ngk_ik))
+#endif
   !
   IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
-     CALL atomic_wfc( ik, wfcatom )
+     IF(use_gpu) THEN
+       !$acc host_data use_device(wfcatom)
+       CALL atomic_wfc_gpu( ik, wfcatom )
+       !$acc end host_data
+     ELSE
+       CALL atomic_wfc( ik, wfcatom )
+     END IF
      CALL stop_clock( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
@@ -341,17 +308,33 @@ SUBROUTINE init_wfc ( ik )
          ! ... in this case, introduce a small randomization of wavefunctions
          ! ... to prevent possible "loss of states"
          !
+#if defined(__CUDA)
+         IF(use_gpu) THEN
+           !$acc host_data use_device(randy_vec)
+           CALL randy_vect_gpu( randy_vec, 2 * n_starting_atomic_wfc * npol * ngk(ik) )
+           !$acc end host_data
+         END IF
+#endif
+         !
+         !$acc parallel loop collapse(3) private(rr1, rr2, arg, rnd_idx)
          DO ibnd = 1, n_starting_atomic_wfc
             !
             DO ipol = 1, npol
                !
-               DO ig = 1, ngk(ik)
+               DO ig = 1, ngk_ik
                   !
-                  rr  = randy()
-                  arg = tpi * randy()
+#if defined(__CUDA)
+                  rnd_idx = 2 * ((ig-1) + ( (ipol-1) + (ibnd-1) * npol ) * ngk_ik) + 1
+                  rr1  = randy_vec(rnd_idx)
+                  rr2  = randy_vec(rnd_idx+1)
+#else
+                  rr1 = randy()
+                  rr2 = randy()
+#endif
+                  arg = tpi * rr2
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) )
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr1*COS(arg), rr1*SIN(arg) ,kind=DP) )
                   !
                END DO
                !
@@ -366,33 +349,57 @@ SUBROUTINE init_wfc ( ik )
   ! ... if not enough atomic wfc are available,
   ! ... fill missing wfcs with random numbers
   !
+#if defined(__CUDA)
+  IF (n_starting_atomic_wfc < n_starting_wfc) &
+     CALL randy_vect_gpu( randy_vec , 2 * (n_starting_wfc-n_starting_atomic_wfc) * npol * ngk(ik) )
+#endif
+  !
+  !$acc parallel loop collapse(3)
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
-     !
      DO ipol = 1, npol
-        !
-        wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
-        !
-        DO ig = 1, ngk(ik)
-           !
-           rr  = randy()
-           arg = tpi * randy()
-           !
-           wfcatom(ig,ipol,ibnd) = &
-                CMPLX( rr*COS( arg ), rr*SIN( arg ) ,kind=DP) / &
-                       ( ( xk(1,ik) + g(1,igk_k(ig,ik)) )**2 + &
-                         ( xk(2,ik) + g(2,igk_k(ig,ik)) )**2 + &
-                         ( xk(3,ik) + g(3,igk_k(ig,ik)) )**2 + 1.0_DP )
-        END DO
-        !
-     END DO
-     !
+        DO ig = ngk_ik, npwx
+          wfcatom(ig,ipol,ibnd) = (0.0_dp, 0.0_dp)
+        END DO 
+    END DO 
   END DO
-
+  !
+  !$acc parallel loop collapse(3) private(rnd_idx, rr1, rr2, arg)
+  DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
+     DO ipol = 1, npol
+        DO ig = 1, ngk_ik
+           !
+#if defined(__CUDA)
+           rnd_idx = 2 * ((ig-1) + ( (ipol-1) + (ibnd-n_starting_atomic_wfc-1) * npol ) * ngk_ik) + 1
+           rr1 = randy_vec(rnd_idx)
+           rr2 = randy_vec(rnd_idx+1)
+#else
+           rr1 = randy()
+           rr2 = randy()
+#endif
+           rr1 = rr1 / ( ( xk_1 + g(1,igk_k(ig,ik)) )**2 + &
+                       ( xk_2 + g(2,igk_k(ig,ik)) )**2 + &
+                       ( xk_3 + g(3,igk_k(ig,ik)) )**2 + 1.0_DP )
+           arg = tpi * rr2 
+           !
+           wfcatom(ig,ipol,ibnd) = CMPLX( rr1*COS( arg ), rr1*SIN( arg ) ,kind=DP) 
+           !
+        END DO
+     END DO
+  END DO
+  !
+#if defined(__CUDA)
+  IF(use_gpu) DEALLOCATE( randy_vec )
+#endif
+  !
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
   ! FIXME: maybe this should be done once evc are computed, not here?
   !
-  IF( nbgrp > 1 ) CALL mp_bcast( wfcatom, root_bgrp_id, inter_bgrp_comm )
+  IF( nbgrp > 1 ) THEN
+    !$acc host_data use_device(wfcatom)
+    CALL mp_bcast( wfcatom, root_bgrp_id, inter_bgrp_comm )
+    !$acc end host_data
+  END IF
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
@@ -400,8 +407,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... Allocate space for <beta|psi>
   !
-  CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
-  CALL using_becp_auto (2)
+  CALL allocate_bec_type_acc ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -415,8 +421,15 @@ SUBROUTINE init_wfc ( ik )
   !
   IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
-  CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
-  CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
+  IF(use_gpu) THEN
+    CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
+    !$acc host_data use_device(wfcatom,etatom)
+    CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc_d, etatom )
+    !$acc end host_data
+  ELSE
+    CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
+    CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
+  END IF
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
   lelfield = lelfield_save
@@ -424,14 +437,89 @@ SUBROUTINE init_wfc ( ik )
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
-  CALL using_et(1)
-  et(1:nbnd,ik) = etatom(1:nbnd)
+  if(use_gpu) then 
+    CALL using_et_d(2)
+    !$acc kernels  
+    DO ibnd=1,nbnd
+       et_d(ibnd,ik) = etatom(ibnd)
+    END DO
+    !$acc end kernels
+  else
+    CALL using_et(1)
+    et(1:nbnd,ik) = etatom(1:nbnd)
+  end if 
   !
-  CALL deallocate_bec_type ( becp )
-  CALL using_becp_auto (2)
+  CALL deallocate_bec_type_acc ( becp )
+  !
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
   !
   RETURN
   !
 END SUBROUTINE init_wfc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE aceinit0()
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine reads the ACE potential from files in non-scf calculations
+  !
+  USE io_global,            ONLY : stdout
+  USE klist,                ONLY : nks, nkstot
+  USE control_flags,        ONLY : lscf, restart
+  USE io_files,             ONLY : restart_dir
+  USE wvfct,                ONLY : nbnd
+  USE pw_restart_new,       ONLY : read_collected_wfc
+  USE exx,                  ONLY : xi, xi_d, domat
+  USE xc_lib,               ONLY : start_exx, exx_is_active
+  USE noncollin_module,     ONLY : npol
+  USE wvfct,                ONLY : npwx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ierr
+  INTEGER :: ik
+  CHARACTER (LEN=256)  :: dirname
+  !
+  CALL start_clock( 'aceinit0' )
+  !
+  IF(lscf.and..not.restart) THEN
+    !
+    WRITE( stdout, '(5X,"EXX: ACE will be initialized later")' )
+    !
+  ELSE
+    !
+    WRITE( stdout, '(5X,"EXX: initializing ACE and reading from file")' )
+    !
+    Call start_exx()
+    !
+    IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbnd,nkstot) )
+#if defined (__CUDA)
+    IF (.NOT. ALLOCATED(xi_d)) ALLOCATE( xi_d(npwx*npol,nbnd) )
+#endif
+    !
+    xi=(0.0d0, 0.0d0)
+    !
+    dirname = restart_dir ( )
+    !
+    DO ik = 1, nks
+       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace", ierr )
+       IF ( ierr /= 0 ) CALL errore ('aceinit0', &
+            'file with ACE potential not found or not readable',ik)
+    END DO
+    !
+#if defined (__CUDA)
+    IF (nks == 1) xi_d(:,:) = xi(:,:,1)
+#endif
+    !
+    WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
+    !
+  END IF 
+  !
+  domat = .FALSE.
+  !
+  CALL stop_clock( 'aceinit0' )  
+  !
+  RETURN
+  !
+END SUBROUTINE aceinit0

@@ -65,6 +65,10 @@ MODULE exx
   !! use old algorithm instead
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)
   !! ACE projectors
+  COMPLEX(DP), ALLOCATABLE :: xi_d(:,:)
+#if defined(__CUDA)
+  ATTRIBUTES(DEVICE) :: xi_d
+#endif
   COMPLEX(DP), ALLOCATABLE :: evc0(:,:,:)
   !! old wfc (G-space) needed to compute fock3
   INTEGER :: nbndproj
@@ -310,6 +314,7 @@ MODULE exx
     IF ( ALLOCATED(locmat) )       DEALLOCATE( locmat )
     IF ( ALLOCATED(exxmat) )       DEALLOCATE( exxmat )
     IF ( ALLOCATED(xi)   )         DEALLOCATE( xi   )
+    IF ( ALLOCATED(xi_d) )         DEALLOCATE( xi_d )
     IF ( ALLOCATED(evc0) )         DEALLOCATE( evc0 )
     !
     IF ( ALLOCATED(becxx) ) THEN
@@ -936,7 +941,7 @@ MODULE exx
           IF (      use_gpu) CALL vexx_gamma_gpu( lda, n, m, psi_exx, hpsi_exx, becpsi )
        ENDIF
     ELSE
-       IF (negrp.eq.1)THEN
+       IF (negrp == 1)THEN
           IF (.not. use_gpu) CALL vexx_k( lda, n, m, psi, hpsi, becpsi )
           IF (      use_gpu) CALL vexx_k_gpu( lda, n, m, psi, hpsi, becpsi )
        ELSE
@@ -1327,7 +1332,7 @@ MODULE exx
                                intra_egrp_comm, me_egrp, &
                                negrp, max_pairs, egrp_pairs, ibands, nibands, &
                                iexx_istart, iexx_iend, &
-                               all_start, all_end, iexx_start, jblock
+                               all_start, all_end, iexx_start, jblock, max_ibands
     USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -1346,8 +1351,8 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER                  :: lda, n, m
-    COMPLEX(DP)              :: psi(:,:)
-    COMPLEX(DP)              :: hpsi(:,:)
+    COMPLEX(DP)              :: psi(lda*npol,max_ibands)
+    COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
@@ -2226,16 +2231,16 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER                  :: lda, n, m
-    COMPLEX(DP)              :: psi(:,:)
-    COMPLEX(DP)              :: hpsi(:,:)
-    COMPLEX(DP),ALLOCATABLE  :: psi_d(:,:)
-    COMPLEX(DP),ALLOCATABLE  :: hpsi_d(:,:)
+    COMPLEX(DP)              :: psi(lda*npol,max_ibands)
+    COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
 #if defined(__CUDA)
     attributes(DEVICE) :: psi_d, hpsi_d
 #endif
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
+    COMPLEX(DP),ALLOCATABLE :: psi_d(:,:)
+    COMPLEX(DP),ALLOCATABLE :: hpsi_d(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_d(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc_d(:,:,:)
     COMPLEX(DP),ALLOCATABLE :: result_d(:,:), result_nc_d(:,:,:)
@@ -3979,6 +3984,9 @@ end associate
     CALL using_evc(0)
     !
     IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
+#if defined (__CUDA)
+    IF (.NOT. ALLOCATED(xi_d)) ALLOCATE( xi_d(npwx*npol,nbndproj) )
+#endif
     IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi )
     !
     eexx = 0.0d0
@@ -4004,6 +4012,10 @@ end associate
     !
     CALL mp_sum( eexx, inter_pool_comm )
     ! WRITE(stdout,'(/,5X,"ACE energy",f15.8)') eexx
+    !
+#if defined (__CUDA)
+    IF (nks == 1) xi_d(:,:) = xi(:,:,1)
+#endif
     !
     IF (PRESENT(exex)) exex = eexx
     IF ( okvan ) CALL deallocate_bec_type( becpsi )
@@ -4043,7 +4055,7 @@ end associate
     !
     INTEGER :: nrxxs
     REAL(DP), ALLOCATABLE :: mexx(:,:)
-    REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0  
+    REAL(DP), PARAMETER :: Zero=0._DP
     LOGICAL :: domat0  
     !
     CALL start_clock( 'aceinit' )  
@@ -4106,9 +4118,9 @@ end associate
     ! ... local variables
     !
     INTEGER :: i, ik
-    REAL*8, ALLOCATABLE :: rmexx(:,:)  
+    REAL(DP), ALLOCATABLE :: rmexx(:,:)
     COMPLEX(DP),ALLOCATABLE :: cmexx(:,:), vv(:,:)  
-    REAL*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0  
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP
     !
     CALL start_clock( 'vexxace' )
     !
@@ -4159,6 +4171,100 @@ end associate
   END SUBROUTINE vexxace_gamma
   !
   !
+  !----------------------------------------------------------------------------------
+  SUBROUTINE vexxace_gamma_gpu( nnpw, nbnd, phi_d, exxe, vphi_d )
+    !-------------------------------------------------------------------------------
+    !! Do the ACE potential and (optional) print the ACE matrix representation.
+    !
+    USE klist,        ONLY : nks
+    USE wvfct,        ONLY : current_k, wg
+    USE lsda_mod,     ONLY : current_spin
+#if defined(__CUDA)
+    USE cublas
+#endif
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: nnpw
+    !! number of plane waves
+    INTEGER :: nbnd
+    !! number of bands
+    COMPLEX(DP) :: phi_d(nnpw,nbnd)
+    !! wave function
+    REAL(DP) :: exxe
+    !! exx energy
+    COMPLEX(DP), OPTIONAL :: vphi_d(nnpw,nbnd)
+    !! v times phi
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: phi_d, vphi_d
+#endif
+    !
+    ! ... local variables
+    !
+    INTEGER :: i, j
+    REAL(DP), ALLOCATABLE :: rmexx_d(:,:)
+    COMPLEX(DP),ALLOCATABLE :: cmexx_d(:,:), vv_d(:,:)
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: rmexx_d, cmexx_d, vv_d
+#endif
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP
+    !
+    CALL start_clock_gpu( 'vexxace' )
+    !
+    IF ( .NOT. PRESENT(vphi_d) ) THEN
+      ALLOCATE( vv_d(nnpw,nbnd) )
+      vv_d = (Zero,Zero)
+    ENDIF
+    !
+    ! do the ACE potential
+    ALLOCATE( rmexx_d(nbndproj,nbnd), cmexx_d(nbndproj,nbnd) )
+    !
+    IF ( nks > 1 ) xi_d(:,:) = xi(:,:,current_k)
+    !
+    ! <xi|phi>
+    CALL matcalc_gpu( '<xi|phi>', .FALSE. , 0, nnpw, nbndproj, nbnd, xi_d, phi_d, rmexx_d, exxe )
+    !
+    !$cuf kernel do(2)
+    DO j = 1, nbnd
+       DO i = 1, nbndproj
+          cmexx_d(i,j) = CMPLX(rmexx_d(i,j), KIND=DP)
+       ENDDO
+    ENDDO
+    !
+    ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
+    IF ( .NOT. PRESENT(vphi_d) ) THEN
+       CALL ZGEMM( 'N', 'N', nnpw, nbnd, nbndproj, -(One,Zero), xi_d, &
+                   nnpw, cmexx_d, nbndproj, (One,Zero), vv_d, nnpw )
+    ELSE
+       CALL ZGEMM( 'N', 'N', nnpw, nbnd, nbndproj, -(One,Zero), xi_d, &
+                   nnpw, cmexx_d, nbndproj, (One,Zero), vphi_d, nnpw )
+    ENDIF
+    !
+    DEALLOCATE( cmexx_d )
+    !
+    IF ( domat ) THEN
+       !
+       IF ( nbndproj /= nbnd ) THEN
+          DEALLOCATE( rmexx_d )
+          ALLOCATE( rmexx_d(nbnd,nbnd) )
+       ENDIF
+       !
+       IF ( .NOT. PRESENT(vphi_d) ) THEN
+          CALL matcalc_gpu( 'ACE', .TRUE., 0, nnpw, nbnd, nbnd, phi_d, vv_d, rmexx_d, exxe )
+       ELSE
+          CALL matcalc_gpu( 'ACE', .TRUE., 0, nnpw, nbnd, nbnd, phi_d, vphi_d, rmexx_d, exxe )
+       ENDIF
+       !
+    ENDIF
+    !
+    DEALLOCATE( rmexx_d )
+    IF( .NOT. PRESENT(vphi_d) ) DEALLOCATE( vv_d )
+    !
+    CALL stop_clock_gpu( 'vexxace' )
+    !
+  END SUBROUTINE vexxace_gamma_gpu
+  !
+  !
   !-------------------------------------------------------------------------------------------
   SUBROUTINE aceupdate( nbndproj, nnpw, xitmp, rmexx )
     !----------------------------------------------------------------------------------------
@@ -4179,7 +4285,7 @@ end associate
     ! ... local variables
     !
     COMPLEX(DP), ALLOCATABLE :: cmexx(:,:)
-    REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP
     !
     CALL start_clock( 'aceupdate' )
     !
@@ -4232,7 +4338,7 @@ end associate
     !
     COMPLEX(DP), ALLOCATABLE :: mexx(:,:)
     REAL(DP) :: exxe0
-    REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
+    REAL(DP), PARAMETER :: Zero=0._DP
     INTEGER :: i
     LOGICAL :: domat0
     !
@@ -4337,9 +4443,8 @@ end associate
     !
     ! ... local variables
     !
-    INTEGER :: i
     COMPLEX(DP), ALLOCATABLE :: cmexx(:,:), vv(:,:)
-    REAL*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP
     !
     CALL start_clock( 'vexxace' )
     !
@@ -4385,6 +4490,93 @@ end associate
     CALL stop_clock( 'vexxace' )
     !
   END SUBROUTINE vexxace_k
+  !
+  !
+  !--------------------------------------------------------------------------------------
+  SUBROUTINE vexxace_k_gpu( nnpw, nbnd, phi_d, exxe, vphi_d )
+    !-----------------------------------------------------------------------------------
+    !! Do the ACE potential and (optional) print the ACE matrix representation.
+    !
+    USE becmod,               ONLY : calbec
+    USE klist,                ONLY : nks
+    USE wvfct,                ONLY : current_k, npwx
+    USE noncollin_module,     ONLY : npol
+#if defined(__CUDA)
+    USE cublas
+#endif
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP) :: exxe
+    !! exx energy
+    INTEGER :: nnpw
+    !! number of PW
+    INTEGER :: nbnd
+    !! number of bands
+    COMPLEX(DP) :: phi_d(npwx*npol,nbnd)
+    !! wave function
+    COMPLEX(DP), OPTIONAL :: vphi_d(npwx*npol,nbnd)
+    !! ACE potential
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: phi_d, vphi_d
+#endif
+    !
+    ! ... local variables
+    !
+    COMPLEX(DP), ALLOCATABLE :: cmexx_d(:,:), vv_d(:,:)
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: cmexx_d, vv_d
+#endif
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP
+    !
+    CALL start_clock_gpu( 'vexxace' )
+    !
+    IF ( .NOT. PRESENT(vphi_d) ) THEN
+      ALLOCATE( vv_d(npwx*npol,nbnd) )
+      vv_d = (Zero,Zero)
+    ENDIF
+    !
+    ! do the ACE potential!
+    ALLOCATE( cmexx_d(nbndproj,nbnd) )
+    !
+    IF ( nks > 1 ) xi_d(:,:) = xi(:,:,current_k)
+    !
+    ! <xi|phi>
+    CALL matcalc_k_gpu( '<xi|phi>', .FALSE., 0, current_k, npwx*npol, nbndproj, nbnd, &
+                        xi_d, phi_d, cmexx_d, exxe )
+    !
+    ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>!
+    IF ( .NOT. PRESENT(vphi_d) ) THEN
+       CALL ZGEMM( 'N', 'N', npwx*npol, nbnd, nbndproj, -(One,Zero), xi_d, &
+                   npwx*npol, cmexx_d, nbndproj, (One,Zero), vv_d, npwx*npol )
+    ELSE
+       CALL ZGEMM( 'N', 'N', npwx*npol, nbnd, nbndproj, -(One,Zero), xi_d, &
+                   npwx*npol, cmexx_d, nbndproj, (One,Zero), vphi_d, npwx*npol )
+    ENDIF
+    !
+    IF ( domat ) THEN
+       !
+       IF ( nbndproj /= nbnd ) THEN
+          DEALLOCATE( cmexx_d )
+          ALLOCATE( cmexx_d(nbnd,nbnd) )
+       ENDIF
+       !
+       IF ( .NOT. PRESENT(vphi_d) ) THEN
+          CALL matcalc_k_gpu( 'ACE', .TRUE., 0, current_k, npwx*npol, nbnd, nbnd, phi_d, &
+                              vv_d, cmexx_d, exxe )
+       ELSE
+          CALL matcalc_k_gpu( 'ACE', .TRUE., 0, current_k, npwx*npol, nbnd, nbnd, phi_d, &
+                              vphi_d, cmexx_d, exxe )
+       ENDIF
+       !
+    ENDIF
+    !
+    DEALLOCATE( cmexx_d )
+    IF( .NOT. PRESENT(vphi_d) ) DEALLOCATE( vv_d )
+    !
+    CALL stop_clock_gpu( 'vexxace' )
+    !
+  END SUBROUTINE vexxace_k_gpu
   !
   !
   !---------------------------------------------------------------------------------
@@ -4603,7 +4795,7 @@ end associate
     INTEGER :: ir, i, j, k
     LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
-    REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP, Two=2._DP
     !
     vol = omega / DBLE(dfftt%nr1 * dfftt%nr2 * dfftt%nr3)
     !
@@ -4702,7 +4894,7 @@ end associate
     INTEGER :: ir, i, j, k
     LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
-    REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP, Two=2._DP
     !
     vol = omega / DBLE(dfftt%nr1 * dfftt%nr2 * dfftt%nr3)
     !

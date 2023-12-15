@@ -10,6 +10,10 @@ MODULE oscdft_input
    PRIVATE
    PUBLIC oscdft_input_type, oscdft_read_input
 
+   INTERFACE oscdft_read_input
+      MODULE PROCEDURE oscdft_read_input_default, oscdft_read_input_work
+   END INTERFACE oscdft_read_input
+
    TYPE oscdft_input_type
       LOGICAL               :: print_occup_matrix,&
                                print_occup_eigvects,&
@@ -57,23 +61,24 @@ MODULE oscdft_input
    END TYPE oscdft_input_type
 
    CONTAINS
-      SUBROUTINE oscdft_read_input(inp, filename_inp)
+      SUBROUTINE oscdft_read_input_default(inp)
          IMPLICIT NONE
 
          TYPE(oscdft_input_type),      INTENT(INOUT) :: inp
-         CHARACTER(LEN=256), OPTIONAL, INTENT(IN)    :: filename_inp
+         CALL oscdft_read_input_work(inp, "oscdft.in")
+      END SUBROUTINE oscdft_read_input_default
+
+      SUBROUTINE oscdft_read_input_work(inp, filename)
+         IMPLICIT NONE
+
+         TYPE(oscdft_input_type), INTENT(INOUT) :: inp
+         CHARACTER(LEN=*),        INTENT(IN)    :: filename
 
          INTEGER, EXTERNAL :: find_free_unit
-         CHARACTER(LEN=256) :: filename
 
          INTEGER :: iun
          LOGICAL :: ext
 
-         IF (PRESENT(filename_inp)) THEN
-            filename = TRIM(filename_inp)
-         ELSE
-            filename = 'oscdft.in'
-         END IF
          iun = find_free_unit()
          INQUIRE(file=TRIM(filename), exist=ext)
          IF (.NOT.ext) CALL errore("read_oscdft", "missing " // TRIM(filename) // " input file", 1)
@@ -84,7 +89,7 @@ MODULE oscdft_input
          CALL read_cards(inp, iun)
 
          CLOSE(iun)
-      END SUBROUTINE oscdft_read_input
+      END SUBROUTINE oscdft_read_input_work
 
       SUBROUTINE capitalize(string)
          IMPLICIT NONE

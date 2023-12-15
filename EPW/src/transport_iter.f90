@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
@@ -11,10 +12,151 @@
   !----------------------------------------------------------------------
   !!
   !! This module contains all the routines linked with self-consistent electronic transport
+  !!   - transport_setup
+  !!   - transport_restart
+  !!   - ibte
+  !!   - iter_restart
   !!
   IMPLICIT NONE
   !
   CONTAINS
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE transport_setup(lrepmatw2_restart, lrepmatw5_restart)
+    !-----------------------------------------------------------------------
+    !!
+    !! Allocate and set initial arrays used for the transport module
+    !!
+    USE epwcom,          ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, mob_nfreq, nstemp
+    USE elph2,           ONLY : inv_tau_all, inv_tau_allcb, inv_tau_all_mode,             &
+                                inv_tau_allcb_mode, inv_tau_all_freq, inv_tau_allcb_freq, &
+                                threshold, nbndfst, nktotf
+    USE constants_epw,   ONLY : zero
+    USE modes,           ONLY : nmodes
+    USE control_flags,   ONLY : iverbosity
+    USE mp_global,       ONLY : npool
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    !! To restart opening files
+    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
+    !! To restart opening files
+    !
+    ! Local variable
+    INTEGER :: ierr
+    !! Error status
+    !
+    ALLOCATE(inv_tau_all(nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_all', 1)
+    ALLOCATE(inv_tau_allcb(nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb', 1)
+    inv_tau_all(:, :, :)   = zero
+    inv_tau_allcb(:, :, :) = zero
+    lrepmatw2_restart(:)   = 0
+    lrepmatw5_restart(:)   = 0
+    IF (iverbosity == 3) THEN
+      ALLOCATE(inv_tau_all_mode(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_all_mode', 1)
+      ALLOCATE(inv_tau_allcb_mode(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb_mode', 1)
+      ALLOCATE(inv_tau_all_freq(mob_nfreq, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_all_freq', 1)
+      ALLOCATE(inv_tau_allcb_freq(mob_nfreq, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb_freq', 1)
+      inv_tau_all_mode(:, :, :, :)   = zero
+      inv_tau_allcb_mode(:, :, :, :) = zero
+      inv_tau_all_freq(:, :, :)      = zero
+      inv_tau_allcb_freq(:, :, :)    = zero
+    ENDIF
+    ! We save matrix elements that are smaller than machine precision (1d-16).
+    ! The sum of all the elements must be smaller than that
+    ! nkf1 * nkf2 * nkf3 * nqf1 * nqf2 * nqf3 * (nbndfst) * (nbndfst)
+    ! must be smaller than 1d-16
+    ! To avoid overflow we need to use DP
+    threshold = 1d-16 / (INT(nkf1, KIND = 8) * INT(nkf2, KIND = 8) * INT(nkf3, KIND = 8) * &
+                         INT(nqf1, KIND = 8) * INT(nqf2, KIND = 8) * INT(nqf3, KIND = 8) * &
+                         INT((nbndfst), KIND = 8) * INT((nbndfst), KIND = 8))
+    !
+    !----------------------------------------------------------------------------
+    END SUBROUTINE transport_setup
+    !----------------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE transport_restart(etf_all, ind_tot, ind_totcb, ef0, efcb)
+    !-----------------------------------------------------------------------
+    !!
+    !! Restart a transport calculation if epmatkqread == .true.
+    !!
+    USE kinds,            ONLY : DP
+    USE epwcom,           ONLY : nstemp
+    USE elph2,            ONLY : nbndfst, nktotf, inv_tau_all, inv_tau_allcb, inv_tau_all_mode, &
+                                 inv_tau_all_freq, inv_tau_allcb_freq, inv_tau_allcb_mode
+    USE constants_epw,    ONLY : zero
+    USE control_flags,    ONLY : iverbosity
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_OFFSET_KIND
+#endif
+    !
+    IMPLICIT NONE
+    !
+#if defined(__MPI)
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
+    !! Total number of component for valence band
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
+    !! Total number of component for the conduction band
+#else
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
+    !! Tota number of component for valence band
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
+    !! Total number of component for conduction band
+#endif
+    REAL(KIND = DP), INTENT(inout) :: etf_all(nbndfst, nktotf)
+    !! Eigen-energies on the fine grid collected from all pools in parallel cas
+    REAL(KIND = DP), INTENT(inout) :: ef0(nstemp)
+    !! Fermi level for the temperature itemp
+    REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
+    !! Fermi level for the temperature itemp for cb band
+    !
+    ! Local variable
+    INTEGER :: ierr
+    !! Error status
+    REAL(KIND = DP), ALLOCATABLE :: vkk_all(:, :, :)
+    !! velocity from all the k-point
+    REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
+    !! k-point weights for all the k-points
+    !
+    ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_restart', 'Error allocating vkk_all', 1)
+    ALLOCATE(wkf_all(nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_restart', 'Error allocating wkf_all', 1)
+    vkk_all(:, :, :) = zero
+    wkf_all(:) = zero
+    !
+    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+    !
+    DEALLOCATE(vkk_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating vkk_all', 1)
+    DEALLOCATE(wkf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating wkf_all', 1)
+    DEALLOCATE(inv_tau_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_all', 1)
+    DEALLOCATE(inv_tau_allcb, STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_allcb', 1)
+    IF (iverbosity == 3) THEN
+      DEALLOCATE(inv_tau_all_mode, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_all_mode', 1)
+      DEALLOCATE(inv_tau_allcb_mode, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_allcb_mode', 1)
+      DEALLOCATE(inv_tau_all_freq, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_all_freq', 1)
+      DEALLOCATE(inv_tau_allcb_freq, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_allcb_freq', 1)
+    ENDIF
+
+    !----------------------------------------------------------------------------
+    END SUBROUTINE transport_restart
+    !----------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
     SUBROUTINE ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &

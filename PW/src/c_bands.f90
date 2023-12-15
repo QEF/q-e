@@ -210,7 +210,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel, &
                                    gdir, l3dstring, efield, efield_cry
   USE becmod,               ONLY : bec_type, becp, calbec, &
-                                   allocate_bec_type, deallocate_bec_type
+                                   allocate_bec_type, deallocate_bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc
   USE klist,                ONLY : nks, ngk
   USE gcscf_module,         ONLY : lgcscf
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
@@ -220,7 +221,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE gcscf_module,         ONLY : lgcscf
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   USE control_flags,        ONLY : scissor
   USE sci_mod,              ONLY : evcc
@@ -270,7 +270,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! Davidson and RMM-DIIS diagonalization uses these external routines on groups of nvec bands
   EXTERNAL h_psi, s_psi, g_psi
-  EXTERNAL h_psi_gpu, s_psi_gpu, g_psi_gpu
+  EXTERNAL h_psi_gpu, s_psi_acc, g_psi_gpu
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
   ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
   ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
@@ -310,8 +310,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
-  CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )
-  CALL using_becp_auto(2)
+  CALL allocate_bec_type_acc( nkb, nbnd, becp, intra_bgrp_comm )
   !
   npw = ngk(ik)
   IF ( gamma_only ) THEN
@@ -326,8 +325,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... deallocate work space
   !
-  CALL deallocate_bec_type( becp )
-  CALL using_becp_auto(2)
+  CALL deallocate_bec_type_acc( becp )
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
   call using_h_diag(2); call using_s_diag(2)
@@ -427,7 +425,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                !
              ELSE
                CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-               CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
+               CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag_d, &
                            npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
                !
@@ -446,7 +444,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                !
              ELSE
                CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-               CALL paro_gamma_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+               CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi_gpu, okvan, &
                           npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -512,7 +510,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
               ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-                CALL paro_gamma_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi_gpu, okvan, &
                            npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
                 avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -524,12 +522,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              IF (.not. use_gpu) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE. )
+#if defined(__CUDA)
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
                                evc_d, hevc_d, sevc_d, et_d(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE.)
+#endif
              END IF
              !
              avg_iter = avg_iter + 1.D0
@@ -546,7 +546,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              CALL using_evc_d(1);  CALL using_et(1)!precontidtion has intent(in)
              !$acc data present(g2kin)
              !$acc host_data use_device(g2kin)
-             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc_d, hevc_d, sevc_d, &
+             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, evc_d, hevc_d, sevc_d, &
                           et(1,ik), g2kin, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
              !$acc end host_data 
@@ -651,13 +651,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE
              CALL using_evc_d(1); CALL using_et_d(1);
              IF ( use_para_diag ) THEN
-                CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                CALL pregterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                             npw, npwx, nbnd, nbndx, evc_d, ethr, &
                             et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call 
                 !
              ELSE
                 !
-                CALL regterg (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                CALL regterg (  h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
                          et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              END IF
@@ -803,7 +803,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              ELSE
                CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
                ! BEWARE npol should be added to the arguments
-               CALL ppcg_k_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
+               CALL ppcg_k_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag_d, &
                            npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
                !
@@ -821,7 +821,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                ! write (6,*) ntry, avg_iter, nhpsi
              ELSE
                CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
-               CALL paro_k_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+               CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi_gpu, okvan, &
                         npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -884,7 +884,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 ! write (6,*) ntry, avg_iter, nhpsi
               ELSE
                 CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
-                CALL paro_k_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi_gpu, okvan, &
                          npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
                 avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -896,14 +896,16 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              IF ( .not. use_gpu ) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), & 
                                   USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
+#if defined(__CUDA)
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
                                   evc_d, hevc_d, sevc_d, et_d(:,ik), &
                                   USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
+#endif
              END IF
              !
              avg_iter = avg_iter + 1.D0
@@ -919,7 +921,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              CALL using_evc_d(1); CALL using_et(1) 
              !$acc data present(g2kin)
              !$acc host_data use_device(g2kin)
-             CALL crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, &
+             CALL crmmdiagg_gpu( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, &
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
              !$acc end host_data
@@ -1037,14 +1039,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              CALL using_evc_d(1) ; CALL using_et_d(1) 
              IF ( use_para_diag ) then
                 !
-                CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                CALL pcegterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
                                et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
 
                 !
              ELSE
                 !
-                CALL cegterg ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                CALL cegterg ( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
                                et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
@@ -1271,8 +1273,7 @@ SUBROUTINE c_bands_nscf( )
         !
      ELSE
         !
-        IF (.not. use_gpu ) CALL init_wfc( ik )
-        IF (      use_gpu ) CALL init_wfc_gpu( ik )
+        CALL init_wfc( ik )
         !
      ENDIF
      !

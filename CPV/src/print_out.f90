@@ -15,12 +15,12 @@
 
       !
       USE kinds,             ONLY : DP
-      USE control_flags,     ONLY : iprint, textfor, do_makov_payne, conv_elec
+      USE control_flags,     ONLY : iprint, textfor, conv_elec
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress, &
                                     printout_vefftsvdw, printout_wfc, &
-                                    save_print_counter
+                                    save_print_counter, print_eigenvalues
       USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
                                     BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ityp, atm, amass, cdmi, &
@@ -30,7 +30,6 @@
                                     tefield2, pberryel2, pberryion2
       USE cg_module,         ONLY : tcg, itercg
       USE sic_module,        ONLY : self_interaction, sic_alpha, sic_epsilon
-      USE electrons_module,  ONLY : print_eigenvalues
       USE pres_ai_mod,      ONLY : P_ext, Surf_t, volclu, surfclu, abivol, &
                                    abisur, pvar, n_ele
       USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
@@ -46,6 +45,7 @@
       USE wannier_module,    ONLY : wfc
       USE electrons_base,    ONLY : nbsp, nspin, nupdwn, iupdwn
       USE clib_wrappers,     ONLY : memstat
+      USE electrons_module,  ONLY : ei
       !
       IMPLICIT NONE
       !
@@ -70,7 +70,7 @@
       REAL(DP) :: dis( SIZE(na) )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
-      INTEGER  :: isa, is, ia, kilobytes
+      INTEGER  :: isa, is, ia, kilobytes, iunit
       REAL(DP), ALLOCATABLE :: tauw(:, :), wfc_temp(:,:)
       LOGICAL  :: tsic, tfile
       LOGICAL, PARAMETER :: nice_output_files=.false.
@@ -80,10 +80,6 @@
       tfile = tfilei .and. ( nfi .gt. nprint_nfi )
       !
       CALL memstat( kilobytes )
-      !
-      IF( ionode .AND. tfile .AND. tprint ) THEN
-         CALL printout_base_open()
-      END IF
       !
       IF( tprint ) THEN
          IF ( tfile ) THEN
@@ -108,7 +104,6 @@
       !
       ! Makov-Payne correction to the total energy (isolated systems only)
       !
-      IF( do_makov_payne .AND. tprint ) CALL makov_payne( etot )
       !
       IF( ionode ) THEN
          !
@@ -119,7 +114,9 @@
             IF(tstdout) &
                CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon, textfor = textfor )
             !
-            CALL print_eigenvalues( 31, tfile, tstdout, nfi, tps )
+            iunit = printout_base_open('.eig')
+            CALL print_eigenvalues( iunit, tfile, tstdout, nfi, tps, nspin, ei, nupdwn )
+            call printout_base_close(iunit)
             !
             IF(tstdout) WRITE( stdout, * )
             IF( kilobytes > 0 .AND. tstdout ) &
@@ -128,7 +125,11 @@
             !  
             IF( tstdout ) CALL printout_cell( stdout, h )
             !
-            IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
+            IF( tfile ) then 
+               iunit = printout_base_open('.cel')
+               CALL printout_cell( iunit, h, nfi, tps )
+               call printout_base_close(iunit)
+            endif
             !
             !  System density:
             !
@@ -156,7 +157,11 @@
                IF(tstdout) &
                   CALL printout_stress( stdout, stress_gpa )
                !
-               IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
+               IF( tfile ) then
+                  iunit = printout_base_open('.str')
+                  CALL printout_stress( iunit, stress_gpa, nfi, tps )
+                  call printout_base_close(iunit)
+               endif
                !
             END IF
             !
@@ -166,13 +171,15 @@
                CALL printout_pos( stdout, tau0, nat, ityp, what = 'pos', label = atm )
             !
             IF( tfile ) then
+               iunit = printout_base_open('.pos')
                if (.not.nice_output_files) then
-                  CALL printout_pos( 35, tau0, nat, ityp, nfi = nfi, tps = tps )
+                  CALL printout_pos( iunit, tau0, nat, ityp, nfi = nfi, tps = tps )
                else
-                  CALL printout_pos( 35, tau0, nat, ityp, what = 'xyz', &
+                  CALL printout_pos( iunit, tau0, nat, ityp, what = 'xyz', &
                                nfi = nfi, tps = tps, label = atm, &
                                fact= BOHR_RADIUS_ANGS )
                endif
+               call printout_base_close(iunit)
             END IF
             !
             ALLOCATE( tauw( 3, nat ) )
@@ -190,12 +197,14 @@
                                what = 'vel', label = atm )
             !
             IF( tfile ) then
+               iunit = printout_base_open('.vel')
                if (.not.nice_output_files) then
-                  CALL printout_pos( 34, tauw, nat, ityp, nfi = nfi, tps = tps )
+                  CALL printout_pos( iunit, tauw, nat, ityp, nfi = nfi, tps = tps )
                else
-                  CALL printout_pos( 34, tauw, nat, ityp, nfi = nfi, tps = tps, &
+                  CALL printout_pos( iunit, tauw, nat, ityp, nfi = nfi, tps = tps, &
                                what = 'vel', label = atm )
                endif
+               call printout_base_close(iunit)
             END IF
             !
             IF( print_forces ) THEN
@@ -207,12 +216,14 @@
                                   what = 'for', label = atm )
                !
                IF( tfile ) then
+                  iunit = printout_base_open('.for')
                   if (.not.nice_output_files) then
-                     CALL printout_pos( 37, fion, nat, ityp, nfi = nfi, tps = tps )
+                     CALL printout_pos( iunit, fion, nat, ityp, nfi = nfi, tps = tps )
                   else
-                     CALL printout_pos( 37, fion, nat, ityp, nfi = nfi, tps = tps, &
+                     CALL printout_pos( iunit, fion, nat, ityp, nfi = nfi, tps = tps, &
                           what = 'for', label = atm )
                   endif
+                  call printout_base_close(iunit)
                END IF
                !
             END IF
@@ -230,44 +241,52 @@
             !
             IF( tfile ) THEN
               !
+              iunit = printout_base_open('.evp')
               IF(tcpbo) THEN
                 !
-                WRITE( 33, 29484 ) nfi,tps,tempp,etot,enthal,econs,econt,(-exx*exxalfa),EtsvdW
+                WRITE( iunit, 29484 ) nfi,tps,tempp,etot,enthal,econs,econt,(-exx*exxalfa),EtsvdW
                 ! BS: different printing options need to be added ..
                 !
               ELSE
                 !
-                IF((nfi/iprint).EQ.1) WRITE( 33, 29471 )
+                IF((nfi/iprint).EQ.1) WRITE( iunit, 29471 )
                 !
                 IF(xclib_dft_is('hybrid').AND.exx_is_active().AND.ts_vdw) THEN
-                  WRITE( 33, 29481 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                  WRITE( iunit, 29481 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,(-exx*exxalfa),EtsvdW
                 ELSEIF(ts_vdw) THEN    
-                  WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                  WRITE( iunit, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,EtsvdW
                 ELSEIF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
-                  WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                  WRITE( iunit, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,(-exx*exxalfa)
                 ELSE    
 #if defined(__OLD_FORMAT)
-                  WRITE( 33, '(I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),F10.2, F8.2, F8.5)') &
+                  WRITE( iunit, '(I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),F10.2, F8.2, F8.5)') &
                                     nfi,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,tps
 #else
-                  WRITE( 33, 29483 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                  WRITE( iunit, 29483 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press
 #endif
                 END IF
                 !
               END IF
+              call printout_base_close(iunit)
               !
             END IF
             !
-            IF( tfile ) WRITE( 39, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1), vnhe, xnhe0
+
+            IF( tfile ) then 
+               iunit = printout_base_open('.nos')
+               WRITE( iunit, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1), vnhe, xnhe0
+               call printout_base_close(iunit)
+            endif
             !
             !print Wannier centers at every iprint steps in .wfc file
             !
             IF(tfile.AND.lwf) THEN 
+              iunit = printout_base_open('.wfc')
               !
               IF (.NOT.tcpbo) THEN
                 !
@@ -279,8 +298,8 @@
                 !
                 wfc_temp(:,:) = MATMUL( h(:,:), wfc_temp(:,:) )
                 !
-                CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, 1)
-                IF(nspin.EQ.2)CALL printout_wfc( 42, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
+                CALL printout_wfc( iunit, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, 1)
+                IF(nspin.EQ.2)CALL printout_wfc( iunit, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
                 !
                 DEALLOCATE( wfc_temp )
                 !
@@ -296,30 +315,34 @@
                   !
                   wfc_temp(:,:) = MATMUL( h(:,:), wfc_temp(:,:) )
                   !
-                  CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, 1)
-                  IF(nspin.EQ.2)CALL printout_wfc( 42, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
+                  CALL printout_wfc( iunit, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, 1)
+                  IF(nspin.EQ.2)CALL printout_wfc( iunit, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
                   !
                   DEALLOCATE( wfc_temp )
                   !
                 END IF    
                 !
-              END IF    
+              END IF
+              call printout_base_close(iunit)    
               !
             END IF
             !
             !print TS-vdW effective Hirshfeld volume of each atom at every iprint steps in .hrs file
             !
             IF(tfile.AND.ts_vdw) THEN 
+
               !
+              iunit = printout_base_open('.hrs')
               IF (.NOT.tcpbo) THEN
                 !
-                CALL printout_vefftsvdw( 43, VefftsvdW, nat, nfi, tps )
+                CALL printout_vefftsvdw( iunit, VefftsvdW, nat, nfi, tps )
                 !
               ELSE   
                 !
-                IF (conv_elec) CALL printout_vefftsvdw( 43, VefftsvdW, nat, nfi, tps )
+                IF (conv_elec) CALL printout_vefftsvdw( iunit, VefftsvdW, nat, nfi, tps )
                 !
-              END IF    
+              END IF  
+              call printout_base_close(iunit)  
               !
             END IF
             !
@@ -327,13 +350,6 @@
          !
       END IF !ionode
       !
-      IF( ionode .AND. tfile .AND. tprint ) THEN
-        !
-        ! ... Close and flush unit 30, ... 40
-        !
-        CALL printout_base_close()
-        !
-      END IF
       !
       IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
          !

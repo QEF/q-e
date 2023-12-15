@@ -645,6 +645,8 @@ SUBROUTINE check_all_convt( convt )
   !
   IF(nproc_image==1) RETURN
   !
+  ! Work out how many processes have converged
+  !
   tot_conv = 0
   IF(convt) tot_conv = 1
   CALL mp_sum(tot_conv, intra_image_comm)

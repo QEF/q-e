@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,10 +17,9 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw, &
                                  lforce => tprnfor, tstress
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
-                                 g_d, gg_d, mill_d, gshells, &
-                                 gstart ! to be communicated to the Solvers if gamma_only
+                                 gshells, gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
-  USE cell_base,          ONLY : alat, at, bg, set_h_ainv
+  USE cell_base,          ONLY : alat, at, bg, set_h_ainv, omega
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
@@ -41,7 +40,9 @@ SUBROUTINE init_run()
   USE two_chem,           ONLY : init_twochem, twochem
   USE lsda_mod,           ONLY : nspin
   USE noncollin_module,   ONLY : domag
-  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, &
+                                 xclib_dft_is, xclib_set_finite_size_volume, &
+                                 dft_has_finite_size_correction
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
@@ -88,21 +89,12 @@ SUBROUTINE init_run()
   CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
+  !$acc update device(mill, g, gg)
   !
   IF (gamma_only) THEN
      ! ... Solvers need to know gstart
      call export_gstart_2_solvers(gstart)
   END IF
-
-#if defined(__CUDA)
-  IF ( use_gpu) THEN
-     ! All these variables are actually set by ggen which has intent out
-     mill_d = mill
-     g_d    = g
-     gg_d   = gg
-  END IF
-#endif
-  !$acc update device(mill, g, gg)
   !
   IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !
@@ -172,8 +164,13 @@ SUBROUTINE init_run()
   CALL openfil()
   !
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
-  !
-  IF (xclib_dft_is('hybrid')) CALL aceinit0()
+  IF (dft_has_finite_size_correction()) &
+       CALL xclib_set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( lmovecell ) CALL infomsg('iosys', &
+          'Variable cell and hybrid XC little tested')
+     CALL aceinit0()
+  END IF
   !
   CALL hinit0()
   !
@@ -183,15 +180,13 @@ SUBROUTINE init_run()
     !
     CALL newd_gpu()
     !
-    CALL wfcinit_gpu()
-    !
   ELSE
     !
     CALL newd()
     !
-    CALL wfcinit()
-    !
   END IF
+  !
+  CALL wfcinit()
   !
   IF(use_wannier) CALL wannier_init()
   !

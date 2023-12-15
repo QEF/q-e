@@ -90,7 +90,7 @@ fi
 done
 
 # Enable QRCP with scalapack if --with-scalapack-qrcp==yes is set.
-AC_ARG_WITH(scalapack,
+AC_ARG_WITH(scalapack-qrcp,
    [AS_HELP_STRING([--with-scalapack-qrcp],
        [(yes|no) Run QRCP with scalapack. Requires ScaLAPACK >= 2.1.0 or MKL >= 2020. (default: no)])],
    [if test "$withval" = "yes" ; then
