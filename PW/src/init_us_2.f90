@@ -53,11 +53,9 @@ CONTAINS
       !
       !$acc data present( igk_(1:npw_), mill(:,:), g(:,:), vkb_(1:npwx,1:nkb), &
       !$acc               eigts1(:,:), eigts2(:,:), eigts3(:,:) )
-      !$acc host_data use_device( eigts1, eigts2, eigts3, mill, g, igk_, vkb_ )
       CALL init_us_2_base_gpu( npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
                                dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2,    &
                                eigts3, mill, g, vkb_ )
-      !$acc end host_data
       !$acc end data
       !
     ELSE

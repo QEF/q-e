@@ -50,6 +50,10 @@
     and should be used to dimension arrays where l=0,...,L. The dimension
     of spherical harmonics (2*lmaxkb+1)^2 is something different and should
     be stored in a different variable (something like ylmdim, or maxlm)
+  - vkb (array holding beta functions in reciprocal space) is one of the
+    variables of upflib, is computed and deallocated in upflib, but it is 
+    allocated outside it. Not very logical. More in general: how to deal 
+    with objects like vkb that depend upon atomic positions?
 
   - Interpolation tables: rationalize names of variables and related routines
 ```
@@ -57,7 +61,7 @@
     betagx   tab_beta              beta(G) functions	 compute_betagx,
     dbetagx             	   dbeta(G)/dG 		 compute_betagx
     dqradx              	   dQ(G)/dG  		 compute_qradx
-             tab_at  tab_atwfc?    atomic R_nl(G)	 init_tab_atwfc
+             tab_at  tab_atwfc     atomic R_nl(G)	 init_tab_atwfc
     qradx    tab_qrad              Q(G) for  USPP/PAW	 qrad_mod
              tab_rho               atomic rho(G)	 rhoa_mod
              tab_rhc               pseudocore rho(G)	 rhoc_mod

@@ -66,17 +66,9 @@ target_link_libraries(qe_upflib
         qe_openacc_fortran
         qe_xml
     PRIVATE
-        qe_devxlib
         qe_mpi_fortran
         qe_lapack
         qe_utilx)
-
-# should the devxlib dependency be permanent or cuda-only?
-#if(QE_ENABLE_CUDA)
-#    target_link_libraries(qe_upflib
-#        PRIVATE
-#            qe_devxlib)
-#endif()
 
 ##############################################################
 # virtual_v2.x

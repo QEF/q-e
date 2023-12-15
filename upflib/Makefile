@@ -2,12 +2,12 @@
 
 include ../make.inc
 
-MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../external/devxlib/src
+MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG).
 
 # list of modules:
 # OBJS_NODEP do not depend upon any external modules
 # OBJS_DEP   depend upon modules in UtilXlib/
-# OBJS_GPU   depend upon modules in devxlib
+# OBJS_GPU   are GPU-specific
 
 OBJS_DEP= \
 vloc_mod.o \
