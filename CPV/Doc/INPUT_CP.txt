@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum ESPRESSO (version: 7.2)
+Program: cp.x / CP / Quantum ESPRESSO (version: 7.3)
 ------------------------------------------------------------------------
 
 
@@ -187,8 +187,7 @@ NAMELIST: &CONTROL
    Default:        1.D0
    Description:    time step for molecular dynamics, in Hartree atomic units
                    (1 a.u.=2.4189 * 10^-17 s : beware, PW code use
-                    Rydberg atomic units, twice that much!!!). The code handles
-                   automatically the change of dt after a restart.
+                    Rydberg atomic units, twice that much!!!)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -998,6 +997,12 @@ NAMELIST: &ELECTRONS
    Description:    'zero'      : restart setting electronic velocities to zero
                    'default'   : restart using electronic velocities of the
                                previous run
+                   'change_step' : restart simulation using electronic velocities of the
+                               previous run, with rescaling due to the timestep change.
+                               specify the old step via "tolp" as in
+                               tolp = 'old_time_step_value' in au.
+                               Note that you may want to specify
+                               "ion_velocities" = 'change_step'
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1176,6 +1181,12 @@ NAMELIST: &IONS
    Description:    initial ionic velocities
                    'default'     : restart the simulation with atomic velocities read
                                    from the restart file
+                   'change_step' : restart the simulation with atomic velocities read
+                                   from the restart file, with rescaling due to the
+                                   timestep change, specify the old step via "tolp"
+                                   as in tolp = 'old_time_step_value' in au.
+                                   Note that you may want to specify
+                                   electron_velocities = 'change_step'
                    'random'      : start the simulation with random atomic velocities
                                    (see also variable "tempw")
                    'from_input'  : restart the simulation with atomic velocities read
@@ -1294,6 +1305,8 @@ NAMELIST: &IONS
    Description:    tolerance (in Kelvin) of the rescaling. When ionic temperature
                    differs from "tempw" more than "tolp" apply rescaling.
                    meaningful only with "ion_temperature" = 'rescaling'
+                   or with "ion_velocities"='change_step', where it specifies
+                   the old timestep
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2523,4 +2536,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Sat Mar 18 19:14:59 CET 2023
+This file has been created by helpdoc utility on Fri Dec 15 09:53:08 CET 2023
