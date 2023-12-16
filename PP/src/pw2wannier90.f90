@@ -992,7 +992,7 @@ PROGRAM pw2wannier90
      sIu_formatted=.false.
      ! end shc
      reduce_unk= .false.
-     reduce_unk_factor = 2
+     reduce_unk_factor = -9999
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
@@ -1066,7 +1066,7 @@ PROGRAM pw2wannier90
   CALL mp_bcast(atom_proj_sym, ionode_id, world_comm)
   CALL mp_bcast(atom_proj_exclude, ionode_id, world_comm)
   !
-  ! Check: kpoint distribution with pools not implemented
+  ! Check: kpoint distribution with pools in library mode not implemented
   !
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
@@ -1074,6 +1074,14 @@ PROGRAM pw2wannier90
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
   !
+  IF (reduce_unk_factor == -9999) THEN
+     ! If reduce_unk_factor is not provided, set it based on reduce_unk.
+     IF (reduce_unk) THEN
+        reduce_unk_factor = 2
+     ELSE
+        reduce_unk_factor = 1
+     ENDIF
+  ENDIF
   IF (reduce_unk_factor < 1) CALL errore('pw2wannier90', 'reduce_unk_factor < 1', 1)
   !
   !   Now allocate space for pwscf variables, read and check them.

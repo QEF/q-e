@@ -76,15 +76,16 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
                 by a factor of @ref reduce_unk_factor along each direction.
                 Only relevant if @ref write_unk = .true.
             }
-            default { .FALSE. }
+            default { .FALSE }
         }
 
         var reduce_unk_factor -type INTEGER {
             info {
                 The reduction factor per direction for @ref reduce_unk. Default 2 means a reduction
                 of 2x2x2 = 8 of the total number of grid points.
+                Only relevant if @ref write_unk = .true.
             }
-            default { 2 }
+            default { 1 if @ref reduce_unk = .FALSE., 2 if @ref reduce_unk = .TRUE. }
         }
 
         var wvfn_formatted -type LOGICAL {
