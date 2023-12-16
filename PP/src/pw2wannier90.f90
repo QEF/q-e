@@ -61,8 +61,6 @@ module wannier
    character(LEN=15)     :: scdm_entanglement
    real(DP)              :: scdm_mu, scdm_sigma
    ! vv: End SCDM keywords
-   ! run check for regular mesh
-   logical               :: regular_mesh = .true.
    ! input data from nnkp file
    real(DP), allocatable :: center_w(:,:)     ! center_w(3,n_wannier)
    integer,  allocatable :: spin_eig(:)
@@ -940,7 +938,6 @@ PROGRAM pw2wannier90
    ! shc
        write_sHu, write_sIu, sHu_formatted, sIu_formatted,&
    ! end shc
-       regular_mesh,& !gresch
        irr_bz,& ! Koretsune
    ! begin change Vitale
        scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma, &
@@ -1807,21 +1804,20 @@ SUBROUTINE read_nnkp
            WRITE(stdout,*)  ' numk=',numk, ' iknum=',iknum
            CALL errore( 'pw2wannier90', 'Wrong number of k-points', numk)
         ENDIF
-        IF(regular_mesh) THEN
-           DO i=1,numk
-              READ(iun_nnkp,*) xx(1), xx(2), xx(3)
-              CALL cryst_to_cart( 1, xx, bg, 1 )
-              IF(abs(xx(1)-xk(1,i))>eps6.or. &
-                   abs(xx(2)-xk(2,i))>eps6.or. &
-                   abs(xx(3)-xk(3,i))>eps6) THEN
-                 WRITE(stdout,*)  ' Something wrong! '
-                 WRITE(stdout,*) ' k-point ',i,' is wrong'
-                 WRITE(stdout,*) xx(1), xx(2), xx(3)
-                 WRITE(stdout,*) xk(1,i), xk(2,i), xk(3,i)
-                 CALL errore( 'pw2wannier90', 'problems with k-points', i )
-              ENDIF
-           ENDDO
-        ENDIF ! regular mesh check
+        ! Check that the k-points agree with those in the nnkp file.
+        ! We do this check only at the ionode which has all the k points even
+        ! with pool parallelization, so calling poolcollect is not necessary.
+        DO i=1,numk
+           READ(iun_nnkp,*) xx(1), xx(2), xx(3)
+           CALL cryst_to_cart( 1, xx, bg, 1 )
+           IF (ANY(ABS(xx - xk(:,i))>eps6)) THEN
+              WRITE(stdout,*)  ' Something wrong! '
+              WRITE(stdout,*) ' k-point ',i,' is wrong'
+              WRITE(stdout,*) xx(1), xx(2), xx(3)
+              WRITE(stdout,*) xk(1,i), xk(2,i), xk(3,i)
+              CALL errore( 'pw2wannier90', 'problems with k-points', i )
+           ENDIF
+        ENDDO
      ENDIF
      WRITE(stdout,*) ' - K-points are ok'
 

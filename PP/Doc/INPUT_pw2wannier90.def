@@ -281,15 +281,6 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
             default { .FALSE. }
         }
 
-        var regular_mesh -type LOGICAL {
-            info {
-                Check if the kpoint mesh is regular or not.
-                It is recommended to keep this to .true., set it to .false. only
-                if you know what you are doing.
-            }
-            default { .TRUE. }
-        }
-
         var irr_bz -type LOGICAL {
             info {
                 Set to .true. to use irreducible BZ for computing amn/mmn/eig
