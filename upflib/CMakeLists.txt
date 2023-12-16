@@ -10,7 +10,7 @@ set(src_upflib
     init_tab_atwfc.f90
     init_tab_beta.f90
     interp_atwfc.f90
-    init_us_2_base.f90
+    init_us_2_acc.f90
     gth.f90
     paw_variables.f90
     pseudo_types.f90
@@ -52,7 +52,6 @@ set(src_upflib
     ylmr2.f90
     dylmr2.f90
     # GPU
-    init_us_2_base_gpu.f90
     ylmr2_gpu.f90
     dylmr2_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")

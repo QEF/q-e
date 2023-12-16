@@ -21,7 +21,7 @@ gen_us_dy.o \
 init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
-init_us_2_base.o \
+init_us_2_acc.o \
 init_tab_atwfc.o \
 init_tab_beta.o
 
@@ -69,7 +69,6 @@ ylmr2.o
 # GPU versions of routines
 OBJS_GPU= \
   dylmr2_gpu.o \
-  init_us_2_base_gpu.o \
   ylmr2_gpu.o
 
 OBJS_NODEP+= dom.o wxml.o

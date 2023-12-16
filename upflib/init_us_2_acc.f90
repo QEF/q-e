@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_base_gpu( npw, npwx, igk, q, nat, tau, ityp, &
+SUBROUTINE init_us_2_acc( npw, npwx, igk, q, nat, tau, ityp, &
      tpiba, omega, nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g, &
      vkb )
   !----------------------------------------------------------------------
@@ -69,8 +69,6 @@ SUBROUTINE init_us_2_base_gpu( npw, npwx, igk, q, nat, tau, ityp, &
   !
   REAL(DP) :: px, ux, vx, wx, arg, q1, q2, q3
   COMPLEX(DP) :: pref
-  !
-  CALL start_clock( 'init_us_2:gpu' )
   !
   !$acc kernels present_or_copyout(vkb)
   vkb = (0._DP,0._DP)
@@ -201,8 +199,10 @@ SUBROUTINE init_us_2_base_gpu( npw, npwx, igk, q, nat, tau, ityp, &
     ikb_t = ikb_t + nht
   ENDDO
   !
+  IF (ikb_t /= nkb) CALL upf_error( 'init_us_2', 'unexpected error', 1 )
+  !
   !$acc parallel loop collapse(2) copyin(ityp,indv,nhtol,nhtolm)
-  DO ikb = 1, ikb_t
+  DO ikb = 1, nkb
     DO ig = 1, npw
       ih = ihv(ikb)
       na = nav(ikb)
@@ -223,15 +223,10 @@ SUBROUTINE init_us_2_base_gpu( npw, npwx, igk, q, nat, tau, ityp, &
   DEALLOCATE( phase, nas )
   DEALLOCATE( sk )
   !
-  IF (ikb_t /= nkb) CALL upf_error( 'gen_us_dy', 'unexpected error', 1 )
-  !
   !$acc end data
   DEALLOCATE( vkb0 )
   !$acc end data
   !
-  CALL stop_clock( 'init_us_2:gpu' )
-  !
-  !
   RETURN
   !
-END SUBROUTINE init_us_2_base_gpu
+END SUBROUTINE init_us_2_acc
