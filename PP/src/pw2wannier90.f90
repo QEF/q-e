@@ -1074,7 +1074,7 @@ PROGRAM pw2wannier90
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
   !
-  if (reduce_unk_factor < 1) call errore('pw2wannier90', 'reduce_unk_factor < 1', 1)
+  IF (reduce_unk_factor < 1) CALL errore('pw2wannier90', 'reduce_unk_factor < 1', 1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -6813,6 +6813,21 @@ SUBROUTINE write_plot
    !
    CALL start_clock( 'write_unk' )
    !
+   IF (reduce_unk .AND. (reduce_unk_factor == 1)) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, '(5x,a)') "WARNING: reduce_unk is .TRUE. but reduce_unk_factor is 1."
+      WRITE(stdout, '(5x,a)') "The UNK file size is not reduced."
+      WRITE(stdout, '(5x,a)') "To enable reduction, set reduce_unk_factor to a value greater than 1."
+      WRITE(stdout, *)
+   ENDIF
+   IF ((.NOT. reduce_unk) .AND. (reduce_unk_factor > 1)) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, '(5x,a)') "WARNING: reduce_unk_factor is not 1 but reduce_unk is .FALSE."
+      WRITE(stdout, '(5x,a)') "The UNK file size is not reduced."
+      WRITE(stdout, '(5x,a)') "To enable reduction, set reduce_unk to .TRUE."
+      WRITE(stdout, *)
+   ENDIF
+   !
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
    ALLOCATE(psic_all(nxxs, npol), stat=ierr)
    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all', 1)
@@ -6829,7 +6844,6 @@ SUBROUTINE write_plot
       WRITE(stdout,'(3(a,i5))') 'n1by2=', nr1, ' n2by2=', nr2, ' n3by2=', nr3
       ALLOCATE(psic_small(nr1*nr2*nr3, npol), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_small', 1)
-      psic_small = (0.0_DP, 0.0_DP)
    ELSE
       psic_small => psic_all
       nr1 = dffts%nr1
@@ -6888,6 +6902,7 @@ SUBROUTINE write_plot
 #endif
          !
          IF (reduce_unk) THEN
+            psic_small = (0.0_DP, 0.0_DP)
             pos = 0
             DO k = 1, dffts%nr3, reduce_unk_factor
                DO j = 1, dffts%nr2, reduce_unk_factor
