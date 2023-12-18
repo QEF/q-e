@@ -29,7 +29,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   USE upf_const,    ONLY : fpi, sqrt2
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
-                           nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, &
+                           nhtol_d, nhtoj_d, ijtoh_d, dvan_d, &
                            qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
@@ -262,7 +262,6 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   if (nhm>0) then
      indv_d=indv
      nhtol_d=nhtol
-     nhtolm_d=nhtolm
      nhtoj_d=nhtoj
      ijtoh_d=ijtoh
      qq_nt_d=qq_nt
