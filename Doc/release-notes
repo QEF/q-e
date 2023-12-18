@@ -1,3 +1,5 @@
+New in 7.3.1 version:
+  * Various improvements and bug fixes for pw2wannier.f90 (Junfeng Qiao) 
 Fixed in 7.3.1 version:
   * f channel of GTH pseudopotentials fixed again (see issue #86 on gitlab)
     Thanks to Chang Liu for reporting.
