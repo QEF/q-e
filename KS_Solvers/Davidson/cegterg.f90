@@ -1101,21 +1101,32 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   nbase  = nvec
   conv   = .FALSE.
   !
+
+!#if defined(__OPENMP_GPU)
+!  !$omp target teams distribute parallel do collapse(2)
+!  do j=1, nvec
+!     do i=1, npwx*npol*2
+!        psi(i,j) = evc(i,j)
+!     enddo
+!  enddo
+!#else
   CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
+  !$omp target update to(psi)
+!#endif
   !
   ! ... hpsi contains h times the basis vectors
   !
   CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
   IF ( uspp ) THEN
+     CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
 #if defined(__OPENMP_GPU)
-          !$omp target update to(psi)
-#endif
-          CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
-#if defined(__OPENMP_GPU)
-          !$omp target update from(spsi)
+     !$omp target update from(spsi)
 #endif
   ENDIF
+#if defined(__OPENMP_GPU)
+  !$omp target update from(hpsi)
+#endif
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -1123,11 +1134,10 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   ! ... here are never allocated
   !
   CALL start_clock( 'cegterg:init' )
-
+  !
   CALL compute_distmat( hl, psi, hpsi )
   !
   IF ( uspp ) THEN
-     !
      CALL compute_distmat( sl, psi, spsi )
      !
   ELSE
@@ -1225,21 +1235,25 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
            END DO
         END DO
      END DO
-     !$omp end parallel do
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
+#if defined(__OPENMP_GPU)
+     !$omp target update to(psi)
+#endif
+     CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) THEN
+        CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
 #if defined(__OPENMP_GPU)
-             !$omp target update to(psi)
-#endif
-             CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-#if defined(__OPENMP_GPU)
-             !$omp target update from(spsi)
+        !$omp target update from(spsi)
 #endif
      ENDIF
+#if defined(__OPENMP_GPU)
+     !$omp target update from(hpsi)
+#endif
+
      !
      ! ... update the reduced hamiltonian
      !
@@ -1279,7 +1293,6 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
            CALL errore( ' pcegterg ',' cannot allocate vl ', ABS(ierr) )
 
      END IF
-     !
      !
      CALL update_distmat( hl, psi, hpsi )
      !
