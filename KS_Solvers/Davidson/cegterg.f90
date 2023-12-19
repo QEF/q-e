@@ -949,7 +949,7 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, ipol, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, ipol, nb1, nbn, i, j
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors

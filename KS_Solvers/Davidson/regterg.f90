@@ -990,6 +990,9 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( 'pregterg ',' cannot allocate spsi ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
+     !$omp target enter data map(alloc:spsi)
+#endif
   END IF
   !
   ! ... Initialize the matrix descriptor
@@ -1061,9 +1064,14 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! ... hpsi contains h times the basis vectors
   !
+  !$omp target update to(psi)
   CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
+  !$omp target update from(hpsi)
   !
-  IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
+  IF ( uspp ) THEN
+     CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
+     !$omp target update from(spsi)
+  ENDIF
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -1162,9 +1170,14 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
+     !$omp target update to(psi)
      CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
+     !$omp target update from(hpsi)
      !
-     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) THEN
+        CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+        !$omp target update from(spsi)
+     ENDIF
      !
      ! ... update the reduced hamiltonian
      !
@@ -1347,7 +1360,12 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( conv )
   DEALLOCATE( ew )
   !
-  IF ( uspp ) DEALLOCATE( spsi )
+  IF ( uspp ) THEN
+#if defined(__OPENMP_GPU)
+          !$omp target exit data map(delete:spsi)
+#endif
+          DEALLOCATE( spsi )
+  ENDIF
   !
 #if defined(__OPENMP_GPU)
   !$omp end target data
