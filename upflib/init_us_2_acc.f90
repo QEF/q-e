@@ -74,7 +74,7 @@ SUBROUTINE init_us_2_acc( npw, npwx, igk, q, nat, tau, ityp, &
   vkb = (0._DP,0._DP)
   !$acc end kernels
   !
-  IF (lmaxkb <= 0) RETURN
+  IF (lmaxkb < 0) RETURN
   !
   !$acc data present_or_copyin(igk,eigts1,eigts2,eigts3,mill,g) present(vkb)
   !
