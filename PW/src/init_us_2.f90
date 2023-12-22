@@ -48,16 +48,17 @@ CONTAINS
     !
     CALL start_clock( 'init_us_2' )
     !
-    !$acc data present( igk_(1:npw_), mill(:,:), g(:,:), vkb_(1:npwx,1:nkb), &
-    !$acc               eigts1(:,:), eigts2(:,:), eigts3(:,:) )
+    !$acc data present_or_copyin ( igk_(1:npw_) ) &
+    !$acc      present ( mill(:,:),g(:,:),eigts1(:,:),eigts2(:,:), eigts3(:,:) ) &
+    !$acc      present_or_copyout( vkb_(1:npwx,1:nkb) )
     CALL init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
                         dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2,    &
                         eigts3, mill, g, vkb_ )
-    !$acc end data
     IF (.not.run_on_gpu) THEN
        CONTINUE
        !$acc update self(vkb_)
     ENDIF
+    !$acc end data
     !
     CALL stop_clock( 'init_us_2' )
     !

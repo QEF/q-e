@@ -76,7 +76,7 @@ SUBROUTINE init_us_2_acc( npw, npwx, igk, q, nat, tau, ityp, &
   !
   IF (lmaxkb < 0) RETURN
   !
-  !$acc data present_or_copyin(igk,eigts1,eigts2,eigts3,mill,g) present(vkb)
+  !$acc data present( igk, eigts1, eigts2, eigts3, mill, g, vkb )
   !
   lmx2 = (lmaxkb+1)**2
   !
