@@ -1530,6 +1530,7 @@ CONTAINS
      !
      ALLOCATE( vtmp( nx, nx ) )
      ALLOCATE( ptmp( npwx*npol, nx ) )
+     !$omp target enter data map(alloc:ptmp,vtmp) map(to:ew)
      !
      jmax = npwx*npol
      !
@@ -1542,7 +1543,6 @@ CONTAINS
            !
            beta = ZERO
            !
-           !$omp target enter data map(alloc:ptmp) map(to:ew)
            !$omp target teams distribute parallel do collapse(2)
            DO i = 1, nx
              DO j = 1, jmax
@@ -1563,7 +1563,7 @@ CONTAINS
               !
               CALL mp_bcast( vtmp(:,1:notcl), root, ortho_parent_comm )
               !
-              !$omp target enter data map(to:vtmp)
+              !$omp target update to(vtmp)
               IF ( uspp ) THEN
                  !
                  CALL MYZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
@@ -1578,7 +1578,6 @@ CONTAINS
               !
               CALL MYZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
                       hpsi(1, ir), kdmx, vtmp, nx, beta, ptmp, kdmx )
-              !$omp target exit data map(delete:vtmp)
               !
               beta = ONE
               !
@@ -1600,7 +1599,6 @@ CONTAINS
                  ENDDO
               ENDDO
            ENDDO
-           !$omp target exit data map(delete:ptmp,ew)
            !
            ! ... clean up garbage if there is any
            IF (npw < npwx) THEN
@@ -1626,10 +1624,12 @@ CONTAINS
         !
      ENDDO
      !
+     !$omp target exit data map(delete:ptmp,ew,vtmp)
      DEALLOCATE( vtmp )
      DEALLOCATE( ptmp )
      !
      RETURN
+     !
   END SUBROUTINE hpsi_dot_v
   !
   !
@@ -1637,12 +1637,11 @@ CONTAINS
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
-     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP), ALLOCATABLE :: vtmp(:,:)
      COMPLEX(DP) :: beta
-
-     call start_clock('refr_evc')
-
-     ALLOCATE( vtmp( nx, nx ) )
+     !
+     ALLOCATE( vtmp(nx,nx) )
+     !$omp target enter data map(alloc:vtmp,vl)
      !
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
@@ -1668,10 +1667,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  !
-                 !$omp target enter data map(to:vl)
+                 !$omp target update to(vl)
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
-                               psi(1,ir), kdmx, vl, nx, beta, evc(1,ic), kdmx ) 
-                 !$omp target exit data map(delete:vl)
+                               psi(1,ir), kdmx, vl, nx, beta, evc(1,ic), kdmx )
                  !
               ELSE
                  !
@@ -1679,10 +1677,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  !
-                 !$omp target enter data map(to:vtmp)
+                 !$omp target update to(vtmp)
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                psi(1,ir), kdmx, vtmp, nx, beta, evc(1,ic), kdmx )
-                 !$omp target exit data map(delete:vtmp)
                  !
               END IF
               !
@@ -1694,9 +1691,8 @@ CONTAINS
         !
      END DO
      !
+     !$omp target exit data map(delete:vtmp,vl)
      DEALLOCATE( vtmp )
-     !
-     CALL stop_clock('refr_evc')
      !
      RETURN
      !
@@ -1712,13 +1708,10 @@ CONTAINS
      !
      INTEGER :: dnvec, npwmax
      !
-     ALLOCATE( vtmp( nx, nx ) )
+     ALLOCATE( vtmp(nx,nx) )
+     !$omp target enter data map(alloc:vtmp,vl)
      !
-     DO nr = 1, nx
-       DO nc = 1, nx
-         vtmp(nc,nr) = (0.d0,0.d0)
-       ENDDO
-     ENDDO
+     vtmp(:,:) = (0.d0,0.d0)
      !
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
@@ -1744,10 +1737,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  !
-                 !$omp target enter data map(to:vl)
+                 !$omp target update to(vl)
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                spsi(1,ir), kdmx, vl, nx, beta, psi(1,nvec+ic), kdmx )
-                 !$omp target exit data map(delete:vl)
                  !
               ELSE
                  !
@@ -1755,10 +1747,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  !
-                 !$omp target enter data map(to:vtmp)
+                 !$omp target update to(vtmp)
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                spsi(1,ir), kdmx, vtmp, nx, beta, psi(1,nvec+ic), kdmx )
-                 !$omp target exit data map(delete:vtmp)
                  !
               END IF
               !
@@ -1779,6 +1770,7 @@ CONTAINS
        ENDDO
      ENDDO
      !
+     !$omp target exit data map(delete:vtmp,vl)
      DEALLOCATE( vtmp )
      !
      RETURN
@@ -1797,11 +1789,9 @@ CONTAINS
      INTEGER :: dnvec, npwmax
      !
      ALLOCATE( vtmp( nx, nx ) )
-     DO nr = 1, nx
-       DO nc = 1, nx
-         vtmp(nc,nr) = (0.d0,0.d0)
-       ENDDO
-     ENDDO
+     !$omp target enter data map(alloc:vtmp,vl)
+     !
+     vtmp(:,:) = (0.d0,0.d0)
      !
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
@@ -1826,21 +1816,19 @@ CONTAINS
                  ! ... this proc sends his block
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
-                 !$omp target enter data map(to:vl)
+                 !$omp target update to(vl)
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           hpsi(1,ir), kdmx, vl, nx, beta, psi(1,nvec+ic), kdmx )
-                 !$omp target exit data map(delete:vl)
-
+                 !
               ELSE
                  !
                  ! ... all other procs receive
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 !$omp target enter data map(to:vtmp)
+                 !$omp target update to(vtmp)
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           hpsi(1,ir), kdmx, vtmp, nx, beta, psi(1,nvec+ic), kdmx )
-                 !$omp target exit data map(delete:vtmp)
-
+                 !
               END IF
               !
               beta = ONE
@@ -1851,6 +1839,7 @@ CONTAINS
         !
      END DO
      !
+     !$omp target exit data map(delete:vtmp,vl)
      DEALLOCATE( vtmp )
      !
      dnvec = nvecx - nvec
@@ -1928,9 +1917,9 @@ CONTAINS
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
-     COMPLEX(DP), INTENT(OUT) :: dm( :, : )
+     COMPLEX(DP), INTENT(OUT) :: dm(:,:)
      COMPLEX(DP) :: v(:,:), w(:,:)
-     COMPLEX(DP), ALLOCATABLE :: work( :, : )
+     COMPLEX(DP), ALLOCATABLE :: work(:,:)
      !
      ALLOCATE( work( nx, nx ) )
      !$omp target enter data map(alloc:work)
@@ -1956,16 +1945,16 @@ CONTAINS
            ! ... rank of the processor for which this block (ipr,ipc) is destinated
            !
            root = rank_ip( ipr, ipc )
-
-           ! use blas subs. on the matrix block
-           
+           !
+           ! ... use blas subs. on the matrix block
+           !
            CALL MYZGEMM( 'C', 'N', nr, nc, kdim, ONE , &
                        v(1,ir), kdmx, w(1,ic), kdmx, ZERO, work, nx )
-
            ! ... accumulate result on dm of root proc.
+           !
            !$omp target update from(work)
            CALL mp_root_sum( work, dm, root, ortho_parent_comm )
-
+           !
         END DO
         !
      END DO
