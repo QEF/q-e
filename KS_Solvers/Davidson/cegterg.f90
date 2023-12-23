@@ -1104,7 +1104,9 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   nbase  = nvec
   conv   = .FALSE.
   !
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#endif
   DO n = 1, nvecx
     DO m = 1, npmx
       IF (n<=nvec) psi(m,n) = evc(m,n)
@@ -1185,9 +1187,13 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... approximate inverse iteration
      !
+#if defined(__OPENMP_GPU)
      !$omp target update from(psi(:,nb1:))
+#endif
      CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
+#if defined(__OPENMP_GPU)
      !$omp target update to(psi(:,nb1:))
+#endif
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -1362,7 +1368,9 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#endif
         DO n = 1, nvec
           DO m = 1, npmx
             psi(m,n) = evc(m,n)
@@ -1530,7 +1538,9 @@ CONTAINS
      !
      ALLOCATE( vtmp( nx, nx ) )
      ALLOCATE( ptmp( npwx*npol, nx ) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:ptmp,vtmp) map(to:ew)
+#endif
      !
      jmax = npwx*npol
      !
@@ -1543,7 +1553,9 @@ CONTAINS
            !
            beta = ZERO
            !
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do collapse(2)
+#endif
            DO i = 1, nx
              DO j = 1, jmax
                ptmp(j,i) = (0.d0,0.d0)
@@ -1563,7 +1575,9 @@ CONTAINS
               !
               CALL mp_bcast( vtmp(:,1:notcl), root, ortho_parent_comm )
               !
+#if defined(__OPENMP_GPU)
               !$omp target update to(vtmp)
+#endif
               IF ( uspp ) THEN
                  !
                  CALL MYZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
@@ -1583,7 +1597,9 @@ CONTAINS
               !
            ENDDO
            !
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do collapse(3)
+#endif
            DO np = 1, notcl
               DO ipol = 1, npol
                  DO ib = 1, numblock
@@ -1603,7 +1619,9 @@ CONTAINS
            ! ... clean up garbage if there is any
            IF (npw < npwx) THEN
               ddnpw = npwx - npw
+#if defined(__OPENMP_GPU)
               !$omp target teams distribute parallel do collapse(2)
+#endif
               DO np = 1, ddnpw
                 DO ib = 0, notcl-1
                   psi(npw+np,nbase+ic+ib) = ZERO
@@ -1612,7 +1630,9 @@ CONTAINS
            ENDIF
            IF (npol == 2) THEN
               ddnpw = npwx - npw
+#if defined(__OPENMP_GPU)
               !$omp target teams distribute parallel do collapse(2)
+#endif
               DO np = 1, ddnpw
                 DO ib = 0, notcl-1
                   psi(npwx+npw+np,nbase+ic+ib) = ZERO
@@ -1624,7 +1644,9 @@ CONTAINS
         !
      ENDDO
      !
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:ptmp,ew,vtmp)
+#endif
      DEALLOCATE( vtmp )
      DEALLOCATE( ptmp )
      !
@@ -1641,7 +1663,9 @@ CONTAINS
      COMPLEX(DP) :: beta
      !
      ALLOCATE( vtmp(nx,nx) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vtmp,vl)
+#endif
      !
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
@@ -1667,7 +1691,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  !
+#if defined(__OPENMP_GPU)
                  !$omp target update to(vl)
+#endif
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                psi(1,ir), kdmx, vl, nx, beta, evc(1,ic), kdmx )
                  !
@@ -1677,7 +1703,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  !
+#if defined(__OPENMP_GPU)
                  !$omp target update to(vtmp)
+#endif
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                psi(1,ir), kdmx, vtmp, nx, beta, evc(1,ic), kdmx )
                  !
@@ -1691,7 +1719,9 @@ CONTAINS
         !
      END DO
      !
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vtmp,vl)
+#endif
      DEALLOCATE( vtmp )
      !
      RETURN
@@ -1709,7 +1739,9 @@ CONTAINS
      INTEGER :: dnvec, npwmax
      !
      ALLOCATE( vtmp(nx,nx) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vtmp,vl)
+#endif
      !
      vtmp(:,:) = (0.d0,0.d0)
      !
@@ -1737,7 +1769,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  !
+#if defined(__OPENMP_GPU)
                  !$omp target update to(vl)
+#endif
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                spsi(1,ir), kdmx, vl, nx, beta, psi(1,nvec+ic), kdmx )
                  !
@@ -1747,7 +1781,9 @@ CONTAINS
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  !
+#if defined(__OPENMP_GPU)
                  !$omp target update to(vtmp)
+#endif
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                                spsi(1,ir), kdmx, vtmp, nx, beta, psi(1,nvec+ic), kdmx )
                  !
@@ -1763,14 +1799,18 @@ CONTAINS
      !
      dnvec = nvecx - nvec
      npwmax = npwx*npol
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO nr = 1, nvec
        DO nc = 1, npwmax
          spsi(nc,nr) = psi(nc,nvec+nr)
        ENDDO
      ENDDO
      !
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vtmp,vl)
+#endif
      DEALLOCATE( vtmp )
      !
      RETURN
@@ -1789,7 +1829,9 @@ CONTAINS
      INTEGER :: dnvec, npwmax
      !
      ALLOCATE( vtmp( nx, nx ) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vtmp,vl)
+#endif
      !
      vtmp(:,:) = (0.d0,0.d0)
      !
@@ -1816,7 +1858,9 @@ CONTAINS
                  ! ... this proc sends his block
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
+#if defined(__OPENMP_GPU)
                  !$omp target update to(vl)
+#endif
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           hpsi(1,ir), kdmx, vl, nx, beta, psi(1,nvec+ic), kdmx )
                  !
@@ -1825,7 +1869,9 @@ CONTAINS
                  ! ... all other procs receive
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
+#if defined(__OPENMP_GPU)
                  !$omp target update to(vtmp)
+#endif
                  CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           hpsi(1,ir), kdmx, vtmp, nx, beta, psi(1,nvec+ic), kdmx )
                  !
@@ -1839,12 +1885,16 @@ CONTAINS
         !
      END DO
      !
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vtmp,vl)
+#endif
      DEALLOCATE( vtmp )
      !
      dnvec = nvecx - nvec
      npwmax = npwx*npol
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO nr = 1, nvec
        DO nc = 1, npwmax
          hpsi(nc,nr) = psi(nc,nvec+nr)
@@ -1922,8 +1972,10 @@ CONTAINS
      COMPLEX(DP), ALLOCATABLE :: work(:,:)
      !
      ALLOCATE( work( nx, nx ) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:work)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO ipr = 1, nx
        DO ipc = 1, nx
          work(ipc,ipr) = (0.d0,0.d0)
@@ -1952,7 +2004,9 @@ CONTAINS
                        v(1,ir), kdmx, w(1,ic), kdmx, ZERO, work, nx )
            ! ... accumulate result on dm of root proc.
            !
+#if defined(__OPENMP_GPU)
            !$omp target update from(work)
+#endif
            CALL mp_root_sum( work, dm, root, ortho_parent_comm )
            !
         END DO
@@ -1965,7 +2019,9 @@ CONTAINS
      !
      CALL laxlib_zsqmher( nbase, dm, nx, idesc )
      !
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:work)
+#endif
      DEALLOCATE( work )
      !
      RETURN
@@ -1982,8 +2038,10 @@ CONTAINS
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
      !
      ALLOCATE( vtmp( nx, nx ) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vtmp)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO ipr = 1, nx
        DO ipc = 1, nx
          vtmp(ipc,ipr) = (0.d0,0.d0)
@@ -2019,7 +2077,9 @@ CONTAINS
               CALL MYZGEMM( 'C', 'N', nr, nc, kdim, ONE, v(1,ir), &
                             kdmx, w(1,ii), kdmx, ZERO, vtmp, nx )
               !
+#if defined(__OPENMP_GPU)
               !$omp target update from(vtmp)
+#endif
               IF (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) vtmp = vtmp/nbgrp
               !
               IF(  (idesc(LAX_DESC_ACTIVE_NODE) > 0) .AND. &
@@ -2037,7 +2097,9 @@ CONTAINS
      !
      CALL laxlib_zsqmher( nbase+notcnv, dm, nx, idesc )
      !
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vtmp)
+#endif
      DEALLOCATE( vtmp )
      !
      RETURN
