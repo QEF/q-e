@@ -963,7 +963,8 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   CALL start_clock( 'regterg' ) !; write(6,*) 'enter pregterg' ; FLUSH(6)
 #if defined(__OPENMP_GPU)
-  !$omp target data map(to:evc)
+  !$omp target enter data map(to:evc)
+  !$omp target update to(evc)
 #endif
   !
   CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
@@ -1170,17 +1171,15 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
-     !$omp target data map(to:ew)
      CALL hpsi_dot_v()
-     !$omp end target data
      !
      CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
-     !$omp target update from(psi)
+     !$omp target update from(psi(:,nb1:))
      CALL g_psi_ptr( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
-     !$omp target update to(psi)
+     !$omp target update to(psi(:,nb1:))
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -1198,8 +1197,7 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !
-     !$omp target data map(to:ew)
-     !$omp target teams distribute parallel do collapse(2)
+     !$omp target teams distribute parallel do collapse(2) map(to:ew)
      DO n = 1, notcnv
         DO i = 1, npwx
            psi(i,nbase+n) = psi(i,nbase+n) / SQRT( ew(n) )
@@ -1211,7 +1209,6 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
            psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 ,kind=DP)
         END DO
      END IF
-     !$omp end target data
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
@@ -1424,7 +1421,8 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( psi )
   !
 #if defined(__OPENMP_GPU)
-  !$omp end target data
+  !$omp target update from(evc)
+  !$omp target exit data map(delete:evc)
 #endif
   CALL stop_clock( 'regterg' )
   !call print_clock( 'regterg' )
@@ -1517,7 +1515,7 @@ CONTAINS
   !
   SUBROUTINE hpsi_dot_v()
      !
-     INTEGER :: ipc, ipr
+     INTEGER :: ipc, ipr, i, j
      INTEGER :: nr, nc, ir, ic, notcl, root, np, npp
      REAL(DP), ALLOCATABLE :: vtmp( :, : )
      COMPLEX(DP), ALLOCATABLE :: ptmp( :, : )
@@ -1525,8 +1523,8 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      ALLOCATE( ptmp( npwx, nx ) )
-     
-     !$omp target data map(alloc:vtmp,ptmp)
+
+     !$omp target data map(alloc:vtmp,ptmp) map(to:ew)
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         IF( notcnv_ip( ipc ) > 0 ) THEN
@@ -1535,6 +1533,15 @@ CONTAINS
            ic    = ic_notcnv( ipc )
 
            beta = 0.0d0
+           !
+#if defined(__OPENMP_GPU)
+           !$omp target teams distribute parallel do collapse(2)
+#endif
+           DO i = 1, nx
+             DO j = 1, npwx
+               ptmp(j,i) = (0.d0,0.d0)
+             ENDDO
+           ENDDO
 
            DO ipr = 1, idesc(LAX_DESC_NPR)
               !
@@ -1548,7 +1555,7 @@ CONTAINS
               END IF
 
               CALL mp_bcast( vtmp(:,1:notcl), root, ortho_parent_comm )
-              !$omp target update to(vtmp(:,1:notcl))
+              !$omp target update to(vtmp)
               !
               IF ( uspp ) THEN
                  !
@@ -1605,7 +1612,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     !$omp target data map(alloc:vtmp) 
+     !$omp target data map(alloc:vtmp,vl) 
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1629,16 +1636,15 @@ CONTAINS
                  !  this proc sends his block
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
-                 !$omp target data map (to:vl(:,1:nc))
+                 !$omp target update to(vl)
                  CALL MYDGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           psi(1,ir), npwx2, vl, nx, beta, evc(1,ic), npwx2 )
-                 !$omp end target data
               ELSE
                  !
                  !  all other procs receive
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 !$omp target update to(vtmp(:,1:nc))
+                 !$omp target update to(vtmp)
                  CALL MYDGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           psi(1,ir), npwx2, vtmp, nx, beta, evc(1,ic), npwx2 )
               END IF
@@ -1668,7 +1674,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     !$omp target data map(alloc:vtmp) 
+     !$omp target data map(alloc:vtmp,vl) 
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1692,16 +1698,15 @@ CONTAINS
                  !  this proc sends his block
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
-                 !$omp target data map(to:vl(:,1:nc))
+                 !$omp target update to(vl)
                  CALL MYDGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           spsi(1,ir), npwx2, vl, nx, beta, psi(1,nvec+ic), npwx2 )
-                 !$omp end target data
               ELSE
                  !
                  !  all other procs receive
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 !$omp target update to(vtmp(:,1:nc))
+                 !$omp target update to(vtmp)
                  CALL MYDGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           spsi(1,ir), npwx2, vtmp, nx, beta, psi(1,nvec+ic), npwx2 )
               END IF
@@ -1742,7 +1747,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     !$omp target data map(alloc:vtmp) 
+     !$omp target data map(alloc:vtmp,vl) 
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1766,16 +1771,15 @@ CONTAINS
                  !  this proc sends his block
                  !
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
-                 !$omp target data map(to:vl(:,1:nc))
+                 !$omp target update to(vl)
                  CALL MYDGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           hpsi(1,ir), npwx2, vl, nx, beta, psi(1,nvec+ic), npwx2 )
-                 !$omp end target data 
               ELSE
                  !
                  !  all other procs receive
                  !
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 !$omp target update to(vtmp(:,1:nc))
+                 !$omp target update to(vtmp)
                  CALL MYDGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           hpsi(1,ir), npwx2, vtmp, nx, beta, psi(1,nvec+ic), npwx2 )
               END IF
@@ -1847,7 +1851,7 @@ CONTAINS
 
            !$omp target update from(work)
            CALL mp_root_sum( work, dm, root, ortho_parent_comm )
-
+           
         END DO
         !
      END DO
