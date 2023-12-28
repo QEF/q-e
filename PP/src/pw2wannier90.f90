@@ -4613,7 +4613,7 @@ SUBROUTINE compute_orb
    USE ions_base,       ONLY : ntyp => nsp
    USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf
-   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type
+   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type, calbec
    USE noncollin_module,ONLY : noncolin, npol
    USE wannier
    ! begin change Lopez, Thonhauser, Souza
@@ -4622,6 +4622,8 @@ SUBROUTINE compute_orb
    USE lsda_mod,        ONLY : lsda, nspin, isk, current_spin
    USE constants,       ONLY : rytoev
    USE uspp_init,       ONLY : init_us_2
+   USE basis,           ONLY : natomwfc, swfcatom
+   USE ldaU,            ONLY : lda_plus_u, copy_U_wfc
    !
    IMPLICIT NONE
    !
@@ -4641,6 +4643,8 @@ SUBROUTINE compute_orb
    !! Computed uIu matrix
    COMPLEX(DP), ALLOCATABLE :: arr(:, :)
    !! Temporary storage
+   COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :)
+   !! For DFT+U calculations
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    !
@@ -4674,6 +4678,12 @@ SUBROUTINE compute_orb
    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_b2', 1)
    ALLOCATE(arr(num_bands, num_bands), stat=ierr)
    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating arr', 1)
+   IF (lda_plus_u) THEN
+      ALLOCATE(wfcatom(npwx*npol, natomwfc), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatom', 1)
+      ALLOCATE(swfcatom(npwx*npol, natomwfc), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating swfcatom', 1)
+   ENDIF
    !
    IF (write_uHu) THEN
       ALLOCATE(H_evc_b2(npol*npwx, num_bands), stat=ierr)
@@ -4740,6 +4750,17 @@ SUBROUTINE compute_orb
       IF (lsda) current_spin = isk(ik)
       CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
       CALL g2_kin(ik)
+      !
+      IF (lda_plus_u) THEN
+         IF (noncolin) THEN
+            CALL atomic_wfc_nc_updown(ik, wfcatom)
+         ELSE
+            CALL atomic_wfc(ik, wfcatom)
+         END IF
+         CALL calbec(npw, vkb, wfcatom, becp)
+         CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
+         CALL copy_U_wfc(swfcatom, noncolin)
+      END IF
       !
       ! Loop over the nearest neighbor b vectors and compute |u_{n,k+b}> and
       ! save them to evc_b.
@@ -4852,6 +4873,10 @@ SUBROUTINE compute_orb
    DEALLOCATE(evc_b1)
    DEALLOCATE(evc_b2)
    DEALLOCATE(evc_b)
+   IF (lda_plus_u) THEN
+      DEALLOCATE(wfcatom)
+      DEALLOCATE(swfcatom)
+   ENDIF
    !
    IF (write_uHu) THEN
       DEALLOCATE(H_evc_b2)
@@ -4897,13 +4922,15 @@ SUBROUTINE compute_shc
    USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf
    USE becmod,          ONLY : bec_type, becp, allocate_bec_type, &
-                               deallocate_bec_type
+                               deallocate_bec_type, calbec
    USE gvecs,           ONLY : doublegrid
    USE noncollin_module,ONLY : noncolin, npol
    USE lsda_mod,        ONLY : nspin, lsda, isk
    USE scf,             ONLY : vrs, vltot, v, kedtau
+   USE uspp_init,       ONLY : init_us_2
+   USE basis,           ONLY : natomwfc, swfcatom
+   USE ldaU,            ONLY : lda_plus_u, copy_U_wfc
    USE wannier
-   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -4916,6 +4943,8 @@ SUBROUTINE compute_shc
    COMPLEX(DP), ALLOCATABLE :: sHu(:, : ,:), sIu(:, :, :)
    COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
    !! Wavefunction at k. Contains only the included bands.
+   COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :)
+   !! For DFT+U calculations
    !
    IF (.NOT. (write_sHu .OR. write_sIu)) THEN
       WRITE(stdout, *)
@@ -4949,6 +4978,12 @@ SUBROUTINE compute_shc
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sHu', 1)
       ALLOCATE(H_evc_kb(npol*npwx, num_bands), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating H_evc_kb', 1)
+      IF (lda_plus_u) THEN
+         ALLOCATE(wfcatom(npwx*npol, natomwfc), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatom', 1)
+         ALLOCATE(swfcatom(npwx*npol, natomwfc), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating swfcatom', 1)
+      ENDIF
    ENDIF
    IF (write_sIu) THEN
       ALLOCATE(sIu(num_bands, num_bands, 3), stat=ierr)
@@ -5010,6 +5045,17 @@ SUBROUTINE compute_shc
       CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
       CALL g2_kin(ik)
       !
+      IF (lda_plus_u) THEN
+         IF (noncolin) THEN
+            CALL atomic_wfc_nc_updown(ik, wfcatom)
+         ELSE
+            CALL atomic_wfc(ik, wfcatom)
+         END IF
+         CALL calbec(npw, vkb, wfcatom, becp)
+         CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
+         CALL copy_U_wfc(swfcatom, noncolin)
+      END IF
+      !
       DO i_b = 1, nnb ! nnb = # of nearest neighbors
          !
          ! compute  |u_{n,k+b2}> and H(k) * |u_{n,k+b2}>
@@ -5068,7 +5114,7 @@ SUBROUTINE compute_shc
                IF (write_sHu) THEN
                   CALL utility_write_array(iun_sHu, sHu_formatted, num_bands, num_bands, sHu(:, :, ispol))
                ENDIF
-               IF (write_sHu) THEN
+               IF (write_sIu) THEN
                   CALL utility_write_array(iun_sIu, sIu_formatted, num_bands, num_bands, sIu(:, :, ispol))
                ENDIF
             ENDDO
@@ -5095,6 +5141,10 @@ SUBROUTINE compute_shc
    IF (write_sHu) THEN
       DEALLOCATE(H_evc_kb)
       DEALLOCATE(sHu)
+      IF (lda_plus_u) THEN
+         DEALLOCATE(wfcatom)
+         DEALLOCATE(swfcatom)
+      ENDIF
    ENDIF
    IF (write_sIu) DEALLOCATE(sIu)
    !
