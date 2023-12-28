@@ -26,7 +26,6 @@ CONTAINS
     USE wvfct,        ONLY : npwx
     USE uspp,         ONLY : nkb
     USE fft_base ,    ONLY : dfftp
-    USE control_flags, ONLY : use_gpu
     !
     IMPLICIT NONE
     !
@@ -39,33 +38,27 @@ CONTAINS
     COMPLEX(DP), INTENT(OUT) :: vkb_(npwx,nkb)
     !! beta functions (npw_ <= npwx)
     LOGICAL, OPTIONAL, INTENT(IN) :: run_on_gpu_
-    !! whether you wish to run on gpu in case use_gpu is true 
+    !! if false (default), copy output vkb back to CPU using OpenACC:
+    !! allows to use this accelerated routine in non-accelerated code
     !
-    LOGICAL :: run_on_gpu 
-    !
+    LOGICAL :: run_on_gpu
     !
     run_on_gpu = .FALSE.
     IF (PRESENT(run_on_gpu_)) run_on_gpu = run_on_gpu_
     !
     CALL start_clock( 'init_us_2' )
     !
-    IF (use_gpu .AND. run_on_gpu) THEN
-      !
-      !$acc data present( igk_(1:npw_), mill(:,:), g(:,:), vkb_(1:npwx,1:nkb), &
-      !$acc               eigts1(:,:), eigts2(:,:), eigts3(:,:) )
-      !$acc host_data use_device( eigts1, eigts2, eigts3, mill, g, igk_, vkb_ )
-      CALL init_us_2_base_gpu( npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
-                               dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2,    &
-                               eigts3, mill, g, vkb_ )
-      !$acc end host_data
-      !$acc end data
-      !
-    ELSE
-      !
-      CALL init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
-                           dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2,    &
-                           eigts3, mill, g, vkb_ )
+    !$acc data present_or_copyin ( igk_(1:npw_) ) &
+    !$acc      present ( mill(:,:),g(:,:),eigts1(:,:),eigts2(:,:), eigts3(:,:) ) &
+    !$acc      present_or_copyout( vkb_(1:npwx,1:nkb) )
+    CALL init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
+                        dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2,    &
+                        eigts3, mill, g, vkb_ )
+    IF (.not.run_on_gpu) THEN
+       CONTINUE
+       !$acc update self(vkb_)
     ENDIF
+    !$acc end data
     !
     CALL stop_clock( 'init_us_2' )
     !

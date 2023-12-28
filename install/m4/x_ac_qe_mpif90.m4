@@ -201,6 +201,8 @@ ftn )
         f90_flavor=ifort
     elif $mpif90 -V 2>&1 | grep -q "^pgf" ; then
         f90_flavor=pgf
+    elif $mpif90 -V 2>&1 | grep -q "^nvfortran" ; then
+        f90_flavor=nvfortran
     elif $mpif90 -v 2>&1 | grep -q "gcc version" ; then
         f90_flavor=gfortran
     elif $mpif90 -V 2>&1 | grep -q "Cray Fortran" ; then

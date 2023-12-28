@@ -17,7 +17,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_kinds,  ONLY: dp
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY: nqx, tab, dq
+  USE uspp_data,  ONLY: nqx, tab_beta, dq
   USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh, nhm
   !
   IMPLICIT NONE
@@ -109,7 +109,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   !$acc update device(ylm)
 #endif
   !
-  !$acc data copyin( tab )
+  !$acc data present( tab_beta )
   DO nt = 1, ntyp
      !$acc parallel loop collapse(2)
      DO nb = 1, upf(nt)%nbeta
@@ -123,10 +123,10 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3
-           djl(ig,nb,nt) = ( tab(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                             tab(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                             tab(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                             tab(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.d0 ) / dq
+           djl(ig,nb,nt) = ( tab_beta(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                             tab_beta(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                             tab_beta(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                             tab_beta(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.d0 ) / dq
         ENDDO
      ENDDO
   ENDDO

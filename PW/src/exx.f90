@@ -3791,7 +3791,7 @@ end associate
   USE constants,     ONLY : tpi
   USE gvect,         ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp_data,     ONLY : nqx, dq, tab
+  USE uspp_data,     ONLY : nqx, dq, tab_beta
   USE m_gth,         ONLY : mk_ffnl_gth
   USE uspp,          ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,    ONLY : upf, lmaxkb, nhm, nh
@@ -3873,10 +3873,10 @@ end associate
                 i1 = i0 + 1
                 i2 = i0 + 2
                 i3 = i0 + 3
-                vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                          tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                          tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                          tab (i3, nb, nt) * px * ux * vx / 6.d0
+                vq (ig) = tab_beta (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                          tab_beta (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                          tab_beta (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                          tab_beta (i3, nb, nt) * px * ux * vx / 6.d0
            ENDDO
         ENDIF
         !

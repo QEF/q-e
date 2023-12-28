@@ -305,14 +305,9 @@ MODULE splinelib
       INTEGER  :: xdim, n, ig, khi, klo 
       REAL(DP) :: a, b, h, xlo, xhi, x
       !   
-#if defined(__CUDA)
-      attributes(device) :: ydata, d2y, xlist, s
-#endif
-      !   
       xdim = size(ydata)
       n  = size(xlist)
 
-      !$cuf kernel do(1) <<<*,*>>>
       do ig = 1, n
         !   
         x = xlist(ig)

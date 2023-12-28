@@ -29,7 +29,7 @@ MODULE uspp
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, ofsbeta, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
-  PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
+  PUBLIC :: indv_d, nhtol_d, ofsbeta_d, &
             dvan_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
@@ -49,21 +49,12 @@ MODULE uspp
        lpl(nlx,nlx,mx)    ! list of combined angular momenta  LM
   REAL(DP) :: ap(lqmax*lqmax,nlx,nlx)
                           ! Clebsch-Gordan coefficients for spherical harmonics
-  ! GPU vars
-  INTEGER, ALLOCATABLE ::  & ! for each pair of combined momenta lm(1),lm(2): 
-       lpx_d(:,:),         & ! maximum combined angular momentum LM
-       lpl_d(:,:,:)          ! list of combined angular momenta  LM
-  REAL(DP), ALLOCATABLE :: ap_d(:,:,:)
-#if defined (__CUDA)
-  attributes(DEVICE) :: lpx_d, lpl_d, ap_d
-#endif
-  !
   !
   INTEGER :: nkb,        &! total number of beta functions, with struct.fact.
              nkbus        ! as above, for US-PP only
   !
   INTEGER, ALLOCATABLE PINMEM ::&
-       indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
+       indv(:,:),        &! index linking  atomic beta's to beta's in the solid
        nhtol(:,:),       &! correspondence n <-> angular momentum l
        nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
        ijtoh(:,:,:),     &! correspondence beta indexes ih,jh -> composite index ijh
@@ -73,11 +64,10 @@ MODULE uspp
   !
   INTEGER, ALLOCATABLE :: indv_d(:,:)
   INTEGER, ALLOCATABLE :: nhtol_d(:,:)
-  INTEGER, ALLOCATABLE :: nhtolm_d(:,:)
   INTEGER, ALLOCATABLE :: ijtoh_d(:,:,:)
   INTEGER, ALLOCATABLE :: ofsbeta_d(:)
 #if defined (__CUDA)
-  attributes(DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, ofsbeta_d
+  attributes(DEVICE) :: indv_d, nhtol_d, ijtoh_d, ofsbeta_d
 #endif
 
   LOGICAL :: &
@@ -212,14 +202,6 @@ CONTAINS
     deallocate(rr)
     deallocate(r)
     !
-#if defined (__CUDA)
-    IF (ALLOCATED(ap_d)) DEALLOCATE(ap_d)
-    ALLOCATE(ap_d, SOURCE=ap)
-    IF (ALLOCATED(lpx_d)) DEALLOCATE(lpx_d)
-    ALLOCATE(lpx_d, SOURCE=lpx)
-    IF (ALLOCATED(lpl_d)) DEALLOCATE(lpl_d)
-    ALLOCATE(lpl_d, SOURCE=lpl)
-#endif
     return
   end subroutine aainit
   !
@@ -383,7 +365,6 @@ CONTAINS
       if (nhm>0) then
         allocate( indv_d(nhm,nsp)   )
         allocate( nhtol_d(nhm,nsp)  )
-        allocate( nhtolm_d(nhm,nsp) )
         allocate( nhtoj_d(nhm,nsp)  )
         allocate( ijtoh_d(nhm,nhm,nsp) )
         allocate( qq_nt_d(nhm,nhm,nsp) )
@@ -448,12 +429,8 @@ CONTAINS
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
     ! GPU variables
-    IF( ALLOCATED( ap_d ) )       DEALLOCATE( ap_d )
-    IF( ALLOCATED( lpx_d ) )      DEALLOCATE( lpx_d )
-    IF( ALLOCATED( lpl_d ) )      DEALLOCATE( lpl_d )
     IF( ALLOCATED( indv_d ) )     DEALLOCATE( indv_d )
     IF( ALLOCATED( nhtol_d ) )    DEALLOCATE( nhtol_d )
-    IF( ALLOCATED( nhtolm_d ) )   DEALLOCATE( nhtolm_d )
     IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
     IF( ALLOCATED( ofsbeta_d)) DEALLOCATE( ofsbeta_d )
     IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )

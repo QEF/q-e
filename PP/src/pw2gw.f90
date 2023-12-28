@@ -153,7 +153,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : nhtol
-  USE uspp_data,  ONLY : tab
+  USE uspp_data,  ONLY : tab_beta
   USE ions_base,  ONLY : ntyp => nsp
   USE klist,      ONLY : ngk
 
@@ -479,14 +479,14 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
       WRITE(15,*) "npw", npw
       ALLOCATE(vkb0(1:npw))
 
-      size_tab=size(tab,1)
+      size_tab=size(tab_beta,1)
 
       ALLOCATE(vec_tab(1:size_tab))
 
       DO nt = 1, ntyp
         DO nb = 1, upf(nt)%nbeta
           vkb0(:) = 0.0_dp
-          vec_tab(:) = tab(:,nb,nt)
+          vec_tab(:) = tab_beta(:,nb,nt)
           CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab)
           WRITE(15,*) "---------------DEBUG-VKB0----------------------"
           WRITE(15,*) "ik= ", ik
@@ -511,13 +511,13 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
       ALLOCATE(djl(1:npw))
 
-      size_tab=size(tab,1)
+      size_tab=size(tab_beta,1)
 
       ALLOCATE(vec_tab(1:size_tab))
       DO nt = 1, ntyp
         DO nb = 1, upf(nt)%nbeta
           djl(:) = 0.0_dp
-          vec_tab(:) = tab(:,nb,nt)
+          vec_tab(:) = tab_beta(:,nb,nt)
           CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab)
   !        WRITE(0,*) "---------------DEBUG-----------------------"
   !        WRITE(0,*) "ik= ", ik

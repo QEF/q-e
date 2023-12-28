@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2021 Quantum ESPRESSO Foundation
+! Copyright (C) 2021-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE init_tab_beta ( omega, intra_bgrp_comm )
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
-  USE uspp_data,    ONLY : nqx, dq, tab, tab_d
+  USE uspp_data,    ONLY : nqx, dq, tab_beta
   USE mp,           ONLY : mp_sum
   USE m_gth,        ONLY : mk_ffnl_gth
   !
@@ -41,21 +41,21 @@ SUBROUTINE init_tab_beta ( omega, intra_bgrp_comm )
   allocate (besr( ndm))
   pref = fpi / sqrt (omega)
   call divide (intra_bgrp_comm, nqx, startq, lastq)
-  tab (:,:,:) = 0.d0
+  tab_beta (:,:,:) = 0.d0
   do nt = 1, nsp
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
         do iq = startq, lastq
            qi = (iq - 1) * dq
            if ( upf(nt)%is_gth ) then
-              CALL mk_ffnl_gth( nt, nb, 1, omega, [ qi ] , tab(iq,nb,nt) )
+              CALL mk_ffnl_gth( nt, nb, 1, omega, [ qi ] , tab_beta(iq,nb,nt) )
            else
               call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
               do ir = 1, upf(nt)%kkbeta
                  aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
               enddo
               call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-              tab (iq, nb, nt) = vqint * pref
+              tab_beta (iq, nb, nt) = vqint * pref
            end if
         enddo
      enddo
@@ -63,12 +63,7 @@ SUBROUTINE init_tab_beta ( omega, intra_bgrp_comm )
   deallocate (besr)
   deallocate (aux)
   !
-  call mp_sum(  tab, intra_bgrp_comm )
-  !
-  ! update GPU memory (taking care of zero-dim allocations)
-  !
-#if defined __CUDA
-  if ( nbetam > 0 ) tab_d=tab
-#endif
+  call mp_sum(  tab_beta, intra_bgrp_comm )
+!$acc update device (tab_beta)
   !
 END SUBROUTINE init_tab_beta

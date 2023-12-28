@@ -14,7 +14,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   USE klist,      ONLY : ngk
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY : nqx, tab, dq
+  USE uspp_data,  ONLY : nqx, tab_beta, dq
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   USE io_global, ONLY : stdout
   !
@@ -83,10 +83,10 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
              i2 = i0 + 2
              i3 = i0 + 3
              if (i3 <= nqx) then ! Approximation
-                djl(ig,nb,nt) = ( tab (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                               tab (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                               tab (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                               tab (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
+                djl(ig,nb,nt) = ( tab_beta (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                               tab_beta (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                               tab_beta (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                               tab_beta (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
              else
                 djl(ig,nb,nt) = 0.d0  ! Approximation
              endif
@@ -156,7 +156,7 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   USE klist,      ONLY : ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY : nqx, tab, dq
+  USE uspp_data,  ONLY : nqx, tab_beta, dq
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
   implicit none
@@ -222,10 +222,10 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
              i2 = i0 + 2
              i3 = i0 + 3
              if (i3<=nqx) then ! DEBUG
-                vkb0 (ig, nb, nt) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                                    tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                                   tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                                    tab (i3, nb, nt) * px * ux * vx / 6.d0
+                vkb0 (ig, nb, nt) = tab_beta (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                                    tab_beta (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                                    tab_beta (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                                    tab_beta (i3, nb, nt) * px * ux * vx / 6.d0
              else
                 vkb0 (ig, nb, nt) = 0.d0 ! DEBUG
              endif

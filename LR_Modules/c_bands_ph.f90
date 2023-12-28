@@ -7,8 +7,8 @@
 !
 !
 !----------------------------------------------------------------------------
-! Questa e' una copia di c_bands_nscf intesa per un confronto con 
-! thermo_pw. 
+! Copy of c_bands_nscf, for comparison with thermo_pw. 
+! FIXME: is the above correct?
 !
 !
 SUBROUTINE c_bands_nscf_ph( )
@@ -26,7 +26,7 @@ SUBROUTINE c_bands_nscf_ph( )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_lr,           ONLY : lgamma
-  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
+  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc

@@ -5,12 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define __PGI_1910_WORKAROUND
+#define __CUDA_KERNEL_YLM
 ! use the CUDA Kernel version instead of the simple  CUF version
-! that for some obscure reason crashes on (obsolescent) PGI v.19.10
+! that crashes for obscure reasons (at least on nvfortran 22.07)
 
 module ylmr2_gpum
-#if defined(__CUDA) && defined(__PGI_1910_WORKAROUND)
+#if defined(__CUDA) && defined(__CUDA_KERNEL_YLM)
 use cudafor
 contains
 attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
@@ -122,7 +122,7 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
   !     overflow for lmax > 11
   !     Last modified May 2nd, 2021, by PG
   !
-#if defined(__CUDA) && defined(__PGI_1910_WORKAROUND)
+#if defined(__CUDA) && defined(__CUDA_KERNEL_YLM)
   USE cudafor
   USE ylmr2_gpum, ONLY : ylmr2_gpu_kernel
   implicit none
