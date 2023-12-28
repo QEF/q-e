@@ -963,8 +963,7 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   CALL start_clock( 'regterg' ) !; write(6,*) 'enter pregterg' ; FLUSH(6)
 #if defined(__OPENMP_GPU)
-  !$omp target enter data map(to:evc)
-  !$omp target update to(evc)
+  !$omp target data map(to:evc)
 #endif
   !
   CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
@@ -1177,9 +1176,9 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... approximate inverse iteration
      !
-     !$omp target update from(psi(:,nb1:))
+     !$omp target update from(psi)
      CALL g_psi_ptr( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
-     !$omp target update to(psi(:,nb1:))
+     !$omp target update to(psi)
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -1342,11 +1341,7 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
-#else
-        !$omp parallel loop collapse(2)
-#endif
         DO j = 1, nvec
           DO i = 1, npwx
             psi(i,j) = evc(i,j)
@@ -1421,8 +1416,7 @@ SUBROUTINE pregterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( psi )
   !
 #if defined(__OPENMP_GPU)
-  !$omp target update from(evc)
-  !$omp target exit data map(delete:evc)
+  !$omp end target data
 #endif
   CALL stop_clock( 'regterg' )
   !call print_clock( 'regterg' )
@@ -1516,7 +1510,7 @@ CONTAINS
   SUBROUTINE hpsi_dot_v()
      !
      INTEGER :: ipc, ipr, i, j
-     INTEGER :: nr, nc, ir, ic, notcl, root, np, npp
+     INTEGER :: nr, nc, ir, ic, notcl, root, np
      REAL(DP), ALLOCATABLE :: vtmp( :, : )
      COMPLEX(DP), ALLOCATABLE :: ptmp( :, : )
      REAL(DP) :: beta
@@ -1524,7 +1518,9 @@ CONTAINS
      ALLOCATE( vtmp( nx, nx ) )
      ALLOCATE( ptmp( npwx, nx ) )
 
+#if defined(__OPENMP_GPU)
      !$omp target data map(alloc:vtmp,ptmp) map(to:ew)
+#endif
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         IF( notcnv_ip( ipc ) > 0 ) THEN
@@ -1534,15 +1530,6 @@ CONTAINS
 
            beta = 0.0d0
            !
-#if defined(__OPENMP_GPU)
-           !$omp target teams distribute parallel do collapse(2)
-#endif
-           DO i = 1, nx
-             DO j = 1, npwx
-               ptmp(j,i) = (0.d0,0.d0)
-             ENDDO
-           ENDDO
-
            DO ipr = 1, idesc(LAX_DESC_NPR)
               !
               nr = nrc_ip( ipr )
@@ -1576,26 +1563,20 @@ CONTAINS
 
            END DO
            !
-#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do collapse(2)
-#endif
            DO np = 1, notcl
-              !
-#if defined(__OPENMP_GPU)
-              DO npp = 1, npw
-                 psi(npp,nbase+np+ic-1) = ptmp(npp,np) - ew(nbase+np+ic-1) * psi(npp,nbase+np+ic-1)
+              DO i = 1, npw
+                 psi(i,nbase+np+ic-1) = ptmp(i,np) - ew(nbase+np+ic-1) * psi(i,nbase+np+ic-1)
               END DO
-#else
-              psi(1:npw,nbase+np+ic-1) = ptmp(1:npw,np) - ew(nbase+np+ic-1) * psi(1:npw,nbase+np+ic-1)
-#endif
-              !
            END DO
            !
         END IF
         !
      END DO 
 
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      DEALLOCATE( vtmp )
      DEALLOCATE( ptmp )
 
@@ -1612,7 +1593,9 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     !$omp target data map(alloc:vtmp,vl) 
+#if defined(__OPENMP_GPU)
+     !$omp target data map(alloc:vtmp) map(to:vl) 
+#endif
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1657,7 +1640,9 @@ CONTAINS
         END IF
         !
      END DO
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      !
      DEALLOCATE( vtmp )
 
@@ -1674,7 +1659,9 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     !$omp target data map(alloc:vtmp,vl) 
+#if defined(__OPENMP_GPU)
+     !$omp target data map(alloc:vtmp) map(to:vl) 
+#endif
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1718,18 +1705,16 @@ CONTAINS
         END IF
         !
      END DO
-     !$omp end target data
-     !
 #if defined(__OPENMP_GPU)
+     !$omp end target data
+#endif
+     !
      !$omp target teams distribute parallel do collapse(2)
      DO j = 1, nvec
         DO i = 1, npwx
            spsi(i,j) = psi(i,nvec+j)
        END DO
      END DO
-#else
-     spsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
-#endif
      !
      DEALLOCATE( vtmp )
 
@@ -1747,7 +1732,9 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     !$omp target data map(alloc:vtmp,vl) 
+#if defined(__OPENMP_GPU)
+     !$omp target data map(alloc:vtmp) map(to:vl) 
+#endif
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1791,18 +1778,18 @@ CONTAINS
         END IF
         !
      END DO
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      !
      DEALLOCATE( vtmp )
-#if defined(__OPENMP_GPU)
+     !
+     !$omp target teams distribute parallel do collapse(2)
      DO j = 1, nvec
         DO i = 1, npwx
            hpsi(i,j) = psi(i,nvec+j)
         END DO
      END DO
-#else
-     hpsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
-#endif
 
      RETURN
   END SUBROUTINE refresh_hpsi
@@ -1824,7 +1811,9 @@ CONTAINS
      !
      work = 0.0d0
      !
+#if defined(__OPENMP_GPU)
      !$omp target data map(to:work) 
+#endif
      DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
         nc = nrc_ip( ipc )
@@ -1855,7 +1844,9 @@ CONTAINS
         END DO
         !
      END DO
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      IF (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
      CALL laxlib_dsqmsym( nbase, dm, nx, idesc )
@@ -1878,7 +1869,9 @@ CONTAINS
      !
      vtmp = 0.0d0
      !
+#if defined(__OPENMP_GPU)
      !$omp target data map(to:vtmp)
+#endif
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
@@ -1922,7 +1915,9 @@ CONTAINS
         END IF
         !
      END DO
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      !
      CALL laxlib_dsqmsym( nbase+notcnv, dm, nx, idesc )
      !
