@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2021-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
@@ -20,8 +19,7 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
-  USE uspp_param,   ONLY : upf, lmaxkb, nbetam, nhm, nh, nsp
-  USE uspp_data,  ONLY : dq, tab_beta
+  USE uspp_param,   ONLY : lmaxkb, nbetam, nhm, nh, nsp
   !
   implicit none
   !
@@ -58,10 +56,7 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   !
   !     Local variables
   !
-  !
-  INTEGER :: i0, i1, i2, i3
-  REAL(dp):: qgr, px, ux, vx, wx
-  integer :: ig, lm, na, nt, nb, ih, ikb, jkb, nbnt, nhnt
+  integer :: ig, lm, na, nt, nb, ih, ikb, jkb, nhnt
   integer :: iv_d, l
   real(DP) :: arg, q1, q2, q3
 
@@ -88,7 +83,7 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   q3 = q_(3)
   !
   !$acc data create(qg, gk, ylm, vq, vkb1, sk) &
-  !$acc      present(tab_beta, g, igk_, eigts1, eigts2, eigts3, mill, vkb_) &
+  !$acc      present(g, igk_, eigts1, eigts2, eigts3, mill, vkb_) &
   !$acc      copyin(nhtol, nhtolm, indv)
   !$acc kernels
   vkb_(:,:) = (0.0_dp, 0.0_dp)
@@ -118,29 +113,10 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   do nt = 1, nsp
-     nbnt = upf(nt)%nbeta
-     nhnt = nh(nt)
-!!!        CALL interp_beta ( nt, nb, npw_, qg, vq )
-     !$acc parallel loop collapse(2)
-     do nb = 1, nbnt
-        DO ig = 1, npw_
-           qgr = qg(ig)
-           px = qgr / dq - DBLE(INT(qgr/dq))
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = INT(qgr/dq) + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           vq(ig,nb) = &
-                tab_beta(i0,nb,nt) * ux * vx * wx / 6.d0 + &
-                tab_beta(i1,nb,nt) * px * vx * wx / 2.d0 - &
-                tab_beta(i2,nb,nt) * px * ux * wx / 2.d0 + &
-                tab_beta(i3,nb,nt) * px * ux * vx / 6.d0
-        END DO
-     END DO
+     !
+     CALL interp_beta ( nt, npw_, qg, vq )
      ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
+     nhnt = nh(nt)
      !$acc parallel loop collapse(2)
      do ih = 1, nhnt
         do ig = 1, npw_
@@ -156,7 +132,7 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
      do na = 1, nat
         ! ordering: first all betas for atoms of type 1
         !           then  all betas for atoms of type 2  and so on
-        if (ityp (na) .eq.nt) then
+        if (ityp (na) == nt) then
            arg = (q1 * tau (1, na) + &
                   q2 * tau (2, na) + &
                   q3 * tau (3, na) ) * tpi
@@ -193,3 +169,45 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   !
   return
 end subroutine init_us_2_acc
+!
+!----------------------------------------------------------------------
+SUBROUTINE interp_beta( nt, npw_, qg, vq )
+  !----------------------------------------------------------------------
+  !
+  USE upf_kinds,  ONLY : dp
+  USE uspp_param, ONLY : upf, nbetam
+  USE uspp_data,  ONLY : dq, tab_beta
+  !
+  implicit none
+  integer, intent(in) :: nt, npw_
+  real(dp), intent(in ) :: qg(npw_)
+  real(dp), intent(out) :: vq(npw_,nbetam)
+  !
+  integer :: i0, i1, i2, i3, nbnt, nb, ig
+  real(dp):: qgr, px, ux, vx, wx
+  !
+  nbnt = upf(nt)%nbeta
+  !$acc data present (qg, vq, tab_beta)
+  !$acc parallel loop collapse(2)
+  do nb = 1, nbnt
+     DO ig = 1, npw_
+        qgr = qg(ig)
+        px = qgr / dq - DBLE(INT(qgr/dq))
+        ux = 1.d0 - px
+        vx = 2.d0 - px
+        wx = 3.d0 - px
+        i0 = INT(qgr/dq) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        vq(ig,nb) = &
+             tab_beta(i0,nb,nt) * ux * vx * wx / 6.d0 + &
+             tab_beta(i1,nb,nt) * px * vx * wx / 2.d0 - &
+             tab_beta(i2,nb,nt) * px * ux * wx / 2.d0 + &
+             tab_beta(i3,nb,nt) * px * ux * vx / 6.d0
+     END DO
+  END DO
+  !$acc end data
+  !----------------------------------------------------------------------
+END SUBROUTINE interp_beta
+!----------------------------------------------------------------------
