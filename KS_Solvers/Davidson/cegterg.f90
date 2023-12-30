@@ -1127,14 +1127,14 @@ SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   CALL start_clock( 'cegterg:init' )
   !
-  CALL compute_distmat_omp( hl, psi, hpsi )
+  CALL compute_distmat( hl, psi, hpsi )
   !
   IF ( uspp ) THEN
-     CALL compute_distmat_omp( sl, psi, spsi )
+     CALL compute_distmat( sl, psi, spsi )
      !
   ELSE
      !
-     CALL compute_distmat_omp( sl, psi, psi )
+     CALL compute_distmat( sl, psi, psi )
      !
   END IF
   !
@@ -1908,61 +1908,6 @@ CONTAINS
   !
   SUBROUTINE compute_distmat( dm, v, w )
      !
-     !  This subroutine compute <vi|wj> and store the
-     !  result in distributed matrix dm
-     !
-     INTEGER :: ipc, ipr
-     INTEGER :: nr, nc, ir, ic, root
-     COMPLEX(DP), INTENT(OUT) :: dm( :, : )
-     COMPLEX(DP) :: v(:,:), w(:,:)
-     COMPLEX(DP), ALLOCATABLE :: work( :, : )
-     !
-     ALLOCATE( work( nx, nx ) )
-     !
-     work = ZERO
-     !
-     !  Only upper triangle is computed, then the matrix is hermitianized
-     !
-     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
-        !
-        nc = nrc_ip( ipc )
-        ic = irc_ip( ipc )
-        !
-        DO ipr = 1, ipc ! idesc(LAX_DESC_NPR) ! ipc ! use symmetry for the loop on row procs
-           !
-           nr = nrc_ip( ipr )
-           ir = irc_ip( ipr )
-           !
-           !  rank of the processor for which this block (ipr,ipc) is destinated
-           !
-           root = rank_ip( ipr, ipc )
-
-           ! use blas subs. on the matrix block
-
-           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ONE , &
-                       v(1,ir), kdmx, w(1,ic), kdmx, ZERO, work, nx )
-
-           ! accumulate result on dm of root proc.
-
-           CALL mp_root_sum( work, dm, root, ortho_parent_comm )
-
-        END DO
-        !
-     END DO
-     if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
-     !
-     !  The matrix is hermitianized using upper triangle
-     !
-     CALL laxlib_zsqmher( nbase, dm, nx, idesc )
-     !
-     DEALLOCATE( work )
-     !
-     RETURN
-  END SUBROUTINE compute_distmat
-  !
-  !
-  SUBROUTINE compute_distmat_omp( dm, v, w )
-     !
      !  ... omp gpu double
      !
      INTEGER :: ipc, ipr
@@ -2026,7 +1971,7 @@ CONTAINS
      !
      RETURN
      !
-  END SUBROUTINE compute_distmat_omp
+  END SUBROUTINE compute_distmat
   !
   !
   SUBROUTINE update_distmat( dm, v, w )

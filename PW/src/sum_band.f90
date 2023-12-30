@@ -308,7 +308,7 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd, brange
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd, brange, ns, dffts_nnr
        REAL(DP) :: kplusgi
        !
        CALL using_evc(0); CALL using_et(0)
@@ -326,6 +326,19 @@ SUBROUTINE sum_band()
           ALLOCATE( tg_rho( v_siz ) )
           incr  = 2*fftx_ntgrp(dffts)
        ENDIF
+       !
+       ns = SIZE(rho%of_r,2)
+       dffts_nnr = dffts%nnr
+       !
+#if defined(__OPENMP_GPU)
+       !$omp target data map(alloc:rho%of_r)
+       !$omp target teams distribute parallel do collapse(2)
+#endif
+       DO j = 1, ns
+         DO i = 1, dffts_nnr
+           rho%of_r(i,j)=0.d0
+         ENDDO
+       ENDDO
        !
        k_loop: DO ik = 1, nks
           !
@@ -359,6 +372,10 @@ SUBROUTINE sum_band()
              eband = eband + et(ibnd,ik) * wg(ibnd,ik)
              !
           ENDDO
+          !
+#if defined(__OPENMP_GPU)
+          !$omp target data map(to:evc)
+#endif
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
@@ -402,7 +419,7 @@ SUBROUTINE sum_band()
                 ebnd = ibnd
                 IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                 !
-                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts )
+                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts, omp_mod=0 )
                 !
                 w1 = wg(ibnd,ik) / omega
                 !
@@ -414,7 +431,7 @@ SUBROUTINE sum_band()
                    w2 = w1
                 ENDIF
                 !
-                CALL get_rho_gamma( rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic )
+                CALL get_rho_gamma( rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic, omp_mod=0 )
                 !
              ENDIF
              !
@@ -455,8 +472,20 @@ SUBROUTINE sum_band()
           !
           IF ( okvan ) CALL sum_bec( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd )
           !
+#if defined(__OPENMP_GPU)
+          !$omp end target data
+#endif
+          !
        ENDDO k_loop
        !
+       IF (.NOT.use_tg) THEN
+#if defined(__OPENMP_GPU)
+         !$omp target update from(rho%of_r)
+#endif
+       ENDIF
+#if defined(__OPENMP_GPU)
+       !$omp end target data
+#endif
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
@@ -757,7 +786,7 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
+          IF ( okvan ) CALL sum_bec( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
           !*evc
 #if defined(__OPENMP_GPU)
@@ -844,27 +873,48 @@ SUBROUTINE sum_band()
         !
      END SUBROUTINE get_rho
 
-     SUBROUTINE get_rho_gamma(rho_loc, nrxxs_loc, w1_loc, w2_loc, psic_loc)
-
+     SUBROUTINE get_rho_gamma( rho_loc, nrxxs_loc, w1_loc, w2_loc, psic_loc, omp_mod )
+        !
         IMPLICIT NONE
-
+        !
         INTEGER :: nrxxs_loc
         REAL(DP) :: rho_loc(nrxxs_loc)
         REAL(DP) :: w1_loc, w2_loc
         COMPLEX(DP) :: psic_loc(nrxxs_loc)
-
+        INTEGER, INTENT(IN), OPTIONAL :: omp_mod
+        !
         INTEGER :: ir
-
-        !$omp parallel do
-        DO ir = 1, nrxxs_loc
-           !
-           rho_loc(ir) = rho_loc(ir) + &
+        LOGICAL :: omp_offload
+        !
+        omp_offload = .FALSE.
+#if defined(__OPENMP_GPU)
+        IF (PRESENT(omp_mod))  omp_offload = omp_mod==0
+#endif
+        !
+        IF (omp_offload) THEN
+#if defined(__OPENMP_GPU)
+          !$omp target teams distribute parallel do
+#endif
+          DO ir = 1, nrxxs_loc
+            !
+            rho_loc(ir) = rho_loc(ir) + &
                          w1_loc * DBLE( psic_loc(ir) )**2 + &
                          w2_loc * AIMAG( psic_loc(ir) )**2
-           !
-        END DO
-        !$omp end parallel do
-
+            !
+          END DO
+          !
+        ELSE
+          !$omp parallel do
+          DO ir = 1, nrxxs_loc
+            !
+            rho_loc(ir) = rho_loc(ir) + &
+                          w1_loc * DBLE( psic_loc(ir) )**2 + &
+                          w2_loc * AIMAG( psic_loc(ir) )**2
+            !
+          END DO
+          !$omp end parallel do
+        ENDIF
+        !
      END SUBROUTINE get_rho_gamma
 
 
@@ -902,7 +952,7 @@ SUBROUTINE sum_band()
 END SUBROUTINE sum_band
 
 !----------------------------------------------------------------------------
-SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd ) 
+SUBROUTINE sum_bec( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd ) 
   !----------------------------------------------------------------------------
   !! This routine computes the sum over bands:
   !
@@ -962,15 +1012,18 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
     ! calbec computes becp = <vkb_i|psi_j>
-    IF ((.NOT.gamma_only).AND.(.NOT. noncolin).AND.(.NOT.okpaw)) THEN
+#if defined(__OPENMP_GPU)
+    IF ((.NOT. noncolin)) THEN
 !civn: this should work with omp and cpu.
 !      acc passes through sum_band_gpu
-      !$omp target data map(to:vkb)
-      CALL calbec( offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
-      !$omp end target data
+        CALL calbec( offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
     ELSE
       CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
     ENDIF
+#else
+    CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+#endif
+     !
   ELSE
      if (gamma_only) then
         do kbnd = 1, this_bgrp_nbnd, 2 !  ibnd_start, ibnd_end, 2

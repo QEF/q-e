@@ -75,7 +75,7 @@ SUBROUTINE addusdens_g(rho)
   !
   IF (.NOT.okvan) RETURN
   !
-  CALL start_clock_gpu( 'addusdens' )
+  CALL start_clock( 'addusdens' )
   !
   ALLOCATE( aux(ngm,nspin_mag) )
   !$acc data create(aux)
@@ -245,7 +245,7 @@ SUBROUTINE addusdens_g(rho)
   !
   DEALLOCATE( aux )
   !
-  CALL stop_clock_gpu( 'addusdens' )
+  CALL stop_clock( 'addusdens' )
   !
   RETURN
   !

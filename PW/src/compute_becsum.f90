@@ -66,7 +66,13 @@ SUBROUTINE compute_becsum( iflag )
      !
      ! ... actual calculation is performed inside routine "sum_bec"
      !
+#if defined(__OPENMP_GPU)
+     !$omp target data map(to:evc) 
+#endif
      CALL sum_bec( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
+#if defined(__OPENMP_GPU)
+     !$omp end target data
+#endif
      !
   ENDDO k_loop
   !
