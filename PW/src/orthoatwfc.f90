@@ -84,6 +84,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   !
   ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
   !$acc enter data create(wfcatom, swfcatom)
+  !$omp target data map(alloc:wfcatom, swfcatom)
   !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
@@ -95,6 +96,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
        !$acc update device(wfcatom)
+       !$omp target update to(wfcatom)
      ELSE
        IF(use_gpu) THEN
          !$acc host_data use_device(wfcatom)
@@ -102,15 +104,17 @@ SUBROUTINE orthoUwfc(save_wfcatom)
          !$acc end host_data
        ELSE
          CALL atomic_wfc (ik, wfcatom)
+         !$omp target update to(wfcatom)
        END IF
      ENDIF
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
-#if defined(__OPENMP_GPU)
-     CALL calbec (offload_cpu, npw, vkb, wfcatom, becp)
-     CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
-#else
+     !$omp target data map(to:vkb)
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
+     !$omp end target data
+#if defined(__OPENMP_GPU)
+     CALL s_psi_omp(npwx, npw, natomwfc, wfcatom, swfcatom)
+#else
      !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
      !$acc end host_data
@@ -123,6 +127,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! save to unit iunhub
      !
      !$acc update host(swfcatom)
+     !$omp target update from(swfcatom)
      CALL copy_U_wfc (swfcatom, noncolin)
      IF ( nks > 1 ) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
@@ -131,12 +136,14 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      !
      IF (save_wfcatom.and..not.use_gpu) THEN
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
+        !$omp target update from(wfcatom)
         CALL copy_U_wfc (wfcatom, noncolin)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
      !
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
+  !$omp end target data
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type_acc ( becp )
   !
@@ -170,7 +177,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   USE uspp,             ONLY : nkb, vkb
   USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, offload_type
   USE noncollin_module, ONLY : noncolin 
   IMPLICIT NONE
   !
@@ -220,9 +227,18 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   IF (orthogonalize_wfc .OR. .NOT.lflag) THEN
      ! Allocate the array becp = <beta|wfcatom>
      CALL allocate_bec_type_acc (nkb,natomwfc, becp)
-     CALL calbec (npw, vkb, wfcatom, becp)
+     !
+     !$omp target data map(to:vkb, wfcatom) map(from:swfcatom)
+     CALL calbec (offload_type, npw, vkb, wfcatom, becp)
      ! Calculate swfcatom = S * phi
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+#if defined(__OPENMP_GPU)
+     CALL s_psi_omp(npwx, npw, natomwfc, wfcatom, swfcatom)
+     !$omp end target data
+#else
+     !$acc host_data use_device(wfcatom, swfcatom)
+     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
+     !$acc end host_data
+#endif
      CALL deallocate_bec_type_acc (becp)
   ENDIF
   !
@@ -231,8 +247,10 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ! lflag=.TRUE.  : On the output wfcatom = O^{-1/2} \phi (no ultrasoft S), swfcatom are unchanged.
   IF (orthogonalize_wfc) THEN
      !$acc data copy(wfcatom, swfcatom)
+     !$omp target data map(tofrom:wfcatom, swfcatom)
      CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag )
      !$acc end data
+     !$omp end target data
   END IF
   !
   IF (lflag) THEN
@@ -292,6 +310,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   normalize_only=.FALSE.
   ALLOCATE (wfcatom( npwx*npol, natomwfc))
   !$acc enter data create(wfcatom, swfcatom)
+  !$omp target data map(alloc:wfcatom, swfcatom)
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type_acc (nkb,natomwfc, becp) 
@@ -301,6 +320,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
        !$acc update device(wfcatom)
+       !$omp target update to(wfcatom)
      ELSE
        IF(use_gpu) THEN 
          !$acc host_data use_device(wfcatom)
@@ -308,31 +328,35 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
          !$acc end host_data
        ELSE
          CALL atomic_wfc (ik, wfcatom)
+         !$omp target update to(wfcatom)
        END IF
      ENDIF
      npw = ngk (ik)
      !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      !
+     !$omp target data map(to:vkb)
+     CALL calbec (offload_type, npw, vkb, wfcatom, becp)
+     !$omp end target data
 #if defined(__OPENMP_GPU)
-     CALL calbec (offload_cpu, npw, vkb, wfcatom, becp)     
-     CALL s_psi( npwx, npw, natomwfc, wfcatom, swfcatom )
+     CALL s_psi_omp (npwx, npw, natomwfc, wfcatom, swfcatom)
 #else
-     CALL calbec (offload_type, npw, vkb, wfcatom, becp)     
      !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc( npwx, npw, natomwfc, wfcatom, swfcatom )
      !$acc end host_data
-#endif
+#endif     
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
      ! write S * atomic wfc to unit iunsat
      !
      !$acc update host(swfcatom)
+     !$omp target update from(swfcatom)
      CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
+  !$omp end target data
   DEALLOCATE (wfcatom)
   CALL deallocate_bec_type_acc ( becp )
   !
@@ -380,35 +404,47 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   INTEGER :: i, j, k, ipol
   !
   ALLOCATE (overlap(m,m), work(m,m), e(m), s(m,m))
+  !
+  !$omp target enter data map(alloc:overlap, e, s)
+  !$omp target enter data map(alloc:work)
   ! 
   !$acc kernels
-  overlap(:,:) = (0.d0,0.d0)
-  work(:,:) = (0.d0,0.d0)
+  !$omp target teams distribute parallel do collapse(2)
+  DO i = 1, m
+     DO j = 1, m
+        overlap(j,i) = (0.d0,0.d0)
+        work(j,i) = (0.d0,0.d0)
+     ENDDO
+  ENDDO
   !$acc end kernels
   !
   ! calculate overlap matrix
   !
   IF (noncolin) THEN
      !$acc host_data use_device(wfc, swfc, overlap)
-     CALL MYZGEMM2 ('c', 'n', m, m, npwx*npol, (1.d0, 0.d0), wfc, &
-          npwx*npol, swfc, npwx*npol, (0.d0,0.d0), overlap, m, .false.)
+     CALL MYZGEMM ('c', 'n', m, m, npwx*npol, (1.0_DP, 0.0_DP), wfc, &
+          npwx*npol, swfc, npwx*npol, (0.0_DP,0.0_DP), overlap, m)
      !$acc end host_data
   ELSE
      !$acc host_data use_device(wfc, swfc, overlap)
-     CALL MYZGEMM2 ('c', 'n', m, m, npw, (1.d0, 0.d0), wfc, &
-          npwx, swfc, npwx, (0.d0, 0.d0), overlap, m, .false.)
+     CALL MYZGEMM ('C', 'N', m, m, npw, (1.0_DP,0.0_DP), wfc, &
+          npwx, swfc, npwx, (0.0_DP,0.0_DP), overlap, m)
      !$acc end host_data
   END IF
   !
+  !$omp target update from(overlap)
   !$acc host_data use_device(overlap)
   CALL mp_sum(  overlap, intra_bgrp_comm )
   !$acc end host_data
+  !$omp target update to(overlap)
   !
   IF ( normalize_only ) THEN
      !$acc parallel
      !$acc loop gang
+     !$omp target teams distribute parallel do
      DO i = 1, m
         !$acc loop vector
+        !$omp simd
         DO j = i+1, m
            overlap(i,j) = CMPLX(0.d0,0.d0, kind=dp)
            overlap(j,i) = CMPLX(0.d0,0.d0, kind=dp)
@@ -436,10 +472,13 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
     !$acc end host_data
     !
   ELSE
+    !$omp target update from(overlap, e, work)
     CALL cdiagh (m, overlap, m, e, work)
+    !$omp target update to(overlap, e, work)
   END IF 
   !
   !$acc parallel loop collapse(2) private(temp)
+  !$omp target teams distribute parallel do collapse(2)
   DO i = 1, m
      DO j = 1, m
         IF ( j < i ) CYCLE
@@ -458,19 +497,37 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! Save quantities which are needed for 
      ! calculations of Hubbard forces and stress
      !$acc kernels copyout(overlap_inv)
-     eigenval(:) = e(:)
-     eigenvect(:,:) = work(:,:)
-     overlap_inv(:,:) = overlap(:,:)
+     !$omp target teams distribute parallel do map(from:eigenval)
+     DO i = 1, m
+        eigenval(i) = e(i)
+     ENDDO
+     !$omp end target teams distribute parallel do
+     !$omp target teams distribute parallel do collapse(2) map(from:overlap_inv, eigenvect)
+     DO i = 1, m
+        DO j = 1, m
+           eigenvect(j,i) = work(j,i)
+           overlap_inv(j,i) = overlap(j,i)
+        ENDDO
+     ENDDO
      !$acc end kernels
      !
   END IF 
+  !
+  !$omp target exit data map(delete:work)
   !
   DEALLOCATE( work )
   !
   ALLOCATE( work(m, npwx*npol ) )
   !
+  !$omp target enter data map(alloc:work)
+  !
   !$acc kernels
-  work(:,:) = (0.d0,0.d0)
+  !$omp target teams distribute parallel do collapse(2)
+  DO i = 1, npwx*npol
+     DO j = 1, m
+        work(j,i) = (0.d0,0.d0)
+     ENDDO
+  ENDDO
   !$acc end kernels
   !
   IF (lflag) THEN
@@ -479,28 +536,29 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! O^(-1/2) \psi (note the transposition):
      ! \phi_I = \sum_J O^{-1/2}_JI \phi_J
      !
-     IF(noncolin) THEN 
-       !$acc host_data use_device(overlap, wfc, work)
-       CALL MYZGEMM2('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
-       !$acc end host_data
-       !$acc parallel loop collapse(2) 
-       DO i = 1, npwx*npol
-         DO j = 1, m
-           wfc(i,j) = work(j,i)
-         END DO 
-       END DO
+     IF (noncolin) THEN 
+        !$acc host_data use_device(overlap, wfc, work)
+        CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.0_DP,0.0_DP), overlap, m, wfc, npwx*npol, (0.0_DP,0.0_DP), work, m)        
+        !$acc end host_data
+        !$acc parallel loop collapse(2) 
+        !$omp target teams distribute parallel do collapse(2)
+        DO i = 1, npwx*npol
+           DO j = 1, m
+              wfc(i,j) = work(j,i)
+           END DO 
+        END DO
      ELSE
-       !$acc host_data use_device(overlap, wfc, work)
-       CALL MYZGEMM2('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
-       !$acc end host_data
-       !$acc parallel loop collapse(2)
-       DO i = 1, npw
-         DO j = 1, m
-           wfc(i,j) = work(j,i)
-         END DO 
-       END DO
+        !$acc host_data use_device(overlap, wfc, work)
+        CALL MYZGEMM('N', 'T', m, npw, m, (1.0_DP,0.0_DP), overlap, m, wfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
+        !$acc end host_data
+        !$acc parallel loop collapse(2)
+        !$omp target teams distribute parallel do collapse(2)
+        DO i = 1, npw
+           DO j = 1, m
+              wfc(i,j) = work(j,i)
+           END DO 
+        END DO
      END IF
-    
      !
      !
   ELSE
@@ -510,30 +568,34 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! \Sphi_I = \sum_J O^{-1/2}_JI \Sphi_J
      ! FIXME: can be done in a faster way by using wfc as work space 
      !
-     IF(noncolin) THEN 
-       !$acc host_data use_device(overlap, swfc, work)
-       CALL MYZGEMM2('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
-       !$acc end host_data 
-       !$acc parallel loop collapse(2)
-       DO i = 1, npwx*npol
-         DO j = 1, m
-           swfc(i,j) = work(j,i)
-         END DO 
-       END DO
+     IF (noncolin) THEN 
+        !$acc host_data use_device(overlap, swfc, work)
+        CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.0_DP,0.0_DP), overlap, m, swfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
+        !$acc end host_data
+        !$acc parallel loop collapse(2)
+        !$omp target teams distribute parallel do collapse(2)
+        DO i = 1, npwx*npol
+           DO j = 1, m
+              swfc(i,j) = work(j,i)
+           END DO 
+        END DO
      ELSE
-       !$acc host_data use_device(overlap, swfc, work)
-       CALL MYZGEMM2('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m, .false. )
-       !$acc end host_data
-       !$acc parallel loop collapse(2)
-       DO i = 1, npw
-         DO j = 1, m
-           swfc(i,j) = work(j,i)
-         END DO 
-       END DO
+        !$acc host_data use_device(overlap, swfc, work)
+        CALL MYZGEMM('N', 'T', m, npw, m, (1.0_DP,0.0_DP), overlap, m, swfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
+        !$acc end host_data
+        !$acc parallel loop collapse(2)
+        !$omp target teams distribute parallel do collapse(2)
+        DO i = 1, npw
+           DO j = 1, m
+              swfc(i,j) = work(j,i)
+           END DO 
+        END DO
      END IF
      !
   ENDIF
   !
+  !$omp target exit data map(delete:work)
+  !$omp target exit data map(delete:overlap, e, s)
   DEALLOCATE (overlap, work, e, s)
   !
   RETURN
@@ -552,7 +614,8 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !! See Eq. (32) in PRB 102, 235159 (2020).
   !! Written by I. Timrov (June 2020)
   !
-  USE kinds,       ONLY : DP
+  USE control_flags, ONLY : use_gpu
+  USE kinds,         ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -577,22 +640,24 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !! auxiliary array
   !
   ALLOCATE (aux(m,m))
+  !$omp target data map(to:work,doverlap,e) map(from:doverlap_inv) map(alloc:aux)
   !
   ! Compute (work^H) * doverlap * work 
   ! and put the result back in doverlap
   !
   ! Compute aux = doverlap * work
   !$acc host_data use_device(doverlap, work, aux)
-  CALL MYZGEMM2('N','N', m, m, m, (1.d0,0.d0), doverlap, &
-              m, work, m, (0.d0,0.d0), aux, m, .false.)
+  CALL MYZGEMM('N','N', m, m, m, (1.0_DP,0.0_DP), doverlap, &
+              m, work, m, (0.0_DP,0.0_DP), aux, m)
   !$acc end host_data
   ! Compute (work^H) * aux
   !$acc host_data use_device(work, aux, doverlap)
-  CALL MYZGEMM2('C','N', m, m, m, (1.d0,0.d0), work, &
-              m, aux, m, (0.d0,0.d0), doverlap, m, .false.)
+  CALL MYZGEMM('C','N', m, m, m, (1.0_DP,0.0_DP), work, &
+              m, aux, m, (0.0_DP,0.0_DP), doverlap, m)
   !$acc end host_data
   !
   !$acc parallel loop collapse(2)
+  !$omp target teams distribute parallel do collapse(2)
   DO m1 = 1, m
      DO m2 = 1, m
         aux(m1,m2) = doverlap(m1,m2) / &
@@ -604,15 +669,16 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !
   ! Compute doverlap = aux * (work^H)
   !$acc host_data use_device(aux, work, doverlap)
-  CALL MYZGEMM2('N','C', m, m, m, (1.d0,0.d0), aux, &
-              m, work, m, (0.d0,0.d0), doverlap, m, .false.)
+  CALL MYZGEMM('N','C', m, m, m, (1.0_DP,0.0_DP), aux, &
+              m, work, m, (0.0_DP,0.0_DP), doverlap, m)
   !$acc end host_data
   ! Compute doverlap_inv = work * doverlap
   !$acc host_data use_device(work, doverlap, doverlap_inv)
-  CALL MYZGEMM2('N','N', m, m, m, (-1.d0,0.d0), work, &
-              m, doverlap, m, (0.d0,0.d0), doverlap_inv, m, .false.)
+  CALL MYZGEMM('N','N', m, m, m, (-1.0_DP,0.0_DP), work, &
+              m, doverlap, m, (0.0_DP,0.0_DP), doverlap_inv, m)
   !$acc end host_data
   !
+  !$omp end target data
   DEALLOCATE (aux)
   !
   RETURN
