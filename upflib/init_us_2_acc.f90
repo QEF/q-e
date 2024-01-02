@@ -187,7 +187,7 @@ SUBROUTINE interp_beta( nt, npw_, qg, vq )
   real(dp):: qgr, px, ux, vx, wx
   !
   nbnt = upf(nt)%nbeta
-  !$acc data present (qg, vq, tab_beta)
+  !$acc data present (tab_beta) present_or_copyin (qg) present_or_copyout (vq)
   !$acc parallel loop collapse(2)
   do nb = 1, nbnt
      DO ig = 1, npw_
