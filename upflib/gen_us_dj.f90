@@ -17,8 +17,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_kinds,  ONLY: dp
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY: nqx, tab_beta, dq
-  USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh, nhm
+  USE uspp_param, ONLY: lmaxkb, nbetam, nh, nhm
   !
   IMPLICIT NONE
   !
@@ -59,16 +58,15 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   !
   ! ... local variables
   !
-  INTEGER :: ikb, nb, ih, ig, i0, i1, i2, i3, nt
+  INTEGER :: ikb, nb, ih, ig, nt
   ! counter on beta functions
   ! counter on beta functions
   ! counter on beta functions
   ! counter on G vectors
-  ! index of the first nonzero point in the r
   ! counter on atomic type
   !
   INTEGER :: ina, na, l, iig, lm, ikb_t, nht
-  REAL(DP) :: arg, px, ux, vx, wx, qt
+  REAL(DP) :: arg
   ! argument of the atomic phase factor
   COMPLEX(DP) :: pref
   ! prefactor
@@ -109,28 +107,13 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   !$acc update device(ylm)
 #endif
   !
-  !$acc data present( tab_beta )
-  DO nt = 1, ntyp
-     !$acc parallel loop collapse(2)
-     DO nb = 1, upf(nt)%nbeta
-        DO ig = 1, npw
-           qt = SQRT(q(ig)) * tpiba
-           px = qt / dq - INT(qt/dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = qt / dq + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           djl(ig,nb,nt) = ( tab_beta(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                             tab_beta(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                             tab_beta(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                             tab_beta(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.d0 ) / dq
-        ENDDO
-     ENDDO
+  !$acc parallel loop
+  DO ig = 1, npw
+     q(ig) = SQRT(q(ig)) * tpiba
   ENDDO
-  !$acc end data
+  DO nt = 1, ntyp
+     CALL interp_dbeta( nt, npw, q, djl(:,:,nt) )
+  ENDDO
   !
   !CALL stop_clock( 'stres_us33' )
   !CALL start_clock( 'stres_us34' )
@@ -219,3 +202,43 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   RETURN
   !
 END SUBROUTINE gen_us_dj_base
+!
+!----------------------------------------------------------------------
+SUBROUTINE interp_dbeta( nt, npw, qg, vq )
+  !----------------------------------------------------------------------
+  !
+  USE upf_kinds,  ONLY : dp
+  USE uspp_param, ONLY : upf, nbetam
+  USE uspp_data,  ONLY : nqx, dq, tab_beta
+  !
+  implicit none
+  integer, intent(in) :: nt, npw
+  real(dp), intent(in ) :: qg(npw)
+  real(dp), intent(out) :: vq(npw,nbetam)
+  !
+  integer :: i0, i1, i2, i3, nbnt, nb, ig
+  real(dp):: qgr, px, ux, vx, wx
+  !
+  nbnt = upf(nt)%nbeta
+  !$acc data present (tab_beta) present_or_copyin (qg) present_or_copyout (vq)
+  !$acc parallel loop collapse(2)
+  DO nb = 1, nbnt
+     DO ig = 1, npw
+        qgr = qg(ig)
+        px = qgr / dq - INT(qgr/dq)
+        ux = 1.0_dp - px
+        vx = 2.0_dp - px
+        wx = 3.0_dp - px
+        i0 = qgr / dq + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        vq(ig,nb) = ( tab_beta(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.0_dp + &
+                      tab_beta(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.0_dp - &
+                      tab_beta(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.0_dp + &
+                      tab_beta(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.0_dp ) / dq
+     ENDDO
+  END DO
+  !$acc end data
+  !----------------------------------------------------------------------
+END SUBROUTINE interp_dbeta
