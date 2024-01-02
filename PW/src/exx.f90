@@ -3214,6 +3214,7 @@ end associate
        intra_bgrp_comm = intra_egrp_comm
        !
        IF (okvan .OR. okpaw) THEN
+          !! FIXME: can be replaced by a call to init_us_2 + calbec
           CALL compute_becpsi( npw, igk_exx(:,ikk), xkp, evc_exx, &
                                becpsi%k(:,ibands(1,my_egrp_id+1)) )
        ENDIF
