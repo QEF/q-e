@@ -18,7 +18,6 @@ SIMPLEOBJS = \
   epe.o  \
   gk_sort_limit.o \
   khamiltonian.o \
-  init_us_2_max.o \
   commutator.o 
 
 

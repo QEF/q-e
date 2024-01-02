@@ -176,7 +176,7 @@ SUBROUTINE interp_beta( nt, npw_, qg, vq )
   !
   USE upf_kinds,  ONLY : dp
   USE uspp_param, ONLY : upf, nbetam
-  USE uspp_data,  ONLY : dq, tab_beta
+  USE uspp_data,  ONLY : nqx, dq, tab_beta
   !
   implicit none
   integer, intent(in) :: nt, npw_
@@ -193,18 +193,24 @@ SUBROUTINE interp_beta( nt, npw_, qg, vq )
      DO ig = 1, npw_
         qgr = qg(ig)
         px = qgr / dq - DBLE(INT(qgr/dq))
-        ux = 1.d0 - px
-        vx = 2.d0 - px
-        wx = 3.d0 - px
+        ux = 1.0_dp - px
+        vx = 2.0_dp - px
+        wx = 3.0_dp - px
         i0 = INT(qgr/dq) + 1
         i1 = i0 + 1
         i2 = i0 + 2
         i3 = i0 + 3
-        vq(ig,nb) = &
-             tab_beta(i0,nb,nt) * ux * vx * wx / 6.d0 + &
-             tab_beta(i1,nb,nt) * px * vx * wx / 2.d0 - &
-             tab_beta(i2,nb,nt) * px * ux * wx / 2.d0 + &
-             tab_beta(i3,nb,nt) * px * ux * vx / 6.d0
+        if ( i3 <= nqx ) then
+           vq(ig,nb) = &
+             tab_beta(i0,nb,nt) * ux * vx * wx / 6.0_dp + &
+             tab_beta(i1,nb,nt) * px * vx * wx / 2.0_dp - &
+             tab_beta(i2,nb,nt) * px * ux * wx / 2.0_dp + &
+             tab_beta(i3,nb,nt) * px * ux * vx / 6.0_dp
+        else
+           !! This case should never happen if tab_beta is properly allocated
+           !! (setting q_max to be large enough) - for compatibility with GWW
+           vq(ig,nb) = 0.0_dp
+        end if
      END DO
   END DO
   !$acc end data

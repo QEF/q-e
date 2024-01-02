@@ -233,10 +233,14 @@ SUBROUTINE interp_dbeta( nt, npw, qg, vq )
         i1 = i0 + 1
         i2 = i0 + 2
         i3 = i0 + 3
-        vq(ig,nb) = ( tab_beta(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.0_dp + &
-                      tab_beta(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.0_dp - &
-                      tab_beta(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.0_dp + &
-                      tab_beta(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.0_dp ) / dq
+        IF ( i3 <= nqx ) THEN
+            vq(ig,nb) = ( tab_beta(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.0_dp + &
+                          tab_beta(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.0_dp - &
+                          tab_beta(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.0_dp + &
+                          tab_beta(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.0_dp )/dq
+        ELSE
+            vq(ig,nb) = 0.0_dp 
+        END IF
      ENDDO
   END DO
   !$acc end data
