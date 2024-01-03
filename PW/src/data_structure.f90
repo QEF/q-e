@@ -33,9 +33,9 @@ SUBROUTINE data_structure( gamma_only )
   USE symm_base,  ONLY : fft_fact
   USE command_line_options, ONLY: pencil_decomposition_
   USE command_line_options, ONLY : nmany_
-!#if defined(__ROCBLAS)
+#if defined(__ROCBLAS)
   USE rocblas,    ONLY : rocblas_a2a_set
-!#endif
+#endif
   !
   IMPLICIT NONE
   !

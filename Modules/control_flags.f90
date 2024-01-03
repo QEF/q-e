@@ -280,9 +280,12 @@ MODULE control_flags
 #endif
   !
   INTEGER, PUBLIC :: &
+#if defined(__OPENMP_GPU) && defined(__HIP) || defined(__CUDA)
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.
-  !
+#else
+    many_fft = 1               ! [temporary preproc split for platforms other than AMD and NVIDIA]
+#endif
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
   !

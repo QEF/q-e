@@ -1415,8 +1415,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
      offset = 0
      !
-#ifdef __MEMCPY_RECT
-     !
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
      !$omp target data use_device_addr(f_in,f_aux)
 #else
@@ -1445,27 +1443,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      ENDDO
      !$omp end target data
      !
-#else
-     !
-     DO gproc = 1, nprocp
-        kdest = ( gproc - 1 ) * sendsiz
-        kfrom = offset
-        ncp_me = ncp_(me)
-        npp_gproc = npp_(gproc)
-        !$omp target teams distribute parallel do collapse(2)
-        DO k = 1, ncp_me
-           DO i = 1, npp_gproc
-             f_aux( kdest + i + (k-1)*nppx ) = f_in( kfrom + i + (k-1)*nr3x )
-           END DO
-        END DO
-        offset = offset + npp_gproc
-     ENDDO
-#if !defined(__GPU_MPI) && !defined(__GPU_MPI_OMP)
-     !$omp target update from (f_aux)
-#endif
-     !
-#endif
-     !
      ! maybe useless; ensures that no garbage is present in the output
      !
      ! ! f_in = 0.0_DP
@@ -1476,7 +1453,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
      CALL start_clock ('a2a_fw')
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
-
+     !
 !$omp target data use_device_addr(f_in, f_aux)
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
@@ -1633,9 +1610,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      call MPI_WAITALL(2*nprocp-2, srh, MPI_STATUSES_IGNORE, ierr)
 #else
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
-#ifndef __MEMCPY_RECT
-     !$omp target update to(f_aux)
-#endif
 #endif
      CALL stop_clock ('a2a_bw')
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
@@ -1643,8 +1617,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !  step one: store contiguously the columns
      !
      offset = 0
-     !
-#ifdef __MEMCPY_RECT
      !
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
      !$omp target data use_device_addr(f_in,f_aux)
@@ -1674,32 +1646,14 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      ENDDO
      !$omp end target data
      !
-#else
-     !
-     DO gproc = 1, nprocp
-        kdest = ( gproc - 1 ) * sendsiz
-        kfrom = offset
-        ncp_me = ncp_(me)
-        npp_gproc = npp_(gproc)
-        !$omp target teams distribute parallel do collapse(2)
-        DO k = 1, ncp_me
-           DO i = 1, npp_gproc
-             f_in( kfrom + i + (k-1)*nr3x ) = f_aux( kdest + i + (k-1)*nppx )
-           END DO
-        END DO
-        offset = offset + npp_gproc
-     ENDDO
-     !
-#endif
-
 20   CONTINUE
-
+     !
   ENDIF
-
+  !
 #endif
-
+  !
   RETURN
-
+  !
 END SUBROUTINE fft_scatter_omp
 
 SUBROUTINE fft_scatter_omp_batch ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, batchsize, srh )
