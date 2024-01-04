@@ -26,7 +26,7 @@ subroutine read_ncpp (iunps, upf, ierr)
   real(DP) :: x, vll
   real(DP), allocatable:: vnl(:,:)
   real(DP), parameter :: rcut = 10.d0, e2 = 2.d0
-  integer :: nlc, nnl, lmax, lloc, ll(1) 
+  integer :: nbeta, nlc, nnl, lmax, lloc, ll(1) 
   integer :: nb, i, l, ir, ios = 0
   logical :: bhstype,  numeric
   !
@@ -151,7 +151,12 @@ subroutine read_ncpp (iunps, upf, ierr)
   do l = 0, lmax
      if (l /= lloc ) upf%nbeta = upf%nbeta + 1
   enddo
-  ALLOCATE ( upf%lll(upf%nbeta) )
+  !
+  !    FIXME: to avoid problems when broadcasting PPs with 0 nonlocal betas,
+  !           use "nbeta" instead of "upf%nbeta" for allocations
+  !
+  nbeta = MAX(1,upf%nbeta)
+  ALLOCATE ( upf%lll( nbeta) )
   nb = 0
   do l = 0, lmax
      if (l /= lloc ) then
@@ -180,7 +185,7 @@ subroutine read_ncpp (iunps, upf, ierr)
   !
 5 upf%kkbeta = 2 * ( ( upf%kkbeta + 1 ) / 2) - 1
   !
-  ALLOCATE ( upf%kbeta(upf%nbeta) )
+  ALLOCATE ( upf%kbeta(nbeta) )
   upf%kbeta(:) = upf%kkbeta
   ALLOCATE ( upf%vloc(upf%mesh) )
   upf%vloc (:) = 0.d0
@@ -239,8 +244,8 @@ subroutine read_ncpp (iunps, upf, ierr)
   !====================================================================
   ! convert to separable (KB) form
   !
-  ALLOCATE ( upf%beta (upf%mesh, upf%nbeta) ) 
-  ALLOCATE ( upf%dion (upf%nbeta,upf%nbeta) ) 
+  ALLOCATE ( upf%beta (upf%mesh, nbeta) ) 
+  ALLOCATE ( upf%dion (nbeta,nbeta) ) 
   upf%dion (:,:) = 0.d0
   nb = 0
   do l = 0, lmax
@@ -282,9 +287,9 @@ subroutine read_ncpp (iunps, upf, ierr)
   allocate(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
   upf%rcut_chi(:) = 0._dp
   upf%rcutus_chi(:) = 0._dp
-  allocate(upf%els_beta(upf%nbeta))
+  allocate(upf%els_beta( nbeta) )
   upf%els_beta(:) = 'nX'
-  allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
+  allocate(upf%rcut(nbeta), upf%rcutus(nbeta))
   upf%rcut(:) = 0._dp
   upf%rcutus(:) = 0._dp
   !
