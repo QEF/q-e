@@ -20,8 +20,8 @@ MODULE Coul_cut_2D
   !! 2D Coulomb cutoff.
   !
   USE kinds,       ONLY : DP
-  USE constants,   ONLY : tpi, pi
   !
+  IMPLICIT NONE
   SAVE
   !
   LOGICAL :: do_cutoff_2D = .FALSE.
@@ -43,12 +43,10 @@ SUBROUTINE cutoff_fact()
   !! a vector called \(\text{cutoff_2D}(:)\), to be re-used in various routines.  
   !! See Eq.(24) of PRB 96, 075448
   !
-  USE kinds
   USE io_global,    ONLY : stdout
   USE gvect,        ONLY : g, ngm, ngmx
   USE cell_base,    ONLY : alat, celldm, at
-  !
-  IMPLICIT NONE
+  USE constants,    ONLY : tpi
   !
   ! ... local variables
   !
@@ -73,7 +71,7 @@ SUBROUTINE cutoff_fact()
   DO i = 1, 2
      IF (ABS(at(3,i))>1d-8) WRITE(stdout, *) "2D CODE WILL NOT WORK, 2D MATERIAL NOT IN X-Y PLANE!!"
   ENDDO
-  ! define cutoff distnce and compute cutoff factor
+  ! define cutoff distance and compute cutoff factor
   lz = 0.5d0*at(3,3)*alat
   DO ng = 1, ngm
      Gplz = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpi*lz/alat
@@ -92,7 +90,6 @@ SUBROUTINE cutoff_lr_Vloc( )
   !! 2D calculations.  
   !! See Eq. (32) of PRB 96, 075448.
   !
-  USE kinds
   USE constants,    ONLY : fpi, e2, eps8
   USE fft_base,     ONLY : dfftp
   USE gvect,        ONLY : ngm, gg, g, ngmx
@@ -100,8 +97,6 @@ SUBROUTINE cutoff_lr_Vloc( )
   USE ions_base,    ONLY : zv, nsp
   USE uspp_param,   ONLY : upf
   USE cell_base,    ONLY : omega, tpiba2
-  !
-  IMPLICIT NONE
   !
   ! ... local variables
   !
@@ -139,12 +134,9 @@ SUBROUTINE cutoff_local( aux )
   !! routine \(\texttt{cutoff_lr_Vloc}\).  
   !! See Eq. (33) of PRB 96, 075448
   !
-  USE kinds
   USE gvect,      ONLY : ngm
   USE vlocal,     ONLY : strf
   USE ions_base,  ONLY : nsp
-  !
-  IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(INOUT):: aux(ngm)
   !! input: local part of ionic potential 
@@ -161,7 +153,6 @@ SUBROUTINE cutoff_local( aux )
   !
 END SUBROUTINE cutoff_local
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   !----------------------------------------------------------------------
@@ -169,11 +160,8 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   !! energy accordingly in G-space.  
   !! See Eq. (34) and (41) of PRB 96, 075448
   !
-  USE kinds
   USE gvect,       ONLY : ngm, gg , gstart
   USE io_global,   ONLY : stdout
-  !
-  IMPLICIT NONE
   ! 
   COMPLEX(DP), INTENT(IN) :: rhog(ngm)
   !! local potential
@@ -206,29 +194,27 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   !
 END SUBROUTINE cutoff_hartree
 !
-!
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_ewald( alpha, ewaldg, omega )
+FUNCTION cutoff_ewald( alpha, omega, gamma_only ) RESULT (ewaldg)
   !----------------------------------------------------------------------
   !! This subroutine defines computes the cutoff version of the 
   !! Ewald sum in G space.
   !! See Eq. (46) of PRB 96, 075448
   !
-  USE kinds
   USE gvect,      ONLY : ngm, gg, gstart
   USE ions_base,  ONLY : zv, nsp, nat, ityp
   USE cell_base,  ONLY : tpiba2, alat
   USE vlocal,     ONLY : strf
   USE io_global,  ONLY : stdout
-  !
-  IMPLICIT NONE
+  USE constants,  ONLY : tpi, fpi
   !
   REAL(DP), INTENT(IN) :: alpha
   !! tuning parameter for Ewald LR/SR separation
-  REAL(DP), INTENT(INOUT) :: ewaldg
-  !! Ewald sum
   REAL(DP), INTENT(IN) :: omega
   !! unit-cell volume
+  LOGICAL, INTENT(IN) :: gamma_only
+  REAL(DP) :: ewaldg
+  !! Ewald sum
   !
   ! ... local variables
   !
@@ -254,7 +240,8 @@ SUBROUTINE cutoff_ewald( alpha, ewaldg, omega )
      ewaldg = ewaldg +  ABS(rhon)**2 * EXP( - gg(ng) * tpiba2 /&
               alpha / 4.d0) / gg(ng)*cutoff_2D(ng) / tpiba2
   ENDDO
-  ewaldg = 2.d0 * tpi / omega * ewaldg
+  ewaldg = fpi / omega * ewaldg
+  IF ( gamma_Only ) ewaldg = 2.0_dp*ewaldg
   !
   ! ... here add the other constant term (Phi_self)
   !
@@ -267,8 +254,7 @@ SUBROUTINE cutoff_ewald( alpha, ewaldg, omega )
   !  
   RETURN
   !
-END SUBROUTINE cutoff_ewald
-!
+END FUNCTION cutoff_ewald
 !
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_force_ew( aux, alpha )
@@ -280,11 +266,8 @@ SUBROUTINE cutoff_force_ew( aux, alpha )
   !! looks somewhat different from what is implemented in the code, but it is
   !! equivalent).
   !
-  USE kinds
   USE gvect,        ONLY : ngm, gg , gstart
   USE cell_base,    ONLY : tpiba2, alat
-  !
-  IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(INOUT) :: aux(ngm)
   !! long-range part of the ionic potential
@@ -304,7 +287,6 @@ SUBROUTINE cutoff_force_ew( aux, alpha )
   !
 END SUBROUTINE cutoff_force_ew
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_force_lc( aux, forcelc )
   !----------------------------------------------------------------------
@@ -313,7 +295,6 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
   !! contribution is missing from the \(\text{Vloc}\).  
   !! See Eq. (54) of PRB 96, 075448.
   !
-  USE kinds
   USE gvect,         ONLY : ngm, gg, g , gstart
   USE constants,     ONLY : fpi, e2, eps8, tpi
   USE uspp_param,    ONLY : upf 
@@ -321,8 +302,6 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
   USE ions_base,     ONLY : nat, zv, tau, ityp
   USE io_global,     ONLY : stdout
   USE fft_base,      ONLY : dfftp
-  !
-  IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN) :: aux(dfftp%nnr)
   !! local ionic potential
@@ -350,7 +329,6 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
   !
 END SUBROUTINE cutoff_force_lc
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   !----------------------------------------------------------------------
@@ -362,13 +340,10 @@ SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   !! Indeed, it is "hidden" in the sum of KS eigenvalues. That is why we need 
   !! to re-compute it here for the stress.
   !
-  USE kinds
   USE ions_base,  ONLY: ntyp => nsp
   USE gvect,      ONLY: ngm, gstart
   USE io_global,  ONLY: stdout
   USE fft_base,   ONLY: dfftp
-  !
-  IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
@@ -400,7 +375,6 @@ SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   !
 END SUBROUTINE cutoff_stres_evloc
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   !----------------------------------------------------------------------
@@ -408,15 +382,12 @@ SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   !! of the local part of the ionic potential to the rest of the 
   !! \(\text{sigmaloc}\). That is, the rest of Eq. (63) of PRB 96, 075448.
   !
-  USE kinds
   USE ions_base,   ONLY : ntyp => nsp
   USE constants,   ONLY : eps8
   USE gvect,       ONLY : ngm, gstart, g, gg
   USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
   USE io_global,   ONLY : stdout
   USE fft_base,    ONLY : dfftp
-  !
-  IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
@@ -489,22 +460,18 @@ SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   !
 END SUBROUTINE cutoff_stres_sigmaloc
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmahar( rho_G, sigmahar )
   !----------------------------------------------------------------------
   !! This subroutine cuts off the Hartree part of the stress.  
   !! See Eq. (62) of PRB 96, 075448.
   !
-  USE kinds
   USE gvect,      ONLY: ngm, gstart
   USE constants,  ONLY: eps8
   USE cell_base,  ONLY: tpiba2, alat, tpiba
   USE io_global,  ONLY: stdout
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, gg
-  !
-  IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G-space
@@ -572,21 +539,17 @@ SUBROUTINE cutoff_stres_sigmahar( rho_G, sigmahar )
   !
 END SUBROUTINE cutoff_stres_sigmahar
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !----------------------------------------------------------------------
   !! This subroutine cuts off the Ewald part of the stress.  
   !! See Eq. (64) in PRB 96 075448
   !
-  USE kinds
   USE ions_base,   ONLY : nat, zv, tau, ityp
-  USE constants,   ONLY : e2, eps8
+  USE constants,   ONLY : tpi, e2, eps8
   USE gvect,       ONLY : ngm, gstart, g, gg
   USE cell_base,   ONLY : tpiba2, alat, omega, tpiba
   USE io_global,   ONLY : stdout
-  !
-  IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: alpha
   !! tuning param for LR/SR separation
@@ -670,6 +633,5 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   RETURN
   !
 END SUBROUTINE cutoff_stres_sigmaewa
-!
 !
 END MODULE Coul_cut_2D
