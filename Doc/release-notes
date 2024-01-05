@@ -6,7 +6,8 @@ Fixed in 7.3.1 version:
   * Distributed parallel diagonalization (option -nd N with N=4,9,16,25,...) 
     crashed when used together with NVidia GPUs (thanks to Laura Bellentani)
   * Old PPs with zero nonlocal part were crashing in parallel execution
-    (see issue #633 on gitlab). Thanks to Ye Luo for reporting
+    (see issue #633 on gitlab). Affects v.7.3. Thanks to Ye Luo for reporting 
+  * assume_isolated='2D' was giving bad numbers when used with Gamma tricks
 
 New in 7.3 version:
   * Experimental support for pseudopotentials in PSML format
