@@ -5,6 +5,8 @@ Fixed in 7.3.1 version:
     Thanks to Chang Liu for reporting.
   * Distributed parallel diagonalization (option -nd N with N=4,9,16,25,...) 
     crashed when used together with NVidia GPUs (thanks to Laura Bellentani)
+  * Old PPs with zero nonlocal part were crashing in parallel execution
+    (see issue #633 on gitlab). Thanks to Ye Luo for reporting
 
 New in 7.3 version:
   * Experimental support for pseudopotentials in PSML format
