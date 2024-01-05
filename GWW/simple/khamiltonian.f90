@@ -232,7 +232,7 @@ subroutine khamiltonian
                 !
                 call start_clock('Vnloc')
                 if (nkb>0) then
-                   call init_us_2_max(npw_max,igkk,qk,vkb_max)  ! get the projectors \beta_Ilm (k-dependent)
+                   call init_us_2(npw_max,igkk,qk,vkb_max)  ! get the projectors \beta_Ilm (k-dependent)
                 endif
                 !vkb_max(npwx+1:npw_max,1:nkb) = 0.d0 ! WARNING: HERE I PUT TO ZERO THE ELEMENTS OF BETA WiTH G > npwx
                 !
