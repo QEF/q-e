@@ -195,7 +195,7 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
 END SUBROUTINE cutoff_hartree
 !
 !----------------------------------------------------------------------
-FUNCTION cutoff_ewald( alpha, omega, gamma_only ) RESULT (ewaldg)
+FUNCTION cutoff_ewald( gamma_only, alpha, omega ) RESULT (ewaldg)
   !----------------------------------------------------------------------
   !! This subroutine defines computes the cutoff version of the 
   !! Ewald sum in G space.
@@ -208,11 +208,12 @@ FUNCTION cutoff_ewald( alpha, omega, gamma_only ) RESULT (ewaldg)
   USE io_global,  ONLY : stdout
   USE constants,  ONLY : tpi, fpi
   !
+  LOGICAL, INTENT(IN) :: gamma_only
+  !! If true, use only half of the Fourier components ("Gamma tricks")
   REAL(DP), INTENT(IN) :: alpha
   !! tuning parameter for Ewald LR/SR separation
   REAL(DP), INTENT(IN) :: omega
   !! unit-cell volume
-  LOGICAL, INTENT(IN) :: gamma_only
   REAL(DP) :: ewaldg
   !! Ewald sum
   !
@@ -241,7 +242,7 @@ FUNCTION cutoff_ewald( alpha, omega, gamma_only ) RESULT (ewaldg)
               alpha / 4.d0) / gg(ng)*cutoff_2D(ng) / tpiba2
   ENDDO
   ewaldg = fpi / omega * ewaldg
-  IF ( gamma_Only ) ewaldg = 2.0_dp*ewaldg
+  IF ( gamma_only ) ewaldg = 2.0_dp*ewaldg
   !
   ! ... here add the other constant term (Phi_self)
   !
@@ -288,7 +289,7 @@ SUBROUTINE cutoff_force_ew( aux, alpha )
 END SUBROUTINE cutoff_force_ew
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_force_lc( aux, forcelc )
+SUBROUTINE cutoff_force_lc( gamma_only, aux, forcelc )
   !----------------------------------------------------------------------
   !! This subroutine re-adds the cutoff contribution from the long-range 
   !! local part of the ionic potential to the forces. In the 2D code, this 
@@ -303,6 +304,8 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
   USE io_global,     ONLY : stdout
   USE fft_base,      ONLY : dfftp
   !
+  LOGICAL, INTENT(IN) :: gamma_only
+  !! If true, use only half of the Fourier components ("Gamma tricks")
   COMPLEX(DP), INTENT(IN) :: aux(dfftp%nnr)
   !! local ionic potential
   REAL(DP), INTENT(INOUT) :: forcelc(3,nat)
@@ -310,15 +313,20 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
   !
   ! ... local variables
   !
-  REAL(DP) :: arg
+  REAL(DP) :: arg, fac
   INTEGER :: ig, na, ipol
   !
+  IF ( gamma_only ) THEN
+     fac = 2.0_dp
+  ELSE
+     fac = 1.0_dp
+  END IF
   DO na = 1, nat
      DO ig = gstart, ngm 
         arg = (g(1,ig) * tau(1,na) + g(2,ig) * tau(2,na) + &
                g(3,ig) * tau(3,na) ) * tpi
         DO ipol = 1, 3
-           forcelc(ipol,na) = forcelc (ipol,na) + tpi / alat * &
+           forcelc(ipol,na) = forcelc (ipol,na) + fac * tpi / alat * &
                  g(ipol,ig) * lr_Vloc(ig, ityp(na)) * omega  * &
                 ( SIN(arg)*DBLE(aux(ig)) + COS(arg)*AIMAG(aux(ig)) )
         ENDDO
@@ -330,7 +338,7 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
 END SUBROUTINE cutoff_force_lc
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
+SUBROUTINE cutoff_stres_evloc( gamma_only, rho_G, strf, evloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part
   !! of the local part of the ionic potential to \(\text{evloc}\).  
@@ -345,6 +353,8 @@ SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   USE io_global,  ONLY: stdout
   USE fft_base,   ONLY: dfftp
   !
+  LOGICAL, INTENT(IN) :: gamma_only
+  !! If true, use only half of the Fourier components ("Gamma tricks")
   COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
   COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
@@ -355,6 +365,13 @@ SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   ! ... local variables
   !
   INTEGER :: ng, nt
+  REAL(DP) :: fac
+  !
+  IF ( gamma_only ) THEN
+     fac = 2.0_dp
+  ELSE
+     fac = 1.0_dp
+  END IF
   !
   !$acc data present_or_copyin(rho_G,strf)
   !
@@ -365,7 +382,7 @@ SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   DO nt = 1, ntyp
     DO ng = gstart, ngm
        evloc = evloc + DBLE( CONJG(rho_G(ng)) * strf(ng,nt) ) &
-                       * lr_Vloc(ng,nt)
+                       * lr_Vloc(ng,nt) * fac
     ENDDO
   ENDDO
   !
@@ -376,7 +393,7 @@ SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
 END SUBROUTINE cutoff_stres_evloc
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
+SUBROUTINE cutoff_stres_sigmaloc( gamma_only, rho_G, strf, sigmaloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part 
   !! of the local part of the ionic potential to the rest of the 
@@ -389,6 +406,8 @@ SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   USE io_global,   ONLY : stdout
   USE fft_base,    ONLY : dfftp
   !
+  LOGICAL, INTENT(IN) :: gamma_only
+  !! If true, use only half of the Fourier components ("Gamma tricks")
   COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
   COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
@@ -399,9 +418,15 @@ SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   !
   INTEGER  :: ng, nt, l, m
   REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc1, dlr_Vloc2, dlr_Vloc3, &
-              no_lm_dep
+              no_lm_dep, fac
   REAL(DP) :: sigmaloc11, sigmaloc31, sigmaloc21, sigmaloc32, &
               sigmaloc22, sigmaloc33
+  !
+  IF ( gamma_only ) THEN
+     fac = 2.0_dp
+  ELSE
+     fac = 1.0_dp
+  END IF
   ! 
   !$acc data present_or_copyin(rho_G,strf)
   !
@@ -435,7 +460,7 @@ SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
                                * (1._DP- beta + gg(ng)*tpiba2/4._DP)
         dlr_Vloc3 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
                                * (1._DP+ gg(ng)*tpiba2/4._DP)
-        no_lm_dep = DBLE( CONJG( rho_G(ng) ) &
+        no_lm_dep = fac * DBLE( CONJG( rho_G(ng) ) &
                           * strf(ng,nt) ) * 2._DP * tpiba2
         sigmaloc11 = sigmaloc11 + no_lm_dep * dlr_Vloc1 * g(1,ng) * g(1,ng)
         sigmaloc21 = sigmaloc21 + no_lm_dep * dlr_Vloc2 * g(2,ng) * g(1,ng)
@@ -540,7 +565,7 @@ SUBROUTINE cutoff_stres_sigmahar( rho_G, sigmahar )
 END SUBROUTINE cutoff_stres_sigmahar
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
+SUBROUTINE cutoff_stres_sigmaewa( gamma_only, alpha, sdewald, sigmaewa )
   !----------------------------------------------------------------------
   !! This subroutine cuts off the Ewald part of the stress.  
   !! See Eq. (64) in PRB 96 075448
@@ -551,6 +576,8 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   USE cell_base,   ONLY : tpiba2, alat, omega, tpiba
   USE io_global,   ONLY : stdout
   !
+  LOGICAL, INTENT(IN) :: gamma_only
+  !! If true, use only half of the Fourier components ("Gamma tricks")
   REAL(DP), INTENT(IN) :: alpha
   !! tuning param for LR/SR separation
   REAL(DP), INTENT(INOUT) :: sigmaewa(3,3)
@@ -565,11 +592,15 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   REAL(DP) :: sigma11, sigma21, sigma22, sigma31, sigma32, sigma33
   COMPLEX(DP) :: rhostar
   !
+  IF ( gamma_only ) THEN
+     fact = 2.0_dp
+  ELSE
+     fact = 1.0_dp
+  END IF
   ntyp = SIZE(zv)
   !
   ! ... g(1) is a problem if it's G=0, because we divide by G^2. 
   !     So start at gstart.
-  !     fact=1.0d0, gamma_only not implemented
   !     G=0 componenent of the long-range part of the local part of the 
   !     pseudopotminus the Hartree potential is set to 0.
   !     in other words, sdewald=0.  
@@ -602,7 +633,7 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
         rhostar = rhostar + CMPLX(zv(ityp(na)),KIND=DP) * CMPLX(COS(arg),SIN(arg),KIND=DP)
      ENDDO
      rhostar = rhostar / CMPLX(omega,KIND=DP)
-     sewald = tpi * e2 * EXP(-g2a) / g2* cutoff_2D(ng) * ABS(rhostar)**2
+     sewald = fact * tpi * e2 * EXP(-g2a) / g2* cutoff_2D(ng) * ABS(rhostar)**2
      ! ... sewald is an other diagonal term that is similar to the diagonal terms 
      !     in the other stress contributions. It basically gives a term prop to 
      !     the ewald energy
