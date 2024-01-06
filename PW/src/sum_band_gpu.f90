@@ -121,7 +121,11 @@ SUBROUTINE sum_band_gpu()
        !
     ELSEIF (lda_plus_u_kind==2) THEN 
        !
-       CALL new_nsg()
+       IF (noncolin) THEN
+          CALL new_nsg_nc()
+       ELSE
+          CALL new_nsg()
+       ENDIF
        !
     ENDIF
   ENDIF
