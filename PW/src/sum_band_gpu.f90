@@ -105,7 +105,11 @@ SUBROUTINE sum_band_gpu()
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind==0) THEN
        !
-       CALL new_ns( rho%ns )
+       IF (noncolin) THEN
+          CALL new_ns_nc(rho%ns_nc)
+       ELSE
+          CALL new_ns(rho%ns)
+       ENDIF
        !
        DO nt = 1, ntyp
           IF (is_hubbard_back(nt)) CALL new_nsb( rho%nsb )
