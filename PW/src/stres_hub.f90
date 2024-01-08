@@ -1053,13 +1053,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    CALL start_clock_gpu('dprojdepsilon')
    ! 
    !$acc data present_or_copyin(spsi) present_or_copyout(dproj)
-   !$omp target data map(to:spsi) map(from:dproj)
+   !$omp target data map(to:spsi) 
    !
    ! Number of plane waves at the k point with the index ik
    npw = ngk(ik)
    !
    !$acc kernels
-   !$omp target teams distribute parallel do collapse(2)
    DO m1 = 1, nbnd
       DO m2 = 1, nwfcU
          dproj(m2,m1) = (0.d0, 0.d0)
@@ -1219,7 +1218,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       CALL mp_sum( doverlap, intra_bgrp_comm )
       !
       !$acc data copyin(doverlap)
-      !$omp target data map(to:doverlap)
+      !$omp target data map(to:doverlap, wfcatom)
       !
       ! USPP term in dO_IJ/d\epsilon(ipol,jpol)
       !
@@ -1227,12 +1226,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          ! Calculate doverlap_us = < phi_I | dS/d\epsilon(ipol,jpol) | phi_J >
          ALLOCATE (doverlap_us(natomwfc,natomwfc))
          !$acc data create(doverlap_us)
-         !$omp target data map(from:doverlap_us) map(to:wfcatom)
+         !$omp target data map(alloc:doverlap_us) 
          CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
               natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0)
          ! Sum up the "normal" and ultrasoft terms
          !$acc parallel loop collapse(2)
-        !$omp target teams distribute parallel do collapse(2)
+         !$omp target teams distribute parallel do collapse(2)
          DO m2 = 1, natomwfc
             DO m1 = 1, natomwfc
                doverlap(m1,m2) = doverlap(m1,m2) + doverlap_us(m1,m2)
@@ -1297,19 +1296,18 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    IF (okvan) THEN
       ALLOCATE(dproj_us(nwfcU,nb_s:nb_e))
       !$acc data create(dproj_us) copyin(evc) 
-      !$omp target data map(alloc:dproj_us) map(to:evc,wfcU)
+      !$omp target data map(from:dproj_us) map(to:evc,wfcU)
       CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
                          nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
       ! dproj + dproj_us
+      !$omp end target data
       !$acc parallel loop
-      !$omp target teams distribute parallel do collapse(2)
       DO m2 = nb_s, nb_e
          DO m1 = 1, nwfcU
             dproj(m1,m2) = dproj(m1,m2) + dproj_us(m1,m2)
          ENDDO
       ENDDO
       !$acc end data
-      !$omp end target data
       DEALLOCATE(dproj_us)
    ENDIF
    !

@@ -608,7 +608,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
    !$acc data create(dproj)
-   !$omp target data map(to:rproj,spsi) map(alloc:dproj)
+   !$omp target data map(to:rproj,spsi) map(from:dproj)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -616,7 +616,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    CALL dprojdtau_gamma( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !
    !$acc update self(dproj(:,nb_s:nb_e))
-   !$omp target update from(dproj)
+   !$omp end target data
    !
    dns(:,:,:,:) = 0.d0
    !
@@ -670,7 +670,6 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
 10 CONTINUE
    !
-   !$omp end target data
    !$acc end data
    DEALLOCATE( dproj )
    !
@@ -1019,7 +1018,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
    !$acc data create(dproj)
-   !$omp target data map(to:rproj,spsi) map(alloc:dproj)
+   !$omp target data map(to:rproj,spsi) map(from:dproj)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1028,7 +1027,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    CALL dprojdtau_gamma( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !
    !$acc update self(dproj(:,nb_s:nb_e))
-   !$omp target update to(dproj)
+   !$omp end target data
    !
    dnsg(:,:,:,:,:) = (0.d0,0.d0)
    !
@@ -1089,7 +1088,6 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 10 CONTINUE
    !
    !$acc end data
-   !$omp end target data
    DEALLOCATE( dproj ) 
    !
    CALL mp_sum( dnsg, intra_pool_comm )
@@ -1976,7 +1974,6 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ALLOCATE( wfatbeta(nwfcU,nh(nt))  )
    ALLOCATE( dbeta(npwx,nh(nt))      )
    !$acc data create(betapsi0,dbetapsi,wfatdbeta,wfatbeta)
-   !$omp target data map(alloc:betapsi0,dbetapsi,wfatdbeta,wfatbeta)
    !$acc data create(dbeta)
    !$omp target data map(alloc:dbeta) map(to:vkb)
    !
@@ -2017,6 +2014,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    DEALLOCATE( dbeta )
    ALLOCATE( betapsi(nh(nt),nb_s:nb_e) )
    !$acc data create( betapsi )
+   !$omp target data map(to:betapsi0,dbetapsi,wfatdbeta,wfatbeta)
    !$omp target data map(alloc:betapsi) map(to:qq_at)
    !
    ! ... calculate \sum_j qq(i,j)*dbetapsi(j)
