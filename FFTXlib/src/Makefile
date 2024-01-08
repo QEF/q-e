@@ -38,11 +38,14 @@ tg_gather.o \
 fft_helper_subroutines.o \
 fft_param.o \
 fft_buffers.o \
-fft_hipkernels.o 
+fft_hipkernelsf.o 
+
+HIPKER = \
+fft_hipkernels.o
 
 all : libqefft.a
 
-libqefft.a: 	$(FFTX)
+libqefft.a:     $(HIPKER) $(FFTX)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

@@ -40,6 +40,8 @@ MODULE enums
 
 END MODULE
 
+
+#if defined(__ABACAB)
 MODULE hip_kernels
   use omp_lib
   USE, INTRINSIC :: iso_c_binding
@@ -48,6 +50,7 @@ MODULE hip_kernels
   PRIVATE
   PUBLIC :: scalar_init, scalar_multiply, scalar_multiply_3D, loop2d_scatter_hip
 
+#if defined(__HIP)
   INTERFACE
     SUBROUTINE scalar_init_(s, dev_ptr,val, stream) &
         & BIND(C, name="c_scalar_init_")
@@ -80,6 +83,7 @@ MODULE hip_kernels
       TYPE(C_PTR), VALUE :: stream
     END SUBROUTINE loop2d_scatter_hip_
   END INTERFACE
+#endif
 
   CONTAINS
 
@@ -88,11 +92,11 @@ MODULE hip_kernels
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
-
+#if defined(__HIP)
     !$omp target data use_device_addr(a)
     CALL scalar_init_(s,c_loc(a),val,stream)
     !$omp end target data
-
+#endif
   END SUBROUTINE scalar_init
 
   SUBROUTINE scalar_multiply(a,val,s,stream)
@@ -100,11 +104,11 @@ MODULE hip_kernels
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
-
+#if defined(__HIP)
     !$omp target data use_device_addr(a)
     CALL scalar_multiply_(s,c_loc(a),val,stream)
     !$omp end target data
-
+#endif
   END SUBROUTINE scalar_multiply
 
   SUBROUTINE scalar_multiply_3D(a,val,s,stream)
@@ -112,11 +116,11 @@ MODULE hip_kernels
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
-
+#if defined(__HIP)
     !$omp target data use_device_addr(a)
     CALL scalar_multiply_(s,c_loc(a),val,stream)
     !$omp end target data
-
+#endif
   END SUBROUTINE scalar_multiply_3D
 
   SUBROUTINE loop2d_scatter_hip( drz, f_in, f_out, dft_ismap, nppx, nnp, of1, of2, npp, nswip, stream )
@@ -125,15 +129,16 @@ MODULE hip_kernels
     INTEGER, INTENT(in) :: dft_ismap(:)
     INTEGER(C_INT), INTENT(in) :: drz, nppx, nnp, npp, nswip, of1, of2
     TYPE(C_PTR) :: stream
-    !
+#if defined(__HIP)
     !$omp target data use_device_addr(f_in, f_out, dft_ismap)
     CALL loop2d_scatter_hip_( drz, c_loc(f_in), c_loc(f_out), c_loc(dft_ismap), nppx, nnp, of1, of2, &
                               npp, nswip, stream )
     !$omp end target data
-    !
+#endif
   END SUBROUTINE loop2d_scatter_hip
 
 END MODULE hip_kernels
+#endif
 
 MODULE hipfft
   USE iso_c_binding
