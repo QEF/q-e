@@ -30,7 +30,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, ijtoh_d, dvan_d, &
-                           qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
+                           qq_nt_d, indv_d, dvan_so_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
                            transform_qq_so
@@ -274,7 +274,6 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
         dvan_d=dvan
      endif
   endif
-  ofsbeta_d=ofsbeta
   !
 #endif
   call stop_clock ('init_us_1')

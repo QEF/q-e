@@ -51,7 +51,7 @@ CONTAINS
   !! MPI communicator, to split the workload
   INTEGER, INTENT(OUT) :: ierr
   !! error code: ierr = 0 if interpolation table (IT) was allocated
-  !!             ierr =-1 if IT had insufficent dimension and was re-allocated
+  !!             ierr =-1 if IT had insufficient dimension and was re-allocated
   !!             ierr =-2 if IT was already present and nothing is done
   !!             ierr =-3 if IT not needed and nothing is done
   REAL(dp), INTENT(IN) :: omega
