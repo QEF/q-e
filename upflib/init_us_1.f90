@@ -251,10 +251,6 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
      end do
   end if
   !
-  ! fill interpolation table for beta functions 
-  !
-  CALL init_tab_beta ( omega, intra_bgrp_comm )
-  !
 #if defined __CUDA
   !
   ! update GPU memory (taking care of zero-dim allocations)
