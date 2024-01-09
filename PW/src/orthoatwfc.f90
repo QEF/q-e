@@ -233,12 +233,12 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
      ! Calculate swfcatom = S * phi
 #if defined(__OPENMP_GPU)
      CALL s_psi_omp(npwx, npw, natomwfc, wfcatom, swfcatom)
-     !$omp end target data
 #else
      !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
      !$acc end host_data
 #endif
+     !$omp end target data
      CALL deallocate_bec_type_acc (becp)
   ENDIF
   !
@@ -439,12 +439,16 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   !$omp target update to(overlap)
   !
   IF ( normalize_only ) THEN
-     !$acc parallel
-     !$acc loop gang
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
      DO i = 1, m
-        !$acc loop vector
         !$omp simd
+#else
+     !$acc parallel
+     !$acc loop gang
+     DO i = 1, m
+        !$acc loop vector
+#endif     
         DO j = i+1, m
            overlap(i,j) = CMPLX(0.d0,0.d0, kind=dp)
            overlap(j,i) = CMPLX(0.d0,0.d0, kind=dp)
@@ -477,8 +481,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
     !$omp target update to(overlap, e, work)
   END IF 
   !
-  !$acc parallel loop collapse(2) private(temp)
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#else
+  !$acc parallel loop collapse(2) private(temp)
+#endif
   DO i = 1, m
      DO j = 1, m
         IF ( j < i ) CYCLE
@@ -540,8 +547,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, wfc, work)
         CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.0_DP,0.0_DP), overlap, m, wfc, npwx*npol, (0.0_DP,0.0_DP), work, m)        
         !$acc end host_data
-        !$acc parallel loop collapse(2) 
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else
+        !$acc parallel loop collapse(2) 
+#endif        
         DO i = 1, npwx*npol
            DO j = 1, m
               wfc(i,j) = work(j,i)
@@ -551,8 +561,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, wfc, work)
         CALL MYZGEMM('N', 'T', m, npw, m, (1.0_DP,0.0_DP), overlap, m, wfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
         !$acc end host_data
-        !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else        
+        !$acc parallel loop collapse(2)
+#endif        
         DO i = 1, npw
            DO j = 1, m
               wfc(i,j) = work(j,i)
@@ -572,8 +585,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, swfc, work)
         CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.0_DP,0.0_DP), overlap, m, swfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
         !$acc end host_data
-        !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else
+        !$acc parallel loop collapse(2)
+#endif        
         DO i = 1, npwx*npol
            DO j = 1, m
               swfc(i,j) = work(j,i)
@@ -583,8 +599,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, swfc, work)
         CALL MYZGEMM('N', 'T', m, npw, m, (1.0_DP,0.0_DP), overlap, m, swfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
         !$acc end host_data
-        !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else        
+        !$acc parallel loop collapse(2)
+#endif
         DO i = 1, npw
            DO j = 1, m
               swfc(i,j) = work(j,i)
@@ -656,8 +675,11 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
               m, aux, m, (0.0_DP,0.0_DP), doverlap, m)
   !$acc end host_data
   !
-  !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#else  
+  !$acc parallel loop collapse(2)
+#endif  
   DO m1 = 1, m
      DO m2 = 1, m
         aux(m1,m2) = doverlap(m1,m2) / &
