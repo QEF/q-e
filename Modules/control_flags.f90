@@ -280,7 +280,7 @@ MODULE control_flags
 #endif
   !
   INTEGER, PUBLIC :: &
-#if defined(__OPENMP_GPU) && defined(__HIP) || defined(__CUDA)
+#if defined(__OPENMP_GPU) && defined(__HIP) && defined(__OMP_MANY_FFT) || defined(__CUDA)
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.
 #else
