@@ -965,7 +965,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE control_flags,      ONLY : gamma_only, tqr, offload_type 
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, &
-                                 becsum_d, ebecsum_d, ofsbeta_d, vkb
+                                 becsum_d, ebecsum_d, vkb
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk, nkstot
@@ -993,7 +993,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
 #endif
   INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
-  INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt
+  INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
   REAL(DP),    ALLOCATABLE :: becp_d_r_d(:,:)
@@ -1093,12 +1093,13 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               ! sum over bands: \sum_i <psi_i|beta_l><beta_m|psi_i> w_i
               ! copy into aux1, aux2 the needed data to perform a GEMM
               !
+              offset = ofsbeta(na)
               IF ( noncolin ) THEN
                  !
                  !$cuf kernel do(2)
                  DO is = 1, npol
                     DO ih = 1, nhnt
-                       ikb = ofsbeta_d(na) + ih
+                       ikb = offset + ih
                        DO kbnd = 1, this_bgrp_nbnd 
                           ibnd = ibnd_start + kbnd -1 
                           auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,kbnd)
@@ -1118,27 +1119,27 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$cuf kernel do(2)
                  DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
-                       ikb = ofsbeta_d(na) + ih
+                       ikb = offset + ih
                        ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
                        auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
                     END DO
                  END DO
                  CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp, becp_d_r_d(ofsbeta(na)+1,1), nkb,    &
+                      1.0_dp, becp_d_r_d(offset+1,1), nkb,    &
                       auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
                    CALL using_et_d(0)
                    !$cuf kernel do(1)
                    DO ih = 1, nhnt
-                      ikb = ofsbeta_d(na) + ih
+                      ikb = offset + ih
                       DO ibnd_loc = 1, nbnd_loc
                       auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
                       END DO
                    END DO
 
                    CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                        1.0_dp, becp_d_r_d(ofsbeta(na)+1,1), nkb,    &
+                        1.0_dp, becp_d_r_d(offset+1,1), nkb,    &
                         auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
                  end if
                  !
@@ -1148,7 +1149,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  DO ih = 1, nhnt
                     DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                        ibnd = ibnd_start + kbnd -1 
-                       ikb = ofsbeta_d(na) + ih
+                       ikb = offset + ih
                        auxk1_d(ibnd,ih) = becp_d_k_d(ikb,kbnd) 
                        auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,kbnd)
                     END DO
@@ -1165,7 +1166,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                    !$cuf kernel do(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         ikb = ofsbeta_d(na) + ih
+                         ikb = offset + ih
                          auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
                       END DO
                    END DO

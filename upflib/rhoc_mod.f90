@@ -54,7 +54,7 @@ CONTAINS
   !! MPI communicator, to split the workload
   INTEGER, INTENT(OUT) :: ierr
   !! return code: ierr = 0 if interpolation table (IT) was allocated
-  !!              ierr =-1 if IT had insufficent dimension and was re-allocated
+  !!              ierr =-1 if IT had insufficient dimension and was re-allocated
   !!              ierr =-2 if IT was already present and nothing is done
   REAL(dp), INTENT(IN) :: qmax_
   !! Interpolate q up to qmax_ (sqrt(Ry), q^2 is an energy)
