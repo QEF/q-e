@@ -244,16 +244,16 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
      !
 #if defined(__OPENMP_GPU)     
      !$omp target data map(to:vkb, wfcatom) map(from:swfcatom)
-#endif     
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
+#else
+     CALL calbec (npw, vkb, wfcatom, becp)
+#endif     
      ! Calculate swfcatom = S * phi
 #if defined(__OPENMP_GPU)
      CALL s_psi_omp(npwx, npw, natomwfc, wfcatom, swfcatom)
      !$omp end target data
 #else
-     !$acc host_data use_device(wfcatom, swfcatom)
-     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
-     !$acc end host_data
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 #endif
      CALL deallocate_bec_type_acc (becp)
   ENDIF
