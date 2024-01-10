@@ -6,7 +6,7 @@ MODULE hip_kernels
   PRIVATE
   PUBLIC :: scalar_init, scalar_multiply, scalar_multiply_3D, loop2d_scatter_hip
 
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
   INTERFACE
     SUBROUTINE scalar_init_(s, dev_ptr,val, stream) &
         & BIND(C, name="c_scalar_init_")
@@ -48,7 +48,7 @@ MODULE hip_kernels
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
     !$omp target data use_device_addr(a)
     CALL scalar_init_(s,c_loc(a),val,stream)
     !$omp end target data
@@ -60,7 +60,7 @@ MODULE hip_kernels
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
     !$omp target data use_device_addr(a)
     CALL scalar_multiply_(s,c_loc(a),val,stream)
     !$omp end target data
@@ -72,7 +72,7 @@ MODULE hip_kernels
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
     !$omp target data use_device_addr(a)
     CALL scalar_multiply_(s,c_loc(a),val,stream)
     !$omp end target data
@@ -85,7 +85,7 @@ MODULE hip_kernels
     INTEGER, INTENT(in) :: dft_ismap(:)
     INTEGER(C_INT), INTENT(in) :: drz, nppx, nnp, npp, nswip, of1, of2
     TYPE(C_PTR) :: stream
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
     !$omp target data use_device_addr(f_in, f_out, dft_ismap)
     CALL loop2d_scatter_hip_( drz, c_loc(f_in), c_loc(f_out), c_loc(dft_ismap), nppx, nnp, of1, of2, &
                               npp, nswip, stream )
