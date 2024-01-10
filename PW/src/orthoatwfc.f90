@@ -83,8 +83,10 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   END IF
   !
   ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
-  !$acc enter data create(wfcatom, swfcatom)
+#if defined(__OPENMP_GPU)  
   !$omp target data map(alloc:wfcatom, swfcatom)
+#endif
+  !$acc enter data create(wfcatom, swfcatom)
   !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
@@ -96,7 +98,9 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
        !$acc update device(wfcatom)
+#if defined(__OPENMP_GPU)       
        !$omp target update to(wfcatom)
+#endif
      ELSE
        IF(use_gpu) THEN
          !$acc host_data use_device(wfcatom)
@@ -104,15 +108,19 @@ SUBROUTINE orthoUwfc(save_wfcatom)
          !$acc end host_data
        ELSE
          CALL atomic_wfc (ik, wfcatom)
+#if defined(__OPENMP_GPU)         
          !$omp target update to(wfcatom)
+#endif         
        END IF
      ENDIF
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
+#if defined(__OPENMP_GPU)     
      !$omp target data map(to:vkb)
+#endif
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
-     !$omp end target data
 #if defined(__OPENMP_GPU)
+     !$omp end target data
      CALL s_psi_omp(npwx, npw, natomwfc, wfcatom, swfcatom)
 #else
      !$acc host_data use_device(wfcatom, swfcatom)
@@ -127,7 +135,9 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! save to unit iunhub
      !
      !$acc update host(swfcatom)
+#if defined(__OPENMP_GPU)     
      !$omp target update from(swfcatom)
+#endif     
      CALL copy_U_wfc (swfcatom, noncolin)
      IF ( nks > 1 ) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
@@ -136,14 +146,18 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      !
      IF (save_wfcatom.and..not.use_gpu) THEN
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
+#if defined(__OPENMP_GPU)        
         !$omp target update from(wfcatom)
+#endif
         CALL copy_U_wfc (wfcatom, noncolin)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
      !
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
+#if defined(__OPENMP_GPU)  
   !$omp end target data
+#endif
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type_acc ( becp )
   !
@@ -228,16 +242,18 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
      ! Allocate the array becp = <beta|wfcatom>
      CALL allocate_bec_type_acc (nkb,natomwfc, becp)
      !
+#if defined(__OPENMP_GPU)     
      !$omp target data map(to:vkb, wfcatom) map(from:swfcatom)
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
+#else
+     CALL calbec (npw, vkb, wfcatom, becp)
+#endif     
      ! Calculate swfcatom = S * phi
 #if defined(__OPENMP_GPU)
      CALL s_psi_omp(npwx, npw, natomwfc, wfcatom, swfcatom)
      !$omp end target data
 #else
-     !$acc host_data use_device(wfcatom, swfcatom)
-     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
-     !$acc end host_data
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 #endif
      CALL deallocate_bec_type_acc (becp)
   ENDIF
@@ -247,10 +263,14 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ! lflag=.TRUE.  : On the output wfcatom = O^{-1/2} \phi (no ultrasoft S), swfcatom are unchanged.
   IF (orthogonalize_wfc) THEN
      !$acc data copy(wfcatom, swfcatom)
+#if defined(__OPENMP_GPU)     
      !$omp target data map(tofrom:wfcatom, swfcatom)
+#endif     
      CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag )
-     !$acc end data
+#if defined(__OPENMP_GPU)     
      !$omp end target data
+#endif
+     !$acc end data
   END IF
   !
   IF (lflag) THEN
@@ -310,17 +330,21 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   normalize_only=.FALSE.
   ALLOCATE (wfcatom( npwx*npol, natomwfc))
   !$acc enter data create(wfcatom, swfcatom)
+#if defined(__OPENMP_GPU)  
   !$omp target data map(alloc:wfcatom, swfcatom)
-
+#endif  
+  !
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type_acc (nkb,natomwfc, becp) 
-  
+  !
   DO ik = 1, nks
-     
+     !
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
        !$acc update device(wfcatom)
+#if defined(__OPENMP_GPU)       
        !$omp target update to(wfcatom)
+#endif
      ELSE
        IF(use_gpu) THEN 
          !$acc host_data use_device(wfcatom)
@@ -328,17 +352,21 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
          !$acc end host_data
        ELSE
          CALL atomic_wfc (ik, wfcatom)
+#if defined(__OPENMP_GPU)         
          !$omp target update to(wfcatom)
+#endif         
        END IF
      ENDIF
      npw = ngk (ik)
      !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      !
-     !$omp target data map(to:vkb)
-     CALL calbec (offload_type, npw, vkb, wfcatom, becp)
-     !$omp end target data
 #if defined(__OPENMP_GPU)
+     !$omp target data map(to:vkb)
+#endif     
+     CALL calbec (offload_type, npw, vkb, wfcatom, becp)
+#if defined(__OPENMP_GPU)
+     !$omp end target data
      CALL s_psi_omp (npwx, npw, natomwfc, wfcatom, swfcatom)
 #else
      !$acc host_data use_device(wfcatom, swfcatom)
@@ -351,12 +379,16 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      ! write S * atomic wfc to unit iunsat
      !
      !$acc update host(swfcatom)
+#if defined(__OPENMP_GPU)     
      !$omp target update from(swfcatom)
+#endif     
      CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
+#if defined(__OPENMP_GPU)  
   !$omp end target data
+#endif  
   DEALLOCATE (wfcatom)
   CALL deallocate_bec_type_acc ( becp )
   !
@@ -405,11 +437,15 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   !
   ALLOCATE (overlap(m,m), work(m,m), e(m), s(m,m))
   !
+#if defined(__OPENMP_GPU)  
   !$omp target enter data map(alloc:overlap, e, s)
   !$omp target enter data map(alloc:work)
+#endif  
   ! 
   !$acc kernels
+#if defined(__OPENMP_GPU)  
   !$omp target teams distribute parallel do collapse(2)
+#endif  
   DO i = 1, m
      DO j = 1, m
         overlap(j,i) = (0.d0,0.d0)
@@ -432,19 +468,27 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !$acc end host_data
   END IF
   !
+#if defined(__OPENMP_GPU)  
   !$omp target update from(overlap)
+#endif
   !$acc host_data use_device(overlap)
   CALL mp_sum(  overlap, intra_bgrp_comm )
   !$acc end host_data
+#if defined(__OPENMP_GPU)  
   !$omp target update to(overlap)
+#endif  
   !
   IF ( normalize_only ) THEN
-     !$acc parallel
-     !$acc loop gang
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
      DO i = 1, m
-        !$acc loop vector
         !$omp simd
+#else
+     !$acc parallel
+     !$acc loop gang
+     DO i = 1, m
+        !$acc loop vector
+#endif     
         DO j = i+1, m
            overlap(i,j) = CMPLX(0.d0,0.d0, kind=dp)
            overlap(j,i) = CMPLX(0.d0,0.d0, kind=dp)
@@ -472,13 +516,20 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
     !$acc end host_data
     !
   ELSE
+#if defined(__OPENMP_GPU)          
     !$omp target update from(overlap, e, work)
+#endif    
     CALL cdiagh (m, overlap, m, e, work)
+#if defined(__OPENMP_GPU)    
     !$omp target update to(overlap, e, work)
+#endif    
   END IF 
   !
-  !$acc parallel loop collapse(2) private(temp)
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#else
+  !$acc parallel loop collapse(2) private(temp)
+#endif
   DO i = 1, m
      DO j = 1, m
         IF ( j < i ) CYCLE
@@ -497,12 +548,16 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! Save quantities which are needed for 
      ! calculations of Hubbard forces and stress
      !$acc kernels copyout(overlap_inv)
+#if defined(__OPENMP_GPU)     
      !$omp target teams distribute parallel do map(from:eigenval)
+#endif     
      DO i = 1, m
         eigenval(i) = e(i)
      ENDDO
+#if defined(__OPENMP_GPU)     
      !$omp end target teams distribute parallel do
      !$omp target teams distribute parallel do collapse(2) map(from:overlap_inv, eigenvect)
+#endif     
      DO i = 1, m
         DO j = 1, m
            eigenvect(j,i) = work(j,i)
@@ -513,16 +568,22 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
   END IF 
   !
+#if defined(__OPENMP_GPU)  
   !$omp target exit data map(delete:work)
+#endif  
   !
   DEALLOCATE( work )
   !
   ALLOCATE( work(m, npwx*npol ) )
   !
+#if defined(__OPENMP_GPU)  
   !$omp target enter data map(alloc:work)
+#endif  
   !
   !$acc kernels
+#if defined(__OPENMP_GPU)  
   !$omp target teams distribute parallel do collapse(2)
+#endif
   DO i = 1, npwx*npol
      DO j = 1, m
         work(j,i) = (0.d0,0.d0)
@@ -540,8 +601,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, wfc, work)
         CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.0_DP,0.0_DP), overlap, m, wfc, npwx*npol, (0.0_DP,0.0_DP), work, m)        
         !$acc end host_data
-        !$acc parallel loop collapse(2) 
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else
+        !$acc parallel loop collapse(2) 
+#endif        
         DO i = 1, npwx*npol
            DO j = 1, m
               wfc(i,j) = work(j,i)
@@ -551,8 +615,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, wfc, work)
         CALL MYZGEMM('N', 'T', m, npw, m, (1.0_DP,0.0_DP), overlap, m, wfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
         !$acc end host_data
-        !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else        
+        !$acc parallel loop collapse(2)
+#endif        
         DO i = 1, npw
            DO j = 1, m
               wfc(i,j) = work(j,i)
@@ -572,8 +639,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, swfc, work)
         CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.0_DP,0.0_DP), overlap, m, swfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
         !$acc end host_data
-        !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else
+        !$acc parallel loop collapse(2)
+#endif        
         DO i = 1, npwx*npol
            DO j = 1, m
               swfc(i,j) = work(j,i)
@@ -583,8 +653,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc host_data use_device(overlap, swfc, work)
         CALL MYZGEMM('N', 'T', m, npw, m, (1.0_DP,0.0_DP), overlap, m, swfc, npwx*npol, (0.0_DP,0.0_DP), work, m)
         !$acc end host_data
-        !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#else        
+        !$acc parallel loop collapse(2)
+#endif
         DO i = 1, npw
            DO j = 1, m
               swfc(i,j) = work(j,i)
@@ -594,8 +667,10 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
   ENDIF
   !
+#if defined(__OPENMP_GPU)  
   !$omp target exit data map(delete:work)
   !$omp target exit data map(delete:overlap, e, s)
+#endif  
   DEALLOCATE (overlap, work, e, s)
   !
   RETURN
@@ -640,7 +715,9 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !! auxiliary array
   !
   ALLOCATE (aux(m,m))
+#if defined(__OPENMP_GPU)  
   !$omp target data map(to:work,doverlap,e) map(from:doverlap_inv) map(alloc:aux)
+#endif
   !
   ! Compute (work^H) * doverlap * work 
   ! and put the result back in doverlap
@@ -656,8 +733,11 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
               m, aux, m, (0.0_DP,0.0_DP), doverlap, m)
   !$acc end host_data
   !
-  !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#else  
+  !$acc parallel loop collapse(2)
+#endif  
   DO m1 = 1, m
      DO m2 = 1, m
         aux(m1,m2) = doverlap(m1,m2) / &
@@ -678,7 +758,9 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
               m, doverlap, m, (0.0_DP,0.0_DP), doverlap_inv, m)
   !$acc end host_data
   !
+#if defined(__OPENMP_GPU)  
   !$omp end target data
+#endif  
   DEALLOCATE (aux)
   !
   RETURN
