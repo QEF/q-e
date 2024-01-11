@@ -282,11 +282,14 @@ SUBROUTINE post_xml_init (  )
   USE rism_module,          ONLY : rism_tobe_alive, rism_pot3d
   USE rism3d_facade,        ONLY : lrism3d, rism3d_initialize, rism3d_read_to_restart
   USE xc_lib,               ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  USE beta_mod,             ONLY : init_tab_beta
+  USE klist,                ONLY : qnorm
   !
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge, qmax
   CHARACTER(LEN=37) :: dft_name
+  INTEGER :: ierr
   !
   ! ... initialize Libxc if needed
   !
@@ -359,9 +362,20 @@ SUBROUTINE post_xml_init (  )
   CALL init_vloc()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
+  !
+  ! qmax is the maximum |G|, for all G needed by the charge density
+  !
   qmax = sqrt(ecutrho)*cell_factor
   CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
+  !
+  ! fill interpolation table for beta functions 
+  ! qmax is the maximum |q+G|, for all G needed by the wavefunctions
+  !
+  qmax = (qnorm + sqrt(ecutwfc))*cell_factor
+  CALL init_tab_beta ( qmax, omega, intra_bgrp_comm, ierr )
+  !
   IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
+  !
   CALL init_tab_atwfc(omega, intra_bgrp_comm)
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
