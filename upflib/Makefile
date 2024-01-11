@@ -68,10 +68,9 @@ ylmr2.o
 
 # GPU versions of routines
 OBJS_GPU= \
-  dylmr2_gpu.o \
   ylmr2_gpu.o
 
-OBJS_NODEP+= dom.o wxml.o
+OBJS_NODEP+= $(OBJS_GPU) dom.o wxml.o
 
 all : libupf.a virtual_v2.x upfconv.x casino2upf.x
 

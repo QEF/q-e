@@ -111,17 +111,9 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   ALLOCATE( dylm(npw,(lmaxkb+1)**2,3) )
   !$acc data create( dylm )
   !
-#if defined(__CUDA)
-  DO ipol = 1, 3
-     CALL dylmr2_acc( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
-  ENDDO
-#else
-  !$acc update self( gk, q )
   DO ipol = 1, 3
      CALL dylmr2( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
   ENDDO
-  !$acc update device( dylm )
-#endif
   !
   u_ipol1 = u(1) ; u_ipol2 = u(2) ; u_ipol3 = u(3)
   !
