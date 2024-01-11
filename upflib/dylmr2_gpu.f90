@@ -1,16 +1,17 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dylmr2_gpu( nylm, ngy, g_d, gg_d, dylm_d, ipol )
+SUBROUTINE dylmr2_acc( nylm, ngy, g, gg, dylm, ipol )
   !-----------------------------------------------------------------------
   !! Compute \partial Y_lm(G) \over \partial (G)_ipol
   !! using simple numerical derivation (SdG).
   !! The spherical harmonics are calculated in ylmr2.
+  !! ACC-enabled version
   !
   USE upf_kinds, ONLY : DP
   !
@@ -22,11 +23,11 @@ SUBROUTINE dylmr2_gpu( nylm, ngy, g_d, gg_d, dylm_d, ipol )
   ! input: the number of g vectors to compute
   INTEGER, INTENT(IN) :: ipol
   ! input: desired polarization
-  REAL(DP), INTENT(IN) :: g_d(3,ngy)
+  REAL(DP), INTENT(IN) :: g(3,ngy)
   !! input: the coordinates of g vectors
-  REAL(DP), INTENT(IN) :: gg_d(ngy)
+  REAL(DP), INTENT(IN) :: gg(ngy)
   !! input: the moduli of g vectors
-  REAL(DP), INTENT(OUT) :: dylm_d(ngy,nylm)
+  REAL(DP), INTENT(OUT) :: dylm(ngy,nylm)
   !! output: the spherical harmonics derivatives
   !
   ! ... local variables
@@ -37,34 +38,12 @@ SUBROUTINE dylmr2_gpu( nylm, ngy, g_d, gg_d, dylm_d, ipol )
   !
   INTEGER :: apol, bpol
   !
-  REAL(DP), PARAMETER :: delta = 1.E-6_DP
-  REAL(DP), ALLOCATABLE :: dg_d(:), dgi_d(:), gx_d(:,:)
-  REAL(DP), ALLOCATABLE :: ggx_d(:), ylmaux_d(:,:)
+  REAL(DP), PARAMETER :: delta = 1.e-6_dp, eps = 1.e-9_dp
+  REAL(DP), ALLOCATABLE :: dg(:), gx(:,:), ggx(:), ylmaux(:,:)
   ! dg is the finite increment for numerical derivation:
-  ! dg = delta |G| = delta * sqrt(gg)
-  ! dgi= 1 /(delta * sqrt(gg))
+  ! dg = delta |G| = delta * sqrt(gg) (later overwritten by 1/dg)
   ! gx = g +/- dg
   ! ggx = gx^2
-  !
-#if defined(__CUDA)
-  attributes(DEVICE) :: g_d, gg_d, dylm_d, gx_d, ggx_d, dg_d, &
-                        dgi_d, ylmaux_d
-#endif  
-  !
-  
-  !
-  ALLOCATE( gx_d(3,ngy), ggx_d(ngy), dg_d(ngy) )
-  ALLOCATE( dgi_d(ngy), ylmaux_d(ngy,nylm) )
-
-  !$cuf kernel do (1) <<<*,*>>>
-  DO ig = 1, ngy
-     dg_d(ig) = delta * SQRT(gg_d(ig) )
-     IF (gg_d(ig) > 1.E-9_DP) THEN
-        dgi_d(ig) = 1._DP / dg_d(ig)
-     ELSE
-        dgi_d(ig) = 0._DP
-     ENDIF
-  ENDDO
   !
   IF ( ipol==1 ) THEN
     apol = 2 ; bpol = 3
@@ -74,38 +53,59 @@ SUBROUTINE dylmr2_gpu( nylm, ngy, g_d, gg_d, dylm_d, ipol )
     apol = 1 ; bpol = 2
   ENDIF
   !
-  !$cuf kernel do (1) <<<*,*>>>
+  ALLOCATE( gx(3,ngy), ggx(ngy), dg(ngy), ylmaux(ngy,nylm) )
+  !$acc data create(gx, ggx, dg, ylmaux) &
+  !$acc      present_or_copyin(g, gg) present_or_copyout(dylm)
+  !
+  !$acc parallel loop
   DO ig = 1, ngy
-     gx_d(apol,ig) = g_d(apol,ig)
-     gx_d(bpol,ig) = g_d(bpol,ig)
-     gx_d(ipol,ig) = g_d(ipol,ig) + dg_d(ig)
-     ggx_d(ig) = gx_d(1,ig) * gx_d(1,ig) + &
-                 gx_d(2,ig) * gx_d(2,ig) + &
-                 gx_d(3,ig) * gx_d(3,ig)
+     dg(ig) = delta * SQRT(gg(ig) )
+  ENDDO
+  !$acc parallel loop
+  DO ig = 1, ngy
+     gx(apol,ig) = g(apol,ig)
+     gx(bpol,ig) = g(bpol,ig)
+     gx(ipol,ig) = g(ipol,ig) + dg(ig)
+     ggx(ig) = gx(1,ig) * gx(1,ig) + &
+               gx(2,ig) * gx(2,ig) + &
+               gx(3,ig) * gx(3,ig)
   ENDDO
   !
-  CALL ylmr2_gpu( nylm, ngy, gx_d, ggx_d, dylm_d )
+  !$acc host_data use_device (gx,ggx,dylm)
+  CALL ylmr2_gpu( nylm, ngy, gx, ggx, dylm )
+  !$acc end host_data 
   !
-  !$cuf kernel do (1) <<<*,*>>>
+  !$acc parallel loop
   DO ig = 1, ngy
-     gx_d(ipol,ig) = g_d(ipol,ig) - dg_d(ig)
-     ggx_d(ig) = gx_d(1,ig) * gx_d(1,ig) + &
-                 gx_d(2,ig) * gx_d(2,ig) + &
-                 gx_d(3,ig) * gx_d(3,ig)
+     gx(ipol,ig) = g(ipol,ig) - dg(ig)
+     ggx(ig) = gx(1,ig) * gx(1,ig) + &
+               gx(2,ig) * gx(2,ig) + &
+               gx(3,ig) * gx(3,ig)
   ENDDO
   !
-  CALL ylmr2_gpu( nylm, ngy, gx_d, ggx_d, ylmaux_d )
+  !$acc host_data use_device (gx,ggx,ylmaux)
+  CALL ylmr2_gpu( nylm, ngy, gx, ggx, ylmaux )
+  !$acc end host_data 
   !
-  !$cuf kernel do (2) <<<*,*>>>
+  !$acc parallel loop
+  DO ig = 1, ngy
+     IF (gg(ig) > eps) THEN
+        dg(ig) = 1.0_dp / dg(ig)
+     ELSE
+        dg(ig) = 0.0_dp
+     ENDIF
+  ENDDO
+  !$acc parallel loop collapse(2)
   DO lm = 1, nylm
      DO ig = 1, ngy
-        dylm_d(ig,lm) = (dylm_d(ig,lm)-ylmaux_d(ig,lm)) * 0.5_DP * dgi_d(ig)
+        dylm(ig,lm) = (dylm(ig,lm)-ylmaux(ig,lm)) * 0.5_dp * dg(ig)
      ENDDO
   ENDDO
   !
-  DEALLOCATE( gx_d, ggx_d, dg_d, dgi_d, ylmaux_d )
+  !$acc end data
+  DEALLOCATE( gx, ggx, dg, ylmaux )
   !
   RETURN
   !
-END SUBROUTINE dylmr2_gpu
+END SUBROUTINE dylmr2_acc
 

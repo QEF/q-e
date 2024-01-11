@@ -139,9 +139,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   DO ipol = 1, 3
      !
 #if defined(__CUDA)
-     !$acc host_data use_device(g,gg,dylmk0)
-     CALL dylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), dylmk0, ipol )
-     !$acc end host_data
+     CALL dylmr2_acc( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), dylmk0, ipol )
 #else
      CALL dylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), dylmk0, ipol )
      !$acc update device(dylmk0)

@@ -112,11 +112,9 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   !$acc data create( dylm )
   !
 #if defined(__CUDA)
-  !$acc host_data use_device( gk, q, dylm )
   DO ipol = 1, 3
-     CALL dylmr2_gpu( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
+     CALL dylmr2_acc( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
   ENDDO
-  !$acc end host_data
 #else
   !$acc update self( gk, q )
   DO ipol = 1, 3
