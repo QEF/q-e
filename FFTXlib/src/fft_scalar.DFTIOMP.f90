@@ -6,7 +6,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__ONEMKL) 
+#if defined(__ONEMKL)
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_dfti_omp
 !=----------------------------------------------------------------------=!
@@ -122,25 +122,33 @@
 
      IF (isign < 0) THEN
         IF (is_inplace) THEN
-          !$omp target variant dispatch use_device_ptr(c)
+          !$omp target data use_device_addr(c)
+          !$omp dispatch
           dfti_status = DftiComputeForward(hand(ip)%desc, c )
-          !$omp end target variant dispatch
+          !$omp end dispatch
+          !$omp end target data
         ELSE
-          !$omp target variant dispatch use_device_ptr(c, cout)
+          !$omp target data use_device_addr(c,cout)
+          !$omp dispatch
           dfti_status = DftiComputeForward(hand(ip)%desc, c, cout )
-          !$omp end target variant dispatch
+          !$omp end dispatch
+          !$omp end target data
         ENDIF
         IF(dfti_status /= 0) CALL fftx_error__(' cft_1z GPU ',&
               ' stopped in DftiComputeForward '// DftiErrorMessage(dfti_status), dfti_status )
      ELSE IF (isign > 0) THEN
         IF (is_inplace) THEN
-          !$omp target variant dispatch use_device_ptr(c)
+          !$omp target data use_device_addr(c)
+          !$omp dispatch
           dfti_status = DftiComputeBackward(hand(ip)%desc, c)
-          !$omp end target variant dispatch
+          !$omp end dispatch
+          !$omp end target data
         ELSE
-          !$omp target variant dispatch use_device_ptr(c, cout)
+          !$omp target data use_device_addr(c,cout)
+          !$omp dispatch
           dfti_status = DftiComputeBackward(hand(ip)%desc, c, cout )
-          !$omp end target variant dispatch
+          !$omp end dispatch
+          !$omp end target data
         ENDIF
         IF(dfti_status /= 0) CALL fftx_error__(' cft_1z GPU ',&
               ' stopped in DftiComputeBackward '// DftiErrorMessage(dfti_status), dfti_status )
@@ -220,9 +228,9 @@
        !IF(dfti_status /= 0) &
        !  CALL fftx_error__(' cft_1z ',' stopped in DFTI_THREAD_LIMIT ', dfti_status )
 
-       !$omp target variant dispatch
+       !$omp dispatch
        dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
-       !$omp end target variant dispatch
+       !$omp end dispatch
        IF(dfti_status /= 0) CALL fftx_error__(' cft_1z ',&
               ' stopped in DftiCommitDescriptor '// DftiErrorMessage(dfti_status), dfti_status )
 
@@ -318,17 +326,21 @@
 
      IF( isign < 0 ) THEN
         !
-        !$omp target variant dispatch use_device_ptr(r)
+        !$omp target data use_device_addr(r)
+        !$omp dispatch
         dfti_status = DftiComputeForward(hand(ip)%desc, r(:))
-        !$omp end target variant dispatch
+        !$omp end dispatch
+        !$omp end target data
         IF(dfti_status /= 0) CALL fftx_error__(' cft_2xy GPU ',&
               ' stopped in DftiComputeForward '// DftiErrorMessage(dfti_status), dfti_status )
         !
      ELSE IF( isign > 0 ) THEN
         !
-        !$omp target variant dispatch use_device_ptr(r)
+        !$omp target data use_device_addr(r)
+        !$omp dispatch
         dfti_status = DftiComputeBackward(hand(ip)%desc, r(:))
-        !$omp end target variant dispatch
+        !$omp end dispatch
+        !$omp end target data
         IF(dfti_status /= 0) CALL fftx_error__(' cft_2xy GPU ',&
               ' stopped in DftiComputeBackward '// DftiErrorMessage(dfti_status), dfti_status )
         !
@@ -400,9 +412,9 @@
        IF(dfti_status /= 0) CALL fftx_error__(' cft_2xy GPU',&
               ' stopped in DFTI_BACKWARD_SCALE '// DftiErrorMessage(dfti_status), dfti_status )
 
-       !$omp target variant dispatch
+       !$omp dispatch
        dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
-       !$omp end target variant dispatch
+       !$omp end dispatch
        IF(dfti_status /= 0) CALL fftx_error__(' cft_2xy GPU',&
               ' stopped in DftiCommitDescriptor '// DftiErrorMessage(dfti_status), dfti_status )
 
@@ -480,17 +492,21 @@
 
      IF( isign < 0 ) THEN
         !
-        !$omp target variant dispatch use_device_ptr(f)
+        !$omp target data use_device_addr(f)
+        !$omp dispatch
         dfti_status = DftiComputeForward(hand(ip)%desc, f(1:))
-        !$omp end target variant dispatch
+        !$omp end dispatch
+        !$omp end target data
         IF(dfti_status /= 0) CALL fftx_error__(' cfft3d GPU ',&
               ' stopped in DftiComputeForward '// DftiErrorMessage(dfti_status), dfti_status )
         !
      ELSE IF( isign > 0 ) THEN
         !
-        !$omp target variant dispatch use_device_ptr(f)
+        !$omp target data use_device_addr(f)
+        !$omp dispatch
         dfti_status = DftiComputeBackward(hand(ip)%desc, f(1:))
-        !$omp end target variant dispatch
+        !$omp end dispatch
+        !$omp end target data
         IF(dfti_status /= 0) CALL fftx_error__(' cfft3d GPU ',&
               ' stopped in DftiComputeBackward '// DftiErrorMessage(dfti_status), dfti_status )
         !
@@ -567,9 +583,9 @@
        IF(dfti_status /= 0) CALL fftx_error__(' cfft3d GPU',&
               ' stopped in DFTI_BACKWARD_SCALE '// DftiErrorMessage(dfti_status), dfti_status )
 
-       !$omp target variant dispatch
+       !$omp dispatch
        dfti_status = DftiCommitDescriptor(hand(icurrent)%desc)
-       !$omp end target variant dispatch
+       !$omp end dispatch
        IF(dfti_status /= 0) CALL fftx_error__(' cfft3d GPU',&
               ' stopped in DftiCommitDescriptor '// DftiErrorMessage(dfti_status), dfti_status )
 

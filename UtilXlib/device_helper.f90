@@ -31,9 +31,11 @@ SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
     CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 #elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, X, Y)
+    !$omp target data use_device_addr(A, X, Y)
+    !$omp dispatch
     CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-    !$omp end target variant dispatch
+    !$omp end dispatch
+    !$omp end target data
 #elif defined(__ROCBLAS)
     CALL rocblas_dger( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 #endif
@@ -84,9 +86,11 @@ SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
     CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, B, C)
+    !$omp target data use_device_addr(A, B, C)
+    !$omp dispatch
     CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-    !$omp end target variant dispatch
+    !$omp end dispatch
+    !$omp end target data
 #elif defined(__ROCBLAS)
     CALL rocblas_dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #endif
@@ -117,7 +121,8 @@ SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
     CALL cublaszgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #else
 #if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, B, C)
+    !$omp target data use_device_addr(A, B, C)
+    !$omp dispatch
 #endif
 #if defined(__ROCBLAS)
     CALL rocblas_zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
@@ -125,7 +130,8 @@ SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
     CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #endif
 #if defined(__ONEMKL)
-    !$omp end target variant dispatch
+    !$omp end dispatch
+    !$omp end target data
 #endif
 #endif
 
@@ -159,9 +165,11 @@ SUBROUTINE MYDGER2  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA, OMP_OFFLOAD )
 #elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
     IF (OMP_OFFLOAD) THEN
-       !$omp target variant dispatch use_device_ptr(A, X, Y)
+       !$omp target data use_device_addr(A, B, C)
+       !$omp dispatch
        CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-       !$omp end target variant dispatch
+       !$omp end dispatch
+       !$omp end target data
     ELSE
        CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
     ENDIF
@@ -200,9 +208,11 @@ SUBROUTINE MYDGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LD
     CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #elif defined(__ONEMKL)
     IF (OMP_OFFLOAD) THEN
-      !$omp target variant dispatch use_device_ptr(A, B, C)
+      !$omp target data use_device_addr(A, B, C)
+      !$omp dispatch
       CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-      !$omp end target variant dispatch
+      !$omp end dispatch
+      !$omp end target data
     ELSE
       CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
     ENDIF
@@ -237,9 +247,11 @@ SUBROUTINE MYZGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LD
     CALL cublaszgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #elif defined(__ONEMKL)
     IF (OMP_OFFLOAD) THEN
-       !$omp target variant dispatch use_device_ptr(A, B, C)
+       !$omp target data use_device_addr(A, B, C)
+       !$omp dispatch
        CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-       !$omp end target variant dispatch
+       !$omp end dispatch
+       !$omp end target data
     ELSE
        CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
     ENDIF
@@ -269,7 +281,6 @@ SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     CALL dgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #endif
 END SUBROUTINE MYDGEMV
-
 
 SUBROUTINE MYZGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
@@ -309,7 +320,8 @@ SUBROUTINE MYDGEMV2(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     CALL cublasdgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #else
 #if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, X, Y)
+    !$omp target data use_device_addr(A, X, Y)
+    !$omp dispatch
 #endif
 #if defined(__ROCBLAS)
     CALL rocblas_dgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
@@ -317,7 +329,8 @@ SUBROUTINE MYDGEMV2(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     CALL dgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #endif
 #if defined(__ONEMKL)
-    !$omp end target variant dispatch
+    !$omp end dispatch
+    !$omp end target data
 #endif
 #endif
 END SUBROUTINE MYDGEMV2
@@ -345,7 +358,8 @@ SUBROUTINE MYZGEMV2(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     CALL cublaszgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #else
 #if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, X, Y)
+    !$omp target data use_device_addr(A, X, Y)
+    !$omp dispatch
 #endif
 #if defined(__ROCBLAS)
     CALL rocblas_zgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
@@ -353,7 +367,8 @@ SUBROUTINE MYZGEMV2(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     CALL zgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #endif
 #if defined(__ONEMKL)
-    !$omp end target variant dispatch
+    !$omp end dispatch
+    !$omp end target data
 #endif
 #endif
 END SUBROUTINE MYZGEMV2
