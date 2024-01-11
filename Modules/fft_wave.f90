@@ -75,14 +75,25 @@ CONTAINS
       omp_map     = omp_mod>=1 ! map data and run FFT on device
     ENDIF
 #endif
-    IF(omp_offload.AND.PRESENT(howmany_set)) CALL errore( 'wave_r2g','omp_offload &
-                                                          &and many FFT NYI', 1 )
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
     !$acc host_data use_device(f_in)
     IF (PRESENT(howmany_set)) THEN
-      CALL fwfft( 'Wave', f_in, dfft, howmany=howmany_set(3) )
+      IF(omp_offload) THEN
+#if defined (__OPENMP_GPU)
+        IF(omp_map) THEN
+          !$omp target data map(tofrom:f_in)
+          CALL fwfft_y_omp( 'Wave', f_in, dfft, howmany=howmany_set(3) )
+          !$omp end target data 
+        ELSE
+          CALL fwfft_y_omp( 'Wave', f_in, dfft, howmany=howmany_set(3) )
+        ENDIF
+#endif
+      ELSE
+        CALL fwfft( 'Wave', f_in, dfft, howmany=howmany_set(3) )
+      ENDIF
+      !
     ELSE
       IF(omp_offload) THEN
 #if defined (__OPENMP_GPU)
@@ -103,7 +114,19 @@ CONTAINS
     IF (gamma_only) THEN
       !
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_psi2c_gamma( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+        IF (omp_offload) THEN
+#if defined (__OPENMP_GPU)
+          IF (omp_map) THEN
+            !$omp target data map(to:f_in) map(from:f_out)
+            CALL fftx_psi2c_gamma_omp( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+            !$omp end target data
+          ELSE
+            CALL fftx_psi2c_gamma_omp( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+          ENDIF
+#endif
+        ELSE
+          CALL fftx_psi2c_gamma( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
+        ENDIF
       ELSE
         IF (omp_offload) THEN
 #if defined (__OPENMP_GPU)
@@ -129,8 +152,25 @@ CONTAINS
     ELSE
       !$acc data present_or_copyin(igk)
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_psi2c_k( dfft, f_in, f_out, igk, howmany_set(1:2) )
+        !
+        IF(omp_offload) THEN
+#if defined (__OPENMP_GPU)
+          IF(omp_map) THEN
+            !$omp target data map(to:f_in,igk) map(tofrom:f_out)
+            CALL fftx_psi2c_k_omp( dfft, f_in, f_out, igk, howmany_set(1:2) )
+            !$omp end target data
+          ELSE
+            !$omp target data map(to:igk)
+            CALL fftx_psi2c_k_omp( dfft, f_in, f_out, igk, howmany_set(1:2) )
+            !$omp end target data
+          ENDIF
+#endif
+        ELSE
+          CALL fftx_psi2c_k( dfft, f_in, f_out, igk, howmany_set(1:2) )
+        ENDIF
+        !
       ELSE
+        !
         IF(omp_offload) THEN
 #if defined (__OPENMP_GPU)
           IF(omp_map) THEN
@@ -197,8 +237,6 @@ CONTAINS
       omp_map     = omp_mod>=1 ! map data and run FFT on device
     ENDIF
 #endif
-    IF (omp_offload.AND.PRESENT(howmany_set)) CALL errore('wave_r2g','omp_offload &
-                                                           &and many FFT NYI', 1 )
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
@@ -208,7 +246,19 @@ CONTAINS
     IF (gamma_only) THEN
       !
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+        IF(omp_offload) THEN
+#if defined (__OPENMP_GPU)
+          IF(omp_map) THEN
+            !$omp target data map(to:f_in) map(from:f_out)
+            CALL fftx_c2psi_gamma_omp( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+            !$omp end target data
+          ELSE
+            CALL fftx_c2psi_gamma_omp( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+          ENDIF
+#endif
+        ELSE
+          CALL fftx_c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
+        ENDIF
       ELSE
         IF(omp_offload) THEN
 #if defined (__OPENMP_GPU)
@@ -234,8 +284,24 @@ CONTAINS
       !
       !$acc data present_or_copyin(igk)
       IF (PRESENT(howmany_set)) THEN     !only when ACC is active
-        npw = howmany_set(2)
-        CALL fftx_c2psi_k( dfft, f_out, f_in, igk, npw, howmany_set(1) )
+        IF (omp_offload) THEN
+#if defined(__OPENMP_GPU)
+          npw = howmany_set(2)
+          IF (omp_map) THEN
+            !$omp target data map(to:f_in,igk) map(tofrom:f_out)
+            CALL fftx_c2psi_k_omp( dfft, f_out, f_in, igk, npw, howmany_set(1) )
+            !$omp end target data
+          ELSE
+            !$omp target data map(to:igk)
+            CALL fftx_c2psi_k_omp( dfft, f_out, f_in, igk, npw, howmany_set(1) )
+            !$omp end target data
+          ENDIF
+#endif
+        ELSE
+          npw = howmany_set(2)
+          CALL fftx_c2psi_k( dfft, f_out, f_in, igk, npw, howmany_set(1) )
+        ENDIF
+        !
       ELSE
         IF(omp_offload) THEN 
 #if defined (__OPENMP_GPU)
@@ -259,8 +325,22 @@ CONTAINS
     !
     !$acc host_data use_device( f_out )
     IF (PRESENT(howmany_set)) THEN
-      CALL invfft( 'Wave', f_out, dfft, howmany=howmany_set(3) )
+      IF (omp_offload) THEN
+#if defined(__OPENMP_GPU)
+        IF (omp_map) THEN
+          !$omp target data map(tofrom:f_out)
+          CALL invfft_y_omp( 'Wave', f_out, dfft, howmany=howmany_set(3) )
+          !$omp end target data
+        ELSE
+          CALL invfft_y_omp( 'Wave', f_out, dfft, howmany=howmany_set(3) )
+        ENDIF
+#endif
+      ELSE
+        CALL invfft( 'Wave', f_out, dfft, howmany=howmany_set(3) )
+      ENDIF
+      !
     ELSE
+      !
       IF(omp_offload) THEN
 #if defined (__OPENMP_GPU)
         IF(omp_map) THEN 

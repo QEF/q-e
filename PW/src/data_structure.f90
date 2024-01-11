@@ -33,6 +33,9 @@ SUBROUTINE data_structure( gamma_only )
   USE symm_base,  ONLY : fft_fact
   USE command_line_options, ONLY: pencil_decomposition_
   USE command_line_options, ONLY : nmany_
+#if defined(__ROCBLAS)
+  USE rocblas,    ONLY : rocblas_a2a_set
+#endif
   !
   IMPLICIT NONE
   !
@@ -96,5 +99,9 @@ SUBROUTINE data_structure( gamma_only )
   CALL gvect_init( ngm_, intra_bgrp_comm )
   CALL gvecs_init( ngs_, intra_bgrp_comm )
   !
+#if defined(__ROCBLAS)
+  CALL rocblas_a2a_set(dffts%a2a_comp)
+#endif
+
 END SUBROUTINE data_structure
 

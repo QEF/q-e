@@ -28,8 +28,11 @@ MODULE rocblas
     IMPLICIT NONE
 
     TYPE(C_PTR) :: handle
+    TYPE(C_PTR) :: handle_a2a
     INTEGER, PARAMETER :: ROCBLAS_STATUS_SUCCESS = 0
-    LOGICAL :: isactive = .FALSE. 
+    LOGICAL :: isactive = .FALSE.
+    LOGICAL :: a2a_isactive = .FALSE. 
+    LOGICAL :: a2a_isset = .FALSE.
 
     INTERFACE    
 
@@ -46,6 +49,15 @@ MODULE rocblas
     TYPE(C_PTR), VALUE :: handle
     INTEGER :: rocblas_destroy_handle
     END FUNCTION rocblas_destroy_handle
+
+    FUNCTION rocblas_set_stream(handle,stream) BIND(C,NAME="rocblas_set_stream")
+    use iso_c_binding
+    IMPLICIT NONE
+    TYPE(C_PTR), VALUE :: handle
+    TYPE(C_PTR), VALUE :: stream
+    INTEGER :: rocblas_set_stream
+    END FUNCTION rocblas_set_stream
+
 
     END INTERFACE
 
@@ -122,6 +134,28 @@ MODULE rocblas
 
         END SUBROUTINE
 
+        SUBROUTINE rocblas_a2a_init()
+            IMPLICIT NONE
+            INTEGER :: stat
+
+            stat = rocblas_create_handle(handle_a2a)
+
+            IF (a2a_isactive) THEN
+                print *,"WARNING:: rocBLAS for a2a has already been initialized."
+                RETURN
+            END IF
+
+            IF (stat /= ROCBLAS_STATUS_SUCCESS) THEN
+                print *, "ERROR:: rocblas_a2a_init: "
+                call rocblas_print_status(stat)
+                STOP
+            END IF
+
+            a2a_isactive = .TRUE.
+
+        END SUBROUTINE
+
+
         SUBROUTINE rocblas_destroy()
             IMPLICIT NONE
             INTEGER :: stat
@@ -134,7 +168,49 @@ MODULE rocblas
             END IF
 
             isactive = .FALSE.
+
         END SUBROUTINE
+
+        SUBROUTINE rocblas_a2a_destroy()
+            IMPLICIT NONE
+            INTEGER :: stat
+
+            stat = rocblas_destroy_handle(handle_a2a)
+
+            IF (.NOT.a2a_isactive) THEN
+                print *,"WARNING:: rocBLAS for a2a has not been initialized."
+                RETURN
+            END IF
+
+            IF (stat /= ROCBLAS_STATUS_SUCCESS) THEN
+                PRINT *, "ERROR:: rocblas_a2a_destroy: "
+                CALL rocblas_print_status(stat)
+            END IF
+
+            a2a_isactive = .FALSE.
+
+        END SUBROUTINE
+
+        SUBROUTINE rocblas_a2a_set(stream)
+            IMPLICIT NONE
+            TYPE(C_PTR), INTENT(IN) :: stream
+            INTEGER :: stat
+ 
+            stat = rocblas_set_stream(handle_a2a,stream)
+
+            IF (a2a_isset) THEN
+                print *,"WARNING:: handle has already been set to a2a."
+                RETURN
+            END IF
+
+            IF (stat /= ROCBLAS_STATUS_SUCCESS) THEN
+                PRINT *, "ERROR:: rocblas_set: "
+                CALL rocblas_print_status(stat)
+            END IF
+
+            a2a_isset = .TRUE.
+        END SUBROUTINE
+
 
         SUBROUTINE rocblas_check(stat, msg)
             IMPLICIT NONE
@@ -152,7 +228,7 @@ MODULE rocblas
 END MODULE rocblas
 
 MODULE rocblas_utils
-    USE rocblas, only : handle, rocblas_check, ROCBLAS_STATUS_SUCCESS, rocblas_get_operation, &
+    USE rocblas, only : handle, handle_a2a, rocblas_check, ROCBLAS_STATUS_SUCCESS, rocblas_get_operation, &
                         rocblas_print_status
     USE util_param, only : DP
     USE iso_c_binding
@@ -261,6 +337,23 @@ MODULE rocblas_utils
                 INTEGER :: rocblas_dger_
         END FUNCTION rocblas_dger_
     END INTERFACE
+
+    INTERFACE
+        FUNCTION rocblas_zaxpy_(handle_a2a, n, alpha, x, incx, y, incy) &
+                               BIND(C, NAME="rocblas_zaxpy")
+                USE ISO_C_BINDING
+                IMPLICIT NONE
+                TYPE(C_PTR), VALUE :: handle_a2a
+                INTEGER(rocblas_int), VALUE :: n
+                COMPLEX(c_double_complex) :: alpha
+                TYPE(C_PTR), VALUE :: x
+                INTEGER(rocblas_int), VALUE :: incx
+                TYPE(C_PTR), VALUE :: y
+                INTEGER(rocblas_int), VALUE :: incy
+                INTEGER :: rocblas_zaxpy_
+        END FUNCTION rocblas_zaxpy_
+    END INTERFACE
+
 
     INTERFACE rocblas_dger
         MODULE PROCEDURE rocblas_dger1, rocblas_dzger
@@ -573,6 +666,29 @@ MODULE rocblas_utils
             CALL rocblas_check(stat, "DZGER")
 
         END SUBROUTINE
+
+        SUBROUTINE rocblas_a2a_zaxpy(n, alpha, x, incx, y, incy)
+            USE ISO_C_BINDING
+            IMPLICIT NONE
+            INTEGER, INTENT(IN) :: n
+            INTEGER, INTENT(IN) :: incx
+            INTEGER, INTENT(INOUT) :: incy
+            COMPLEX(DP), INTENT(IN) :: alpha
+            COMPLEX(DP), INTENT(IN) :: x(n)
+            COMPLEX(DP), INTENT(INOUT) :: y(n)
+            INTEGER :: rn, rincx, rincy
+            INTEGER :: stat
+            rn = int(n, kind(rocblas_int))
+            rincx = int(incx, kind(rocblas_int))
+            rincy = int(incy, kind(rocblas_int))
+
+            !$omp target data use_device_ptr(x, y)
+            stat = rocblas_zaxpy_(handle_a2a, rn, alpha, c_loc(x), rincx, c_loc(y), rincy)
+            !$omp end target data
+            CALL rocblas_check(stat, "ZAXPY")
+
+        END SUBROUTINE
+
 
 END MODULE rocblas_utils
 #endif

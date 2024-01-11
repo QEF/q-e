@@ -36,7 +36,7 @@ SUBROUTINE clean_pw( lflag )
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
-  USE wavefunctions,        ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : evc, psic, psic_nc, psicg
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
@@ -154,6 +154,7 @@ SUBROUTINE clean_pw( lflag )
 #endif
      DEALLOCATE( psic_nc )
   ENDIF
+  IF ( ALLOCATED( psicg ) )  DEALLOCATE( psicg )
   IF ( ALLOCATED( vrs ) )    THEN
 #if defined(__OPENMP_GPU)
     !$omp target exit data map(delete:vrs)

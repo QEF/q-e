@@ -20,6 +20,8 @@
      USE kinds, ONLY :  DP
 #if defined (__CUDA)
      USE cudafor
+#elif defined(__OPENMP_GPU)
+     USE omp_lib
 #endif
 
      IMPLICIT NONE
@@ -33,13 +35,19 @@
        !
 #if defined(__CUDA)
        attributes(PINNED) :: evc
+#elif defined(__OPENMP_GPU)
+     ! ... tools to pin evc with omp
+     INTEGER, PARAMETER :: ntraits = 1
+     INTEGER(omp_allocator_handle_kind) :: pinned_alloc
+     TYPE(omp_alloctrait) :: traits(ntraits) =[omp_alloctrait(omp_atk_pinned,1)]
 #endif
      !
      COMPLEX(DP) , ALLOCATABLE, TARGET :: psic(:)
      !! additional memory for FFT
      COMPLEX(DP) , ALLOCATABLE, TARGET :: psic_nc(:,:)
      !! additional memory for FFT for the noncolinear case
-     !
+     COMPLEX(DP) , ALLOCATABLE, TARGET :: psicg(:)
+     !! additional memory again for FFT
      !
      ! electronic wave functions, CPV code
      ! distributed over gvector and bands
@@ -75,6 +83,7 @@
 #endif
          DEALLOCATE( psic )
        ENDIF
+       IF( ALLOCATED( psicg ) ) DEALLOCATE( psicg )
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
 #if defined (__CUDA)
        IF( ALLOCATED( c0_d ) ) DEALLOCATE( c0_d )
