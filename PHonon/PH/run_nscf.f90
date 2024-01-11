@@ -45,7 +45,6 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_images,       ONLY : intra_image_comm
   USE mp,              ONLY : mp_barrier
   USE rism_module,     ONLY : lrism, rism_set_restart
-  USE two_chem,        ONLY : twochem
 
   !
   IMPLICIT NONE
