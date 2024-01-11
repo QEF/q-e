@@ -25,6 +25,7 @@ MODULE fft_types
   USE omp_lib
 #if defined(__OPENMP_GPU)
   USE iso_c_binding
+  USE hipfft
 #endif
   IMPLICIT NONE
   PRIVATE
@@ -165,6 +166,11 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: srh(:,:) ! These are non blocking send/recv handles that are used to
                                      ! overlap computation and communication of FFTs subbatches.
 #endif
+#if defined(__OPENMP_GPU)
+    TYPE(C_PTR) :: a2a_comp
+    TYPE(C_PTR), dimension(200) :: bstreams
+    TYPE(C_PTR), dimension(200) :: bevents
+#endif
 #if defined(__CUDA)
     ! These CUDA streams are used in the 1D+1D+1D GPU implementation
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
@@ -190,7 +196,9 @@ MODULE fft_types
 
   REAL(DP) :: fft_dual = 4.0d0
   INTEGER  :: incremental_grid_identifier = 0
-
+  !
+  !
+  !
   PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
   PUBLIC :: fft_stick_index, fft_index_to_3d
@@ -324,6 +332,7 @@ CONTAINS
 #if defined (__OPENMP_GPU)
     !$omp target enter data map(always,alloc:desc%nsp)
     !$omp target enter data map(always,alloc:desc%nsw)
+    !$omp target enter data map(always,alloc:desc%iss)
     !$omp target enter data map(always,alloc:desc%ismap)
     !$omp target enter data map(always,alloc:desc%ir1p)
     !$omp target enter data map(always,alloc:desc%ir1w)
@@ -334,7 +343,7 @@ CONTAINS
 
     nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
     ALLOCATE( desc%srh(2*nproc, nsubbatches))
-    !$omp target enter data map(always,alloc:desc%srh)
+    !!$omp target enter data map(always,alloc:desc%srh)
 #endif
 
 #if defined(__CUDA)
@@ -376,6 +385,18 @@ CONTAINS
 
 #endif
 
+#if defined(__OPENMP_GPU)
+
+    CALL myStreamCreate( desc%a2a_comp )
+    !
+    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+    DO i = 1, nsubbatches
+      CALL myStreamCreate( desc%bstreams(i) )
+      CALL myEventCreate( desc%bevents(i) )
+    ENDDO
+
+#endif
+
     incremental_grid_identifier = incremental_grid_identifier + 1
     desc%grid_id = incremental_grid_identifier
 
@@ -392,6 +413,9 @@ CONTAINS
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%nsw), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%nsw)
+    ENDIF
+    IF (OMP_TARGET_IS_PRESENT(c_loc(desc%iss), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
+        !$omp target exit data map(delete:desc%iss)
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%ismap), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%ismap)
@@ -415,7 +439,7 @@ CONTAINS
         !$omp target exit data map(delete:desc%indw_tg)
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%srh), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
-        !$omp target exit data map(delete:desc%srh)
+        !!$omp target exit data map(delete:desc%srh)
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%aux), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%aux)
@@ -515,6 +539,27 @@ CONTAINS
         DEALLOCATE( desc%bevents )
     END IF
 
+#endif
+
+#if defined(__OPENMP_GPU) 
+    ! SLAB decomposition
+    IF (desc%a2a_comp /= 0) THEN
+          CALL myStreamSynchronize( desc%a2a_comp )
+          CALL myStreamDestroy( desc%a2a_comp )
+          desc%a2a_comp = 0
+    END IF
+    !
+    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+    DO i = 1, nsubbatches
+          CALL myStreamSynchronize( desc%bstreams(i) ) 
+          CALL myStreamDestroy( desc%bstreams(i) ) 
+    ENDDO
+    !
+    DO i = 1, nsubbatches
+          CALL myEventSynchronize( desc%bevents(i) )
+          CALL myEventDestroy( desc%bevents(i) )
+    ENDDO
+    !
 #endif
 
 #if defined(__CUDA) || defined(__OPENMP_GPU)
@@ -1063,6 +1108,7 @@ CONTAINS
 
      REAL(DP) :: gcut, gkcut, dual
      INTEGER  :: ngm, ngw
+     INTEGER  :: i, nsubbatches
      !write (6,*) ' inside fft_type_init' ; FLUSH(6)
 
      dual = fft_dual
@@ -1078,7 +1124,7 @@ CONTAINS
         CALL fftx_error__(' fft_type_init ', ' unknown FFT personality ', 1 )
      END IF
      !write (*,*) 'FFT_TYPE_INIT pers, gkcut,gcut', pers, gkcut, gcut
-
+     !
      IF( .NOT. ALLOCATED( dfft%nsp ) ) THEN
         CALL fft_type_allocate( dfft, at, bg, gcut, comm, fft_fact=fft_fact, nyfft=nyfft )
      ELSE

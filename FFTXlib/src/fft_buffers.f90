@@ -1,11 +1,17 @@
 MODULE fft_buffers
   !
+#if defined(__OPENMP_GPU)
+  USE omp_lib
+#endif
   USE fft_param
   IMPLICIT NONE
   SAVE
   !
   INTEGER :: current_size = 0
 #if defined(__OPENMP_GPU)
+  INTEGER, PARAMETER :: ntraits = 1
+  INTEGER(omp_allocator_handle_kind) :: pinned_alloc
+  TYPE(omp_alloctrait) :: traits(ntraits) = [omp_alloctrait(omp_atk_pinned,1)]
   COMPLEX(DP), ALLOCATABLE :: aux(:), aux2(:)
 #else
   COMPLEX(DP), ALLOCATABLE :: dev_space_fftparallel(:)
@@ -44,10 +50,14 @@ CONTAINS
       current_size = desc%nnr * howmany_
       !
 #if defined(__OPENMP_GPU)
-      !$omp target exit data map(delete:aux)
-      !$omp target exit data map(delete:aux2)
-      IF( ALLOCATED( aux ) ) DEALLOCATE( aux )
-      IF( ALLOCATED( aux2 ) ) DEALLOCATE( aux2 )
+      IF( ALLOCATED( aux ) ) THEN
+         !$omp target exit data map(delete:aux)
+         DEALLOCATE( aux )
+      ENDIF
+      IF( ALLOCATED( aux2 ) ) THEN
+         !$omp target exit data map(delete:aux2)
+         DEALLOCATE( aux2 )
+      ENDIF
 #else
       IF( ALLOCATED( dev_space_fftparallel ) ) DEALLOCATE( dev_space_fftparallel )
       IF( ALLOCATED( pin_space_scatter_in  ) ) DEALLOCATE( pin_space_scatter_in  )
@@ -55,9 +65,12 @@ CONTAINS
 #endif
       !
 #if defined(__OPENMP_GPU)
+      pinned_alloc = omp_init_allocator(omp_default_mem_alloc, ntraits, traits)
+      !$omp allocate(aux) allocator(pinned_alloc)
       ALLOCATE(aux(current_size), STAT=info)
       IF ( info /= 0 ) CALL fftx_error__( ' fft_buffers ', ' Allocation failed ', 4 )
       !$omp target enter data map(alloc:aux)
+      !$omp allocate(aux2) allocator(pinned_alloc)
       ALLOCATE(aux2(current_size), STAT=info)
       IF ( info /= 0 ) CALL fftx_error__( ' fft_buffers ', ' Allocation failed ', 5 )
       !$omp target enter data map(alloc:aux2)
@@ -87,10 +100,14 @@ CONTAINS
   SUBROUTINE deallocate_buffers()
     current_size = 0
 #if defined(__OPENMP_GPU)
-    !$omp target exit data map(delete:aux)
-    !$omp target exit data map(delete:aux2)
-    IF( ALLOCATED( aux ) ) DEALLOCATE( aux )
-    IF( ALLOCATED( aux2 ) ) DEALLOCATE( aux2 )
+    IF( ALLOCATED( aux ) ) THEN
+       !$omp target exit data map(delete:aux)
+       DEALLOCATE( aux )
+    ENDIF
+    IF( ALLOCATED( aux2 ) ) THEN
+       !$omp target exit data map(delete:aux2)
+       DEALLOCATE( aux2 )
+    ENDIF
 #else
     IF( ALLOCATED( dev_space_fftparallel ) ) DEALLOCATE( dev_space_fftparallel )
     IF( ALLOCATED( pin_space_scatter_in  ) ) DEALLOCATE( pin_space_scatter_in  )

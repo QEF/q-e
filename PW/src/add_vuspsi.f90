@@ -27,7 +27,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !
   ! This is a unique interface to offload add_vuspsi with openmp
   ! INOUT  : hpsi is assumed on device
-  ! Global : (becp, vkb, deeq, deeq_nc) are mapped to
+  ! Global : becp, deeq, deeq_nc are mapped to
+  !          vkb is mapped in init_us_2
   !
   ! ... I/O variables
   !
@@ -108,7 +109,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
           CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps ', ABS(ierr) )
        !
 #if defined(__OPENMP_GPU)
-       !$omp target data map(to:becp%r,deeq,vkb) map(alloc:ps)
+       !$omp target data map(to:becp%r,deeq) map(alloc:ps)
        !
        !$omp target teams distribute parallel do collapse(2)
        DO j = 1, m_max 
@@ -213,7 +214,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate deeaux ', ABS( ierr ) )
        !
-       !$omp target data map(alloc:ps,deeaux) map(to:deeq,becp%k,vkb)
+       !$omp target data map(alloc:ps,deeaux) map(to:deeq,becp%k)
 #endif
        DO nt = 1, ntyp
           !
@@ -290,7 +291,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
           CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
        !
 #if defined(__OPENMP_GPU)
-       !$omp target data map(alloc:ps) map(to:becp%nc,deeq_nc,vkb)
+       !$omp target data map(alloc:ps) map(to:becp%nc,deeq_nc)
        !$omp target teams distribute parallel do collapse(3)
        DO k = 1, m
          DO j = 1, npol

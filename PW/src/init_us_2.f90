@@ -66,6 +66,9 @@ CONTAINS
                            dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2,    &
                            eigts3, mill, g, vkb_ )
     ENDIF
+#if defined(__OPENMP_GPU)
+     !$omp target update to(vkb_)
+#endif
     !
     CALL stop_clock( 'init_us_2' )
     !

@@ -417,6 +417,7 @@ CONTAINS
 !FIXME in order to be created and deleted automatically by using !$acc declare create(vkb) in 
     IF( ALLOCATED( vkb ) ) THEN
         !$acc exit data delete(vkb ) 
+        !$omp target exit data map(delete:vkb)
         DEALLOCATE( vkb )
     END IF 
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
