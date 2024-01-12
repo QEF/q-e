@@ -20,6 +20,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
+  USE beta_mod,    ONLY: interp_beta
   !
   IMPLICIT NONE
   !
