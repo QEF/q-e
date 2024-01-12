@@ -124,6 +124,7 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
 #if defined(__CUDA)
   USE cudafor
   USE ylmr2_gpum, ONLY : ylmr2_gpu_kernel
+#endif
   implicit none
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
@@ -131,6 +132,7 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
   integer, intent(in) :: lmax2, ng
   real(DP), intent(in) :: g (3, ng), gg (ng)
   real(DP), intent(out) :: ylm (ng,lmax2)
+#if defined(__CUDA)
   attributes(device):: g,gg,ylm
   !
   ! CUDA Fortran Kernel implementation. Optimizes the use of Q (see below)
@@ -155,6 +157,8 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
   grid = dim3(ceiling(real(ng)/tBlock%x),1,1)
   call ylmr2_gpu_kernel<<<grid,tBlock>>>(lmax, lmax2, ng, g, gg, ylm)
   !
+#else
+  call upf_error('ylmr2_gpu','you should not be here, go away!',1)
 #endif
   return
 end subroutine ylmr2_gpu
