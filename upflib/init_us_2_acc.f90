@@ -100,9 +100,13 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
                gk(3, ig)*gk(3, ig)
   enddo
   !
+#if defined(__CUDA)
   !$acc host_data use_device (gk, qg, ylm)
   call ylmr2_gpu ((lmaxkb+1)**2, npw_, gk, qg, ylm)
   !$acc end host_data 
+#else
+  call ylmr2 ((lmaxkb+1)**2, npw_, gk, qg, ylm)
+#endif
   !
   ! set now qg=|q+G| in atomic units
   !
