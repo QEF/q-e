@@ -1,96 +1,106 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
+SUBROUTINE dylmr2( nylm, ngy, g, gg, dylm, ipol )
   !-----------------------------------------------------------------------
   !! Compute \partial Y_lm(G) \over \partial (G)_ipol
-  !! using simple numerical derivation (SdG)
-  !! The spherical harmonics are calculated in ylmr2
+  !! using simple numerical derivation (SdG).
+  !! The spherical harmonics are calculated in ylmr2.
+  !! ACC-enabled version
   !
   USE upf_kinds, ONLY : DP
-  implicit none
   !
-  integer :: nylm
-  !! input: number of spherical harmonics
-  integer :: ngy
-  !! input: the number of g vectors to compute
-  integer :: ipol
-  !! input: desired polarization
-  real(DP) :: g(3,ngy)
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nylm
+  ! input: number of spherical harmonics
+  INTEGER, INTENT(IN) :: ngy
+  ! input: the number of g vectors to compute
+  INTEGER, INTENT(IN) :: ipol
+  ! input: desired polarization
+  REAL(DP), INTENT(IN) :: g(3,ngy)
   !! input: the coordinates of g vectors
-  real(DP) :: gg (ngy)
+  REAL(DP), INTENT(IN) :: gg(ngy)
   !! input: the moduli of g vectors
-  real(DP) :: dylm (ngy, nylm)
+  REAL(DP), INTENT(OUT) :: dylm(ngy,nylm)
   !! output: the spherical harmonics derivatives
   !
   ! ... local variables
   !
-  integer :: ig, lm
+  INTEGER :: ig, lm, i
   ! counter on g vectors
   ! counter on l,m component
-
-  real(DP), parameter :: delta = 1.d-6
-  real(DP), allocatable :: dg (:), dgi (:), gx (:,:), ggx (:), ylmaux (:,:)
+  !
+  INTEGER :: apol, bpol
+  !
+  REAL(DP), PARAMETER :: delta = 1.e-6_dp, eps = 1.e-9_dp
+  REAL(DP), ALLOCATABLE :: dg(:), gx(:,:), ggx(:), ylmaux(:,:)
   ! dg is the finite increment for numerical derivation:
-  ! dg = delta |G| = delta * sqrt(gg)
-  ! dgi= 1 /(delta * sqrt(gg))
+  ! dg = delta |G| = delta * sqrt(gg) (later overwritten by 1/dg)
   ! gx = g +/- dg
   ! ggx = gx^2
   !
-  allocate ( gx(3,ngy), ggx(ngy), dg(ngy), dgi(ngy), ylmaux(ngy,nylm) )
-
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
-  do ig = 1, ngy
-     dg (ig) = delta * sqrt (gg (ig) )
-     if (gg (ig) .gt. 1.d-9) then
-        dgi (ig) = 1.d0 / dg (ig)
-     else
-        dgi (ig) = 0.d0
-     endif
-  enddo
-!$OMP END PARALLEL DO
-
-  call dcopy (3 * ngy, g, 1, gx, 1)
-
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
-  do ig = 1, ngy
-     gx (ipol, ig) = g (ipol, ig) + dg (ig)
-     ggx (ig) = gx (1, ig) * gx (1, ig) + &
-                gx (2, ig) * gx (2, ig) + &
-                gx (3, ig) * gx (3, ig)
-  enddo
-!$OMP END PARALLEL DO
-
-  call ylmr2 (nylm, ngy, gx, ggx, dylm)
-
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
-  do ig = 1, ngy
-     gx (ipol, ig) = g (ipol, ig) - dg (ig)
-     ggx (ig) = gx (1, ig) * gx (1, ig) + &
-                gx (2, ig) * gx (2, ig) + &
-                gx (3, ig) * gx (3, ig)
-  enddo
-!$OMP END PARALLEL DO
-
-  call ylmr2 (nylm, ngy, gx, ggx, ylmaux)
-
-  call daxpy (ngy * nylm, - 1.d0, ylmaux, 1, dylm, 1)
-
-  do lm = 1, nylm
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
-     do ig = 1, ngy
-        dylm (ig, lm) = dylm (ig, lm) * 0.5d0 * dgi (ig)
-     enddo
-!$OMP END PARALLEL DO
-  enddo
-
-  deallocate ( gx, ggx, dg, dgi, ylmaux )
-
-  return
-end subroutine dylmr2
-
+  IF ( ipol==1 ) THEN
+    apol = 2 ; bpol = 3
+  ELSEIF ( ipol==2 ) THEN
+    apol = 1 ; bpol = 3
+  ELSEIF ( ipol==3 ) THEN
+    apol = 1 ; bpol = 2
+  ENDIF
+  !
+  ALLOCATE( gx(3,ngy), ggx(ngy), dg(ngy), ylmaux(ngy,nylm) )
+  !$acc data create(gx, ggx, dg, ylmaux) &
+  !$acc      present_or_copyin(g, gg) present_or_copyout(dylm)
+  !
+  !$acc parallel loop
+  DO ig = 1, ngy
+     dg(ig) = delta * SQRT(gg(ig) )
+  ENDDO
+  !$acc parallel loop
+  DO ig = 1, ngy
+     gx(apol,ig) = g(apol,ig)
+     gx(bpol,ig) = g(bpol,ig)
+     gx(ipol,ig) = g(ipol,ig) + dg(ig)
+     ggx(ig) = gx(1,ig) * gx(1,ig) + &
+               gx(2,ig) * gx(2,ig) + &
+               gx(3,ig) * gx(3,ig)
+  ENDDO
+  !
+  CALL ylmr2( nylm, ngy, gx, ggx, dylm )
+  !
+  !$acc parallel loop
+  DO ig = 1, ngy
+     gx(ipol,ig) = g(ipol,ig) - dg(ig)
+     ggx(ig) = gx(1,ig) * gx(1,ig) + &
+               gx(2,ig) * gx(2,ig) + &
+               gx(3,ig) * gx(3,ig)
+  ENDDO
+  !
+  CALL ylmr2( nylm, ngy, gx, ggx, ylmaux )
+  !
+  !$acc parallel loop
+  DO ig = 1, ngy
+     IF (gg(ig) > eps) THEN
+        dg(ig) = 1.0_dp / dg(ig)
+     ELSE
+        dg(ig) = 0.0_dp
+     ENDIF
+  ENDDO
+  !$acc parallel loop collapse(2)
+  DO lm = 1, nylm
+     DO ig = 1, ngy
+        dylm(ig,lm) = (dylm(ig,lm)-ylmaux(ig,lm)) * 0.5_dp * dg(ig)
+     ENDDO
+  ENDDO
+  !
+  !$acc end data
+  DEALLOCATE( gx, ggx, dg, ylmaux )
+  !
+  RETURN
+  !
+END SUBROUTINE dylmr2

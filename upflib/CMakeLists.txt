@@ -52,8 +52,7 @@ set(src_upflib
     ylmr2.f90
     dylmr2.f90
     # GPU
-    ylmr2_gpu.f90
-    dylmr2_gpu.f90)
+    ylmr2_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")
 
 qe_add_library(qe_xml xmltools.f90 dom.f90 wxml.f90)
