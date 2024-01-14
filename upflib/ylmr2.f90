@@ -32,16 +32,16 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   ! local variables
   !
   real(DP), parameter :: eps = 1.0d-9
+  integer, parameter :: maxl = 14
   real(DP) :: cost , sent, phi 
   real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm, lm1, lm2
   !
   if (ng < 1 .or. lmax2 < 1) return
-  do lmax = 0, 25
+  do lmax = 0, maxl
      if ((lmax+1)**2 == lmax2) go to 10
-     if ((lmax+1)**2 > lmax2) exit
   end do
-  call upf_error (' ylmr2', 'wrong number of Ylm required',lmax2)
+  call upf_error (' ylmr2', 'l too large, or wrong number of Ylm required',lmax)
 10 continue
   !
 #if defined(__CUDA)

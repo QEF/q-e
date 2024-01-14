@@ -11,6 +11,7 @@ module ylmr2_gpum
 ! CUDA Kernel version
 
 use cudafor
+  INTEGER, PARAMETER :: maxl = 14
 contains
 attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
   implicit none
@@ -25,7 +26,7 @@ attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
   ! local variables
   !
   real(DP), parameter :: eps = 1.0d-9
-  real(DP) ::  Q(0:6,0:6)  !Allocate Q for the maximum supported size
+  real(DP) ::  Q(0:maxl,0:maxl)  !Allocate Q for the maximum supported size
 
   real(DP) :: cost , sent, phi
   real(DP) :: c, gmod
@@ -123,7 +124,7 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
   !
 #if defined(__CUDA)
   USE cudafor
-  USE ylmr2_gpum, ONLY : ylmr2_gpu_kernel
+  USE ylmr2_gpum, ONLY : ylmr2_gpu_kernel, maxl
 #endif
   implicit none
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
@@ -145,13 +146,12 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
   !         incorrect results will ensue if the above does not hold
   !
   if (ng < 1 .or. lmax2 < 1) return
-  do lmax = 0, 25
+  do lmax = 0, maxl
      if ((lmax+1)**2 == lmax2) go to 10
   end do
-  call upf_error (' ylmr', 'l > 25 or wrong number of Ylm required',lmax2)
+  call upf_error (' ylmr', 'l too large or wrong number of Ylm required',lmax)
 
 10 continue
-  if (lmax > 6) call upf_error (' ylmr', 'l>6 => out of bounds in Ylm with CUDA Kernel',lmax)
 
   tBlock = dim3(256,1,1)
   grid = dim3(ceiling(real(ng)/tBlock%x),1,1)
