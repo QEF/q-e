@@ -46,7 +46,7 @@ SUBROUTINE force_hub( forceh )
    USE constants,            ONLY : eps16
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, me_pool, &
                                     nproc_pool
-   USE mp,                   ONLY : mp_sum
+   USE mp,                   ONLY : mp_sum, mp_size
    USE mp_bands,             ONLY : intra_bgrp_comm
    !
    IMPLICIT NONE
@@ -64,7 +64,7 @@ SUBROUTINE force_hub( forceh )
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
    INTEGER :: npw, alpha, na, nt, is, is2, m1, m2, ipol, ldim, ik, ijkb0
    INTEGER :: na1, na2, equiv_na2, nt1, nt2, ldim1, ldim2, viz
-   INTEGER :: nb_s, nb_e, mykey, ldimb
+   INTEGER :: nb_s, nb_e, mykey, ldimb, ierr
    LOGICAL :: lhubb
    LOGICAL :: save_flag
    INTEGER, EXTERNAL :: find_viz
@@ -79,7 +79,6 @@ SUBROUTINE force_hub( forceh )
       CALL errore( "force_hub", &
                    " forces for this Hubbard_projectors type not implemented", 1 )
    !
-   ! IF (noncolin) CALL errore( "forceh","Noncollinear case is not supported", 1 )
    IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore( "force_hub", &
                    " forces in the DFT+U+J scheme are not implemented", 1 )
    !
@@ -118,7 +117,12 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    IF (noncolin) THEN
-      ALLOCATE (proj%k (nwfcU, nbnd))
+      !$acc enter data copyin(proj)
+      ALLOCATE (proj%k (nwfcU, nbnd), STAT=ierr)
+      IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate proj%k ', ABS(ierr) )
+      proj%k(:,:)=(0.0D0,0.0D0)
+      !$acc enter data copyin(proj%k)
    ELSE
       CALL allocate_bec_type_acc( nwfcU, nbnd, proj )
    ENDIF
@@ -164,9 +168,15 @@ SUBROUTINE force_hub( forceh )
       !
       ! ... proj=<wfcU|S|evc>
       IF (noncolin) THEN
+         !$acc host_data use_device(wfcU, spsi, proj%k)
          CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
-         CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
+         !$acc end host_data
+         IF (mp_size(intra_bgrp_comm) > 1) THEN
+            !$acc host_data use_device(proj%k)
+            CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
+            !$acc end host_data
+         ENDIF
       ELSE
          CALL calbec( offload_type, npw, wfcU, spsi, proj )
       ENDIF
