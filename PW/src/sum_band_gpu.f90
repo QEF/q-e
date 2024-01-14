@@ -967,7 +967,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, &
                                  becsum_d, ebecsum_d, vkb
   USE uspp_param,         ONLY : upf, nh, nhm
-  USE wvfct,              ONLY : nbnd, wg, et, current_k
+  USE wvfct,              ONLY : nbnd, et, wg,current_k
   USE klist,              ONLY : ngk, nkstot
   USE noncollin_module,   ONLY : noncolin, npol
   USE wavefunctions,      ONLY : evc
@@ -977,7 +977,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE us_exx,             ONLY : store_becxx0
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
-  USE wvfct_gpum,         ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
+  USE wvfct_gpum,         ONLY : et_d, using_et, using_et_d
   USE upf_spinorb,        ONLY : fcoef
   !
   ! Used to avoid unnecessary memcopy
@@ -988,9 +988,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
   REAL(DP), ALLOCATABLE    :: auxg_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
+  REAL(DP), ALLOCATABLE    :: wg_d(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
+  attributes(DEVICE) :: wg_d
 #endif
   INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
@@ -1001,8 +1003,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 #if defined(__CUDA)
   attributes(DEVICE) :: becp_d_r_d, becp_d_k_d, becp_d_nc_d
 #endif
-  !
-  CALL using_wg_d(0)
   !
   CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
@@ -1060,6 +1060,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      CALL store_becxx0(ik, becp)
   ENDIF
   !
+  allocate(wg_d,source=wg)
+  wg_d=wg
   CALL start_clock_gpu( 'sum_band:becsum' )
   !
   DO np = 1, ntyp
@@ -1231,6 +1233,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      !
   END DO
   !
+  deallocate(wg_d)
   if(allocated(becp_d_r_d))  deallocate( becp_d_r_d ) 
   if(allocated(becp_d_k_d))  deallocate( becp_d_k_d ) 
   if(allocated(becp_d_nc_d)) deallocate( becp_d_nc_d ) 

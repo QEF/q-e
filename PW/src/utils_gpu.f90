@@ -17,8 +17,7 @@ SUBROUTINE matcalc_gpu( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE wvfct,                ONLY : current_k
-  USE wvfct_gpum,           ONLY : using_wg_d,wg_d
+  USE wvfct,                ONLY : current_k, wg
   USE gvect,                ONLY : gstart
   USE mp,                   ONLY : mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -65,15 +64,16 @@ SUBROUTINE matcalc_gpu( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
   IF( PrtMat > 1 ) CALL errore('matcalc_gpu', 'cannot print matrix', 1)
 
   IF(DoE) THEN
-     CALL using_wg_d(0)
      IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
+     !$acc data present(wg)
      string = 'E-'
      ee = 0.0_dp
-     !$cuf kernel do (1)
+     !$acc loop vector reduction(+:ee)
      DO i = 1,n
-        ee = ee + wg_d(i,current_k)*mat(i,i)
+        ee = ee + wg(i,current_k)*mat(i,i)
      ENDDO
      IF ( PrtMat > 0 ) WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
+     !$acc end data 
   ENDIF
 
   CALL stop_clock_gpu('matcalc')
@@ -87,7 +87,6 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   USE kinds,                ONLY : dp
   USE io_global,ONLY : stdout
   USE wvfct,                ONLY : wg, npwx
-  USE wvfct_gpum,           ONLY : using_wg_d,wg_d
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp,                   ONLY : mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -118,15 +117,16 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   IF( PrtMat > 1 ) CALL errore('matcalc_k_gpu', 'cannot print matrix', 1)
 
   IF(DoE) THEN
-    CALL using_wg_d(0)
     IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
+    !$acc data present(wg)
     string = 'E-'
     ee = 0.0_dp
-    !$cuf kernel do (1)
+    !$acc loop vector reduction(+:ee)
     DO i = 1,n
-      ee = ee + wg_d(i,ik)*DBLE(mat(i,i))
+      ee = ee + wg(i,ik)*DBLE(mat(i,i))
     ENDDO
     IF ( PrtMat > 0 ) WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
+    !$acc end data
   ENDIF
 
   CALL stop_clock_gpu('matcalc')

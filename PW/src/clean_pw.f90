@@ -169,7 +169,10 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
-  IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
+  IF ( ALLOCATED( wg ) ) THEN
+     !$acc exit data delete(wg)
+     DEALLOCATE( wg )
+  END IF
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
