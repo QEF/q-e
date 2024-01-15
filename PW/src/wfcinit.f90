@@ -294,9 +294,7 @@ SUBROUTINE init_wfc ( ik )
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      IF(use_gpu) THEN
-       !$acc host_data use_device(wfcatom)
        CALL atomic_wfc_gpu( ik, wfcatom )
-       !$acc end host_data
      ELSE
        CALL atomic_wfc( ik, wfcatom )
      END IF
