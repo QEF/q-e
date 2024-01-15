@@ -118,14 +118,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   !$acc data create(aux1,aux2,qmod)
   !$acc data create(ylmk0,dylmk0)
   !
-#if defined(__CUDA)
-  !$acc host_data use_device(g,gg,ylmk0)
-  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
-  !$acc end host_data
-#else
   CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
-  !$acc update device(ylmk0)
-#endif
   !
   !$acc parallel loop
   DO ig = 1, ngm_l
@@ -138,14 +131,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   !
   DO ipol = 1, 3
      !
-#if defined(__CUDA)
-     !$acc host_data use_device(g,gg,dylmk0)
-     CALL dylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), dylmk0, ipol )
-     !$acc end host_data
-#else
      CALL dylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), dylmk0, ipol )
-     !$acc update device(dylmk0)
-#endif
      !
      DO nt = 1, ntyp
         !

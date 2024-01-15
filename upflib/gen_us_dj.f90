@@ -98,15 +98,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
      q(ig) = gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
-#if defined(__CUDA)
-  !$acc host_data use_device(gk,q,ylm)
-  CALL ylmr2_gpu( (lmaxkb+1)**2, npw, gk, q, ylm )
-  !$acc end host_data
-#else
-  !$acc update self(gk,q)
   CALL ylmr2( (lmaxkb+1)**2, npw, gk, q, ylm )
-  !$acc update device(ylm)
-#endif
   !
   !$acc parallel loop
   DO ig = 1, npw
