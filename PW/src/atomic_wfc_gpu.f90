@@ -75,9 +75,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
   !
   !  ylm = spherical harmonics
   !
-  !$acc host_data use_device (ylm, gk, qg)
-  CALL ylmr2_gpu( (lmax_wfc+1)**2, npw, gk, qg, ylm )
-  !$acc end host_data 
+  CALL ylmr2( (lmax_wfc+1)**2, npw, gk, qg, ylm )
   !
   ! set now q=|k+G| in atomic units
   !
