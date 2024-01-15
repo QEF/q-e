@@ -988,11 +988,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
   REAL(DP), ALLOCATABLE    :: auxg_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
-  REAL(DP), ALLOCATABLE    :: wg_d(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
-  attributes(DEVICE) :: wg_d
 #endif
   INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
@@ -1060,8 +1058,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      CALL store_becxx0(ik, becp)
   ENDIF
   !
-  allocate(wg_d,source=wg)
-  wg_d=wg
   CALL start_clock_gpu( 'sum_band:becsum' )
   !
   DO np = 1, ntyp
@@ -1098,14 +1094,14 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               offset = ofsbeta(na)
               IF ( noncolin ) THEN
                  !
-                 !$cuf kernel do(2)
+                 !$acc parallel loop collapse(2)
                  DO is = 1, npol
                     DO ih = 1, nhnt
                        ikb = offset + ih
                        DO kbnd = 1, this_bgrp_nbnd 
                           ibnd = ibnd_start + kbnd -1 
                           auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,kbnd)
-                          auxk2_d(ibnd,ih+(is-1)*nhnt)= wg_d(ibnd,ik) * &
+                          auxk2_d(ibnd,ih+(is-1)*nhnt)= wg(ibnd,ik) * &
                                                         becp_d_nc_d(ikb,is,kbnd)
                        END DO
                     END DO
@@ -1118,12 +1114,12 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               ELSE IF ( gamma_only ) THEN
                  !
                  ibnd_begin = becp%ibnd_begin
-                 !$cuf kernel do(2)
+                 !$acc parallel loop collapse(2)
                  DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = offset + ih
                        ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
-                       auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
+                       auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg(ibnd,ik)
                     END DO
                  END DO
                  CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
@@ -1147,13 +1143,13 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !
               ELSE
                  !
-                 !$cuf kernel do(2) <<<*,*>>>
+                 !$acc parallel loop collapse(2)
                  DO ih = 1, nhnt
                     DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                        ibnd = ibnd_start + kbnd -1 
                        ikb = offset + ih
                        auxk1_d(ibnd,ih) = becp_d_k_d(ikb,kbnd) 
-                       auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,kbnd)
+                       auxk2_d(ibnd,ih) = wg(ibnd,ik)*becp_d_k_d(ikb,kbnd)
                     END DO
                  END DO
                  !
@@ -1233,7 +1229,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      !
   END DO
   !
-  deallocate(wg_d)
   if(allocated(becp_d_r_d))  deallocate( becp_d_r_d ) 
   if(allocated(becp_d_k_d))  deallocate( becp_d_k_d ) 
   if(allocated(becp_d_nc_d)) deallocate( becp_d_nc_d ) 
