@@ -987,20 +987,14 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
   COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
-  REAL(DP), ALLOCATABLE    :: auxg_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
+  REAL(DP), ALLOCATABLE    :: auxg1_d(:,:), auxg2_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
-  attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
+  attributes(DEVICE) :: auxg1_d, auxg2_d, aux_gk_d, aux_egk_d
 #endif
   INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
-  !
-  REAL(DP),    ALLOCATABLE :: becp_d_r_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: becp_d_k_d(:,:), becp_d_nc_d(:,:,:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: becp_d_r_d, becp_d_k_d, becp_d_nc_d
-#endif
   !
   CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
@@ -1027,22 +1021,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         !$acc update device(becp%k)
      endif
   ENDIF
-  if(allocated(becp%r)) then
-    allocate( becp_d_r_d(size(becp%r,1),size(becp%r,2)) ) 
-    !$acc kernels deviceptr(becp_d_r_d)
-    becp_d_r_d = becp%r 
-    !$acc end kernels
-  elseif(allocated(becp%k)) then
-    allocate( becp_d_k_d(size(becp%k,1),size(becp%k,2)) ) 
-    !$acc kernels deviceptr(becp_d_k_d) 
-    becp_d_k_d = becp%k 
-    !$acc end kernels
-  elseif(allocated(becp%nc)) then
-    allocate( becp_d_nc_d(size(becp%nc,1),size(becp%nc,2),size(becp%nc,3)) ) 
-    !$acc kernels deviceptr(becp_d_nc_d) 
-    becp_d_nc_d = becp%nc 
-    !$acc end kernels
-  endif
   CALL stop_clock_gpu( 'sum_band:calbec' )
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
@@ -1068,7 +1046,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         !
         IF ( gamma_only ) THEN
            nbnd_loc = becp%nbnd_loc
-           ALLOCATE( auxg_d( nbnd_loc, nh(np) ) )
+           ALLOCATE( auxg1_d( nbnd_loc, nh(np) ) )
+           ALLOCATE( auxg2_d( nbnd_loc, nh(np) ) )
         ELSE
            ALLOCATE( auxk1_d( ibnd_start:ibnd_end, nh(np)*npol ), &
                      auxk2_d( ibnd_start:ibnd_end, nh(np)*npol ) )
@@ -1100,9 +1079,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                        ikb = offset + ih
                        DO kbnd = 1, this_bgrp_nbnd 
                           ibnd = ibnd_start + kbnd -1 
-                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,kbnd)
+                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp%nc(ikb,is,kbnd)
                           auxk2_d(ibnd,ih+(is-1)*nhnt)= wg(ibnd,ik) * &
-                                                        becp_d_nc_d(ikb,is,kbnd)
+                                                        becp%nc(ikb,is,kbnd)
                        END DO
                     END DO
                  END DO
@@ -1119,26 +1098,27 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = offset + ih
                        ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
-                       auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg(ibnd,ik)
+                       auxg1_d(ibnd_loc,ih) = becp%r(ikb,ibnd_loc)
+                       auxg2_d(ibnd_loc,ih) = becp%r(ikb,ibnd_loc) * wg(ibnd,ik)
                     END DO
                  END DO
-                 CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp, becp_d_r_d(offset+1,1), nkb,    &
-                      auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
+                 CALL cublasDgemm ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
+                      1.0_dp, auxg1_d, nbnd_loc,    &
+                      auxg2_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
                    CALL using_et_d(0)
-                   !$cuf kernel do(1)
+                   !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
-                      ikb = offset + ih
                       DO ibnd_loc = 1, nbnd_loc
-                      auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
+                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
+                       auxg2_d(ibnd_loc,ih) = et_d(ibnd,ik) * auxg2_d(ibnd_loc,ih)
                       END DO
                    END DO
 
                    CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                        1.0_dp, becp_d_r_d(offset+1,1), nkb,    &
-                        auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
+                        1.0_dp, auxg1_d, nbnd_loc,    &
+                        auxg2_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
                  end if
                  !
               ELSE
@@ -1148,8 +1128,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                     DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                        ibnd = ibnd_start + kbnd -1 
                        ikb = offset + ih
-                       auxk1_d(ibnd,ih) = becp_d_k_d(ikb,kbnd) 
-                       auxk2_d(ibnd,ih) = wg(ibnd,ik)*becp_d_k_d(ikb,kbnd)
+                       auxk1_d(ibnd,ih) = becp%k(ikb,kbnd) 
+                       auxk2_d(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,kbnd)
                     END DO
                  END DO
                  !
@@ -1161,10 +1141,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !
                  if (tqr) then
                    CALL using_et_d(0)
-                   !$cuf kernel do(2)
+                   !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         ikb = offset + ih
                          auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
                       END DO
                    END DO
@@ -1186,7 +1165,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 !$acc end host_data
               ELSE
                  !
-                 !$cuf kernel do(2) <<<*,*>>>
+                 !$acc parallel loop collapse(2)
                  DO ih = 1, nhnt
                     DO jh = 1, nhnt
                        ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh_d(ih,jh,np) ?  OPTIMIZE !!
@@ -1220,7 +1199,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
            if (tqr) DEALLOCATE ( aux_egk_d  ) 
         END IF
         IF ( gamma_only ) THEN
-           DEALLOCATE( auxg_d )
+           DEALLOCATE( auxg2_d, auxg1_d )
         ELSE
            DEALLOCATE( auxk2_d, auxk1_d )
         END IF
@@ -1228,10 +1207,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      END IF
      !
   END DO
-  !
-  if(allocated(becp_d_r_d))  deallocate( becp_d_r_d ) 
-  if(allocated(becp_d_k_d))  deallocate( becp_d_k_d ) 
-  if(allocated(becp_d_nc_d)) deallocate( becp_d_nc_d ) 
   !
   ! sync 
   if (nhm > 0) then
