@@ -239,7 +239,7 @@ SUBROUTINE potinit()
            ! ... NB: for LSDA rho is (tot,magn), rho_kin is (up,down) 
            rho%kin_r(:,1) = ( rho%of_r(:,1) + rho%of_r(:,2) ) / 2.0_dp
            rho%kin_r(:,2) = ( rho%of_r(:,1) - rho%of_r(:,2) ) / 2.0_dp
-           ! FIXME: why the multiplication times nspin ?
+           ! multiplication by nspin: see Eq.2.9 of 10.1103/PhysRevA.20.397
            DO is = 1, nspin
               rho%kin_r(:,is) = fact * abs(rho%kin_r(:,is)*nspin)**(5.0/3.0)/nspin
            END DO
