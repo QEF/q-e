@@ -97,9 +97,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
        !$acc update device(wfcatom)
      ELSE
        IF(use_gpu) THEN
-         !$acc host_data use_device(wfcatom)
          CALL atomic_wfc_gpu( ik, wfcatom )
-         !$acc end host_data
        ELSE
          CALL atomic_wfc (ik, wfcatom)
        END IF
@@ -298,9 +296,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
        !$acc update device(wfcatom)
      ELSE
        IF(use_gpu) THEN 
-         !$acc host_data use_device(wfcatom)
          CALL atomic_wfc_gpu( ik, wfcatom )
-         !$acc end host_data
        ELSE
          CALL atomic_wfc (ik, wfcatom)
        END IF

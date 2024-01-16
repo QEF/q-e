@@ -182,6 +182,7 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! proj=<wfcU|S|evc>
       IF (noncolin) THEN
+         !$acc update self(spsi)
          CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  projkd, nwfcU)
          CALL mp_sum( projkd( :, 1:nbnd ), intra_bgrp_comm )
@@ -1549,7 +1550,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          ENDDO
       ENDIF        
       !
-      ! Sum over G vectorso
+      ! Sum over G vectors
       CALL mp_sum( doverlap, intra_bgrp_comm )
       !
       !$acc data copyin(doverlap)
@@ -1609,10 +1610,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
    IF (noncolin) THEN
+      !$acc update self(dwfc)
       CALL ZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
             dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
             dproj, nwfcU)   
       CALL mp_sum( dproj, intra_bgrp_comm )
+      !$acc update device(dproj)
    ELSE   
       CALL calbec( offload_type, npw, dwfc, spsi, dproj )
    ENDIF
