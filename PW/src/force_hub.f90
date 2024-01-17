@@ -169,7 +169,7 @@ SUBROUTINE force_hub( forceh )
       ! ... proj=<wfcU|S|evc>
       IF (noncolin) THEN
          !$acc host_data use_device(wfcU, spsi, proj%k)
-         CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
+         CALL MYZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
          !$acc end host_data
          IF (mp_size(intra_bgrp_comm) > 1) THEN
