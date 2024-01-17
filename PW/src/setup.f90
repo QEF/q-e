@@ -70,7 +70,7 @@ SUBROUTINE setup()
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, init_hubbard, lda_plus_u_kind
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard, lda_plus_u_kind, orbital_resolved
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
@@ -428,7 +428,7 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           IF ( lgcscf ) THEN
+           IF ( lgcscf .OR. orbital_resolved ) THEN
               !
               ethr = 1.D-8
               !

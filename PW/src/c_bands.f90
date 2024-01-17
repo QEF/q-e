@@ -198,6 +198,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
                                    rmm_ndim, rmm_conv, gs_nblock, &
                                    gamma_only, use_para_diag, use_gpu
+  USE ldaU,                 ONLY : hub_pot_fix
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
@@ -309,7 +310,18 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
      !
-     CALL errore( 'c_bands', 'too many bands are not converged', 1 )
+     IF ( hub_pot_fix ) THEN
+        ! If perturbing a Hubbard manifold using Hubbard_alpha, 
+        ! need to diagonalize with very tight convergence threshholds
+        ! even during the first iteration.
+        ! Thus, c_bands should not throw an error even though many
+        ! bands might not achieve this convergence criterion.
+        !
+        WRITE( stdout, '(5X,"c_bands: ",I2, " eigenvalues not converged")' ) notconv
+        WRITE( stdout, '(5X,"WARNING: c_bands: not aborting due to active Hubbard alpha")' ) notconv
+     ELSE
+        CALL errore( 'c_bands', 'too many bands are not converged', 1 )
+     ENDIF
      !
   ELSEIF ( notconv > 0 ) THEN
      !
