@@ -13,11 +13,11 @@ MODULE enums
   USE iso_c_binding
   IMPLICIT NONE
 
-  ENUM, BIND(C) 
+  ENUM, BIND(C)
       ENUMERATOR :: HIP_SUCCESS = 0
   END ENUM
 
-  ENUM, BIND(C) 
+  ENUM, BIND(C)
       ENUMERATOR :: HIPFFT_SUCCESS = 0
   END ENUM
 
@@ -47,7 +47,7 @@ MODULE hipfft
 
   INTEGER(C_INT), PARAMETER, PUBLIC :: HIPFFT_FORWARD = -1, HIPFFT_BACKWARD = 1
 
-  INTERFACE  
+  INTERFACE
      FUNCTION HipDeviceSynchronize() &
          BIND(C,name="hipDeviceSynchronize")
         use iso_c_binding
@@ -172,7 +172,6 @@ MODULE hipfft
        INTEGER(kind(HIPFFT_SUCCESS)) :: hipfftDestroy
        TYPE(C_PTR),VALUE :: plan
      END FUNCTION
-
 
      FUNCTION hipfftSetStream(plan,stream) BIND(C, name="hipfftSetStream")
        USE iso_c_binding
@@ -449,7 +448,7 @@ END MODULE
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
-     
+
      TYPE(C_PTR)   :: stream_
      LOGICAL, SAVE :: is_inplace
 
@@ -512,7 +511,7 @@ END MODULE
         ENDIF
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Forward) ')
         CALL hipfftCheck(hipfft_status)
-        
+
         tscale = 1.0_DP / nz
         IF (stream_==0) THEN
           IF (is_inplace) THEN
@@ -527,7 +526,13 @@ END MODULE
             END DO
           ENDIF
         ELSE
-#if defined(__NO_HIPKERN)
+#if defined(__HIPKERN)
+          IF (is_inplace) THEN
+            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream_)
+          ELSE
+            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream_)
+          ENDIF
+#else
           incy=1
           itscale=CMPLX(tscale-1.0_DP,KIND=DP)
           IF (is_inplace) THEN
@@ -535,17 +540,10 @@ END MODULE
           ELSE
              CALL a2azaxpy(ldz*nsl,itscale,cout,1,cout,incy)
           ENDIF
-#else
-          IF (is_inplace) THEN
-            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream_)
-          ELSE
-            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream_)
-          ENDIF
 #endif
         ENDIF
      ELSE IF (isign > 0) THEN
 
-     
         IF (is_inplace) THEN
             !$omp target data use_device_ptr(c)
               hipfft_status = hipfftExecZ2Z(hipfft_planz(ip), c_loc(c), c_loc(c), HIPFFT_BACKWARD)
@@ -592,7 +590,6 @@ END MODULE
              DIST = ldz
              BATCH = nsl
 
-
        IF( hipfft_planz( icurrent) /= c_null_ptr ) THEN
            hipfft_status = hipfftDestroy( hipfft_planz( icurrent) )
            CALL fftx_error__(" fft_scalar_hipFFT: cft_1z_omp ", " hipfftDestroy failed ", hipfft_status)
@@ -611,7 +608,6 @@ END MODULE
        ip = icurrent
        icurrent = MOD( icurrent, ndims ) + 1
      END SUBROUTINE init_plan
-
 
    END SUBROUTINE cft_1z_omp
 
@@ -712,7 +708,7 @@ END MODULE
         hipfft_status = hipfftExecZ2Z( hipfft_plan_2d(ip), c_loc(r_d), c_loc(r_d), HIPFFT_FORWARD )
         !$omp end target data
         IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ")
-        
+
         tscale = 1.0_DP / ( nx * ny )
         IF (stream_==0) THEN
           !$omp target teams distribute parallel do collapse(3)
@@ -724,15 +720,14 @@ END MODULE
             END DO
           END DO
         ELSE
-#if defined(__NO_HIPKERNS)
+#if defined(__HIPKERN)
+          CALL scalar_multiply_3D(r_d,tscale,2*nzl*ldy*ldx,stream_)
+#else
           itscale=CMPLX(tscale-1.0_DP,KIND=DP)
           incy=1
           CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
-#else
-          CALL scalar_multiply_3D(r_d,tscale,2*nzl*ldy*ldx,stream_)
 #endif
         ENDIF
-
 
      ELSE IF( isign > 0 ) THEN
         !$omp target data use_device_ptr(r_d)
@@ -741,7 +736,6 @@ END MODULE
 
         IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
      END IF
-
 
 #if defined(__FFT_CLOCKS)
      CALL stop_clock( 'GPU_cft_2xy' )
@@ -791,7 +785,6 @@ END MODULE
                               HIPFFT_Z2Z, BATCH )
        CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftPlanMany failed ", istat)
 
-
 #ifdef TRACK_FLOPS
        xyflops( icurrent ) = REAL( ny*nzl )                    * 5.0d0 * REAL( nx ) * log( REAL( nx )  )/log( 2.d0 ) &
                            + REAL( nzl*BATCH_1 + nzl*BATCH_2 ) * 5.0d0 * REAL( ny ) * log( REAL( ny )  )/log( 2.d0 )
@@ -804,7 +797,7 @@ END MODULE
      END SUBROUTINE init_plan
 
    END SUBROUTINE cft_2xy_omp
-   
+
    SUBROUTINE cfft3d_omp( f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
 
   !     driver routine for 3d complex fft of lengths nx, ny, nz
@@ -830,7 +823,6 @@ END MODULE
      INTEGER, SAVE :: dims(4,ndims) = -1
 
      type(c_ptr), SAVE :: hipfft_plan_3d( ndims ) = c_null_ptr
-
 
      IF ( nx < 1 ) &
          call fftx_error__('cfft3d',' nx is less than 1 ', 1)

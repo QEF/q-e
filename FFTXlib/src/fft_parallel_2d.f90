@@ -410,8 +410,10 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
                                    fft_scatter_many_planes_to_columns_store_omp
   USE fft_types,          ONLY : fft_type_descriptor
   USE fft_buffers,        ONLY : check_buffers_size, aux, aux2
+#if defined(__HIP)
   USE hipfft
   USE hip_kernels
+#endif
   !
   IMPLICIT NONE
   !
@@ -499,13 +501,21 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDIF
        !
        DO i = 0, currsize - 1
+#if defined(__HIP)
          CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:),stream=dfft%a2a_comp)
+#else
+         CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:))
+#endif
        ENDDO
        !
+#if defined(__HIP)
        i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize+1), dfft%a2a_comp)
        i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize+1), dfft%bevents(j/dfft%subbatchsize+1), 0)
+#endif
        !
+#if defined(__HIP)
        IF (j > 0) i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize+1), dfft%bevents(j/dfft%subbatchsize), 0)
+#endif
        !
        CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr+1:), nx3, dfft_nnr, f(j*dfft_nnr+1:), &
                                                           sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize+1 )
@@ -522,12 +532,20 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !
        IF (currsize == dfft%subbatchsize) THEN
          !
+#if defined(__HIP)
          CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
+#else
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+#endif
          !
        ELSE
          !
          DO i = 0, currsize - 1
+#if defined(__HIP)
            CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
+#else
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+#endif
          ENDDO
          !
        ENDIF
@@ -551,23 +569,29 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDIF
 
        IF (currsize == dfft%subbatchsize) THEN
+#if defined(__HIP)
          CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
+#else
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+#endif
        ELSE
          DO i = 0, currsize - 1
+#if defined(__HIP)
            CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
+#else
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+#endif
          ENDDO
        ENDIF
 
-       IF (j > 0) i = hipStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0) 
+#if defined(__HIP)
+       IF (j > 0) i = hipStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
+#endif
 
        CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
                             aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, &
                             dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap)
-
      ENDDO
-
-
-
 
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
@@ -575,14 +599,21 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
          aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
+#if defined(__HIP)
        i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = hipStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)
+#endif
 
        DO i = 0, currsize - 1
+#if defined(__HIP)
          CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), stream=dfft%a2a_comp )
+#else
+         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:) )
+#endif
        ENDDO
        !
      ENDDO
+     stop
      !
      !
   ENDIF
@@ -966,7 +997,6 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
 
        CALL fft_scatter_many_planes_to_columns_send( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-
 
        i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 0), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = cudaStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)

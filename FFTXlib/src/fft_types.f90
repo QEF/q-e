@@ -23,7 +23,7 @@ MODULE fft_types
   USE fft_support, ONLY : good_fft_order, good_fft_dimension
   USE fft_param
   USE omp_lib
-#if defined(__OPENMP_GPU)
+#if defined(__HIP)
   USE iso_c_binding
   USE hipfft
 #endif
@@ -385,7 +385,7 @@ CONTAINS
 
 #endif
 
-#if defined(__OPENMP_GPU)
+#if defined(__HIP)
 
     CALL myStreamCreate( desc%a2a_comp )
     !
@@ -541,7 +541,7 @@ CONTAINS
 
 #endif
 
-#if defined(__OPENMP_GPU) 
+#if defined(__HIP)
     ! SLAB decomposition
     IF (desc%a2a_comp /= 0) THEN
           CALL myStreamSynchronize( desc%a2a_comp )
@@ -551,8 +551,8 @@ CONTAINS
     !
     nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
     DO i = 1, nsubbatches
-          CALL myStreamSynchronize( desc%bstreams(i) ) 
-          CALL myStreamDestroy( desc%bstreams(i) ) 
+          CALL myStreamSynchronize( desc%bstreams(i) )
+          CALL myStreamDestroy( desc%bstreams(i) )
     ENDDO
     !
     DO i = 1, nsubbatches
