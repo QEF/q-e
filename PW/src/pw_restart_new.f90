@@ -145,7 +145,7 @@ MODULE pw_restart_new
       USE martyna_tuckerman,    ONLY : do_comp_mt 
       USE run_info,             ONLY : title
       !
-      USE wvfct_gpum,           ONLY : using_et
+      USE wvfct_gpum,           ONLY : using_et, using_wg
       USE wavefunctions_gpum,   ONLY : using_evc
       USE qexsd_module,         ONLY : qexsd_add_all_clocks 
       USE solvmol,              ONLY : nsolV, solVs
@@ -252,6 +252,7 @@ MODULE pw_restart_new
       ! If local PW dimensions are not available, set to 0
       !
       CALL using_et(0)
+      CALL using_wg(0)
       CALL using_evc(0)
       !
       ALLOCATE( ngk_g( nkstot ) )
