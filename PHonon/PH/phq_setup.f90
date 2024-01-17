@@ -113,8 +113,6 @@ subroutine phq_setup
        mu, nu, imode0, irr, ipert, na, it, nt, nsym_is, last_irr_eff
   ! counters
 
-  real(DP), allocatable :: wg_up(:,:), wg_dw(:,:)
-
   logical :: sym (48), magnetic_sym
   LOGICAL :: symmorphic_or_nzb
   ! the symmetry operations

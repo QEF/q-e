@@ -229,7 +229,7 @@ SUBROUTINE force_us( forcenl )
        becp_nbnd_loc = becp%nbnd_loc
        becp_ibnd_begin = becp%ibnd_begin
        !
-       !$acc data copyin( et, wg )
+       !$acc data copyin( et ) present( wg )
        !
        DO nt = 1, ntyp
           !
