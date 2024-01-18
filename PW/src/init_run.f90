@@ -46,7 +46,7 @@ SUBROUTINE init_run()
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
-  USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
+  USE wvfct_gpum,         ONLY : using_et
   USE rism_module,        ONLY : lrism, rism_alloc3d
   USE extffield,          ONLY : init_extffield
   USE control_flags,      ONLY : scissor
@@ -144,11 +144,6 @@ SUBROUTINE init_run()
   CALL using_et(2)
   !
   wg(:,:) = 0.D0
-  CALL using_wg(2)
-#if defined(__CUDA)
-  ! Sync here. Shouldn't be done and will be removed ASAP.
-  CALL using_wg_d(0)
-#endif
   !
   btype(:,:) = 1
   !
