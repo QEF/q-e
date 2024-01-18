@@ -1610,12 +1610,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
    IF (noncolin) THEN
-      !$acc update self(dwfc)
-      CALL ZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
+      !$acc host_data use_device(dwfc,spsi,dproj)
+      CALL MYZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
             dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
             dproj, nwfcU)   
       CALL mp_sum( dproj, intra_bgrp_comm )
-      !$acc update device(dproj)
+      !$acc end host_data
    ELSE   
       CALL calbec( offload_type, npw, dwfc, spsi, dproj )
    ENDIF
