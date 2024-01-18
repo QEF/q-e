@@ -85,7 +85,7 @@ SUBROUTINE read_file_ph( needwf_ph )
   USE pw_restart_new,   ONLY : read_collected_wfc
   USE fft_base,         ONLY : dffts
   !
-  USE wvfct_gpum,       ONLY : using_et, using_wg, using_wg_d
+  USE wvfct_gpum,       ONLY : using_et
   USE wavefunctions_gpum, ONLY : using_evc
   USE pw_restart_new,   ONLY : read_xml_file
   !
@@ -119,12 +119,7 @@ SUBROUTINE read_file_ph( needwf_ph )
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
   CALL using_et(1)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
-  CALL using_wg(1)
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-#if defined(__CUDA)
-  ! Updating wg here. Should not be done and will be removed ASAP.
-  CALL using_wg_d(0)
-#endif
   !
   ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
   ! ... FIXME: the latter should be read from file, not recomputed
@@ -182,7 +177,7 @@ SUBROUTINE read_file_new ( needwf )
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
   !
-  USE wvfct_gpum,     ONLY : using_et, using_wg, using_wg_d
+  USE wvfct_gpum,     ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -217,12 +212,7 @@ SUBROUTINE read_file_new ( needwf )
      CALL divide_et_impera( nkstot, xk, wk, isk, nks )
      CALL using_et(1)
      CALL poolscatter( nbnd, nkstot, et, nks, et )
-     CALL using_wg(1)
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-#if defined(__CUDA)
-     ! Updating wg here. Should not be done and will be removed ASAP.
-     CALL using_wg_d(0)
-#endif
      !
      ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
      ! ... FIXME: the latter should be read from file, not recomputed
