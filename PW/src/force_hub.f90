@@ -172,7 +172,7 @@ SUBROUTINE force_hub( forceh )
          CALL MYZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
          !$acc end host_data
-         ! Workaround: mp_sum does not like elements of a structure as 
+         !Workaround: mp_sum does not like proj%k on device for obscure reasons
          !$acc update self(proj%k)
          CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
          !$acc update device(proj%k)
