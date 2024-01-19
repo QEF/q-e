@@ -117,11 +117,11 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    IF (noncolin) THEN
-      !$acc enter data copyin(proj)
       ALLOCATE (proj%k (nwfcU, nbnd), STAT=ierr)
       IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type_acc ', ' cannot allocate proj%k ', ABS(ierr) )
       proj%k(:,:)=(0.0D0,0.0D0)
+      !$acc enter data copyin(proj)
       !$acc enter data copyin(proj%k)
    ELSE
       CALL allocate_bec_type_acc( nwfcU, nbnd, proj )
@@ -169,14 +169,13 @@ SUBROUTINE force_hub( forceh )
       ! ... proj=<wfcU|S|evc>
       IF (noncolin) THEN
          !$acc host_data use_device(wfcU, spsi, proj%k)
-         CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
+         CALL MYZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
          !$acc end host_data
-         IF (mp_size(intra_bgrp_comm) > 1) THEN
-            !$acc host_data use_device(proj%k)
-            CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
-            !$acc end host_data
-         ENDIF
+         !Workaround: mp_sum does not like proj%k on device for obscure reasons
+         !$acc update self(proj%k)
+         CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )
+         !$acc update device(proj%k)
       ELSE
          CALL calbec( offload_type, npw, wfcU, spsi, proj )
       ENDIF
