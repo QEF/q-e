@@ -652,7 +652,6 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL start_clock( 'dndtau' )
    !
-   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
    !
    ! Compute the derivative of occupation matrices (the quantities dns_nc(m1,m2,i))
    ! of the atomic orbitals. They are complex quantities as well as dns_nc(m1,m2,i).
@@ -664,11 +663,14 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    IF ( mykey /= 0 ) GO TO 10
    !
+   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
+   IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
+   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
+   !
    ! Compute the USPP contribution to dproj:
    ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-      ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
       CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
                        nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false.)
    ENDIF
@@ -688,7 +690,12 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
          ! Compute the second contribution to dproj due to the derivative of 
          ! (ortho-)atomic orbitals
          CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
-         IF (okvan) dproj = dproj + dproj_us
+         IF (okvan) THEN
+           !$acc kernels
+           dproj = dproj + dproj_us
+           !$acc end kernels
+         ENDIF
+         !$acc update self(dproj(:,nb_s:nb_e))
          !
          ldim1 = 2*Hubbard_l(nt)+1
          DO is1 = 1, npol
@@ -712,10 +719,12 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO
 ! !omp end parallel do
    !
-10 DEALLOCATE( dproj )
+   !$acc end data
+   DEALLOCATE( dproj )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
    IF (okvan) DEALLOCATE (dproj_us)
    !
+   10 CONTINUE
    CALL mp_sum( dns_nc, intra_pool_comm )
    !
    ! Impose hermiticity of dns_nc{m1,m2,i}
@@ -2145,7 +2154,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
       ! Calculate dbetaB = <dbeta|B>
       ! (same as betaB)
       !
-      dbetaB=(0.0,0.0)
+      !dbetaB=(0.0,0.0)
       CALL MYZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP,0.0_DP), aux,&
                npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), dbetaB, nh(nt)*npol)
       CALL mp_sum( dbetaB(:, 1:lB) , intra_bgrp_comm )
