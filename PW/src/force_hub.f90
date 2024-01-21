@@ -148,9 +148,8 @@ SUBROUTINE force_hub( forceh )
       !$acc update device(evc) 
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
-      ! ... FIXME check if this update is actually needed and in case comment
-      ! ...       indicating why. 
-      !
+      ! ... FIXME this update is needed for ortho-atomic case
+      !$acc update self(vkb)
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type_acc( nkb, nbnd, becp )
       Call calbec(offload_type, npw, vkb, evc, becp ) 
