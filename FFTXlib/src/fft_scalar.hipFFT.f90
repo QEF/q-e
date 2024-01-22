@@ -526,19 +526,19 @@ END MODULE
             END DO
           ENDIF
         ELSE
-#if defined(__HIPKERN)
-          IF (is_inplace) THEN
-            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream_)
-          ELSE
-            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream_)
-          ENDIF
-#else
+#if defined(__NO_HIPKERN)
           incy=1
           itscale=CMPLX(tscale-1.0_DP,KIND=DP)
           IF (is_inplace) THEN
              CALL a2azaxpy(ldz*nsl,itscale,c,1,c,incy)
           ELSE
              CALL a2azaxpy(ldz*nsl,itscale,cout,1,cout,incy)
+          ENDIF
+#else
+          IF (is_inplace) THEN
+            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream_)
+          ELSE
+            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream_)
           ENDIF
 #endif
         ENDIF
@@ -720,12 +720,12 @@ END MODULE
             END DO
           END DO
         ELSE
-#if defined(__HIPKERN)
-          CALL scalar_multiply_3D(r_d,tscale,2*nzl*ldy*ldx,stream_)
-#else
+#if defined(__NO_HIPKERN)
           itscale=CMPLX(tscale-1.0_DP,KIND=DP)
           incy=1
           CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
+#else
+          CALL scalar_multiply_3D(r_d,tscale,2*nzl*ldy*ldx,stream_)
 #endif
         ENDIF
 

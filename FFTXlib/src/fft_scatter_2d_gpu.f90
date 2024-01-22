@@ -2289,14 +2289,14 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
 10 CONTINUE
    !
    ! Zero out f_aux_d
-#if defined(__HIPKERN)
-   nnp = 2*batchsize*nxx_
-   CALL scalar_init(f_aux,0.d0,nnp, dfft%a2a_comp)
-#else
+#if defined(__NO_HIPKERN) || defined(__ONEMKL)
    !$omp target teams distribute parallel do
    do i = lbound(f_aux,1), ubound(f_aux,1)
      f_aux(i) = (0.d0, 0.d0)
    end do
+#else
+   nnp = 2*batchsize*nxx_
+   CALL scalar_init(f_aux,0.d0,nnp, dfft%a2a_comp)
 #endif
    !
    npp = dfft%nr3p( me )
@@ -2322,13 +2322,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
       DO gproc = 1, nprocp
          ioff = dfft_iss( gproc )
          nswip =  dfft_nsw( gproc )
-#if defined(__HIPKERN)
-         DO i = 0, batchsize-1
-            CALL loop2d_scatter_hip( -1, f_aux2(:), f_aux(:), dfft_ismap(ioff+1:ioff+nswip), nppx, &
-                                     nnp, 2*(gproc-1)*sendsiz+2*i*nppx*ncpx, 2*i*nnr, npp, nswip,  &
-                                     dfft%a2a_comp )
-         ENDDO
-#else
+#if defined(__NO_HIPKERN) || defined(__ONEMKL)
          !$omp target teams distribute parallel do collapse(3)
          DO i = 0, batchsize-1
             DO cuf_j = 1, npp
@@ -2338,6 +2332,12 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
                  f_aux( mc + ( cuf_j - 1 ) * nnp + i*nnr ) = f_aux2( cuf_j + it )
                ENDDO
             ENDDO
+         ENDDO
+#else
+         DO i = 0, batchsize-1
+            CALL loop2d_scatter_hip( -1, f_aux2(:), f_aux(:), dfft_ismap(ioff+1:ioff+nswip), nppx, &
+                                     nnp, 2*(gproc-1)*sendsiz+2*i*nppx*ncpx, 2*i*nnr, npp, nswip,  &
+                                     dfft%a2a_comp )
          ENDDO
 #endif
       ENDDO
@@ -2443,13 +2443,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
          gproc = dest + 1
          ioff = dfft_iss( gproc )
          nswip = dfft_nsw( gproc )
-#if defined(__HIPKERN)
-         DO i = 0, batchsize-1
-            CALL loop2d_scatter_hip( 1, f_aux(:), f_aux2(:), dfft_ismap(ioff+1:ioff+nswip), nppx, &
-                                     nnp, 2*(gproc-1)*sendsiz+2*i*nppx*ncpx, 2*i*nnr, npp, nswip, &
-                                     dfft%a2a_comp )
-         ENDDO
-#else
+#if defined(__NO_HIPKERN) || defined(__ONEMKL)
          !$omp target teams distribute parallel do collapse(3)
          DO i = 0, batchsize-1
             DO cuf_j = 1, npp
@@ -2459,6 +2453,12 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
                  f_aux2( cuf_j + it ) = f_aux( mc + ( cuf_j - 1 ) * nnp + i*nnr )
                ENDDO
             ENDDO
+         ENDDO
+#else
+         DO i = 0, batchsize-1
+            CALL loop2d_scatter_hip( 1, f_aux(:), f_aux2(:), dfft_ismap(ioff+1:ioff+nswip), nppx, &
+                                     nnp, 2*(gproc-1)*sendsiz+2*i*nppx*ncpx, 2*i*nnr, npp, nswip, &
+                                     dfft%a2a_comp )
          ENDDO
 #endif
       ENDDO
