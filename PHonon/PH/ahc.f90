@@ -1365,11 +1365,14 @@ SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, dim, iun, ierr)
    INTEGER, INTENT(out) :: ierr
    !! Error status
    !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
    CALL start_clock('MPI_FILE_OPEN')
    !
    IF (io == 1) THEN
      ! Open for writing
 #if defined(__MPI)
+     iun = find_free_unit()
      CALL MPI_FILE_OPEN(comm, filename, MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, iun, ierr)
 #else
     OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted', &
@@ -1379,6 +1382,7 @@ SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, dim, iun, ierr)
    ELSE IF (io == -1) THEN
      ! Open for reading
 #if defined(__MPI)
+     iun = find_free_unit()
      CALL MPI_FILE_OPEN(comm, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, iun, ierr)
 #else
      OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted', &
@@ -1443,6 +1447,78 @@ SUBROUTINE MY_MPI_FILE_WRITE_AT(array, dim, ind, iun, ierr)
    CALL stop_clock('MPI_WRITE_AT')
 !
 END SUBROUTINE MY_MPI_FILE_WRITE_AT
+!--------------------------------------------------------------------------
+!
+!--------------------------------------------------------------------------
+SUBROUTINE MY_MPI_FILE_READ_AT(array, dim, ind, iun, ierr)
+   !--------------------------------------------------------------------------
+   !! Wrapper for reading file using MPI IO.
+   !! Wraps MPI_FILE_READ_AT (blocking, noncollective read).
+   !--------------------------------------------------------------------------
+   USE kinds,            ONLY : DP
+#if defined(__MPI)
+   USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION, &
+                                MPI_STATUS_IGNORE
+#endif
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(in) :: dim
+   !! Size of the array
+   INTEGER, INTENT(in) :: ind
+   !! Index of the file to write. Use a 0-based index.
+   INTEGER, INTENT(in) :: iun
+   !! Unit for reading file
+   INTEGER, INTENT(out) :: ierr
+   !! Error status
+   COMPLEX(KIND = DP), INTENT(inout) :: array(dim)
+   !! Output array
+   !
+#if defined(__MPI)
+   INTEGER(KIND = MPI_OFFSET_KIND) :: lrsize
+   !! Size of the data to write
+   INTEGER(KIND = MPI_OFFSET_KIND) :: lroffset
+   !! Offset for writing the data
+#endif
+   !
+   CALL start_clock('MPI_READ_AT')
+   !
+#if defined(__MPI)
+   lrsize = 2_MPI_OFFSET_KIND * INT(dim, KIND = MPI_OFFSET_KIND)
+   !
+   lroffset = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND &
+            * INT(dim, KIND = MPI_OFFSET_KIND) &
+            * INT(ind, KIND = MPI_OFFSET_KIND)
+   !
+   CALL MPI_FILE_READ_AT(iun, lroffset, array, lrsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else
+   READ(iun, REC=ind+1, IOSTAT=ierr) array
+#endif
+   !
+   CALL stop_clock('MPI_READ_AT')
+!
+END SUBROUTINE MY_MPI_FILE_READ_AT
+!--------------------------------------------------------------------------
+!
+!------------------------------------------------------------------------------
+SUBROUTINE MY_MPI_FILE_CLOSE(iun, ierr)
+   !---------------------------------------------------------------------------
+   !! Wrapper for MPI_FILE_CLOSE
+   !---------------------------------------------------------------------------
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: iun
+   !! Unit for reading file
+   INTEGER, INTENT(OUT) :: ierr
+   !! Error status
+   !
+#if defined(__MPI)
+    CALL MPI_FILE_CLOSE(iun, ierr)
+#else
+    CLOSE(iun, STATUS='KEEP')
+#endif
+   !
+END SUBROUTINE MY_MPI_FILE_CLOSE
 !--------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
