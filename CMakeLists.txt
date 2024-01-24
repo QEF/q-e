@@ -69,6 +69,10 @@ else()
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
 endif()
+option(QE_ENABLE_ROCM
+    "enable ROCm acceleration on AMD GPUs" OFF)
+option(QE_ENABLE_ONEAPI
+    "enable OneAPI acceleration on Intel GPUs" OFF)
 cmake_dependent_option(QE_ENABLE_OFFLOAD
     "enable OpenMP offload"
     OFF "QE_ENABLE_OPENMP" OFF)
@@ -164,6 +168,13 @@ qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_CUDA)
     qe_add_global_compile_definitions(__CUDA)
+endif()
+if(QE_ENABLE_ROCM)
+    qe_add_global_compile_definitions(__HIP)
+endif()
+if(QE_ENABLE_ONEAPI)
+    #qe_add_global_compile_definitions(__SYCL) # for SYCL kernels
+    qe_add_global_compile_definitions(__ONEMKL) # for OneAPI MKL OpenMP offload fortran interfaces
 endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
