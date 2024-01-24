@@ -175,6 +175,7 @@ endif()
 if(QE_ENABLE_ONEAPI)
     #qe_add_global_compile_definitions(__SYCL) # for SYCL kernels
     qe_add_global_compile_definitions(__ONEMKL) # for OneAPI MKL OpenMP offload fortran interfaces
+    qe_add_global_compile_definitions(__NO_HIPKERN)
 endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
@@ -388,6 +389,29 @@ if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
         find_package(CUDAToolkit REQUIRED)
     endif()
 endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
+
+###########################################################
+# OneAPI
+###########################################################
+if(QE_ENABLE_ONEAPI)
+  if(NOT QE_ENABLE_OFFLOAD)
+    message(FATAL_ERROR "QE_ENABLE_ONEAPI=ON requires QE_ENABLE_OFFLOAD=ON")
+  endif()
+  add_library(MKL::sycl INTERFACE IMPORTED)
+  find_path(MKL_OMP_OFFLOAD_INCLUDE mkl_omp_offload.f90
+    HINTS ${MKL_ROOT} $ENV{MKLROOT} $ENV{MKL_ROOT} $ENV{MKL_HOME}
+    PATH_SUFFIXES include
+    REQUIRED
+  )
+  target_include_directories(MKL::sycl INTERFACE "${MKL_OMP_OFFLOAD_INCLUDE}")
+
+  find_library(MKL_SYCL mkl_sycl
+    HINTS ${MKL_ROOT} $ENV{MKLROOT} $ENV{MKL_ROOT} $ENV{MKL_HOME}
+    PATH_SUFFIXES lib/intel64 lib
+    REQUIRED
+  )
+  target_link_libraries(MKL::sycl INTERFACE ${MKL_SYCL})
+endif()
 
 ###########################################################
 # MPI
