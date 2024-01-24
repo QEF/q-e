@@ -133,7 +133,7 @@ MODULE dvscf_interpolate
       IF (exst) THEN
         qrpl = .TRUE.
         IF (ionode) THEN
-          OPEN(UNIT = iun, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
+          OPEN(NEWUNIT = iun, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
           READ(iun, *) dummy
           DO i = 1, 3 * nat
             READ(iun, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
