@@ -51,9 +51,9 @@ MODULE control_flags
   LOGICAL :: tfirst    = .TRUE.  ! CP: true if first iteration after restart
   LOGICAL :: tlast     = .FALSE. ! CP: true if last iteration before ending
   LOGICAL :: tprint    = .FALSE. ! CP: set to true when calculation of time
-                                 !     derivatives of wave functions must be 
+                                 !     derivatives of wave functions must be
                                  !     computed via projection on occupied
-                                 !     manifold 
+                                 !     manifold
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
@@ -98,7 +98,7 @@ MODULE control_flags
   INTEGER :: ndr    = 0 !
   INTEGER :: nomore = 0 !
   INTEGER :: iprint =10 ! print output every iprint step
-  INTEGER  :: max_xml_steps =0 ! max number of dynamics included in xml file if 0 all steps are included. 
+  INTEGER  :: max_xml_steps =0 ! max number of dynamics included in xml file if 0 all steps are included.
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
   !
   ! ... .TRUE. if only gamma point is used
@@ -112,7 +112,7 @@ MODULE control_flags
   ! This is necessary to mantain compatibility with the old way of changing the molecular dynamics integration timestep.
   ! The code needs to check, in case the old method is used, that the input old timestep and the xml old timestep are the same
   !
-  REAL(DP) :: dt_xml_old = -1.0_DP 
+  REAL(DP) :: dt_xml_old = -1.0_DP
   !
   ! ... Wave function randomization
   !
@@ -162,7 +162,7 @@ MODULE control_flags
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
     !=================================================================
-    !exx_wf related 
+    !exx_wf related
     lwfnscf =.FALSE., &
     lwfpbe0nscf=.FALSE.,&
     !=================================================================
@@ -200,7 +200,7 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     tr2_init,         &! initial value of tr2 for adaptive thresholds
     tr2_multi          ! the dexx multiplier for adaptive thresholds
-                       ! tr2 = tr2_multi * dexx after each V_exx update 
+                       ! tr2 = tr2_multi * dexx after each V_exx update
   LOGICAL, PUBLIC :: scf_must_converge
   !
   ! ... pw diagonalization
@@ -216,7 +216,7 @@ MODULE control_flags
     gs_nblock          ! blocking size in Gram-Schmidt orthogonalization
   LOGICAL, PUBLIC :: &
     rmm_conv,                     &! if true,  RMM-DIIS is performed up to converge
-    rmm_with_davidson  = .TRUE.,  &! if true RMM-DIIS  in alternance with davidson 
+    rmm_with_davidson  = .TRUE.,  &! if true RMM-DIIS  in alternance with davidson
     diago_full_acc     = .FALSE.      ! if true,  empty eigenvalues have the same
                                    ! accuracy of the occupied ones
   !
@@ -255,11 +255,11 @@ MODULE control_flags
   ! ... miscellany
   !
   LOGICAL, PUBLIC :: &
-    use_para_diag = .FALSE.  ! if .TRUE. a fully distributed memory iteration 
+    use_para_diag = .FALSE.  ! if .TRUE. a fully distributed memory iteration
                              ! algorithm and parallel Householder algorithm are used
   !
   LOGICAL, PUBLIC :: &
-    remove_rigid_rot = .FALSE. ! if .TRUE. the total torque acting on the atoms 
+    remove_rigid_rot = .FALSE. ! if .TRUE. the total torque acting on the atoms
                                ! is removed
   LOGICAL, PUBLIC :: &
     do_makov_payne = .FALSE.   ! if .TRUE. makov-payne correction for isolated
@@ -272,7 +272,7 @@ MODULE control_flags
   TYPE(offload_kind_omp), PUBLIC :: offload_omp  ! flag to select OpenMP5 offload type
   TYPE(offload_kind_cpu), PUBLIC :: offload_cpu  ! flag to select no offload type (CPU execution)
 #if defined(__CUDA)
-  TYPE(offload_kind_acc), PUBLIC :: offload_type ! flag to point the actual currently used offload type 
+  TYPE(offload_kind_acc), PUBLIC :: offload_type ! flag to point the actual currently used offload type
 #elif defined(__OPENMP_GPU)
   TYPE(offload_kind_omp), PUBLIC :: offload_type
 #else
@@ -280,7 +280,7 @@ MODULE control_flags
 #endif
   !
   INTEGER, PUBLIC :: &
-#if defined(__OPENMP_GPU) && defined(__HIP) && defined(__OMP_MANY_FFT) || defined(__CUDA)
+#if defined(__OPENMP_GPU) && defined(__OMP_MANY_FFT) || defined(__CUDA)
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.
 #else
@@ -301,13 +301,12 @@ MODULE control_flags
   !
   ! ... Augmetation charge and beta smoothing
   !
-  LOGICAL,          PUBLIC :: tq_smoothing=.FALSE. ! if true the Q are smoothed 
-  LOGICAL,          PUBLIC :: tbeta_smoothing=.FALSE. ! if true the betas are smoothed 
+  LOGICAL,          PUBLIC :: tq_smoothing=.FALSE. ! if true the Q are smoothed
+  LOGICAL,          PUBLIC :: tbeta_smoothing=.FALSE. ! if true the betas are smoothed
   !
   ! ... External Forces on Ions
   !
   LOGICAL,          PUBLIC :: textfor = .FALSE.
-
 
   LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
