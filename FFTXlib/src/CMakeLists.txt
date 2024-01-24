@@ -30,6 +30,9 @@ if(QE_ENABLE_CUDA)
         fft_scatter_gpu.f90
         fft_scatter_2d_gpu.f90)
 endif()
+if(QE_ENABLE_ONEAPI AND QE_ENABLE_OFFLOAD)
+  set(f_src_fftx ${f_src_fftx} fft_scalar.DFTIOMP.f90 onemkl_dfti_omp_offload.f90)
+endif()
 qe_enable_cuda_fortran("${f_src_fftx}")
 
 set(c_src_fftx
