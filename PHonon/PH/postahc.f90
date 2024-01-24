@@ -187,14 +187,16 @@ PROGRAM postahc
   !! (nmodes, nmodes, nq) Phonon modes
   COMPLEX(DP), ALLOCATABLE :: ahc_dw(:, :, :, :, :)
   !! Debye-Waller matrix element
-  COMPLEX(DP), ALLOCATABLE :: selfen_dw(:, :, :)
+  COMPLEX(DP), ALLOCATABLE :: ahc_dw_trunc(:, :, :, :, :)
+  !! Debye-Waller matrix element computed with truncation
+  COMPLEX(DP), ALLOCATABLE :: selfen_updw(:, :, :)
+  !! Debye-Waller self-energy
+  COMPLEX(DP), ALLOCATABLE :: selfen_lodw(:, :, :)
   !! Debye-Waller self-energy
   COMPLEX(DP), ALLOCATABLE :: selfen_upfan(:, :, :)
   !! Upper Fan self-energy
   COMPLEX(DP), ALLOCATABLE :: selfen_lofan(:, :, :)
   !! Lower Fan self-energy
-  COMPLEX(DP), ALLOCATABLE :: selfen_fan(:, :, :)
-  !! Fan self-energy (lower + upper)
   COMPLEX(DP), ALLOCATABLE :: selfen_tot(:, :, :)
   !! Total self-energy
   COMPLEX(DP), ALLOCATABLE :: selfen_diag(:, :)
@@ -356,18 +358,21 @@ PROGRAM postahc
   ALLOCATE(etk_all(nbnd, nks))
   ALLOCATE(etk(ahc_nbnd, nks))
   ALLOCATE(ahc_dw(ahc_nbnd, ahc_nbnd, nmodes, 3, nks))
-  ALLOCATE(selfen_dw(ahc_nbnd, ahc_nbnd, nks))
+  ALLOCATE(ahc_dw_trunc(ahc_nbnd, ahc_nbnd, nmodes, 3, nks))
+  ALLOCATE(selfen_updw(ahc_nbnd, ahc_nbnd, nks))
+  ALLOCATE(selfen_lodw(ahc_nbnd, ahc_nbnd, nks))
   ALLOCATE(selfen_upfan(ahc_nbnd, ahc_nbnd, nks))
   ALLOCATE(selfen_lofan(ahc_nbnd, ahc_nbnd, nks))
-  ALLOCATE(selfen_fan(ahc_nbnd, ahc_nbnd, nks))
   ALLOCATE(selfen_tot(ahc_nbnd, ahc_nbnd, nks))
   !
   etk_all = 0.d0
   etk = 0.d0
-  selfen_dw = (0.d0, 0.d0)
+  ahc_dw = (0.d0, 0.d0)
+  ahc_dw_trunc = (0.d0, 0.d0)
+  selfen_updw = (0.d0, 0.d0)
+  selfen_lodw = (0.d0, 0.d0)
   selfen_upfan = (0.d0, 0.d0)
   selfen_lofan = (0.d0, 0.d0)
-  selfen_fan = (0.d0, 0.d0)
   selfen_tot = (0.d0, 0.d0)
   !
   DO iat = 1, nat
@@ -513,17 +518,18 @@ PROGRAM postahc
   !
   ! Read ahc_dw which does not depend on iq.
   !
-  filename = TRIM(ahc_dir) // 'ahc_dw.bin'
+  CALL compute_ahc_dw_with_truncation(ahc_dw_trunc)
   !
-  IF (truncate_dw) THEN
-    CALL compute_ahc_dw_with_truncation(ahc_dw)
-  ELSE
+  IF (.NOT. truncate_dw) THEN
+    filename = TRIM(ahc_dir) // 'ahc_dw.bin'
     INQUIRE(IOLENGTH=recl) ahc_dw
     OPEN(NEWUNIT=iun, FILE=TRIM(filename), STATUS='OLD', FORM='UNFORMATTED', &
       ACCESS='DIRECT', RECL=recl, IOSTAT=ios)
     IF (ios /= 0) CALL errore('postahc', 'Error opening ' // TRIM(filename), 1)
     READ(iun, REC=1) ahc_dw
     CLOSE(iun)
+    !
+    ahc_dw = ahc_dw - ahc_dw_trunc
   ENDIF
   !
   ! ---------------------------------------------------------------------------
@@ -564,7 +570,10 @@ PROGRAM postahc
       ENDIF
     ENDDO
     !
-    IF (.NOT. skip_dw) CALL calc_debye_waller(iq, selfen_dw)
+    IF (.NOT. skip_dw) THEN
+      CALL calc_debye_waller(iq, selfen_lodw, .TRUE.)
+      IF (.NOT. truncate_dw) CALL calc_debye_waller(iq, selfen_updw, .FALSE.)
+    ENDIF
     !
     IF (.NOT. truncate_fan) CALL calc_upper_fan(iq, selfen_upfan)
     !
@@ -578,7 +587,8 @@ PROGRAM postahc
   !
   CALL mp_sum(selfen_lofan, intra_pool_comm)
   CALL mp_sum(selfen_upfan, intra_pool_comm)
-  CALL mp_sum(selfen_dw, intra_pool_comm)
+  CALL mp_sum(selfen_lodw, intra_pool_comm)
+  CALL mp_sum(selfen_updw, intra_pool_comm)
   !
   ! If the energy is outside the AHC window, set all values to zero because
   ! the results (in particular the upper Fan self-energy) are meaningless
@@ -589,14 +599,15 @@ PROGRAM postahc
         selfen_lofan(ibnd, :, ik) = (0.d0, 0.d0)
         selfen_upfan(:, ibnd, ik) = 0.d0
         selfen_upfan(ibnd, :, ik) = 0.d0
-        selfen_dw(:, ibnd, ik) = 0.d0
-        selfen_dw(ibnd, :, ik) = 0.d0
+        selfen_updw(:, ibnd, ik) = 0.d0
+        selfen_updw(ibnd, :, ik) = 0.d0
+        selfen_lodw(:, ibnd, ik) = 0.d0
+        selfen_lodw(ibnd, :, ik) = 0.d0
       ENDIF
     ENDDO
   ENDDO
   !
-  selfen_fan = selfen_lofan + selfen_upfan
-  selfen_tot = selfen_fan + selfen_dw
+  selfen_tot = selfen_lodw + selfen_updw + selfen_lofan + selfen_upfan
   !
   ! Write self-energy to stdout
   !
@@ -619,11 +630,10 @@ PROGRAM postahc
     WRITE(stdout, '(5x,a)') 'Self-energy of degenerate states are averaged.'
     WRITE(stdout, '(5x,a)') 'The DW and Upper_Fan terms are real-valued by construction.'
     WRITE(stdout, '(5x,a)') 'For states with energy outside the AHC window, all output are zero.'
-    WRITE(stdout, '(5x,a)') 'Total_Fan = Upper_Fan + Lower_Fan'
-    WRITE(stdout, '(5x,a)') 'Total = Total_Fan + DW'
+    WRITE(stdout, '(5x,a)') 'Total = Upper_DW + Lower_DW + Upper_Fan + Lower_Fan'
     WRITE(stdout, *)
     WRITE(stdout, '(5x,a)') 'Begin postahc output'
-    WRITE(stdout, '(5x,a)') '    ik  ibnd    Re[Total]           DW Re[Total_Fan]&
+    WRITE(stdout, '(5x,a)') '    ik  ibnd    Re[Total]     Upper_DW      Lower_DW&
                             &   Upper_Fan Re[Lower_Fan]   Im[Total]'
     !
     ALLOCATE(selfen_diag(ahc_nbnd, 5))
@@ -632,8 +642,8 @@ PROGRAM postahc
     DO ik = 1, nks
       DO ibnd = 1, ahc_nbnd
         selfen_diag(ibnd, 1) = selfen_tot(ibnd, ibnd, ik)
-        selfen_diag(ibnd, 2) = selfen_dw(ibnd, ibnd, ik)
-        selfen_diag(ibnd, 3) = selfen_fan(ibnd, ibnd, ik)
+        selfen_diag(ibnd, 2) = selfen_updw(ibnd, ibnd, ik)
+        selfen_diag(ibnd, 3) = selfen_lodw(ibnd, ibnd, ik)
         selfen_diag(ibnd, 4) = selfen_upfan(ibnd, ibnd, ik)
         selfen_diag(ibnd, 5) = selfen_lofan(ibnd, ibnd, ik)
       ENDDO
@@ -722,17 +732,17 @@ PROGRAM postahc
       ! Write self-energy to selfen.dat
       !
       OPEN(NEWUNIT=iun, FILE='selfen_real.dat', FORM='FORMATTED')
-      WRITE(iun, '(a)') '# Real part of diagonal electron self-energy &
+      WRITE(iun, '(a)') '# Real part of full electron self-energy matrix &
                         &Re[sigma(ibnd, jbnd, ik)] in eV'
-      WRITE(iun, '(a)') '#   ik  ibnd  jbnd       Total          DW   Total_Fan&
+      WRITE(iun, '(a)') '#   ik  ibnd  jbnd       Total    Upper_DW    Lower_DW&
                         &   Upper_Fan   Lower_Fan'
       DO ik = 1, nks
         DO jbnd = 1, ahc_nbnd
           DO ibnd = 1, ahc_nbnd
             WRITE(iun, '(3I6, 5ES16.7)') ik, ibnd, jbnd, &
               REAL(selfen_tot(ibnd, jbnd, ik))   * RYTOEV, &
-              REAL(selfen_dw(ibnd, jbnd, ik))    * RYTOEV, &
-              REAL(selfen_fan(ibnd, jbnd, ik))   * RYTOEV, &
+              REAL(selfen_updw(ibnd, jbnd, ik))  * RYTOEV, &
+              REAL(selfen_lodw(ibnd, jbnd, ik))  * RYTOEV, &
               REAL(selfen_upfan(ibnd, jbnd, ik)) * RYTOEV, &
               REAL(selfen_lofan(ibnd, jbnd, ik)) * RYTOEV
           ENDDO
@@ -741,17 +751,17 @@ PROGRAM postahc
       CLOSE(iun)
       !
       OPEN(NEWUNIT=iun, FILE='selfen_imag.dat', FORM='FORMATTED')
-      WRITE(iun, '(a)') '# Imaginary part of diagonal electron self-energy &
+      WRITE(iun, '(a)') '# Imaginary part of full electron self-energy matrix &
                         &Im[sigma(ibnd, jbnd, ik)] in eV'
-      WRITE(iun, '(a)') '#   ik  ibnd  jbnd       Total          DW   Total_Fan&
+      WRITE(iun, '(a)') '#   ik  ibnd  jbnd       Total    Upper_DW    Lower_DW&
                         &   Upper_Fan   Lower_Fan'
       DO ik = 1, nks
         DO jbnd = 1, ahc_nbnd
           DO ibnd = 1, ahc_nbnd
             WRITE(iun, '(3I6, 5ES16.7)') ik, ibnd, jbnd, &
               AIMAG(selfen_tot(ibnd, jbnd, ik))   * RYTOEV, &
-              AIMAG(selfen_dw(ibnd, jbnd, ik))    * RYTOEV, &
-              AIMAG(selfen_fan(ibnd, jbnd, ik))   * RYTOEV, &
+              AIMAG(selfen_updw(ibnd, jbnd, ik))  * RYTOEV, &
+              AIMAG(selfen_lodw(ibnd, jbnd, ik))  * RYTOEV, &
               AIMAG(selfen_upfan(ibnd, jbnd, ik)) * RYTOEV, &
               AIMAG(selfen_lofan(ibnd, jbnd, ik)) * RYTOEV
           ENDDO
@@ -775,10 +785,11 @@ PROGRAM postahc
   DEALLOCATE(etk_all)
   DEALLOCATE(etk)
   DEALLOCATE(ahc_dw)
-  DEALLOCATE(selfen_dw)
+  DEALLOCATE(ahc_dw_trunc)
+  DEALLOCATE(selfen_updw)
+  DEALLOCATE(selfen_lodw)
   DEALLOCATE(selfen_upfan)
   DEALLOCATE(selfen_lofan)
-  DEALLOCATE(selfen_fan)
   DEALLOCATE(selfen_tot)
   !
   ! ---------------------------------------------------------------------------
@@ -843,16 +854,18 @@ END FUNCTION get_index_of_k_point
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
-SUBROUTINE compute_ahc_dw_with_truncation(ahc_dw)
+SUBROUTINE compute_ahc_dw_with_truncation(ahc_dw_trunc)
   !----------------------------------------------------------------------------
-  !! Compute ahc_dw using truncated sum over states.
+  !! Compute ahc_dw_trunc using truncated sum over states.
   !! Include only the states inside the AHC window.
   !------------------------------------------------------------------------------
   !
-  COMPLEX(DP), INTENT(INOUT) :: ahc_dw(ahc_nbnd, ahc_nbnd, nmodes, 3, nks)
+  COMPLEX(DP), INTENT(INOUT) :: ahc_dw_trunc(ahc_nbnd, ahc_nbnd, nmodes, 3, nks)
   !! Debye-Waller matrix element
   !
   INTEGER :: ik, ib, jb, pb, idir, imode
+  CHARACTER(LEN=256) :: filename
+  !! Name of files to read
   COMPLEX(DP), ALLOCATABLE :: ahc_gkk(:, :, :, :)
   !! electron-phonon matrix element
   COMPLEX(DP), ALLOCATABLE :: ahc_p(:, :, :, :)
@@ -867,7 +880,7 @@ SUBROUTINE compute_ahc_dw_with_truncation(ahc_dw)
   filename = TRIM(ahc_dir) // 'ahc_p.bin'
   CALL postahc_read_unformatted_file(filename, 1, ahc_p)
   !
-  ahc_dw = (0.d0, 0.d0)
+  ahc_dw_trunc = (0.d0, 0.d0)
   DO ik = 1, nks
     DO pb = 1, nbnd
       IF (etk_all(pb, ik) >= ahc_win_min .AND. etk_all(pb, ik) <= ahc_win_max) THEN
@@ -875,7 +888,7 @@ SUBROUTINE compute_ahc_dw_with_truncation(ahc_dw)
           DO jb = 1, ahc_nbnd
             DO idir = 1, 3
               DO imode = 1, nmodes
-                ahc_dw(ib, jb, imode, idir, ik) = ahc_dw(ib, jb, imode, idir, ik) + &
+                ahc_dw_trunc(ib, jb, imode, idir, ik) = ahc_dw_trunc(ib, jb, imode, idir, ik) + &
                   + (0.d0, 1.d0) * CONJG(ahc_gkk(pb, ib, imode, ik)) * ahc_p(pb, jb, idir, ik) &
                   - (0.d0, 1.d0) * CONJG(ahc_p(pb, ib, idir, ik)) * ahc_gkk(pb, jb, imode, ik)
               ENDDO
@@ -893,7 +906,7 @@ END SUBROUTINE compute_ahc_dw_with_truncation
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
-SUBROUTINE calc_debye_waller(iq, selfen_dw)
+SUBROUTINE calc_debye_waller(iq, selfen_dw, truncate)
   !----------------------------------------------------------------------------
   !!
   !! Compute Debye-Waller self-energy at iq
@@ -908,6 +921,8 @@ SUBROUTINE calc_debye_waller(iq, selfen_dw)
   !----------------------------------------------------------------------------
   USE kinds,       ONLY : DP
   !
+  LOGICAL, INTENT(IN) :: truncate
+  !! If .TRUE., use ahc_dw_truncated, otherwise, use ahc_dw.
   INTEGER, INTENT(IN) :: iq
   COMPLEX(DP), INTENT(INOUT) :: selfen_dw(ahc_nbnd, ahc_nbnd, nks)
   !
@@ -950,8 +965,13 @@ SUBROUTINE calc_debye_waller(iq, selfen_dw)
   DO kmode = 1, nmodes
     DO jdir = 1, 3
       DO imode = 1, nmodes
-        selfen_dw_iq = selfen_dw_iq + ahc_dw(:, :, imode, jdir, :) &
-                                    * coeff_dw(imode, jdir, kmode)
+        IF (truncate) THEN
+          selfen_dw_iq = selfen_dw_iq + ahc_dw_trunc(:, :, imode, jdir, :) &
+                                      * coeff_dw(imode, jdir, kmode)
+        ELSE
+          selfen_dw_iq = selfen_dw_iq + ahc_dw(:, :, imode, jdir, :) &
+                                      * coeff_dw(imode, jdir, kmode)
+        ENDIF
       ENDDO
     ENDDO
   ENDDO
@@ -983,7 +1003,7 @@ SUBROUTINE calc_upper_fan(iq, selfen_upfan)
   COMPLEX(DP), INTENT(INOUT) :: selfen_upfan(ahc_nbnd, ahc_nbnd, nks)
   !
   CHARACTER(LEN=256) :: filename
-  !! Name of ahc_upfan_iq*.bin file
+  !! Name of files to read
   INTEGER :: iun
   !! Unit for reading file
   INTEGER :: recl

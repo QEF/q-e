@@ -1,5 +1,5 @@
 
-     Program POSTAHC v.7.0 starts on  6Feb2023 at 16:44:21 
+     Program POSTAHC v.7.2 starts on 12Mar2024 at 19: 9:10 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -10,13 +10,14 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI & OpenMP), running on       1 processor cores
-     Number of MPI processes:                 1
-     Threads/MPI process:                     1
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     3238 MiB available memory on the printing compute node when the environment starts
- 
+     4777 MiB available memory on the printing compute node when the environment starts
+
+     Waiting for input...
+     Reading input from standard input
+      Title line not specified: using 'default'.
 
      Reading xml data from directory:
 
@@ -29,67 +30,67 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         121     121     43                  893      893     181
- 
+
      Using Slab Decomposition
- 
+
      There are          4 q points in total.
      Calculating        4 q points in the root core.
      Total number of bands :        9
      Bands to calculate the self-energy :       5 to        8
- 
-     Calculating electron self-energy. Loop over q points
-       1       2       3       4 
- 
- 
+
+     Calculating electron self-energy. Loop over        4 q points
+
+
+
      Diagonal electron self-energy in eV
      Self-energy of degenerate states are averaged.
-     The DW and Upper_Fan terms are real-valed by construction.
-     Total_Fan = Upper_Fan + Lower_Fan
-     Total = Total_Fan + DW
- 
+     The DW and Upper_Fan terms are real-valued by construction.
+     For states with energy outside the AHC window, all output are zero.
+     Total = Upper_DW + Lower_DW + Upper_Fan + Lower_Fan
+
      Begin postahc output
-         ik  ibnd    Re[Total]           DW Re[Total_Fan]   Upper_Fan Re[Lower_Fan]   Im[Total]
-          1     1   0.31355367   0.39887352  -0.08531985  -0.37424041   0.28892056  -0.84126932
-          1     2   0.31355367   0.39887352  -0.08531985  -0.37424041   0.28892056  -0.84126932
-          1     3   0.31355367   0.39887352  -0.08531985  -0.37424041   0.28892056  -0.84126932
-          1     4  -2.99021148  -0.22346045  -2.76675103  -1.08095536  -1.68579567  -0.24834042
-          2     1  -0.67683136  -0.07971520  -0.59711616  -0.74077249   0.14365633  -3.73590207
-          2     2   2.00204037   0.33794005   1.66410032  -0.36440241   2.02850274  -3.03109050
-          2     3   2.00204037   0.33794005   1.66410032  -0.36440241   2.02850274  -3.03109050
-          2     4  -0.32736193   0.34780852  -0.67517046  -0.50744220  -0.16772826  -0.80815122
-          3     1  -1.34378919   0.32756852  -1.67135771  -0.45267065  -1.21868706  -0.12153864
-          3     2   0.49264214   0.40763792   0.08500422  -0.62972897   0.71473319  -0.39427425
-          3     3   0.76670205   0.52878875   0.23791330  -0.62440127   0.86231457  -1.03149313
-          3     4  -1.07476961   0.07657625  -1.15134586  -0.62852793  -0.52281793  -4.93420384
-          4     1  -0.82521531   0.16633743  -0.99155274  -0.37972460  -0.61182814  -0.21318181
-          4     2  -1.40528879   0.27797480  -1.68326359  -0.52538953  -1.15787406  -1.89400248
-          4     3  -1.89747710   0.34743764  -2.24491475  -0.72266813  -1.52224661  -1.02201803
-          4     4   2.24597640   0.50857071   1.73740568  -0.71865328   2.45605897  -2.35686871
-          5     1  -0.92875513   0.25337781  -1.18213294  -0.41548596  -0.76664698  -2.40433047
-          5     2   0.61780863   0.30842248   0.30938615  -0.55762467   0.86701082  -0.59500181
-          5     3  -0.78877056   0.31425589  -1.10302645  -0.65365917  -0.44936728  -0.17654543
-          5     4  -0.97716641   0.29343408  -1.27060049  -0.52785112  -0.74274937  -0.72776172
+         ik  ibnd    Re[Total]     Upper_DW      Lower_DW   Upper_Fan Re[Lower_Fan]   Im[Total]
+          1     1   3.1355E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8892E-01  -8.4127E-01
+          1     2   3.1355E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8892E-01  -8.4127E-01
+          1     3   3.1355E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8892E-01  -8.4127E-01
+          1     4  -2.9902E+00   3.3284E-01  -5.5630E-01  -1.0810E+00  -1.6858E+00  -2.4834E-01
+          2     1  -6.7683E-01   2.3980E-01  -3.1952E-01  -7.4077E-01   1.4366E-01  -3.7359E+00
+          2     2   2.0020E+00   3.3924E-01  -1.2951E-03  -3.6440E-01   2.0285E+00  -3.0311E+00
+          2     3   2.0020E+00   3.3924E-01  -1.2951E-03  -3.6440E-01   2.0285E+00  -3.0311E+00
+          2     4  -3.2736E-01   2.9921E-01   4.8596E-02  -5.0744E-01  -1.6773E-01  -8.0815E-01
+          3     1  -1.3438E+00   3.4428E-01  -1.6715E-02  -4.5267E-01  -1.2187E+00  -1.2154E-01
+          3     2   4.9264E-01   4.5881E-01  -5.1169E-02  -6.2973E-01   7.1473E-01  -3.9427E-01
+          3     3   7.6670E-01   4.8397E-01   4.4823E-02  -6.2440E-01   8.6231E-01  -1.0315E+00
+          3     4  -1.0748E+00   2.2068E-01  -1.4410E-01  -6.2853E-01  -5.2282E-01  -4.9342E+00
+          4     1  -8.2522E-01   2.1389E-01  -4.7552E-02  -3.7972E-01  -6.1183E-01  -2.1318E-01
+          4     2  -1.4053E+00   3.1936E-01  -4.1382E-02  -5.2539E-01  -1.1579E+00  -1.8940E+00
+          4     3  -1.8975E+00   4.3801E-01  -9.0572E-02  -7.2267E-01  -1.5222E+00  -1.0220E+00
+          4     4   2.2460E+00   5.4569E-01  -3.7116E-02  -7.1865E-01   2.4561E+00  -2.3569E+00
+          5     1  -9.2875E-01   2.9244E-01  -3.9059E-02  -4.1549E-01  -7.6665E-01  -2.4043E+00
+          5     2   6.1781E-01   3.6837E-01  -5.9952E-02  -5.5762E-01   8.6701E-01  -5.9500E-01
+          5     3  -7.8877E-01   3.8076E-01  -6.6503E-02  -6.5366E-01  -4.4937E-01  -1.7655E-01
+          5     4  -9.7717E-01   3.1113E-01  -1.7701E-02  -5.2785E-01  -7.4275E-01  -7.2776E-01
      End postahc output
- 
+
      Full off-diagonal complex self-energy matrix is written in files
      selfen_real.dat and selfen_imag.dat. These data can differ from
      the output above because the self-energy of degenerate states are
      NOT averaged in the selfen_*.dat output.
- 
- 
-     debye_waller :      0.00s CPU      0.00s WALL (       4 calls)
+
+
+     debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
      lower_fan    :      0.00s CPU      0.00s WALL (       4 calls)
      upper_fan    :      0.00s CPU      0.00s WALL (       4 calls)
- 
-     POSTAHC      :      0.10s CPU      0.11s WALL
 
- 
-   This run was terminated on:  16:44:21   6Feb2023            
+     POSTAHC      :      0.04s CPU      0.04s WALL
+
+
+   This run was terminated on:  19: 9:10  12Mar2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

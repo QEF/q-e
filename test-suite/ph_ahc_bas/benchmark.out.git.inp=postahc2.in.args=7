@@ -1,8 +1,5 @@
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
 
-     Program POSTAHC v.7.2 starts on  7Dec2023 at 19:20: 9 
+     Program POSTAHC v.7.2 starts on 12Mar2024 at 19:10: 7 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,12 +10,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     3 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       3
-     38353 MiB available memory on the printing compute node when the environment starts
- 
+     4797 MiB available memory on the printing compute node when the environment starts
+
      Waiting for input...
      Reading input from standard input
       Title line not specified: using 'default'.
@@ -33,18 +29,16 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
-     Parallelization info
+
+     G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min         150     150     46                 2140     2140     355
-     Max         151     151     47                 2143     2143     356
      Sum         451     451    139                 6423     6423    1067
- 
+
      Using Slab Decomposition
- 
+
      There are          4 q points in total.
-     Calculating        2 q points in the root core.
+     Calculating        4 q points in the root core.
      Check whether the sum of the weight is equal to the number of q points in the full q-point grid.
      SUM(wtq) =         27.0000
  
@@ -56,61 +50,60 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
  
      Total number of bands :       14
      Bands to calculate the self-energy :       1 to        9
- 
-     Calculating electron self-energy. Loop over q points
-       1       2 
- 
- 
+
+     Calculating electron self-energy. Loop over        4 q points
+
+
+
      Diagonal electron self-energy in eV
      Self-energy of degenerate states are averaged.
      The DW and Upper_Fan terms are real-valued by construction.
      For states with energy outside the AHC window, all output are zero.
-     Total_Fan = Upper_Fan + Lower_Fan
-     Total = Total_Fan + DW
- 
+     Total = Upper_DW + Lower_DW + Upper_Fan + Lower_Fan
+
      Begin postahc output
-         ik  ibnd    Re[Total]           DW Re[Total_Fan]   Upper_Fan Re[Lower_Fan]   Im[Total]
-          1     1  -4.2337E-02   1.1926E-01  -1.6160E-01  -1.0227E-01  -5.9328E-02   2.9142E-04
-          1     2   4.3503E-02   7.4400E-01  -7.0050E-01  -7.0462E-01   4.1211E-03   1.0483E-03
-          1     3   4.3503E-02   7.4400E-01  -7.0050E-01  -7.0462E-01   4.1211E-03   1.0483E-03
-          1     4   4.3503E-02   7.4400E-01  -7.0050E-01  -7.0462E-01   4.1211E-03   1.0483E-03
-          1     5   3.2333E-01   5.5947E-01  -2.3613E-01  -5.9095E-01   3.5482E-01  -9.7334E-02
-          1     6   3.2333E-01   5.5947E-01  -2.3613E-01  -5.9095E-01   3.5482E-01  -9.7334E-02
-          1     7   3.2333E-01   5.5947E-01  -2.3613E-01  -5.9095E-01   3.5482E-01  -9.7334E-02
-          1     8  -6.4497E-02   3.2628E-01  -3.9077E-01  -4.5143E-01   6.0655E-02  -1.8165E-01
+         ik  ibnd    Re[Total]     Upper_DW      Lower_DW   Upper_Fan Re[Lower_Fan]   Im[Total]
+          1     1  -4.2338E-02   1.0087E-01   1.8418E-02  -1.0229E-01  -5.9333E-02   2.9143E-04
+          1     2   4.3499E-02   6.9842E-01   4.5616E-02  -7.0465E-01   4.1110E-03   1.0484E-03
+          1     3   4.3499E-02   6.9842E-01   4.5616E-02  -7.0465E-01   4.1110E-03   1.0484E-03
+          1     4   4.3499E-02   6.9842E-01   4.5616E-02  -7.0465E-01   4.1110E-03   1.0484E-03
+          1     5   3.2337E-01   5.8862E-01  -2.9083E-02  -5.9102E-01   3.5485E-01  -9.7361E-02
+          1     6   3.2337E-01   5.8862E-01  -2.9083E-02  -5.9102E-01   3.5485E-01  -9.7361E-02
+          1     7   3.2337E-01   5.8862E-01  -2.9083E-02  -5.9102E-01   3.5485E-01  -9.7361E-02
+          1     8  -6.4420E-02   3.9433E-01  -6.8017E-02  -4.5147E-01   6.0740E-02  -1.8182E-01
           1     9   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
-          2     1  -9.3862E-03   1.8032E-01  -1.8970E-01  -1.6153E-01  -2.8169E-02   3.5458E-03
-          2     2  -2.2864E-02   2.0596E-01  -2.2883E-01  -2.1214E-01  -1.6682E-02   8.0779E-04
-          2     3   1.4096E-01   6.2837E-01  -4.8741E-01  -6.0038E-01   1.1297E-01   2.0251E-02
-          2     4   1.4096E-01   6.2837E-01  -4.8741E-01  -6.0038E-01   1.1297E-01   2.0251E-02
-          2     5  -1.2592E-01   2.4825E-01  -3.7417E-01  -3.3922E-01  -3.4959E-02  -3.1156E-02
-          2     6   1.1448E-02   4.7911E-01  -4.6767E-01  -6.0676E-01   1.3909E-01  -3.8970E-03
-          2     7   1.1448E-02   4.7911E-01  -4.6767E-01  -6.0676E-01   1.3909E-01  -3.8970E-03
+          2     1  -9.3834E-03   1.5742E-01   2.2926E-02  -1.6156E-01  -2.8173E-02   3.5460E-03
+          2     2  -2.2863E-02   2.1039E-01  -4.4176E-03  -2.1216E-01  -1.6680E-02   8.0781E-04
+          2     3   1.4096E-01   5.6280E-01   6.5606E-02  -6.0042E-01   1.1297E-01   2.0251E-02
+          2     4   1.4096E-01   5.6280E-01   6.5606E-02  -6.0042E-01   1.1297E-01   2.0251E-02
+          2     5  -1.2593E-01   3.0257E-01  -5.4304E-02  -3.3924E-01  -3.4958E-02  -3.1157E-02
+          2     6   1.1457E-02   5.2687E-01  -4.7709E-02  -6.0680E-01   1.3910E-01  -3.8974E-03
+          2     7   1.1457E-02   5.2687E-01  -4.7709E-02  -6.0680E-01   1.3910E-01  -3.8974E-03
           2     8   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
           2     9   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
-          3     1  -1.0982E-01   2.3410E-01  -3.4392E-01  -2.1665E-01  -1.2726E-01   8.1485E-02
-          3     2  -8.3022E-02   1.6508E-01  -2.4810E-01  -1.6135E-01  -8.6755E-02   7.7216E-03
-          3     3  -2.2510E-02   4.8876E-01  -5.1127E-01  -4.7472E-01  -3.6548E-02   3.2037E-03
-          3     4  -2.2510E-02   4.8876E-01  -5.1127E-01  -4.7472E-01  -3.6548E-02   3.2037E-03
-          3     5  -5.5869E-02   9.6686E-02  -1.5256E-01  -1.7923E-01   2.6680E-02  -2.0347E-03
-          3     6  -7.7597E-02   2.5663E-01  -3.3423E-01  -3.4119E-01   6.9619E-03  -5.4837E-03
+          3     1  -1.0982E-01   2.1286E-01   2.1271E-02  -2.1668E-01  -1.2727E-01   8.1506E-02
+          3     2  -8.3033E-02   1.5585E-01   9.2441E-03  -1.6136E-01  -8.6763E-02   7.7230E-03
+          3     3  -2.2509E-02   4.5026E-01   3.8531E-02  -4.7474E-01  -3.6551E-02   3.2038E-03
+          3     4  -2.2509E-02   4.5026E-01   3.8531E-02  -4.7474E-01  -3.6551E-02   3.2038E-03
+          3     5  -5.5869E-02   1.5045E-01  -5.3759E-02  -1.7925E-01   2.6689E-02  -2.0346E-03
+          3     6  -7.7598E-02   3.1046E-01  -5.3818E-02  -3.4121E-01   6.9686E-03  -5.4847E-03
           3     7   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
           3     8   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
           3     9   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
      End postahc output
- 
+
      Using q points in the irreducible Brillouin zone.
      The off-diagonal self-energy matrix is not computed.
- 
- 
-     debye_waller :      0.00s CPU      0.00s WALL (       2 calls)
-     lower_fan    :      0.00s CPU      0.00s WALL (       2 calls)
-     upper_fan    :      0.00s CPU      0.00s WALL (       2 calls)
- 
-     POSTAHC      :      0.07s CPU      0.08s WALL
 
- 
-   This run was terminated on:  19:20: 9   7Dec2023            
+
+     debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
+     lower_fan    :      0.00s CPU      0.00s WALL (       4 calls)
+     upper_fan    :      0.01s CPU      0.01s WALL (       4 calls)
+
+     POSTAHC      :      0.07s CPU      0.07s WALL
+
+
+   This run was terminated on:  19:10: 7  12Mar2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
