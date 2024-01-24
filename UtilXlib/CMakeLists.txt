@@ -47,14 +47,22 @@ qe_install_targets(qe_utilx qe_utilx_c)
 
 set(src_device_lapack
     device_helper.f90)
+if(QE_ENABLE_ONEAPI AND QE_ENABLE_OFFLOAD)
+  set(src_device_lapack ${src_device_lapack} onemkl_omp.f90)
+endif()
 qe_enable_cuda_fortran("${src_device_lapack}")
 qe_add_library(qe_device_lapack ${src_device_lapack})
+
 target_link_libraries(qe_device_lapack
     PRIVATE
         qe_openacc_fortran
         qe_lapack
         qe_openmp_fortran
         qe_mpi_fortran)
+
+if(QE_ENABLE_ONEAPI AND QE_ENABLE_OFFLOAD)
+  target_link_libraries(qe_device_lapack PUBLIC MKL::sycl)
+endif()
 
 qe_install_targets(qe_device_lapack)
 
