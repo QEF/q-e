@@ -518,19 +518,27 @@ PROGRAM postahc
   !
   ! Read ahc_dw which does not depend on iq.
   !
-  CALL compute_ahc_dw_with_truncation(ahc_dw_trunc)
-  !
-  IF (.NOT. truncate_dw) THEN
-    filename = TRIM(ahc_dir) // 'ahc_dw.bin'
-    INQUIRE(IOLENGTH=recl) ahc_dw
-    OPEN(NEWUNIT=iun, FILE=TRIM(filename), STATUS='OLD', FORM='UNFORMATTED', &
-      ACCESS='DIRECT', RECL=recl, IOSTAT=ios)
-    IF (ios /= 0) CALL errore('postahc', 'Error opening ' // TRIM(filename), 1)
-    READ(iun, REC=1) ahc_dw
-    CLOSE(iun)
+  IF (ionode) THEN
     !
-    ahc_dw = ahc_dw - ahc_dw_trunc
-  ENDIF
+    CALL compute_ahc_dw_with_truncation(ahc_dw_trunc)
+    !
+    IF (.NOT. truncate_dw) THEN
+      filename = TRIM(ahc_dir) // 'ahc_dw.bin'
+      INQUIRE(IOLENGTH=recl) ahc_dw
+      OPEN(NEWUNIT=iun, FILE=TRIM(filename), STATUS='OLD', FORM='UNFORMATTED', &
+        ACCESS='DIRECT', RECL=recl, IOSTAT=ios)
+      IF (ios /= 0) CALL errore('postahc', 'Error opening ' // TRIM(filename), 1)
+      READ(iun, REC=1) ahc_dw
+      CLOSE(iun)
+      !
+      ahc_dw = ahc_dw - ahc_dw_trunc
+      !
+    ENDIF
+    !
+  ENDIF ! ionode
+  !
+  CALL mp_bcast(ahc_dw, ionode_id, world_comm)
+  CALL mp_bcast(ahc_dw_trunc, ionode_id, world_comm)
   !
   ! ---------------------------------------------------------------------------
   !
@@ -1215,13 +1223,7 @@ SUBROUTINE calc_lower_fan(iq, selfen_lofan)
   ! Read files: ahc_etq, ahc_gkk
   !
   filename = TRIM(ahc_dir) // 'ahc_gkk_iq' // TRIM(int_to_char(iq)) // '.bin'
-  !
-  INQUIRE(IOLENGTH=recl) ahc_gkk
-  OPEN(NEWUNIT=iun, FILE=TRIM(filename), STATUS='OLD', FORM='UNFORMATTED', &
-    ACCESS='DIRECT', RECL=recl, IOSTAT=ios)
-  IF (ios /= 0) CALL errore('postahc', 'Error opening ' // TRIM(filename), 1)
-  READ(iun, REC=1) ahc_gkk
-  CLOSE(iun)
+  CALL postahc_read_unformatted_file(filename, 1, ahc_gkk)
   !
   filename = TRIM(ahc_dir) // 'ahc_etq_iq' // TRIM(int_to_char(iq)) // '.bin'
   !
@@ -1501,7 +1503,7 @@ SUBROUTINE postahc_read_unformatted_file(filename, irec, array)
     ACCESS='DIRECT', RECL=recl, IOSTAT=ios)
   IF (ios /= 0) CALL errore('postahc', 'Error opening ' // TRIM(filename), 1)
   READ(iun, REC=irec) array
-  CLOSE(iun)
+  CLOSE(iun, STATUS='KEEP')
 END
 !------------------------------------------------------------------------------
 !
