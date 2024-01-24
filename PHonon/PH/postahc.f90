@@ -54,6 +54,8 @@ PROGRAM postahc
   !! Truncate Fan self energy to states inside the AHC window
   LOGICAL :: truncate_dw
   !! Truncate Debye-Waller matrix element to states inside the AHC window
+  LOGICAL :: adiabatic
+  !! Use adiabatic approximation (i.e. ignore the phonon frequency in the denominator)
   LOGICAL :: use_irr_q
   !! Use q points from the irreducible Brillouin zone.
   INTEGER :: ahc_nbnd
@@ -209,7 +211,7 @@ PROGRAM postahc
   !
   NAMELIST / input / prefix, outdir, skip_upper, skip_dw, ahc_nbnd, &
       ahc_nbndskip, ahc_dir, flvec, eta_eV, temp_kelvin, efermi_eV, amass_amu,  &
-      ahc_win_min_eV, ahc_win_max_eV, use_irr_q
+      ahc_win_min_eV, ahc_win_max_eV, use_irr_q, adiabatic
   !
   CALL mp_startup()
   CALL environment_start('POSTAHC')
@@ -262,6 +264,7 @@ PROGRAM postahc
   amass_amu(:) = -9999.d0
   ahc_win_min_eV = -1.d8
   ahc_win_max_eV = 1.d8
+  adiabatic = .FALSE.
   !
   ! Read the namelist input
   !
@@ -292,6 +295,7 @@ PROGRAM postahc
   CALL mp_bcast(amass_amu, ionode_id, world_comm)
   CALL mp_bcast(ahc_win_min_eV, ionode_id, world_comm)
   CALL mp_bcast(ahc_win_max_eV, ionode_id, world_comm)
+  CALL mp_bcast(adiabatic, ionode_id, world_comm)
   !
   tmp_dir = trimcheck(outdir)
   ahc_dir = trimcheck(ahc_dir)
@@ -331,6 +335,14 @@ PROGRAM postahc
     WRITE(stdout, '(5x, a)') "WARNING: For double-grid calculations, it is strongly advised"
     WRITE(stdout, '(5x, a)') "to set truncate_fan and truncate_dw to the same value because"
     WRITE(stdout, '(5x, a)') "otherwise the double-grid result converge much slowly."
+    WRITE(stdout, *) ""
+  ENDIF
+  !
+  IF (adiabatic) THEN
+    WRITE(stdout, '(5x, a)') "WARNING: Using the adiabatic approximation. This approximation"
+    WRITE(stdout, '(5x, a)') "is inaccurate and even divergent in some materials."
+    WRITE(stdout, '(5x, a)') "(See S. Poncé et al., J. Chem. Phys. 143, 102813 (2015) for details.)"
+    WRITE(stdout, '(5x, a)') "One should use adiabatic = .TRUE. (default) to get accurate results."
     WRITE(stdout, *) ""
   ENDIF
   !
@@ -1259,15 +1271,17 @@ SUBROUTINE calc_lower_fan(iq, selfen_lofan)
           ! Skip states outside the AHC window
           IF (etq(ibq, ik) < ahc_win_min .OR. etq(ibq, ik) > ahc_win_max) CYCLE
           !
-          de1 = CMPLX(etk(ibk, ik) - etq(ibq, ik) - omega(imode, iq),&
-                      eta * sign, KIND=DP)
-          coeff1(ibq, ibk, imode, ik) = (1.d0 - occq(ibq, ik) + occph(imode)) &
-                                      / de1
+          IF (adiabatic) THEN
+            ! Adiabatic approximation: ignore omega in the denominator
+            de1 = CMPLX(etk(ibk, ik) - etq(ibq, ik), eta * sign, KIND=DP)
+            de2 = CMPLX(etk(ibk, ik) - etq(ibq, ik), eta * sign, KIND=DP)
+          ELSE
+            de1 = CMPLX(etk(ibk, ik) - etq(ibq, ik) - omega(imode, iq), eta * sign, KIND=DP)
+            de2 = CMPLX(etk(ibk, ik) - etq(ibq, ik) + omega(imode, iq), eta * sign, KIND=DP)
+          ENDIF
           !
-          de2 = CMPLX(etk(ibk, ik) - etq(ibq, ik) + omega(imode, iq),&
-                      eta * sign, KIND=DP)
-          coeff2(ibq, ibk, imode, ik) = ( occq(ibq, ik) + occph(imode) ) &
-                                      / de2
+          coeff1(ibq, ibk, imode, ik) = (1.d0 - occq(ibq, ik) + occph(imode)) / de1
+          coeff2(ibq, ibk, imode, ik) = ( occq(ibq, ik) + occph(imode) ) / de2
         ENDDO
       ENDDO
     ENDDO

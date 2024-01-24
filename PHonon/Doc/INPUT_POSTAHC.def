@@ -129,6 +129,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
             If .false., ahc_dw.bin file must be present in @ref ahc_dir.
         }
     }
+    var adiabatic -type LOGICAL {
+        default { .false. }
+        info {
+            If .true., use the adiabatic approximation when computing the Fan self-energy
+            by ignoring the phonon frequency in the denominator. This approximation is known
+            to be inaccurate and even divergent in some materials (S. Poncé et al., J. Chem.
+            Phys. 143, 102813 (2015)). Therefore, this keyword should be used only for
+            experimental or debugging purposes.
+        }
+    }
 
     }
 }
