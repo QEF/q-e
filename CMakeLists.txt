@@ -384,6 +384,9 @@ endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 # ROCM
 ###########################################################
 if(QE_ENABLE_ROCM)
+  if(NOT QE_ENABLE_OFFLOAD)
+    message(FATAL_ERROR "QE_ENABLE_ROCM=ON requires QE_ENABLE_OFFLOAD=ON")
+  endif()
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES AND DEFINED QE_GPU_ARCHS)
     set(CMAKE_CUDA_ARCHITECTURES ${QE_GPU_ARCHS})
   endif()
