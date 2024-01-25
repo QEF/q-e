@@ -22,17 +22,28 @@ set(f_src_fftx
     tg_gather.f90
     fft_helper_subroutines.f90
     fft_param.f90)
-if(QE_ENABLE_CUDA)
+if(QE_ENABLE_CUDA OR QE_ENABLE_OFFLOAD)
     set(f_src_fftx
         ${f_src_fftx}
-        fft_scalar.cuFFT.f90
         fft_buffers.f90
         fft_scatter_gpu.f90
         fft_scatter_2d_gpu.f90)
 endif()
-if(QE_ENABLE_ONEAPI AND QE_ENABLE_OFFLOAD)
+
+if(QE_ENABLE_CUDA)
+    set(f_src_fftx
+        ${f_src_fftx}
+        fft_scalar.cuFFT.f90)
+elseif(QE_ENABLE_ONEAPI)
   set(f_src_fftx ${f_src_fftx} fft_scalar.DFTIOMP.f90 onemkl_dfti_omp_offload.f90)
+elseif(QE_ENABLE_ROCM)
+  set(f_src_fftx ${f_src_fftx} fft_scalar.hipFFT.f90 fft_hipkernelsf.f90)
+  add_library(qe_fftx_hipkernels fft_hipkernels.hip)
+  set_source_files_properties(fft_hipkernels.hip PROPERTIES LANGUAGE HIP)
+  target_link_libraries(qe_fftx_hipkernels PRIVATE hip::hipfft)
+  qe_install_targets(qe_fftx_hipkernels)
 endif()
+
 qe_enable_cuda_fortran("${f_src_fftx}")
 
 set(c_src_fftx
@@ -57,6 +68,8 @@ if(QE_ENABLE_CUDA)
             qe_openacc_fortran
         PRIVATE
             CUDA::cufft)
+elseif(QE_ENABLE_ROCM)
+    target_link_libraries(qe_fftx PRIVATE qe_fftx_hipkernels)
 endif()
         
 qe_install_targets(qe_fftx)

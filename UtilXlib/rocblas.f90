@@ -24,7 +24,6 @@
 MODULE rocblas
 
     USE ISO_C_BINDING
-    USE util_param, ONLY : DP
     IMPLICIT NONE
 
     TYPE(C_PTR) :: handle
@@ -230,7 +229,6 @@ END MODULE rocblas
 MODULE rocblas_utils
     USE rocblas, only : handle, handle_a2a, rocblas_check, ROCBLAS_STATUS_SUCCESS, rocblas_get_operation, &
                         rocblas_print_status
-    USE util_param, only : DP
     USE iso_c_binding
     IMPLICIT NONE
 
@@ -365,10 +363,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: trans
             INTEGER, INTENT(IN) :: m, n, lda, incx, incy
-            REAL(DP), INTENT(IN) :: alpha, beta
-            REAL(DP), INTENT(IN), TARGET :: A(lda,*)
-            REAL(DP), INTENT(IN), TARGET :: X(*)
-            REAL(DP), INTENT(INOUT), TARGET :: Y(*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha, beta
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: A(lda,*)
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: X(*)
+            REAL(kind=C_DOUBLE), INTENT(INOUT), TARGET :: Y(*)
             INTEGER :: stat
             INTEGER(c_int) :: itrans
             INTEGER(rocblas_int) :: rm, rn, rlda, rincx, rincy
@@ -396,10 +394,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: trans
             INTEGER, INTENT(IN) :: m, n, lda, incx, incy
-            COMPLEX(DP), INTENT(IN) :: alpha, beta
-            COMPLEX(DP), INTENT(IN), TARGET :: A(lda,*)
-            COMPLEX(DP), INTENT(IN), TARGET :: X(*)
-            COMPLEX(DP), INTENT(INOUT), TARGET :: Y(*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN) :: alpha, beta
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: A(lda,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: X(*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(INOUT), TARGET :: Y(*)
             INTEGER :: stat
             INTEGER(c_int) :: itrans
             INTEGER(rocblas_int) :: rm, rn, rlda, rincx, rincy
@@ -427,10 +425,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: transA, transB
             INTEGER, INTENT(IN) :: m, n, k, lda, ldb, ldc
-            COMPLEX(DP), INTENT(IN) :: alpha, beta
-            COMPLEX(DP), INTENT(IN), TARGET :: A(lda,*)
-            COMPLEX(DP), INTENT(IN), TARGET :: B(ldb,*)
-            COMPLEX(DP), INTENT(INOUT), TARGET :: C(ldc,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN) :: alpha, beta
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: A(lda,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: B(ldb,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(INOUT), TARGET :: C(ldc,*)
             INTEGER :: stat
             INTEGER(c_int) :: itransA, itransB
             INTEGER(rocblas_int) :: rm, rn, rk, rlda, rldb, rldc
@@ -460,10 +458,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: transA, transB
             INTEGER, INTENT(IN) :: m, n, k, lda, ldb, ldc
-            REAL(DP), INTENT(IN) :: alpha, beta
-            REAL(DP), INTENT(IN), TARGET :: A(lda,*)
-            REAL(DP), INTENT(IN), TARGET :: B(ldb,*)
-            REAL(DP), INTENT(INOUT), TARGET :: C(ldc,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha, beta
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: A(lda,*)
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: B(ldb,*)
+            REAL(kind=C_DOUBLE), INTENT(INOUT), TARGET :: C(ldc,*)
             INTEGER :: stat
             INTEGER(c_int) :: itransA, itransB
             INTEGER :: rm, rn, rk, rlda, rldb, rldc
@@ -493,10 +491,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: transA, transB
             INTEGER, INTENT(IN) :: m, n, k, lda, ldb, ldc
-            REAL(DP), INTENT(IN) :: alpha, beta
-            COMPLEX(DP), INTENT(IN), TARGET :: A(lda,*)
-            COMPLEX(DP), INTENT(IN), TARGET :: B(ldb,*)
-            COMPLEX(DP), INTENT(INOUT), TARGET :: C(ldc,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha, beta
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: A(lda,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: B(ldb,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(INOUT), TARGET :: C(ldc,*)
             INTEGER :: stat
             INTEGER(c_int) :: itransA, itransB
             INTEGER :: rm, rn, rk, rlda, rldb, rldc
@@ -526,10 +524,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: transA, transB
             INTEGER, INTENT(IN) :: m, n, k, lda, ldb, ldc
-            REAL(DP), INTENT(IN) :: alpha, beta
-            REAL(DP), INTENT(IN), TARGET :: A(lda,*)
-            COMPLEX(DP), INTENT(IN), TARGET :: B(ldb,*)
-            COMPLEX(DP), INTENT(INOUT), TARGET :: C(ldc,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha, beta
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: A(lda,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: B(ldb,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(INOUT), TARGET :: C(ldc,*)
             INTEGER :: stat
             INTEGER(c_int) :: itransA, itransB
             INTEGER :: rm, rn, rk, rlda, rldb, rldc
@@ -559,10 +557,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: transA, transB
             INTEGER, INTENT(IN) :: m, n, k, lda, ldb, ldc
-            REAL(DP), INTENT(IN) :: alpha, beta
-            COMPLEX(DP), INTENT(IN), TARGET :: A(lda,*)
-            REAL(DP), INTENT(IN), TARGET :: B(ldb,*)
-            COMPLEX(DP), INTENT(INOUT), TARGET :: C(ldc,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha, beta
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: A(lda,*)
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: B(ldb,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(INOUT), TARGET :: C(ldc,*)
             INTEGER :: stat
             INTEGER(c_int) :: itransA, itransB
             INTEGER :: rm, rn, rk, rlda, rldb, rldc
@@ -592,10 +590,10 @@ MODULE rocblas_utils
             IMPLICIT NONE
             CHARACTER, INTENT(IN) :: transA, transB
             INTEGER, INTENT(IN) :: m, n, k, lda, ldb, ldc
-            REAL(DP), INTENT(IN) :: alpha, beta
-            COMPLEX(DP), INTENT(IN), TARGET :: A(lda,*)
-            COMPLEX(DP), INTENT(IN), TARGET :: B(ldb,*)
-            REAL(DP), INTENT(INOUT), TARGET :: C(ldc,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha, beta
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: A(lda,*)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN), TARGET :: B(ldb,*)
+            REAL(kind=C_DOUBLE), INTENT(INOUT), TARGET :: C(ldc,*)
             INTEGER :: stat
             INTEGER(c_int) :: itransA, itransB
             INTEGER :: rm, rn, rk, rlda, rldb, rldc
@@ -625,9 +623,9 @@ MODULE rocblas_utils
             USE ISO_C_BINDING
             IMPLICIT NONE
             INTEGER, INTENT(IN) :: m, n, incx, incy, lda
-            REAL(DP), INTENT(IN) :: alpha 
-            REAL(DP), INTENT(IN), TARGET :: x(m), y(n)
-            REAL(DP), INTENT(INOUT), TARGET :: A(lda,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha
+            REAL(kind=C_DOUBLE), INTENT(IN), TARGET :: x(m), y(n)
+            REAL(kind=C_DOUBLE), INTENT(INOUT), TARGET :: A(lda,*)
             INTEGER :: rm, rn, rincx, rincy, rlda
             INTEGER :: stat
             rm = int(m, kind(rocblas_int))
@@ -648,9 +646,9 @@ MODULE rocblas_utils
             USE ISO_C_BINDING
             IMPLICIT NONE
             INTEGER, INTENT(IN) :: m, n, incx, incy, lda
-            REAL(DP), INTENT(IN) :: alpha 
-            COMPLEX(DP), INTENT(IN) :: x(m), y(n)
-            REAL(DP), INTENT(INOUT) :: A(lda,*)
+            REAL(kind=C_DOUBLE), INTENT(IN) :: alpha
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN) :: x(m), y(n)
+            REAL(kind=C_DOUBLE), INTENT(INOUT) :: A(lda,*)
             INTEGER :: rm, rn, rincx, rincy, rlda
             INTEGER :: stat
             rm = int(m, kind(rocblas_int))
@@ -673,9 +671,9 @@ MODULE rocblas_utils
             INTEGER, INTENT(IN) :: n
             INTEGER, INTENT(IN) :: incx
             INTEGER, INTENT(INOUT) :: incy
-            COMPLEX(DP), INTENT(IN) :: alpha
-            COMPLEX(DP), INTENT(IN) :: x(n)
-            COMPLEX(DP), INTENT(INOUT) :: y(n)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN) :: alpha
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(IN) :: x(n)
+            COMPLEX(kind=C_DOUBLE_COMPLEX), INTENT(INOUT) :: y(n)
             INTEGER :: rn, rincx, rincy
             INTEGER :: stat
             rn = int(n, kind(rocblas_int))
