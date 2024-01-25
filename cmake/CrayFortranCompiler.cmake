@@ -15,18 +15,24 @@ if(NOT QE_ENABLE_OPENACC)
 endif()
 
 if(QE_ENABLE_OFFLOAD)
-  execute_process(
-    COMMAND ${CMAKE_Fortran_COMPILER} -craype-verbose --version
-    RESULT_VARIABLE VERSION_QUERY_RETURN
-    OUTPUT_VARIABLE VERSION_QUERY_OUTPUT)
+  if(DEFINED QE_GPU_ARCHS)
+    string(REPLACE "gfx" "amd_gfx" ACCEL_TARGET "${QE_GPU_ARCHS}")
+    target_compile_options(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:-target-accel=${ACCEL_TARGET}>")
+    target_link_options(qe_openmp_fortran INTERFACE "$<$<LINK_LANGUAGE:Fortran>:-target-accel=${ACCEL_TARGET}>")
+  else()
+    execute_process(
+      COMMAND ${CMAKE_Fortran_COMPILER} -craype-verbose --version
+      RESULT_VARIABLE VERSION_QUERY_RETURN
+      OUTPUT_VARIABLE VERSION_QUERY_OUTPUT)
 
-  if(VERSION_QUERY_RETURN)
-    message(WARNING "Command `${CMAKE_Fortran_COMPILER} -craype-verbose --version` failed!")
-  elseif(NOT VERSION_QUERY_OUTPUT MATCHES "accel=")
-    message(FATAL_ERROR "Cannot find -haccel=<gpu_arc> option being used by the ftn compiler wrapper. "
-                        "Make sure the GPU architecture module is loaded."
-                        "Command `${CMAKE_Fortran_COMPILER} -craype-verbose --version` returns\n"
-                        "${VERSION_QUERY_OUTPUT}")
+    if(VERSION_QUERY_RETURN)
+      message(WARNING "Command `${CMAKE_Fortran_COMPILER} -craype-verbose --version` failed!")
+    elseif(NOT VERSION_QUERY_OUTPUT MATCHES "accel=")
+      message(FATAL_ERROR "Cannot find -haccel=<gpu_arc> option being used by the ftn compiler wrapper. "
+                          "Make sure the GPU architecture module is loaded."
+                          "Command `${CMAKE_Fortran_COMPILER} -craype-verbose --version` returns\n"
+                          "${VERSION_QUERY_OUTPUT}")
+    endif()
   endif()
 endif()
 
