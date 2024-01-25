@@ -1012,7 +1012,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       !
       !$acc kernels
       dproj2 = dproj1
-      !$acc end kernels      
+      !$acc end kernels
       !
    ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ! ... In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
@@ -1212,6 +1212,9 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE ( dproj1(nwfcU,nb_s:nb_e) )
    ALLOCATE ( dproj2(nwfcU,nb_s:nb_e) )
+   IF (okvan) ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+   !$acc data present_or_copyin(wfcU) create(dproj1,dproj2,dproj_us)
+   !
    !
    ! Compute the derivative of the generalized occupation matrices 
    ! (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1227,16 +1230,23 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-   ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
-   CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+      CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
       nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .false.)
    ENDIF
    !
    IF (Hubbard_projectors.EQ."atomic") THEN
       ! In the 'atomic' case the calculation must be performed only once (when na=alpha)
       CALL dprojdtau_k ( spsi, alpha, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
-      IF (okvan) dproj1 = dproj1 + dproj_us
+      ! ... adds dproj_us to dproj.
+      IF ( okvan ) THEN
+         !$acc kernels
+         dproj1 = dproj1 + dproj_us
+         !$acc end kernels
+      ENDIF
+      !
+      !$acc kernels
       dproj2 = dproj1
+      !$acc end kernels
    ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
       ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
@@ -1254,8 +1264,13 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
          ! ortho-atomic orbitals
          IF (Hubbard_projectors.EQ."ortho-atomic") THEN
             CALL dprojdtau_k ( spsi, alpha, na1, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
-            IF (okvan) dproj1 = dproj1 + dproj_us
+            IF ( okvan ) THEN
+               !$acc kernels
+               dproj1 = dproj1 + dproj_us
+               !$acc end kernels
+            ENDIF
          ENDIF
+         !$acc update self(dproj1)
          ldim1 = ldim_u(nt1)
          DO viz = 1, neighood(na1)%num_neigh
             na2 = neighood(na1)%neigh(viz)
@@ -1266,8 +1281,13 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
             ! ortho-atomic orbitals
             IF (Hubbard_projectors.EQ."ortho-atomic") THEN
                CALL dprojdtau_k ( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
-               IF (okvan) dproj2 = dproj2 + dproj_us
+               IF ( okvan ) THEN
+                  !$acc kernels
+                  dproj2 = dproj2 + dproj_us
+                  !$acc end kernels
+               ENDIF
             ENDIF
+            !$acc update self(dproj2)
             IF (mykey==0) THEN
                IF (na1.GT.na2) THEN 
                   DO is1 = 1, npol
@@ -1308,10 +1328,11 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO ! na1
    ! !omp end parallel do
    !
+   !$acc end data
+   IF (okvan) DEALLOCATE( dproj_us )
    DEALLOCATE ( dproj1 ) 
    DEALLOCATE ( dproj2 ) 
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
-   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
    !
    CALL mp_sum(dnsg, intra_pool_comm)
    !
