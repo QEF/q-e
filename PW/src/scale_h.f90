@@ -74,7 +74,7 @@ SUBROUTINE scale_h
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
   !$acc update device(g,gg)
-#if defined(OPENMP_GPU)
+#if defined(__OPENMP_GPU)
   !$omp target update to(g)
 #endif
   !
