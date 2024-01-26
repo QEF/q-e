@@ -265,9 +265,13 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL start_clock( 'h_psi:calbec' )
 !civn: this should work for omp and cpu case. 
 !      acc case passes through h_psi_gpu
+#if defined(__OPENMP_GPU)
      !$omp target data map(to:vkb)
+#endif
      CALL calbec( offload_type, n, vkb, psi, becp, m )
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      CALL stop_clock( 'h_psi:calbec' )
      CALL add_vuspsi( lda, n, m, hpsi )
      !

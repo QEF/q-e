@@ -511,9 +511,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 #if defined(__HIP)
        i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize+1), dfft%a2a_comp)
        i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize+1), dfft%bevents(j/dfft%subbatchsize+1), 0)
-#endif
        !
-#if defined(__HIP)
        IF (j > 0) i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize+1), dfft%bevents(j/dfft%subbatchsize), 0)
 #endif
        !
@@ -613,7 +611,6 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDDO
        !
      ENDDO
-     stop
      !
      !
   ENDIF

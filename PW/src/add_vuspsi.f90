@@ -174,9 +174,13 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
              !
              ! block rotation
              !
+#if defined(__OPENMP_GPU)
              !$omp target update from(ps)
+#endif
              CALL mp_circular_shift_left( ps, icyc, becp%comm )
+#if defined(__OPENMP_GPU)
              !$omp target update to(ps)
+#endif
              !
              icur_blk = icur_blk + 1
              IF( icur_blk == nproc ) icur_blk = 0

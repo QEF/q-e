@@ -87,8 +87,9 @@ SUBROUTINE allocate_wfc_k()
   !
 #if defined __CUDA
 !$acc enter data create(vkb(1:npwx,1:nkb), g2kin(1:npwx) ) 
-#endif
+#elif defined(__OPENMP_GPU)
   !$omp target enter data map(alloc:vkb,g2kin)
+#endif
   !
   RETURN
   !

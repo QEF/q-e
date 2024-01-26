@@ -480,11 +480,15 @@ SUBROUTINE orbm_kubo()
               H_evc = (0.0d0,0.0d0)
               store_flag = lelfield
               lelfield = .FALSE.
+#if defined(__OPENMP_GPU)
               !$omp target data map(alloc:evcpm,H_evc)
               !$omp target update to(evcpm,H_evc)
+#endif
               CALL h_psi( npwx, npw_k, nbnd, evcpm(:,:,2*eps_j(l)+sigp-1), H_evc )
+#if defined(__OPENMP_GPU)
               !$omp target update from(H_evc)
               !$omp end target data
+#endif
               lelfield = store_flag
               !
               DO nb = 1, nbnd ! loop over bands
@@ -510,11 +514,15 @@ SUBROUTINE orbm_kubo()
               H_evc = (0.0d0,0.0d0)
               store_flag = lelfield
               lelfield = .FALSE.
+#if defined(__OPENMP_GPU)
               !$omp target data map(alloc:evc_k, H_evc)
               !$omp target update to(evc_k,H_evc)
+#endif
               CALL h_psi( npwx, npw_k, nbnd, evc_k, H_evc )
+#if defined(__OPENMP_GPU)
               !$omp target update from(H_evc)
               !$omp end target data
+#endif
               lelfield = store_flag
               !
               DO nb = 1, nbnd ! loop over bands

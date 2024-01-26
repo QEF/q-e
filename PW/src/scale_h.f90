@@ -74,7 +74,9 @@ SUBROUTINE scale_h
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
   !$acc update device(g,gg)
+#if defined(OPENMP_GPU)
   !$omp target update to(g)
+#endif
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
   qmax = SQRT(gg_max)*tpiba
