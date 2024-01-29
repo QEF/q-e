@@ -26,8 +26,13 @@
 #include <malloc.h>
 int c_memstat( )
 {
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2  && __GLIBC_MINOR__ >= 33))
+  struct mallinfo2 info;
+  info = mallinfo2();
+#else
   struct mallinfo info;
   info = mallinfo();
+#endif
   return (info.arena + info.hblkhd) / 1024 ;
 #else
 int c_memstat( )
