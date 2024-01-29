@@ -9,21 +9,17 @@
 !-----------------------------------------------------------------------
 SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
   !-----------------------------------------------------------------------
-  !! This routine computes the superposition of atomic wavefunctions
-  !! for k-point "ik" - output in "wfcatom". ACC version
-  !
+  !! Wrapper routine: calls atomic_wfc_acc to compute the (non-orthogonal)
+  !! superposition of atomic wavefunctions at the ik-th k-point - output in 
+  !! "wfcatom", on GPU if input is an ACC variable, copied to CPU otherwise
+  !!
   USE kinds,            ONLY : DP
-  USE constants,        ONLY : tpi, fpi, pi
-  USE cell_base,        ONLY : omega, tpiba
-  USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
+  USE ions_base,        ONLY : nat, tau, nsp, ityp
   USE basis,            ONLY : natomwfc
-  USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,            ONLY : xk, ngk, igk_k
   USE wvfct,            ONLY : npwx
-  USE uspp_param,       ONLY : upf, nwfcm
   USE noncollin_module, ONLY : noncolin, domag, npol, angle1, angle2, &
                                starting_spin_angle
-  USE upf_spinorb,      ONLY : rot_ylm, lmaxx
   !
   IMPLICIT NONE
   !
@@ -34,8 +30,74 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
   !
   ! ... local variables
   !
+  CALL start_clock( 'atomic_wfc' )
+  !
+  !$acc data present_or_copyout(wfcatom)
+  CALL atomic_wfc_acc( xk(1,ik), ngk(ik), igk_k(1,ik), nat, nsp, ityp, tau, &
+       noncolin, domag, angle1, angle2, starting_spin_angle, &
+       npwx, npol, natomwfc, wfcatom )
+  !$acc end data
+  !
+  CALL stop_clock( 'atomic_wfc' )
+  !
+END SUBROUTINE atomic_wfc_gpu
+!
+!-----------------------------------------------------------------------
+SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
+     noncolin, domag, angle1, angle2, starting_spin_angle, &
+     npwx, npol, natomwfc, wfcatom )
+  !-----------------------------------------------------------------------
+  !! This routine computes the superposition of atomic wavefunctions
+  !! See below for input variables, output on wfcatom (ACC variable)
+  !! Computation is performed on GPU if available
+  !! Can be called by CP as well (does not use PW-specific modules)
+  !
+  USE kinds,            ONLY : DP
+  USE constants,        ONLY : tpi, fpi, pi
+  USE cell_base,        ONLY : omega, tpiba
+  USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
+  USE uspp_param,       ONLY : upf, nwfcm
+  USE upf_spinorb,      ONLY : rot_ylm, lmaxx
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: xk(3)
+  !! k-point
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: nsp
+  !! number of types of atoms
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! indices of the type of atom  for each atom
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions (in units of alat)
+  INTEGER, INTENT(IN) :: npw
+  !! number of plane waves
+  INTEGER, INTENT(IN) :: igk_k(npw)
+  !! index of G in the k+G list
+  LOGICAL, INTENT(IN) ::  noncolin
+  !! true if calculation noncolinear
+  LOGICAL, INTENT(IN) :: domag
+  !! true if nonzero noncolinear magnetization
+  LOGICAL, INTENT(IN) :: starting_spin_angle
+  !! true if initial spin direction is set
+  REAL(DP), INTENT(IN) :: angle1(nsp)
+  !! angle theta of initial spin direction
+  REAL(DP), INTENT(IN) ::  angle2(nsp)
+  !! angle phi of initial spin direction
+  INTEGER, INTENT(IN) :: npol
+  !! npol = 2 for noncolinear calculations
+  INTEGER, INTENT(IN) :: npwx
+  !! max number of plane waves
+  INTEGER, INTENT(IN) :: natomwfc
+  !! number of atomic wavefunctions
+  COMPLEX(DP), INTENT(OUT) :: wfcatom(npwx,npol,natomwfc)
+  !! Superposition of atomic wavefunctions
+  !
+  ! ... local variables
+  !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-             i0, i1, i2, i3, npw
+             i0, i1, i2, i3
   COMPLEX(DP) :: kphase, lphase
   REAL(DP)    :: arg, px, ux, vx, wx
   !
@@ -45,28 +107,24 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
   COMPLEX(DP), ALLOCATABLE :: sk(:)
   !
   !
-  CALL start_clock( 'atomic_wfc' )
-
   ! calculate max angular momentum required in wavefunctions
   lmax_wfc = 0
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      lmax_wfc = MAX( lmax_wfc, MAXVAL( upf(nt)%lchi(1:upf(nt)%nwfc) ) )
   END DO
   !
-  npw = ngk(ik)
-  !
-  ALLOCATE( ylm(npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp)) 
+  ALLOCATE( ylm(npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,nsp)) 
   ALLOCATE( qg(npw), gk(3,npw), sk(npw) )
   !$acc data create (ylm, chiq, gk, qg, sk) &
   !$acc      present(g, igk_k, eigts1, eigts2, eigts3, mill, wfcatom)
   !
-  xk1 = xk(1,ik)
-  xk2 = xk(2,ik)
-  xk3 = xk(3,ik)
+  xk1 = xk(1)
+  xk2 = xk(2)
+  xk3 = xk(3)
   !
   !$acc parallel loop
   DO ig = 1, npw
-     iig = igk_k(ig,ik)
+     iig = igk_k(ig)
      gk(1,ig) = xk1 + g(1,iig)
      gk(2,ig) = xk2 + g(2,iig)
      gk(3,ig) = xk3 + g(3,iig)
@@ -102,7 +160,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
      !
      !$acc parallel loop
      DO ig = 1, npw
-        iig = igk_k(ig,ik)
+        iig = igk_k(ig)
         sk(ig) = kphase * eigts1(mill(1,iig),na) * &
                           eigts2(mill(2,iig),na) * &
                           eigts3(mill(3,iig),na)
@@ -151,7 +209,6 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
   !$acc end data
   DEALLOCATE( sk, gk, qg, chiq, ylm ) 
   
-  CALL stop_clock( 'atomic_wfc' )
   RETURN
 
 CONTAINS
@@ -365,4 +422,4 @@ CONTAINS
    !
   END SUBROUTINE atomic_wfc___gpu
   !
-END SUBROUTINE atomic_wfc_gpu
+END SUBROUTINE atomic_wfc_acc
