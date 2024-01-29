@@ -99,7 +99,7 @@ SUBROUTINE data_structure( gamma_only )
   CALL gvect_init( ngm_, intra_bgrp_comm )
   CALL gvecs_init( ngs_, intra_bgrp_comm )
   !
-#if defined(__ROCBLAS)
+#if defined(__ROCBLAS) && defined(__OMP_MANY_FFT)
   CALL rocblas_a2a_set(dffts%a2a_comp)
 #endif
 

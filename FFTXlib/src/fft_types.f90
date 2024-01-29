@@ -385,7 +385,7 @@ CONTAINS
 
 #endif
 
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
 
     CALL myStreamCreate( desc%a2a_comp )
     !
@@ -541,7 +541,7 @@ CONTAINS
 
 #endif
 
-#if defined(__HIP)
+#if defined(__HIP) && defined(__OMP_MANY_FFT)
     ! SLAB decomposition
     IF (desc%a2a_comp /= 0) THEN
           CALL myStreamSynchronize( desc%a2a_comp )

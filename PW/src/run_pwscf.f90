@@ -141,8 +141,10 @@ SUBROUTINE run_pwscf( exit_status )
   END IF
 #endif
 #if defined(__ROCBLAS)
-  CALL rocblas_init() 
+  CALL rocblas_init()
+#if defined(__OMP_MANY_FFT)
   IF (many_fft>1) CALL rocblas_a2a_init()
+#endif
 #endif
   !
   CALL check_stop_init()
@@ -364,8 +366,10 @@ SUBROUTINE run_pwscf( exit_status )
   CALL qmmm_shutdown()
   !
 #if defined(__ROCBLAS)
-  CALL rocblas_destroy() 
+  CALL rocblas_destroy()
+#if defined(__OMP_MANY_FFT)
   IF(many_fft>1) CALL rocblas_a2a_destroy()
+#endif
 #endif
   RETURN
   !

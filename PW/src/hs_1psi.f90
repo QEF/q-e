@@ -49,10 +49,14 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
              call s_psir_k(1,1)
              call fwfft_orbital_k(spsi,1,1)
            end if
-        else   
-  !$omp target update to(psi,hpsi)     
+        else
+#if defined(__OPENMP_GPU)
+  !$omp target update to(psi,hpsi)
+#endif
   CALL h_psi( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
-  !$omp target update from(hpsi)    
+#if defined(__OPENMP_GPU)
+  !$omp target update from(hpsi)
+#endif
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !
