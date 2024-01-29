@@ -227,7 +227,7 @@ SUBROUTINE init_wfc ( ik )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
 #if defined(__CUDA)
-  USE random_numbers_gpum,  ONLY : randy_vect_gpu => randy_vect_debug_gpu
+  USE random_numbers_gpum,  ONLY : randy_vect_gpu ! => randy_vect_debug_gpu
                                                   ! use '=>randy_vect_debug_gpu'
                                                   ! to adopt the same (slower) PRNG
                                                   ! used on the CPU.
