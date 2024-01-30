@@ -158,10 +158,6 @@ option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
 # least in C, not sure about Fortran), change all feature
 # macros to avoid weird behaviors
 
-# Disable all configuration headers used to be generated
-# by configure (see <qe>/include/)
-qe_add_global_compile_definitions(QE_NO_CONFIG_H)
-
 if(QE_ENABLE_CUDA)
     qe_add_global_compile_definitions(__CUDA)
 endif()
