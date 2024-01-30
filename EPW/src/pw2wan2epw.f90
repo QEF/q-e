@@ -2922,6 +2922,8 @@
     !-----------------------------------------------------------------------
     !!
     !! Guiding functions
+    !! gf should not be normalized at each k point because the atomic orbitals
+    !! are not orthonormal and their Bloch representation not normalized.
     !!
     !
     USE kinds,          ONLY : DP
@@ -2959,8 +2961,6 @@
     !! Error status
     REAL(KIND = DP) :: arg
     !! 2*pi*(k+G)*r
-    REAL(KIND = DP) :: anorm
-    !! Anormal
     REAL(KIND = DP), EXTERNAL :: DDOT
     !! Scalar product of two vectors
     REAL(KIND = DP), ALLOCATABLE :: gk(:, :)
@@ -3028,9 +3028,6 @@
         sk(ig) = CMPLX(COS(arg), - SIN(arg), KIND = DP)
         gf(ig, iw) = gf(ig, iw) * sk(ig)
       ENDDO
-      anorm = REAL(ZDOTC(npw, gf(1, iw), 1, gf(1, iw), 1))
-      CALL mp_sum(anorm, intra_pool_comm)
-      gf(:, iw) = gf(:, iw) / DSQRT(anorm)
     ENDDO
     !
     DEALLOCATE(gk, STAT = ierr)
@@ -3564,8 +3561,8 @@
               ENDDO
             ENDDO
           ENDDO
-          wmod = wmod / DSQRT(DBLE(wmod)**2 + AIMAG(wmod)**2)
-          wann_func(:, :, :, :) = wann_func(:, :, :, :) / wmod
+          !wmod = wmod / DSQRT(DBLE(wmod)**2 + AIMAG(wmod)**2)
+          !wann_func(:, :, :, :) = wann_func(:, :, :, :) / wmod
           !
           ! Check the 'reality' of the WF
           !
