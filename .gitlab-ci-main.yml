@@ -2,7 +2,7 @@ include: '.gitlab-ci.yml'
 
 build:pw:
   tags: [docker]
-  image: ubuntu:18.04
+  image: ubuntu:20.04
   script:
     - apt-get -qq update
     - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
@@ -16,7 +16,7 @@ build:pw:
 
 build:cp:
   tags: [docker]
-  image: ubuntu:18.04
+  image: ubuntu:20.04
   script:
     - apt-get -qq update
     - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
