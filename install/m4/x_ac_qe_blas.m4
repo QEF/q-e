@@ -10,6 +10,7 @@ have_atlas=0
 have_essl=0
 have_mkl=0
 have_armpl=0 
+have_craylibsci=0
 
 if test "$blas_libs" != ""
 then
@@ -230,7 +231,16 @@ else
                     then break ; fi
           done       
           ;;
-
+    craype:ftn ) 
+            # check for cray_libsci 
+            unset ac_cv_search_dgemm 
+            AC_SEARCH_LIBS(dgemm, cray_libsci, have_blas=1, have_craylibsci=1)  
+            if test "$ac_cv_search_dgemm" = "none required"
+            then
+                echo "cray_libsci links automatically with ftn"
+                have_craylibsci=1
+            fi
+           ;;
     # obsolescent or obsolete architectures
     
     crayxt*:* )
