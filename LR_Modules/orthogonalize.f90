@@ -120,7 +120,16 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
                    w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
            END IF
            DO jbnd = 1, nbnd
+              !
+              if (twochem) then
+                      if (jbnd.le.nbnd-nbnd_cond) then
+                        wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
+                      else
+                        wgp = wgauss ( (ef_cond - et (jbnd, ikq) ) / degauss_cond, ngauss)
+                      end if
+              else
               wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
+              end if
               deltae = et (jbnd, ikq) - et (ibnd, ikk)
               theta = wgauss (deltae / degauss, 0)
               wwg(jbnd) = wg1 * (1.d0 - theta) + wgp * theta

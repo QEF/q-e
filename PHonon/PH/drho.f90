@@ -30,6 +30,8 @@ subroutine drho
   USE control_ph, ONLY : all_done, rec_code_read
 
   USE lrus,       ONLY : becp1
+  USE klist,      ONLY : lgauss
+  USE two_chem,   ONLY : twochem
   USE qpoint,     ONLY : nksq
   USE control_lr, ONLY : lgamma
 
@@ -88,8 +90,10 @@ subroutine drho
   !    due to the displacement of the augmentation charge
   !
   call compute_becsum_ph()
+  if(twochem.and.lgamma.and.lgauss) call compute_becsum_ph_cond()
   !
   call compute_alphasum()
+  if(twochem.and.lgamma.and.lgauss) call compute_alphasum_cond()
   !
   !    then compute the weights
   !

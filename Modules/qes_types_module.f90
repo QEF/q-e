@@ -1022,6 +1022,23 @@ MODULE qes_types_module
     !
   END TYPE spin_constraints_type
   !
+  TYPE :: two_chem_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL  :: twochem_ispresent = .FALSE.
+    LOGICAL :: twochem
+    LOGICAL  :: nbnd_cond_ispresent = .FALSE.
+    INTEGER :: nbnd_cond
+    LOGICAL  :: degauss_cond_ispresent = .FALSE.
+    REAL(DP) :: degauss_cond
+    LOGICAL  :: nelec_cond_ispresent = .FALSE.
+    REAL(DP) :: nelec_cond
+    !
+  END TYPE two_chem_type
+  !
   TYPE :: gate_settings_type
     !
     CHARACTER(len=100) :: tagname
@@ -2002,6 +2019,8 @@ MODULE qes_types_module
     TYPE(matrix_type) :: stress
     LOGICAL  :: electric_field_ispresent = .FALSE.
     TYPE(outputElectricField_type) :: electric_field
+    LOGICAL  :: ef_cond_ispresent = .FALSE.
+    REAL(DP) :: ef_cond
     LOGICAL  :: fcp_force_ispresent = .FALSE.
     REAL(DP) :: fcp_force
     LOGICAL  :: fcp_tot_charge_ispresent = .FALSE.

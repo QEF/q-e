@@ -75,6 +75,8 @@ subroutine compute_weight (wgg)
            !two chemical potentials case
            if (twochem) then
             if (ibnd.gt.(nbnd-nbnd_cond)) then
+             wg1 = wgauss ( (ef_cond - et (ibnd, ikk) ) / degauss_cond, ngauss)
+             else
              wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
             end if
            end if

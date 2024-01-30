@@ -84,6 +84,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_solvents
     MODULE PROCEDURE qes_init_ekin_functional
     MODULE PROCEDURE qes_init_spin_constraints
+    MODULE PROCEDURE qes_init_two_chem
     MODULE PROCEDURE qes_init_electric_field
     MODULE PROCEDURE qes_init_gate_settings
     MODULE PROCEDURE qes_init_atomic_constraints
@@ -481,7 +482,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_output(obj, tagname, algorithmic_info, atomic_species, atomic_structure,&
                             basis_set, dft, total_energy, band_structure, convergence_info, symmetries,&
                             boundary_conditions, magnetization, forces, stress, electric_field,&
-                            fcp_force, fcp_tot_charge, rism3d, rismlaue)
+                            ef_cond, fcp_force, fcp_tot_charge, rism3d, rismlaue)
     !
     IMPLICIT NONE
     !
@@ -501,6 +502,7 @@ MODULE qes_init_module
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: forces
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: stress
     TYPE(outputElectricField_type),OPTIONAL,INTENT(IN) :: electric_field
+    REAL(DP),OPTIONAL,INTENT(IN) :: ef_cond
     REAL(DP),OPTIONAL,INTENT(IN) :: fcp_force
     REAL(DP),OPTIONAL,INTENT(IN) :: fcp_tot_charge
     TYPE(rism3d_type),OPTIONAL,INTENT(IN) :: rism3d
@@ -558,6 +560,12 @@ MODULE qes_init_module
       obj%electric_field = electric_field
     ELSE
       obj%electric_field_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(ef_cond)) THEN
+      obj%ef_cond_ispresent = .TRUE. 
+      obj%ef_cond = ef_cond
+    ELSE
+      obj%ef_cond_ispresent = .FALSE.
     END IF
     IF ( PRESENT(fcp_force)) THEN
       obj%fcp_force_ispresent = .TRUE. 
@@ -3307,6 +3315,49 @@ MODULE qes_init_module
     END IF
     !
   END SUBROUTINE qes_init_spin_constraints
+  !
+  !
+  SUBROUTINE qes_init_two_chem(obj, tagname, twochem, nbnd_cond, degauss_cond, nelec_cond)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(two_chem_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    LOGICAL,OPTIONAL,INTENT(IN) :: twochem
+    INTEGER,OPTIONAL,INTENT(IN) :: nbnd_cond
+    REAL(DP),OPTIONAL,INTENT(IN) :: degauss_cond
+    REAL(DP),OPTIONAL,INTENT(IN) :: nelec_cond
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    IF ( PRESENT(twochem)) THEN
+      obj%twochem_ispresent = .TRUE. 
+      obj%twochem = twochem
+    ELSE
+      obj%twochem_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(nbnd_cond)) THEN
+      obj%nbnd_cond_ispresent = .TRUE. 
+      obj%nbnd_cond = nbnd_cond
+    ELSE
+      obj%nbnd_cond_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(degauss_cond)) THEN
+      obj%degauss_cond_ispresent = .TRUE. 
+      obj%degauss_cond = degauss_cond
+    ELSE
+      obj%degauss_cond_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(nelec_cond)) THEN
+      obj%nelec_cond_ispresent = .TRUE. 
+      obj%nelec_cond = nelec_cond
+    ELSE
+      obj%nelec_cond_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_two_chem
   !
   !
   SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, dipole_correction, gate_settings,&

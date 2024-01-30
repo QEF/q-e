@@ -82,6 +82,7 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_solvents
     MODULE PROCEDURE qes_reset_ekin_functional
     MODULE PROCEDURE qes_reset_spin_constraints
+    MODULE PROCEDURE qes_reset_two_chem
     MODULE PROCEDURE qes_reset_electric_field
     MODULE PROCEDURE qes_reset_gate_settings
     MODULE PROCEDURE qes_reset_atomic_constraints
@@ -337,6 +338,7 @@ MODULE qes_reset_module
     IF (obj%electric_field_ispresent) &
       CALL qes_reset_outputElectricField(obj%electric_field)
     obj%electric_field_ispresent = .FALSE.
+    obj%ef_cond_ispresent = .FALSE.
     obj%fcp_force_ispresent = .FALSE.
     obj%fcp_tot_charge_ispresent = .FALSE.
     IF (obj%rism3d_ispresent) &
@@ -1537,6 +1539,23 @@ MODULE qes_reset_module
     obj%target_magnetization_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_spin_constraints
+  !
+  !
+  SUBROUTINE qes_reset_two_chem(obj)
+    !
+    IMPLICIT NONE
+    TYPE(two_chem_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%twochem_ispresent = .FALSE.
+    obj%nbnd_cond_ispresent = .FALSE.
+    obj%degauss_cond_ispresent = .FALSE.
+    obj%nelec_cond_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_two_chem
   !
   !
   SUBROUTINE qes_reset_electric_field(obj)

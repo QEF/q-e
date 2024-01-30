@@ -50,7 +50,8 @@ MODULE qexsd_input
        qexsd_init_electric_field_input, &
        qexsd_init_atomic_constraints, &
        qexsd_init_occupations, &
-       qexsd_init_smearing
+       qexsd_init_smearing,&
+       qexsd_init_twochem
   !
   CONTAINS
   !--------------------------------------------------------------------------------------------------------------------  
@@ -65,7 +66,7 @@ MODULE qexsd_input
                                           pseudo_dir,outdir,disk_io,verbosity
   LOGICAL,INTENT(IN)                   :: stress,forces,wf_collect,fcp,rism
   REAL(DP),INTENT(IN)                  :: max_seconds,etot_conv_thr,forc_conv_thr,&
-                                          press_conv_thr   
+                                          press_conv_thr
   INTEGER,INTENT(IN)                   :: iprint, nstep
   OPTIONAL                             :: nstep
   !
@@ -94,7 +95,7 @@ MODULE qexsd_input
                                   verbosity=TRIM(verbosity_value),stress=stress,forces=forces,    &
                                   wf_collect=wf_collect,max_seconds=int_max_seconds,  &
                                   etot_conv_thr=etot_conv_thr,forc_conv_thr=forc_conv_thr, &
-                                  press_conv_thr=press_conv_thr,print_every=iprint, fcp=fcp,rism=rism, &
+                                  press_conv_thr=press_conv_thr,print_every=iprint, fcp=fcp,rism=rism,&
                                   NSTEP = nstep)
 
   END SUBROUTINE qexsd_init_control_variables
@@ -856,5 +857,18 @@ MODULE qexsd_input
       END SUBROUTINE qexsd_init_smearing
       !--------------------------------------------------------------------------------------------
       !
+      !-----------------------------------------------------------------------------------
+      SUBROUTINE qexsd_init_twochem(obj, twochem,nbnd_cond,degauss_cond,nelec_cond) 
+      !--------------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      TYPE (two_chem_type),INTENT(INOUT)      :: obj;
+      LOGICAL,INTENT(IN)                      :: twochem
+      REAL(DP)                                :: degauss_cond,nelec_cond
+      INTEGER,INTENT(IN)                      :: nbnd_cond
+      ! 
+      call qes_init (obj,"twoch_", twochem, nbnd_cond, degauss_cond, nelec_cond)
+      END SUBROUTINE qexsd_init_twochem
+!
 END MODULE qexsd_input          
   
