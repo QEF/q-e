@@ -23,11 +23,13 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.5 starts on 19Nov2022 at 12:49:26 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:30:29 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -38,11 +40,12 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     52483 MiB available memory on the printing compute node when the environment starts
-
+     K-points division:     npool     =       4
+     35631 MiB available memory on the printing compute node when the environment starts
+ 
      Reading input from epw2.in
 
      WARNING: The specified dis_win_min is ignored.
@@ -61,14 +64,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         703     703    211                12387    12387    2109
-
+ 
      Using Slab Decomposition
-
+ 
      Reading collected, re-writing distributed wavefunctions
 
      --                                                                         
@@ -103,8 +106,8 @@
    Cartesian axes
 
      site n.  atom      mass           positions (a_0 units)
-        1        Pb 207.2000   tau( 1) = (    0.00000    0.00000    0.00000  )
-
+        1     Pb    207.2000   tau( 1) = (    0.00000    0.00000    0.00000  )
+ 
      49 Sym.Ops. (with q -> -q+G )
 
 
@@ -147,21 +150,21 @@
      Using radial grid of 1281 points,  2 beta functions with: 
                 l(1) =   2
                 l(2) =   1
-     EPW          :      0.09s CPU      0.09s WALL
+     EPW          :      0.25s CPU      0.26s WALL
 
-     EPW          :      0.16s CPU      0.17s WALL
+     EPW          :      0.25s CPU      0.27s WALL
 
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
      -------------------------------------------------------------------
-
+ 
      Spin CASE ( default = unpolarized )
-
+ 
      Initializing Wannier90
-
-
+ 
+ 
      Initial Wannier projections
-
+ 
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
@@ -172,94 +175,54 @@
       - Number of excluded bands is (  5)
       - Number of wannier functions is (  4)
       - All guiding functions are given 
-
+ 
   Reading data about k-point neighbours 
-
+ 
       - All neighbours are found 
-
+ 
      AMN
-      k points =    27 in    1 pools
-            1 of   27 on ionode
-            2 of   27 on ionode
-            3 of   27 on ionode
-            4 of   27 on ionode
-            5 of   27 on ionode
-            6 of   27 on ionode
-            7 of   27 on ionode
-            8 of   27 on ionode
-            9 of   27 on ionode
-           10 of   27 on ionode
-           11 of   27 on ionode
-           12 of   27 on ionode
-           13 of   27 on ionode
-           14 of   27 on ionode
-           15 of   27 on ionode
-           16 of   27 on ionode
-           17 of   27 on ionode
-           18 of   27 on ionode
-           19 of   27 on ionode
-           20 of   27 on ionode
-           21 of   27 on ionode
-           22 of   27 on ionode
-           23 of   27 on ionode
-           24 of   27 on ionode
-           25 of   27 on ionode
-           26 of   27 on ionode
-           27 of   27 on ionode
-
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+ 
      AMN calculated
-
+ 
      MMN
-      k points =    27 in    1 pools
-            1 of   27 on ionode
-            2 of   27 on ionode
-            3 of   27 on ionode
-            4 of   27 on ionode
-            5 of   27 on ionode
-            6 of   27 on ionode
-            7 of   27 on ionode
-            8 of   27 on ionode
-            9 of   27 on ionode
-           10 of   27 on ionode
-           11 of   27 on ionode
-           12 of   27 on ionode
-           13 of   27 on ionode
-           14 of   27 on ionode
-           15 of   27 on ionode
-           16 of   27 on ionode
-           17 of   27 on ionode
-           18 of   27 on ionode
-           19 of   27 on ionode
-           20 of   27 on ionode
-           21 of   27 on ionode
-           22 of   27 on ionode
-           23 of   27 on ionode
-           24 of   27 on ionode
-           25 of   27 on ionode
-           26 of   27 on ionode
-           27 of   27 on ionode
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
      MMN calculated
-
+ 
      Running Wannier90
-
+ 
      Wannier Function centers (cartesian, alat) and spreads (ang):
-
+ 
      (   0.08268   0.08268   0.08268) :   1.58499
      (   0.08268  -0.08268  -0.08268) :   1.58499
      (  -0.08268   0.08268  -0.08268) :   1.58499
      (  -0.08268  -0.08268   0.08268) :   1.58499
-
+ 
      -------------------------------------------------------------------
-     WANNIER      :      4.29s CPU      4.30s WALL (       1 calls)
+     WANNIER      :      1.57s CPU      1.62s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
-
+ 
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.02s CPU      0.02s WALL (       1 calls)
+     kmaps        :      0.03s CPU      0.03s WALL (       1 calls)
      Symmetries of Bravais lattice:  48
      Symmetries of crystal:          48
 
@@ -280,13 +243,13 @@
 
      Symmetries of small group of q: 48
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
      Imposing acoustic sum rule on the dynamical matrix
      Dyn mat calculated from ifcs
-
+ 
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -295,7 +258,7 @@
      ===================================================================
 
      Symmetries of small group of q:  6
-
+ 
      Number of q in the star =    8
      List of q in the star:
           1  -0.333333333   0.333333333  -0.333333333
@@ -307,7 +270,9 @@
           7   0.333333333  -0.333333333  -0.333333333
           8  -0.333333333  -0.333333333   0.333333333
      Dyn mat calculated from ifcs
-
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
+ 
         q(    2 ) = (  -0.3333333   0.3333333  -0.3333333 )
         q(    3 ) = (   0.3333333   0.3333333  -0.3333333 )
         q(    4 ) = (   0.3333333   0.3333333   0.3333333 )
@@ -323,7 +288,7 @@
      ===================================================================
 
      Symmetries of small group of q:  8
-
+ 
      Number of q in the star =    6
      List of q in the star:
           1   0.000000000   0.666666667   0.000000000
@@ -333,7 +298,7 @@
           5   0.000000000   0.000000000  -0.666666667
           6   0.666666667   0.000000000   0.000000000
      Dyn mat calculated from ifcs
-
+ 
         q(   10 ) = (   0.0000000   0.6666667   0.0000000 )
         q(   11 ) = (  -0.6666667   0.0000000   0.0000000 )
         q(   12 ) = (   0.0000000  -0.6666667   0.0000000 )
@@ -347,7 +312,7 @@
      ===================================================================
 
      Symmetries of small group of q:  4
-
+ 
      Number of q in the star =   12
      List of q in the star:
           1   0.666666667   0.000000000   0.666666667
@@ -363,11 +328,11 @@
          11   0.000000000   0.666666667  -0.666666667
          12   0.000000000  -0.666666667  -0.666666667
      Dyn mat calculated from ifcs
-
+ 
         q(   16 ) = (   0.6666667   0.0000000   0.6666667 )
         q(   17 ) = (   0.6666667   0.0000000  -0.6666667 )
         q(   18 ) = (  -0.6666667   0.0000000  -0.6666667 )
-        q(   19 ) = (  -0.6666667  -0.0000000   0.6666667 )
+        q(   19 ) = (  -0.6666667   0.0000000   0.6666667 )
         q(   20 ) = (   0.0000000  -0.6666667   0.6666667 )
         q(   21 ) = (  -0.6666667   0.6666667   0.0000000 )
         q(   22 ) = (  -0.6666667  -0.6666667   0.0000000 )
@@ -418,63 +383,30 @@
      Bloch2wane:         25 /         27
      Bloch2wane:         26 /         27
      Bloch2wane:         27 /         27
- 
-     Bloch2wanp:          1 /         43
-     Bloch2wanp:          2 /         43
-     Bloch2wanp:          3 /         43
-     Bloch2wanp:          4 /         43
-     Bloch2wanp:          5 /         43
-     Bloch2wanp:          6 /         43
-     Bloch2wanp:          7 /         43
-     Bloch2wanp:          8 /         43
-     Bloch2wanp:          9 /         43
-     Bloch2wanp:         10 /         43
-     Bloch2wanp:         11 /         43
-     Bloch2wanp:         12 /         43
-     Bloch2wanp:         13 /         43
-     Bloch2wanp:         14 /         43
-     Bloch2wanp:         15 /         43
-     Bloch2wanp:         16 /         43
-     Bloch2wanp:         17 /         43
-     Bloch2wanp:         18 /         43
-     Bloch2wanp:         19 /         43
-     Bloch2wanp:         20 /         43
-     Bloch2wanp:         21 /         43
-     Bloch2wanp:         22 /         43
-     Bloch2wanp:         23 /         43
-     Bloch2wanp:         24 /         43
-     Bloch2wanp:         25 /         43
-     Bloch2wanp:         26 /         43
-     Bloch2wanp:         27 /         43
-     Bloch2wanp:         28 /         43
-     Bloch2wanp:         29 /         43
-     Bloch2wanp:         30 /         43
-     Bloch2wanp:         31 /         43
-     Bloch2wanp:         32 /         43
-     Bloch2wanp:         33 /         43
-     Bloch2wanp:         34 /         43
-     Bloch2wanp:         35 /         43
-     Bloch2wanp:         36 /         43
-     Bloch2wanp:         37 /         43
-     Bloch2wanp:         38 /         43
-     Bloch2wanp:         39 /         43
-     Bloch2wanp:         40 /         43
-     Bloch2wanp:         41 /         43
-     Bloch2wanp:         42 /         43
-     Bloch2wanp:         43 /         43
+     Bloch2wanp:          1 /         11
+     Bloch2wanp:          2 /         11
+     Bloch2wanp:          3 /         11
+     Bloch2wanp:          4 /         11
+     Bloch2wanp:          5 /         11
+     Bloch2wanp:          6 /         11
+     Bloch2wanp:          7 /         11
+     Bloch2wanp:          8 /         11
+     Bloch2wanp:          9 /         11
+     Bloch2wanp:         10 /         11
+     Bloch2wanp:         11 /         11
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =        46Mb
-                   VmPeak =       378Mb
+     Memory usage:  VmHWM =        82Mb
+                   VmPeak =      3805Mb
      ===================================================================
      
-     Using uniform q-mesh:    6   6   6
+     Using uniform q-mesh:     6    6    6
      Size of q point mesh for interpolation:        216
-     Using uniform k-mesh:    6   6   6
+     Using uniform k-mesh:     6    6    6
      Size of k point mesh for interpolation:        432
-     Max number of k points per pool:              432
+     Max number of k points per pool:              108
 
      Fermi energy coarse grid =   9.797923 eV
 
@@ -494,7 +426,7 @@
               ibndmax =     4  ebndmax =    17.208 eV
 
 
-     Number of ep-matrix elements per pool :         5832 ~=   45.56 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :         1458 ~=   11.39 Kb (@ 8 bytes/ DP)
       
      A selecq.fmt file was found but re-created because selecqread == .FALSE. 
      Number selected, total            100            100
@@ -586,7 +518,7 @@
      lambda___(   3 )=       0.255681   gamma___=       0.028609 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.181479   gamma_tr=      -0.020306 meV   omega=      8.2884 meV
      lambda___( tot )=       0.493124
-     lambda_tr( tot )=      -0.452627
+     lambda_tr( tot )=      -0.452626
      -------------------------------------------------------------------
 
 
@@ -631,10 +563,10 @@
      lambda_tr(   1 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
-     lambda___(   3 )=      -0.000000   gamma___=      -0.000000 meV   omega=      5.8847 meV
-     lambda_tr(   3 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      5.8847 meV
-     lambda___( tot )=      -0.000000
-     lambda_tr( tot )=       0.000000
+     lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      5.8847 meV
+     lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
+     lambda___( tot )=       0.000001
+     lambda_tr( tot )=       0.000001
      -------------------------------------------------------------------
 
 
@@ -691,14 +623,14 @@
 
      ismear =     1 iq =      12 coord.:   0.00000  0.16667  0.83333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311795   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda___(   1 )=       0.311794   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.280984   gamma_tr=       0.009899 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169781   gamma___=       0.006718 meV   omega=      4.9287 meV
-     lambda_tr(   2 )=       0.150520   gamma_tr=       0.005956 meV   omega=      4.9287 meV
+     lambda_tr(   2 )=       0.150519   gamma_tr=       0.005956 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055211   gamma___=       0.004600 meV   omega=      7.1524 meV
      lambda_tr(   3 )=       0.050431   gamma_tr=       0.004202 meV   omega=      7.1524 meV
-     lambda___( tot )=       0.536787
-     lambda_tr( tot )=       0.481935
+     lambda___( tot )=       0.536786
+     lambda_tr( tot )=       0.481934
      -------------------------------------------------------------------
 
 
@@ -855,10 +787,10 @@
      lambda_tr(   1 )=       0.058406   gamma_tr=       0.004691 meV   omega=      7.0223 meV
      lambda___(   2 )=       0.025968   gamma___=       0.002086 meV   omega=      7.0223 meV
      lambda_tr(   2 )=       0.058406   gamma_tr=       0.004691 meV   omega=      7.0223 meV
-     lambda___(   3 )=       0.230368   gamma___=       0.042523 meV   omega=     10.6455 meV
-     lambda_tr(   3 )=       0.552871   gamma_tr=       0.102052 meV   omega=     10.6455 meV
+     lambda___(   3 )=       0.230367   gamma___=       0.042523 meV   omega=     10.6455 meV
+     lambda_tr(   3 )=       0.552870   gamma_tr=       0.102052 meV   omega=     10.6455 meV
      lambda___( tot )=       0.282303
-     lambda_tr( tot )=       0.669683
+     lambda_tr( tot )=       0.669682
      -------------------------------------------------------------------
 
 
@@ -889,7 +821,7 @@
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009418   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
-     lambda___( tot )=       0.239511
+     lambda___( tot )=       0.239512
      lambda_tr( tot )=       0.174657
      -------------------------------------------------------------------
 
@@ -1011,7 +943,7 @@
 
      ismear =     1 iq =      32 coord.:   0.00000  0.83333  0.16667 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311794   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda___(   1 )=       0.311795   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.280984   gamma_tr=       0.009899 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169781   gamma___=       0.006718 meV   omega=      4.9287 meV
      lambda_tr(   2 )=       0.150519   gamma_tr=       0.005956 meV   omega=      4.9287 meV
@@ -1079,10 +1011,10 @@
      lambda_tr(   1 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
-     lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
-     lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
-     lambda___( tot )=       0.000000
-     lambda_tr( tot )=       0.000000
+     lambda___(   3 )=      -0.000000   gamma___=      -0.000000 meV   omega=      5.8847 meV
+     lambda_tr(   3 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      5.8847 meV
+     lambda___( tot )=      -0.000000
+     lambda_tr( tot )=      -0.000000
      -------------------------------------------------------------------
 
 
@@ -1139,7 +1071,7 @@
 
      ismear =     1 iq =      40 coord.:   0.16667  0.00000  0.50000 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.181184   gamma___=       0.011941 meV   omega=      6.3610 meV
+     lambda___(   1 )=       0.181183   gamma___=       0.011941 meV   omega=      6.3610 meV
      lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
@@ -1171,14 +1103,14 @@
 
      ismear =     1 iq =      42 coord.:   0.16667  0.00000  0.83333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311795   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda___(   1 )=       0.311794   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.280984   gamma_tr=       0.009899 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169781   gamma___=       0.006718 meV   omega=      4.9287 meV
-     lambda_tr(   2 )=       0.150520   gamma_tr=       0.005956 meV   omega=      4.9287 meV
+     lambda_tr(   2 )=       0.150519   gamma_tr=       0.005956 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055211   gamma___=       0.004600 meV   omega=      7.1524 meV
      lambda_tr(   3 )=       0.050431   gamma_tr=       0.004202 meV   omega=      7.1524 meV
-     lambda___( tot )=       0.536787
-     lambda_tr( tot )=       0.481935
+     lambda___( tot )=       0.536786
+     lambda_tr( tot )=       0.481934
      -------------------------------------------------------------------
 
 
@@ -1219,14 +1151,14 @@
 
      ismear =     1 iq =      45 coord.:   0.16667  0.16667  0.33333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311795   gamma___=       0.010985 meV   omega=      4.6509 meV
-     lambda_tr(   1 )=       0.280985   gamma_tr=       0.009899 meV   omega=      4.6509 meV
-     lambda___(   2 )=       0.169782   gamma___=       0.006718 meV   omega=      4.9287 meV
+     lambda___(   1 )=       0.311794   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda_tr(   1 )=       0.280984   gamma_tr=       0.009899 meV   omega=      4.6509 meV
+     lambda___(   2 )=       0.169781   gamma___=       0.006718 meV   omega=      4.9287 meV
      lambda_tr(   2 )=       0.150520   gamma_tr=       0.005956 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055211   gamma___=       0.004600 meV   omega=      7.1524 meV
      lambda_tr(   3 )=       0.050431   gamma_tr=       0.004202 meV   omega=      7.1524 meV
-     lambda___( tot )=       0.536787
-     lambda_tr( tot )=       0.481936
+     lambda___( tot )=       0.536786
+     lambda_tr( tot )=       0.481935
      -------------------------------------------------------------------
 
 
@@ -1363,12 +1295,12 @@
 
      ismear =     1 iq =      54 coord.:   0.16667  0.33333  0.83333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065584   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065583   gamma___=       0.004615 meV   omega=      6.5728 meV
      lambda_tr(   1 )=       0.054084   gamma_tr=       0.003806 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160246   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.009223   gamma_tr=      -0.000718 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077457   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.123783   gamma_tr=       0.017042 meV   omega=      9.1937 meV
+     lambda_tr(   3 )=       0.123782   gamma_tr=       0.017042 meV   omega=      9.1937 meV
      lambda___( tot )=       0.303287
      lambda_tr( tot )=       0.168644
      -------------------------------------------------------------------
@@ -1498,7 +1430,7 @@
      lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
-     lambda_tr( tot )=       0.174657
+     lambda_tr( tot )=       0.174658
      -------------------------------------------------------------------
 
 
@@ -1555,7 +1487,7 @@
 
      ismear =     1 iq =      66 coord.:   0.16667  0.66667  0.83333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065583   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065584   gamma___=       0.004615 meV   omega=      6.5728 meV
      lambda_tr(   1 )=       0.054084   gamma_tr=       0.003806 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160246   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.009221   gamma_tr=      -0.000717 meV   omega=      6.9115 meV
@@ -1609,7 +1541,7 @@
      lambda_tr(   2 )=      -0.009222   gamma_tr=      -0.000718 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077457   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.123783   gamma_tr=       0.017042 meV   omega=      9.1937 meV
-     lambda___( tot )=       0.303288
+     lambda___( tot )=       0.303287
      lambda_tr( tot )=       0.168645
      -------------------------------------------------------------------
 
@@ -1785,7 +1717,7 @@
      lambda_tr(   2 )=       0.150519   gamma_tr=       0.005956 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055211   gamma___=       0.004600 meV   omega=      7.1524 meV
      lambda_tr(   3 )=       0.050431   gamma_tr=       0.004202 meV   omega=      7.1524 meV
-     lambda___( tot )=       0.536787
+     lambda___( tot )=       0.536786
      lambda_tr( tot )=       0.481934
      -------------------------------------------------------------------
 
@@ -1817,7 +1749,7 @@
      lambda_tr(   2 )=      -0.009221   gamma_tr=      -0.000717 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077457   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.123783   gamma_tr=       0.017042 meV   omega=      9.1937 meV
-     lambda___( tot )=       0.303288
+     lambda___( tot )=       0.303287
      lambda_tr( tot )=       0.168646
      -------------------------------------------------------------------
 
@@ -1898,7 +1830,7 @@
      lambda___(   3 )=       0.255681   gamma___=       0.028609 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.181479   gamma_tr=      -0.020306 meV   omega=      8.2884 meV
      lambda___( tot )=       0.493126
-     lambda_tr( tot )=      -0.452626
+     lambda_tr( tot )=      -0.452625
      -------------------------------------------------------------------
 
 
@@ -1928,9 +1860,9 @@
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011154   gamma_tr=       0.001351 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115533   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.307939   gamma_tr=       0.038913 meV   omega=      8.8081 meV
+     lambda_tr(   3 )=       0.307938   gamma_tr=       0.038913 meV   omega=      8.8081 meV
      lambda___( tot )=       0.135682
-     lambda_tr( tot )=       0.364661
+     lambda_tr( tot )=       0.364660
      -------------------------------------------------------------------
 
 
@@ -2007,10 +1939,10 @@
      lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
-     lambda___(   3 )=       0.053789   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
+     lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
+     lambda_tr(   3 )=      -0.009418   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
-     lambda_tr( tot )=       0.174658
+     lambda_tr( tot )=       0.174657
      -------------------------------------------------------------------
 
 
@@ -2056,9 +1988,9 @@
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011154   gamma_tr=       0.001351 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115533   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.307939   gamma_tr=       0.038913 meV   omega=      8.8081 meV
+     lambda_tr(   3 )=       0.307938   gamma_tr=       0.038913 meV   omega=      8.8081 meV
      lambda___( tot )=       0.135682
-     lambda_tr( tot )=       0.364660
+     lambda_tr( tot )=       0.364661
      -------------------------------------------------------------------
 
 
@@ -2090,7 +2022,7 @@
      lambda___(   3 )=       0.115533   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.307938   gamma_tr=       0.038913 meV   omega=      8.8081 meV
      lambda___( tot )=       0.135682
-     lambda_tr( tot )=       0.364661
+     lambda_tr( tot )=       0.364660
      -------------------------------------------------------------------
 
 
@@ -2118,11 +2050,11 @@
      lambda___(   1 )=       0.015988   gamma___=       0.001275 meV   omega=      6.9975 meV
      lambda_tr(   1 )=       0.045568   gamma_tr=       0.003634 meV   omega=      6.9975 meV
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
-     lambda_tr(   2 )=       0.011155   gamma_tr=       0.001351 meV   omega=      8.6241 meV
+     lambda_tr(   2 )=       0.011154   gamma_tr=       0.001351 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115533   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.307938   gamma_tr=       0.038913 meV   omega=      8.8081 meV
-     lambda___( tot )=       0.135683
-     lambda_tr( tot )=       0.364661
+     lambda___( tot )=       0.135682
+     lambda_tr( tot )=       0.364660
      -------------------------------------------------------------------
 
 
@@ -2227,14 +2159,14 @@
 
      ismear =     1 iq =     108 coord.:   0.33333  0.83333  0.83333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.181184   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183226   gamma_tr=       0.012075 meV   omega=      6.3610 meV
+     lambda___(   1 )=       0.181183   gamma___=       0.011941 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
-     lambda_tr( tot )=       0.174658
+     lambda_tr( tot )=       0.174657
      -------------------------------------------------------------------
 
 
@@ -2263,7 +2195,7 @@
      lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
-     lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
+     lambda___(   3 )=       0.053789   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
      lambda_tr( tot )=       0.174658
@@ -2295,10 +2227,10 @@
      lambda_tr(   1 )=       0.058406   gamma_tr=       0.004691 meV   omega=      7.0223 meV
      lambda___(   2 )=       0.025968   gamma___=       0.002086 meV   omega=      7.0223 meV
      lambda_tr(   2 )=       0.058406   gamma_tr=       0.004691 meV   omega=      7.0223 meV
-     lambda___(   3 )=       0.230368   gamma___=       0.042523 meV   omega=     10.6455 meV
-     lambda_tr(   3 )=       0.552871   gamma_tr=       0.102052 meV   omega=     10.6455 meV
+     lambda___(   3 )=       0.230367   gamma___=       0.042523 meV   omega=     10.6455 meV
+     lambda_tr(   3 )=       0.552870   gamma_tr=       0.102052 meV   omega=     10.6455 meV
      lambda___( tot )=       0.282303
-     lambda_tr( tot )=       0.669683
+     lambda_tr( tot )=       0.669682
      -------------------------------------------------------------------
 
 
@@ -2328,7 +2260,7 @@
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
+     lambda_tr(   3 )=      -0.009418   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239511
      lambda_tr( tot )=       0.174657
      -------------------------------------------------------------------
@@ -2535,10 +2467,10 @@
      lambda_tr(   1 )=       0.058406   gamma_tr=       0.004691 meV   omega=      7.0223 meV
      lambda___(   2 )=       0.025968   gamma___=       0.002086 meV   omega=      7.0223 meV
      lambda_tr(   2 )=       0.058406   gamma_tr=       0.004691 meV   omega=      7.0223 meV
-     lambda___(   3 )=       0.230368   gamma___=       0.042523 meV   omega=     10.6455 meV
-     lambda_tr(   3 )=       0.552872   gamma_tr=       0.102053 meV   omega=     10.6455 meV
+     lambda___(   3 )=       0.230367   gamma___=       0.042523 meV   omega=     10.6455 meV
+     lambda_tr(   3 )=       0.552871   gamma_tr=       0.102052 meV   omega=     10.6455 meV
      lambda___( tot )=       0.282303
-     lambda_tr( tot )=       0.669684
+     lambda_tr( tot )=       0.669683
      -------------------------------------------------------------------
 
 
@@ -2602,7 +2534,7 @@
      lambda___(   3 )=       0.053789   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
-     lambda_tr( tot )=       0.174658
+     lambda_tr( tot )=       0.174657
      -------------------------------------------------------------------
 
 
@@ -2675,14 +2607,14 @@
 
      ismear =     1 iq =     136 coord.:   0.50000  0.66667  0.50000 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.181184   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183226   gamma_tr=       0.012075 meV   omega=      6.3610 meV
+     lambda___(   1 )=       0.181183   gamma___=       0.011941 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
-     lambda_tr( tot )=       0.174658
+     lambda_tr( tot )=       0.174657
      -------------------------------------------------------------------
 
 
@@ -2723,7 +2655,7 @@
 
      ismear =     1 iq =     139 coord.:   0.50000  0.83333  0.00000 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.181184   gamma___=       0.011941 meV   omega=      6.3610 meV
+     lambda___(   1 )=       0.181183   gamma___=       0.011941 meV   omega=      6.3610 meV
      lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
@@ -2787,7 +2719,7 @@
 
      ismear =     1 iq =     143 coord.:   0.50000  0.83333  0.66667 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065584   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065583   gamma___=       0.004615 meV   omega=      6.5728 meV
      lambda_tr(   1 )=       0.054084   gamma_tr=       0.003806 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160246   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.009223   gamma_tr=      -0.000718 meV   omega=      6.9115 meV
@@ -2826,7 +2758,7 @@
      lambda___(   3 )=       0.255681   gamma___=       0.028609 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.181479   gamma_tr=      -0.020306 meV   omega=      8.2884 meV
      lambda___( tot )=       0.493126
-     lambda_tr( tot )=      -0.452625
+     lambda_tr( tot )=      -0.452626
      -------------------------------------------------------------------
 
 
@@ -3018,7 +2950,7 @@
      lambda___(   3 )=       0.115533   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.307938   gamma_tr=       0.038913 meV   omega=      8.8081 meV
      lambda___( tot )=       0.135682
-     lambda_tr( tot )=       0.364661
+     lambda_tr( tot )=       0.364660
      -------------------------------------------------------------------
 
 
@@ -3159,10 +3091,10 @@
      lambda_tr(   1 )=       0.183225   gamma_tr=       0.012075 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000849   gamma_tr=       0.000068 meV   omega=      7.0201 meV
-     lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
+     lambda___(   3 )=       0.053789   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.009417   gamma_tr=      -0.001336 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239512
-     lambda_tr( tot )=       0.174657
+     lambda_tr( tot )=       0.174658
      -------------------------------------------------------------------
 
 
@@ -3210,7 +3142,7 @@
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
      lambda___( tot )=       0.840944
-     lambda_tr( tot )=       0.840944
+     lambda_tr( tot )=       0.840943
      -------------------------------------------------------------------
 
 
@@ -3347,7 +3279,7 @@
 
      ismear =     1 iq =     178 coord.:   0.66667  0.83333  0.50000 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065584   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065583   gamma___=       0.004615 meV   omega=      6.5728 meV
      lambda_tr(   1 )=       0.054084   gamma_tr=       0.003806 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160246   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.009221   gamma_tr=      -0.000717 meV   omega=      6.9115 meV
@@ -3497,8 +3429,8 @@
      lambda_tr(   2 )=       0.150520   gamma_tr=       0.005956 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055211   gamma___=       0.004600 meV   omega=      7.1524 meV
      lambda_tr(   3 )=       0.050431   gamma_tr=       0.004202 meV   omega=      7.1524 meV
-     lambda___( tot )=       0.536787
-     lambda_tr( tot )=       0.481936
+     lambda___( tot )=       0.536786
+     lambda_tr( tot )=       0.481935
      -------------------------------------------------------------------
 
 
@@ -3523,13 +3455,13 @@
 
      ismear =     1 iq =     189 coord.:   0.83333  0.16667  0.33333 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065585   gamma___=       0.004615 meV   omega=      6.5728 meV
-     lambda_tr(   1 )=       0.054085   gamma_tr=       0.003806 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065584   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda_tr(   1 )=       0.054084   gamma_tr=       0.003806 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160246   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.009222   gamma_tr=      -0.000718 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077457   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.123783   gamma_tr=       0.017042 meV   omega=      9.1937 meV
-     lambda___( tot )=       0.303288
+     lambda___( tot )=       0.303287
      lambda_tr( tot )=       0.168645
      -------------------------------------------------------------------
 
@@ -3609,7 +3541,7 @@
      lambda_tr(   2 )=      -0.009221   gamma_tr=      -0.000717 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077457   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.123783   gamma_tr=       0.017042 meV   omega=      9.1937 meV
-     lambda___( tot )=       0.303288
+     lambda___( tot )=       0.303287
      lambda_tr( tot )=       0.168646
      -------------------------------------------------------------------
 
@@ -3827,7 +3759,7 @@
 
      ismear =     1 iq =     208 coord.:   0.83333  0.66667  0.50000 wt:   0.00463 Temp:  300.000K
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065584   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065583   gamma___=       0.004615 meV   omega=      6.5728 meV
      lambda_tr(   1 )=       0.054084   gamma_tr=       0.003806 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160246   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.009221   gamma_tr=      -0.000717 meV   omega=      6.9115 meV
@@ -3879,7 +3811,7 @@
      lambda_tr(   1 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
-     lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
+     lambda___(   3 )=      -0.000000   gamma___=      -0.000000 meV   omega=      5.8847 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
      lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
@@ -3969,41 +3901,54 @@
      Number of (k,k+q) pairs on the Fermi surface:      214 out of      216
 
      ===================================================================
-     Memory usage:  VmHWM =        46Mb
-                   VmPeak =       378Mb
+     Memory usage:  VmHWM =        82Mb
+                   VmPeak =      3805Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     23.98s CPU     24.25s WALL (       1 calls)
+     elphon_wrap  :      7.61s CPU      7.72s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.04s CPU      0.04s WALL (       2 calls)
+     init_vloc    :      0.04s CPU      0.04s WALL (       1 calls)
+     init_us_1    :      0.06s CPU      0.06s WALL (       1 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      1.13s CPU      1.23s WALL (       1 calls)
-     ep-interp    :      1.05s CPU      1.15s WALL (     216 calls)
-     PH SELF-ENER :      0.06s CPU      0.06s WALL (     216 calls)
+     ephwann      :      0.58s CPU      0.65s WALL (       1 calls)
+     ep-interp    :      0.50s CPU      0.56s WALL (     216 calls)
+     PH SELF-ENER :      0.02s CPU      0.02s WALL (     216 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
-     ep: step 1   :      0.00s CPU      0.00s WALL (      81 calls)
-     ep: step 2   :      1.09s CPU      1.20s WALL (       1 calls)
-     DynW2B       :      0.00s CPU      0.00s WALL (     216 calls)
-     HamW2B       :      0.40s CPU      0.44s WALL (   93960 calls)
-     ephW2Bp      :      0.05s CPU      0.06s WALL (     216 calls)
-     ephW2B       :      0.12s CPU      0.13s WALL (   46225 calls)
+     ep: step 1   :      0.00s CPU      0.00s WALL (      27 calls)
+     ep: step 2   :      0.00s CPU      0.00s WALL (      27 calls)
+     DynW2B       :      0.00s CPU      0.01s WALL (     216 calls)
+     HamW2B       :      0.17s CPU      0.19s WALL (   23490 calls)
+     ephW2Bp      :      0.04s CPU      0.05s WALL (     216 calls)
+     ephW2B       :      0.05s CPU      0.06s WALL (   11395 calls)
 
 
      Total program execution
-     EPW          :     29.56s CPU     29.95s WALL
+     EPW          :     10.01s CPU     10.26s WALL
 
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
      ===============================================================================
                                                                                     

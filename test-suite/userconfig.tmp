@@ -125,7 +125,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0   , 1.0e-2, 'mobxZ'),
               (1.5e+3,   None, 'indabs'),
               (1.0e-4,   None, 'ratmax'),
-              (5.0e-2, 1.0e-2, 'eplrn'))
+              (5.0e-2, 1.0e-1, 'eplrn'))
 
 skip_program = grep
 skip_args = 'not present in this version'

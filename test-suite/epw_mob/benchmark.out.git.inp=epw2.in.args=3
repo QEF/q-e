@@ -23,16 +23,19 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.2.0 starts on  9Jul2020 at 18:51:22 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:31:34 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -41,7 +44,11 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     Fft bands division:     nmany     =       1
+     35385 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from epw2.in
+
+     Generating evenly spaced temperature list.
                       
      ------------------------------------------------------------------------ 
                    RESTART - RESTART - RESTART - RESTART                         
@@ -98,6 +105,8 @@
      Using si.ukk from disk
      -------------------------------------------------------------------
 
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
 
      Do not need to read .epb files; read .fmt files
 
@@ -115,9 +124,10 @@
 
      Reading interatomic force constants
 
-     IFC last   -0.0032824
+ end of file reached, closing tag not found
+     IFC last   -0.0032796
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000253
+     Norm of the difference between old and new force-constants:    0.0000254
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -126,11 +136,11 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        66Mb
-                   VmPeak =       387Mb
+     Memory usage:  VmHWM =        53Mb
+                   VmPeak =      3745Mb
      ===================================================================
      
-     Using uniform q-mesh:   12  12  12
+     Using uniform q-mesh:    12   12   12
      Size of q point mesh for interpolation:       1728
      Using k-mesh file: ./kpt.txt
      Size of k point mesh for interpolation:        210
@@ -138,15 +148,15 @@
 
      Fermi energy coarse grid =   6.302835 eV
 
-     Fermi energy is calculated from the fine k-mesh: Ef =   6.868908 eV
+     Fermi energy is calculated from the fine k-mesh: Ef =   6.696053 eV
 
      Warning: check if difference with Fermi level fine grid makes sense
 
      ===================================================================
      Applying a scissor shift of   0.70000 eV to the CB      9
 
-              ibndmin =     3  ebndmin =     0.363
-              ibndmax =    12  ebndmax =     0.636
+              ibndmin =     3  ebndmin =     4.935 eV
+              ibndmax =    12  ebndmax =     8.649 eV
 
 
      Number of ep-matrix elements per pool :        16200 ~=  126.56 Kb (@ 8 bytes/ DP)
@@ -184,8 +194,8 @@
 
 
      Fermi Surface thickness =   2.000000 eV
-     This is computed with respect to the fine Fermi level   6.868908 eV
-     Only states between   4.868908 eV and   8.868908 eV will be included
+     This is computed with respect to the fine Fermi level   6.696053 eV
+     Only states between   4.696053 eV and   8.696053 eV will be included
 
      Progression iq (fine) =       1000/      1728
      Creation of a restart point
@@ -194,58 +204,58 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      300.000      6.8411       0.100000E+14       0.177497E+03  x-axis
-                                                   0.234741E+03  y-axis
-                                                   0.249047E+03  z-axis
-                                                   0.220428E+03     avg
-      350.000      6.9357       0.999997E+13       0.128654E+03  x-axis
-                                                   0.169033E+03  y-axis
-                                                   0.179158E+03  z-axis
-                                                   0.158949E+03     avg
-      400.000      7.0307       0.100000E+14       0.975866E+02  x-axis
-                                                   0.127701E+03  y-axis
-                                                   0.135196E+03  z-axis
-                                                   0.120161E+03     avg
-      450.000      7.1261       0.100000E+14       0.766835E+02  x-axis
-                                                   0.100000E+03  y-axis
-                                                   0.106154E+03  z-axis
-                                                   0.942792E+02     avg
-      500.000      7.2218       0.100000E+14       0.619532E+02  x-axis
-                                                   0.804714E+02  y-axis
-                                                   0.861129E+02  z-axis
-                                                   0.761792E+02     avg
+      300.000      6.8411       0.100000E+14       0.148369E+03  x-axis
+                                                   0.196063E+03  y-axis
+                                                   0.207783E+03  z-axis
+                                                   0.184071E+03     avg
+      350.000      6.9357       0.100000E+14       0.107924E+03  x-axis
+                                                   0.141331E+03  y-axis
+                                                   0.149746E+03  z-axis
+                                                   0.133001E+03     avg
+      400.000      7.0307       0.999995E+13       0.821206E+02  x-axis
+                                                   0.106801E+03  y-axis
+                                                   0.113291E+03  z-axis
+                                                   0.100738E+03     avg
+      450.000      7.1261       0.100000E+14       0.647107E+02  x-axis
+                                                   0.836514E+02  y-axis
+                                                   0.891797E+02  z-axis
+                                                   0.791806E+02     avg
+      500.000      7.2218       0.100000E+14       0.524098E+02  x-axis
+                                                   0.673566E+02  y-axis
+                                                   0.724893E+02  z-axis
+                                                   0.640852E+02     avg
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      300.000      7.1071       0.999993E+13       0.286506E+04  x-axis
-                                                   0.710706E+04  y-axis
-                                                   0.937790E+04  z-axis
-                                                   0.645001E+04     avg
-      350.000      7.0227       0.100000E+14       0.212170E+04  x-axis
-                                                   0.493524E+04  y-axis
-                                                   0.647249E+04  z-axis
-                                                   0.450981E+04     avg
-      400.000      6.9381       0.999995E+13       0.161191E+04  x-axis
-                                                   0.358361E+04  y-axis
-                                                   0.467551E+04  z-axis
-                                                   0.329034E+04     avg
-      450.000      6.8532       0.100000E+14       0.125256E+04  x-axis
-                                                   0.269456E+04  y-axis
-                                                   0.350011E+04  z-axis
-                                                   0.248241E+04     avg
-      500.000      6.7681       0.100000E+14       0.992866E+03  x-axis
-                                                   0.208378E+04  y-axis
-                                                   0.269660E+04  z-axis
-                                                   0.192442E+04     avg
+      300.000      7.1071       0.999993E+13       0.195862E+04  x-axis
+                                                   0.492527E+04  y-axis
+                                                   0.659701E+04  z-axis
+                                                   0.449363E+04     avg
+      350.000      7.0227       0.999999E+13       0.144928E+04  x-axis
+                                                   0.342433E+04  y-axis
+                                                   0.455339E+04  z-axis
+                                                   0.314233E+04     avg
+      400.000      6.9381       0.999995E+13       0.110044E+04  x-axis
+                                                   0.248913E+04  y-axis
+                                                   0.328945E+04  z-axis
+                                                   0.229301E+04     avg
+      450.000      6.8532       0.100000E+14       0.854806E+03  x-axis
+                                                   0.187334E+04  y-axis
+                                                   0.246273E+04  z-axis
+                                                   0.173029E+04     avg
+      500.000      6.7681       0.100000E+14       0.677436E+03  x-axis
+                                                   0.144989E+04  y-axis
+                                                   0.189756E+04  z-axis
+                                                   0.134163E+04     avg
 
      Note: Mobility are sorted by ascending values and might not correspond
                                               to the expected (x,y,z) axis.
 
      Total time so far
-     SCAT         :      3.36s CPU      3.39s WALL (    1000 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       1 calls)
+     SCAT         :      4.79s CPU      4.79s WALL (    1000 calls)
+     MOB          :      0.00s CPU      0.00s WALL (       1 calls)
 
      Temperature  300.000 K
      Average over degenerate eigenstates is performed
@@ -283,67 +293,67 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      300.000      6.8411       0.100000E+14       0.160049E+03  x-axis
-                                                   0.219417E+03  y-axis
-                                                   0.220730E+03  z-axis
-                                                   0.200065E+03     avg
-      350.000      6.9357       0.999997E+13       0.115336E+03  x-axis
-                                                   0.156104E+03  y-axis
-                                                   0.158109E+03  z-axis
-                                                   0.143183E+03     avg
-      400.000      7.0307       0.100000E+14       0.870442E+02  x-axis
-                                                   0.116320E+03  y-axis
-                                                   0.119365E+03  z-axis
-                                                   0.107576E+03     avg
-      450.000      7.1261       0.100000E+14       0.680824E+02  x-axis
-                                                   0.899583E+02  y-axis
-                                                   0.938064E+02  z-axis
-                                                   0.839490E+02     avg
-      500.000      7.2218       0.100000E+14       0.547627E+02  x-axis
-                                                   0.716795E+02  y-axis
-                                                   0.760406E+02  z-axis
-                                                   0.674943E+02     avg
+      300.000      6.8411       0.100000E+14       0.133903E+03  x-axis
+                                                   0.181988E+03  y-axis
+                                                   0.185628E+03  z-axis
+                                                   0.167173E+03     avg
+      350.000      6.9357       0.100000E+14       0.968428E+02  x-axis
+                                                   0.129768E+03  y-axis
+                                                   0.133048E+03  z-axis
+                                                   0.119886E+03     avg
+      400.000      7.0307       0.999995E+13       0.733163E+02  x-axis
+                                                   0.969004E+02  y-axis
+                                                   0.100509E+03  z-axis
+                                                   0.902419E+02     avg
+      450.000      7.1261       0.100000E+14       0.575006E+02  x-axis
+                                                   0.750876E+02  y-axis
+                                                   0.790387E+02  z-axis
+                                                   0.705423E+02     avg
+      500.000      7.2218       0.100000E+14       0.463604E+02  x-axis
+                                                   0.599404E+02  y-axis
+                                                   0.641103E+02  z-axis
+                                                   0.568037E+02     avg
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      300.000      7.1071       0.999993E+13       0.207706E+04  x-axis
-                                                   0.355032E+04  y-axis
-                                                   0.355278E+04  z-axis
-                                                   0.306005E+04     avg
-      350.000      7.0227       0.100000E+14       0.153034E+04  x-axis
-                                                   0.261547E+04  y-axis
-                                                   0.261856E+04  z-axis
-                                                   0.225479E+04     avg
-      400.000      6.9381       0.999995E+13       0.115751E+04  x-axis
-                                                   0.197797E+04  y-axis
-                                                   0.198145E+04  z-axis
-                                                   0.170564E+04     avg
-      450.000      6.8532       0.100000E+14       0.896103E+03  x-axis
-                                                   0.153098E+04  y-axis
-                                                   0.153467E+04  z-axis
-                                                   0.132059E+04     avg
-      500.000      6.7681       0.100000E+14       0.708079E+03  x-axis
-                                                   0.120948E+04  y-axis
-                                                   0.121324E+04  z-axis
-                                                   0.104360E+04     avg
+      300.000      7.1071       0.999993E+13       0.139854E+04  x-axis
+                                                   0.249797E+04  y-axis
+                                                   0.250024E+04  z-axis
+                                                   0.213225E+04     avg
+      350.000      7.0227       0.999999E+13       0.103070E+04  x-axis
+                                                   0.184031E+04  y-axis
+                                                   0.184317E+04  z-axis
+                                                   0.157139E+04     avg
+      400.000      6.9381       0.999995E+13       0.779856E+03  x-axis
+                                                   0.139184E+04  y-axis
+                                                   0.139506E+04  z-axis
+                                                   0.118892E+04     avg
+      450.000      6.8532       0.100000E+14       0.603961E+03  x-axis
+                                                   0.107739E+04  y-axis
+                                                   0.108081E+04  z-axis
+                                                   0.920719E+03     avg
+      500.000      6.7681       0.100000E+14       0.477430E+03  x-axis
+                                                   0.851213E+03  y-axis
+                                                   0.854693E+03  z-axis
+                                                   0.727779E+03     avg
 
      Note: Mobility are sorted by ascending values and might not correspond
                                               to the expected (x,y,z) axis.
 
      Total time so far
-     SCAT         :      5.74s CPU      5.84s WALL (    1729 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       2 calls)
+     SCAT         :      8.00s CPU      8.01s WALL (    1729 calls)
+     MOB          :      0.00s CPU      0.00s WALL (       2 calls)
 
      ===================================================================
-     Memory usage:  VmHWM =        80Mb
-                   VmPeak =       419Mb
+     Memory usage:  VmHWM =        63Mb
+                   VmPeak =      3777Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+     elphon_wrap  :      0.01s CPU      0.01s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -351,21 +361,37 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     23.34s CPU     27.71s WALL (       1 calls)
-     ep-interp    :     22.31s CPU     26.58s WALL (    1728 calls)
+     ephwann      :     32.57s CPU     35.99s WALL (       1 calls)
+     ep-interp    :     31.02s CPU     34.43s WALL (    1728 calls)
 
-     DynW2B       :      0.05s CPU      0.05s WALL (    1728 calls)
-     HamW2B       :      4.98s CPU      5.19s WALL (   99088 calls)
-     ephW2Bp      :      6.57s CPU     10.41s WALL (    1728 calls)
-     ephW2B       :      2.38s CPU      2.44s WALL (   22728 calls)
+     DynW2B       :      0.08s CPU      0.08s WALL (    1728 calls)
+     HamW2B       :      6.56s CPU      6.72s WALL (   99140 calls)
+     ephW2Bp      :     10.39s CPU     13.53s WALL (    1728 calls)
+     ephW2B       :      2.71s CPU      2.75s WALL (   22924 calls)
 
 
      Total program execution
-     EPW          :     23.35s CPU     27.72s WALL
+     EPW          :     32.58s CPU     36.01s WALL
 
-                                                                                          
- Please consider citing:                                                                  
- S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                          
- In addition, since you have used the following functionalities, please cite:             
-   scattering :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [scattering/iterative_bte] input, please consider also citing      
+       S. Ponc\'e, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)             
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    
