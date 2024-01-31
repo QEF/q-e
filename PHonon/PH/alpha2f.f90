@@ -209,7 +209,7 @@ SUBROUTINE compute_a2F()
   USE wvfct,     ONLY : et, nbnd
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : at, bg
-  USE klist,     ONLY : nkstot
+  USE klist,     ONLY : nkstot, nks
   USE disp,      ONLY : nq1, nq2, nq3, nqs, x_q
   USE symm_base, ONLY : nsym, s, time_reversal, t_rev
   USE lsda_mod,  ONLY : nspin
@@ -254,6 +254,7 @@ SUBROUTINE compute_a2F()
   nspin = 1
   nbnd = nmodes
   nkstot = nqs
+  nks = nqs
   CALL opt_tetra_partialdos(1, kresolveddos, nfreq, nat + 1, 1, &
   &                         0.0_dp, DeltaE, proj, pdos, dos, 1)
   !
@@ -376,6 +377,7 @@ PROGRAM alpha2f
   USE io_global,      ONLY : qestdin, ionode
   USE modes,          ONLY : nmodes
   USE ions_base,      ONLY : nat
+  USE mp_world,       ONLY : nproc
   !
   USE alpha2f_vals,     ONLY : nfreq
   USE alpha2f_routines, ONLY : read_lam, compute_a2f, compute_lambda, read_polarization
@@ -387,9 +389,10 @@ PROGRAM alpha2f
   !
   NAMELIST /INPUTA2F/ nfreq
   !
-#if defined(__MPI)
   CALL mp_startup()
-#endif
+  !
+  IF ( nproc > 1 ) CALL errore('alpha2f','Number of processes > 1 is not supported.', nproc)
+  !
   CALL environment_start('ALPHA2F')
   in_alpha2f = .TRUE.
   !
@@ -412,8 +415,6 @@ PROGRAM alpha2f
   END IF
   !
   CALL environment_end('ALPHA2F')
-#if defined(__MPI)
   CALL mp_global_end()
-#endif
   !
 END PROGRAM alpha2f
