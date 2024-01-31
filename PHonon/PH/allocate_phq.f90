@@ -48,7 +48,8 @@ subroutine allocate_phq
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
   USE two_chem,      ONLY : twochem
-  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc, becsumort_cond,becsum_cond
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc,&
+                            becsumort_cond,becsum_cond
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
   !
