@@ -7,42 +7,6 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE atomic_wfc_gpu( ik, wfcatom )
-  !-----------------------------------------------------------------------
-  !! Wrapper routine: calls atomic_wfc_acc to compute the (non-orthogonal)
-  !! superposition of atomic wavefunctions at the ik-th k-point - output in 
-  !! "wfcatom", on GPU if input is an ACC variable, copied to CPU otherwise
-  !!
-  USE kinds,            ONLY : DP
-  USE ions_base,        ONLY : nat, tau, nsp, ityp
-  USE basis,            ONLY : natomwfc
-  USE klist,            ONLY : xk, ngk, igk_k
-  USE wvfct,            ONLY : npwx
-  USE noncollin_module, ONLY : noncolin, domag, npol, angle1, angle2, &
-                               starting_spin_angle
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: ik
-  !! k-point index
-  COMPLEX(DP), INTENT(OUT) :: wfcatom(npwx,npol,natomwfc)
-  !! Superposition of atomic wavefunctions
-  !
-  ! ... local variables
-  !
-  CALL start_clock( 'atomic_wfc' )
-  !
-  !$acc data present_or_copyout(wfcatom)
-  CALL atomic_wfc_acc( xk(1,ik), ngk(ik), igk_k(1,ik), nat, nsp, ityp, tau, &
-       noncolin, domag, angle1, angle2, starting_spin_angle, &
-       npwx, npol, natomwfc, wfcatom )
-  !$acc end data
-  !
-  CALL stop_clock( 'atomic_wfc' )
-  !
-END SUBROUTINE atomic_wfc_gpu
-!
-!-----------------------------------------------------------------------
 SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
      noncolin, domag, angle1, angle2, starting_spin_angle, &
      npwx, npol, natomwfc, wfcatom )
@@ -180,20 +144,20 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
               IF ( upf(nt)%has_so ) THEN
                  !
                  IF (starting_spin_angle.OR..NOT.domag) THEN
-                    CALL atomic_wfc_so_gpu( )
+                    CALL atomic_wfc_so( )
                  ELSE
-                    CALL atomic_wfc_so_mag_gpu( )
+                    CALL atomic_wfc_so_mag( )
                  END IF
                  !
               ELSE
                  !
-                 CALL atomic_wfc_nc_gpu( )
+                 CALL atomic_wfc_nc( )
                  !
               END IF
               !
            ELSE
               !
-              CALL atomic_wfc___gpu( )
+              CALL atomic_wfc_lsda( )
               !
            END IF
            !
@@ -213,7 +177,7 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
 
 CONTAINS
 !----------------------------------------------------------------
-  SUBROUTINE atomic_wfc_so_gpu(  )
+  SUBROUTINE atomic_wfc_so(  )
    !------------------------------------------------------------
    !! Spin-orbit case.
    !
@@ -255,9 +219,9 @@ CONTAINS
       END IF
    END DO
    !
-  END SUBROUTINE atomic_wfc_so_gpu
+  END SUBROUTINE atomic_wfc_so
   ! 
-  SUBROUTINE atomic_wfc_so_mag_gpu( )
+  SUBROUTINE atomic_wfc_so_mag( )
    !
    !! Spin-orbit case, magnetization along "angle1" and "angle2"
    !! In the magnetic case we always assume that magnetism is much larger
@@ -342,10 +306,10 @@ CONTAINS
    !
    n_starting_wfc = n_starting_wfc + 2*l+1
    !
-  END SUBROUTINE atomic_wfc_so_mag_gpu
+  END SUBROUTINE atomic_wfc_so_mag
   !
   !
-  SUBROUTINE atomic_wfc_nc_gpu( )
+  SUBROUTINE atomic_wfc_nc( )
    !
    !! noncolinear case, magnetization along "angle1" and "angle2"
    !
@@ -397,10 +361,10 @@ CONTAINS
    END DO
    n_starting_wfc = n_starting_wfc + 2*l+1
    !
-  END SUBROUTINE atomic_wfc_nc_gpu
+  END SUBROUTINE atomic_wfc_nc
   !
   !
-  SUBROUTINE atomic_wfc___gpu(  )
+  SUBROUTINE atomic_wfc_lsda(  )
     !
     ! ... LSDA or nonmagnetic case
     !
@@ -420,6 +384,6 @@ CONTAINS
       !
    END DO
    !
-  END SUBROUTINE atomic_wfc___gpu
+  END SUBROUTINE atomic_wfc_lsda
   !
 END SUBROUTINE atomic_wfc_acc

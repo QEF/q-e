@@ -293,11 +293,7 @@ SUBROUTINE init_wfc ( ik )
   IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
-     IF(use_gpu) THEN
-       CALL atomic_wfc_gpu( ik, wfcatom )
-     ELSE
-       CALL atomic_wfc( ik, wfcatom )
-     END IF
+     CALL atomic_wfc( ik, wfcatom )
      CALL stop_clock( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
      !
      IF ( starting_wfc == 'atomic+random' .AND. &

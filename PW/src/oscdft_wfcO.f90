@@ -139,13 +139,7 @@ MODULE oscdft_wfcO
          CALL allocate_bec_type_acc(nkb, natomwfc, becp)
 
          DO ik=1,nks
-            IF (use_gpu) THEN
-               !$acc host_data use_device(wfcatom)
-               CALL atomic_wfc_gpu(ik, wfcatom)
-               !$acc end host_data
-            ELSE
-               CALL atomic_wfc(ik, wfcatom)
-            END IF
+            CALL atomic_wfc(ik, wfcatom)
             npw = ngk(ik)
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             CALL calbec(offload_type, npw, vkb, wfcatom, becp)
