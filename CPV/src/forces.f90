@@ -393,7 +393,7 @@
       ! local variables
       !
       INTEGER     :: iv, jv, ia, is, iss1, iss2, ir, ig, inl, jnl
-      INTEGER     :: igno, igrp, ierr, ii
+      INTEGER     :: igno, igrp, ierr, ii, cmax
       INTEGER     :: idx, ioff
       REAL(DP)    :: fi, fip, dd, dv
       REAL(DP)    :: tmp1, tmp2                      
@@ -408,6 +408,7 @@
       REAL(DP),    ALLOCATABLE, DEVICE :: exx_a(:), exx_b(:)       
       REAL(DP),    ALLOCATABLE, DEVICE :: exx_potential_d(:,:)
       INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
+      COMPLEX(DP), ALLOCATABLE :: psi_h(:), c_h(:,:)
       !
       CALL start_clock( 'dforce' ) 
       !
@@ -510,7 +511,50 @@
 
       ENDDO
 
-      !
+      ! ... provisional (mgga contribution done on CPU)
+      IF (xclib_dft_is('meta')) THEN
+         df = df_d
+         da = da_d
+         ALLOCATE( psi_h(dffts%nnr*many_fft), c_h(size(c,1),2*many_fft) )
+         psi_h = psi
+         cmax = MIN(i+2*many_fft-1,size(c,2))
+         c_h(:,1:cmax-i+1) = c(:,i:cmax)
+         !
+         igno = 0
+         ioff = 0
+         DO idx = 1, 2*many_fft, 2
+           ii = i+idx-1
+           IF( ii > n ) EXIT
+           ! HK/MCA : reset occupation numbers since omp private screws it up... need a better fix FIXME
+           IF (tens) THEN
+             fi = -0.5d0
+             fip = -0.5d0
+           ELSE
+             fi = -0.5d0*f(ii)
+             fip = -0.5d0*f(ii+1)
+           ENDIF
+           !
+           IF( ii < n ) THEN
+             iss1=ispin( ii )
+             iss2=ispin( ii + 1 )
+           ELSE IF( ii == n ) THEN
+             iss1=ispin( ii )
+             iss2=iss1
+           ENDIF
+           CALL dforce_meta( c_h(1,idx),c_h(1,idx+1),df(igno+1:igno+ngw), &
+                             da(igno+1:igno+ngw),psi_h(ioff+1:ioff+dffts%nnr), &
+                             iss1,iss2,fi,fip )
+           igno = igno + ngw
+           ioff = ioff + dffts%nnr
+         ENDDO
+         !
+         df_d = df
+         da_d = da
+         !
+         DEALLOCATE( psi_h, c_h )
+         !
+      END IF
+      
 
       IF( nhsa > 0 ) THEN
          !
