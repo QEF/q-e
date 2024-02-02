@@ -443,12 +443,8 @@
                               TOT_MAG  = tot_magnetization)
      END IF
   END IF  
-  IF (twochem) THEN
-     obj%twoch__ispresent=.TRUE.
-        CALL qexsd_init_twochem(obj%twoch_,twochem, nbnd_cond,degauss_cond,nelec_cond)
-  ELSE 
-     obj%twoch__ispresent=.FALSE.
-  END IF
+  obj%twoch__ispresent=.TRUE.
+  CALL qexsd_init_twochem(obj%twoch_,twochem, nbnd_cond,degauss_cond,nelec_cond)
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                    BASIS ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------

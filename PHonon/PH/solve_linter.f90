@@ -416,7 +416,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         ENDIF
      ENDIF
      !rotate also dbecsum_cond in the twochem case
-     IF (noncolin.and.okvan) THEN
+     IF (noncolin.and.okvan.and.lmetq0.and.twochem) THEN
         CALL set_dbecsum_nc(dbecsum_nc, dbecsum, npe)
         IF (nsolv==2) THEN
            dbecsum_aux=(0.0_DP,0.0_DP)
@@ -430,7 +430,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !    Now we compute for all perturbations the total charge and potential
      !
      call addusddens (drhoscfh, dbecsum, imode0, npe, 0)
-     call addusddens_cond (drhoscfh_cond, dbecsum_cond, imode0, npe, 0) !twochem case
+     IF (twochem.and.lmetq0) call addusddens_cond (drhoscfh_cond, dbecsum_cond, imode0, npe, 0) !twochem case
      !
      !   Reduce the delta rho across pools
      !
@@ -438,9 +438,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      call mp_sum ( drhoscfh, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
      !twochem case
-     call mp_sum ( drhoscf_cond, inter_pool_comm )
-     call mp_sum ( drhoscfh_cond, inter_pool_comm )
-     IF (okpaw) call mp_sum ( dbecsum_cond, inter_pool_comm )
+     IF (twochem.and.lmetq0) call mp_sum ( drhoscf_cond, inter_pool_comm )
+     IF (twochem.and.lmetq0) call mp_sum ( drhoscfh_cond, inter_pool_comm )
+     IF (okpaw.and.twochem.and.lmetq0) call mp_sum ( dbecsum_cond, inter_pool_comm )
 
      !
      IF (okpaw) THEN
