@@ -17,11 +17,10 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   !! Can be called by CP as well (does not use PW-specific modules)
   !
   USE kinds,            ONLY : DP
-  USE constants,        ONLY : tpi, fpi, pi
+  USE constants,        ONLY : tpi
   USE cell_base,        ONLY : omega, tpiba
   USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp_param,       ONLY : upf, nwfcm
-  USE upf_spinorb,      ONLY : rot_ylm, lmaxx
   !
   IMPLICIT NONE
   !
@@ -62,7 +61,7 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
              i0, i1, i2, i3
-  COMPLEX(DP) :: kphase, lphase
+  COMPLEX(DP) :: kphase
   REAL(DP)    :: arg, px, ux, vx, wx
   !
   REAL(DP) :: xk1, xk2, xk3, qgr
@@ -106,8 +105,6 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
      qg(ig) = SQRT( qg(ig) )*tpiba
   END DO
   !
-  n_starting_wfc = 0
-  !
   ! chiq = radial fourier transform of atomic orbitals chi
   !
   CALL interp_atwfc ( npw, qg, nwfcm, chiq )
@@ -115,6 +112,8 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   !$acc kernels
   wfcatom(:,:,:) = (0.0_dp, 0.0_dp)
   !$acc end kernels
+  !
+  n_starting_wfc = 0
   !
   DO na = 1, nat
      arg = (xk1*tau(1,na) + xk2*tau(2,na) + xk3*tau(3,na)) * tpi
@@ -133,8 +132,6 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
      nt = ityp(na)
      DO nb = 1, upf(nt)%nwfc
         IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
-           l = upf(nt)%lchi(nb)
-           lphase = (0.d0,1.d0)**l
            !
            !  the factor i^l MUST BE PRESENT in order to produce
            !  wavefunctions for k=0 that are real in real space
@@ -144,20 +141,27 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
               IF ( upf(nt)%has_so ) THEN
                  !
                  IF (starting_spin_angle.OR..NOT.domag) THEN
-                    CALL atomic_wfc_so( )
+                    CALL atomic_wfc_so ( npw, npwx, npol, natomwfc, nsp, nt, &
+                         nb, lmax_wfc, ylm, chiq, sk, n_starting_wfc, wfcatom )
                  ELSE
-                    CALL atomic_wfc_so_mag( )
+                    CALL atomic_wfc_so_mag ( npw, npwx, npol, natomwfc, nsp, &
+                         nt, nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+                         n_starting_wfc, wfcatom )
                  END IF
                  !
               ELSE
                  !
-                 CALL atomic_wfc_nc( )
+                 CALL atomic_wfc_nc ( npw, npwx, npol, natomwfc, nsp, &
+                         nt, nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+                         n_starting_wfc, wfcatom )
                  !
               END IF
               !
            ELSE
               !
-              CALL atomic_wfc_lsda( )
+              CALL atomic_wfc_lsda  ( npw, npwx, npol, natomwfc, &
+                         nsp, nt, nb, lmax_wfc, ylm, chiq, sk, &
+                         n_starting_wfc, wfcatom )
               !
            END IF
            !
@@ -175,18 +179,36 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   
   RETURN
 
-CONTAINS
+END SUBROUTINE atomic_wfc_acc
+!
 !----------------------------------------------------------------
-  SUBROUTINE atomic_wfc_so(  )
+SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
+     nb, lmax_wfc, ylm, chiq, sk, n_starting_wfc, wfcatom )
    !------------------------------------------------------------
-   !! Spin-orbit case.
+   !! Spin-orbit case, no magnetization
+   !
+   USE kinds,            ONLY : DP
+   USE upf_spinorb,      ONLY : rot_ylm, lmaxx
+   USE uspp_param,       ONLY : upf, nwfcm
+   !
+   IMPLICIT NONE
+   INTEGER,  INTENT(IN)  :: nsp, nt, nb, natomwfc, npw, npwx, npol, lmax_wfc
+   REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
+   REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
+   COMPLEX(DP), INTENT(IN) :: sk(npw)
+   INTEGER, INTENT(INOUT) :: n_starting_wfc
+   COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
    !
    REAL(DP) :: fact(2), fact_is, j
-   COMPLEX(DP) :: rot_ylm_in1
+   COMPLEX(DP) :: rot_ylm_in1, lphase
    REAL(DP), EXTERNAL :: spinor
-   INTEGER :: ind, ind1, n1, is, sph_ind
+   INTEGER,  EXTERNAL :: sph_ind
+   INTEGER :: l, ind, ind1, n1, is, m, ig
    !
    j = upf(nt)%jchi(nb)
+   l = upf(nt)%lchi(nb)
+   lphase = (0.d0,1.d0)**l
+   !
    DO m = -l-1, l
       fact(1) = spinor(l,j,m,1)
       fact(2) = spinor(l,j,m,2)
@@ -221,7 +243,10 @@ CONTAINS
    !
   END SUBROUTINE atomic_wfc_so
   ! 
-  SUBROUTINE atomic_wfc_so_mag( )
+  SUBROUTINE atomic_wfc_so_mag( npw, npwx, npol, natomwfc, nsp, nt, &
+       nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+       n_starting_wfc, wfcatom )
+   !------------------------------------------------------------
    !
    !! Spin-orbit case, magnetization along "angle1" and "angle2"
    !! In the magnetic case we always assume that magnetism is much larger
@@ -230,11 +255,30 @@ CONTAINS
    !! according to the direction of the magnetization, following what is
    !! done in the noncollinear case.
    !
+   USE kinds,            ONLY : DP
+   USE constants,        ONLY : pi
+   USE uspp_param,       ONLY : upf, nwfcm
+   !
+   IMPLICIT NONE
+   INTEGER,  INTENT(IN)  :: nsp, nt, nb, natomwfc, npw, npwx, npol, lmax_wfc
+   REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
+   REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
+   COMPLEX(DP), INTENT(IN) :: sk(npw)
+   REAL(DP), INTENT(IN) :: angle1(*)
+   !! angle theta of initial spin direction
+   REAL(DP), INTENT(IN) ::  angle2(*)
+   !! angle phi of initial spin direction
+   INTEGER, INTENT(INOUT) :: n_starting_wfc
+   COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
+   !
    REAL(DP) :: alpha, gamman, j
-   COMPLEX(DP) :: fup, fdown, aux
-   INTEGER :: nc, ib, ig
+   COMPLEX(DP) :: fup, fdown, aux, lphase
+   INTEGER :: nc, ib, ig, l, m, lm
    !
    j = upf(nt)%jchi(nb)
+   l = upf(nt)%lchi(nb)
+   lphase = (0.d0,1.d0)**l
+   !
    !
    !  This routine creates two functions only in the case j=l+1/2 or exit in the
    !  other case 
@@ -263,7 +307,7 @@ CONTAINS
       lm = l**2+m
       n_starting_wfc = n_starting_wfc + 1
       IF ( n_starting_wfc + 2*l+1 > natomwfc ) CALL errore &
-            ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
+            ('atomic_wfc_so_mag', 'internal error: too many wfcs', 1)
       !
       !$acc parallel loop
       DO ig = 1, npw
@@ -293,7 +337,7 @@ CONTAINS
          ! first rotation with angle (alpha+pi) around (OX)
          !
          fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)), KIND=DP)*aux
          !
          ! second, rotation with angle gamma around (OZ)
          !
@@ -309,14 +353,35 @@ CONTAINS
   END SUBROUTINE atomic_wfc_so_mag
   !
   !
-  SUBROUTINE atomic_wfc_nc( )
+  SUBROUTINE atomic_wfc_nc( npw, npwx, npol, natomwfc, nsp,  nt, &
+       nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+       n_starting_wfc, wfcatom )
    !
    !! noncolinear case, magnetization along "angle1" and "angle2"
    !
-   REAL(DP) :: alpha, gamman
-   COMPLEX(DP) :: fup, fdown, aux
-   INTEGER :: m, lm, ig  
+   USE kinds,            ONLY : DP
+   USE constants,        ONLY : pi 
+   USE uspp_param,       ONLY : upf, nwfcm
    !
+   IMPLICIT NONE
+   INTEGER,  INTENT(IN)  :: nsp, nt, nb, natomwfc, npw, npwx, npol, lmax_wfc
+   REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
+   REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
+   COMPLEX(DP), INTENT(IN) :: sk(npw)
+   REAL(DP), INTENT(IN) :: angle1(*)
+   !! angle theta of initial spin direction
+   REAL(DP), INTENT(IN) ::  angle2(*)
+   !! angle phi of initial spin direction
+   INTEGER, INTENT(INOUT) :: n_starting_wfc
+   COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
+   !
+   REAL(DP) :: alpha, gamman, j
+   COMPLEX(DP) :: fup, fdown, aux, lphase
+   INTEGER :: m, lm, ig, l  
+   !
+   j = upf(nt)%jchi(nb)
+   l = upf(nt)%lchi(nb)
+   lphase = (0.d0,1.d0)**l
    alpha = angle1(nt)
    gamman = - angle2(nt) + 0.5d0*pi
    !
@@ -364,17 +429,32 @@ CONTAINS
   END SUBROUTINE atomic_wfc_nc
   !
   !
-  SUBROUTINE atomic_wfc_lsda(  )
-    !
-    ! ... LSDA or nonmagnetic case
-    !
-   INTEGER :: m, lm, ig
+  SUBROUTINE atomic_wfc_lsda( npw, npwx, npol, natomwfc, nsp, nt, &
+       nb, lmax_wfc, ylm, chiq, sk, n_starting_wfc, wfcatom )
    !
+   !! LSDA or nonmagnetic case
+   !
+   USE kinds,            ONLY : DP
+   USE uspp_param,       ONLY : upf, nwfcm
+   !
+   IMPLICIT NONE
+   INTEGER,  INTENT(IN)  :: nsp, nt, nb, natomwfc, npw, npwx, npol, lmax_wfc
+   REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
+   REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
+   COMPLEX(DP), INTENT(IN) :: sk(npw)
+   INTEGER, INTENT(INOUT) :: n_starting_wfc
+   COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
+   !
+   COMPLEX(DP) :: lphase
+   INTEGER :: m, lm, ig, l
+   !
+   l = upf(nt)%lchi(nb)
+   lphase = (0.d0,1.d0)**l
    DO m = 1, 2 * l + 1
       lm = l**2 + m
       n_starting_wfc = n_starting_wfc + 1
       IF ( n_starting_wfc > natomwfc) CALL errore &
-         ('atomic_wfc___', 'internal error: too many wfcs', 1)
+         ('atomic_wfc_lsda', 'internal error: too many wfcs', 1)
       !
       !$acc parallel loop
       DO ig = 1, npw
@@ -385,5 +465,3 @@ CONTAINS
    END DO
    !
   END SUBROUTINE atomic_wfc_lsda
-  !
-END SUBROUTINE atomic_wfc_acc
