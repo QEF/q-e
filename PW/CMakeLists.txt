@@ -332,7 +332,8 @@ set_target_properties(qe_pw_exe
         OUTPUT_NAME pw.x)
 target_link_libraries(qe_pw_exe
     PRIVATE
-        qe_pw)
+        qe_pw
+        qe_lax)
 
 ###########################################################
 # ibrav2cell.x
