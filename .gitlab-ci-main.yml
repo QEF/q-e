@@ -5,6 +5,7 @@ build:pw:
   image: ubuntu:20.04
   script:
     - apt-get -qq update
+    - DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
     - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
     - ./configure
     - make pw
@@ -19,6 +20,7 @@ build:cp:
   image: ubuntu:20.04
   script:
     - apt-get -qq update
+    - DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
     - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
     - ./configure
     - make cp
