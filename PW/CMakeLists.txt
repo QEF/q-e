@@ -301,7 +301,6 @@ target_link_libraries(qe_pw
         qe_kssolver_rmmdiis
         qe_kssolver_dense
         qe_upflib # TODO turn to vendorized library from MaX gitrepo ? 
-        qe_modules
         qe_fftx
         qe_dftd3
         qe_openmp_fortran
@@ -310,6 +309,7 @@ target_link_libraries(qe_pw
         qe_devxlib
         qe_mbd
     PUBLIC
+        qe_modules
         qe_openacc_fortran)
 
 if(QE_ENABLE_CUDA)
@@ -332,10 +332,7 @@ set_target_properties(qe_pw_exe
         OUTPUT_NAME pw.x)
 target_link_libraries(qe_pw_exe
     PRIVATE
-        qe_pw
-        qe_modules
-        qe_lax
-        qe_upflib)
+        qe_pw)
 
 ###########################################################
 # ibrav2cell.x
@@ -347,8 +344,7 @@ set_target_properties(qe_pw_tools_ibrav2cell_exe
         OUTPUT_NAME ibrav2cell.x)
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
     PRIVATE
-        qe_pw
-        qe_modules)
+        qe_pw)
 
 ###########################################################
 # cell2ibrav.x
@@ -360,8 +356,7 @@ set_target_properties(qe_pw_tools_cell2ibrav_exe
         OUTPUT_NAME cell2ibrav.x)
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
     PRIVATE
-        qe_pw
-        qe_modules)
+        qe_pw)
 
 ###########################################################
 # ev.x
@@ -373,8 +368,7 @@ set_target_properties(qe_pw_tools_ev_exe
         OUTPUT_NAME ev.x)
 target_link_libraries(qe_pw_tools_ev_exe
     PRIVATE
-        qe_pw
-        qe_modules)
+        qe_pw)
 
 ###########################################################
 # kpoints.x
@@ -386,8 +380,7 @@ set_target_properties(qe_pw_tools_kpoints_exe
         OUTPUT_NAME kpoints.x)
 target_link_libraries(qe_pw_tools_kpoints_exe
     PRIVATE
-        qe_pw
-        qe_modules)
+        qe_pw)
 
 ###########################################################
 # pwi2xsf.x
@@ -399,8 +392,7 @@ set_target_properties(qe_pw_tools_pwi2xsf_exe
         OUTPUT_NAME pwi2xsf.x)
 target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
-        qe_pw
-        qe_modules)
+        qe_pw)
 
 ###########################################################
 # scan_ibrav.x
@@ -412,8 +404,7 @@ set_target_properties(qe_pw_tools_scan_ibrav_exe
         OUTPUT_NAME scan_ibrav.x)
 target_link_libraries(qe_pw_tools_scan_ibrav_exe
     PRIVATE
-        qe_pw
-        qe_modules)
+        qe_pw)
 
 ###########################################################
 
