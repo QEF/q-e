@@ -375,11 +375,10 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    INTEGER, INTENT(INOUT) :: n_starting_wfc
    COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
    !
-   REAL(DP) :: alpha, gamman, j
+   REAL(DP) :: alpha, gamman
    COMPLEX(DP) :: fup, fdown, aux, lphase
    INTEGER :: m, lm, ig, l  
    !
-   j = upf(nt)%jchi(nb)
    l = upf(nt)%lchi(nb)
    lphase = (0.d0,1.d0)**l
    alpha = angle1(nt)
