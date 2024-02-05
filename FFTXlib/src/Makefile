@@ -1,6 +1,9 @@
 # Makefile for FFTXlib
 
 include ../../make.inc
+.SUFFIXES : .o .hip
+.hip.o:
+	hipcc --offload-arch=gfx90a -c $<
 
 FFTX = \
 scatter_mod.o  \
@@ -40,8 +43,14 @@ fft_param.o \
 fft_buffers.o \
 fft_hipkernelsf.o 
 
+OMP_MANY_FFT=yes
+ifeq ($(OMP_MANY_FFT),yes)
 HIPKER = \
-fft_hipkernels.o
+fft_hipkernels.o 
+else
+HIPKER =
+endif 
+
 
 all : libqefft.a
 
