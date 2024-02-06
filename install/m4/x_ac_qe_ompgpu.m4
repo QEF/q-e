@@ -49,6 +49,14 @@ if test "x$omp_gpu" == "xyes";then
 fi 
 
 
+#Optional enable of GPU aware MPI when offloading with OpenMP 
+AC_ARG_ENABLE(omp_mpi_gpu,
+	[ --enable-omp_mpi_gpu  Enables GPU aware MPI with OMP offloading, default in disabled],
+        [omp_mpi_gpu=$enableval],
+        [omp_mpi_gpu="no"]
+)
+
+
 # Provide your ROCM path with this
 AC_ARG_WITH([rocm],
    [AS_HELP_STRING([--with-rocm=PATH],[prefix where ROCM is installed @<:@default=no@:>@])],
@@ -83,6 +91,9 @@ then
          try_dflags="$try_dflags -D__OMP_MANY_FFT"
          ompgpu_many_fft="yes"
       fi
+      if test "x$omp_mpi_gpu" == "xyes"; then
+         try_dflags="$try_dflags -D__GPU_MPI_OMP"
+      fi 
       hip_comp_suffixes=".SUFFIXES : .hip .o"
       hip_comp_rule_tag=".hip.o"
       hip_comp_rule="hipcc --offload-arch=$gpu_arch -c $<"

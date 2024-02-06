@@ -777,6 +777,7 @@ with_cuda_runtime
 with_cuda_mpi
 enable_nvtx
 enable_omp_gpu
+enable_omp_mpi_gpu
 with_rocm
 with_gpu_arch
 with_omp_many_fft
@@ -1431,6 +1432,7 @@ Optional Features:
   --enable-static         build static executables if possible (default: no)
   --enable-nvtx           Enable compilation for NVTX [default=no]
  --enable-omp_gpu    Enables GPU offlaoding using OpenMP
+ --enable-omp_mpi_gpu  Enables GPU aware MPI with OMP offloading, default in disabled
  --enable-legacy_plugins    Enables use of legacy plugins in PW and CP.
   --enable-signals        enable signal trapping (default: no)
   --enable-exit-status    enable Unix status on exit (default: no)
@@ -4256,6 +4258,17 @@ if test "x$omp_gpu" == "xyes";then
 fi
 
 
+#Optional enable of GPU aware MPI when offloading with OpenMP
+# Check whether --enable-omp_mpi_gpu was given.
+if test "${enable_omp_mpi_gpu+set}" = set; then :
+  enableval=$enable_omp_mpi_gpu; omp_mpi_gpu=$enableval
+else
+  omp_mpi_gpu="no"
+
+fi
+
+
+
 # Provide your ROCM path with this
 
 # Check whether --with-rocm was given.
@@ -4301,6 +4314,9 @@ then
       if test "x$omp_many_fft" == "xyes"; then
          try_dflags="$try_dflags -D__OMP_MANY_FFT"
          ompgpu_many_fft="yes"
+      fi
+      if test "x$omp_mpi_gpu" == "xyes"; then
+         try_dflags="$try_dflags -D__GPU_MPI_OMP"
       fi
       hip_comp_suffixes=".SUFFIXES : .hip .o"
       hip_comp_rule_tag=".hip.o"
