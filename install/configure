@@ -678,6 +678,7 @@ blas_line
 blas_libs
 f90rule
 SET_MAKE
+ompgpu_many_fft
 hip_comp_rule
 hip_comp_rule_tag
 hip_comp_suffixes
@@ -777,7 +778,7 @@ with_cuda_mpi
 enable_nvtx
 enable_omp_gpu
 with_rocm
-with_hip_offload_arch
+with_gpu_arch
 with_omp_many_fft
 with_libxc
 with_libxc_prefix
@@ -1443,8 +1444,7 @@ Optional Packages:
   --with-cuda-runtime=VAL CUDA runtime (Pascal: 8+, Volta: 9+) [default=10.1]
   --with-cuda-mpi=VAL     CUDA-aware MPI (yes|no) [default=no]
   --with-rocm=PATH        prefix where ROCM is installed [default=no]
-  --with-hip_offload_arch=VAL
-                          HIP target architecture (LUMI-G: gfx90a)
+  --with-gpu_arch=VAL     HIP target architecture (LUMI-G: gfx90a)
                           [default=gfx90a]
   --with-omp_many_fft=VAL enable/disable streamed FFTs [default=yes]
   --with-libxc            (yes|no) Use libXC for some XC functionals (default:
@@ -4233,7 +4233,7 @@ hip_comp_suffixes=
 hip_comp_rule_tag=
 hip_comp_rule=
 hip_offload_arch=
-ompgpu_many_fft=
+ompgpu_many_fft="no"
 ompgpu_found="no"
 #none needed so far
 ompgpu_extlibs=
@@ -4267,11 +4267,11 @@ fi
 
 
 
-# Check whether --with-hip_offload_arch was given.
-if test "${with_hip_offload_arch+set}" = set; then :
-  withval=$with_hip_offload_arch; hip_offload_arch=$withval
+# Check whether --with-gpu_arch was given.
+if test "${with_gpu_arch+set}" = set; then :
+  withval=$with_gpu_arch; hip_offload_arch=$withval
 else
-  hip_offload_arch="gfx90a"
+  gpu_arch="gfx90a"
 fi
 
 
@@ -4300,10 +4300,11 @@ then
       try_dflags="$try_dflags -D_OPENMP -D__OPENMP_GPU -D__HIP -D__ROCBLAS"
       if test "x$omp_many_fft" == "xyes"; then
          try_dflags="$try_dflags -D__OMP_MANY_FFT"
+         ompgpu_many_fft="yes"
       fi
-      hip_comp_suffixes=".hip .o"
+      hip_comp_suffixes=".SUFFIXES : .hip .o"
       hip_comp_rule_tag=".hip.o"
-      hip_comp_rule="hipcc --offload-arch=$hip_offload_arch -c $<"
+      hip_comp_rule="hipcc --offload-arch=$gpu_arch -c $<"
    fi
    rocm_ldflags="-lstdc++ -L$rocm/hip/lib -lamdhip64 -lhsa-runtime64"
    rocm_ldflags="$rocm_ldflags -L$rocm/lib -lhipfft -lrocblas"
@@ -4319,6 +4320,7 @@ then
 fi
 
 # Announcing the new variables
+
 
 
 

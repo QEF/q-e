@@ -30,7 +30,7 @@ hip_comp_suffixes=
 hip_comp_rule_tag=
 hip_comp_rule=
 hip_offload_arch=
-ompgpu_many_fft=
+ompgpu_many_fft="no"
 ompgpu_found="no" 
 #none needed so far
 ompgpu_extlibs=
@@ -55,10 +55,10 @@ AC_ARG_WITH([rocm],
    [rocm="$withval"],
    [rocm="no"])
    
-AC_ARG_WITH([hip_offload_arch],
-   [AS_HELP_STRING([--with-hip_offload_arch=VAL],[HIP target architecture (LUMI-G: gfx90a) @<:@default=gfx90a@:>@])],
+AC_ARG_WITH([gpu_arch],
+   [AS_HELP_STRING([--with-gpu_arch=VAL],[HIP target architecture (LUMI-G: gfx90a) @<:@default=gfx90a@:>@])],
    [hip_offload_arch=$withval],
-   [hip_offload_arch="gfx90a"])
+   [gpu_arch="gfx90a"])
 
 AC_ARG_WITH([omp_many_fft],
    [AS_HELP_STRING([--with-omp_many_fft=VAL],[enable/disable streamed FFTs @<:@default=yes@:>@])],
@@ -80,11 +80,12 @@ then
    if test "$ompgpu_found"  == "yes"; then 
       try_dflags="$try_dflags -D_OPENMP -D__OPENMP_GPU -D__HIP -D__ROCBLAS"
       if test "x$omp_many_fft" == "xyes"; then   
-         try_dflags="$try_dflags -D__OMP_MANY_FFT" 
+         try_dflags="$try_dflags -D__OMP_MANY_FFT"
+         ompgpu_many_fft="yes"
       fi
-      hip_comp_suffixes=".hip .o"
+      hip_comp_suffixes=".SUFFIXES : .hip .o"
       hip_comp_rule_tag=".hip.o"
-      hip_comp_rule="hipcc --offload-arch=$hip_offload_arch -c $<"
+      hip_comp_rule="hipcc --offload-arch=$gpu_arch -c $<"
    fi  
    rocm_ldflags="-lstdc++ -L$rocm/hip/lib -lamdhip64 -lhsa-runtime64"
    rocm_ldflags="$rocm_ldflags -L$rocm/lib -lhipfft -lrocblas"
@@ -106,4 +107,5 @@ AC_SUBST(f90flags)
 AC_SUBST(hip_comp_suffixes)
 AC_SUBST(hip_comp_rule_tag)
 AC_SUBST(hip_comp_rule)
+AC_SUBST(ompgpu_many_fft)
 ])

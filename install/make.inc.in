@@ -4,7 +4,7 @@
 
 .SUFFIXES :
 .SUFFIXES : .o .c .f90 .h .fh
-.SUFFIXES : @hip_comp_suffixes@
+@hip_comp_suffixes@
 
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
@@ -106,6 +106,7 @@ CUDA_CFLAGS=@cuda_cflags@
 
 # OMPGPU F90 Flags
 OMPGPU_F90FLAGS = @ompgpu_fflags@
+OMP_MANY_FFT = @ompgpu_many_fft@
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
