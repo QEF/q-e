@@ -88,10 +88,10 @@ MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
 
-# GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
+# GPU architecture (Kepler: 35, Pascal: 60, Volta: 70, Ampere: 80)
 GPU_ARCH=@gpu_arch@
 
-# CUDA runtime (Pascal: 8.0, Volta: 9.0)
+# CUDA runtime (should be compatible with the CUDA driver)
 CUDA_RUNTIME=@cuda_runtime@
 
 # CUDA F90 Flags
