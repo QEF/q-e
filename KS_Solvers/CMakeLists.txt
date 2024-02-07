@@ -119,6 +119,7 @@ qe_add_library(qe_kssolver_dense ${src_dense})
 target_link_libraries(qe_kssolver_dense
     PRIVATE
         qe_openacc_fortran
+	qe_openmp_fortran
         qe_lax
         qe_utilx
         qe_mpi_fortran
