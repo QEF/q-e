@@ -139,6 +139,7 @@ target_link_libraries(qe_kssolver_paro
     PRIVATE 
         qe_device_lapack
         qe_openacc_fortran
+	qe_openmp_fortran
         qe_kssolver_dense
         qe_lax
         qe_utilx
@@ -148,6 +149,7 @@ qe_add_library(qe_kssolver_rmmdiis ${src_rmmdiis})
 target_link_libraries(qe_kssolver_rmmdiis
     PRIVATE
 	qe_lax
+	qe_openmp_fortran
         qe_utilx
 	qe_devxlib
         qe_mpi_fortran )  
