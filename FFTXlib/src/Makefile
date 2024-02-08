@@ -38,10 +38,15 @@ tg_gather.o \
 fft_helper_subroutines.o \
 fft_param.o \
 fft_buffers.o \
-fft_hipkernelsf.o 
+fft_hipkernelsf.o
 
+ifeq ($(OMP_MANY_FFT),yes)
 HIPKER = \
-fft_hipkernels.o
+fft_hipkernels.o 
+else
+HIPKER =
+endif 
+
 
 all : libqefft.a
 
@@ -62,5 +67,8 @@ fftw_dp.o : fftw_dp.c fftw_dp.h fftw.h konst.h
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L
+
+info : 
+	$(info $(HIPKER))
 
 include make.depend

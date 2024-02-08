@@ -4,6 +4,7 @@
 
 .SUFFIXES :
 .SUFFIXES : .o .c .f90 .h .fh
+@hip_comp_suffixes@
 
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
@@ -20,6 +21,9 @@
 
 .h.fh:
 	$(CPP) $(CPPFLAGS) $< -o $*.fh
+
+@hip_comp_rule_tag@:
+	@hip_comp_rule@
 
 @SET_MAKE@
 
@@ -100,6 +104,10 @@ CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 # CUDA C Flags
 CUDA_CFLAGS=@cuda_cflags@
 
+# OMPGPU F90 Flags
+OMPGPU_F90FLAGS = @ompgpu_fflags@
+OMP_MANY_FFT = @ompgpu_many_fft@
+
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS
@@ -112,7 +120,7 @@ CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
 CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS) $(CUDA_CFLAGS)
-F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
+F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(OMPGPU_F90FLAGS) $(IFLAGS) $(MODFLAGS)
 
 # compiler flags with and without optimization for fortran-77
 # the latter is NEEDED to properly compile dlamch.f, used by lapack
@@ -132,6 +140,9 @@ FFLAGS_NOMAIN   = @fflags_nomain@
 LD             = @ld@
 LDFLAGS        = @ldflags@
 LD_LIBS        = @ld_libs@
+
+
+ROCM_LDFLAGS = @rocm_ldflags@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 

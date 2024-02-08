@@ -2,7 +2,8 @@
 
 AC_DEFUN([X_AC_QE_LAPACK], [
 
-if test "$have_mkl" -ne 0 || test "$have_armpl" -ne 0 || test "$have_acml" -ne 0 || test "$have_essl" -ne 0 
+if test "$have_mkl" -ne 0 || test "$have_armpl" -ne 0 || test "$have_acml" -ne 0 || test "$have_essl" -ne 0 || \ 
+   test "$have_craylibsci" -ne 0 
 then
    # MKL or ARM libraries or ACML (obsolete) or ESSL (obsolete?) found:
    # no need to check for lapack
