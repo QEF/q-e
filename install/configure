@@ -683,7 +683,7 @@ hip_comp_rule
 hip_comp_rule_tag
 hip_comp_suffixes
 ompgpu_fflags
-rocm_ld_flags
+rocm_ldflags
 cuda_extlibs
 cuda_libs
 cuda_fflags

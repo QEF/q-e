@@ -112,7 +112,7 @@ then
 fi
 
 # Announcing the new variables
-AC_SUBST(rocm_ld_flags)
+AC_SUBST(rocm_ldflags)
 AC_SUBST(ompgpu_fflags)
 AC_SUBST(f90flags)
 AC_SUBST(hip_comp_suffixes)
