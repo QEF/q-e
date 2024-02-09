@@ -256,7 +256,8 @@ SUBROUTINE init_wfc ( ik )
   !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
-  !$acc declare device_resident(wfcatom)
+  ! should be declared "device_resident(wfcatom)" but gives problems inside
+  ! "atomic_wfc" for spin-orbit case and openmp compilation - not sure why
   !
 #if defined(__CUDA)
   REAL(DP),    ALLOCATABLE :: randy_vec(:) ! data for random
@@ -286,6 +287,7 @@ SUBROUTINE init_wfc ( ik )
   xk_1 = xk(1,ik); xk_2 = xk(2,ik); xk_3 = xk(3,ik)
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
+  !$acc data create(wfcatom)
 #if defined(__CUDA)
   ALLOCATE(randy_vec(2 * n_starting_wfc * npol * ngk_ik))
 #endif
@@ -446,6 +448,7 @@ SUBROUTINE init_wfc ( ik )
   CALL deallocate_bec_type_acc ( becp )
   !
   DEALLOCATE( etatom )
+  !$acc end data
   DEALLOCATE( wfcatom )
   !
   RETURN
