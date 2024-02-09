@@ -150,7 +150,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   USE parallel_include
   USE scf,       ONLY : rho, rho_core, rhog_core
   USE ener,      ONLY : etxc, vtxc
-
+  USE beta_mod,   ONLY : interp_beta, interp_dbeta
   USE uspp_param, ONLY : upf, nh, nbetam
   USE ions_base,  ONLY : ntyp => nsp
   USE klist,      ONLY : ngk

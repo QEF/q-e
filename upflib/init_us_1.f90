@@ -23,14 +23,13 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   !      spherical harmonics in the Q expansion
   !   f) It computes the interpolation table "qrad" for Q(G)
   !   g) It computes the qq terms which define the S matrix.
-  !   h) It fills the interpolation table "tab_beta" for the beta functions
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, ijtoh_d, dvan_d, &
-                           qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
+                           qq_nt_d, indv_d, dvan_so_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
                            transform_qq_so
@@ -52,7 +51,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   real(DP) ::  j
   ! J=L+S (noninteger!)
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
-             lk, mk, vk, kh, lh, ijkb0, na
+             lk, mk, kh, lh, ijkb0, na
   integer, external :: sph_ind
   complex(DP) :: coeff
   real(DP) :: ji, jk
@@ -170,12 +169,10 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
           li = nhtol(ih, nt)
           ji = nhtoj(ih, nt)
           mi = nhtolm(ih, nt)-li*li
-          vi = indv (ih, nt)
           do kh=1,nh(nt)
             lk = nhtol(kh, nt)
             jk = nhtoj(kh, nt)
             mk = nhtolm(kh, nt)-lk*lk
-            vk = indv (kh, nt)
             if (li == lk .and. abs(ji-jk) < 1.d-7) then
               do is1=1,2
                 do is2=1,2
@@ -251,10 +248,6 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
      end do
   end if
   !
-  ! fill interpolation table for beta functions 
-  !
-  CALL init_tab_beta ( omega, intra_bgrp_comm )
-  !
 #if defined __CUDA
   !
   ! update GPU memory (taking care of zero-dim allocations)
@@ -274,7 +267,6 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
         dvan_d=dvan
      endif
   endif
-  ofsbeta_d=ofsbeta
   !
 #endif
   call stop_clock ('init_us_1')

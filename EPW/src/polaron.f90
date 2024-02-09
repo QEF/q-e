@@ -3408,7 +3408,7 @@
     WRITE (file_unit, '(a)') 'PRIMCOORD'
     ! The second number is always 1 for PRIMCOORD coordinates,
     ! according to http://www.xcrysden.org/doc/XSF.html
-    WRITE (file_unit, '(a)')  natm, 1
+    WRITE (file_unit, '(2i6)')  natm, 1
     !
     DO iatm = 1, natm
       IF (PRESENT(forces)) THEN

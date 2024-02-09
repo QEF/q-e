@@ -38,7 +38,7 @@ SUBROUTINE plot_rism(filplot, title, nsite, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
   REAL(DP),          INTENT(INOUT) :: gcutm
   LOGICAL,           INTENT(INOUT) :: laue
   CHARACTER(LEN=12), INTENT(INOUT) :: asite(1:*)
-  CHARACTER(LEN=3),  INTENT(INOUT) :: atm(1:*)
+  CHARACTER(LEN=*),  INTENT(INOUT) :: atm(1:*)
   INTEGER,           INTENT(INOUT) :: ityp(1:*)
   REAL(DP),          INTENT(INOUT) :: zv(1:*)
   REAL(DP),          INTENT(INOUT) :: tau(3, 1:*)

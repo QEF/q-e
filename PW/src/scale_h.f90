@@ -29,6 +29,7 @@ SUBROUTINE scale_h
   USE rism_module,    ONLY : lrism, rism_reinit3d
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
+  USE beta_mod,       ONLY : scale_tab_beta
   USE vloc_mod,       ONLY : scale_tab_vloc
   USE rhoc_mod,       ONLY : scale_tab_rhc
   USE rhoat_mod,      ONLY : scale_tab_rhoat
@@ -86,6 +87,7 @@ SUBROUTINE scale_h
   ! scale the non-local pseudopotential tables
   !
   call scale_uspp_data( omega_old/omega )
+  call scale_tab_beta( omega_old/omega )
   CALL scale_tab_rhc( omega_old/omega )
   CALL scale_tab_rhoat( omega_old/omega )
   CALL scale_tab_qrad( omega_old/omega )

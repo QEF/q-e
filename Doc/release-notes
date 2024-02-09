@@ -1,12 +1,19 @@
 New in 7.3.1 version:
   * Various improvements and bug fixes for pw2wannier.f90 (Junfeng Qiao) 
+
 Fixed in 7.3.1 version:
   * f channel of GTH pseudopotentials fixed again (see issue #86 on gitlab)
     Thanks to Chang Liu for reporting.
   * Distributed parallel diagonalization (option -nd N with N=4,9,16,25,...) 
     crashed when used together with NVidia GPUs (thanks to Laura Bellentani)
   * Old PPs with zero nonlocal part were crashing in parallel execution
-    (see issue #633 on gitlab). Thanks to Ye Luo for reporting
+    (see issue #633 on gitlab). Affects v.7.3. Thanks to Ye Luo for reporting 
+  * assume_isolated='2D' was giving wrong results when used with Gamma tricks
+    (see issue #11 on gitlab). Affects all previous versions.
+  * assume_isolated='esm' was giving bad forces when used with Gamma tricks.
+    Affects v.7.2 and 7.3. Thanks to Giuseppe Mattioli for reporting.
+  * Bad atomic symbols in some files used for plotting data (see issue #645
+    on gitlab). Affects v.7.3. Thanks to Francesco Filippone for reporting.
 
 New in 7.3 version:
   * Experimental support for pseudopotentials in PSML format

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2023 Quantum ESPRESSO group
+! Copyright (C) 2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -52,7 +52,6 @@ CONTAINS
     !! correct G=0 limit, is stored into tab_vloc(0,n)
     !! Atomic Ry units everywhere.
     !
-    USE upf_const,    ONLY : fpi, e2
     USE atom,         ONLY : rgrid, msh
     USE uspp_param,   ONLY : upf, nsp
     USE mp,           ONLY : mp_sum
@@ -67,7 +66,7 @@ CONTAINS
     INTEGER, INTENT(OUT) :: ierr
     !! error code: ierr = 1 if modified Coulomb not implemented 
     !!             ierr = 0 if interpolation table (IT) was allocated
-    !!             ierr =-1 if IT had insufficent dimension and was re-allocated
+    !!             ierr =-1 if IT had insufficient dimension and was re-allocated
     !!             ierr =-2 if IT was already present and nothing is done
     REAL(dp), INTENT(IN) :: omega
     !! Unit-cell volume

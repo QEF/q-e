@@ -19,7 +19,7 @@
     nbnd        = 10
  /
  &electrons
-    conv_thr =  1.d-10
+    conv_thr =  1.d-11
     mixing_beta = 0.5
  /
 ATOMIC_SPECIES

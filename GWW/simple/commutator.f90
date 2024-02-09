@@ -14,6 +14,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   USE klist,      ONLY : ngk
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
+  USE beta_mod,   ONLY : interp_dbeta
   USE uspp_param, ONLY : lmaxkb, nbetam, nh
   USE io_global, ONLY : stdout
   !
@@ -137,6 +138,7 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   USE klist,      ONLY : ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
+  USE beta_mod,   ONLY : interp_beta
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
   implicit none

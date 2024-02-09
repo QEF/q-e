@@ -23,11 +23,13 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.5 starts on 19Nov2022 at 12:50:59 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:31:12 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -38,11 +40,12 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     52422 MiB available memory on the printing compute node when the environment starts
-
+     K-points division:     npool     =       4
+     35505 MiB available memory on the printing compute node when the environment starts
+ 
      Reading input from epw1.in
 
      Reading supplied temperature list.
@@ -57,14 +60,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         211     211     85                 2109     2109     531
-
+ 
      Using Slab Decomposition
-
+ 
      Reading collected, re-writing distributed wavefunctions
 
      --                                                                         
@@ -99,9 +102,9 @@
    Cartesian axes
 
      site n.  atom      mass           positions (a_0 units)
-        1        Si  28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
-        2        Si  28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
-
+        1     Si     28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2     Si     28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
+ 
      49 Sym.Ops. (with q -> -q+G )
 
 
@@ -189,21 +192,21 @@
                 l(8) =   2
                 l(9) =   2
                l(10) =   2
-     EPW          :      0.10s CPU      0.12s WALL
+     EPW          :      0.20s CPU      0.23s WALL
 
-     EPW          :      0.12s CPU      0.15s WALL
+     EPW          :      0.20s CPU      0.23s WALL
 
      -------------------------------------------------------------------
      Wannierization on  4 x  4 x  4 electronic grid
      -------------------------------------------------------------------
-
+ 
      Spin CASE ( non-collinear )
-
+ 
      Initializing Wannier90
-
-
+ 
+ 
      Initial Wannier projections
-
+ 
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
@@ -226,189 +229,93 @@
       - Number of excluded bands is (  0)
       - Number of wannier functions is ( 16)
       - All guiding functions are given 
-
+ 
   Reading data about k-point neighbours 
-
+ 
       - All neighbours are found 
-
+ 
      AMN
-      k points =    64 in    1 pools
-            1 of   64 on ionode
-            2 of   64 on ionode
-            3 of   64 on ionode
-            4 of   64 on ionode
-            5 of   64 on ionode
-            6 of   64 on ionode
-            7 of   64 on ionode
-            8 of   64 on ionode
-            9 of   64 on ionode
-           10 of   64 on ionode
-           11 of   64 on ionode
-           12 of   64 on ionode
-           13 of   64 on ionode
-           14 of   64 on ionode
-           15 of   64 on ionode
-           16 of   64 on ionode
-           17 of   64 on ionode
-           18 of   64 on ionode
-           19 of   64 on ionode
-           20 of   64 on ionode
-           21 of   64 on ionode
-           22 of   64 on ionode
-           23 of   64 on ionode
-           24 of   64 on ionode
-           25 of   64 on ionode
-           26 of   64 on ionode
-           27 of   64 on ionode
-           28 of   64 on ionode
-           29 of   64 on ionode
-           30 of   64 on ionode
-           31 of   64 on ionode
-           32 of   64 on ionode
-           33 of   64 on ionode
-           34 of   64 on ionode
-           35 of   64 on ionode
-           36 of   64 on ionode
-           37 of   64 on ionode
-           38 of   64 on ionode
-           39 of   64 on ionode
-           40 of   64 on ionode
-           41 of   64 on ionode
-           42 of   64 on ionode
-           43 of   64 on ionode
-           44 of   64 on ionode
-           45 of   64 on ionode
-           46 of   64 on ionode
-           47 of   64 on ionode
-           48 of   64 on ionode
-           49 of   64 on ionode
-           50 of   64 on ionode
-           51 of   64 on ionode
-           52 of   64 on ionode
-           53 of   64 on ionode
-           54 of   64 on ionode
-           55 of   64 on ionode
-           56 of   64 on ionode
-           57 of   64 on ionode
-           58 of   64 on ionode
-           59 of   64 on ionode
-           60 of   64 on ionode
-           61 of   64 on ionode
-           62 of   64 on ionode
-           63 of   64 on ionode
-           64 of   64 on ionode
-
+      k points =    64 in    4 pools
+            1 of   16 on ionode
+            2 of   16 on ionode
+            3 of   16 on ionode
+            4 of   16 on ionode
+            5 of   16 on ionode
+            6 of   16 on ionode
+            7 of   16 on ionode
+            8 of   16 on ionode
+            9 of   16 on ionode
+           10 of   16 on ionode
+           11 of   16 on ionode
+           12 of   16 on ionode
+           13 of   16 on ionode
+           14 of   16 on ionode
+           15 of   16 on ionode
+           16 of   16 on ionode
+ 
      AMN calculated
-
+ 
      MMN
-      k points =    64 in    1 pools
-            1 of   64 on ionode
-            2 of   64 on ionode
-            3 of   64 on ionode
-            4 of   64 on ionode
-            5 of   64 on ionode
-            6 of   64 on ionode
-            7 of   64 on ionode
-            8 of   64 on ionode
-            9 of   64 on ionode
-           10 of   64 on ionode
-           11 of   64 on ionode
-           12 of   64 on ionode
-           13 of   64 on ionode
-           14 of   64 on ionode
-           15 of   64 on ionode
-           16 of   64 on ionode
-           17 of   64 on ionode
-           18 of   64 on ionode
-           19 of   64 on ionode
-           20 of   64 on ionode
-           21 of   64 on ionode
-           22 of   64 on ionode
-           23 of   64 on ionode
-           24 of   64 on ionode
-           25 of   64 on ionode
-           26 of   64 on ionode
-           27 of   64 on ionode
-           28 of   64 on ionode
-           29 of   64 on ionode
-           30 of   64 on ionode
-           31 of   64 on ionode
-           32 of   64 on ionode
-           33 of   64 on ionode
-           34 of   64 on ionode
-           35 of   64 on ionode
-           36 of   64 on ionode
-           37 of   64 on ionode
-           38 of   64 on ionode
-           39 of   64 on ionode
-           40 of   64 on ionode
-           41 of   64 on ionode
-           42 of   64 on ionode
-           43 of   64 on ionode
-           44 of   64 on ionode
-           45 of   64 on ionode
-           46 of   64 on ionode
-           47 of   64 on ionode
-           48 of   64 on ionode
-           49 of   64 on ionode
-           50 of   64 on ionode
-           51 of   64 on ionode
-           52 of   64 on ionode
-           53 of   64 on ionode
-           54 of   64 on ionode
-           55 of   64 on ionode
-           56 of   64 on ionode
-           57 of   64 on ionode
-           58 of   64 on ionode
-           59 of   64 on ionode
-           60 of   64 on ionode
-           61 of   64 on ionode
-           62 of   64 on ionode
-           63 of   64 on ionode
-           64 of   64 on ionode
+      k points =    64 in    4 pools
+            1 of   16 on ionode
+            2 of   16 on ionode
+            3 of   16 on ionode
+            4 of   16 on ionode
+            5 of   16 on ionode
+            6 of   16 on ionode
+            7 of   16 on ionode
+            8 of   16 on ionode
+            9 of   16 on ionode
+           10 of   16 on ionode
+           11 of   16 on ionode
+           12 of   16 on ionode
+           13 of   16 on ionode
+           14 of   16 on ionode
+           15 of   16 on ionode
+           16 of   16 on ionode
      MMN calculated
-
+ 
      Running Wannier90
-
+ 
      Wannier Function centers (cartesian, alat) and spreads (ang):
-
-     (   0.04115   0.04115   0.04115) :   2.22693
-     (   0.04115   0.04115   0.04115) :   2.22693
-     (   0.04115  -0.04115  -0.04115) :   2.22693
-     (   0.04115  -0.04115  -0.04115) :   2.22693
-     (  -0.04115   0.04115  -0.04115) :   2.22693
-     (  -0.04115   0.04115  -0.04115) :   2.22693
-     (  -0.04115  -0.04115   0.04115) :   2.22693
-     (  -0.04115  -0.04115   0.04115) :   2.22693
-     (   0.33395   0.33395   0.33395) :   1.84644
-     (   0.33395   0.33395   0.33395) :   1.84644
-     (   0.33395   0.16605   0.16605) :   1.84644
-     (   0.33395   0.16605   0.16605) :   1.84644
-     (   0.16605   0.33395   0.16605) :   1.84644
-     (   0.16605   0.33395   0.16605) :   1.84644
-     (   0.16605   0.16605   0.33395) :   1.84644
-     (   0.16605   0.16605   0.33395) :   1.84644
-
+ 
+     (   0.04115   0.04115   0.04115) :   2.22692
+     (   0.04115   0.04115   0.04115) :   2.22692
+     (   0.04115  -0.04115  -0.04115) :   2.22692
+     (   0.04115  -0.04115  -0.04115) :   2.22692
+     (  -0.04115   0.04115  -0.04115) :   2.22692
+     (  -0.04115   0.04115  -0.04115) :   2.22692
+     (  -0.04115  -0.04115   0.04115) :   2.22692
+     (  -0.04115  -0.04115   0.04115) :   2.22692
+     (   0.33395   0.33395   0.33395) :   1.84645
+     (   0.33395   0.33395   0.33395) :   1.84645
+     (   0.33395   0.16605   0.16605) :   1.84645
+     (   0.33395   0.16605   0.16605) :   1.84645
+     (   0.16605   0.33395   0.16605) :   1.84645
+     (   0.16605   0.33395   0.16605) :   1.84645
+     (   0.16605   0.16605   0.33395) :   1.84645
+     (   0.16605   0.16605   0.33395) :   1.84645
+ 
      -------------------------------------------------------------------
-     WANNIER      :      8.63s CPU      8.67s WALL (       1 calls)
+     WANNIER      :      3.86s CPU      3.94s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
-
+ 
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.00s CPU      0.00s WALL (       1 calls)
+     kmaps        :      0.01s CPU      0.01s WALL (       1 calls)
      Symmetries of Bravais lattice:  48
      Symmetries of crystal:          48
 
      Reading interatomic force constants
 
  end of file reached, closing tag not found
-     IFC last   -0.0032828
+     IFC last   -0.0032796
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000288
+     Norm of the difference between old and new force-constants:    0.0000254
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -421,14 +328,14 @@
 
      Symmetries of small group of q: 48
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
      Read dielectric tensor and effective charges
      Imposing acoustic sum rule on the dynamical matrix
      Dyn mat calculated from ifcs
-
+ 
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -438,7 +345,7 @@
 
      Symmetries of small group of q: 12
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000  -0.500000000   0.500000000
@@ -446,7 +353,9 @@
           3  -0.500000000  -0.500000000  -0.500000000
           4   0.500000000  -0.500000000  -0.500000000
      Dyn mat calculated from ifcs
-
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
+ 
         q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
         q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
         q(    4 ) = (  -0.5000000  -0.5000000  -0.5000000 )
@@ -459,14 +368,14 @@
 
      Symmetries of small group of q: 16
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    3
      List of q in the star:
           1   0.000000000  -1.000000000   0.000000000
           2  -1.000000000   0.000000000   0.000000000
           3   0.000000000   0.000000000   1.000000000
      Dyn mat calculated from ifcs
-
+ 
         q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
         q(    7 ) = (  -1.0000000   0.0000000   0.0000000 )
         q(    8 ) = (   0.0000000   0.0000000   1.0000000 )
@@ -493,39 +402,24 @@
      Bloch2wane:          6 /          8
      Bloch2wane:          7 /          8
      Bloch2wane:          8 /          8
- 
-     Bloch2wanp:          1 /         19
-     Bloch2wanp:          2 /         19
-     Bloch2wanp:          3 /         19
-     Bloch2wanp:          4 /         19
-     Bloch2wanp:          5 /         19
-     Bloch2wanp:          6 /         19
-     Bloch2wanp:          7 /         19
-     Bloch2wanp:          8 /         19
-     Bloch2wanp:          9 /         19
-     Bloch2wanp:         10 /         19
-     Bloch2wanp:         11 /         19
-     Bloch2wanp:         12 /         19
-     Bloch2wanp:         13 /         19
-     Bloch2wanp:         14 /         19
-     Bloch2wanp:         15 /         19
-     Bloch2wanp:         16 /         19
-     Bloch2wanp:         17 /         19
-     Bloch2wanp:         18 /         19
-     Bloch2wanp:         19 /         19
+     Bloch2wanp:          1 /          5
+     Bloch2wanp:          2 /          5
+     Bloch2wanp:          3 /          5
+     Bloch2wanp:          4 /          5
+     Bloch2wanp:          5 /          5
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =        78Mb
-                   VmPeak =       410Mb
+     Memory usage:  VmHWM =        93Mb
+                   VmPeak =      3816Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
      Size of q point mesh for interpolation:        100
      Using k-mesh file: ./LGX.txt
      Size of k point mesh for interpolation:        200
-     Max number of k points per pool:              200
+     Max number of k points per pool:               50
 
      Fermi energy coarse grid =   6.302835 eV
 
@@ -539,47 +433,60 @@
               ibndmax =    12  ebndmax =     7.499 eV
 
 
-     Number of ep-matrix elements per pool :        60000 ~=  468.75 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :        15000 ~=  117.19 Kb (@ 8 bytes/ DP)
      Number selected, total         100         100
      We only need to compute      100 q-points
       
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        78Mb
-                   VmPeak =       410Mb
+     Memory usage:  VmHWM =        93Mb
+                   VmPeak =      3816Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     53.42s CPU     53.94s WALL (       1 calls)
+     elphon_wrap  :     15.46s CPU     15.79s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.11s CPU      0.11s WALL (       9 calls)
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.02s CPU      0.02s WALL (       2 calls)
+     set_drhoc    :      0.01s CPU      0.01s WALL (       9 calls)
+     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_us_1    :      0.02s CPU      0.02s WALL (       1 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      3.54s CPU      4.17s WALL (       1 calls)
-     ep-interp    :      2.87s CPU      3.44s WALL (     100 calls)
+     ephwann      :      1.91s CPU      2.20s WALL (       1 calls)
+     ep-interp    :      1.27s CPU      1.49s WALL (     100 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
-     ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
-     ep: step 2   :      3.46s CPU      4.09s WALL (       1 calls)
+     ep: step 1   :      0.01s CPU      0.01s WALL (       8 calls)
+     ep: step 2   :      0.04s CPU      0.04s WALL (       8 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      1.27s CPU      1.28s WALL (   21789 calls)
-     ephW2Bp      :      0.32s CPU      0.86s WALL (     100 calls)
-     ephW2B       :      0.42s CPU      0.42s WALL (    5776 calls)
+     HamW2B       :      0.43s CPU      0.45s WALL (    6076 calls)
+     ephW2Bp      :      0.40s CPU      0.60s WALL (     100 calls)
+     ephW2B       :      0.13s CPU      0.13s WALL (    1052 calls)
 
 
      Total program execution
-     EPW          :   1m 5.71s CPU   1m 6.93s WALL
+     EPW          :     21.44s CPU     22.16s WALL
 
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
      ===============================================================================
                                                                                     

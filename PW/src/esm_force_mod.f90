@@ -1032,7 +1032,7 @@ CONTAINS
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(ng)
+        rhog3(n3, ng_2d) = CONJG(aux(ng))
       ENDIF
     ENDDO
 
@@ -1196,7 +1196,7 @@ CONTAINS
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(ng)
+        rhog3(n3, ng_2d) = CONJG(aux(ng))
       ENDIF
     ENDDO
 
@@ -1367,7 +1367,7 @@ CONTAINS
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(ng)
+        rhog3(n3, ng_2d) = CONJG(aux(ng))
       ENDIF
     ENDDO
 
@@ -1537,7 +1537,7 @@ CONTAINS
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(ng)
+        rhog3(n3, ng_2d) = CONJG(aux(ng))
       ENDIF
     ENDDO
 

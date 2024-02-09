@@ -9,6 +9,7 @@ MODFLAGS=$(BASEMOD_FLAGS)
 
 MODULES = \
 additional_kpoints.o \
+atomic_wfc_mod.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \

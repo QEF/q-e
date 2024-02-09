@@ -182,6 +182,7 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! proj=<wfcU|S|evc>
       IF (noncolin) THEN
+         !$acc update self(spsi)
          CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  projkd, nwfcU)
          CALL mp_sum( projkd( :, 1:nbnd ), intra_bgrp_comm )
@@ -666,7 +667,6 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    !
    IF ( mykey /= 0 ) GO TO 10
    !
-   ! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
    DO na = 1, nat
       nt = ityp(na)
       IF ( is_hubbard(nt) ) THEN
@@ -690,14 +690,12 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
          ENDDO
        ENDIF
    ENDDO
-! !omp end parallel do
    !
 10 CALL mp_sum(dns_nc, intra_pool_comm)
    !
    !
    ! Impose hermiticity of dns_{m1,m2}
    !
-   ! !omp parallel do default(shared) private(na,is,m1,m2)
    DO na = 1, nat
       nt = ityp (na)
       IF ( is_hubbard(nt) ) THEN
@@ -1549,7 +1547,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          ENDDO
       ENDIF        
       !
-      ! Sum over G vectorso
+      ! Sum over G vectors
       CALL mp_sum( doverlap, intra_bgrp_comm )
       !
       !$acc data copyin(doverlap)
@@ -1609,10 +1607,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
    IF (noncolin) THEN
-      CALL ZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
+      !$acc host_data use_device(dwfc,spsi,dproj)
+      CALL MYZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
             dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
             dproj, nwfcU)   
       CALL mp_sum( dproj, intra_bgrp_comm )
+      !$acc end host_data
    ELSE   
       CALL calbec( offload_type, npw, dwfc, spsi, dproj )
    ENDIF
@@ -1748,15 +1748,19 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !
             IF (noncolin) THEN
                IF ( upf(nt)%has_so ) THEN
+                  !$acc kernels
                   qq(1:nh(nt),1:nh(nt)) = qq_so(:,:,1,nt)
                   qq(1:nh(nt),1+nh(nt):nh(nt)*npol) = qq_so(:,:,2,nt)
                   qq(1+nh(nt):nh(nt)*npol,1:nh(nt)) = qq_so(:,:,3,nt)
                   qq(1+nh(nt):nh(nt)*npol,1+nh(nt):nh(nt)*npol) = qq_so(:,:,4,nt)
+                  !$acc end kernels
                ELSE
+                  !$acc kernels
                   qq(1:nh(nt),1:nh(nt)) = qq_at(1:nh(nt),1:nh(nt),na)
                   qq(1:nh(nt),1+nh(nt):nh(nt)*npol) = (0.0,0.0)
                   qq(1+nh(nt):nh(nt)*npol,1:nh(nt)) = (0.0,0.0)
                   qq(1+nh(nt):nh(nt)*npol,1+nh(nt):nh(nt)*npol) = qq_at(1:nh(nt),1:nh(nt),na)
+                  !$acc end kernels
                ENDIF
             ELSE
                !$acc parallel loop collapse(2) 
@@ -1770,7 +1774,9 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             ! aux is used as a workspace
             ALLOCATE ( aux(npwx*npol,nh(nt)*npol) )
             !$acc data create(aux)
+            !$acc kernels
             aux=(0.0,0.0)
+            !$acc end kernels
             !
             !$acc parallel loop collapse(2) 
             DO ih = 1, nh_nt !nh(nt)
@@ -1796,18 +1802,20 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ! Calculate betaB = <dbeta|B>
                ! dbetaB(:,1       : nh(nt))      = spin up
                ! dbetaB(:,1+nh(nt): nh(nt)*npol) = spin down
-               dbetaB=(0.0,0.0)
-               CALL ZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
+               ! dbetaB=(0.0,0.0)
+               !$acc host_data use_device(aux, A, B, Adbeta, dbetaB)
+               CALL MYZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
                           npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), dbetaB, nh(nt)*npol)
                CALL mp_sum( dbetaB(:, 1:lB) , intra_bgrp_comm )               
                !
                ! Calculate Adbeta = <A|dbeta>
                ! Adbeta(:,1       : nh(nt))      = spin up
                ! Adbeta(:,1+nh(nt): nh(nt)*npol) = spin down      
-               Adbeta=(0.0,0.0)
-               CALL ZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
+               !Adbeta=(0.0,0.0)
+               CALL MYZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
                           npwx*npol, aux, npwx*npol, (0.0_DP, 0.0_DP), Adbeta, lA)
                CALL mp_sum( Adbeta(:, 1:nh(nt)*npol) , intra_bgrp_comm )
+               !$acc end host_data 
             ELSE        
                ! Calculate dbetaB = <dbeta|B> 
                CALL calbec(offload_type, npw, aux, B, dbetaB )
@@ -1829,18 +1837,20 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                 ! Calculate Abeta = <A|beta>      
                 ! (same as Adbeta)
                 !
-                Abeta=(0.0,0.0)
-                CALL ZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
+                !Abeta=(0.0,0.0)
+                !$acc host_data use_device(aux, A, B, Abeta, betaB)
+                CALL MYZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
                            npwx*npol, aux, npwx*npol, (0.0_DP, 0.0_DP), Abeta, lA)
                 CALL mp_sum( Abeta(:, 1:nh(nt)*npol) , intra_bgrp_comm )
                 !
                 ! Calculate betaB = <beta|B>
                 ! (same as dbetaB)
                 !
-                betaB=(0.0,0.0)
-                CALL ZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
+                !betaB=(0.0,0.0)
+                CALL MYZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
                            npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), betaB, nh(nt)*npol)
                 CALL mp_sum( betaB(:, 1:lB) , intra_bgrp_comm )
+               !$acc end host_data 
              ELSE
                ! Calculate Abeta = <A|beta>
                CALL calbec( offload_type, npw, A, aux, Abeta )
@@ -1854,22 +1864,26 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !
             ALLOCATE ( aux(nh(nt)*npol, lB) )
             !$acc data create(aux)
+            !$acc kernels
             aux(:,:)=(0.0,0.0)            
+            !$acc end kernels
             !
             IF (noncolin) THEN
                ! aux(:, 1:nh(nt))             = \sum_jh qq(1,jh)*dbetaB(1,jh) + qq(2,jh)*dbetaB(2,jh)
                ! aux(:, 1+nh(nt):nh(nt)*npol) = \sum_jh qq(3,jh)*dbetaB(1,jh) + qq(4,jh)*dbetaB(2,jh)
                !
                ! spin up
-               CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+               !$acc host_data use_device(qq,aux,dbetaB)
+               CALL MYZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                           qq(1, 1), nh(nt)*npol, &
                           dbetaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
                           aux(1, lB_s), nh(nt)*npol)
                ! spin down   
-               CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+               CALL MYZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                           qq(1+nh(nt), 1), nh(nt)*npol, &
                           dbetaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
                           aux(1+nh(nt), lB_s), nh(nt)*npol)
+               !$acc end host_data
             ELSE
                ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)     
                !$acc host_data use_device(qq,dbetaB,aux)
@@ -1886,15 +1900,17 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ! (same as dbetaB)     
                !
                ! spin up 
-               CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+               !$acc host_data use_device(qq,betaB,aux)
+               CALL MYZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                           qq(1, 1), nh(nt)*npol, &
                           betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
                           aux(1, lB_s), nh(nt)*npol)
                ! spin down   
-               CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+               CALL MYZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                           qq(1+nh(nt), 1), nh(nt)*npol, &
                           betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
                           aux(1+nh(nt), lB_s), nh(nt)*npol)
+              !$acc end host_data
             ELSE
                ! Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
                !$acc host_data use_device(qq,betaB,aux)
@@ -1920,6 +1936,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             IF ( mykey == 0 ) THEN
                IF (noncolin) THEN
                   nt1 = nh(nt) + 1
+                  !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)      
                   IF ( flag ) THEN
                      DO nb = 1, nat
                         IF ( is_hubbard(ityp(nb)) ) THEN
@@ -1928,33 +1945,34 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                            mD = mU + ldim
                            !
                            ! spin up
-                           CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                           CALL MYZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                                        Adbeta(mU,1), lA, &
                                        betaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                        A_dS_B(mU, lB_s), lA)
-                           CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                           CALL MYZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                                     Abeta(mU,1), lA, &
                                     dbetaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                     A_dS_B(mU, lB_s), lA)
                            ! spin down
-                           CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                           CALL MYZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                                        Adbeta(mD, nt1), lA, &
                                        betaB(nt1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                        A_dS_B(mD,lB_s), lA)
-                           CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                           CALL MYZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                                        Abeta(mD, nt1), lA, &
                                        dbetaB(nt1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                        A_dS_B(mD,lB_s), lA)
                         ENDIF
                      ENDDO
                   ELSEIF ( .not. flag ) THEN
-                     CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                     CALL MYZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                                   Adbeta, lA, betaB(1,lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                   A_dS_B(1,lB_s), lA)
-                     CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                     CALL MYZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
                                   Abeta, lA, dbetaB(1,lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
                                   A_dS_B(1,lB_s), lA)
                   ENDIF
+                  !$acc end host_data   
                ELSE
                   !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)      
                   CALL MYZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &

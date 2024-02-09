@@ -23,11 +23,13 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.6 starts on  6Feb2023 at 15:48:33 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:41: 5 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -38,11 +40,12 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     45712 MiB available memory on the printing compute node when the environment starts
-
+     K-points division:     npool     =       4
+     35215 MiB available memory on the printing compute node when the environment starts
+ 
      Reading input from epw6.in
 
      Reading supplied temperature list.
@@ -87,7 +90,7 @@
 
      site n.  atom      mass           positions (a_0 units)
 
-
+ 
      No symmetry!
 
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
@@ -122,15 +125,15 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        15Mb
-                   VmPeak =       250Mb
+     Memory usage:  VmHWM =        53Mb
+                   VmPeak =      3741Mb
      ===================================================================
      
-     Using uniform q-mesh:    7   7   7
+     Using uniform q-mesh:     7    7    7
      Size of q point mesh for interpolation:        343
-     Using uniform MP k-mesh:    7   7   7
+     Using uniform MP k-mesh:     7    7    7
      Size of k point mesh for interpolation:         40
-     Max number of k points per pool:               40
+     Max number of k points per pool:               10
 
      Fermi energy coarse grid =   6.255484 eV
 
@@ -145,7 +148,7 @@
               ibndmax =     5  ebndmax =     8.046 eV
 
 
-     Number of ep-matrix elements per pool :          120 ~=    0.94 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :           30 ~=    0.23 Kb (@ 8 bytes/ DP)
 
      File ./Fepmatkqcb1/si.epmatkqcb1_0 deleted, as requested
 
@@ -156,13 +159,13 @@
      We only need to compute       58 q-points
       
      Valence band maximum    =   6.255484 eV
-     Conduction band minimum =   7.660799 eV
+     Conduction band minimum =   7.660797 eV
 
      Temperature  400.000 K
-     Mobility CB Fermi level =   7.030496 eV
+     Mobility CB Fermi level =   7.030495 eV
 
      Temperature  500.000 K
-     Mobility CB Fermi level =   6.872903 eV
+     Mobility CB Fermi level =   6.872901 eV
 
      ===================================================================
      Scattering rate for IBTE
@@ -178,17 +181,17 @@
      Save matrix elements larger than threshold:   0.849985975231E-21
       
      Progression iq (fine) =         50/        58
-      400.000      7.0305       0.100000E+14
+      400.000      7.0305       0.100001E+14
       500.000      6.8729       0.999996E+13
       
      epmatkqread automatically changed to .TRUE. as all scattering have been computed.
       
      ===================================================================
-     Memory usage:  VmHWM =        21Mb
-                   VmPeak =       250Mb
+     Memory usage:  VmHWM =        62Mb
+                   VmPeak =      3857Mb
      ===================================================================
 
-     Number of elements per core        144
+     Number of elements per core         36
      Symmetry mapping finished
       
      =============================================================================================
@@ -200,12 +203,12 @@
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.162741E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.162741E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.162741E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.140246E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.140246E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.140246E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.162767E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.162767E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.162767E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.140261E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.140261E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.140261E+00
       
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -218,14 +221,14 @@
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.134293E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.134293E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.134293E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.118596E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.118596E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.118596E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.134314E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.134314E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.134314E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.118608E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.118608E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.118608E+00
 
-                                                      0.134293E+00    Max error
+                                                      0.134314E+00    Max error
      Iteration number:         2
 
      =============================================================================================
@@ -233,14 +236,14 @@
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.139323E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.139323E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.139323E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.122189E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.122189E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.122189E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.139345E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.139345E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.139345E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.122202E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.122202E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.122202E+00
 
-                                                      0.502947E-02    Max error
+                                                      0.503027E-02    Max error
      Iteration number:         3
 
      =============================================================================================
@@ -248,14 +251,14 @@
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.138429E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.138429E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138429E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.121572E+00    0.000000E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.121572E+00    0.000000E+00
-                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121572E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.138451E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.138451E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138451E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.121584E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.121584E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121584E+00
 
-                                                      0.893296E-03    Max error
+                                                      0.893438E-03    Max error
      Iteration number:         4
      =============================================================================================
      The iteration reached the maximum but did not converge.
@@ -263,7 +266,7 @@
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+     elphon_wrap  :      0.01s CPU      0.01s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -271,23 +274,40 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.71s CPU      0.93s WALL (       1 calls)
-     ep-interp    :      0.45s CPU      0.65s WALL (      58 calls)
+     ephwann      :      0.57s CPU      0.88s WALL (       1 calls)
+     ep-interp    :      0.23s CPU      0.54s WALL (      58 calls)
 
      DynW2B       :      0.00s CPU      0.00s WALL (      58 calls)
-     HamW2B       :      0.09s CPU      0.10s WALL (    2380 calls)
-     ephW2Bp      :      0.30s CPU      0.49s WALL (      58 calls)
-     ephW2B       :      0.01s CPU      0.02s WALL (      72 calls)
-     print_ibte   :      0.00s CPU      0.00s WALL (      58 calls)
-     vmewan2bloch :      0.02s CPU      0.03s WALL (     144 calls)
-     vmewan2bloch :      0.02s CPU      0.03s WALL (     144 calls)
+     HamW2B       :      0.03s CPU      0.03s WALL (     595 calls)
+     ephW2Bp      :      0.16s CPU      0.27s WALL (      58 calls)
+     ephW2B       :      0.00s CPU      0.00s WALL (      24 calls)
+     print_ibte   :      0.02s CPU      0.21s WALL (      58 calls)
+     vmewan2bloch :      0.01s CPU      0.01s WALL (      48 calls)
+     vmewan2bloch :      0.01s CPU      0.01s WALL (      48 calls)
 
 
      Total program execution
-     EPW          :      0.71s CPU      0.93s WALL
+     EPW          :      0.58s CPU      0.90s WALL
 
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [scattering/iterative_bte] input, please consider also citing      
+       S. Ponc\'e, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)             
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
      ===============================================================================
                                                                                     
