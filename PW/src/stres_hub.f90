@@ -667,7 +667,6 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    !
    IF ( mykey /= 0 ) GO TO 10
    !
-   ! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
    DO na = 1, nat
       nt = ityp(na)
       IF ( is_hubbard(nt) ) THEN
@@ -691,14 +690,12 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
          ENDDO
        ENDIF
    ENDDO
-! !omp end parallel do
    !
 10 CALL mp_sum(dns_nc, intra_pool_comm)
    !
    !
    ! Impose hermiticity of dns_{m1,m2}
    !
-   ! !omp parallel do default(shared) private(na,is,m1,m2)
    DO na = 1, nat
       nt = ityp (na)
       IF ( is_hubbard(nt) ) THEN
