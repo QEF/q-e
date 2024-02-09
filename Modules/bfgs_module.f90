@@ -234,6 +234,7 @@ CONTAINS
       INTEGER  :: n, i, j, k, nat
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
+      REAL(DP), ALLOCATABLE :: step_tmp(:)
       ! ... for scaled coordinates
       REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3), omega
       !
