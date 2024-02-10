@@ -654,6 +654,7 @@ CONTAINS
            nelec, ef, two_fermi_energies, ef_up, ef_dw )
       !
       IF ( .NOT. ALLOCATED(et) ) ALLOCATE( et(nbnd,nkstot) )
+      !$acc enter data create(et)
       IF ( .NOT. ALLOCATED(wg) ) ALLOCATE( wg(nbnd,nkstot) )
       !
       DO ik =1, band_struct_obj%ndim_ks_energies
@@ -677,6 +678,7 @@ CONTAINS
          END IF
          !
       END DO
+      !$acc update device(et)
       !
     END SUBROUTINE qexsd_copy_band_structure
     !
