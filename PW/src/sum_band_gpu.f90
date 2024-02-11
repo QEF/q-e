@@ -1113,7 +1113,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                    DO ih = 1, nhnt
                       DO ibnd_loc = 1, nbnd_loc
                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
-                      auxg2_d(ibnd_loc,ih) = et_d(ibnd,ik) * auxg2_d(ibnd_loc,ih)
+                      auxg2_d(ibnd_loc,ih) = et(ibnd,ik) * auxg2_d(ibnd_loc,ih)
                       END DO
                    END DO
 
@@ -1145,7 +1145,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                    !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
+                         auxk2_d(ibnd,ih) = et(ibnd,ik)*auxk2_d(ibnd,ih)
                       END DO
                    END DO
 

@@ -29,7 +29,6 @@ SUBROUTINE weights()
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
-  USE wvfct_gpum,           ONLY : using_et
   USE two_chem,             ONLY : twochem, gweights_twochem
   !
   IMPLICIT NONE
@@ -39,8 +38,6 @@ SUBROUTINE weights()
   INTEGER :: ibnd, ik ! counters: bands, k-points
   REAL(DP) :: demet_up, demet_dw
   REAL(DP),ALLOCATABLE :: et_col(:,:)
-  !
-  CALL using_et(0)
   !
   demet = 0.D0
   !
@@ -220,8 +217,6 @@ SUBROUTINE weights_only()
   USE io_global,            ONLY : ionode, ionode_id
   USE two_chem,             ONLY : twochem, gweights_only_twochem
   !
-  USE wvfct_gpum,           ONLY : using_et
-  !
   IMPLICIT NONE
   !
   ! ... local variables
@@ -229,8 +224,6 @@ SUBROUTINE weights_only()
   INTEGER :: ibnd, ik ! counters: bands, k-points
   REAL(DP) :: demet_up, demet_dw
   REAL(DP),ALLOCATABLE :: et_col(:,:)
-  !
-  CALL using_et(0)
   !
   demet = 0.D0
   !

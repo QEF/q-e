@@ -35,7 +35,6 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE buffers,            ONLY : get_buffer
    USE wavefunctions_gpum, ONLY : using_evc
-   USE wvfct_gpum,         ONLY : using_et
 
    USE pw2blip
 
@@ -366,7 +365,7 @@ CONTAINS
             ENDDO
          ENDDO
 
-         CALL using_evc(0); CALL using_et(0)
+         CALL using_evc(0)
 
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
@@ -720,7 +719,6 @@ CONTAINS
          kprod(6,:)=kvec(2,:)*kvec(3,:)
          ksq(:)=kprod(1,:)+kprod(2,:)+kprod(3,:)
 
-         CALL using_et(0)
          WRITE(iob)&
             kvec                                          ,&
             ksq                                           ,&
@@ -875,8 +873,6 @@ CONTAINS
 
       IF(binwrite)RETURN
 
-      CALL using_et(0)
-
       ikk = ik + nk*(ispin-1)
       IF(ispin==1.and.ibnd==1)THEN
          WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
@@ -902,8 +898,6 @@ CONTAINS
    SUBROUTINE write_bwfn_data(ik,ispin,ibnd)
       INTEGER,INTENT(in) :: ik,ispin,ibnd
       INTEGER lx,ly,lz,ikk,j,l1,l2,l3
-
-      CALL using_et(0)
 
       IF(binwrite)THEN
          DO l3=1,blipgrid(3)
@@ -949,8 +943,6 @@ CONTAINS
    SUBROUTINE write_bwfn_data_gamma(re_im,ik,ispin,ibnd)
       INTEGER,INTENT(in) :: ik,ispin,ibnd,re_im
       INTEGER lx,ly,lz,ikk,j,l1,l2,l3
-
-      CALL using_et(0)
 
       IF(binwrite)THEN
          IF(re_im==1)THEN
