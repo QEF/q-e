@@ -220,7 +220,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   USE control_flags,        ONLY : scissor
   USE sci_mod,              ONLY : evcc
-  USE wvfct_gpum,   ONLY : et_d
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
   USE oscdft_base,      ONLY : oscdft_ctx
@@ -319,7 +318,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
      CALL diag_bands_k()
      !
   ENDIF
-  et_d(:,ik) = et(:,ik)
   !
   ! ... deallocate work space
   !
