@@ -31,7 +31,6 @@ subroutine wannier_proj(ik, wan_func)
   USE buffers,          ONLY : get_buffer, save_buffer
 
   USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
   
   implicit none
   ! input-output
@@ -53,7 +52,7 @@ subroutine wannier_proj(ik, wan_func)
   ! Read current wavefunctions DIRECTLY FROM FINAL WFC FILES
   ! (this routine must be called from PP/src/, not from PW/src)
   !
-  CALL using_evc(2); CALL using_et(0)
+  CALL using_evc(2)
   evc = ZERO  
   call read_collected_wfc ( restart_dir(), ik, evc )  
   ! Reads ortho-atomic wfc
