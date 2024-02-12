@@ -15,6 +15,7 @@ if(NOT QE_ENABLE_OPENACC)
 endif()
 
 if(QE_ENABLE_OFFLOAD)
+  set(CMAKE_Fortran_FLAGS "-O0")
   if(DEFINED QE_GPU_ARCHS)
     string(REPLACE "gfx" "amd_gfx" ACCEL_TARGET "${QE_GPU_ARCHS}")
     target_compile_options(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:-target-accel=${ACCEL_TARGET}>")

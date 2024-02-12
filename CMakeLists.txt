@@ -316,7 +316,6 @@ if(QE_ENABLE_OPENMP)
 endif(QE_ENABLE_OPENMP)
 if(QE_ENABLE_OFFLOAD)
     target_compile_definitions(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:__OPENMP_GPU>")
-    set(CMAKE_Fortran_FLAGS "-O0")
 endif()
 
 ###########################################################
