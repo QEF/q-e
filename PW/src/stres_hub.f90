@@ -157,7 +157,10 @@ SUBROUTINE stres_hub ( sigmah )
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
-      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      IF (nks > 1) THEN
+        CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+        !$acc update device(evc)
+      END IF
       !
       CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE.)
       !
@@ -166,12 +169,10 @@ SUBROUTINE stres_hub ( sigmah )
       ! Compute spsi = S * psi
       CALL allocate_bec_type_acc ( nkb, nbnd, becp)
       !
-      !$acc data present_or_copyin(evc)
       CALL calbec( offload_type, npw, vkb, evc, becp )
       !$acc host_data use_device(evc, spsi)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
-      !$acc end data
       !
       CALL deallocate_bec_type_acc (becp)
       !
@@ -1627,7 +1628,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    IF (okvan) THEN
       ALLOCATE(dproj_us(nwfcU,nb_s:nb_e))
-      !$acc data create(dproj_us) copyin(evc) 
+      !$acc data create(dproj_us) 
       CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
                          nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .true.)
       ! dproj + dproj_us
@@ -2196,9 +2197,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   ENDDO
                ENDIF   
                !
-               !$acc data present_or_copyin(evc)
                CALL calbec(offload_type, npw, dbeta, evc, dbetapsi )
-               !$acc end data
                CALL calbec(offload_type, npw, wfcU, dbeta, wfatdbeta )
                !
                ! dbeta is now used as work space to store vkb
@@ -2210,9 +2209,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                ENDDO
                !
                CALL calbec(offload_type, npw, wfcU, dbeta, wfatbeta )
-               !$acc data present_or_copyin(evc)
                CALL calbec(offload_type, npw, dbeta, evc, betapsi0 )
-               !$acc end data
                !
                ! here starts band parallelization
                ! beta is here used as work space to calculate dbetapsi
