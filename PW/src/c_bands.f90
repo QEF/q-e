@@ -32,8 +32,6 @@ SUBROUTINE c_bands( iter )
   USE check_stop,           ONLY : check_stop_now
   USE gcscf_module,         ONLY : lgcscf
   USE add_dmft_occ,         ONLY : dmft, dmft_updated
-
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE uspp_init,            ONLY : init_us_2
   USE device_fbuff_m,       ONLY : dev_buf
   !
@@ -217,7 +215,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE xc_lib,               ONLY : exx_is_active
   USE gcscf_module,         ONLY : lgcscf
-  USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
   !
   USE control_flags,        ONLY : scissor
   USE sci_mod,              ONLY : evcc
@@ -482,7 +479,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( okvan ) THEN
              ALLOCATE( sevc_d( npwx*npol, nbnd ) )
           ELSE
-             sevc_d => evc !evc_d allocated in wfcinit_gpu
+             sevc_d => evc 
           END IF
        END IF
        !
@@ -505,7 +502,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
               END FORALL
               !
               IF (.not. use_gpu ) THEN
-                CALL using_evc(1);  CALL using_h_diag(0) ! precondition has intent(in)
+                CALL using_h_diag(0) ! precondition has intent(in)
                 CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
                            npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
@@ -528,7 +525,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE IF ( .NOT. lrot ) THEN
              !
              IF (.not. use_gpu) THEN
-                CALL using_evc(1)
                 CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE. )
 #if defined(__CUDA)
@@ -547,7 +543,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           !
           !
           IF (.not. use_gpu) THEN
-            CALL using_evc(1);  CALL using_h_diag(0) !precondition has intent(in)
+            CALL using_h_diag(0) !precondition has intent(in)
             CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
@@ -577,7 +573,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... Gram-Schmidt orthogonalization
        !
        IF (.not. use_gpu) THEN
-        CALL using_evc(1)
         CALL gram_schmidt_gamma( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
                         okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
@@ -870,7 +865,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
          IF ( okvan ) THEN
             ALLOCATE( sevc_d( npwx*npol, nbnd ) )
          ELSE
-            sevc_d => evc !evc_d allocated in wfcinit_gpu
+            sevc_d => evc 
          END IF
        END IF  
        !
@@ -893,7 +888,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
               CALL usnldiag(npw, h_diag, s_diag )
               !
               IF ( .not. use_gpu ) THEN
-                CALL using_evc(1)
                 CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
@@ -915,7 +909,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE IF ( .NOT. lrot ) THEN
              !
              IF ( .not. use_gpu ) THEN
-                CALL using_evc(1)
                 CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), & 
                                   USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
@@ -935,7 +928,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           END IF
           !
           IF ( .not. use_gpu ) THEN
-             CALL using_evc(1); CALL using_h_diag(0)
+             CALL using_h_diag(0)
              CALL crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
@@ -964,7 +957,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... Gram-Schmidt orthogonalization
        !
        IF ( .not. use_gpu ) THEN
-          CALL using_evc(1)
           CALL gram_schmidt_k( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
@@ -1213,7 +1205,6 @@ SUBROUTINE c_bands_nscf( )
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE uspp_init,            ONLY : init_us_2
   IMPLICIT NONE
   !
@@ -1237,7 +1228,6 @@ SUBROUTINE c_bands_nscf( )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
   !
-  CALL using_evc(1)
   DO ik = 1, ik_
      CALL get_buffer( evc, nwordwfc, iunwfc, ik )
   ENDDO
@@ -1290,7 +1280,6 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
-        CALL using_evc(1)
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         !
      ELSE
@@ -1305,7 +1294,6 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... save wave-functions (unless disabled in input)
      !
-     IF ( io_level > -1 ) CALL using_evc(0)
      IF ( io_level > -1 ) CALL save_buffer( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different
