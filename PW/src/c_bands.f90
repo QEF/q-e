@@ -56,7 +56,6 @@ SUBROUTINE c_bands( iter )
   !
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
-  CALL using_evc(0)
   !
   ik_ = 0
   avg_iter = 0.D0
@@ -67,9 +66,10 @@ SUBROUTINE c_bands( iter )
   ! ...  directly from file, in order to avoid wasting memory)
   !
   DO ik = 1, ik_
-     IF ( nks > 1 .OR. lelfield ) &
+     IF ( nks > 1 .OR. lelfield ) THEN
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     IF ( nks > 1 .OR. lelfield ) CALL using_evc(1)
+        !$acc update device(evc)
+     END IF
   ENDDO
   !
   IF ( isolve == 0 ) THEN
@@ -114,9 +114,10 @@ SUBROUTINE c_bands( iter )
      !
      ! ... read in wavefunctions from the previous iteration
      !
-     IF ( nks > 1 .OR. lelfield ) &
+     IF ( nks > 1 .OR. lelfield ) THEN
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     IF ( nks > 1 .OR. lelfield ) CALL using_evc(2)
+          !$acc update device(evc)
+     END IF
      !
      ! ... Needed for DFT+Hubbard
      !
@@ -128,15 +129,15 @@ SUBROUTINE c_bands( iter )
      !
      IF (.NOT. ( dmft .AND. .NOT. dmft_updated ) ) THEN
         call diag_bands ( iter, ik, avg_iter )
+        !sync evc here to allow later use of converged wavefunction on host
+        !$acc update self(evc)
      END IF
      !
      ! ... save wave-functions to be used as input for the
      ! ... iterative diagonalization of the next scf iteration
      ! ... and for rho calculation
      !
-     CALL using_evc(0)
-     IF ( nks > 1 .OR. lelfield ) &
-          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 .OR. lelfield ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different
      ! ... pools differs, make sure that all processors are still in
@@ -648,7 +649,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           lrot = ( iter == 1 )
           !
           IF (.not. use_gpu) THEN
-             CALL using_evc(1)
              IF ( use_para_diag ) THEN
 !                ! make sure that all processors have the same wfc
                 CALL pregterg( h_psi, s_psi, okvan, g_psi, &
@@ -659,19 +659,20 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              END IF
-             ! CALL using_evc(1) done above
+             ! 
           ELSE
-             CALL using_evc_d(1)
              !$acc host_data use_device(et)
              IF ( use_para_diag ) THEN
+                !$acc host_data use_device(evc)
                 CALL pregterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
-                            npw, npwx, nbnd, nbndx, evc_d, ethr, &
+                            npw, npwx, nbnd, nbndx, evc, ethr, &
                             et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call 
+                !$acc end host_data
                 !
              ELSE
                 !
                 CALL regterg (  h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
-                         npw, npwx, nbnd, nbndx, evc_d, ethr, &
+                         npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              END IF
              !$acc end host_data
@@ -1050,7 +1051,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           lrot = ( iter == 1 )
           !
           IF (.not. use_gpu ) THEN
-             CALL using_evc(1)
              IF ( use_para_diag ) then
                 !
                 CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
@@ -1064,19 +1064,19 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
           ELSE
-             CALL using_evc_d(1)
              !$acc host_data use_device(et)
              IF ( use_para_diag ) then
                 !
+                !$acc host_data use_device(evc)
                 CALL pcegterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
-                               npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
+                               npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                                et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
-
+                !$acc end host_data
                 !
              ELSE
                 !
                 CALL cegterg ( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
-                               npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
+                               npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                                et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
              !$acc end host_data 
