@@ -1842,7 +1842,6 @@ FUNCTION exxenergyace( )
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only, use_gpu
   USE wavefunctions,      ONLY : evc
-  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   !
   IMPLICIT NONE
   !
@@ -1857,9 +1856,6 @@ FUNCTION exxenergyace( )
   domat = .TRUE.
   exxenergyace=0.0_dp
   !
-  IF (.NOT. use_gpu) CALL using_evc(0)
-  IF (      use_gpu) CALL using_evc_d(0)
-  !
   DO ik = 1, nks
      npw = ngk (ik)
      !
@@ -1867,17 +1863,26 @@ FUNCTION exxenergyace( )
      IF ( lsda ) current_spin = isk(ik)
      !
      IF (nks > 1) THEN
-        CALL using_evc(2)
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        IF (use_gpu) CALL using_evc_d(0)
+        !$acc update device(evc)
      ENDIF
      !
      IF (gamma_only) THEN
-        IF (.NOT. use_gpu) CALL vexxace_gamma( npw, nbnd, evc, ex )
-        IF (      use_gpu) CALL vexxace_gamma_gpu( npw, nbnd, evc_d, ex )
+        IF (use_gpu) THEN
+          !$acc host_data use_device(evc)
+          CALL vexxace_gamma_gpu( npw, nbnd, evc, ex )
+          !$acc end host_data
+        ELSE
+          CALL vexxace_gamma( npw, nbnd, evc, ex )
+        END IF
      ELSE
-        IF (.NOT. use_gpu) CALL vexxace_k( npw, nbnd, evc, ex )
-        IF (      use_gpu) CALL vexxace_k_gpu( npw, nbnd, evc_d, ex )
+        IF (use_gpu) THEN
+          !$acc host_data use_device(evc)
+          CALL vexxace_k_gpu( npw, nbnd, evc, ex )
+          !$acc end host_data
+        ELSE
+          CALL vexxace_k( npw, nbnd, evc, ex )
+        ENDIF
      ENDIF
      exxenergyace = exxenergyace + ex
   ENDDO
