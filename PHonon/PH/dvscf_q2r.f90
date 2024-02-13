@@ -97,8 +97,8 @@ PROGRAM dvscf_q2r
 !! Later, dvtot at fine q points can be computed as
 !! dvscf(r,q) = exp(-iqr) (dvlong(r,q) + sum_R exp(iqR) w_pot(r,R))
 !!
-!! Only the dipole (Frohlich) potential is considered. The quadrupole
-!! potential [4] is not implemented.
+!! The dipole (Frohlich) potential is considered if zeu is nonzero.
+!! The quadrupole potential [4] is considered if quadrupole.fmt file is present.
 !!
 !! * Parallelization
 !! We use PW and pool parallelization.
@@ -594,7 +594,11 @@ PROGRAM dvscf_q2r
     DO iq = 1, nqlocal
       xq_cart = xqs_cry_global(:, iq_l2g(iq))
       CALL cryst_to_cart(1, xq_cart, bg, +1)
-      CALL dvscf_long_range(xq_cart, zeu, epsil, dvscf_long)
+      IF (qrpl) THEN
+        CALL dvscf_long_range(xq_cart, zeu, epsil, dvscf_long, Qmat)
+      ELSE
+        CALL dvscf_long_range(xq_cart, zeu, epsil, dvscf_long)
+      ENDIF
       !
       dvscf(:,:,:,iq) = dvscf(:,:,:,iq) - dvscf_long(:,:,:)
     ENDDO

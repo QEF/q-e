@@ -451,7 +451,11 @@ MODULE dvscf_interpolate
       CALL start_clock('dvscf_long')
       !
       ALLOCATE(dvscf_long(dfftp%nnr, nspin_mag, nmodes))
-      CALL dvscf_long_range(xq, zeu_r2q, epsilon_r2q, dvscf_long)
+      IF (qrpl) THEN
+        CALL dvscf_long_range(xq, zeu_r2q, epsilon_r2q, dvscf_long, Qmat)
+      ELSE
+        CALL dvscf_long_range(xq, zeu_r2q, epsilon_r2q, dvscf_long)
+      ENDIF
       dvscf_cart = dvscf_cart + dvscf_long
       DEALLOCATE(dvscf_long)
       !
@@ -631,7 +635,7 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE dvscf_long_range(xq, zeu, epsilon, dvscf_long)
+  SUBROUTINE dvscf_long_range(xq, zeu, epsilon, dvscf_long, Qmat)
   !----------------------------------------------------------------------------
   !! This subroutine calculates the long-range dipole potential for given
   !! xq and zeu.
@@ -673,6 +677,8 @@ MODULE dvscf_interpolate
     !! Input: Dielectric matrix
     COMPLEX(DP) :: dvscf_long(dfftp%nnr, nspin_mag, 3*nat)
     !! Output: long-range part of the potential, for all modes in Cartesian basis
+    REAL(DP), INTENT(IN), OPTIONAL :: Qmat(nat, 3, 3, 3)
+    !! Quadrupole tensor
     !
     INTEGER :: iatm, idir, imode, jdir, ig, ipol, jpol
     REAL(DP) :: xq_g(3), epsilon_denom, arg
@@ -720,7 +726,7 @@ MODULE dvscf_interpolate
         ENDDO
         !
         Qqq = 0.0d0
-        IF (qrpl) THEN
+        IF (PRESENT(Qmat)) THEN
           DO ipol = 1, 3
             DO jpol = 1, 3
               Qqq = Qqq + 0.5 * xq_g(ipol) * xq_g(jpol) * Qmat(iatm, idir, ipol, jpol)
