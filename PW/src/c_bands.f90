@@ -1291,6 +1291,7 @@ SUBROUTINE c_bands_nscf( )
      ! ... diagonalization of bands for k-point ik
      !
      CALL diag_bands( 1, ik, avg_iter )
+     !$acc update self(evc)
      !
      ! ... save wave-functions (unless disabled in input)
      !
