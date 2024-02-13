@@ -13,6 +13,10 @@ SUBROUTINE allocate_wfc()
   !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\), 
   !! \(\text{natomwfc}\), \(\text{nwfcU}\).
   !
+#if defined (__CUDA)
+  use, intrinsic :: iso_c_binding
+  use cudafor
+#endif
   USE io_global,           ONLY : stdout
   USE wvfct,               ONLY : npwx, nbnd
   USE basis,               ONLY : natomwfc, swfcatom
@@ -22,11 +26,16 @@ SUBROUTINE allocate_wfc()
   USE wavefunctions,       ONLY : evc
   USE wannier_new,         ONLY : use_wannier
   USE wavefunctions_gpum,  ONLY : using_evc
+  USE control_flags,       ONLY : use_gpu
   !
   IMPLICIT NONE
+    INTEGER :: istat
   !
   !
   ALLOCATE( evc(npwx*npol,nbnd) )
+!civn: PIN evc memory here
+  IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
+  !$acc enter data create(evc)
   CALL using_evc(2)
   !
   IF ( one_atom_occupations .OR. use_wannier ) &
