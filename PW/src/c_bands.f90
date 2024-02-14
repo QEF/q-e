@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -374,7 +374,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ntry = 0
        !
-       !$acc host_data use_device(et)
        CG_loop : DO
           !
           IF ( isolve == 1 .OR. isolve == 2 ) THEN
@@ -387,7 +386,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
                    CALL using_evc_d(1)
+                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc_d, et(1,ik) )
+                   !$acc end host_data
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
@@ -403,10 +404,12 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
                 CALL using_evc_d(1);  CALL using_h_diag_d(0) ! precondition has intent(in)
+                !$acc host_data use_device(et)
                 CALL rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
                          npwx, npw, nbnd, evc_d, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-             !
+                !$acc end host_data
+                !
              END IF
              !
              avg_iter = avg_iter + cg_iter
@@ -422,9 +425,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                !
              ELSE
                CALL using_evc_d(1); CALL using_h_diag_d(0) ! precondition has intent(in)
+               !$acc host_data use_device(et)
                CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag_d, &
                            npwx, npw, nbnd, evc_d, et(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
+               !$acc end host_data
                !
                avg_iter = avg_iter + ppcg_iter
                !
@@ -441,8 +446,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                !
              ELSE
                CALL using_evc_d(1);  CALL using_h_diag_d(0) ! precondition has intent(in)
+               !$acc host_data use_device(et)
                CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi_gpu, okvan, &
                           npwx, npw, nbnd, evc_d, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+               !$acc end host_data
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
                ! write (6,*) ntry, avg_iter, nhpsi
@@ -458,7 +465,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( test_exit_cond() ) EXIT  CG_loop
           !
        ENDDO CG_loop
-       !$acc end host_data
        !$acc update self(et)
        !
     ELSE IF ( isolve == 4 .AND. .NOT. rmm_use_davidson(iter)) THEN
@@ -763,7 +769,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ntry = 0
        !
-       !$acc host_data use_device(et)
        CG_loop : DO
           !
           IF ( isolve == 1 .OR. isolve == 2 ) THEN
@@ -776,7 +781,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
                    CALL using_evc_d(1)
+                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc_d, et(1,ik) )
+                   !$acc end host_data
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
@@ -791,9 +798,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
                 CALL using_evc_d(1);  CALL using_h_diag_d(0)
+                !$acc host_data use_device(et)
                 CALL ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
                          npwx, npw, nbnd, npol, evc_d, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+                !$acc end host_data
              END IF
              !
              avg_iter = avg_iter + cg_iter
@@ -811,9 +820,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              ELSE
                CALL using_evc_d(1); CALL using_h_diag_d(0)
                ! BEWARE npol should be added to the arguments
+               !$acc host_data use_device(et)
                CALL ppcg_k_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag_d, &
                            npwx, npw, nbnd, npol, evc_d, et(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
+               !$acc end host_data
                !
                avg_iter = avg_iter + ppcg_iter
                !
@@ -829,8 +840,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                ! write (6,*) ntry, avg_iter, nhpsi
              ELSE
                CALL using_evc_d(1); CALL using_h_diag_d(0)
+               !$acc host_data use_device(et)
                CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi_gpu, okvan, &
                         npwx, npw, nbnd, npol, evc_d, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+               !$acc end host_data
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
                ! write (6,*) ntry, avg_iter, nhpsi
@@ -844,7 +857,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( test_exit_cond() ) EXIT  CG_loop
           !
        ENDDO CG_loop
-       !$acc end host_data
        !$acc update self(et)
        !
     ELSE IF ( isolve == 4 .AND. .NOT. rmm_use_davidson(iter) )  THEN
