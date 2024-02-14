@@ -2620,9 +2620,9 @@ CONTAINS
                CALL errore( 'card_hubbard', 'Too many occurrences of V for the same couple of atoms', i)
             ENDIF
             !
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            !                    Read the data for the first atom                              !
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            !**********************************************************************************!
+            !*                   Read the data for the first atom                             *!
+            !**********************************************************************************!
             !
             ! Column 3: Read the atomic type name and the Hubbard manifold (e.g. Fe-3d)
             CALL get_field(2, field_str, input_line)
@@ -2756,9 +2756,9 @@ CONTAINS
                ENDIF
             ENDIF
             !
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            !                    Read the data for the second atom                             !
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            !**********************************************************************************!
+            !*                   Read the data for the second atom                            *!
+            !**********************************************************************************!
             !
             ! Column 3: Read the atomic type name and the Hubbard manifold (e.g. O-2p)
             CALL get_field(3, field_str, input_line)

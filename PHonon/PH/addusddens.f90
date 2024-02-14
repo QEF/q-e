@@ -19,7 +19,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !! from solve_* (iflag=0) drhoscf and dbecsum contain the contribution
   !! of the solution of the linear system and the terms due to alphasum
   !! and becsum are not added. In this case the change of the charge
-  !! calculated by drho (called \Delta \rho in [1]) is read from file
+  !! calculated by drho (called \(\Delta \rho\) in [1]) is read from file
   !! and added. The contribution of the change of
   !! the Fermi energy is not calculated here but added later by ef_shift.
   !! [1] PRB 64, 235118 (2001).
