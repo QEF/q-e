@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ld1.x /  / Quantum ESPRESSO (version: 7.3)
+Program: ld1.x /  / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 
