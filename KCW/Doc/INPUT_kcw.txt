@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: kcw.x / KCW / Quantum ESPRESSO (version: 7.3)
+Program: kcw.x / KCW / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 
