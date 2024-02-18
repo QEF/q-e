@@ -16,6 +16,8 @@ Fixed in 7.3.1 version:
     Affects v.7.2 and 7.3. Thanks to Giuseppe Mattioli for reporting.
   * Bad atomic symbols in some files used for plotting data (see issue #645
     on gitlab). Affects v.7.3. Thanks to Francesco Filippone for reporting.
+  * Since v.6.2, assume_isolated='mt' was yielding bad phonon frequencies 
+    (see issue #657). Thanks to Jeremy Rabone for reporting.
 
 New in 7.3 version:
   * Experimental support for pseudopotentials in PSML format

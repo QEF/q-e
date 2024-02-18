@@ -1146,8 +1146,10 @@ MODULE pw_restart_new
            exxdiv_treatment, yukawa, ecutvcut
       USE exx,             ONLY : ecutfock, local_thr
       USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
-           lxdm, ts_vdw, mbd_vdw
+           lxdm, ts_vdw, mbd_vdw, do_makov_payne 
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
+      USE esm,             ONLY : do_comp_esm 
+      USE martyna_tuckerman,ONLY: do_comp_mt 
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
               nspin_lsda, nspin_gga, nspin_mag, domag, lspinorb
       USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
@@ -1338,9 +1340,15 @@ MODULE pw_restart_new
       !! IF (nat > 0) CALL checkallsym( nat, tau, ityp)
       !! Algorithmic info
       IF (output_obj%boundary_conditions_ispresent) THEN 
-         do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
-      ELSE 
-         do_cutoff_2D = .FALSE.
+         do_makov_payne = (output_obj%boundary_conditions%assume_isolated == "makov_payne")
+         do_comp_mt     = (output_obj%boundary_conditions%assume_isolated == "martyna_tuckerman")
+         do_comp_esm    = (output_obj%boundary_conditions%assume_isolated == "esm")
+         do_cutoff_2D   = (output_obj%boundary_conditions%assume_isolated == "2D")
+      ELSE
+         do_makov_payne= .FALSE.
+         do_comp_mt    = .FALSE.
+         do_comp_esm   = .FALSE.
+         do_cutoff_2D  = .FALSE.
       END IF
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
