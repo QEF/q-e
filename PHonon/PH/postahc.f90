@@ -854,6 +854,7 @@ SUBROUTINE setup_ik_to_ikirr_mapping()
       !
       DO isk = 2, nqs
         jk = get_index_of_k_point(sxq(:, isk), xk, nks)
+        !
         IF (jk == -1) THEN
           xk_crys = sxq(:, isk)
           CALL cryst_to_cart(1, xk_crys, at, -1)
@@ -867,6 +868,7 @@ SUBROUTINE setup_ik_to_ikirr_mapping()
       IF (imq == 0) THEN
         DO isk = 1, nqs
           jk = get_index_of_k_point(-sxq(:, isk), xk, nks)
+          !
           IF (jk == -1) THEN
             xk_crys = -sxq(:, isk)
             CALL cryst_to_cart(1, xk_crys, at, -1)
@@ -890,6 +892,7 @@ SUBROUTINE setup_ik_to_ikirr_mapping()
     WRITE(stdout, '(5x,a)') 'To use use_irr_q = .true., the k point for the NSCF calculation list'
     WRITE(stdout, '(5x,a)') 'must contain all k points in the star once and only once.'
     WRITE(stdout, '(5x,a)') 'See above for the list of missing k points in crystal coordinates.'
+    WRITE(stdout, '(5x,a)') 'Add these k points to the input of the NSCF calculation and rerun.'
     CALL errore('postahc', 'k point in the star not found.', 1)
   ENDIF
   !
