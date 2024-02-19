@@ -381,6 +381,12 @@ PROGRAM postahc
   !
   ! ---------------------------------------------------------------------------
   !
+  ! Calculate the map of the full k points to the irreducible k points
+  !
+  IF (use_irr_q) CALL setup_ik_to_ikirr_mapping()
+  !
+  ! ---------------------------------------------------------------------------
+  !
   ! Read flvec file
   !
   IF (ionode) THEN
@@ -430,10 +436,9 @@ PROGRAM postahc
   !
   ! ---------------------------------------------------------------------------
   !
+  ! Calculate weight of the q-points for the irreducible grid case.
+  !
   IF (use_irr_q) THEN
-    !
-    ! Calculate weight of the q-points for the irreducible grid case.
-    !
     IF (ionode) THEN
       DO iq = 1, nq
         CALL star_q(xq(:, iq), at, bg, nsym, s, invs, nqs, sxq, isq, imq, .FALSE.)
@@ -446,50 +451,6 @@ PROGRAM postahc
       wtq = wtq / SUM(wtq)
     ENDIF
     CALL mp_bcast(wtq, ionode_id, world_comm)
-    !
-    ! Calculate the map of the full k points to the irreducible k points
-    !
-    ALLOCATE(ik_to_ikirr(nks))
-    ik_to_ikirr = -1
-    ikirr = 0
-    !
-    IF (ionode) THEN
-      WRITE(stdout, *) ''
-      WRITE(stdout, '(5x, a)') 'List of irreducible k points'
-      WRITE(stdout, '(5x, a)') 'ik      xk(1:3) (cart. coord. in units 2pi/alat)'
-      DO ik = 1, nks
-        ! Skip if the irreducible k is already found.
-        IF (ik_to_ikirr(ik) /= -1) CYCLE
-        !
-        ikirr = ikirr + 1
-        ik_to_ikirr(ik) = ikirr
-        WRITE(stdout, '(I8,3F12.8)') ikirr, xk(:, ik)
-        !
-        CALL star_q(xk(:, ik), at, bg, nsym, s, invs, nqs, sxq, isq, imq, .FALSE.)
-        !
-        IF (nqs == 1) CYCLE
-        !
-        ! Find other k points in the star
-        !
-        DO isk = 2, nqs
-          jk = get_index_of_k_point(sxq(:, isk), xk, nks)
-          ik_to_ikirr(jk) = ikirr
-        ENDDO ! isk
-        !
-        IF (imq == 0) THEN
-          DO isk = 1, nqs
-            jk = get_index_of_k_point(-sxq(:, isk), xk, nks)
-            ik_to_ikirr(jk) = ikirr
-          ENDDO ! isk
-        ENDIF
-        !
-      ENDDO ! ik
-      !
-      WRITE(stdout, *) ''
-    ENDIF ! ionode
-    !
-    CALL mp_bcast(ik_to_ikirr, ionode_id, world_comm)
-    nkirr = MAXVAL(ik_to_ikirr)
     !
   ENDIF ! use_irr_q
   !
@@ -848,17 +809,108 @@ INTEGER FUNCTION get_index_of_k_point(xk_want, xk, nks)
     !
   ENDDO
   !
-  ! If the function has not returned, the k vector is not found.
+  ! If the function has not returned, the k vector is not found. Return -1.
   !
-  WRITE(stdout, '(5x,a)') 'ERROR: k point in the star not found.'
-  WRITE(stdout, '(5x,a)') 'To use use_irr_q = .true., the k point&
-      & for the NSCF calculation list'
-  WRITE(stdout, '(5x,a)') 'must contain all k&
-      & points in the star once and only once.'
-  CALL errore('postahc', 'k point in the star not found.', 1)
+  get_index_of_k_point = -1
   !
 !------------------------------------------------------------------------------
 END FUNCTION get_index_of_k_point
+!------------------------------------------------------------------------------
+!
+!------------------------------------------------------------------------------
+SUBROUTINE setup_ik_to_ikirr_mapping()
+  !----------------------------------------------------------------------------
+  !! When using irreducible q points, for each k point, its symmetry-equivalent
+  !! k points must all be included.
+  !! Here, find the list of symmetry-inequivalent (irreducible) k points and
+  !! find the mapping from the full k points to the irreducible k points.
+  !----------------------------------------------------------------------------
+  !
+  LOGICAL :: missing
+  !! Set to true if any of the symmetry pairs is missing
+  REAL(DP) :: xk_crys(3)
+  !! k point in crystal coordinates
+  !
+  ALLOCATE(ik_to_ikirr(nks))
+  ik_to_ikirr = -1
+  ikirr = 0
+  !
+  missing = .FALSE.
+  !
+  IF (ionode) THEN
+    !
+    DO ik = 1, nks
+      ! Skip if the irreducible k is already found.
+      IF (ik_to_ikirr(ik) /= -1) CYCLE
+      !
+      ikirr = ikirr + 1
+      ik_to_ikirr(ik) = ikirr
+      !
+      CALL star_q(xk(:, ik), at, bg, nsym, s, invs, nqs, sxq, isq, imq, .FALSE.)
+      !
+      IF (nqs == 1) CYCLE
+      !
+      ! Find other k points in the star
+      !
+      DO isk = 2, nqs
+        jk = get_index_of_k_point(sxq(:, isk), xk, nks)
+        IF (jk == -1) THEN
+          xk_crys = sxq(:, isk)
+          CALL cryst_to_cart(1, xk_crys, at, -1)
+          WRITE(stdout, '(5x,a,3F12.8)') 'missing k point (crystal): ', xk_crys
+          missing = .TRUE.
+        ELSE
+          ik_to_ikirr(jk) = ikirr
+        ENDIF
+      ENDDO ! isk
+      !
+      IF (imq == 0) THEN
+        DO isk = 1, nqs
+          jk = get_index_of_k_point(-sxq(:, isk), xk, nks)
+          IF (jk == -1) THEN
+            xk_crys = -sxq(:, isk)
+            CALL cryst_to_cart(1, xk_crys, at, -1)
+            WRITE(stdout, '(5x,a,3F12.8)') 'missing k point (crystal): ', xk_crys
+            missing = .TRUE.
+          ELSE
+            ik_to_ikirr(jk) = ikirr
+          ENDIF
+        ENDDO ! isk
+      ENDIF
+      !
+    ENDDO ! ik
+    !
+  ENDIF ! ionode
+  !
+  CALL mp_bcast(missing, ionode_id, world_comm)
+  !
+  IF (missing) THEN
+    WRITE(stdout, *) ''
+    WRITE(stdout, '(5x,a)') 'ERROR: k point in the star not found.'
+    WRITE(stdout, '(5x,a)') 'To use use_irr_q = .true., the k point for the NSCF calculation list'
+    WRITE(stdout, '(5x,a)') 'must contain all k points in the star once and only once.'
+    WRITE(stdout, '(5x,a)') 'See above for the list of missing k points in crystal coordinates.'
+    CALL errore('postahc', 'k point in the star not found.', 1)
+  ENDIF
+  !
+  CALL mp_bcast(ik_to_ikirr, ionode_id, world_comm)
+  nkirr = MAXVAL(ik_to_ikirr)
+  !
+  ! Print the list of irreducible k points
+  !
+  WRITE(stdout, *) ''
+  WRITE(stdout, '(5x, a)') 'List of irreducible k points'
+  WRITE(stdout, '(5x, a)') 'ik      xk(1:3) (cart. coord. in units 2pi/alat)'
+  ikirr = 0
+  DO ik = 1, nks
+    IF (ik_to_ikirr(ik) == ik) THEN
+      ikirr = ikirr + 1
+      WRITE(stdout, '(I8,3F12.8)') ikirr, xk(:, ik)
+    ENDIF
+  ENDDO
+  WRITE(stdout, *) ''
+  !
+END SUBROUTINE setup_ik_to_ikirr_mapping
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
