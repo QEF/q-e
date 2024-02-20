@@ -1079,10 +1079,6 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   INTEGER  :: ig
   ! 
   !
-  !$acc data present_or_copyin(rho1, rho2)
-  local_tf_ddot = 0.D0
-  !$acc update self(rho1(1), rho2(1)) async(2) 
-  !
   fac = e2 * fpi / tpiba2
   !
   IF ( PRESENT(g0) ) THEN
@@ -1095,6 +1091,8 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
      !
   END IF
   !
+  local_tf_ddot = 0.D0
+  !$acc data present_or_copyin(rho1, rho2)
   IF ( gg0 > 0.0_DP ) THEN
      !
 #if defined(_OPENACC)
@@ -1102,26 +1100,19 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
 #else
      !$omp parallel do reduction(+:local_tf_ddot)
 #endif
-     DO ig = gstart, ngm0
+     DO ig = 1, ngm0
         local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
      END DO
 #if !defined(_OPENACC) 
      !$omp end parallel do
 #endif
      !
-     IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
-     !
-     IF ( gstart == 2 ) THEN
-        !$acc wait(2) 
-        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
-     END IF
-     !
   ELSE
      !
 #if !defined(_OPENACC) 
      !$omp parallel do reduction(+:local_tf_ddot)
 #else
-    !$acc parallel loop reduction(+:local_tf_ddot) 
+     !$acc parallel loop reduction(+:local_tf_ddot) 
 #endif
      DO ig = gstart, ngm0
         local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
@@ -1130,13 +1121,12 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
      !$omp end parallel do
 #endif 
      !
-     IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
-     !
   END IF
+  !$acc end data
   !
+  IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
   local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
   !
-  !$acc end data
   CALL mp_sum( local_tf_ddot, intra_bgrp_comm )
   !
   RETURN
