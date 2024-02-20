@@ -1087,46 +1087,31 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
      !
   ELSE
      !
-     gg0 = -1.0_DP
+     gg0 = 0.0_DP
      !
   END IF
   !
   local_tf_ddot = 0.D0
   !$acc data present_or_copyin(rho1, rho2)
-  IF ( gg0 > 0.0_DP ) THEN
-     !
 #if defined(_OPENACC)
-     !$acc parallel loop reduction(+:local_tf_ddot) 
+  !$acc parallel loop reduction(+:local_tf_ddot) 
 #else
-     !$omp parallel do reduction(+:local_tf_ddot)
+  !$omp parallel do reduction(+:local_tf_ddot)
 #endif
-     DO ig = 1, ngm0
-        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
-     END DO
+  DO ig = gstart, ngm0
+     local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
+  END DO
 #if !defined(_OPENACC) 
-     !$omp end parallel do
+  !$omp end parallel do
 #endif
-     !
-  ELSE
-     !
-#if !defined(_OPENACC) 
-     !$omp parallel do reduction(+:local_tf_ddot)
-#else
-     !$acc parallel loop reduction(+:local_tf_ddot) 
-#endif
-     DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
-     END DO
-#if !defined(_OPENACC) 
-     !$omp end parallel do
-#endif 
-     !
-  END IF
   !$acc end data
   !
   IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
+  IF ( gstart == 2 .AND. gg0 > 0.0_dp ) THEN
+     ! This is the G=0 term, that for gamma_only must not be counted twice
+     local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
+  END IF
   local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
-  !
   CALL mp_sum( local_tf_ddot, intra_bgrp_comm )
   !
   RETURN
