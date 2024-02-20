@@ -25,7 +25,6 @@ SUBROUTINE non_scf( )
   USE wavefunctions,        ONLY : evc
   USE add_dmft_occ,         ONLY : dmft
   !
-  USE wavefunctions_gpum, ONLY : using_evc
   USE exx,                  ONLY : exxinit, aceinit, use_ace
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, kedtau
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
@@ -47,8 +46,6 @@ SUBROUTINE non_scf( )
   REAL(DP), EXTERNAL :: get_clock
   REAL(DP) :: charge
   REAL(DP) :: etot_cmp_paw(nat,2,2)
-
-  CALL using_evc(0) ! This may not be needed. save buffer is intent(in)
   !
   !
   CALL start_clock( 'electrons' )
@@ -124,8 +121,6 @@ SUBROUTINE non_scf( )
   ! ... FIXME: it shouldn't be necessary to do this here
   !
   IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
-        CALL using_evc(0) ! save buffer is intent(in)
-  IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
         CALL save_buffer( evc, nwordwfc, iunwfc, nks )
   !
   ! ... do a Berry phase polarization calculation if required
@@ -179,8 +174,6 @@ SUBROUTINE non_scf( )
      WRITE( stdout, 9102 )
      conv_elec = .TRUE.
      CALL print_ks_energies_nonscf ( ef_scf, ef_scf_up, ef_scf_dw ) 
-     IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
-           CALL using_evc(0) ! save buffer is intent(in)
      IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
            CALL save_buffer( evc, nwordwfc, iunwfc, nks )
      IF ( lberry ) CALL c_phase()

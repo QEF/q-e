@@ -2691,7 +2691,6 @@ end associate
                                        deallocate_bec_type, calbec
     USE uspp,                   ONLY : okvan,nkb,vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
-    USE wavefunctions_gpum,     ONLY : using_evc
     USE uspp_init,              ONLY : init_us_2
     IMPLICIT NONE
     !
@@ -2706,8 +2705,6 @@ end associate
     !
     IF (okvan) CALL allocate_bec_type( nkb, nbnd, becpsi )
     energy = 0._dp
-    !
-    CALL using_evc(0)
     !
     DO ik = 1, nks
        npw = ngk(ik)
@@ -3830,7 +3827,6 @@ end associate
     USE mp_bands,           ONLY : intra_bgrp_comm
     USE mp,                 ONLY : mp_sum
     USE wavefunctions,      ONLY : evc
-    USE wavefunctions_gpum, ONLY : using_evc
     USE uspp_init,          ONLY : init_us_2
     !
     IMPLICIT NONE
@@ -3852,8 +3848,6 @@ end associate
        CALL errore( 'aceinit', 'n_proj must be between occ and tot.', 1 )
     ENDIF
     !
-    CALL using_evc(0)
-    !
     IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
 #if defined (__CUDA)
     IF (.NOT. ALLOCATED(xi_d)) ALLOCATE( xi_d(npwx*npol,nbndproj) )
@@ -3868,7 +3862,6 @@ end associate
        current_k = ik
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-       IF ( nks > 1 ) CALL using_evc(2)
        IF ( okvan ) THEN
           CALL init_us_2( npw, igk_k(1,ik), xk(:,ik), vkb )
           CALL calbec( npw, vkb, evc, becpsi, nbnd )

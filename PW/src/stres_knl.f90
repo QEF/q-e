@@ -27,9 +27,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   USE mp_pools,             ONLY: inter_pool_comm
   USE mp_bands,             ONLY: intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
-#if defined(__CUDA) 
-  USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d
-#endif   
   !
   IMPLICIT NONE
   !
@@ -44,11 +41,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   REAL(DP) :: twobysqrtpi, gk2, arg, s11, s21, s31, s22, s32, s33, &
               xk1, xk2, xk3, tmpf, wg_nk 
   INTEGER  :: npw, ik, l, m, i, ibnd
-  !
-#if defined(__CUDA)
-  CALL using_evc(0)
-  CALL using_evc_d(0)
-#endif
   !
   !$acc enter data create( evc ) 
   !
@@ -71,10 +63,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   DO ik = 1, nks
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-#if defined(__CUDA)
-        CALL using_evc(2)
-        CALL using_evc_d(0)
-#endif
      ENDIF 
      !
      npw = ngk(ik)

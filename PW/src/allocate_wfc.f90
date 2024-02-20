@@ -25,7 +25,6 @@ SUBROUTINE allocate_wfc()
   USE noncollin_module,    ONLY : npol
   USE wavefunctions,       ONLY : evc
   USE wannier_new,         ONLY : use_wannier
-  USE wavefunctions_gpum,  ONLY : using_evc
   USE control_flags,       ONLY : use_gpu
   !
   IMPLICIT NONE
@@ -36,7 +35,6 @@ SUBROUTINE allocate_wfc()
 !civn: PIN evc memory here
   IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
   !$acc enter data create(evc)
-  CALL using_evc(2)
   !
   IF ( one_atom_occupations .OR. use_wannier ) &
      ALLOCATE( swfcatom(npwx*npol,natomwfc) )

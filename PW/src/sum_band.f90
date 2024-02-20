@@ -48,7 +48,6 @@ SUBROUTINE sum_band()
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
   USE io_global,            ONLY : stdout
   USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE fft_interfaces,       ONLY : invfft
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
@@ -313,7 +312,6 @@ SUBROUTINE sum_band()
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd, brange
        REAL(DP) :: kplusgi
        !
-       CALL using_evc(0)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -339,8 +337,6 @@ SUBROUTINE sum_band()
           CALL start_clock( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-
-          IF ( nks > 1 ) CALL using_evc(1) ! get_buffer(evc, ...) evc is updated (intent out)
           !
           CALL stop_clock( 'sum_band:buffer' )
           !
@@ -421,8 +417,6 @@ SUBROUTINE sum_band()
              ENDIF
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
-                !
-                CALL using_evc(0)
                 !
                 DO j = 1, 3
                    DO i = 1, npw
@@ -510,9 +504,6 @@ SUBROUTINE sum_band()
        REAL(DP) :: wg_p
        INTEGER  :: ibnd_p
        !
-       CALL using_evc(0)
-       !
-       !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
@@ -558,8 +549,6 @@ SUBROUTINE sum_band()
           CALL start_clock( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-          IF ( nks > 1 ) CALL using_evc(1)
-
           CALL stop_clock( 'sum_band:buffer' )
           !
           CALL start_clock( 'sum_band:init_us_2' )
@@ -880,7 +869,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE us_exx,             ONLY : store_becxx0
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
-  USE wavefunctions_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -902,8 +890,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   INTEGER :: ibnd, ibnd_loc, nbnd_loc, kbnd  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
-  !
-  CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   !
   CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)

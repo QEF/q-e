@@ -37,7 +37,6 @@ SUBROUTINE new_ns( ns )
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -54,8 +53,6 @@ SUBROUTINE new_ns( ns )
   !    "    "  spins
   REAL(DP), ALLOCATABLE :: nr(:,:,:,:)
   REAL(DP) :: psum
-  !
-  CALL using_evc(0)
   !
   CALL start_clock( 'new_ns' )
   !
@@ -78,7 +75,6 @@ SUBROUTINE new_ns( ns )
      npw = ngk(ik)
      !
      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(1)
      !
      ! make the projection
      !
@@ -239,7 +235,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ldaU,                 ONLY : is_hubbard, nwfcU
     USE becmod,               ONLY : bec_type, calbec, &
                                      allocate_bec_type, deallocate_bec_type
-    USE wavefunctions_gpum,   ONLY : using_evc
     USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
@@ -265,7 +260,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-    CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
     ! does not need mp_sum intra-pool, since it is already done in calbec 
     !
@@ -326,7 +320,6 @@ SUBROUTINE new_ns_nc( ns )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
-  USE wavefunctions_gpum,   ONLY : using_evc
   IMPLICIT NONE
   !
   COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
@@ -353,13 +346,11 @@ SUBROUTINE new_ns_nc( ns )
   !
   !--
   !  loop on k points
-  CALL using_evc(0)
   DO ik = 1, nks
      !
      npw = ngk (ik)
      IF (nks > 1) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        CALL using_evc(1)
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      ENDIF
      !
