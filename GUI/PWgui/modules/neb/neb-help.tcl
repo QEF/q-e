@@ -372,9 +372,13 @@ help lfcp -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. perform a constant bias potential (constant-mu)
-calculation with ESM method (assume_isolated = 'esm' and
-esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
+If .TRUE. perform a constant bias potential (constant-mu) calculation with
+- ESM method (assume_isolated = 'esm' and esm_bc = 'bc2' or 'bc3' must be
+              set in SYSTEM namelist) or
+- ESM-RISM method (assume_isolated = 'esm' and esm_bc = 'bc1' must be set
+                   set in SYSTEM namelist, and trism = .TRUE. must be set
+                   set in CONTROL namelist).
+
 "fcp_mu" gives the target Fermi energy.
 See the header of PW/src/fcp_module.f90 for documentation
                </pre></blockquote>

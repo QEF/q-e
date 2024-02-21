@@ -236,7 +236,11 @@ help dftd3_hess -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> File where the D3 dispersion hessian matrix is read.
+<blockquote><pre>
+File where the D3 dispersion hessian matrix is read. Set to
+'automatic.hess' to enable automatic mode (experimental). In
+this mode, D3 Hessian is computed if 'automatic.hess' file is
+missing.
          </pre></blockquote>
 </ul>      
       
