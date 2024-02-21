@@ -2,24 +2,28 @@
  * * *   README file for QE-modes   * * *
 ========================================================================
 
-This is QE-modes package: an open-source collection of Emacs
+This is the QE-modes package: an open-source collection of Emacs
 major-modes for making the editing of Quantum ESPRESSO input files
-somewhat easier and more comfortable with Emacs editor.
+somewhat easier and more comfortable with the Emacs editor.
 
-QE-modes is free software, released under the GNU General Public
-License. See: http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt,
+QE-modes is free software released under the GNU General Public
+License. See: http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
 
 Quick installation instructions for the impatient:
 --------------------------------------------------
 
-1. copy the qe-modes/ subdirectory into ~/.emacs.d/ directory
-   (N.B.: use the install.sh script instead)
-   
-2. edit and append the qe-modes.emacs file to your ~/.emacs file
+1. To install QE-modes, type:
 
-For more information about the installation and usage, see the file:
-Doc/user_guide.pdf
+      ./install.sh
+
+   This script copies the qe-modes/ subdirectory into the ~/.emacs.d/
+   directory.
+   
+2. Edit and append the 'qe-modes.emacs' file to your ~/.emacs file.
+
+For more information about the installation and usage, see the
+Doc/user_guide.pdf file.
 
 
                             * * *
