@@ -420,6 +420,7 @@ MODULE exx
     IF ( use_ace ) &
         WRITE(stdout,'(/,5X,"Using ACE for calculation of exact exchange")') 
     !
+    !$acc update device(evc)
     CALL transform_evc_to_exx( 2 )
     !
     ! ... prepare the symmetry matrices for the spin part

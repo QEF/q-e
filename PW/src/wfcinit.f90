@@ -87,6 +87,7 @@ SUBROUTINE wfcinit()
         DO ik = 1, nks
            CALL read_collected_wfc ( dirname, ik, evc, "wfc", ierr )
            IF ( ierr /= 0 ) GO TO 10
+           !$acc update device(evc)
            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         END DO
         !
