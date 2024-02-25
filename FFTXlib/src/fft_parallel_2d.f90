@@ -995,7 +995,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
        CALL fft_scatter_many_planes_to_columns_send( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
-       i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 0), dfft%bstreams(j/dfft%subbatchsize + 1))
+       i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = cudaStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)
 
        DO i = 0, currsize - 1
