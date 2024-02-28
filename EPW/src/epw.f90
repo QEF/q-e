@@ -11,7 +11,7 @@
   PROGRAM epw
   !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v5.8
+  !! version: v5.8.1
   !! license: GNU
   !! summary: EPW main driver
   !!
@@ -42,7 +42,7 @@
   LOGICAL,EXTERNAL    :: check_gpu_support
   !! Name of the program
   !
-  version_number = '5.8'
+  version_number = '5.8.1'
   !
   CALL init_clocks(.TRUE.)
   !
