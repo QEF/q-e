@@ -18,6 +18,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_param, ONLY: lmaxkb, nbetam, nh, nhm
+  USE beta_mod,   ONLY: interp_dbeta
   !
   IMPLICIT NONE
   !
@@ -97,15 +98,7 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
      q(ig) = gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
-#if defined(__CUDA)
-  !$acc host_data use_device(gk,q,ylm)
-  CALL ylmr2_gpu( (lmaxkb+1)**2, npw, gk, q, ylm )
-  !$acc end host_data
-#else
-  !$acc update self(gk,q)
   CALL ylmr2( (lmaxkb+1)**2, npw, gk, q, ylm )
-  !$acc update device(ylm)
-#endif
   !
   !$acc parallel loop
   DO ig = 1, npw
@@ -202,47 +195,3 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   RETURN
   !
 END SUBROUTINE gen_us_dj_base
-!
-!----------------------------------------------------------------------
-SUBROUTINE interp_dbeta( nt, npw, qg, vq )
-  !----------------------------------------------------------------------
-  !
-  USE upf_kinds,  ONLY : dp
-  USE uspp_param, ONLY : upf, nbetam
-  USE uspp_data,  ONLY : nqx, dq, tab_beta
-  !
-  implicit none
-  integer, intent(in) :: nt, npw
-  real(dp), intent(in ) :: qg(npw)
-  real(dp), intent(out) :: vq(npw,nbetam)
-  !
-  integer :: i0, i1, i2, i3, nbnt, nb, ig
-  real(dp):: qgr, px, ux, vx, wx
-  !
-  nbnt = upf(nt)%nbeta
-  !$acc data present (tab_beta) present_or_copyin (qg) present_or_copyout (vq)
-  !$acc parallel loop collapse(2)
-  DO nb = 1, nbnt
-     DO ig = 1, npw
-        qgr = qg(ig)
-        px = qgr / dq - INT(qgr/dq)
-        ux = 1.0_dp - px
-        vx = 2.0_dp - px
-        wx = 3.0_dp - px
-        i0 = qgr / dq + 1
-        i1 = i0 + 1
-        i2 = i0 + 2
-        i3 = i0 + 3
-        IF ( i3 <= nqx ) THEN
-            vq(ig,nb) = ( tab_beta(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.0_dp + &
-                          tab_beta(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.0_dp - &
-                          tab_beta(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.0_dp + &
-                          tab_beta(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.0_dp )/dq
-        ELSE
-            vq(ig,nb) = 0.0_dp 
-        END IF
-     ENDDO
-  END DO
-  !$acc end data
-  !----------------------------------------------------------------------
-END SUBROUTINE interp_dbeta

@@ -1,6 +1,6 @@
   &inputhp
    prefix = 'bn',
-   nq1 = 1 
+   nq1 = 2 
    nq2 = 1 
    nq3 = 1 
    conv_thr_chi = 1.d-7,

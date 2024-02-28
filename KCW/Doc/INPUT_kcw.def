@@ -347,8 +347,8 @@ input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
            default { .FALSE. }
            info {
            If .true. the interpolated band structure is computed along 
-           a path secified with the K_POINTS card ( see PW documentation 
-           https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 )
+           a path specified with the K_POINTS card ( see PW documentation 
+           https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS )
            }
         }
 
@@ -382,7 +382,7 @@ input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
      }
 
     card K_POINTS { 
-      message { see https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 }
-      }
+        message { see https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS }
+    }
 }
 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Numerical recursive algorithm based on the one given in Numerical 
   !     Recipes but avoiding the calculation of factorials that generate 
   !     overflow for lmax > 11
-  !     Last modified May 2nd, 2021, by PG
+  !     Last modified Jan. 2024, by PG: calls CUF version if __CUDA
   !
   USE upf_kinds, ONLY : DP
   USE upf_const, ONLY : pi, fpi
@@ -32,17 +32,25 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   ! local variables
   !
   real(DP), parameter :: eps = 1.0d-9
+  integer, parameter :: maxl = 14
   real(DP) :: cost , sent, phi 
   real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm, lm1, lm2
   !
   if (ng < 1 .or. lmax2 < 1) return
-  do lmax = 0, 25
+  do lmax = 0, maxl
      if ((lmax+1)**2 == lmax2) go to 10
   end do
-  call upf_error (' ylmr', 'l > 25 or wrong number of Ylm required',lmax2)
+  call upf_error (' ylmr2', 'l too large, or wrong number of Ylm required',lmax)
 10 continue
   !
+#if defined(__CUDA)
+  !$acc data present_or_copyout(ylm) present_or_copyin(g, gg)
+  !$acc host_data use_device(g,gg,ylm)
+  call ylmr2_gpu(lmax2, ng, g, gg, ylm)
+  !$acc end host_data
+  !$acc end data
+#else
   if (lmax == 0) then
      ylm(:,1) =  sqrt (1.d0 / fpi)
      return
@@ -124,6 +132,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
      end do
   enddo
   !$omp end parallel do
+#endif
   !
   return
 end subroutine ylmr2

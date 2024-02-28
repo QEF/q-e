@@ -96,9 +96,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0( ngm_l, lmaxq*lmaxq ) )
   !$acc data create( vaux, qmod, ylmk0 )
   !
-  !$acc host_data use_device(ylmk0, g, gg)
-  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
-  !$acc end host_data
+  CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !
   !$acc parallel loop
   DO ig = 1, ngm_l

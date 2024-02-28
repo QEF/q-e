@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2021-2023 Quantum ESPRESSO Foundation
+! Copyright (C) 2021-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,6 +20,7 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   USE upf_const,    ONLY : tpi
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : lmaxkb, nbetam, nhm, nh, nsp
+  USE beta_mod,     ONLY : interp_beta
   !
   implicit none
   !
@@ -99,9 +100,7 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
                gk(3, ig)*gk(3, ig)
   enddo
   !
-  !$acc host_data use_device (gk, qg, ylm)
-  call ylmr2_gpu ((lmaxkb+1)**2, npw_, gk, qg, ylm)
-  !$acc end host_data 
+  call ylmr2 ((lmaxkb+1)**2, npw_, gk, qg, ylm)
   !
   ! set now qg=|q+G| in atomic units
   !
@@ -168,52 +167,6 @@ SUBROUTINE init_us_2_acc( npw_, npwx, igk_, q_, nat, tau, ityp, &
   deallocate(vkb1)
   !
   return
+  !----------------------------------------------------------------------
 end subroutine init_us_2_acc
-!
-!----------------------------------------------------------------------
-SUBROUTINE interp_beta( nt, npw_, qg, vq )
-  !----------------------------------------------------------------------
-  !
-  USE upf_kinds,  ONLY : dp
-  USE uspp_param, ONLY : upf, nbetam
-  USE uspp_data,  ONLY : nqx, dq, tab_beta
-  !
-  implicit none
-  integer, intent(in) :: nt, npw_
-  real(dp), intent(in ) :: qg(npw_)
-  real(dp), intent(out) :: vq(npw_,nbetam)
-  !
-  integer :: i0, i1, i2, i3, nbnt, nb, ig
-  real(dp):: qgr, px, ux, vx, wx
-  !
-  nbnt = upf(nt)%nbeta
-  !$acc data present (tab_beta) present_or_copyin (qg) present_or_copyout (vq)
-  !$acc parallel loop collapse(2)
-  do nb = 1, nbnt
-     DO ig = 1, npw_
-        qgr = qg(ig)
-        px = qgr / dq - DBLE(INT(qgr/dq))
-        ux = 1.0_dp - px
-        vx = 2.0_dp - px
-        wx = 3.0_dp - px
-        i0 = INT(qgr/dq) + 1
-        i1 = i0 + 1
-        i2 = i0 + 2
-        i3 = i0 + 3
-        if ( i3 <= nqx ) then
-           vq(ig,nb) = &
-             tab_beta(i0,nb,nt) * ux * vx * wx / 6.0_dp + &
-             tab_beta(i1,nb,nt) * px * vx * wx / 2.0_dp - &
-             tab_beta(i2,nb,nt) * px * ux * wx / 2.0_dp + &
-             tab_beta(i3,nb,nt) * px * ux * vx / 6.0_dp
-        else
-           !! This case should never happen if tab_beta is properly allocated
-           !! (setting q_max to be large enough) - for compatibility with GWW
-           vq(ig,nb) = 0.0_dp
-        end if
-     END DO
-  END DO
-  !$acc end data
-  !----------------------------------------------------------------------
-END SUBROUTINE interp_beta
 !----------------------------------------------------------------------

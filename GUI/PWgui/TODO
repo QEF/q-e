@@ -1,5 +1,5 @@
 * starkits' binary version does not parse well the command line
-  options; -- must be passed and also pwgui header is always printed
+  options
 
 * would be nice to have kind of beginner mode for more complex modules
   such as pw.x, where only the most common variable items would be

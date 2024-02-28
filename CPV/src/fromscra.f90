@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,6 @@
 SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
-    USE atomic_wfc_init,      ONLY : atomic_wfc_cp
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
@@ -23,7 +22,7 @@ SUBROUTINE from_scratch( )
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp, tempw
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, velh, at, alat, tpiba
+                                     cell_force, velh, at, alat
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx, nudx
@@ -49,7 +48,6 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
-    USE upf_ions,             ONLY : n_atom_wfc
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
@@ -63,7 +61,6 @@ SUBROUTINE from_scratch( )
     USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
     USE device_memcpy_m,        ONLY : dev_memcpy
-    USE uspp_param,             ONLY : upf, nwfcm
 
 #if defined (__ENVIRON)
     USE plugin_flags,         ONLY : use_environ
@@ -90,7 +87,7 @@ SUBROUTINE from_scratch( )
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
-    INTEGER                  :: i1, i2, natomwfc
+    INTEGER                  :: i1, i2
     !
     ! ... Subroutine body
     !
@@ -147,13 +144,12 @@ SUBROUTINE from_scratch( )
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
 
-    ! if asked, use as much atomic wavefunctions as possible
+    ! if asked, use as many atomic wavefunctions as possible
     if ( trim(startingwfc) == 'atomic') then
        if ( ionode ) &
          WRITE (stdout, '("Using also atomic wavefunctions as much as possible")') 
-       natomwfc = n_atom_wfc ( nat, ityp )
-       call atomic_wfc_cp(cm_bgrp, omega, tpiba, nat, nsp, ityp, tau0, natomwfc, &
-                   mill, eigts1, eigts2, eigts3, g, iupdwn, ngw, upf, nwfcm, nspin )
+       CALL atomic_wfc_cp(omega, nat, nsp, ityp, tau0, iupdwn, nspin, &
+               ngw, nbspx, cm_bgrp )
     endif
 
 
@@ -403,3 +399,65 @@ subroutine hangup
     call mp_barrier(world_comm)
     CALL stop_cp_run()
 end subroutine
+
+SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, iupdwn, npol, npw, nbspx,&
+               evc )
+   
+         USE kinds,        ONLY : DP
+         USE uspp_param,   ONLY : nwfcm
+         USE mp_global,    ONLY : intra_bgrp_comm
+         USE uspp_data,    ONLY : nqx, tab_at, dq
+         USE gvecw,        ONLY : ecutwfc
+         USE upf_ions,     ONLY : n_atom_wfc
+
+         IMPLICIT NONE
+         !
+         INTEGER, INTENT(IN) :: nat, nsp, ityp(nat), iupdwn(2), npol, npw, nbspx
+         REAL(DP), INTENT(IN) :: omega, tau(3,nat)
+         COMPLEX(DP), INTENT(inout) :: evc (npw,nbspx)
+         !
+         INTEGER :: natomwfc
+         COMPLEX(DP), ALLOCATABLE  :: wfcatom(:,:,:)
+         !! Superposition of atomic wavefunctions
+   
+         !cp specific settings (gamma only)
+         ! xk is 0,0,0, igk is the identical permutation
+         ! wfcatom has 2 dimensions (npw, nbnd*nspin)
+         ! looks like only nspin=1,2 are implemented. The layout of the wfc is different:
+         ! in cp it is the equivalent of (npw, nbnd, nspin ), while in pw is (npwx, nspin, nbnd)
+         real(dp) :: xk(3)
+         integer ::  igk(npw), i, ipol, sh(2)
+         REAL(DP) :: angle1(nsp), angle2(nsp)
+         !! dummy, unused variables
+   
+         ! identity permutation
+         do i=1,npw
+            igk(i)=i
+         enddo
+         ! gamma point only
+         xk=0.d0
+         nqx = INT( (SQRT(ecutwfc) / dq + 4) * 1.d0 )
+         allocate(tab_at(nqx,nwfcm,nsp))
+         call init_tab_atwfc(omega, intra_bgrp_comm)
+
+         natomwfc = n_atom_wfc ( nat, ityp )
+         allocate ( wfcatom(npw, npol, natomwfc) )
+         
+         ! only nospin / LSDA in CP
+         call atomic_wfc_acc( xk, npw, igk, nat, nsp, ityp, tau, &
+              .false., .false.,  angle1, angle2, .false., &
+              npw, npol, natomwfc, wfcatom )
+   
+         sh = shape(evc)
+   
+         !write the result in the correct order in evc
+         do i=1,min(natomwfc,sh(2)/npol)
+            do ipol = 1, npol
+               evc(:,i + iupdwn(ipol)-1) = wfcatom(:,ipol,i)
+            enddo
+         enddo
+   
+         deallocate (wfcatom)
+         deallocate (tab_at)
+         
+      end subroutine atomic_wfc_cp

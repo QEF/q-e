@@ -227,7 +227,7 @@ SUBROUTINE init_wfc ( ik )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
 #if defined(__CUDA)
-  USE random_numbers_gpum,  ONLY : randy_vect_gpu => randy_vect_debug_gpu
+  USE random_numbers_gpum,  ONLY : randy_vect_gpu ! => randy_vect_debug_gpu
                                                   ! use '=>randy_vect_debug_gpu'
                                                   ! to adopt the same (slower) PRNG
                                                   ! used on the CPU.
@@ -256,7 +256,8 @@ SUBROUTINE init_wfc ( ik )
   !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
-  !$acc declare device_resident(wfcatom)
+  ! should be declared "device_resident(wfcatom)" but gives problems inside
+  ! "atomic_wfc" for spin-orbit case and openmp compilation - not sure why
   !
 #if defined(__CUDA)
   REAL(DP),    ALLOCATABLE :: randy_vec(:) ! data for random
@@ -286,6 +287,7 @@ SUBROUTINE init_wfc ( ik )
   xk_1 = xk(1,ik); xk_2 = xk(2,ik); xk_3 = xk(3,ik)
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
+  !$acc data create(wfcatom)
 #if defined(__CUDA)
   ALLOCATE(randy_vec(2 * n_starting_wfc * npol * ngk_ik))
 #endif
@@ -293,13 +295,7 @@ SUBROUTINE init_wfc ( ik )
   IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
-     IF(use_gpu) THEN
-       !$acc host_data use_device(wfcatom)
-       CALL atomic_wfc_gpu( ik, wfcatom )
-       !$acc end host_data
-     ELSE
-       CALL atomic_wfc( ik, wfcatom )
-     END IF
+     CALL atomic_wfc( ik, wfcatom )
      CALL stop_clock( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
@@ -452,6 +448,7 @@ SUBROUTINE init_wfc ( ik )
   CALL deallocate_bec_type_acc ( becp )
   !
   DEALLOCATE( etatom )
+  !$acc end data
   DEALLOCATE( wfcatom )
   !
   RETURN

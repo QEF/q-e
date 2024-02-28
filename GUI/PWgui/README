@@ -7,43 +7,39 @@ This is the PWgui---a GUI for the PWscf set of programs within the
 open-source Quantum ESPRESSO suite for quantum simulation of materials
 (see http://www.quantum-espresso.org).
 
-PWgui is written in [incr Tcl], an extension of Tcl scripting language
-(hence no compilation is needed for the PWgui source package). However
-the package depends on the [incr Tcl] and related software. Therefore
-there are two possibilities:
+PWgui is written in [incr Tcl], an extension of Tcl scripting
+language, implying that compilation is not needed. However, it depends
+on the [incr Tcl] and related software. Therefore, there are two
+possibilities:
 
-   (i)  to use a source package if the required Tcl software is installed
+   (i)  to use a source package (requires the Tcl software, see the
+        'INSTALL' file)
 
-   (ii) to use a standalone executable which runs out of the
-	box. Works only on the platforms for which executables have
-	been built. They are available at http://www-k3.ijs.si/kokalj/pwgui
-
-See the file "INSTALL" for installation instructions.
+   (ii) to use a standalone executable which runs out of the box. It
+	works only on the platforms for which it was built. The
+	executables are available at http://www-k3.ijs.si/kokalj/pwgui
 
 
 CURRENT STATUS
 --------------
 
-The main purpose of the PWgui is to facilitate the creation and
-manipulation (editing) of input files for Quantum ESPRESSO
-programs.
-
-It also provides a syntax checker and a formatted of input files
-(i.e. pwgui --reformat program input).
+The main purpose of PWgui is to facilitate the creation and
+manipulation (editing) of input files for Quantum ESPRESSO programs.
+It also provides a syntax checker and an input file formatter
+(i.e. pwgui --reformat PROGRAM INPUT).
 
 It is possible to run the supported QE programs by using the GUI. This
-feature requires to set the path of the QE executables via
+feature requires setting the path of the QE executables via the
 "File-->Settings" menu (tab: PWscf settings).
 
-The GUI can also use the XCRYSDEN program (http://www.xcrysden.org/)
-for the visualization of atomic structures from the pw.x input/output
-files, or for the visualization of properties calculated via the
+PWgui can also use the XCRYSDEN program (http://www.xcrysden.org/) for
+the visualization of atomic structures from the pw.x input/output
+files or for the visualization of properties calculated via the
 sequence: pw.x-->pp.x (when the property was saved into an XSF file).
 
 Currently, the following QE programs (modules) are supported: 
-
  * pw.x
- * neb.x's neb.dat
+ * neb.x
  * ph.x
  * pp.x
  * projwfc.x
@@ -113,4 +109,4 @@ following:
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Jan 2022
+Anton Kokalj (tone.kokalj@ijs.si), Feb 2024

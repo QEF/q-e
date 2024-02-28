@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
   USE io_global,        ONLY : stdout
   USE ldaU,             ONLY : Hubbard_l, Hubbard_n, Hubbard_l2, Hubbard_n2,        &
                                Hubbard_l3, Hubbard_n3, is_hubbard, is_hubbard_back, &
-                               backall, hubbard_occ
+                               backall, hubbard_occ, hubbard_projectors
   USE upf_utils,        ONLY : l_to_spdf, capital
   !
   IMPLICIT NONE
@@ -51,7 +51,9 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
      ldim = upf(nt)%nwfc
      !
      WRITE(s,'(i2)') nt
-     IF ( ( is_hubbard(nt) .OR. is_hubbard_back(nt) ) .AND. ldim < 1 ) THEN
+     IF ( ( is_hubbard(nt) .OR. is_hubbard_back(nt) .OR. &
+            Hubbard_projectors=="ortho-atomic"      .OR. &
+            Hubbard_projectors=="norm-atomic" ) .AND. ldim < 1 ) THEN
         CALL errore('offset_atom_wfc', 'no atomic wavefunctions in &
                &pseudopotential file for species #' // s // new_line('a') // &
                &'use a pseudopotential file with atomic wavefunctions!', lflag)

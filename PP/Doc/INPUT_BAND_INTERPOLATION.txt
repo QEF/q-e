@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: band_interpolation.x / PWscf / Quantum ESPRESSO (version: 7.3)
+Program: band_interpolation.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 

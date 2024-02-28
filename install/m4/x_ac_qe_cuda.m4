@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2022 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 #####
 #
 # SYNOPSIS
@@ -116,7 +116,7 @@ then
    # -----------------------------------------
    # C flags 
    # -----------------------------------------   
-   cuda_cflags=" -I$with_cuda/include -cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_cflags=" -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    ldflags="$ldflags -cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"

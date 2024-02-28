@@ -81,20 +81,20 @@
 (autoload 'pw-mode' "pw-mode.elc"
   "Major mode for editing Quantum ESPRESSO pw.x input files" t)
 
-(autoload 'cp-mode' "cp-mode.elc"
-  "Major mode for editing Quantum ESPRESSO cp.x input files" t)
-
-(autoload 'pp-mode' "pp-mode.elc"
-  "Major mode for editing Quantum ESPRESSO pp.x input files" t)
-
 (autoload 'ld1-mode' "ld1-mode.elc"
   "Major mode for editing Quantum ESPRESSO ld1.x input files" t)
 
 (autoload 'neb-mode' "neb-mode.elc"
   "Major mode for editing Quantum ESPRESSO neb.x input files" t)
 
+(autoload 'pp-mode' "pp-mode.elc"
+  "Major mode for editing Quantum ESPRESSO pp.x input files" t)
+
 (autoload 'ph-mode' "ph-mode.elc"
   "Major mode for editing Quantum ESPRESSO ph.x input files" t)
+
+(autoload 'cp-mode' "cp-mode.elc"
+  "Major mode for editing Quantum ESPRESSO cp.x input files" t)
 
 
 

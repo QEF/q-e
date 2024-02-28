@@ -21,7 +21,7 @@ SUBROUTINE c_bands_nscf_ph( )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer, open_buffer
   USE basis,                ONLY : starting_wfc
-  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
+  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
   USE uspp,                 ONLY : vkb, nkb 
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum ESPRESSO (version: 7.3)
+Program: pw.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 
@@ -1318,11 +1318,11 @@ NAMELIST: &SYSTEM
     
                    'vcut_spherical' :
                         appropriate for cubic and quasi-cubic supercells
-                                                                   (untested for non-orthogonal crystal axis)
+                        (untested for non-orthogonal crystal axis)
     
                    'vcut_ws' :
                         appropriate for strongly anisotropic supercells, see also "ecutvcut"
-                                                            (untested for non-orthogonal crystal axis)
+                        (untested for non-orthogonal crystal axis)
     
                    'none' :
                         sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
@@ -4821,4 +4821,4 @@ CARD: HUBBARD atomic | ortho-atomic | norm-atomic | wf | pseudo
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Dec 15 09:52:02 CET 2023
+This file has been created by helpdoc utility on Wed Feb 21 08:15:20 CET 2024

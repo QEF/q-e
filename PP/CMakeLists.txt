@@ -341,6 +341,20 @@ target_link_libraries(qe_pp_epsilon_exe
         qe_upflib)
 
 ###########################################################
+# d3hess.x
+###########################################################
+set(src_d3hess_x src/d3hess.f90)
+qe_add_executable(qe_pp_d3hess_exe ${src_d3hess_x})
+set_target_properties(qe_pp_d3hess_exe PROPERTIES OUTPUT_NAME d3hess.x)
+target_link_libraries(qe_pp_d3hess_exe
+    PRIVATE
+        qe_pw
+        qe_modules
+        qe_pp
+        qe_dftd3
+        qe_upflib)
+
+###########################################################
 # wannier_ham.x
 ###########################################################
 set(src_wannier_ham_x src/wannier_ham.f90)
@@ -579,6 +593,7 @@ set(PP_EXE_TARGETS
     qe_pp_pw2gt_exe
     qe_pp_sumpdos_exe
     qe_pp_epsilon_exe
+    qe_pp_d3hess_exe
     qe_pp_wannierham_exe
     qe_pp_wannierplot_exe
     qe_pp_molecularpdos_exe

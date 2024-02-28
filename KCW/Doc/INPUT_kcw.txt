@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: kcw.x / KCW / Quantum ESPRESSO (version: 7.3)
+Program: kcw.x / KCW / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 
@@ -368,8 +368,8 @@ NAMELIST: &HAM
    Type:           LOGICAL
    Default:        .FALSE.
    Description:    If .true. the interpolated band structure is computed along
-                   a path secified with the K_POINTS card ( see PW documentation
-                   https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 )
+                   a path specified with the K_POINTS card ( see PW documentation
+                   https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS )
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -408,9 +408,9 @@ NAMELIST: &HAM
 ========================================================================
 CARD: K_POINTS 
 
-   see https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487
+   see https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS
    
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Dec 15 09:59:11 CET 2023
+This file has been created by helpdoc utility on Fri Feb 23 17:16:08 CET 2024

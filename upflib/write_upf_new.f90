@@ -422,13 +422,13 @@ CONTAINS
           READ (u_input, '(A)',end=20,err=25) line
           WRITE (iun, '(A)') xml_protect(line)
           CYCLE read_write_loop
-25        CALL upf_error('write_upf::write_inputfile', 'problem writing input data',-1)
+25        WRITE(*,'(5X,"write_upf::copy_input_data warning: problem writing input data")')
 20        EXIT read_write_loop
        END DO read_write_loop
+       CALL xmlw_closetag ( ) ! 'input'
     ELSE
-       CALL upf_error('write_upf::write_inputfile', 'input file not open',-1)
+       WRITE(*,'(5X,"write_upf::copy_input_data warning: input file not open")')
     END IF
-    CALL xmlw_closetag ( ) ! 'input'
     !
   END SUBROUTINE copy_input_data
   !

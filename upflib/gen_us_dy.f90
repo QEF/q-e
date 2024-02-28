@@ -20,6 +20,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
+  USE beta_mod,    ONLY: interp_beta
   !
   IMPLICIT NONE
   !
@@ -110,19 +111,9 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   ALLOCATE( dylm(npw,(lmaxkb+1)**2,3) )
   !$acc data create( dylm )
   !
-#if defined(__CUDA)
-  !$acc host_data use_device( gk, q, dylm )
-  DO ipol = 1, 3
-     CALL dylmr2_gpu( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
-  ENDDO
-  !$acc end host_data
-#else
-  !$acc update self( gk, q )
   DO ipol = 1, 3
      CALL dylmr2( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
   ENDDO
-  !$acc update device( dylm )
-#endif
   !
   u_ipol1 = u(1) ; u_ipol2 = u(2) ; u_ipol3 = u(3)
   !

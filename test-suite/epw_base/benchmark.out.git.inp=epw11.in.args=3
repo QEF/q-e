@@ -23,11 +23,13 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.5 starts on 19Nov2022 at 12:48:31 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:29:18 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -38,11 +40,12 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     52520 MiB available memory on the printing compute node when the environment starts
-
+     K-points division:     npool     =       4
+     35776 MiB available memory on the printing compute node when the environment starts
+ 
      Reading input from epw11.in
 
      Reading supplied temperature list.
@@ -58,14 +61,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         367     367    121                 4645     4645     893
-
+ 
      Using Slab Decomposition
-
+ 
      Reading collected, re-writing distributed wavefunctions
 
 Possibly too few bands at point    1   0.00000   0.00000   0.00000
@@ -81,46 +84,6 @@ Possibly too few bands at point    5   0.00000   0.66667   0.00000
 Possibly too few bands at point    6  -0.33333   1.00000  -0.33333
 
 Possibly too few bands at point    7   0.66667   0.66667   0.66667
-
-Possibly too few bands at point    8   0.33333   1.00000   0.33333
-
-Possibly too few bands at point    9   0.00000   1.33333   0.00000
-
-Possibly too few bands at point   10  -0.33333  -0.33333   0.33333
-
-Possibly too few bands at point   11  -0.66667   0.00000   0.00000
-
-Possibly too few bands at point   12  -1.00000   0.33333  -0.33333
-
-Possibly too few bands at point   13   0.00000   0.00000   0.66667
-
-Possibly too few bands at point   14  -0.33333   0.33333   0.33333
-
-Possibly too few bands at point   15  -0.66667   0.66667  -0.00000
-
-Possibly too few bands at point   16   0.33333   0.33333   1.00000
-
-Possibly too few bands at point   17   0.00000   0.66667   0.66667
-
-Possibly too few bands at point   18  -0.33333   1.00000   0.33333
-
-Possibly too few bands at point   19  -0.66667  -0.66667   0.66667
-
-Possibly too few bands at point   20  -1.00000  -0.33333   0.33333
-
-Possibly too few bands at point   21  -1.33333   0.00000   0.00000
-
-Possibly too few bands at point   22  -0.33333  -0.33333   1.00000
-
-Possibly too few bands at point   23  -0.66667  -0.00000   0.66667
-
-Possibly too few bands at point   24  -1.00000   0.33333   0.33333
-
-Possibly too few bands at point   25   0.00000   0.00000   1.33333
-
-Possibly too few bands at point   26  -0.33333   0.33333   1.00000
-
-Possibly too few bands at point   27  -0.66667   0.66667   0.66667
 
      --                                                                         
 
@@ -154,9 +117,9 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
    Cartesian axes
 
      site n.  atom      mass           positions (a_0 units)
-        1        C   12.0108   tau( 1) = (    0.00000    0.00000    0.00000  )
-        2        C   12.0108   tau( 2) = (    0.25000    0.25000    0.25000  )
-
+        1     C      12.0108   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2     C      12.0108   tau( 2) = (    0.25000    0.25000    0.25000  )
+ 
      49 Sym.Ops. (with q -> -q+G )
 
 
@@ -199,21 +162,21 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
      Using radial grid of  461 points,  2 beta functions with: 
                 l(1) =   0
                 l(2) =   1
-     EPW          :      0.04s CPU      0.04s WALL
+     EPW          :      0.12s CPU      0.14s WALL
 
-     EPW          :      0.05s CPU      0.05s WALL
+     EPW          :      0.12s CPU      0.14s WALL
 
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
      -------------------------------------------------------------------
-
+ 
      Spin CASE ( default = unpolarized )
-
+ 
      Initializing Wannier90
-
-
+ 
+ 
      Initial Wannier projections
-
+ 
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
@@ -224,103 +187,63 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
       - Number of excluded bands is (  0)
       - Number of wannier functions is (  4)
       - All guiding functions are given 
-
+ 
   Reading data about k-point neighbours 
-
+ 
       - All neighbours are found 
-
+ 
      AMN
-      k points =    27 in    1 pools
-            1 of   27 on ionode
-            2 of   27 on ionode
-            3 of   27 on ionode
-            4 of   27 on ionode
-            5 of   27 on ionode
-            6 of   27 on ionode
-            7 of   27 on ionode
-            8 of   27 on ionode
-            9 of   27 on ionode
-           10 of   27 on ionode
-           11 of   27 on ionode
-           12 of   27 on ionode
-           13 of   27 on ionode
-           14 of   27 on ionode
-           15 of   27 on ionode
-           16 of   27 on ionode
-           17 of   27 on ionode
-           18 of   27 on ionode
-           19 of   27 on ionode
-           20 of   27 on ionode
-           21 of   27 on ionode
-           22 of   27 on ionode
-           23 of   27 on ionode
-           24 of   27 on ionode
-           25 of   27 on ionode
-           26 of   27 on ionode
-           27 of   27 on ionode
-
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+ 
      AMN calculated
-
+ 
      MMN
-      k points =    27 in    1 pools
-            1 of   27 on ionode
-            2 of   27 on ionode
-            3 of   27 on ionode
-            4 of   27 on ionode
-            5 of   27 on ionode
-            6 of   27 on ionode
-            7 of   27 on ionode
-            8 of   27 on ionode
-            9 of   27 on ionode
-           10 of   27 on ionode
-           11 of   27 on ionode
-           12 of   27 on ionode
-           13 of   27 on ionode
-           14 of   27 on ionode
-           15 of   27 on ionode
-           16 of   27 on ionode
-           17 of   27 on ionode
-           18 of   27 on ionode
-           19 of   27 on ionode
-           20 of   27 on ionode
-           21 of   27 on ionode
-           22 of   27 on ionode
-           23 of   27 on ionode
-           24 of   27 on ionode
-           25 of   27 on ionode
-           26 of   27 on ionode
-           27 of   27 on ionode
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
      MMN calculated
-
+ 
      Running Wannier90
-
+ 
      Wannier Function centers (cartesian, alat) and spreads (ang):
-
+ 
      (   0.12500   0.12500   0.12500) :   0.57702
      (   0.12500  -0.12500  -0.12500) :   0.57702
      (  -0.12500   0.12500  -0.12500) :   0.57702
      (  -0.12500  -0.12500   0.12500) :   0.57702
-
+ 
     Writing out Wannier function cube files
 
 nr1s =   24, nr2s =   24, nr3s =   24
 write_plot: wannier_plot_supercell =    3    3    3
-      Wannier Function Num:    1       Maximum Im/Re Ratio =    0.000017
-      Wannier Function Num:    3       Maximum Im/Re Ratio =    0.000015
-      Wannier Function Num:    4       Maximum Im/Re Ratio =    0.000018
+      Wannier Function Num:    1       Maximum Im/Re Ratio =    0.000016
+      Wannier Function Num:    3       Maximum Im/Re Ratio =    0.000016
+      Wannier Function Num:    4       Maximum Im/Re Ratio =    0.000011
 
 
   cube files written
      -------------------------------------------------------------------
-     WANNIER      :      2.17s CPU      2.18s WALL (       1 calls)
+     WANNIER      :      0.98s CPU      1.02s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Unfolding on the coarse grid
 
      INITIALIZATION: 
 
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_us_1    :      0.02s CPU      0.02s WALL (       1 calls)
 
 
 
@@ -329,10 +252,23 @@ write_plot: wannier_plot_supercell =    3    3    3
 
 
      Total program execution
-     EPW          :      2.22s CPU      2.23s WALL
+     EPW          :      1.11s CPU      1.15s WALL
 
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
      ===============================================================================
                                                                                     
