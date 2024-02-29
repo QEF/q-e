@@ -56,13 +56,11 @@ subroutine hp_allocate_q
     ENDIF
   ENDIF
   !
-  IF (okvan) THEN
-     ALLOCATE (eigqts(nat))
-     ALLOCATE (becp1(nksq))
-     DO ik = 1,nksq
-        CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
-     ENDDO
-  ENDIF
+  ALLOCATE (eigqts(nat))
+  ALLOCATE (becp1(nksq))
+  DO ik = 1,nksq
+     CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
+  ENDDO
   !
   ALLOCATE (swfcatomk(npwx*npol,nwfcU))     
   IF (lgamma) THEN

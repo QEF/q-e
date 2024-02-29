@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: molecularpdos.x / PWscf / Quantum ESPRESSO (version: 7.3)
+Program: molecularpdos.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 

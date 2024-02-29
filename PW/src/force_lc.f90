@@ -129,7 +129,7 @@ SUBROUTINE force_lc( nat, tau, ityp, ntyp, alat, omega, ngm, ngl, &
   !
   ! 2D calculations: re-add the erf/r contribution to the forces that was 
   ! substracted from vloc (in vloc_of_g) and re-added to vltot only (in setlocal)
-  IF ( do_cutoff_2D ) CALL cutoff_force_lc( aux(:,1), forcelc )
+  IF ( do_cutoff_2D ) CALL cutoff_force_lc( gamma_only, aux(:,1), forcelc )
   !
   CALL mp_sum( forcelc, intra_bgrp_comm )
   !

@@ -1,5 +1,6 @@
 set(src_modules
     additional_kpoints.f90 
+    atomic_wfc_mod.f90
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw2gw.x / PWscf / Quantum ESPRESSO (version: 7.3)
+Program: pw2gw.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 

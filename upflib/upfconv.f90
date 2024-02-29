@@ -306,7 +306,7 @@ SUBROUTINE plot_ps_loc ( upf, fileout )
   write(100,'("#   r,  vloc(r), vloc+Ze^2/r")') 
   do ir=1,upf%mesh
      write(100,'(f10.4,2f25.12)') upf%r(ir), upf%vloc(ir), &
-          upf%vloc(ir) + upf%zp*e2/max(0.1,upf%r(ir))
+          upf%vloc(ir) + upf%zp*e2/max(0.1_dp,upf%r(ir))
   end do
   close(unit=100)
 

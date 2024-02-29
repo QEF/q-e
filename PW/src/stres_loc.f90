@@ -76,7 +76,7 @@ SUBROUTINE stres_loc( sigmaloc )
   ENDDO
   !
   ! ... 2D: add contribution from cutoff long-range part of Vloc
-  IF (do_cutoff_2D)  CALL cutoff_stres_evloc( rhog(:,1), strf, evloc )
+  IF (do_cutoff_2D)  CALL cutoff_stres_evloc( gamma_only, rhog(:,1), strf, evloc )
   !
   !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
@@ -110,7 +110,7 @@ SUBROUTINE stres_loc( sigmaloc )
   ENDDO
   !
   ! ... 2D: re-add LR Vloc to sigma here
-  IF (do_cutoff_2D)  CALL cutoff_stres_sigmaloc( rhog(:,1), strf, sigmaloc )
+  IF (do_cutoff_2D)  CALL cutoff_stres_sigmaloc( gamma_only, rhog(:,1), strf, sigmaloc )
   !
   !$acc end data
   !$acc end data

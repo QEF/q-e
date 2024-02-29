@@ -17,8 +17,8 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_kinds,  ONLY: dp
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY: nqx, tab, dq
-  USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh, nhm
+  USE uspp_param, ONLY: lmaxkb, nbetam, nh, nhm
+  USE beta_mod,   ONLY: interp_dbeta
   !
   IMPLICIT NONE
   !
@@ -59,16 +59,15 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   !
   ! ... local variables
   !
-  INTEGER :: ikb, nb, ih, ig, i0, i1, i2, i3, nt
+  INTEGER :: ikb, nb, ih, ig, nt
   ! counter on beta functions
   ! counter on beta functions
   ! counter on beta functions
   ! counter on G vectors
-  ! index of the first nonzero point in the r
   ! counter on atomic type
   !
   INTEGER :: ina, na, l, iig, lm, ikb_t, nht
-  REAL(DP) :: arg, px, ux, vx, wx, qt
+  REAL(DP) :: arg
   ! argument of the atomic phase factor
   COMPLEX(DP) :: pref
   ! prefactor
@@ -99,38 +98,15 @@ SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
      q(ig) = gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
-#if defined(__CUDA)
-  !$acc host_data use_device(gk,q,ylm)
-  CALL ylmr2_gpu( (lmaxkb+1)**2, npw, gk, q, ylm )
-  !$acc end host_data
-#else
-  !$acc update self(gk,q)
   CALL ylmr2( (lmaxkb+1)**2, npw, gk, q, ylm )
-  !$acc update device(ylm)
-#endif
   !
-  !$acc data copyin( tab )
-  DO nt = 1, ntyp
-     !$acc parallel loop collapse(2)
-     DO nb = 1, upf(nt)%nbeta
-        DO ig = 1, npw
-           qt = SQRT(q(ig)) * tpiba
-           px = qt / dq - INT(qt/dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = qt / dq + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           djl(ig,nb,nt) = ( tab(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                             tab(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                             tab(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                             tab(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.d0 ) / dq
-        ENDDO
-     ENDDO
+  !$acc parallel loop
+  DO ig = 1, npw
+     q(ig) = SQRT(q(ig)) * tpiba
   ENDDO
-  !$acc end data
+  DO nt = 1, ntyp
+     CALL interp_dbeta( nt, npw, q, djl(:,:,nt) )
+  ENDDO
   !
   !CALL stop_clock( 'stres_us33' )
   !CALL start_clock( 'stres_us34' )

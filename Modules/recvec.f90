@@ -74,7 +74,6 @@
        !! Set local and global dimensions, allocate arrays
        !
        USE mp, ONLY: mp_max, mp_sum
-       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_
        INTEGER, INTENT(IN) :: comm
@@ -109,7 +108,6 @@
      SUBROUTINE deallocate_gvect(vc)
        !! Deallocate G-vector related arrays.
        !
-       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        !
        LOGICAL, OPTIONAL, INTENT(IN) :: vc
@@ -183,7 +181,6 @@
         !
         USE kinds,              ONLY : DP
         USE constants,          ONLY : eps8
-        USE control_flags,      ONLY : use_gpu
         !
         IMPLICIT NONE
         !

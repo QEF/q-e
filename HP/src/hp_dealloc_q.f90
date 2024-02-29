@@ -45,16 +45,14 @@ SUBROUTINE hp_dealloc_q()
   if (allocated(ikmkmqs))   deallocate (ikmkmqs)
   if (allocated(m_loc))     deallocate (m_loc)
   !
-  IF (okvan) THEN 
-     if (allocated(eigqts)) deallocate (eigqts)
-     !
-     if (allocated(becp1))  then
-        do ik=1,size(becp1)
-           call deallocate_bec_type ( becp1(ik) )
-        enddo
-        deallocate(becp1)
-     endif
-  ENDIF
+  if (allocated(eigqts)) deallocate (eigqts)
+  !
+  if (allocated(becp1))  then
+     do ik=1,size(becp1)
+        call deallocate_bec_type ( becp1(ik) )
+     enddo
+     deallocate(becp1)
+  endif
   if (allocated(becpt)) then  
       do ik=1,size(becpt)
          call deallocate_bec_type ( becpt(ik) )

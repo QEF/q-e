@@ -939,7 +939,7 @@ SUBROUTINE phq_readin()
   !
   ! end of reading, close unit qestdin, remove temporary input file if existing
   ! FIXME: closing input file here breaks alpha2F.x that reads what follows
-  !!! IF (meta_ionode) ios = close_input_file ()
+  !   IF (meta_ionode) ios = close_input_file ()
 
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)

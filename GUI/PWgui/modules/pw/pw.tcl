@@ -101,10 +101,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 var disk_io {
                     -label    "Disk Input/Output (disk_io):"
                     -textvalue {
-                        high medium low nowf none
+                        high medium low nowf minimal none
                     }
                     -value {
-                        'high' 'medium' 'low' 'nowf' 'none'
+                        'high' 'medium' 'low' 'nowf' 'minimal' 'none'
                     }
                     -widget optionmenu
                 }
@@ -123,7 +123,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 }
 
                 var iprint {
-                    -label   "Interval (in SCF iterations) for printing band energies (iprint):"
+                    -label   "Interval of MD steps for printing trajectory (iprint):"
                     -widget   spinint
                     -validate nonnegint
                 }

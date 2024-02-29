@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2021 Quantum ESPRESSSO Foundation
+! Copyright (C) 2021 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,8 +19,8 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   USE upf_kinds,   ONLY: dp
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,   ONLY: nqx, tab, dq
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
+  USE beta_mod,    ONLY: interp_beta
   !
   IMPLICIT NONE
   !
@@ -63,8 +63,8 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   !
   ! ... local variables
   !
-  INTEGER :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
-             i3, ig, nbm, iq, mil1, mil2, mil3, ikb_t,     &
+  INTEGER :: na, nt, nb, ih, l, lm, ikb, iig, ipol, &
+             ig, nbm, iq, mil1, mil2, mil3, ikb_t,     &
              nht, ina, lmx2
   !
   INTEGER, ALLOCATABLE :: nas(:), ihv(:), nav(:)
@@ -75,7 +75,7 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   ! dylm_u as above projected on u
   COMPLEX(DP), ALLOCATABLE :: phase(:), sk(:,:)
   !
-  REAL(DP) :: px, ux, vx, wx, arg, u_ipol1, u_ipol2, u_ipol3, xk1, xk2, xk3
+  REAL(DP) :: arg, u_ipol1, u_ipol2, u_ipol3, xk1, xk2, xk3
   COMPLEX(DP) :: pref
   !
   !$acc kernels present_or_copyout(dvkb)
@@ -111,19 +111,9 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   ALLOCATE( dylm(npw,(lmaxkb+1)**2,3) )
   !$acc data create( dylm )
   !
-#if defined(__CUDA)
-  !$acc host_data use_device( gk, q, dylm )
-  DO ipol = 1, 3
-     CALL dylmr2_gpu( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
-  ENDDO
-  !$acc end host_data
-#else
-  !$acc update self( gk, q )
   DO ipol = 1, 3
      CALL dylmr2( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
   ENDDO
-  !$acc update device( dylm )
-#endif
   !
   u_ipol1 = u(1) ; u_ipol2 = u(2) ; u_ipol3 = u(3)
   !
@@ -142,28 +132,9 @@ SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
   q(:) = SQRT(q(:)) * tpiba
   !$acc end kernels
   !
-  !$acc data copyin( tab )
   DO nt = 1, ntyp
-     nbm = upf(nt)%nbeta
-     !$acc parallel loop collapse(2)
-     DO nb = 1, nbm
-        DO ig = 1, npw
-           px = q(ig)/dq - DBLE(INT(q(ig)/dq))
-           ux = 1._DP - px
-           vx = 2._DP - px
-           wx = 3._DP - px
-           i0 = INT(q(ig)/dq) + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           vkb0(ig,nb,nt) = tab(i0,nb,nt) * ux * vx * wx / 6._DP + &
-                            tab(i1,nb,nt) * px * vx * wx / 2._DP - &
-                            tab(i2,nb,nt) * px * ux * wx / 2._DP + &
-                            tab(i3,nb,nt) * px * ux * vx / 6._DP
-       ENDDO
-    ENDDO
+     CALL interp_beta ( nt, npw, q, vkb0(:,:,nt))
   ENDDO
-  !$acc end data
   !
   !$acc end data
   DEALLOCATE( gk, q )

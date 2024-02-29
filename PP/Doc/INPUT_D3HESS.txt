@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: d3hess.x / PWscf / Quantum ESPRESSO (version: 7.3)
+Program: d3hess.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 

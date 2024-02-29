@@ -127,7 +127,7 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   IF (do_cutoff_2D) THEN 
      !
-     CALL cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
+     CALL cutoff_stres_sigmaewa( gamma_only, alpha, sdewald, sigmaewa )
      !
   ELSE
      !

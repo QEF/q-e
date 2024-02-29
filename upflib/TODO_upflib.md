@@ -17,6 +17,13 @@
 
 * TO BE DONE: 
 
+  - vkb (array holding beta functions in reciprocal space) is one of the
+    variables of upflib, is computed and deallocated in upflib, but it is 
+    allocated outside it. Not very logical. More in general:
+    how to deal with objects like vkb that depend upon atomic positions? 
+    What belongs to upflib and what doesn't? e.g. module upf_ions, 
+    containing only function n_atom_wfc: does it belong here?
+
   - The usage of the full grid with "upf%mesh" points is useless and even
     dangerous in some cases (may enhance large-r numerical noise).
     The upf% structure contains shorter grids for nonlocal projectors
@@ -26,8 +33,10 @@
     move "msh" into the upf structure and allocate/read/write arrays
     using such a shorter grid
 
-  - Simpson integration does not seem to be the best choice. One might use 
-    GTH analytical PPs converted to numerical form for testing purposes
+  - Simpson integration does not seem to be the best choice. 
+    For testing purposes, it would be useful to select at compile time
+    (with a preprocessing flag) the fully analytical or numerical form 
+    for GTH pseudopotentials and experiments with those.
 
   - semilocal Vnl and human-readable sections are not read from PP files,
     but they should: converters may make a good usage of that information.
@@ -42,39 +51,27 @@
     together with upf(:), when upf is read. Or even better (but annoying
     to do): nh should be part of upf, since it is an atomic quantity?
 
-  - Merge pseudopotential_indexes from CPV/src/pseudopot_sub.f90 with the
-    uspp initialization in upflib (init_us_1 etc); merge qvan2b and qvan2
-    (requires merge of interpolation tables qrad and qradb)
-
-  - upf_ions now contains just a function n_atom_wfc: move somewhere else?
-    same for upf_auxtools, that only contains upf_check_atwfc_norm
-  - upf_spinorb contains just two variables: merge into uspp? add to it
-    the two functions spinor and sph_ind used only for spin-orbit?
   - lmaxq should be "the maximum value of L in Q functions", not "... + 1"
-    and should be used to dimension arrays where l=0,...,L. The dimension
-    of spherical harmonics (2*lmaxkb+1)^2 is something different and should
-    be stored in a different variable (something like ylmdim, or maxlm)
+    and should be used to dimension arrays where l=0,...,L. 
+    The dimension of spherical harmonics (lmaxq+1)^2 might be stored
+    in another variable, something like ylmdim, or maxlm
 
   - Interpolation tables: rationalize names of variables and related routines
 ```
       CP     PW      better name     contains 	           computed in
-    betagx   tab     tab_beta      beta(G) functions	 compute_betagx,
+    betagx   tab_beta              beta(G) functions	 compute_betagx,
     dbetagx             	   dbeta(G)/dG 		 compute_betagx
     dqradx              	   dQ(G)/dG  		 compute_qradx
-             tab_at  tab_atwfc?    atomic R_nl(G)	 init_tab_atwfc
+             tab_at  tab_atwfc     atomic R_nl(G)	 init_tab_atwfc
     qradx    tab_qrad              Q(G) for  USPP/PAW	 qrad_mod
              tab_rho               atomic rho(G)	 rhoa_mod
              tab_rhc               pseudocore rho(G)	 rhoc_mod
 	     tab_vloc              local pseudopotential vloc_mod
 ```
-  - Interpolation tables: rationalize the structure of the code.
-    Move allocation  of interpolation tables into initialization routines,
-    setting max |G| as input. Collect interpolation data and related routines
-    into a module, one per variable. DONE: for Vloc, rhoc, rhoat
-  - Interpolation tables: get rid of CUDA Fortran. Currently interpolation
-    tables are computed on CPU, copied to GPU using OpenACC, used via OpenACC.
-    Exception: init_us_2 still use CUDA Fortran, so tab_d has DEVICE
-    attribute and ylmr2, dylmr2 have a CUDA Fortran version.
+  - Merge pseudopotential_indexes from CPV/src/pseudopot_sub.f90 with the
+    uspp initialization in upflib (init_us_1 etc); merge qvan2b and qvan2
+    (requires merge of interpolation tables qrad and qradb)
+
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
