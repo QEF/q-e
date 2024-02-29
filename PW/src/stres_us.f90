@@ -30,7 +30,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
                                    mp_circular_shift_left 
   USE wavefunctions,        ONLY : evc
-  USE wvfct_gpum,           ONLY : using_et
   USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy
   !
   IMPLICIT NONE
@@ -205,8 +204,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        ! ... for the moment when using_gpu is true becp is always fully present
        !     in all processors
-       !
-       CALL using_et(0) ! compute_deff : intent(in)
        !
        ALLOCATE( becpr(nkb,nbnd_loc) )
        !$acc kernels present(becp%r)
@@ -460,8 +457,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           !$acc end kernels
        ENDIF
        !$acc data create( ps, ps_nc, deff, deff_nc )
-       !
-       CALL using_et(0)
        !
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors

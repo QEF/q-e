@@ -48,7 +48,6 @@ SUBROUTINE sum_band_gpu()
   USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
-  USE wvfct_gpum,           ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -303,8 +302,6 @@ SUBROUTINE sum_band_gpu()
        attributes(pinned) :: tg_rho_h
 #endif
        !
-       CALL using_et(0)
-       !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
@@ -535,8 +532,6 @@ SUBROUTINE sum_band_gpu()
        attributes(device) :: rho_d
        attributes(pinned) :: tg_rho_h, tg_rho_nc_h
 #endif
-       !
-       CALL using_et(0)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -977,7 +972,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE us_exx,             ONLY : store_becxx0
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
-  USE wvfct_gpum,         ONLY : et_d, using_et, using_et_d
   USE upf_spinorb,        ONLY : fcoef
   !
   ! Used to avoid unnecessary memcopy
@@ -1108,12 +1102,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                       auxg2_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
-                   CALL using_et_d(0)
                    !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd_loc = 1, nbnd_loc
                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
-                      auxg2_d(ibnd_loc,ih) = et_d(ibnd,ik) * auxg2_d(ibnd_loc,ih)
+                      auxg2_d(ibnd_loc,ih) = et(ibnd,ik) * auxg2_d(ibnd_loc,ih)
                       END DO
                    END DO
 
@@ -1141,11 +1134,10 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                       0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
-                   CALL using_et_d(0)
                    !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
+                         auxk2_d(ibnd,ih) = et(ibnd,ik)*auxk2_d(ibnd,ih)
                       END DO
                    END DO
 

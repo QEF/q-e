@@ -145,7 +145,6 @@ MODULE pw_restart_new
       USE martyna_tuckerman,    ONLY : do_comp_mt 
       USE run_info,             ONLY : title
       !
-      USE wvfct_gpum,           ONLY : using_et
       USE wavefunctions_gpum,   ONLY : using_evc
       USE qexsd_module,         ONLY : qexsd_add_all_clocks 
       USE solvmol,              ONLY : nsolV, solVs
@@ -251,7 +250,6 @@ MODULE pw_restart_new
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
       ! If local PW dimensions are not available, set to 0
       !
-      CALL using_et(0)
       CALL using_evc(0)
       !
       ALLOCATE( ngk_g( nkstot ) )
@@ -876,7 +874,6 @@ MODULE pw_restart_new
       USE clib_wrappers,        ONLY : f_mkdir_safe
       !
       USE wavefunctions_gpum,   ONLY : using_evc
-      USE wvfct_gpum,           ONLY : using_et
       !
       IMPLICIT NONE
       !
@@ -889,7 +886,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename, filenameace
       !
-      CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
+      CALL using_evc(0)
       dirname = restart_dir ()
       !
       ! ... check that restart_dir exists on all processors that write

@@ -46,7 +46,6 @@ SUBROUTINE init_run()
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
-  USE wvfct_gpum,         ONLY : using_et
   USE rism_module,        ONLY : lrism, rism_alloc3d
   USE extffield,          ONLY : init_extffield
   USE control_flags,      ONLY : scissor
@@ -139,12 +138,13 @@ SUBROUTINE init_run()
 #endif
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
+  !$acc enter data create(et)
   !
   et(:,:) = 0.D0
-  CALL using_et(2)
-  !
+  !$acc kernels
+  et(:,:) = 0.D0
+  !$acc end kernels
   wg(:,:) = 0.D0
-  !
   btype(:,:) = 1
   !
   IF (ts_vdw .or. mbd_vdw) THEN

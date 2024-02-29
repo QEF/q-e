@@ -85,7 +85,6 @@ SUBROUTINE read_file_ph( needwf_ph )
   USE pw_restart_new,   ONLY : read_collected_wfc
   USE fft_base,         ONLY : dffts
   !
-  USE wvfct_gpum,       ONLY : using_et
   USE wavefunctions_gpum, ONLY : using_evc
   USE pw_restart_new,   ONLY : read_xml_file
   !
@@ -117,8 +116,8 @@ SUBROUTINE read_file_ph( needwf_ph )
   ! ... of k-points in the current pool
   !
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  CALL using_et(1)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
+  !$acc update device(et)
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
   ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
@@ -177,8 +176,6 @@ SUBROUTINE read_file_new ( needwf )
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
   !
-  USE wvfct_gpum,     ONLY : using_et
-  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(INOUT) :: needwf
@@ -210,7 +207,6 @@ SUBROUTINE read_file_new ( needwf )
      ! ... of k-points in the current pool
      !
      CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-     CALL using_et(1)
      CALL poolscatter( nbnd, nkstot, et, nks, et )
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
      !

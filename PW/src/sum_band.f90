@@ -49,7 +49,6 @@ SUBROUTINE sum_band()
   USE io_global,            ONLY : stdout
   USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
   USE wavefunctions_gpum,   ONLY : using_evc
-  USE wvfct_gpum,           ONLY : using_et
   USE fft_interfaces,       ONLY : invfft
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
@@ -314,7 +313,7 @@ SUBROUTINE sum_band()
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd, brange
        REAL(DP) :: kplusgi
        !
-       CALL using_evc(0); CALL using_et(0)
+       CALL using_evc(0)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -511,7 +510,7 @@ SUBROUTINE sum_band()
        REAL(DP) :: wg_p
        INTEGER  :: ibnd_p
        !
-       CALL using_evc(0); CALL using_et(0)
+       CALL using_evc(0)
        !
        !
        ! ... here we sum for each k point the contribution
@@ -882,7 +881,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,         ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -906,7 +904,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   ! counters on beta functions, atoms, atom types, spin
   !
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
-  CALL using_et(0)
   !
   CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)

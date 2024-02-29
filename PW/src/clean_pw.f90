@@ -68,7 +68,6 @@ SUBROUTINE clean_pw( lflag )
   USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
-  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
   USE control_flags,        ONLY : sic, scissor
@@ -167,7 +166,7 @@ SUBROUTINE clean_pw( lflag )
   !
   !$acc exit data delete(g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  CALL deallocate_wvfct_gpu()
+  !$acc exit data delete(et)
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
