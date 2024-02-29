@@ -85,13 +85,16 @@ gipaw_distclean:
 ###########################################################
 
 w90:
+	cd ../external/wannier90; $(MAKE) || exit 1
+	-(cd ../bin; ln -fs ../external/wannier90/*.x .)
+
+w90lib:
 	$(call update_submodule,external,wannier90)
 	if test -e make_wannier90.inc; then \
 	(cp make_wannier90.inc \
 	    ../external/wannier90/make.inc ); else \
 	(echo "no make.inc file found for Wannier90"); fi
 	cd ../external/wannier90; $(MAKE) lib || exit 1
-	-(cd ../bin; ln -fs ../external/wannier90/wannier90.x .)
 
 w90_clean:
 	if test -d $(TOPDIR)/external/wannier90; then \

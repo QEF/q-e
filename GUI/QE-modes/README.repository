@@ -13,7 +13,7 @@ To generate the QE-modes sources:
 make
 
 which will create the *.el and *.elc files in qe-modes/ subdirectory.
-From this point on, see the either README file or Doc/user_guide.pdf.
+From this point on, see either the README file or Doc/user_guide.pdf.
 
 
 To generate the QE-modes tarball:

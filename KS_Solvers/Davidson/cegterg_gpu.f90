@@ -356,9 +356,9 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      ! ... approximate inverse iteration
      !
      ew_d = ew
-     psi_d(1:npwx*npol, nb1:nb1+notcnv) = psi(1:npwx*npol, nb1:nb1+notcnv)
+     psi_d(1:npwx*npol, nb1:nb1+notcnv-1) = psi(1:npwx*npol, nb1:nb1+notcnv-1)
      CALL g_psi_ptr( npwx, npw, notcnv, npol, psi_d(1,nb1), ew_d(nb1) )
-     psi(1:npwx*npol, nb1:nb1+notcnv) = psi_d(1:npwx*npol, nb1:nb1+notcnv)
+     psi(1:npwx*npol, nb1:nb1+notcnv-1) = psi_d(1:npwx*npol, nb1:nb1+notcnv-1)
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -401,9 +401,9 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     psi_d(1:npwx*npol, nb1:nb1+notcnv) = psi(1:npwx*npol, nb1:nb1+notcnv)
+     psi_d(1:npwx*npol, nb1:nb1+notcnv-1) = psi(1:npwx*npol, nb1:nb1+notcnv-1)
      CALL h_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
-     hpsi(1:npwx*npol, nb1:nb1+notcnv) = hpsi_d(1:npwx*npol, nb1:nb1+notcnv)
+     hpsi(1:npwx*npol, nb1:nb1+notcnv-1) = hpsi_d(1:npwx*npol, nb1:nb1+notcnv-1)
      !
      IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
      IF ( uspp ) spsi = spsi_d

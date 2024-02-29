@@ -129,7 +129,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
   USE kinds,     ONLY : DP, sgl
   USE constants, ONLY : eps8, pi, AUTOEV, rytoev
-  USE cell_base, ONLY : alat, tpiba2, at, bg, omega
+  USE cell_base, ONLY : alat, tpiba, tpiba2, at, bg, omega
   USE symm_base, ONLY : s, nsym
   USE wvfct,     ONLY : npwx, nbnd, wg, et
   USE gvecw,     ONLY : gcutw
@@ -150,10 +150,8 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   USE parallel_include
   USE scf,       ONLY : rho, rho_core, rhog_core
   USE ener,      ONLY : etxc, vtxc
-
-  USE uspp_param, ONLY : upf, nh
-  USE uspp,       ONLY : nhtol
-  USE uspp_data,  ONLY : tab
+  USE beta_mod,   ONLY : interp_beta, interp_dbeta
+  USE uspp_param, ONLY : upf, nh, nbetam
   USE ions_base,  ONLY : ntyp => nsp
   USE klist,      ONLY : ngk
 
@@ -189,8 +187,8 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   INTEGER, ALLOCATABLE :: igk_l2g(:)
   INTEGER :: npol
   !
-  REAL(kind=DP), ALLOCATABLE :: vkb0(:), djl(:), vec_tab(:)
-  INTEGER :: nb, nt, size_tab, ipw, l
+  REAL(kind=DP), ALLOCATABLE :: vkb0(:,:), q(:)
+  INTEGER :: nb, nt, ipw, l
   !
   ! REAL(kind=DP) :: norma ! Variable needed only for DEBUG
   !
@@ -472,53 +470,38 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
   IF( vkb) THEN
 ! --------------------------
-! vkb0
+! vkb0 contains \beta_n(|G|)
 ! --------------------------
     DO ik=1,nkpt
       npw = ngk(ik)
+      WRITE(*,*) "CHANGES DONE IN v.7.3.1 VERSION UNTESTED"
       WRITE(15,*) "npw", npw
-      ALLOCATE(vkb0(1:npw))
-
-      size_tab=size(tab,1)
-
-      ALLOCATE(vec_tab(1:size_tab))
-
+      ALLOCATE( vkb0(1:npw,nbetam), q(1:npw) )
+      do ig = 1, npw
+         q (ig) = sqrt ( ( xk(1,ik) + g(1,igk_k(ig,ik)) ) ** 2 + &
+                         ( xk(2,ik) + g(2,igk_k(ig,ik)) ) ** 2 + &
+                         ( xk(3,ik) + g(3,igk_k(ig,ik)) ) ** 2 ) * tpiba
+      enddo
+      !
       DO nt = 1, ntyp
+        vkb0(:,:) = 0.0_dp
+        CALL interp_beta ( nt, npw, q, vkb0 )
         DO nb = 1, upf(nt)%nbeta
-          vkb0(:) = 0.0_dp
-          vec_tab(:) = tab(:,nb,nt)
-          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab)
           WRITE(15,*) "---------------DEBUG-VKB0----------------------"
           WRITE(15,*) "ik= ", ik
           WRITE(15,*) "nt= ", nt
           WRITE(15,*) "nb= ", nb
           WRITE(15,*) "l= ", upf(nt)%lll(nb)
-          WRITE (15,'(8f15.9)') vkb0
+          WRITE (15,'(8f15.9)') (vkb0(ig,nb), ig=1,npw)
           WRITE(15,*) "--------------END-DEBUG------------------------"
   !        WRITE(io) vkb0
         ENDDO
-      ENDDO
-
-     DEALLOCATE(vkb0)
-     DEALLOCATE(vec_tab)
-
-    ENDDO
 !---------------------------
-! djl
+! vkb0 contains d\beta_n(|G|)/d|G|
 !---------------------------
-    DO ik=1,nkpt
-      npw = ngk(ik)
-
-      ALLOCATE(djl(1:npw))
-
-      size_tab=size(tab,1)
-
-      ALLOCATE(vec_tab(1:size_tab))
-      DO nt = 1, ntyp
+        vkb0(:,:) = 0.0_dp
+        ! CALL interp_dbeta ( nt, npw, q, vkb0 )
         DO nb = 1, upf(nt)%nbeta
-          djl(:) = 0.0_dp
-          vec_tab(:) = tab(:,nb,nt)
-          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab)
   !        WRITE(0,*) "---------------DEBUG-----------------------"
   !        WRITE(0,*) "ik= ", ik
   !        WRITE(0,*) "nt= ", nt
@@ -530,8 +513,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
         ENDDO
       ENDDO
 
-     DEALLOCATE(djl)
-     DEALLOCATE(vec_tab)
+      DEALLOCATE(q, vkb0)
 
     ENDDO
 
@@ -1134,138 +1116,3 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   IF (ios /= 0) CALL errore ('diropn', 'error opening '//filename, unit)
   RETURN
 END SUBROUTINE diropn_gw
-
-!----------------------------------------------------------------------
-subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab)
-  !----------------------------------------------------------------------
-  !
-  !  Calculates the kleinman-bylander pseudopotentials with the
-  !  derivative of the spherical harmonics projected on vector u
-  !
-  USE kinds,      ONLY : DP
-  USE io_global,  ONLY : stdout
-  USE constants,  ONLY : tpi
-  USE cell_base,  ONLY : tpiba
-  USE klist,      ONLY : xk, igk_k
-  USE gvect,      ONLY : g
-  USE uspp_data,  ONLY : nqx, dq
-  USE uspp_param, ONLY : upf
-  !
-  implicit none
-  !
-  integer, intent(in) :: ik, npw
-  real(DP), intent(inout) ::djl(1:npw)
-  integer, intent(in) :: size_tab
-  real(DP), intent(in) :: vec_tab(1:size_tab)
-  !
-  integer :: i0, i1, i2, &
-       i3, ig
-  real(DP), allocatable :: gk(:,:), q (:)
-  real(DP) :: px, ux, vx, wx
-  complex(DP), allocatable :: sk (:)
-
-  integer :: iq
-  real(DP) :: qt
-
-
-  allocate ( gk(3,npw) )
-  allocate ( q(npw) )
-
-  do ig = 1, npw
-     gk (1, ig) = xk (1, ik) + g (1, igk_k (ig,ik) )
-     gk (2, ig) = xk (2, ik) + g (2, igk_k (ig,ik) )
-     gk (3, ig) = xk (3, ik) + g (3, igk_k (ig,ik) )
-     q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
-  enddo
-
-  do ig = 1, npw
-     q (ig) = sqrt ( q(ig) ) * tpiba
-  end do
-
-  ! calculate beta in G-space using an interpolation table
-  do ig = 1, npw
-    qt = sqrt(q(ig)) * tpiba
-        px = qt / dq - int (qt / dq)
-        ux = 1.d0 - px
-        vx = 2.d0 - px
-        wx = 3.d0 - px
-        i0 = qt / dq + 1
-        i1 = i0 + 1
-        i2 = i0 + 2
-        i3 = i0 + 3
-        djl (ig) = vec_tab (i0) * (-vx*wx-ux*wx-ux*vx) / 6.d0 + &
-                          vec_tab (i1) * (+vx*wx-px*wx-px*vx) / 2.d0 - &
-                          vec_tab (i2) * (+ux*wx-px*wx-px*ux) / 2.d0 + &
-                          vec_tab (i3) * (+ux*vx-px*vx-px*ux) / 6.d0
-  enddo
-
-  deallocate (q)
-  deallocate ( gk )
-  return
-end subroutine gen_us_djl
-!
-!----------------------------------------------------------------------
-subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab)
-  !----------------------------------------------------------------------
-  !
-  !  Calculates the kleinman-bylander pseudopotentials with the
-  !  derivative of the spherical harmonics projected on vector u
-  !
-  USE kinds,      ONLY : DP
-  USE io_global,  ONLY : stdout
-  USE constants,  ONLY : tpi
-  USE cell_base,  ONLY : tpiba
-  USE klist,      ONLY : xk, igk_k
-  USE gvect,      ONLY : g
-  USE uspp_data,  ONLY : nqx, dq
-  USE uspp_param, ONLY : upf
-  !
-  implicit none
-  !
-  integer, intent(in) :: ik, npw
-  real(DP), intent(inout) ::vkb0(1:npw)
-  integer, intent(in) :: size_tab
-  real(DP), intent(in) :: vec_tab(1:size_tab)
-  !
-  integer :: na, nt, nb, ikb,i0, i1, i2, &
-       i3, ig
-  real(DP), allocatable :: gk(:,:), q (:)
-  real(DP) :: px, ux, vx, wx
-  complex(DP), allocatable :: sk (:)
-
-  integer :: iq
-
-  allocate ( gk(3,npw) )
-  allocate ( q(npw) )
-
-  do ig = 1, npw
-     gk (1, ig) = xk (1, ik) + g (1, igk_k (ig,ik) )
-     gk (2, ig) = xk (2, ik) + g (2, igk_k (ig,ik) )
-     gk (3, ig) = xk (3, ik) + g (3, igk_k (ig,ik) )
-     q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
-  enddo
-
-  do ig = 1, npw
-     q (ig) = sqrt ( q(ig) ) * tpiba
-  end do
-
-  ! calculate beta in G-space using an interpolation table
-  do ig = 1, npw
-        px = q (ig) / dq - int (q (ig) / dq)
-        ux = 1.d0 - px
-        vx = 2.d0 - px
-        wx = 3.d0 - px
-        i0 = q (ig) / dq + 1
-        i1 = i0 + 1
-        i2 = i0 + 2
-        i3 = i0 + 3
-        vkb0 (ig) = vec_tab (i0) * ux * vx * wx / 6.d0 + &
-                          vec_tab (i1) * px * vx * wx / 2.d0 - &
-                          vec_tab (i2) * px * ux * wx / 2.d0 + &
-                          vec_tab (i3) * px * ux * vx / 6.d0
-  enddo
-
-  deallocate (q)
-  deallocate ( gk )
-  return
-end subroutine gen_us_vkb0

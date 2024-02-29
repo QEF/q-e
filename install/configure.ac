@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2022 Quantum ESPRESSO group
+# Copyright (C) 2001-2024 Quantum ESPRESSO group
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 7.2, , espresso)
+AC_INIT(ESPRESSO, 7.3.1, , espresso)
 
 AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
@@ -131,7 +131,6 @@ AC_SUBST(ld_libs)
 AC_SUBST(topdir)
 AC_SUBST(extlib_flags)
 
-AC_CONFIG_HEADERS([include/qe_cdefs.h:include/qe_cdefs.h.in])
 AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
 AC_CONFIG_FILES(make.inc)

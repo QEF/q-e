@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 7.3
+    VERSION 7.3.1
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -157,10 +157,6 @@ option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
 # character are reserved for standard library use (at
 # least in C, not sure about Fortran), change all feature
 # macros to avoid weird behaviors
-
-# Disable all configuration headers used to be generated
-# by configure (see <qe>/include/)
-qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_CUDA)
     qe_add_global_compile_definitions(__CUDA)

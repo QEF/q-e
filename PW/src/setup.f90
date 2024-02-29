@@ -355,7 +355,7 @@ SUBROUTINE setup()
         CALL errore( 'setup', 'too few spin dw bands', 1 )
      !
      IF ( nbnd < NINT( nelec ) .AND. lscf .AND. noncolin ) &
-        CALL errore( 'setup', 'too few bands', 1 )
+        CALL errore( 'setup', 'too few bands noncolin case', 1 )
      !
   END IF
   !

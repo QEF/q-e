@@ -20,8 +20,8 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort nvfortran pgf90 nagfor $try_f90"
-        try_mpif90="mpiifort $try_mpif90"
+        try_f90="ifx ifort nvfortran pgf90 nagfor $try_f90"
+        try_mpif90="mpiifx mpiifort $try_mpif90"
         ;;
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
@@ -99,9 +99,6 @@ else
 # parallel case - use MPIF90 if set
         if test "$mpif90" = "" ; then 
 	   mpif90="$try_mpif90 $f90 $try_f90 "
-	fi
-    	if test "$f90" != "" ; then
-           AC_MSG_WARN([F90 value is set to be consistent with value of MPIF90])
 	fi
 fi
 
@@ -201,6 +198,8 @@ ftn )
         f90_flavor=ifort
     elif $mpif90 -V 2>&1 | grep -q "^pgf" ; then
         f90_flavor=pgf
+    elif $mpif90 -V 2>&1 | grep -q "^nvfortran" ; then
+        f90_flavor=nvfortran
     elif $mpif90 -v 2>&1 | grep -q "gcc version" ; then
         f90_flavor=gfortran
     elif $mpif90 -V 2>&1 | grep -q "Cray Fortran" ; then
@@ -212,14 +211,22 @@ ftn )
         f90_flavor=$mpif90
     fi
     echo $f90_flavor
-    f90=ftn
+    ;;
+mpiifx )
+    # While waiting for better ideas: assume ifx
+    f90_flavor=ifx
     ;;
 * )
-    # For all other cases f90=f90_flavor=f90_in_mpif90
-    f90=$f90_in_mpif90
-    f90_flavor=$f90
+    # For all other cases f90_flavor=f90_in_mpif90
+    f90_flavor=$f90_in_mpif90
     ;;
 esac
+
+if test "$f90" = "" ; then
+   f90="$f90_flavor"
+else
+   AC_MSG_WARN([Check whether user-supplied F90 is consistent with MPIF90 !!! ])
+fi
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90

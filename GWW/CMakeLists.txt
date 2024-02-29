@@ -148,7 +148,6 @@ set(src_simple
     simple/epe.f90
     simple/gk_sort_limit.f90
     simple/khamiltonian.f90
-    simple/init_us_2_max.f90
     simple/commutator.f90)
 
 set(src_simple_bse

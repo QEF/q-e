@@ -404,7 +404,7 @@ MODULE input_parameters
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
         !! PW ONLY
 
-        !!!PARAMETERS FOR TWO-CHEM-CALCULATIONS
+        !  PARAMETERS FOR TWO-CHEM-CALCULATIONS
         REAL(DP) :: degauss_cond = 0.0_DP 
         !broadening for conduction band
         INTEGER ::  nbnd_cond = 0 

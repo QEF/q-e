@@ -103,14 +103,7 @@ SUBROUTINE addusdens_g(rho)
   ALLOCATE( ylmk0(ngm_l,lmaxq*lmaxq) )
   !$acc data create(qmod,qgm,ylmk0)
   !
-#if defined(__CUDA)
-  !$acc host_data use_device(g,gg,ylmk0)
-  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
-  !$acc end host_data
-#else
   CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
-  !$acc update device(ylmk0)
-#endif
   !
   !$acc parallel loop
   DO ig = 1, ngm_l

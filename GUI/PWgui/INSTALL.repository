@@ -4,19 +4,17 @@
         * * *              from the QE repository             * * *
  ==============================================================================
 
-To make the PWgui fully functional do the following:
+To make the PWgui fully functional, do the following:
 
-Either:
-  * from the QE root directory:  make gui
-Or:                                      
-  * or from this directory (i.e. GUI/PWgui):  make init
+* either in the QE root directory:  make gui
+* or in this directory (i.e., GUI/PWgui):  make init
+  
+To run PWgui, type in this directory: ./pwgui
 
-  * to run PWgui, type from this directory: ./pwgui
 
-BEWARE: 
-
-To run the "pwgui" the required Tcl-related software is needed (see
+BEWARE:
+To run "pwgui", the required Tcl-related software is needed (see
 the INSTALL file).
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Jan 2022
+Anton Kokalj (tone.kokalj@ijs.si), Jan 2024

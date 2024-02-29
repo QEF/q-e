@@ -118,7 +118,7 @@ contains
        !
        do ii=1,nq
           qr2=(qg(ii)*rrl)**2
-          vq(ii)=qg(ii)**3 * exp(-0.5_dp*qr2) / 105.0_dp
+          vq(ii)=qg(ii)**3 * exp(-0.5_dp*qr2) / sqrt(105.0_dp)
        end do
        !
     end if lif
@@ -257,7 +257,7 @@ contains
           qr2=qt*rrl**2
           e_qr2_h=exp(-0.5_dp*qr2)
           !
-          dvq(ii)=e_qr2_h * qt*(3._dp - qr2) / 105.0_dp
+          dvq(ii)=e_qr2_h * qt*(3._dp - qr2) / sqrt(105.0_dp)
        end do
        !
     end if lif

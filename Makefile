@@ -125,7 +125,7 @@ couple : pw cp
 	if test -d COUPLE ; then \
 	( cd COUPLE ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-epw: phlibs
+epw: phlibs w90lib
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
@@ -138,7 +138,7 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
-kcw : pwlibs lrmods pp w90
+kcw : pwlibs lrmods pp w90lib
 	if test -d KCW ; then \
 	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
 
@@ -240,7 +240,10 @@ libmbd:
 # plugins
 #########################################################
 
-w90: bindir $(LAPACK)
+w90: w90lib
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
+w90lib: bindir $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 want: $(LAPACK)

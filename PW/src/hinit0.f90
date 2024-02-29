@@ -22,6 +22,7 @@ SUBROUTINE hinit0()
   USE klist,            ONLY : qnorm
   USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
+  USE beta_mod,         ONLY : init_tab_beta
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space
   USE ldaU,             ONLY : lda_plus_U, Hubbard_projectors
@@ -42,6 +43,7 @@ SUBROUTINE hinit0()
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old, qmax
+  INTEGER   :: ierr
   LOGICAL   :: is_tau_read = .FALSE.
   !
 #if defined (__ENVIRON)
@@ -60,10 +62,20 @@ SUBROUTINE hinit0()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   qmax = (qnorm + sqrt(ecutrho))*cell_factor
-  ! qmax is the maximum needed |q+G|, increased by a factor (20% or so)
-  ! to avoid too frequent reallocations in variable-cell calculations
-  ! (qnorm=max|q| may be needed for hybrid EXX or phonon calculations)
+  !
+  ! qmax is the maximum |q+G|, for all G needed by the charge density,
+  ! increased by a factor (20% or so) to avoid too frequent reallocations 
+  ! in variable-cell calculations ( norm is an estimate of max|q|, that
+  ! may be needed for hybrid EXX or phonon calculations)
+  !
   CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
+  !
+  ! fill interpolation table for beta functions 
+  ! qmax as above, for all G needed by wavefunctions
+  !
+  qmax = (qnorm + sqrt(ecutwfc))*cell_factor
+  CALL init_tab_beta ( qmax, omega, intra_bgrp_comm, ierr )
+  !
   IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc (omega, intra_bgrp_comm)
   !

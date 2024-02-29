@@ -51,12 +51,7 @@ MODULE klist
   !! index of G corresponding to a given index of k+G
   INTEGER, ALLOCATABLE :: ngk(:)
   !! number of plane waves for each k point
-  INTEGER, ALLOCATABLE :: igk_k_d(:,:)
-  !! device copy of igk
-  INTEGER, ALLOCATABLE :: ngk_d(:)
-  !! device copy of ngk
 #if defined (__CUDA)
-  attributes(DEVICE) :: igk_k_d, ngk_d
   attributes(PINNED) :: igk_k
 #endif
   !
@@ -110,12 +105,6 @@ CONTAINS
     !$acc update device(igk_k)
     !
     DEALLOCATE( gk )
-#if defined (__CUDA)
-    IF(ALLOCATED(igk_k_d)) DEALLOCATE(igk_k_d)
-    IF (nks > 0) ALLOCATE ( igk_k_d, source=igk_k)
-    IF(ALLOCATED(ngk_d)) DEALLOCATE(ngk_d)
-    IF (nks > 0) ALLOCATE ( ngk_d, source=ngk)
-#endif
     !
   END SUBROUTINE init_igk
   !
@@ -125,9 +114,6 @@ CONTAINS
     !
     !$acc exit data delete(igk_k)
     IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
-    IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
-    !
-    IF (ALLOCATED(ngk_d))   DEALLOCATE( ngk_d )
     !
   END SUBROUTINE deallocate_igk
   !
