@@ -81,7 +81,7 @@
       !
       CALL memstat( kilobytes )
       !
-      IF( tprint ) THEN
+      IF( tprint .and. ndw > 1 ) THEN
          IF ( tfile ) THEN
             ! we're writing files, let's save nfi
             CALL save_print_counter( nfi, ndw )
