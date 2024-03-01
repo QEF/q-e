@@ -502,10 +502,10 @@ MODULE paw_onecenter
        ALLOCATE( e_rad(im_sum) )
     ENDIF
     !
-    !$acc data copyin( rho_lm, rho_core )
-    !$acc data create( arho, rho_rad, ex, ec, vx, vc, e_rad ) copyout(v_rad)
-    !$acc data copyin( g(i%t:i%t), g(i%t)%r2, g(i%t)%rm2, g(i%t)%rab )
+    !$acc data copyin( rho_lm, rho_core ) copyout( v_rad, v_lm )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%ylm, rad(i%t)%ww )
+    !$acc data create( arho, rho_rad, ex, ec, vx, vc, e_rad )
+    !$acc data copyin( g(i%t:i%t), g(i%t)%r2, g(i%t)%rm2, g(i%t)%rab )
     IF ( with_small_so ) THEN
       !$acc enter data copyin( rad(i%t)%sin_th, rad(i%t)%cos_th, rad(i%t)%sin_phi, rad(i%t)%cos_phi )
       !$acc enter data copyin( msmall_lm) copyin( g_rad )
@@ -638,11 +638,9 @@ MODULE paw_onecenter
     !
     !$acc end data
     !$acc end data
-    !$acc end data
     IF ( with_small_so ) THEN
-      !$acc update self(g_rad)
       !$acc exit data delete( rad(i%t)%sin_th, rad(i%t)%cos_th, rad(i%t)%sin_phi, rad(i%t)%cos_phi )
-      !$acc exit data delete( msmall_lm, g_rad)
+      !$acc exit data delete( msmall_lm)
     ENDIF
     !
     IF ( PRESENT(energy) ) DEALLOCATE( e_rad )
@@ -660,23 +658,33 @@ MODULE paw_onecenter
     ENDIF
     !
     ! ... Recompose the sph. harm. expansion
+#if !defined(_OPENACC)
     CALL PAW_rad2lm( i, v_rad, v_lm, i%l, nspin_mag )
-    !
+    IF ( with_small_so ) CALL PAW_rad2lm( i, g_rad, g_lm, i%l, nspin_mag )
+#else
+    CALL PAW_rad2lm_gpu( i, v_rad, v_lm, i%l, nspin_mag )
     IF ( with_small_so ) THEN
-       CALL PAW_rad2lm( i, g_rad, g_lm, i%l, nspin_mag )
-       DEALLOCATE( g_rad )
+       !$acc update self(g_rad)
+       CALL PAW_rad2lm_gpu( i, g_rad, g_lm, i%l, nspin_mag )
+       !$acc update self(g_rad)
+       !$acc exit data delete(g_rad)
     ENDIF
+#endif
     !
-   
-    !$acc data copy(v_lm)
-
+    IF ( with_small_so ) DEALLOCATE( g_rad )
+    
+    !$acc update self(v_lm)
+    
     ! ... Add gradient correction, if necessary
     IF ( xclib_dft_is('gradient') ) &
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
     !
+    
+    !$acc update device(v_lm)
+    
     !$acc end data
     !$acc end data
-
+    !
     !IF (TIMING) CALL stop_clock( 'PAW_xc_pot' )
     !
     RETURN
@@ -1476,6 +1484,69 @@ MODULE paw_onecenter
     IF (TIMING) CALL stop_clock( 'PAW_rad2lm' )
     !
   END SUBROUTINE PAW_rad2lm
+  !
+  !
+  !--------------------------------------------------------------------------------
+  SUBROUTINE PAW_rad2lm_gpu( i, F_rad, F_lm, lmax_loc, nspin )
+    !------------------------------------------------------------------------------
+    !! gpu double
+    !
+    IMPLICIT NONE
+    !
+    TYPE(paw_info), INTENT(IN) :: i
+    INTEGER, INTENT(IN) :: nspin
+    INTEGER,  INTENT(IN) :: lmax_loc
+    REAL(DP), INTENT(OUT):: F_lm(i%m,lmax_loc**2,nspin)
+    REAL(DP), INTENT(IN) :: F_rad(i%m,rad(i%t)%nx,nspin)
+    !
+    ! ... local variables
+    !
+    INTEGER :: ix    ! counter for integration
+    INTEGER :: lm    ! counter for angmom
+    INTEGER :: ispin ! counter for spin
+    INTEGER :: j
+    !
+    !$acc data present_or_copyin(F_rad,rad(i%t:i%t)) present_or_copyout(F_lm)
+    !$acc data copyin(rad(i%t)%wwylm)
+    !
+    IF (TIMING) CALL start_clock( 'PAW_rad2lm' )
+    !
+#if defined(_OPENACC)
+!$acc parallel loop collapse(3) present(rad(i%t:i%t))
+#else
+!$omp parallel default(private), &
+!$omp shared(lmax_loc, )
+!$omp do
+#endif
+    DO ispin = 1, nspin
+      DO lm = 1, lmax_loc**2
+        DO j = 1, i%m
+          F_lm(j,lm,ispin) = 0.d0
+          DO ix = ix_s, ix_e
+            F_lm(j,lm,ispin) = F_lm(j,lm,ispin) + F_rad(j,ix,ispin)*rad(i%t)%wwylm(ix,lm)
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+#if !defined(_OPENACC)
+!$omp end do
+!$omp end parallel
+#else
+!$acc update host( F_lm )
+!$acc end data
+#endif
+    !
+    ! Now recollects the result within the paw communicator
+    !
+    !$acc host_data use_device(F_lm)
+    CALL mp_sum( F_lm, paw_comm )
+    !$acc end host_data
+    !
+    !$acc end data
+    !
+    IF (TIMING) CALL stop_clock( 'PAW_rad2lm' )
+    !
+  END SUBROUTINE PAW_rad2lm_gpu
   !
   !
   !--------------------------------------------------------------------------------------
