@@ -668,7 +668,6 @@ MODULE cp_restart_new
       INTEGER               :: ib, nb
       REAL(DP)              :: amass_(ntypx)
       INTEGER,  ALLOCATABLE :: ityp_(:) 
-      INTEGER,  ALLOCATABLE :: isrt_(:) 
       REAL(DP), ALLOCATABLE :: tau_(:,:) 
       REAL(DP), ALLOCATABLE :: occ_(:,:), et_(:,:)
       CHARACTER(LEN=80)     :: pos_unit
@@ -759,7 +758,7 @@ MODULE cp_restart_new
               atm, amass_ )
       IF ( nsp_ /= nsp ) CALL errore ('cp_readfile', 'wrong nsp read', 1)
 
-      ALLOCATE ( tau_(3,nat), ityp_(nat), isrt_(nat) )
+      ALLOCATE ( tau_(3,nat), ityp_(nat) )
       CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
            atm, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_ )
       IF ( nat_ /= nat ) CALL errore ('cp_readfile', 'wrong nat read', 1)
@@ -779,7 +778,7 @@ MODULE cp_restart_new
          CALL ions_cofmass( taui, amass_ , nat_, ityp_, cdmi )
       END IF
       !
-      DEALLOCATE ( tau_, ityp_, isrt_ )
+      DEALLOCATE ( tau_, ityp_ )
       
       CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only_, ecutwfc_,&
            ecutrho_, nr1s, nr2s, nr3s, nr1, nr2, nr3, nr1b, nr2b, nr3b, &

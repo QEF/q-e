@@ -237,7 +237,7 @@ input_description -distribution {Quantum ESPRESSO} -package CP -program cp.x {
 	var ndw -type INTEGER { 
 	    default { 50 }
 	    info {
-               The restart files are write in the folder
+               The restart files are written, if ndw > 0, in the folder
                  outdir/prefix_ndw.save/
                where outdir, prefix and ndw are the input variables described
                in this document
