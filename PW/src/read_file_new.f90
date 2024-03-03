@@ -208,6 +208,7 @@ SUBROUTINE read_file_new ( needwf )
      !
      CALL divide_et_impera( nkstot, xk, wk, isk, nks )
      CALL poolscatter( nbnd, nkstot, et, nks, et )
+     !$acc update device(et)
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
      !
      ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
