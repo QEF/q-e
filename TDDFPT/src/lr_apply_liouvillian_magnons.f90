@@ -160,6 +160,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! and evq (wfct at k+q)
      !
      CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     !$acc update device(evc)
      CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
      !
      dpsi(:,:)  = (0.d0,0.d0)
@@ -174,7 +175,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
 !     IF (interaction1) THEN
      IF ( .not. no_hxc) THEN
         !
-        !$acc data copyin(evc, dvrssc) create(revc) copy (dvpsi)
+        !$acc data copyin(dvrssc) create(revc) copy (dvpsi)
         !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the
@@ -318,7 +319,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
 !     IF (interaction1) THEN
      IF ( .not. no_hxc) THEN
         !
-        !$acc data copyin(evc, dvrssc) create(revc) copy (dvpsi)
+        !$acc data copyin(dvrssc) create(revc) copy (dvpsi)
         !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the

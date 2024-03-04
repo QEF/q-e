@@ -120,7 +120,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      endif
      call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb, .true.)
      !
-     !$acc data copyin(evc) present(vkb, becp)
+     !$acc data present(vkb, becp)
      call calbec ( offload_type, npw, vkb, evc, becp)
      !$acc end data
      !

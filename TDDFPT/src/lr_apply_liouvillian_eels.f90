@@ -146,6 +146,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !
      IF (nksq > 1) THEN 
         CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+        !$acc update device(evc)
         CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
      ENDIF
      !

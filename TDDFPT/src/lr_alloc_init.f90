@@ -82,6 +82,10 @@ SUBROUTINE lr_alloc_init()
         ALLOCATE(evc(npwx*npol,nbnd))
         IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
         !$acc enter data create(evc)
+        !$acc kernels
+        evc(:,:) = (0.0d0, 0.0d0)
+        !$acc end kernels
+        !$acc update self(evc)
      ENDIF 
   ENDIF
   !

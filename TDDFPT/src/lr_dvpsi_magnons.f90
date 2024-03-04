@@ -104,6 +104,7 @@ SUBROUTINE lr_dvpsi_magnons (ik, ip, dvpsi)
   !
 
   CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+  !$acc update device(evc)
   CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
   ! 
 
@@ -124,7 +125,7 @@ SUBROUTINE lr_dvpsi_magnons (ik, ip, dvpsi)
      ELSE
         !
         ! FFT to R-space
-!$acc data copyin(evc(1:npwx*npol,ibnd)) copy(revc(1:dffts%nnr, 1:npol), dvpsi(1:npwx*npol,ibnd,1))
+!$acc data copy(revc(1:dffts%nnr, 1:npol), dvpsi(1:npwx*npol,ibnd,1))
         CALL cft_wave(ik, evc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
