@@ -1,3 +1,7 @@
+Fixed in development version:
+  * Phonon restart was not working properly in some cases with ultrasoft,
+    PPs, due to bad initialization of PP tables - affects v.7.3 and 7.3.1
+
 New in 7.3.1 version:
   * Various improvements and bug fixes for pw2wannier.f90 (Junfeng Qiao) 
 

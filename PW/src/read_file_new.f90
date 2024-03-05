@@ -350,9 +350,9 @@ SUBROUTINE post_xml_init (  )
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   !
-  ! qmax is the maximum |G|, for all G needed by the charge density
+  ! qmax is the maximum |q+G|, for all G needed by the charge density
   !
-  qmax = sqrt(ecutrho)*cell_factor
+  qmax = (qnorm+sqrt(ecutrho))*cell_factor
   CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
   !
   ! fill interpolation table for beta functions 
