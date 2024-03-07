@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-
 subroutine drho
   !-----------------------------------------------------------------------
   !! Here we compute, for each mode the change of the charge density
@@ -28,7 +27,7 @@ subroutine drho
   USE uspp,       ONLY : okvan, nkb
   USE wvfct,      ONLY : nbnd
   USE paw_variables,    ONLY : okpaw
-  USE control_ph, ONLY : ldisp, all_done, rec_code_read
+  USE control_ph, ONLY : all_done, rec_code_read
 
   USE lrus,       ONLY : becp1
   USE qpoint,     ONLY : nksq
