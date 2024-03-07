@@ -41,9 +41,9 @@ mbd_version.o: mbd_version.f90 mbd_constants.o
 
 mbd_version.f90: mbd_version.f90.in
 	sed  -e 's/@PROJECT_VERSION_MAJOR@/0/' mbd_version.f90.in  > mbd_version.f90
-	sed -i -e 's/@PROJECT_VERSION_MINOR@/12/'  mbd_version.f90
-	sed -i -e 's/@PROJECT_VERSION_PATCH@/8/' mbd_version.f90
-	sed -i -e 's/@PROJECT_VERSION_SUFFIX@/3/' mbd_version.f90
+	sed -i -e 's/@PROJECT_VERSION_MINOR@/13/'  mbd_version.f90
+	sed -i -e 's/@PROJECT_VERSION_PATCH@/0/' mbd_version.f90
+	sed -i -e 's/@PROJECT_VERSION_SUFFIX@/0/' mbd_version.f90
 
 .PHONY: clean distclean
 clean:
