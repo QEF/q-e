@@ -746,12 +746,9 @@ MODULE paw_onecenter
     REAL(DP), ALLOCATABLE :: arho(:,:)
     REAL(DP), ALLOCATABLE :: r_vec(:,:)
     !
-    REAL(DP), DIMENSION(i%m,nspin_gga) :: v1x, v2x, v1c, v2c  !workspace
-    REAL(DP), DIMENSION(i%m) :: sx, sc
+    REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:)
+    REAL(DP), ALLOCATABLE :: sx(:), sc(:)
     REAL(DP), ALLOCATABLE :: v2cud(:)
-    !REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:)  !workspace
-    !REAL(DP), ALLOCATABLE :: sx(:), sc(:)
-    !REAL(DP), ALLOCATABLE :: v2cud(:)
 
     !
     REAL(DP) :: vnull
@@ -759,7 +756,7 @@ MODULE paw_onecenter
     REAL(DP), ALLOCATABLE :: e_rad(:)      ! aux, used to store energy
     REAL(DP) :: e, e_gcxc                  ! aux, used to integrate energy
     !
-    INTEGER  :: k, ix, is, lm , ixk, im_sum             ! counters on spin and mesh
+    INTEGER  :: k, ix, is, js,je, lm , ixk, im_sum             ! counters on spin and mesh
     REAL(DP) :: sgn                        ! workspace
     REAL(DP) :: co2                        ! workspace
     !
@@ -815,12 +812,16 @@ MODULE paw_onecenter
     ALLOCATE( grad(i%m,3,nspin_gga), gradt(im_sum,3,nspin_gga) ) ! gradient
     ALLOCATE( grad2(i%m,nspin_gga),grad2t(im_sum,nspin_gga)  ) ! square modulus of gradient
     !                                   (first of charge, than of hamiltonian)
-
     !                                  
     !$acc data create( gc_rad, h_rad )  
-    ! !$acc data create( rho_radt, gradt, grad2t )
-    !$acc data create( rho_radt )
+    !$acc data create( rho_radt, gradt, grad2t )
     !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%r2, g(i%t)%rm2,g(i%t)%rm3,g(i%t)%rab )
+    !
+    ALLOCATE( sx(im_sum), sc(im_sum) )
+    ALLOCATE( v1x(im_sum,nspin_gga), v1c(im_sum,nspin_gga) )
+    ALLOCATE( v2x(im_sum,nspin_gga), v2c(im_sum,nspin_gga) )
+    IF (nspin_mag>1) ALLOCATE( v2cud(im_sum) )
+    !$acc data copyin( sx, sc, v1x, v1c, v2x, v2c, v2cud )
     
     !
 #if defined(_OPENACC)
@@ -845,10 +846,9 @@ MODULE paw_onecenter
 !$omp end single
 #endif
         egcxc_of_tid(mytid) = 0.0_dp
-        ALLOCATE( e_rad(i%m) )
+        ALLOCATE( e_rad(im_sum) )
     ENDIF
     !
-    !$acc update self(gc_rad,h_rad)
     !
     spin:&
     !
@@ -856,112 +856,135 @@ MODULE paw_onecenter
         !
         ALLOCATE( arho(im_sum,1) )
         ALLOCATE( gradx(3,im_sum,1) )
-        ! $ acc data create( arho, gradx, e_rad )
+        !$acc data create( arho, gradx, e_rad )
         !
         CALL PAW_lm2rad_gpu( i, ix_s, rho_lm, rho_radt, nspin_mag, ix_e-ix_s+1 )
         CALL PAW_gradient2( i, ix_s, rho_lm, rho_radt, rho_core, grad2t, ix_e-ix_s+1, gradt )
         !
-        !$acc update self(rho_radt)
-        !
 #if !defined(_OPENACC)
-!$omp do
+        !$omp do
+#else
+        !$acc parallel loop collapse(2) present(g(i%t:i%t))
 #endif
         DO ix = ix_s, ix_e
-           !
            DO k = 1, i%m
               ixk = (ix-ix_s)*i%m + k
-              arho(k,1) = ABS(rho_radt(ixk,1)*g(i%t)%rm2(k) + rho_core(k))
-              gradx(:,k,1) = gradt(ixk,:,1)
+              arho(ixk,1) = ABS(rho_radt(ixk,1)*g(i%t)%rm2(k) + rho_core(k))
+              gradx(:,ixk,1) = gradt(ixk,:,1)
            ENDDO
-           !
-           CALL xc_gcx( i%m, 1, arho, gradx, sx, sc, v1x, v2x, v1c, v2c )
-           !
-           DO k = 1, i%m
-              ixk = (ix-ix_s)*i%m + k
-              IF ( PRESENT(energy) ) &
-                 e_rad(k)     = e2 * (sx(k)+sc(k)) * g(i%t)%r2(k)
-              gc_rad(k,ix,1)  = (v1x(k,1)+v1c(k,1))  !*g(i%t)%rm2(k)
-              h_rad(k,:,ix,1) = (v2x(k,1)+v2c(k,1))*gradt(ixk,:,1)*g(i%t)%r2(k)
-           ENDDO
-           !
-           ! integrate energy (if required)
-           IF ( PRESENT(energy) ) THEN
-               CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-               egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e*rad(i%t)%ww(ix)
-           ENDIF
-           !
         ENDDO
         !
-        ! $ acc end data
+        
+        CALL xc_gcx( im_sum, 1, arho, gradx, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=.TRUE. )
+        
+        !$acc parallel loop collapse(2) present(g(i%t:i%t))
+        DO ix = ix_s, ix_e
+           DO k = 1, i%m
+              ixk = (ix-ix_s)*i%m + k
+              IF ( en_pres ) &
+                 e_rad(ixk)     = e2 * (sx(ixk)+sc(ixk)) * g(i%t)%r2(k)
+              gc_rad(k,ix,1)  = (v1x(ixk,1)+v1c(ixk,1))  !*g(i%t)%rm2(k)
+              h_rad(k,:,ix,1) = (v2x(ixk,1)+v2c(ixk,1))*gradt(ixk,:,1)*g(i%t)%r2(k)
+           ENDDO
+        ENDDO
+        !
+        
+        !$acc update self( e_rad, gc_rad, h_rad )
+        
+        ! ... integrate energy (if required)
+        IF ( en_pres ) THEN
+           DO ix = ix_s, ix_e
+              js = (ix-ix_s)*i%m+1
+              je = (ix-ix_s+1)*i%m
+              CALL simpson(i%m, e_rad(js:je), g(i%t)%rab, e)
+              egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e*rad(i%t)%ww(ix)
+           ENDDO
+        ENDIF
+        !
+        !$acc end data
         DEALLOCATE( arho ) 
         DEALLOCATE( gradx )
         !
     ELSEIF ( nspin_mag == 2 .OR. nspin_mag == 4 ) THEN
         !
-        ALLOCATE( gradx(3,i%m,2) )
-        ALLOCATE( r_vec(i%m,2) )
-        ALLOCATE( v2cud(i%m) )
+        ALLOCATE( gradx(3,im_sum,2) )
+        ALLOCATE( r_vec(im_sum,2) )
+        !$acc data create( gradx, r_vec, e_rad )
         !
         !$acc data copyin(rhoout_lm)
         CALL PAW_lm2rad_gpu( i, ix_s, rhoout_lm, rho_radt, nspin_gga, ix_e-ix_s+1 )
         CALL PAW_gradient2( i, ix_s, rhoout_lm, rho_radt, rho_core, grad2t, ix_e-ix_s+1, gradt )
-        !$acc update self(rho_radt)
         !$acc end data
         !
 #if !defined(_OPENACC)
-!$omp do
+        !$omp do
+#else
+        !$acc parallel loop collapse(2) present(g(i%t:i%t))
 #endif
         DO ix = ix_s, ix_e
-           !
            DO k = 1, i%m
                !
                ixk = (ix-ix_s)*i%m + k
                !
                ! ... rho_core is considered half spin up and half spin down:
-               co2 = rho_core(k)/2
+               co2 = rho_core(k)*0.5d0
                ! ... than I build the real charge dividing by r**2
-               r_vec(k,1) = rho_radt(ixk,1)*g(i%t)%rm2(k) + co2
-               r_vec(k,2) = rho_radt(ixk,2)*g(i%t)%rm2(k) + co2
+               r_vec(ixk,1) = rho_radt(ixk,1)*g(i%t)%rm2(k) + co2
+               r_vec(ixk,2) = rho_radt(ixk,2)*g(i%t)%rm2(k) + co2
                !
-               gradx(:,k,1) = gradt(ixk,:,1)
-               gradx(:,k,2) = gradt(ixk,:,2)
+               gradx(:,ixk,1) = gradt(ixk,:,1)
+               gradx(:,ixk,2) = gradt(ixk,:,2)
            ENDDO
-           !
-           CALL xc_gcx( i%m, 2, r_vec, gradx, sx, sc, v1x, v2x, v1c, v2c, v2cud )
-           !
+        ENDDO
+        !
+        CALL xc_gcx( im_sum, 2, r_vec, gradx, sx, sc, v1x, v2x, v1c, v2c, v2cud, gpu_args_=.TRUE. )
+        !
+#if !defined(_OPENACC)
+        !$omp do
+#else
+        !$acc parallel loop collapse(2) present(g(i%t:i%t))
+#endif
+        DO ix = ix_s, ix_e
            DO k = 1, i%m
               !
               ixk = (ix-ix_s)*i%m + k
-              
-              IF ( PRESENT(energy) ) e_rad(k) = e2*(sx(k)+sc(k))*g(i%t)%r2(k)
               !
-              ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
-              gc_rad(k,ix,1)  = (v1x(k,1)+v1c(k,1)) !*g(i%t)%rm2(k)
-              gc_rad(k,ix,2)  = (v1x(k,2)+v1c(k,2)) !*g(i%t)%rm2(k)
+              IF ( en_pres ) e_rad(ixk) = e2*(sx(ixk)+sc(ixk))*g(i%t)%r2(k)
+              !
+              ! ... first term of the gradient correction: D(rho*Exc)/D(rho)
+              gc_rad(k,ix,1)  = (v1x(ixk,1)+v1c(ixk,1)) !*g(i%t)%rm2(k)
+              gc_rad(k,ix,2)  = (v1x(ixk,2)+v1c(ixk,2)) !*g(i%t)%rm2(k)
               !
               ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-              h_rad(k,:,ix,1) =( (v2x(k,1)+v2c(k,1))*gradt(ixk,:,1) + &
-                                  v2cud(k)*gradt(ixk,:,2) )*g(i%t)%r2(k)
-              h_rad(k,:,ix,2) =( (v2x(k,2)+v2c(k,2))*gradt(ixk,:,2) + &
-                                  v2cud(k)*gradt(ixk,:,1) )*g(i%t)%r2(k)
+              h_rad(k,:,ix,1) = ( (v2x(ixk,1)+v2c(ixk,1))*gradt(ixk,:,1) + &
+                                   v2cud(ixk)*gradt(ixk,:,2) )*g(i%t)%r2(k)
+              h_rad(k,:,ix,2) = ( (v2x(ixk,2)+v2c(ixk,2))*gradt(ixk,:,2) + &
+                                   v2cud(ixk)*gradt(ixk,:,1) )*g(i%t)%r2(k)
               !
            ENDDO
+        ENDDO
+        !
+        !$acc update self( e_rad, gc_rad, h_rad )
+        !
+        ! integrate energy (if required)
+        ! NOTE: this integration is duplicated for every spin, FIXME!
+        IF (PRESENT(energy)) THEN
            !
-           ! integrate energy (if required)
-           ! NOTE: this integration is duplicated for every spin, FIXME!
-           IF (PRESENT(energy)) THEN
-               CALL simpson( i%m, e_rad, g(i%t)%rab, e )
+           DO ix = ix_s, ix_e
+               js = (ix-ix_s)*i%m+1
+               je = (ix-ix_s+1)*i%m
+               CALL simpson( i%m, e_rad(js:je), g(i%t)%rab, e )
                egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e * rad(i%t)%ww(ix)
-           ENDIF
+           ENDDO
            !
-        ENDDO ! ix
+        ENDIF
 #if !defined(_OPENACC)
 !$omp end do nowait
 #endif
         !
+        !$acc end data
         DEALLOCATE( gradx )
         DEALLOCATE( r_vec )
-        DEALLOCATE( v2cud )
         !
     ELSE spin
     !
@@ -970,6 +993,12 @@ MODULE paw_onecenter
 !$omp end master
     ENDIF spin
     !
+    !$acc end data
+    DEALLOCATE( sx, sc )
+    DEALLOCATE( v1x, v1c )
+    DEALLOCATE( v2x, v2c )
+    IF (nspin_mag>1) DEALLOCATE( v2cud )
+    
     IF ( PRESENT(energy) ) THEN
        DEALLOCATE( e_rad )
     ENDIF
