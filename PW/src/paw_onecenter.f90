@@ -729,8 +729,6 @@ MODULE paw_onecenter
     
     REAL(DP), ALLOCATABLE :: grad(:,:,:)  ! gradient
     REAL(DP), ALLOCATABLE :: gradx(:,:,:) ! gradient (swapped indexes)
-    REAL(DP), ALLOCATABLE :: grad2(:,:)   ! square modulus of gradient
-                                          ! (first of charge, than of hamiltonian)
     REAL(DP), ALLOCATABLE :: gc_rad(:,:,:)    ! GC correction to V (radial samples)
     REAL(DP), ALLOCATABLE :: gc_lm(:,:,:)     ! GC correction to V (Y_lm expansion)
     REAL(DP), ALLOCATABLE :: h_rad(:,:,:,:)   ! hamiltonian (vector field)
@@ -742,7 +740,7 @@ MODULE paw_onecenter
     REAL(DP), ALLOCATABLE :: vout_lm(:,:,:)   ! potential as lm components
     REAL(DP), ALLOCATABLE :: segni_rad(:,:)   ! sign of the magnetization
     !
-    REAL(DP), ALLOCATABLE :: r_vec(:,:)
+    REAL(DP), ALLOCATABLE :: rho_full(:,:)  ! full charge density
     !
     REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:)
     REAL(DP), ALLOCATABLE :: sx(:), sc(:)
@@ -754,7 +752,7 @@ MODULE paw_onecenter
     REAL(DP), ALLOCATABLE :: e_rad(:)      ! aux, used to store energy
     REAL(DP) :: e, e_gcxc                  ! aux, used to integrate energy
     !
-    INTEGER  :: k, ix, is, js,je, lm , ixk, im_sum, ix_length ,dspin            ! counters on spin and mesh
+    INTEGER  :: k, ix, is, js,je, lm , ixk, im_sum, ix_length ,dspin
     REAL(DP) :: sgn                        ! workspace
     REAL(DP) :: co2(2)                        ! workspace
     !
@@ -764,30 +762,31 @@ MODULE paw_onecenter
 #endif
     REAL(DP),ALLOCATABLE :: egcxc_of_tid(:)
     REAL(DP), PARAMETER   :: eps = 1.e-30_dp, div3=1.d0/3.d0
-    LOGICAL :: en_pres
-
+    LOGICAL :: energy_present
+    !
     IF (TIMING) CALL start_clock( 'PAW_gcxc_v' )
-  
+    !
     !$acc data present( rho_lm, rho_core, v_lm )
-  
+    !
     e_gcxc = 0._dp
-    
-    en_pres = PRESENT(energy)
+    !
+    energy_present = PRESENT(energy)
     ix_length = ix_e-ix_s+1
     im_sum = i%m*ix_length
-
+    !
     ALLOCATE( gc_rad(i%m,rad(i%t)%nx,nspin_gga) )! GC correction to V (radial samples)
     ALLOCATE( gc_lm(i%m,i%l**2,nspin_gga)       )! GC correction to V (Y_lm expansion)
     ALLOCATE( h_rad(i%m,3,rad(i%t)%nx,nspin_gga))! hamiltonian (vector field)
     ALLOCATE( h_lm(i%m,3,(i%l+rad(i%t)%ladd)**2,nspin_gga) ) 
                                         ! ^^^^^^^^^^^^^^^^^^ expanded to higher lm than rho !
     dspin = nspin_gga
-    IF (nspin_mag == 1) dspin = nspin
+    IF ( nspin_mag==1 ) dspin = nspin
     ALLOCATE(div_h(i%m,i%l**2,dspin))
     ALLOCATE(rhoout_lm(i%m,i%l**2,nspin_gga)) ! charge density as lm components
     ALLOCATE(vout_lm(i%m,i%l**2,nspin_gga))   ! potential as lm components
     ALLOCATE(segni_rad(i%m,rad(i%t)%nx))      ! charge density as lm components
-    vout_lm=0.0_DP
+    !
+    vout_lm = 0.0_DP
     !
     !$acc data create( rhoout_lm, gc_rad, h_rad )
     !
@@ -802,30 +801,25 @@ MODULE paw_onecenter
     ENDIF
     !
 #if !defined(_OPENACC)
-!$omp parallel default(private), &
-!$omp shared(i,g,nspin,nspin_gga,nspin_mag,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,rho_lm,rhoout_lm,rho_core,energy,ix_s,ix_e)
+    !$omp parallel default(private), &
+    !$omp shared(i,g,nspin,nspin_gga,nspin_mag,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,&
+    !$omp        rho_lm,rhoout_lm,rho_core,energy,ix_s,ix_e)
 #endif
     !
     mytid = 1
     ntids = 1
 #if defined(_OPENMP)
-    mytid = omp_get_thread_num()+1 ! take the thread ID
-    ntids = omp_get_num_threads()  ! take the number of threads
+    mytid = omp_get_thread_num()+1
+    ntids = omp_get_num_threads()
 #endif
-    ALLOCATE( rho_rad(im_sum,nspin_mag) ) ! charge density sampled
-    ALLOCATE( grad(im_sum,3,nspin_gga) )  ! gradient
-    ALLOCATE( grad2(im_sum,nspin_gga) )   ! square modulus of gradient
-    !                                       (first of charge, than of hamiltonian)
-    !                                  
-    !$acc data create( rho_rad, grad, grad2 )
-    !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%r2, g(i%t)%rm2, g(i%t)%rm3, g(i%t)%rab )
-    !
-    ALLOCATE( sx(im_sum), sc(im_sum) )
-    ALLOCATE( v1x(im_sum,nspin_gga), v1c(im_sum,nspin_gga) )
-    ALLOCATE( v2x(im_sum,nspin_gga), v2c(im_sum,nspin_gga) )
+    ALLOCATE( rho_rad(im_sum,nspin_mag), grad(im_sum,3,nspin_gga) )
+    ALLOCATE( sx(im_sum), sc(im_sum), v1x(im_sum,nspin_gga), v1c(im_sum,nspin_gga), &
+              v2x(im_sum,nspin_gga), v2c(im_sum,nspin_gga) )
     IF (nspin_mag>1) ALLOCATE( v2cud(im_sum) )
+    !
+    !$acc data create( rho_rad, grad )
+    !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%r2, g(i%t)%rm2, g(i%t)%rm3, g(i%t)%rab )
     !$acc data create( sx, sc, v1x, v1c, v2x, v2c, v2cud )
-    
     !
 #if defined(_OPENACC)
     !$acc kernels
@@ -840,34 +834,26 @@ MODULE paw_onecenter
     !$omp end workshare
 #endif
     !
-    IF (PRESENT(energy)) THEN
-#if !defined(_OPENACC)
-!$omp single
-#endif
-        ALLOCATE( egcxc_of_tid(ntids) )
-#if !defined(_OPENACC)
-!$omp end single
-#endif
-        egcxc_of_tid(mytid) = 0.0_dp
-        ALLOCATE( e_rad(im_sum) )
+    IF ( energy_present ) THEN
+      !$omp single
+      ALLOCATE( egcxc_of_tid(ntids) )
+      !$omp end single
+      egcxc_of_tid(mytid) = 0.0_dp
+      ALLOCATE( e_rad(im_sum) )
     ENDIF
     !
+    IF (nspin_mag/=1.AND.nspin_mag/=2.AND.nspin_mag/=4) THEN
+      !$omp master
+      CALL errore( 'PAW_gcxc_v', 'unknown spin number', 2 )
+      !$omp end master
+    ENDIF
     !
-    
-    dspin = 1
-    IF ( nspin_mag == 2 .OR. nspin_mag == 4 ) dspin = 2   !*****controlla che nspin_gga vada bene sempre qui sotto
-                                                          !    non dovrebbe esserci bisogno di dspin
-
-
-    !
-    ALLOCATE( r_vec(im_sum,dspin) )
-    ALLOCATE( gradx(3,im_sum,dspin) )
-    !$acc data create( r_vec, gradx, e_rad )
+    ALLOCATE( rho_full(im_sum,nspin_gga), gradx(3,im_sum,nspin_gga) )
+    !$acc data create( rho_full, gradx, e_rad )
     !
     CALL PAW_lm2rad_gpu( i, ix_s, rhoout_lm, rho_rad, nspin_gga, ix_length )
-    CALL PAW_gradient2( i, ix_s, rhoout_lm, rho_rad, rho_core, grad2, ix_length, grad )
+    CALL PAW_gradient2( i, ix_s, ix_length, rhoout_lm, rho_rad, rho_core, grad )
     !
-
 #if !defined(_OPENACC)
     !$omp do
 #else
@@ -879,150 +865,98 @@ MODULE paw_onecenter
         ixk = (ix-ix_s)*i%m + k
         !
         ! ... rho_core is considered half spin up and half spin down:
-        co2(1:dspin) = rho_core(k)/dspin
+        co2(1:nspin_gga) = rho_core(k)/DBLE(nspin_gga)
         !
         ! ... build the real charge dividing by r^2
-        r_vec(ixk,1:dspin) = rho_rad(ixk,1:dspin)*g(i%t)%rm2(k) + co2(1:dspin)
-        IF (nspin_mag==1) r_vec(ixk,1) = ABS(r_vec(ixk,1)) 
-        gradx(:,ixk,1:dspin) = grad(ixk,:,1:dspin)
+        rho_full(ixk,1:nspin_gga) = rho_rad(ixk,1:nspin_gga)*g(i%t)%rm2(k) + co2(1:nspin_gga)
+        IF (nspin_mag==1) rho_full(ixk,1) = ABS(rho_full(ixk,1))
+        gradx(:,ixk,1:nspin_gga) = grad(ixk,:,1:nspin_gga)
         !
       ENDDO
     ENDDO
     !
-    
-    IF ( nspin_mag == 1 ) THEN
-        !
-        
-        CALL xc_gcx( im_sum, 1, r_vec, gradx, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=.TRUE. )
-        
-        !$acc parallel loop collapse(2) present(g(i%t:i%t))
-        DO ix = ix_s, ix_e
-           DO k = 1, i%m
-              ixk = (ix-ix_s)*i%m + k
-              IF ( en_pres ) e_rad(ixk) = e2 * (sx(ixk)+sc(ixk)) * g(i%t)%r2(k)
-              gc_rad(k,ix,1)  = (v1x(ixk,1)+v1c(ixk,1))  !*g(i%t)%rm2(k)
-              h_rad(k,:,ix,1) = (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1)*g(i%t)%r2(k)
-           ENDDO
-        ENDDO
-        !
-        
-        !$acc update self( e_rad, gc_rad, h_rad )
-        
-        ! ... integrate energy (if required)
-        IF ( en_pres ) THEN
-           DO ix = ix_s, ix_e
-              js = (ix-ix_s)*i%m+1
-              je = (ix-ix_s+1)*i%m
-              CALL simpson(i%m, e_rad(js:je), g(i%t)%rab, e)
-              egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e*rad(i%t)%ww(ix)
-           ENDDO
-        ENDIF
-        !
-        !
+    IF ( nspin_mag==1 ) THEN
+      CALL xc_gcx( im_sum, 1, rho_full, gradx, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=.TRUE. )
     ELSEIF ( nspin_mag == 2 .OR. nspin_mag == 4 ) THEN
-        !
-        !
-        CALL xc_gcx( im_sum, 2, r_vec, gradx, sx, sc, v1x, v2x, v1c, v2c, v2cud, gpu_args_=.TRUE. )
-        !
+      CALL xc_gcx( im_sum, 2, rho_full, gradx, sx, sc, v1x, v2x, v1c, v2c, v2cud, gpu_args_=.TRUE. )
+    ENDIF
+    !
 #if !defined(_OPENACC)
-        !$omp do
+    !$omp do
 #else
-        !$acc parallel loop collapse(2) present(g(i%t:i%t))
+    !$acc parallel loop collapse(2) present(g(i%t:i%t))
 #endif
-        DO ix = ix_s, ix_e
-           DO k = 1, i%m
-              !
-              ixk = (ix-ix_s)*i%m + k
-              !
-              IF ( en_pres ) e_rad(ixk) = e2*(sx(ixk)+sc(ixk))*g(i%t)%r2(k)
-              !
-              ! ... first term of the gradient correction: D(rho*Exc)/D(rho)
-              gc_rad(k,ix,1)  = (v1x(ixk,1)+v1c(ixk,1)) !*g(i%t)%rm2(k)
-              gc_rad(k,ix,2)  = (v1x(ixk,2)+v1c(ixk,2)) !*g(i%t)%rm2(k)
-              !
-              ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-              h_rad(k,:,ix,1) = ( (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1) + &
-                                   v2cud(ixk)*grad(ixk,:,2) )*g(i%t)%r2(k)
-              h_rad(k,:,ix,2) = ( (v2x(ixk,2)+v2c(ixk,2))*grad(ixk,:,2) + &
-                                   v2cud(ixk)*grad(ixk,:,1) )*g(i%t)%r2(k)
-              !
-           ENDDO
-        ENDDO
-        !
-        !$acc update self( e_rad, gc_rad, h_rad )
-        !
-        ! integrate energy (if required)
-        ! NOTE: this integration is duplicated for every spin, FIXME!
-        IF (PRESENT(energy)) THEN
-           !
-           DO ix = ix_s, ix_e
-               js = (ix-ix_s)*i%m+1
-               je = (ix-ix_s+1)*i%m
-               CALL simpson( i%m, e_rad(js:je), g(i%t)%rab, e )
-               egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e * rad(i%t)%ww(ix)
-           ENDDO
-           !
-        ENDIF
-#if !defined(_OPENACC)
-!$omp end do nowait
-#endif
-        !
-    ELSE
+    DO ix = ix_s, ix_e
+       DO k = 1, i%m
+          !
+          ixk = (ix-ix_s)*i%m + k
+          !
+          IF ( energy_present ) e_rad(ixk) = e2*(sx(ixk)+sc(ixk))*g(i%t)%r2(k)
+          gc_rad(k,ix,1:nspin_gga)  = v1x(ixk,1:nspin_gga)+v1c(ixk,1:nspin_gga)
+          ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+          IF ( nspin_mag==1 ) THEN
+            h_rad(k,:,ix,1) = (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1)*g(i%t)%r2(k)
+          ELSEIF ( nspin_mag == 2 .OR. nspin_mag == 4 ) THEN
+            h_rad(k,:,ix,1) = ( (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1) + &
+                                 v2cud(ixk)*grad(ixk,:,2) )*g(i%t)%r2(k)
+            h_rad(k,:,ix,2) = ( (v2x(ixk,2)+v2c(ixk,2))*grad(ixk,:,2) + &
+                                 v2cud(ixk)*grad(ixk,:,1) )*g(i%t)%r2(k)
+          ENDIF
+          !
+       ENDDO
+    ENDDO
     !
-!$omp master
-        CALL errore( 'PAW_gcxc_v', 'unknown spin number', 2 )
-!$omp end master
-    ENDIF
-    
-    !$acc end data
-    DEALLOCATE( gradx )
-    DEALLOCATE( r_vec )
-    
+    !$acc update self( e_rad, h_rad )
     !
-    !$acc end data
-    DEALLOCATE( sx, sc )
-    DEALLOCATE( v1x, v1c )
-    DEALLOCATE( v2x, v2c )
-    IF (nspin_mag>1) DEALLOCATE( v2cud )
-    
-    IF ( PRESENT(energy) ) THEN
-       DEALLOCATE( e_rad )
+    ! ... integrate energy (if required)
+    IF ( energy_present ) THEN
+       DO ix = ix_s, ix_e
+          js = (ix-ix_s)*i%m+1
+          je = (ix-ix_s+1)*i%m
+          CALL simpson( i%m, e_rad(js:je), g(i%t)%rab, e )
+          egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e*rad(i%t)%ww(ix)
+       ENDDO
     ENDIF
     !
     !$acc end data
     !$acc end data
+    !
+    DEALLOCATE( rho_full, gradx )
+    DEALLOCATE( sx, sc, v1x, v1c, v2x, v2c )
+    IF ( nspin_mag>1 ) DEALLOCATE( v2cud )
+    IF ( energy_present ) DEALLOCATE( e_rad )
+    !
     !$acc end data
     !$acc end data
     !
-    DEALLOCATE( rho_rad )
-    DEALLOCATE( grad )
-    DEALLOCATE( grad2 )
+    DEALLOCATE( rho_rad, grad )
 #if !defined(_OPENACC)
-!$omp end parallel
+    !$omp end parallel
 #endif
     !
-    !
-    IF ( PRESENT(energy) ) THEN
+    IF ( energy_present ) THEN
        e_gcxc = SUM(egcxc_of_tid)
        CALL mp_sum( e_gcxc, paw_comm )
        energy = energy + e_gcxc
     ENDIF
     !
-    IF ( PRESENT(energy) ) THEN
+    IF ( energy_present ) THEN
        DEALLOCATE( egcxc_of_tid )
     ENDIF
     !
     ! convert the first part of the GC correction back to spherical harmonics
-    CALL PAW_rad2lm( i, gc_rad, gc_lm, i%l, nspin_gga )
+    CALL PAW_rad2lm_gpu( i, gc_rad, gc_lm, i%l, nspin_gga )
     !
-    ! Note that the expansion into spherical harmonics of the derivative 
-    ! with respect to theta of the spherical harmonics, is very slow to
-    ! converge and would require a huge angular momentum ladd.
-    ! This derivative divided by sin_th is much faster to converge, so
-    ! we divide here before calculating h_lm and keep into account for
-    ! this factor sin_th in the expression of the divergence.
+    !$acc end data
+    !$acc end data
     !
-    ! ADC 30/04/2009.
+    ! ... Note that the expansion into spherical harmonics of the derivative 
+    ! ... with respect to theta of the spherical harmonics, is very slow to
+    ! ... converge and would require a huge angular momentum ladd.
+    ! ... This derivative divided by sin_th is much faster to converge, so
+    ! ... we divide here before calculating h_lm and keep into account for
+    ! ... this factor sin_th in the expression of the divergence.
+    ! ... ADC 30/04/2009.
     ! 
     DO ix = ix_s, ix_e
        h_rad(1:i%m,3,ix,1:nspin_gga) = h_rad(1:i%m,3,ix,1:nspin_gga) / &
@@ -1173,7 +1107,7 @@ MODULE paw_onecenter
   !
   
   !---------------------------------------------------------------------------
-  SUBROUTINE PAW_gradient2( i, ix, rho_lm, rho_rad, rho_core, grho_rad2, ix_l, grho_rad )
+  SUBROUTINE PAW_gradient2( i, ix, ix_l, rho_lm, rho_rad, rho_core, grho_rad, grho_rad2 )
     !-------------------------------------------------------------------------
     !! Build gradient of radial charge distribution from its spherical harmonics expansion
     !
@@ -1184,122 +1118,98 @@ MODULE paw_onecenter
     !
     IMPLICIT NONE
     !
+    TYPE(paw_info), INTENT(IN) :: i
+    !! atom's minimal info
     INTEGER, INTENT(IN)  :: ix
     !! line of the dylm2 matrix to use actually it is  one of the nx spherical
     !! integration directions
-    TYPE(paw_info), INTENT(IN) :: i
-    !! atom's minimal info
+    INTEGER, INTENT(IN):: ix_l
+    !! number of integration directions
     REAL(DP), INTENT(IN) :: rho_lm(i%m,i%l**2,nspin_gga)
     !! Y_lm expansion of rho
     REAL(DP), INTENT(IN) :: rho_rad(i%m*ix_l,nspin_gga)
     !! radial density along direction ix
     REAL(DP), INTENT(IN) :: rho_core(i%m)
     !! core density
-    REAL(DP), INTENT(OUT) :: grho_rad2(i%m*ix_l,nspin_gga)
-    !! |grad(rho)|^2 on rad. grid
-    
-    INTEGER, INTENT(IN):: ix_l
-    
     REAL(DP), OPTIONAL, INTENT(OUT):: grho_rad(i%m*ix_l,3,nspin_gga)
     !! vector gradient (only for gcxc)
     ! r, theta and phi components ---^
-    
+    REAL(DP), OPTIONAL, INTENT(OUT) :: grho_rad2(i%m*ix_l,nspin_gga)
+    !! |grad(rho)|^2 on rad. grid
+    !
+    ! ... local variables
     !
     REAL(DP), ALLOCATABLE :: aux(:), aux2(:)
-    !REAL(DP) :: aux(i%m), aux2(i%m), fact  ! workspace
-    INTEGER :: is, lm, k, im_sum,jx,ixk,il ! counters on: spin,angular momentum, mesh
-    LOGICAL :: grr_pres
+    INTEGER :: is, lm, k, im_sum, jx, ixk, il
+    LOGICAL :: grad_present, grad2_present
     REAL(DP) :: fact, aux_k, aux2_k
     !
+    grad_present  = PRESENT(grho_rad)
+    grad2_present = PRESENT(grho_rad2)
+    !
     !$acc data present_or_copyin( rho_lm, rho_rad, rho_core )
-    !$acc data present_or_copyout( grho_rad2, grho_rad )
+    !$acc data present_or_copyout( grho_rad  ) if( grad_present  )
+    !$acc data present_or_copyout( grho_rad2 ) if( grad2_present )
     !
     IF (TIMING) CALL start_clock( 'PAW_grad' )
     !
-    
-    !
-    ! 1. build real charge density = rho/r**2 + rho_core
-    ! 2. compute the partial derivative of rho_rad
+    ! ... first build real charge density = rho/r**2 + rho_core
+    ! ... then compute the partial derivative of rho_rad
     fact = 1.0_DP/DBLE(nspin_gga)
-    !
-    grr_pres = PRESENT(grho_rad)
     !
     im_sum = i%m*ix_l
     ALLOCATE( aux(im_sum), aux2(im_sum) )
     !$acc data create( aux, aux2 )
-    
-    
+    !
+    ! ... build real charge density
     DO is = 1, nspin_gga
       !
       !$acc parallel loop collapse(2) present(g(i%t:i%t))
       DO jx = 1, ix_l
         DO k = 1, i%m
-          ! build real charge density
           ixk = (jx-1)*i%m + k
           aux(ixk) = rho_rad(ixk,is)*g(i%t)%rm2(k) + rho_core(k)*fact
         ENDDO
       ENDDO
       !
-      
-      
       CALL radial_gradient2( aux, aux2, g(i%t)%r, i%m, radial_grad_style, ix_l )
-      
-      !! $ acc update self(aux,aux2)
-      !DO jx = 1, ix_l
-      !  CALL radial_gradient( aux((jx-1)*i%m+1:jx*i%m), aux2((jx-1)*i%m+1:jx*i%m), g(i%t)%r, i%m, radial_grad_style )
-      !ENDDO
-      !! $ acc update device(aux,aux2)
-      
-
-      ! compute the square
       !
-      !$acc parallel loop collapse(2)
+      !$acc parallel loop collapse(2) present(rad(i%t:i%t),g(i%t:i%t))
       DO jx = 1, ix_l
         DO k = 1, i%m
-          ixk = (jx-1)*i%m + k
-          grho_rad2(ixk,is) = aux2(ixk)**2
-          ! store in vector gradient, if present:
-          IF (grr_pres) grho_rad(ixk,1,is) = aux2(ixk)
-        ENDDO
-      ENDDO
-      !
-    ENDDO !is
-    !
-    
-    !$acc parallel loop collapse(3) present(rad(i%t:i%t),g(i%t:i%t))
-    DO jx = 1, ix_l
-      DO is = 1, nspin_gga
-        DO k = 1, i%m
           !
           ixk = (jx-1)*i%m + k
           !
-          ! Spherical (lm=1) component (that would also include core correction) can be  omitted
-          ! as its contribution to non-radial derivative is zero
+          ! ... Spherical (lm=1) component (that would also include core correction) can be  omitted
+          ! ... as its contribution to non-radial derivative is zero
           !
           aux_k=0.d0 ; aux2_k=0.d0
           !$acc loop seq
           DO il = 2, i%l**2
-            ! 5. [ \sum_{lm} rho(r) (dY_{lm}/dphi /cos(theta))  ]**2
+            ! ... [ \sum_{lm} rho(r) (dY_{lm}/dphi /cos(theta)) ]**2
             aux_k = aux_k + rad(i%t)%dylmp(ix+jx-1,il) * rho_lm(k,il,is)
-              ! 6. [ \sum_{lm} rho(r) (dY_{lm}/dtheta)  ]**2
+            ! ... [ \sum_{lm} rho(r) (dY_{lm}/dtheta) ]**2
             aux2_k = aux2_k + rad(i%t)%dylmt(ix+jx-1,il) * rho_lm(k,il,is)
           ENDDO
           !
-          ! Square and sum up these 2 components, the (1/r**2)**3 factor come from:
-          !  a. 1/r**2 from the derivative in spherical coordinates
-          !  b. (1/r**2)**2 from rho_lm being multiplied by r**2 
-          !     (as the derivative is orthogonal to r you can multiply after deriving)
-          grho_rad2(ixk,is) = grho_rad2(ixk,is) + (aux_k**2+aux2_k**2)*g(i%t)%rm2(k)**3
-          ! Store vector components:
-          IF (grr_pres) THEN
+          ! ... Square and sum up these 2 components, the (1/r**2)**3 factor come from:
+          ! ...  a. 1/r**2 from the derivative in spherical coordinates
+          ! ...  b. (1/r**2)**2 from rho_lm being multiplied by r**2 
+          ! ...     (as the derivative is orthogonal to r you can multiply after deriving)
+          IF (grad2_present) grho_rad2(ixk,is) = aux2(ixk)**2 + (aux_k**2+aux2_k**2)*g(i%t)%rm2(k)**3
+          ! ... Store vector components:
+          IF (grad_present) THEN
+             grho_rad(ixk,1,is) = aux2(ixk)
              grho_rad(ixk,2,is) = aux_k  * g(i%t)%rm3(k) ! phi
              grho_rad(ixk,3,is) = aux2_k * g(i%t)%rm3(k) ! theta
           ENDIF
           !
         ENDDO
       ENDDO
+      !
     ENDDO
     !
+    !$acc end data
     !$acc end data
     !$acc end data
     !$acc end data
@@ -1307,8 +1217,9 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL stop_clock( 'PAW_grad' )
     !
+    RETURN
+    !
   END SUBROUTINE PAW_gradient2
-
   
   
   
@@ -1711,22 +1622,24 @@ MODULE paw_onecenter
     INTEGER :: ix    ! counter for integration
     INTEGER :: lm    ! counter for angmom
     INTEGER :: ispin ! counter for spin
-    INTEGER :: j
+    INTEGER :: j, lmax_loc2
     !
     !$acc data present_or_copyin(F_rad,rad(i%t:i%t)) present_or_copyout(F_lm)
     !$acc data copyin(rad(i%t)%wwylm)
     !
     IF (TIMING) CALL start_clock( 'PAW_rad2lm' )
     !
+    lmax_loc2 = lmax_loc**2
+    !
 #if defined(_OPENACC)
 !$acc parallel loop collapse(3) present(rad(i%t:i%t))
 #else
 !$omp parallel default(private), &
-!$omp shared(lmax_loc, )
+!$omp shared(lmax_loc2, nspin, i)
 !$omp do
 #endif
     DO ispin = 1, nspin
-      DO lm = 1, lmax_loc**2
+      DO lm = 1, lmax_loc2
         DO j = 1, i%m
           F_lm(j,lm,ispin) = 0.d0
           DO ix = ix_s, ix_e
@@ -1738,17 +1651,15 @@ MODULE paw_onecenter
 #if !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
-#else
-!$acc update host( F_lm )
-!$acc end data
 #endif
     !
-    ! Now recollects the result within the paw communicator
+    ! ... Now recollects the result within the paw communicator
     !
     !$acc host_data use_device(F_lm)
     CALL mp_sum( F_lm, paw_comm )
     !$acc end host_data
     !
+    !$acc end data
     !$acc end data
     !
     IF (TIMING) CALL stop_clock( 'PAW_rad2lm' )
