@@ -83,8 +83,8 @@ libpp.a : $(PPOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) 
+pp_example.x: pp_example.o $(MODULES)
+	$(LD) $(LDFLAGS) -o $@ pp_example.o libpp.a $(MODULES) $(QELIBS) 
 
 open_grid.x : open_grid.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
