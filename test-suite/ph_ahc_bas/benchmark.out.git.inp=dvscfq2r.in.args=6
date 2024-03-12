@@ -1,9 +1,5 @@
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
 
-     Program DVSCF_Q2R v.7.2 starts on  7Dec2023 at 18:19:33 
+     Program DVSCF_Q2R v.7.2 starts on 12Mar2024 at 19:16:40 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,12 +10,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       4
-     38429 MiB available memory on the printing compute node when the environment starts
- 
+     4710 MiB available memory on the printing compute node when the environment starts
+
 
      Reading xml data from directory:
 
@@ -31,117 +26,115 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
-     Parallelization info
+
+     G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min         112     112     34                 1604     1604     266
-     Max         113     113     35                 1607     1607     267
      Sum         451     451    139                 6423     6423    1067
- 
+
      Using Slab Decomposition
- 
+
 
      Reading grid info from file BAs.dyn0
- 
+
      Reading epsilon and Born effective charge from file
      Done reading epsilon and Born effective charge
- 
-     Allocating dvscf, shape    7200       6       8
+
+     Allocating dvscf, shape   27000       6       8
      Done allocating dvscf
- 
+
      Reading and rotating dvscf files (induced part of dvscf)
- 
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
- 
+
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000  -0.500000000   0.500000000
           2  -0.500000000  -0.500000000  -0.500000000
           3  -0.500000000   0.500000000   0.500000000
           4   0.500000000   0.500000000  -0.500000000
- 
+
      Number of q in the star =    3
      List of q in the star:
           1   0.000000000  -1.000000000   0.000000000
           2   0.000000000   0.000000000  -1.000000000
           3   1.000000000   0.000000000   0.000000000
- 
+
      Renormalize induced part of dvscf for charge neutrality
      Charge neutrality done
- 
+
      Computing bare part of dvscf
        1       2     Message from routine init_vloc:
      Interpolation table for Vloc re-allocated
-       3       4       5       6       7       8 
+       3       4       5       6       7       8
      Computing and subtracting long-range part of dvscf
      Long-range part done
- 
- 
+
+
      Fourier transforming dvscf to w_pot, writing to file
      unit_cell_index        1
      rlatt_crys            0           0           0
      rlatt_cart       0.0000      0.0000      0.0000
-     sum_w_pot      900.882123      900.831256      900.821589
-     sum_w_pot      784.140749      784.140685      784.140704
- 
+     sum_w_pot      898.175044      898.175044      898.175044
+     sum_w_pot      784.335069      784.335069      784.335069
+
      unit_cell_index        2
      rlatt_crys            0           0           1
      rlatt_cart      -0.5000      0.5000      0.0000
-     sum_w_pot     1539.028873     1539.051159     2911.833935
-     sum_w_pot     1346.396988     1346.396640     2916.814456
- 
+     sum_w_pot     1533.713360     1533.713360     2900.438343
+     sum_w_pot     1347.698404     1347.698404     2920.899344
+
      unit_cell_index        3
      rlatt_crys            0           1           0
      rlatt_cart       0.0000      0.5000      0.5000
-     sum_w_pot     2911.785893     1538.935371     1538.950303
-     sum_w_pot     2916.814471     1346.397165     1346.396801
- 
+     sum_w_pot     2900.438343     1533.713360     1533.713360
+     sum_w_pot     2920.899344     1347.698404     1347.698404
+
      unit_cell_index        4
      rlatt_crys            0           1           1
      rlatt_cart      -0.5000      1.0000      0.5000
-     sum_w_pot     1009.934051     2382.732712     1009.918292
-     sum_w_pot     1197.310886     2767.701067     1197.310666
- 
+     sum_w_pot     1006.460162     2373.254312     1006.460162
+     sum_w_pot     1199.229412     2772.431640     1199.229412
+
      unit_cell_index        5
      rlatt_crys            1           0           0
      rlatt_cart      -0.5000      0.0000      0.5000
-     sum_w_pot     1538.944796     2911.782700     1538.990479
-     sum_w_pot     1346.396917     2916.814455     1346.396954
- 
+     sum_w_pot     1533.713360     2900.438343     1533.713360
+     sum_w_pot     1347.698404     2920.899344     1347.698404
+
      unit_cell_index        6
      rlatt_crys            1           0           1
      rlatt_cart      -1.0000      0.5000      0.5000
-     sum_w_pot     2382.748091     1009.943250     1009.942595
-     sum_w_pot     2767.701124     1197.311597     1197.311318
- 
+     sum_w_pot     2373.254312     1006.460162     1006.460162
+     sum_w_pot     2772.431640     1199.229412     1199.229412
+
      unit_cell_index        7
      rlatt_crys            1           1           0
      rlatt_cart      -0.5000      0.5000      1.0000
-     sum_w_pot     1009.941234     1009.941921     2382.778737
-     sum_w_pot     1197.310372     1197.310047     2767.701064
- 
+     sum_w_pot     1006.460162     1006.460162     2373.254312
+     sum_w_pot     1199.229412     1199.229412     2772.431640
+
      unit_cell_index        8
      rlatt_crys            1           1           1
      rlatt_cart      -1.0000      1.0000      1.0000
-     sum_w_pot      487.559377      487.571806      487.592936
-     sum_w_pot      539.812981      539.813552      539.813988
- 
- 
- 
-     read_dvscf   :      0.05s CPU      0.06s WALL (       1 calls)
-     dvscf_bare   :      0.01s CPU      0.01s WALL (       1 calls)
-     mul_iqr      :      0.00s CPU      0.00s WALL (       1 calls)
-     dvscf_shift  :      0.01s CPU      0.01s WALL (       8 calls)
-     calc_w_pot   :      0.01s CPU      0.01s WALL (       8 calls)
-     write_w_pot  :      0.01s CPU      0.02s WALL (       8 calls)
- 
-     DVSCF_Q2R    :      0.16s CPU      0.21s WALL
+     sum_w_pot      486.292360      486.292360      486.292360
+     sum_w_pot      540.602613      540.602613      540.602613
 
- 
-   This run was terminated on:  18:19:33   7Dec2023            
+
+
+     read_dvscf   :      0.10s CPU      0.11s WALL (       1 calls)
+     dvscf_bare   :      0.02s CPU      0.02s WALL (       1 calls)
+     mul_iqr      :      0.01s CPU      0.01s WALL (       1 calls)
+     dvscf_shift  :      0.03s CPU      0.04s WALL (       8 calls)
+     calc_w_pot   :      0.02s CPU      0.03s WALL (       8 calls)
+     write_w_pot  :      0.01s CPU      0.01s WALL (       8 calls)
+
+     DVSCF_Q2R    :      0.29s CPU      0.33s WALL
+
+
+   This run was terminated on:  19:16:40  12Mar2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

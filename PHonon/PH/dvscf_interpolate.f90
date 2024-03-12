@@ -782,9 +782,15 @@ MODULE dvscf_interpolate
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: Qqq
     !! Quadrupole
+    REAL(KIND = DP) :: alpha
+    !! Width of the Gaussian filter
+    REAL(KIND = DP) :: filter
+    !! Gaussian filter
     COMPLEX(DP) :: phase
     COMPLEX(DP), ALLOCATABLE :: aux(:)
     !! (dfftp%nnr) long-range part in G space
+    !
+    alpha = 0.1  ! in bohr^-2 units (PRB 102, 094308 (2020), footnote 3)
     !
     ALLOCATE(aux(dfftp%nnr))
     !
@@ -794,9 +800,11 @@ MODULE dvscf_interpolate
       iatm = (imode - 1) / 3 + 1
       idir = imode - 3 * (iatm - 1)
       !
-      ! Compute aux(G) = 1j * 4pi / Omega
-      !                * [ (q+G)_y * Zstar_{a,yx} * exp(-i*(q+G)*tau_a)) ]
-      !                / [ (q+G)_y * epsilon_yz * (q+G)_z ]
+      ! aux_x(G) = i * 4pi / Omega
+      !     * [ (q+G)_y * Zstar_{a,yx} - (q+G)_y (q+G)_z * Qmat_{a,xyz} / 2 ]
+      !     * exp(-|q+G|^2 / 4 / alpha)
+      !     * exp(-i * (q+G) * tau_a)
+      !     / [ (q+G)_y * epsilon_{yz} * (q+G)_z ]
       !
       aux(:) = (0.d0, 0.d0)
       !
@@ -816,6 +824,10 @@ MODULE dvscf_interpolate
         arg = tpi * SUM(xq_g(:) * tau(:,iatm))
         phase = CMPLX(COS(arg), -SIN(arg), KIND=DP)
         !
+        !
+        ! filter = exp(-|q+G|^2 / 4 / alpha)
+        filter = EXP(- SUM(ABS(xq_g * xq_g)) * tpiba**2 / 4 / alpha)
+        !
         zaq = 0.0d0
         DO ipol = 1, 3
           zaq = zaq + xq_g(ipol) * zeu(ipol, idir, iatm)
@@ -830,11 +842,11 @@ MODULE dvscf_interpolate
           ENDDO
         ENDIF
         !
-        aux(dfftp%nl(ig)) = (zaq - (0.d0, 1.d0) * Qqq) * phase / epsilon_denom
+        aux(dfftp%nl(ig)) = (zaq / tpiba - (0.d0, 1.d0) * Qqq) * filter * phase / epsilon_denom
         !
       ENDDO
       !
-      aux(:) = aux(:) * (0.d0, 1.d0) * fpi / omega * e2 / tpiba
+      aux(:) = aux(:) * (0.d0, 1.d0) * fpi / omega * e2
       !
       ! Fourier transform aux to dvscf_long(:, imode)
       CALL invfft('Rho', aux, dfftp)
