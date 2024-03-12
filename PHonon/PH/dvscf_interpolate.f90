@@ -64,6 +64,153 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   !
   !----------------------------------------------------------------------------
+  SUBROUTINE read_quadrupole_fmt(filename, nat, qrpl, Qmat, verbose)
+    !--------------------------------------------------------------------------
+    !! Read quadrupole.fmt file.
+    !! If file exists, set qrpl = .TRUE. and read data to Qmat.
+    !! If file does not exist, set qrpl = .FALSE. and fill Qmat with zeros.
+    !--------------------------------------------------------------------------
+    USE kinds,       ONLY : DP
+    USE mp,          ONLY : mp_bcast
+    USE io_global,   ONLY : ionode_id, ionode, stdout
+    USE mp_images,   ONLY : intra_image_comm
+    !
+    CHARACTER(LEN = *), INTENT(IN) :: filename
+    !! Name of the quadrupole.fmt file
+    INTEGER, INTENT(IN) :: nat
+    !! Numbers of atoms
+    LOGICAL, INTENT(INOUT) :: qrpl
+    !! Set to .TRUE. if quadrupoles exist, .FALSE. otherwise.
+    REAL(KIND = DP), ALLOCATABLE, INTENT(INOUT) :: Qmat(:, :, :, :)
+    !! Quadrupole tensor
+    LOGICAL, INTENT(IN) :: verbose
+    !! If .TRUE., write quadrupole to stdout.
+    !
+    LOGICAL :: exst
+    !! Find if a file exists.
+    CHARACTER(LEN = 256) :: dummy
+    !! Dummy character for reading
+    INTEGER :: ierr
+    !! Error index when reading/writing a file
+    INTEGER :: ios
+    !! iostat
+    INTEGER :: iun
+    !! Index for reading files
+    INTEGER :: i, idir
+    !! Index for directions
+    INTEGER :: na
+    !! Atom index
+    REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+    !! Specific quadrupole values read from file.
+    !
+    ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvscf_interpolate', 'Error allocating Qmat', 1)
+    Qmat(:, :, :, :) = 0.0d0
+    !
+    ! If quadrupole file exist, read it
+    IF (ionode) THEN
+      INQUIRE(FILE = TRIM(filename), EXIST = exst)
+      !
+      IF (exst) THEN
+        qrpl = .TRUE.
+        !
+        OPEN(NEWUNIT = iun, FILE = TRIM(filename), STATUS = 'old', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('read_quadrupole_fmt', 'problem opening quadrupole.fmt', ios)
+        !
+        READ(iun, *) dummy
+        DO i = 1, 3 * nat
+          READ(iun, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+          Qmat(na, idir, 1, 1) = Qxx
+          Qmat(na, idir, 2, 2) = Qyy
+          Qmat(na, idir, 3, 3) = Qzz
+          Qmat(na, idir, 2, 3) = Qyz
+          Qmat(na, idir, 3, 2) = Qyz
+          Qmat(na, idir, 1, 3) = Qxz
+          Qmat(na, idir, 3, 1) = Qxz
+          Qmat(na, idir, 1, 2) = Qxy
+          Qmat(na, idir, 2, 1) = Qxy
+        ENDDO
+        CLOSE(iun)
+      ENDIF ! exst
+    ENDIF
+    !
+    CALL mp_bcast(qrpl, ionode_id, intra_image_comm)
+    CALL mp_bcast(Qmat, ionode_id, intra_image_comm)
+    !
+    ! Write quadrupole tensor to stdout
+    !
+    IF (qrpl .AND. verbose) THEN
+      WRITE(stdout, '(a)') '     '
+      WRITE(stdout, '(a)') '     ------------------------------------ '
+      WRITE(stdout, '(a)') '     Quadrupole tensor is correctly read: '
+      WRITE(stdout, '(a)') '     ------------------------------------ '
+      WRITE(stdout, '(a)') '     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy'
+      DO na = 1, nat
+        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        x    ', Qmat(na, 1, 1, 1), Qmat(na, 1, 2, 2), Qmat(na, 1, 3, 3), &
+                                                              Qmat(na, 1, 2, 3), Qmat(na, 1, 1, 3), Qmat(na, 1, 1, 2)
+        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        y    ', Qmat(na, 2, 1, 1), Qmat(na, 2, 2, 2), Qmat(na, 2, 3, 3), &
+                                                              Qmat(na, 2, 2, 3), Qmat(na, 2, 1, 3), Qmat(na, 2, 1, 2)
+        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        z    ', Qmat(na, 3, 1, 1), Qmat(na, 3, 2, 2), Qmat(na, 3, 3, 3), &
+                                                              Qmat(na, 3, 2, 3), Qmat(na, 3, 1, 3), Qmat(na, 3, 1, 2)
+      ENDDO
+      WRITE(stdout, '(a)') '     '
+    ENDIF
+    !
+  END SUBROUTINE read_quadrupole_fmt
+  !----------------------------------------------------------------------------
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE write_quadrupole_fmt(filename, nat, Qmat)
+    !--------------------------------------------------------------------------
+    !! Read quadrupole.fmt file.
+    !! If file exists, set qrpl = .TRUE. and read data to Qmat.
+    !! If file does not exist, set qrpl = .FALSE. and fill Qmat with zeros.
+    !--------------------------------------------------------------------------
+    USE kinds,       ONLY : DP
+    USE io_global,   ONLY : ionode
+    !
+    CHARACTER(LEN = *), INTENT(IN) :: filename
+    !! Name of the quadrupole.fmt file
+    INTEGER, INTENT(IN) :: nat
+    !! Numbers of atoms
+    REAL(KIND = DP), INTENT(IN) :: Qmat(nat, 3, 3, 3)
+    !! Quadrupole tensor
+    !
+    INTEGER :: ios
+    !! iostat
+    INTEGER :: iun
+    !! Index for reading files
+    INTEGER :: idir
+    !! Index for directions
+    INTEGER :: na
+    !! Atom index
+    REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+    !! Specific quadrupole values read from file.
+    !
+    IF (ionode) THEN
+      OPEN(NEWUNIT = iun, FILE = TRIM(filename), FORM = 'formatted', &
+           ACTION = 'write', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('write_quadrupole_fmt', &
+            'problem opening file for writing quadrupole.fmt', ios)
+      WRITE(iun, '(a)') "  atom   dir       Qxx         Qyy         Qzz         Qyz         Qxz         Qxy"
+      DO na = 1, nat
+        DO idir = 1, 3
+          Qxx = Qmat(na, idir, 1, 1)
+          Qyy = Qmat(na, idir, 2, 2)
+          Qzz = Qmat(na, idir, 3, 3)
+          Qyz = Qmat(na, idir, 2, 3)
+          Qxz = Qmat(na, idir, 1, 3)
+          Qxy = Qmat(na, idir, 1, 2)
+          WRITE(iun, '(I5,I3,6F18.10)') na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+        ENDDO
+      ENDDO
+      CLOSE(iun, STATUS='KEEP')
+    ENDIF ! ionode
+    !
+  END SUBROUTINE write_quadrupole_fmt
+  !----------------------------------------------------------------------------
+  !
+  !----------------------------------------------------------------------------
   SUBROUTINE dvscf_interpol_setup()
     !--------------------------------------------------------------------------
     !! Do setups for \(\texttt{dvscf_r2q}\). Called in \(\texttt{phq_setup}\)
@@ -86,13 +233,11 @@ MODULE dvscf_interpolate
     !
     IMPLICIT NONE
     !
-    LOGICAL :: exst
-    !! Find if a file exists.
     INTEGER :: iun
     !! Index for reading tensors.dat and rlatt.txt files
-    INTEGER :: i, j, idir
+    INTEGER :: i, j
     !! Index for directions
-    INTEGER :: iatm, na
+    INTEGER :: iatm
     !! Atom index
     INTEGER :: ir, ir_, ir1, ir2, ir3
     !! Real space unit cell index
@@ -102,14 +247,8 @@ MODULE dvscf_interpolate
     !! variable used for calculating nrlocal
     INTEGER :: ios
     !! iostat
-    INTEGER :: ierr
-    !! Error index when reading/writing a file
-    CHARACTER(LEN = 256) :: dummy
-    !! Dummy character reading
     REAL(DP) :: zeu_r2q_avg(3,3)
     !! Average of Born effective charge. Used for charge neutrality correction.
-    REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
-    !! Specific quadrupole values read from file.
     !
     IF (nspin_mag /= 1) CALL errore(' dvscf_r2q', ' magnetism not implemented',1)
     IF (nspin == 2) CALL errore(' dvscf_r2q', ' LSDA magnetism not implemented',1)
@@ -120,51 +259,8 @@ MODULE dvscf_interpolate
     CALL start_clock('dvscf_setup')
     !
     IF (do_long_range) THEN
-      ! If quadrupole file exist, read it
-      IF (ionode) THEN
-        INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
-      ENDIF
-      CALL mp_bcast(exst, ionode_id, intra_image_comm)
       !
-      qrpl = .FALSE.
-      ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
-      IF (ierr /= 0) CALL errore('dvscf_interpolate', 'Error allocating Qmat', 1)
-      Qmat(:, :, :, :) = 0.0d0
-      IF (exst) THEN
-        qrpl = .TRUE.
-        IF (ionode) THEN
-          OPEN(NEWUNIT = iun, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
-          READ(iun, *) dummy
-          DO i = 1, 3 * nat
-            READ(iun, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
-            Qmat(na, idir, 1, 1) = Qxx
-            Qmat(na, idir, 2, 2) = Qyy
-            Qmat(na, idir, 3, 3) = Qzz
-            Qmat(na, idir, 2, 3) = Qyz
-            Qmat(na, idir, 3, 2) = Qyz
-            Qmat(na, idir, 1, 3) = Qxz
-            Qmat(na, idir, 3, 1) = Qxz
-            Qmat(na, idir, 1, 2) = Qxy
-            Qmat(na, idir, 2, 1) = Qxy
-          ENDDO
-          CLOSE(iun)
-        ENDIF ! mpime == ionode_id
-        CALL mp_bcast(Qmat, ionode_id, intra_image_comm)
-        WRITE(stdout, '(a)') '     '
-        WRITE(stdout, '(a)') '     ------------------------------------ '
-        WRITE(stdout, '(a)') '     Quadrupole tensor is correctly read: '
-        WRITE(stdout, '(a)') '     ------------------------------------ '
-        WRITE(stdout, '(a)') '     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy'
-        DO na = 1, nat
-          WRITE(stdout, '(i8, a,6f10.5)' ) na, '        x    ', Qmat(na, 1, 1, 1), Qmat(na, 1, 2, 2), Qmat(na, 1, 3, 3), &
-                                                                Qmat(na, 1, 2, 3), Qmat(na, 1, 1, 3), Qmat(na, 1, 1, 2)
-          WRITE(stdout, '(i8, a,6f10.5)' ) na, '        y    ', Qmat(na, 2, 1, 1), Qmat(na, 2, 2, 2), Qmat(na, 2, 3, 3), &
-                                                                Qmat(na, 2, 2, 3), Qmat(na, 2, 1, 3), Qmat(na, 2, 1, 2)
-          WRITE(stdout, '(i8, a,6f10.5)' ) na, '        z    ', Qmat(na, 3, 1, 1), Qmat(na, 3, 2, 2), Qmat(na, 3, 3, 3), &
-                                                                Qmat(na, 3, 2, 3), Qmat(na, 3, 1, 3), Qmat(na, 3, 1, 2)
-        ENDDO
-        WRITE(stdout, '(a)') '     '
-      ENDIF ! exst
+      CALL read_quadrupole_fmt(TRIM(wpot_dir)//'quadrupole.fmt', nat, qrpl, Qmat, .TRUE.)
       !
       ! Read tensors.dat file for epsil and zeu
       !

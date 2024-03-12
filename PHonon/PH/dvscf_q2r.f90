@@ -13,7 +13,7 @@ PROGRAM dvscf_q2r
 !!    Fourier transform the dvscf computed at coarse q points to real space.
 !!    Originally proposed by [1]. For charge neutrality correction see [2].
 !!    Dipole long-range part described in [3].
-!!    Quadrupole long-range part described in [4] (not implemented here).
+!!    Quadrupole long-range part described in [4].
 !!    Author: Jae-Mo Lihm
 !!
 !! Input data: Namelist "input"
@@ -52,7 +52,7 @@ PROGRAM dvscf_q2r
 !! [1] A. Eiguren and C. Ambrosch-Draxl, PRB 78, 045124 (2008)
 !! [2] S. Ponce et al, J. Chem. Phys. 143, 102813 (2015)
 !! [3] Xavier Gonze et al, Comput. Phys. Commun. 248 107042 (2020)
-!! [4] Guillaume Brunin et al, arXiv:2002.00628 (2020)
+!! [4] Guillaume Brunin et al, Phys. Rev. Lett. 125, 136601 (2020)
 !!
 !! Not implemented for the following cases:
 !!    - PAW
@@ -132,7 +132,8 @@ PROGRAM dvscf_q2r
   USE ph_restart,  ONLY : ph_readfile
   USE efield_mod,  ONLY : zstareu, zstarue, zstarue0, zstareu0, epsilon
   USE dvscf_interpolate, ONLY : dvscf_shift_center, dvscf_bare_calc, &
-                                dvscf_long_range, multiply_iqr
+                                dvscf_long_range, multiply_iqr, read_quadrupole_fmt, &
+                                write_quadrupole_fmt
   USE mp_images,   ONLY : intra_image_comm
   !
   IMPLICIT NONE
@@ -531,57 +532,23 @@ PROGRAM dvscf_q2r
   CALL stop_clock('dvscf_bare')
   !
   ! ---------------------------------------------------------------------------
+  !
   ! Subtract long-range part (dipole potential) from
-  ! When charge neutrality renormalization is done, zeu must be modified
+  !
   IF (do_long_range) THEN
-    ! If quadrupole file exist, read it
-    IF (ionode) THEN
-      INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
-    ENDIF
-    CALL mp_bcast(exst, ionode_id, intra_image_comm)
     !
-    qrpl = .FALSE.
-    ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
-    IF (ierr /= 0) CALL errore('dvscf_q2r', 'Error allocating Qmat', 1)
-    Qmat(:, :, :, :) = 0.0d0
-    IF (exst) THEN
-      qrpl = .TRUE.
-      IF (ionode) THEN
-        OPEN(NEWUNIT = iun, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
-        READ(iun, *) dummy
-        DO i = 1, 3 * nat
-          READ(iun, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
-          Qmat(na, idir, 1, 1) = Qxx
-          Qmat(na, idir, 2, 2) = Qyy
-          Qmat(na, idir, 3, 3) = Qzz
-          Qmat(na, idir, 2, 3) = Qyz
-          Qmat(na, idir, 3, 2) = Qyz
-          Qmat(na, idir, 1, 3) = Qxz
-          Qmat(na, idir, 3, 1) = Qxz
-          Qmat(na, idir, 1, 2) = Qxy
-          Qmat(na, idir, 2, 1) = Qxy
-        ENDDO
-        CLOSE(iun)
-      ENDIF ! mpime == ionode_id
-      CALL mp_bcast(Qmat, ionode_id, intra_image_comm)
-      WRITE(stdout, '(a)') '     '
-      WRITE(stdout, '(a)') '     ------------------------------------ '
-      WRITE(stdout, '(a)') '     Quadrupole tensor is correctly read: '
-      WRITE(stdout, '(a)') '     ------------------------------------ '
-      WRITE(stdout, '(a)') '     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy'
-      DO na = 1, nat
-        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        x    ', Qmat(na, 1, 1, 1), Qmat(na, 1, 2, 2), Qmat(na, 1, 3, 3), &
-                                                              Qmat(na, 1, 2, 3), Qmat(na, 1, 1, 3), Qmat(na, 1, 1, 2)
-        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        y    ', Qmat(na, 2, 1, 1), Qmat(na, 2, 2, 2), Qmat(na, 2, 3, 3), &
-                                                              Qmat(na, 2, 2, 3), Qmat(na, 2, 1, 3), Qmat(na, 2, 1, 2)
-        WRITE(stdout, '(i8, a,6f10.5)' ) na, '        z    ', Qmat(na, 3, 1, 1), Qmat(na, 3, 2, 2), Qmat(na, 3, 3, 3), &
-                                                              Qmat(na, 3, 2, 3), Qmat(na, 3, 1, 3), Qmat(na, 3, 1, 2)
-      ENDDO
-      WRITE(stdout, '(a)') '     '
-    ENDIF ! exst
+    ! If quadrupole file exist, read it
+    !
+    CALL read_quadrupole_fmt('quadrupole.fmt', nat, qrpl, Qmat, .TRUE.)
+    !
+    IF (qrpl) THEN
+      CALL write_quadrupole_fmt(TRIM(wpot_dir)//'quadrupole.fmt', nat, Qmat)
+    ENDIF
     !
     WRITE(stdout, *)
     WRITE(stdout, '(5x,a)') "Computing and subtracting long-range part of dvscf"
+    !
+    ! When charge neutrality renormalization is done, zeu must be modified
     !
     IF (do_charge_neutral) THEN
       DO iat = 1, nat
