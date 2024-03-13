@@ -758,7 +758,7 @@ MODULE paw_onecenter
     !
     vout_lm = 0.0_DP
     !
-    !$acc data create( rhoout_lm, gc_rad, h_rad )
+    !$acc data create( rhoout_lm, gc_rad, h_rad, h_lm, gc_lm )
     !
     IF ( (nspin_mag==2 .OR. nspin_mag==4) .AND. noncolin ) THEN
        ! ... transform the noncollinear case into sigma-GGA case
@@ -876,7 +876,7 @@ MODULE paw_onecenter
        ENDDO
     ENDDO
     !
-    !$acc update self( e_rad, h_rad, gc_rad )
+    !$acc update self( e_rad )
     !
     ! ... integrate energy (if required)
     IF ( energy_present ) THEN
@@ -904,8 +904,7 @@ MODULE paw_onecenter
     !$omp end parallel
 #endif
     !
-        !$acc end data
-    !$acc end data
+
     
     IF ( energy_present ) THEN
        e_gcxc = SUM(egcxc_of_tid)
@@ -928,34 +927,39 @@ MODULE paw_onecenter
     ! ... this factor sin_th in the expression of the divergence.
     ! ... ADC 30/04/2009.
     !
+    !$acc parallel loop collapse(2) present(rad(i%t:i%t)) copyin(rad(i%t)%sin_th(ix_s:ix_e))
     DO ix = ix_s, ix_e
-       h_rad(1:i%m,3,ix,1:nspin_gga) = h_rad(1:i%m,3,ix,1:nspin_gga) / &
-                                       rad(i%t)%sin_th(ix)
-    ENDDO
-    
-    
-    
-    ! We need the gradient of H to calculate the last part of the exchange
-    ! and correlation potential. First we have to convert H to its Y_lm expansion
-    CALL PAW_rad2lm3_gpu( i, h_rad, h_lm, i%l+rad(i%t)%ladd, nspin_gga )
-    !
-    ! Compute div(H)
-    CALL PAW_divergence( i, h_lm, div_h, i%l+rad(i%t)%ladd, i%l )
-    !                       input max lm --^  output max lm-^
-    !
-    ! Finally sum it back into v_xc
-    DO is = 1,nspin_gga
-      DO lm = 1,i%l**2
-         vout_lm(1:i%m,lm,is) = vout_lm(1:i%m,lm,is) + e2*(gc_lm(1:i%m,lm,is)-div_h(1:i%m,lm,is))
+      DO k = 1, i%m
+        h_rad(k,3,ix,1:nspin_gga) = h_rad(k,3,ix,1:nspin_gga) / rad(i%t)%sin_th(ix)
       ENDDO
     ENDDO
+    !    
+    ! ... We need the gradient of H to calculate the last part of the exchange
+    ! ... and correlation potential. First we have to convert H to its Y_lm expansion
+    CALL PAW_rad2lm3_gpu( i, h_rad, h_lm, i%l+rad(i%t)%ladd, nspin_gga )
+    !
+    !$acc data create(div_h)
+    !
+    CALL PAW_divergence2( i, h_lm, div_h, i%l+rad(i%t)%ladd, i%l )
+    !
+    !$acc parallel loop collapse(3)
+    DO is = 1,nspin_gga
+      DO lm = 1,i%l**2
+        DO k = 1, i%m
+          vout_lm(k,lm,is) = vout_lm(k,lm,is) + e2*(gc_lm(k,lm,is)-div_h(k,lm,is))
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    !$acc end data
+    !$acc end data
+    !$acc end data
     !
     IF (nspin_mag == 4 ) THEN
        CALL compute_pot_nonc( i, vout_lm, v_lm, segni_rad, rho_lm )
     ELSE
        v_lm(:,:,1:nspin_mag) = v_lm(:,:,1:nspin_mag)+vout_lm(:,:,1:nspin_mag)
     ENDIF
-    !
     !
     DEALLOCATE( gc_rad )
     DEALLOCATE( gc_lm  )
@@ -971,6 +975,116 @@ MODULE paw_onecenter
     !
   END SUBROUTINE PAW_gcxc_potential
   !
+  !
+  
+  !-------------------------------------------------------------------------------
+  SUBROUTINE PAW_divergence2( i, F_lm, div_F_lm, lmaxq_in, lmaxq_out )
+    !---------------------------------------------------------------------------
+    !! Compute divergence of a vector field (actually the hamiltonian).  
+    !! It is assumed that:  
+    !! 1. the input function is multiplied by \(r^2\);  
+    !! 2. the output function is multiplied by \(r^2\) too.
+    !
+    USE constants,              ONLY : sqrtpi, fpi, e2
+    USE noncollin_module,       ONLY : nspin_gga
+    USE lsda_mod,               ONLY : nspin
+    USE atom,                   ONLY : g => rgrid
+    !
+    TYPE(paw_info), INTENT(IN) :: i
+    !! atom's minimal info
+    INTEGER, INTENT(IN) :: lmaxq_in
+    !! max angular momentum to derive (divergence is reliable up to lmaxq_in-2)
+    INTEGER, INTENT(IN) :: lmaxq_out
+    !! max angular momentum to reconstruct for output
+    REAL(DP), INTENT(IN) :: F_lm(i%m,3,lmaxq_in**2,nspin_gga)
+    !! Y_lm expansion of F
+    REAL(DP), INTENT(OUT):: div_F_lm(i%m,lmaxq_out**2,nspin_gga)
+    !! div(F) 
+    !
+    ! ... local variables
+    !
+    REAL(DP) :: div_F_rad(i%m,rad(i%t)%nx,nspin_gga) ! div(F) on rad. grid
+    REAL(DP) :: aux(i%m)                             ! workspace
+    ! counters on: spin, angular momentum, radial grid point:
+    INTEGER :: is, lm, ix, k
+    REAL(DP) :: aux_k
+    !
+    ! ... This is the divergence in spherical coordinates:
+    ! ...     {1 \over r^2}{\partial ( r^2 A_r ) \over \partial r} 
+    ! ...   + {1 \over r\sin\theta}{\partial \over \partial \theta} (  A_\theta\sin\theta )
+    ! ...   + {1 \over r\sin\theta}{\partial A_\phi \over \partial \phi}
+    ! ...
+    ! ... The derivative sum_LM d(Y_LM sin(theta) )/dtheta will be expanded as:
+    ! ... sum_LM ( Y_lm cos(theta) + sin(theta) dY_lm/dtheta )
+    ! ...
+    ! ... The radial component of the divergence is computed last, for practical reasons
+    ! ...
+    ! ...     CALL errore('PAW_divergence', 'More angular momentum components are needed (in input)'//&
+    ! ...             ' to provide the number you have requested (in output)', lmaxq_out-lmaxq_in+2)
+    !
+    IF (TIMING) CALL start_clock( 'PAW_div' )
+    !
+    !$acc data present(F_lm, div_F_lm)
+    !$acc data copyin(div_F_rad,g(i%t:i%t),g(i%t)%rm3,g(i%t)%rm2) create(aux)
+    !
+    !$acc parallel loop collapse(3) present(rad(i%t:i%t)) copyin(rad(i%t)%sin_th,rad(i%t)%cos_th)
+    DO is = 1, nspin_gga
+      DO ix = ix_s, ix_e
+        DO k = 1, i%m
+          ! ... spherical contribution (lm=1) of the theta component
+          aux_k = F_lm(k,3,1,is) * (rad(i%t)%dylmt(ix,1)*rad(i%t)%sin_th(ix) &
+                             + 2.0_DP*rad(i%t)%ylm(ix,1)*rad(i%t)%cos_th(ix))
+          ! ... sum of phi and theta components (phi has no spherical term, 
+          ! ... so lm starts from 2)
+          !$acc loop seq
+          DO lm = 2, lmaxq_in**2
+             aux_k = aux_k + rad(i%t)%dylmp(ix,lm)* (F_lm(k,2,lm,is)) + &
+                     F_lm(k,3,lm,is) * (rad(i%t)%dylmt(ix,lm)*rad(i%t)%sin_th(ix) + &
+                     2.0_DP*rad(i%t)%ylm(ix,lm)*rad(i%t)%cos_th(ix))
+          ENDDO
+          div_F_rad(k,ix,is) = aux_k
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    ! ... Convert what I have done so far to Y_lm
+    CALL PAW_rad2lm_gpu( i, div_F_rad, div_F_lm, lmaxq_out, nspin_gga )
+    !
+    ! ... Multiply by 1/r**3: 1/r is for theta and phi componente only
+    ! ... 1/r**2 is common to all the three components.
+    !$acc parallel loop collapse(3) present(g(i%t:i%t))
+    DO is = 1, nspin_gga
+      DO lm = 1, lmaxq_out**2
+        DO k = 1, i%m
+          div_F_lm(k,lm,is) = div_F_lm(k,lm,is) * g(i%t)%rm3(k)
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    ! ... Compute partial radial derivative d/dr
+    DO is = 1, nspin_gga
+      DO lm = 1, lmaxq_out**2
+        ! ... Derive along \hat{r} (F already contains a r**2 factor, otherwise
+        ! ... it may be better to expand (1/r**2) d(A*r**2)/dr = dA/dr + 2A/r)
+        CALL radial_gradient2( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style, 1 )
+        ! ... Sum it in the divergence: it is already in the right Y_lm form
+        !$acc parallel loop present(g(i%t:i%t))
+        DO k = 1, i%m
+          div_F_lm(k,lm,is) = div_F_lm(k,lm,is) + aux(k)*g(i%t)%rm2(k)
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    !$acc update self(div_F_lm)
+    !$acc end data
+    !$acc end data
+    !
+    IF (TIMING) CALL stop_clock( 'PAW_div' )
+    !
+    RETURN
+    !
+  END SUBROUTINE PAW_divergence2
+  
   !
   !-------------------------------------------------------------------------------
   SUBROUTINE PAW_divergence( i, F_lm, div_F_lm, lmaxq_in, lmaxq_out )
