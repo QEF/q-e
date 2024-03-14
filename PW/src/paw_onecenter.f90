@@ -498,7 +498,7 @@ MODULE paw_onecenter
     ENDIF
     !
     !$acc data copyin( rho_lm, rho_core ) copyout( v_rad, v_lm )
-    !$acc data copyin( rad(i%t:i%t), rad(i%t)%ylm, rad(i%t)%ww, rad(i%t)%dylmp,rad(i%t)%dylmt)
+    !$acc data copyin( rad(i%t:i%t), rad(i%t)%ylm, rad(i%t)%ww, rad(i%t)%dylmp,rad(i%t)%dylmt )
     !$acc data create( arho, rho_rad, ex, ec, vx, vc, e_rad )
     !$acc data copyin( g(i%t:i%t), g(i%t)%r2, g(i%t)%rm2, g(i%t)%rab )
     IF ( with_small_so ) THEN
@@ -611,7 +611,7 @@ MODULE paw_onecenter
     !$acc end data
     IF ( with_small_so ) THEN
       !$acc exit data delete( rad(i%t)%sin_th, rad(i%t)%cos_th, rad(i%t)%sin_phi, rad(i%t)%cos_phi )
-      !$acc exit data delete( msmall_lm)
+      !$acc exit data delete( msmall_lm )
     ENDIF
     !
     IF ( energy_present ) DEALLOCATE( e_rad )
@@ -643,14 +643,12 @@ MODULE paw_onecenter
     !
     IF ( with_small_so ) DEALLOCATE( g_rad )
     
-    !$acc update self(v_lm)
-    
     ! ... Add gradient correction, if necessary
     IF ( xclib_dft_is('gradient') ) &
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
     !
     
-    !$acc update device(v_lm)
+    !$acc update self(v_lm)
     
     !$acc end data
     !$acc end data
@@ -755,8 +753,6 @@ MODULE paw_onecenter
     ALLOCATE(rhoout_lm(i%m,i%l**2,nspin_gga)) ! charge density as lm components
     ALLOCATE(vout_lm(i%m,i%l**2,nspin_gga))   ! potential as lm components
     ALLOCATE(segni_rad(i%m,rad(i%t)%nx))      ! charge density as lm components
-    !
-    vout_lm = 0.0_DP
     !
     !$acc data create( rhoout_lm, gc_rad, h_rad, h_lm, gc_lm )
     !
@@ -904,8 +900,6 @@ MODULE paw_onecenter
     !$omp end parallel
 #endif
     !
-
-    
     IF ( energy_present ) THEN
        e_gcxc = SUM(egcxc_of_tid)
        CALL mp_sum( e_gcxc, paw_comm )
@@ -938,7 +932,7 @@ MODULE paw_onecenter
     ! ... and correlation potential. First we have to convert H to its Y_lm expansion
     CALL PAW_rad2lm3_gpu( i, h_rad, h_lm, i%l+rad(i%t)%ladd, nspin_gga )
     !
-    !$acc data create(div_h)
+    !$acc data create(div_h, vout_lm)
     !
     CALL PAW_divergence2( i, h_lm, div_h, i%l+rad(i%t)%ladd, i%l )
     !
@@ -946,20 +940,27 @@ MODULE paw_onecenter
     DO is = 1,nspin_gga
       DO lm = 1,i%l**2
         DO k = 1, i%m
-          vout_lm(k,lm,is) = vout_lm(k,lm,is) + e2*(gc_lm(k,lm,is)-div_h(k,lm,is))
+          vout_lm(k,lm,is) = e2*(gc_lm(k,lm,is)-div_h(k,lm,is))
         ENDDO
       ENDDO
     ENDDO
     !
-    !$acc end data
-    !$acc end data
+    IF (nspin_mag == 4 ) THEN
+    
+!       !$acc update self(vout_lm, v_lm, rho_lm)
+       CALL compute_pot_nonc2( i, vout_lm, v_lm, segni_rad, rho_lm )
+!       !$acc update device(v_lm)
+        !$acc update self(v_lm)
+    ELSE
+       !$acc kernels
+       v_lm(:,:,1:nspin_mag) = v_lm(:,:,1:nspin_mag)+vout_lm(:,:,1:nspin_mag)
+       !$acc end kernels
+    ENDIF
+    !
     !$acc end data
     !
-    IF (nspin_mag == 4 ) THEN
-       CALL compute_pot_nonc( i, vout_lm, v_lm, segni_rad, rho_lm )
-    ELSE
-       v_lm(:,:,1:nspin_mag) = v_lm(:,:,1:nspin_mag)+vout_lm(:,:,1:nspin_mag)
-    ENDIF
+    !$acc end data
+    !$acc end data
     !
     DEALLOCATE( gc_rad )
     DEALLOCATE( gc_lm  )
@@ -976,7 +977,6 @@ MODULE paw_onecenter
   END SUBROUTINE PAW_gcxc_potential
   !
   !
-  
   !-------------------------------------------------------------------------------
   SUBROUTINE PAW_divergence2( i, F_lm, div_F_lm, lmaxq_in, lmaxq_out )
     !---------------------------------------------------------------------------
@@ -1627,6 +1627,7 @@ MODULE paw_onecenter
           !
           ixk = (jx-ix)*i%m + k
           F_rads = 0._DP
+          !$acc loop seq
           DO lm = 1, i%l**2
             F_rads = F_rads + rad(i%t)%ylm(jx,lm)*F_lm(k,lm,ispin)
           ENDDO ! lm
@@ -1730,6 +1731,7 @@ MODULE paw_onecenter
       DO lm = 1, lmax_loc2
         DO j = 1, i%m
           F_lm(j,lm,ispin) = 0.d0
+          !$acc loop seq
           DO ix = ix_s, ix_e
             F_lm(j,lm,ispin) = F_lm(j,lm,ispin) + F_rad(j,ix,ispin)*rad(i%t)%wwylm(ix,lm)
           ENDDO
@@ -2616,6 +2618,113 @@ MODULE paw_onecenter
   END SUBROUTINE compute_rho_spin_lm
   !
   !
+  
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE compute_pot_nonc2( i, vout_lm, v_lm, segni_rad, rho_lm )
+    !------------------------------------------------------------------------
+    !! This subroutine receives the GGA potential for spin up and
+    !! spin down and calculates the exchange and correlation potential and 
+    !! magnetic field.
+    !
+    USE kinds,            ONLY : DP
+    USE constants,        ONLY : eps12
+    USE lsda_mod,         ONLY : nspin
+    USE noncollin_module, ONLY : nspin_gga, nspin_mag
+    USE uspp_param,       ONLY : upf
+    USE atom,             ONLY : g => rgrid
+    USE io_global,        ONLY : stdout
+    !
+    TYPE(paw_info), INTENT(IN) :: i
+    !! atom's minimal info
+    REAL(DP), INTENT(IN) ::  rho_lm(i%m,i%l**2,nspin)
+    !! the charge and magnetization densities
+    REAL(DP), INTENT(IN) :: vout_lm(i%m,i%l**2,nspin_gga)
+    !! the spin up and spin down charges
+    REAL(DP), INTENT(IN) :: segni_rad(i%m,rad(i%t)%nx)
+    !! input: keep track of the direction of the magnetization
+    REAL(DP), INTENT(INOUT) :: v_lm(i%m,i%l**2,nspin)
+    !! output: the xc potential and magnetic field
+    !
+    ! ... local variables
+    !
+    REAL(DP), ALLOCATABLE :: vsave_lm(:,:,:)  ! auxiliary: v_lm is updated
+    REAL(DP), ALLOCATABLE :: gsave_lm(:,:,:)  ! auxiliary: g_lm is updated
+    REAL(DP), ALLOCATABLE :: vout_rad(:,:)    ! auxiliary: the potential along a line
+    REAL(DP), ALLOCATABLE :: rho_rad(:,:)     ! auxiliary: the charge+mag along a line
+    REAL(DP), ALLOCATABLE :: v_rad(:,:,:)     ! auxiliary: rho up and down along a line
+    REAL(DP), ALLOCATABLE :: g_rad(:,:,:)     ! auxiliary: rho up and down along a line
+    REAL(DP) :: mag                           ! modulus of the magnetization
+    INTEGER :: k, ix, ix0, ixk, ipol, kpol    ! counters on mesh points, directions, polarization
+    INTEGER :: ix_length, im_sum              ! number of directions, directions x mesh
+    !
+    IF (nspin /= 4) CALL errore( 'compute_pot_nonc', 'called in the wrong case', 1 )
+    !
+    ix_length = ix_e-ix_s+1
+    im_sum = i%m*ix_length
+    ALLOCATE( vout_rad(im_sum,nspin_gga), rho_rad(im_sum,nspin)  )
+    ALLOCATE( vsave_lm(i%m,i%l**2,nspin), gsave_lm(i%m,i%l**2,nspin) )
+    ALLOCATE( v_rad(i%m,ix_length,nspin), g_rad(i%m,ix_length,nspin) )
+    !
+    !$acc data present_or_copy(v_lm) present_or_copyin(vout_lm,rho_lm,segni_rad,g(i%t:i%t),g(i%t)%rm2)
+    !$acc data create(rho_rad,vout_rad,v_rad,vs_rad,g_rad,g_lm,vsave_lm,gsave_lm)
+    !
+    CALL PAW_lm2rad_gpu( i, ix_s, vout_lm, vout_rad, nspin_gga, ix_length )
+    CALL PAW_lm2rad_gpu( i, ix_s, rho_lm,  rho_rad,  nspin_mag, ix_length )
+    IF (with_small_so) CALL add_small_mag_gpu( i, ix_s, rho_rad, ix_length )
+    !
+    !$acc parallel loop collapse(2) present(g(i%t:i%t))
+    DO ix = ix_s, ix_e
+       DO k = 1, i%m
+          ix0 = ix-ix_s+1
+          ixk = (ix0-1)*i%m+k
+          rho_rad(ixk,1:nspin) = rho_rad(ixk,1:nspin) * g(i%t)%rm2(k)
+          mag = SQRT( rho_rad(ixk,2)**2 + rho_rad(ixk,3)**2 + rho_rad(ixk,4)**2 )
+          v_rad(k,ix0,1) = 0.5_DP * ( vout_rad(ixk,1) + vout_rad(ixk,2) )
+          vs_rad(k,ix,i%a) = 0.5_DP * ( vout_rad(ixk,1) - vout_rad(ixk,2) )
+          !
+          ! ... Choose rhoup and rhodw depending on the projection of the magnetization
+          ! ... on the chosen direction
+          IF (mag > eps12) THEN
+             !$acc loop seq
+             DO ipol = 2, 4
+                v_rad(k,ix0,ipol) = vs_rad(k,ix,i%a) * segni_rad(k,ix) * & 
+                                                      rho_rad(ixk,ipol) / mag
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDDO
+    !
+    !$acc update self(vs_rad)
+    !
+    IF (with_small_so) CALL compute_g_gpu( i, ix_s, v_rad, g_rad, ix_length )
+    !
+    CALL PAW_rad2lm_gpu( i, v_rad, vsave_lm, i%l, nspin )
+    !
+    !$acc kernels
+    v_lm = v_lm + vsave_lm
+    !$acc end kernels
+    !
+    IF (with_small_so) THEN
+       CALL PAW_rad2lm_gpu( i, g_rad, gsave_lm, i%l, nspin )
+       !$acc kernels
+       g_lm = g_lm + gsave_lm
+       !$acc end kernels
+       !$acc update self(g_lm)
+    ENDIF
+    !
+    !$acc end data
+    !$acc end data
+    !
+    DEALLOCATE( v_rad, g_rad )
+    DEALLOCATE( vsave_lm, gsave_lm )
+    DEALLOCATE( vout_rad, rho_rad )
+    !
+    RETURN
+    !
+  END SUBROUTINE compute_pot_nonc2
+  !
+  !
   !------------------------------------------------------------------------
   SUBROUTINE compute_pot_nonc( i, vout_lm, v_lm, segni_rad, rho_lm )
     !------------------------------------------------------------------------
@@ -2964,12 +3073,13 @@ MODULE paw_onecenter
     hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
     hatr(3)=rad(i%t)%cos_th(ix)
     !
-    !$acc parallel loop collapse(2) present(rad(i%t:i%t)) private(hatr)
+    !$acc parallel loop collapse(2)
     DO jx = ix, ix+ix_l-1
       DO k = 1, i%m
         !
         ixk = (jx-ix)*i%m + k
         !
+        !$acc loop seq collapse(2)
         DO ipol = 1, 3
           DO kpol = 1, 3
             rho_rad(ixk,ipol+1) = rho_rad(ixk,ipol+1) - &
@@ -3076,6 +3186,7 @@ MODULE paw_onecenter
     INTEGER :: k, ipol, kpol, jx
     !
     !$acc data present_or_copyin(v_rad) present_or_copy(g_rad)
+    !$acc data present_or_copyin(rad(i%t:i%t),rad(i%t)%sin_th,rad(i%t)%cos_th,rad(i%t)%sin_phi,rad(i%t)%cos_phi)
     !$acc parallel loop collapse(2) present(rad(i%t:i%t)) private(hatr)
     DO jx = ix, ix+ix_l-1
       DO k = 1, i%m
@@ -3084,11 +3195,10 @@ MODULE paw_onecenter
         hatr(2) = rad(i%t)%sin_th(jx)*rad(i%t)%sin_phi(jx)
         hatr(3) = rad(i%t)%cos_th(jx)
         !
+        !$acc loop seq collapse(2)
         DO ipol = 1, 3
           DO kpol = 1, 3 
-            !
             ! ... v_rad contains -B_{xc} with the notation of the papers
-            !
             g_rad(k,jx,ipol+1) = g_rad(k,jx,ipol+1) - &
                                  v_rad(k,jx,kpol+1)*hatr(kpol)*hatr(ipol)*2.0_DP
           ENDDO
@@ -3096,6 +3206,7 @@ MODULE paw_onecenter
         !
       ENDDO
     ENDDO
+    !$acc end data
     !$acc end data
     !
     RETURN
