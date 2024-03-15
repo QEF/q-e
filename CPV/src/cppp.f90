@@ -66,9 +66,6 @@ PROGRAM cp_postproc
   ! default values
 
   dunit = 14
-#if defined(__INTEL_COMPILER)
-  CALL remove_stack_limit ( )
-#endif
   !  initialize mpi
   CALL mp_startup  ( )
   !

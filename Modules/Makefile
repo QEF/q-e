@@ -217,8 +217,7 @@ w1gauss.o \
 deviatoric.o \
 customize_signals.o \
 qmmm_aux.o \
-sockets.o \
-stack.o
+sockets.o
 
 # GPU versions of modules
 MODULES += \
