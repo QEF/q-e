@@ -95,7 +95,6 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
              i_ref         ! the orbital we want to keep fix
   !
   REAL(DP) :: tcpu, get_clock ! timing variables
-  EXTERNAL cch_psi_all, ccg_psi
   EXTERNAL ch_psi_all,  cg_psi
   CHARACTER(LEN=256) :: flmixDPot = 'mixd'
   !
@@ -425,7 +424,6 @@ SUBROUTINE sternheimer_kernel_old(first_iter, npert, i_ref, lrdvpsi, iudvpsi, &
   REAL(DP) , ALLOCATABLE   :: h_diag (:,:)
   ! h_diag: diagonal part of the Hamiltonian
   INTEGER :: ipert, nrec
-  EXTERNAL cch_psi_all, ccg_psi
   EXTERNAL ch_psi_all,  cg_psi
   INTEGER :: lter, ltaver, lintercall, ibnd, spin_ref
   REAL(DP) :: anorm, weight
