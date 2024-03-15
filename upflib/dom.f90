@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#undef __debug
+  !! define __debug to print information on opened and closed tags
 module dom
   !
   ! Poor-man FoX_dom replacement - Paolo Giannozzi, 2022
@@ -234,15 +236,21 @@ CONTAINS
           if ( line(n:n2) == ']]>' ) then
              in_comment = .false.
              n = n+3
-             ! print *, 'debug: cdata ends'
+#if defined ( __debug )
+             print *, 'debug: cdata ends'
+#endif
           else if ( line(n:n2) == '-->' ) then
              in_comment = .false.
              n = n+3
-             ! print *, 'debug: comment ends'
+#if defined ( __debug )
+             print *, 'debug: comment ends'
+#endif
           else if ( line(n:n1) == '?>' ) then
              in_comment = .false.
              n = n+2
-             ! print *, 'debug: process ends'
+#if defined ( __debug )
+             print *, 'debug: process ends'
+#endif
           else
              n = n+1
           end if
@@ -255,22 +263,30 @@ CONTAINS
              if ( line(n1:n2) == '!--' ) then
                 n = n+4
                 in_comment = .true.
-                ! print *, 'debug: comment begins'
+#if defined ( __debug )
+                print *, 'debug: comment begins'
+#endif
              else if ( line(n1:n3) == '![CDATA[' ) then
                 n = n+9
                 in_comment = .true.
-                ! print *, 'debug: cdata begins'
+#if defined ( __debug )
+                print *, 'debug: cdata begins'
+#endif
              else if ( line(n1:n1) == '?' ) then
                 n = n+2
                 in_comment = .true.
-                ! print *, 'debug: process begins'
+#if defined ( __debug )
+                print *, 'debug: process begins'
+#endif
              else if ( line(n1:n1) == '/' ) then
                 ! tag = trim( open_tags(nlevel) )
                 tag = curr%tag
                 n = n+2
                 m = min(n+len_trim(tag)+1,nl)
                 if ( line(n:m) == trim(tag)//'>' ) then
-                   ! print *, 'debug: closing tag </',trim(tag),'> found'
+#if defined ( __debug )
+                   print *, 'debug: closing tag </',trim(tag),'> found'
+#endif
                    prev => curr%prev
                    curr => prev
                    in_data = .false.
@@ -310,11 +326,13 @@ CONTAINS
                    end if
                    if ( is_found ) then
                       tag = line(n+1:m-1)
-                      !if ( in_attribute ) then
-                      !   print *, 'debug: tag with attributes ',trim(tag),'...'
-                      !else
-                      !   print *, 'debug: tag <',trim(tag),'> found'
-                      !endif
+#if defined ( __debug )
+                      if ( in_attribute ) then
+                         print *, 'debug: tag with attributes ',trim(tag),'...'
+                      else
+                         print *, 'debug: tag <',trim(tag),'> found'
+                      endif
+#endif
                       nlevel = nlevel + 1
                       ! open_tags(nlevel) = trim(tag)
                       allocate(next)
@@ -349,14 +367,18 @@ CONTAINS
           else if ( line(n:n) == '>' ) then
              if ( in_attribute ) then
                 if ( line(n-1:n-1) == '/' ) then
-                   ! print *, 'info short tag ',trim(tag),' found'
+#if defined ( __debug )
+                   print *, 'info short tag ',trim(tag),' found'
+#endif
                    ! remove slash from attribute
                    curr%attr(len(curr%attr):len(curr%attr)) = ' '
                    prev => curr%prev
                    curr => prev
                    nlevel = nlevel - 1
                 else
-                   ! print *, 'debug: tag with attributes ',trim(tag),' found'
+#if defined ( __debug )
+                   print *, 'debug: tag with attributes ',trim(tag),' found'
+#endif
                    in_data = .true.
                 end if
                 in_attribute = .false.
