@@ -45,7 +45,7 @@ build:cmake-nvhpc:
     - mkdir build
     - cd build
     - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make -j 2
+            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make -j 4
 
 build:cmake-nvhpc-nocuda:
   tags: [docker]
