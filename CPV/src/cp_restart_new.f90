@@ -1250,8 +1250,11 @@ MODULE cp_restart_new
     !
     n2Pointer => item( getElementsByTagname( n1Pointer, "DT"), 0)
     found = ASSOCIATED(n2Pointer)
-    IF ( .NOT.found ) RETURN
-    CALL extractDataContent( n2Pointer, dt)
+    IF ( .NOT.found ) THEN
+       dt = -1.0_dp
+    ELSE
+       CALL extractDataContent( n2Pointer, dt)
+    END IF
     !
     ! ... read MD timesteps variables
     !
