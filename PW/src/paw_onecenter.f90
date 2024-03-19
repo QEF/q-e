@@ -721,7 +721,7 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_gcxc_v' )
     !
-    !$acc data present_or_copyin( rho_lm, rho_core, v_lm )
+    !$acc data present_or_copyin( rho_lm, rho_core ) present_or_copy( v_lm )
     !$acc data present_or_copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%r2, g(i%t)%rm2, g(i%t)%rm3, g(i%t)%rab )
     !
     e_gcxc = 0._dp
@@ -1696,8 +1696,8 @@ MODULE paw_onecenter
     INTEGER :: ispin ! counter for spin
     INTEGER :: j, lmax_loc2, ix0
     !
-    !$acc data present_or_copyin(F_rad,rad(i%t:i%t)) present_or_copyout(F_lm)
-    !$acc data copyin(rad(i%t)%wwylm)
+    !$acc data present_or_copyin(F_rad) present_or_copyout(F_lm)
+    !$acc data present_or_copyin(rad(i%t:i%t),rad(i%t)%wwylm)
     !
     IF (TIMING) CALL start_clock( 'PAW_rad2lm' )
     !
@@ -2119,76 +2119,100 @@ MODULE paw_onecenter
                                                       ! radial slice of rho)
     REAL(DP), ALLOCATABLE :: dmuxc(:,:,:)             ! fxc in the lsda case
     !
-    INTEGER :: is, js, ix, k                          ! counters on directions 
+    INTEGER :: is, js, ix, k, ixk                     ! counters on directions 
                                                       ! and radial grid
+    INTEGER :: im_sum
     !
     CALL start_clock( 'PAW_dxc_pot' )
     !
-    ALLOCATE( rho_rad(i%m,nspin_mag) )
-    ALLOCATE( v_rad(i%m,rad(i%t)%nx,nspin_mag) )
-    ALLOCATE( dmuxc(i%m,nspin_mag,nspin_mag) )
+    !$acc data copyin( rho_lm, drho_lm, rho_core ) copyout( v_lm )
+    !$acc data copyin( rad(i%t:i%t), rad(i%t)%ylm, rad(i%t)%wwylm )
+    !$acc data copyin( g(i%t:i%t), g(i%t)%rm2 )
     !
+    im_sum = i%m*nx_loc
+    !
+    ALLOCATE( rho_rad(im_sum,nspin_mag) )
+    ALLOCATE( v_rad(i%m,rad(i%t)%nx,nspin_mag) )
+    ALLOCATE( dmuxc(im_sum,nspin_mag,nspin_mag) )
+    !$acc enter data create( v_rad )
+    !$acc enter data create( rho_rad, dmuxc )
+    !
+    ! ... LDA (and LSDA) part (no gradient correction):
+    ! ... convert _lm density to real density along ix
+    CALL PAW_lm2rad_gpu( i, rho_lm(:,:,1:nspin_mag), rho_rad(:,1:nspin_mag), nspin_mag )
+    !
+    !$acc parallel loop collapse(2) present(g(i%t:i%t))
     DO ix = ix_s, ix_e
-       !
-       ! *** LDA (and LSDA) part (no gradient correction) ***
-       ! convert _lm density to real density along ix
-       !
-       CALL PAW_lm2rad( i, ix, rho_lm, rho_rad, nspin_mag )
-       !
-       ! Compute the fxc function on the radial mesh along ix
-       !
        DO k = 1, i%m
-          rho_rad(k,1:nspin_mag) = rho_rad(k,1:nspin_mag)*g(i%t)%rm2(k)
+         !
+         ixk = (ix-ix_s)*i%m+k
+         !
+         rho_rad(ixk,1:nspin_mag) = rho_rad(ixk,1:nspin_mag)*g(i%t)%rm2(k)
+         !
+         IF (nspin_mag/=2) THEN
+            rho_rad(ixk,1) = rho_rad(ixk,1) + rho_core(k)
+         ELSE
+            rho_rad(ixk,1) = rho_rad(ixk,1) + 0.5_DP*rho_core(k)
+            rho_rad(ixk,2) = rho_rad(ixk,2) + 0.5_DP*rho_core(k)
+         ENDIF
+         !
        ENDDO
-       !
-       SELECT CASE( nspin_mag )
-       CASE( 4 )
-          !
-          rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
-          CALL dmxc( i%m, 4, rho_rad, dmuxc )
-          !
-       CASE( 2 )
-          !
-          rho_rad(:,1) = rho_rad(:,1) + 0.5_DP*rho_core(:)
-          rho_rad(:,2) = rho_rad(:,2) + 0.5_DP*rho_core(:)
-          !
-          CALL dmxc( i%m, 2, rho_rad, dmuxc )
-          !
-       CASE DEFAULT
-          !
-          rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
-          !
-          CALL dmxc( i%m, 1, rho_rad(:,1:1), dmuxc )
-          !
-          v_rad(:,ix,1) = dmuxc(:,1,1)
-          !
-       END SELECT
-       !
-       ! Compute the change of the charge on the radial mesh along ix
-       !
-       CALL PAW_lm2rad( i, ix, drho_lm, rho_rad, nspin_mag )
-       !
-       ! fxc * dn
-       !
-       IF (nspin_mag == 1) THEN
-          v_rad(:,ix,1) = v_rad(:,ix,1)*rho_rad(:,1)*g(i%t)%rm2(:) 
-       ELSE
-          DO is=1,nspin_mag
-             v_rad(:,ix,is)=0.0_DP
-             DO js=1,nspin_mag
-                v_rad(:,ix,is) = v_rad(:,ix,is) + &
-                                 dmuxc(:,is,js)*rho_rad(:,js)*g(i%t)%rm2(:) 
-             ENDDO
-          ENDDO
-       ENDIF
-       !
     ENDDO
     !
-    ! Recompose the sph. harm. expansion
     !
-    CALL PAW_rad2lm( i, v_rad, v_lm, i%l, nspin_mag )
+    CALL dmxc( im_sum, nspin_mag, rho_rad(:,1:nspin_mag), dmuxc )
     !
-    ! Add gradient correction, if necessary
+    !
+    IF (nspin_mag==1) THEN
+      !$acc parallel loop collapse(2)
+      DO ix = ix_s, ix_e
+        DO k = 1, i%m
+          ixk = (ix-ix_s)*i%m+k
+          v_rad(k,ix,1) = dmuxc(ixk,1,1)
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    ! ... Compute the change of the charge on the radial mesh along ix
+    !
+    CALL PAW_lm2rad_gpu( i, drho_lm(:,:,1:nspin_mag), rho_rad(:,1:nspin_mag), nspin_mag )
+    !
+    ! ... fxc * dn
+    !
+    !$acc parallel loop collapse(2) present(g(i%t:i%t))
+    DO ix = ix_s, ix_e
+      DO k = 1, i%m
+        ixk = (ix-ix_s)*i%m+k
+        IF (nspin_mag == 1) THEN
+           v_rad(k,ix,1) = v_rad(k,ix,1)*rho_rad(ixk,1)*g(i%t)%rm2(k) 
+        ELSE
+           !$acc loop seq
+           DO is = 1, nspin_mag
+              v_rad(k,ix,is)=0.0_DP
+              !$acc loop seq
+              DO js = 1, nspin_mag
+                 v_rad(k,ix,is) = v_rad(k,ix,is) + &
+                                  dmuxc(ixk,is,js)*rho_rad(ixk,js)*g(i%t)%rm2(k) 
+              ENDDO
+           ENDDO
+        ENDIF
+      ENDDO  
+      !
+    ENDDO
+    !
+    ! ... Recompose the sph. harm. expansion
+    !
+    CALL PAW_rad2lm_gpu( i, v_rad, v_lm, i%l, nspin_mag )
+    !
+    ! ... Add gradient correction, if necessary
+    !
+    !$acc update self( v_lm )
+    !$acc exit data delete( v_rad )
+    !$acc exit data delete( rho_rad, dmuxc )
+    !
+    !$acc end data
+    !$acc end data
+    !$acc end data
     !
     IF( xclib_dft_is('gradient') ) &
         CALL PAW_dgcxc_potential( i, rho_lm, rho_core, drho_lm, v_lm )
