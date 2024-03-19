@@ -347,8 +347,6 @@ CONTAINS
           energy_error = ABS( energy_p - energy )
       END IF
       !
-      energy_error = ABS( energy_p - energy )
-      !
       ! ... obscure PGI bug as of v.17.4
       !
 #if defined (__PGI)
