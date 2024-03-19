@@ -1849,11 +1849,6 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
     !
-    zero    = 0.0_DP
-    gc_rad  = 0.0_DP
-    h_rad   = 0.0_DP
-    vout_lm = 0.0_DP
-    !
     ALLOCATE( r(i%m,nspin_gga) )
     ALLOCATE( v1x(i%m,nspin_gga), v2x(i%m,nspin_gga) )
     ALLOCATE( v1c(i%m,nspin_gga), v2c(i%m,nspin_gga) )
@@ -1877,6 +1872,11 @@ MODULE paw_onecenter
     ALLOCATE( grad2 (i%m,nspin_gga)   )
     ALLOCATE( dgrad (i%m,3,nspin_gga) )
     ALLOCATE( dgrad2(i%m,nspin_gga)   )
+    !
+    zero    = 0.0_DP
+    gc_rad  = 0.0_DP
+    h_rad   = 0.0_DP
+    vout_lm = 0.0_DP
     !
     IF ( nspin_mag == 1 ) THEN
        !
