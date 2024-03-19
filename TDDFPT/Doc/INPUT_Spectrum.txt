@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 7.3)
+Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 7.3.1)
 ------------------------------------------------------------------------
 
 

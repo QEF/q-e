@@ -13,9 +13,9 @@ build:cmake-gnu:
     - mkdir build
     - cd build
     - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
+            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make -j 2
       && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
-      && ctest -L unit --output-on-failure
+      && ctest -j 2 -L unit --output-on-failure
     - make install DESTDIR=`pwd`/install_root
 
 
@@ -26,7 +26,7 @@ build:pgi:
     - apt-get -qq update
     - apt-get -qq install ca-certificates git m4
     - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no --with-cuda-runtime=11.2  --with-cuda-cc=70
-    - make pw cp ph
+    - make -j 2 pw cp ph
 
 
 

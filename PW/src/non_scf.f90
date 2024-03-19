@@ -26,7 +26,6 @@ SUBROUTINE non_scf( )
   USE add_dmft_occ,         ONLY : dmft
   !
   USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
   USE exx,                  ONLY : exxinit, aceinit, use_ace
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, kedtau
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
@@ -81,7 +80,6 @@ SUBROUTINE non_scf( )
   ! ... explicitly collected to the first node
   ! ... this is done here for et, in weights () for wg
   !
-  CALL using_et(1)
   CALL poolrecover( et, nbnd, nkstot, nks )
   !
   ! ... the new density is computed here. For PAW:
@@ -141,7 +139,6 @@ SUBROUTINE non_scf( )
   ! ... for DMFT write everything to file to restart next scf step from here
   !
   IF ( dmft ) THEN
-     CALL using_et(0)
      CALL save_in_electrons( iter-1, dr2, ethr, et )
      RETURN
   ENDIF
@@ -169,7 +166,6 @@ SUBROUTINE non_scf( )
         conv_elec=.FALSE.
         RETURN
      ENDIF
-     CALL using_et(1)
      CALL poolrecover( et, nbnd, nkstot, nks )
      ef_scf = ef
      ef_scf_up = ef_up

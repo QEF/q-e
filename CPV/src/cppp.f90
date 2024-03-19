@@ -18,7 +18,6 @@
 PROGRAM cp_postproc
 
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
   USE io_files,   ONLY : prefix, tmp_dir, xmlfile
   USE mp_global,  ONLY : mp_startup, mp_global_end
   USE matrix_inversion, ONLY : invmat
@@ -30,28 +29,33 @@ PROGRAM cp_postproc
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: maxsp = 20
-
+  !
+  ! QE variables, read from files
+  !
   TYPE (output_type)    :: output_obj 
   INTEGER, ALLOCATABLE  :: ityp(:)
   INTEGER               :: nat, nsp, ibrav
-  INTEGER               :: ounit, cunit, punit, funit, dunit, bunit, ksunit
-  INTEGER               :: natoms, na(maxsp), atomic_number(maxsp)
-  INTEGER               :: np1, np2, np3, np
+  CHARACTER(len=6)      :: atm( maxsp )
   REAL(DP)              :: alat, amass(maxsp)
-  REAL(DP)              :: at(3, 3), atinv(3, 3)
+  REAL(DP)              :: at(3, 3)
   REAL(DP), ALLOCATABLE :: tau(:,:), tau_in(:,:), tau_out(:,:)
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
-  REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
-
+  !
+  ! local variables
+  !
   CHARACTER(len=256) :: filepp, fileout, output, outdir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
-  CHARACTER(len=6)   :: atm( maxsp ), lab
   LOGICAL            :: lforces, ldynamics, lpdb, lrotation
-  INTEGER            :: nframes
-  INTEGER            :: ios, ndr
-
-  REAL(DP) :: x, y, z, fx, fy, fz
-  INTEGER  :: i, j, k, n, ix, iy, iz, ierr
+  INTEGER            :: ounit, cunit, punit, funit, dunit, bunit, ksunit
+  INTEGER            :: natoms, nframes
+  INTEGER            :: atomic_number(maxsp)
+  !! FIXME: should be deleted from input and replaced by QE function
+  !! FIXME: with the same name: atomic_number(atm(ityp(n)))
+  INTEGER            :: np1, np2, np3, np
+  INTEGER            :: ios, ndr, ierr
+  INTEGER, ALLOCATABLE  :: n_atomic(:)
+  REAL(DP)           :: atinv(3,3)
+  INTEGER            :: i, j, k, n, ix, iy, iz
 
   REAL(DP) :: euler(6)
 
@@ -62,9 +66,6 @@ PROGRAM cp_postproc
   ! default values
 
   dunit = 14
-#if defined(__INTEL_COMPILER)
-  CALL remove_stack_limit ( )
-#endif
   !  initialize mpi
   CALL mp_startup  ( )
   !
@@ -153,32 +154,17 @@ PROGRAM cp_postproc
   !
   !   End of reading from data file
   !
-
-  natoms = nat
-  !
-  ! Count atoms in each species
-  !
-  na = 0
-  DO i = 1, nat
-     na( ityp( i ) ) = na( ityp( i ) ) + 1 
-  END DO
-
   ! allocate arrays
   ALLOCATE(tau_in(3, nat))                  ! atomic positions, angstroms
   ALLOCATE(tau_out(3, nat * np))            ! replicated positions
   ALLOCATE(sigma(3, nat ) )                 ! scaled coordinates
-  DEALLOCATE (ityp)
-  ALLOCATE (ityp(nat*np))
+  ALLOCATE (n_atomic(nat*np))
   IF (lforces) ALLOCATE( force( 3, nat * np ) )
-
+  !
   ! assign species (from input) to each atom
   !
-  k = 0
-  DO i = 1, nsp
-     DO j = 1, na(i)
-        k = k + 1
-        ityp(k) = atomic_number(i)
-     END DO
+  DO i = 1, nat
+     n_atomic(i) = atomic_number(ityp(i))
   END DO
 
   ! open output file for trajectories 
@@ -224,13 +210,17 @@ PROGRAM cp_postproc
      ! read data from files produced by cp
      !
      CALL read_cp( lforces, cunit, punit, funit, dunit, &
-                     natoms, at, tau_in, force ) 
+                     nat, at, tau_in, force, ierr ) 
+     IF ( ierr /= 0 ) THEN
+         WRITE(*,'("End of file after ",i5," frames")') n
+         EXIT
+     END IF
 
      WRITE(*,'(2x,"Cell parameters (Angstroms):")')
      WRITE(*,'(3(2x,f10.6))') ((at(i, j), i=1,3), j=1,3)
      !
      WRITE(*,'(2x,"Atomic coordinates (Angstroms):")')
-     WRITE(*,'(3(2x,f10.6))') ((tau_in(i, j), i=1,3), j=1,natoms)
+     WRITE(*,'(3(2x,f10.6))') ((tau_in(i, j), i=1,3), j=1,nat)
 
      ! compute scaled coordinates
      !
@@ -242,7 +232,7 @@ PROGRAM cp_postproc
 
      IF (lpdb) THEN
         ! apply periodic boundary conditions
-        DO i = 1, natoms
+        DO i = 1, nat
            DO j = 1, 3
               sigma(j, i) = sigma(j, i) - FLOOR(sigma(j, i))
            END DO
@@ -263,17 +253,17 @@ PROGRAM cp_postproc
      DO ix = 1, np1
         DO iy = 1, np2
            DO iz = 1, np3
-              DO j = 1, natoms
+              DO j = 1, nat
                  k = k + 1
                  tau_out(:, k) = tau_in(:, j) + (ix-1) * at(:, 1) + &
                                  (iy-1) * at(:, 2) + (iz-1) * at(:, 3)
-                 ityp(k) = ityp(j)
+                 n_atomic(k) = n_atomic(j)
                  IF (lforces) force(:, k) = force(:, j)
               END DO
            END DO
         END DO
      END DO
-     natoms = natoms * np
+     natoms = nat * np
 
      ! compute supercell
      at(:, 1) = at(:, 1) * np1
@@ -286,11 +276,11 @@ PROGRAM cp_postproc
      IF ( output == 'xsf' ) THEN
         ! write data as XSF format
         CALL write_xsf( ldynamics, lforces, ounit, n, at, & 
-                        natoms, ityp, tau_out, force )
+                        natoms, n_atomic, tau_out, force )
      ELSE IF( output == 'xyz' ) THEN
         ! write data as XYZ format
         CALL write_xyz( ldynamics, lforces, ounit, n, at, &
-                        natoms, ityp, tau_out, force )
+                        natoms, n_atomic, tau_out, force )
      END IF
 
   END DO
@@ -298,7 +288,7 @@ PROGRAM cp_postproc
   CLOSE(ounit)
 
   ! write atomic positions as PDB format
-  CALL write_pdb( bunit, at, tau_out, natoms, ityp, euler, lrotation )
+  CALL write_pdb( bunit, at, tau_out, natoms, n_atomic, euler, lrotation )
 
   ! free allocated resources
   CLOSE(punit)
@@ -308,10 +298,8 @@ PROGRAM cp_postproc
   DEALLOCATE(tau_in)
   DEALLOCATE(tau_out)
   DEALLOCATE(ityp)
+  DEALLOCATE(n_atomic)
   IF( ALLOCATED( force  ) ) DEALLOCATE(force)
-  IF( ALLOCATED( stau0 ) )  DEALLOCATE( stau0 )
-  IF( ALLOCATED( svel0 ) )  DEALLOCATE( svel0 )
-  IF( ALLOCATED( force0) )  DEALLOCATE( force0 )
 
   CALL mp_global_end ()
   STOP
@@ -323,7 +311,7 @@ END PROGRAM cp_postproc
 
 
 SUBROUTINE read_cp( lforces, cunit, punit, funit, dunit, &
-                      natoms, at, tau, force )
+                      nat, at, tau, force, ierr )
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
@@ -333,43 +321,45 @@ SUBROUTINE read_cp( lforces, cunit, punit, funit, dunit, &
 
   LOGICAL, INTENT(in)   :: lforces
   INTEGER, INTENT(in)   :: cunit, punit, funit, dunit
-  INTEGER, INTENT(in)   :: natoms
-  REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
+  INTEGER, INTENT(in)   :: nat
+  INTEGER, INTENT(out)  :: ierr
+  REAL(DP), INTENT(out) :: at(3, 3), tau(3, nat), force(3, nat)
 
   INTEGER  :: i, j, ix, iy, iz
   REAL(DP) :: x, y, z, fx, fy, fz
   CHARACTER(LEN=256) :: filename
   INTEGER       :: n1, n2, n3
 
+  ierr = 0
   ! read cell vectors
   ! NOTE: colums are lattice vectors
   !
-  READ(cunit,*)
+  READ(cunit,*, end=10, err=10)
   DO i = 1, 3
-     READ(cunit,*) ( at(i, j), j=1,3 )
+  READ(cunit,*, end=10, err=10) ( at(i, j), j=1,3 )
   END DO
   at(:, :) = at(:, :) * bohr
 
   ! read atomic coordinates
-  READ(punit,*)
-  IF (lforces) READ(funit,*)
-  DO i = 1, natoms
+  READ(punit,*, end=10, err=10)
+  IF (lforces) READ(funit,*, end=10, err=10)
+  DO i = 1, nat
      ! convert atomic units to Angstroms
-     READ(punit,*) x, y, z
+     READ(punit,*, end=10, err=10) x, y, z
      tau(1, i) = x * bohr
      tau(2, i) = y * bohr
      tau(3, i) = z * bohr
 
      IF (lforces) THEN
         ! read forces
-        READ (funit,*) fx, fy, fz
+        READ (funit,*, end=10, err=10) fx, fy, fz
         force(1, i) = fx
         force(2, i) = fy
         force(3, i) = fz
      END IF
   END DO
-
   RETURN
+  10 ierr=1
 END SUBROUTINE read_cp
 
 ! generate cell dimensions and Euler angles from cell vectors
@@ -508,7 +498,7 @@ SUBROUTINE write_xyz( ldynamics, lforces, ounit, n, at, &
               "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", &
               "Pa", " U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", &
               "Md", "No", "Lr"/
-
+  !! FIXME: should be replaced by QE function "atom_name"
   ! write natoms
   write(ounit,*) natoms
 
@@ -553,6 +543,7 @@ SUBROUTINE write_pdb( bunit, at, tau, natoms, ityp, euler, lrotation )
               "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", &
               "Pa", " U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", &
               "Md", "No", "Lr"/
+  !! FIXME: should be replaced by QE function "atom_name"
 
   WRITE(bunit,'("HEADER    PROTEIN")')
   WRITE(bunit,'("COMPND    UNNAMED")')

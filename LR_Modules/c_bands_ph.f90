@@ -37,7 +37,6 @@ SUBROUTINE c_bands_nscf_ph( )
   USE io_files,             ONLY : tmp_dir, prefix
   USE uspp_init,            ONLY : init_us_2
   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
-  USE wvfct_gpum,           ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -54,7 +53,6 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   ik_ = 0
   avg_iter = 0.D0
-  call using_et(2) 
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
@@ -150,7 +148,6 @@ SUBROUTINE c_bands_nscf_ph( )
         ! ... save wavefunctions to file
         !
         IF (check_stop_now()) THEN
-           call using_et(0) 
            CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF

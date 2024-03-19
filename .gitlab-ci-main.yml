@@ -8,7 +8,7 @@ build:pw:
     - DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
     - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
     - ./configure
-    - make pw
+    - make -j 2 pw
 #    - export OMP_NUM_THREADS=1
 #    - cd test-suite
 #    - mkdir /tmp/save
@@ -23,7 +23,7 @@ build:cp:
     - DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
     - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
     - ./configure
-    - make cp
+    - make -j 2 cp
 #    - export OMP_NUM_THREADS=1
 #    - cd test-suite
 #    - mkdir /tmp/save
@@ -45,7 +45,7 @@ build:cmake-nvhpc:
     - mkdir build
     - cd build
     - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make
+            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make -j 4
 
 build:cmake-nvhpc-nocuda:
   tags: [docker]
@@ -62,7 +62,7 @@ build:cmake-nvhpc-nocuda:
     - mkdir build
     - cd build
     - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DQE_ENABLE_CUDA=OFF -DQE_ENABLE_OPENACC=OFF .. && make
+            -DQE_ENABLE_CUDA=OFF -DQE_ENABLE_OPENACC=OFF .. && make -j 2
 
 
 #build:ph:

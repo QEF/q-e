@@ -1,3 +1,7 @@
+Version: 7.x
+        * PWgui-7.x corresponds to respective QE-7.x with respect to
+          namelists, their input variables, and cards
+        
 Version: 6.7
         * hp.x module added
         

@@ -205,7 +205,8 @@ help iprint -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-band energies are written every <i>iprint</i> iterations
+When "calculation" == 'md' (molecular dynamics)
+trajectory is written every <i>iprint</i> md steps.
          </pre></blockquote>
 </ul>      
       
@@ -463,8 +464,15 @@ Reduces I/O but increases memory wrt the previous cases
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'nowf'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-save to disk only the xml data file,
-never save wavefunctions and charge density
+save to disk only the xml data file and the charge density
+at convergence, never save wavefunctions. Restarting from
+an interrupted calculation is not possible with this option.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'minimal'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+save to disk only the xml data file at convergence
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -1146,11 +1154,14 @@ help starting_magnetization -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Starting spin polarization on atomic type 'i' in a spin
-polarized (LSDA or noncollinear/spin-orbit) calculation.
-For non-constrained calculations, the allowed values
-range between -1 (all spins down for the valence electrons
-of atom type 'i') to 1 (all spins up).
+Starting spin polarization on atomic type 'i' in a spin-polarized
+(LSDA or non-collinear/spin-orbit) calculation.
+The input values can have an absolute value greater than or equal to 1,
+which will be interpreted as the site's magnetic moment.
+Alternatively, the values can range between -1 and 1,
+which will be interpreted as the site magnetization per valence electron.
+For QE-v7.2 and older versions, only the second option is allowed.
+
 If you expect a nonzero magnetization in your ground state,
 you MUST either specify a nonzero value for at least one
 atomic type, or constrain the magnetization using variable
@@ -1998,22 +2009,28 @@ for treating the Coulomb potential divergencies at small q vectors.
             </pre>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'gygi-baldereschi'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> appropriate for cubic and quasi-cubic supercells
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+appropriate for cubic and quasi-cubic supercells
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'vcut_spherical'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> appropriate for cubic and quasi-cubic supercells
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+appropriate for cubic and quasi-cubic supercells
+(untested for non-orthogonal crystal axis)
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'vcut_ws'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> appropriate for strongly anisotropic supercells, see also "ecutvcut".
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+appropriate for strongly anisotropic supercells, see also "ecutvcut"
+(untested for non-orthogonal crystal axis)
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'none'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
             </pre></dd>
 </dl>
 </blockquote>
@@ -2127,11 +2144,6 @@ Hubbard manifold number. It is possible to specify up to
 three Hubbard manifolds per Hubbard atom. However, if you want
 to specify three manifolds then the second and the third manifolds
 will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
-
-Note: Hubbard_occ cannot be used together with fully-relativistic pseudopotentials
-(i.e. when noncolin=.true. and lspinorb=.true.) since this variable does not
-allow to distinguish between the occupied and unoccupied channels (this is
-needed when determining the atomic orbital offsets).
          </pre></blockquote>
 </ul>      
       

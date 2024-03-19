@@ -1273,15 +1273,23 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                     for treating the Coulomb potential divergencies at small q vectors.
                 }
 
-                opt -val 'gygi-baldereschi' { appropriate for cubic and quasi-cubic supercells }
+                opt -val 'gygi-baldereschi' {
+                    appropriate for cubic and quasi-cubic supercells
+                }
                 
-                opt -val 'vcut_spherical' { appropriate for cubic and quasi-cubic supercells
-                                            (untested for non-orthogonal crystal axis) }
+                opt -val 'vcut_spherical' {
+                    appropriate for cubic and quasi-cubic supercells
+                    (untested for non-orthogonal crystal axis)
+                }
 
-                opt -val 'vcut_ws' { appropriate for strongly anisotropic supercells, see also @ref ecutvcut
-                                     (untested for non-orthogonal crystal axis) }
+                opt -val 'vcut_ws' {
+                    appropriate for strongly anisotropic supercells, see also @ref ecutvcut
+                    (untested for non-orthogonal crystal axis)
+                }
                 
-                opt -val 'none' { sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE) }
+                opt -val 'none' {
+                    sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
+                }
             }
         }
 
@@ -1927,7 +1935,8 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                Damping function parameter a1 (adimensional). It is NOT necessary to give
                a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
                in this list, the coefficients are given in:
-                  http://schooner.chem.dal.ca/wiki/XDM
+                  https://github.com/aoterodelaroza/postg/blob/master/xdm.param
+                  or https://erin-r-johnson.github.io/software/
                   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
                   doi:10.1063/1.4705760
            }
@@ -1938,7 +1947,8 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                Damping function parameter a2 (angstrom). It is NOT necessary to give
                a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
                in this list, the coefficients are given in:
-                  http://schooner.chem.dal.ca/wiki/XDM
+                  https://github.com/aoterodelaroza/postg/blob/master/xdm.param
+                  or https://erin-r-johnson.github.io/software/
                   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
                   doi:10.1063/1.4705760
            }

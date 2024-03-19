@@ -1816,26 +1816,23 @@ MODULE paw_onecenter
     !
     ! ... local variables
     !
-    REAL(DP) :: zero(i%m)                          ! dcore charge, not used
-    REAL(DP) :: rho_rad(i%m,nspin_gga)             ! charge density sampled
-    REAL(DP) :: drho_rad(i%m,nspin_gga)            ! charge density sampled
-    REAL(DP) :: grad(i%m,3,nspin_gga)              ! gradient
-    REAL(DP) :: grad2(i%m,nspin_gga)               ! square modulus of gradient
-                                                   ! (first of charge, than of hamiltonian)
-    REAL(DP) :: dgrad(i%m,3,nspin_gga)             ! gradient
-    REAL(DP) :: dgrad2(i%m,nspin_gga)              ! square modulus of gradient
-                                                   ! of dcharge
-    REAL(DP) :: gc_rad(i%m,rad(i%t)%nx,nspin_gga)  ! GC correction to V (radial samples)
-    REAL(DP) :: gc_lm(i%m,i%l**2,nspin_gga)        ! GC correction to V (Y_lm expansion)
-    REAL(DP) :: h_rad(i%m,3,rad(i%t)%nx,nspin_gga) ! hamiltonian (vector field)
-    REAL(DP) :: h_lm(i%m,3,(i%l+rad(i%t)%ladd)**2,nspin_gga) ! hamiltonian (vector field)
-                        ! ^^^^^^^^^^^^^^^^^^ expanded to higher lm than rho !
-    REAL(DP) :: vout_lm(i%m,i%l**2,nspin_gga)      ! potential to be updated
-    REAL(DP) :: rhoout_lm(i%m,i%l**2,nspin_gga)    ! change of charge density as lm components
-    REAL(DP) :: drhoout_lm(i%m,i%l**2,nspin_gga)   ! change of charge density as lm components
-    REAL(DP) :: segni_rad(i%m, rad(i%t)%nx)
-
-    REAL(DP) :: div_h(i%m,i%l**2,nspin_gga)        ! div(hamiltonian)
+    REAL(DP) :: zero(i%m)                     ! dcore charge, not used
+    REAL(DP) :: rho_rad(i%m,nspin_gga)        ! charge density sampled
+    REAL(DP) :: drho_rad(i%m,nspin_gga)       ! charge density sampled
+    REAL(DP), allocatable :: grad(:,:,:)      ! gradient
+    REAL(DP), allocatable :: grad2(:,:)       ! square modulus of gradient
+                                              ! (first of charge, than of hamiltonian)
+    REAL(DP), allocatable :: dgrad(:,:,:)     ! gradient of dcharge
+    REAL(DP), allocatable :: dgrad2(:,:)      ! square modulus of gradient of dcharge
+    REAL(DP), allocatable :: rhoout_lm(:,:,:) ! change of charge density as lm components
+    REAL(DP), allocatable :: drhoout_lm(:,:,:)! change of charge density as lm components
+    REAL(DP), allocatable :: gc_rad(:,:,:)     ! GC correction to V (radial samples)
+    REAL(DP), allocatable :: gc_lm(:,:,:)      ! GC correction to V (Y_lm expansion)
+    REAL(DP), allocatable :: h_rad(:,:,:,:)    ! hamiltonian (vector field)
+    REAL(DP), allocatable :: h_lm(:,:,:,:)     ! hamiltonian (vector field)
+    REAL(DP), allocatable :: vout_lm(:,:,:)    ! potential to be updated
+    REAL(DP), allocatable :: segni_rad(:,:)
+    REAL(DP), allocatable :: div_h(:,:,:)      ! div(hamiltonian)
     ! 
     REAL(DP), ALLOCATABLE :: r(:,:), rho(:), arho(:), gradsw(:,:,:), sign_v(:)
     REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:), v2c_ud(:)
@@ -1852,11 +1849,6 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
     !
-    zero    = 0.0_DP
-    gc_rad  = 0.0_DP
-    h_rad   = 0.0_DP
-    vout_lm = 0.0_DP
-    !
     ALLOCATE( r(i%m,nspin_gga) )
     ALLOCATE( v1x(i%m,nspin_gga), v2x(i%m,nspin_gga) )
     ALLOCATE( v1c(i%m,nspin_gga), v2c(i%m,nspin_gga) )
@@ -1866,6 +1858,25 @@ MODULE paw_onecenter
     ALLOCATE( dsvxc_ss(i%m,nspin_gga,nspin_gga) )
     ALLOCATE( gradsw(3,i%m,nspin_gga) )
     !
+    ALLOCATE( div_h(i%m,i%l**2,nspin_gga) )
+    ALLOCATE(    vout_lm(i%m,i%l**2,nspin_gga) )
+    ALLOCATE( segni_rad(i%m, rad(i%t)%nx) )
+    ALLOCATE( h_lm(i%m,3,(i%l+rad(i%t)%ladd)**2,nspin_gga) )
+                        ! ^^^^^^^^^^^^^^^^^^ expanded to higher lm than rho !
+    ALLOCATE( h_rad(i%m,3,rad(i%t)%nx,nspin_gga) )
+    ALLOCATE( gc_rad(i%m,rad(i%t)%nx,nspin_gga) )
+    ALLOCATE( gc_lm(i%m,i%l**2,nspin_gga) )
+    ALLOCATE( drhoout_lm(i%m,i%l**2,nspin_gga) )
+    ALLOCATE(  rhoout_lm(i%m,i%l**2,nspin_gga) )
+    ALLOCATE( grad  (i%m,3,nspin_gga) )
+    ALLOCATE( grad2 (i%m,nspin_gga)   )
+    ALLOCATE( dgrad (i%m,3,nspin_gga) )
+    ALLOCATE( dgrad2(i%m,nspin_gga)   )
+    !
+    zero    = 0.0_DP
+    gc_rad  = 0.0_DP
+    h_rad   = 0.0_DP
+    vout_lm = 0.0_DP
     !
     IF ( nspin_mag == 1 ) THEN
        !
@@ -2069,6 +2080,8 @@ MODULE paw_onecenter
        !
     ENDIF 
     !
+    DEALLOCATE( dgrad2, grad2, dgrad, grad )
+    DEALLOCATE( drhoout_lm, rhoout_lm )
     DEALLOCATE( r )
     DEALLOCATE( v1x, v2x, v1c )
     IF (nspin_gga==2) DEALLOCATE( v2c_ud )
@@ -2106,6 +2119,10 @@ MODULE paw_onecenter
     ELSE
        v_lm(:,:,1:nspin_mag) = v_lm(:,:,1:nspin_mag)+vout_lm(:,:,1:nspin_mag)
     ENDIF
+    DEALLOCATE( div_h, vout_lm )
+    DEALLOCATE( segni_rad )
+    DEALLOCATE( h_lm, h_rad )
+    DEALLOCATE( gc_rad, gc_lm )
     !
     IF (TIMING) CALL stop_clock( 'PAW_dgcxc_v' )
     !

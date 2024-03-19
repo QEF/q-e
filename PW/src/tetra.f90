@@ -1289,8 +1289,6 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
   USE mp_images,           ONLY : intra_image_comm
   USE mp,                 ONLY : mp_sum
   !
-  USE wvfct_gpum,         ONLY: using_et
-  !
   IMPLICIT NONE
   !
   LOGICAL :: kresolveddos
@@ -1314,7 +1312,6 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
      nspin1 = 1
   ENDIF
   !
-  CALL using_et(0)
   ALLOCATE(et_col(nbnd,nkstot), proj_col(natomwfc,nbnd,nkstot))
   CALL poolcollect(nbnd, nks, et, nkstot, et_col)
   CALL poolcollect(nbnd*natomwfc, nks, proj, nkstot, proj_col)

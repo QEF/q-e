@@ -62,17 +62,6 @@ CONTAINS
     CHARACTER(LEN=3)           :: env_maxdepth
     INTEGER :: ios, crashunit, max_depth 
 
-
-    ! ... The Intel compiler allocates a lot of stack space
-    ! ... Stack limit is often small, thus causing SIGSEGV and crash
-    ! ... One may use "ulimit -s unlimited" but it doesn't always work
-    ! ... The following call does the same and always works
-    !
-#if defined(__INTEL_COMPILER)
-    CALL remove_stack_limit ( )
-#endif
-    ! ... use ".FALSE." to disable all clocks except the total cpu time clock
-    ! ... use ".TRUE."  to enable clocks
 #if defined(__TRACE)
     CALL get_environment_variable('ESPRESSO_MAX_DEPTH', env_maxdepth)
     IF (env_maxdepth .NE. ' ') THEN 
@@ -80,6 +69,8 @@ CONTAINS
       IF (ios == 0 ) CALL set_trace_max_depth( max_depth )
     END IF
 #endif
+    ! ... use ".FALSE." to disable all clocks except the total cpu time clock
+    ! ... use ".TRUE."  to enable clocks
     CALL init_clocks(.TRUE.) 
     CALL start_clock( TRIM(code) )
 

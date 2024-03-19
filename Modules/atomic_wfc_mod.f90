@@ -145,14 +145,14 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
                          nb, lmax_wfc, ylm, chiq, sk, n_starting_wfc, wfcatom )
                  ELSE
                     CALL atomic_wfc_so_mag ( npw, npwx, npol, natomwfc, nsp, &
-                         nt, nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+                         nt,nb, angle1(nt),angle2(nt), lmax_wfc, ylm, chiq, sk,&
                          n_starting_wfc, wfcatom )
                  END IF
                  !
               ELSE
                  !
                  CALL atomic_wfc_nc ( npw, npwx, npol, natomwfc, nsp, &
-                         nt, nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+                         nt,nb, angle1(nt),angle2(nt), lmax_wfc, ylm, chiq, sk,&
                          n_starting_wfc, wfcatom )
                  !
               END IF
@@ -256,7 +256,6 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    !! done in the noncollinear case.
    !
    USE kinds,            ONLY : DP
-   USE constants,        ONLY : pi
    USE uspp_param,       ONLY : upf, nwfcm
    !
    IMPLICIT NONE
@@ -264,15 +263,15 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
    REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
    COMPLEX(DP), INTENT(IN) :: sk(npw)
-   REAL(DP), INTENT(IN) :: angle1(*)
+   REAL(DP), INTENT(IN) :: angle1
    !! angle theta of initial spin direction
-   REAL(DP), INTENT(IN) ::  angle2(*)
+   REAL(DP), INTENT(IN) ::  angle2
    !! angle phi of initial spin direction
    INTEGER, INTENT(INOUT) :: n_starting_wfc
    COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
    !
-   REAL(DP) :: alpha, gamman, j
-   COMPLEX(DP) :: fup, fdown, aux, lphase
+   COMPLEX(DP) :: f1up, f1down, f2up, f2down, aux, lphase
+   REAL(DP) :: j
    INTEGER :: nc, ib, ig, l, m, lm
    !
    j = upf(nt)%jchi(nb)
@@ -300,8 +299,7 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    !
    !  and construct the starting wavefunctions as in the noncollinear case.
    !
-   alpha = angle1(nt)
-   gamman = - angle2(nt) + 0.5d0*pi
+   CALL spinor_components ( angle1, angle2, f1up,f1down, f2up,f2down )
    !
    DO m = 1, 2*l+1
       lm = l**2+m
@@ -317,34 +315,12 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
          aux = sk(ig)* CMPLX( ylm(ig,lm) * (chiq(ig,nb,nt)*DBLE(l+1) + &
               chiq(ig,nc,nt)*l)/DBLE(2*l+1), KIND=DP )
          !
-         ! now, rotate wfc as needed
-         ! first : rotation with angle alpha around (OX)
+         wfcatom(ig,1,n_starting_wfc) = aux * f1up
+         wfcatom(ig,2,n_starting_wfc) = aux * f1down
          !
-         fup = CMPLX(COS(0.5d0*alpha), KIND=DP)*aux
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=DP)*aux
+         wfcatom(ig,1,n_starting_wfc+2*l+1) = aux * f2up
+         wfcatom(ig,2,n_starting_wfc+2*l+1) = aux * f2down
          !
-         ! Now, build the orthogonal wfc
-         ! first rotation with angle (alpha+pi) around (OX)
-         !
-         wfcatom(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
-         wfcatom(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-              -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
-         !
-         ! second: rotation with angle gamma around (OZ)
-         !
-         ! Now, build the orthogonal wfc
-         ! first rotation with angle (alpha+pi) around (OX)
-         !
-         fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)), KIND=DP)*aux
-         !
-         ! second, rotation with angle gamma around (OZ)
-         !
-         wfcatom(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0 *gamman), KIND=DP))*fup
-         wfcatom(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
       END DO
    END DO
    !
@@ -360,7 +336,6 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    !! noncolinear case, magnetization along "angle1" and "angle2"
    !
    USE kinds,            ONLY : DP
-   USE constants,        ONLY : pi 
    USE uspp_param,       ONLY : upf, nwfcm
    !
    IMPLICIT NONE
@@ -368,21 +343,20 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
    REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
    COMPLEX(DP), INTENT(IN) :: sk(npw)
-   REAL(DP), INTENT(IN) :: angle1(*)
+   REAL(DP), INTENT(IN) :: angle1
    !! angle theta of initial spin direction
-   REAL(DP), INTENT(IN) ::  angle2(*)
+   REAL(DP), INTENT(IN) ::  angle2
    !! angle phi of initial spin direction
    INTEGER, INTENT(INOUT) :: n_starting_wfc
    COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
    !
-   REAL(DP) :: alpha, gamman
-   COMPLEX(DP) :: fup, fdown, aux, lphase
+   COMPLEX(DP) :: f1up, f1down, f2up, f2down, aux, lphase
    INTEGER :: m, lm, ig, l  
    !
    l = upf(nt)%lchi(nb)
    lphase = (0.d0,1.d0)**l
-   alpha = angle1(nt)
-   gamman = - angle2(nt) + 0.5d0*pi
+   !
+   CALL spinor_components ( angle1, angle2, f1up,f1down, f2up,f2down )
    !
    DO m = 1, 2*l+1
       lm = l**2 + m
@@ -391,36 +365,15 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       !$acc parallel loop
       DO ig = 1, npw
+         !
          aux = sk(ig)*CMPLX(ylm(ig,lm)*chiq(ig,nb,nt), KIND=DP)
          !
-         ! now, rotate wfc as needed
-         ! first : rotation with angle alpha around (OX)
+         wfcatom(ig,1,n_starting_wfc) = aux * f1up
+         wfcatom(ig,2,n_starting_wfc) = aux * f1down
          !
-         fup = CMPLX(COS(0.5d0*alpha), KIND=DP)*aux
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=DP)*aux
+         wfcatom(ig,1,n_starting_wfc+2*l+1) = aux * f2up
+         wfcatom(ig,2,n_starting_wfc+2*l+1) = aux * f2down
          !
-         ! Now, build the orthogonal wfc
-         ! first rotation with angle (alpha+pi) around (OX)
-         !
-         wfcatom(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
-         wfcatom(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
-         !
-         ! second: rotation with angle gamma around (OZ)
-         !
-         ! Now, build the orthogonal wfc
-         ! first rotation with angle (alpha+pi) around (OX)
-         !
-         fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)), KIND=DP)*aux
-         !
-         ! second, rotation with angle gamma around (OZ)
-         !
-         wfcatom(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
-         wfcatom(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
-                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
       END DO
    END DO
    n_starting_wfc = n_starting_wfc + 2*l+1
@@ -464,3 +417,39 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    END DO
    !
   END SUBROUTINE atomic_wfc_lsda
+  !
+  SUBROUTINE spinor_components( angle1, angle2, f1up, f1dw, f2up, f2dw )
+    !
+    USE kinds,     ONLY : dp
+    USE constants, ONLY : pi
+    IMPLICIT NONE
+    !
+    REAL(dp), INTENT(IN) :: angle1
+    !! angle theta of initial spin direction
+    REAL(dp), INTENT(IN) :: angle2
+    !! angle phi of initial spin direction
+    COMPLEX(dp), INTENT(OUT):: f1up, f1dw, f2up, f2dw
+    !! up and down components for the two opposite spin directions
+    REAL(dp) :: alpha, gamman
+    !
+    alpha = angle1
+    gamman = - angle2 + 0.5d0*pi
+    !
+    !! Spin direction 1:  rotation with angle alpha around (OX),
+    !! followed by second rotation with angle gamma around (OZ)
+    f1up = CMPLX(COS(0.5d0*alpha), KIND=dp) * &
+           ( CMPLX(COS(0.5d0*gamman), KIND=dp) &
+            +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=dp) )
+    f1dw = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=dp) * &
+           ( CMPLX(COS(0.5d0*gamman), KIND=dp) &
+            -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=dp) )
+    !! Orthogonal spin direction:  rotation with angle (alpha+pi) around (OX)
+    !! followed by second rotation with angle gamma around (OZ)
+    f2up = CMPLX(COS(0.5d0*(alpha+pi)), KIND=dp) * &
+           ( CMPLX(COS(0.5d0*gamman), KIND=dp) &
+            +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=dp) )
+    f2dw = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)), KIND=dp) * &
+           ( CMPLX(COS(0.5d0*gamman), KIND=dp) &
+            -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=dp))
+    !
+  END SUBROUTINE spinor_components

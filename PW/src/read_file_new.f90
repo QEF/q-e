@@ -85,7 +85,6 @@ SUBROUTINE read_file_ph( needwf_ph )
   USE pw_restart_new,   ONLY : read_collected_wfc
   USE fft_base,         ONLY : dffts
   !
-  USE wvfct_gpum,       ONLY : using_et
   USE wavefunctions_gpum, ONLY : using_evc
   USE pw_restart_new,   ONLY : read_xml_file
   !
@@ -117,8 +116,8 @@ SUBROUTINE read_file_ph( needwf_ph )
   ! ... of k-points in the current pool
   !
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  CALL using_et(1)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
+  !$acc update device(et)
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
   ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
@@ -177,8 +176,6 @@ SUBROUTINE read_file_new ( needwf )
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
   !
-  USE wvfct_gpum,     ONLY : using_et
-  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(INOUT) :: needwf
@@ -210,8 +207,8 @@ SUBROUTINE read_file_new ( needwf )
      ! ... of k-points in the current pool
      !
      CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-     CALL using_et(1)
      CALL poolscatter( nbnd, nkstot, et, nks, et )
+     !$acc update device(et)
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
      !
      ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
@@ -353,9 +350,9 @@ SUBROUTINE post_xml_init (  )
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   !
-  ! qmax is the maximum |G|, for all G needed by the charge density
+  ! qmax is the maximum |q+G|, for all G needed by the charge density
   !
-  qmax = sqrt(ecutrho)*cell_factor
+  qmax = (qnorm+sqrt(ecutrho))*cell_factor
   CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
   !
   ! fill interpolation table for beta functions 

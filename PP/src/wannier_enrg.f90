@@ -22,14 +22,10 @@ subroutine wannier_enrg(enrg)
   USE io_files
   USE buffers
 
-  use wvfct_gpum, only: using_et
-  
   implicit none
   real(DP), intent(out) :: enrg(nwan,nspin)
 
   integer :: i,j, ik
-
-  CALL using_et(0)
 
   enrg = ZERO
   current_spin = 1

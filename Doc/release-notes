@@ -1,7 +1,13 @@
+Fixed in development version:
+  * Phonon restart was not working properly in some cases with ultrasoft,
+    PPs, due to bad initialization of PP tables - affects v.7.3 and 7.3.1
+
 New in 7.3.1 version:
   * Various improvements and bug fixes for pw2wannier.f90 (Junfeng Qiao) 
 
 Fixed in 7.3.1 version:
+  * In CPV the mgga contribution to the force was missing on the GPU side.
+    Now it has been added (CPU and GPU runs match).
   * f channel of GTH pseudopotentials fixed again (see issue #86 on gitlab)
     Thanks to Chang Liu for reporting.
   * Distributed parallel diagonalization (option -nd N with N=4,9,16,25,...) 
@@ -14,6 +20,8 @@ Fixed in 7.3.1 version:
     Affects v.7.2 and 7.3. Thanks to Giuseppe Mattioli for reporting.
   * Bad atomic symbols in some files used for plotting data (see issue #645
     on gitlab). Affects v.7.3. Thanks to Francesco Filippone for reporting.
+  * Since v.6.2, assume_isolated='mt' was yielding bad phonon frequencies 
+    (see issue #657). Thanks to Jeremy Rabone for reporting.
 
 New in 7.3 version:
   * Experimental support for pseudopotentials in PSML format
@@ -29,7 +37,7 @@ Incompatible changes in 7.3 version:
   * Small changes in options "iprint" and "disk_io" of PWscf
   * More pseudopotential-related code restructured and moved to upflib/
 
-Fixed in 7.3  version:
+Fixed in 7.3 version:
   * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.
     May cause crashes (but not bad numbers). Reported by Jibiao Li.
   * Wrong output from Libxc-based gga-exchange functionals (gga_x) due to
