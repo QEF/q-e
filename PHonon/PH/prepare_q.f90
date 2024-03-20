@@ -41,8 +41,6 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE output,          ONLY : fildyn, fildvscf
   USE el_phon,         ONLY : elph_mat, wan_index_dyn, auxdvscf
   USE dfpt_tetra_mod,  ONLY : dfpt_tetra_linit
-
-  USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
   USE noncollin_module, ONLY : noncolin, domag
   ! YAMBO >
@@ -102,7 +100,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   ! YAMBO>
   !
-  IF ( ldisp .OR. dvscf_yambo .OR. elph_yambo ) THEN
+  IF ( ldisp .OR. qplot .OR. dvscf_yambo .OR. elph_yambo ) THEN
      !
      ! ... set the q point
      !

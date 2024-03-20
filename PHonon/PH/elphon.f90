@@ -143,7 +143,7 @@ SUBROUTINE elphon()
         allocate( phip(3,3,nat,nat) )
         CALL read_dyn_mat_param(fildyn, ntyp_, nat_)
         IF ( ntyp_ /= ntyp .OR. nat_ /= nat ) &
-           CALL errore('elphon','uncorrect nat or ntyp',1)
+           CALL errore('elphon','incorrect nat or ntyp',1)
           
         CALL read_dyn_mat_header(ntyp, nat, ibrav_, nspin_mag_, &
                  celldm_, at, bg, omega, atm, amass, tau, ityp, &
@@ -802,7 +802,7 @@ SUBROUTINE elphsum ( )
 
   elph_dir='elph_dir/'
   CALL create_directory( elph_dir )
-  WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
+  WRITE (6, '(5x,"Electron-phonon interaction  ..."/)')
   ngauss1 = 0
 
   ALLOCATE(xk_collect(3,nkstot))
