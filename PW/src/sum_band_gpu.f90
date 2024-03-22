@@ -973,6 +973,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
   USE upf_spinorb,        ONLY : fcoef
+  USE wavefunctions,      ONLY : psic
   !
   ! Used to avoid unnecessary memcopy
   USE xc_lib,             ONLY : xclib_dft_is
