@@ -533,11 +533,14 @@ contains
        endif        
     else
        if (.not. okvan) then
+          !$acc data copyin(vec_b(:,:,:,num_basis_old+1:num_basis)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,num_basis_old+1:num_basis), C_vec_b(:,:,:,num_basis_old+1:num_basis))     
           do ibr = num_basis_old+1, num_basis
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
              if (.not. poor_of_ram2) then
+                !$acc kernels     
                 D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
                 C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+                !$acc end kernels
              endif
              ! Add new M_D, M_C    
              do ibl = 1, ibr
@@ -546,7 +549,8 @@ contains
                 M_C(ibl,ibr)=M_D(ibl,ibr)
                 if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
              enddo   
-          enddo   
+          enddo
+          !$acc end data
        elseif (poor_of_ram) then ! Less memory needed
           do ibr = num_basis_old+1, num_basis
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
