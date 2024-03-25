@@ -54,8 +54,11 @@ FUNCTION lr_dot(x,y)
   !
   IF (gamma_only) THEN
      !
+     !$acc data present_or_copyin(x,y) copyin(wg) copy(temp_gamma)
      CALL lr_dot_gamma()
+     !$acc end data
      lr_dot = cmplx(temp_gamma,0.0d0,dp)
+     lr_dot = lr_dot/degspin
      !
   ELSEIF (noncolin) THEN
      !
@@ -65,10 +68,9 @@ FUNCTION lr_dot(x,y)
   ELSE
      !
      CALL lr_dot_k()
+     lr_dot = lr_dot/degspin
      !
   ENDIF
-  !
-  lr_dot = lr_dot/degspin
   !
   CALL stop_clock ('lr_dot')
   !
@@ -80,7 +82,29 @@ CONTAINS
     !
     ! Optical case: gamma_only
     ! Noncollinear case is not implemented
+    !    
+    USE wvfct, ONLY : npwx,nbnd,wg
+#if defined(__CUDA)
+    use cublas
+#endif
+    !  
+    INTEGER :: ibnd
+    REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
+    !$acc routine(MYDDOT_VECTOR_GPU) vector
     !
+!    !$acc data present(x,y,wg,temp_gamma)
+#if defined(__CUDA)
+    !$acc parallel loop reduction(temp_gamma)
+    DO ibnd=1,nbnd
+       !
+       temp_gamma = temp_gamma + 2.D0*wg(ibnd,1)*MYDDOT_VECTOR_GPU(2*ngk(1),x(:,ibnd,1),y(:,ibnd,1))
+       !
+       ! G=0 has been accounted twice, so we subtract one contribution.
+       !
+       IF (gstart==2) temp_gamma = temp_gamma - wg(ibnd,1)*dble(x(1,ibnd,1))*dble(y(1,ibnd,1))
+       !
+    ENDDO
+#else
     DO ibnd=1,nbnd
        !
        temp_gamma = temp_gamma + 2.D0*wg(ibnd,1)*DDOT(2*ngk(1),x(:,ibnd,1),1,y(:,ibnd,1),1)
@@ -90,11 +114,15 @@ CONTAINS
        IF (gstart==2) temp_gamma = temp_gamma - wg(ibnd,1)*dble(x(1,ibnd,1))*dble(y(1,ibnd,1))
        !
     ENDDO
-    !
-#if defined(__MPI)
-    CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
     !
+#if defined(__MPI)
+    !$acc host_data use_device(temp_gamma)
+    CALL mp_sum(temp_gamma, intra_bgrp_comm)
+    !$acc end host_data
+#endif
+    !
+!    !$acc end data
     RETURN
     !
   END SUBROUTINE lr_dot_gamma

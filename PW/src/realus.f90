@@ -2198,14 +2198,17 @@ MODULE realus
     INTEGER :: ebnd
     !
     !-------------------TEMPORARY-----------
-    INTEGER :: ngk1
-    LOGICAL :: is_present, acc_is_present
+!    INTEGER :: ngk1
+!    LOGICAL :: is_present, acc_is_present
     !---------------------------------------
     !
     !Task groups
     !
     !The new task group version based on vloc_psi
     !print *, "->Real space"
+    !
+    !$acc data present_or_copyin(orbital) present_or_copyout(psic)
+    !
     CALL start_clock( 'invfft_orbital' )
     !
     IF( dffts%has_task_groups ) THEN
@@ -2227,11 +2230,11 @@ MODULE realus
         CALL wave_g2r( orbital(1:ngk(1),ibnd:ebnd), psic, dffts )
         !
 !-------------TEMPORARY---------------------
-        ngk1 = SIZE(psic)
-#if defined(_OPENACC)
-        is_present = acc_is_present(psic,ngk1)
-        !$acc update self(psic) if (is_present)
-#endif
+!        ngk1 = SIZE(psic)
+!#if defined(_OPENACC)
+!        is_present = acc_is_present(psic,ngk1)
+!        !$acc update self(psic) if (is_present)
+!#endif
 !-------------------------------------------
         !
         IF (PRESENT(conserved)) THEN
@@ -2244,6 +2247,8 @@ MODULE realus
     ENDIF
     !
     CALL stop_clock( 'invfft_orbital' )
+    !
+    !$acc end data
     !
   END SUBROUTINE invfft_orbital_gamma
   !
@@ -2290,13 +2295,15 @@ MODULE realus
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
     !
 !-------------------TEMPORARY-----------
-    INTEGER :: ngk1
-    LOGICAL :: is_present, acc_is_present
+!    INTEGER :: ngk1
+!    LOGICAL :: is_present, acc_is_present
 !---------------------------------------
     !
     ! ... Task groups
     !print *, "->Fourier space"
     CALL start_clock( 'fwfft_orbital' )
+    !
+    !$acc data present_or_copyin(psic) present_or_copy(orbital)
     !
     add_to_orbital_=.FALSE. ; IF( PRESENT(add_to_orbital)) add_to_orbital_ = add_to_orbital
     !
@@ -2352,30 +2359,32 @@ MODULE realus
         CALL wave_r2g( psic(1:dffts%nnr), psio, dffts )
         !
 !-------------TEMPORARY---------------------
-        ngk1 = SIZE(psic)
-#if defined(_OPENACC)
-        is_present = acc_is_present(psic,ngk1)
-        !$acc update self(psic) if (is_present)
-#endif
+!        ngk1 = SIZE(psic)
+!#if defined(_OPENACC)
+!        is_present = acc_is_present(psic,ngk1)
+!        !$acc update self(psic) if (is_present)
+!#endif
 !-------------------------------------------
         !
         fac = 1.d0
         IF ( ibnd<last ) fac = 0.5d0
         !
         IF ( add_to_orbital_ ) THEN
-           !$omp parallel do
+           !$acc parallel loop
+!           !$omp parallel do
            DO j = 1, ngk(1)
               orbital(j,ibnd) = orbital(j,ibnd) + fac*psio(j,1)
               IF (ibnd<last) orbital(j,ibnd+1) = orbital(j,ibnd+1) + fac*psio(j,2)
            ENDDO
-           !$omp end parallel do
+!           !$omp end parallel do
         ELSE
-           !$omp parallel do
+           !$acc parallel loop     
+!           !$omp parallel do
            DO j = 1, ngk(1)
               orbital(j,ibnd) = fac*psio(j,1)
               IF (ibnd<last) orbital(j,ibnd+1) = fac*psio(j,2)
            ENDDO
-           !$omp end parallel do
+!           !$omp end parallel do
         ENDIF
         !
         DEALLOCATE( psio )
@@ -2387,6 +2396,8 @@ MODULE realus
         ENDIF
         !
     ENDIF
+    !
+    !$acc end data
     !
     CALL stop_clock( 'fwfft_orbital' )
     !
