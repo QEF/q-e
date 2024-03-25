@@ -481,13 +481,6 @@ SUBROUTINE phq_readin()
      elph=.false.
   END SELECT
 
-  ! YAMBO >
-  IF (.not.elph_yambo.and..not.dvscf_yambo) then
-    ! YAMBO <
-    IF (qplot.AND..NOT.ldisp) CALL errore('phq_readin','qplot requires ldisp=.true.',1)
-    !
-  ENDIF
-
   IF (ldisp.AND.only_init.AND.(.NOT.lqdir)) &
      CALL errore('phq_readin', &
                  'only_init=.TRUE. requires lqdir=.TRUE. or data are lost',1)
@@ -518,14 +511,15 @@ SUBROUTINE phq_readin()
      ios = 0
      IF (qplot) THEN
         READ (qestdin, *, iostat = ios) nqaux
-     ELSE
-        IF (.NOT. ldisp) READ (qestdin, *, iostat = ios) (xq (ipol), ipol=1,3)
+     ELSE IF (.NOT. ldisp) THEN
+        nqaux = 1
+        READ (qestdin, *, iostat = ios) (xq (ipol), ipol=1,3)
      ENDIF
   END IF
+  CALL mp_bcast(nqaux, meta_ionode_id, world_comm )
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
   CALL errore ('phq_readin', 'reading xq', ABS (ios) )
   IF (qplot) THEN
-     CALL mp_bcast(nqaux, meta_ionode_id, world_comm )
      ALLOCATE(xqaux(3,nqaux))
      ALLOCATE(wqaux(nqaux))
      IF (meta_ionode) THEN
@@ -846,8 +840,8 @@ SUBROUTINE phq_readin()
        'drho_star with image parallelization is not yet available',1)
 
   IF (lda_plus_u .AND. read_dns_bare .AND. ldisp) lqdir=.TRUE.
-
-  IF (.NOT.ldisp) lqdir=.FALSE.
+  ! FIXME: Why not setting lqdir =.true always?
+  IF (.NOT.ldisp.AND..NOT.qplot) lqdir=.FALSE.
 
   IF (i_cons /= 0) &
      CALL errore('phq_readin',&
