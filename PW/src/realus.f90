@@ -1642,6 +1642,10 @@ MODULE realus
     !
     REAL(DP), EXTERNAL :: ddot
     !
+    !-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+    !---------------------------------------    
     !
     CALL start_clock( 'calbec_rs' )
     !
@@ -1653,9 +1657,18 @@ MODULE realus
     !
     becp_r(:,ibnd)=0.d0
     IF ( ibnd+1 <= last ) becp_r(:,ibnd+1)=0.d0
+    !
     ! Clearly for an odd number of bands for ibnd=nbnd=last you don't have
     ! anymore bands, and so the imaginary part equal zero
     !
+!-------------TEMPORARY---------------------
+    ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+    is_present = acc_is_present(psic,ngk1)
+    !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------    
+!
 !
 ! copy psic into a box-friendly array (and scatter it across intra_bbox_comm if needed)
 !
@@ -1677,7 +1690,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = ofsbeta(ia)
+             ijkb0 = ofsbeta(ia)             
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
@@ -1703,7 +1716,7 @@ MODULE realus
                 DO ih = 1, nh_nt
                    !
                    ikb = ijkb0 + ih
-                   bci = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wi(:) , 1 )
+                   bci = ddot( mbia, betasave(box_s(ia): box_e(ia),ih), 1, wi(:) , 1 )
                    becp_r(ikb,ibnd+1) = fac * bci
                    !
                 ENDDO
@@ -2197,11 +2210,6 @@ MODULE realus
     !
     INTEGER :: ebnd
     !
-    !-------------------TEMPORARY-----------
-!    INTEGER :: ngk1
-!    LOGICAL :: is_present, acc_is_present
-    !---------------------------------------
-    !
     !Task groups
     !
     !The new task group version based on vloc_psi
@@ -2228,14 +2236,6 @@ MODULE realus
         IF ( ibnd < last ) ebnd = ebnd + 1
         !
         CALL wave_g2r( orbital(1:ngk(1),ibnd:ebnd), psic, dffts )
-        !
-!-------------TEMPORARY---------------------
-!        ngk1 = SIZE(psic)
-!#if defined(_OPENACC)
-!        is_present = acc_is_present(psic,ngk1)
-!        !$acc update self(psic) if (is_present)
-!#endif
-!-------------------------------------------
         !
         IF (PRESENT(conserved)) THEN
           IF (conserved) THEN
@@ -2293,11 +2293,6 @@ MODULE realus
     INTEGER :: j, idx, incr, ebnd, brange
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
-    !
-!-------------------TEMPORARY-----------
-!    INTEGER :: ngk1
-!    LOGICAL :: is_present, acc_is_present
-!---------------------------------------
     !
     ! ... Task groups
     !print *, "->Fourier space"
@@ -2358,33 +2353,29 @@ MODULE realus
         !
         CALL wave_r2g( psic(1:dffts%nnr), psio, dffts )
         !
-!-------------TEMPORARY---------------------
-!        ngk1 = SIZE(psic)
-!#if defined(_OPENACC)
-!        is_present = acc_is_present(psic,ngk1)
-!        !$acc update self(psic) if (is_present)
-!#endif
-!-------------------------------------------
-        !
         fac = 1.d0
         IF ( ibnd<last ) fac = 0.5d0
         !
         IF ( add_to_orbital_ ) THEN
+#if defined(_OPENACC)                
            !$acc parallel loop
-!           !$omp parallel do
+#else
+           !$omp parallel do
+#endif
            DO j = 1, ngk(1)
               orbital(j,ibnd) = orbital(j,ibnd) + fac*psio(j,1)
               IF (ibnd<last) orbital(j,ibnd+1) = orbital(j,ibnd+1) + fac*psio(j,2)
            ENDDO
-!           !$omp end parallel do
         ELSE
-           !$acc parallel loop     
-!           !$omp parallel do
+#if defined(_OPENACC)                
+           !$acc parallel loop
+#else
+           !$omp parallel do
+#endif                
            DO j = 1, ngk(1)
               orbital(j,ibnd) = fac*psio(j,1)
               IF (ibnd<last) orbital(j,ibnd+1) = fac*psio(j,2)
            ENDDO
-!           !$omp end parallel do
         ENDIF
         !
         DEALLOCATE( psio )
