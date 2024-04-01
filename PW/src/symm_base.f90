@@ -15,6 +15,7 @@ MODULE symm_base
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg
+  USE ions_base,  ONLY : atm
   !
   ! ... these are acceptance criteria
   !
@@ -492,8 +493,9 @@ CONTAINS
      !
      IF ( fractional_translations ) THEN
         DO na = 2, nat
-           IF (ityp(nb) == ityp(na)) THEN
-              !
+            IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+            !IF ( ityp(nb) == ityp(na) ) THEN
+               !
               ft_(:) = xau(:,na) - xau(:,nb) - NINT( xau(:,na) - xau(:,nb) )
               sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft_ )
               IF (sym(irot)) THEN
@@ -531,8 +533,9 @@ CONTAINS
         IF (.NOT.sym(irot) .AND. fractional_translations) THEN
            nb = 1
            DO na = 1, nat
-              IF (ityp(nb) == ityp(na)) THEN
-                 !
+               IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+               !IF ( ityp(nb) == ityp(na) ) THEN
+                  !
                  ! ... second attempt: check all possible fractional translations
                  ft_(:) = rau(:,na) - xau(:,nb) - NINT( rau(:,na) - xau(:,nb) )
                  !
@@ -885,8 +888,9 @@ CONTAINS
      DO na = 1, nat
         DO nb = 1, nat
            !
-           IF( ityp (nb) == ityp (na) ) THEN
-              checksym =  eqvect( rau(1,na), xau(1,nb), ft_ , accep )
+            IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+            !IF ( ityp(nb) == ityp(na) ) THEN
+               checksym =  eqvect( rau(1,na), xau(1,nb), ft_ , accep )
               IF ( checksym ) THEN
                  !
                  ! ... the rotated atom does coincide with one of the like atoms
@@ -1122,7 +1126,8 @@ CONTAINS
       !
       DO na = 2, nat
          IF ( fractional_translations ) THEN
-            IF (ityp(nb) == ityp(na) ) THEN
+            IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+            !IF ( ityp(nb) == ityp(na) ) THEN
                ft_(:) = xau(:,na) - xau(:,nb) - NINT( xau(:,na) - xau(:,nb) )
                !
                sym(irot) = checksym( irot, nat, ityp, xau, xau, ft_ )
@@ -1154,7 +1159,8 @@ CONTAINS
             nb = 1
             !
             DO na = 1, nat
-               IF (ityp(nb) == ityp(na) ) THEN
+               IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+               !IF ( ityp(nb) == ityp(na) ) THEN
                   !
                   !      second attempt: check all possible fractional translations
                   !
@@ -1315,4 +1321,23 @@ CONTAINS
     END FUNCTION mcm
     !
     !
+    !--------------------------------------------------------------------------
+    CHARACTER FUNCTION chem_symb( symbol )
+      !------------------------------------------------------------------------
+      !! Returns the chemical symbol used to identify the symmetry
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: symbol
+      !
+      IF ( SCAN( symbol ,"0123456789") == 0 ) THEN
+         chem_symb = symbol
+      ELSE
+         chem_symb = symbol( 1:SCAN( symbol , "0123456789_-" ) -1 )
+      ENDIF
+      !
+    END FUNCTION chem_symb
+    !
+    !
+
 END MODULE symm_base
