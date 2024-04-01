@@ -460,15 +460,11 @@ MODULE paw_onecenter
     !
     REAL(DP) :: e_radik, rho_loc1, rho_loc2
     LOGICAL  :: energy_present
-    INTEGER  :: mytid, ntids
     !
     REAL(DP), ALLOCATABLE :: arho(:,:)
     REAL(DP), ALLOCATABLE :: ex(:), ec(:)
     REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
     REAL(DP), PARAMETER   :: eps = 1.e-30_DP, div3=1._DP/3._DP
-#if defined(_OPENMP)
-    INTEGER, EXTERNAL :: omp_get_thread_num, omp_get_num_threads
-#endif
     !
     IF (TIMING) CALL start_clock( 'PAW_xc_pot' )
     !$acc data copyin( rho_lm, rho_core ) copyout( v_lm )
@@ -476,17 +472,10 @@ MODULE paw_onecenter
     !$acc data copyin( rad(i%t)%sin_th,rad(i%t)%cos_th,rad(i%t)%sin_phi,rad(i%t)%cos_phi ) if(with_small_so)
     !$acc data copyin( g(i%t:i%t), g(i%t)%r2, g(i%t)%rm2, g(i%t)%rab )
     !
-    mytid = 1 ; ntids = 1
     im_sum = i%m*nx_loc
     energy_present = PRESENT(energy)
     lsd = 0
     IF (nspin == 2)  lsd = 1
-    !
-#if defined(_OPENMP) && !defined(_OPENACC)
-    !$omp parallel
-    ntids = omp_get_num_threads()
-    !$omp end parallel
-#endif
     !
     ALLOCATE( rho_rad(i%m,nx_loc,nspin_mag), v_rad(i%m,nx_loc,nspin) )
     ALLOCATE( arho(im_sum,nspin) )
@@ -496,8 +485,6 @@ MODULE paw_onecenter
     !
     IF ( energy_present ) THEN
        energy = 0._DP
-       ALLOCATE( e_of_tid(ntids) )
-       e_of_tid = 0._DP
        ALLOCATE( e_rad(im_sum) )
        !$acc enter data create( e_rad )
     ENDIF
@@ -528,8 +515,8 @@ MODULE paw_onecenter
 #if defined(_OPENACC)
     !$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
 #else
-    !$omp parallel do default(private), &
-    !$omp shared(i,rho_rad,rad,rho_lm,rho_core,arho,msmall_lm,ix_s,ix_e,nspin,nspin_mag,g,with_small_so)
+    !$omp parallel do collapse(2) default(private), shared( i, rho_rad, rho_core, &
+    !$omp &                                        arho, ix_s, ix_e, nspin_mag, g )
 #endif
     DO ix = ix_s, ix_e
       DO k = 1, i%m
@@ -553,11 +540,11 @@ MODULE paw_onecenter
     ENDIF
     !
 #if defined(_OPENACC)
-    !$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
+    !$acc parallel loop collapse(2) present(g(i%t:i%t))
 #else
-    !$omp parallel do default(private), shared(en_pres,i,arho,rad,rho_core,rho_rad, &
-    !$omp                     v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e, g, g_rad,with_small_so)
-#endif    
+    !$omp parallel do collapse(2) default(private), shared(energy_present,i,arho,&
+    !$omp &  lsd,nspin_mag,rho_core,rho_rad,v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e,g)
+#endif
     DO ix = ix_s, ix_e
       DO k = 1, i%m
         !
@@ -594,29 +581,21 @@ MODULE paw_onecenter
     !
     IF ( energy_present ) THEN
       !$acc update self( e_rad )
-#if defined(_OPENMP) && !defined(OPENACC)
-      !$omp parallel default(private), &
-      !$omp shared(i,rad,ix_s,ix_e,e_rad,e_of_tid,g)
-      mytid = omp_get_thread_num()+1
-#endif
-      !$omp do
+      !
+      !$omp parallel do reduction(+:energy) default(private) shared(i,rad,ix_s,ix_e,e_rad,g)
       DO ix = ix_s, ix_e
         ixk_s = (ix-ix_s)*i%m+1
         ixk_e = (ix-ix_s+1)*i%m
         CALL simpson( i%m, e_rad(ixk_s:ixk_e), g(i%t)%rab, e )
-        e_of_tid(mytid) = e_of_tid(mytid) + e * rad(i%t)%ww(ix)
+        energy = energy + e * rad(i%t)%ww(ix)
       ENDDO
-      !$omp end do
-      !$omp end parallel
     ENDIF
     !
     IF ( energy_present ) THEN 
-      energy = SUM(e_of_tid)
       CALL mp_sum( energy, paw_comm )
       !
       !$acc exit data delete( e_rad )
       DEALLOCATE( e_rad )
-      DEALLOCATE( e_of_tid )
     ENDIF
     !$acc exit data delete( arho, rho_rad, ex, ec, vx, vc )
     DEALLOCATE( rho_rad, arho )
@@ -703,21 +682,17 @@ MODULE paw_onecenter
     REAL(DP) :: e, e_gcxc                     ! aux, used to integrate energy
     REAL(DP) :: co2(2)                        ! aux, to store core density
     !
-    INTEGER :: k, ix, is, js, je, lm, ixk, im_sum, dspin ! counters
+    INTEGER :: k, ix, is, js, je, lm, ix0, ixk, im_sum, dspin ! counters
     LOGICAL :: energy_present
     !
-    INTEGER :: mytid, ntids
-#if defined(_OPENMP)
-    INTEGER, EXTERNAL :: omp_get_thread_num, omp_get_num_threads
-#endif
     REAL(DP), PARAMETER :: epsr = 1.e-6_DP, epsg = 1.e-10_DP
     ! (as in PW/src/gradcorr.f90)
     REAL(DP), PARAMETER :: eps = 1.e-30_dp, div3=1.d0/3.d0
     !
     IF (TIMING) CALL start_clock( 'PAW_gcxc_v' )
     !
-    !$acc data present_or_copyin( rho_lm, rho_core ) present_or_copy( v_lm )
-    !$acc data present_or_copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%r2, g(i%t)%rm2, g(i%t)%rm3, g(i%t)%rab )
+    !$acc data copyin( rho_lm, rho_core ) present_or_copy( v_lm )
+    !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%r2, g(i%t)%rm2, g(i%t)%rm3, g(i%t)%rab )
     !
     e_gcxc = 0._dp
     !
@@ -746,18 +721,6 @@ MODULE paw_onecenter
        !$acc end kernels
     ENDIF
     !
-#if !defined(_OPENACC)
-    !$omp parallel default(private), &
-    !$omp shared(i,g,nspin,nspin_gga,nspin_mag,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,&
-    !$omp        rho_lm,rhoout_lm,rho_core,energy,ix_s,ix_e)
-#endif
-    !
-    mytid = 1
-    ntids = 1
-#if defined(_OPENMP)
-    mytid = omp_get_thread_num()+1
-    ntids = omp_get_num_threads()
-#endif
     ALLOCATE( rho_rad(im_sum,nspin_mag), grad(im_sum,3,nspin_gga) )
     ALLOCATE( sx(im_sum), sc(im_sum), v1x(im_sum,nspin_gga), v1c(im_sum,nspin_gga), &
               v2x(im_sum,nspin_gga), v2c(im_sum,nspin_gga) )
@@ -771,6 +734,7 @@ MODULE paw_onecenter
 #if defined(_OPENACC)
     !$acc kernels
 #else
+    !$omp parallel shared(gc_rad,h_rad)
     !$omp workshare
 #endif
     gc_rad = 0.0d0
@@ -779,21 +743,16 @@ MODULE paw_onecenter
     !$acc end kernels
 #else
     !$omp end workshare
+    !$omp end parallel
 #endif
     !
     IF ( energy_present ) THEN
-      !$omp single
-      ALLOCATE( egcxc_of_tid(ntids) )
-      !$omp end single
-      egcxc_of_tid(mytid) = 0.0_dp
       ALLOCATE( e_rad(im_sum) )
       !$acc enter data create( e_rad )
     ENDIF
     !
     IF (nspin_mag/=1.AND.nspin_mag/=2.AND.nspin_mag/=4) THEN
-      !$omp master
       CALL errore( 'PAW_gcxc_v', 'unknown spin number', 2 )
-      !$omp end master
     ENDIF
     !
     ALLOCATE( rho_full(im_sum,nspin_gga), gradx(3,im_sum,nspin_gga) )
@@ -802,10 +761,12 @@ MODULE paw_onecenter
     CALL PAW_lm2rad( i, rhoout_lm, rho_rad, nspin_gga )
     CALL PAW_gradient( i, rhoout_lm, rho_rad, rho_core, grad )
     !
-#if !defined(_OPENACC)
-    !$omp do
-#else
+#if defined(_OPENACC)
     !$acc parallel loop collapse(2) present(g(i%t:i%t))
+#else
+    !$omp parallel do collapse(2) default(private), &
+    !$omp shared(i,g,nspin_gga,nspin_mag,rho_rad,gradx,grad, &
+    !$omp &      rho_core,rho_full,ix_s,ix_e)
 #endif
     DO ix = ix_s, ix_e
       DO k = 1, i%m
@@ -829,25 +790,28 @@ MODULE paw_onecenter
       CALL xc_gcx( im_sum, 2, rho_full, gradx, sx, sc, v1x, v2x, v1c, v2c, v2cud, gpu_args_=.TRUE. )
     ENDIF
     !
-#if !defined(_OPENACC)
-    !$omp do
-#else
+#if defined(_OPENACC)
     !$acc parallel loop collapse(2) present(g(i%t:i%t))
+#else
+    !$omp parallel do default(private), &
+    !$omp shared(i,g,nspin_gga,nspin_mag,grad,sx,sc,v1x,v1c,v2x,v2c,v2cud, &
+    !$omp &      e_rad,ix_s,ix_e,energy_present,gc_rad,h_rad)
 #endif
     DO ix = ix_s, ix_e
        DO k = 1, i%m
           !
+          ix0 = ix-ix_s+1
           ixk = (ix-ix_s)*i%m + k
           !
           IF ( energy_present ) e_rad(ixk) = e2*(sx(ixk)+sc(ixk))*g(i%t)%r2(k)
-          gc_rad(k,ix,1:nspin_gga)  = v1x(ixk,1:nspin_gga)+v1c(ixk,1:nspin_gga)
+          gc_rad(k,ix0,1:nspin_gga)  = v1x(ixk,1:nspin_gga)+v1c(ixk,1:nspin_gga)
           ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
           IF ( nspin_mag==1 ) THEN
-            h_rad(k,:,ix,1) = (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1)*g(i%t)%r2(k)
+            h_rad(k,:,ix0,1) = (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1)*g(i%t)%r2(k)
           ELSEIF ( nspin_mag == 2 .OR. nspin_mag == 4 ) THEN
-            h_rad(k,:,ix,1) = ( (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1) + &
+            h_rad(k,:,ix0,1) = ( (v2x(ixk,1)+v2c(ixk,1))*grad(ixk,:,1) + &
                                  v2cud(ixk)*grad(ixk,:,2) )*g(i%t)%r2(k)
-            h_rad(k,:,ix,2) = ( (v2x(ixk,2)+v2c(ixk,2))*grad(ixk,:,2) + &
+            h_rad(k,:,ix0,2) = ( (v2x(ixk,2)+v2c(ixk,2))*grad(ixk,:,2) + &
                                  v2cud(ixk)*grad(ixk,:,1) )*g(i%t)%r2(k)
           ENDIF
           !
@@ -858,11 +822,13 @@ MODULE paw_onecenter
     !
     ! ... integrate energy (if required)
     IF ( energy_present ) THEN
+       !$omp parallel do reduction(+:e_gcxc) default(private) &
+       !$omp & shared(i,rad,ix_s,ix_e,e_rad,g)
        DO ix = ix_s, ix_e
           js = (ix-ix_s)*i%m+1
           je = (ix-ix_s+1)*i%m
           CALL simpson( i%m, e_rad(js:je), g(i%t)%rab, e )
-          egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e*rad(i%t)%ww(ix)
+          e_gcxc = e_gcxc + e*rad(i%t)%ww(ix)
        ENDDO
     ENDIF
     !
@@ -880,18 +846,10 @@ MODULE paw_onecenter
     ENDIF
     !$acc exit data delete( rho_rad, grad )
     DEALLOCATE( rho_rad, grad )
-#if !defined(_OPENACC)
-    !$omp end parallel
-#endif
     !
     IF ( energy_present ) THEN
-       e_gcxc = SUM(egcxc_of_tid)
        CALL mp_sum( e_gcxc, paw_comm )
        energy = energy + e_gcxc
-    ENDIF
-    !
-    IF ( energy_present ) THEN
-       DEALLOCATE( egcxc_of_tid )
     ENDIF
     !
     ! ... convert the first part of the GC correction back to spherical harmonics
@@ -908,7 +866,8 @@ MODULE paw_onecenter
     !$acc parallel loop collapse(2) present(rad(i%t:i%t)) copyin(rad(i%t)%sin_th(ix_s:ix_e))
     DO ix = ix_s, ix_e
       DO k = 1, i%m
-        h_rad(k,3,ix,1:nspin_gga) = h_rad(k,3,ix,1:nspin_gga) / rad(i%t)%sin_th(ix)
+        ix0 = ix-ix_s+1
+        h_rad(k,3,ix0,1:nspin_gga) = h_rad(k,3,ix0,1:nspin_gga) / rad(i%t)%sin_th(ix)
       ENDDO
     ENDDO
     !    
@@ -1450,9 +1409,8 @@ MODULE paw_onecenter
 #if defined(_OPENACC)
 !$acc parallel loop collapse(3) present(rad(i%t:i%t))
 #else
-!$omp parallel default(private), &
-!$omp shared(lmax_loc2, nspin, i)
-!$omp do
+!$omp parallel do collapse(3) default(private) shared( F_lm, lmax_loc2, nspin, i, &
+!$omp &                                                F_rad, rad, ix_s, ix_e )
 #endif
     DO ispin = 1, nspin
       DO lm = 1, lmax_loc2
@@ -1466,10 +1424,6 @@ MODULE paw_onecenter
         ENDDO
       ENDDO
     ENDDO
-#if !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
     !
     ! ... Now recollects the result within the paw communicator
     !
