@@ -199,6 +199,7 @@ PROGRAM matdyn
                   amass_blk(ntypx),          &! original atomic masses
                   atws(3,3),      &! lattice vector for WS initialization
                   rws(0:3,nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
+  REAL(DP) :: alph ! Ewald coefficient for non-analytical term
   !
   INTEGER :: nat, nat_blk, ntyp, ntyp_blk, &
              l1, l2, l3,                   &! supercell dimensions
@@ -371,10 +372,11 @@ PROGRAM matdyn
         else
            CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
         end if
+        alph = 1.0_dp
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
-            amass_blk, omega_blk, has_zstar, read_lr)
+            amass_blk, omega_blk, has_zstar, alph, read_lr)
      ENDIF
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
@@ -616,8 +618,8 @@ PROGRAM matdyn
 
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
-                   loto_2d, &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
+             loto_2d, epsil, zeu, alph, &
+             frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
         IF (.not.loto_2d) THEN 
         qhat(1) = q(1,n)*at(1,1)+q(2,n)*at(2,1)+q(3,n)*at(3,1)
         qhat(2) = q(1,n)*at(1,2)+q(2,n)*at(2,2)+q(3,n)*at(3,2)
@@ -890,7 +892,8 @@ END PROGRAM matdyn
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
-                    ibrav, alat, at, ntyp, amass, omega, has_zstar, read_lr )
+     ibrav, alat, at, ntyp, amass, omega, &
+     has_zstar, alph, read_lr )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -904,12 +907,13 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   IMPLICIT NONE
   ! I/O variable
   CHARACTER(LEN=256) :: flfrc
+  CHARACTER(LEN=80)  :: line
   INTEGER :: ibrav, nr1,nr2,nr3,nat, ntyp
-  REAL(DP) :: alat, at(3,3), epsil(3,3)
+  REAL(DP) :: alat, at(3,3), epsil(3,3), alph
   LOGICAL :: has_zstar, read_lr
   ! local variables
   INTEGER :: i, j, na, nb, m1,m2,m3
-  INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
+  INTEGER :: ios, ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
   REAL(DP) :: amass(ntyp), amass_from_file, omega
   INTEGER :: nt
   !
@@ -966,9 +970,16 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   !  read macroscopic variable
   !
-  IF (ionode) READ (1,*) has_zstar
+  IF (ionode) READ (1,'(a)') line
+  READ(line,*,iostat=ios) has_zstar, alph
+  IF ( ios /= 0 ) THEN
+     READ(line,*) has_zstar
+     alph = 1.0_dp
+  ENDIF
+  !
   CALL mp_bcast(has_zstar,ionode_id, world_comm)
   IF (has_zstar) THEN
+     CALL mp_bcast(alph,ionode_id, world_comm)
      IF (ionode) READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
      CALL mp_bcast(epsil,ionode_id, world_comm)
      IF (ionode) THEN
@@ -1210,8 +1221,8 @@ END SUBROUTINE frc_blk
 !-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
-     &         loto_2d, & 
-     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
+     &         loto_2d, epsil, zeu, alph, &
+     &         frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -1225,7 +1236,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   ! I/O variables
   !
   INTEGER:: nr1, nr2, nr3, nat, nat_blk, nsc, nrws, itau_blk(nat)
-  REAL(DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat,      &
+  REAL(DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat, alph,    &
                   epsil(3,3), zeu(3,3,nat_blk), rws(0:3,nrws),   &
                   frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
   REAL(DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
@@ -1252,11 +1263,10 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
      CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
           &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q,fd)
-      IF (has_zstar .and. .not.na_ifc) &
-           CALL rgd_blk(nr1,nr2,nr3,nat_blk,dyn_blk,qp,tau_blk,   &
-                         epsil,zeu,bg_blk,omega_blk,celldm(1), loto_2d,+1.d0)
-           ! LOTO 2D added celldm(1)=alat to passed arguments
-     !
+     IF (has_zstar .and. .not.na_ifc) &
+          CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp, tau_blk,   &
+          epsil, zeu, alph, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0 )
+      !
      DO na=1,nat
         na_blk = itau_blk(na)
         DO nb=1,nat
