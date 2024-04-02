@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -219,7 +219,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
         !
         ! alph = 1 is the Ewald parameter. Since it is used as -G^2/4/alph
         ! and G^2 is in 2pi/alat units, the conversion factor (alat/2pi)^2
-        ! ensures consistency - see issue #610 on gitlab
+        ! ensures consistency - see issue #601 on gitlab
         !
         alph = ( celldm(1) / tpi ) ** 2
         WRITE (stdout,*) ' alpha Ewald: ',alph
@@ -322,9 +322,9 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
              celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
      ENDIF
      IF (write_lr) THEN
-        CALL write_ifc(nr1,nr2,nr3,nat,phid,phid_lr)
+        CALL write_ifc(alph,nr1,nr2,nr3,nat,phid,phid_lr)
      ELSE
-        CALL write_ifc(nr1,nr2,nr3,nat,phid)
+        CALL write_ifc(alph,nr1,nr2,nr3,nat,phid)
      ENDIF
   ELSE IF (ionode) THEN
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')

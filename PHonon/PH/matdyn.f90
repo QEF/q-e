@@ -368,11 +368,10 @@ PROGRAM matdyn
         ALLOCATE(frc_lr(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
         frc_lr = 0.d0
         if (read_lr) THEN
-           CALL read_ifc(nr1,nr2,nr3,nat_blk,frc,frc_lr)
+           CALL read_ifc(alph,nr1,nr2,nr3,nat_blk,frc,frc_lr)
         else
-           CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
+           CALL read_ifc(alph,nr1,nr2,nr3,nat_blk,frc)
         end if
-        alph = 1.0_dp
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
@@ -560,7 +559,7 @@ PROGRAM matdyn
      !
      IF (write_frc) THEN
         CALL writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, at_blk, bg_blk, &
-                     ntyp_blk, nat_blk, amass_blk, omega_blk, epsil, nspin_mag, nqs)
+                     ntyp_blk, nat_blk, amass_blk, omega_blk, epsil, alph, nspin_mag, nqs)
      END IF
      !
      IF (flvec.EQ.' ') THEN
@@ -968,13 +967,13 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   CALL mp_bcast(ityp,ionode_id, world_comm)
   CALL mp_bcast(tau,ionode_id, world_comm)
   !
-  !  read macroscopic variable
+  !  read macroscopic variables
   !
-  IF (ionode) READ (1,'(a)') line
-  READ(line,*,iostat=ios) has_zstar, alph
-  IF ( ios /= 0 ) THEN
-     READ(line,*) has_zstar
-     alph = 1.0_dp
+  alph = 1.0_dp
+  IF (ionode) THEN
+     READ (1,'(a)') line
+     READ(line,*,iostat=ios) has_zstar, alph
+     IF ( ios /= 0 ) READ(line,*) has_zstar
   ENDIF
   !
   CALL mp_bcast(has_zstar,ionode_id, world_comm)
@@ -1041,7 +1040,7 @@ END SUBROUTINE readfc
 !
 !-----------------------------------------------------------------------
 SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
-                   at, bg, ntyp, nat, amass, omega, epsil, nspin_mag, nqs)
+                   at, bg, ntyp, nat, amass, omega, epsil, alph, nspin_mag, nqs)
   !---------------------------------------------------------------------
   !
    USE kinds,      ONLY : DP
@@ -1057,6 +1056,7 @@ SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
    CHARACTER(LEN=256) :: flfrc
    INTEGER :: nr1, nr2, nr3, ibrav, nat, ntyp, nspin_mag, nqs
    REAL(DP) :: alat, omega, at(3,3), bg(3,3), amass(ntyp), epsil(3,3)
+   REAL(DP) :: alph
    LOGICAL :: xmlifc, has_zstar
    ! local variables
    INTEGER :: i, j, nt, na, nb, nn, m1, m2, m3, leng
@@ -1074,7 +1074,7 @@ SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
          CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, &
               celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
       ENDIF
-      CALL write_ifc(nr1, nr2, nr3, nat, frc2)
+      CALL write_ifc(alph,nr1, nr2, nr3, nat, frc2)
    ELSE IF (ionode) THEN
       OPEN(unit=1, file=flfrc2, status='unknown', form='formatted')
       WRITE(1,'(i3,i5,i4,6f11.7)') ntyp, nat, ibrav, celldm
@@ -1085,7 +1085,7 @@ SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
       DO na = 1, nat
          WRITE(1,'(2i5,3f18.10)') na, ityp(na), (tau(j,na),j=1,3)
       END DO
-      WRITE (1,*) has_zstar
+      WRITE (1,*) has_zstar, alph
       IF (has_zstar) THEN
          WRITE(1,'(3f24.12)') ((epsil(i,j),j=1,3),i=1,3)
          DO na = 1, nat
