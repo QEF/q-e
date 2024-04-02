@@ -1418,7 +1418,10 @@ SUBROUTINE elph_prt()
   !
   LOGICAL :: found
   !
-  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr, istatus
+#if defined(__MPI)
+  INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr
   INTEGER :: nksq2, ikk2, ikq2, nkq2, ik1, ik2, ipert, jpert, n
   !
   REAL(DP), PARAMETER :: ryd2mev  = rytoev * 1.0E3_DP
