@@ -120,6 +120,7 @@ SUBROUTINE from_scratch( )
     END IF
     !
     CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
+    !$acc update device(eigts1,eigts2,eigts3)
     !
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
     !     
@@ -148,7 +149,7 @@ SUBROUTINE from_scratch( )
     if ( trim(startingwfc) == 'atomic') then
        if ( ionode ) &
          WRITE (stdout, '("Using also atomic wavefunctions as much as possible")') 
-       CALL atomic_wfc_cp(omega, nat, nsp, ityp, tau0, iupdwn, nspin, &
+       CALL atomic_wfc_cp(omega, nat, nsp, ityp, tau0, nupdwn, iupdwn, nspin, &
                ngw, nbspx, cm_bgrp )
     endif
 
@@ -400,8 +401,8 @@ subroutine hangup
     CALL stop_cp_run()
 end subroutine
 
-SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, iupdwn, npol, npw, nbspx,&
-               evc )
+SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
+                         npw, nbspx, evc )
    
          USE kinds,        ONLY : DP
          USE uspp_param,   ONLY : nwfcm
@@ -412,51 +413,54 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, iupdwn, npol, npw, nbspx,&
 
          IMPLICIT NONE
          !
-         INTEGER, INTENT(IN) :: nat, nsp, ityp(nat), iupdwn(2), npol, npw, nbspx
+         INTEGER, INTENT(IN) :: nat, nsp, ityp(nat), nupdwn(2), iupdwn(2), nspin, npw, nbspx
          REAL(DP), INTENT(IN) :: omega, tau(3,nat)
          COMPLEX(DP), INTENT(inout) :: evc (npw,nbspx)
          !
          INTEGER :: natomwfc
          COMPLEX(DP), ALLOCATABLE  :: wfcatom(:,:,:)
-         !! Superposition of atomic wavefunctions
+         !! Superposition of atomic wavefunctions - only nospin / LSDA
    
-         !cp specific settings (gamma only)
+         ! cp specific settings (gamma only)
          ! xk is 0,0,0, igk is the identical permutation
-         ! wfcatom has 2 dimensions (npw, nbnd*nspin)
-         ! looks like only nspin=1,2 are implemented. The layout of the wfc is different:
-         ! in cp it is the equivalent of (npw, nbnd, nspin ), while in pw is (npwx, nspin, nbnd)
-         real(dp) :: xk(3)
-         integer ::  igk(npw), i, ipol, sh(2)
-         REAL(DP) :: angle1(nsp), angle2(nsp)
-         !! dummy, unused variables
+         ! wfcs have 2 dimensions (npw, nbnd)
+         ! The layout of the wfc is different:
+         ! in cp it is the equivalent of (npw, nbnd, nspin ), 
+         ! while in pw is (npwx, nspin, nbnd)
+         real(dp) :: xk(3), angle1, angle2
+         integer  :: i, ipol, sh(2)
+         integer, allocatable :: igk(:)
    
-         ! identity permutation
-         do i=1,npw
-            igk(i)=i
-         enddo
          ! gamma point only
          xk=0.d0
          nqx = INT( (SQRT(ecutwfc) / dq + 4) * 1.d0 )
          allocate(tab_at(nqx,nwfcm,nsp))
-         call init_tab_atwfc(omega, intra_bgrp_comm)
-
          natomwfc = n_atom_wfc ( nat, ityp )
-         allocate ( wfcatom(npw, npol, natomwfc) )
+         allocate ( wfcatom(npw, 1, natomwfc) )
+         allocate (igk (npw) )
+         !$acc data create(tab_at, wfcatom, igk)
+         !
+         call init_tab_atwfc(omega, intra_bgrp_comm)
+         !$acc parallel loop
+         do i=1,npw
+            igk(i)=i
+         end do
          
-         ! only nospin / LSDA in CP
          call atomic_wfc_acc( xk, npw, igk, nat, nsp, ityp, tau, &
               .false., .false.,  angle1, angle2, .false., &
-              npw, npol, natomwfc, wfcatom )
+              npw, 1, natomwfc, wfcatom )
+         !$acc update host (wfcatom)
    
          sh = shape(evc)
    
          !write the result in the correct order in evc
-         do i=1,min(natomwfc,sh(2)/npol)
-            do ipol = 1, npol
-               evc(:,i + iupdwn(ipol)-1) = wfcatom(:,ipol,i)
+         do ipol = 1, nspin
+            do i=1,nupdwn(ipol)
+               evc(:,i + iupdwn(ipol)-1) = wfcatom(:,1,i)
             enddo
          enddo
-   
+         !$acc end data
+         deallocate (igk)
          deallocate (wfcatom)
          deallocate (tab_at)
          
