@@ -115,7 +115,8 @@
     tz_ref,                  &!  reference fractional coordinate of atoms in 2D system
     evbm,                    &!  electronic valence band maximum
     ecbm,                    &!  electronic conduction band minimum
-    sum_E                     !  FIXME
+    sum_E,                   &!  sum of total energy (phonon) for MC integration in QDPT
+    alph                      !  Ewald alpha used to subtract out the long-range term
   REAL(KIND = DP), ALLOCATABLE ::&
     a_all(:, :, :),          &!  electronic spectral function du to electron-phonon interaction
     a_all_ph(:, :, :),       &!  phononic spectral function du to electron-phonon interaction

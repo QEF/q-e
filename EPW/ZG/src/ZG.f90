@@ -309,6 +309,7 @@ PROGRAM ZG
   INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf
   REAL(DP)                 :: error_thresh, T, qhat_in(3)
   REAL(DP)                 :: atmsf_a(ntypx,5), atmsf_b(ntypx,5) 
+  REAL(DP)                 :: alph  
   REAL(DP),    ALLOCATABLE :: q_nq(:, :) ! 3, nq
   COMPLEX(DP), ALLOCATABLE :: z_nq(:, :, :) ! nomdes, nmodes, nq
   ! 
@@ -550,7 +551,7 @@ PROGRAM ZG
         call volume(alat, at_blk(1, 1), at_blk(1, 2), at_blk(1, 3), omega_blk)
         CALL read_ifc_param(nr1, nr2, nr3)
         ALLOCATE(frc(nr1, nr2, nr3, 3, 3, nat_blk, nat_blk))
-        CALL read_ifc(nr1, nr2, nr3, nat_blk,frc)
+        CALL read_ifc(alph, nr1, nr2, nr3, nat_blk,frc)
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
@@ -777,7 +778,7 @@ PROGRAM ZG
         CALL setupmat (q(1, n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
                    loto_2d, &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc, f_of_q, fd)
+             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc, f_of_q, fd, alph)
 
         IF (.not.loto_2d) THEN
         qhat(1) = q(1, n) * at(1, 1) + q(2, n) * at(2, 1) + q(3, n) * at(3, 1)
@@ -1161,7 +1162,7 @@ END SUBROUTINE frc_blk
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
      &         loto_2d, &
-     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
+     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd,alph)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -1178,7 +1179,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   REAL(DP) :: q(3), tau(3, nat), at(3, 3), bg(3, 3), alat,      &
                   epsil(3, 3), zeu(3, 3, nat_blk), rws(0:3, nrws),   &
                   frc(nr1, nr2, nr3, 3, 3, nat_blk, nat_blk)
-  REAL(DP) :: tau_blk(3, nat_blk), at_blk(3, 3), bg_blk(3, 3), omega_blk
+  REAL(DP) :: tau_blk(3, nat_blk), at_blk(3, 3), bg_blk(3, 3), omega_blk, alph
   COMPLEX(DP) dyn_blk(3, 3, nat_blk, nat_blk), f_of_q(3, 3, nat, nat)
   COMPLEX(DP) ::  dyn(3, 3, nat, nat)
   LOGICAL :: has_zstar, na_ifc, fd
@@ -1205,7 +1206,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
           &              nr1, nr2, nr3,frc, at_blk, bg_blk, rws, nrws, f_of_q, fd)
       IF (has_zstar .and. .not. na_ifc) &
            CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp,tau_blk,   &
-                        epsil, zeu, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0)
+                        epsil, zeu, alph, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0)
      !
      DO na= 1, nat
         na_blk = itau_blk(na)
