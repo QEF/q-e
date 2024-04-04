@@ -58,7 +58,8 @@
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
                             ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
-                            gmap, g0vec_all_r, qrpl, Qmat, L, do_cutoff_2D_epw
+                            gmap, g0vec_all_r, qrpl, Qmat, L, do_cutoff_2D_epw, &
+                            alph
   USE klist_epw,     ONLY : et_loc, et_all, xk_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -219,6 +220,9 @@
   !
   CALL start_clock('elphon_wrap')
   !
+  alph = 1.0
+  ! S. Tiwari: Initializing the Ewald sum in case we don't use IFC
+  !  
   ALLOCATE(xqc(3, nqc1 * nqc2 * nqc3), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xqc', 1)
   xqc(:, :) = zero

@@ -23,7 +23,6 @@
   !!
   REAL(KIND = DP) :: qqcut
   !!
-  REAL(KIND = DP), PARAMETER :: alph = 1.d0
   !! Ewald parameter, units (2pi/alat)^{2}
   REAL(KIND = DP), PARAMETER :: gmax = 14.d0
   !! Cutoff criteria for G-sum:
@@ -219,7 +218,7 @@
     USE division,      ONLY : para_bounds
     USE mp,            ONLY : mp_bcast, mp_sum
     USE epwcom,        ONLY : lpolar, system_2d
-    USE elph2,         ONLY : area, Qmat
+    USE elph2,         ONLY : area, Qmat, alph
     !
     IMPLICIT NONE
     !
@@ -804,7 +803,7 @@
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8, cone, &
                               half, two, four, eps5, one
     USE epwcom,        ONLY : shortrange, lpolar, system_2d
-    USE elph2,         ONLY : area, Qmat, L, do_cutoff_2D_epw
+    USE elph2,         ONLY : area, Qmat, L, do_cutoff_2D_epw, alph
     USE io_global,     ONLY : stdout
     !
     IMPLICIT NONE
@@ -1207,7 +1206,7 @@
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8, cone, &
                               zero, one, half, two, four, eps5
     USE epwcom,        ONLY : shortrange, nbndsub, lpolar, system_2d
-    USE elph2,         ONLY : area, Qmat, L, do_cutoff_2D_epw
+    USE elph2,         ONLY : area, Qmat, L, do_cutoff_2D_epw, alph
     !
     IMPLICIT NONE
     !
@@ -1586,6 +1585,7 @@
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, cc2cb, cone
     USE epwcom,        ONLY : shortrange, nbndsub, ii_n, ii_charge, ii_eps0
+    USE elph2,         ONLY : alph
     !
     IMPLICIT NONE
     !
@@ -1626,8 +1626,6 @@
     REAL(KIND = DP) :: g1, g2, g3
     !!
     REAL(KIND = DP) :: gmax
-    !!
-    REAL(KIND = DP) :: alph
     !!
     REAL(KIND = DP) :: geg
     !!
@@ -1681,7 +1679,6 @@
     ENDIF
     !
     gmax = 14.d0
-    alph = 1.0d0
     geg = gmax * alph * 4.0d0
     fac = signe * e2 * fpi * ii_charge / omega * ci
     !
@@ -2185,6 +2182,7 @@
     USE constants_epw, ONLY : fpi, e2, ci, twopi
     USE constants,     ONLY : pi
     USE cell_base,     ONLY : bg, omega, alat
+    USE elph2,         ONLY : alph
     USE constants_epw, ONLY : eps6
     !
     IMPLICIT NONE
@@ -2486,7 +2484,7 @@
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : pi, twopi, zero, half, one, two, four, eps5, eps12
     USE cell_base,     ONLY : at, alat
-    USE elph2,         ONLY : thickn_2d, epsi_2d, tz_ref
+    USE elph2,         ONLY : thickn_2d, epsi_2d, tz_ref, alph
     !
     IMPLICIT NONE
     !
@@ -2802,7 +2800,7 @@
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, cone, eps12, eps5, zero, one, half, two, four
     USE epwcom,        ONLY : shortrange, lpolar
-    USE elph2,         ONLY : do_cutoff_2D_epw
+    USE elph2,         ONLY : do_cutoff_2D_epw, alph
     !USE io_global,     ONLY : stdout
     !
     IMPLICIT NONE
@@ -2991,7 +2989,7 @@
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, cone, eps12, eps5, zero, one, half, two, four
     USE epwcom,        ONLY : shortrange, nbndsub, lpolar, epwwrite, epwread
-    USE elph2,         ONLY : do_cutoff_2D_epw
+    USE elph2,         ONLY : do_cutoff_2D_epw, alph
     !USE io_global,     ONLY : stdout
     !
     IMPLICIT NONE

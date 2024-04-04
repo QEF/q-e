@@ -528,7 +528,7 @@
     !!
     !
     USE kinds,     ONLY : DP
-    USE elph2,     ONLY : ifc, zstar, epsi
+    USE elph2,     ONLY : ifc, zstar, epsi, alph
     USE epwcom,    ONLY : asr_typ, dvscf_dir, nqc1, nqc2, nqc3
     USE ions_base, ONLY : nat
     USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
@@ -625,7 +625,7 @@
                tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar)
       CALL volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
       CALL read_ifc_param(nqc1, nqc2, nqc3)
-      CALL read_ifc(nqc1, nqc2, nqc3, nat_, ifc)
+      CALL read_ifc(alph, nqc1, nqc2, nqc3, nat_, ifc)
       DEALLOCATE(m_loc, STAT = ierr)
       IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error deallocating m_loc', 1)
       DEALLOCATE(atm, STAT = ierr)
