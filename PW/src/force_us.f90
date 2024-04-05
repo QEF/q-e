@@ -281,7 +281,7 @@ SUBROUTINE force_us( forcenl )
 #if defined(_OPENACC)
                 !$acc parallel loop collapse(2) reduction(+:forcenl_ipol)
 #else
-                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl_ipol)
+                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(+:forcenl_ipol)
 #endif
                 DO ih = 1, nh_nt
                    DO ibnd_loc = 1, becp_nbnd_loc
