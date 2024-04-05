@@ -607,8 +607,8 @@ MODULE io_dyn_mat
     ! 
     IF (ionode) THEN
       CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS", ierr)
-      CALL xmlr_readtag( "alpha_ewald", alph )
-      IF ( alph < 1.0D-8 ) alph = 1.0_dp ! for back-compatibility
+      CALL xmlr_readtag( "alpha_ewald", alph, ierr )
+      IF ( ierr /= 0 .or. alph < 1.0D-8 ) alph = 1.0_dp ! for back-compatibility
       DO na = 1, nat
         DO nb = 1, nat
           nn = 0
