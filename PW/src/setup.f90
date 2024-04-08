@@ -256,7 +256,17 @@ SUBROUTINE setup()
         do na=1,nat
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
-     end if
+     !  set initial magnetization for collinear case
+      ELSE IF ( ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 ) ) THEN
+         WRITE (stdout,*) 'set starting magnetization to m_loc:'
+         DO na = 1, nat
+             m_loc(1,na) = 0.0_dp
+             m_loc(2,na) = 0.0_dp
+             m_loc(3,na) = starting_magnetization(ityp(na))
+         END DO
+         WRITE (stdout,*) 'Starting magnetization:', starting_magnetization
+      ENDIF     
+
      IF ( i_cons /= 0 .AND. nspin==1 ) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
      IF ( i_cons /= 0 .AND. i_cons /= 1 ) &

@@ -530,6 +530,8 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
            ELSE
               CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
            END IF
+        ELSE 
+           WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
         END IF
         IF ( ANY ( ABS(ft(:,isym)) > eps6 ) ) THEN
            ftcart(:) = at(:,1)*ft(1,isym) + at(:,2)*ft(2,isym) + &

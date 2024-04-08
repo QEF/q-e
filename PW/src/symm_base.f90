@@ -393,9 +393,14 @@ CONTAINS
        ENDIF
        !
        ! ... Here we check for magnetic symmetries
-       IF ( magnetic_sym ) CALL sgam_at_mag( nat, m_loc, sym )
-       !
+       IF ( magnetic_sym ) THEN
+          CALL sgam_at_mag( nat, m_loc, sym )
+       ! ... Here we check for time reversal symmetries for collinear systems
+       ELSE IF ( ANY ( ABS( m_loc(3,:) ) > 1.D-6 )) THEN
+          CALL sgam_at_collin( nat, m_loc, sym )
        ! ... If nosym_evc is true from now on we do not use the symmetry any more
+       ENDIF
+       !
        IF (nosym_evc) THEN
           sym = .FALSE.
           sym(1) = .TRUE.
@@ -697,6 +702,83 @@ CONTAINS
      RETURN
      !
    END SUBROUTINE sgam_at_mag
+   !
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE sgam_at_collin( nat, m_loc, sym )
+      !-----------------------------------------------------------------------
+      !! Find spin-space-group symmetries of the collinear system, i.e.
+      !! the pair of the point-group symmetries and the spin operations
+      !! that are symmetries of the atomic configurations and the local magnetization.
+      !! The spin operations include the identity and the time reversal.
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nat
+      !! numbero of atoms of all species
+      REAL(DP), INTENT(IN) :: m_loc(3,nat)
+      !! local magnetization, must be invariant under the sym.op.
+      LOGICAL, INTENT(INOUT) :: sym(48)
+      !! .TRUE. if rotation isym is a sym.op. of the crystal
+      !! (i.e. not of the bravais lattice only)
+      !
+      ! ... local variables
+      !
+      INTEGER :: na, nb, irot
+      LOGICAL :: t1, t2
+      REAL(DP) , ALLOCATABLE ::  m_org(:), m_op(:)
+      ! debug
+      WRITE( stdout, * ) "sgam_at_collin: nat=", nat
+      WRITE( stdout, * ) "sgam_at_collin: m_loc=", m_loc
+      ! magnetization and rotated magnetization in crystal axis
+      !
+      ALLOCATE( m_org(nat), m_op(nat) )
+      !
+      ! Set original magnetization
+      DO na = 1, nat
+         m_org(na) = m_loc(3,na)
+      ENDDO
+
+      ! Check for time reversal
+      DO irot = 1, nrot
+         !
+         t_rev(irot) = 0
+         !
+         IF ( sym(irot) ) THEN
+            DO na = 1, nat
+               nb = irt(irot,na)
+               IF ( nb < 1 .OR. nb > nat ) CALL errore( 'check_mag_sym', &
+                   'internal error: out-of-bound atomic index', na )
+
+               m_op(nb) = m_org(na)
+
+            ENDDO
+
+            IF (ALL( ABS(m_op - m_org) < 1.0D-6)) THEN
+               ! the operation is a symmetry without time-reversal
+               t_rev(irot) = 0
+            ELSEIF (ALL( ABS(m_op + m_org) < 1.0D-6)) THEN
+               ! the operation is a symmetry with time-reversal
+               t_rev(irot) = 1
+            ELSE
+               ! the operation is not a symmetry
+               sym(irot) = .FALSE.
+            ENDIF
+
+
+            IF ( (.NOT. sym(irot) ) .AND. &
+               ( ABS(ft(1,irot)) > eps2 .OR. &
+                 ABS(ft(2,irot)) > eps2 .OR. &
+                 ABS(ft(3,irot)) > eps2 ) ) nsym_ns = nsym_ns-1
+
+         ENDIF
+      ENDDO
+      ! ... deallocate work space
+      DEALLOCATE( m_op, m_org )
+      !
+      RETURN
+      !
+   END SUBROUTINE sgam_at_collin
    !
    !
    !-------------------------------------------------------------------------
