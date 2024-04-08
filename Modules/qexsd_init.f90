@@ -50,7 +50,7 @@ MODULE qexsd_init
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
             qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
-            qexsd_init_rism3d, qexsd_init_rismlaue
+            qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm
   !
 CONTAINS
   !
@@ -928,9 +928,22 @@ CONTAINS
     CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
     CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
     !
+
     CALL qes_init (obj,TAGNAME,ASSUME_ISOLATED =assume_isolated)
     END SUBROUTINE qexsd_init_outputPBC
     !
+    !
+    SUBROUTINE qexsd_init_esm(esm_obj, bc, nfit, w, efield, a, zb, debug, debug_gpmax) 
+      IMPLICIT NONE 
+      TYPE(esm_type),INTENT(INOUT)  :: esm_obj 
+      CHARACTER(LEN=*),INTENT(IN)  :: bc
+      INTEGER,INTENT(IN)            :: nfit
+      REAL(DP),INTENT(IN)           :: w, efield, a 
+      REAL(DP),INTENT(IN),OPTIONAL  :: zb 
+      LOGICAL,INTENT(IN),OPTIONAL   :: debug, debug_gpmax
+      !
+      CALL qes_init (esm_obj, "esm", bc=TRIM(bc), nfit=nfit, w=w, efield=efield, a=a )
+    END SUBROUTINE qexsd_init_esm
     !
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_magnetization(obj, lsda, noncolin, spinorbit, total_mag, total_mag_nc, absolute_mag, &
