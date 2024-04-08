@@ -81,7 +81,7 @@ SUBROUTINE setup()
                                  starting_magnetization
   USE noncollin_module,   ONLY : noncolin, domag, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
-                                 nspin_gga, nspin_mag, lspinorb
+                                 nspin_gga, nspin_mag, lspinorb, colin_mag
   USE qexsd_module,       ONLY : qexsd_readschema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
@@ -220,6 +220,15 @@ SUBROUTINE setup()
   !
   CALL set_spin_vars( lsda, noncolin, domag, &
          npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  ! set colin_mag.
+  ! NOTE: This should be done in set_spin_vars, but I temporarily put it here 
+  ! to avoid changing the interface of set_spin_vars until the setting
+  !  of colin_mag is finalized.
+  IF (nspin == 2) THEN
+     colin_mag = .TRUE.
+  ELSE
+     colin_mag = .FALSE.
+  END IF
   !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
@@ -257,15 +266,15 @@ SUBROUTINE setup()
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
      !  set initial magnetization for collinear case
-      ELSE IF ( ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 ) ) THEN
-         WRITE (stdout,*) 'set starting magnetization to m_loc:'
-         DO na = 1, nat
-             m_loc(1,na) = 0.0_dp
-             m_loc(2,na) = 0.0_dp
-             m_loc(3,na) = starting_magnetization(ityp(na))
-         END DO
-         WRITE (stdout,*) 'Starting magnetization:', starting_magnetization
-      ENDIF     
+     ELSE IF ( colin_mag ) THEN
+        WRITE (stdout,*) 'set starting magnetization to m_loc:'
+        DO na = 1, nat
+            m_loc(1,na) = 0.0_dp
+            m_loc(2,na) = 0.0_dp
+            m_loc(3,na) = starting_magnetization(ityp(na))
+        END DO
+        WRITE (stdout,*) 'Starting magnetization:', starting_magnetization
+     ENDIF     
 
      IF ( i_cons /= 0 .AND. nspin==1 ) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )

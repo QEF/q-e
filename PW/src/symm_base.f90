@@ -396,6 +396,9 @@ CONTAINS
        IF ( magnetic_sym ) THEN
           CALL sgam_at_mag( nat, m_loc, sym )
        ! ... Here we check for time reversal symmetries for collinear systems
+       ! NOTE: This check should be performed in the consistent way as in setup.f90
+       ! However, we temporarily use this way not to change the interface
+       ! until the structure of the code is fixed.
        ELSE IF ( ANY ( ABS( m_loc(3,:) ) > 1.D-6 )) THEN
           CALL sgam_at_collin( nat, m_loc, sym )
        ! ... If nosym_evc is true from now on we do not use the symmetry any more
