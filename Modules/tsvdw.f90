@@ -1325,14 +1325,14 @@ PRIVATE :: GetVdWParam
   ! Local variables
   !
   INTEGER :: ia,iq,off1
-  REAL(DP) :: normr
+  REAL(DP) :: normr, veff_ia
   !
   CALL start_clock('tsvdw_veff')
   !
   ! Initialization of effective volume...
   !
   ALLOCATE(veff(nat)); veff=0.0_DP
-  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff=0.0_DP
+  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff_pub=0.0_DP
   !
   ! Normalization factor for veff integral...
   !
@@ -1345,10 +1345,11 @@ PRIVATE :: GetVdWParam
     ! Connect processor number with atom...
     !
     ia=me+nproc_image*(iproc-1)
+    veff_ia=0.0_DP
     !
     ! Loop over points in the (pre-screened) spherical atomic integration domain...
     !
-!$omp parallel do private(off1),reduction(+:veff)
+!$omp parallel do private(off1),reduction(+:veff_ia)
     DO iq=1,NsomegaA(ia)
       !
       ! Compute veff integrand and complete dispersion potential (functional derivative of veff(A) wrt charge density)...
@@ -1364,7 +1365,7 @@ PRIVATE :: GetVdWParam
       !
       IF ((MOD(somegaA(iq,1,iproc),2).EQ.1).AND.(MOD(somegaA(iq,2,iproc),2).EQ.1).AND.(MOD(somegaA(iq,3,iproc),2).EQ.1))  THEN
         !
-        veff(ia)=veff(ia)+(dveffAdn(iq,iproc)*rhotot(off1))
+        veff_ia=veff_ia+(dveffAdn(iq,iproc)*rhotot(off1))
         !
       END IF
       !
@@ -1373,7 +1374,7 @@ PRIVATE :: GetVdWParam
     !
     ! Apply final normalization to veff integral...
     !
-    veff(ia)=normr*veff(ia)
+    veff(ia)=normr*veff_ia
     !
   END DO !iproc
   !
