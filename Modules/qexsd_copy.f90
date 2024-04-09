@@ -23,7 +23,7 @@ MODULE qexsd_copy
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
        qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
-       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue
+       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue, qexsd_copy_esm 
   !
 CONTAINS
   !-------------------------------------------------------------------------------
@@ -908,7 +908,29 @@ CONTAINS
        ! 
      END SUBROUTINE qexsd_copy_kpoints
      !
-
+  !
+  !---------------------------------------------------------------
+  SUBROUTINE qexsd_copy_esm( pbc_obj, bc, nfit, w, efield, a) 
+    !------------------------------------------------------------
+    USE qes_types_module, ONLY: outputPBC_type 
+    IMPLICIT NONE 
+    TYPE(outputPBC_type),INTENT(IN) :: pbc_obj 
+    CHARACTER(LEN=3),INTENT(OUT)    :: bc 
+    INTEGER,INTENT(OUT)             :: nfit 
+    REAL(DP),INTENT(OUT)             :: w 
+    REAL(DP),INTENT(OUT)             :: efield
+    REAL(DP),INTENT(OUT)             :: a 
+    ! 
+    IF (pbc_obj%esm_ispresent) THEN 
+      bc = TRIM(pbc_obj%esm%bc) 
+      nfit = pbc_obj%esm%nfit 
+      w = pbc_obj%esm%w 
+      efield = pbc_obj%esm%efield
+      a = pbc_obj%esm%a 
+    ELSE 
+      CALL errore("qexsd_copy_esm","esm object not present in input", 1) 
+    END IF 
+  END SUBROUTINE qexsd_copy_esm 
   !
   !---------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_rism3d( rism3d_obj, pseudo_dir, nsolV, solVs, molfile, ecutsolv )

@@ -41,7 +41,8 @@ MODULE pw_restart_new
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
        qexsd_copy_band_structure, qexsd_copy_magnetization, &
-       qexsd_copy_kpoints, qexsd_copy_rism3d, qexsd_copy_rismlaue
+       qexsd_copy_kpoints, qexsd_copy_rism3d, qexsd_copy_rismlaue, &
+       qexsd_copy_esm
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlfile
   !
@@ -558,8 +559,8 @@ MODULE pw_restart_new
             END IF 
             CALL qexsd_init_outputPBC(output_obj%boundary_conditions, TRIM(pbc_label) )  
             IF (do_comp_esm) THEN
-              CALL qexsd_init_esm(output_obj%boundary_conditions%esm, esm_bc, esm_nfit, esm_w, esm_efield, esm_a)
-              output_obj%boundary_conditions%esm_ispresent = .TRUE. 
+               CALL qexsd_init_esm(output_obj%boundary_conditions%esm, esm_bc, esm_nfit, esm_w, esm_efield, esm_a)
+               output_obj%boundary_conditions%esm_ispresent = .TRUE. 
             END IF  
          ENDIF
          !
@@ -1149,7 +1150,7 @@ MODULE pw_restart_new
       USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
            lxdm, ts_vdw, mbd_vdw, do_makov_payne 
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
-      USE esm,             ONLY : do_comp_esm
+      USE esm,             ONLY : do_comp_esm, esm_bc, esm_nfit, esm_w, esm_efield, esm_a
       USE martyna_tuckerman,ONLY: do_comp_mt 
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
               nspin_lsda, nspin_gga, nspin_mag, domag, lspinorb
@@ -1351,6 +1352,7 @@ MODULE pw_restart_new
          do_comp_esm   = .FALSE.
          do_cutoff_2D  = .FALSE.
       END IF
+      IF (do_comp_esm)  CALL qexsd_copy_esm(output_obj%boundary_conditions, esm_bc, esm_nfit, esm_w, esm_efield, esm_a) 
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
       !
