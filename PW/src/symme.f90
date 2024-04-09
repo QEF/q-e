@@ -818,6 +818,8 @@ gloop:    DO jg=iig,ngm_
     !
     USE kinds
     USE constants,   ONLY : tpi
+    USE noncollin_module, ONLY : colin_mag
+    USE io_global,       ONLY : stdout 
     !
     IMPLICIT NONE
     !
@@ -927,20 +929,39 @@ gloop:    DO jg=iig,ngm_
                                  g_(2,isg) * ft_(2,ns) + &
                                  g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), -SIN(arg), KIND=dp )
-                   DO is=1,nspin_lsda
-                      rhosum(is) = rhosum(is) + rhog_(isg, is) * fact
-                   END DO
+                   ! time-reversal for collinear case
+                   IF ( colin_mag .AND. (t_rev(invs(ns)) == 1) ) THEN
+                      ! WRITE ( stdout, * ) "nonsym, collinear and t_rev, npspin_lsda=", nspin_lsda
+                      rhosum(1) = rhosum(1) + rhog_(isg, 2) * fact
+                      rhosum(2) = rhosum(2) + rhog_(isg, 1) * fact
+                   ! other cases
+                   ELSE
+                      DO is=1,nspin_lsda
+                         ! WRITE( stdout, * ) "nonsym, collinear npspin_lsda=", nspin_lsda
+                         rhosum(is) = rhosum(is) + rhog_(isg, is) * fact
+                      END DO
+                   END IF
                    IF ( nspin_ == 4 ) &
                         magsum(:) = magsum(:) + magrot(:) * fact
                 ELSE
-                   DO is=1,nspin_lsda
-                      rhosum(is) = rhosum(is) + rhog_(isg, is)
-                   END DO
+                   ! time-reversal for collinear case
+                   IF ( colin_mag .AND. (t_rev(invs(ns)) == 1)) THEN
+                      ! WRITE ( stdout, * ) "symm, collinear and t_rev, npspin_lsda=", nspin_lsda
+                      rhosum(1) = rhosum(1) + rhog_(isg, 2)
+                      rhosum(2) = rhosum(2) + rhog_(isg, 1)
+                   ! other cases
+                   ELSE
+                      ! WRITE( stdout, * ) "symm, collinear npspin_lsda=", nspin_lsda
+                      DO is=1,nspin_lsda
+                         rhosum(is) = rhosum(is) + rhog_(isg, is)
+                      END DO
+                   END IF
                    IF ( nspin_ == 4 ) &
                         magsum(:) = magsum(:) + magrot(:)
                 END IF
              END DO
              !
+             WRITE( stdout, * ) "rhosum=", rhosum
              DO is=1,nspin_lsda
                 rhosum(is) = rhosum(is) / nsym
              END DO
