@@ -140,7 +140,7 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
               !
               IF ( updown ) THEN
                  !! spin direction: s_z up and down
-                 f1up = 1.0_dp; f1down = 0.0_dp; f2up = 1.0_dp; f2down = 0.0_dp
+                 f1up = 1.0_dp; f1down = 0.0_dp; f2up = 0.0_dp; f2down = 1.0_dp
               ELSE
                  !! spin direction for atom type nt along angle1 and angle2
                  CALL spinor_components ( angle1(nt), angle2(nt), f1up,f1down, f2up,f2down )
