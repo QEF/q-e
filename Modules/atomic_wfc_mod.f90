@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
-     noncolin, domag, angle1, angle2, starting_spin_angle, &
+     noncolin, updown, angle1, angle2, starting_spin_angle, &
      npwx, npol, natomwfc, wfcatom )
   !-----------------------------------------------------------------------
   !! This routine computes the superposition of atomic wavefunctions
@@ -40,8 +40,8 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   !! index of G in the k+G list
   LOGICAL, INTENT(IN) ::  noncolin
   !! true if calculation noncolinear
-  LOGICAL, INTENT(IN) :: domag
-  !! true if nonzero noncolinear magnetization
+  LOGICAL, INTENT(IN) :: updown
+  !! true if spin up and down noncolinear states are required
   LOGICAL, INTENT(IN) :: starting_spin_angle
   !! true if initial spin direction is set
   REAL(DP), INTENT(IN) :: angle1(nsp)
@@ -61,7 +61,7 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
              i0, i1, i2, i3
-  COMPLEX(DP) :: kphase
+  COMPLEX(DP) :: f1up, f1down, f2up, f2down, kphase
   REAL(DP)    :: arg, px, ux, vx, wx
   !
   REAL(DP) :: xk1, xk2, xk3, qgr
@@ -138,21 +138,29 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
            !
            IF ( noncolin ) THEN
               !
+              IF ( updown ) THEN
+                 !! spin direction: s_z up and down
+                 f1up = 1.0_dp; f1down = 0.0_dp; f2up = 1.0_dp; f2down = 0.0_dp
+              ELSE
+                 !! spin direction for atom type nt along angle1 and angle2
+                 CALL spinor_components ( angle1(nt), angle2(nt), f1up,f1down, f2up,f2down )
+              END IF
+              !
               IF ( upf(nt)%has_so ) THEN
                  !
-                 IF (starting_spin_angle.OR..NOT.domag) THEN
+                 IF (starting_spin_angle) THEN
                     CALL atomic_wfc_so ( npw, npwx, npol, natomwfc, nsp, nt, &
                          nb, lmax_wfc, ylm, chiq, sk, n_starting_wfc, wfcatom )
                  ELSE
                     CALL atomic_wfc_so_mag ( npw, npwx, npol, natomwfc, nsp, &
-                         nt,nb, angle1(nt),angle2(nt), lmax_wfc, ylm, chiq, sk,&
+                         nt,nb, f1up, f1down, f2up, f2down, lmax_wfc, ylm, chiq, sk,&
                          n_starting_wfc, wfcatom )
                  END IF
                  !
               ELSE
                  !
                  CALL atomic_wfc_nc ( npw, npwx, npol, natomwfc, nsp, &
-                         nt,nb, angle1(nt),angle2(nt), lmax_wfc, ylm, chiq, sk,&
+                         nt,nb, f1up, f1down, f2up, f2down, lmax_wfc, ylm, chiq, sk,&
                          n_starting_wfc, wfcatom )
                  !
               END IF
@@ -244,11 +252,11 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
   END SUBROUTINE atomic_wfc_so
   ! 
   SUBROUTINE atomic_wfc_so_mag( npw, npwx, npol, natomwfc, nsp, nt, &
-       nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+       nb, f1up, f1down, f2up, f2down, lmax_wfc, ylm, chiq, sk, &
        n_starting_wfc, wfcatom )
    !------------------------------------------------------------
    !
-   !! Spin-orbit case, magnetization along "angle1" and "angle2"
+   !! Spin-orbit case, magnetization along (f1up,f1down) and (f2up,f2down)
    !! In the magnetic case we always assume that magnetism is much larger
    !! than spin-orbit and average the wavefunctions at l+1/2 and l-1/2
    !! filling then the up and down spinors with the average wavefunctions,
@@ -263,14 +271,11 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
    REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
    COMPLEX(DP), INTENT(IN) :: sk(npw)
-   REAL(DP), INTENT(IN) :: angle1
-   !! angle theta of initial spin direction
-   REAL(DP), INTENT(IN) ::  angle2
-   !! angle phi of initial spin direction
+   COMPLEX(DP), INTENT(IN) :: f1up, f1down, f2up, f2down
    INTEGER, INTENT(INOUT) :: n_starting_wfc
    COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
    !
-   COMPLEX(DP) :: f1up, f1down, f2up, f2down, aux, lphase
+   COMPLEX(DP) :: aux, lphase
    REAL(DP) :: j
    INTEGER :: nc, ib, ig, l, m, lm
    !
@@ -298,8 +303,6 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    END IF
    !
    !  and construct the starting wavefunctions as in the noncollinear case.
-   !
-   CALL spinor_components ( angle1, angle2, f1up,f1down, f2up,f2down )
    !
    DO m = 1, 2*l+1
       lm = l**2+m
@@ -330,10 +333,10 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
   !
   !
   SUBROUTINE atomic_wfc_nc( npw, npwx, npol, natomwfc, nsp,  nt, &
-       nb, angle1, angle2, lmax_wfc, ylm, chiq, sk, &
+       nb,  f1up, f1down, f2up, f2down, lmax_wfc, ylm, chiq, sk, &
        n_starting_wfc, wfcatom )
    !
-   !! noncolinear case, magnetization along "angle1" and "angle2"
+   !! noncolinear case, magnetization along (f1up,f1down) and (f2up,f2down)
    !
    USE kinds,            ONLY : DP
    USE uspp_param,       ONLY : upf, nwfcm
@@ -343,20 +346,15 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
    REAL(DP), INTENT(IN) :: chiq(npw,nwfcm,nsp)
    REAL(DP), INTENT(IN) :: ylm(npw,(lmax_wfc+1)**2)
    COMPLEX(DP), INTENT(IN) :: sk(npw)
-   REAL(DP), INTENT(IN) :: angle1
-   !! angle theta of initial spin direction
-   REAL(DP), INTENT(IN) ::  angle2
-   !! angle phi of initial spin direction
+   COMPLEX(DP), INTENT(IN) :: f1up, f1down, f2up, f2down
    INTEGER, INTENT(INOUT) :: n_starting_wfc
    COMPLEX(DP), INTENT(INOUT) :: wfcatom(npwx,npol,natomwfc)
    !
-   COMPLEX(DP) :: f1up, f1down, f2up, f2down, aux, lphase
+   COMPLEX(DP) :: aux, lphase
    INTEGER :: m, lm, ig, l  
    !
    l = upf(nt)%lchi(nb)
    lphase = (0.d0,1.d0)**l
-   !
-   CALL spinor_components ( angle1, angle2, f1up,f1down, f2up,f2down )
    !
    DO m = 1, 2*l+1
       lm = l**2 + m

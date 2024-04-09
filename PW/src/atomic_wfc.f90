@@ -30,11 +30,14 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   !
   ! ... local variables
   !
+  LOGICAL :: starting_spin_angle_ = .false., updown = .false.
+  !
   CALL start_clock( 'atomic_wfc' )
   !
+  starting_spin_angle_ = starting_spin_angle .OR. .NOt.domag
   !$acc data present_or_copyout(wfcatom)
   CALL atomic_wfc_acc( xk(1,ik), ngk(ik), igk_k(1,ik), nat, nsp, ityp, tau, &
-       noncolin, domag, angle1, angle2, starting_spin_angle, &
+       noncolin, .false., angle1, angle2, starting_spin_angle_, &
        npwx, npol, natomwfc, wfcatom )
   !$acc end data
   !
