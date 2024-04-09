@@ -201,7 +201,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
 !        rho_sum = SUM(rho_1(:,is))
         !$acc parallel loop private(rho_sum) copy(rho_sum)
         do irho = 1, v_siz
-           rho_sum = rho_sum + rho_1(i,is)
+           rho_sum = rho_sum + rho_1(irho,is)
         enddo   
         !
 #if defined(__MPI)
@@ -387,7 +387,7 @@ CONTAINS
 
     IMPLICIT NONE
     !
-    INTEGER :: ibnd_start_gamma, ibnd_end_gamma, ibnd, ebnd
+    INTEGER :: ibnd_start_gamma, ibnd_end_gamma, ibnd
     INTEGER :: v_siz, incr, ir3, ioff, ioff_tg, nxyp, idx
     REAL(DP), ALLOCATABLE :: tg_rho(:)
     INTEGER :: nnr_siz, pnnr_siz, ir
@@ -414,9 +414,6 @@ CONTAINS
     DO ibnd = ibnd_start_gamma, ibnd_end_gamma, incr
        !
        ! FFT: evc1 -> psic
-       !
-       ebnd = ibnd
-       IF ( ibnd < nbnd ) ebnd = ebnd + 1
        !
        CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !

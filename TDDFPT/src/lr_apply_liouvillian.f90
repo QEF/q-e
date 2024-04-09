@@ -102,7 +102,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ALLOCATE( sevc1_new(npwx*npol,nbnd,nks))
   !
   nnr_siz= dffts%nnr
-!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) copyout(sevc1_new(1:npwx*npol,1:nbnd,1:nks)) create(spsi1(1:npwx, 1:nbnd)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1))
+!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) create(sevc1_new(1:npwx*npol,1:nbnd,1:nks), spsi1(1:npwx, 1:nbnd)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1))
   !
   d_deeq(:,:,:,:)=0.0d0
   !$acc kernels
