@@ -134,6 +134,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_scalarQuantity
     MODULE PROCEDURE qes_init_rism3d
     MODULE PROCEDURE qes_init_rismlaue
+    MODULE PROCEDURE qes_init_two_chem
     !
   END INTERFACE qes_init
   !
@@ -296,7 +297,7 @@ MODULE qes_init_module
                            dft, spin, bands, basis, electron_control, k_points_IBZ, ion_control,&
                            cell_control, symmetry_flags, boundary_conditions, fcp_settings, rism_settings,&
                            solvents, ekin_functional, external_atomic_forces, free_positions,&
-                           starting_atomic_velocities, electric_field, atomic_constraints, spin_constraints &
+                           starting_atomic_velocities, electric_field, atomic_constraints, spin_constraints, twoch_ &
                            )
     !
     IMPLICIT NONE
@@ -326,6 +327,7 @@ MODULE qes_init_module
     TYPE(electric_field_type),OPTIONAL,INTENT(IN) :: electric_field
     TYPE(atomic_constraints_type),OPTIONAL,INTENT(IN) :: atomic_constraints
     TYPE(spin_constraints_type),OPTIONAL,INTENT(IN) :: spin_constraints
+    TYPE(two_chem_type),OPTIONAL,INTENT(IN) :: twoch_
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -413,6 +415,12 @@ MODULE qes_init_module
       obj%spin_constraints = spin_constraints
     ELSE
       obj%spin_constraints_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(twoch_)) THEN
+      obj%twoch__ispresent = .TRUE. 
+      obj%twoch_ = twoch_
+    ELSE
+      obj%twoch__ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_input
@@ -3981,19 +3989,26 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_info
   !
   !
-  SUBROUTINE qes_init_outputPBC(obj, tagname, assume_isolated)
+  SUBROUTINE qes_init_outputPBC(obj, tagname, assume_isolated, esm)
     !
     IMPLICIT NONE
     !
     TYPE(outputPBC_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
+    TYPE(esm_type),OPTIONAL,INTENT(IN) :: esm
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%assume_isolated = assume_isolated
+    IF ( PRESENT(esm)) THEN
+      obj%esm_ispresent = .TRUE. 
+      obj%esm = esm
+    ELSE
+      obj%esm_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_outputPBC
   !
@@ -4164,7 +4179,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, wf_collected,&
                                     starting_k_points, nks, occupations_kind, ks_energies, nbnd,&
                                     nbnd_up, nbnd_dw, num_of_atomic_wfc, fermi_energy, highestOccupiedLevel,&
-                                    lowestUnoccupiedLevel, two_fermi_energies, smearing)
+                                    lowestUnoccupiedLevel, twochem, two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -4182,6 +4197,7 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
     REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
+    TYPE(two_chem_type),OPTIONAL,INTENT(IN) :: twochem
     REAL(DP), DIMENSION(2),OPTIONAL,INTENT(IN) :: two_fermi_energies
     TYPE(k_points_IBZ_type),INTENT(IN) :: starting_k_points
     INTEGER,INTENT(IN) :: nks
@@ -4239,6 +4255,12 @@ MODULE qes_init_module
       obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
     ELSE
       obj%lowestUnoccupiedLevel_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(twochem)) THEN
+      obj%twochem_ispresent = .TRUE. 
+      obj%twochem = twochem
+    ELSE
+      obj%twochem_ispresent = .FALSE.
     END IF
     IF ( PRESENT(two_fermi_energies)) THEN
       obj%two_fermi_energies_ispresent = .TRUE. 
@@ -5045,6 +5067,29 @@ MODULE qes_init_module
     END IF
     !
   END SUBROUTINE qes_init_rismlaue
+  !
+  !
+  SUBROUTINE qes_init_two_chem(obj, tagname, twochem, nbnd_cond, degauss_cond, nelec_cond)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(two_chem_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    LOGICAL,INTENT(IN) :: twochem
+    INTEGER,INTENT(IN) :: nbnd_cond
+    REAL(DP),INTENT(IN) :: degauss_cond
+    INTEGER,INTENT(IN) :: nelec_cond
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%twochem = twochem
+    obj%nbnd_cond = nbnd_cond
+    obj%degauss_cond = degauss_cond
+    obj%nelec_cond = nelec_cond
+    !
+  END SUBROUTINE qes_init_two_chem
   !
   !
 END MODULE qes_init_module
