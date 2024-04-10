@@ -23,9 +23,9 @@ then
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
            upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
-           EPW/src XSpectra/src NEB/src TDDFPT/src \
+           EPW/src EPW/ZG/src XSpectra/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src KCW/src KCW/PP " 
+	   GWW/simple_bse GWW/simple_ip QEHeat/src KCW/src KCW/PP "
           
 elif
     test $1 = "-addson" 
@@ -57,6 +57,7 @@ for dir in $dirs; do
     # (directory DIR itself should not be listed in DEPENDS)
     LEVEL1=..
     LEVEL2=../..
+    LEVEL3=../../..
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
@@ -91,10 +92,12 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/dft-d3" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src | KCW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
-        KCW/PP )
+	KCW/PP )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL1/src" ;;
-        EPW/src | QEHeat/src )
-             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
+	EPW/src | QEHeat/src )
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;;
+	EPW/ZG/src )
+	     DEPENDS="$LEVEL3/PW/src $LEVEL3/LR_Modules $LEVEL3/PHonon/PH $LEVEL3/Modules $LEVEL3/upflib $LEVEL3/UtilXlib" ;;
 	GWW/head )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
 	GWW/bse )
