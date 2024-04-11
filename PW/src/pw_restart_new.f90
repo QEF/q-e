@@ -309,11 +309,11 @@ MODULE pw_restart_new
                         SCF_HAS_CONVERGED = scf_has_converged, &
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
                         OPTIMIZATION_HAS_CONVERGED = conv_ions, &
-                        N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+                        N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor, WF_COLLECTED=wf_collect)
          ELSE
              call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
-                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2)
+                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2, WF_COLLECTED=wf_collect)
          END IF
          output_obj%convergence_info_ispresent = .TRUE.
          !
@@ -351,7 +351,7 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
          !         
          CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp, &
-              nat, alat*tau, alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
+              nat, alat*tau, alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav, natomwfc)
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES
@@ -1207,7 +1207,7 @@ MODULE pw_restart_new
       !
       ! ... Now read all needed variables from xml objects
       !
-      wfc_is_collected = output_obj%band_structure%wf_collected
+      wfc_is_collected = output_obj%convergence_info%wf_collected 
       lvalid_input = (TRIM(input_obj%tagname) == "input")
       !
       CALL qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
@@ -1223,7 +1223,7 @@ MODULE pw_restart_new
       !! tau and ityp are allocated inside qexsd_copy_atomic_structure
       !
       CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
-           atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
+           atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav, natomwfc )
       !
       !! More initializations needed for atomic structure:
       !! bring atomic positions and crystal axis into "alat" units;
@@ -1285,7 +1285,7 @@ MODULE pw_restart_new
       !! Band structure section
       !! et and wg are allocated inside qexsd_copy_band_structure
       CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
-           nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
+           nkstot, isk, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
            wk, wg, ef, ef_up, ef_dw, et )
       ! convert to Ry
       ef = ef*e2
