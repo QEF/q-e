@@ -91,7 +91,7 @@ SUBROUTINE re_diagonalize ( )
   USE gvecs,      ONLY : doublegrid
   USE uspp,       ONLY : nkb, vkb
   USE uspp_init,  ONLY : init_us_2
-  USE wvfct,      ONLY : npwx, nbnd, current_k
+  USE wvfct,      ONLY : npwx, nbnd, current_k, et
   USE mp_bands,   ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   USE wavefunctions,  ONLY : evc, psic
   USE pw_restart_new, ONLY : read_collected_wfc
@@ -104,6 +104,7 @@ SUBROUTINE re_diagonalize ( )
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   INTEGER :: ik, npw
+  integer :: i,j
   !
   ALLOCATE( aux(npwx, nbnd ) )
   ALLOCATE( hc( nbnd, nbnd) )    
@@ -127,6 +128,15 @@ SUBROUTINE re_diagonalize ( )
      !
      CALL h_psi( npwx, npw, nbnd, evc, aux )
      CALL calbec ( npw, evc, aux, hc )
+     print '(4(2x,2e12.4))', ( ( hc(i,j),i=1,nbnd),j=1,nbnd)
+     do i=1,nbnd
+        en(i) = 0.0
+        do j=1,npw
+           aux(j,i) = aux(j,i)-et(i,ik)*evc(j,i)
+           en(i) = en(i) + aux(j,i)*conjg(aux(j,i))
+        end do
+     end do
+     print '("|(H-e)\psi|^2=",4e12.4)',(en(i), i=1,nbnd)
      CALL s_psi( npwx, npw, nbnd, evc, aux )
      CALL calbec ( npw, evc, aux, sc )
      !

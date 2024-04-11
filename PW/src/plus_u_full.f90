@@ -280,35 +280,3 @@ SUBROUTINE comp_dspinldau()
    RETURN
    !
 END SUBROUTINE comp_dspinldau   
-!
-!
-!--------------------------------------------------------------------------
-SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
-  !-----------------------------------------------------------------------
-  !! Wrapper routine like "atomic_wfc", for the noncolinear case,
-  !! when pure spin-up or spin-down atomic wavefunctions are required
-  !
-  USE kinds,            ONLY : DP
-  USE ions_base,        ONLY : nat, tau, nsp, ityp
-  USE basis,            ONLY : natomwfc
-  USE klist,            ONLY : xk, ngk, igk_k
-  USE wvfct,            ONLY : npwx
-  USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
-  !! Note: angle1 and angle2 are not used
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: ik
-  !! the k-point index
-  COMPLEX(DP), INTENT(OUT) :: wfcatom(npwx,npol,natomwfc)
-  !! the superposition of atomic wavefunctions (up or down)
-  !
-  CALL start_clock( 'atomic_wfc' )
-  !$acc data present_or_copyout(wfcatom)
-  CALL atomic_wfc_acc( xk(1,ik), ngk(ik), igk_k(1,ik), nat, nsp, ityp, tau, &
-       noncolin, .true., angle1, angle2, .false., &
-       npwx, npol, natomwfc, wfcatom )
-  !$acc end data
-  CALL stop_clock( 'atomic_wfc' )
-  !
-END SUBROUTINE atomic_wfc_nc_updown  
