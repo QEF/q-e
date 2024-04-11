@@ -1004,21 +1004,15 @@ MODULE paw_onecenter
       ENDDO
     ENDDO
     !
-    IF (radial_grad_style/=0) THEN
-        !$acc update self(F_lm)
-    ENDIF
-    !
     ! ... Compute partial radial derivative d/dr
     DO is = 1, nspin_gga
       DO lm = 1, lmaxq_out**2
         ! ... Derive along \hat{r} (F already contains a r**2 factor, otherwise
         ! ... it may be better to expand (1/r**2) d(A*r**2)/dr = dA/dr + 2A/r)
-        CALL radial_gradient( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style )
-        IF (radial_grad_style/=0) THEN
-          !$acc update device(aux)
-        ENDIF
+        CALL radial_gradient( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style, .TRUE. )
+        !
         ! ... Sum it in the divergence: it is already in the right Y_lm form
-        
+        !
         !$acc parallel loop present(g(i%t:i%t))
         DO k = 1, i%m
           div_F_lm(k,lm,is) = div_F_lm(k,lm,is) + aux(k)*g(i%t)%rm2(k)
@@ -1099,19 +1093,11 @@ MODULE paw_onecenter
         ENDDO
       ENDDO
       !
-      IF (radial_grad_style/=0) THEN
-        !$acc update self(aux)
-      ENDIF
-      !
       DO ix = 1, nx_loc
         ixs = (ix-1)*i%m+1
         ixe = ix*i%m
-        CALL radial_gradient( aux(ixs:ixe), aux2(ixs:ixe), g(i%t)%r, i%m, radial_grad_style )
+        CALL radial_gradient( aux(ixs:ixe), aux2(ixs:ixe), g(i%t)%r, i%m, radial_grad_style, .TRUE. )
       ENDDO
-      !
-      IF (radial_grad_style/=0) THEN
-        !$acc update device(aux2)
-      ENDIF
       !
       !$acc parallel loop collapse(2) present(rad(i%t:i%t),g(i%t:i%t))
       DO ix = 1, nx_loc
@@ -1751,7 +1737,7 @@ MODULE paw_onecenter
                                                       ! radial slice of rho)
     REAL(DP), ALLOCATABLE :: dmuxc(:,:,:)             ! fxc in the lsda case
     !
-    INTEGER :: is, js, ix, k, ixk                     ! counters on directions 
+    INTEGER :: is, js, ix, k, ixk, ix0                ! counters on directions 
                                                       ! and radial grid
     INTEGER :: im_sum
     !
@@ -1764,7 +1750,7 @@ MODULE paw_onecenter
     im_sum = i%m*nx_loc
     !
     ALLOCATE( rho_rad(im_sum,nspin_mag) )
-    ALLOCATE( v_rad(i%m,rad(i%t)%nx,nspin_mag) )
+    ALLOCATE( v_rad(i%m,nx_loc,nspin_mag) )
     ALLOCATE( dmuxc(im_sum,nspin_mag,nspin_mag) )
     !$acc enter data create( v_rad )
     !$acc enter data create( rho_rad, dmuxc )
@@ -1799,8 +1785,9 @@ MODULE paw_onecenter
       !$acc parallel loop collapse(2)
       DO ix = ix_s, ix_e
         DO k = 1, i%m
+          ix0 = ix-ix_s+1
           ixk = (ix-ix_s)*i%m+k
-          v_rad(k,ix,1) = dmuxc(ixk,1,1)
+          v_rad(k,ix0,1) = dmuxc(ixk,1,1)
         ENDDO
       ENDDO
     ENDIF
@@ -1814,16 +1801,17 @@ MODULE paw_onecenter
     !$acc parallel loop collapse(2) present(g(i%t:i%t))
     DO ix = ix_s, ix_e
       DO k = 1, i%m
+        ix0 = ix-ix_s+1
         ixk = (ix-ix_s)*i%m+k
         IF (nspin_mag == 1) THEN
-           v_rad(k,ix,1) = v_rad(k,ix,1)*rho_rad(ixk,1)*g(i%t)%rm2(k) 
+           v_rad(k,ix0,1) = v_rad(k,ix0,1)*rho_rad(ixk,1)*g(i%t)%rm2(k) 
         ELSE
            !$acc loop seq
            DO is = 1, nspin_mag
-              v_rad(k,ix,is)=0.0_DP
+              v_rad(k,ix0,is)=0.0_DP
               !$acc loop seq
               DO js = 1, nspin_mag
-                 v_rad(k,ix,is) = v_rad(k,ix,is) + &
+                 v_rad(k,ix0,is) = v_rad(k,ix0,is) + &
                                   dmuxc(ixk,is,js)*rho_rad(ixk,js)*g(i%t)%rm2(k) 
               ENDDO
            ENDDO
@@ -2079,9 +2067,9 @@ MODULE paw_onecenter
              !
              IF ( r(ixk,1)+r(ixk,2) > eps ) THEN
                 dsvxc_s(1,1) = v2x(ixk,1) + v2c(ixk,1)
-                dsvxc_s(1,2) = v2c(ixk,1)
-                dsvxc_s(2,1) = v2c(ixk,1)
-                dsvxc_s(2,2) = v2x(ixk,2) + v2c(ixk,1)
+                dsvxc_s(1,2) = v2c_ud(ixk)
+                dsvxc_s(2,1) = v2c_ud(ixk)
+                dsvxc_s(2,2) = v2x(ixk,2) + v2c(ixk,2)
              ELSE
                 dsvxc_s = 0._DP
              ENDIF

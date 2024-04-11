@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------------
-SUBROUTINE radial_gradient( f, gf, r, mesh, iflag )
+SUBROUTINE radial_gradient( f, gf, r, mesh, iflag, offld_ )
   !---------------------------------------------------------------------------
   !! This subroutine calculates the derivative with respect to r of a
   !! radial function defined on the mesh r.
@@ -23,24 +23,29 @@ SUBROUTINE radial_gradient( f, gf, r, mesh, iflag )
   INTEGER, INTENT(IN) :: mesh, iflag
   REAL(DP), INTENT(IN) :: f(mesh), r(mesh)
   REAL(DP), INTENT(OUT) :: gf(mesh)
+  LOGICAL, INTENT(IN), OPTIONAL :: offld_
   !
   INTEGER :: i, j, k, imin, npoint
   REAL(DP) :: delta, b(5), faux(6), raux(6)
+  LOGICAL :: offld
   !
   ! ... This formula is used in the all-electron case.
   !
+  offld = .FALSE.
+  IF (PRESENT(offld_)) offld = offld_
+  !
   IF (iflag==0) THEN
      !
-     !$acc data copyin(f,r) copyout(gf)
+     !$acc data copyin(f,r) copyout(gf) if(offld)
      !
-     !$acc parallel loop
+     !$acc parallel loop if(offld)
      DO i = 2, mesh-1
         gf(i) = ( (r(i+1)-r(i))**2*(f(i-1)-f(i)) &
                    -(r(i-1)-r(i))**2*(f(i+1)-f(i)) ) &
                    / ((r(i+1)-r(i))*(r(i-1)-r(i))*(r(i+1)-r(i-1)))
      ENDDO
      !
-     !$acc parallel
+     !$acc parallel if(offld)
      gf(mesh) = 0.0_DP
      gf(1) = gf(2) + (gf(3)-gf(2)) * (r(1)-r(2)) / (r(3)-r(2))
      !$acc end parallel
@@ -58,6 +63,8 @@ SUBROUTINE radial_gradient( f, gf, r, mesh, iflag )
      ! ... At larger r the distances between points become larger than delta 
      ! ... and this formula coincides with the previous one.
      ! ... (ADC 08/2007)
+     !
+     !$acc update self(f) if(offld)
      !
      delta = 0.00001_DP
      imin = 1
@@ -118,6 +125,8 @@ SUBROUTINE radial_gradient( f, gf, r, mesh, iflag )
     DO i = 1, imin
        gf(i) = b(1)+r(i)*(b(2)+r(i)*(b(3)+r(i)*b(4)))
     ENDDO
+    !
+    !$acc update device(gf) if(offld)
     !
   ENDIF
   !
