@@ -601,6 +601,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%nat_ispresent, ionode_id, comm)
     IF (obj%nat_ispresent) &
       CALL mp_bcast(obj%nat, ionode_id, comm)
+    CALL mp_bcast(obj%num_of_atomic_wfc_ispresent, ionode_id, comm)
+    IF (obj%num_of_atomic_wfc_ispresent) &
+      CALL mp_bcast(obj%num_of_atomic_wfc, ionode_id, comm)
     CALL mp_bcast(obj%alat_ispresent, ionode_id, comm)
     IF (obj%alat_ispresent) &
       CALL mp_bcast(obj%alat, ionode_id, comm)
@@ -2448,6 +2451,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%opt_conv_ispresent, ionode_id, comm)
     IF (obj%opt_conv_ispresent) &
       CALL qes_bcast_opt_conv(obj%opt_conv, ionode_id, comm)
+    CALL mp_bcast(obj%wf_collected_ispresent, ionode_id, comm)
+    IF (obj%wf_collected_ispresent) &
+      CALL mp_bcast(obj%wf_collected, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_convergence_info
   !
@@ -2729,10 +2735,6 @@ MODULE qes_bcast_module
     IF (obj%nbnd_dw_ispresent) &
       CALL mp_bcast(obj%nbnd_dw, ionode_id, comm)
     CALL mp_bcast(obj%nelec, ionode_id, comm)
-    CALL mp_bcast(obj%num_of_atomic_wfc_ispresent, ionode_id, comm)
-    IF (obj%num_of_atomic_wfc_ispresent) &
-      CALL mp_bcast(obj%num_of_atomic_wfc, ionode_id, comm)
-    CALL mp_bcast(obj%wf_collected, ionode_id, comm)
     CALL mp_bcast(obj%fermi_energy_ispresent, ionode_id, comm)
     IF (obj%fermi_energy_ispresent) &
       CALL mp_bcast(obj%fermi_energy, ionode_id, comm)

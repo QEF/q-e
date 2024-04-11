@@ -508,6 +508,7 @@ MODULE qes_reset_module
     obj%crystal_positions_ispresent = .FALSE.
     CALL qes_reset_cell(obj%cell)
     obj%nat_ispresent = .FALSE.
+    obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%alat_ispresent = .FALSE.
     obj%bravais_index_ispresent = .FALSE.
     obj%alternative_axes_ispresent = .FALSE.
@@ -1809,6 +1810,7 @@ MODULE qes_reset_module
     IF (obj%opt_conv_ispresent) &
       CALL qes_reset_opt_conv(obj%opt_conv)
     obj%opt_conv_ispresent = .FALSE.
+    obj%wf_collected_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_convergence_info
   !
@@ -2003,7 +2005,6 @@ MODULE qes_reset_module
     obj%nbnd_ispresent = .FALSE.
     obj%nbnd_up_ispresent = .FALSE.
     obj%nbnd_dw_ispresent = .FALSE.
-    obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
     obj%lowestUnoccupiedLevel_ispresent = .FALSE.
