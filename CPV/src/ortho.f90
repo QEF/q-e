@@ -209,7 +209,6 @@ CONTAINS
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     use_parallel_diag
-      USE control_flags,      ONLY: diagonalize_on_host
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
       USE mp_world,           ONLY: mpime
@@ -312,7 +311,8 @@ CONTAINS
                CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
             END IF
          ELSE IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            IF( diagonalize_on_host ) THEN  !  tune here
+#if defined(__diagonalize_on_host)
+!! FIXME: is this case working? useful?
                ALLOCATE( rhos_h, SOURCE = rhos )
                ALLOCATE( rhod_h, MOLD = rhod )
                ALLOCATE( s_h, MOLD = s )
@@ -320,14 +320,14 @@ CONTAINS
                CALL dev_memcpy( s, s_h )
                CALL dev_memcpy( rhod, rhod_h )
                DEALLOCATE( rhos_h, rhod_h, s_h )
-            ELSE
+#else
                CALL collect_matrix( wrk, rhos, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
                IF( idesc(LAX_DESC_IC) == 1 .AND. idesc(LAX_DESC_IR) == 1 ) THEN
                   CALL laxlib_diagonalize( nss, wrk, rhod, stmp, info )
                END IF 
                CALL distribute_matrix( stmp, s, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
                CALL mp_bcast( rhod, 0, idesc(LAX_DESC_COMM) )
-            END IF
+#endif
          END IF
 #else
          CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )
