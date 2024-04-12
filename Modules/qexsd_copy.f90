@@ -149,7 +149,6 @@ CONTAINS
     IF ( atomic_structure%num_of_atomic_wfc_ispresent ) THEN 
       natomwfc = atomic_structure%num_of_atomic_wfc
     ELSE 
-      call infomsg ("qexsd_copy:natomwfc not read","xml change for pw >=7.3.1") 
       natomwfc = 0 
     END IF   
     alat = atomic_structure%alat 
