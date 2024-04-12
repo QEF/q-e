@@ -126,7 +126,7 @@ CONTAINS
 
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_atomic_structure (atomic_structure, nsp, atm, &
-       nat, tau, ityp, alat, a1, a2, a3, ibrav )
+       nat, tau, ityp, alat, a1, a2, a3, ibrav, natomwfc )
   !--------------------------------------------------------------------------
     
     USE qes_types_module, ONLY : atomic_structure_type
@@ -137,7 +137,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nsp 
     CHARACTER(LEN = 6), INTENT(in) :: atm(:)
     !
-    INTEGER, INTENT(out)  :: nat, ibrav
+    INTEGER, INTENT(out)  :: nat, ibrav, natomwfc
     REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:)
     INTEGER, INTENT(inout),  ALLOCATABLE :: ityp(:)
     REAL(dp), INTENT(inout), ALLOCATABLE :: tau(:,:)
@@ -146,6 +146,11 @@ CONTAINS
     INTEGER :: iat, idx, isp
     !
     nat = atomic_structure%nat 
+    IF ( atomic_structure%num_of_atomic_wfc_ispresent ) THEN 
+      natomwfc = atomic_structure%num_of_atomic_wfc
+    ELSE 
+      natomwfc = 0 
+    END IF   
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
@@ -301,7 +306,7 @@ CONTAINS
     npw_g     = basis_set%npwx
     !
     b1 =  basis_set%reciprocal_lattice%b1
-   !  b2 =  basis_set%reciprocal_lattice%b2
+    b2 =  basis_set%reciprocal_lattice%b2
     b3 =  basis_set%reciprocal_lattice%b3
     !
   END SUBROUTINE qexsd_copy_basis_set
@@ -584,7 +589,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
+         isk, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
          ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
@@ -595,7 +600,7 @@ CONTAINS
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
       LOGICAL, INTENT(out) :: lsda
-      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, nbnd_up, nbnd_dw, &
+      INTEGER, INTENT(out) :: nkstot, nbnd, nbnd_up, nbnd_dw, &
               isk(:)
       REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, xk(:,:), wk(:)
       REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
@@ -604,8 +609,7 @@ CONTAINS
       INTEGER :: ik
       ! 
       lsda = band_struct_obj%lsda
-      nkstot = band_struct_obj%nks 
-      natomwfc = band_struct_obj%num_of_atomic_wfc
+      nkstot = band_struct_obj%nks  
       !
       IF ( lsda) THEN
          !

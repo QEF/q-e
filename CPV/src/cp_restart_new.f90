@@ -760,7 +760,7 @@ MODULE cp_restart_new
 
       ALLOCATE ( tau_(3,nat), ityp_(nat) )
       CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
-           atm, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_ )
+           atm, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_, int_dum )
       IF ( nat_ /= nat ) CALL errore ('cp_readfile', 'wrong nat read', 1)
       !
       CALL recips( a1_, a2_, a3_, b1, b2, b3 )
@@ -802,7 +802,7 @@ MODULE cp_restart_new
       nbnd_ = nupdwn(1)
       ALLOCATE( occ_(nbnd_, nspin), et_(nbnd_, nspin) )
       CALL qexsd_copy_band_structure( output_obj%band_structure, lsda_, &
-           nk_, isk_, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec_, xk, &
+           nk_, isk_, nbnd, nbnd_up, nbnd_dw, nelec_, xk, &
            wk_, occ_, ef, ef_up, ef_dw, et_ )
       ! FIXME: in the call, the same array is passed as both occ0 and occm!
       DO iss = 1, nspin
@@ -1479,6 +1479,7 @@ MODULE cp_restart_new
     REAL(DP)         :: a1_(3), a2_(3), a3_(3)
     REAL(DP)         :: b1_(3), b2_(3), b3_(3)
     REAL(DP), ALLOCATABLE :: tau_(:,:) 
+    INTEGER          :: natomwfc_
     CHARACTER(LEN=6) :: atm_(ntypx)
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
@@ -1560,7 +1561,7 @@ MODULE cp_restart_new
        CALL qes_read(simpleNode, output_obj) 
        !
        CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp_, &
-            atm_, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_ )
+            atm_, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_ , natomwfc_)
        IF ( nat_ /= nat ) CALL errore ('cp_readfile', 'wrong nat read', 1)
        CALL qes_reset (output_obj)
        !

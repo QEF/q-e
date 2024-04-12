@@ -1436,6 +1436,8 @@ MODULE qes_types_module
     !
     INTEGER :: nat
     LOGICAL :: nat_ispresent = .FALSE.
+    INTEGER :: num_of_atomic_wfc
+    LOGICAL :: num_of_atomic_wfc_ispresent = .FALSE.
     REAL(DP) :: alat
     LOGICAL :: alat_ispresent = .FALSE.
     INTEGER :: bravais_index
@@ -1735,6 +1737,8 @@ MODULE qes_types_module
     TYPE(scf_conv_type) :: scf_conv
     LOGICAL  :: opt_conv_ispresent = .FALSE.
     TYPE(opt_conv_type) :: opt_conv
+    LOGICAL  :: wf_collected_ispresent = .FALSE.
+    LOGICAL :: wf_collected
     !
   END TYPE convergence_info_type
   !
@@ -1803,9 +1807,6 @@ MODULE qes_types_module
     LOGICAL  :: nbnd_dw_ispresent = .FALSE.
     INTEGER :: nbnd_dw
     REAL(DP) :: nelec
-    LOGICAL  :: num_of_atomic_wfc_ispresent = .FALSE.
-    INTEGER :: num_of_atomic_wfc
-    LOGICAL :: wf_collected
     LOGICAL  :: fermi_energy_ispresent = .FALSE.
     REAL(DP) :: fermi_energy
     LOGICAL  :: highestOccupiedLevel_ispresent = .FALSE.
