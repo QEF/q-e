@@ -338,7 +338,7 @@ SUBROUTINE alloc_neighborhood()
         max_num_neighbors = neighood(i)%num_neigh
      ENDIF
      !
-     ALLOCATE (neighood(i)%neigh(1:neighood(i)%num_neigh))
+     IF (.NOT.ALLOCATED(neighood(i)%neigh)) ALLOCATE (neighood(i)%neigh(1:neighood(i)%num_neigh))
      ! 
      viz = 0
      !
@@ -785,7 +785,7 @@ SUBROUTINE alloc_atom_pos()
   INTEGER :: na, ipol
   ! counters on atoms and coordinates
   !
-  ALLOCATE(atom_pos(nat,3))
+  IF (.NOT.ALLOCATED(atom_pos)) ALLOCATE(atom_pos(nat,3))
   !
   DO na = 1, nat
      DO ipol = 1, 3

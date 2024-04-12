@@ -439,11 +439,11 @@ CONTAINS
        !
        ! The allocation should be moved into scf_mod ?
        !
-       ALLOCATE ( v_nsg ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( nsg   ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( phase_fac(nat*num_uc))
-       ALLOCATE ( ll(ldmx_tot, ntyp))
+       IF (.NOT.ALLOCATED(v_nsg))     ALLOCATE ( v_nsg ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
+       IF (.NOT.ALLOCATED(nsg))       ALLOCATE ( nsg   ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
+       IF (.NOT.ALLOCATED(nsgnew))    ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
+       IF (.NOT.ALLOCATED(phase_fac)) ALLOCATE ( phase_fac(nat*num_uc))
+       IF (.NOT.ALLOCATED(ll))        ALLOCATE ( ll(ldmx_tot, ntyp))
        !
        ! ll is a label of all the Hubbard states telling the l of that states. 
        ! It is equal to Hubbard_l for the first 2*Hubbard_l+1 states, 
