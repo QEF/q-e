@@ -14,7 +14,6 @@ addusdens1d.o \
 add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
-atomic_wfc_nc_proj.o \
 chdens_module.o \
 chdens_bspline.o \
 chdens_bspline_sphere.o \

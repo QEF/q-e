@@ -427,7 +427,7 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
          ! The layout of the wfc is different:
          ! in cp it is the equivalent of (npw, nbnd, nspin ), 
          ! while in pw is (npwx, nspin, nbnd)
-         real(dp) :: xk(3), angle1, angle2
+         real(dp) :: xk(3), angle1(nsp), angle2(nsp)
          integer  :: i, ipol, sh(2)
          integer, allocatable :: igk(:)
    
@@ -447,7 +447,7 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
          end do
          
          call atomic_wfc_acc( xk, npw, igk, nat, nsp, ityp, tau, &
-              .false., .false.,  angle1, angle2, .false., &
+              .false., .false., .false.,  angle1, angle2, .false., &
               npw, 1, natomwfc, wfcatom )
          !$acc update host (wfcatom)
    

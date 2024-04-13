@@ -446,7 +446,7 @@ MODULE paw_onecenter
     ! ... local variables
     !
     REAL(DP), ALLOCATABLE :: rho_loc(:,:)       ! local density (workspace), up and down
-    REAL(DP) :: v_rad(i%m,rad(i%t)%nx,nspin)    ! radial potential (to be integrated)
+    REAL(DP), ALLOCATABLE :: v_rad(:,:,:)       ! radial potential (to be integrated)
     REAL(DP), ALLOCATABLE :: g_rad(:,:,:)       ! radial potential
 
     REAL(DP), ALLOCATABLE :: rho_rad(:,:)       ! workspace (only one radial slice of rho)
@@ -479,6 +479,7 @@ MODULE paw_onecenter
        ALLOCATE( g_rad(i%m,rad(i%t)%nx,nspin) )
        g_rad = 0.0_DP
     ENDIF
+    ALLOCATE (v_rad(i%m,rad(i%t)%nx,nspin))
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid, &
@@ -626,6 +627,7 @@ MODULE paw_onecenter
     ! Recompose the sph. harm. expansion
     CALL PAW_rad2lm( i, v_rad, v_lm, i%l, nspin_mag )
     !
+    DEALLOCATE( v_rad )
     IF ( with_small_so ) THEN
        CALL PAW_rad2lm( i, g_rad, g_lm, i%l, nspin_mag )
        DEALLOCATE( g_rad )
@@ -975,8 +977,8 @@ MODULE paw_onecenter
     !
     ! ... local variables
     !
-    REAL(DP) :: div_F_rad(i%m,rad(i%t)%nx,nspin_gga) ! div(F) on rad. grid
-    REAL(DP) :: aux(i%m)!,aux2(i%m)                  ! workspace
+    REAL(DP), ALLOCATABLE :: div_F_rad(:,:,:)     ! div(F) on rad. grid
+    REAL(DP), ALLOCATABLE :: aux(:)               ! workspace
     ! counters on: spin, angular momentum, radial grid point:
     INTEGER :: is, lm, ix
     !
@@ -997,6 +999,7 @@ MODULE paw_onecenter
     !
     ! phi component
     !
+    ALLOCATE ( div_F_rad(i%m,rad(i%t)%nx,nspin_gga), aux(i%m) )
     div_F_rad = 0.0_DP
     !
     DO is = 1, nspin_gga
@@ -1050,6 +1053,7 @@ MODULE paw_onecenter
         div_F_lm(1:i%m,lm,is) = div_F_lm(1:i%m,lm,is) + aux(1:i%m)
       ENDDO
     ENDDO
+    DEALLOCATE ( aux, div_F_rad )
     !
     IF (TIMING) CALL stop_clock( 'PAW_div' )
     !
