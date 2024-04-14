@@ -38,8 +38,8 @@ SUBROUTINE clean_pw( lflag )
   USE symme,                ONLY : sym_rho_deallocate
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE uspp,                 ONLY : deallocate_uspp
-  USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
+  USE atwfc_mod,            ONLY : deallocate_tab_atwfc
   USE m_gth,                ONLY : deallocate_gth
   USE ldaU,                 ONLY : deallocate_hubbard
   USE extfield,             ONLY : forcefield, forcegate
@@ -155,7 +155,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  CALL deallocate_uspp_data()
+  CALL deallocate_tab_atwfc()
   CALL deallocate_uspp() 
   !
   CALL deallocate_gth( lflag ) 

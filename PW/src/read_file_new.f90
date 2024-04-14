@@ -269,6 +269,7 @@ SUBROUTINE post_xml_init (  )
   USE rism_module,          ONLY : rism_tobe_alive, rism_pot3d
   USE rism3d_facade,        ONLY : lrism3d, rism3d_initialize, rism3d_read_to_restart
   USE xc_lib,               ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  USE atwfc_mod,            ONLY : init_tab_atwfc
   USE beta_mod,             ONLY : init_tab_beta
   USE klist,                ONLY : qnorm
   !

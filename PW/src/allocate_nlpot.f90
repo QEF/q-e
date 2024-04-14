@@ -19,7 +19,6 @@ SUBROUTINE allocate_nlpot
   !
   !! Computes the following global quantities:  
   !! * nqx: number of points of the interpolation table
-  !! * nqxq: as above, for q-function interpolation table
   !
   USE control_flags,    ONLY : tqr, use_gpu
   USE ions_base,        ONLY : nat
@@ -29,7 +28,7 @@ SUBROUTINE allocate_nlpot
   USE noncollin_module, ONLY : noncolin, lspinorb
   USE gvect,            ONLY : ecutrho
   USE gvecw,            ONLY : ecutwfc
-  USE uspp_data,        ONLY : dq, nqx, nqxq, allocate_uspp_data
+  USE atwfc_mod,        ONLY : dq, nqx, allocate_tab_atwfc
   USE uspp,             ONLY : allocate_uspp
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nsp, nbetam, nwfcm
   IMPLICIT NONE
@@ -41,19 +40,11 @@ SUBROUTINE allocate_nlpot
   !
   call allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
   !
-  ! This routine is called also by the phonon code, in which case it should
-  ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|
-  !
-  nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
-  !
-  ! Calculate dimensions for array tab (including a possible factor
+  ! Calculate dimensions for array tab_atwfc (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)
   !
   nqx = INT( (SQRT(ecutwfc) / dq + 4) * cell_factor )
-  !
-  ! uspp_data  actual allocation
-  !
-  call allocate_uspp_data(use_gpu,nqxq,nqx,nbetam,nwfcm,lmaxq,nsp)
+  call allocate_tab_atwfc( nqx, nwfcm, nsp )
   !
   return
   !

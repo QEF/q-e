@@ -407,9 +407,10 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
          USE kinds,        ONLY : DP
          USE uspp_param,   ONLY : nwfcm
          USE mp_global,    ONLY : intra_bgrp_comm
-         USE uspp_data,    ONLY : nqx, tab_at, dq
          USE gvecw,        ONLY : ecutwfc
          USE upf_ions,     ONLY : n_atom_wfc
+         USE atwfc_mod,    ONLY : allocate_tab_atwfc, init_tab_atwfc, &
+                                  deallocate_tab_atwfc, nqx, dq
 
          IMPLICIT NONE
          !
@@ -434,11 +435,11 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
          ! gamma point only
          xk=0.d0
          nqx = INT( (SQRT(ecutwfc) / dq + 4) * 1.d0 )
-         allocate(tab_at(nqx,nwfcm,nsp))
+         call allocate_tab_atwfc(nqx,nwfcm,nsp)
          natomwfc = n_atom_wfc ( nat, ityp )
          allocate ( wfcatom(npw, 1, natomwfc) )
          allocate (igk (npw) )
-         !$acc data create(tab_at, wfcatom, igk)
+         !$acc data create(wfcatom, igk)
          !
          call init_tab_atwfc(omega, intra_bgrp_comm)
          !$acc parallel loop
@@ -462,6 +463,6 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
          !$acc end data
          deallocate (igk)
          deallocate (wfcatom)
-         deallocate (tab_at)
+         call deallocate_tab_atwfc()
          
       end subroutine atomic_wfc_cp
