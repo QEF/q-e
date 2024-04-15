@@ -22,6 +22,7 @@ SUBROUTINE hinit0()
   USE klist,            ONLY : qnorm
   USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
+  USE atwfc_mod,        ONLY : init_tab_atwfc
   USE beta_mod,         ONLY : init_tab_beta
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space

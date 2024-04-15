@@ -18,7 +18,6 @@ subroutine init_gipaw_1
   USE cell_base ,  ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants,   ONLY : fpi
-  USE uspp_data,   ONLY : dq, nqx
   USE paw_gipaw,   ONLY : paw_recon, paw_nkb, paw_lmaxkb, nbrx
   USE splinelib
   USE uspp,        ONLY : ap, aainit
@@ -27,14 +26,16 @@ subroutine init_gipaw_1
   USE mp_pools,    ONLY : intra_pool_comm
   USE mp,          ONLY : mp_sum
   USE matrix_inversion
+  USE gvecw,       ONLY : ecutwfc
   !
   implicit none
   !
   !     here a few local variables
   !
-
+  REAL(dp), parameter:: dq = 0.01_dp
+  ! dq is the interpolation step - must be the same as in init_gipaw_1
   integer :: nt, ih, jh, nb, l, m, ir, iq, startq
-  INTEGER :: lastq, na, j, n1, n2, ndm, nrs, nrc, lmaxkb
+  INTEGER :: lastq, na, j, n1, n2, ndm, nrs, nrc, nqx, lmaxkb
   ! various counters
   real(DP), allocatable :: aux (:), aux1 (:), besr (:)
   ! various work space
@@ -65,6 +66,9 @@ subroutine init_gipaw_1
   allocate ( besr(ndm) )
 
   paw_lmaxkb = 0
+  ! nqx is the size of the interpolation table tha used to be computed in
+  ! allocate_nlpot - cell_factor is set to 1.2 but should not be needed
+  nqx = INT( (SQRT(ecutwfc) / dq + 4) * 1.2_dp )
   do nt = 1, ntyp
      lmaxkb = 0
      paw_recon(nt)%paw_nh = 0

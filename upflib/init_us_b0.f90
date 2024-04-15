@@ -14,7 +14,6 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   USE upf_io,       ONLY : stdout
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
-  USE uspp_data,    ONLY : dq
   USE uspp_param,   ONLY : nsp, upf, nbetam
   USE mp,           ONLY : mp_sum
   !
@@ -32,6 +31,7 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   REAL(DP) :: rcut, drcut ! beta function cutoff radius and its estimated increase due to the filtering
 
   REAL(DP), PARAMETER :: eps = 1.d-9 ! error tolerance for integrals, norms etc.
+  REAL(DP), PARAMETER :: dq = 0.01_dp !nterpolation table 
   !
   INTEGER :: nqx
   REAL(DP), ALLOCATABLE :: tab0(:,:), tab(:,:), beta(:,:), betas(:,:)

@@ -21,6 +21,7 @@ SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
   USE cell_base,        ONLY : omega, tpiba
   USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp_param,       ONLY : upf, nwfcm
+  USE atwfc_mod,        ONLY : interp_atwfc
   !
   IMPLICIT NONE
   !
