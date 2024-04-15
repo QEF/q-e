@@ -712,18 +712,10 @@ MODULE exx
                    ENDDO
                    !
                    IF ( me_egrp == 0 ) THEN
-!$omp parallel do default(shared) private(ir) firstprivate(npol,nxxs)
-                      DO ir = 1, nxxs
-                         !DIR$ UNROLL_AND_JAM (2)
-                         DO ipol = 1, npol
+!$omp parallel do collapse(2)
+                      DO ipol = 1, npol
+                         DO ir = 1, nxxs
                             psic_all_nc(ir,ipol) = (0.0_DP, 0.0_DP)
-                         ENDDO
-                      ENDDO
-!$omp end parallel do
-!$omp parallel do default(shared) private(ir) firstprivate(npol,isym,nxxs) reduction(+:psic_all_nc)
-                      DO ir = 1, nxxs
-                         !DIR$ UNROLL_AND_JAM (4)
-                         DO ipol = 1, npol
                             DO jpol = 1, npol
                                psic_all_nc(ir,ipol) = psic_all_nc(ir,ipol) + &
                                              CONJG(d_spin(jpol,ipol,isym)) * &
@@ -738,18 +730,10 @@ MODULE exx
                       CALL scatter_grid( dfftt, psic_all_nc(:,ipol), psic_nc(:,ipol) )
                    ENDDO
 #else
-!$omp parallel do default(shared) private(ir) firstprivate(npol,nxxs)
-                   DO ir = 1, nxxs
-                      !DIR$ UNROLL_AND_JAM (2)
-                      DO ipol = 1, npol
+!$omp parallel do collapse(2)
+                   DO ipol = 1, npol
+                      DO ir = 1, nxxs
                          psic_nc(ir,ipol) = (0._DP,0._DP)
-                      ENDDO
-                   ENDDO
-!$omp end parallel do
-!$omp parallel do default(shared) private(ipol,jpol,ir) firstprivate(npol,isym,nxxs) reduction(+:psic_nc)
-                   DO ir = 1, nxxs
-                      !DIR$ UNROLL_AND_JAM (4)
-                      DO ipol = 1, npol
                          DO jpol = 1, npol
                             psic_nc(ir,ipol) = psic_nc(ir,ipol) + CONJG(d_spin(jpol,ipol,isym))* &
                                                temppsic_nc(rir(ir,isym),jpol)
