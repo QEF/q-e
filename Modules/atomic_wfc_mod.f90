@@ -386,7 +386,7 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
          !
          !  Average the two functions
          !
-         aux = sk(ig)* CMPLX( ylm(ig,lm) * (chiq(ig,nb,nt)*DBLE(l+1) + &
+         aux = lphase * sk(ig)* CMPLX( ylm(ig,lm) * (chiq(ig,nb,nt)*DBLE(l+1)+&
               chiq(ig,nc,nt)*l)/DBLE(2*l+1), KIND=DP )
          !
          wfcatom(ig,1,n_starting_wfc) = aux * f1up
@@ -435,7 +435,7 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
       !$acc parallel loop
       DO ig = 1, npw
          !
-         aux = sk(ig)*CMPLX(ylm(ig,lm)*chiq(ig,nb,nt), KIND=DP)
+         aux = lphase*sk(ig)*CMPLX(ylm(ig,lm)*chiq(ig,nb,nt), KIND=DP)
          !
          wfcatom(ig,1,n_starting_wfc) = aux * f1up
          wfcatom(ig,2,n_starting_wfc) = aux * f1down

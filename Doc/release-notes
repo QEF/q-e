@@ -1,6 +1,8 @@
 Fixed in development version:
   * Phonon restart was not working properly in some cases with ultrasoft,
     PPs, due to bad initialization of PP tables - affects v.7.3 and 7.3.1
+  * Too small parameter "maxl" in upflib/ylmr2.f90 and upflib/ylmr2_gpu.f90
+    for some PAW calculations - affects v.7.3.1 only
 
 New in 7.3.1 version:
   * Various improvements and bug fixes for pw2wannier.f90 (Junfeng Qiao) 
