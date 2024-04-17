@@ -172,8 +172,10 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) ) THEN
+#if defined(__CUDA)
     !$acc exit data delete(evc)
     IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
     DEALLOCATE( evc )
   END IF
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )

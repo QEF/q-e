@@ -28,8 +28,11 @@
      !
 !civn
 !    COMPLEX(DP), ALLOCATABLE, TARGET :: &
-     COMPLEX(DP), POINTER, CONTIGUOUS :: &
-       evc(:,:)
+#if defined(__CUDA)
+     COMPLEX(DP), POINTER, CONTIGUOUS :: evc(:,:)
+#else
+     COMPLEX(DP), ALLOCATABLE, TARGET :: evc(:,:)
+#endif
        !! wavefunctions in the PW basis set.  
        !! noncolinear case: first index is a combined PW + spin index
        !
@@ -69,8 +72,10 @@
        IF( ALLOCATED( phi ) ) DEALLOCATE( phi )
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
+#if defined(__CUDA)
        !$acc exit data delete(evc)
        IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
 #if defined (__CUDA)
        IF( ALLOCATED( c0_d ) ) DEALLOCATE( c0_d )

@@ -33,8 +33,10 @@ SUBROUTINE allocate_wfc()
   !
   ALLOCATE( evc(npwx*npol,nbnd) )
 !civn: PIN evc memory here
+#if defined(__CUDA)
   IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
   !$acc enter data create(evc)
+#endif
   !
   IF ( one_atom_occupations .OR. use_wannier ) &
      ALLOCATE( swfcatom(npwx*npol,natomwfc) )
@@ -44,7 +46,6 @@ SUBROUTINE allocate_wfc()
   RETURN
   !
 END SUBROUTINE allocate_wfc
-!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE allocate_wfc_k()
