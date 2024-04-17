@@ -200,8 +200,8 @@ SUBROUTINE interp_atdwfc ( npw, qg, nwfcm, dchiq )
     INTEGER, INTENT(IN) :: nqx_, nwfcm, nsp
     !
     nqx = nqx_
-    !$acc enter data create(tab_atwfc)
     allocate(tab_atwfc(nqx_,nwfcm,nsp))
+    !$acc enter data create(tab_atwfc)
     !
   end subroutine allocate_tab_atwfc
   !
