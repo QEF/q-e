@@ -36,7 +36,6 @@ SUBROUTINE c_bands_nscf_ph( )
   USE noncollin_module,     ONLY : noncolin, npol, domag
   USE io_files,             ONLY : tmp_dir, prefix
   USE uspp_init,            ONLY : init_us_2
-  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
   !
   IMPLICIT NONE
   !
@@ -57,10 +56,10 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
   !
-  CALL using_evc(2) 
   DO ik = 1, ik_
      CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
   END DO
+  !$acc update device(evc)
   !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
@@ -103,8 +102,8 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
-        CALL using_evc(2) 
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+        !$acc update device(evc)
         !
      ELSE
         !
@@ -114,28 +113,30 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... diagonalization of bands for k-point ik
      !
-#if defined(__CUDA)
-     call using_evc_d(0) 
-#endif
+Call check_wfc( '@1', 'DH' )
      call diag_bands ( 1, ik, avg_iter )
+     !$acc update self(evc)
+Call check_wfc( '@2', 'DH' )
      !
      !  In the noncolinear magnetic case we have k, k+q, -k -k-q and
      !  to the last two wavefunctions we must apply t_rev.
      !  When lgamma is true we have only k and -k
      !
      IF (noncolin.AND.domag) THEN
-        call using_evc(0) 
         IF (lgamma.AND. MOD(ik,2)==0) THEN
            CALL apply_trev(evc, ik, ik-1)
+           !$acc update device(evc)
         ELSEIF (.NOT.lgamma.AND.(MOD(ik,4)==3.OR.MOD(ik,4)==0)) THEN
            CALL apply_trev(evc, ik, ik-2)
+           !$acc update device(evc)
         ENDIF
      ENDIF
      !
      ! ... save wave-functions (unless disabled in input)
      !
-     call using_evc(0)
+Call check_wfc( '@3', 'DH' )
      IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+Call check_wfc( '@4', 'DH' )
      !
      ! ... beware: with pools, if the number of k-points on different
      ! ... pools differs, make sure that all processors are still in
@@ -168,6 +169,7 @@ SUBROUTINE c_bands_nscf_ph( )
   WRITE( stdout, '(/,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1)' ) &
        ethr, avg_iter
   !
+Call check_wfc( '@5', 'DH' )
   CALL stop_clock( 'c_bands' )
   !
   RETURN

@@ -171,8 +171,10 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
       IF (nksq > 1 .OR. (noncolin .AND. domag)) THEN
          IF (lgamma) THEN
             CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            !$acc update device(evc)
          ELSE
             CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            !$acc update device(evc)
             CALL get_buffer(evq, lrwfc, iuwfc, ikmkmq)
          ENDIF
       ENDIF

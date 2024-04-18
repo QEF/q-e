@@ -48,6 +48,9 @@ SUBROUTINE do_phonon(auxdyn)
   USE buffers,        ONLY : close_buffer
   USE control_flags,  ONLY : use_gpu
   USE environment,   ONLY : print_cuda_info
+!civn
+use wavefunctions, only : evc
+!
   
   IMPLICIT NONE
   !
@@ -58,6 +61,9 @@ SUBROUTINE do_phonon(auxdyn)
   !
   qind = 0
   !
+call check_wfc( '@@0HH', 'HH' )
+!$acc update device(evc)
+call check_wfc( '@@0DH', 'DH' )
   DO iq = 1, nqs
      !
      CALL prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
@@ -81,6 +87,7 @@ SUBROUTINE do_phonon(auxdyn)
         IF (reduce_io .AND. (qind == 1)) THEN
            CALL close_buffer( iunwfc, 'DELETE' )
         ENDIF
+write(*,*) '@chk calling run_nscf'
         CALL run_nscf(do_band, iq)
      ELSE 
         CALL print_cuda_info(check_use_gpu=.true.) 
@@ -94,14 +101,20 @@ SUBROUTINE do_phonon(auxdyn)
         GOTO 100
      ENDIF
      !
+call check_wfc( '@@1HH', 'HH' )
+call check_wfc( '@@1DH', 'DH' )
      !  Initialize the quantities which do not depend on
      !  the linear response of the system
      !
      CALL initialize_ph()
+call check_wfc( '@@2', 'DH' )
      !
      !  electric field perturbation
      !
+call check_wfc( '@@3HH', 'HH' )
+call check_wfc( '@@3DH', 'DH' )
      IF (epsil) CALL phescf()
+call check_wfc( '@@4', 'DH' )
      !
      !  IF only_init is .true. the code computes only the 
      !  initialization parts.
