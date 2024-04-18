@@ -229,9 +229,9 @@ SUBROUTINE post_xml_init (  )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE uspp_param,           ONLY : upf
+  USE uspp_param,           ONLY : upf, nhm, nsp
   USE read_pseudo_mod,      ONLY : readpp
-  USE uspp,                 ONLY : becsum
+  USE uspp,                 ONLY : becsum, allocate_uspp
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
@@ -253,7 +253,7 @@ SUBROUTINE post_xml_init (  )
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE io_rho_xml,           ONLY : read_scf
   USE vlocal,               ONLY : strf
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, use_gpu
   USE control_flags,        ONLY : ts_vdw, tqr, tq_smoothing, tbeta_smoothing
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
@@ -328,8 +328,8 @@ SUBROUTINE post_xml_init (  )
   !
   ! ... allocate the potentials
   !
+  call allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
   CALL allocate_locpot()
-  CALL allocate_nlpot()
   IF (okpaw) THEN
      CALL allocate_paw_internals()
      CALL paw_init_onecenter()
@@ -364,7 +364,7 @@ SUBROUTINE post_xml_init (  )
   !
   IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   !
-  CALL init_tab_atwfc(omega, intra_bgrp_comm)
+  CALL init_tab_atwfc( qmax, omega, intra_bgrp_comm, ierr )
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
