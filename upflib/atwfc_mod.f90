@@ -20,7 +20,6 @@ MODULE atwfc_mod
   !
   PRIVATE
   PUBLIC :: init_tab_atwfc
-  PUBLIC :: allocate_tab_atwfc
   PUBLIC :: deallocate_tab_atwfc
   PUBLIC :: scale_tab_atwfc
   PUBLIC :: interp_atwfc
@@ -36,13 +35,11 @@ MODULE atwfc_mod
   !! max q covered by the interpolation table
   REAL(DP), ALLOCATABLE :: tab_atwfc(:,:,:)
   !! interpolation table for numerical beta functions in reciprocal space
-  PUBLIC :: nqx, dq, qmax, tab_atwfc
-  !! FIXME: these variables should be private
   !
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE init_tab_atwfc( omega, intra_bgrp_comm)
+  SUBROUTINE init_tab_atwfc( qmax_, omega, comm, ierr)
   !-----------------------------------------------------------------------
   !! This routine computes a table with the radial Fourier transform 
   !! of the atomic wavefunctions.
@@ -50,18 +47,45 @@ CONTAINS
   USE upf_kinds,    ONLY : DP
   USE atom,         ONLY : rgrid, msh
   USE upf_const,    ONLY : fpi
-  USE uspp_param,   ONLY : nsp, upf
+  USE uspp_param,   ONLY : nsp, upf, nwfcm, nsp
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: omega
-  INTEGER,  INTENT(IN) :: intra_bgrp_comm
+  REAL(dp), INTENT(IN) :: qmax_
+  !! Interpolate q up to qmax_ (sqrt(Ry), q^2 is an energy)
+  REAL(dp), INTENT(IN) :: omega
+  !! Unit-cell volume
+  INTEGER, INTENT(IN)  :: comm
+  !! MPI communicator, to split the workload
+  INTEGER, INTENT(OUT) :: ierr
+  !! error code: ierr = 0 if interpolation table (IT) was allocated
+  !!             ierr =-1 if IT had insufficient size and was re-allocated
+  !!             ierr =-2 if IT was already present and nothing is done
   !
   INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm
   !
   REAL(DP), ALLOCATABLE :: aux(:), vchi(:)
   REAL(DP) :: vqint, pref, q
+  !
+  IF ( .NOT. ALLOCATED(tab_atwfc) ) THEN
+     !! table not yet allocated
+     qmax = qmax_
+     ierr = 0
+  ELSE IF ( qmax_ > qmax ) THEN
+     !! table ìs allocated but dimension insufficient: re-allocate
+     !! (with some margin so that this does not happen too often)
+     !$acc exit data delete(tab_atwfc)
+     DEALLOCATE ( tab_atwfc )
+     qmax = qmax_ + MAX(dq*100,qmax_-qmax)
+     ierr =-1
+  ELSE
+     !! table already computed: exit
+     ierr =-2
+     RETURN
+  END IF
+  nqx = NINT( qmax/dq + 4)
+  allocate(tab_atwfc(nqx,nwfcm,nsp))
   !
   ndm = MAXVAL(msh(1:nsp))
   ALLOCATE( aux(ndm), vchi(ndm) )
@@ -71,7 +95,7 @@ CONTAINS
   pref = fpi / SQRT(omega)
   ! needed to normalize atomic wfcs (not a bad idea in general and 
   ! necessary to compute correctly lda+U projections)
-  CALL divide( intra_bgrp_comm, nqx, startq, lastq )
+  CALL divide( comm, nqx, startq, lastq )
   !
   tab_atwfc(:,:,:) = 0.0_DP
   !
@@ -96,7 +120,7 @@ CONTAINS
      ENDDO
   ENDDO
   !
-  CALL mp_sum( tab_atwfc, intra_bgrp_comm )
+  CALL mp_sum( tab_atwfc, comm )
   !
   !$acc update device(tab_atwfc)
   !

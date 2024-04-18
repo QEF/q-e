@@ -5,9 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! TB
-! included deallocation of forcefield of gate 'forcegate'
-!
 !----------------------------------------------------------------------
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
@@ -152,8 +149,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( cutoff_2D ) )  DEALLOCATE( cutoff_2D )
   IF ( ALLOCATED( lr_Vloc )   )  DEALLOCATE( lr_Vloc   )
   IF ( ALLOCATED( strf )      )  DEALLOCATE( strf      )
-  !
-  ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
   CALL deallocate_tab_atwfc()
   CALL deallocate_uspp() 

@@ -181,8 +181,8 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   IF ( nkstot > npk ) CALL errore( 'setup_nscf', 'too many k points', nkstot )
   !
-  ! ...notice: qnorm is used by allocate_nlpot to determine
-  ! the correct size of the interpolation table "qrad"
+  ! ...notice: qnorm is used to determine the correct size 
+  ! ...of the interpolation tables (tab_beta, tab_qrad, etc.)
   !
   qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba
   !

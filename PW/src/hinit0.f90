@@ -78,7 +78,7 @@ SUBROUTINE hinit0()
   CALL init_tab_beta ( qmax, omega, intra_bgrp_comm, ierr )
   !
   IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
-  CALL init_tab_atwfc (omega, intra_bgrp_comm)
+  CALL init_tab_atwfc ( qmax, omega, intra_bgrp_comm, ierr)
   !
   IF ( restart .AND. startingconfig == 'file' ) THEN
      !
