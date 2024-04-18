@@ -54,6 +54,7 @@ subroutine deallocate_phq
   if (lgamma) then
      if(associated(evq)) nullify(evq)
   else
+     !$acc exit data delete(evq)
      if(associated(evq)) deallocate(evq)   !why not if allocated? 
   end if
 

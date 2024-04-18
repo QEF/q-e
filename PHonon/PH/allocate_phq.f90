@@ -63,6 +63,7 @@ subroutine allocate_phq
      !  q!=0 : evq is allocated and calculated at point k+q
      !
      allocate (evq ( npwx*npol , nbnd))
+     !$acc enter data create(evq)
   endif
   !
   allocate (dvpsi ( npwx*npol , nbnd))
