@@ -229,7 +229,7 @@ SUBROUTINE post_xml_init (  )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE uspp_param,           ONLY : upf, nhm, nsp, init_uspp_dims
+  USE uspp_param,           ONLY : upf, nhm, nsp
   USE read_pseudo_mod,      ONLY : readpp
   USE uspp,                 ONLY : becsum, allocate_uspp
   USE paw_variables,        ONLY : okpaw, ddd_PAW
@@ -312,7 +312,6 @@ SUBROUTINE post_xml_init (  )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
   !
-  CALL init_uspp_dims ( )
   CALL pre_init()
   ! NB: data_structure uses k-points to compute gkcut
   CALL data_structure ( gamma_only )

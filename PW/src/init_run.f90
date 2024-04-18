@@ -50,7 +50,7 @@ SUBROUTINE init_run()
   USE extffield,          ONLY : init_extffield
   USE control_flags,      ONLY : scissor
   USE sci_mod,            ONLY : allocate_scissor
-  USE uspp_param,         ONLY : nhm, init_uspp_dims
+  USE uspp_param,         ONLY : nhm
   USE uspp,               ONLY : allocate_uspp
   !
 #if defined (__ENVIRON)
@@ -70,7 +70,6 @@ SUBROUTINE init_run()
   !
   ! ... calculate limits of some indices, used in subsequent allocations
   !
-  CALL init_uspp_dims ( )
   CALL pre_init()
   !
   ! ... determine the data structure for fft arrays
@@ -206,10 +205,15 @@ SUBROUTINE pre_init()
   !----------------------------------------------------------------------------
   !
   USE ions_base,        ONLY : nat, ityp
-  USE uspp_param,       ONLY : upf, nh
+  USE uspp_param,       ONLY : upf, nh, init_uspp_dims
   USE uspp,             ONLY : nkb, nkbus
   IMPLICIT NONE
   INTEGER :: na, nt
+  !
+  ! init_uspp_dims allocates and fills nh
+  !                calculates nhm, nbetam, nwfcm, lmaxkb, lmaxq
+  !
+  CALL init_uspp_dims( )
   !
   ! calculate the number of beta functions of the solid
   !
