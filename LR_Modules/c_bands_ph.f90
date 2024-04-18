@@ -113,10 +113,8 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... diagonalization of bands for k-point ik
      !
-Call check_wfc( '@1', 'DH' )
      call diag_bands ( 1, ik, avg_iter )
      !$acc update self(evc)
-Call check_wfc( '@2', 'DH' )
      !
      !  In the noncolinear magnetic case we have k, k+q, -k -k-q and
      !  to the last two wavefunctions we must apply t_rev.
@@ -134,9 +132,7 @@ Call check_wfc( '@2', 'DH' )
      !
      ! ... save wave-functions (unless disabled in input)
      !
-Call check_wfc( '@3', 'DH' )
      IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
-Call check_wfc( '@4', 'DH' )
      !
      ! ... beware: with pools, if the number of k-points on different
      ! ... pools differs, make sure that all processors are still in
@@ -169,7 +165,6 @@ Call check_wfc( '@4', 'DH' )
   WRITE( stdout, '(/,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1)' ) &
        ethr, avg_iter
   !
-Call check_wfc( '@5', 'DH' )
   CALL stop_clock( 'c_bands' )
   !
   RETURN
