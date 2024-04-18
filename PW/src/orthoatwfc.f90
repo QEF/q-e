@@ -94,7 +94,6 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      !
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
-       !$acc update device(wfcatom)
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
@@ -289,7 +288,6 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
-       !$acc update device(wfcatom)
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
