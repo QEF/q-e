@@ -86,6 +86,7 @@ CONTAINS
   END IF
   nqx = NINT( qmax/dq + 4)
   allocate(tab_atwfc(nqx,nwfcm,nsp))
+  !$acc enter data create(tab_atwfc)
   !
   ndm = MAXVAL(msh(1:nsp))
   ALLOCATE( aux(ndm), vchi(ndm) )
