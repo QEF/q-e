@@ -568,6 +568,7 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
               m, aux, m, (0.d0,0.d0), doverlap, m)
   !$acc end host_data
   !
+  !$acc host_data use_device(aux, doverlap, e)
   !$acc parallel loop collapse(2)
   DO m1 = 1, m
      DO m2 = 1, m
@@ -575,6 +576,7 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
                     (e(m1)*DSQRT(e(m2))+e(m2)*DSQRT(e(m1)))
      ENDDO
   ENDDO
+  !$acc end host_data
   !
   ! Compute work * aux * (work^H)
   !
