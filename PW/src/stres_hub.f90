@@ -1425,7 +1425,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       !
    ENDDO
    !
-   !$acc data copyin(a1_temp, a2_temp, at_dj)
+   !$acc data copyin(a1_temp, a2_temp, at_dj, at_dy)
    !
    DO na = 1, nat
       nt = ityp(na)
