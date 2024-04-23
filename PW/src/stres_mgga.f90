@@ -18,7 +18,6 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
   USE wavefunctions,          ONLY : evc
-  USE wavefunctions_gpum,     ONLY : using_evc
   USE xc_lib,                 ONLY : xclib_dft_is
   USE klist,                  ONLY : nks, xk, ngk
   USE buffers,                ONLY : get_buffer
@@ -49,8 +48,6 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   !
   IF ( .NOT. xclib_dft_is('meta') ) RETURN
-  !
-  CALL using_evc(1)
   !
   current_spin = 1
   !

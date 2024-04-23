@@ -71,7 +71,10 @@ SUBROUTINE lr_read_wf()
      CALL normal_read()
   ENDIF
   !
-  IF (.NOT.eels) evc(:,:) = evc0(:,:,1)
+  IF (.NOT.eels) THEN
+    evc(:,:) = evc0(:,:,1)
+    !$acc update device(evc)
+  ENDIF
   !
   IF ( xclib_dft_is('hybrid') ) THEN
      !

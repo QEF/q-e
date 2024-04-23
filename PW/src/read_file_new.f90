@@ -24,8 +24,6 @@ SUBROUTINE read_file()
   USE wavefunctions,    ONLY : evc
   USE pw_restart_new,   ONLY : read_collected_wfc
   !
-  USE wavefunctions_gpum, ONLY : using_evc
-  !
   IMPLICIT NONE
   !
   INTEGER :: ik
@@ -48,7 +46,6 @@ SUBROUTINE read_file()
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions'
-     CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
@@ -85,7 +82,6 @@ SUBROUTINE read_file_ph( needwf_ph )
   USE pw_restart_new,   ONLY : read_collected_wfc
   USE fft_base,         ONLY : dffts
   !
-  USE wavefunctions_gpum, ONLY : using_evc
   USE pw_restart_new,   ONLY : read_xml_file
   !
   IMPLICIT NONE
@@ -139,7 +135,6 @@ SUBROUTINE read_file_ph( needwf_ph )
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions in '//TRIM(wfc_dir)
-     CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )

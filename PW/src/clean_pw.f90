@@ -59,12 +59,11 @@ SUBROUTINE clean_pw( lflag )
   USE exx,                  ONLY : deallocate_exx
   USE Coul_cut_2D,          ONLY : cutoff_2D, lr_Vloc 
   !
-  USE control_flags,        ONLY : ts_vdw, mbd_vdw
+  USE control_flags,        ONLY : ts_vdw, mbd_vdw, use_gpu
   USE tsvdw_module,         ONLY : tsvdw_finalize
   USE libmbd_interface,     ONLY : clean_mbd
   USE dftd3_qe,             ONLY : dftd3_clean
   !
-  USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
   USE control_flags,        ONLY : sic, scissor
@@ -76,6 +75,9 @@ SUBROUTINE clean_pw( lflag )
   USE plugin_flags,         ONLY : use_environ
   USE environ_base_module,  ONLY : clean_environ
 #endif
+#if defined (__CUDA)
+  USE cudafor
+#endif
   !
   IMPLICIT NONE
   !
@@ -84,7 +86,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... local variables
   !
-  INTEGER :: nt, nr1, nr2, nr3
+  INTEGER :: nt, nr1, nr2, nr3, istat
   !
   IF ( lflag ) THEN
      !
@@ -168,10 +170,14 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
+  IF ( ALLOCATED( evc ) ) THEN
+#if defined(__CUDA)
+    !$acc exit data delete(evc)
+    IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
+    DEALLOCATE( evc )
+  END IF
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  !
-  CALL deallocate_wavefunctions_gpu()
   !
   ! ... fft structures allocated in data_structure.f90  
   !

@@ -35,7 +35,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npwx
   USE wavefunctions,  ONLY: evc
-  USE wavefunctions_gpum, ONLY: evc_d
   USE nlcc_ph,    ONLY : drc
   USE uspp,       ONLY : nlcc_any
   USE eqv,        ONLY : dvpsi, dmuxc, vlocq
@@ -123,7 +122,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   npwq= ngk(ikq)
   nnr = dffts%nnr
   ! 
-  !$acc data create(aux1(1:nnr),aux2(1:nnr)) copyout(dvpsi) copyin(vlocq,drc,dmuxc) present( igk_k ) deviceptr(evc_d, nl_d, nlp_d)
+  !$acc data create(aux1(1:nnr),aux2(1:nnr)) copyout(dvpsi) copyin(vlocq,drc,dmuxc) present( igk_k ) deviceptr(nl_d, nlp_d)
   !$acc kernels present(dvpsi,aux1)
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
@@ -255,9 +254,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !
   ! Now we compute dV_loc/dtau in real space
   !
-#if defined(__CUDA)
-  evc_d = evc
-#endif
+  !$acc update device(evc)
+  ! 
   !$acc host_data use_device(aux1)
   CALL invfft ('Rho', aux1, dffts)
   !$acc end host_data
@@ -270,21 +268,13 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
            !$acc parallel loop present(aux2, igk_k) 
            do ig = 1, npw
               itmp = nl_d (igk_k (ig,ikk) )
-#if defined(__CUDA)
-              aux2 ( itmp ) = evc_d (ig, ibnd)
-#else
               aux2 ( itmp ) = evc (ig, ibnd)
-#endif
            enddo
         else
            !$acc parallel loop present(aux2, igk_k)
            do ig = 1, npw
               itmp = nl_d (igk_k (ig,ikk) )
-#if defined(__CUDA)
-              aux2 ( itmp ) = evc_d (ig+npwx, ibnd)
-#else
               aux2 ( itmp ) = evc (ig+npwx, ibnd)
-#endif
            enddo
         end if
         !

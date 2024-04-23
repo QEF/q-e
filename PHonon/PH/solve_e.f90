@@ -163,6 +163,7 @@ subroutine solve_e
         !
         IF (nksq > 1) THEN
            CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+           !$acc update device(evc)
         ENDIF
         !
         CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb, .true.)

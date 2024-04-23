@@ -112,7 +112,7 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   CALL start_clock( 'regterg' ) !; write(6,*) 'enter regterg' ; FLUSH(6)
   ! 
-  !$acc data deviceptr(evc, e)
+  !$acc data deviceptr(e)
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -509,10 +509,10 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        !$acc host_data use_device(psi, vr)
+        !$acc host_data use_device(evc, psi, vr)
         CALL DGEMM( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, evc, npwx2 )
-        !$acc end host_data
         CALL mp_sum( evc, inter_bgrp_comm )
+        !$acc end host_data
         !
         IF ( notcnv == 0 ) THEN
            !

@@ -72,7 +72,7 @@ SUBROUTINE force_hub( forceh )
    !
    CALL start_clock_gpu( 'force_hub' )
    !
-   !$acc data  present(vkb) copyin(wfcU) present_or_create(evc) 
+   !$acc data  present(vkb) copyin(wfcU) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
@@ -1545,7 +1545,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
-   USE wavefunctions_gpum,   ONLY : using_evc
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, offsetU
    !
    IMPLICIT NONE

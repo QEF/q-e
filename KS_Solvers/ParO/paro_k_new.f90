@@ -95,7 +95,7 @@ SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
   !
-  !$acc data deviceptr(evc, eig)
+  !$acc data deviceptr(eig)
   !
   ! ... init local variables
   !
@@ -106,7 +106,9 @@ SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
   !
   CALL start_clock( 'paro_k' ); !write (6,*) ' enter paro diag'
 
+  !$acc host_data use_device(evc)
   CALL mp_type_create_column_section(evc(1,1), 0, npwx*npol, npwx*npol, column_type)
+  !$acc end host_data
 
   ALLOCATE ( psi(npwx*npol,nvecx), hpsi(npwx*npol,nvecx), spsi(npwx*npol,nvecx), ew(nvecx), conv(nbnd) )
 

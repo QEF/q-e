@@ -170,10 +170,15 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
       !
       IF (nksq > 1 .OR. (noncolin .AND. domag)) THEN
          IF (lgamma) THEN
+            !civn: in this case evq is a pointer to evc
             CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            !$acc update device(evc)
          ELSE
+            !civn: in this case evq is allocated separately and needs to be updated on device
             CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            !$acc update device(evc)
             CALL get_buffer(evq, lrwfc, iuwfc, ikmkmq)
+            !$acc update device(evq)
          ENDIF
       ENDIF
       !

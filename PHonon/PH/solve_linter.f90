@@ -267,6 +267,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         IF (nksq > 1 .OR. nsolv == 2) THEN
            CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+           !$acc update device(evc)
         ENDIF
         !
         DO ipert = 1, npe
