@@ -64,7 +64,6 @@ SUBROUTINE clean_pw( lflag )
   USE libmbd_interface,     ONLY : clean_mbd
   USE dftd3_qe,             ONLY : dftd3_clean
   !
-  USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
   USE control_flags,        ONLY : sic, scissor
@@ -179,8 +178,6 @@ SUBROUTINE clean_pw( lflag )
     DEALLOCATE( evc )
   END IF
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  !
-  CALL deallocate_wavefunctions_gpu()
   !
   ! ... fft structures allocated in data_structure.f90  
   !
