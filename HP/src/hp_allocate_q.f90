@@ -40,6 +40,7 @@ subroutine hp_allocate_q
   ELSE
      ! q/=0 : evq is allocated and calculated at point k+q
      ALLOCATE (evq(npwx*npol,nbnd))
+     !$acc enter data create(evq)
   ENDIF
   !
   ALLOCATE (dvpsi(npwx*npol,nbnd))
