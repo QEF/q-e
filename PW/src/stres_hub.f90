@@ -83,7 +83,10 @@ SUBROUTINE stres_hub ( sigmah )
    ALLOCATE (spsi(npwx*npol,nbnd))
    ALLOCATE (wfcatom(npwx*npol,natomwfc))
    ALLOCATE (at_dy(npwx*npol,natomwfc), at_dj(npwx*npol,natomwfc))
-   IF (okvan) ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
+   IF (okvan) THEN
+      ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
+      !$acc enter data create (us_dy, us_dj)
+   END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
       ALLOCATE (eigenval(natomwfc))
@@ -417,7 +420,10 @@ SUBROUTINE stres_hub ( sigmah )
    DEALLOCATE (spsi)
    DEALLOCATE (wfcatom)
    DEALLOCATE (at_dy, at_dj)
-   IF (okvan) DEALLOCATE (us_dy, us_dj)
+   IF (okvan) THEN
+      !$acc exit data delete (us_dy, us_dj)
+      DEALLOCATE (us_dy, us_dj)
+   END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
@@ -1730,7 +1736,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    !
    ijkb0 = 0
    !
-   !$acc data copyin(us_dj, qq_at, a1_temp, a2_temp)
+   !$acc data present(us_dj) copyin(qq_at, a1_temp, a2_temp)
    DO nt = 1, ntyp
       !
       ALLOCATE ( Adbeta(lA,npol*nh(nt)) )
@@ -2121,7 +2127,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
       !
    ENDDO
    !
-   !$acc data copyin(a1_temp, a2_temp, at_dy, at_dj, us_dy, us_dj, qq_at, wfcU)
+   !$acc data present(us_dy, us_dj) copyin(a1_temp, a2_temp, at_dy, at_dj, qq_at, wfcU)
    !$acc data create(dwfc) 
    !
    DO na = 1, nat
