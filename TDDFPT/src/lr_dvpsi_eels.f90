@@ -89,6 +89,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
   !$acc update device(evc)
   CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+  !$acc update device(evq)
   !
   ! Re-ordering of the G vectors.
   !

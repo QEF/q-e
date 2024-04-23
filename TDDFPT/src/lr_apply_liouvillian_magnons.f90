@@ -162,6 +162,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
      !$acc update device(evc)
      CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+     !$acc update device(evq)
      !
      dpsi(:,:)  = (0.d0,0.d0)
      dvpsi(:,:) = (0.d0,0.d0)
@@ -260,7 +261,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
-     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik,1),sevc1_new(1:npwx*npol,1:nbnd,ik), et(:,ikk))
+     !$acc data copy(evc1(1:npwx*npol,1:nbnd,ik,1),sevc1_new(1:npwx*npol,1:nbnd,ik), et(:,ikk))
      CALL ch_psi_all (npwq, evc1(:,:,ik,1), sevc1_new(:,:,ik,1), et(:,ikk), ik, nbnd_occ(ikk)) 
      !$acc end data
      !
@@ -388,7 +389,9 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
         ! Ortogonalize dvpsi to valence states.
         ! Apply -P_c^+, and then change the sign, because we need P_c^+.
         !
+        !$acc data copyin(Tevq)
         CALL orthogonalize(dvpsi, Tevq, imk, imkq, dpsi, npwq, .false.)
+        !$acc end data
         IF ( .not. L_dag ) dvpsi = -dvpsi
         !
      ENDIF
@@ -409,7 +412,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
-     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik,2),sevc1_new(1:npwx*npol,1:nbnd,ik,2), et(:,imk))
+     !$acc data copy(evc1(1:npwx*npol,1:nbnd,ik,2),sevc1_new(1:npwx*npol,1:nbnd,ik,2), et(:,imk))
      CALL ch_psi_all (npwq, evc1(:,:,ik,2), sevc1_new(:,:,ik,2), et(:,imk), ik, nbnd_occ(imk))
      !$acc end data
      !

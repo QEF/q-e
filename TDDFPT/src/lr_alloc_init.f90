@@ -137,6 +137,7 @@ SUBROUTINE lr_alloc_init()
      !
      ALLOCATE (evq(npwx*npol,nbnd))
      evq(:,:) = (0.0d0, 0.0d0)  
+     !$acc enter data copyin(evq)
      ! 
   ELSEIF (magnons) THEN
      !

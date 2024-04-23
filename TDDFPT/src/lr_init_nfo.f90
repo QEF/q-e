@@ -222,6 +222,7 @@ SUBROUTINE lr_init_nfo()
      !
      ALLOCATE(evq(npwx*npol,nbnd))
      evq(:,:) = (0.0d0, 0.0d0)     
+     !$acc enter data copyin(evq)
      !
      ! Write T-rev wfc to disk and keep unit open, they are going to be used
      ! throughout the whole calculation

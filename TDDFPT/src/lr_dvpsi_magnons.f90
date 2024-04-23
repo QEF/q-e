@@ -106,6 +106,7 @@ SUBROUTINE lr_dvpsi_magnons (ik, ip, dvpsi)
   CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
   !$acc update device(evc)
   CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+  !$acc update device(evq)
   ! 
 
   ! Re-ordering of the G vectors.
@@ -199,7 +200,9 @@ SUBROUTINE lr_dvpsi_magnons (ik, ip, dvpsi)
   ! Ortogonalize dvpsi(:,:,1) to valence states.
   ! Apply -P_c^+
   !
+  !$acc data copyin(Tevq)
   CALL orthogonalize(dvpsi(:,:,2), Tevq, imk, imkq, dpsi, npwq, .false.) 
+  !$acc end data
   !
   DEALLOCATE (revc)
   !

@@ -303,8 +303,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ! [H(k) - E(k)] * evc1(k). Keep this in mind if you want to
   ! generalize this subroutine to metals. 
   !
+  !$acc data copyin(evc0)
   DO ik = 1, nks
      !
+
      CALL orthogonalize(sevc1_new(:,:,ik), evc0(:,:,ik), ik, ik, &
                                   & sevc0(:,:,ik), ngk(ik), .true.)
      !$acc kernels                     
@@ -312,6 +314,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !$acc end kernels
      !
   ENDDO 
+  !$acc end data
   !
   !
   ! Here we apply the S^{-1} operator.
