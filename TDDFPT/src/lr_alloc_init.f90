@@ -76,12 +76,16 @@ SUBROUTINE lr_alloc_init()
   !
   IF (.NOT. magnons) THEN
      IF (allocated(evc)) THEN
+#if defined(__CUDA)
         !$acc exit data delete(evc)
         IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
         DEALLOCATE(evc)
         ALLOCATE(evc(npwx*npol,nbnd))
+#if defined(__CUDA)
         IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
         !$acc enter data create(evc)
+#endif
         !$acc kernels
         evc(:,:) = (0.0d0, 0.0d0)
         !$acc end kernels
