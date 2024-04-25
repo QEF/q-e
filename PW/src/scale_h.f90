@@ -124,9 +124,13 @@ SUBROUTINE scale_h
   ! re-allocate and re-compute if needed
   ! For tab_vloc, tab_rhc, tab_rhoc, this is done when used
   !
+  WRITE( stdout, '(5x,"New effective cutoffs (rho, wfc):",2f8.2)' ) gmax**2,kmax**2
   CALL init_tab_qrad ( gmax, omega, intra_bgrp_comm, ierr)
+  IF ( ierr == -1) WRITE( stdout, '(5x,"Interpolation table for Q(G) re-allocated")' ) 
   CALL init_tab_beta ( kmax, omega, intra_bgrp_comm, ierr)
+  IF ( ierr == -1) WRITE( stdout, '(5x,"Interpolation table for beta(G) re-allocated")' ) 
   CALL init_tab_atwfc( kmax, omega, intra_bgrp_comm, ierr)
+  IF ( ierr == -1) WRITE( stdout, '(5x,"Interpolation table for atomic wavefunctions re-allocated")' ) 
   !
   ! recalculate the local part of the pseudopotential
   !
