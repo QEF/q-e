@@ -28,7 +28,7 @@ SUBROUTINE allocate_wfc()
   USE control_flags,       ONLY : use_gpu
   !
   IMPLICIT NONE
-    INTEGER :: istat
+  INTEGER :: istat
   !
   !
   ALLOCATE( evc(npwx*npol,nbnd) )
@@ -121,14 +121,13 @@ SUBROUTINE allocate_wfc_k()
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
+  !$acc enter data create(vkb) 
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE( g2kin(npwx) )
+  !$acc enter data create(g2kin) 
   !
-#if defined __CUDA
-!$acc enter data create(vkb(1:npwx,1:nkb), g2kin(1:npwx) ) 
-#endif
   !
   RETURN
   !

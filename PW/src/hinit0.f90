@@ -66,7 +66,7 @@ SUBROUTINE hinit0()
   !
   ! qmax is the maximum |q+G|, for all G needed by the charge density,
   ! increased by a factor (20% or so) to avoid too frequent reallocations 
-  ! in variable-cell calculations ( norm is an estimate of max|q|, that
+  ! in variable-cell calculations ( qnorm is an estimate of max|q|, that
   ! may be needed for hybrid EXX or phonon calculations)
   !
   CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)

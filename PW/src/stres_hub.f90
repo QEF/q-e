@@ -22,7 +22,7 @@ SUBROUTINE stres_hub ( sigmah )
                                   lda_plus_u_kind, Hubbard_projectors, is_hubbard_back, &
                                   ldim_back, ldmx_b, nsg, v_nsg, max_num_neighbors, &
                                   ldim_u, Hubbard_V, at_sc, neighood, ldmx_tot, &
-                                  wfcU, nwfcU, copy_U_wfc, Hubbard_J
+                                  wfcU, nwfcU, Hubbard_J
    USE becmod,             ONLY : becp, calbec, allocate_bec_type_acc, deallocate_bec_type_acc
    USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
    USE uspp,               ONLY : nkb, vkb, okvan

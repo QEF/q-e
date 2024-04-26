@@ -5,10 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------------
-! TB
-! included gate related energy
-!----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
@@ -161,6 +157,7 @@ SUBROUTINE electrons()
   ENDIF
   !
   !  ... energy calculation of neutral case
+  !  ... FIXME: these lines should be called before electrons, not inside it
   !
   IF (sic .and. sic_energy) THEN
      WRITE(stdout,'(5x,"Energy calculation for the neutral polaron")')
