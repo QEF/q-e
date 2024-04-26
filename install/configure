@@ -6265,6 +6265,18 @@ fi
 
                 fi
         fi
+        if test "$have_mpi" -eq 1; then
+           cat > conftest.$ac_ext <<_ACEOF
+program conftest; use mpi; end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  try_dflags="$try_dflags -D__MPI_MODULE"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: mpi module not available" >&5
+$as_echo "mpi module not available" >&6; }
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+        fi
 else
         if test "$use_parallel" -ne 0
         then
