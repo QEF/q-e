@@ -86,8 +86,6 @@ option(QE_ENABLE_PROFILE_NVTX
         "enable execution of NVIDIA NVTX profiler plugin" OFF)
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
-option(QE_ENABLE_MPI_MODULE
-    "use MPI via Fortran module instead of mpif.h header inclusion" OFF)
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
 option(QE_LAPACK_INTERNAL
@@ -169,9 +167,6 @@ if(QE_ENABLE_PROFILE_NVTX)
 endif() 
 if(QE_ENABLE_MPI_INPLACE)
     qe_add_global_compile_definitions(__USE_INPLACE_MPI)
-endif()
-if(QE_ENABLE_MPI_MODULE)
-    qe_add_global_compile_definitions(__MPI_MODULE)
 endif()
 if(QE_ENABLE_BARRIER)
     qe_add_global_compile_definitions(__USE_BARRIER)
@@ -382,6 +377,31 @@ qe_install_targets(qe_mpi_fortran)
 ###########################################################
 if(QE_ENABLE_MPI)
     find_package(MPI REQUIRED Fortran)
+
+    # choose using mpi module or header file.
+    if(MPI_Fortran_HAVE_F90_MODULE)
+        set(QE_ENABLE_MPI_MODULE_DEFAULT ON)
+    elseif(MPI_Fortran_HAVE_F77_HEADER)
+        set(QE_ENABLE_MPI_MODULE_DEFAULT OFF)
+    else()
+        message(FATAL_ERROR "MPI library doesn't provide a Fortran 'mpi' module nor a 'mpif.h' header file.")
+    endif()
+
+    option(QE_ENABLE_MPI_MODULE
+        "use MPI via Fortran module instead of mpif.h header inclusion" ${QE_ENABLE_MPI_MODULE_DEFAULT})
+    if(QE_ENABLE_MPI_MODULE)
+        message(STATUS "Selected the Fortran 'mpi' module. QE_ENABLE_MPI_MODULE=ON")
+        if(NOT MPI_Fortran_HAVE_F90_MODULE)
+            message(FATAL_ERROR "MPI library doesn't provide a Fortran 'mpi' module.")
+        endif()
+        qe_add_global_compile_definitions(__MPI_MODULE)
+    else()
+        message(STATUS "Selected the Fortran 'mpif.h' header file. QE_ENABLE_MPI_MODULE=OFF")
+        if(NOT MPI_Fortran_HAVE_F77_HEADER)
+            message(FATAL_ERROR "MPI library doesn't provide a Fortran 'mpif.h' header file.")
+        endif()
+    endif()
+
     target_link_libraries(qe_mpi_fortran
         INTERFACE MPI::MPI_Fortran)
     message(STATUS "MPI settings used by CTest")
