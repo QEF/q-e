@@ -13,7 +13,7 @@ SUBROUTINE hinit0()
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, nsp, ityp, tau
-  USE basis,            ONLY : startingconfig
+  USE starting_scf,     ONLY : startingconfig
   USE cell_base,        ONLY : alat, at, bg, omega, tpiba
   USE cellmd,           ONLY : omega_old, at_old, lmovecell, calc, cell_factor
   USE dynamics_module,  ONLY : verlet_read_tau_from_conf

@@ -27,7 +27,7 @@ SUBROUTINE potinit()
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : alat, omega
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE basis,                ONLY : starting_pot
+  USE starting_scf,         ONLY : starting_pot
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : lsda, nspin
   USE fft_base,             ONLY : dfftp

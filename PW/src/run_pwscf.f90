@@ -380,7 +380,7 @@ SUBROUTINE reset_gvectors( )
   !! energy computed with G-vectors and plane waves for the final cell
   !
   USE io_global,  ONLY : stdout
-  USE basis,      ONLY : starting_wfc, starting_pot
+  USE starting_scf, ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
   USE xc_lib,     ONLY : xclib_dft_is

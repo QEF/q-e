@@ -14,7 +14,8 @@ SUBROUTINE wfcinit()
   ! ... It also open needed files or memory buffers
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE basis,                ONLY : natomwfc, starting_wfc
+  USE basis,                ONLY : natomwfc
+  USE starting_scf,         ONLY : starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
@@ -220,7 +221,8 @@ SUBROUTINE init_wfc ( ik )
                                    allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
-  USE basis,                ONLY : natomwfc, starting_wfc
+  USE basis,                ONLY : natomwfc
+  USE starting_scf,         ONLY : starting_wfc
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk, ngk, igk_k
   USE wvfct,                ONLY : nbnd, npwx, et
