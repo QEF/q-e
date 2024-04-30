@@ -130,7 +130,6 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         ELSE
            CALL v_hubbard_extended (nsg, v_nsg, eth)
         ENDIF
-        !
      ELSE
         !
         CALL errore('v_of_rho', 'Not allowed value of lda_plus_u_kind',1)
@@ -1775,15 +1774,6 @@ COMPLEX(DP)              :: eigenvecs_current(2*Hubbard_lmax+1,2*Hubbard_lmax+1,
 INTEGER                  :: is, na, nt, m1, m2, m3, ldim, m_order
 ! the ordering vector for the orbital-tracking routine
 INTEGER                  :: order(2*Hubbard_lmax+1)
-=======
-REAL(DP)                 :: effU, effalpha
-COMPLEX(DP)              :: v_hub_diag(2*Hubbard_lmax+1,nspin,nat), temp
-COMPLEX(DP)              :: eigenvecs_current(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin)
-!! eigenvectors of the ns occupation matrix in the current iteration
-!
-INTEGER                  :: is, na, nt, m1, m2, m3, ldim, m_order
-INTEGER                  :: order(2*Hubbard_lmax+1,nspin)
->>>>>>> 687c57fef (Implementation of orbital-resolved DFT+U as)
 !
 !
 eth    = 0.d0
@@ -1892,7 +1882,7 @@ RETURN
 END SUBROUTINE v_hubbard_resolved
 !----------------------------------------------------------------------------
 SUBROUTINE v_hubbard_resolved_nc( ns, v_hub, eth )
-!------------------------------------------------
+!----------------------------------------------------------------------------
 !
 !! Computes Hubbard potential and Hubbard energy
 !! for a manifold of selected orbitals (noncollinear formulation).
@@ -2040,8 +2030,6 @@ DO na = 1, nat
    ENDIF
    !
 ENDDO ! nt
-!
-IF (nspin==1) eth = 2.d0 * eth
 !
 ! print Hubbard energy
 !

@@ -31,7 +31,7 @@ MODULE ldaU
   !! the rotations in spin space for all symmetries
   REAL(DP) :: eth
   !! the Hubbard contribution to the energy
-  REAL(DP) :: Hubbard_U(ntypx) !!! Change to 4 for NC implementation
+  REAL(DP) :: Hubbard_U(ntypx)
   !! the Hubbard U (main Hubbard channel)
   REAL(DP) :: Hubbard_U2(ntypx)
   !! the Hubbard U (second (and third) Hubbard channel)
@@ -155,10 +155,12 @@ MODULE ldaU
   COMPLEX(DP), ALLOCATABLE :: eigenvecs_ref(:,:,:,:)
   !! Eigenvectors used for tracking
   !! orbitals in orbital-resolved DFT+U
-
+  !!
   !****************************************************
   !                Hubbard V part                     !
   !****************************************************
+  !
+  ! Inter atomic interaction should be cut off at some distance 
   !
   ! Inter atomic interaction should be cut off at some distance 
   ! that is the reason of having so many unitcell information. 

@@ -115,40 +115,6 @@ SUBROUTINE hub_summary()
                               is,(Hubbard_alpha_m(m1,is,nt)*rytoev, m1=1, ldim)
                   ENDDO
                ENDIF
-         ENDIF
-      ENDDO
-    ENDIF
-    !
-    IF (orbital_resolved) THEN
-    ! ... currently not using "write_hub_param" because the latter expects 
-    ! ... hub_parameter to be a scalar, but orbital-resolved Hubbard parameters
-    ! ... are arrays and should be printed as such
-    !
-      WRITE( stdout, '(5x,"Orbital-resolved Hubbard parameters in eV:")')
-      DO nt = 1, ntyp
-         IF (is_hubbard(nt)) THEN
-               IF (ANY(ABS(Hubbard_Um(:,:,nt)) .GT. eps16)) THEN
-                  WRITE(stdout,'(5x,a,i1,a)')  &
-                     'U' // '(' // TRIM(atm(nt)) // '-', Hubbard_n(nt), &
-                     l_to_spdf(Hubbard_l(nt),.FALSE.) // ')'
-                  !
-                  ldim = 2*Hubbard_l(nt)+1
-                  DO is = 1, nspin
-                     WRITE( stdout,'(5x,"spin-channel ",i2,": ", 8f8.4)'), &
-                              is,(Hubbard_Um(m1,is,nt)*rytoev, m1=1, ldim)
-                  ENDDO
-               ENDIF
-               !
-               IF (ANY(ABS(Hubbard_alpha_m(:,:,nt)) .GT. eps16)) THEN
-                  WRITE(stdout,'(5x,a,i1,a)')  &
-                     'ALPHA' // '(' // TRIM(atm(nt)) // '-', Hubbard_n(nt), &
-                     l_to_spdf(Hubbard_l(nt),.FALSE.) // ')'
-                  !
-                  DO is = 1, nspin
-                     WRITE( stdout,'(5x,"spin-channel ",i2,": ", 8f8.4)'), &
-                              is,(Hubbard_alpha_m(m1,is,nt)*rytoev, m1=1, ldim)
-                  ENDDO
-               ENDIF
                !
                IF (ANY(ABS(Hubbard_Um_nc(:,nt)) .GT. eps16)) THEN
                   WRITE(stdout,'(5x,a,i1,a)')  &
@@ -441,12 +407,11 @@ SUBROUTINE diag_ns_nc( ldim, ns_nc, lambda, eigenvecs_current )
    USE kinds,                ONLY : DP
    USE lsda_mod,             ONLY : nspin
    USE io_global,            ONLY : stdout
-   USE noncollin_module,     ONLY : npol
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN)        :: ldim
    !! Number of magnetic quantum orbitals (2l+1)
-   REAL(DP), INTENT(IN)       :: ns_nc(ldim,ldim,4)
+   COMPLEX(DP), INTENT(IN)    :: ns_nc(ldim,ldim,4)
    !! Occupation matrix (undiagonalized)
    REAL(DP), INTENT(OUT)      :: lambda(2*ldim)
    !! Occupation eigenvalues
@@ -509,7 +474,7 @@ REAL(DP), INTENT(IN)     :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
 COMPLEX(DP), ALLOCATABLE :: eigenvecs_current(:,:,:)
 !
 INTEGER, ALLOCATABLE     :: eigval_list(:), unpert_ats(:)
-INTEGER                  :: i, is, na, nt, m1, m2, ldim, eigval_add
+INTEGER                  :: i, is, na, nt, m, m1, m2, ldim, eigval_add
 INTEGER                  :: order(2*Hubbard_lmax+1,nspin), m_order
 !
 REAL(DP)                 :: tralpha, u
@@ -517,7 +482,6 @@ REAL(DP)                 :: tralpha, u
 LOGICAL                  :: has_second_manifold
 !
 CHARACTER(len=6)         :: manifold
-!
 !
 !
 ALLOCATE( unpert_ats(0) )
@@ -543,11 +507,11 @@ DO na = 1, nat
       !
       DO is = 1, nspin
          !
-         IF ( ANY(eigenvecs_ref(:,:,is,na) .NE. 0.0d0) ) THEN
+         IF ( ANY(eigenvecs_ref(:,:,is,na) /= 0.0d0) ) THEN
             ! order the eigenstates
             order(:,is) = 0
-            CALL order_eigenvecs( order(:,is), eigenvecs_current(:,:,is), &
-                  eigenvecs_ref(:,:,is,na), ldim )
+            CALL order_eigenvecs( order(1:ldim,is), eigenvecs_current(1:ldim,1:ldim,is), &
+                  eigenvecs_ref(1:ldim,1:ldim,is,na), ldim )
          ELSE
             ! if this routine is called, there should always be reference 
             ! eigenvectors because if Hubbard_alpha /=0 the Hubbard 
@@ -558,7 +522,7 @@ DO na = 1, nat
          !
          DO m1 = 1, ldim    
             !
-            IF (ABS(Hubbard_alpha_m(order(m1,is),is,nt)) .GE. eps16) THEN
+            IF (ABS(Hubbard_alpha_m(order(m1,is),is,nt)) >= eps16) THEN
                ! sum up the occupation of the perturbed states
                tralpha = tralpha + lambda_ns(order(m1,is),is,na)
                u = Hubbard_Um(order(m1,is),is,nt)*rytoev
@@ -575,8 +539,9 @@ DO na = 1, nat
       !
       IF (nspin ==1) tralpha = tralpha*2
       !
-      WRITE( stdout,'(/5x,"@ ATOM: ",i2," | MANIFOLD: ",a2," | U: ", f4.2, &
-            & " | OCCUPATION: ", f9.7," | EIGVALS:", (*(i2,1x)))'),na,manifold,u,tralpha,eigval_list
+      WRITE( stdout,'(/5x,"@ ATOM: ",i3," | MANIFOLD: ",a2," | U: ", f4.2, &
+            & " | OCCUPATION: ", f10.8," | EIGVALS:", 21i3)'),na,manifold,u,tralpha,(eigval_list(m),m=1,SIZE(eigval_list))
+
       !
    ELSEIF ( ANY(Hubbard_Um(:,:,nt) .NE. 0.d0) .AND. ALL(Hubbard_alpha_m(:,:,nt) .EQ. 0.d0) ) THEN
       ! ...case b) the species is NOT directly affected by Hubbard_alpha_m
@@ -619,17 +584,17 @@ IF (has_second_manifold) THEN
       !
       DO is = 1, nspin
          !
-         IF ( ANY(eigenvecs_ref(:,:,is,na) .NE. 0.0d0) ) THEN
-            order(:,is) = 0
-            CALL order_eigenvecs( order(:,is), eigenvecs_current(:,:,is), &
-                  eigenvecs_ref(:,:,is,na), ldim )
+         IF ( ANY(eigenvecs_ref(1:ldim,1:ldim,is,na) .NE. 0.0d0) ) THEN
+            order(1:ldim,is) = 0
+            CALL order_eigenvecs( order(1:ldim,is), eigenvecs_current(1:ldim,1:ldim,is), &
+                  eigenvecs_ref(1:ldim,1:ldim,is,na), ldim )
          ELSE
             CALL errore( 'alpha_m_trace', 'missing reference eigenvectors', 1 )
          ENDIF
          !
          DO m1 = 1, ldim
             !
-            ! check if Um of the respective eigenstate /= 0.0
+            ! check if Um of the resepective eigenstate /= 0.0
             ! if yes, sum this state's occupation eigenvalue
             !
             IF ( Hubbard_Um(order(m1,is),is,nt) .NE. 0.d0 ) THEN
@@ -646,8 +611,8 @@ IF (has_second_manifold) THEN
       ENDDO
       !
       IF (nspin ==1) tralpha = tralpha*2
-      WRITE( stdout,'(/5x,"@ ATOM: ",i2," | MANIFOLD: ",a2," | U: ", f4.2, &
-      & " | OCCUPATION: ", f9.7," | EIGVALS:", (*(i2,1x)))'),na,manifold,u,tralpha,eigval_list
+      WRITE( stdout,'(/5x,"@ ATOM: ",i3," | MANIFOLD: ",a2," | U: ", f4.2, &
+      & " | OCCUPATION: ", f10.8," | EIGVALS:", 21i3)'),na,manifold,u,tralpha,(eigval_list(m),m=1,SIZE(eigval_list))
       !
    DEALLOCATE( eigval_list )
    DEALLOCATE( eigenvecs_current)
@@ -689,7 +654,7 @@ COMPLEX(DP), INTENT(IN)     :: ns_nc(2*Hubbard_lmax+1,2*Hubbard_lmax+1,4,nat)
 COMPLEX(DP), ALLOCATABLE :: eigenvecs_current(:,:)
 !
 INTEGER, ALLOCATABLE     :: eigval_list(:), unpert_ats(:)
-INTEGER                  :: i, is, na, nt, m1, m2, ldim
+INTEGER                  :: i, is, na, nt, m, m1, m2, ldim
 INTEGER                  :: order(4*Hubbard_lmax+2), m_order
 !
 REAL(DP)                 :: tralpha, u
@@ -724,8 +689,8 @@ DO na = 1, nat
       IF ( ANY(eigenvecs_ref(:,:,1,na) .NE. 0.0d0) ) THEN
          ! order the eigenstates
          order(:) = 0
-         CALL order_eigenvecs( order(:), eigenvecs_current(:,:), &
-               eigenvecs_ref(:,:,1,na), 2*ldim )
+         CALL order_eigenvecs( order(:), eigenvecs_current(1:2*ldim,1:2*ldim), &
+               eigenvecs_ref(1:2*ldim,1:2*ldim,1,na), 2*ldim )
       ELSE
          ! if this routine is called, there should always be reference 
          ! eigenvectors because if Hubbard_alpha /=0 the Hubbard 
@@ -747,8 +712,8 @@ DO na = 1, nat
          !
       ENDDO
       !
-      WRITE( stdout,'(/5x,"@ ATOM: ",i2," | MANIFOLD: ",a2," | U: ", f4.2, &
-            & " | OCCUPATION: ", f9.7," | EIGVALS:", (*(i2,1x)))'),na,manifold,u,tralpha,eigval_list
+      WRITE( stdout,'(/5x,"@ ATOM: ",i3," | MANIFOLD: ",a2," | U: ", f4.2, &
+            & " | OCCUPATION: ", f10.8," | EIGVALS:", 21i3)'),na,manifold,u,tralpha,(eigval_list(m),m=1,SIZE(eigval_list))
       !
    ELSEIF ( ANY(Hubbard_Um_nc(:,nt) .NE. 0.d0) .AND. &
             ALL(Hubbard_alpha_m_nc(:,nt) .EQ. 0.d0) ) THEN
@@ -793,8 +758,8 @@ IF (has_second_manifold) THEN
       !
       IF ( ANY(eigenvecs_ref(:,:,1,na) .NE. 0.0d0) ) THEN
          order(:) = 0
-         CALL order_eigenvecs( order(:), eigenvecs_current(:,:), &
-               eigenvecs_ref(:,:,1,na), 2*ldim )
+         CALL order_eigenvecs( order(:), eigenvecs_current(1:2*ldim,1:2*ldim), &
+               eigenvecs_ref(1:2*ldim,1:2*ldim,1,na), 2*ldim )
       ELSE
          CALL errore( 'alpha_m_trace', 'missing reference eigenvectors', 1 )
       ENDIF
@@ -813,8 +778,8 @@ IF (has_second_manifold) THEN
          !
       ENDDO
       !
-      WRITE( stdout,'(/5x,"@ ATOM: ",i2," | MANIFOLD: ",a2," | U: ", f4.2, &
-      & " | OCCUPATION: ", f9.7," | EIGVALS:", (*(i2,1x)))'),na,manifold,u,tralpha,eigval_list
+      WRITE( stdout,'(/5x,"@ ATOM: ",i3," | MANIFOLD: ",a2," | U: ", f4.2, &
+      & " | OCCUPATION: ", f10.8," | EIGVALS:", 21i3)'),na,manifold,u,tralpha,(eigval_list(m),m=1,SIZE(eigval_list))
       !
    DEALLOCATE( eigval_list )
    DEALLOCATE( eigenvecs_current)
@@ -826,7 +791,4 @@ DEALLOCATE( unpert_ats )
 RETURN
    !
 END SUBROUTINE alpha_m_nc_trace
-!-----------------------------------------------------------------------
-
-
-
+   !-----------------------------------------------------------------------

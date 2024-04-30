@@ -813,7 +813,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                     rhoin%ns = rho%ns
                  ENDIF
               ELSEIF (lda_plus_u_kind.EQ.2) THEN
-                 CALL nsg_adj()  
+                 CALL nsg_adj()
               ENDIF
            ENDIF
            IF ( iter <= niter_with_fixed_ns ) THEN
@@ -901,7 +901,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                &    "too large:",/,5X,                      &
                                & "Diagonalizing with lowered threshold",/)' )
               !
-              ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )         
+              ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )
               !
               CYCLE scf_step
               !

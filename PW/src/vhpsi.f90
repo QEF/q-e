@@ -54,7 +54,7 @@ SUBROUTINE vhpsi( ldap, np, mps, psip, hpsi )
   ! proj = <wfcU|psip>
   CALL calbec (np, wfcU, psip, proj)
   ! 
-  IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1) THEN
+  IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
      CALL vhpsi_U ()  ! DFT+U
   ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
      CALL vhpsi_UV () ! DFT+U+V

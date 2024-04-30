@@ -1125,7 +1125,6 @@ FUNCTION ns_ddot_um( rho1, rho2 )
                index1 = FINDLOC(order1,m,dim=1)
                index2 = FINDLOC(order2,m,dim=1)
                !
-               ! **Check if the following also works for the NC case**
                ns_ddot_um = ns_ddot_um + 0.5D0 * Hubbard_Um(m,is,nt) * &
                       lambda1(index1,is) * lambda2(index2,is)
                !

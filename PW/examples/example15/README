@@ -41,4 +41,3 @@ The contrained DFT+U calculation can be done in two ways:
 Please see the documentation at q-e/PW/Doc/INPUT_OSCDFT.def for the
 descritpion of all other input keywords in the OSCDFT input file.
 
-

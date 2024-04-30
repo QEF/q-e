@@ -3258,10 +3258,6 @@ CONTAINS
                     & 'Currently DFT+U+V does not support orbital-resolved Hubbard U parameters', i)
             IF (ANY(ABS(Hubbard_alpha_m(:,:,:))>eps16)) CALL errore('card_hubbard', &
                     & 'Currently DFT+U+V does not support orbital-resolved Hubbard ALPHA parameters', i)
-         ELSEIF (ANY(ABS(Hubbard_Um(:,:,:))>eps16) .OR. ANY(ABS(Hubbard_alpha_m(:,:,:))>eps16)) THEN
-            ! Orbital-resolved DFT+U
-            lda_plus_u_kind = 0
-            orbital_resolved = .true.
             !
          ELSEIF (ANY(ABS(Hubbard_Um(:,:,:))>eps16) .OR. ANY(ABS(Hubbard_alpha_m(:,:,:))>eps16) .OR. &
             & ANY(ABS(Hubbard_Um_nc(:,:))>eps16) .OR. ANY(ABS(Hubbard_alpha_m_nc(:,:))>eps16)) THEN

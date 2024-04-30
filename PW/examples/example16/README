@@ -29,7 +29,6 @@ not treat the e_g manifold with Hubbard U corrections.
 In the following, we explain how this can be done using a "two-step"
 procedure whose first step is to investigate the order of the eigenstates,
 which are then targeted by orbital-resolved U corrections in the second run.
-!!!!!!!
 
 ================================
 Explanation of the input:
@@ -73,4 +72,3 @@ and at that of the lowest unoccupied one (LUMO), we can see that the U correctio
 strongly affects the former, lowering it by about 1.55eV, while having 
 no impact on the latter. Therefore, the band gap expands due to the 
 Hubbard U-induced downshift of the HOMO.
-
