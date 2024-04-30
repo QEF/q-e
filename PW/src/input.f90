@@ -218,6 +218,7 @@ SUBROUTINE control_iosys()
                             amass
   !
   USE starting_scf,  ONLY : startingconfig, starting_wfc, starting_pot
+  USE starting_scf,  ONLY : starting_charge_ => starting_charge
   !
   USE run_info,      ONLY : title_ => title
   !
@@ -349,9 +350,6 @@ SUBROUTINE control_iosys()
   USE realus,                ONLY : real_space_ => real_space
 
   USE qmmm,                  ONLY : qmmm_config
-
-
-  USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
   !

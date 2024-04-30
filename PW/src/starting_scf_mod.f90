@@ -9,8 +9,10 @@
 !
 MODULE starting_scf
   !
-  !! The variables needed to describe how to start an scf calculation
+  !! The variables describing how to start an scf calculation
   !
+  USE kinds,      ONLY: dp
+  USE parameters, ONLY: ntypx
   SAVE
   !
   CHARACTER(len=30) :: starting_wfc
@@ -19,5 +21,7 @@ MODULE starting_scf
   !! It can be 'atomic' or 'file'
   CHARACTER(len=30) :: startingconfig
   !! It can be 'input' or 'file'
+  REAL(dp) :: starting_charge(ntypx)
+  !! the atomic charge used to start with
   !
 END MODULE starting_scf

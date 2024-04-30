@@ -27,7 +27,8 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   USE cell_base,            ONLY : tpiba2, omega
   USE gvect,                ONLY : ngm, ngl, gl, igtongl, ecutrho
   USE lsda_mod,             ONLY : starting_magnetization
-  USE vlocal,               ONLY : starting_charge, strf
+  USE starting_scf,         ONLY : starting_charge
+  USE vlocal,               ONLY : strf
   USE noncollin_module,     ONLY : angle1, angle2
   USE uspp_param,           ONLY : upf
   USE mp_bands,             ONLY : intra_bgrp_comm
