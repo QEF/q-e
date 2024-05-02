@@ -198,7 +198,7 @@ set(src_pw
    src/set_vrs.f90 
    src/setlocal.f90 
    src/setup.f90 
-   src/starting_scf.f90
+   src/starting_scf_mod.f90
    src/stop_run.f90 
    src/stres_cc.f90 
    src/stres_ewa.f90 
