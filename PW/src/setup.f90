@@ -44,7 +44,8 @@ SUBROUTINE setup()
   USE io_files,           ONLY : xmlfile
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,              ONLY : starting_pot, natomwfc
+  USE basis,              ONLY : natomwfc
+  USE starting_scf,       ONLY : starting_pot
   USE fft_support,        ONLY : good_fft_order
   USE gvect,              ONLY : gcutm, ecutrho
   USE gvecw,              ONLY : gcutw, ecutwfc

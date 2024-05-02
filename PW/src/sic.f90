@@ -5,7 +5,7 @@ MODULE sic_mod
    ! ... Module for self-interaction-corrected calculations
    !     Written by Stefano Falletta
    !
-   USE basis,            ONLY : starting_pot
+   USE starting_scf,     ONLY : starting_pot
    USE cell_base,        ONLY : omega
    USE ener,             ONLY : esic
    USE fft_base,         ONLY : dfftp, dffts

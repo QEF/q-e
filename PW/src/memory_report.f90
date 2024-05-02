@@ -29,7 +29,8 @@ SUBROUTINE memory_report()
   USE kinds,     ONLY : dp 
   USE constants, ONLY : tpi, fpi, pi, eps16
   USE wvfct,     ONLY : nbnd, nbndx
-  USE basis,     ONLY : natomwfc, starting_wfc
+  USE basis,     ONLY : natomwfc
+  USE starting_scf, ONLY : starting_wfc
   USE cell_base, ONLY : omega, bg, alat
   USE exx,       ONLY : ecutfock, use_ace
   USE exx_base,  ONLY : nkqs

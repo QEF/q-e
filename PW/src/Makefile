@@ -211,6 +211,7 @@ setlocal.o \
 setup.o \
 scissor.o \
 sic.o \
+starting_scf_mod.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
