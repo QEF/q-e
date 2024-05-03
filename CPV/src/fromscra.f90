@@ -410,6 +410,7 @@ SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
          USE gvecw,        ONLY : ecutwfc
          USE upf_ions,     ONLY : n_atom_wfc
          USE atwfc_mod,    ONLY : init_tab_atwfc, deallocate_tab_atwfc
+         USE atomic_wfc_mod,   ONLY : atomic_wfc_acc
 
          IMPLICIT NONE
          !

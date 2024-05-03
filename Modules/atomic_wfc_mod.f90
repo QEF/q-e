@@ -5,6 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE atomic_wfc_mod
+  IMPLICIT NONE
+  PRIVATE
+  PUBLIC :: atomic_wfc_acc
+  CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE atomic_wfc_acc( xk, npw, igk_k, nat, nsp, ityp, tau, &
@@ -522,3 +527,5 @@ SUBROUTINE atomic_wfc_so( npw, npwx, npol, natomwfc, nsp, nt, &
             -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=dp))
     !
   END SUBROUTINE spinor_components
+  !
+END MODULE atomic_wfc_mod
