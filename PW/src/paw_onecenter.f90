@@ -944,8 +944,8 @@ MODULE paw_onecenter
     !
     ! ... local variables
     !
-    REAL(DP) :: div_F_rad(i%m,nx_loc,nspin_gga) ! div(F) on rad. grid
-    REAL(DP) :: aux(i%m)                        ! workspace
+    REAL(DP), ALLOCATABLE, DIMENSION(:,:,:)  :: div_F_rad ! div(F) on rad. grid
+    REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux            ! workspace
     ! counters on: spin, angular momentum, radial grid point:
     INTEGER :: is, lm, ix, k, ix0
     REAL(DP) :: aux_k
@@ -965,6 +965,8 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_div' )
     !
+    ALLOCATE(div_F_rad(i%m, nx_loc, nspin_gga), aux(i%m))
+
     !$acc data copyin( F_lm ) copyout( div_F_lm ) create( div_F_rad, aux )
     !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%rm3, g(i%t)%rm2 )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%dylmt, rad(i%t)%dylmp, rad(i%t)%ylm )
@@ -1023,6 +1025,8 @@ MODULE paw_onecenter
     !$acc end data
     !$acc end data
     !$acc end data
+
+    DEALLOCATE(div_F_rad, aux)
     !
     IF (TIMING) CALL stop_clock( 'PAW_div' )
     !
@@ -1899,7 +1903,7 @@ MODULE paw_onecenter
     INTEGER  :: k, ix, is, lm! counters on spin and mesh
     INTEGER  :: js, ls, ks, ipol, ix0, ixk, im_sum
     REAL(DP) :: a(2,2,2), b(2,2,2,2), c(2,2,2)
-    REAL(DP) :: s1
+    REAL(DP) :: s1, gIT_r2, gIT_rm2
     REAL(DP) :: ps(2,2), ps1(3,2,2), ps2(3,2,2,2)
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
@@ -2058,7 +2062,7 @@ MODULE paw_onecenter
        !
        CALL xc_gcx( im_sum, nspin_gga, r, gradsw, sx, sc, v1x, v2x, v1c, v2c, v2c_ud, gpu_args_=.TRUE. )
        !
-       !$acc parallel loop collapse(2) present(g(i%t:i%t)) private(dsvxc_s,ps,ps1,ps2,a,b,c)
+
        DO ix = ix_s, ix_e
           DO k = 1, i%m
              !
@@ -2066,21 +2070,28 @@ MODULE paw_onecenter
              ixk = (ix-ix_s)*i%m+k
              !
              IF ( r(ixk,1)+r(ixk,2) > eps ) THEN
+                !$acc parallel
                 dsvxc_s(1,1) = v2x(ixk,1) + v2c(ixk,1)
                 dsvxc_s(1,2) = v2c_ud(ixk)
                 dsvxc_s(2,1) = v2c_ud(ixk)
                 dsvxc_s(2,2) = v2x(ixk,2) + v2c(ixk,2)
+                !$acc end parallel
              ELSE
+                !$acc parallel
                 dsvxc_s = 0._DP
+                !$acc end parallel
              ENDIF
              !
+             !$acc kernels
              ps(:,:) = (0._DP,0._DP)
+             !$acc end kernels
              !
-             !$acc loop seq
+             gIT_rm2=g(i%t)%rm2(k)
+             !$acc parallel loop seq
              DO is = 1, nspin_gga
                 DO js = 1, nspin_gga
                    !
-                   ps1(:,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,:,js)
+                   ps1(:,is,js) = drho_rad(ixk,is)*gIT_rm2*grad(ixk,:,js)
                    !
                    DO ipol = 1, 3
                       ps(is,js) = ps(is,js) + grad(ixk,ipol,is)*dgrad(ixk,ipol,js)
@@ -2125,12 +2136,12 @@ MODULE paw_onecenter
                 ENDDO
              ENDDO
              !
-             !$acc loop seq
+             !$acc parallel loop seq
              DO is = 1, nspin_gga
                 DO js = 1, nspin_gga
                    !
                    gc_rad(k,ix0,is)  = gc_rad(k,ix0,is)  + dsvxc_rr(ixk,is,js) &
-                                              * drho_rad(ixk,js)*g(i%t)%rm2(k)
+                                              * drho_rad(ixk,js)*gIT_rm2
                    h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + dsvxc_s(is,js)  &
                                               * dgrad(ixk,:,js)
                    !
@@ -2149,7 +2160,10 @@ MODULE paw_onecenter
                 ENDDO
              ENDDO
              !
-             h_rad(k,:,ix0,:) = h_rad(k,:,ix0,:)*g(i%t)%r2(k)
+             gIT_r2=g(i%t)%r2(k)
+             !$acc kernels
+             h_rad(k,:,ix0,:) = h_rad(k,:,ix0,:)*gIT_r2
+             !$acc end kernels
              !
           ENDDO
        ENDDO
