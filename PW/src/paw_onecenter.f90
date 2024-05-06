@@ -1903,7 +1903,7 @@ MODULE paw_onecenter
     INTEGER  :: k, ix, is, lm! counters on spin and mesh
     INTEGER  :: js, ls, ks, ipol, ix0, ixk, im_sum
     REAL(DP) :: a(2,2,2), b(2,2,2,2), c(2,2,2)
-    REAL(DP) :: s1, gIT_r2, gIT_rm2
+    REAL(DP) :: s1
     REAL(DP) :: ps(2,2), ps1(3,2,2), ps2(3,2,2,2)
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
@@ -2062,7 +2062,7 @@ MODULE paw_onecenter
        !
        CALL xc_gcx( im_sum, nspin_gga, r, gradsw, sx, sc, v1x, v2x, v1c, v2c, v2c_ud, gpu_args_=.TRUE. )
        !
-
+       !$acc parallel loop collapse(2) present(g(i%t:i%t)) private(dsvxc_s,ps,ps1,ps2,a,b,c)
        DO ix = ix_s, ix_e
           DO k = 1, i%m
              !
@@ -2070,33 +2070,29 @@ MODULE paw_onecenter
              ixk = (ix-ix_s)*i%m+k
              !
              IF ( r(ixk,1)+r(ixk,2) > eps ) THEN
-                !$acc parallel
                 dsvxc_s(1,1) = v2x(ixk,1) + v2c(ixk,1)
                 dsvxc_s(1,2) = v2c_ud(ixk)
                 dsvxc_s(2,1) = v2c_ud(ixk)
                 dsvxc_s(2,2) = v2x(ixk,2) + v2c(ixk,2)
-                !$acc end parallel
              ELSE
-                !$acc parallel
                 dsvxc_s = 0._DP
-                !$acc end parallel
              ENDIF
              !
-             !$acc kernels
              ps(:,:) = (0._DP,0._DP)
-             !$acc end kernels
              !
-             gIT_rm2=g(i%t)%rm2(k)
-             !$acc parallel loop seq
+             !$acc loop seq
              DO is = 1, nspin_gga
+                !$acc loop seq
                 DO js = 1, nspin_gga
                    !
-                   ps1(:,is,js) = drho_rad(ixk,is)*gIT_rm2*grad(ixk,:,js)
+                   ps1(:,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,:,js)
                    !
+                   !$acc loop seq
                    DO ipol = 1, 3
                       ps(is,js) = ps(is,js) + grad(ixk,ipol,is)*dgrad(ixk,ipol,js)
                    ENDDO
                    !
+                   !$acc loop seq
                    DO ks = 1, nspin_gga
                       !
                       IF ( is==js .AND. js==ks ) THEN
@@ -2117,6 +2113,7 @@ MODULE paw_onecenter
                       !
                       ps2(:,is,js,ks) = ps(is,js) * grad(ixk,:,ks)
                       !
+                      !$acc loop seq
                       DO ls = 1, nspin_gga
                          !
                          IF ( is==js .AND. js==ks .AND. ks==ls ) THEN
@@ -2136,20 +2133,23 @@ MODULE paw_onecenter
                 ENDDO
              ENDDO
              !
-             !$acc parallel loop seq
+             !$acc loop seq
              DO is = 1, nspin_gga
+                !$acc loop seq
                 DO js = 1, nspin_gga
                    !
                    gc_rad(k,ix0,is)  = gc_rad(k,ix0,is)  + dsvxc_rr(ixk,is,js) &
-                                              * drho_rad(ixk,js)*gIT_rm2
+                                              * drho_rad(ixk,js)*g(i%t)%rm2(k)
                    h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + dsvxc_s(is,js)  &
                                               * dgrad(ixk,:,js)
                    !
+                   !$acc loop seq
                    DO ks = 1, nspin_gga
                       !
                       gc_rad(k,ix0,is) = gc_rad(k,ix0,is)+a(is,js,ks)*ps(js,ks)
                       h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + &
                                          c(is,js,ks) * ps1(:,js,ks)
+                      !$acc loop seq
                       DO ls = 1, nspin_gga
                          h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + &
                                             b(is,js,ks,ls) * ps2(:,js,ks,ls)
@@ -2158,12 +2158,9 @@ MODULE paw_onecenter
                    ENDDO
                    !
                 ENDDO
+                h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is)*g(i%t)%r2(k)
              ENDDO
              !
-             gIT_r2=g(i%t)%r2(k)
-             !$acc kernels
-             h_rad(k,:,ix0,:) = h_rad(k,:,ix0,:)*gIT_r2
-             !$acc end kernels
              !
           ENDDO
        ENDDO
