@@ -2080,9 +2080,8 @@ MODULE paw_onecenter
              !
              ps(:,:) = (0._DP,0._DP)
              !
-             !$acc loop seq
+             !$acc loop seq collapse(2)
              DO is = 1, nspin_gga
-                !$acc loop seq
                 DO js = 1, nspin_gga
                    !
                    ps1(:,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,:,js)
