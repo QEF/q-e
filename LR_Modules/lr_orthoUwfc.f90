@@ -41,6 +41,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum
   USE mp_pools,         ONLY : intra_pool_comm
+  USE mp_bands,         ONLY : use_bgrp_in_hpsi
   USE noncollin_module, ONLY : noncolin, npol
   USE qpoint,           ONLY : nksq, ikks, ikqs
   USE control_lr,       ONLY : lgamma
@@ -56,7 +57,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
              ikq, & ! k+q point
              npw, & ! number of plane waves at k
              npwq   ! number of plane waves at k+q
-  LOGICAL :: orthogonalize_wfc, normalize_only
+  LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:), &  ! atomic wfc
                               swfcatom(:,:)    ! S * atomic wfc
   !
@@ -86,7 +87,9 @@ SUBROUTINE lr_orthoUwfc (lflag)
   ALLOCATE (wfcatom(npwx*npol,natomwfc))
   ALLOCATE (swfcatom(npwx*npol,natomwfc))
   !
-
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
+  !
+  ! Allocate the array becp = <beta|wfcatom>
   IF (okvan) CALL allocate_bec_type (nkb,natomwfc,becp)
   !
   DO ik = 1, nksq
@@ -190,6 +193,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
   DEALLOCATE (swfcatom)
   ! 
   IF (okvan) CALL deallocate_bec_type (becp)
+  !
+  use_bgrp_in_hpsi = save_flag
   !
   CALL stop_clock ('lr_orthoUwfc')
   !

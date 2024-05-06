@@ -42,7 +42,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   USE gvect,          ONLY : g
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
-  USE mp_pools,       ONLY : intra_pool_comm
+  USE mp_bands,       ONLY : intra_bgrp_comm
   USE buffers,        ONLY : get_buffer
   USE basis,          ONLY : natomwfc
   USE noncollin_module, ONLY : noncolin, npol
@@ -248,9 +248,9 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
      !
   ENDDO
   !
-  CALL mp_sum(proj1, intra_pool_comm)
-  CALL mp_sum(proj2, intra_pool_comm)
-  CALL mp_sum(proj3, intra_pool_comm)
+  CALL mp_sum(proj1, intra_bgrp_comm)
+  CALL mp_sum(proj2, intra_bgrp_comm)
+  CALL mp_sum(proj3, intra_bgrp_comm)
   !
   DO nah = 1, nat   ! the Hubbard atom
      !
@@ -414,7 +414,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     USE uspp,       ONLY : qq_nt, nkb, ofsbeta
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
-    USE mp_pools,   ONLY : intra_pool_comm
+    USE mp_bands,   ONLY : intra_bgrp_comm
     !
     IMPLICIT NONE
     !
@@ -455,7 +455,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
           !
           projaux1vec3 = dot_product (aux1(1:npw), vec3(1:npw))
           !
-          CALL mp_sum(projaux1vec3, intra_pool_comm)
+          CALL mp_sum(projaux1vec3, intra_bgrp_comm)
           !
           ! Summing on na and l1 for each ig
           !
