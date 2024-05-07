@@ -8,10 +8,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use control_flags,  ONLY : gamma_only  
   use becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
-!  use symme,          ONLY : nsym, s, invsym, sname, irt, ftau
-!  use symme,          ONLY : nsym, s, invsym, irt, ftau
-!  use char,           ONLY : sname
-! occhio sname is in symme which is now outside pwcom
   use  uspp,          ONLY : nkb, vkb
   use wavefunctions,  ONLY : evc
   use io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
@@ -22,7 +18,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use mp_pools,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm, nproc_pool
   USE mp_world,             ONLY : world_comm
   use mp,             ONLY : mp_sum, mp_max
-!  use ldaU,           ONLY : swfcatom, lda_plus_u
   use ldaU,           ONLY :  lda_plus_u
   USE gvecw,              ONLY :  ecutwfc
   USE klist, ONLY : igk_k
@@ -192,7 +187,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      IF( (ik >= iks) .AND. (ik <= ike) ) THEN
 
        call davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
-!       IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, (ik-iks+1), -1 )
        local_pw = ngk(ik-iks+1)
 
      ENDIF

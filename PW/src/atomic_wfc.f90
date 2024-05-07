@@ -20,6 +20,7 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   USE wvfct,            ONLY : npwx
   USE noncollin_module, ONLY : noncolin, lspinorb, domag, npol, &
                                angle1, angle2, starting_spin_angle
+  USE atomic_wfc_mod,   ONLY : atomic_wfc_acc
   !
   IMPLICIT NONE
   !
@@ -61,6 +62,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   USE wvfct,            ONLY : npwx
   USE noncollin_module, ONLY : noncolin, lspinorb, npol, angle1, angle2
   !! Note: lspinorb, angle1 and angle2 are not used
+  USE atomic_wfc_mod,   ONLY : atomic_wfc_acc
   !
   IMPLICIT NONE
   !
@@ -104,6 +106,7 @@ SUBROUTINE atomic_wfc_nc_proj( ik, wfcatom )
   USE wvfct,            ONLY : npwx
   USE noncollin_module, ONLY : noncolin, lspinorb, npol, angle1, angle2
   !! Note: angle1 and angle2 are not used
+  USE atomic_wfc_mod,   ONLY : atomic_wfc_acc
   !
   IMPLICIT NONE
   !

@@ -22,7 +22,6 @@ subroutine rotate_wannier( rot_u,ispin, iun_wannier)
   USE wvfct,    ONLY : npwx, npw, nbnd
   USE gvecw,    ONLY : gcutw
   USE gvect
-  USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
   USE io_files, ONLY: nwordwfc
@@ -110,7 +109,6 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp)
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx, npw,nbnd
   USE gvect
-  USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
   USE io_files, ONLY: nwordwfc
