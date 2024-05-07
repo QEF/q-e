@@ -1006,12 +1006,15 @@ MODULE paw_onecenter
       ENDDO
     ENDDO
     !
+    !$acc update self(F_lm(:,1:1,:,:))
+    !
     ! ... Compute partial radial derivative d/dr
     DO is = 1, nspin_gga
       DO lm = 1, lmaxq_out**2
         ! ... Derive along \hat{r} (F already contains a r**2 factor, otherwise
         ! ... it may be better to expand (1/r**2) d(A*r**2)/dr = dA/dr + 2A/r)
-        CALL radial_gradient( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style, .TRUE. )
+        CALL radial_gradient( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style )
+        !$acc update device(aux)
         !
         ! ... Sum it in the divergence: it is already in the right Y_lm form
         !
@@ -1097,11 +1100,13 @@ MODULE paw_onecenter
         ENDDO
       ENDDO
       !
+      !$acc update self(aux)
       DO ix = 1, nx_loc
         ixs = (ix-1)*i%m+1
         ixe = ix*i%m
-        CALL radial_gradient( aux(ixs:ixe), aux2(ixs:ixe), g(i%t)%r, i%m, radial_grad_style, .TRUE. )
+        CALL radial_gradient( aux(ixs:ixe), aux2(ixs:ixe), g(i%t)%r, i%m, radial_grad_style )
       ENDDO
+      !$acc update device(aux2)
       !
       !$acc parallel loop collapse(2) present(rad(i%t:i%t),g(i%t:i%t))
       DO ix = 1, nx_loc
@@ -1372,7 +1377,9 @@ MODULE paw_onecenter
   !--------------------------------------------------------------------------------
   SUBROUTINE PAW_rad2lm( i, F_rad, F_lm, lmax_loc, nspin )
     !------------------------------------------------------------------------------
-    !! gpu double
+    !! Computes:
+    !! \[ F_{lm}(r) = \int d \Omega\ F(r,\text{th},\text{ph})\ Y_{lm}(\text{th},
+    !! \text{ph}) \]
     !
     IMPLICIT NONE
     !
