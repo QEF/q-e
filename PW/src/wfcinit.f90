@@ -14,20 +14,24 @@ SUBROUTINE wfcinit()
   ! ... It also open needed files or memory buffers
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE basis,                ONLY : natomwfc
+  USE ions_base,            ONLY : nat, ityp
+  USE basis,                ONLY : natomwfc, swfcatom
+  USE upf_ions,             ONLY : n_atom_wfc
   USE starting_scf,         ONLY : starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, &
+                                   nwfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, xmlfile, restart_dir
+  USE noncollin_module,     ONLY : npol, noncolin
+  USE io_files,             ONLY : nwordwfc, nwordwfcU, nwordatwfc, iunhub, &
+                                   iunwfc, iunsat, diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
-  USE wvfct,                ONLY : nbnd, current_k, et
+  USE wvfct,                ONLY : nbnd, npwx, current_k, et
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -47,12 +51,27 @@ SUBROUTINE wfcinit()
   !
   CALL start_clock( 'wfcinit' )
   !
+  ! ... set number of atomic wavefunctions
+  !
+  natomwfc = n_atom_wfc( nat, ityp, noncolin )
+  !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
-  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
-       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
-  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
+  IF ( use_wannier .OR. one_atom_occupations ) THEN
+     !
+     IF ( lda_plus_u ) CALL errore ( 'wfcinit', 'incompatible options', 1 )
+     nwordatwfc= npwx*natomwfc*npol
+     CALL open_buffer( iunsat, 'satwfc', nwordatwfc, io_level, exst )
+     ALLOCATE( swfcatom(npwx*npol,natomwfc) )
+     CALL orthoatwfc ( use_wannier )
+     !
+  ELSE IF ( lda_plus_u .AND. ( Hubbard_projectors.NE.'pseudo') ) THEN
+     !
+     ! nwfcU is computed in init_hubbard
+     ALLOCATE( wfcU(npwx*npol,nwfcU) )
+     CALL orthoUwfc(.FALSE.)
+     !
+  END IF
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer
@@ -257,8 +276,6 @@ SUBROUTINE init_wfc ( ik )
   !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
-  ! should be declared "device_resident(wfcatom)" but gives problems inside
-  ! "atomic_wfc" for spin-orbit case and openmp compilation - not sure why
   !
 #if defined(__CUDA)
   REAL(DP),    ALLOCATABLE :: randy_vec(:) ! data for random
