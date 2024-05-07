@@ -944,8 +944,8 @@ MODULE paw_onecenter
     !
     ! ... local variables
     !
-    REAL(DP) :: div_F_rad(i%m,nx_loc,nspin_gga) ! div(F) on rad. grid
-    REAL(DP) :: aux(i%m)                        ! workspace
+    REAL(DP), ALLOCATABLE, DIMENSION(:,:,:)  :: div_F_rad ! div(F) on rad. grid
+    REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux            ! workspace
     ! counters on: spin, angular momentum, radial grid point:
     INTEGER :: is, lm, ix, k, ix0
     REAL(DP) :: aux_k
@@ -965,6 +965,8 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_div' )
     !
+    ALLOCATE(div_F_rad(i%m, nx_loc, nspin_gga), aux(i%m))
+
     !$acc data copyin( F_lm ) copyout( div_F_lm ) create( div_F_rad, aux )
     !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%rm3, g(i%t)%rm2 )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%dylmt, rad(i%t)%dylmp, rad(i%t)%ylm )
@@ -1023,6 +1025,8 @@ MODULE paw_onecenter
     !$acc end data
     !$acc end data
     !$acc end data
+
+    DEALLOCATE(div_F_rad, aux)
     !
     IF (TIMING) CALL stop_clock( 'PAW_div' )
     !
@@ -2076,16 +2080,18 @@ MODULE paw_onecenter
              !
              ps(:,:) = (0._DP,0._DP)
              !
-             !$acc loop seq
+             !$acc loop seq collapse(2)
              DO is = 1, nspin_gga
                 DO js = 1, nspin_gga
                    !
                    ps1(:,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,:,js)
                    !
+                   !$acc loop seq
                    DO ipol = 1, 3
                       ps(is,js) = ps(is,js) + grad(ixk,ipol,is)*dgrad(ixk,ipol,js)
                    ENDDO
                    !
+                   !$acc loop seq
                    DO ks = 1, nspin_gga
                       !
                       IF ( is==js .AND. js==ks ) THEN
@@ -2106,6 +2112,7 @@ MODULE paw_onecenter
                       !
                       ps2(:,is,js,ks) = ps(is,js) * grad(ixk,:,ks)
                       !
+                      !$acc loop seq
                       DO ls = 1, nspin_gga
                          !
                          IF ( is==js .AND. js==ks .AND. ks==ls ) THEN
@@ -2127,6 +2134,7 @@ MODULE paw_onecenter
              !
              !$acc loop seq
              DO is = 1, nspin_gga
+                !$acc loop seq
                 DO js = 1, nspin_gga
                    !
                    gc_rad(k,ix0,is)  = gc_rad(k,ix0,is)  + dsvxc_rr(ixk,is,js) &
@@ -2134,11 +2142,13 @@ MODULE paw_onecenter
                    h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + dsvxc_s(is,js)  &
                                               * dgrad(ixk,:,js)
                    !
+                   !$acc loop seq
                    DO ks = 1, nspin_gga
                       !
                       gc_rad(k,ix0,is) = gc_rad(k,ix0,is)+a(is,js,ks)*ps(js,ks)
                       h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + &
                                          c(is,js,ks) * ps1(:,js,ks)
+                      !$acc loop seq
                       DO ls = 1, nspin_gga
                          h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + &
                                             b(is,js,ks,ls) * ps2(:,js,ks,ls)
@@ -2147,9 +2157,9 @@ MODULE paw_onecenter
                    ENDDO
                    !
                 ENDDO
+                h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is)*g(i%t)%r2(k)
              ENDDO
              !
-             h_rad(k,:,ix0,:) = h_rad(k,:,ix0,:)*g(i%t)%r2(k)
              !
           ENDDO
        ENDDO
