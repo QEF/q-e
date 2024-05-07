@@ -70,7 +70,7 @@ SUBROUTINE force_us( forcenl )
     ALLOCATE( deff(nhm,nhm,nat) )
   ENDIF
   ! 
-  !$acc data create(deff,deff_nc) copyin(evc)
+  !$acc data create(deff,deff_nc) 
   !
   ALLOCATE( nt_list(nat), na_list(nat), ismulti_np(nat) )
   !
