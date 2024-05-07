@@ -96,12 +96,6 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   ALLOCATE (vkb_(npwx,nkb))
   ALLOCATE (dwfcatom_(npwx))
   !
-  aux1 = (0.d0, 0.d0)
-  aux2 = (0.d0, 0.d0)
-  aux3 = (0.d0, 0.d0)
-  aux4 = (0.d0, 0.d0)
-  aux5 = (0.d0, 0.d0)
-  !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
   proj1 = (0.d0, 0.d0)
