@@ -10,8 +10,7 @@
 SUBROUTINE allocate_wfc()
   !----------------------------------------------------------------------------
   !! Dynamical allocation of arrays: wavefunctions.  
-  !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\), 
-  !! \(\text{natomwfc}\), \(\text{nwfcU}\).
+  !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\)
   !
 #if defined (__CUDA)
   use, intrinsic :: iso_c_binding
