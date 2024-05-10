@@ -1913,7 +1913,8 @@ MODULE paw_onecenter
     REAL(DP) :: s1
     REAL(DP) :: ps(2,2), ps1(3,2,2), ps2(3,2,2,2)
     !
-    IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
+    !IF (TIMING) 
+    CALL start_clock( 'PAW_dgcxc_v' )
     !
     !$acc data copyin( rho_lm, drho_lm, rho_core ) copy( v_lm )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%dylmt, rad(i%t)%dylmp, rad(i%t)%ylm, rad(i%t)%wwylm )
@@ -2082,19 +2083,22 @@ MODULE paw_onecenter
                 dsvxc_s(2,1) = v2c_ud(ixk)
                 dsvxc_s(2,2) = v2x(ixk,2) + v2c(ixk,2)
              ELSE
-                dsvxc_s = 0._DP
+                dsvxc_s(1,1) = 0.d0
+                dsvxc_s(1,2) = 0.d0
+                dsvxc_s(2,1) = 0.d0
+                dsvxc_s(2,2) = 0.d0
              ENDIF
              !
-             ps(:,:) = (0._DP,0._DP)
+             ps(1,1) = 0.d0 ; ps(1,2) = 0.d0
+             ps(2,1) = 0.d0 ; ps(2,2) = 0.d0
              !
              !$acc loop seq collapse(2)
              DO is = 1, nspin_gga
                 DO js = 1, nspin_gga
                    !
-                   ps1(:,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,:,js)
-                   !
                    !$acc loop seq
                    DO ipol = 1, 3
+                      ps1(ipol,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,ipol,js)
                       ps(is,js) = ps(is,js) + grad(ixk,ipol,is)*dgrad(ixk,ipol,js)
                    ENDDO
                    !
@@ -2117,7 +2121,9 @@ MODULE paw_onecenter
                          ENDIF
                       ENDIF
                       !
-                      ps2(:,is,js,ks) = ps(is,js) * grad(ixk,:,ks)
+                      ps2(1,is,js,ks) = ps(is,js) * grad(ixk,1,ks)
+                      ps2(2,is,js,ks) = ps(is,js) * grad(ixk,2,ks)
+                      ps2(3,is,js,ks) = ps(is,js) * grad(ixk,3,ks)
                       !
                       !$acc loop seq
                       DO ls = 1, nspin_gga
@@ -2141,9 +2147,9 @@ MODULE paw_onecenter
              !
              !$acc loop seq
              DO is = 1, nspin_gga
-                !$acc loop seq
+               !$acc loop seq
                 DO js = 1, nspin_gga
-                   !
+                  !
                    gc_rad(k,ix0,is)  = gc_rad(k,ix0,is)  + dsvxc_rr(ixk,is,js) &
                                               * drho_rad(ixk,js)*g(i%t)%rm2(k)
                    h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + dsvxc_s(is,js)  &
@@ -2166,7 +2172,6 @@ MODULE paw_onecenter
                 ENDDO
                 h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is)*g(i%t)%r2(k)
              ENDDO
-             !
              !
           ENDDO
        ENDDO
@@ -2255,7 +2260,8 @@ MODULE paw_onecenter
     !$acc end data
     !$acc end data
     !
-    IF (TIMING) CALL stop_clock( 'PAW_dgcxc_v' )
+    !IF (TIMING) 
+    CALL stop_clock( 'PAW_dgcxc_v' )
     !
   END SUBROUTINE PAW_dgcxc_potential
   !
