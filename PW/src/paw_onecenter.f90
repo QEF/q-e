@@ -1913,8 +1913,7 @@ MODULE paw_onecenter
     REAL(DP) :: s1
     REAL(DP) :: ps(2,2), ps1(3,2,2), ps2(3,2,2,2)
     !
-    !IF (TIMING) 
-    CALL start_clock( 'PAW_dgcxc_v' )
+    IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
     !
     !$acc data copyin( rho_lm, drho_lm, rho_core ) copy( v_lm )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%dylmt, rad(i%t)%dylmp, rad(i%t)%ylm, rad(i%t)%wwylm )
@@ -2260,8 +2259,7 @@ MODULE paw_onecenter
     !$acc end data
     !$acc end data
     !
-    !IF (TIMING) 
-    CALL stop_clock( 'PAW_dgcxc_v' )
+    IF (TIMING) CALL stop_clock( 'PAW_dgcxc_v' )
     !
   END SUBROUTINE PAW_dgcxc_potential
   !
@@ -2541,6 +2539,7 @@ MODULE paw_onecenter
           IF (mag*g(i%t)%rm2(k) < eps12) THEN
              segni_rad(k,ix) = 1.0_DP
           ELSE
+             !$acc loop seq
              DO ipol = 1, 3
                 m(ipol) = rho_rad(ixk,1+ipol)/mag
              ENDDO
