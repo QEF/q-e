@@ -69,7 +69,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   ALLOCATE(ps(nbnd,nbnd))
   !
-  !$acc data copy(dvpsi,dpsi) create(ps(1:nbnd, 1:nbnd), ps_r(1:nbnd, 1:nbnd))
+  !$acc data present_or_copyin(evq) present_or_copy(dvpsi,dpsi) create(ps(1:nbnd, 1:nbnd), ps_r(1:nbnd, 1:nbnd))
   IF (gamma_only) THEN
      !$acc kernels
      ps_r(:,:) = 0.0d0
