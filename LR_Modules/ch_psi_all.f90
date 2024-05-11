@@ -17,7 +17,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE cell_base,            ONLY : tpiba
   USE wvfct,                ONLY : npwx, nbnd, current_k
   USE becmod,               ONLY : becp, calbec
-  USE uspp,                 ONLY : nkb, vkb
+  USE uspp,                 ONLY : nkb, vkb, okvan
   USE fft_base,             ONLY : dffts
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, igk_k
@@ -216,16 +216,18 @@ CONTAINS
     !
     !    And apply S again
     !
-    CALL start_clock_gpu ('ch_psi_calbec')
-    if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
-       call divide (inter_bgrp_comm, m, m_start, m_end)
-       if (m_end >= m_start) then
-          CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+    IF (okvan) THEN
+       CALL start_clock_gpu ('ch_psi_calbec')
+       if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
+          call divide (inter_bgrp_comm, m, m_start, m_end)
+          if (m_end >= m_start) then
+             CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+          endif
+       else
+          CALL calbec (offload_type, n, vkb, hpsi, becp, m)
        endif
-    else
-       CALL calbec (offload_type, n, vkb, hpsi, becp, m)
-    endif
-    CALL stop_clock_gpu ('ch_psi_calbec')
+       CALL stop_clock_gpu ('ch_psi_calbec')
+    ENDIF ! okvan
     !$acc host_data use_device(hpsi, spsi)
     CALL s_psi_acc (npwx, n, m, hpsi, spsi)
     !$acc end host_data
@@ -318,14 +320,16 @@ CONTAINS
        ENDDO
        !$acc update device(hpsi, spsi)
     ELSE
-       CALL start_clock_gpu ('ch_psi_calbec')
-       if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
-          call divide( inter_bgrp_comm, m, m_start, m_end)
-          if (m_end >= m_start) CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
-       else
-          CALL calbec (offload_type, n, vkb, hpsi, becp, m)
-       end if
-       CALL stop_clock_gpu ('ch_psi_calbec')
+       IF (okvan) THEN
+          CALL start_clock_gpu ('ch_psi_calbec')
+          if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
+             call divide( inter_bgrp_comm, m, m_start, m_end)
+             if (m_end >= m_start) CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+          else
+             CALL calbec (offload_type, n, vkb, hpsi, becp, m)
+          end if
+          CALL stop_clock_gpu ('ch_psi_calbec')
+       ENDIF ! okvan
        !$acc host_data use_device(hpsi, spsi)
        CALL s_psi_acc (npwx, n, m, hpsi, spsi)
        !$acc end host_data
