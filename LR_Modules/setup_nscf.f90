@@ -26,9 +26,8 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE parameters,         ONLY : npk
   USE constants,          ONLY : pi, degspin
   USE cell_base,          ONLY : at, bg, tpiba
-  USE ions_base,          ONLY : nat, tau, ityp, zv
+  USE ions_base,          ONLY : nat
   USE force_mod,          ONLY : force
-  USE basis,              ONLY : natomwfc
   USE klist,              ONLY : xk, wk, nks, degauss, lgauss, &
                                  ltetra, nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
@@ -40,7 +39,6 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE noncollin_module,   ONLY : noncolin, domag
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE upf_ions,           ONLY : n_atom_wfc
   USE ktetra,             ONLY : tetra, tetra_type, opt_tetra_init
   USE lr_symm_base,       ONLY : nsymq, invsymq, minus_q
   USE control_lr,         ONLY : lgamma, ethr_nscf
@@ -51,7 +49,6 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   LOGICAL, INTENT (IN) :: newgrid
   LOGICAL, INTENT (IN) :: elph_mat  ! used to be passed through a module. 
   !
-  REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   INTEGER  :: t_rev_eff(48), ik
   LOGICAL  :: magnetic_sym, sym(48)
   LOGICAL  :: skip_equivalence
@@ -73,7 +70,6 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   END IF
   nbndx = david*nbnd
   max_cg_iter=20
-  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
   CALL set_para_diag( nbnd, use_para_diag )
   !

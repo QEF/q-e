@@ -25,13 +25,16 @@ SUBROUTINE lr_orthoUwfc (lflag)
   !
   ! In the norm-conserving case, S(k)=1 and S(k+q)=1.
   ! Note: here the array wfcU is used as a workspace.
+  ! Note2: wfcU is not deallocated because it is used also in ch_psi_all 
   ! Inspired by PW/src/orthoatwfc.f90
   !
   ! Written by I. Timrov (01.10.2018)
   !
   USE kinds,            ONLY : DP
   USE io_files,         ONLY : iunhub, iunhub_noS, nwordwfcU
+  USE ions_base,        ONLY : nat, ityp
   USE basis,            ONLY : natomwfc
+  USE upf_ions,         ONLY : n_atom_wfc
   USE klist,            ONLY : xk, ngk, igk_k
   USE wvfct,            ONLY : npwx
   USE control_flags,    ONLY : gamma_only
@@ -83,10 +86,11 @@ SUBROUTINE lr_orthoUwfc (lflag)
      CALL errore ("hp_sphi"," This Hubbard projectors type is not valid",1)
   ENDIF
   !
+  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   ALLOCATE (wfcatom(npwx*npol,natomwfc))
   ALLOCATE (swfcatom(npwx*npol,natomwfc))
+  IF ( .NOT. ALLOCATED(wfcU) ) ALLOCATE (wfcU(npwx*npol,nwfcU))
   !
-
   IF (okvan) CALL allocate_bec_type (nkb,natomwfc,becp)
   !
   DO ik = 1, nksq
@@ -188,7 +192,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
   !
   DEALLOCATE (wfcatom)
   DEALLOCATE (swfcatom)
-  ! 
+  !
   IF (okvan) CALL deallocate_bec_type (becp)
   !
   CALL stop_clock ('lr_orthoUwfc')
