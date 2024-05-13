@@ -151,7 +151,6 @@ SUBROUTINE sum_band_gpu()
   !
   CALL start_clock_gpu( 'sum_band:loop' )
   !
-  !$acc enter data create(evc)
   IF (noncolin) THEN
     !$acc enter data create(psic_nc)
   ELSE
@@ -168,7 +167,6 @@ SUBROUTINE sum_band_gpu()
      !
   ENDIF
   !
-  !$acc exit data delete(evc)
   IF (noncolin) THEN
     !$acc exit data delete(psic_nc)
   ELSE
@@ -993,7 +991,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
-     !$acc data present_or_copyin(evc) 
+     !$acc data present(evc) 
      CAll calbec(offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
      !$acc end data
   ELSE

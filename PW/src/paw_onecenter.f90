@@ -944,8 +944,8 @@ MODULE paw_onecenter
     !
     ! ... local variables
     !
-    REAL(DP) :: div_F_rad(i%m,nx_loc,nspin_gga) ! div(F) on rad. grid
-    REAL(DP) :: aux(i%m)                        ! workspace
+    REAL(DP), ALLOCATABLE, DIMENSION(:,:,:)  :: div_F_rad ! div(F) on rad. grid
+    REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux            ! workspace
     ! counters on: spin, angular momentum, radial grid point:
     INTEGER :: is, lm, ix, k, ix0
     REAL(DP) :: aux_k
@@ -965,6 +965,8 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_div' )
     !
+    ALLOCATE(div_F_rad(i%m, nx_loc, nspin_gga), aux(i%m))
+
     !$acc data copyin( F_lm ) copyout( div_F_lm ) create( div_F_rad, aux )
     !$acc data copyin( g(i%t:i%t), g(i%t)%r, g(i%t)%rm3, g(i%t)%rm2 )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%dylmt, rad(i%t)%dylmp, rad(i%t)%ylm )
@@ -1004,12 +1006,15 @@ MODULE paw_onecenter
       ENDDO
     ENDDO
     !
+    !$acc update self(F_lm(:,1:1,:,:))
+    !
     ! ... Compute partial radial derivative d/dr
     DO is = 1, nspin_gga
       DO lm = 1, lmaxq_out**2
         ! ... Derive along \hat{r} (F already contains a r**2 factor, otherwise
         ! ... it may be better to expand (1/r**2) d(A*r**2)/dr = dA/dr + 2A/r)
-        CALL radial_gradient( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style, .TRUE. )
+        CALL radial_gradient( F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style )
+        !$acc update device(aux)
         !
         ! ... Sum it in the divergence: it is already in the right Y_lm form
         !
@@ -1023,6 +1028,8 @@ MODULE paw_onecenter
     !$acc end data
     !$acc end data
     !$acc end data
+
+    DEALLOCATE(div_F_rad, aux)
     !
     IF (TIMING) CALL stop_clock( 'PAW_div' )
     !
@@ -1093,11 +1100,13 @@ MODULE paw_onecenter
         ENDDO
       ENDDO
       !
+      !$acc update self(aux)
       DO ix = 1, nx_loc
         ixs = (ix-1)*i%m+1
         ixe = ix*i%m
-        CALL radial_gradient( aux(ixs:ixe), aux2(ixs:ixe), g(i%t)%r, i%m, radial_grad_style, .TRUE. )
+        CALL radial_gradient( aux(ixs:ixe), aux2(ixs:ixe), g(i%t)%r, i%m, radial_grad_style )
       ENDDO
+      !$acc update device(aux2)
       !
       !$acc parallel loop collapse(2) present(rad(i%t:i%t),g(i%t:i%t))
       DO ix = 1, nx_loc
@@ -1368,7 +1377,9 @@ MODULE paw_onecenter
   !--------------------------------------------------------------------------------
   SUBROUTINE PAW_rad2lm( i, F_rad, F_lm, lmax_loc, nspin )
     !------------------------------------------------------------------------------
-    !! gpu double
+    !! Computes:
+    !! \[ F_{lm}(r) = \int d \Omega\ F(r,\text{th},\text{ph})\ Y_{lm}(\text{th},
+    !! \text{ph}) \]
     !
     IMPLICIT NONE
     !
@@ -2071,21 +2082,26 @@ MODULE paw_onecenter
                 dsvxc_s(2,1) = v2c_ud(ixk)
                 dsvxc_s(2,2) = v2x(ixk,2) + v2c(ixk,2)
              ELSE
-                dsvxc_s = 0._DP
+                dsvxc_s(1,1) = 0.d0
+                dsvxc_s(1,2) = 0.d0
+                dsvxc_s(2,1) = 0.d0
+                dsvxc_s(2,2) = 0.d0
              ENDIF
              !
-             ps(:,:) = (0._DP,0._DP)
+             ps(1,1) = 0.d0 ; ps(1,2) = 0.d0
+             ps(2,1) = 0.d0 ; ps(2,2) = 0.d0
              !
-             !$acc loop seq
+             !$acc loop seq collapse(2)
              DO is = 1, nspin_gga
                 DO js = 1, nspin_gga
                    !
-                   ps1(:,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,:,js)
-                   !
+                   !$acc loop seq
                    DO ipol = 1, 3
+                      ps1(ipol,is,js) = drho_rad(ixk,is)*g(i%t)%rm2(k)*grad(ixk,ipol,js)
                       ps(is,js) = ps(is,js) + grad(ixk,ipol,is)*dgrad(ixk,ipol,js)
                    ENDDO
                    !
+                   !$acc loop seq
                    DO ks = 1, nspin_gga
                       !
                       IF ( is==js .AND. js==ks ) THEN
@@ -2104,8 +2120,11 @@ MODULE paw_onecenter
                          ENDIF
                       ENDIF
                       !
-                      ps2(:,is,js,ks) = ps(is,js) * grad(ixk,:,ks)
+                      ps2(1,is,js,ks) = ps(is,js) * grad(ixk,1,ks)
+                      ps2(2,is,js,ks) = ps(is,js) * grad(ixk,2,ks)
+                      ps2(3,is,js,ks) = ps(is,js) * grad(ixk,3,ks)
                       !
+                      !$acc loop seq
                       DO ls = 1, nspin_gga
                          !
                          IF ( is==js .AND. js==ks .AND. ks==ls ) THEN
@@ -2127,18 +2146,21 @@ MODULE paw_onecenter
              !
              !$acc loop seq
              DO is = 1, nspin_gga
+               !$acc loop seq
                 DO js = 1, nspin_gga
-                   !
+                  !
                    gc_rad(k,ix0,is)  = gc_rad(k,ix0,is)  + dsvxc_rr(ixk,is,js) &
                                               * drho_rad(ixk,js)*g(i%t)%rm2(k)
                    h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + dsvxc_s(is,js)  &
                                               * dgrad(ixk,:,js)
                    !
+                   !$acc loop seq
                    DO ks = 1, nspin_gga
                       !
                       gc_rad(k,ix0,is) = gc_rad(k,ix0,is)+a(is,js,ks)*ps(js,ks)
                       h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + &
                                          c(is,js,ks) * ps1(:,js,ks)
+                      !$acc loop seq
                       DO ls = 1, nspin_gga
                          h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is) + &
                                             b(is,js,ks,ls) * ps2(:,js,ks,ls)
@@ -2147,9 +2169,8 @@ MODULE paw_onecenter
                    ENDDO
                    !
                 ENDDO
+                h_rad(k,:,ix0,is) = h_rad(k,:,ix0,is)*g(i%t)%r2(k)
              ENDDO
-             !
-             h_rad(k,:,ix0,:) = h_rad(k,:,ix0,:)*g(i%t)%r2(k)
              !
           ENDDO
        ENDDO
@@ -2518,6 +2539,7 @@ MODULE paw_onecenter
           IF (mag*g(i%t)%rm2(k) < eps12) THEN
              segni_rad(k,ix) = 1.0_DP
           ELSE
+             !$acc loop seq
              DO ipol = 1, 3
                 m(ipol) = rho_rad(ixk,1+ipol)/mag
              ENDDO

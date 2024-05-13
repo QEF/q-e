@@ -137,7 +137,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
 
      IF (search_sym.AND.nspin_mag/=4) THEN
         CALL find_mode_sym_new (u, eigen, tau, nat, nsymq, s, sr, irt, xq,    &
-             rtau, amass, ntyp, ityp, 0, .FALSE., .TRUE., num_rap_mode, ierr)
+             rtau, amass, ntyp, ityp, 0, .FALSE., .FALSE., num_rap_mode, ierr)
 
 !
 !   Order the modes so that we first make all those that belong to the first

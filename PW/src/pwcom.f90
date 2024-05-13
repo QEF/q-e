@@ -32,11 +32,11 @@ MODULE klist
   REAL(DP) :: degauss
   !! smearing parameter
   REAL(DP) :: degauss_cond
-  !! smeraing parameter for the conduction band in the case of two chemical potentials
+  !! smearing parameter for conduction bands in the case of two chemical potentials
   REAL(DP) :: nelec
   !! number of electrons
   REAL(DP) :: nelec_cond
-  !! number of electrons in the conudction bad in the case of two chemical potentials 
+  !! number of electrons in the conduction bands in the case of two chemical potentials 
   REAL(DP) :: nelup=0.0_dp
   !! number of spin-up electrons (if two_fermi_energies=t)
   REAL(DP) :: neldw=0.0_dp
@@ -46,7 +46,7 @@ MODULE klist
   REAL(DP) :: tot_charge
   !! total charge
   REAL(DP) :: qnorm= 0.0_dp
-  !! |q|, used in phonon+US calculations only
+  !! |q|, used in EXX+US and phonon+US calculations only
   INTEGER, ALLOCATABLE :: igk_k(:,:)
   !! index of G corresponding to a given index of k+G
   INTEGER, ALLOCATABLE :: ngk(:)
@@ -66,7 +66,7 @@ MODULE klist
   LOGICAL :: ltetra
   !! if .TRUE.: use tetrahedra
   LOGICAL :: lxkcry=.FALSE.
-  !! if .TRUE.:k-pnts in cryst. basis accepted in input
+  !! if .TRUE.:k-points in cryst. basis accepted in input
   LOGICAL :: two_fermi_energies
   !! if .TRUE.: nelup and neldw set ef_up and ef_dw separately
   !

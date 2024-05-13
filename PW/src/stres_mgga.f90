@@ -227,7 +227,7 @@ SUBROUTINE wfc_gradient( ibnd, ik, npw, gradpsi )
      IF ( ibnd<nbnd ) ebnd = ebnd+1
      brange = ebnd-ibnd+1
      !
-     !$acc data copyin(evc(:,ibnd:ibnd+brange-1),igk_k(:,ik:ik))
+     !$acc data copyin(igk_k(:,ik:ik))
      DO ipol = 1, 3
         !
         xki = xk(ipol,ik)
@@ -246,7 +246,7 @@ SUBROUTINE wfc_gradient( ibnd, ik, npw, gradpsi )
      !
   ELSE
      !
-     !$acc data copyin(evc(:,ibnd:ibnd),igk_k(:,ik:ik))
+     !$acc data copyin(igk_k(:,ik:ik))
      DO ipol = 1, 3
         !
         xki = xk(ipol,ik)

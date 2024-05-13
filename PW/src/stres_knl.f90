@@ -42,8 +42,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
               xk1, xk2, xk3, tmpf, wg_nk 
   INTEGER  :: npw, ik, l, m, i, ibnd
   !
-  !$acc enter data create( evc ) 
-  !
   ALLOCATE( gk(npwx,3), kfac(npwx) )
   !$acc data create( gk, kfac )
   !$acc data copyin( wg )
@@ -121,8 +119,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   !$acc end data
   !$acc end data
   DEALLOCATE( gk, kfac )
-  !
-  !$acc exit data delete(evc)
   !
   ! ... the kinetic term must be summed over PW's and over k-points
   !

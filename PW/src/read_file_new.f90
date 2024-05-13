@@ -268,6 +268,8 @@ SUBROUTINE post_xml_init (  )
   USE beta_mod,             ONLY : init_tab_beta
   USE klist,                ONLY : qnorm
   !
+  USE tsvdw_module,         ONLY : tsvdw_initialize
+  USE xc_lib,               ONLY : xclib_dft_is
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge, qmax
@@ -338,6 +340,10 @@ SUBROUTINE post_xml_init (  )
   ! ... bring the charge density to real space
   !
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
+  ! ... bring tau to real space
+  IF  ( xclib_dft_is('meta') ) THEN
+     CALL rho_g2r (dfftp, rho%kin_g, rho%kin_r)
+  ENDIF
   !
   ! ... re-compute the local part of the pseudopotential vltot and
   ! ... the core correction charge (if any) - from hinit0.f90
@@ -387,10 +393,10 @@ SUBROUTINE post_xml_init (  )
   ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
   IF ( ts_vdw) THEN
-     ! CALL tsvdw_initialize()
-     ! CALL set_h_ainv()
-     CALL infomsg('read_file_new','*** vdW-TS term will be missing in potential ***')
-     ts_vdw = .false.
+      CALL tsvdw_initialize()
+      CALL set_h_ainv()
+     !CALL infomsg('read_file_new','*** vdW-TS term will be missing in potential ***')
+     !ts_vdw = .false.
   END IF
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
