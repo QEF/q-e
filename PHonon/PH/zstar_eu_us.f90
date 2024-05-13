@@ -14,7 +14,7 @@ subroutine zstar_eu_us
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_sum
   USE mp_pools,         ONLY : inter_pool_comm
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm, nbgrp
   USE cell_base,        ONLY : omega
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
   USE buffers,          ONLY : get_buffer
@@ -267,7 +267,7 @@ subroutine zstar_eu_us
 
   fact=1.0_DP
 #if defined(__MPI)
-  fact=1.0_DP/nproc_pool/npool
+  fact=1.0_DP/nproc_pool/npool*nbgrp
 #endif
   IF (okpaw) THEN
      imode0 = 0
