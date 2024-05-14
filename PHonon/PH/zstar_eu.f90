@@ -81,7 +81,7 @@ subroutine zstar_eu
                  zstareu0(jpol, mode) = zstareu0(jpol, mode) - 2.d0 * weight * &
                       dot_product(dpsi(1:npw, ibnd), dvpsi(1:npw, ibnd))
                  IF (noncolin) &
-                 zstareu0(jpol, mode)=zstareu0 (mode, jpol) - 2.d0 * weight * &
+                 zstareu0(jpol, mode)=zstareu0 (jpol, mode) - 2.d0 * weight * &
                       dot_product(dpsi(1+npwx:npw+npwx, ibnd), dvpsi(1+npwx:npw+npwx, ibnd))
               enddo
            enddo
