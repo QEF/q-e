@@ -1,4 +1,4 @@
-set(qe_test_categories "pw" "cp" "ph" "epw" "tddfpt" "hp")
+set(qe_test_categories "pw" "cp") # "ph" "epw" "tddfpt" "hp" tests are not ready
 if(QE_ENABLE_OSCDFT)
   list(APPEND qe_test_categories "oscdft")
 endif()
@@ -6,7 +6,7 @@ endif()
 set(ESPRESSO_PSEUDO "${qe_SOURCE_DIR}/pseudo" CACHE STRING "Pseudopotential files")
 set(NETWORK_PSEUDO "https://pseudopotentials.quantum-espresso.org/upf_files" CACHE STRING "URL to remote pseudopotential folder")
 set(TESTCODE_NPROCS 4 CACHE STRING "Number of MPI processes for each test")
-set(TESTCODE_NTHREADS 1 CACHE STRING "Number of OpenMP threads for each test")
+set(TESTCODE_NTHREADS 3 CACHE STRING "Number of OpenMP threads for each test")
 
 message("\n"
         "Only pw and cp results from ctest are reliable, we are working on making the rest tests work reliably with ctest. "
