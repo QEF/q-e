@@ -662,8 +662,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
 #else
-            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
-            !$omp&    dot32,dot33) shared(evcv,qm1,gk,ps_nc,dvkb)
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
+            !$omp& firstprivate(nkb,npw,npwx) shared(evcv,qm1,gk,ps_nc,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
@@ -719,8 +719,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
 #else
-            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
-            !$omp&    dot32,dot33) shared(evcv,qm1,gk,ps,dvkb)
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
+            !$omp& firstprivate(nkb,npw) shared(evcv,qm1,gk,ps,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
@@ -778,8 +778,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
 #else
-            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
-            !$omp&    dot32,dot33) shared(evcv,gk,ps_nc,dvkb)
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
+            !$omp& firstprivate(nkb,npw,npwx) shared(evcv,gk,ps_nc,dvkb) default(private)
 #endif
             DO ikb =1, nkb
                DO i = 1, npw
@@ -838,8 +838,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
 #else
-            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
-            !$omp&    dot32,dot33) shared(evcv,gk,ps,dvkb)
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
+            !$omp& firstprivate(nkb,npw) shared(evcv,gk,ps,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
