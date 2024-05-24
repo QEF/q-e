@@ -670,15 +670,11 @@
      e = 0.0d0
      IF( PRESENT( tau0 ) ) THEN
         DO i = 1, SIZE( extfor,2 )
-          e = e + extfor( 3, i ) *  tau0( 3, i ) &
-                + extfor( 2, i ) *  tau0( 2, i ) &
-                + extfor( 1, i ) *  tau0( 1, i )
+          e = e + sum(extfor( :, i ) *  tau0( :, i ))
         END DO
      ELSE
         DO i = 1, SIZE( extfor,2 )
-          e = e + extfor( 3, i ) *  tau( 3, i ) &
-                + extfor( 2, i ) *  tau( 2, i ) &
-                + extfor( 1, i ) *  tau( 1, i )
+          e = e + sum(extfor( :, i ) *  tau( :, i ))
         END DO
      END IF
      compute_eextfor = - e
