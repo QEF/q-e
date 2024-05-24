@@ -468,7 +468,6 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
                                  gname_is, sname_is, code_group_is
   USE cell_base,          ONLY : at, ibrav
   USE fft_base,           ONLY : dfftp
-  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -531,17 +530,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
            ELSE
               CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
            END IF
-        ELSE IF( colin_mag ) THEN
-           WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
-           IF (t_rev(isym)==0) THEN
-              nsym_is=nsym_is+1
-              sr_is(:,:,nsym_is) = sr(:,:,isym)
-              ! CALL find_u(sr_is(1,1,nsym_is), d_spin_is(1,1,nsym_is))
-              ft_is(:,nsym_is)=ft(:,isym)
-              sname_is(nsym_is)=sname(isym)
-           END IF
         END IF
-        ! END IF
         IF ( ANY ( ABS(ft(:,isym)) > eps6 ) ) THEN
            ftcart(:) = at(:,1)*ft(1,isym) + at(:,2)*ft(2,isym) + &
                        at(:,3)*ft(3,isym)
@@ -579,7 +568,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
      !
      IF ( ibrav == 0 ) RETURN
      !
-     IF ( (noncolin.AND.domag) .OR. colin_mag ) THEN
+     IF (noncolin.AND.domag) THEN
         CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
         CALL set_irr_rap_so(code_group_is,nclass_ref,nrap,char_mat_so, &
              name_rap_so,name_class_so,name_class_so1)

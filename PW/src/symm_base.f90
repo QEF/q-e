@@ -762,7 +762,11 @@ CONTAINS
                t_rev(irot) = 0
             ELSEIF (ALL( ABS(m_op + m_org) < 1.0D-6)) THEN
                ! the operation is a symmetry with time-reversal
-               t_rev(irot) = 1
+               ! t_rev(irot) = 1
+
+               ! discard the symmetry when time-reversal is required
+               sym(irot) = .FALSE.
+   
             ELSE
                ! the operation is not a symmetry
                sym(irot) = .FALSE.

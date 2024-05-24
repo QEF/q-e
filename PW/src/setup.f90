@@ -267,13 +267,11 @@ SUBROUTINE setup()
         end do
      !  set initial magnetization for collinear case
      ELSE IF ( colin_mag ) THEN
-        WRITE (stdout,*) 'set starting magnetization to m_loc:'
         DO na = 1, nat
             m_loc(1,na) = 0.0_dp
             m_loc(2,na) = 0.0_dp
             m_loc(3,na) = starting_magnetization(ityp(na))
         END DO
-        WRITE (stdout,*) 'Starting magnetization:', starting_magnetization
      ENDIF     
 
      IF ( i_cons /= 0 .AND. nspin==1 ) &
