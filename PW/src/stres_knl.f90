@@ -42,15 +42,15 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   INTEGER  :: npw, ik, l, m, i, ibnd, is
   !
   !
-  sigmanlc(:,:) = 0.d0
-  twobysqrtpi   = 2.d0/SQRT(pi)
+  sigmanlc(:,:) = 0.0_dp
+  twobysqrtpi   = 2.0_dp/SQRT(pi)
   !
   ALLOCATE( gk(npwx,3) )
   ALLOCATE( kfac(npwx) )
   !$acc data present(g,igk_k) copyin(xk,wg) create(gk, kfac, sigmakin) 
   !$acc kernels
-  kfac(:) = 1.d0
-  sigmakin(:,:) = 0.d0
+  kfac(:) = 1.0_dp
+  sigmakin(:,:) = 0.0_dp
   !$acc end kernels
   !
   DO ik = 1, nks
@@ -64,10 +64,10 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
         gk(i,1) = ( xk(1,ik) + g(1,igk_k(i,ik)) ) * tpiba
         gk(i,2) = ( xk(2,ik) + g(2,igk_k(i,ik)) ) * tpiba
         gk(i,3) = ( xk(3,ik) + g(3,igk_k(i,ik)) ) * tpiba
-        IF (qcutz > 0.d0) THEN
+        IF (qcutz > 0.0_dp) THEN
            gk2 = gk(i,1)**2 + gk(i,2)**2 + gk(i,3)**2
            arg = ( (gk2-ecfixed)/q2sigma )**2
-           kfac(i) = 1.d0 + qcutz / q2sigma * twobysqrtpi * EXP(-arg)
+           kfac(i) = 1.0_dp + qcutz / q2sigma * twobysqrtpi * EXP(-arg)
         ENDIF
      ENDDO
      !
@@ -128,11 +128,11 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   ENDDO
   !
   IF ( gamma_only ) THEN
-     sigmakin(:,:) = 2.d0 * e2 / omega * sigmakin(:,:)
+     sigmakin(:,:) = 2.0_dp * e2 / omega * sigmakin(:,:)
   ELSE
      sigmakin(:,:) = e2 / omega * sigmakin(:,:)
   ENDIF
-  sigmanlc(:,:) = -1.d0 / omega * sigmanlc(:,:)
+  sigmanlc(:,:) = -sigmanlc(:,:) / omega 
   !
   ! ... symmetrize stress
   !
