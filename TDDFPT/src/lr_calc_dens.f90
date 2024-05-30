@@ -31,7 +31,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE io_global,              ONLY : stdout
   USE kinds,                  ONLY : dp
   USE klist,                  ONLY : nks, xk, wk, ngk, igk_k
-  USE lr_variables,           ONLY : evc0,revc0,rho_1,lr_verbosity,&
+  USE lr_variables,           ONLY : evc0,rho_1,lr_verbosity,&
                                      & charge_response, itermax,&
                                      & cube_save, LR_iteration,&
                                      & LR_polarization, project,&
@@ -39,7 +39,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      & n_ipol, becp1_virt, rho_1c,&
                                      & lr_exx
   USE lsda_mod,               ONLY : current_spin, isk
-  USE wavefunctions,   ONLY : psic
+  USE wavefunctions,          ONLY : psic
   USE wvfct,                  ONLY : nbnd, et, wg, npwx
   USE control_flags,          ONLY : gamma_only
   USE uspp,                   ONLY : vkb, nkb, okvan, qq_nt, becsum
@@ -60,7 +60,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE lr_exx_kernel,          ONLY : lr_exx_kernel_int, revc_int,&
                                      & revc_int_c
   USE constants,              ONLY : eps12
-  USE qpoint,                ONLY : nksq
+  USE qpoint,                 ONLY : nksq
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -81,7 +81,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ! These are temporary buffers for the response 
   REAL(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:), rho_sum_resp_y(:),&
                               & rho_sum_resp_z(:)  
-  COMPLEX(kind=dp), ALLOCATABLE :: rhoaux(:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: rhoaux(:,:), revc0(:), tg_revc0(:)
   CHARACTER(len=256) :: tempfile, filename
   !
   IF (lr_verbosity > 5) THEN
@@ -90,15 +90,24 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   CALL start_clock_gpu('lr_calc_dens')
   !
+  IF ( dffts%has_task_groups ) THEN
+     !
+     ALLOCATE(tg_revc0(dfftp%nnr_tg))
+     !
+  ENDIF
+
+
   ALLOCATE( psic(dfftp%nnr) )
+  ALLOCATE( revc0(dfftp%nnr) )
 
   v_siz = dfftp%nnr
   nnr_siz = dffts%nnr
   !
-  !$acc data create(psic(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag)) 
+  !$acc data create(psic(1:v_siz), revc0(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copyout( rho_1(1:v_siz,1:nspin_mag)) 
   !
   !$acc kernels
   psic(:) = (0.0d0, 0.0d0)
+  revc0(:) = (0.0d0, 0.0d0)
   !$acc end kernels
   !
   IF (gamma_only) THEN
@@ -238,7 +247,13 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   !$acc end data
   !
-  DEALLOCATE ( psic )
+  DEALLOCATE ( psic, revc0 )
+  !
+  IF ( dffts%has_task_groups ) THEN
+     !
+     DEALLOCATE(tg_revc0)
+     !
+  ENDIF
   !
   IF (charge_response == 2 .AND. LR_iteration /=0) THEN
      !
@@ -373,7 +388,7 @@ CONTAINS
     ! Gamma_only case
     !
     USE becmod,              ONLY : bec_type, becp, calbec
-    USE lr_variables,        ONLY : becp_1, tg_revc0
+    USE lr_variables,        ONLY : becp_1
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, invfft_orbital_gamma,&
                                     initialisation_level,&
@@ -413,6 +428,17 @@ CONTAINS
     !
     DO ibnd = ibnd_start_gamma, ibnd_end_gamma, incr
        !
+       ! FFT: evc0 -> psic -> revc0
+       !
+       CALL invfft_orbital_gamma(evc0(:,:,1),ibnd,nbnd)
+       IF (dffts%has_task_groups) THEN
+          tg_revc0(:) = tg_psic(:)     
+       ELSE
+          !$acc kernels     
+          revc0(:) = psic(:)
+          !$acc end kernels
+       ENDIF
+       !
        ! FFT: evc1 -> psic
        !
        CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
@@ -450,8 +476,8 @@ CONTAINS
           !
           DO ir = 1, dffts%nr1x * dffts%nr2x * dffts%my_nr3p
              tg_rho(ir) = tg_rho(ir) &
-                  + 2.0d0*(w1*real(tg_revc0(ir,ibnd,1),dp)*real(tg_psic(ir),dp)&
-                  +       w2*aimag(tg_revc0(ir,ibnd,1))*aimag(tg_psic(ir)))
+                  + 2.0d0*(w1*real(tg_revc0(ir),dp)*real(tg_psic(ir),dp)&
+                  +       w2*aimag(tg_revc0(ir))*aimag(tg_psic(ir)))  
           ENDDO
           !
        ELSE
@@ -479,8 +505,8 @@ CONTAINS
           !$acc parallel loop
           DO ir = 1, nnr_siz
              rho_1(ir,1) = rho_1(ir,1) &
-                  + 2.0d0*(w1*dble(revc0(ir,ibnd,1))*dble(psic(ir))&
-                  +       w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
+                  + 2.0d0*(w1*dble(revc0(ir))*dble(psic(ir))&
+                  +       w2*aimag(revc0(ir))*aimag(psic(ir)))
           ENDDO
           !
           ! OBM - psic now contains the response functions in real space.
@@ -631,12 +657,15 @@ CONTAINS
           !
           ! FFT: evc1(:,:,ik) -> psic(:)
           !
+          revc0(:) = (0.0d0,0.0d0)
           psic(:) = (0.0d0,0.0d0)
           !
           DO ig = 1, ngk(ik)
+             revc0(dffts%nl(igk_k(ig,ik))) = evc0(ig,ibnd,ik)
              psic(dffts%nl(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
           ENDDO
           !
+          CALL invfft ('Wave', revc0, dffts)
           CALL invfft ('Wave', psic, dffts)
           !
           ! I. Timrov: Try to use invfft_orbital_k
@@ -648,7 +677,7 @@ CONTAINS
           !
           DO ir=1,dffts%nnr
              rho_1c(ir,:) = rho_1c(ir,:) &
-                  + 2.0d0*w1*conjg(revc0(ir,ibnd,ik))*psic(ir)
+                  + 2.0d0*w1*conjg(revc0(ir))*psic(ir)
           ENDDO
           !
           IF (lr_exx) CALL lr_exx_kernel_int (evc1(:,:,ik), ibnd, nbnd, ik )

@@ -20,7 +20,7 @@ PROGRAM lr_dav_main
   USE lr_variables,          ONLY : restart, restart_step,&
        evc1,n_ipol, d0psi, &
        no_hxc, nbnd_total, &
-       revc0, lr_io_level, code1,davidson
+       lr_io_level, code1,davidson
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
   USE mp_global,             ONLY : nimage, mp_startup, inter_bgrp_comm, &
@@ -96,7 +96,6 @@ PROGRAM lr_dav_main
   CALL lr_dv_setup()
 
   !   Davidson loop
-  !$acc data copyin(revc0(:,:,:))
   if (precondition) write(stdout,'(/5x,"Precondition is used in the algorithm,")')
   do while (.not. dav_conv .and. dav_iter .lt. max_iter)
     dav_iter=dav_iter+1
@@ -116,7 +115,6 @@ PROGRAM lr_dav_main
       endif
       !
   enddo
-  !$acc end data
   ! call check_hermitian()
   ! Extract physical meaning from the solution
   if ( check_stop_now() ) goto 100

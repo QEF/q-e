@@ -186,7 +186,7 @@ contains
     use kinds,         only : dp
     use wvfct,         only : nbnd, npwx, et
     use lr_dav_variables
-    use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt,&
+    use lr_variables,         only : evc0, sevc0 , evc0_virt,&
                                    & sevc0_virt, nbnd_total, davidson, restart
     use io_global,    only : stdout
     use wvfct,       only : npwx,nbnd,et
@@ -672,8 +672,8 @@ contains
 #endif
 
     ! Recover eigenvectors in the whole space
-    left_full(:,:,:,:)=0.0d0
-    right_full(:,:,:,:)=0.0d0
+    left_full(:,:,:,:)=(0.0d0, 0.0d0)
+    right_full(:,:,:,:)=(0.0d0, 0.0d0)
     do ieign = 1, num_eign
       do ibr = 1, num_basis
         left_full(:,:,1,ieign)=left_full(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
@@ -1542,7 +1542,7 @@ contains
     use kinds,         only : DP
     use wvfct,         only : nbnd,et
     use lr_dav_variables
-    use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt
+    use lr_variables,         only : evc0, sevc0 , evc0_virt
     use wvfct,                only : npwx,wg
     use fft_base,             only : dffts,dfftp
     use uspp,           only : okvan

@@ -176,60 +176,60 @@ contains
   end subroutine check_overlap_basis
   !-------------------------------------------------------------------------------
 
-  subroutine check_revc0()
-    !-------------------------------------------------------------------------------
-    ! Created by X.Ge in Apr. 2013
-    !-------------------------------------------------------------------------------
-    ! Due to the bug of virt_read, this is to check if revc0 is correct
-    use lr_variables,    only : evc0, revc0
-    use wvfct,           only : nbnd, npwx
-    use kinds,           only : dp
-    use fft_base,             only : dffts
-    use mp_global,            only : intra_bgrp_comm
-    use mp_world,             only : world_comm
-    use mp,                   only : mp_sum, mp_barrier
-    use lr_dav_variables
-    USE cell_base,              ONLY : omega
-    USE wavefunctions, ONLY : psic
-    USE realus,              ONLY : invfft_orbital_gamma, fwfft_orbital_gamma
-      USE gvect,                ONLY : gstart
-
-    implicit none
-    integer :: i,tot_nnr
-    real(dp) :: norm,banda(dffts%nnr),bandb(dffts%nnr)
-    real(kind=dp), external    :: ddot
-    complex(kind=dp),external :: lr_dot   
-    complex(dp) :: wfck(npwx,1)
-
-    ALLOCATE( psic(dffts%nnr) )
-    
-    tot_nnr=dffts%nr1x*dffts%nr2x*dffts%nr3x
-    
-    do i = 1, nbnd,2
-      banda(:)=dble(revc0(:,i,1))     
-      bandb(:)=aimag(revc0(:,i,1))     
-      wfck(:,1)=evc0(:,i,1)
-      call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
-      norm=DDOT(dffts%nnr,psic(:),2,banda,1)/tot_nnr
-#if defined(__MPI)
-      call mp_barrier( world_comm )
-      call mp_sum(norm,intra_bgrp_comm)
-#endif
-      print *, norm
-
-      wfck(:,1)=evc0(:,i+1,1)
-      call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
-      norm=DDOT(dffts%nnr,psic(:),2,bandb,1)/tot_nnr
-#if defined(__MPI)
-      call mp_barrier( world_comm )
-      call mp_sum(norm,intra_bgrp_comm)
-#endif
-      print *, norm
-    enddo
+!  subroutine check_revc0()
+!    !-------------------------------------------------------------------------------
+!    ! Created by X.Ge in Apr. 2013
+!    !-------------------------------------------------------------------------------
+!    ! Due to the bug of virt_read, this is to check if revc0 is correct
+!    use lr_variables,    only : evc0, revc0
+!    use wvfct,           only : nbnd, npwx
+!    use kinds,           only : dp
+!    use fft_base,             only : dffts
+!    use mp_global,            only : intra_bgrp_comm
+!    use mp_world,             only : world_comm
+!    use mp,                   only : mp_sum, mp_barrier
+!    use lr_dav_variables
+!    USE cell_base,              ONLY : omega
+!    USE wavefunctions, ONLY : psic
+!    USE realus,              ONLY : invfft_orbital_gamma, fwfft_orbital_gamma
+!      USE gvect,                ONLY : gstart
+!
+!    implicit none
+!    integer :: i,tot_nnr
+!    real(dp) :: norm,banda(dffts%nnr),bandb(dffts%nnr)
+!    real(kind=dp), external    :: ddot
+!    complex(kind=dp),external :: lr_dot   
+!    complex(dp) :: wfck(npwx,1)
+!
+!    ALLOCATE( psic(dffts%nnr) )
+!    
+!    tot_nnr=dffts%nr1x*dffts%nr2x*dffts%nr3x
+!    
+!    do i = 1, nbnd,2
+!      banda(:)=dble(revc0(:,i,1))     
+!      bandb(:)=aimag(revc0(:,i,1))     
+!      wfck(:,1)=evc0(:,i,1)
+!      call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
+!      norm=DDOT(dffts%nnr,psic(:),2,banda,1)/tot_nnr
+!#if defined(__MPI)
+!      call mp_barrier( world_comm )
+!      call mp_sum(norm,intra_bgrp_comm)
+!#endif
+!      print *, norm
+!
+!      wfck(:,1)=evc0(:,i+1,1)
+!      call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
+!      norm=DDOT(dffts%nnr,psic(:),2,bandb,1)/tot_nnr
+!#if defined(__MPI)
+!      call mp_barrier( world_comm )
+!      call mp_sum(norm,intra_bgrp_comm)
+!#endif
+!      print *, norm
+!    enddo
 !call mp_stop(100)
-    return
-  end subroutine check_revc0
-  !-------------------------------------------------------------------------------
+!    !return
+!  end subroutine check_revc0
+!  !-------------------------------------------------------------------------------
 
   subroutine check_hermitian()
     !-------------------------------------------------------------------------------
