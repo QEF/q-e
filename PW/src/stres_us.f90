@@ -195,10 +195,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           nbnd_begin = 1
        ENDIF
        !
-       ALLOCATE( deff(nhm,nhm,nat) )
-       ALLOCATE( ps(nkb) )
-       !$acc data create(deff,ps)
-       !
        ! ... diagonal contribution - if the result from "calbec" are not 
        ! ... distributed, must be calculated on a single processor
        !
@@ -239,8 +235,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           !
        ENDIF compute_evps
        !
+       DO l = 1, 3
+          sigmanlc(l,l) = sigmanlc(l,l) - evps
+       ENDDO
+       !
        ! ... non diagonal contribution - derivative of the Bessel function
        !
+       ALLOCATE( deff(nhm,nhm,nat) )
+       ALLOCATE( ps(nkb) )
+       !$acc data create(deff,ps)
        ALLOCATE( dvkb(npwx,nkb,4) )
        !$acc data create(dvkb)
        !
@@ -378,10 +381,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
 10     CONTINUE
        !
-       DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
-       ENDDO
-       !
        !$acc end data
        !$acc end data
        DEALLOCATE( deff, ps )
@@ -426,33 +425,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        evps = 0._DP
        ! ... diagonal contribution
-       !
-       ALLOCATE( dvkb(npwx,nkb,4) )
-       !$acc data create( dvkb )
-       !
-       CALL gen_us_dj( ik, dvkb(:,:,4) )
-       IF ( lmaxkb > 0 ) THEN
-         DO ipol = 1, 3
-           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
-         ENDDO
-       ENDIF
-       !
-       IF (noncolin) THEN
-          ALLOCATE( ps_nc(nkb,npol) )
-          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
-          ALLOCATE( becpnc(nkb,npol,nbnd) )
-          !$acc kernels present(becp%nc)
-          becpnc = becp%nc
-          !$acc end kernels
-       ELSE
-          ALLOCATE( ps(nkb) )
-          ALLOCATE( deff(nhm,nhm,nat) )
-          ALLOCATE( becpk(nkb,nbnd) )
-          !$acc kernels present(becp%k)
-          becpk = becp%k
-          !$acc end kernels
-       ENDIF
-       !$acc data create( ps, ps_nc, deff, deff_nc )
        !
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors
@@ -517,7 +489,33 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           !
        END IF
        !
+       IF (noncolin) THEN
+          ALLOCATE( ps_nc(nkb,npol) )
+          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
+          ALLOCATE( becpnc(nkb,npol,nbnd) )
+          !$acc kernels present(becp%nc)
+          becpnc = becp%nc
+          !$acc end kernels
+       ELSE
+          ALLOCATE( ps(nkb) )
+          ALLOCATE( deff(nhm,nhm,nat) )
+          ALLOCATE( becpk(nkb,nbnd) )
+          !$acc kernels present(becp%k)
+          becpk = becp%k
+          !$acc end kernels
+       ENDIF
+       !$acc data create( ps, ps_nc, deff, deff_nc )
        ! ... non diagonal contribution - derivative of the bessel function
+       !
+       ALLOCATE( dvkb(npwx,nkb,4) )
+       !$acc data create( dvkb )
+       !
+       CALL gen_us_dj( ik, dvkb(:,:,4) )
+       IF ( lmaxkb > 0 ) THEN
+         DO ipol = 1, 3
+           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
+         ENDDO
+       ENDIF
        !
        DO ibnd = 1, nbnd
          !
