@@ -95,7 +95,6 @@ contains
       complex(dp) :: c0_d(:, :)
       complex(dp) :: cm(ngw, nbspx)
       complex(dp) :: phi(ngw, nbspx)
-      complex(dp) :: phi_tmp(ngw, nbspx)
       real(dp) :: dbec(nkb, nbspx, 3, 3)
 !
       include 'laxlib.fh'
@@ -285,9 +284,8 @@ contains
                          c0, c0_d, hpsi, hpsi_d, .false., .false., .true.)
          if (pre_state) call ave_kin(c0, SIZE(c0, 1), nbsp, ave_ene)
 
-         phi_tmp = phi ! cannot use device array as input for openacc according to the compiler
-!$acc data copy(c0,hpsi) copyin(phi_tmp) 
-         call pcdaga2(c0, phi_tmp, hpsi)
+!$acc data copy(c0,hpsi)
+         call pcdaga2(c0, phi, hpsi)
 !$acc end data
          hpsi0 = hpsi
          gi = hpsi
@@ -1253,7 +1251,10 @@ contains
       implicit none
 
       complex(dp) a(ngw, n), b(ngw, n), as(ngw, n)
-      !$acc declare present(a,b,as)
+      !$acc declare present(a,b)
+#if defined(__CUDA)
+      attributes(device) :: as
+#endif
       ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j, ig
       real(dp) sca
@@ -1376,7 +1377,7 @@ contains
                            do ig = 1, ngw           !loop on g vectors
                               sca = sca + ema0bg(ig)*DBLE(CONJG(betae(ig, inl))*betae(ig, jnl))
                            enddo
-                           sca = sca*2.0d0  !2. for real weavefunctions
+                           sca = sca*2.0d0  !2. for real wavefunctions
                            if (gstart == 2) sca = sca - ema0bg(1)*DBLE(CONJG(betae(1, inl))*betae(1, jnl))
                         else
                            ! s_minus case
