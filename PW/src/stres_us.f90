@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only, offload_type
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq
+  USE uspp,                 ONLY : nkb, vkb, deeq, qq_at, ofsbeta, deeq_nc, qq_so
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
@@ -213,34 +213,30 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        evps = 0._DP
        !
        compute_evps: IF ( .NOT. (nproc==1 .AND. me_pool/=root_pool) ) THEN
-         !
-         DO ibnd_loc = 1, nbnd_loc
-            ibnd = ibnd_loc+becp%ibnd_begin-1
-            CALL compute_deff( deff, et(ibnd,ik) )
-            wg_nk = wg(ibnd,ik)
-            !
-            !$acc parallel loop reduction(+:evps)
-            DO i = 1, itot
-              ih = ih_list(i)           ;   na = na_list(i)
-              ishift = ishift_list(i)   ;   ikb = ishift + ih
-              !
-              IF (.NOT. is_multinp(i)) THEN
-                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2
-              ELSE
-                 nh_np = nh_list(i)
-                 !
-                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2 &
-                             +  becpr(ikb,ibnd_loc)* wg_nk * 2._DP  &
-                                * SUM( deff(ih,ih+1:nh_np,na)       &
-                                * becpr(ishift+ih+1:ishift+nh_np,ibnd_loc))
-              ENDIF
-              !
-              evps = evps + aux
-              !
-            ENDDO
-            !
-         ENDDO
-         !
+          !
+          !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r) &
+          !$acc copyin( ityp, wg, et, nh ) reduction(+:evps)
+          DO na = 1, nat
+             DO ibnd_loc = 1, nbnd_loc
+                ibnd = ibnd_loc+becp%ibnd_begin-1
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      ! the nondiagonal contribution (ih,jh) is actually present only for
+                      ! US-PP (upf(np)%tvanp) or multiprojector PP (upf(np)%is_multiproj)
+                      ! but it is not worth here to make two distinct cases
+                      ikb = ijkb0 + ih
+                      jkb = ijkb0 + jh
+                      ! For norm-conserving PP, qq_at=0 - again, not worth to make two cases
+                      evps = evps + ( deeq(ih,jh,na,current_spin) - et(ibnd,ik)*qq_at(ih,jh,na)) * &
+                           wg(ibnd,ik) * becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
+                   END DO
+                END DO
+             END DO
+          END DO
+          !
        ENDIF compute_evps
        !
        ! ... non diagonal contribution - derivative of the Bessel function
@@ -406,12 +402,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        ! ... local variables
        !
-       INTEGER  :: na, np, ibnd, ipol, jpol, l, i, nt, &
+       INTEGER  :: na, np, ibnd, ipol, jpol, l, i, nt, ijkb0, &
                    ikb, jkb, ih, jh, is, js, ijs, ishift, nh_np
        REAL(DP) :: fac, evps, dot11, dot21, dot31, dot22, dot32, dot33, aux, &
                    Re_worksum, Re_worksum1, Re_worksum2, Im_worksum,         &
                    Im_worksum1, Im_worksum2
-       COMPLEX(DP) :: qm1i, gk1, gk2, gk3, pss
+       COMPLEX(DP) :: qm1i, gk1, gk2, gk3, pss, deq
        COMPLEX(DP) :: cv, cv1, cv2, worksum, worksum1, worksum2, evci, evc1i, &
                       evc2i, ps1, ps2, ps1d1, ps1d2, ps1d3, ps2d1, ps2d2,     &
                       ps2d3, psd1, psd2, psd3
@@ -461,119 +457,65 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors
        !
-       IF ( me_bgrp /= root_bgrp ) GO TO 100
-       !
-       DO ibnd = 1, nbnd
-          fac = wg(ibnd,ik)
-          IF (ABS(fac) < 1.d-9) CYCLE
-          IF (noncolin) THEN
-             CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
-          ELSE
-             CALL compute_deff( deff, et(ibnd,ik) )
-          ENDIF
+       IF ( me_bgrp == root_bgrp ) THEN
           !
-          IF (noncolin) THEN
-            !
-#if defined(_OPENACC)
-            !$acc parallel loop reduction(+:evps)
-#else
-            !$omp parallel do reduction(+:evps), private(ih,na,ishift,ikb,aux,&
-            !$omp&            ijs,is,js,nh_np,jkb)
-#endif
-            DO i = 1, itot
-              !
-              ih = ih_list(i)         ; na = na_list(i)
-              ishift = ishift_list(i) ; ikb = ishift + ih
-              aux = 0.d0
-              !
-              IF (.NOT. is_multinp(i)) THEN
-                 ijs = 0
-                 !$acc loop seq collapse(2) reduction(+:aux)
-                 DO is = 1, npol
-                   DO js = 1, npol
-                      ijs = ijs + 1
-                      aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) * &
-                                             CONJG(becpnc(ikb,is,ibnd)) * &
-                                             becpnc(ikb,js,ibnd))
-                   ENDDO
-                 ENDDO
-              ELSE
-                 nh_np = nh_list(i)
-                 ijs = 0
-                 !$acc loop seq collapse(2) reduction(+:aux)
-                 DO is = 1, npol
-                   DO js = 1, npol
-                      ijs = ijs + 1
-                      aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) * &
-                                             CONJG(becpnc(ikb,is,ibnd)) * &
-                                             becpnc(ikb,js,ibnd))
-                   ENDDO
-                 ENDDO
-                 !$acc loop seq
-                 DO jh = ih+1, nh_np
-                    jkb = ishift + jh
-                    ijs = 0
-                    !$acc loop seq collapse(2) reduction(+:aux)
-                    DO is = 1, npol
-                      DO js = 1, npol
-                         ijs = ijs + 1
-                         aux = aux + 2._DP*fac * &
-                                       DBLE(deff_nc(ih,jh,na,ijs) * &
-                                            (CONJG(becpnc(ikb,is,ibnd)) * &
-                                             becpnc(jkb,js,ibnd)))
-                      ENDDO
-                    ENDDO
-                 ENDDO
-              ENDIF
-              !
-              evps = evps + aux
-              !
-            ENDDO
-#if !defined(_OPENACC)
-            !$omp end parallel do
-#endif
-            !
-          ELSE
-            !
-            aux = 0.d0
-#if defined(_OPENACC)
-            !$acc parallel loop reduction(+:evps)
-#else
-            !$omp parallel do reduction(+:evps) private(ih,na,ishift,ikb,&
-            !$omp&            aux,nh_np)
-#endif
-            DO i = 1, itot
-              !
-              ih = ih_list(i)         ; na = na_list(i)
-              ishift = ishift_list(i) ; ikb = ishift + ih
-              !
-              IF (.NOT. is_multinp(i)) THEN
-                 aux = fac * deff(ih,ih,na) * &
-                               ABS(becpk(ikb,ibnd) )**2
-              ELSE
-                 nh_np = nh_list(i)
-                 aux = fac * deff(ih,ih,na) * ABS(becpk(ikb,ibnd) )**2 + &
-                             SUM( deff(ih,ih+1:nh_np,na) * &
-                                  fac * 2._DP*DBLE( CONJG(becpk(ikb,ibnd)) &
-                                  * becpk(ishift+ih+1:ishift+nh_np,ibnd) ) )
-              ENDIF
-              !
-              evps = evps + aux
-              !
-            ENDDO
-#if !defined(_OPENACC)
-            !$omp end parallel do
-#endif
-            !
-          ENDIF
+          !$acc parallel loop collapse(2) present(deeq, deeq_nc, qq_so, qq_at, becp%k, becp%nc) &
+          !$acc copyin( ityp, wg, et, nh ) reduction(+:evps)
+          DO na = 1, nat
+             DO ibnd = 1, nbnd
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      ! the nondiagonal contribution (ih,jh) is actually present only for
+                      ! US-PP (upf(np)%tvanp) or multiprojector PP (upf(np)%is_multiproj)
+                      ! but it is not worth here to make two distinct cases
+                      ikb = ijkb0 + ih
+                      jkb = ijkb0 + jh
+                      ! For norm-conserving PP, qq_at=0 - again, not worth to make two cases
+                      IF ( lspinorb ) THEN
+                         !$acc loop seq collapse(2)
+                         DO is=1,npol
+                            DO js=1,npol
+                               ijs=2*(is-1)+js
+                               evps = evps + ( deeq_nc(ih,jh,na,ijs) - &
+                                    et(ibnd,ik)*qq_so(ih,jh,ijs,np) ) * wg(ibnd,ik) *&
+                                    CONJG( becp%nc(ikb,is,ibnd) ) * &
+                                           becp%nc(jkb,js,ibnd)
+                            END DO
+                         END DO
+                      ELSE IF ( noncolin ) THEN
+                         !$acc loop seq collapse(2)
+                         DO is=1,npol
+                            DO js=1,npol
+                               ijs=2*(is-1)+js
+                               IF ( is == js ) THEN
+                                  deq = deeq_nc(ih,jh,na,ijs) - et(ibnd,ik)*qq_at(ih,jh,na)
+                               ELSE
+                                  deq = deeq_nc(ih,jh,na,ijs)
+                               END IF
+                               evps = evps + deq * wg(ibnd,ik) * &
+                                    CONJG( becp%nc(ikb,is,ibnd) ) * &
+                                           becp%nc(jkb,js,ibnd)
+                            END DO
+                         END DO
+                      ELSE
+                         evps = evps + ( deeq(ih,jh,na,current_spin) - &
+                              et(ibnd,ik)*qq_at(ih,jh,na) ) * wg(ibnd,ik) * &
+                              CONJG( becp%k(ikb,ibnd) ) * &
+                                     becp%k(jkb,ibnd)
+                      END IF
+                   END DO
+                END DO
+             END DO
+          END DO
           !
-       ENDDO
-       !
-       DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
-       ENDDO
-       !
-100    CONTINUE
+          DO l = 1, 3
+             sigmanlc(l,l) = sigmanlc(l,l) - evps
+          ENDDO
+          !
+       END IF
        !
        ! ... non diagonal contribution - derivative of the bessel function
        !
