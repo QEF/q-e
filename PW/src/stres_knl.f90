@@ -91,7 +91,7 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
                  ENDIF
               ENDDO
            ENDDO
-           sigmakin(l,m) = sigma
+           sigmakin(l,m) = sigmakin(l,m) + sigma
         ENDDO
         !
      ENDDO
