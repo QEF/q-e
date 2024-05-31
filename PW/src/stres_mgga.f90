@@ -146,8 +146,8 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   DO iss = 1, nspin 
      !
-     vkin = v%kin_r(:,iss)
-     rhokin = rho%kin_r(:,iss)
+     vkin = v%kin_r(1:dffts%nnr,iss)
+     rhokin = rho%kin_r(1:dffts%nnr,iss)
      !$acc update device(vkin,rhokin)
      !
      !$acc parallel loop reduction(+:sigma1,sigma2,sigma3,sigma4,sigma5,sigma6)
