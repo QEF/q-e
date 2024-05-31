@@ -38,20 +38,16 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: gk(:,:), kfac(:)
-  REAL(DP) :: twobysqrtpi, gk2, arg
+  REAL(DP) :: sigma, gk2, arg
   INTEGER  :: npw, ik, l, m, i, ibnd, is
   !
   !
   sigmanlc(:,:) = 0.0_dp
-  twobysqrtpi   = 2.0_dp/SQRT(pi)
+  sigmakin(:,:) = 0.0_dp
   !
   ALLOCATE( gk(npwx,3) )
   ALLOCATE( kfac(npwx) )
-  !$acc data present(g,igk_k) copyin(xk,wg) create(gk, kfac, sigmakin) 
-  !$acc kernels
-  kfac(:) = 1.0_dp
-  sigmakin(:,:) = 0.0_dp
-  !$acc end kernels
+  !$acc data present(g,igk_k) copyin(xk,wg) create(gk, kfac) 
   !
   DO ik = 1, nks
      IF ( nks > 1 ) THEN
@@ -67,7 +63,9 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
         IF (qcutz > 0.0_dp) THEN
            gk2 = gk(i,1)**2 + gk(i,2)**2 + gk(i,3)**2
            arg = ( (gk2-ecfixed)/q2sigma )**2
-           kfac(i) = 1.0_dp + qcutz / q2sigma * twobysqrtpi * EXP(-arg)
+           kfac(i) = 1.0_dp + qcutz / q2sigma * 2.0_dp / SQRT(pi) * EXP(-arg)
+        ELSE
+           kfac(i) = 1.0_dp
         ENDIF
      ENDDO
      !
@@ -75,21 +73,25 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
      !
      DO l = 1, 3
         DO m = 1, l
-     !$acc parallel loop collapse(2) reduction(+:sigmakin)
+           ! Stupid workaround for NVidia HPC-SDK v. < 22
+           ! that cannot make a reduction on a matrix
+           sigma = 0.0_dp
+           !$acc parallel loop collapse(2) reduction(+:sigma)
            DO ibnd = 1, nbnd
               DO i = 1, npw
                  IF (noncolin) THEN
-                    sigmakin(l,m) = sigmakin(l,m) + wg(ibnd,ik) * &
+                    sigma = sigma + wg(ibnd,ik) * &
                      gk(i,l) * gk(i, m) * kfac(i) * &
                      ( DBLE (CONJG(evc(   i  ,ibnd))*evc(   i  ,ibnd)) + &
                        DBLE (CONJG(evc(i+npwx,ibnd))*evc(i+npwx,ibnd)))
                  ELSE
-                    sigmakin(l,m) = sigmakin(l,m) + wg(ibnd,ik) * &
+                    sigma = sigma + wg(ibnd,ik) * &
                         gk(i,l) * gk(i, m) * kfac(i) * &
                           DBLE (CONJG(evc(i, ibnd) ) * evc(i, ibnd) )
                  ENDIF
               ENDDO
            ENDDO
+           sigmakin(l,m) = sigmakin(l,m) + sigma
         ENDDO
         !
      ENDDO
@@ -100,7 +102,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
      !
   ENDDO
   !
-  !$acc update host(sigmakin)
   !$acc end data 
   DEALLOCATE( kfac )
   DEALLOCATE(  gk  )
