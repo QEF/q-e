@@ -91,32 +91,32 @@ subroutine dv_of_drho (dvscf, drhoc)
   CALL fwfft ('Rho', dvscf(:,1), dfftp)
   !
   IF (do_comp_mt) THEN
-      !
-      ! Response Hartree potential with the Martyna-Tuckerman correction
-      !
-      allocate(dvhart(dfftp%nnr,nspin_mag))
-      dvhart(:,:) = (0.d0,0.d0)
-      !
-      do is = 1, nspin_lsda
+     !
+     ! Response Hartree potential with the Martyna-Tuckerman correction
+     !
+     allocate(dvhart(dfftp%nnr,nspin_mag))
+     dvhart(:,:) = (0.d0,0.d0)
+     !
+     do is = 1, nspin_lsda
         do ig = gstart, ngm
-          qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-          dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+           qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+           dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
         enddo
-      enddo 
-      !
-      ! Add Martyna-Tuckerman correction to response Hartree potential
-      !
-      allocate( dvaux_mt( ngm ), rgtot(ngm) )
-      !
-      ! Total response density
-      !
-      do ig = 1, ngm
-         rgtot(ig) = dvscf(dfftp%nl(ig),1)
-      enddo
-      !
-      CALL wg_corr_h (omega, ngm, rgtot, dvaux_mt, eh_corr)
-      !
-      do is = 1, nspin_lsda
+     enddo 
+     !
+     ! Add Martyna-Tuckerman correction to response Hartree potential
+     !
+     allocate( dvaux_mt( ngm ), rgtot(ngm) )
+     !
+     ! Total response density
+     !
+     do ig = 1, ngm
+        rgtot(ig) = dvscf(dfftp%nl(ig),1)
+     enddo
+     !
+     CALL wg_corr_h (omega, ngm, rgtot, dvaux_mt, eh_corr)
+     !
+     do is = 1, nspin_lsda
         !
         do ig = 1, ngm
            dvhart(dfftp%nl(ig),is)  = dvhart(dfftp%nl(ig),is)  + dvaux_mt(ig)
@@ -131,87 +131,77 @@ subroutine dv_of_drho (dvscf, drhoc)
         !
         CALL invfft ('Rho', dvhart (:,is), dfftp)
         !
-      enddo
-      !
-      ! At the end the two contributions (XC+Hartree) are added
-      ! 
-      dvscf = dvaux + dvhart
-      !
-      deallocate( dvaux_mt, rgtot ) 
-      deallocate(dvhart)
-      !
+     enddo
+     !
+     ! At the end the two contributions (XC+Hartree) are added
+     ! 
+     dvscf = dvaux + dvhart
+     !
+     deallocate( dvaux_mt, rgtot ) 
+     deallocate(dvhart)
+     !
   ELSE
-   !
-   ! Response Hartree potential (without Martyna-Tuckerman correction)
-   !
-   If (gamma_only) then
-      !
-      ! Gamma_only case
-      !
-      allocate(dvhart(dfftp%nnr,nspin_mag))
-      dvhart(:,:) = (0.d0,0.d0)
-      !
-      do is = 1, nspin_lsda
-        do ig = 1, ngm
-           qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-           if (qg2 > 1.d-8) then
-              dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
-              dvhart(dfftp%nlm(ig),is)=conjg(dvhart(dfftp%nl(ig),is))
-           endif
+     !
+     ! Response Hartree potential (without Martyna-Tuckerman correction)
+     !
+     If (gamma_only) then
+        !
+        ! Gamma_only case
+        !
+        allocate(dvhart(dfftp%nnr,nspin_mag))
+        dvhart(:,:) = (0.d0,0.d0)
+        !
+        do is = 1, nspin_lsda
+           do ig = 1, ngm
+              qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+              if (qg2 > 1.d-8) then
+                 dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+                 dvhart(dfftp%nlm(ig),is)=conjg(dvhart(dfftp%nl(ig),is))
+              endif
+           enddo
+           !
+           ! Transformed back to real space
+           !
+           CALL invfft ('Rho', dvhart (:, is), dfftp)
+           !
         enddo
         !
-        ! Transformed back to real space
+        ! At the end the two contributes are added
         !
-        CALL invfft ('Rho', dvhart (:, is), dfftp)
+        dvscf = dvaux + dvhart
         !
-      enddo
-      !
-      ! At the end the two contributes are added
-      !
-      dvscf = dvaux + dvhart
-      !
-      deallocate(dvhart)
-      !
-   else
-      !
-      ! General k points implementation
-      !
-      do is = 1, nspin_lsda
-         CALL fwfft ('Rho', dvaux (:, is), dfftp)
-         IF (do_cutoff_2D) THEN 
-            call cutoff_dv_of_drho(dvaux, is, dvscf)
-         ELSE
-            do ig = 1, ngm
-               qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-               g2  = g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
-               IF (lnolr) THEN
-                 !
-                 IF (g2 > 1d-8 .AND. qg2 > 1.d-8) THEN
-                    dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
-                                   & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
-                 ENDIF
-                 ! 
-               ELSE
+        deallocate(dvhart)
+        !
+     else
+        !
+        ! General k points implementation
+        !
+        do is = 1, nspin_lsda
+           CALL fwfft ('Rho', dvaux (:, is), dfftp)
+           IF (do_cutoff_2D) THEN 
+              call cutoff_dv_of_drho(dvaux, is, dvscf)
+           ELSE
+              do ig = 1, ngm
+                 qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
                  if (qg2 > 1.d-8) then
                     dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
                                    & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
                  endif
-               ENDIF
-            enddo
-         ENDIF
-         !
-         ! Transformed back to real space
-         !
-         CALL invfft ('Rho', dvaux (:, is), dfftp)
-         !
-      enddo
-      !
-      ! At the end the two contributes are added
-      !
-      dvscf (:,:) = dvaux (:,:)
-      !
-   endif
-   !
+              enddo
+           ENDIF
+           !
+           ! Transformed back to real space
+           !
+           CALL invfft ('Rho', dvaux (:, is), dfftp)
+           !
+        enddo
+        !
+        ! At the end the two contributes are added
+        !
+        dvscf (:,:) = dvaux (:,:)
+        !
+     endif
+     !
   ENDIF
   !
   deallocate (dvaux)

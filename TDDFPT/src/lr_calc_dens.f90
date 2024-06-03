@@ -103,7 +103,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   v_siz = dfftp%nnr
   nnr_siz = dffts%nnr
   !
-  !$acc data create(psic(1:v_siz), revc0(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copyout( rho_1(1:v_siz,1:nspin_mag)) 
+  !$acc data create(psic(1:v_siz), revc0(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks), evc0(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout( rho_1(1:v_siz,1:nspin_mag)) 
   !
   !$acc kernels
   psic(:) = (0.0d0, 0.0d0)
@@ -128,9 +128,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      IF ( doublegrid ) THEN
         print *, 'doublegrid', doublegrid
-        !$acc host_data use_device(rho_1(:,1))     
         CALL fft_interpolate(dffts, rho_1(:,1), dfftp, rho_1(:,1))
-        !$acc end host_data
      ENDIF
      !
 #if defined(__MPI)
