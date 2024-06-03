@@ -26,7 +26,7 @@ MODULE lr_exx_kernel
   !
 
   USE kinds,                  ONLY : DP
-  USE lr_variables,           ONLY : evc0, revc0
+  USE lr_variables,           ONLY : evc0
   USE fft_base,               ONLY : dffts
   USE fft_interfaces,         ONLY : invfft, fwfft
   USE lsda_mod,               ONLY : nspin
