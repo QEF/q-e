@@ -26,7 +26,6 @@ contains
                                 & if_dft_spectrum, reference
     use lr_variables, only : nbnd_total
     use io_global,    only : stdout
-    use lr_dav_debug
  
     implicit none
     integer :: ib,ic,iv
@@ -193,7 +192,6 @@ contains
     use gvect,                only : gstart
     use uspp,           only : okvan
     use lr_us
-    use lr_dav_debug
 
     implicit none
     integer :: ib,ia,ipw,ibnd
@@ -231,7 +229,6 @@ contains
     dav_iter=0
 101 continue
     dav_conv=.false.
-    ! call check_orth()
     write(stdout,'(5x,"Finished initiating.")')
     !
     RETURN
@@ -437,7 +434,6 @@ contains
     use lr_us
     use uspp,           only : okvan
     use lr_dav_variables
-    use lr_dav_debug
     use lr_us
 
     implicit none
@@ -605,7 +601,6 @@ contains
     use lr_us
     use uspp,           only : okvan
     use lr_dav_variables
-    use lr_dav_debug
     use lr_us
 
     implicit none
@@ -629,9 +624,6 @@ contains
     call start_clock("matrix")
     call ZGEMM('N', 'N', num_basis,num_basis,num_basis,(1.0D0,0.0D0),M_D,&
                num_basis_max,M_C,num_basis_max,(0.0D0,0.0D0), M,num_basis_max)
-    call check("M_C")
-    call check("M_D")
-    call check("M")
 
     ! Solve M_DC
     ! It is dangerous to be "solved", use its shadow avatar in order to protect the original one
@@ -733,7 +725,6 @@ contains
     use io_global, only : stdout
     use wvfct,                only : nbnd, npwx
     use uspp,           only : okvan
-    use lr_dav_debug
     use lr_us
     
     implicit none
@@ -842,7 +833,6 @@ contains
     use io_global,       only : stdout
     use uspp,           only : okvan
     use lr_us
-    use lr_dav_debug
     use wvfct,                only : npwx
     
     implicit none
@@ -1983,7 +1973,6 @@ contains
     use charg_resp,           only : lr_calc_R
     use io_global,    only : stdout,ionode
     use io_files,      only : prefix
-    use lr_dav_debug
 
     implicit none
     integer :: ib,ic,iv,i
