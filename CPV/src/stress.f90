@@ -111,8 +111,8 @@
       !
       CALL start_clock("stress_local") 
       s_ngm_ = dffts%ngm
-DEV_ACC data present(rhoe, drhoe,sfac) copyin(gagb,vps,dvps) 
-DEV_ACC update self(drhoe(1,1:6), sfac(1,1:nsp)) 
+!$acc data present(rhoe, drhoe,sfac) copyin(gagb,vps,dvps) 
+!$acc update self(drhoe(1,1:6), sfac(1,1:nsp)) 
       depst  = (0.d0,0.d0)
       depst1 = (0.d0,0.d0) 
       depst2 = (0.d0,0.d0)
@@ -121,10 +121,10 @@ DEV_ACC update self(drhoe(1,1:6), sfac(1,1:nsp))
       depst5 = (0.d0,0.d0) 
       depst6 = (0.d0,0.d0) 
       wz = 2.0d0
-DEV_ACC parallel loop private(svp) reduction(+:depst1,depst2,depst3,depst4,depst5,depst6) 
+!$acc parallel loop private(svp) reduction(+:depst1,depst2,depst3,depst4,depst5,depst6) 
       DO ig = gstart, s_ngm_
          svp = 0.0d0
-DEV_ACC loop seq 
+!$acc loop seq 
          DO is = 1, nsp
             svp = svp + sfac( ig, is ) * vps( ig, is )
          END DO
@@ -153,10 +153,10 @@ DEV_ACC loop seq
          depst = depst + CONJG( drhoe( 1, : ) ) * svp
       END IF 
       !
-DEV_ACC parallel loop private(dsvp) reduction(+:depst1,depst2,depst3,depst4,depst5,depst6) 
+!$acc parallel loop private(dsvp) reduction(+:depst1,depst2,depst3,depst4,depst5,depst6) 
       DO ig = gstart, s_ngm_
          dsvp = 0.0d0
-DEV_ACC loop seq 
+!$acc loop seq 
          DO is = 1, nsp
             dsvp = dsvp + sfac( ig, is ) * dvps( ig, is )
          END DO
@@ -169,7 +169,7 @@ DEV_ACC loop seq
       END DO
       depst = depst + [depst1,depst2,depst3,depst4,depst5,depst6] 
       deps = omega * DBLE( depst )
-DEV_ACC end data  
+!$acc end data  
       CALL stop_clock("stress_local") 
       RETURN
    END SUBROUTINE stress_local_x
@@ -271,31 +271,31 @@ DEV_ACC end data
       INTEGER     :: ij, is, ig
       COMPLEX(DP) :: drhop
       !
-DEV_ACC data present(drhot, sfac) copyin(gagb) 
+!$acc data present(drhot, sfac) copyin(gagb) 
       DO ij = 1, 6
          IF( dalbe( ij ) > 0.0d0 ) THEN
-DEV_ACC kernels async 
+!$acc kernels async 
             DO is = 1, nsp
                DO ig = 1, dffts%ngm
                   drhot(ig,ij) = drhot(ig,ij) - sfac(ig,is)*rhops(ig,is)
                ENDDO
             END DO
-DEV_ACC end kernels 
+!$acc end kernels 
          END IF
       END DO
-DEV_ACC parallel loop private(drhop) 
+!$acc parallel loop private(drhop) 
       DO ig = 1, dffts%ngm
          drhop = 0.0d0
-DEV_ACC loop seq 
+!$acc loop seq 
          DO is = 1, nsp
            drhop = drhop - sfac( ig, is ) * rhops(ig,is) * rcmax(is)**2 * 0.5D0
          END DO
-DEV_ACC loop seq 
+!$acc loop seq 
          DO ij = 1, 6
              drhot(ig,ij) = drhot(ig,ij) - drhop * gagb( ij, ig )
          END DO
       END DO
-DEV_ACC end data
+!$acc end data
       RETURN
    END SUBROUTINE add_drhoph_x
 
@@ -429,18 +429,18 @@ DEV_ACC end data
 
       ALLOCATE( hgm1( p_ngm_ ) )
       ! 
-DEV_ACC data present(sfac,rhot,drhot) copyin(gagb,gg) create(hgm1)
+!$acc data present(sfac,rhot,drhot) copyin(gagb,gg) create(hgm1)
       !
-DEV_ACC kernels  
+!$acc kernels  
       hgm1( 1 ) = 0.0d0
-DEV_ACC loop 
+!$acc loop 
       DO ig = gstart, p_ngm_
          hgm1( ig ) = 1.D0 / gg(ig) / tpiba2
       END DO
-DEV_ACC end kernels
+!$acc end kernels
 
       ! Add term  rho_t * CONJG( rho_t ) / G^2 * G_alpha * G_beta / G^2
-DEV_ACC parallel loop private(cfact) reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6) 
+!$acc parallel loop private(cfact) reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6) 
       DO ig = gstart, p_ngm_
          cfact = rhot( ig ) * CONJG( rhot( ig ) ) * hgm1( ig ) ** 2 
          dehc1 = dehc1 + cfact * gagb(1,ig)
@@ -452,7 +452,7 @@ DEV_ACC parallel loop private(cfact) reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,d
       END DO
 
       ! Add term  2 * Re{ CONJG( rho_t ) * drho_t / G^2 }
-DEV_ACC parallel loop reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6) 
+!$acc parallel loop reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6) 
       DO ig = gstart, p_ngm_
          dehc1 = dehc1  +  rhot( ig ) * CONJG( drhot( ig, 1 ) ) * hgm1( ig )
          dehc2 = dehc2  +  rhot( ig ) * CONJG( drhot( ig, 2 ) ) * hgm1( ig )
@@ -469,7 +469,7 @@ DEV_ACC parallel loop reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6)
       else
         deht = wz * fpi * omega * DBLE(dehc)
       end if
-DEV_ACC end data
+!$acc end data
       DEALLOCATE( hgm1 )
       RETURN
    END SUBROUTINE stress_hartree_x

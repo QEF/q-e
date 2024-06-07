@@ -176,11 +176,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ALLOCATE( vtemp( p_ngm_ ) )
       ALLOCATE( rhotmp( p_ngm_ ) )
-DEV_ACC enter data create(rhotmp( 1:p_ngm_ ) )
+!$acc enter data create(rhotmp( 1:p_ngm_ ) )
       !
       IF ( tpre ) THEN
          ALLOCATE( drhot( p_ngm_, 6 ) )
-DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
+!$acc enter data create(drhot(1:p_ngm_, 1:6))
          ALLOCATE( gagb( 6, p_ngm_ ) )
          CALL compute_gagb( gagb, g, p_ngm_, tpiba2 )
       END IF
@@ -237,65 +237,65 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
       !
       zpseu = 0.0_DP 
       !
-      DEV_ACC  update device(gg)
-      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,rhops) copyout(vtemp) 
-      DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
+      !$acc  update device(gg)
+      !$acc  data copyin(rhog,drhog,ht,sfac,vps,rhops) copyout(vtemp) 
+      DEV_OMP_NOACC  parallel default(shared), private(ig,is,ij,i,j,k)
       !
-      DEV_OMP do 
-      DEV_ACC parallel loop present(rhotmp, rhog)
+      DEV_OMP_NOACC do 
+      !$acc parallel loop present(rhotmp, rhog)
       DO ig = 1, p_ngm_
         rhotmp( ig ) = rhog( ig, 1 )
       END DO 
-      DEV_OMP end do
+      DEV_OMP_NOACC end do
       !
       IF( nspin == 2 ) THEN
         !
-        DEV_OMP do
-        DEV_ACC parallel loop present(rhotmp, rhog)
+        DEV_OMP_NOACC do
+        !$acc parallel loop present(rhotmp, rhog)
         DO ig = 1, p_ngm_
            rhotmp( ig ) = rhotmp( ig ) + rhog( ig, 2 )
         END DO 
-        DEV_OMP end do
+        DEV_OMP_NOACC end do
         !
       END IF
       !
 
       IF( tpre ) THEN
-DEV_OMP do
+DEV_OMP_NOACC do
          DO ij = 1, 6
             i = alpha( ij )
             j = beta( ij )
             !
-DEV_ACC parallel loop present(drhot) 
+!$acc parallel loop present(drhot) 
             DO ig = 1, p_ngm_
               drhot( ig, ij ) = 0.0d0
             END DO 
             !
             DO k = 1, 3
                !
-DEV_ACC parallel loop present(drhot, drhog, ht) 
+!$acc parallel loop present(drhot, drhog, ht) 
                DO ig = 1, p_ngm_
                  drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 1, i, k ) * ht( k, j )
                END DO 
                !
             END DO
          END DO
-DEV_OMP end do
+DEV_OMP_NOACC end do
          IF( nspin == 2 ) THEN
-DEV_OMP do
+DEV_OMP_NOACC do
             DO ij = 1, 6
                i = alpha( ij )
                j = beta( ij ) 
                DO k = 1, 3
                   !
-DEV_ACC parallel loop present(drhot, drhog, ht)
+!$acc parallel loop present(drhot, drhog, ht)
                   DO ig = 1, p_ngm_
                     drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 2, i, k ) * ht( k, j )
                   END DO  
                   !
                END DO
             END DO
-DEV_OMP end do
+DEV_OMP_NOACC end do
          ENDIF
       END IF
       !
@@ -303,27 +303,27 @@ DEV_OMP end do
       !
 
       !
-DEV_OMP do
-DEV_ACC parallel loop 
+DEV_OMP_NOACC do
+!$acc parallel loop 
       DO ig = 1, SIZE(vtemp)
          vtemp(ig)=(0.d0,0.d0)
       END DO
       DO is=1,nsp
-DEV_OMP do
-DEV_ACC parallel loop present(rhotmp)
+DEV_OMP_NOACC do
+!$acc parallel loop present(rhotmp)
          DO ig=1,s_ngm_
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
 
-DEV_OMP do reduction(+:zpseu)
-DEV_ACC parallel loop reduction(+:zpseu) 
+DEV_OMP_NOACC do reduction(+:zpseu)
+!$acc parallel loop reduction(+:zpseu) 
       DO ig=1,s_ngm_
          zpseu = zpseu + vtemp(ig)
       END DO
-DEV_OMP end parallel
+DEV_OMP_NOACC end parallel
       ! 
-DEV_ACC update self(vtemp(1)) 
+!$acc update self(vtemp(1)) 
       epseu = wz * DBLE(zpseu)
       !
       IF (gstart == 2) epseu = epseu - DBLE( vtemp(1) )
@@ -348,33 +348,33 @@ DEV_ACC update self(vtemp(1))
 
       zh = 0.0d0
 
-DEV_OMP parallel default(shared), private(ig,is,x_tmp)
-DEV_ACC parallel present(rhotmp) 
-DEV_ACC loop gang private(x_tmp)
-DEV_OMP do 
+DEV_OMP_NOACC parallel default(shared), private(ig,is,x_tmp)
+!$acc parallel present(rhotmp) 
+!$acc loop gang private(x_tmp)
+DEV_OMP_NOACC do 
       DO ig=1,s_ngm_
          x_tmp = rhotmp(ig)
-DEV_ACC loop vector reduction(+:x_tmp) 
+!$acc loop vector reduction(+:x_tmp) 
          DO is=1,nsp
             x_tmp=x_tmp+sfac(ig,is)*rhops(ig,is)
          END DO
          rhotmp(ig)=x_tmp 
       END DO
-DEV_ACC end parallel
+!$acc end parallel
       !
-DEV_OMP do
-DEV_ACC parallel loop present(rhotmp,gg)
+DEV_OMP_NOACC do
+!$acc parallel loop present(rhotmp,gg)
       DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
-DEV_OMP do reduction(+:zh)
-DEV_ACC parallel loop reduction(+:zh) 
+DEV_OMP_NOACC do reduction(+:zh)
+!$acc parallel loop reduction(+:zh) 
       DO ig = gstart, p_ngm_
          zh = zh + vtemp(ig)
       END DO
 
-DEV_OMP end parallel
+DEV_OMP_NOACC end parallel
 
       eh = DBLE( zh ) * wz * 0.5d0 * fpi / tpiba2
 !
@@ -394,7 +394,7 @@ DEV_OMP end parallel
          CALL stress_hartree(dh6, eh*omega, sfac, rhotmp, drhot, gagb, omega )
          !
          DEALLOCATE( gagb )
-DEV_ACC exit data delete(drhot)
+!$acc exit data delete(drhot)
          DEALLOCATE( drhot )
          !
       END IF
@@ -423,29 +423,29 @@ END_WSHARE
       !     calculation hartree + local pseudo potential
       !
       !
-DEV_ACC kernels 
+!$acc kernels 
       IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
-DEV_ACC end kernels 
+!$acc end kernels 
 
 !
-DEV_ACC parallel loop present(rhotmp,gg)
+!$acc parallel loop present(rhotmp,gg)
 !
-DEV_OMP parallel default(shared), private(ig,is)
-DEV_OMP do
+DEV_OMP_NOACC parallel default(shared), private(ig,is)
+DEV_OMP_NOACC do
       DO ig=gstart,p_ngm_
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
       !
-DEV_ACC parallel loop 
-DEV_OMP do
+!$acc parallel loop 
+DEV_OMP_NOACC do
       DO ig=1,s_ngm_
-DEV_ACC loop seq 
+!$acc loop seq 
          DO is=1,nsp
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
-DEV_OMP end parallel
-DEV_ACC exit data delete(rhotmp)
+DEV_OMP_NOACC end parallel
+!$acc exit data delete(rhotmp)
       DEALLOCATE (rhotmp)
 
 !
@@ -472,7 +472,7 @@ DEV_ACC exit data delete(rhotmp)
       !
       !FIXME : need to complete the offloading of this part rhog rhor and nlc call shou
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
-DEV_ACC update device(rhog)
+!$acc update device(rhog)
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
       !
       ! ... add non local corrections (if any)
@@ -560,17 +560,17 @@ DEV_ACC update device(rhog)
       ELSE
          isup=1
          isdw=2
-DEV_ACC host_data use_device(vtemp,rhog) 
+!$acc host_data use_device(vtemp,rhog) 
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isup), 1)
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isdw), 1)
-DEV_ACC end host_data  
+!$acc end host_data  
          IF( ttsic ) THEN
             rhog( 1:p_ngm_, isup ) = rhog( 1:p_ngm_, isup ) - self_vloc(1:p_ngm_) 
             rhog( 1:p_ngm_, isdw ) = rhog( 1:p_ngm_, isdw ) - self_vloc(1:p_ngm_)
          END IF
       END IF
-DEV_ACC update self(rhog) 
-DEV_ACC end data  
+!$acc update self(rhog) 
+!$acc end data  
       DEALLOCATE (vtemp)
       IF( ttsic ) DEALLOCATE( self_vloc )
 !

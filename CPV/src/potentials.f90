@@ -357,17 +357,17 @@
   
 !
 
-DEV_ACC data present(rhoeg, rhops, mill,g,gg ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, vps, ityp,ei1, ei2, ei3) 
+!$acc data present(rhoeg, rhops, mill,g,gg ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, vps, ityp,ei1, ei2, ei3) 
 !
-DEV_OMP parallel default(none) &
-DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
-DEV_OMP         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
-DEV_OMP private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
-DEV_OMP          ty, tz, teigr,fx, fy, fz )
+DEV_OMP_NOACC parallel default(none) &
+DEV_OMP_NOACC shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
+DEV_OMP_NOACC         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
+DEV_OMP_NOACC private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
+DEV_OMP_NOACC          ty, tz, teigr,fx, fy, fz )
  
  
-DEV_ACC parallel loop       
-DEV_OMP do  
+!$acc parallel loop       
+DEV_OMP_NOACC do  
    DO ig = gstart, s_ngm_
       rp( ig) = (0.d0,0.d0) 
       DO is = 1, nsp 
@@ -375,16 +375,16 @@ DEV_OMP do
       END DO 
    END DO 
 
-DEV_ACC parallel vector_length(128) 
-DEV_ACC loop gang private(is, fx,fy,fz) 
-DEV_OMP do  
+!$acc parallel vector_length(128) 
+!$acc loop gang private(is, fx,fy,fz) 
+DEV_OMP_NOACC do  
    DO ia = 1, nat
       is = ityp(ia) 
       fx = (0.d0, 0.d0) 
       fy = (0.d0, 0.d0) 
       fz = (0.d0, 0.d0) 
-DEV_ACC loop vector private(rhet, rhog, fpibg, ig1, ig2, ig3, gxc,gyc,gzc, cnvg, cvn, &
-DEV_ACC&                             tx, ty, tz, teigr) reduction(+:fx,fy,fz)   
+!$acc loop vector private(rhet, rhog, fpibg, ig1, ig2, ig3, gxc,gyc,gzc, cnvg, cvn, &
+!$acc &                   tx, ty, tz, teigr) reduction(+:fx,fy,fz)   
       DO ig = gstart, s_ngm_ 
          rhet = rhoeg ( ig ) 
          rhog = rhet + rp ( ig)
@@ -411,9 +411,9 @@ DEV_ACC&                             tx, ty, tz, teigr) reduction(+:fx,fy,fz)
       END DO         
       fion (:,ia) =  fion(:,ia) + [DBLE(fx),DBLE(fy),DBLE(fz)] * 2.d0 * omega * tpiba
    END DO
-DEV_ACC end parallel
-DEV_ACC end data 
-DEV_OMP end parallel 
+!$acc end parallel
+!$acc end data 
+DEV_OMP_NOACC end parallel 
    DEALLOCATE (rp) 
       RETURN
       END SUBROUTINE force_loc_x
