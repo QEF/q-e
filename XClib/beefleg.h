@@ -8,6 +8,10 @@
 
 #define nmax 30
 
+#ifdef _WIN32
+#define random rand
+#endif
+
 extern void dgemv_(const char *, const int *, const int *, const double *,
     double *, const int *, double *, const int *, const double *, double *,
     const int *);
