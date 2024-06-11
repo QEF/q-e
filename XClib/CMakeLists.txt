@@ -43,6 +43,7 @@ set(sources_libbeef
     pbecor.c
     beefun.c)
 qe_add_library(qe_libbeef ${sources_libbeef})
+set_target_properties(qe_libbeef PROPERTIES Fortran_MODULE_DIRECTORY "")
 target_link_libraries(qe_libbeef 
     PUBLIC
         qe_openacc_c
