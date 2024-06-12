@@ -1,3 +1,7 @@
+Incompatible changes in development version:
+  * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
+    modified and made uniform with all other constraints - courtesy Tae Yun Kim
+
 Fixed in development version:
   * Phonon restart was not working properly in some cases with ultrasoft,
     PPs, due to bad initialization of PP tables - affects v.7.3 and 7.3.1

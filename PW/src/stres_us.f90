@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only, offload_type
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq
+  USE uspp,                 ONLY : nkb, vkb, deeq, qq_at, ofsbeta, deeq_nc, qq_so
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
@@ -44,12 +44,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: qm1(:)
-  COMPLEX(DP), ALLOCATABLE :: evcv(:)
   !
   REAL(DP) :: q
   INTEGER  :: npw , iu, np
   !
-  INTEGER :: na1, np1, nh_np1, ijkb01, itot, levc
+  INTEGER :: na1, np1, nh_np1, ijkb01, itot
   LOGICAL :: ismulti_np
   INTEGER, ALLOCATABLE :: shift(:), na_list(:), nh_list(:), ih_list(:), &
                           ishift_list(:)
@@ -124,10 +123,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
     ENDDO
   ENDDO
   !
-  levc = SIZE(evc(:,1))
-  ALLOCATE( evcv(1:levc) )
-  !$acc data create(evcv)
-  !
   IF ( gamma_only ) THEN
      !
      CALL stres_us_gamma()
@@ -137,9 +132,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      CALL stres_us_k()
      !
   ENDIF
-  !
-  !$acc end data
-  DEALLOCATE( evcv )
   !
   !$acc end data
   !$acc end data
@@ -176,7 +168,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: ps(:), dvkb(:,:,:)
        !
-       REAL(DP) :: xyz(3,3)
+       REAL(DP) :: deff_, xyz(3,3)
        !
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, 0._DP, &
@@ -195,10 +187,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           nbnd_begin = 1
        ENDIF
        !
-       ALLOCATE( deff(nhm,nhm,nat) )
-       ALLOCATE( ps(nkb) )
-       !$acc data create(deff,ps)
-       !
        ! ... diagonal contribution - if the result from "calbec" are not 
        ! ... distributed, must be calculated on a single processor
        !
@@ -213,38 +201,45 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        evps = 0._DP
        !
        compute_evps: IF ( .NOT. (nproc==1 .AND. me_pool/=root_pool) ) THEN
-         !
-         DO ibnd_loc = 1, nbnd_loc
-            ibnd = ibnd_loc+becp%ibnd_begin-1
-            CALL compute_deff( deff, et(ibnd,ik) )
-            wg_nk = wg(ibnd,ik)
-            !
-            !$acc parallel loop reduction(+:evps)
-            DO i = 1, itot
-              ih = ih_list(i)           ;   na = na_list(i)
-              ishift = ishift_list(i)   ;   ikb = ishift + ih
-              !
-              IF (.NOT. is_multinp(i)) THEN
-                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2
-              ELSE
-                 nh_np = nh_list(i)
-                 !
-                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2 &
-                             +  becpr(ikb,ibnd_loc)* wg_nk * 2._DP  &
-                                * SUM( deff(ih,ih+1:nh_np,na)       &
-                                * becpr(ishift+ih+1:ishift+nh_np,ibnd_loc))
-              ENDIF
-              !
-              evps = evps + aux
-              !
-            ENDDO
-            !
-         ENDDO
-         !
+          !
+          !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r) &
+          !$acc copyin( ityp, wg, et, nh ) reduction(+:evps)
+          DO na = 1, nat
+             DO ibnd_loc = 1, nbnd_loc
+                ibnd = ibnd_loc+becp%ibnd_begin-1
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      ! 
+                      ! a nondiagonal contribution (ih,jh) is present only
+                      ! for US-PP or multiprojector PP:
+                      !   IF ( upf(np)%tvanp) .or. upf(np)%is_multiproj ) 
+                      ! but it is not worth to make two distinct cases here
+                      !
+                      ikb = ijkb0 + ih
+                      jkb = ijkb0 + jh
+                      ! For norm-conserving PP, actually qq_at=0 but again,
+                      ! it is not worth to make two distinct cases here
+                      evps = evps + ( deeq(ih,jh,na,current_spin) - et(ibnd,ik)*qq_at(ih,jh,na)) * &
+                           wg(ibnd,ik) * becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
+                   END DO
+                END DO
+             END DO
+          END DO
+          !
        ENDIF compute_evps
+       !
+       DO l = 1, 3
+          sigmanlc(l,l) = sigmanlc(l,l) - evps
+       ENDDO
        !
        ! ... non diagonal contribution - derivative of the Bessel function
        !
+       ALLOCATE( deff(nhm,nhm,nat) )
+       ALLOCATE( ps(nkb) )
+       !$acc data create(deff,ps)
        ALLOCATE( dvkb(npwx,nkb,4) )
        !$acc data create(dvkb)
        !
@@ -261,10 +256,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              ibnd = ibnd_loc + becp%ibnd_begin - 1
              CALL compute_deff( deff, et(ibnd,ik) )
-             !
-             !$acc kernels
-             evcv(:) = evc(:,ibnd)
-             !$acc end kernels
              !
              !$acc parallel loop
              DO i = 1, itot
@@ -297,7 +288,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       worksum = worksum + ps(ikb) * dvkb(i,ikb,4)
                    ENDDO
                    Re_worksum = DBLE(worksum) ;  Im_worksum = DIMAG(worksum)
-                   evci = evcv(i)
+                   evci = evc(i,ibnd)
                    gk1  = gk(i,1) ;  gk2 = gk(i,2) ;  gk3 = gk(i,3)
                    qm1i = qm1(i)
                    !
@@ -340,7 +331,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    wsum2 = ps(ikb)*dvkb(i,ikb,2)
                    wsum3 = ps(ikb)*dvkb(i,ikb,3)
                    !
-                   evci = evcv(i)
+                   evci = evc(i,ibnd)
                    gk1 = gk(i,1)
                    gk2 = gk(i,2)
                    gk3 = gk(i,3)
@@ -382,10 +373,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
 10     CONTINUE
        !
-       DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
-       ENDDO
-       !
        !$acc end data
        !$acc end data
        DEALLOCATE( deff, ps )
@@ -406,12 +393,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        ! ... local variables
        !
-       INTEGER  :: na, np, ibnd, ipol, jpol, l, i, nt, &
+       INTEGER  :: na, np, ibnd, ipol, jpol, l, i, nt, ijkb0, &
                    ikb, jkb, ih, jh, is, js, ijs, ishift, nh_np
        REAL(DP) :: fac, evps, dot11, dot21, dot31, dot22, dot32, dot33, aux, &
                    Re_worksum, Re_worksum1, Re_worksum2, Im_worksum,         &
                    Im_worksum1, Im_worksum2
-       COMPLEX(DP) :: qm1i, gk1, gk2, gk3, pss
+       COMPLEX(DP) :: qm1i, gk1, gk2, gk3, pss, deq
        COMPLEX(DP) :: cv, cv1, cv2, worksum, worksum1, worksum2, evci, evc1i, &
                       evc2i, ps1, ps2, ps1d1, ps1d2, ps1d3, ps2d1, ps2d2,     &
                       ps2d3, psd1, psd2, psd3
@@ -431,15 +418,68 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        evps = 0._DP
        ! ... diagonal contribution
        !
-       ALLOCATE( dvkb(npwx,nkb,4) )
-       !$acc data create( dvkb )
+       ! ... the contribution is calculated only on one processor because
+       ! ... partial results are later summed over all processors
        !
-       CALL gen_us_dj( ik, dvkb(:,:,4) )
-       IF ( lmaxkb > 0 ) THEN
-         DO ipol = 1, 3
-           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
-         ENDDO
-       ENDIF
+       IF ( me_bgrp == root_bgrp ) THEN
+          !
+          !$acc parallel loop collapse(2) present(deeq, deeq_nc, qq_so, qq_at, becp%k, becp%nc) &
+          !$acc copyin( ityp, wg, et, nh ) reduction(+:evps)
+          DO na = 1, nat
+             DO ibnd = 1, nbnd
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      ! the nondiagonal contribution (ih,jh) is actually present only for
+                      ! US-PP (upf(np)%tvanp) or multiprojector PP (upf(np)%is_multiproj)
+                      ! but it is not worth here to make two distinct cases
+                      ikb = ijkb0 + ih
+                      jkb = ijkb0 + jh
+                      ! For norm-conserving PP, qq_at=0 - again, not worth to make two cases
+                      IF ( lspinorb ) THEN
+                         !$acc loop seq collapse(2)
+                         DO is=1,npol
+                            DO js=1,npol
+                               ijs=2*(is-1)+js
+                               evps = evps + ( deeq_nc(ih,jh,na,ijs) - &
+                                    et(ibnd,ik)*qq_so(ih,jh,ijs,np) ) * wg(ibnd,ik) *&
+                                    CONJG( becp%nc(ikb,is,ibnd) ) * &
+                                           becp%nc(jkb,js,ibnd)
+                            END DO
+                         END DO
+                      ELSE IF ( noncolin ) THEN
+                         !$acc loop seq collapse(2)
+                         DO is=1,npol
+                            DO js=1,npol
+                               ijs=2*(is-1)+js
+                               IF ( is == js ) THEN
+                                  deq = deeq_nc(ih,jh,na,ijs) - et(ibnd,ik)*qq_at(ih,jh,na)
+                               ELSE
+                                  deq = deeq_nc(ih,jh,na,ijs)
+                               END IF
+                               evps = evps + deq * wg(ibnd,ik) * &
+                                    CONJG( becp%nc(ikb,is,ibnd) ) * &
+                                           becp%nc(jkb,js,ibnd)
+                            END DO
+                         END DO
+                      ELSE
+                         evps = evps + ( deeq(ih,jh,na,current_spin) - &
+                              et(ibnd,ik)*qq_at(ih,jh,na) ) * wg(ibnd,ik) * &
+                              CONJG( becp%k(ikb,ibnd) ) * &
+                                     becp%k(jkb,ibnd)
+                      END IF
+                   END DO
+                END DO
+             END DO
+          END DO
+          !
+          DO l = 1, 3
+             sigmanlc(l,l) = sigmanlc(l,l) - evps
+          ENDDO
+          !
+       END IF
        !
        IF (noncolin) THEN
           ALLOCATE( ps_nc(nkb,npol) )
@@ -457,131 +497,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           !$acc end kernels
        ENDIF
        !$acc data create( ps, ps_nc, deff, deff_nc )
-       !
-       ! ... the contribution is calculated only on one processor because
-       ! ... partial results are later summed over all processors
-       !
-       IF ( me_bgrp /= root_bgrp ) GO TO 100
-       !
-       DO ibnd = 1, nbnd
-          fac = wg(ibnd,ik)
-          IF (ABS(fac) < 1.d-9) CYCLE
-          IF (noncolin) THEN
-             CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
-          ELSE
-             CALL compute_deff( deff, et(ibnd,ik) )
-          ENDIF
-          !
-          IF (noncolin) THEN
-            !
-#if defined(_OPENACC)
-            !$acc parallel loop reduction(+:evps)
-#else
-            !$omp parallel do reduction(+:evps), private(ih,na,ishift,ikb,aux,&
-            !$omp&            ijs,is,js,nh_np,jkb)
-#endif
-            DO i = 1, itot
-              !
-              ih = ih_list(i)         ; na = na_list(i)
-              ishift = ishift_list(i) ; ikb = ishift + ih
-              aux = 0.d0
-              !
-              IF (.NOT. is_multinp(i)) THEN
-                 ijs = 0
-                 !$acc loop seq collapse(2) reduction(+:aux)
-                 DO is = 1, npol
-                   DO js = 1, npol
-                      ijs = ijs + 1
-                      aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) * &
-                                             CONJG(becpnc(ikb,is,ibnd)) * &
-                                             becpnc(ikb,js,ibnd))
-                   ENDDO
-                 ENDDO
-              ELSE
-                 nh_np = nh_list(i)
-                 ijs = 0
-                 !$acc loop seq collapse(2) reduction(+:aux)
-                 DO is = 1, npol
-                   DO js = 1, npol
-                      ijs = ijs + 1
-                      aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) * &
-                                             CONJG(becpnc(ikb,is,ibnd)) * &
-                                             becpnc(ikb,js,ibnd))
-                   ENDDO
-                 ENDDO
-                 !$acc loop seq
-                 DO jh = ih+1, nh_np
-                    jkb = ishift + jh
-                    ijs = 0
-                    !$acc loop seq collapse(2) reduction(+:aux)
-                    DO is = 1, npol
-                      DO js = 1, npol
-                         ijs = ijs + 1
-                         aux = aux + 2._DP*fac * &
-                                       DBLE(deff_nc(ih,jh,na,ijs) * &
-                                            (CONJG(becpnc(ikb,is,ibnd)) * &
-                                             becpnc(jkb,js,ibnd)))
-                      ENDDO
-                    ENDDO
-                 ENDDO
-              ENDIF
-              !
-              evps = evps + aux
-              !
-            ENDDO
-#if !defined(_OPENACC)
-            !$omp end parallel do
-#endif
-            !
-          ELSE
-            !
-            aux = 0.d0
-#if defined(_OPENACC)
-            !$acc parallel loop reduction(+:evps)
-#else
-            !$omp parallel do reduction(+:evps) private(ih,na,ishift,ikb,&
-            !$omp&            aux,nh_np)
-#endif
-            DO i = 1, itot
-              !
-              ih = ih_list(i)         ; na = na_list(i)
-              ishift = ishift_list(i) ; ikb = ishift + ih
-              !
-              IF (.NOT. is_multinp(i)) THEN
-                 aux = fac * deff(ih,ih,na) * &
-                               ABS(becpk(ikb,ibnd) )**2
-              ELSE
-                 nh_np = nh_list(i)
-                 aux = fac * deff(ih,ih,na) * ABS(becpk(ikb,ibnd) )**2 + &
-                             SUM( deff(ih,ih+1:nh_np,na) * &
-                                  fac * 2._DP*DBLE( CONJG(becpk(ikb,ibnd)) &
-                                  * becpk(ishift+ih+1:ishift+nh_np,ibnd) ) )
-              ENDIF
-              !
-              evps = evps + aux
-              !
-            ENDDO
-#if !defined(_OPENACC)
-            !$omp end parallel do
-#endif
-            !
-          ENDIF
-          !
-       ENDDO
-       !
-       DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
-       ENDDO
-       !
-100    CONTINUE
-       !
        ! ... non diagonal contribution - derivative of the bessel function
        !
+       ALLOCATE( dvkb(npwx,nkb,4) )
+       !$acc data create( dvkb )
+       !
+       CALL gen_us_dj( ik, dvkb(:,:,4) )
+       IF ( lmaxkb > 0 ) THEN
+         DO ipol = 1, 3
+           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
+         ENDDO
+       ENDIF
+       !
        DO ibnd = 1, nbnd
-         !
-         !$acc kernels
-         evcv(:) = evc(:,ibnd)
-         !$acc end kernels
          !
          IF ( noncolin ) THEN
             !
@@ -663,12 +591,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw,npwx) shared(evcv,qm1,gk,ps_nc,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw,npwx) shared(evc,qm1,gk,ps_nc,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
-                  evc1i = evcv(i)
-                  evc2i = evcv(i+npwx)
+                  evc1i = evc(i,ibnd)
+                  evc2i = evc(i+npwx,ibnd)
                   qm1i = CMPLX(qm1(i), KIND=DP)
                   gk1 = CMPLX(gk(i,1), KIND=DP)
                   gk2 = CMPLX(gk(i,2), KIND=DP)
@@ -720,7 +648,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw) shared(evcv,qm1,gk,ps,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw) shared(evc,qm1,gk,ps,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
@@ -728,7 +656,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   worksum = ps(ikb) *dvkb(i,ikb,4)
                   Re_worksum = DBLE(worksum) ;  Im_worksum = DIMAG(worksum)
                   !
-                  evci = evcv(i)
+                  evci = evc(i,ibnd)
                   qm1i = CMPLX(qm1(i), KIND=DP)
                   gk1 = CMPLX(gk(i,1), KIND=DP)
                   gk2 = CMPLX(gk(i,2), KIND=DP)
@@ -779,7 +707,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw,npwx) shared(evcv,gk,ps_nc,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw,npwx) shared(evc,gk,ps_nc,dvkb) default(private)
 #endif
             DO ikb =1, nkb
                DO i = 1, npw
@@ -799,8 +727,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   ps2d2 = ps2 * dvkb(i,ikb,2)
                   ps2d3 = ps2 * dvkb(i,ikb,3)
                   !
-                  evc1i = evcv(i)
-                  evc2i = evcv(i+npwx)
+                  evc1i = evc(i,ibnd)
+                  evc2i = evc(i+npwx,ibnd)
                   !
                   cv1 = evc1i * gk1
                   cv2 = evc2i * gk1
@@ -839,7 +767,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw) shared(evcv,gk,ps,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw) shared(evc,gk,ps,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
@@ -847,7 +775,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                  psd1 = pss*dvkb(i,ikb,1)
                  psd2 = pss*dvkb(i,ikb,2)
                  psd3 = pss*dvkb(i,ikb,3)
-                 evci = evcv(i)
+                 evci = evc(i,ibnd)
                  gk1  = CMPLX(gk(i,1), KIND=DP)
                  gk2  = CMPLX(gk(i,2), KIND=DP)
                  gk3  = CMPLX(gk(i,3), KIND=DP)
