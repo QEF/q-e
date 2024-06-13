@@ -60,7 +60,7 @@ INTEGER FUNCTION n_plane_waves( gcutw, nks, xk, g, ngm ) RESULT( npwx )
   !
   npw = npwx
   CALL mp_min( npw, intra_bgrp_comm )
-  IF (npw < 0) CALL errore( 'n_plane_waves', &
+  IF (npw <= 0) CALL errore( 'n_plane_waves', &
                &'Some processors have no plane waves! Wrong input &
                & or too many processors for this job' )
   !
