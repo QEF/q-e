@@ -21,7 +21,6 @@ SUBROUTINE sum_band_gpu()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   USE fft_wave,             ONLY : wave_g2r, tgwave_g2r
   USE gvect,                ONLY : ngm, g
@@ -35,7 +34,7 @@ SUBROUTINE sum_band_gpu()
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
                                    becsum_d, ebecsum_d
-  USE uspp_param,           ONLY : upf, nh, nhm
+  USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
@@ -62,7 +61,7 @@ SUBROUTINE sum_band_gpu()
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL(DP), ALLOCATABLE :: kplusg(:)
-  COMPLEX(DP), ALLOCATABLE :: psicd(:), kplusg_evc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   !
   !
   CALL start_clock_gpu( 'sum_band' )
@@ -141,7 +140,10 @@ SUBROUTINE sum_band_gpu()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type_acc( nkb, this_bgrp_nbnd, becp, intra_bgrp_comm )
-  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE( kplusg(npwx), kplusg_evc(npwx,2) )
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+     ALLOCATE( kplusg_evc(npwx,2) )
+     ALLOCATE( kplusg(npwx) )
+  ENDIF
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -178,7 +180,8 @@ SUBROUTINE sum_band_gpu()
   CALL mp_sum( eband, inter_bgrp_comm )
   !
   IF (xclib_dft_is('meta') .OR. lxdm) THEN
-    DEALLOCATE( kplusg, kplusg_evc )
+    DEALLOCATE( kplusg )
+    DEALLOCATE( kplusg_evc )
   ENDIF
   IF ( okvan ) CALL deallocate_bec_type_acc ( becp )
   !
