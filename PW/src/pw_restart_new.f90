@@ -375,12 +375,14 @@ MODULE pw_restart_new
                symmetries_loop:DO isym = 1, nrot
                   classes_loop:DO iclass = 1, 12
                      elements_loop:DO ielem=1, nelem (iclass)
-                        IF (.NOT. colin_mag) THEN
+                        ! if the time-reversal in collinear systems is not detected
+                        IF (colin_mag <= 1) THEN 
                            IF ( elem(ielem,iclass) == isym) THEN
                               symop_2_class(isym) = name_class(iclass)
                               EXIT classes_loop
                            END IF
-                        ELSE ! IF (colin_mag)
+                        ! if the time-reversal in non-collinear systems is detected
+                        ELSE ! IF (colin_mag == 2)
                            IF( sname_is(elem(ielem,iclass)) == sname(isym) ) THEN
                               symop_2_class(isym) = name_class(iclass)
                               EXIT classes_loop

@@ -3436,12 +3436,13 @@ IF (noncolin) THEN
    END IF
    WRITE(stdout,'(5x, "there are", i3," classes and",i3, &
                      &   " irreducible representations")') nclass, nrap
-ELSE IF (colin_mag) THEN
+! symmetries with time-reversal are detected in collinear systems
+ELSE IF (colin_mag == 2) THEN
    WRITE(stdout,'(/,5x,"point group of the spacial part of the full symmetry ",a11)') gname
    WRITE(stdout,'(/,5x,"point group of the symmetry without spin operations ",a11)') gname_is
    WRITE(stdout,'(5x, "there are", i3," classes")') nclass
-
-ELSE ! IF (.NOT. colin_mag)
+! symmetries with time-reversal are not detected in collinear systems
+ELSE ! IF (colin_mag <= 1)
    WRITE(stdout,'(/,5x,"point group ",a11)') gname
    WRITE(stdout,'(5x, "there are", i3," classes")') nclass
 ENDIF

@@ -225,7 +225,7 @@ SUBROUTINE setup()
   ! to avoid changing the interface of set_spin_vars until the setting
   !  of colin_mag is finalized.
   IF (nspin == 2 .AND. (ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6)) ) THEN
-     colin_mag = 1
+     colin_mag = 2
   ELSE
      colin_mag = 0
   END IF
@@ -266,7 +266,7 @@ SUBROUTINE setup()
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
      !  set initial magnetization for collinear case
-     ELSE IF ( colin_mag == 1 ) THEN
+     ELSE IF ( colin_mag >= 1 ) THEN
         DO na = 1, nat
             m_loc(1,na) = 0.0_dp
             m_loc(2,na) = 0.0_dp

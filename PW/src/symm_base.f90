@@ -400,7 +400,7 @@ CONTAINS
        ! NOTE: This check should be performed in the consistent way as in setup.f90
        ! However, we temporarily use this way not to change the interface
        ! until the structure of the code is fixed.
-       ELSE IF (colin_mag == 1) THEN
+       ELSE IF (colin_mag >= 1) THEN
           CALL sgam_at_collin( nat, m_loc, sym )
        ! ... If nosym_evc is true from now on we do not use the symmetry any more
        ENDIF
@@ -763,13 +763,14 @@ CONTAINS
             IF (ALL( ABS(m_op - m_org) < 1.0D-6)) THEN
                ! the operation is a symmetry without time-reversal
                t_rev(irot) = 0
-            ELSEIF (ALL( ABS(m_op + m_org) < 1.0D-6)) THEN
-               ! the operation is a symmetry with time-reversal
-               ! t_rev(irot) = 1
-
-               ! discard the symmetry when time-reversal is required
-               sym(irot) = .FALSE.
-   
+            ELSE IF (ALL( ABS(m_op + m_org) < 1.0D-6)) THEN
+               IF ( colin_mag == 1) THEN 
+                  ! discard symmteries with time-reversal
+                  sym(irot) = .FALSE. 
+               ELSE ! IF ( colin_mag == 2) THEN
+                  ! the operation is a symmetry with time-reversal
+                  t_rev(irot) = 1
+               ENDIF
             ELSE
                ! the operation is not a symmetry
                sym(irot) = .FALSE.

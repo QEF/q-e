@@ -930,7 +930,7 @@ gloop:    DO jg=iig,ngm_
                                  g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), -SIN(arg), KIND=dp )
                    ! time-reversal for collinear case
-                   IF ( colin_mag .AND. (t_rev(invs(ns)) == 1) ) THEN
+                   IF ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1) ) THEN
                       rhosum(1) = rhosum(1) + rhog_(isg, 2) * fact
                       rhosum(2) = rhosum(2) + rhog_(isg, 1) * fact
                    ! other cases
@@ -943,7 +943,7 @@ gloop:    DO jg=iig,ngm_
                         magsum(:) = magsum(:) + magrot(:) * fact
                 ELSE
                    ! time-reversal for collinear case
-                   IF ( colin_mag .AND. (t_rev(invs(ns)) == 1)) THEN
+                   IF ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1)) THEN
                       rhosum(1) = rhosum(1) + rhog_(isg, 2)
                       rhosum(2) = rhosum(2) + rhog_(isg, 1)
                    ! other cases
@@ -983,7 +983,7 @@ gloop:    DO jg=iig,ngm_
                                  g_(2,isg) * ft_(2,ns) + &
                                  g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), SIN(arg), KIND=dp )
-                   if ( colin_mag .AND. (t_rev(invs(ns)) == 1) ) THEN
+                   if ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1) ) THEN
                       rhog_(isg, 1) = rhosum(2) * fact
                       rhog_(isg, 2) = rhosum(1) * fact
                    ELSE
@@ -997,7 +997,7 @@ gloop:    DO jg=iig,ngm_
                       END DO
                    END IF
                 ELSE
-                   IF ( colin_mag .AND. (t_rev(invs(ns)) == 1) ) THEN
+                   IF ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1) ) THEN
                       rhog_(isg, 1) = rhosum(2)
                       rhog_(isg, 2) = rhosum(1)
                    ELSE

@@ -155,7 +155,7 @@ SUBROUTINE new_ns( ns )
                  DO isym = 1, nsym
                     nb = irt (isym, na)  
                     ! flip spin for time-reversal in collinear systems
-                    IF (colin_mag .AND. (t_rev(isym) == 1) ) THEN
+                    IF ( (colin_mag==2) .AND. (t_rev(isym) == 1) ) THEN
                        is2 = 3-is
                     ELSE
                        is2 = is
