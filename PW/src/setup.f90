@@ -224,10 +224,10 @@ SUBROUTINE setup()
   ! NOTE: This should be done in set_spin_vars, but I temporarily put it here 
   ! to avoid changing the interface of set_spin_vars until the setting
   !  of colin_mag is finalized.
-  IF (nspin == 2) THEN
-     colin_mag = .TRUE.
+  IF (nspin == 2 .AND. (ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6)) ) THEN
+     colin_mag = 1
   ELSE
-     colin_mag = .FALSE.
+     colin_mag = 0
   END IF
   !
   ! time reversal operation is set up to 0 by default
@@ -266,14 +266,12 @@ SUBROUTINE setup()
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
      !  set initial magnetization for collinear case
-     ELSE IF ( colin_mag ) THEN
-        WRITE (stdout,*) 'set starting magnetization to m_loc:'
+     ELSE IF ( colin_mag == 1 ) THEN
         DO na = 1, nat
             m_loc(1,na) = 0.0_dp
             m_loc(2,na) = 0.0_dp
             m_loc(3,na) = starting_magnetization(ityp(na))
         END DO
-        WRITE (stdout,*) 'Starting magnetization:', starting_magnetization
      ENDIF     
 
      IF ( i_cons /= 0 .AND. nspin==1 ) &

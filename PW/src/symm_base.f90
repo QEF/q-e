@@ -16,6 +16,7 @@ MODULE symm_base
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg
   USE ions_base,  ONLY : atm
+  USE noncollin_module, ONLY : colin_mag
   !
   ! ... these are acceptance criteria
   !
@@ -399,7 +400,7 @@ CONTAINS
        ! NOTE: This check should be performed in the consistent way as in setup.f90
        ! However, we temporarily use this way not to change the interface
        ! until the structure of the code is fixed.
-       ELSE IF ( ANY ( ABS( m_loc(3,:) ) > 1.D-6 )) THEN
+       ELSE IF (colin_mag == 1) THEN
           CALL sgam_at_collin( nat, m_loc, sym )
        ! ... If nosym_evc is true from now on we do not use the symmetry any more
        ENDIF
@@ -501,7 +502,8 @@ CONTAINS
      !
      IF ( fractional_translations ) THEN
         DO na = 2, nat
-            IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+            IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                 .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
             !IF ( ityp(nb) == ityp(na) ) THEN
                !
               ft_(:) = xau(:,na) - xau(:,nb) - NINT( xau(:,na) - xau(:,nb) )
@@ -541,7 +543,8 @@ CONTAINS
         IF (.NOT.sym(irot) .AND. fractional_translations) THEN
            nb = 1
            DO na = 1, nat
-               IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+               IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                    .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
                !IF ( ityp(nb) == ityp(na) ) THEN
                   !
                  ! ... second attempt: check all possible fractional translations
@@ -762,7 +765,11 @@ CONTAINS
                t_rev(irot) = 0
             ELSEIF (ALL( ABS(m_op + m_org) < 1.0D-6)) THEN
                ! the operation is a symmetry with time-reversal
-               t_rev(irot) = 1
+               ! t_rev(irot) = 1
+
+               ! discard the symmetry when time-reversal is required
+               sym(irot) = .FALSE.
+   
             ELSE
                ! the operation is not a symmetry
                sym(irot) = .FALSE.
@@ -973,7 +980,8 @@ CONTAINS
      DO na = 1, nat
         DO nb = 1, nat
            !
-            IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+            IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                 .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
             !IF ( ityp(nb) == ityp(na) ) THEN
                checksym =  eqvect( rau(1,na), xau(1,nb), ft_ , accep )
               IF ( checksym ) THEN
@@ -1211,7 +1219,9 @@ CONTAINS
       !
       DO na = 2, nat
          IF ( fractional_translations ) THEN
-            IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+            IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                 .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
+
             !IF ( ityp(nb) == ityp(na) ) THEN
                ft_(:) = xau(:,na) - xau(:,nb) - NINT( xau(:,na) - xau(:,nb) )
                !
@@ -1244,7 +1254,8 @@ CONTAINS
             nb = 1
             !
             DO na = 1, nat
-               IF ( chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) THEN
+               IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                    .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
                !IF ( ityp(nb) == ityp(na) ) THEN
                   !
                   !      second attempt: check all possible fractional translations
