@@ -22,7 +22,9 @@ MODULE fft_types
 #endif
   USE fft_support, ONLY : good_fft_order, good_fft_dimension
   USE fft_param
+#if defined(_OPENMP)
   USE omp_lib
+#endif
   IMPLICIT NONE
   PRIVATE
   SAVE
