@@ -246,7 +246,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_symmetries(obj, space_group, nsym, nrot, s, ft, &
-         sname, t_rev, nat, irt, class_names, verbosity, noncolin)
+         sname, t_rev, nat, irt, class_names, verbosity, noncolin, colin_mag_)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -259,7 +259,9 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN) :: sname(:), verbosity
       CHARACTER(LEN=15),INTENT(IN) :: class_names(:)
       LOGICAL,INTENT(IN)           :: noncolin
+      LOGICAL, OPTIONAL, INTENT(IN) :: colin_mag_
       !
+      LOGICAL                      :: colin_mag
       TYPE(symmetry_type), ALLOCATABLE  :: symm(:)
       TYPE(equivalent_atoms_type)  :: equiv_atm
       TYPE(info_type)              :: info
@@ -276,7 +278,14 @@ CONTAINS
       NULLIFY( classname, trev) 
       !
       IF ( TRIM(verbosity) .EQ. 'high' .OR. TRIM(verbosity) .EQ. 'medium')  class_ispresent= .TRUE.
-      IF ( noncolin  ) time_reversal_ispresent = .TRUE.
+
+      IF ( PRESENT(colin_mag_) ) THEN
+         colin_mag = colin_mag_
+      ELSE
+         colin_mag = .FALSE.
+      END IF
+      
+      IF ( noncolin .OR. colin_mag ) time_reversal_ispresent = .TRUE.
       DO i = 1, nrot
           !
           IF  (class_ispresent ) classname => class_names(i)
