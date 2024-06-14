@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,8 +34,7 @@ SUBROUTINE sum_band()
                                    becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag, lspinorb
-  USE upf_spinorb,          ONLY : fcoef
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -46,9 +45,7 @@ SUBROUTINE sum_band()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
-  USE io_global,            ONLY : stdout
   USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
-  USE fft_interfaces,       ONLY : invfft
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
   USE oscdft_base,      ONLY : oscdft_ctx
@@ -113,7 +110,7 @@ SUBROUTINE sum_band()
      !
   ENDIF
   !
-  ! ... Needed for DFT+U(+V): compute occupations of Hubbard states
+  ! ... Needed for DFT+Hubbard: compute occupations of Hubbard states
   !
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind==0) THEN
@@ -185,8 +182,8 @@ SUBROUTINE sum_band()
   CALL mp_sum( eband, inter_bgrp_comm )
   !
   IF (xclib_dft_is('meta') .OR. lxdm) THEN
-    DEALLOCATE( kplusg_evc )
     DEALLOCATE( kplusg )
+    DEALLOCATE( kplusg_evc )
   ENDIF
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   !

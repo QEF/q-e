@@ -236,8 +236,7 @@ SUBROUTINE init_wfc ( ik )
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield
-  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
-                                   allocate_bec_type_acc, deallocate_bec_type_acc, &
+  USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
   USE basis,                ONLY : natomwfc
