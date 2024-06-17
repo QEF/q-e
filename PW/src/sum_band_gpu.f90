@@ -293,15 +293,11 @@ SUBROUTINE sum_band_gpu()
          ! weights
        INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
-       REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_h(:)
-       REAL(DP),    ALLOCATABLE :: rho_d(:,:)
+       REAL(DP),    ALLOCATABLE :: tg_rho(:)
+       REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
-#if defined(__CUDA)
-       attributes(device) :: tg_rho_d, rho_d
-       attributes(pinned) :: tg_rho_h
-#endif
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -315,20 +311,26 @@ SUBROUTINE sum_band_gpu()
           v_siz = dffts%nnr_tg 
           !
           ALLOCATE( tg_psi( v_siz ) )
-          !$acc enter data create(tg_psi)
-          ALLOCATE( tg_rho_d( v_siz ) )
-          ALLOCATE( tg_rho_h( v_siz ) )
+          ALLOCATE( tg_rho( v_siz ) )
+          !$acc enter data create(tg_psi, tg_rho)
           !
           incr = 2 * fftx_ntgrp(dffts)
           !
        ELSE
-          ALLOCATE( rho_d, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers (and batched FFT)
-          rho_d = 0.0_DP
+          ALLOCATE( rhoaux, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers (and batched FFT)
+          !$acc enter data create(rhoaux)
+          !$acc kernels
+          rhoaux = 0.0_DP
+          !$acc end kernels
        ENDIF
        !
        k_loop: DO ik = 1, nks
           !
-          IF ( use_tg ) tg_rho_d = 0.0_DP
+          IF ( use_tg ) THEN
+             !$acc kernels
+             tg_rho = 0.0_DP
+             !$acc end kernels
+          END IF
           IF ( lsda ) current_spin = isk(ik)
           !
           npw = ngk(ik)
@@ -392,10 +394,8 @@ SUBROUTINE sum_band_gpu()
                 !
                 CALL tg_get_group_nr3( dffts, right_nr3 )
                 !
-                !$acc host_data use_device(tg_psi)
-                CALL get_rho_gamma_gpu( tg_rho_d, dffts%nr1x*dffts%nr2x*right_nr3, &
+                CALL get_rho_gamma_gpu( tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, &
                                         w1, w2, tg_psi )
-                !$acc end host_data
                 !
              ELSE
                 !
@@ -420,9 +420,7 @@ SUBROUTINE sum_band_gpu()
                    !
                 ENDIF
                 !
-                !$acc host_data use_device(psic)
-                CALL get_rho_gamma_gpu( rho_d(:,current_spin), dffts%nnr, w1, w2, psic )
-                !$acc end host_data
+                CALL get_rho_gamma_gpu( rhoaux(:,current_spin), dffts%nnr, w1, w2, psic )
                 !
              ENDIF
              !
@@ -456,8 +454,8 @@ SUBROUTINE sum_band_gpu()
           ENDDO
           !
           IF( use_tg ) THEN
-             tg_rho_h = tg_rho_d
-             CALL tg_reduce_rho( rho%of_r, tg_rho_h, current_spin, dffts )
+             !$acc update host(tg_rho)
+             CALL tg_reduce_rho( rho%of_r, tg_rho, current_spin, dffts )
           ENDIF
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
@@ -468,7 +466,8 @@ SUBROUTINE sum_band_gpu()
        ENDDO k_loop
        !
        IF( .NOT. use_tg ) THEN
-          rho%of_r = rho_d
+          !$acc update host (rhoaux)
+          rho%of_r = rhoaux
        ENDIF
        !
        ! ... with distributed <beta|psi>, sum over bands
@@ -485,12 +484,12 @@ SUBROUTINE sum_band_gpu()
        ENDIF
        !
        IF( use_tg ) THEN
-          !$acc exit data delete(tg_psi)
+          !$acc exit data delete(tg_psi, tg_rho)
           DEALLOCATE( tg_psi )
-          DEALLOCATE( tg_rho_d )
-          DEALLOCATE( tg_rho_h )
+          DEALLOCATE( tg_rho )
        ELSE
-          DEALLOCATE(rho_d)
+          !$acc exit data delete(rhoaux)
+          DEALLOCATE( rhoaux )
        ENDIF
        !
        RETURN
@@ -520,19 +519,13 @@ SUBROUTINE sum_band_gpu()
        INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz
        COMPLEX(DP), ALLOCATABLE :: psicd(:)
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
-       REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_nc_d(:,:)
-       REAL(DP),    ALLOCATABLE :: tg_rho_h(:), tg_rho_nc_h(:,:)
-       REAL(DP),    ALLOCATABLE :: rho_d(:,:)
+       REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
+       REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL  :: use_tg
        INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
        !
-#if defined(__CUDA)
-       attributes(device) :: tg_rho_d, tg_rho_nc_d
-       attributes(device) :: rho_d
-       attributes(pinned) :: tg_rho_h, tg_rho_nc_h
-#endif
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -548,20 +541,18 @@ SUBROUTINE sum_band_gpu()
           !
           IF (noncolin) THEN
              ALLOCATE( tg_psi_nc( v_siz, npol ) )
-             !$acc enter data create(tg_psi_nc)
-             ALLOCATE( tg_rho_nc_d( v_siz, nspin_mag ) )
-             ALLOCATE( tg_rho_nc_h( v_siz, nspin_mag ) )
+             ALLOCATE( tg_rho_nc( v_siz, nspin_mag ) )
+             !$acc enter data create(tg_psi_nc, tg_rho_nc)
           ELSE
              ALLOCATE( tg_psi( v_siz ) )
-             !$acc enter data create(tg_psi)
-             ALLOCATE( tg_rho_d( v_siz ) )
-             ALLOCATE( tg_rho_h( v_siz ) )
+             ALLOCATE( tg_rho( v_siz ) )
+             !$acc enter data create(tg_psi, tg_rho)
           ENDIF
           !
           incr = fftx_ntgrp(dffts)
           !
        ELSE
-          ALLOCATE( rho_d, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers!
+          ALLOCATE( rhoaux, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers!
           IF (noncolin .OR. (xclib_dft_is('meta') .OR. lxdm)) THEN
             ALLOCATE( psicd(dffts%nnr) )
             incr = 1
@@ -569,18 +560,24 @@ SUBROUTINE sum_band_gpu()
             ALLOCATE( psicd(dffts%nnr*many_fft) )
             incr = many_fft
           ENDIF
-          !$acc enter data create(psicd)
+          !$acc enter data create(psicd, rhoaux)
           ! ... This is used as reduction variable on the device
-          rho_d = 0.0_DP
+          !$acc kernels
+          rhoaux = 0.0_DP
+          !$acc end kernels
        ENDIF
        !
        k_loop: DO ik = 1, nks
           !
           IF( use_tg ) THEN
             IF (noncolin) THEN
-               tg_rho_nc_d = 0.0_DP
+               !$acc kernels
+               tg_rho_nc = 0.0_DP
+               !$acc end kernels
             ELSE
-               tg_rho_d = 0.0_DP
+               !$acc kernels
+               tg_rho = 0.0_DP
+               !$acc end kernels
             ENDIF
           ENDIF
           !
@@ -649,15 +646,13 @@ SUBROUTINE sum_band_gpu()
                    !
                    ! OPTIMIZE HERE : this is a sum of all densities in first spin channel
                    !
-                   !$acc host_data use_device(tg_psi_nc)
                    DO ipol = 1, npol
-                      CALL get_rho_gpu( tg_rho_nc_d(:,1), dffts%nr1x*dffts%nr2x* &
+                      CALL get_rho_gpu( tg_rho_nc(:,1), dffts%nr1x*dffts%nr2x* &
                                         right_nr3, w1, tg_psi_nc(:,ipol) )
                    ENDDO
                    !
-                   IF (domag) CALL get_rho_domag_gpu( tg_rho_nc_d(:,:), dffts%nr1x* &
+                   IF (domag) CALL get_rho_domag_gpu( tg_rho_nc(:,:), dffts%nr1x* &
                                       dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:) )
-                   !$acc end host_data
                    !
                 ELSE
                    !
@@ -671,20 +666,18 @@ SUBROUTINE sum_band_gpu()
                    ! ... Increment the charge density
                    !
                    DO ipol = 1, npol
-                      !$acc host_data use_device(psic_nc)
-                      CALL get_rho_gpu( rho_d(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
-                      !$acc end host_data
+                      CALL get_rho_gpu( rhoaux(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
                    ENDDO
                    !
                    ! ... In this case, calculate also the three
                    ! ... components of the magnetization (stored in rho%of_r(ir,2-4))
                    !
                    IF (domag) THEN
-                      !$acc host_data use_device(psic_nc)
-                      CALL get_rho_domag_gpu( rho_d(1:,1:), dffts%nnr, w1, psic_nc(1:,1:) )
-                      !$acc end host_data
+                      CALL get_rho_domag_gpu( rhoaux(1:,1:), dffts%nnr, w1, psic_nc(1:,1:) )
                    ELSE
-                      rho_d(:,2:4) = 0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
+                      !$acc kernels
+                      rhoaux(:,2:4) = 0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
+                      !$acc end kernels
                    ENDIF
                    !
                 ENDIF
@@ -717,9 +710,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
-                   !$acc host_data use_device(tg_psi)
-                   CALL get_rho_gpu( tg_rho_d, dffts%nr1x*dffts%nr2x*right_nr3, w1, tg_psi )
-                   !$acc end host_data
+                   CALL get_rho_gpu( tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, w1, tg_psi )
                    !
                 ELSEIF (many_fft > 1 .AND. (.NOT. (xclib_dft_is('meta') .OR. lxdm))) THEN
                    !
@@ -733,9 +724,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    DO i = 0, group_size-1
                      w1 = wg(ibnd+i,ik) / omega
-                     !$acc host_data use_device(psicd)
-                     CALL get_rho_gpu( rho_d(:,current_spin), nnr, w1, psicd(i*nnr+1:) )
-                     !$acc end host_data
+                     CALL get_rho_gpu( rhoaux(:,current_spin), nnr, w1, psicd(i*nnr+1:) )
                    ENDDO
                    !
                 ELSE
@@ -744,9 +733,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    ! ... increment the charge density ...
                    !
-                   !$acc host_data use_device(psicd)
-                   CALL get_rho_gpu( rho_d(:,current_spin), dffts%nnr, w1, psicd )
-                   !$acc end host_data
+                   CALL get_rho_gpu( rhoaux(:,current_spin), dffts%nnr, w1, psicd )
                    !
                 ENDIF
                 !
@@ -774,10 +761,13 @@ SUBROUTINE sum_band_gpu()
              !
              ! ... reduce the charge across task group
              !
-             IF (noncolin)       tg_rho_nc_h = tg_rho_nc_d
-             IF (.NOT. noncolin) tg_rho_h    = tg_rho_d
-             CALL tg_reduce_rho( rho%of_r, tg_rho_nc_h, tg_rho_h, current_spin, &
+             IF (noncolin) THEN
+               !$acc update host(tg_rho_nc)
+             ELSE 
+               !$acc update host(tg_rho)
+               CALL tg_reduce_rho( rho%of_r, tg_rho_nc, tg_rho, current_spin, &
                                  noncolin, domag, dffts )
+             END IF
              !
           END IF
           !
@@ -788,7 +778,8 @@ SUBROUTINE sum_band_gpu()
        END DO k_loop
        !
        IF (.not. use_tg ) THEN
-          rho%of_r = rho_d
+          !$acc update host(rhoaux)
+          rho%of_r = rhoaux
        END IF
        !
        ! ... with distributed <beta|psi>, sum over bands
@@ -806,19 +797,17 @@ SUBROUTINE sum_band_gpu()
        !
        IF( use_tg ) THEN
           IF (noncolin) THEN
-             !$acc exit data delete(tg_psi_nc)
+             !$acc exit data delete(tg_psi_nc,tg_rho_nc)
              DEALLOCATE( tg_psi_nc )
-             DEALLOCATE( tg_rho_nc_d )
-             DEALLOCATE( tg_rho_nc_h )
+             DEALLOCATE( tg_rho_nc )
           ELSE
-             !$acc exit data delete(tg_psi)
+             !$acc exit data delete(tg_psi, tg_rho)
              DEALLOCATE( tg_psi )
-             DEALLOCATE( tg_rho_d )
-             DEALLOCATE( tg_rho_h )
+             DEALLOCATE( tg_rho )
           END IF
        ELSE
-          DEALLOCATE( rho_d ) ! OPTIMIZE HERE, use buffers!
-          !$acc exit data delete(psicd)
+          !$acc exit data delete(psicd,rhoaux)
+          DEALLOCATE( rhoaux ) ! OPTIMIZE HERE, use buffers!
           DEALLOCATE( psicd )
        END IF
        !
@@ -827,27 +816,26 @@ SUBROUTINE sum_band_gpu()
      END SUBROUTINE sum_band_k_gpu
      !
      !---------------
-     SUBROUTINE get_rho_gpu(rho_loc_d, nrxxs_loc, w1_loc, psic_loc_d)
+     SUBROUTINE get_rho_gpu(rho_loc, nrxxs_loc, w1_loc, psic_loc)
         !------------
         !
         IMPLICIT NONE
         !
         INTEGER :: nrxxs_loc
-        REAL(DP) :: rho_loc_d(:)
+        REAL(DP), INTENT(INOUT) :: rho_loc(:)
         REAL(DP) :: w1_loc
-        COMPLEX(DP) :: psic_loc_d(:)
-#if defined(__CUDA)
-        attributes(device) :: rho_loc_d, psic_loc_d
-#endif
+        COMPLEX(DP), INTENT(IN) :: psic_loc(:)
         INTEGER :: ir
         !
-        !$cuf kernel do(1)
+        !$acc data present(rho_loc, psic_loc)
+        !$acc parallel loop
         DO ir = 1, nrxxs_loc
            !
-           rho_loc_d(ir) = rho_loc_d(ir) + &
-                         w1_loc * ( DBLE( psic_loc_d(ir) )**2 + &
-                                   AIMAG( psic_loc_d(ir) )**2 )
+           rho_loc(ir) = rho_loc(ir) + &
+                         w1_loc * ( DBLE( psic_loc(ir) )**2 + &
+                                   AIMAG( psic_loc(ir) )**2 )
         END DO
+        !$acc end data
         !
      END SUBROUTINE get_rho_gpu
      !
@@ -874,62 +862,60 @@ SUBROUTINE sum_band_gpu()
      END SUBROUTINE get_rho
      !
      !-----------------
-     SUBROUTINE get_rho_gamma_gpu( rho_loc_d, nrxxs_loc, w1_loc, w2_loc, psic_loc_d )
+     SUBROUTINE get_rho_gamma_gpu( rho_loc, nrxxs_loc, w1_loc, w2_loc, psic_loc )
         !--------------
         !
         IMPLICIT NONE
         !
         INTEGER :: nrxxs_loc
-        REAL(DP) :: rho_loc_d(nrxxs_loc)
+        REAL(DP), INTENT(INOUT) :: rho_loc(nrxxs_loc)
         REAL(DP) :: w1_loc, w2_loc
-        COMPLEX(DP) :: psic_loc_d(nrxxs_loc)
-#if defined(__CUDA)
-        attributes(device) :: rho_loc_d, psic_loc_d
-#endif
+        COMPLEX(DP), INTENT(IN) :: psic_loc(nrxxs_loc)
         INTEGER :: ir
         !
-        !$cuf kernel do(1)
+        !$acc data present(rho_loc, psic_loc)
+        !$acc parallel loop
         DO ir = 1, nrxxs_loc
            !
-           rho_loc_d(ir) = rho_loc_d(ir) + &
-                         w1_loc * DBLE( psic_loc_d(ir) )**2 + &
-                         w2_loc * AIMAG( psic_loc_d(ir) )**2
+           rho_loc(ir) = rho_loc(ir) + &
+                         w1_loc * DBLE( psic_loc(ir) )**2 + &
+                         w2_loc * AIMAG( psic_loc(ir) )**2
            !
         END DO
+        !$acc end data
         !
      END SUBROUTINE get_rho_gamma_gpu
      !
      !--------------
-     SUBROUTINE get_rho_domag_gpu( rho_loc_d, nrxxs_loc, w1_loc, psic_loc_d )
+     SUBROUTINE get_rho_domag_gpu( rho_loc, nrxxs_loc, w1_loc, psic_loc )
         !-----------
         !
         IMPLICIT NONE
         !
         INTEGER :: nrxxs_loc
-        REAL(DP) :: rho_loc_d(:, :)
+        REAL(DP), INTENT(INOUT) :: rho_loc(:, :)
         REAL(DP) :: w1_loc
-        COMPLEX(DP) :: psic_loc_d(:, :)
-#if defined(__CUDA)
-        attributes(device) :: rho_loc_d, psic_loc_d
-#endif
+        COMPLEX(DP), INTENT(IN) :: psic_loc(:, :)
         INTEGER :: ir
 
-        !$cuf kernel do(1)
+        !$acc data present( rho_loc, psic_loc)
+        !$acc parallel loop
         DO ir = 1, nrxxs_loc
            !
-           rho_loc_d(ir,2) = rho_loc_d(ir,2) + w1_loc*2.D0* &
-                          (DBLE(psic_loc_d(ir,1))* DBLE(psic_loc_d(ir,2)) + &
-                          AIMAG(psic_loc_d(ir,1))*AIMAG(psic_loc_d(ir,2)))
+           rho_loc(ir,2) = rho_loc(ir,2) + w1_loc*2.D0* &
+                          (DBLE(psic_loc(ir,1))* DBLE(psic_loc(ir,2)) + &
+                          AIMAG(psic_loc(ir,1))*AIMAG(psic_loc(ir,2)))
  
-           rho_loc_d(ir,3) = rho_loc_d(ir,3) + w1_loc*2.D0* &
-                          (DBLE(psic_loc_d(ir,1))*AIMAG(psic_loc_d(ir,2)) - &
-                           DBLE(psic_loc_d(ir,2))*AIMAG(psic_loc_d(ir,1)))
+           rho_loc(ir,3) = rho_loc(ir,3) + w1_loc*2.D0* &
+                          (DBLE(psic_loc(ir,1))*AIMAG(psic_loc(ir,2)) - &
+                           DBLE(psic_loc(ir,2))*AIMAG(psic_loc(ir,1)))
 
-           rho_loc_d(ir,4) = rho_loc_d(ir,4) + w1_loc* &
-                          (DBLE(psic_loc_d(ir,1))**2+AIMAG(psic_loc_d(ir,1))**2 &
-                          -DBLE(psic_loc_d(ir,2))**2-AIMAG(psic_loc_d(ir,2))**2)
+           rho_loc(ir,4) = rho_loc(ir,4) + w1_loc* &
+                          (DBLE(psic_loc(ir,1))**2+AIMAG(psic_loc(ir,1))**2 &
+                          -DBLE(psic_loc(ir,2))**2-AIMAG(psic_loc(ir,2))**2)
            !
         END DO
+        !$acc end data
 
      END SUBROUTINE get_rho_domag_gpu
      !
