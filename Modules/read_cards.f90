@@ -759,6 +759,7 @@ CONTAINS
          IF (tend) GOTO 10
          IF (terr) GOTO 20
          READ(input_line, *, END=10, ERR=20) nkstot
+         IF ( nkstot <= 0 ) GO TO 20
          !
          IF (kband) THEN
 !
