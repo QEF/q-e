@@ -43,6 +43,7 @@ set(sources_libbeef
     pbecor.c
     beefun.c)
 qe_add_library(qe_libbeef ${sources_libbeef})
+set_target_properties(qe_libbeef PROPERTIES Fortran_MODULE_DIRECTORY "")
 target_link_libraries(qe_libbeef 
     PUBLIC
         qe_openacc_c
@@ -103,9 +104,11 @@ if(QE_ENABLE_TEST)
         set(test_input_file_names_no_extension exe_test gen_test test_all_terms test_all_shorts)
 
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_terms.xml
-             ${CMAKE_CURRENT_BINARY_DIR}/all_terms.xml SYMBOLIC)
+             ${CMAKE_CURRENT_BINARY_DIR}/all_terms.xml
+             SYMBOLIC COPY_ON_ERROR)
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_shorts.xml
-             ${CMAKE_CURRENT_BINARY_DIR}/all_shorts.xml SYMBOLIC)
+             ${CMAKE_CURRENT_BINARY_DIR}/all_shorts.xml
+             SYMBOLIC COPY_ON_ERROR)
         
         foreach(file_name_no_extension IN LISTS test_input_file_names_no_extension)
             add_unit_test(test_qe_xclib_${file_name_no_extension} 1 1 ${BASH_PROGRAM} -c
