@@ -591,7 +591,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw,npwx) shared(evc,qm1,gk,ps_nc,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw,npwx) shared(evc,ibnd,qm1,gk,ps_nc,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
@@ -648,7 +648,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw) shared(evc,qm1,gk,ps,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw) shared(evc,ibnd,qm1,gk,ps,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
@@ -707,7 +707,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw,npwx) shared(evc,gk,ps_nc,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw,npwx) shared(evc,ibnd,gk,ps_nc,dvkb) default(private)
 #endif
             DO ikb =1, nkb
                DO i = 1, npw
@@ -767,7 +767,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc&                                      dot22,dot32,dot33)
 #else
             !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)&
-            !$omp& firstprivate(nkb,npw) shared(evc,gk,ps,dvkb) default(private)
+            !$omp& firstprivate(nkb,npw) shared(evc,ibnd,gk,ps,dvkb) default(private)
 #endif
             DO ikb = 1, nkb
                DO i = 1, npw
