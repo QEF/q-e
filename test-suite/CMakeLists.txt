@@ -61,7 +61,8 @@ if (QE_ENABLE_CUDA)
 endif()
 # prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
-                 ${CMAKE_CURRENT_BINARY_DIR}/jobconfig SYMBOLIC)
+                 ${CMAKE_CURRENT_BINARY_DIR}/jobconfig
+                 SYMBOLIC COPY_ON_ERROR)
 string(REPLACE "/" "\\/" qe_SOURCE_DIR_FOR_SED ${qe_SOURCE_DIR})
 execute_process(COMMAND sed "s/XXXXXX/${qe_SOURCE_DIR_FOR_SED}/" ${CMAKE_CURRENT_SOURCE_DIR}/userconfig.tmp
                 OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
@@ -111,11 +112,13 @@ foreach(test_category IN LISTS qe_test_categories)
       # skip reference and test run output files which also has filename extension .in
       if (NOT test_input_file MATCHES "^benchmark" AND NOT test_input_file MATCHES "^test")
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${test_input_file}
-                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${test_input_file} SYMBOLIC)
+                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${test_input_file}
+                         SYMBOLIC COPY_ON_ERROR)
         set(TESTSUITE_ARGS 0)
         if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file})
           file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
-                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file} SYMBOLIC)
+                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
+                           SYMBOLIC COPY_ON_ERROR)
         else()
           while (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} AND TESTSUITE_ARGS LESS 10)
             math(EXPR TESTSUITE_ARGS "${TESTSUITE_ARGS} + 1")
@@ -125,7 +128,8 @@ foreach(test_category IN LISTS qe_test_categories)
             continue()
           endif()
           file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS}
-                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} SYMBOLIC)
+                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS}
+                           SYMBOLIC COPY_ON_ERROR)
         endif()
         string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
         if (TESTSUITE_ARGS EQUAL 0)
