@@ -12,9 +12,6 @@ SUBROUTINE sum_band_gpu()
   !! Calculates the symmetrized charge density and related quantities.  
   !! Also computes the occupations and the sum of occupied eigenvalues.
   !
-#if defined(__CUDA)
-  USE cudafor
-#endif
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
   USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
@@ -936,7 +933,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
 #if defined(__CUDA)
-  USE cudafor
   USE cublas
 #else
 #define cublasZgemm zgemm
@@ -966,10 +962,10 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
-  COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
-  !$acc declare device_resident (auxk1_d, auxk2_d, aux_nc_d)
-  REAL(DP), ALLOCATABLE    :: auxg1_d(:,:), auxg2_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
-  !$acc declare device_resident (auxg1_d, auxg2_d, aux_gk_d, aux_egk_d) 
+  COMPLEX(DP), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
+  !$acc declare device_resident (auxk1, auxk2, aux_nc)
+  REAL(DP), ALLOCATABLE    :: auxg1(:,:), auxg2(:,:), aux_gk(:,:), aux_egk(:,:)
+  !$acc declare device_resident (auxg1, auxg2, aux_gk, aux_egk) 
   INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
@@ -1025,17 +1021,17 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         !
         IF ( gamma_only ) THEN
            nbnd_loc = becp%nbnd_loc
-           ALLOCATE( auxg1_d( nbnd_loc, nh(np) ) )
-           ALLOCATE( auxg2_d( nbnd_loc, nh(np) ) )
+           ALLOCATE( auxg1( nbnd_loc, nh(np) ) )
+           ALLOCATE( auxg2( nbnd_loc, nh(np) ) )
         ELSE
-           ALLOCATE( auxk1_d( ibnd_start:ibnd_end, nh(np)*npol ), &
-                     auxk2_d( ibnd_start:ibnd_end, nh(np)*npol ) )
+           ALLOCATE( auxk1( ibnd_start:ibnd_end, nh(np)*npol ), &
+                     auxk2( ibnd_start:ibnd_end, nh(np)*npol ) )
         END IF
         IF ( noncolin ) THEN
-           ALLOCATE ( aux_nc_d( nh(np)*npol,nh(np)*npol ) ) 
+           ALLOCATE ( aux_nc( nh(np)*npol,nh(np)*npol ) ) 
         ELSE
-           ALLOCATE ( aux_gk_d( nh(np),nh(np) ) ) 
-           if (tqr) ALLOCATE ( aux_egk_d( nh(np),nh(np) ) ) 
+           ALLOCATE ( aux_gk( nh(np),nh(np) ) ) 
+           if (tqr) ALLOCATE ( aux_egk( nh(np),nh(np) ) ) 
         END IF
         !
         !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
@@ -1058,16 +1054,16 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                        ikb = offset + ih
                        DO kbnd = 1, this_bgrp_nbnd 
                           ibnd = ibnd_start + kbnd -1 
-                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp%nc(ikb,is,kbnd)
-                          auxk2_d(ibnd,ih+(is-1)*nhnt)= wg(ibnd,ik) * &
+                          auxk1(ibnd,ih+(is-1)*nhnt)= becp%nc(ikb,is,kbnd)
+                          auxk2(ibnd,ih+(is-1)*nhnt)= wg(ibnd,ik) * &
                                                         becp%nc(ikb,is,kbnd)
                        END DO
                     END DO
                  END DO
                  !
                  CALL cublasZgemm ( 'C', 'N', npol*nhnt, npol*nhnt, this_bgrp_nbnd, &
-                      (1.0_dp,0.0_dp), auxk1_d, this_bgrp_nbnd, auxk2_d, this_bgrp_nbnd, &
-                      (0.0_dp,0.0_dp), aux_nc_d, npol*nhnt )
+                      (1.0_dp,0.0_dp), auxk1, this_bgrp_nbnd, auxk2, this_bgrp_nbnd, &
+                      (0.0_dp,0.0_dp), aux_nc, npol*nhnt )
                  !
               ELSE IF ( gamma_only ) THEN
                  !
@@ -1077,26 +1073,26 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = offset + ih
                        ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
-                       auxg1_d(ibnd_loc,ih) = becp%r(ikb,ibnd_loc)
-                       auxg2_d(ibnd_loc,ih) = becp%r(ikb,ibnd_loc) * wg(ibnd,ik)
+                       auxg1(ibnd_loc,ih) = becp%r(ikb,ibnd_loc)
+                       auxg2(ibnd_loc,ih) = becp%r(ikb,ibnd_loc) * wg(ibnd,ik)
                     END DO
                  END DO
                  CALL cublasDgemm ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp, auxg1_d, nbnd_loc,    &
-                      auxg2_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
+                      1.0_dp, auxg1, nbnd_loc,    &
+                      auxg2, nbnd_loc, 0.0_dp, aux_gk, nhnt )
                  !
                  if (tqr) then
                    !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd_loc = 1, nbnd_loc
                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
-                      auxg2_d(ibnd_loc,ih) = et(ibnd,ik) * auxg2_d(ibnd_loc,ih)
+                      auxg2(ibnd_loc,ih) = et(ibnd,ik) * auxg2(ibnd_loc,ih)
                       END DO
                    END DO
 
                    CALL cublasDgemm ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
-                        1.0_dp, auxg1_d, nbnd_loc,    &
-                        auxg2_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
+                        1.0_dp, auxg1, nbnd_loc,    &
+                        auxg2, nbnd_loc, 0.0_dp, aux_egk, nhnt )
                  end if
                  !
               ELSE
@@ -1106,28 +1102,28 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                     DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                        ibnd = ibnd_start + kbnd -1 
                        ikb = offset + ih
-                       auxk1_d(ibnd,ih) = becp%k(ikb,kbnd) 
-                       auxk2_d(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,kbnd)
+                       auxk1(ibnd,ih) = becp%k(ikb,kbnd) 
+                       auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,kbnd)
                     END DO
                  END DO
                  !
                  ! only the real part is computed
                  !
                  CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
-                      1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
-                      0.0_dp, aux_gk_d, nhnt )
+                      1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
+                      0.0_dp, aux_gk, nhnt )
                  !
                  if (tqr) then
                    !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         auxk2_d(ibnd,ih) = et(ibnd,ik)*auxk2_d(ibnd,ih)
+                         auxk2(ibnd,ih) = et(ibnd,ik)*auxk2(ibnd,ih)
                       END DO
                    END DO
 
                    CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
-                        1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
-                        0.0_dp, aux_egk_d, nhnt )
+                        1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
+                        0.0_dp, aux_egk, nhnt )
                  end if
 
               END IF
@@ -1135,9 +1131,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               ! copy output from GEMM into desired format
               !
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
-                 CALL add_becsum_nc_gpu (na, np, aux_nc_d, becsum_d )
+                 CALL add_becsum_nc_gpu (na, np, aux_nc, becsum_d )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN
-                 CALL add_becsum_so_gpu (na, np, aux_nc_d, becsum_d )
+                 CALL add_becsum_so_gpu (na, np, aux_nc, becsum_d )
               ELSE
                  !
                  !$acc parallel loop collapse(2)
@@ -1150,14 +1146,14 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                        !
                        IF ( jh == ih ) THEN
                           becsum_d(ijh,na,current_spin) = &
-                               becsum_d(ijh,na,current_spin) + aux_gk_d (ih,jh)
-                          if (tqr) ebecsum_d(ijh,na,current_spin) = &
-                             ebecsum_d(ijh,na,current_spin) + aux_egk_d (ih,jh)
+                               becsum_d(ijh,na,current_spin) + aux_gk (ih,jh)
+                          if (tqr) ebecsum(ijh,na,current_spin) = &
+                             ebecsum(ijh,na,current_spin) + aux_egk (ih,jh)
                        ELSE IF ( jh > ih ) THEN
                           becsum_d(ijh,na,current_spin) = &
-                               becsum_d(ijh,na,current_spin) + aux_gk_d(ih,jh)*2.0_dp
-                          if (tqr) ebecsum_d(ijh,na,current_spin) = &
-                             ebecsum_d(ijh,na,current_spin) + aux_egk_d(ih,jh)*2.0_dp
+                               becsum_d(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
+                          if (tqr) ebecsum(ijh,na,current_spin) = &
+                             ebecsum(ijh,na,current_spin) + aux_egk(ih,jh)*2.0_dp
                        END IF
                     END DO
                  END DO
@@ -1168,15 +1164,15 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         END DO
         !
         IF ( noncolin ) THEN
-           DEALLOCATE ( aux_nc_d )
+           DEALLOCATE ( aux_nc )
         ELSE
-           DEALLOCATE ( aux_gk_d  ) 
-           if (tqr) DEALLOCATE ( aux_egk_d  ) 
+           DEALLOCATE ( aux_gk  ) 
+           if (tqr) DEALLOCATE ( aux_egk  ) 
         END IF
         IF ( gamma_only ) THEN
-           DEALLOCATE( auxg2_d, auxg1_d )
+           DEALLOCATE( auxg2, auxg1 )
         ELSE
-           DEALLOCATE( auxk2_d, auxk1_d )
+           DEALLOCATE( auxk2, auxk1 )
         END IF
         !
      END IF
@@ -1195,7 +1191,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 END SUBROUTINE sum_bec_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
+SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
 !----------------------------------------------------------------------------
   !! This routine multiplies \(\text{becsum_nc}\) by the identity and the
   !! Pauli matrices, saves it in \(\text{becsum}\) for the calculation of 
@@ -1214,8 +1210,8 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: na, np
-  COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
-  !$acc declare device_resident (becsum_nc_d)
+  COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
+  !$acc declare device_resident (becsum_nc)
   REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
 #if defined(__CUDA)
   attributes(DEVICE) :: becsum_d
@@ -1240,14 +1236,14 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
               fac = 2.0_dp
            END IF
            becsum_d(ijh,na,1)= becsum_d(ijh,na,1) + fac * &
-                   DBLE( becsum_nc_d(ih,1,jh,1) + becsum_nc_d(ih,2,jh,2) )
+                   DBLE( becsum_nc(ih,1,jh,1) + becsum_nc(ih,2,jh,2) )
            IF (domag) THEN
               becsum_d(ijh,na,2)= becsum_d(ijh,na,2) + fac *  &
-                   DBLE( becsum_nc_d(ih,1,jh,2) + becsum_nc_d(ih,2,jh,1) )
+                   DBLE( becsum_nc(ih,1,jh,2) + becsum_nc(ih,2,jh,1) )
               becsum_d(ijh,na,3)= becsum_d(ijh,na,3) + fac * DBLE( (0.d0,-1.d0)* &
-                  (becsum_nc_d(ih,1,jh,2) - becsum_nc_d(ih,2,jh,1)) )
+                  (becsum_nc(ih,1,jh,2) - becsum_nc(ih,2,jh,1)) )
               becsum_d(ijh,na,4)= becsum_d(ijh,na,4) + fac * &
-                   DBLE( becsum_nc_d(ih,1,jh,1) - becsum_nc_d(ih,2,jh,2) )
+                   DBLE( becsum_nc(ih,1,jh,1) - becsum_nc(ih,2,jh,2) )
            END IF
         END IF
      END DO
@@ -1256,7 +1252,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
 END SUBROUTINE add_becsum_nc_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
+SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum_d )
   !----------------------------------------------------------------------------
   !! This routine multiplies \(\text{becsum_nc}\) by the identity and the Pauli
   !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
@@ -1274,8 +1270,8 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   IMPLICIT NONE
   
   INTEGER, INTENT(IN) :: na, np
-  COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
-  !$acc declare device_resident(becsum_nc_d)
+  COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
+  !$acc declare device_resident(becsum_nc)
   REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
   !
   ! ... local variables
@@ -1302,7 +1298,7 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
                       (indv_d(lh,np)==indv_d(jh,np)) ) THEN   !same_lj(lh,jh,np)) THEN
                     DO is1=1,npol
                        DO is2=1,npol
-                          fac=becsum_nc_d(kh,is1,lh,is2)
+                          fac=becsum_nc(kh,is1,lh,is2)
                           becsum_d(ijh,na,1)=becsum_d(ijh,na,1) + DBLE( fac * &
                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) + &
                                 fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  ) )
