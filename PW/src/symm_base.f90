@@ -30,7 +30,8 @@ MODULE symm_base
   !
   PUBLIC :: s, sr, sname, ft, nrot, nsym, nsym_ns, nsym_na, t_rev,  &
             no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
-            allfrac, nofrac, nosym, nosym_evc, fft_fact, spacegroup
+            allfrac, nofrac, nosym, nosym_evc, fft_fact, spacegroup,&
+            chem_symb
   !
   INTEGER :: s(3,3,48)
   !! symmetry matrices, in crystal axis
