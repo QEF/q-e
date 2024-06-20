@@ -959,7 +959,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE us_exx,             ONLY : store_becxx0
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
-  USE upf_spinorb,        ONLY : fcoef
   !
   ! Used to avoid unnecessary memcopy
   USE xc_lib,             ONLY : xclib_dft_is
@@ -1138,9 +1137,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
                  CALL add_becsum_nc_gpu (na, np, aux_nc_d, becsum_d )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN
-!$acc host_data use_device(fcoef)
-                 CALL add_becsum_so_gpu (na, np, fcoef, aux_nc_d, becsum_d )
-!$acc end host_data
+                 CALL add_becsum_so_gpu (na, np, aux_nc_d, becsum_d )
               ELSE
                  !
                  !$acc parallel loop collapse(2)
@@ -1218,9 +1215,10 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   !
   INTEGER, INTENT(IN) :: na, np
   COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
+  !$acc declare device_resident (becsum_nc_d)
   REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
 #if defined(__CUDA)
-  attributes(DEVICE) :: becsum_nc_d, becsum_d
+  attributes(DEVICE) :: becsum_d
 #endif
   !
   ! ... local variables
@@ -1230,7 +1228,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   !
   nhnp = nh(np)
 
-  !$cuf kernel do(2) <<<*,*>>>
+  !$acc parallel loop collapse(2)
   DO ih = 1, nhnp
      DO jh = 1, nhnp
         IF ( jh >= ih ) THEN
@@ -1258,7 +1256,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
 END SUBROUTINE add_becsum_nc_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_so_gpu( na, np, fcoef_d, becsum_nc_d, becsum_d )
+SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   !----------------------------------------------------------------------------
   !! This routine multiplies \(\text{becsum_nc}\) by the identity and the Pauli
   !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
@@ -1272,13 +1270,12 @@ SUBROUTINE add_becsum_so_gpu( na, np, fcoef_d, becsum_nc_d, becsum_d )
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : npol, nspin_mag, domag
   USE uspp,                 ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
+  USE upf_spinorb,          ONLY : fcoef
   IMPLICIT NONE
   
   INTEGER, INTENT(IN) :: na, np
-  COMPLEX(DP), INTENT(IN) :: fcoef_d(nhm,nhm,2,2,ntyp)
-  !! function needed to account for spinors.
-!$acc declare deviceptr(fcoef_d)
   COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
+  !$acc declare device_resident(becsum_nc_d)
   REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
   !
   ! ... local variables
@@ -1286,12 +1283,12 @@ SUBROUTINE add_becsum_so_gpu( na, np, fcoef_d, becsum_nc_d, becsum_d )
   INTEGER :: ih, jh, lh, kh, ijh, is1, is2, nhnt
   COMPLEX(DP) :: fac
 #if defined(__CUDA)
-  attributes (DEVICE) :: fcoef_d, becsum_nc_d, becsum_d
+  attributes (DEVICE) :: becsum_d
 #endif
   !
   nhnt = nh(np)
   !
-  !$cuf kernel do(1)
+  !$acc parallel loop collapse(2) present(fcoef)
   DO ih = 1, nhnt
      DO jh = 1, nhnt
         ijh=ijtoh_d(ih,jh,np)
@@ -1307,18 +1304,18 @@ SUBROUTINE add_becsum_so_gpu( na, np, fcoef_d, becsum_nc_d, becsum_d )
                        DO is2=1,npol
                           fac=becsum_nc_d(kh,is1,lh,is2)
                           becsum_d(ijh,na,1)=becsum_d(ijh,na,1) + DBLE( fac * &
-                               (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,1,is2,np) + &
-                                fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,2,is2,np)  ) )
+                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) + &
+                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  ) )
                           IF (domag) THEN
                             becsum_d(ijh,na,2)=becsum_d(ijh,na,2) + DBLE( fac * &
-                                (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,2,is2,np) +&
-                                 fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,1,is2,np)  ) )
+                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) +&
+                                 fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  ) )
                             becsum_d(ijh,na,3)=becsum_d(ijh,na,3) + DBLE( fac*(0.d0,-1.d0)*&
-                               (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,2,is2,np) - &
-                                fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,1,is2,np)  ))
+                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) - &
+                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  ))
                             becsum_d(ijh,na,4)=becsum_d(ijh,na,4) + DBLE(fac * &
-                               (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,1,is2,np) - &
-                                fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,2,is2,np)  ) )
+                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) - &
+                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  ) )
                         END IF
                      END DO
                   END DO
