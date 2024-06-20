@@ -968,11 +968,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
   COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
+  !$acc declare device_resident (auxk1_d, auxk2_d, aux_nc_d)
   REAL(DP), ALLOCATABLE    :: auxg1_d(:,:), auxg2_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
-  attributes(DEVICE) :: auxg1_d, auxg2_d, aux_gk_d, aux_egk_d
-#endif
+  !$acc declare device_resident (auxg1_d, auxg2_d, aux_gk_d, aux_egk_d) 
   INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
