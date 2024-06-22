@@ -28,8 +28,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   USE upf_const,    ONLY : fpi, sqrt2
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
-                           nhtol_d, nhtoj_d, ijtoh_d, dvan_d, &
-                           qq_nt_d, indv_d, dvan_so_d
+                           qq_nt_d, dvan_d, dvan_so_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
                            transform_qq_so
@@ -253,12 +252,12 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   ! update GPU memory (taking care of zero-dim allocations)
   !
   if (nhm>0) then
-     indv_d=indv
-     nhtol_d=nhtol
-     nhtoj_d=nhtoj
-     ijtoh_d=ijtoh
+     !$acc update device(indv)
+     !$acc update device(nhtol)
+     !$acc update device(nhtoj)
+     !$acc update device(ijtoh)
      qq_nt_d=qq_nt
-    !$acc update device(qq_at)
+     !$acc update device(qq_at)
      if (is_spinorbit) then
         dvan_so_d=dvan_so
       !$acc update device(fcoef)

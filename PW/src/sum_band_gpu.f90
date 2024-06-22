@@ -29,7 +29,7 @@ SUBROUTINE sum_band_gpu()
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
-  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
+  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, okvan, &
                                    becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
@@ -1139,7 +1139,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$acc parallel loop collapse(2)
                  DO ih = 1, nhnt
                     DO jh = 1, nhnt
-                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh_d(ih,jh,np) ?  OPTIMIZE !!
+                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh(ih,jh,np) ?  OPTIMIZE !!
                        !
                        ! nondiagonal terms summed and collapsed into a
                        ! single index (matrix is symmetric wrt (ih,jh))
@@ -1203,7 +1203,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
-  USE uspp,                 ONLY : ijtoh_d
+  USE uspp,                 ONLY : ijtoh
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : npol, nspin_mag, domag
   !
@@ -1224,12 +1224,12 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
   !
   nhnp = nh(np)
 
-  !$acc parallel loop collapse(2)
+  !$acc parallel loop collapse(2) present(ijtoh)
   DO ih = 1, nhnp
      DO jh = 1, nhnp
         IF ( jh >= ih ) THEN
            !ijh = jh + ((ih-1)*(2*nhnp-ih))/2  is this faster? Does it matter?
-           ijh=ijtoh_d(ih,jh,np)
+           ijh=ijtoh(ih,jh,np)
            IF ( ih == jh ) THEN
               fac = 1.0_dp
            ELSE
@@ -1265,7 +1265,7 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum_d )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : npol, nspin_mag, domag
-  USE uspp,                 ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
+  USE uspp,                 ONLY : ijtoh, nhtol, nhtoj, indv
   USE upf_spinorb,          ONLY : fcoef
   IMPLICIT NONE
   
@@ -1284,18 +1284,18 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum_d )
   !
   nhnt = nh(np)
   !
-  !$acc parallel loop collapse(2) present(fcoef)
+  !$acc parallel loop collapse(2) present(fcoef, ijtoh, nhtoj, nhtol, indv)
   DO ih = 1, nhnt
      DO jh = 1, nhnt
-        ijh=ijtoh_d(ih,jh,np)
+        ijh=ijtoh(ih,jh,np)
         DO kh = 1, nhnt
-           IF ( (nhtol_d(kh,np)==nhtol_d(ih,np)).AND. &
-                (ABS(nhtoj_d(kh,np)-nhtoj_d(ih,np))<1.d8).AND. &
-                (indv_d(kh,np)==indv_d(ih,np)) ) THEN ! same_lj(kh,ih,np)
+           IF ( (nhtol(kh,np)==nhtol(ih,np)).AND. &
+                (ABS(nhtoj(kh,np)-nhtoj(ih,np))<1.d8).AND. &
+                (indv(kh,np)==indv(ih,np)) ) THEN ! same_lj(kh,ih,np)
               DO lh=1,nhnt
-                 IF ( (nhtol_d(lh,np)==nhtol_d(jh,np)).AND. &
-                      (ABS(nhtoj_d(lh,np)-nhtoj_d(jh,np))<1.d8).AND. &
-                      (indv_d(lh,np)==indv_d(jh,np)) ) THEN   !same_lj(lh,jh,np)) THEN
+                 IF ( (nhtol(lh,np)==nhtol(jh,np)).AND. &
+                      (ABS(nhtoj(lh,np)-nhtoj(jh,np))<1.d8).AND. &
+                      (indv(lh,np)==indv(jh,np)) ) THEN   !same_lj(lh,jh,np)) THEN
                     DO is1=1,npol
                        DO is2=1,npol
                           fac=becsum_nc(kh,is1,lh,is2)
