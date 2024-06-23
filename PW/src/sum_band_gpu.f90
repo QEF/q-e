@@ -1273,7 +1273,9 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum )
   !
   nhnt = nh(np)
   !
-  !$acc parallel loop collapse(2) present(fcoef, ijtoh, nhtoj, nhtol, indv, becsum)
+  ! For an obscure reason, if you collapse the first two loops into one
+  ! with collapse(2) in the line below, the calculation also collapses!
+  !$acc parallel loop present(fcoef, ijtoh, nhtoj, nhtol, indv, becsum)
   DO ih = 1, nhnt
      DO jh = 1, nhnt
         ijh=ijtoh(ih,jh,np)
