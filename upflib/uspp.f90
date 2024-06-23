@@ -29,7 +29,7 @@ MODULE uspp
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, ofsbeta, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
-  PUBLIC :: dvan_d, qq_nt_d,becsum_d, ebecsum_d
+  PUBLIC :: dvan_d, qq_nt_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
   PUBLIC :: dvan_so_d
@@ -85,15 +85,11 @@ MODULE uspp
   !
   ! GPU vars
   !
-  REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
-  REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
-  REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
 #if defined(__CUDA)
-  attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, qq_nt_d, &
-                         nhtoj_d, dvan_so_d
+  attributes (DEVICE) :: dvan_d, qq_nt_d, dvan_so_d
 #endif
 
   !
@@ -346,8 +342,10 @@ CONTAINS
        allocate( dvan(nhm,nhm,nsp) )
     endif
     allocate(becsum( nhm*(nhm+1)/2, nat, nspin))
+    !$acc enter data create(becsum)
     if (tqr) then
        allocate(ebecsum( nhm*(nhm+1)/2, nat, nspin))
+       !$acc enter data create(ebecsum)
     endif
     allocate( ofsbeta(nat) )
     !
@@ -361,10 +359,6 @@ CONTAINS
            allocate( dvan_so_d(nhm,nhm,nspin,nsp) )
         else
            allocate( dvan_d(nhm,nhm,nsp) )
-        endif
-        allocate(becsum_d( nhm*(nhm+1)/2, nat, nspin))
-        if (tqr) then
-           allocate(ebecsum_d( nhm*(nhm+1)/2, nat, nspin))
         endif
         !
       endif
@@ -400,8 +394,12 @@ CONTAINS
         !$acc exit data delete(vkb ) 
         DEALLOCATE( vkb )
     END IF 
+    !$acc exit data delete( becsum )
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
-    IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )
+    IF( ALLOCATED( ebecsum ) ) THEN
+       !$acc exit data delete( ebecsum )
+       DEALLOCATE( ebecsum )
+    END IF
     IF( ALLOCATED( qq_at ) ) THEN
       !$acc exit data delete( qq_at )
       DEALLOCATE( qq_at )
@@ -429,8 +427,6 @@ CONTAINS
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
     ! GPU variables
-    IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
-    IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
     IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )

@@ -30,8 +30,8 @@ SUBROUTINE sum_band()
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
-                                   becsum_d, ebecsum_d
+  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, &
+                                   nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
@@ -214,13 +214,7 @@ SUBROUTINE sum_band()
      !
      IF (tqr) CALL mp_sum( ebecsum, inter_pool_comm )
      IF (tqr) CALL mp_sum( ebecsum, inter_bgrp_comm )
-     !
-#if defined __CUDA
-     if (nhm>0) then
-        becsum_d=becsum
-        if (tqr) ebecsum_d=ebecsum
-     endif
-#endif
+     !$acc update device(becsum, ebecsum)
      !
      ! ... PAW: symmetrize becsum and store it
      ! ... FIXME: the same should be done for USPP as well

@@ -20,7 +20,7 @@ SUBROUTINE compute_becsum( iflag )
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE scf,                  ONLY : rho
-  USE uspp,                 ONLY : nkb, vkb, becsum, becsum_d, okvan
+  USE uspp,                 ONLY : nkb, vkb, becsum, okvan
   USE uspp_param,           ONLY : nhm
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, wg
@@ -71,12 +71,7 @@ SUBROUTINE compute_becsum( iflag )
   !
   IF( becp%comm /= mp_get_comm_null() ) &
        CALL mp_sum( becsum, becp%comm )
-  !
-#if defined __CUDA
-  ! GPU-sync (protecting zero-size allocations)
-  if (nhm>0) becsum_d=becsum
-#endif
-
+  !$acc update device(becsum)
   !
   ! ... Needed for PAW: becsum has to be symmetrized so that they reflect 
   ! ... a real integral in k-space, not only on the irreducible zone. 

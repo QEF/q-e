@@ -29,8 +29,7 @@ SUBROUTINE sum_band_gpu()
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
-  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, okvan, &
-                                   becsum_d, ebecsum_d
+  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, okvan
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
@@ -64,10 +63,15 @@ SUBROUTINE sum_band_gpu()
   CALL start_clock_gpu( 'sum_band' )
   !
   IF ( nhm > 0 ) THEN
+     ! Note: becsum and ebecsum are computed on GPU and copied to CPU
+     !$acc kernels
      becsum(:,:,:) = 0.D0
-     IF (tqr) ebecsum(:,:,:) = 0.D0
-     becsum_d(:,:,:) = 0.D0
-     IF (tqr) ebecsum_d(:,:,:) = 0.D0
+     !$acc end kernels
+     IF (tqr) THEN
+        !$acc kernels
+        ebecsum(:,:,:) = 0.D0
+        !$acc end kernels
+     END IF
   ENDIF
   rho%of_r(:,:) = 0.D0
   rho%of_g(:,:) = (0.D0, 0.D0)
@@ -197,21 +201,18 @@ SUBROUTINE sum_band_gpu()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
-     ! ... use host copy to do the comunication. This avoids going back an forth GPU data
-     ! ... becsum=becsum_d     not needed 
-     ! ... since becsum is already uptodate, see sum_band*gpu
+     ! ... use host copy to do the comunication.
      !
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
-     becsum_d=becsum
+     !$acc update device(becsum)
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
      IF (tqr) THEN
-        !ebecsum=ebecsum_d   not needed as above
         CALL mp_sum(ebecsum, inter_pool_comm )
         CALL mp_sum(ebecsum, inter_bgrp_comm )
-        ebecsum_d=ebecsum
+        !$acc update device(ebecsum)
      ENDIF
      !
      ! ... PAW: symmetrize becsum and store it
@@ -470,14 +471,12 @@ SUBROUTINE sum_band_gpu()
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0) THEN
-          !becsum=becsum_d      not needed, since already updated in sum_bec_gpu
           CALL mp_sum( becsum, becp%comm )
-          becsum_d=becsum
+          !$acc update device(becsum)
        ENDIF
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm>0) THEN
-          !ebecsum=ebecsum_d    as above
           CALL mp_sum( ebecsum, becp%comm )
-          ebecsum_d=ebecsum
+          !$acc update device(ebecsum)
        ENDIF
        !
        IF( use_tg ) THEN
@@ -782,14 +781,12 @@ SUBROUTINE sum_band_gpu()
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0 ) THEN 
-          !becsum=becsum_d     not needed, since already updated in sum_bec_gpu
           CALL mp_sum( becsum, becp%comm )
-          becsum_d=becsum
+          !$acc update device(becsum)
        ENDIF
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm> 0) THEN
-          !ebecsum=ebecsum_d    not needed as above
           CALL mp_sum( ebecsum, becp%comm )
-          ebecsum_d=ebecsum
+          !$acc update device(ebecsum)
        ENDIF
        !
        IF( use_tg ) THEN
@@ -942,8 +939,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE becmod,             ONLY : becp, calbec
   USE control_flags,      ONLY : gamma_only, tqr, offload_type 
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, &
-                                 becsum_d, ebecsum_d, vkb
+  USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, vkb
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk, nkstot
@@ -1131,12 +1127,12 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               ! copy output from GEMM into desired format
               !
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
-                 CALL add_becsum_nc_gpu (na, np, aux_nc, becsum_d )
+                 CALL add_becsum_nc_gpu (na, np, aux_nc, becsum )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN
-                 CALL add_becsum_so_gpu (na, np, aux_nc, becsum_d )
+                 CALL add_becsum_so_gpu (na, np, aux_nc, becsum )
               ELSE
                  !
-                 !$acc parallel loop collapse(2)
+                 !$acc parallel loop collapse(2) present(becsum)
                  DO ih = 1, nhnt
                     DO jh = 1, nhnt
                        ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh(ih,jh,np) ?  OPTIMIZE !!
@@ -1145,13 +1141,13 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                        ! single index (matrix is symmetric wrt (ih,jh))
                        !
                        IF ( jh == ih ) THEN
-                          becsum_d(ijh,na,current_spin) = &
-                               becsum_d(ijh,na,current_spin) + aux_gk (ih,jh)
+                          becsum(ijh,na,current_spin) = &
+                               becsum(ijh,na,current_spin) + aux_gk (ih,jh)
                           if (tqr) ebecsum(ijh,na,current_spin) = &
                              ebecsum(ijh,na,current_spin) + aux_egk (ih,jh)
                        ELSE IF ( jh > ih ) THEN
-                          becsum_d(ijh,na,current_spin) = &
-                               becsum_d(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
+                          becsum(ijh,na,current_spin) = &
+                               becsum(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
                           if (tqr) ebecsum(ijh,na,current_spin) = &
                              ebecsum(ijh,na,current_spin) + aux_egk(ih,jh)*2.0_dp
                        END IF
@@ -1180,10 +1176,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   END DO
   !$acc end data
   !
-  ! sync 
-  if (nhm > 0) then
-     becsum=becsum_d
-     if (tqr) ebecsum=ebecsum_d
+  !$acc update host(becsum)
+  if (tqr) then
+     !$acc update host(ebecsum)
   endif
   !
   CALL stop_clock_gpu( 'sum_band:becsum' )
@@ -1191,7 +1186,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 END SUBROUTINE sum_bec_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
+SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum )
 !----------------------------------------------------------------------------
   !! This routine multiplies \(\text{becsum_nc}\) by the identity and the
   !! Pauli matrices, saves it in \(\text{becsum}\) for the calculation of 
@@ -1212,10 +1207,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
   INTEGER, INTENT(IN) :: na, np
   COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
   !$acc declare device_resident (becsum_nc)
-  REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
-#if defined(__CUDA)
-  attributes(DEVICE) :: becsum_d
-#endif
+  REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
   !
   ! ... local variables
   !
@@ -1224,7 +1216,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
   !
   nhnp = nh(np)
 
-  !$acc parallel loop collapse(2) present(ijtoh)
+  !$acc parallel loop collapse(2) present(ijtoh, becsum)
   DO ih = 1, nhnp
      DO jh = 1, nhnp
         IF ( jh >= ih ) THEN
@@ -1235,14 +1227,14 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
            ELSE
               fac = 2.0_dp
            END IF
-           becsum_d(ijh,na,1)= becsum_d(ijh,na,1) + fac * &
+           becsum(ijh,na,1)= becsum(ijh,na,1) + fac * &
                    DBLE( becsum_nc(ih,1,jh,1) + becsum_nc(ih,2,jh,2) )
            IF (domag) THEN
-              becsum_d(ijh,na,2)= becsum_d(ijh,na,2) + fac *  &
+              becsum(ijh,na,2)= becsum(ijh,na,2) + fac *  &
                    DBLE( becsum_nc(ih,1,jh,2) + becsum_nc(ih,2,jh,1) )
-              becsum_d(ijh,na,3)= becsum_d(ijh,na,3) + fac * DBLE( (0.d0,-1.d0)* &
+              becsum(ijh,na,3)= becsum(ijh,na,3) + fac * DBLE( (0.d0,-1.d0)* &
                   (becsum_nc(ih,1,jh,2) - becsum_nc(ih,2,jh,1)) )
-              becsum_d(ijh,na,4)= becsum_d(ijh,na,4) + fac * &
+              becsum(ijh,na,4)= becsum(ijh,na,4) + fac * &
                    DBLE( becsum_nc(ih,1,jh,1) - becsum_nc(ih,2,jh,2) )
            END IF
         END IF
@@ -1252,7 +1244,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum_d )
 END SUBROUTINE add_becsum_nc_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum_d )
+SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum )
   !----------------------------------------------------------------------------
   !! This routine multiplies \(\text{becsum_nc}\) by the identity and the Pauli
   !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
@@ -1272,19 +1264,16 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum_d )
   INTEGER, INTENT(IN) :: na, np
   COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
   !$acc declare device_resident(becsum_nc)
-  REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
+  REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
   !
   ! ... local variables
   !
   INTEGER :: ih, jh, lh, kh, ijh, is1, is2, nhnt
   COMPLEX(DP) :: fac
-#if defined(__CUDA)
-  attributes (DEVICE) :: becsum_d
-#endif
   !
   nhnt = nh(np)
   !
-  !$acc parallel loop collapse(2) present(fcoef, ijtoh, nhtoj, nhtol, indv)
+  !$acc parallel loop collapse(2) present(fcoef, ijtoh, nhtoj, nhtol, indv, becsum)
   DO ih = 1, nhnt
      DO jh = 1, nhnt
         ijh=ijtoh(ih,jh,np)
@@ -1299,17 +1288,17 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum_d )
                     DO is1=1,npol
                        DO is2=1,npol
                           fac=becsum_nc(kh,is1,lh,is2)
-                          becsum_d(ijh,na,1)=becsum_d(ijh,na,1) + DBLE( fac * &
+                          becsum(ijh,na,1)=becsum(ijh,na,1) + DBLE( fac * &
                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) + &
                                 fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  ) )
                           IF (domag) THEN
-                            becsum_d(ijh,na,2)=becsum_d(ijh,na,2) + DBLE( fac * &
+                            becsum(ijh,na,2)=becsum(ijh,na,2) + DBLE( fac * &
                                 (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) +&
                                  fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  ) )
-                            becsum_d(ijh,na,3)=becsum_d(ijh,na,3) + DBLE( fac*(0.d0,-1.d0)*&
+                            becsum(ijh,na,3)=becsum(ijh,na,3) + DBLE( fac*(0.d0,-1.d0)*&
                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) - &
                                 fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  ))
-                            becsum_d(ijh,na,4)=becsum_d(ijh,na,4) + DBLE(fac * &
+                            becsum(ijh,na,4)=becsum(ijh,na,4) + DBLE(fac * &
                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) - &
                                 fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  ) )
                         END IF
