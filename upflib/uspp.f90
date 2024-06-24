@@ -29,7 +29,7 @@ MODULE uspp
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, ofsbeta, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
-  PUBLIC :: indv_d, nhtol_d, dvan_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
+  PUBLIC :: dvan_d, qq_nt_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
   PUBLIC :: dvan_so_d
@@ -59,15 +59,6 @@ MODULE uspp
        ijtoh(:,:,:),     &! correspondence beta indexes ih,jh -> composite index ijh
        ofsbeta(:)      ! first beta (index in the solid) for each atom 
   !
-  ! GPU vars
-  !
-  INTEGER, ALLOCATABLE :: indv_d(:,:)
-  INTEGER, ALLOCATABLE :: nhtol_d(:,:)
-  INTEGER, ALLOCATABLE :: ijtoh_d(:,:,:)
-#if defined (__CUDA)
-  attributes(DEVICE) :: indv_d, nhtol_d, ijtoh_d
-#endif
-
   LOGICAL :: &
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
@@ -94,15 +85,11 @@ MODULE uspp
   !
   ! GPU vars
   !
-  REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
-  REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
-  REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
 #if defined(__CUDA)
-  attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, qq_nt_d, &
-                         nhtoj_d, dvan_so_d
+  attributes (DEVICE) :: dvan_d, qq_nt_d, dvan_so_d
 #endif
 
   !
@@ -325,11 +312,15 @@ CONTAINS
     logical, intent(in) :: noncolin,lspinorb,tqr
     integer, intent(in) :: nhm,nsp,nat,nspin
     !
-    allocate( indv(nhm,nsp)   )
-    allocate( nhtol(nhm,nsp)  )
     allocate( nhtolm(nhm,nsp) )
+    allocate( indv(nhm,nsp)   )
+    !$acc enter data create(indv)
+    allocate( nhtol(nhm,nsp)  )
+    !$acc enter data create(nhtol)
     allocate( nhtoj(nhm,nsp)  )
+    !$acc enter data create(nhtoj)
     allocate( ijtoh(nhm,nhm,nsp) )
+    !$acc enter data create(ijtoh)
     allocate( deeq(nhm,nhm,nat,nspin) )
     !$acc enter data create(deeq)
     if ( noncolin ) then
@@ -351,8 +342,10 @@ CONTAINS
        allocate( dvan(nhm,nhm,nsp) )
     endif
     allocate(becsum( nhm*(nhm+1)/2, nat, nspin))
+    !$acc enter data create(becsum)
     if (tqr) then
        allocate(ebecsum( nhm*(nhm+1)/2, nat, nspin))
+       !$acc enter data create(ebecsum)
     endif
     allocate( ofsbeta(nat) )
     !
@@ -361,19 +354,11 @@ CONTAINS
     if (use_gpu) then
       !
       if (nhm>0) then
-        allocate( indv_d(nhm,nsp)   )
-        allocate( nhtol_d(nhm,nsp)  )
-        allocate( nhtoj_d(nhm,nsp)  )
-        allocate( ijtoh_d(nhm,nhm,nsp) )
         allocate( qq_nt_d(nhm,nhm,nsp) )
         if ( lspinorb ) then
            allocate( dvan_so_d(nhm,nhm,nspin,nsp) )
         else
            allocate( dvan_d(nhm,nhm,nsp) )
-        endif
-        allocate(becsum_d( nhm*(nhm+1)/2, nat, nspin))
-        if (tqr) then
-           allocate(ebecsum_d( nhm*(nhm+1)/2, nat, nspin))
         endif
         !
       endif
@@ -386,19 +371,35 @@ CONTAINS
   SUBROUTINE deallocate_uspp()
     !-----------------------------------------------------------------------
     IMPLICIT NONE
-    IF( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
-    IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
-    IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
-    IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
+    !
     IF( ALLOCATED( ofsbeta ) )    DEALLOCATE( ofsbeta )
-    IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
-!FIXME in order to be created and deleted automatically by using !$acc declare create(vkb) in 
+    IF( ALLOCATED( nhtolm ) )      DEALLOCATE( nhtolm )
+    IF( ALLOCATED( nhtol ) ) THEN
+        !$acc exit data delete( nhtol ) 
+        DEALLOCATE( nhtol )
+    END IF
+    IF( ALLOCATED( indv ) ) THEN
+        !$acc exit data delete( indv ) 
+        DEALLOCATE( indv )
+    END IF
+    IF( ALLOCATED( ijtoh ) ) THEN
+        !$acc exit data delete( ijtoh ) 
+        DEALLOCATE( ijtoh )
+    END IF
+    IF( ALLOCATED( nhtoj ) ) THEN
+        !$acc exit data delete( nhtoj ) 
+        DEALLOCATE( nhtoj )
+    END IF
     IF( ALLOCATED( vkb ) ) THEN
         !$acc exit data delete(vkb ) 
         DEALLOCATE( vkb )
     END IF 
+    !$acc exit data delete( becsum )
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
-    IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )
+    IF( ALLOCATED( ebecsum ) ) THEN
+       !$acc exit data delete( ebecsum )
+       DEALLOCATE( ebecsum )
+    END IF
     IF( ALLOCATED( qq_at ) ) THEN
       !$acc exit data delete( qq_at )
       DEALLOCATE( qq_at )
@@ -426,14 +427,8 @@ CONTAINS
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
     ! GPU variables
-    IF( ALLOCATED( indv_d ) )     DEALLOCATE( indv_d )
-    IF( ALLOCATED( nhtol_d ) )    DEALLOCATE( nhtol_d )
-    IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
-    IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
-    IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
     IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
-    IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
     !
   END SUBROUTINE deallocate_uspp
