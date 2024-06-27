@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ SUBROUTINE sum_band_gpu()
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
-  USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+  USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr, sic
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
@@ -26,9 +26,10 @@ SUBROUTINE sum_band_gpu()
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho, rhoz_or_updw
+  USE sic_mod,              ONLY : isp, pol_type
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE buffers,              ONLY : get_buffer
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, okvan
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
@@ -43,6 +44,12 @@ SUBROUTINE sum_band_gpu()
   USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
+  USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_sum_band
+#endif
   !
   IMPLICIT NONE
   !
@@ -79,11 +86,21 @@ SUBROUTINE sum_band_gpu()
      rho%kin_r(:,:) = 0.D0
      rho%kin_g(:,:) = (0.D0, 0.D0)
   ENDIF
+  IF (sic) THEN
+     rho%pol_r(:,:) = 0.d0
+     rho%pol_g(:,:) = (0.d0,0.d0)
+  END IF
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
   CALL start_clock_gpu( 'sum_band:weights' )
-  CALL weights()
+  ! ... for DMFT skip weights in the first iteration since they were loaded from file
+  ! ... and are manipulated elsewhere
+  !
+  IF (.NOT. ( dmft .AND. .NOT. dmft_updated) ) THEN
+     CALL weights ( )
+  ENDIF
+  !
   CALL stop_clock_gpu( 'sum_band:weights' )
   !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
@@ -132,6 +149,9 @@ SUBROUTINE sum_band_gpu()
        !
     ENDIF
   ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_sum_band(oscdft_ctx)
+#endif
   !
   ! ... for band parallelization: set band computed by this processor
   !
@@ -190,11 +210,16 @@ SUBROUTINE sum_band_gpu()
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   CALL mp_sum( rho%of_r, inter_bgrp_comm )
+  IF (sic) then
+     CALL mp_sum( rho%pol_r, inter_pool_comm )
+     CALL mp_sum( rho%pol_r, inter_bgrp_comm )
+  END IF
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
   ! ... bring the unsymmetrized rho(r) to G-space (use psic as work array)
   !
   CALL rho_r2g( dffts, rho%of_r, rho%of_g )
+  IF(sic) CALL rho_r2g( dffts, rho%pol_r, rho%pol_g )
   !
   IF( okvan )  THEN
      !
@@ -233,10 +258,12 @@ SUBROUTINE sum_band_gpu()
   !
   CALL start_clock_gpu( 'sum_band:sym_rho' )
   CALL sym_rho( nspin_mag, rho%of_g )
+  IF (sic) CALL sym_rho ( nspin_mag, rho%pol_g )
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
   !
   CALL rho_g2r( dfftp, rho%of_g, rho%of_r )
+  IF(sic) CALL rho_g2r( dfftp, rho%pol_g, rho%pol_r )
   !
   ! ... rho_kin(r): sum over bands, k-points, bring to G-space, symmetrize,
   ! ... synchronize with rho_kin(G)
@@ -259,6 +286,10 @@ SUBROUTINE sum_band_gpu()
   ! ... (up+dw,up-dw) format.
   !
   IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+  IF (sic) THEN
+    rho%pol_r(:,2) = rho%pol_r(:,1) 
+    rho%pol_g(:,2) = rho%pol_g(:,1) 
+  END IF
   !
   ! ... sum number of electrons, for GC-SCF
   !
@@ -280,7 +311,8 @@ SUBROUTINE sum_band_gpu()
        USE becmod,                 ONLY : becp
        USE mp_bands,               ONLY : me_bgrp
        USE mp,                     ONLY : mp_sum, mp_get_comm_null
-       USE fft_helper_subroutines
+       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
+                                          tg_reduce_rho, tg_get_group_nr3
        USE uspp_init,              ONLY : init_us_2
        !
        IMPLICIT NONE
@@ -500,8 +532,10 @@ SUBROUTINE sum_band_gpu()
        !
        USE mp_bands,               ONLY : me_bgrp
        USE mp,                     ONLY : mp_sum, mp_get_comm_null
-       USE fft_helper_subroutines
+       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
+                                          tg_reduce_rho, tg_get_group_nr3
        USE uspp_init,              ONLY : init_us_2
+       USE klist,                  ONLY : nelec
        USE control_flags,          ONLY : many_fft
        !
        IMPLICIT NONE
@@ -518,10 +552,13 @@ SUBROUTINE sum_band_gpu()
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL  :: use_tg
-       INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
-       !
+       ! polaron calculation
+       COMPLEX(DP), ALLOCATABLE :: psic_p(:)
+       REAL(DP) :: wg_p
+       INTEGER  :: ibnd_p
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -529,7 +566,12 @@ SUBROUTINE sum_band_gpu()
        use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 1
-       nnr  = dffts%nnr
+       !
+       IF(sic) THEN
+          ALLOCATE(psic_p(dffts%nnr*2))
+          wg_p = 0.0
+          ibnd_p = nelec/2+1 
+       END IF
        !
        IF( use_tg ) THEN
           !
@@ -593,22 +635,40 @@ SUBROUTINE sum_band_gpu()
           !
           CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
-          ! ... here we compute the band energy: the sum of the eigenvalues
+          IF ( dmft .AND. .NOT. dmft_updated) THEN
+             ! 
+             DO j = 1, npw
+                CALL ZGEMM( 'T', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
+                            nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd )
+             ENDDO
+             !
+             IF ( nks > 1 ) &
+                  CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+             !
+          END IF
+          !
+          ! ... calculate polaron density
+          !
+          IF ( sic .AND. current_spin==isp ) THEN
+             CALL wave_g2r( evc(1:npw,ibnd_p:ibnd_p), psic_p, dffts, igk=igk_k(:,ik) )
+             !
+             CALL get_rho(rho%pol_r(:,1), dffts%nnr, wg(1,ik)/omega, psic_p)
+             wg_p = wg_p + wg(ibnd_p,ik)
+          ENDIF
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             !IF( use_tg ) THEN
+             ! ... here we compute the band energy: the sum of the eigenvalues
+             !
              DO idx = 1, incr
                 IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
-                                                             wg(idx+ibnd-1,ik)
+                     wg(idx+ibnd-1,ik)
              ENDDO
-             !ELSE
-             !   eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
-             !END IF
              !
              ! ... the sum of eband and demet is the integral for e < ef of
              ! ... e n(e) which reduces for degauss=0 to the sum of the
              ! ... eigenvalues
+             !
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
@@ -720,7 +780,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    DO i = 0, group_size-1
                      w1 = wg(ibnd+i,ik) / omega
-                     CALL get_rho_gpu( rhoaux(:,current_spin), nnr, w1, psicd(i*nnr+1:) )
+                     CALL get_rho_gpu( rhoaux(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
                    ENDDO
                    !
                 ELSE
@@ -788,6 +848,11 @@ SUBROUTINE sum_band_gpu()
           CALL mp_sum( ebecsum, becp%comm )
           !$acc update device(ebecsum)
        ENDIF
+       !
+       IF(sic .and. pol_type == 'h') THEN
+          wg_p = 1.0 - wg_p
+          DEALLOCATE(psic_p)
+       END IF
        !
        IF( use_tg ) THEN
           IF (noncolin) THEN
