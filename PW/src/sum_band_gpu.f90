@@ -556,7 +556,9 @@ SUBROUTINE sum_band_gpu()
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
        ! polaron calculation
+       REAL(DP), ALLOCATABLE :: rho_p(:)
        COMPLEX(DP), ALLOCATABLE :: psic_p(:)
+       !$acc declare device_resident(psic_p)
        REAL(DP) :: wg_p
        INTEGER  :: ibnd_p
        !
@@ -568,7 +570,12 @@ SUBROUTINE sum_band_gpu()
        incr = 1
        !
        IF(sic) THEN
-          ALLOCATE(psic_p(dffts%nnr*2))
+          ALLOCATE(rho_p(dffts%nnr))
+          !$acc enter data create(rho_p)
+          ALLOCATE(psic_p(dffts%nnr*2)) ! why *2?
+          !$acc kernels
+          rho_p=0.0_dp
+          !$acc end kernels
           wg_p = 0.0
           ibnd_p = nelec/2+1 
        END IF
@@ -652,7 +659,9 @@ SUBROUTINE sum_band_gpu()
           IF ( sic .AND. current_spin==isp ) THEN
              CALL wave_g2r( evc(1:npw,ibnd_p:ibnd_p), psic_p, dffts, igk=igk_k(:,ik) )
              !
-             CALL get_rho(rho%pol_r(:,1), dffts%nnr, wg(1,ik)/omega, psic_p)
+             CALL get_rho_gpu(rho_p, dffts%nnr, wg(1,ik)/omega, psic_p)
+             !$acc update host(rho_p)
+             rho%pol_r(:,1) = rho_p(:)
              wg_p = wg_p + wg(ibnd_p,ik)
           ENDIF
           !
@@ -852,6 +861,8 @@ SUBROUTINE sum_band_gpu()
        IF(sic .and. pol_type == 'h') THEN
           wg_p = 1.0 - wg_p
           DEALLOCATE(psic_p)
+          !$acc exit data delete(rho_p)
+          DEALLOCATE(rho_p)
        END IF
        !
        IF( use_tg ) THEN
@@ -994,12 +1005,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
-#if defined(__CUDA)
-  USE cublas
-#else
-#define cublasZgemm zgemm
-#define cublasDgemm dgemm
-#endif
   USE kinds,              ONLY : DP
   USE becmod,             ONLY : becp, calbec
   USE control_flags,      ONLY : gamma_only, tqr, offload_type 
@@ -1122,9 +1127,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                     END DO
                  END DO
                  !
-                 CALL cublasZgemm ( 'C', 'N', npol*nhnt, npol*nhnt, this_bgrp_nbnd, &
+                 !$acc host_data use_device(auxk1, auxk2, aux_nc)
+                 CALL MYZGEMM ( 'C', 'N', npol*nhnt, npol*nhnt, this_bgrp_nbnd, &
                       (1.0_dp,0.0_dp), auxk1, this_bgrp_nbnd, auxk2, this_bgrp_nbnd, &
                       (0.0_dp,0.0_dp), aux_nc, npol*nhnt )
+                 !$acc end host_data
                  !
               ELSE IF ( gamma_only ) THEN
                  !
@@ -1138,9 +1145,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                        auxg2(ibnd_loc,ih) = becp%r(ikb,ibnd_loc) * wg(ibnd,ik)
                     END DO
                  END DO
-                 CALL cublasDgemm ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
+                 !$acc host_data use_device(auxg1, auxg2, aux_gk)
+                 CALL MYDGEMM ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
                       1.0_dp, auxg1, nbnd_loc,    &
                       auxg2, nbnd_loc, 0.0_dp, aux_gk, nhnt )
+                 !$acc end host_data
                  !
                  if (tqr) then
                    !$acc parallel loop collapse(2)
@@ -1150,10 +1159,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                       auxg2(ibnd_loc,ih) = et(ibnd,ik) * auxg2(ibnd_loc,ih)
                       END DO
                    END DO
-
-                   CALL cublasDgemm ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
+                   !$acc host_data use_device(auxg1, auxg2, aux_egk)
+                   CALL MYDGEMM ( 'T', 'N', nhnt, nhnt, nbnd_loc, &
                         1.0_dp, auxg1, nbnd_loc,    &
                         auxg2, nbnd_loc, 0.0_dp, aux_egk, nhnt )
+                   !$acc end host_data
                  end if
                  !
               ELSE
@@ -1170,9 +1180,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !
                  ! only the real part is computed
                  !
-                 CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
+                 !$acc host_data use_device(auxk1, auxk2, aux_gk)
+                 CALL MYDGEMM ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
                       1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
                       0.0_dp, aux_gk, nhnt )
+                 !$acc end host_data
                  !
                  if (tqr) then
                    !$acc parallel loop collapse(2)
@@ -1182,9 +1194,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                       END DO
                    END DO
 
-                   CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
+                   !$acc host_data use_device(auxk1, auxk2, aux_egk)
+                   CALL MYDGEMM ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
                         1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
                         0.0_dp, aux_egk, nhnt )
+                   !$acc end host_data
                  end if
 
               END IF
