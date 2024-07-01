@@ -352,8 +352,8 @@ MODULE ener
   !! another solvation energy, from 3D-RISM
   REAL(DP) :: ef_cond
   !! the conduction band chemical potential for a two chemical potential simulation
-  !! obsolete exchange-correlation energy term for core correction - unused
   REAL(DP) :: etxcc = 0.0
+  !! obsolete exchange-correlation energy term for core correction - unused
   !
 END MODULE ener
 !
