@@ -84,8 +84,7 @@ SUBROUTINE non_scf( )
   ! ... and a subtly different copy in rho%bec (scf module)
   !
   IF(xclib_dft_is('hybrid')) THEN 
-    IF (.not. use_gpu) CALL sum_band()
-    IF (      use_gpu) CALL sum_band_gpu()
+    CALL sum_band()
   END IF 
   !
   ! ... calculate weights of Kohn-Sham orbitals (only weights, not Ef,

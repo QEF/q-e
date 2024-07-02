@@ -281,7 +281,6 @@ PWLIBS += \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
   add_vuspsi_gpu.o \
-  sum_band_gpu.o \
   newd_gpu.o \
   add_paw_to_deeq_gpu.o \
   add_vhub_to_deeq_gpu.o \

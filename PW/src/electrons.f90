@@ -713,8 +713,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
             WRITE( stdout, '(5X,"WARNING: electron_maxstep > 1 not recommended for dmft = .true.")')
         END IF
         !
-        IF (.not. use_gpu) CALL sum_band()
-        IF (      use_gpu) CALL sum_band_gpu()
+        CALL sum_band()
         !
         ! ... if DMFT update was made, make sure it is only done in the first iteration
         ! ... (generally in this mode it should only run a single iteration, but just to make sure!)
