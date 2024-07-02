@@ -250,7 +250,7 @@ end if
            else 
               na = na_l 
            end if
-           if (ityp (na) .eq.nt ) then
+           if (ityp (na) .eq.nt .and. nh(nt) > 0 ) then
               ijkb0 = ofsbeta(na)
               ijkbnh = ijkb0 + nh(nt)
               do ipol = 1, 3
@@ -336,7 +336,7 @@ end if
                           else 
                             nb = nb_l
                           end if
-                          if (ityp (nb) == ntb) then
+                          if (ityp (nb) == ntb .and. nh(ntb) > 0 ) then
                              ijkb0b = ofsbeta(nb)
                              ijkb1b = ijkb0b + 1 
                              ijkbnb = ijkb0b + nh(ntb)
