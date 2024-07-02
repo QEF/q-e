@@ -69,7 +69,10 @@ subroutine kcw_setup
   USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
                                root_bgrp, intra_bgrp_comm, &
                                inter_bgrp_comm
-
+  USE symm_base,        ONLY : s, time_reversal, sr, ft
+  USE control_kcw,      ONLY : s_w, nqstot_ibz, xq_ibz, wq_ibz, nsym_w
+  USE start_k,          ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE parameters,       ONLY : npk
 
   !
   implicit none
@@ -84,6 +87,13 @@ subroutine kcw_setup
   COMPLEX(DP), ALLOCATABLE :: rhowann(:,:,:), rhowann_aux(:)
   CHARACTER (LEN=256) :: filename, file_base
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
+  INTEGER:: mp1, mp2, mp3
+  INTEGER :: nsymwi
+  INTEGER :: s_wi(3,3,48)
+  REAL(DP) :: Gvector(3)
+  INTEGER :: iq_
+  INTEGER, ALLOCATABLE :: ibz2fbz(:)
+
   !
   INTEGER :: &
        igk_k_all(npwx,nkstot),&    ! index of G corresponding to a given index of k+G
@@ -436,6 +446,118 @@ subroutine kcw_setup
   WRITE(stdout, '(/,5X,"INFO: PREPARING THE KCW CALCULATION ... DONE")')
   WRITE(stdout,'(/)')
   !
+  ! For symmetry
+  !
+  CALL symmetries_of_wannier_function()
+
+  mp1=2
+  mp2=2
+  mp3=2
+  i=6
+  ALLOCATE(xq_ibz(3,mp1*mp2*mp3))
+  ALLOCATE(wq_ibz(mp1*mp2*mp3))
+  WRITE(*,*) "nsym_w(i)", nsym_w(i), "time_reversal", time_reversal
+  nsymwi = nsym_w(i)
+  s_wi(:,:,:) = s_w(:,:,:,i)
+  CALL kpoint_grid ( nsymwi, time_reversal, .false., s_wi, 0, bg, &
+                     mp1*mp2*mp3, 0,0,0, mp1,mp2,mp3, nqstot_ibz, xq_ibz, wq_ibz )
+
+
+                     WRITE(*,*)
+                     WRITE(*,*)
+                     WRITE(*,*)
+                     WRITE(*,*)
+                     WRITE(*,*)
+                     WRITE(*,*)
+                     WRITE(*,*)
+                 
+WRITE(*,*) "nqstot_ibz", nqstot_ibz
+!DO iq=1, nsymwi
+!  WRITE(*,*) "isym", iq, s_wi(:,:,iq)
+!END DO
+
+WRITE(*,*) "xq_ibz"
+DO iq=1, nqstot_ibz
+  WRITE(*,*) xq_ibz(:, iq)
+END DO                   
+
+WRITE(*,*) "wq_ibz"
+DO iq=1, nqstot_ibz
+  WRITE(*,*) wq_ibz(iq)
+END DO         
+
+WRITE(*,*) "xk"
+DO ik=1, mp1*mp2*mp3
+  WRITE(*,*) xk(:,ik)
+END DO
+
+DO ik=nkstot+1, nkstot+nqstot_ibz
+  xk(:, ik) = xq_ibz(:, ik-nkstot)
+END DO                   
+
+ALLOCATE(ibz2fbz(nqstot_ibz))
+WRITE(*,*) "         iq        ik         Gvector"
+DO iq=nkstot+1, nkstot+nqstot_ibz
+  CALL rotate_xk(iq, 1, i, Gvector)
+  ibz2fbz(iq-nkstot) = i
+  WRITE(*,*) iq-nkstot, i, Gvector
+END DO
+
+sh=0
+DO iq_=1, nqstot_ibz
+  DO i = 6,6
+    iq = ibz2fbz(iq_)
+    xq = x_q(:,iq)
+    !
+    ! IF (ionode) WRITE(iun_qlist,'(3f12.8)') xq
+    !
+    lgamma_iq(iq)=(x_q(1,iq)==0.D0.AND.x_q(2,iq)==0.D0.AND.x_q(3,iq)==0.D0)
+    CALL cryst_to_cart(1, xq, at, -1)
+    !
+    CALL compute_map_ikq_single (iq)
+    ! The map to identify which k point in the 1BZ corresponds to k+q and the G vector that produce the mapping
+    ! The results are stored in the global variable map_ikq and shift_1bz (used inside rho_of_q) 
+    ! can (should) be moved inside rho_of_q ( )
+    !
+    rhowann(:,:)=ZERO
+    CALL rho_of_q (rhowann, ngk_all, igk_k_all)
+    ! Compute the peridic part rho_q(r) of the wannier density rho(r)
+    ! rho(r)   = \sum_q exp[iqr]rho_q(r)
+    !
+    WRITE( stdout, '(8X,"INFO: rho_q(r) DONE ",/)')
+    !
+    ! Compute the Self Hartree
+!    weight(iq) = 1.D0/nqs ! No SYMM 
+    lrpa_save=lrpa
+    lrpa = .true.
+    !
+    rhog(:)         = CMPLX(0.D0,0.D0,kind=DP)
+    delta_vg(:,:)   = CMPLX(0.D0,0.D0,kind=DP)
+    vh_rhog(:)      = CMPLX(0.D0,0.D0,kind=DP)
+    rhor(:)         = CMPLX(0.D0,0.D0,kind=DP)
+    !
+    rhor(:) = rhowann(:,i) 
+    !! The periodic part of the orbital desity in real space
+    !
+    CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_ )
+    rhowann_g(:,i) = rhog
+    !! The periodic part of the perturbation DeltaV_q(G)
+    ! 
+    sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:) )*wq_ibz(iq_)*omega
+    !
+  ENDDO
+END DO
+
+WRITE(stdout,'(5X, "INFO: Orbital Self-Hartree (SH)")') 
+DO i = 1, num_wann
+  WRITE(stdout,'(5X, "orb ", 1i5, 5X, "SH ", 1F10.6)') i, REAL(sh(i))
+END DO
+
+
+
+  !CALL compute_dmn()
+  !
+  CALL close_buffer  ( iuwfc, 'KEEP' )
   !
   CALL stop_clock ('kcw_setup')
   !

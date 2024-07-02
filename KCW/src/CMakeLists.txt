@@ -46,7 +46,13 @@ set(src_kcw
     kcw_allocate_q.f90
     kcw_deallocate_q.f90
     setup_coulomb_exx.f90
-    coulomb.f90)
+    coulomb.f90
+    kcw_set_symm.f90#Giovanni Cistaro
+    compute_dmn.f90 #Giovanni Cistaro
+    rotate_evc.f90 #Giovanni Cistaro
+    #compute_w0n_unitcell.f90 #Giovanni Cistaro
+    symmetries_of_wannier_function.f90 #Giovanni Cistaro
+    )
 
 qe_add_library(qe_kcw ${src_kcw})
 target_link_libraries(

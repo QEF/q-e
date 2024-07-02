@@ -102,5 +102,29 @@ MODULE control_kcw
   !
   LOGICAL :: io_sp, io_real_space
   !
+  !Giovanni Cistaro
+  !
+  INTEGER, ALLOCATABLE :: rir(:,:) !rotate grid using a symmetry operation. to 
+                                   !build it, use kcw_set_symm
+                                   !first dim -> number of r points
+                                   !second dim-> number of symmetries
+  REAL(DP),    ALLOCATABLE :: r(:,:)! position in the real grid
+                                    ! defined by q-e
+  INTEGER                  :: ir_end !last index of r array
+
+  INTEGER(DP), ALLOCATABLE    :: s_w(:,:,:,:)
+  !symmetries respected by each wannier function
+  REAL(DP), ALLOCATABLE    :: ft_w(:,:,:)
+  !fractional translation
+  INTEGER, ALLOCATABLE     :: nsym_w(:)
+  !number of symmetries respected by each wannier function
+  INTEGER                  :: nqstot_ibz
+  !total number of q points in irreducible bz
+  REAL(DP), ALLOCATABLE    :: xq_ibz(:,:)
+  !q coordinates (cartesian, in units of 2pi/alat)
+  REAL(DP), ALLOCATABLE    :: wq_ibz(:)
+  !weights of q points
+
+
 END MODULE control_kcw
 
