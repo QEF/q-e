@@ -90,5 +90,9 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "9" ]]
+then 
+   echo "Running DYNMAT ... " 
+   ${ESPRESSO_ROOT}/bin/dynmat.x < $2 > $3 2> $4  
 fi
 
