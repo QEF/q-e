@@ -324,7 +324,6 @@ SUBROUTINE sum_band()
        INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
-       REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
@@ -347,10 +346,9 @@ SUBROUTINE sum_band()
           incr = 2 * fftx_ntgrp(dffts)
           !
        ELSE
-          ALLOCATE( rhoaux, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers (and batched FFT)
-          !$acc enter data create(rhoaux)
+          !$acc enter data create(rho%of_r)
           !$acc kernels
-          rhoaux = 0.0_DP
+          rho%of_r(:,:) = 0.0_DP
           !$acc end kernels
        ENDIF
        !
@@ -450,7 +448,7 @@ SUBROUTINE sum_band()
                    !
                 ENDIF
                 !
-                CALL get_rho_gamma( rhoaux(:,current_spin), dffts%nnr, w1, w2, psic )
+                CALL get_rho_gamma( rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic )
                 !
              ENDIF
              !
@@ -495,11 +493,6 @@ SUBROUTINE sum_band()
           !
        ENDDO k_loop
        !
-       IF( .NOT. use_tg ) THEN
-          !$acc update host (rhoaux)
-          rho%of_r = rhoaux
-       ENDIF
-       !
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0) THEN
@@ -516,8 +509,8 @@ SUBROUTINE sum_band()
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
        ELSE
-          !$acc exit data delete(rhoaux)
-          DEALLOCATE( rhoaux )
+          !$acc update host (rho%of_r)
+          !$acc exit data delete(rho%of_r)
        ENDIF
        !
        RETURN
@@ -550,7 +543,6 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: psicd(:)
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
-       REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr
        INTEGER :: i, j, group_size, hm_vec(3)
@@ -597,7 +589,6 @@ SUBROUTINE sum_band()
           incr = fftx_ntgrp(dffts)
           !
        ELSE
-          ALLOCATE( rhoaux, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers!
           IF (noncolin .OR. (xclib_dft_is('meta') .OR. lxdm)) THEN
             ALLOCATE( psicd(dffts%nnr) )
             incr = 1
@@ -605,10 +596,10 @@ SUBROUTINE sum_band()
             ALLOCATE( psicd(dffts%nnr*many_fft) )
             incr = many_fft
           ENDIF
-          !$acc enter data create(psicd, rhoaux)
+          !$acc enter data create(psicd, rho%of_r)
           ! ... This is used as reduction variable on the device
           !$acc kernels
-          rhoaux = 0.0_DP
+          rho%of_r(:,:) = 0.0_DP
           !$acc end kernels
        ENDIF
        !
@@ -737,17 +728,17 @@ SUBROUTINE sum_band()
                    ! ... Increment the charge density
                    !
                    DO ipol = 1, npol
-                      CALL get_rho_gpu( rhoaux(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
+                      CALL get_rho_gpu( rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
                    ENDDO
                    !
                    ! ... In this case, calculate also the three
                    ! ... components of the magnetization (stored in rho%of_r(ir,2-4))
                    !
                    IF (domag) THEN
-                      CALL get_rho_domag( rhoaux(1:,1:), dffts%nnr, w1, psic_nc(1:,1:) )
+                      CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
                    ELSE
                       !$acc kernels
-                      rhoaux(:,2:4) = 0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
+                      rho%of_r(:,2:4) = 0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
                       !$acc end kernels
                    ENDIF
                    !
@@ -795,7 +786,7 @@ SUBROUTINE sum_band()
                    !
                    DO i = 0, group_size-1
                      w1 = wg(ibnd+i,ik) / omega
-                     CALL get_rho_gpu( rhoaux(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
+                     CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
                    ENDDO
                    !
                 ELSE
@@ -804,7 +795,7 @@ SUBROUTINE sum_band()
                    !
                    ! ... increment the charge density ...
                    !
-                   CALL get_rho_gpu( rhoaux(:,current_spin), dffts%nnr, w1, psicd )
+                   CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd )
                    !
                 ENDIF
                 !
@@ -848,11 +839,6 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
        !
-       IF (.not. use_tg ) THEN
-          !$acc update host(rhoaux)
-          rho%of_r = rhoaux
-       END IF
-       !
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0 ) THEN 
@@ -882,8 +868,8 @@ SUBROUTINE sum_band()
              DEALLOCATE( tg_rho )
           END IF
        ELSE
-          !$acc exit data delete(psicd,rhoaux)
-          DEALLOCATE( rhoaux ) ! OPTIMIZE HERE, use buffers!
+          !$acc update host(rho%of_r)
+          !$acc exit data delete(psicd,rho%of_r)
           DEALLOCATE( psicd )
        END IF
        !
