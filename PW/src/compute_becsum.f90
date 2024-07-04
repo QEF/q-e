@@ -29,8 +29,8 @@ SUBROUTINE compute_becsum( iflag )
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
-  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
-                                   becp
+  USE becmod,               ONLY : allocate_bec_type_acc, &
+                                   deallocate_bec_type_acc, becp
   USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
@@ -49,8 +49,10 @@ SUBROUTINE compute_becsum( iflag )
   !
   IF ( iflag == 1) CALL weights( )
   !
+  !$acc kernels
   becsum(:,:,:) = 0.D0
-  CALL allocate_bec_type( nkb,nbnd, becp,intra_bgrp_comm )
+  !$acc end kernels
+  CALL allocate_bec_type_acc( nkb,nbnd, becp,intra_bgrp_comm )
   CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
@@ -58,8 +60,9 @@ SUBROUTINE compute_becsum( iflag )
      !
      IF ( lsda ) current_spin = isk(ik)
      IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+     !$acc update device(evc)
      !
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
      !
      ! ... actual calculation is performed inside routine "sum_bec"
      !
@@ -85,7 +88,7 @@ SUBROUTINE compute_becsum( iflag )
      CALL PAW_symmetrize( rho%bec )
   ENDIF
   !
-  CALL deallocate_bec_type( becp )
+  CALL deallocate_bec_type_acc( becp )
   !
   CALL stop_clock( 'compute_becsum' )
   !
