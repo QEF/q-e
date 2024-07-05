@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2021 Quantum ESPRESSO group
+! Copyright (C) 2004-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,10 +15,16 @@
 !
 MODULE uspp
   !
-  ! Ultrasoft PPs:
-  ! - Clebsch-Gordan coefficients "ap", auxiliary variables "lpx", "lpl"
-  ! - beta and q functions of the solid
-  !
+  !! Variables for ultrasoft PPs:
+  !! 1) Clebsch-Gordan coefficients "ap", auxiliary variables "lpx", "lpl"
+  !! 2) Atomic D_lm, Q_lm functions and related indices
+  !! FIXME: maybe 1) and 2) should better stay in module uspp_param
+  !! 3) Beta_l for the solid in G-space (vkb) and related indices
+  !!    (also: beta and dbeta for the Car-Parrinello code)
+  !! 4) self-consistent variables becsum, ebecsum, deeq
+  !! FIXME: Variables in 3) and 4) should better be defined and allocated
+  !!        outside upflib/
+  !!
   USE upf_kinds,   ONLY: DP
   USE upf_params,  ONLY: lmaxx, lqmax
   USE upf_spinorb, ONLY: is_spinorbit, fcoef
@@ -63,8 +69,9 @@ MODULE uspp
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
   ! 
-  !FIXME use !$acc declare create(vkb) to create and delete it automatically in the device
-  ! 
+  !!FIXME: vkb should be created and then computed and used on device only
+  !!FIXME: this should be done (if it works) with "$acc declare create(vkb)"
+  !
   COMPLEX(DP), ALLOCATABLE, TARGET PINMEM :: &
        vkb(:,:)                ! all beta functions in reciprocal space
   REAL(DP), ALLOCATABLE :: &

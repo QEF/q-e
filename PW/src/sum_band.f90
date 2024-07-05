@@ -67,7 +67,7 @@ SUBROUTINE sum_band()
   COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   !
   !
-  CALL start_clock_gpu( 'sum_band' )
+  CALL start_clock( 'sum_band' )
   !
   IF ( nhm > 0 ) THEN
      ! Note: becsum and ebecsum are computed on GPU and copied to CPU
@@ -93,7 +93,7 @@ SUBROUTINE sum_band()
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
-  CALL start_clock_gpu( 'sum_band:weights' )
+  CALL start_clock( 'sum_band:weights' )
   ! ... for DMFT skip weights in the first iteration since they were loaded from file
   ! ... and are manipulated elsewhere
   !
@@ -101,7 +101,7 @@ SUBROUTINE sum_band()
      CALL weights ( )
   ENDIF
   !
-  CALL stop_clock_gpu( 'sum_band:weights' )
+  CALL stop_clock( 'sum_band:weights' )
   !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
   ! ... and computed with low accuracy only when its occupation is < 0.01, and
@@ -172,7 +172,7 @@ SUBROUTINE sum_band()
   !
   eband = 0.D0
   !
-  CALL start_clock_gpu( 'sum_band:loop' )
+  CALL start_clock( 'sum_band:loop' )
   !
   IF (noncolin) THEN
     !$acc enter data create(psic_nc)
@@ -196,7 +196,7 @@ SUBROUTINE sum_band()
     !$acc exit data delete(psic)
   ENDIF
   !
-  CALL stop_clock_gpu( 'sum_band:loop' )
+  CALL stop_clock( 'sum_band:loop' )
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
@@ -216,7 +216,7 @@ SUBROUTINE sum_band()
   END IF
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
-  ! ... bring the unsymmetrized rho(r) to G-space (use psic as work array)
+  ! ... bring the unsymmetrized rho(r) to G-space
   !
   CALL rho_r2g( dffts, rho%of_r, rho%of_g )
   IF(sic) CALL rho_r2g( dffts, rho%pol_r, rho%pol_g )
@@ -256,11 +256,11 @@ SUBROUTINE sum_band()
   !
   ! ... symmetrize rho(G) 
   !
-  CALL start_clock_gpu( 'sum_band:sym_rho' )
+  CALL start_clock( 'sum_band:sym_rho' )
   CALL sym_rho( nspin_mag, rho%of_g )
   IF (sic) CALL sym_rho ( nspin_mag, rho%pol_g )
   !
-  ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
+  ! ... synchronize rho%of_r to the calculated rho%of_g
   !
   CALL rho_g2r( dfftp, rho%of_g, rho%of_r )
   IF(sic) CALL rho_g2r( dfftp, rho%pol_g, rho%pol_r )
@@ -280,7 +280,7 @@ SUBROUTINE sum_band()
      CALL rho_g2r( dfftp, rho%kin_g, rho%kin_r )
      !
   ENDIF
-  CALL stop_clock_gpu( 'sum_band:sym_rho' )
+  CALL stop_clock( 'sum_band:sym_rho' )
   !
   ! ... if LSDA rho%of_r and rho%of_g are converted from (up,dw) to
   ! ... (up+dw,up-dw) format.
@@ -324,7 +324,6 @@ SUBROUTINE sum_band()
        INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
-       REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
@@ -347,10 +346,9 @@ SUBROUTINE sum_band()
           incr = 2 * fftx_ntgrp(dffts)
           !
        ELSE
-          ALLOCATE( rhoaux, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers (and batched FFT)
-          !$acc enter data create(rhoaux)
+          !$acc enter data create(rho%of_r)
           !$acc kernels
-          rhoaux = 0.0_DP
+          rho%of_r(:,:) = 0.0_DP
           !$acc end kernels
        ENDIF
        !
@@ -365,18 +363,18 @@ SUBROUTINE sum_band()
           !
           npw = ngk(ik)
           !
-          CALL start_clock_gpu( 'sum_band:buffer' )
+          CALL start_clock( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           !$acc update device(evc)
           !
-          CALL stop_clock_gpu( 'sum_band:buffer' )
+          CALL stop_clock( 'sum_band:buffer' )
           !
-          CALL start_clock_gpu( 'sum_band:init_us_2' )
+          CALL start_clock( 'sum_band:init_us_2' )
           !
           IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
           !
-          CALL stop_clock_gpu( 'sum_band:init_us_2' )
+          CALL stop_clock( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -450,7 +448,7 @@ SUBROUTINE sum_band()
                    !
                 ENDIF
                 !
-                CALL get_rho_gamma( rhoaux(:,current_spin), dffts%nnr, w1, w2, psic )
+                CALL get_rho_gamma( rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic )
                 !
              ENDIF
              !
@@ -495,11 +493,6 @@ SUBROUTINE sum_band()
           !
        ENDDO k_loop
        !
-       IF( .NOT. use_tg ) THEN
-          !$acc update host (rhoaux)
-          rho%of_r = rhoaux
-       ENDIF
-       !
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0) THEN
@@ -516,8 +509,8 @@ SUBROUTINE sum_band()
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
        ELSE
-          !$acc exit data delete(rhoaux)
-          DEALLOCATE( rhoaux )
+          !$acc update host (rho%of_r)
+          !$acc exit data delete(rho%of_r)
        ENDIF
        !
        RETURN
@@ -550,7 +543,6 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: psicd(:)
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
-       REAL(DP),    ALLOCATABLE :: rhoaux(:,:)
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr
        INTEGER :: i, j, group_size, hm_vec(3)
@@ -597,7 +589,6 @@ SUBROUTINE sum_band()
           incr = fftx_ntgrp(dffts)
           !
        ELSE
-          ALLOCATE( rhoaux, MOLD=rho%of_r ) ! OPTIMIZE HERE, use buffers!
           IF (noncolin .OR. (xclib_dft_is('meta') .OR. lxdm)) THEN
             ALLOCATE( psicd(dffts%nnr) )
             incr = 1
@@ -605,10 +596,10 @@ SUBROUTINE sum_band()
             ALLOCATE( psicd(dffts%nnr*many_fft) )
             incr = many_fft
           ENDIF
-          !$acc enter data create(psicd, rhoaux)
+          !$acc enter data create(psicd, rho%of_r)
           ! ... This is used as reduction variable on the device
           !$acc kernels
-          rhoaux = 0.0_DP
+          rho%of_r(:,:) = 0.0_DP
           !$acc end kernels
        ENDIF
        !
@@ -629,28 +620,34 @@ SUBROUTINE sum_band()
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
           !
-          CALL start_clock_gpu( 'sum_band:buffer' )
+          CALL start_clock( 'sum_band:buffer' )
           IF ( nks > 1 ) THEN
              CALL get_buffer( evc, nwordwfc, iunwfc, ik )
           ENDIF
           !$acc update device(evc)
-          CALL stop_clock_gpu( 'sum_band:buffer' )
+          CALL stop_clock( 'sum_band:buffer' )
           !
-          CALL start_clock_gpu( 'sum_band:init_us_2' )
+          CALL start_clock( 'sum_band:init_us_2' )
           !
           IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
           !
-          CALL stop_clock_gpu( 'sum_band:init_us_2' )
+          CALL stop_clock( 'sum_band:init_us_2' )
+          !
+          ! ... for DMFT the eigenvectors are updated using v_dmft from add_dmft_occ.f90
           !
           IF ( dmft .AND. .NOT. dmft_updated) THEN
-             ! 
+             ! BEWARE: untested on GPUs - should work if v_dmft is present on host  
+             !$acc update host(evc)
              DO j = 1, npw
                 CALL ZGEMM( 'T', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
                             nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd )
              ENDDO
              !
-             IF ( nks > 1 ) &
+             IF ( nks > 1 ) THEN
                   CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+             ELSE
+                !$acc update device(evc)
+             END IF
              !
           END IF
           !
@@ -731,17 +728,17 @@ SUBROUTINE sum_band()
                    ! ... Increment the charge density
                    !
                    DO ipol = 1, npol
-                      CALL get_rho_gpu( rhoaux(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
+                      CALL get_rho_gpu( rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
                    ENDDO
                    !
                    ! ... In this case, calculate also the three
                    ! ... components of the magnetization (stored in rho%of_r(ir,2-4))
                    !
                    IF (domag) THEN
-                      CALL get_rho_domag( rhoaux(1:,1:), dffts%nnr, w1, psic_nc(1:,1:) )
+                      CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
                    ELSE
                       !$acc kernels
-                      rhoaux(:,2:4) = 0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
+                      rho%of_r(:,2:4) = 0.0_DP
                       !$acc end kernels
                    ENDIF
                    !
@@ -789,7 +786,7 @@ SUBROUTINE sum_band()
                    !
                    DO i = 0, group_size-1
                      w1 = wg(ibnd+i,ik) / omega
-                     CALL get_rho_gpu( rhoaux(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
+                     CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
                    ENDDO
                    !
                 ELSE
@@ -798,7 +795,7 @@ SUBROUTINE sum_band()
                    !
                    ! ... increment the charge density ...
                    !
-                   CALL get_rho_gpu( rhoaux(:,current_spin), dffts%nnr, w1, psicd )
+                   CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd )
                    !
                 ENDIF
                 !
@@ -842,11 +839,6 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
        !
-       IF (.not. use_tg ) THEN
-          !$acc update host(rhoaux)
-          rho%of_r = rhoaux
-       END IF
-       !
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0 ) THEN 
@@ -876,8 +868,8 @@ SUBROUTINE sum_band()
              DEALLOCATE( tg_rho )
           END IF
        ELSE
-          !$acc exit data delete(psicd,rhoaux)
-          DEALLOCATE( rhoaux ) ! OPTIMIZE HERE, use buffers!
+          !$acc update host(rho%of_r)
+          !$acc exit data delete(psicd,rho%of_r)
           DEALLOCATE( psicd )
        END IF
        !
@@ -1036,7 +1028,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
-  CALL start_clock_gpu( 'sum_band:calbec' )
+  CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      !$acc data present(evc) 
@@ -1061,7 +1053,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
         !$acc update device(becp%k)
      endif
   ENDIF
-  CALL stop_clock_gpu( 'sum_band:calbec' )
+  CALL stop_clock( 'sum_band:calbec' )
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
   ! saved in a global variable to be rotated later
@@ -1076,7 +1068,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      CALL store_becxx0(ik, becp)
   ENDIF
   !
-  CALL start_clock_gpu( 'sum_band:becsum' )
+  CALL start_clock( 'sum_band:becsum' )
   !
   !$acc data copyin(wg)
   DO np = 1, ntyp
@@ -1214,7 +1206,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !$acc parallel loop collapse(2) present(becsum)
                  DO ih = 1, nhnt
                     DO jh = 1, nhnt
-                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh(ih,jh,np) ?  OPTIMIZE !!
+                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh(ih,jh,np) ?  
                        !
                        ! nondiagonal terms summed and collapsed into a
                        ! single index (matrix is symmetric wrt (ih,jh))
@@ -1260,7 +1252,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      !$acc update host(ebecsum)
   endif
   !
-  CALL stop_clock_gpu( 'sum_band:becsum' )
+  CALL stop_clock( 'sum_band:becsum' )
   !
 END SUBROUTINE sum_bec
 !
@@ -1271,9 +1263,6 @@ SUBROUTINE add_becsum_nc ( na, np, becsum_nc, becsum )
   !! Pauli matrices, saves it in \(\text{becsum}\) for the calculation of 
   !! augmentation charge and magnetization.
   !
-#if defined(__CUDA)
-  USE cudafor
-#endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
@@ -1329,9 +1318,6 @@ SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
   !! \(\text{becsum}\) for the calculation of augmentation charge and magnetization.
   !
-#if defined(__CUDA)
-  USE cudafor
-#endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
