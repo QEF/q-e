@@ -738,7 +738,7 @@ SUBROUTINE sum_band()
                       CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
                    ELSE
                       !$acc kernels
-                      rho%of_r(:,2:4) = 0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
+                      rho%of_r(:,2:4) = 0.0_DP
                       !$acc end kernels
                    ENDIF
                    !
@@ -1206,7 +1206,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !$acc parallel loop collapse(2) present(becsum)
                  DO ih = 1, nhnt
                     DO jh = 1, nhnt
-                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh(ih,jh,np) ?  OPTIMIZE !!
+                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh(ih,jh,np) ?  
                        !
                        ! nondiagonal terms summed and collapsed into a
                        ! single index (matrix is symmetric wrt (ih,jh))
