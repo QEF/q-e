@@ -80,7 +80,13 @@ SUBROUTINE sum_band()
         !$acc end kernels
      END IF
   ENDIF
-  rho%of_r(:,:) = 0.D0
+  ! FIXME: next line  needed for old (21.7 or so) NVIDIA compilers
+  !$acc enter data create(rho)
+  ! FIXME: rho should be on GPU always, not just in this routine
+  !$acc enter data create(rho%of_r)
+  !$acc kernels
+  rho%of_r(:,:) = 0.0_DP
+  !$acc end kernels
   rho%of_g(:,:) = (0.D0, 0.D0)
   IF ( xclib_dft_is('meta') .OR. lxdm ) THEN
      rho%kin_r(:,:) = 0.D0
@@ -189,6 +195,8 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   ENDIF
+  !$acc update host(rho%of_r)
+  !$acc exit data delete(rho%of_r, rho)
   !
   IF (noncolin) THEN
     !$acc exit data delete(psic_nc)
@@ -345,11 +353,6 @@ SUBROUTINE sum_band()
           !
           incr = 2 * fftx_ntgrp(dffts)
           !
-       ELSE
-          !$acc enter data create(rho%of_r)
-          !$acc kernels
-          rho%of_r(:,:) = 0.0_DP
-          !$acc end kernels
        ENDIF
        !
        k_loop: DO ik = 1, nks
@@ -508,9 +511,6 @@ SUBROUTINE sum_band()
           !$acc exit data delete(tg_psi, tg_rho)
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
-       ELSE
-          !$acc update host (rho%of_r)
-          !$acc exit data delete(rho%of_r)
        ENDIF
        !
        RETURN
@@ -596,11 +596,8 @@ SUBROUTINE sum_band()
             ALLOCATE( psicd(dffts%nnr*many_fft) )
             incr = many_fft
           ENDIF
-          !$acc enter data create(psicd, rho%of_r)
+          !$acc enter data create(psicd)
           ! ... This is used as reduction variable on the device
-          !$acc kernels
-          rho%of_r(:,:) = 0.0_DP
-          !$acc end kernels
        ENDIF
        !
        k_loop: DO ik = 1, nks
@@ -868,8 +865,7 @@ SUBROUTINE sum_band()
              DEALLOCATE( tg_rho )
           END IF
        ELSE
-          !$acc update host(rho%of_r)
-          !$acc exit data delete(psicd,rho%of_r)
+          !$acc exit data delete(psicd)
           DEALLOCATE( psicd )
        END IF
        !
