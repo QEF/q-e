@@ -195,8 +195,6 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   ENDIF
-  !$acc update host(rho%of_r)
-  !$acc exit data delete(rho%of_r, rho)
   !
   IF (noncolin) THEN
     !$acc exit data delete(psic_nc)
@@ -216,13 +214,15 @@ SUBROUTINE sum_band()
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
+  !$acc update host(rho%of_r)
+  !$acc exit data delete(rho%of_r)
+  !$acc exit data delete(rho)
   CALL mp_sum( rho%of_r, inter_pool_comm )
   CALL mp_sum( rho%of_r, inter_bgrp_comm )
   IF (sic) then
      CALL mp_sum( rho%pol_r, inter_pool_comm )
      CALL mp_sum( rho%pol_r, inter_bgrp_comm )
   END IF
-  IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
   ! ... bring the unsymmetrized rho(r) to G-space
   !
@@ -733,10 +733,6 @@ SUBROUTINE sum_band()
                    !
                    IF (domag) THEN
                       CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
-                   ELSE
-                      !$acc kernels
-                      rho%of_r(:,2:4) = 0.0_DP
-                      !$acc end kernels
                    ENDIF
                    !
                 ENDIF
