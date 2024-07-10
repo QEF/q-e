@@ -245,23 +245,29 @@ SUBROUTINE sum_band()
   !
   IF( okvan )  THEN
      !
-     ! ... with distributed <beta|psi>, sum over bands
-     ! ... (use host copy to do the comunication)
+     ! ... becsum = \sum_k\sum_i w_{k,i} <\psi_{k,i}|\beta_l><\beta_m|psi_{k,i}> is computed
+     ! ... in sum_band_*. Use host copy to do the communications
+     !$acc update host(becsum)
+     if (tqr) then
+        !$acc update host(ebecsum)
+     endif
      !
-     IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm > 0 ) THEN
+     ! ... If the <beta|psi> are distributed, sum over bands
+     !
+     IF ( becp%comm /= mp_get_comm_null() .AND. nhm > 0 ) THEN
         CALL mp_sum( becsum, becp%comm )
         IF ( tqr ) CALL mp_sum( ebecsum, becp%comm )
      ENDIF
      CALL deallocate_bec_type_acc ( becp )
      !
-     ! ... becsum is summed over bands (if bgrp_parallelization is done)
-     ! ... and over k-points (but it is not symmetrized)
+     ! ... becsums must be also be summed over bands (with bgrp parallelization)
+     ! ... and over k-points (unsymmetrized). Then the CPU and GPU copies are aligned.
      !
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
      !$acc update device(becsum)
      !
-     ! ... same for ebecsum, a correction to becsum (?) in real space
+     ! ... same for ebecsum, a correction needed for real-space algorithm
      !
      IF (tqr) THEN
         CALL mp_sum(ebecsum, inter_pool_comm )
@@ -269,8 +275,10 @@ SUBROUTINE sum_band()
         !$acc update device(ebecsum)
      ENDIF
      !
-     ! ... PAW: symmetrize becsum and store it
-     ! ... FIXME: the same should be done for USPP as well
+     ! ... Needed for PAW: becsums are stored into rho%bec and symmetrized so that they reflect
+     ! ... a real integral in k-space, not only on the irreducible zone. 
+     ! ... For USPP there is no need to do this as becsums are only used
+     ! ... to compute the density, which is symmetrized later.
      !
      IF ( okpaw ) THEN
         rho%bec(:,:,:) = becsum(:,:,:)
@@ -1318,11 +1326,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      !
   END DO
   !$acc end data
-  !
-  !$acc update host(becsum)
-  if (tqr) then
-     !$acc update host(ebecsum)
-  endif
   !
   CALL stop_clock( 'sum_band:becsum' )
   !

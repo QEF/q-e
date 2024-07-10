@@ -64,31 +64,35 @@ SUBROUTINE compute_becsum( iflag )
      !
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
      !
-     ! ... actual calculation is performed inside routine "sum_bec"
+     ! ... actual calculation is performed (on GPU) inside routine "sum_bec"
      !
      CALL sum_bec( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      !
   ENDDO k_loop
   !
-  ! ... with distributed <beta|psi>, sum over bands
+  ! ... Use host copy to do the communications
+  !$acc update host(becsum)
   !
-  IF( becp%comm /= mp_get_comm_null() ) &
+  ! ... If the <beta|psi> are distributed, sum over bands
+  !
+  IF( becp%comm /= mp_get_comm_null() .AND. nhm > 0) &
        CALL mp_sum( becsum, becp%comm )
-  !$acc update device(becsum)
+  CALL deallocate_bec_type_acc( becp )
   !
-  ! ... Needed for PAW: becsum has to be symmetrized so that they reflect 
+  ! ... becsums must be also be summed over bands (with bgrp parallelization)
+  ! ... and over k-points (unsymmetrized).
+  !
+  CALL mp_sum(becsum, inter_bgrp_comm )
+  CALL mp_sum(becsum, inter_pool_comm )
+  !
+  ! ... Needed for PAW: becsums are stored into rho%bec and symmetrized so that they reflect
   ! ... a real integral in k-space, not only on the irreducible zone. 
-  ! ... For USPP there is no need to do this as becsums are only used
-  ! ... to compute the density, which is symmetrized later.
+  ! ... No need to symmetrize becsums or to align GPU and CPU copies: they are used only here.
   !
   IF ( okpaw )  THEN
-     rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
-     CALL mp_sum( rho%bec, inter_pool_comm )
-     call mp_sum( rho%bec, inter_bgrp_comm )
+     rho%bec(:,:,:) = becsum(:,:,:)
      CALL PAW_symmetrize( rho%bec )
   ENDIF
-  !
-  CALL deallocate_bec_type_acc( becp )
   !
   CALL stop_clock( 'compute_becsum' )
   !
