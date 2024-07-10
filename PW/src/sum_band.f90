@@ -19,7 +19,7 @@ SUBROUTINE sum_band()
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
-  USE fft_wave,             ONLY : wave_g2r, tgwave_g2r
+  USE fft_wave,             ONLY : wave_g2r
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
@@ -37,7 +37,7 @@ SUBROUTINE sum_band()
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
-  USE mp,                   ONLY : mp_sum
+  USE mp,                   ONLY : mp_sum, mp_get_comm_null
   USE xc_lib,               ONLY : xclib_dft_is
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
@@ -186,15 +186,30 @@ SUBROUTINE sum_band()
     !$acc enter data create(psic)
   ENDIF
   !
-  IF ( gamma_only ) THEN
-     !
-     CALL sum_band_gamma()
-     !
+  IF ( ( dffts%has_task_groups ) .AND. .NOT. &
+       ( xclib_dft_is('meta') .OR. lxdm .OR. dmft .OR. sic ) ) THEN
+     ! Task groups: no GPU, no special cases, etc.
+     IF ( gamma_only ) THEN
+        !
+        CALL sum_band_gamma_tg ()
+        !
+     ELSE
+        !
+        CALL sum_band_k_tg()
+        !
+     ENDIF
   ELSE
-     !
-     CALL sum_band_k()
-     !
-  ENDIF
+     ! General case, but no task groups
+     IF ( gamma_only ) THEN
+        !
+        CALL sum_band_gamma()
+        !
+     ELSE
+        !
+        CALL sum_band_k()
+        !
+     ENDIF
+  END IF
   !
   IF (noncolin) THEN
     !$acc exit data delete(psic_nc)
@@ -210,7 +225,6 @@ SUBROUTINE sum_band()
     DEALLOCATE( kplusg )
     DEALLOCATE( kplusg_evc )
   ENDIF
-  IF ( okvan ) CALL deallocate_bec_type_acc ( becp )
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -231,10 +245,17 @@ SUBROUTINE sum_band()
   !
   IF( okvan )  THEN
      !
+     ! ... with distributed <beta|psi>, sum over bands
+     ! ... (use host copy to do the comunication)
+     !
+     IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm > 0 ) THEN
+        CALL mp_sum( becsum, becp%comm )
+        IF ( tqr ) CALL mp_sum( ebecsum, becp%comm )
+     ENDIF
+     CALL deallocate_bec_type_acc ( becp )
+     !
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
-     !
-     ! ... use host copy to do the comunication.
      !
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
@@ -316,11 +337,6 @@ SUBROUTINE sum_band()
        !-----------------------------------------------------------------------
        !! \(\texttt{sum_band}\) - part for gamma version.
        !
-       USE becmod,                 ONLY : becp
-       USE mp_bands,               ONLY : me_bgrp
-       USE mp,                     ONLY : mp_sum, mp_get_comm_null
-       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
-                                          tg_reduce_rho, tg_get_group_nr3
        USE uspp_init,              ONLY : init_us_2
        !
        IMPLICIT NONE
@@ -329,39 +345,17 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1, w2
          ! weights
-       INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j
-       COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
-       REAL(DP),    ALLOCATABLE :: tg_rho(:)
-       LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd, i, brange
+       INTEGER  :: npw, incr, j
+       INTEGER ::  ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
-       !
        incr = 2
-       !
-       IF( use_tg ) THEN
-          !
-          v_siz = dffts%nnr_tg 
-          !
-          ALLOCATE( tg_psi( v_siz ) )
-          ALLOCATE( tg_rho( v_siz ) )
-          !$acc enter data create(tg_psi, tg_rho)
-          !
-          incr = 2 * fftx_ntgrp(dffts)
-          !
-       ENDIF
        !
        k_loop: DO ik = 1, nks
           !
-          IF ( use_tg ) THEN
-             !$acc kernels
-             tg_rho = 0.0_DP
-             !$acc end kernels
-          END IF
           IF ( lsda ) current_spin = isk(ik)
           !
           npw = ngk(ik)
@@ -393,75 +387,36 @@ SUBROUTINE sum_band()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             IF( use_tg ) THEN
+             ebnd = ibnd
+             IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
+             !
+             CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts )
+             !
+             w1 = wg(ibnd,ik) / omega
+             !
+             ! ... increment the charge density ...
+             !
+             IF ( ibnd < ibnd_end ) THEN
                 !
-                CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw )
+                ! ... two ffts at the same time
                 !
-                ! ... Now the first proc of the group holds the first two bands
-                ! ... of the 2*ntgrp bands that we are processing at the same time,
-                ! ... the second proc. holds the third and fourth band and so on.
-                !
-                ! ... Compute the proper factor for each band
-                !
-                idx = fftx_tgpe(dffts) + 1
-                !
-                ! ... Remember two bands are packed in a single array :
-                !    - proc 0 has bands ibnd   and ibnd+1
-                !    - proc 1 has bands ibnd+2 and ibnd+3
-                !    - ....
-                !
-                idx = 2*idx - 1
-                !
-                IF( idx + ibnd - 1 < ibnd_end ) THEN
-                   w1 = wg( idx + ibnd - 1, ik) / omega
-                   w2 = wg( idx + ibnd    , ik) / omega
-                ELSEIF( idx + ibnd - 1 == ibnd_end ) THEN
-                   w1 = wg( idx + ibnd - 1, ik) / omega
-                   w2 = w1
-                ELSE
-                   w1 = 0.0d0
-                   w2 = w1
-                ENDIF
-                !
-                CALL tg_get_group_nr3( dffts, right_nr3 )
-                !
-                CALL get_rho_gamma( tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, &
-                                        w1, w2, tg_psi )
+                w2 = wg(ibnd+1,ik) / omega
                 !
              ELSE
                 !
-                ebnd = ibnd
-                IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
-                !
-                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts )
-                !
-                w1 = wg(ibnd,ik) / omega
-                !
-                ! ... increment the charge density ...
-                !
-                IF ( ibnd < ibnd_end ) THEN
-                   !
-                   ! ... two ffts at the same time
-                   !
-                   w2 = wg(ibnd+1,ik) / omega
-                   !
-                ELSE
-                   !
-                   w2 = w1
-                   !
-                ENDIF
-                !
-                CALL get_rho_gamma( rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic )
+                w2 = w1
                 !
              ENDIF
+             !
+             CALL get_rho_gamma( rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic )
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
                 !
                 DO j = 1, 3
                    DO i = 1, npw
-                     kplusgi = (xk(j,ik)+g(j,i)) * tpiba
-                     kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
-                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd+1)
+                      kplusgi = (xk(j,ik)+g(j,i)) * tpiba
+                      kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
+                      IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd+1)
                    ENDDO
                    !
                    ebnd = ibnd
@@ -475,8 +430,8 @@ SUBROUTINE sum_band()
                    !
                    DO ir = 1, dffts%nnr
                       rho%kin_r(ir,current_spin) = rho%kin_r(ir,current_spin) + &
-                                                    w1 *  DBLE( psic(ir) )**2 + &
-                                                    w2 * AIMAG( psic(ir) )**2
+                           w1 *  DBLE( psic(ir) )**2 + &
+                           w2 * AIMAG( psic(ir) )**2
                    ENDDO
                 ENDDO
                 !
@@ -484,49 +439,23 @@ SUBROUTINE sum_band()
              !
           ENDDO
           !
-          IF( use_tg ) THEN
-             !$acc update host(tg_rho)
-             CALL tg_reduce_rho( rho%of_r, tg_rho, current_spin, dffts )
-          ENDIF
-          !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
           IF ( okvan ) CALL sum_bec( ik, current_spin, ibnd_start, ibnd_end, &
-                                         this_bgrp_nbnd )
+               this_bgrp_nbnd )
           !
        ENDDO k_loop
        !
-       ! ... with distributed <beta|psi>, sum over bands
-       !
-       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0) THEN
-          CALL mp_sum( becsum, becp%comm )
-          !$acc update device(becsum)
-       ENDIF
-       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm>0) THEN
-          CALL mp_sum( ebecsum, becp%comm )
-          !$acc update device(ebecsum)
-       ENDIF
-       !
-       IF( use_tg ) THEN
-          !$acc exit data delete(tg_psi, tg_rho)
-          DEALLOCATE( tg_psi )
-          DEALLOCATE( tg_rho )
-       ENDIF
        !
        RETURN
        !
      END SUBROUTINE sum_band_gamma
-     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE sum_band_k()
        !-----------------------------------------------------------------------
        !! \(\texttt{sum_band}\) - part for k-points version
        !
-       USE mp_bands,               ONLY : me_bgrp
-       USE mp,                     ONLY : mp_sum, mp_get_comm_null
-       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
-                                          tg_reduce_rho, tg_get_group_nr3
        USE uspp_init,              ONLY : init_us_2
        USE klist,                  ONLY : nelec
        USE control_flags,          ONLY : many_fft
@@ -539,12 +468,9 @@ SUBROUTINE sum_band()
        ! weights
        INTEGER :: npw, ipol, na, np
        !
-       INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz
+       INTEGER  :: idx, incr
        COMPLEX(DP), ALLOCATABLE :: psicd(:)
-       COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
-       REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
-       LOGICAL  :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr
+       INTEGER :: ierr
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
        ! polaron calculation
@@ -556,8 +482,6 @@ SUBROUTINE sum_band()
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
-       !
-       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 1
        !
@@ -572,47 +496,17 @@ SUBROUTINE sum_band()
           ibnd_p = nelec/2+1 
        END IF
        !
-       IF( use_tg ) THEN
-          !
-          v_siz = dffts%nnr_tg
-          !
-          IF (noncolin) THEN
-             ALLOCATE( tg_psi_nc( v_siz, npol ) )
-             ALLOCATE( tg_rho_nc( v_siz, nspin_mag ) )
-             !$acc enter data create(tg_psi_nc, tg_rho_nc)
-          ELSE
-             ALLOCATE( tg_psi( v_siz ) )
-             ALLOCATE( tg_rho( v_siz ) )
-             !$acc enter data create(tg_psi, tg_rho)
-          ENDIF
-          !
-          incr = fftx_ntgrp(dffts)
-          !
+       IF (noncolin .OR. (xclib_dft_is('meta') .OR. lxdm)) THEN
+          ALLOCATE( psicd(dffts%nnr) )
+          incr = 1
        ELSE
-          IF (noncolin .OR. (xclib_dft_is('meta') .OR. lxdm)) THEN
-            ALLOCATE( psicd(dffts%nnr) )
-            incr = 1
-          ELSE
-            ALLOCATE( psicd(dffts%nnr*many_fft) )
-            incr = many_fft
-          ENDIF
-          !$acc enter data create(psicd)
-          ! ... This is used as reduction variable on the device
+          ALLOCATE( psicd(dffts%nnr*many_fft) )
+          incr = many_fft
        ENDIF
+       !$acc enter data create(psicd)
+       ! ... This is used as reduction variable on the device
        !
        k_loop: DO ik = 1, nks
-          !
-          IF( use_tg ) THEN
-            IF (noncolin) THEN
-               !$acc kernels
-               tg_rho_nc = 0.0_DP
-               !$acc end kernels
-            ELSE
-               !$acc kernels
-               tg_rho = 0.0_DP
-               !$acc end kernels
-            ENDIF
-          ENDIF
           !
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
@@ -675,128 +569,54 @@ SUBROUTINE sum_band()
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
-                IF( use_tg ) THEN
-                   !
-                   CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi_nc(:,1), dffts, &
-                                    npw, igk_k(:,ik) )
-                   CALL tgwave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd_end), tg_psi_nc(:,2), &
-                                    dffts, npw, igk_k(:,ik) )
-                   !
-                   ! ... Now the first proc of the group holds the first band
-                   ! ... of the ntgrp bands that we are processing at the same time,
-                   ! ... the second proc. holds the second and so on
-                   !
-                   ! ... Compute the proper factor for each band
-                   !
-                   idx = fftx_tgpe(dffts) + 1 
-                   !
-                   ! ... Remember
-                   ! ... proc 0 has bands ibnd
-                   ! ... proc 1 has bands ibnd+1
-                   ! ...    ....
-                   !
-                   IF( idx + ibnd - 1 <= ibnd_end ) THEN
-                      w1 = wg( idx + ibnd - 1, ik) / omega
-                   ELSE
-                      w1 = 0.0d0
-                   ENDIF
-                   !
-                   CALL tg_get_group_nr3( dffts, right_nr3 )
-                   !
-                   ! OPTIMIZE HERE : this is a sum of all densities in first spin channel
-                   !
-                   DO ipol = 1, npol
-                      CALL get_rho_gpu( tg_rho_nc(:,1), dffts%nr1x*dffts%nr2x* &
-                                        right_nr3, w1, tg_psi_nc(:,ipol) )
-                   ENDDO
-                   !
-                   IF (domag) CALL get_rho_domag( tg_rho_nc(:,:), dffts%nr1x* &
-                                      dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:) )
-                   !
-                ELSE
-                   !
-                   ! ... Noncollinear case without task groups
-                   !
-                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic_nc(:,1), &
-                                  dffts, igk=igk_k(:,ik) )
-                   CALL wave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd), psic_nc(:,2), &
-                                  dffts, igk=igk_k(:,ik) )
-                   !
-                   ! ... Increment the charge density
-                   !
-                   DO ipol = 1, npol
-                      CALL get_rho_gpu( rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
-                   ENDDO
-                   !
-                   ! ... In this case, calculate also the three
-                   ! ... components of the magnetization (stored in rho%of_r(ir,2-4))
-                   !
-                   IF (domag) THEN
-                      CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
-                   ENDIF
-                   !
-                ENDIF
+                !
+                ! ... Noncollinear case without task groups
+                !
+                CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic_nc(:,1), &
+                     dffts, igk=igk_k(:,ik) )
+                CALL wave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd), psic_nc(:,2), &
+                     dffts, igk=igk_k(:,ik) )
+                !
+                ! ... Increment the charge density
+                !
+                DO ipol = 1, npol
+                   CALL get_rho_gpu( rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
+                ENDDO
+                !
+                ! ... In this case, calculate also the three
+                ! ... components of the magnetization (stored in rho%of_r(ir,2-4))
+                !
+                IF (domag) &
+                   CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
+                !
+             ELSE IF (many_fft > 1 .AND. (.NOT. (xclib_dft_is('meta') .OR. lxdm))) THEN
+                !
+                group_size = MIN(many_fft,ibnd_end-(ibnd-1))
+                hm_vec(1)=group_size ; hm_vec(2)=npw ; hm_vec(3)=group_size
+                !
+                CALL wave_g2r( evc(:,ibnd:ibnd+group_size-1), psicd, &
+                     dffts, igk=igk_k(:,ik), howmany_set=hm_vec )
+                !
+                ! ... increment the charge density ...
+                !
+                DO i = 0, group_size-1
+                   w1 = wg(ibnd+i,ik) / omega
+                   CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
+                ENDDO
                 !
              ELSE
                 !
-                IF( use_tg ) THEN
-                   !
-                   CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw, &
-                                    igk_k(:,ik) )
-                   !
-                   ! Now the first proc of the group holds the first band
-                   ! of the ntgrp bands that we are processing at the same time,
-                   ! the second proc. holds the second and so on
-                   !
-                   ! Compute the proper factor for each band
-                   !
-                   idx = fftx_tgpe(dffts) + 1
-                   !
-                   ! Remember
-                   ! proc 0 has bands ibnd
-                   ! proc 1 has bands ibnd+1
-                   ! ....
-                   !
-                   IF( idx+ibnd-1 <= ibnd_end ) THEN
-                      w1 = wg(idx+ibnd-1,ik) / omega
-                   ELSE
-                      w1 = 0.0d0
-                   ENDIF
-                   !
-                   CALL tg_get_group_nr3( dffts, right_nr3 )
-                   !
-                   CALL get_rho_gpu( tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, w1, tg_psi )
-                   !
-                ELSEIF (many_fft > 1 .AND. (.NOT. (xclib_dft_is('meta') .OR. lxdm))) THEN
-                   !
-                   group_size = MIN(many_fft,ibnd_end-(ibnd-1))
-                   hm_vec(1)=group_size ; hm_vec(2)=npw ; hm_vec(3)=group_size
-                   !
-                   CALL wave_g2r( evc(:,ibnd:ibnd+group_size-1), psicd, &
-                                  dffts, igk=igk_k(:,ik), howmany_set=hm_vec )
-                   !
-                   ! ... increment the charge density ...
-                   !
-                   DO i = 0, group_size-1
-                     w1 = wg(ibnd+i,ik) / omega
-                     CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd(i*dffts%nnr+1:) )
-                   ENDDO
-                   !
-                ELSE
-                   !
-                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psicd, dffts, igk=igk_k(:,ik) )
-                   !
-                   ! ... increment the charge density ...
-                   !
-                   CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd )
-                   !
-                ENDIF
+                CALL wave_g2r( evc(1:npw,ibnd:ibnd), psicd, dffts, igk=igk_k(:,ik) )
+                !
+                ! ... increment the charge density ...
+                !
+                CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd )
                 !
                 IF (xclib_dft_is('meta') .OR. lxdm) THEN
                    DO j=1,3
                       DO i = 1, npw
-                        kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
-                        kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
+                         kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
+                         kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
                       ENDDO
                       !
                       CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, igk=igk_k(:,ik) )
@@ -812,36 +632,11 @@ SUBROUTINE sum_band()
              !
           ENDDO
           !
-          IF ( use_tg ) THEN
-             !
-             ! ... reduce the charge across task group
-             !
-             IF (noncolin) THEN
-               !$acc update host(tg_rho_nc)
-             ELSE 
-               !$acc update host(tg_rho)
-               CALL tg_reduce_rho( rho%of_r, tg_rho_nc, tg_rho, current_spin, &
-                                 noncolin, domag, dffts )
-             END IF
-             !
-          END IF
-          !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
           IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
        END DO k_loop
-       !
-       ! ... with distributed <beta|psi>, sum over bands
-       !
-       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0 ) THEN 
-          CALL mp_sum( becsum, becp%comm )
-          !$acc update device(becsum)
-       ENDIF
-       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm> 0) THEN
-          CALL mp_sum( ebecsum, becp%comm )
-          !$acc update device(ebecsum)
-       ENDIF
        !
        IF(sic .and. pol_type == 'h') THEN
           wg_p = 1.0 - wg_p
@@ -850,20 +645,8 @@ SUBROUTINE sum_band()
           DEALLOCATE(rho_p)
        END IF
        !
-       IF( use_tg ) THEN
-          IF (noncolin) THEN
-             !$acc exit data delete(tg_psi_nc,tg_rho_nc)
-             DEALLOCATE( tg_psi_nc )
-             DEALLOCATE( tg_rho_nc )
-          ELSE
-             !$acc exit data delete(tg_psi, tg_rho)
-             DEALLOCATE( tg_psi )
-             DEALLOCATE( tg_rho )
-          END IF
-       ELSE
-          !$acc exit data delete(psicd)
-          DEALLOCATE( psicd )
-       END IF
+       !$acc exit data delete(psicd)
+       DEALLOCATE( psicd )
        !
        RETURN
        !
@@ -972,6 +755,303 @@ SUBROUTINE sum_band()
         !$acc end data
 
      END SUBROUTINE get_rho_domag
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE sum_band_gamma_tg()
+       !-----------------------------------------------------------------------
+       !! \(\texttt{sum_band}\) - part for gamma version.
+       !
+       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
+                                          tg_reduce_rho, tg_get_group_nr3
+       USE fft_wave,               ONLY : tgwave_g2r
+       USE uspp_init,              ONLY : init_us_2
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       REAL(DP) :: w1, w2
+         ! weights
+       INTEGER  :: npw, idx, incr, v_siz, j
+       COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
+       REAL(DP),    ALLOCATABLE :: tg_rho(:)
+       INTEGER :: right_nr3, ntgrp, ierr, i
+       !
+       ! ... here we sum for each k point the contribution
+       ! ... of the wavefunctions to the charge
+       !
+       incr = 2
+       !
+       v_siz = dffts%nnr_tg 
+       !
+       ALLOCATE( tg_psi( v_siz ) )
+       ALLOCATE( tg_rho( v_siz ) )
+       !
+       incr = 2 * fftx_ntgrp(dffts)
+       !
+       k_loop: DO ik = 1, nks
+          !
+          tg_rho = 0.0_DP
+          IF ( lsda ) current_spin = isk(ik)
+          !
+          npw = ngk(ik)
+          !
+          CALL start_clock( 'sum_band:buffer' )
+          IF ( nks > 1 ) &
+             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+          !
+          CALL stop_clock( 'sum_band:buffer' )
+          !
+          CALL start_clock( 'sum_band:init_us_2' )
+          !
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
+          !
+          CALL stop_clock( 'sum_band:init_us_2' )
+          !
+          ! ... here we compute the band energy: the sum of the eigenvalues
+          !
+          DO ibnd = ibnd_start, ibnd_end
+             !
+             ! ... the sum of eband and demet is the integral for
+             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
+             ! ... the eigenvalues.
+             !
+             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
+             !
+          ENDDO
+          !
+          DO ibnd = ibnd_start, ibnd_end, incr
+             !
+             CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw )
+             !
+             ! ... Now the first proc of the group holds the first two bands
+             ! ... of the 2*ntgrp bands that we are processing at the same time,
+             ! ... the second proc. holds the third and fourth band and so on.
+             !
+             ! ... Compute the proper factor for each band
+             !
+             idx = fftx_tgpe(dffts) + 1
+             !
+             ! ... Remember two bands are packed in a single array :
+             !    - proc 0 has bands ibnd   and ibnd+1
+             !    - proc 1 has bands ibnd+2 and ibnd+3
+             !    - ....
+             !
+             idx = 2*idx - 1
+             !
+             IF( idx + ibnd - 1 < ibnd_end ) THEN
+                w1 = wg( idx + ibnd - 1, ik) / omega
+                w2 = wg( idx + ibnd    , ik) / omega
+             ELSEIF( idx + ibnd - 1 == ibnd_end ) THEN
+                w1 = wg( idx + ibnd - 1, ik) / omega
+                w2 = w1
+             ELSE
+                w1 = 0.0d0
+                w2 = w1
+             ENDIF
+             !
+             CALL tg_get_group_nr3( dffts, right_nr3 )
+             !
+             CALL get_rho_gamma( tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, &
+                  w1, w2, tg_psi )
+             !
+          ENDDO
+          !
+          CALL tg_reduce_rho( rho%of_r, tg_rho, current_spin, dffts )
+          !
+          ! ... If we have a US pseudopotential we compute here the becsum term
+          !
+          IF ( okvan ) CALL sum_bec( ik, current_spin, ibnd_start, ibnd_end, &
+                                         this_bgrp_nbnd )
+          !
+       ENDDO k_loop
+       !
+       !
+       DEALLOCATE( tg_psi )
+       DEALLOCATE( tg_rho )
+       !
+       RETURN
+       !
+     END SUBROUTINE sum_band_gamma_tg
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE sum_band_k_tg()
+       !-----------------------------------------------------------------------
+       !! \(\texttt{sum_band}\) - part for k-points version
+       !
+       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
+                                          tg_reduce_rho, tg_get_group_nr3
+       USE fft_wave,               ONLY : tgwave_g2r
+       USE uspp_init,              ONLY : init_us_2
+       USE klist,                  ONLY : nelec
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       REAL(DP) :: w1
+       ! weights
+       INTEGER :: npw, ipol, na, np
+       !
+       INTEGER  :: idx, incr, v_siz
+       COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
+       REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
+       !
+       INTEGER :: right_nr3, ntgrp, ierr
+       INTEGER :: i, j, group_size, hm_vec(3)
+       !
+       ! ... here we sum for each k point the contribution
+       ! ... of the wavefunctions to the charge
+       !
+       incr = 1
+       !
+       v_siz = dffts%nnr_tg
+       !
+       IF (noncolin) THEN
+          ALLOCATE( tg_psi_nc( v_siz, npol ) )
+          ALLOCATE( tg_rho_nc( v_siz, nspin_mag ) )
+       ELSE
+          ALLOCATE( tg_psi( v_siz ) )
+          ALLOCATE( tg_rho( v_siz ) )
+       ENDIF
+       !
+       incr = fftx_ntgrp(dffts)
+       !
+       k_loop: DO ik = 1, nks
+          !
+          IF (noncolin) THEN
+             tg_rho_nc = 0.0_DP
+          ELSE
+             tg_rho = 0.0_DP
+          ENDIF
+          !
+          IF ( lsda ) current_spin = isk(ik)
+          npw = ngk (ik)
+          !
+          CALL start_clock( 'sum_band:buffer' )
+          IF ( nks > 1 ) THEN
+             CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+          ENDIF
+          CALL stop_clock( 'sum_band:buffer' )
+          !
+          CALL start_clock( 'sum_band:init_us_2' )
+          !
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
+          !
+          CALL stop_clock( 'sum_band:init_us_2' )
+          !
+          ! ... for DMFT the eigenvectors are updated using v_dmft from add_dmft_occ.f90
+          !
+          DO ibnd = ibnd_start, ibnd_end, incr
+             !
+             ! ... here we compute the band energy: the sum of the eigenvalues
+             !
+             DO idx = 1, incr
+                IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
+                     wg(idx+ibnd-1,ik)
+             ENDDO
+             !
+             ! ... the sum of eband and demet is the integral for e < ef of
+             ! ... e n(e) which reduces for degauss=0 to the sum of the
+             ! ... eigenvalues
+             !
+             w1 = wg(ibnd,ik) / omega
+             !
+             IF (noncolin) THEN
+                !
+                CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi_nc(:,1), dffts, &
+                     npw, igk_k(:,ik) )
+                CALL tgwave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd_end), tg_psi_nc(:,2), &
+                     dffts, npw, igk_k(:,ik) )
+                !
+                ! ... Now the first proc of the group holds the first band
+                ! ... of the ntgrp bands that we are processing at the same time,
+                ! ... the second proc. holds the second and so on
+                !
+                ! ... Compute the proper factor for each band
+                !
+                idx = fftx_tgpe(dffts) + 1 
+                !
+                ! ... Remember
+                ! ... proc 0 has bands ibnd
+                ! ... proc 1 has bands ibnd+1
+                ! ...    ....
+                !
+                IF( idx + ibnd - 1 <= ibnd_end ) THEN
+                   w1 = wg( idx + ibnd - 1, ik) / omega
+                ELSE
+                   w1 = 0.0d0
+                ENDIF
+                !
+                CALL tg_get_group_nr3( dffts, right_nr3 )
+                !
+                ! OPTIMIZE HERE : this is a sum of all densities in first spin channel
+                !
+                DO ipol = 1, npol
+                   CALL get_rho_gpu( tg_rho_nc(:,1), dffts%nr1x*dffts%nr2x* &
+                        right_nr3, w1, tg_psi_nc(:,ipol) )
+                ENDDO
+                !
+                IF (domag) CALL get_rho_domag( tg_rho_nc(:,:), dffts%nr1x* &
+                     dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:) )
+                !
+                !
+             ELSE
+                !
+                CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw, &
+                     igk_k(:,ik) )
+                !
+                ! Now the first proc of the group holds the first band
+                ! of the ntgrp bands that we are processing at the same time,
+                ! the second proc. holds the second and so on
+                !
+                ! Compute the proper factor for each band
+                !
+                idx = fftx_tgpe(dffts) + 1
+                !
+                ! Remember
+                ! proc 0 has bands ibnd
+                ! proc 1 has bands ibnd+1
+                ! ....
+                !
+                IF( idx+ibnd-1 <= ibnd_end ) THEN
+                   w1 = wg(idx+ibnd-1,ik) / omega
+                ELSE
+                   w1 = 0.0d0
+                ENDIF
+                !
+                CALL tg_get_group_nr3( dffts, right_nr3 )
+                !
+                CALL get_rho_gpu( tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, w1, tg_psi )
+             END IF
+             !
+          ENDDO
+          !
+          ! ... reduce the charge across task group
+          !
+          IF (.not.noncolin) THEN
+             CALL tg_reduce_rho( rho%of_r, tg_rho_nc, tg_rho, current_spin, &
+                  noncolin, domag, dffts )
+          END IF
+          !
+          ! ... If we have a US pseudopotential we compute here the becsum term
+          !
+          IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
+          !
+       END DO k_loop
+       !
+       IF (noncolin) THEN
+          DEALLOCATE( tg_psi_nc )
+          DEALLOCATE( tg_rho_nc )
+       ELSE
+          DEALLOCATE( tg_psi )
+          DEALLOCATE( tg_rho )
+       END IF
+       !
+       RETURN
+       !
+     END SUBROUTINE sum_band_k_tg
      !
 END SUBROUTINE sum_band
 
