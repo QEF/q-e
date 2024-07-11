@@ -221,7 +221,9 @@ PROGRAM lr_main
      IF (okvan) CALL sd0psi() 
      !
      ! Loop on the Lanczos iterations
-     ! 
+     !
+!     !$acc data copyin(evc0, evc1, evc1_old) create(evc1_new, sevc1_new) 
+     !
      lancz_loop1 : DO iteration = iter_restart, itermax
         !
         LR_iteration = iteration
@@ -240,6 +242,8 @@ PROGRAM lr_main
         !
         IF ( check_stop_now() ) THEN
            !
+!           !$acc update host(evc1, evc1_old)
+           !
            CALL lr_write_restart()
            !
            ! Deallocate PW variables.
@@ -252,6 +256,8 @@ PROGRAM lr_main
         ENDIF
         !
      ENDDO lancz_loop1
+     !
+!     !$acc end data
      !
      IF (charge_response == 1) THEN
         !
