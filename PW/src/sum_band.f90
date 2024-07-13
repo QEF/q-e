@@ -32,7 +32,7 @@ SUBROUTINE sum_band()
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, okvan
   USE uspp_param,           ONLY : nh, nhm
-  USE wavefunctions,        ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
@@ -63,8 +63,6 @@ SUBROUTINE sum_band()
              nt,   &! counter on atomic types
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
-  REAL(DP), ALLOCATABLE :: kplusg(:)
-  COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   !
   !
   CALL start_clock( 'sum_band' )
@@ -87,14 +85,17 @@ SUBROUTINE sum_band()
   !$acc kernels
   rho%of_r(:,:) = 0.0_DP
   !$acc end kernels
-  rho%of_g(:,:) = (0.D0, 0.D0)
+  rho%of_g(:,:) = (0.0_dp, 0.0_dp)
   IF ( xclib_dft_is('meta') .OR. lxdm ) THEN
-     rho%kin_r(:,:) = 0.D0
-     rho%kin_g(:,:) = (0.D0, 0.D0)
+     !$acc enter data create(rho%kin_r)
+     !$acc kernels
+     rho%kin_r(:,:) = 0.0_dp
+     !$acc end kernels
+     rho%kin_g(:,:) = (0.0_dp, 0.0_dp)
   ENDIF
   IF (sic) THEN
-     rho%pol_r(:,:) = 0.d0
-     rho%pol_g(:,:) = (0.d0,0.d0)
+     rho%pol_r(:,:) = 0.0_dp
+     rho%pol_g(:,:) = (0.0_dp,0.0_dp)
   END IF
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
@@ -167,10 +168,6 @@ SUBROUTINE sum_band()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type_acc( nkb, this_bgrp_nbnd, becp, intra_bgrp_comm )
-  IF (xclib_dft_is('meta') .OR. lxdm) THEN
-     ALLOCATE( kplusg_evc(npwx,2) )
-     ALLOCATE( kplusg(npwx) )
-  ENDIF
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -179,12 +176,6 @@ SUBROUTINE sum_band()
   eband = 0.D0
   !
   CALL start_clock( 'sum_band:loop' )
-  !
-  IF (noncolin) THEN
-    !$acc enter data create(psic_nc)
-  ELSE
-    !$acc enter data create(psic)
-  ENDIF
   !
   IF ( ( dffts%has_task_groups ) .AND. .NOT. &
        ( xclib_dft_is('meta') .OR. lxdm .OR. dmft .OR. sic ) ) THEN
@@ -211,20 +202,9 @@ SUBROUTINE sum_band()
      ENDIF
   END IF
   !
-  IF (noncolin) THEN
-    !$acc exit data delete(psic_nc)
-  ELSE
-    !$acc exit data delete(psic)
-  ENDIF
-  !
   CALL stop_clock( 'sum_band:loop' )
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
-  !
-  IF (xclib_dft_is('meta') .OR. lxdm) THEN
-    DEALLOCATE( kplusg )
-    DEALLOCATE( kplusg_evc )
-  ENDIF
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -307,6 +287,7 @@ SUBROUTINE sum_band()
   !
   IF ( xclib_dft_is('meta') .OR. lxdm) THEN
      !
+     !$acc exit data delete(rho%kin_r)
      CALL mp_sum( rho%kin_r, inter_pool_comm )
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
      !
@@ -345,7 +326,9 @@ SUBROUTINE sum_band()
        !-----------------------------------------------------------------------
        !! \(\texttt{sum_band}\) - part for gamma version.
        !
-       USE uspp_init,              ONLY : init_us_2
+       USE uspp_init,      ONLY : init_us_2
+       USE wavefunctions,  ONLY : psic
+       !! psic is allocated work space
        !
        IMPLICIT NONE
        !
@@ -356,11 +339,15 @@ SUBROUTINE sum_band()
        INTEGER  :: npw, incr, j
        INTEGER ::  ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
+       COMPLEX(DP), ALLOCATABLE :: grad_psic(:,:)
+       !$acc declare device_resident(grad_psic)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
        incr = 2
+       !$acc enter data create(psic)
+       IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE( grad_psic(npwx,2) )
        !
        k_loop: DO ik = 1, nks
           !
@@ -420,29 +407,27 @@ SUBROUTINE sum_band()
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
                 !
+                !$acc data present(g,igk_k,evc,psic,rho%kin_r) copyin(xk)
                 DO j = 1, 3
+                   !$acc parallel loop
                    DO i = 1, npw
-                      kplusgi = (xk(j,ik)+g(j,i)) * tpiba
-                      kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
-                      IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd+1)
+                      kplusgi = ( xk(j,ik) + g(j,igk_k(i,ik)) ) * tpiba
+                      grad_psic(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
+                      IF ( ibnd < ibnd_end ) grad_psic(i,2) = &
+                           CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd+1)
                    ENDDO
                    !
                    ebnd = ibnd
                    IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                    brange = ebnd-ibnd+1
                    !
-                   CALL wave_g2r( kplusg_evc(1:npw,1:brange), psic, dffts )
-                   !$acc update self(psic)
+                   CALL wave_g2r( grad_psic(1:npw,1:brange), psic, dffts )
                    !
                    ! ... increment the kinetic energy density ...
-                   !
-                   DO ir = 1, dffts%nnr
-                      rho%kin_r(ir,current_spin) = rho%kin_r(ir,current_spin) + &
-                           w1 *  DBLE( psic(ir) )**2 + &
-                           w2 * AIMAG( psic(ir) )**2
-                   ENDDO
+                   !  
+                   CALL get_rho_gamma( rho%kin_r(:,current_spin), dffts%nnr, w1, w2, psic )
                 ENDDO
-                !
+                !$acc end data
              ENDIF
              !
           ENDDO
@@ -454,7 +439,11 @@ SUBROUTINE sum_band()
           !
        ENDDO k_loop
        !
-       !
+       IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          DEALLOCATE( grad_psic )
+          !$acc update host(rho%kin_r)
+       END IF
+       !$acc exit data delete(psic)
        RETURN
        !
      END SUBROUTINE sum_band_gamma
@@ -467,6 +456,9 @@ SUBROUTINE sum_band()
        USE uspp_init,              ONLY : init_us_2
        USE klist,                  ONLY : nelec
        USE control_flags,          ONLY : many_fft
+       USE wavefunctions,          ONLY : psic_nc
+       !! psic_nc is allocated work space for noncolinear case
+       !! FIXME: too many work spaces!
        !
        IMPLICIT NONE
        !
@@ -478,13 +470,14 @@ SUBROUTINE sum_band()
        !
        INTEGER  :: idx, incr
        COMPLEX(DP), ALLOCATABLE :: psicd(:)
-       INTEGER :: ierr
-       INTEGER :: i, j, group_size, hm_vec(3)
-       REAL(DP) :: kplusgi
+       COMPLEX(DP), ALLOCATABLE :: grad_psic(:,:)
        ! polaron calculation
        REAL(DP), ALLOCATABLE :: rho_p(:)
        COMPLEX(DP), ALLOCATABLE :: psic_p(:)
-       !$acc declare device_resident(psic_p)
+       !$acc declare device_resident(psicd, rho_p, psic_p, grad_psic)
+       INTEGER :: ierr
+       INTEGER :: i, j, group_size, hm_vec(3)
+       REAL(DP) :: kplusgi
        REAL(DP) :: wg_p
        INTEGER  :: ibnd_p
        !
@@ -495,7 +488,6 @@ SUBROUTINE sum_band()
        !
        IF(sic) THEN
           ALLOCATE(rho_p(dffts%nnr))
-          !$acc enter data create(rho_p)
           ALLOCATE(psic_p(dffts%nnr*2)) ! why *2?
           !$acc kernels
           rho_p=0.0_dp
@@ -504,14 +496,16 @@ SUBROUTINE sum_band()
           ibnd_p = nelec/2+1 
        END IF
        !
-       IF (noncolin .OR. (xclib_dft_is('meta') .OR. lxdm)) THEN
-          ALLOCATE( psicd(dffts%nnr) )
+       IF (noncolin) THEN
           incr = 1
+          !$acc enter data create(psic_nc)
+       ELSE IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          incr = 1
+          ALLOCATE( grad_psic(npwx,incr) )
        ELSE
-          ALLOCATE( psicd(dffts%nnr*many_fft) )
           incr = many_fft
        ENDIF
-       !$acc enter data create(psicd)
+       ALLOCATE( psicd(dffts%nnr*incr) )
        ! ... This is used as reduction variable on the device
        !
        k_loop: DO ik = 1, nks
@@ -597,7 +591,7 @@ SUBROUTINE sum_band()
                 IF (domag) &
                    CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(1:,1:) )
                 !
-             ELSE IF (many_fft > 1 .AND. (.NOT. (xclib_dft_is('meta') .OR. lxdm))) THEN
+             ELSE IF ( incr > 1 ) THEN
                 !
                 group_size = MIN(many_fft,ibnd_end-(ibnd-1))
                 hm_vec(1)=group_size ; hm_vec(2)=npw ; hm_vec(3)=group_size
@@ -621,19 +615,21 @@ SUBROUTINE sum_band()
                 CALL get_rho_gpu( rho%of_r(:,current_spin), dffts%nnr, w1, psicd )
                 !
                 IF (xclib_dft_is('meta') .OR. lxdm) THEN
+                   !$acc data present(g,igk_k,evc,rho%kin_r) copyin(xk)
                    DO j=1,3
+                      !$acc parallel loop
                       DO i = 1, npw
                          kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
-                         kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
+                         grad_psic(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
                       ENDDO
                       !
-                      CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, igk=igk_k(:,ik) )
-                      !$acc update self(psic)
+                      CALL wave_g2r( grad_psic(1:npw,1:1), psicd, dffts, igk=igk_k(:,ik) )
                       !
                       ! ... increment the kinetic energy density ...
                       !
-                      CALL get_rho( rho%kin_r(:,current_spin), dffts%nnr, w1, psic )
+                      CALL get_rho_gpu( rho%kin_r(:,current_spin), dffts%nnr, w1, psicd )
                    ENDDO
+                   !$acc end data
                 ENDIF
                 !
              ENDIF
@@ -649,13 +645,18 @@ SUBROUTINE sum_band()
        IF(sic .and. pol_type == 'h') THEN
           wg_p = 1.0 - wg_p
           DEALLOCATE(psic_p)
-          !$acc exit data delete(rho_p)
           DEALLOCATE(rho_p)
        END IF
        !
-       !$acc exit data delete(psicd)
        DEALLOCATE( psicd )
        !
+       IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          DEALLOCATE( grad_psic )
+          !$acc update host(rho%kin_r)
+       END IF
+       IF ( noncolin) THEN
+          !$acc exit data delete(psic_nc)
+       ENDIF
        RETURN
        !
      END SUBROUTINE sum_band_k
@@ -683,28 +684,6 @@ SUBROUTINE sum_band()
         !$acc end data
         !
      END SUBROUTINE get_rho_gpu
-     !
-     !-------------
-     SUBROUTINE get_rho( rho_loc_h, nrxxs_loc, w1_loc, psic_loc_h )
-        !----------
-        !
-        IMPLICIT NONE
-        !
-        INTEGER :: nrxxs_loc
-        REAL(DP) :: rho_loc_h(nrxxs_loc)
-        REAL(DP) :: w1_loc
-        COMPLEX(DP) :: psic_loc_h(nrxxs_loc)
-        INTEGER :: ir
-        !
-        DO ir = 1, nrxxs_loc
-           !
-           rho_loc_h(ir) = rho_loc_h(ir) + &
-                         w1_loc * ( DBLE( psic_loc_h(ir) )**2 + &
-                                   AIMAG( psic_loc_h(ir) )**2 )
-           !
-        ENDDO
-        !
-     END SUBROUTINE get_rho
      !
      !-----------------
      SUBROUTINE get_rho_gamma( rho_loc, nrxxs_loc, w1_loc, w2_loc, psic_loc )
