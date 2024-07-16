@@ -484,8 +484,6 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       incr = 1
-       !
        IF(sic) THEN
           ALLOCATE(rho_p(dffts%nnr))
           ALLOCATE(psic_p(dffts%nnr*2)) ! why *2?
