@@ -200,9 +200,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
      !
      ! ... calculate S|psi>
      !
-write(*,*) '@@4.1'
      CALL s_1psi_ptr( npwx, npw, psi(1,m), spsi )
-write(*,*) '@@4.2'
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
@@ -214,7 +212,6 @@ write(*,*) '@@4.2'
                    kdmx, spsi, 1, ZERO, lagrange_d(m_start), 1 )
        !$acc end host_data
      END IF
-write(*,*) '@@4.3'
      if(m_start.le.m_end) lagrange(m_start:m_end) = lagrange_d(m_start:m_end)
 
      CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
@@ -236,7 +233,6 @@ write(*,*) '@@4.3'
         psi_norm = psi_norm - ( DBLE( lagrange(j) )**2 + AIMAG( lagrange(j) )**2 )
         !
      END DO
-write(*,*) '@@4.4'
      !
      psi_norm = SQRT( psi_norm )
      !
@@ -246,12 +242,10 @@ write(*,*) '@@4.4'
      END DO
      !$acc end kernels
      !
-write(*,*) '@@4.5'
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
      CALL hs_1psi_ptr( npwx, npw, psi(1,m), hpsi, spsi )
      !
-write(*,*) '@@4.6'
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
      ! ... NB:  ddot(2*npw,a,1,b,1) = REAL( zdotc(npw,a,1,b,1) )
@@ -260,7 +254,6 @@ write(*,*) '@@4.6'
      e(m) = ksDdot( kdim2, psi(1,m), 1, hpsi, 1 )
      !$acc end host_data
      !
-write(*,*) '@@4.7'
      CALL mp_sum( e(m), intra_bgrp_comm )
      !
      ! ... start iteration for this band
@@ -276,7 +269,6 @@ write(*,*) '@@4.7'
            ppsi(i) = spsi(i) / precondition_d(i)
         END DO
         !$acc end kernels
-write(*,*) '@@4.8'
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
@@ -284,7 +276,6 @@ write(*,*) '@@4.8'
         es(1) = ksDdot( kdim2, spsi(1), 1, g(1), 1 )
         es(2) = ksDdot( kdim2, spsi(1), 1, ppsi(1), 1 )
         !$acc end host_data
-write(*,*) '@@4.9'
         !
         CALL mp_sum( es , intra_bgrp_comm )
         !
@@ -303,9 +294,7 @@ write(*,*) '@@4.9'
         !
         ! ... scg is used as workspace
         !
-write(*,*) '@@4.10'
         CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
-write(*,*) '@@4.11'
         !
         lagrange(1:m-1) = ZERO
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
@@ -315,7 +304,6 @@ write(*,*) '@@4.11'
                       kdmx, scg, 1, ZERO, lagrange_d(m_start), 1 )
           !$acc end host_data
         END IF
-write(*,*) '@@4.12'
         if(m_start.le.m_end) lagrange(m_start:m_end) = lagrange_d(m_start:m_end)
         CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
         !
@@ -333,7 +321,6 @@ write(*,*) '@@4.12'
            !$acc end kernels
            !
         END DO
-write(*,*) '@@4.11'
         !
         IF ( iter /= 1 ) THEN
            !
@@ -342,7 +329,6 @@ write(*,*) '@@4.11'
            !$acc host_data use_device(g)
            gg1 = ksDdot( kdim2, g(1), 1, g0_d(1), 1 )
            !$acc end host_data
-write(*,*) '@@4.12'
            !
            CALL mp_sum( gg1, intra_bgrp_comm )
            !
@@ -355,12 +341,10 @@ write(*,*) '@@4.12'
            g0_d(i) = scg(i) * precondition_d(i)
         END DO
         !$acc end kernels
-write(*,*) '@@4.13'
         !
         !$acc host_data use_device(g)
         gg = ksDdot( kdim2, g(1), 1, g0_d(1), 1 )
         !$acc end host_data
-write(*,*) '@@4.14'
         !
         CALL mp_sum( gg, intra_bgrp_comm )
         !
@@ -375,7 +359,6 @@ write(*,*) '@@4.14'
               cg(i) = g(i)
            END DO
            !$acc end kernels
-write(*,*) '@@4.15'
            !
         ELSE
            !
@@ -405,7 +388,6 @@ write(*,*) '@@4.15'
               cg(i) = (g(i) + cg(i) * gamma) - psi_norm * psi(i,m)
            END DO
            !$acc end kernels
-write(*,*) '@@4.16'
            !
         END IF
         !
@@ -413,15 +395,12 @@ write(*,*) '@@4.16'
         !
         ! ... |scg> is S|cg>
         !
-write(*,*) '@@4.17'
         CALL hs_1psi_ptr( npwx, npw, cg(1), ppsi(1), scg(1) )
-write(*,*) '@@4.18'
         !
         !$acc host_data use_device(scg, cg)
         cg0 = ksDdot( kdim2, cg(1), 1, scg(1), 1 )
         !$acc end host_data
         !
-write(*,*) '@@4.19'
         CALL mp_sum(  cg0 , intra_bgrp_comm )
         !
         cg0 = SQRT( cg0 )
@@ -438,7 +417,6 @@ write(*,*) '@@4.19'
         a0 = 2.D0 *  ksDdot( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
         !$acc end host_data
         !
-write(*,*) '@@4.20'
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
         !$acc host_data use_device(cg, ppsi)
