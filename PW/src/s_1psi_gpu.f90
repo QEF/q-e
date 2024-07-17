@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
+SUBROUTINE s_1psi_gpu( npwx, n, psi, spsi )
   !----------------------------------------------------------------------------
   !! spsi = S*psi for one wavefunction. Wrapper routine - calls \(texttt{calbec}
   !! and \texttt{s_psi}.
@@ -15,7 +15,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   USE uspp,               ONLY: nkb, vkb
   USE becmod,             ONLY: bec_type, becp
 #if defined(__CUDA)
-  USE becmod,             ONLY: calbec_cuf
+  USE becmod,             ONLY: calbec
 #endif
   USE control_flags,      ONLY: gamma_only, offload_type
   USE noncollin_module,   ONLY: noncolin, npol 
@@ -30,14 +30,11 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   !! maximum number of PW for wavefunctions
   INTEGER :: n
   !! the number of plane waves
-  COMPLEX(DP) :: psi_d(npwx*npol,1)
+  COMPLEX(DP) :: psi(npwx*npol,1)
   !! input vector
-  COMPLEX(DP) :: spsi_d(npwx*npol,1)
+  COMPLEX(DP) :: spsi(npwx*npol,1)
   !! S*psi
   !
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, spsi_d
-#endif
   COMPLEX(DP), ALLOCATABLE :: psi_h(:,:), spsi_h(:,:)
   ! ... local variables
   !
@@ -49,8 +46,9 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   IF ( real_space) THEN
      !
      ALLOCATE(psi_h(npwx*npol,1), spsi_h(npwx*npol,1))
-     psi_h(1:npwx*npol,1) = psi_d(1:npwx*npol,1)
-     spsi_h(1:npwx*npol,1) = spsi_d(1:npwx*npol,1)
+     !$acc update self(psi, spsi)
+     psi_h(1:npwx*npol,1) = psi(1:npwx*npol,1)
+     spsi_h(1:npwx*npol,1) = spsi(1:npwx*npol,1)
      IF ( gamma_only ) THEN
         !
         DO ibnd = 1, nbnd, 2
@@ -77,15 +75,15 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
         !
      ENDIF
      !
-     spsi_d(1:npwx*npol,1) = spsi_h(1:npwx*npol,1)
+     spsi(1:npwx*npol,1) = spsi_h(1:npwx*npol,1)
+     !$acc update device(spsi)
      DEALLOCATE(psi_h, spsi_h)
   ELSE
      !
 #if defined(__CUDA)
-!civn: remove psi_d and use calbec instead
-     CAll calbec_cuf(offload_type, n, vkb, psi_d, becp )
+     CAll calbec(offload_type, n, vkb, psi, becp )
 #endif
-     CALL s_psi_acc( npwx, n, 1, psi_d, spsi_d )
+     CALL s_psi_acc( npwx, n, 1, psi, spsi )
      
      !
   ENDIF

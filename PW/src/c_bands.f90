@@ -687,6 +687,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     ! --- Define a small number ---
     INTEGER :: j
     !
+write(*,*) '@0'
     !write (*,*) ' enter diag_bands_k'; FLUSH(6)
     IF ( lelfield ) THEN
        !
@@ -747,6 +748,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ntry = 0
        !
+write(*,*) '@1'
        CG_loop : DO
           !
           IF ( isolve == 1 .OR. isolve == 2 ) THEN
@@ -757,9 +759,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 IF ( .not. use_gpu ) THEN
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
-                   !$acc host_data use_device(evc, et)
+write(*,*) '@2'
+                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                    !$acc end host_data
+write(*,*) '@3'
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
@@ -773,12 +777,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
+write(*,*) '@4'
                 CALL using_h_diag_d(0)
-                !$acc host_data use_device(evc, et)
+                !$acc host_data use_device(et)
                 CALL ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
                 !$acc end host_data
+write(*,*) '@5'
              END IF
              !
              avg_iter = avg_iter + cg_iter
