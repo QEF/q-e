@@ -106,7 +106,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE sci_mod,                 ONLY: p_psi
   USE fft_helper_subroutines
   !
-  USE scf_gpum,                ONLY: using_vrs
 #if defined(__OSCDFT)
   USE plugin_flags,            ONLY : use_oscdft
   USE oscdft_base,             ONLY : oscdft_ctx
@@ -133,10 +132,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-
-  CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
-
-
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !

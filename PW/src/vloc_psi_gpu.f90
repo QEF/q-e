@@ -10,7 +10,7 @@
 #define tg_gather_gpu tg_gather
 #endif
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
+SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - Gamma point.
   !
@@ -30,9 +30,9 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   INTEGER, INTENT(in) :: lda, n, m
   COMPLEX(DP), INTENT(in)   :: psi_d(lda,m)
   COMPLEX(DP), INTENT(inout):: hpsi_d(lda,m)
-  REAL(DP),    INTENT(in)   :: v_d(dffts%nnr)
+  REAL(DP),    INTENT(in)   :: v(dffts%nnr)
 #if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d, v_d
+  attributes(DEVICE) :: psi_d, hpsi_d
 #endif
   !
   ! ... local variables
@@ -82,10 +82,10 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         !
         CALL wave_g2r( psi(:,ibnd:ibnd+group_size-1), psic, dffts, howmany_set=hm_vec )
         !
-        !$acc parallel loop collapse(2)
+        !$acc parallel loop collapse(2) present(v)
         DO idx = 0, howmany-1
           DO j = 1, dffts_nnr
-            psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v_d(j)
+            psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v(j)
           ENDDO
         ENDDO
         !
@@ -122,9 +122,9 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         !
         CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts )
         !        
-        !$acc parallel loop
+        !$acc parallel loop present(v)
         DO j = 1, dffts_nnr
-           psic(j) = psic(j) * v_d(j)
+           psic(j) = psic(j) * v(j)
         ENDDO
         !
         brange=1 ;  fac=1.d0
@@ -158,7 +158,7 @@ END SUBROUTINE vloc_psi_gamma_gpu
 !
 !@njs: vloc_psi_k
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
+SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - k-points. GPU double.
   !
@@ -185,9 +185,9 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   INTEGER, INTENT(IN) :: lda, n, m
   COMPLEX(DP), INTENT(IN) :: psi_d(lda,m)
   COMPLEX(DP), INTENT(INOUT):: hpsi_d(lda,m)
-  REAL(DP), INTENT(IN) :: v_d(dffts%nnr)
+  REAL(DP), INTENT(IN) :: v(dffts%nnr)
 #if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d, v_d
+  attributes(DEVICE) :: psi_d, hpsi_d
 #endif
   !
   ! ... local variables
@@ -229,10 +229,10 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         CALL wave_g2r( psi(:,ibnd:ebnd), psic, dffts, igk=igk_k(:,current_k), &
                        howmany_set=hm_vec )
         !
-        !$acc parallel loop collapse(2)
+        !$acc parallel loop collapse(2) present(v)
         DO idx = 0, group_size-1
            DO j = 1, dffts_nnr
-              psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v_d(j)
+              psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v(j)
            ENDDO
         ENDDO
         !
@@ -256,9 +256,9 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         !
         CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
         !
-        !$acc parallel loop
+        !$acc parallel loop present(v)
         DO j = 1, dffts_nnr
-           psic(j) = psic(j) * v_d(j)
+           psic(j) = psic(j) * v(j)
         ENDDO
         !
         CALL wave_r2g( psic, vpsi(1:n,:), dffts, igk=igk_k(:,current_k) )
@@ -289,7 +289,7 @@ END SUBROUTINE vloc_psi_k_gpu
 !
 !@njs: vloc_psi_nc
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
+SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - non-collinear - 
   !! GPU version.
@@ -308,11 +308,11 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n, m
-  REAL(DP), INTENT(IN) :: v_d(dfftp%nnr,4) ! beware dimensions!
+  REAL(DP), INTENT(IN) :: v(dfftp%nnr,4) ! beware dimensions!
   COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
   COMPLEX(DP), INTENT(INOUT):: hpsi_d(lda,npol,m)
 #if defined(__CUDA)
-  attributes(DEVICE) :: v_d, psi_d, hpsi_d
+  attributes(DEVICE) :: psi_d, hpsi_d
 #endif
   !
   ! ... local variables
@@ -355,19 +355,19 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      ENDDO
      !
      IF (domag) THEN
-        !$acc parallel loop
+        !$acc parallel loop present(v)
         DO j = 1, dffts_nnr
-           sup  = psic_nc(j,1) * (v_d(j,1)+v_d(j,4)) + &
-                psic_nc(j,2) * (v_d(j,2)-(0.d0,1.d0)*v_d(j,3))
-           sdwn = psic_nc(j,2) * (v_d(j,1)-v_d(j,4)) + &
-                psic_nc(j,1) * (v_d(j,2)+(0.d0,1.d0)*v_d(j,3))
+           sup  = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
+                psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
+           sdwn = psic_nc(j,2) * (v(j,1)-v(j,4)) + &
+                psic_nc(j,1) * (v(j,2)+(0.d0,1.d0)*v(j,3))
            psic_nc(j,1) = sup
            psic_nc(j,2) = sdwn
         ENDDO
      ELSE
-        !$acc parallel loop
+        !$acc parallel loop present(v)
         DO j = 1, dffts_nnr
-           psic_nc(j,:) = psic_nc(j,:) * v_d(j,1)
+           psic_nc(j,:) = psic_nc(j,:) * v(j,1)
         ENDDO
      ENDIF
      !

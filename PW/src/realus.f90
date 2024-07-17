@@ -2613,7 +2613,6 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
-    USE scf_gpum,      ONLY : using_vrs
     !
     IMPLICIT NONE
     !
@@ -2628,8 +2627,6 @@ MODULE realus
     REAL(DP), ALLOCATABLE :: tg_v(:)
     !
     CALL start_clock( 'v_loc_psir' )
-
-    CALL using_vrs(0) ! tg_gather (intent: in)
 
     IF( dffts%has_task_groups ) THEN
         IF (ibnd == 1 ) THEN
@@ -2672,7 +2669,6 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
-    USE scf_gpum,      ONLY : using_vrs
     !
     IMPLICIT NONE
     !
@@ -2687,8 +2683,6 @@ MODULE realus
     REAL(DP), ALLOCATABLE :: tg_v(:)
     !
     CALL start_clock( 'v_loc_psir' )
-
-    CALL using_vrs(0) ! tg_gather (intent: in)
 
     IF( dffts%has_task_groups ) THEN
         IF (ibnd == 1 ) THEN
