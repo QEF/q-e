@@ -45,9 +45,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, npwx
   USE scf,                  ONLY : rho, vrs
-#if defined(__CUDA)
-  USE scf_gpum,             ONLY : vrs_d
-#endif
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
   USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
@@ -331,10 +328,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
               IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
            ENDIF
+           !$acc kernels
            vrs(:, 2:4) = -vrs(:, 2:4)
-#if defined(__CUDA)
-           vrs_d = vrs
-#endif
+           !$acc end kernels
            IF (okvan) THEN
                    deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
                    !$acc update device(deeq_nc)
@@ -362,10 +358,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
               IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
            ENDIF
+           !$acc kernels
            vrs(:, 2:4) = -vrs(:, 2:4)
-#if defined(__CUDA)
-           vrs_d = vrs
-#endif
+           !$acc end kernels
            IF (okvan) THEN
                    deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
                    !$acc update device(deeq_nc)
