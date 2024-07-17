@@ -47,8 +47,6 @@ SUBROUTINE electrons()
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   USE loc_scdm_k,           ONLY : localize_orbitals_k
   !
-  USE scf_gpum,             ONLY : using_vrs
-  !
   USE add_dmft_occ,         ONLY : dmft
   USE rism_module,          ONLY : lrism, rism_calc3d
   USE makovpayne,           ONLY : makov_payne
@@ -145,7 +143,6 @@ SUBROUTINE electrons()
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
-           CALL using_vrs(1)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -242,7 +239,6 @@ SUBROUTINE electrons()
         IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
-        CALL using_vrs(1)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -462,7 +458,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE libmbd_interface,     ONLY : EmbdvdW
   USE add_dmft_occ,         ONLY : dmft, dmft_update, v_dmft, dmft_updated
   !
-  USE scf_gpum,             ONLY : using_vrs
   USE device_fbuff_m,       ONLY : dev_buf, pin_buf
   USE pwcom,                ONLY : report_mag 
   USE makovpayne,           ONLY : makov_payne
@@ -987,13 +982,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      ! ... define the total local potential (external + scf)
      !
-     CALL using_vrs(1)
-     CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
-     !
-     ! ... interpolate the total local potential
-     !
-     CALL using_vrs(1) ! redundant
-     CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
+                   nspin, doublegrid )
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential

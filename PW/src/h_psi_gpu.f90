@@ -97,7 +97,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
   USE becmod,                  ONLY: bec_type, becp
   USE lsda_mod,                ONLY: current_spin
-  USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
   USE gvect,                   ONLY: gstart
@@ -113,6 +112,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE fft_helper_subroutines
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
+  USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin  
 #if defined(__OSCDFT)
   USE plugin_flags,            ONLY : use_oscdft
@@ -140,7 +140,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   LOGICAL     :: need_host_copy
   !
   CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  CALL using_vrs_d(0)
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
@@ -208,13 +207,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         !
      ELSE
         ! ... usual reciprocal-space algorithm
-        CALL vloc_psi_gamma_gpu ( lda, n, m, psi_d, vrs_d(1,current_spin), hpsi_d )
+        CALL vloc_psi_gamma_gpu ( lda, n, m, psi_d, vrs(1,current_spin), hpsi_d )
         !
      ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
-     CALL vloc_psi_nc_gpu ( lda, n, m, psi_d, vrs_d, hpsi_d )
+     CALL vloc_psi_nc_gpu ( lda, n, m, psi_d, vrs, hpsi_d )
      !
   ELSE  
      ! 
@@ -246,7 +245,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         !
      ELSE
         !
-        CALL vloc_psi_k_gpu ( lda, n, m, psi_d, vrs_d(1,current_spin), hpsi_d )
+        CALL vloc_psi_k_gpu ( lda, n, m, psi_d, vrs(1,current_spin), hpsi_d )
         !
      ENDIF
      !

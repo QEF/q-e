@@ -19,7 +19,6 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE wvfct,                ONLY : npwx, nbnd, ik => current_k
   USE lsda_mod,             ONLY : current_spin, nspin
-  USE scf,                  ONLY : vrs  
   USE gvect
   USE uspp,                 ONLY : okvan, nkb, vkb, qq_so, qq_at
   USE uspp_param,           ONLY : nh, nhm, nbetam
