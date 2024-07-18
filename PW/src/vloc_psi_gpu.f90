@@ -1,14 +1,10 @@
 !
-! Copyright (C) 2003-2013 PWSCF group
+! Copyright (C) 2003-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-
-! Workaround for missing interface
-#if ! defined (__CUDA)
-#define tg_gather_gpu tg_gather
-#endif
+!
 !-----------------------------------------------------------------------
 SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
@@ -21,9 +17,6 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   USE fft_base,       ONLY : dffts
   USE fft_wave
   USE fft_helper_subroutines
-#if defined(__CUDA)
-  USE device_fbuff_m, ONLY : dev_buf
-#endif
   !
   IMPLICIT NONE
   !
@@ -31,9 +24,6 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   COMPLEX(DP), INTENT(in)   :: psi_d(lda,m)
   COMPLEX(DP), INTENT(inout):: hpsi_d(lda,m)
   REAL(DP),    INTENT(in)   :: v(dffts%nnr)
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d
-#endif
   !
   ! ... local variables
   !
@@ -52,7 +42,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   CALL start_clock_gpu( 'vloc_psi' )
   !
   ALLOCATE( psi(lda,m) )
-  !$acc data create( psi )
+  !$acc data create( psi ) deviceptr(psi_d,hpsi_d)
   !$acc kernels
   psi = psi_d
   !$acc end kernels
@@ -176,9 +166,6 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   USE fft_base,      ONLY : dffts
   USE fft_wave
   USE fft_helper_subroutines
-#if defined(__CUDA)
-  USE device_fbuff_m,    ONLY : dev_buf
-#endif
   !
   IMPLICIT NONE
   !
@@ -186,9 +173,6 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   COMPLEX(DP), INTENT(IN) :: psi_d(lda,m)
   COMPLEX(DP), INTENT(INOUT):: hpsi_d(lda,m)
   REAL(DP), INTENT(IN) :: v(dffts%nnr)
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d
-#endif
   !
   ! ... local variables
   !
@@ -207,7 +191,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_gpu','no task groups!',2)
   !
   ALLOCATE( psi(lda,m) )
-  !$acc data create( psi )
+  !$acc data create( psi ) deviceptr(psi_d,hpsi_d)
   !$acc kernels
   psi = psi_d
   !$acc end kernels
@@ -311,9 +295,6 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   REAL(DP), INTENT(IN) :: v(dfftp%nnr,4) ! beware dimensions!
   COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
   COMPLEX(DP), INTENT(INOUT):: hpsi_d(lda,npol,m)
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d
-#endif
   !
   ! ... local variables
   !
@@ -331,7 +312,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_gpu','no task groups!',3)
   !
   ALLOCATE( psi(lda*npol,m) )
-  !$acc data create( psi )
+  !$acc data create( psi ) deviceptr(psi_d,hpsi_d)
   !$acc kernels
   psi = psi_d
   !$acc end kernels
