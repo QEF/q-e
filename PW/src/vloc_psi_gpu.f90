@@ -44,12 +44,12 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   CALL start_clock_gpu( 'vloc_psi' )
   !
   incr = 2*many_fft
-  !
-  ALLOCATE( psi(lda,incr) )
-  !$acc data create( psi ) deviceptr(psi_d,hpsi_d)
-  !
   dffts_nnr = dffts%nnr
+  !
+  ALLOCATE( psi(n,incr) )
   ALLOCATE( psic(dffts_nnr*incr) )
+  !$acc data create( psi, psic ) deviceptr(psi_d,hpsi_d) present(v)
+  !
   !
   ! ... The local potential V_Loc psi:
   !    - fft to real space;
@@ -58,7 +58,6 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   IF (many_fft > 1) THEN
      !
-     !$acc data create(psic)
      DO ibnd = 1, m, incr
         !
         group_size = MIN(2*many_fft, m-(ibnd-1))
@@ -75,7 +74,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
         !
         CALL wave_g2r( psi(:,1:group_size), psic, dffts, howmany_set=hm_vec )
         !
-        !$acc parallel loop collapse(2) present(v)
+        !$acc parallel loop collapse(2)
         DO idx = 0, howmany-1
           DO j = 1, dffts_nnr
             psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v(j)
@@ -103,11 +102,9 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
         ENDIF
         !
      ENDDO
-     !$acc end data
      !
   ELSE
      !
-     !$acc data create(psic)
      DO ibnd = 1, m, incr
         !
         brange = 1
@@ -121,7 +118,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
         !
         CALL wave_g2r( psi(:,1:brange), psic, dffts )
         !        
-        !$acc parallel loop present(v)
+        !$acc parallel loop
         DO j = 1, dffts_nnr
            psic(j) = psic(j) * v(j)
         ENDDO
@@ -138,13 +135,11 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
         ENDDO
         !
      ENDDO
-     !$acc end data
      !
   ENDIF
   !
   !$acc end data
   DEALLOCATE( psi )
-  !
   DEALLOCATE( psic )
   !
   CALL stop_clock_gpu ('vloc_psi')
@@ -199,15 +194,14 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   CALL start_clock_gpu ('vloc_psi')
   !
   incr = many_fft
+  dffts_nnr = dffts%nnr
   !
   ALLOCATE( psi(n,incr) )
-  !$acc data create( psi ) deviceptr(psi_d,hpsi_d)
-  dffts_nnr = dffts%nnr
   ALLOCATE( psic(dffts_nnr*incr) )
+  !$acc data create( psi, psic ) deviceptr(psi_d,hpsi_d) present(v, igk_k)
   !
   IF (many_fft > 1) THEN
      !
-     !$acc data create(psic)
      DO ibnd = 1, m, incr
         !
         group_size = MIN(many_fft,m-(ibnd-1))
@@ -220,10 +214,10 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
            END DO
         END DO
         !
-        CALL wave_g2r( psi(:,1:group_size), psic, dffts, igk=igk_k(:,current_k), &
+        CALL wave_g2r( psi(:,1:group_size), psic, dffts, igk=igk_k(:,current_k),&
                        howmany_set=hm_vec )
         !
-        !$acc parallel loop collapse(2) present(v)
+        !$acc parallel loop collapse(2) 
         DO idx = 0, group_size-1
            DO j = 1, dffts_nnr
               psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v(j)
@@ -241,11 +235,9 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
         ENDDO
         !
      ENDDO
-     !$acc end data
      !
   ELSE
      !
-     !$acc data create(psic)
      DO ibnd = 1, m
         !
         !$acc parallel loop
@@ -254,7 +246,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
         END DO
         CALL wave_g2r( psi(:,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
         !
-        !$acc parallel loop present(v)
+        !$acc parallel loop 
         DO j = 1, dffts_nnr
            psic(j) = psic(j) * v(j)
         ENDDO
@@ -267,19 +259,15 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
         ENDDO
         !
      ENDDO
-     !$acc end data
      !
   ENDIF
   !
   !$acc end data
-  DEALLOCATE( psi )
-  !
   DEALLOCATE( psic )
+  DEALLOCATE( psi )
   !
   CALL stop_clock_gpu( 'vloc_psi' )
 #endif
-  !
-99 format ( 20 ('(',2f12.9,')') )
   !
   RETURN
   !
