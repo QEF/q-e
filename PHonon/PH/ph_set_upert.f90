@@ -47,7 +47,53 @@ SUBROUTINE ph_set_upert_phonon(irr)
       ENDDO
    ENDIF ! minus_q
    !
-END SUBROUTINE ph_set_upert
+END SUBROUTINE ph_set_upert_phonon
+!-----------------------------------------------------------------------------------------
+!
+!-----------------------------------------------------------------------------------------
+SUBROUTINE ph_set_upert_e()
+   !--------------------------------------------------------------------------------------
+   !! Set lr_npert, upert, and upert_mp for electric field perturbation.
+   !--------------------------------------------------------------------------------------
+   !
+   USE symm_base,    ONLY : s
+   USE lr_symm_base, ONLY : nsymq, minus_q, lr_npert, upert, upert_mq
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: ipol, jpol
+   !! Counter on perturbations
+   INTEGER :: isym
+   !! Counter on symmetries
+   !
+   ! Set symmetry representation in lr_symm_base
+   !
+   lr_npert = 3
+   !
+   ALLOCATE(upert(lr_npert, lr_npert, nsymq))
+   !
+   DO isym = 1, nsymq
+      DO ipol = 1, 3
+         DO jpol = 1, 3
+            upert(jpol, ipol, isym) = s(ipol, jpol, isym)
+         ENDDO
+      ENDDO
+   ENDDO
+   !
+   IF (minus_q) THEN
+      !
+      ! upert_mq is the rotation matrix for symmetry S such that T * S * q = q + G.
+      ! E field perturbation is applied only for q = 0, where T*q = q, i.e., S = identity.
+      ! Thus, upert_mq is the 3*3 identity matrix.
+      !
+      ALLOCATE(upert_mq(lr_npert, lr_npert))
+      upert_mq = (0.d0, 0.d0)
+      DO ipol = 1, lr_npert
+         upert_mq(ipol, ipol) = (1.d0, 0.d0)
+      ENDDO
+   ENDIF ! minus_q
+   !
+END SUBROUTINE ph_set_upert_e
 !----------------------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------------------
