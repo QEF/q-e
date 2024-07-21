@@ -55,6 +55,7 @@ SUBROUTINE sym_dns_wrapper (ldim, dns_cart, dns_pattern)
      npe = npert(irr)
      ! allocate
      ALLOCATE (dns_aux(ldim,ldim,nspin,nat,npe))
+     CALL ph_set_upert_phonon(irr)
      ! pack
      dns_aux(:,:,:,:,1:npe) = dns_pattern(:,:,:,:,imode0:imode0-1+npe)
      ! symmetrize
@@ -63,6 +64,7 @@ SUBROUTINE sym_dns_wrapper (ldim, dns_cart, dns_pattern)
      dns_pattern(:,:,:,:,imode0:imode0-1+npe) = dns_aux(:,:,:,:,1:npe)
      ! deallocate
      DEALLOCATE (dns_aux)
+     CALL ph_deallocate_upert()
      ! advance the counter
      imode0 = imode0 + npe
   ENDDO

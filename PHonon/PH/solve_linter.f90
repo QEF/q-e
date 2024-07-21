@@ -395,9 +395,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (lmetq0) THEN
         IF (okpaw) THEN
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, irr, sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, sym_def)
         ELSE
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, irr=irr, sym_def=sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, sym_def=sym_def)
         ENDIF
      ENDIF
      !

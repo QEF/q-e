@@ -108,6 +108,7 @@ phq_recover.o \
 phq_setup.o \
 phq_summary.o \
 phqscf.o \
+ph_set_upert.o \
 polariz.o \
 print_clock_ph.o \
 prepare_q.o \
