@@ -194,12 +194,6 @@ if(QE_CLOCK_SECONDS)
    qe_add_global_compile_definitions(__CLOCK_SECONDS)
 endif()
 
-# Feature checks
-check_function_exists(mallinfo HAVE_MALLINFO)
-if(HAVE_MALLINFO)
-    qe_add_global_compile_definitions(HAVE_MALLINFO)
-endif()
-
 # OSCDFT
 if(QE_ENABLE_OSCDFT)
     qe_add_global_compile_definitions(__OSCDFT)
