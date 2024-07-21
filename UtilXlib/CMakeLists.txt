@@ -33,8 +33,7 @@ set(src_util_c
     memstat.c
     memusage.c
     ptrace.c)
-qe_add_library(qe_utilx_c ${src_util_c})
-set_target_properties(qe_utilx_c PROPERTIES Fortran_MODULE_DIRECTORY "")
+add_library(qe_utilx_c ${src_util_c})
 target_link_libraries(qe_utilx
     PUBLIC
         qe_utilx_c # cclock is exposed by the mytime module in clocks_handler
@@ -44,6 +43,12 @@ target_link_libraries(qe_utilx
         qe_openmp_fortran)
 
 qe_install_targets(qe_utilx qe_utilx_c)
+
+# Feature checks
+check_function_exists(mallinfo HAVE_MALLINFO)
+if(HAVE_MALLINFO)
+    target_compile_definitions(qe_utilx_c PRIVATE HAVE_MALLINFO)
+endif()
 
 set(src_device_lapack
     device_helper.f90)

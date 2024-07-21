@@ -186,6 +186,7 @@ function(qe_add_library LIB)
     _qe_add_target(${LIB} ${ARGN})
 endfunction(qe_add_library)
 
+# Only use this one for Fortran targets
 function(_qe_add_target TGT)
     if(TARGET QEGlobalCompileDefinitions)
         target_link_libraries(${TGT} PUBLIC QEGlobalCompileDefinitions)
