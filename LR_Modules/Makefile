@@ -66,6 +66,7 @@ mix_pot.o \
 lrcom.o \
 lr_dot.o \
 lr_dot_magnons.o \
+lr_nc_mag.o \
 lanczos_pseudohermitian.o \
 lanczos_nonhermitian.o \
 lanczos_pseudohermitian_c.o \

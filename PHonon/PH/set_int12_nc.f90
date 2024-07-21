@@ -15,7 +15,7 @@ USE ions_base, ONLY : nat, ntyp => nsp, ityp
 USE noncollin_module, ONLY : noncolin, domag, lspinorb
 USE uspp_param, only: upf
 USE phus, ONLY : int1, int2, int1_nc, int2_so
-USE nc_mag_aux, ONLY : int1_nc_save
+USE lr_nc_mag,  ONLY : int1_nc_save
 IMPLICIT NONE
 INTEGER :: iflag
 INTEGER :: np, na
@@ -60,4 +60,3 @@ END DO
 IF (noncolin.AND.domag) int1_nc_save(:,:,:,:,:,1) = int1_nc
 
 END SUBROUTINE set_int12_nc
-

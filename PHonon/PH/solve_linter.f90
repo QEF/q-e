@@ -44,7 +44,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, npwx
-  USE scf,                  ONLY : rho, vrs
+  USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
   USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
@@ -82,11 +82,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE dv_of_drho_lr,        ONLY : dv_of_drho
   USE fft_interfaces,       ONLY : fft_interpolate
   USE ldaU,                 ONLY : lda_plus_u
-  USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE response_kernels,     ONLY : sternheimer_kernel
   USE uspp_init,            ONLY : init_us_2
   USE sym_def_module,       ONLY : sym_def
+  USE lr_nc_mag,            ONLY : lr_apply_time_reversal, int1_nc_save, deeq_nc_save, &
+                                   int3_save
   implicit none
 
   integer :: irr
@@ -323,19 +324,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         !  change the sign of the magnetic field if required
         !
-        IF (isolv == 2) THEN
-           IF (.NOT. first_iter) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
-           ENDIF
-           !$acc kernels
-           vrs(:, 2:4) = -vrs(:, 2:4)
-           !$acc end kernels
-           IF (okvan) THEN
-                   deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-                   !$acc update device(deeq_nc)
-           ENDIF
-        ENDIF
+        IF (isolv == 2) CALL lr_apply_time_reversal(.TRUE., first_iter, dvscfins)
         !
         ! set threshold for iterative solution of the linear system
         !
@@ -353,19 +342,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         !  reset the original magnetic field if it was changed
         !
-        IF (isolv == 2) THEN
-           IF (.NOT. first_iter) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
-           ENDIF
-           !$acc kernels
-           vrs(:, 2:4) = -vrs(:, 2:4)
-           !$acc end kernels
-           IF (okvan) THEN
-                   deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-                   !$acc update device(deeq_nc)
-           ENDIF
-        ENDIF
+        IF (isolv == 2) CALL lr_apply_time_reversal(.FALSE., first_iter, dvscfins)
         !
      END DO ! isolv
      !

@@ -28,7 +28,7 @@ subroutine hp_allocate_q
   USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,           ONLY : becpt
-  USE hp_nc_mag_aux,        ONLY : deeq_nc_save 
+  USE lr_nc_mag,            ONLY : deeq_nc_save
   USE uspp_param,           ONLY : nhm 
   !
   IMPLICIT NONE

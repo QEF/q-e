@@ -358,7 +358,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
   USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save, int3_save
   USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE

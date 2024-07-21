@@ -52,10 +52,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
-  USE hp_nc_mag_aux,        ONLY : deeq_nc_save, int3_save   
-  USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt  
-  USE lsda_mod,             ONLY : nspin     
-  USE scf,                  ONLY : vrs    
+  USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt
+  USE lsda_mod,             ONLY : nspin
+  USE lr_nc_mag,            ONLY : lr_apply_time_reversal, deeq_nc_save, int3_save
   !
   IMPLICIT NONE
   !
@@ -243,14 +242,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         !
         !  change the sign of the magnetic field if required
         !
-        IF (isolv == 2) THEN
-           IF ( iter > 1 ) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
-           ENDIF
-           vrs(:, 2:4) = -vrs(:, 2:4)
-           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-        ENDIF
+        IF (isolv == 2) CALL lr_apply_time_reversal(.TRUE., iter == 1, dvscfins)
         !
         ! set threshold for iterative solution of the linear system
         !
@@ -278,14 +270,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         !
         !  reset the original magnetic field if it was changed
         !
-        IF (isolv == 2) THEN
-           IF ( iter > 1 ) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
-           ENDIF
-           vrs(:, 2:4) = -vrs(:, 2:4)
-           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-        ENDIF
+        IF (isolv == 2) CALL lr_apply_time_reversal(.FALSE., iter == 1, dvscfins)
      ENDDO ! isolv
      !
      IF (nsolv==2) THEN
