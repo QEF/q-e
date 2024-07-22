@@ -15,8 +15,13 @@ MODULE lr_nc_mag
    SAVE
    !
    COMPLEX (DP), ALLOCATABLE :: deeq_nc_save(:, :, :, :, :)
+   !! deeq_nc_save(:,:,:,:,1) stores the original state of deeq_nc.
+   !! deeq_nc_save(:,:,:,:,2) stores deeq_nc computed with flipped magnetic field.
    COMPLEX (DP), ALLOCATABLE :: int1_nc_save(:, :, :, :, :, :)
-   COMPLEX (DP), ALLOCATABLE :: int3_save(:, :, :, :, :, :)
+   !! Same as deeq_nc_save, for int1_nc
+   COMPLEX (DP), ALLOCATABLE :: int3_nc_save(:, :, :, :, :, :)
+   !! Same as deeq_nc_save, for int3_nc
+   !
    !
    CONTAINS
    !
@@ -63,7 +68,7 @@ SUBROUTINE lr_apply_time_reversal(tr, first_iter, dvscfins)
       !
       IF (okvan) THEN
          IF (.NOT. first_iter) THEN
-            int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
+            int3_nc(:,:,:,:,:) = int3_nc_save(:,:,:,:,:,2)
          ENDIF
          !
          deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
@@ -76,7 +81,7 @@ SUBROUTINE lr_apply_time_reversal(tr, first_iter, dvscfins)
       !
       IF (okvan) THEN
          IF (.NOT. first_iter) THEN
-            int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
+            int3_nc(:,:,:,:,:) = int3_nc_save(:,:,:,:,:,1)
          ENDIF
          !
          deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)

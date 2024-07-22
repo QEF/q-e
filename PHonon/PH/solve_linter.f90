@@ -87,7 +87,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE uspp_init,            ONLY : init_us_2
   USE sym_def_module,       ONLY : sym_def
   USE lr_nc_mag,            ONLY : lr_apply_time_reversal, int1_nc_save, deeq_nc_save, &
-                                   int3_save
+                                   int3_nc_save
   implicit none
 
   integer :: irr
@@ -186,7 +186,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
   IF (noncolin.AND.domag.AND.okvan) THEN
-     ALLOCATE (int3_save( nhm, nhm, nat, nspin_mag, npe, 2))
+     ALLOCATE (int3_nc_save( nhm, nhm, nat, nspin_mag, npe, 2))
      ALLOCATE (dbecsum_aux ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
   ENDIF
   CALL apply_dpot_allocate()
@@ -492,11 +492,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         call newdq (dvscfin, npe)
         !
         !  In the noncollinear magnetic case computes the int3 coefficients with
-        !  the opposite sign of the magnetic field. They are saved in int3_save,
+        !  the opposite sign of the magnetic field. They are saved in int3_nc_save,
         !  that must have been allocated by the calling routine
         !
         IF (noncolin.AND.domag) THEN
-           int3_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
+           int3_nc_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
            IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
            DO ipert=1,npe
               dvscfin(:,2:4,ipert)=-dvscfin(:,2:4,ipert)
@@ -511,7 +511,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !   here compute the int3 integrals
            !
            CALL newdq (dvscfin, npe)
-           int3_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
+           int3_nc_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
            !
            !  restore the correct sign of the magnetic field.
            !
@@ -523,7 +523,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !
            !  put into int3_nc the coefficient with +B
            !
-           int3_nc(:,:,:,:,:)=int3_save(:,:,:,:,:,1)
+           int3_nc(:,:,:,:,:)=int3_nc_save(:,:,:,:,:,1)
         ENDIF
      END IF
      !
@@ -593,7 +593,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   deallocate(aux2)
   deallocate(drhoc)
   IF (noncolin.AND.domag.AND.okvan) THEN
-     DEALLOCATE (int3_save)
+     DEALLOCATE (int3_nc_save)
      DEALLOCATE (dbecsum_aux)
   ENDIF
 
