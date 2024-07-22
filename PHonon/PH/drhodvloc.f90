@@ -18,6 +18,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
+  USE modes,     ONLY : u
 
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
@@ -51,7 +52,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   ! We need a sum over all perturbations
   !
   do nu_j = 1, 3 * nat
-     call compute_dvloc (nu_j, dvloc)
+     call compute_dvloc (u(1, nu_j), .FALSE., dvloc)
      do ipert = 1, npe
         nu_i = nu_i0 + ipert
         do is = 1, nspin_lsda
