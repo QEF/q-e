@@ -324,7 +324,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         !  change the sign of the magnetic field if required
         !
-        IF (isolv == 2) CALL lr_apply_time_reversal(.TRUE., first_iter, dvscfins)
+        IF (isolv == 2) CALL lr_apply_time_reversal(first_iter, 2, dvscfins)
         !
         ! set threshold for iterative solution of the linear system
         !
@@ -342,7 +342,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         !  reset the original magnetic field if it was changed
         !
-        IF (isolv == 2) CALL lr_apply_time_reversal(.FALSE., first_iter, dvscfins)
+        IF (isolv == 2) CALL lr_apply_time_reversal(first_iter, 1, dvscfins)
         !
      END DO ! isolv
      !

@@ -26,11 +26,11 @@ MODULE lr_nc_mag
    CONTAINS
    !
 !------------------------------------------------------------------------------
-SUBROUTINE lr_apply_time_reversal(tr, first_iter, dvscfins)
+SUBROUTINE lr_apply_time_reversal(first_iter, ind, dvscfins)
 !------------------------------------------------------------------------------
    !! Apply time reversal for DFPT in noncollinear magnetic systems
-   !! If tr == .true.,  flip sign of the magnetic field
-   !! If tr == .false., revert back to the original state.
+   !! If ind == 2, flip to the time-reversed state.
+   !! If ind == 1, revert back to the original state.
    !---------------------------------------------------------------------------
    USE kinds,             ONLY : DP
    USE scf,               ONLY : vrs
@@ -40,55 +40,32 @@ SUBROUTINE lr_apply_time_reversal(tr, first_iter, dvscfins)
    !
    IMPLICIT NONE
    !
-   LOGICAL, INTENT(IN) :: tr
-   !! If .true., flip magnetic field. If .false., revert back.
    LOGICAL, INTENT(IN) :: first_iter
    !! True if first iteration. Skip some calculation if true.
+   INTEGER, INTENT(IN) :: ind
+   !! If 1, flip to the time-reversed state. If 1, revert back to the original state.
    COMPLEX(DP), POINTER, INTENT(INOUT) :: dvscfins(:, :, :)
    !! change of the scf potential (smooth part only, dffts)
    !
-   IF (.NOT. (noncolin.AND.domag)) THEN
-      CALL errore('lr_apply_time_reversal', &
-                  'This routine is only for noncollinear magnetic systems', 1)
-   ENDIF
+   IF (.NOT. (ind == 1 .OR. ind == 2)) CALL errore('lr_apply_time_reversal', &
+      'ind must be 1 or 2', 1)
+   !
+   IF (.NOT. (noncolin.AND.domag)) CALL errore('lr_apply_time_reversal', &
+      'This routine is only for noncollinear magnetic systems', 1)
    !
    ! Flip the sign of the magnetic field
    !
    IF (.NOT. first_iter) THEN
       dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+      IF (okvan) int3_nc(:,:,:,:,:) = int3_nc_save(:,:,:,:,:,ind)
    ENDIF
    !
    !$acc kernels
    vrs(:, 2:4) = -vrs(:, 2:4)
    !$acc end kernels
    !
-   IF (tr) THEN
-      !
-      ! Set to the time-reversed state
-      !
-      IF (okvan) THEN
-         IF (.NOT. first_iter) THEN
-            int3_nc(:,:,:,:,:) = int3_nc_save(:,:,:,:,:,2)
-         ENDIF
-         !
-         deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-         !$acc update device(deeq_nc)
-      ENDIF
-      !
-   ELSE ! tr == .FALSE.
-      !
-      ! Set back to the original state
-      !
-      IF (okvan) THEN
-         IF (.NOT. first_iter) THEN
-            int3_nc(:,:,:,:,:) = int3_nc_save(:,:,:,:,:,1)
-         ENDIF
-         !
-         deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-         !$acc update device(deeq_nc)
-      ENDIF
-      !
-   ENDIF ! tr
+   IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,ind)
+   !$acc update device(deeq_nc)
    !
 END SUBROUTINE lr_apply_time_reversal
 !------------------------------------------------------------------------------
