@@ -12,6 +12,7 @@ SUBROUTINE ph_set_upert_phonon(irr)
    !--------------------------------------------------------------------------------------
    !
    USE modes,        ONLY : npert, t, tmq
+   USE control_ph,   ONLY : lgamma_gamma
    USE lr_symm_base, ONLY : nsymq, minus_q, lr_npert, upert, upert_mq
    !
    IMPLICIT NONE
@@ -28,24 +29,44 @@ SUBROUTINE ph_set_upert_phonon(irr)
    !
    lr_npert = npert(irr)
    !
-   ALLOCATE(upert(lr_npert, lr_npert, nsymq))
-   !
-   DO isym = 1, nsymq
-      DO ipert = 1, lr_npert
-         DO jpert = 1, lr_npert
-            upert(jpert, ipert, isym) = t(jpert, ipert, isym, irr)
+   IF (lgamma_gamma) THEN
+      !
+      ! If lgamma_gamma is true, symmetrization is not used.
+      ! Set upert and upert_mq to 1.
+      !
+      IF (lr_npert /= 1) CALL errore('ph_set_upert_phonon', &
+         'lgamma_gamma is true, but lr_npert /= 1', 1)
+      !
+      ALLOCATE(upert(1, 1, 1))
+      upert(1, 1, 1) = (1.d0, 0.d0)
+      !
+      IF (minus_q) THEN
+         ALLOCATE(upert_mq(1, 1))
+         upert_mq(1, 1) = (1.d0, 0.d0)
+      ENDIF
+      !
+   ELSE
+      !
+      ALLOCATE(upert(lr_npert, lr_npert, nsymq))
+      !
+      DO isym = 1, nsymq
+         DO ipert = 1, lr_npert
+            DO jpert = 1, lr_npert
+               upert(jpert, ipert, isym) = t(jpert, ipert, isym, irr)
+            ENDDO
          ENDDO
       ENDDO
-   ENDDO
-   !
-   IF (minus_q) THEN
-      ALLOCATE(upert_mq(lr_npert, lr_npert))
-      DO ipert = 1, lr_npert
-         DO jpert = 1, lr_npert
-            upert_mq(jpert, ipert) = tmq(jpert, ipert, irr)
+      !
+      IF (minus_q) THEN
+         ALLOCATE(upert_mq(lr_npert, lr_npert))
+         DO ipert = 1, lr_npert
+            DO jpert = 1, lr_npert
+               upert_mq(jpert, ipert) = tmq(jpert, ipert, irr)
+            ENDDO
          ENDDO
-      ENDDO
-   ENDIF ! minus_q
+      ENDIF ! minus_q
+      !
+   ENDIF
    !
 END SUBROUTINE ph_set_upert_phonon
 !-----------------------------------------------------------------------------------------
