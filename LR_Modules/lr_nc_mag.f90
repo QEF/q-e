@@ -28,9 +28,9 @@ MODULE lr_nc_mag
 !------------------------------------------------------------------------------
 SUBROUTINE lr_apply_time_reversal(first_iter, ind, dvscfins)
 !------------------------------------------------------------------------------
-   !! Apply time reversal for DFPT in noncollinear magnetic systems
-   !! If ind == 2, flip to the time-reversed state.
-   !! If ind == 1, revert back to the original state.
+   !! Apply time reversal for DFPT in noncollinear magnetic systems. Used in sternheimer_kernel.
+   !! If ind == 2, flip to the time-reversed state. Called during initialization.
+   !! If ind == 1, revert to the original state. Called during finalization.
    !---------------------------------------------------------------------------
    USE kinds,             ONLY : DP
    USE scf,               ONLY : vrs

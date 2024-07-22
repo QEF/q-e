@@ -86,8 +86,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE response_kernels,     ONLY : sternheimer_kernel
   USE uspp_init,            ONLY : init_us_2
   USE sym_def_module,       ONLY : sym_def
-  USE lr_nc_mag,            ONLY : lr_apply_time_reversal, int1_nc_save, deeq_nc_save, &
-                                   int3_nc_save
+  USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   implicit none
 
   integer :: irr
@@ -322,10 +321,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      DO isolv = 1, nsolv
         !
-        !  change the sign of the magnetic field if required
-        !
-        IF (isolv == 2) CALL lr_apply_time_reversal(first_iter, 2, dvscfins)
-        !
         ! set threshold for iterative solution of the linear system
         !
         IF (first_iter) THEN
@@ -339,10 +334,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
             thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
             dbecsum_nc(:,:,:,:,:,isolv))
-        !
-        !  reset the original magnetic field if it was changed
-        !
-        IF (isolv == 2) CALL lr_apply_time_reversal(first_iter, 1, dvscfins)
         !
      END DO ! isolv
      !

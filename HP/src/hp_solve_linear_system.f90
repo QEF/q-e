@@ -240,10 +240,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      DO isolv = 1, nsolv
         !
-        !  change the sign of the magnetic field if required
-        !
-        IF (isolv == 2) CALL lr_apply_time_reversal(iter == 1, 2, dvscfins)
-        !
         ! set threshold for iterative solution of the linear system
         !
         IF ( iter == 1 ) THEN
@@ -268,9 +264,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            WRITE(stdout, '(6x, "sternheimer_kernel not converged. Try to increase thresh_init.")')
         ENDIF
         !
-        !  reset the original magnetic field if it was changed
-        !
-        IF (isolv == 2) CALL lr_apply_time_reversal(iter == 1, 1, dvscfins)
      ENDDO ! isolv
      !
      IF (nsolv==2) THEN
