@@ -27,10 +27,11 @@ SUBROUTINE lr_apply_time_reversal(tr, first_iter, dvscfins)
    !! If tr == .true.,  flip sign of the magnetic field
    !! If tr == .false., revert back to the original state.
    !---------------------------------------------------------------------------
-   USE kinds,                ONLY : DP
-   USE scf,                  ONLY : vrs
-   USE uspp,                 ONLY : okvan, deeq_nc
-   USE lrus,                 ONLY : int3_nc
+   USE kinds,             ONLY : DP
+   USE scf,               ONLY : vrs
+   USE uspp,              ONLY : okvan, deeq_nc
+   USE noncollin_module,  ONLY : noncolin, domag
+   USE lrus,              ONLY : int3_nc
    !
    IMPLICIT NONE
    !
@@ -40,6 +41,11 @@ SUBROUTINE lr_apply_time_reversal(tr, first_iter, dvscfins)
    !! True if first iteration. Skip some calculation if true.
    COMPLEX(DP), POINTER, INTENT(INOUT) :: dvscfins(:, :, :)
    !! change of the scf potential (smooth part only, dffts)
+   !
+   IF (.NOT. (noncolin.AND.domag)) THEN
+      CALL errore('lr_apply_time_reversal', &
+                  'This routine is only for noncollinear magnetic systems', 1)
+   ENDIF
    !
    ! Flip the sign of the magnetic field
    !
