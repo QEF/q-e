@@ -33,7 +33,6 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   COMPLEX(DP), ALLOCATABLE :: psic(:)
   !$acc declare device_resident(psi,psic)
-#if defined(__CUDA)
   INTEGER :: dffts_nnr, idx, ebnd, brange
   INTEGER :: ierr, ioff
   ! ... Variables to handle batched FFT
@@ -144,12 +143,10 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   DEALLOCATE( psic )
   !
   CALL stop_clock_gpu ('vloc_psi')
-#endif
   !
   RETURN
 END SUBROUTINE vloc_psi_gamma_gpu
 !
-!@njs: vloc_psi_k
 !-----------------------------------------------------------------------
 SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
@@ -186,8 +183,6 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   COMPLEX(DP), ALLOCATABLE :: psic(:)
   !$acc declare device_resident(psi,psic)
   !
-#if defined(__CUDA)
-  !
   INTEGER :: dffts_nnr, idx, group_size, hm_vec(3)
   INTEGER :: ierr, brange
   !
@@ -210,7 +205,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
         hm_vec(1)=group_size ; hm_vec(2)=n ; hm_vec(3)=group_size
         ebnd = ibnd+group_size-1
         !$acc parallel loop collapse(2)
-        DO idx = 1, group_size
+        DO idx = 2, group_size
            DO j = 1, n
               psi(j,idx) = psi_d(j,ibnd+idx-1)
            END DO
@@ -242,11 +237,12 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
      !
      DO ibnd = 1, m
         !
+        idx = 1
         !$acc parallel loop
         DO j = 1, n
            psi(j,idx) = psi_d(j,ibnd+idx-1)
         END DO
-        CALL wave_g2r( psi(:,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
+        CALL wave_g2r( psi(:,idx:idx), psic, dffts, igk=igk_k(:,current_k) )
         !
         !$acc parallel loop 
         DO j = 1, dffts_nnr
@@ -257,7 +253,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
         !
         !$acc parallel loop
         DO i = 1, n
-           hpsi_d(i,ibnd) = hpsi_d(i,ibnd) + psi(i,1)
+           hpsi_d(i,ibnd) = hpsi_d(i,ibnd) + psi(i,idx)
         ENDDO
         !
      ENDDO
@@ -269,13 +265,11 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   DEALLOCATE( psi )
   !
   CALL stop_clock_gpu( 'vloc_psi' )
-#endif
   !
   RETURN
   !
 END SUBROUTINE vloc_psi_k_gpu
 !
-!@njs: vloc_psi_nc
 !-----------------------------------------------------------------------
 SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
@@ -307,7 +301,6 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), psic_nc(:,:)
   !$acc declare device_resident(psi,psic_nc)
-#if defined(__CUDA)
   INTEGER :: dffts_nnr, idx, ioff, ii, ie, brange
   INTEGER :: right_nnr, right_nr3, right_inc
   !
@@ -373,7 +366,6 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   DEALLOCATE( psi )
   !
   CALL stop_clock_gpu ('vloc_psi')
-#endif
   !
   RETURN
   !
