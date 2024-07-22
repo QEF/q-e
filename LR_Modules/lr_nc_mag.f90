@@ -64,8 +64,10 @@ SUBROUTINE lr_apply_time_reversal(first_iter, ind, dvscfins)
    vrs(:, 2:4) = -vrs(:, 2:4)
    !$acc end kernels
    !
-   IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,ind)
-   !$acc update device(deeq_nc)
+   IF (okvan) THEN
+      deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,ind)
+      !$acc update device(deeq_nc)
+   ENDIF
    !
 END SUBROUTINE lr_apply_time_reversal
 !------------------------------------------------------------------------------
