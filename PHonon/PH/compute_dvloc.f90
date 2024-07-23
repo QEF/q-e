@@ -27,8 +27,6 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE eqv,              ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
   USE modes,            ONLY : nmodes
-  USE Coul_cut_2D,      ONLY : do_cutoff_2D
-  USE Coul_cut_2D_ph,   ONLY : cutoff_localq
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
   !
   IMPLICIT NONE
@@ -103,11 +101,6 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
            itmp = nl_d (ig)
            dvlocin (itmp) = dvlocin (itmp) + vlocq (ig, nt) * gu * fact * gtau
         enddo
-        IF (do_cutoff_2D) then
-           !$acc update host(dvlocin)
-           call cutoff_localq( dvlocin, fact, u1, u2, u3, gu0, nt, na)
-           !$acc update device(dvlocin)
-        ENDIF
         !
      endif
   enddo
