@@ -21,7 +21,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
-  USE modes,  ONLY : nirr, npert
+  USE modes,  ONLY : nirr, npert, u
   USE uspp,   ONLY : nlcc_any
 
   USE mp_bands,  ONLY: intra_bgrp_comm
@@ -77,7 +77,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 !
   do ipert = 1, npe
      mode = imode0 + ipert
-     call addcore (mode, drhoc)
+     call addcore(u(1, mode), drhoc)
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      end do
@@ -107,7 +107,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      do irr = 1, nirr
         do jpert = 1, npert (irr)
            mode1 = mode1 + 1
-           call addcore (mode1, drhoc)
+           call addcore(u(1, mode1), drhoc)
            do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
                    dot_product (dvaux (:,is), drhoc) * &

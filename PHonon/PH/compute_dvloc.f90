@@ -22,13 +22,11 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE cell_base,        ONLY : tpiba
   USE fft_base,         ONLY : dfftp, dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g, ngm
+  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g
   USE gvecs,            ONLY : ngms
   USE lsda_mod,         ONLY : nspin, lsda, current_spin
   USE scf,              ONLY : rho, rho_core
   USE noncollin_module, ONLY : nspin_gga
-  use uspp_param,       ONLY : upf
-  USE nlcc_ph,          ONLY : drc
   USE uspp,             ONLY : nlcc_any
   USE eqv,              ONLY : dmuxc, vlocq
   USE qpoint,           ONLY : xq, eigqts
@@ -59,7 +57,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   INTEGER :: ir
   !! counter on real mesh
   !!
-  INTEGER :: nnr, nnp, itmp, itmpp
+  INTEGER :: nnr, nnp, itmp, itmpp, is, is1
   !!
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   complex(DP), allocatable :: aux (:,:)
@@ -90,7 +88,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   nnr = dffts%nnr
   !
-  !$acc data create(dvlocin(1:nnr)) copyin(vlocq,drc,dmuxc) deviceptr(nl_d, nlp_d)
+  !$acc data create(dvlocin(1:nnr)) copyin(vlocq,dmuxc) deviceptr(nl_d, nlp_d)
   !$acc kernels present(dvlocin)
   dvlocin(:) = (0.d0, 0.d0)
   !$acc end kernels
@@ -123,7 +121,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   ! add NLCC when present
   !
   if (nlcc_any.and.addnlcc) then
-     !CALL errore ('dvqpsi_us', 'openacc fpr ncll_any to be checked', 1)
+     !CALL errore ('dvqpsi_us', 'openacc fpr nlcc_any to be checked', 1)
      allocate (drhoc( dfftp%nnr,nspin))
      allocate (aux( dfftp%nnr,nspin))
      nnp=dfftp%nnr
@@ -132,31 +130,9 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      drhoc(:,:) = (0.d0, 0.d0)
      aux(:,:) = (0.0_dp, 0.0_dp)
      !$acc end kernels
-     do na = 1,nat
-        fact = tpiba*(0.d0,-1.d0)*eigqts(na)
-        mu = 3*(na-1)
-        u1 = uact(mu+1)
-        u2 = uact(mu+2)
-        u3 = uact(mu+3)
-        if (abs(u1) + abs(u2) + abs(u3) > 1.0d-12) then
-           nt=ityp(na)
-           gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
-           if (upf(nt)%nlcc) then
-              !$acc parallel loop present(eigts1, eigts2, eigts3, g, mill,drhoc)
-              do ig = 1,ngm
-                 gtau = eigts1(mill(1,ig),na)*   &
-                        eigts2(mill(2,ig),na)*   &
-                        eigts3(mill(3,ig),na)
-                 gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
-                 itmp = nlp_d(ig)
-                 drhoc(itmp,1)=drhoc(itmp,1)+drc(ig,nt)*gu*fact*gtau
-              enddo
-           endif
-        endif
-     enddo
-     !$acc host_data use_device(drhoc)
-     CALL invfft ('Rho', drhoc(:,1), dfftp)
-     !$acc end host_data
+     !
+     CALL addcore (uact, drhoc(1, 1))
+     !
      if (.not.lsda) then
         !$acc parallel loop present(aux,drhoc)
         do ir=1,nnp

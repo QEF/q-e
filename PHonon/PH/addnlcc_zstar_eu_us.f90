@@ -20,7 +20,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE efield_mod, ONLY : zstareu0
   USE uspp,   ONLY : nlcc_any
-  USE modes,  ONLY : npert, nirr
+  USE modes,  ONLY : npert, nirr, u
 
   USE mp_pools, ONLY : my_pool_id
 
@@ -58,7 +58,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            mode = imode0 + ipert
 
            dvaux = (0.0_dp,0.0_dp)
-           CALL addcore (mode, drhoc)
+           CALL addcore(u(1, mode), drhoc)
 
            rho%of_r(:,1) = rho%of_r(:,1) + rho_core
 

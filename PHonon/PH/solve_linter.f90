@@ -426,13 +426,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         !
         ! Compute the response of the core charge density
-        ! IT: Should the condition "imode0+ipert > 0" be removed?
         !
-        if (imode0+ipert > 0) then
-           call addcore (imode0+ipert, drhoc)
-        else
-           drhoc(:) = (0.0_DP,0.0_DP)
-        endif
+        call addcore(u(1, imode0+ipert), drhoc)
         !
         ! Compute the response HXC potential
         call dv_of_drho (dvscfout(1,1,ipert), .true., drhoc)
