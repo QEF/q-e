@@ -72,7 +72,15 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   !
   ! 1) The exchange-correlation contribution is computed in real space
   !
-  IF (.NOT. lrpa) CALL dv_of_drho_xc(dvaux, dvscf, drhoc)
+  IF (.NOT. lrpa) THEN
+     IF (add_nlcc) THEN
+        CALL dv_of_drho_xc(dvaux, drho = dvscf, drhoc = drhoc)
+     ELSE
+        CALL dv_of_drho_xc(dvaux, drho = dvscf)
+     ENDIF
+  ENDIF
+  !
+  ! 2) Hartree contribution is computed in reciprocal space
   !
   ! Copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
@@ -81,8 +89,6 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   end if
   !
   CALL fwfft ('Rho', dvscf(:,1), dfftp)
-  !
-  ! 2) Hartree contribution is computed in reciprocal space
   !
   IF (do_comp_mt) THEN
       !
