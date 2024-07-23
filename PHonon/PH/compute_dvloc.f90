@@ -34,6 +34,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE modes,            ONLY : nmodes
   USE Coul_cut_2D,      ONLY : do_cutoff_2D
   USE Coul_cut_2D_ph,   ONLY : cutoff_localq
+  USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
   !
   IMPLICIT NONE
   !
@@ -62,7 +63,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   complex(DP), allocatable :: aux (:,:)
   complex(DP), pointer :: auxs (:)
-  COMPLEX(DP), ALLOCATABLE :: drhoc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: drhoc(:)
   !
 #if defined(__CUDA)
   INTEGER, POINTER, DEVICE :: nl_d(:), nlp_d(:)
@@ -122,49 +123,21 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   if (nlcc_any.and.addnlcc) then
      !CALL errore ('dvqpsi_us', 'openacc fpr nlcc_any to be checked', 1)
-     allocate (drhoc( dfftp%nnr,nspin))
+     allocate (drhoc( dfftp%nnr))
      allocate (aux( dfftp%nnr,nspin))
      nnp=dfftp%nnr
-     !$acc enter data create(drhoc(1:nnp,1:nspin),aux(1:nnp,1:nspin))
+     !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin))
      !$acc kernels present(drhoc,aux)
-     drhoc(:,:) = (0.d0, 0.d0)
+     drhoc(:) = (0.d0, 0.d0)
      aux(:,:) = (0.0_dp, 0.0_dp)
      !$acc end kernels
      !
-     CALL addcore (uact, drhoc(1, 1))
+     CALL addcore (uact, drhoc)
      !
-     if (.not.lsda) then
-        !$acc parallel loop present(aux,drhoc)
-        do ir=1,nnp
-           aux(ir,1) = drhoc(ir,1) * dmuxc(ir,1,1)
-        end do
-     else
-        !$acc parallel loop present(drhoc,aux) copyin(current_spin)
-        do ir=1,nnp
-           drhoc(ir,1) = 0.5d0 * drhoc(ir,1)
-           drhoc(ir,2) = drhoc(ir,1)
-           aux(ir,1) = drhoc(ir,1) * ( dmuxc(ir,current_spin,1) + &
-                                       dmuxc(ir,current_spin,2) )
-        enddo
-     endif
-     rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
-     !$acc exit data copyout(drhoc)
-
-     IF ( xclib_dft_is('gradient') ) THEN
-                    !$acc update host(aux)
-                    CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
-                    dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc, nspin, nspin_gga, g, aux)
-                    !$acc update device(aux)
-     END IF
-     IF (dft_is_nonlocc()) THEN
-             !$acc update host(aux)               ! to fix double update
-             CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
-             !$acc update device(aux)
-     END IF
+     CALL dv_of_drho_xc(aux, drhoc = drhoc)
+     !
      deallocate (drhoc)
-
-     rho%of_r(:,1) = rho%of_r(:,1) - rho_core(:)
-
+     !
      !$acc host_data use_device(aux)
      CALL fwfft ('Rho', aux(:,1), dfftp)
      !$acc end host_data
