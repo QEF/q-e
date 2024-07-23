@@ -11,22 +11,13 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 !----------===================-------------------
 
   USE kinds, ONLY : DP
-  USE funct, only : dft_is_nonlocc !, dft_is_gradient
-  USE xc_lib, only : xclib_dft_is
-  USE scf, only : rho, rho_core
+  USE mp_pools, ONLY : my_pool_id
   USE cell_base, ONLY : omega
-  USE gvect, ONLY : ngm, g
   USE fft_base, ONLY : dfftp
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
+  USE noncollin_module, ONLY : nspin_lsda,  nspin_mag
   USE efield_mod, ONLY : zstareu0
   USE uspp,   ONLY : nlcc_any
   USE modes,  ONLY : npert, nirr, u
-
-  USE mp_pools, ONLY : my_pool_id
-
-  USE qpoint, ONLY : xq
-  USE eqv,     ONLY : dmuxc
-  USE gc_lr,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
 
   IMPLICIT NONE
@@ -34,7 +25,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   COMPLEX(DP) :: drhoscf (dfftp%nnr,nspin_mag,3)
 
 
-  INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
+  INTEGER :: nrtot, ipert, is, irr, mode
   INTEGER :: imode0, npe, ipol
 
   REAL(DP) :: fac

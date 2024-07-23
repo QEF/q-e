@@ -12,24 +12,15 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !
 
   USE kinds, only : DP
+  USE mp_bands,  ONLY: intra_bgrp_comm
+  USE mp,        ONLY: mp_sum
   USE ions_base, ONLY : nat
-  USE funct,  only : dft_is_nonlocc
-  USE xc_lib, only : xclib_dft_is
   USE cell_base, ONLY : omega
-  use scf, only : rho, rho_core
-  USE gvect, ONLY : g, ngm
   USE fft_base, ONLY : dfftp
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
+  USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert, u
   USE uspp,   ONLY : nlcc_any
-
-  USE mp_bands,  ONLY: intra_bgrp_comm
-  USE mp,        ONLY: mp_sum
-
-  USE qpoint,  ONLY : xq
-  USE eqv,     ONLY : dmuxc
-  USE gc_lr,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
 
   implicit none
@@ -41,12 +32,11 @@ subroutine addnlcc (imode0, drhoscf, npe)
   complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
   !! input: the change of density due to perturbation
 
-  integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
+  integer :: nrtot, ipert, jpert, is, irr, mode, mode1
   ! the total number of points
   ! counter on perturbations
   ! counter on spin
   ! counter on representations
-  ! counter on real space points
   ! counter on modes
 
   complex(DP) :: dyn1 (3 * nat, 3 * nat)

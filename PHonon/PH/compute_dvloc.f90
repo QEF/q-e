@@ -16,21 +16,16 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   !
   USE kinds,            ONLY : DP
-  USE funct,            ONLY : dft_is_nonlocc
-  USE xc_lib,           ONLY : xclib_dft_is
   USE ions_base,        ONLY : nat, ityp
   USE cell_base,        ONLY : tpiba
   USE fft_base,         ONLY : dfftp, dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g
   USE gvecs,            ONLY : ngms
-  USE lsda_mod,         ONLY : nspin, lsda, current_spin
-  USE scf,              ONLY : rho, rho_core
-  USE noncollin_module, ONLY : nspin_gga
+  USE lsda_mod,         ONLY : nspin
   USE uspp,             ONLY : nlcc_any
-  USE eqv,              ONLY : dmuxc, vlocq
+  USE eqv,              ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
-  USE gc_lr,            ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE modes,            ONLY : nmodes
   USE Coul_cut_2D,      ONLY : do_cutoff_2D
   USE Coul_cut_2D_ph,   ONLY : cutoff_localq
@@ -55,10 +50,8 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !! counter on G vectors
   INTEGER :: nt
   !! the type of atom
-  INTEGER :: ir
-  !! counter on real mesh
   !!
-  INTEGER :: nnr, nnp, itmp, itmpp, is, is1
+  INTEGER :: nnr, nnp, itmp, itmpp
   !!
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   complex(DP), allocatable :: aux (:,:)
@@ -89,7 +82,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   nnr = dffts%nnr
   !
-  !$acc data create(dvlocin(1:nnr)) copyin(vlocq,dmuxc) deviceptr(nl_d, nlp_d)
+  !$acc data create(dvlocin(1:nnr)) copyin(vlocq) deviceptr(nl_d, nlp_d)
   !$acc kernels present(dvlocin)
   dvlocin(:) = (0.d0, 0.d0)
   !$acc end kernels
