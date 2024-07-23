@@ -27,6 +27,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE qpoint, ONLY : xq
   USE eqv,     ONLY : dmuxc
   USE gc_lr,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
 
   IMPLICIT NONE
 
@@ -59,30 +60,8 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
            dvaux = (0.0_dp,0.0_dp)
            CALL addcore(u(1, mode), drhoc)
-
-           rho%of_r(:,1) = rho%of_r(:,1) + rho_core
-
-           DO is = 1, nspin_mag
-              DO is1 = 1, nspin_mag
-                 DO ir = 1, dfftp%nnr
-                    dvaux (ir, is) = dvaux (ir, is) +     &
-                         dmuxc (ir, is, is1) *            &
-                         drhoscf (ir, is1, ipol)
-                 ENDDO
-              ENDDO
-           END DO
            !
-           ! add gradient correction to xc, NB: if nlcc is true we need to add here
-           ! its contribution. grho contains already the core charge
-           !
-           IF ( xclib_dft_is('gradient') ) CALL dgradcorr( dfftp, rho%of_r, grho, dvxc_rr, &
-                                   dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1,1,ipol), &
-                                   nspin_mag, nspin_gga, g, dvaux )
-           !
-           IF (dft_is_nonlocc()) CALL dnonloccorr( rho%of_r, drhoscf(1, 1, ipol), &
-                                                  xq, dvaux )
-           !
-           rho%of_r(:,1) = rho%of_r(:,1) - rho_core
+           CALL dv_of_drho_xc(dvaux, drho = drhoscf(1, 1, ipol))
            !
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
