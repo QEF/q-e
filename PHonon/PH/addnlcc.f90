@@ -30,6 +30,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE qpoint,  ONLY : xq
   USE eqv,     ONLY : dmuxc
   USE gc_lr,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
 
   implicit none
 
@@ -63,46 +64,20 @@ subroutine addnlcc (imode0, drhoscf, npe)
   allocate (dvaux(  dfftp%nnr, nspin_mag))
 
   dyn1 (:,:) = (0.d0, 0.d0)
+  dvaux(:, :) = (0.d0, 0.d0)
 !
 !  compute the exchange and correlation potential for this mode
 !
   nrtot = dfftp%nr1 * dfftp%nr2 * dfftp%nr3
   fac = 1.d0 / DBLE (nspin_lsda)
 !
-! add core charge to the density
-!
-  rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
-!
 !  Compute the change of xc potential due to the perturbation
 !
   do ipert = 1, npe
      mode = imode0 + ipert
      call addcore(u(1, mode), drhoc)
-     do is = 1, nspin_lsda
-        call daxpy (2 * dfftp%nnr, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
-     end do
-     do is = 1, nspin_lsda
-        dvaux (:,is) = (0.d0, 0.d0)
-        do is1 = 1, nspin_mag
-           do ir = 1, dfftp%nnr
-              dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * &
-                                                drhoscf ( ir, is1, ipert)
-           enddo
-        enddo
-     enddo
+     CALL dv_of_drho_xc(dvaux, drho = drhoscf(1, 1, ipert), drhoc = drhoc)
      !
-     ! add gradient correction to xc, NB: if nlcc is true we need to add here
-     ! its contribution. grho contains already the core charge
-     !
-     if ( xclib_dft_is('gradient') ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
-                          dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1, 1, ipert), &
-                          nspin_mag, nspin_gga, g, dvaux)
-     !
-     if (dft_is_nonlocc()) call dnonloccorr(rho%of_r, drhoscf(1,1,ipert), xq, dvaux)
-     !
-     do is = 1, nspin_lsda
-        call daxpy (2 * dfftp%nnr, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
-     enddo
      mode1 = 0
      do irr = 1, nirr
         do jpert = 1, npert (irr)
@@ -116,8 +91,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
         enddo
      enddo
   enddo
-  !
-  rho%of_r(:,1) = rho%of_r(:,1) - rho_core(:)
   !
   ! collect contributions from all r/G points.
   !
