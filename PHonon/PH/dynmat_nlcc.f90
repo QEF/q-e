@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine addnlcc (imode0, drhoscf, npe)
+subroutine dynmat_nlcc (imode0, drhoscf, npe)
   !
   !! This routine adds a contribution to the dynamical matrix due
   !! to the NLCC.
@@ -25,11 +25,11 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   implicit none
 
-  integer :: imode0
+  integer, intent(in) :: imode0
   !! input: the starting mode
-  integer :: npe
+  integer, intent(in) :: npe
   !! input: the number of perturbations
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  complex(DP), intent(in) :: drhoscf (dfftp%nnr, nspin_mag, npe)
   !! input: the change of density due to perturbation
 
   integer :: nrtot, ipert, jpert, is, irr, mode, mode1
@@ -91,4 +91,4 @@ subroutine addnlcc (imode0, drhoscf, npe)
   deallocate (dvaux)
   deallocate (drhoc)
   return
-end subroutine addnlcc
+end subroutine dynmat_nlcc

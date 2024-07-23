@@ -559,7 +559,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if
   endif
-  if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
+  if (convt.and.nlcc_any) call dynmat_nlcc (imode0, drhoscfh, npe)
   !
   CALL apply_dpot_deallocate()
   if (allocated(ldoss)) deallocate (ldoss)
