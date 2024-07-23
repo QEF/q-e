@@ -260,6 +260,12 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
      !   drhoscfh(:, nspin) = psic(:)
      !ENDIF
      !
+     ! Symmetrization of the response charge density.
+     !
+     CALL kcw_symdvscf (drhoscfh)
+     !
+
+     !
      !    Now we compute for all perturbations the total charge and potential
      !
      !CALL addusddens (drhoscfh, dbecsum, irr, imode0, 1, 0)

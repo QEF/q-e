@@ -118,13 +118,19 @@ MODULE control_kcw
   !fractional translation
   INTEGER, ALLOCATABLE     :: nsym_w(:)
   !number of symmetries respected by each wannier function
-  INTEGER                  :: nqstot_ibz
+  INTEGER, ALLOCATABLE     :: nqstot_ibz(:)
   !total number of q points in irreducible bz
-  REAL(DP), ALLOCATABLE    :: xq_ibz(:,:)
+  REAL(DP), ALLOCATABLE    :: xq_ibz(:,:,:)
   !q coordinates (cartesian, in units of 2pi/alat)
-  REAL(DP), ALLOCATABLE    :: wq_ibz(:)
+  REAL(DP), ALLOCATABLE    :: wq_ibz(:,:)
   !weights of q points
-
-
+  INTEGER, ALLOCATABLE     :: ibz2fbz(:,:)
+  !index of q point in xq_ibz in array xk
+  INTEGER, ALLOCATABLE     :: fbz2ibz(:, :)
+  !index of q point xk in array xq_ibz
+  LOGICAL                  :: irr_bz = .true.
+  INTEGER                  :: nsym_old
+  !to keep track of number of symmetries of crystal, without restrictions
+  
 END MODULE control_kcw
 

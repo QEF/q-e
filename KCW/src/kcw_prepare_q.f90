@@ -33,6 +33,7 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
   USE start_k,              ONLY : reset_grid
   USE noncollin_module,     ONLY : domag, noncolin
   USE lsda_mod,             ONLY : lsda
+  USE control_kcw,          ONLY : irr_bz
   !
   IMPLICIT NONE
   !
@@ -97,7 +98,8 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
     !
   ENDIF
   !
-  do_band=.TRUE.
+  IF(irr_bz) setup_pw = .TRUE.
+  IF(irr_bz) do_band=.TRUE.
   !
   xq_ = x_q(:,iq)
   CALL cryst_to_cart(1, xq_, at, -1)

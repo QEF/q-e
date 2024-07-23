@@ -20,14 +20,15 @@ SUBROUTINE symmetries_of_wannier_function()
   USE fft_base,              ONLY : dffts
   USE control_flags,         ONLY : gamma_only
   USE klist,                 ONLY : xk     
-  USE symm_base,             ONLY : ft, nsym, s
+  USE symm_base,             ONLY : ft, nsym, s, sr
   USE cell_base,             ONLY : omega
   USE io_kcw,                ONLY : read_rhowann, read_rhowann_g
   USE fft_interfaces,        ONLY : invfft, fwfft
   USE klist,                 ONLY : nkstot
   USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
   USE cell_base,             ONLY : bg, at
-  USE control_kcw,           ONLY : nsym_w, s_w, ft_w
+  USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers
+  USE interpolation,         ONLY : read_wannier_centers
   !
   IMPLICIT NONE 
   !
@@ -45,8 +46,11 @@ SUBROUTINE symmetries_of_wannier_function()
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   COMPLEX(DP), ALLOCATABLE :: phase(:)
   LOGICAL                  :: onlyone
+  REAL(DP), ALLOCATABLE    :: cx(:)
   REAL(DP)                 :: ggg(3)
-
+  REAL(DP)                 :: ft_cart(3)
+  LOGICAL                  :: is_satisfied
+  !
   !
   IMAG = CMPLX(0.D0, 1.D0, kind=DP)
   ALLOCATE ( rhog (ngms) )
@@ -58,12 +62,34 @@ SUBROUTINE symmetries_of_wannier_function()
   ALLOCATE ( nsym_w(num_wann) )
   ALLOCATE (s_w(3,3,48,num_wann))
   ALLOCATE (ft_w(3,48,num_wann))
+  ALLOCATE( centers(3,num_wann) )
+  ALLOCATE(cx(3))
   !
   WRITE(*,*) "Inside symmetry function"
   WRITE(*,*) "nkstot= ", nkstot, "nsym= ", nsym, "num_wann= ", num_wann
   !
-  !setup inverse matrix of bg
+  WRITE(*,*) "read_wannier_centers"
   !
+  !get wannier centres in lattice coordinates
+  !
+  CALL read_wannier_centers()
+  DO iwann=1, num_wann
+    WRITE(*,*) centers(:, iwann)
+  END DO
+  WRITE(*,*) "read_wannier_centers"
+  CALL cryst_to_cart( num_wann, centers, at, +1 )
+  
+  WRITE(*,*) " SYMMETRIES OF WANNIER FUNCTION"
+  DO isym=1, nsym
+    iwann=5
+    ft_cart(:) = ft(:, isym)
+    CALL cryst_to_cart(1, ft_cart, at, +1)
+    cx = MATMUL(centers(:,iwann), sr(:,:,isym))-ft_cart(:)
+    is_satisfied = ( (centers(1,iwann)-cx(1))**2 + (centers(2,iwann)-cx(2))**2 &
+                  + (centers(3,iwann)-cx(3))**2 .lt. 1.D-02 )
+    IF( is_satisfied)  WRITE(*,*) isym
+  END DO
+ 
   ! construct rir
   !
   CALL kcw_set_symm( dffts%nr1,  dffts%nr2,  dffts%nr3, &
@@ -186,6 +212,7 @@ SUBROUTINE symmetries_of_wannier_function()
         !  SUM( ABS(rhowann_aux(:)) )   !"ggg", ggg,&
         !     !"g", mill(:,ig)!dffts%nl(ig))
         !END IF
+        WRITE(*,*) "iq", iq, "isym", isym, "iwann", iwann, "SUM.", SUM( ABS(rhowann_aux(:)))
         IF ( SUM( ABS(rhowann_aux(:)) ) .gt. 1.D-02 )  THEN
           EXIT
         END IF
@@ -231,12 +258,6 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   INTEGER               :: ik
   REAL(DP)              :: Rxk(3)
   ! Rotated k vector Rxk = R.xk(ik) in cartesian
-  REAL(DP)              :: delta_xk(3)
-  ! differenze of Rxk and xk in cartesian
-  REAL(DP)              :: delta_xk_cryst(3)
-  ! difference of Rxk and xk in crystal
-  LOGICAL               :: isGvec
-  ! 
   !
   ! rotate k point
   !
@@ -244,12 +265,41 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   !
   ! Find k point that differs a reciprocal lattice vector from the rotated one
   !
+  CALL find_kpoint(Rxk, iRk, Gvector)
+  !
+  ! WRITE(*,*) "Rxk:", Rxk, "xk:", xk(:, iRk), "Gvector", delta_xk
+  !WRITE(*,*) "ik", ik, "xk", xk(:, ik)
+END SUBROUTINE 
+    
+SUBROUTINE find_kpoint(xk_, ik_, Gvector)
+  USE kinds,                 ONLY : DP
+  USE io_global,             ONLY : stdout
+  USE klist,                 ONLY:  xk, nkstot        !k points in cartesian coordinates
+  USE cell_base,             ONLY : at
+  !
+  IMPLICIT NONE
+  !
+  INTEGER                  :: ik
+  !indices
+  REAL(DP), INTENT(IN)     :: xk_(3)
+  ! k point to find (in cartesian coordinates)
+  INTEGER,  INTENT(OUT)    :: ik_
+  !index of the k point xk_ in xk
+  REAL(DP), INTENT(OUT)    :: Gvector(3)
+  ! G connecting xk_ and xk(ik_):
+  !      G = xk_ - xk(ik_)
+  REAL(DP)              :: delta_xk(3)
+  ! differenze of Rxk and xk in cartesian
+  REAL(DP)              :: delta_xk_cryst(3)
+  ! difference of Rxk and xk in crystal
+  LOGICAL               :: isGvec
+  !
   Gvector(:) = 0.5 ! Impossible condition, this to check in the end this value changed
   DO ik = 1, nkstot
     !
     !delta_xk in cartesian
     !
-    delta_xk(:) = Rxk(:) - xk(:, ik)
+    delta_xk(:) = xk_(:) - xk(:, ik)
     !
     !go to crystal
     !
@@ -257,21 +307,16 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
                         at(3,:)*delta_xk(3)
     IF( isGvec(delta_xk_cryst) ) THEN 
       Gvector(:) = delta_xk(:)!delta_xk_cryst(:)    
-      iRk = ik
+      ik_ = ik
       EXIT
     END IF
-  END DO
+  END DO!ik
   !
   IF ( ANY( Gvector .EQ. 0.5 ) ) THEN 
-    WRITE(stdout, *) "ERROR! Could not find rotated k point ", Rxk, "in k mesh grid."
+    WRITE(stdout, *) "ERROR! Could not find  k point", xk_, "in k mesh grid."
   END IF
-  !
- ! WRITE(*,*) "Rxk:", Rxk, "xk:", xk(:, iRk), "Gvector", delta_xk
-  !WRITE(*,*) "ik", ik, "xk", xk(:, ik)
-END SUBROUTINE 
-    
-    
-           
+END SUBROUTINE
+      
     
     
     
