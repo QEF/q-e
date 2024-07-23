@@ -7,6 +7,9 @@
 !
 MODULE dv_of_drho_lr
 
+PUBLIC :: dv_of_drho
+PUBLIC :: dv_of_drho_xc
+
 CONTAINS
 
 !-----------------------------------------------------------------------
@@ -24,19 +27,15 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE fft_interfaces,    ONLY : fwfft, invfft
   USE gvect,             ONLY : ngm, g, gstart
   USE cell_base,         ONLY : tpiba2, omega
-  USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
+  USE noncollin_module,  ONLY : nspin_lsda, nspin_mag
   USE funct,             ONLY : dft_is_nonlocc
   USE xc_lib,            ONLY : xclib_dft_is
-  USE scf,               ONLY : rho, rho_core
-  USE uspp,              ONLY : nlcc_any
   USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   USE Coul_cut_2D,       ONLY : do_cutoff_2D  
   USE Coul_cut_2D_ph,    ONLY : cutoff_dv_of_drho 
   USE qpoint,            ONLY : xq
-  USE gc_lr,             ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE control_lr,        ONLY : lrpa
-  USE eqv,               ONLY : dmuxc
 
   IMPLICIT NONE
   COMPLEX(DP), INTENT(INOUT) :: dvscf(dfftp%nnr, nspin_mag)
@@ -48,13 +47,12 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   ! input: response core charge density 
   ! (needed only for PHonon when add_nlcc=.true.)
   
-  INTEGER :: ir, is, is1, ig
+  INTEGER :: is, ig
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
-  REAL(DP) :: qg2, fac, eh_corr
+  REAL(DP) :: qg2, eh_corr
   ! qg2: the modulus of (q+G)^2
-  ! fac: the structure factor
   ! eh_corr: the correction to response Hartree energy due 
   ! to Martyna-Tuckerman correction (calculated, but not used).
   COMPLEX(DP), ALLOCATABLE :: dvaux(:,:), dvhart(:,:), & 
@@ -74,43 +72,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   !
   ! 1) The exchange-correlation contribution is computed in real space
   !
-  if (lrpa) goto 111
-  !
-  fac = 1.d0 / DBLE (nspin_lsda)
-  !
-  if (nlcc_any.and.add_nlcc) then
-     rho%of_r(:, 1) = rho%of_r(:, 1) + rho_core (:)
-     do is = 1, nspin_lsda
-        dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
-     enddo
-  endif
-  !
-  do is = 1, nspin_mag
-     do is1 = 1, nspin_mag
-        do ir = 1, dfftp%nnr
-           dvaux(ir,is) = dvaux(ir,is) + dmuxc(ir,is,is1) * dvscf(ir,is1)
-        enddo
-     enddo
-  enddo
-  !
-  ! Add gradient correction to the response XC potential.
-  ! NB: If nlcc=.true. we need to add here its contribution. 
-  ! grho contains already the core charge
-  !
-  if ( xclib_dft_is('gradient') ) call dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, &
-                                dvxc_sr, dvxc_ss, dvxc_s, xq, dvscf, &
-                                nspin_mag, nspin_gga, g, dvaux) 
-  !
-  if ( dft_is_nonlocc() )  call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
-  !
-  if (nlcc_any.and.add_nlcc) then
-     rho%of_r(:, 1) = rho%of_r(:, 1) - rho_core (:)
-     do is = 1, nspin_lsda
-        dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
-     enddo
-  endif
-  !
-111 continue
+  IF (.NOT. lrpa) CALL dv_of_drho_xc(dvaux, dvscf, drhoc)
   !
   ! Copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
@@ -243,5 +205,86 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   RETURN
   !
 end subroutine dv_of_drho
+
+!-----------------------------------------------------------------------
+subroutine dv_of_drho_xc (dv, drho, drhoc)
+  !-----------------------------------------------------------------------
+  !
+  !  This routine computes the change of the self consistent potential
+  !  (Hartree and XC) due to the perturbation.
+  !  Note: gamma_only is disregarded for PHonon calculations,
+  !  TDDFPT purposes only.
+  !
+  USE kinds,             ONLY : DP
+  USE constants,         ONLY : e2, fpi
+  USE fft_base,          ONLY : dfftp
+  USE fft_interfaces,    ONLY : fwfft, invfft
+  USE gvect,             ONLY : g
+  USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
+  USE funct,             ONLY : dft_is_nonlocc
+  USE xc_lib,            ONLY : xclib_dft_is
+  USE scf,               ONLY : rho, rho_core
+  USE uspp,              ONLY : nlcc_any
+  USE Coul_cut_2D_ph,    ONLY : cutoff_dv_of_drho
+  USE qpoint,            ONLY : xq
+  USE gc_lr,             ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE eqv,               ONLY : dmuxc
+
+  IMPLICIT NONE
+  COMPLEX(DP), INTENT(INOUT) :: dv(dfftp%nnr, nspin_mag)
+  ! output: response XC potential
+  COMPLEX(DP), INTENT(IN), OPTIONAL :: drho(dfftp%nnr, nspin_mag)
+  ! input:  response charge density
+  COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoc(dfftp%nnr)
+  ! input: response core charge density
+  ! (needed only for PHonon when add_nlcc=.true.)
+
+  INTEGER :: ir, is, is1
+  ! counter on r vectors
+  ! counter on spin polarizations
+  REAL(DP) :: fac
+  ! fac: 1 / nspin_lsda
+  COMPLEX(DP), ALLOCATABLE :: drhotot(:, :)
+  ! Total charge density. Sum of electronic (drho) and nlcc (drhoc) terms.
+  !
+  ALLOCATE(drhotot(dfftp%nnr, nspin_mag))
+  !
+  IF (PRESENT(drho)) THEN
+     drhotot = drho
+  ELSE
+     drhotot = (0.d0, 0.d0)
+  ENDIF
+  !
+  IF (PRESENT(drhoc)) THEN
+     ! Add core charge
+     fac = 1.d0 / DBLE (nspin_lsda)
+     DO is = 1, nspin_lsda
+        drhotot(:, is) = drhotot(:, is) + fac * drhoc(:)
+     ENDDO
+  ENDIF
+  !
+  do is = 1, nspin_mag
+     do is1 = 1, nspin_mag
+        do ir = 1, dfftp%nnr
+           dv(ir,is) = dv(ir,is) + dmuxc(ir,is,is1) * drhotot(ir,is1)
+        enddo
+     enddo
+  enddo
+  !
+  ! Add gradient correction to the response XC potential.
+  ! NB: If nlcc=.true. we need to add here its contribution.
+  ! grho contains already the core charge
+  !
+  if (nlcc_any) rho%of_r(:, 1) = rho%of_r(:, 1) + rho_core (:)
+  !
+  if ( xclib_dft_is('gradient') ) call dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, &
+                                dvxc_sr, dvxc_ss, dvxc_s, xq, drhotot, &
+                                nspin_mag, nspin_gga, g, dv)
+  !
+  if ( dft_is_nonlocc() )  call dnonloccorr(rho%of_r, drhotot, xq, dv)
+  !
+  if (nlcc_any) rho%of_r(:, 1) = rho%of_r(:, 1) - rho_core (:)
+  !
+end subroutine dv_of_drho_xc
 
 END MODULE dv_of_drho_lr
