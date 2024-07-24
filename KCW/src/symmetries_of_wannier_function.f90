@@ -29,7 +29,8 @@ SUBROUTINE symmetries_of_wannier_function()
   USE cell_base,             ONLY : bg, at
   USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers
   USE interpolation,         ONLY : read_wannier_centers
-  !
+  USE io_global,             ONLY : stdout
+  USE mp,                    ONLY : mp_sum  
   IMPLICIT NONE 
   !
   COMPLEX(DP)              ::IMAG
@@ -37,7 +38,6 @@ SUBROUTINE symmetries_of_wannier_function()
   INTEGER                  :: iRq
   COMPLEX(DP), ALLOCATABLE :: rhowann(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: rhowann_aux(:)
-  COMPLEX(DP), ALLOCATABLE :: rhowann_aux2(:)
   COMPLEX(DP), ALLOCATABLE :: rho_rotated(:)
   COMPLEX(DP), ALLOCATABLE :: rhog(:)
   CHARACTER (LEN=256)      :: file_base
@@ -45,18 +45,17 @@ SUBROUTINE symmetries_of_wannier_function()
   REAL(DP)                 :: xk_cryst(3,1)
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   COMPLEX(DP), ALLOCATABLE :: phase(:)
-  LOGICAL                  :: onlyone
   REAL(DP), ALLOCATABLE    :: cx(:)
   REAL(DP)                 :: ggg(3)
   REAL(DP)                 :: ft_cart(3)
   LOGICAL                  :: is_satisfied
+  REAL(DP)                 :: delta_rho
   !
   !
   IMAG = CMPLX(0.D0, 1.D0, kind=DP)
   ALLOCATE ( rhog (ngms) )
   ALLOCATE (rhowann ( dffts%nnr, nkstot/nspin, num_wann) )
   ALLOCATE ( rhowann_aux(dffts%nnr) )
-  ALLOCATE ( rhowann_aux2(dffts%nnr) )
   ALLOCATE ( rho_rotated(dffts%nnr) )
   ALLOCATE( phase (dffts%nnr) )
   ALLOCATE ( nsym_w(num_wann) )
@@ -73,23 +72,26 @@ SUBROUTINE symmetries_of_wannier_function()
   !get wannier centres in lattice coordinates
   !
   CALL read_wannier_centers()
-  DO iwann=1, num_wann
-    WRITE(*,*) centers(:, iwann)
-  END DO
-  WRITE(*,*) "read_wannier_centers"
+  !
+  !go to crystal coordinates
+  !
   CALL cryst_to_cart( num_wann, centers, at, +1 )
-  
-  WRITE(*,*) " SYMMETRIES OF WANNIER FUNCTION"
-  DO isym=1, nsym
-    iwann=5
-    ft_cart(:) = ft(:, isym)
-    CALL cryst_to_cart(1, ft_cart, at, +1)
-    cx = MATMUL(centers(:,iwann), sr(:,:,isym))-ft_cart(:)
-    is_satisfied = ( (centers(1,iwann)-cx(1))**2 + (centers(2,iwann)-cx(2))**2 &
-                  + (centers(3,iwann)-cx(3))**2 .lt. 1.D-02 )
-    IF( is_satisfied)  WRITE(*,*) isym
+  WRITE(stdout, *) "Centers of wannier functions (crys)..."
+  DO iwann=1, num_wann
+    WRITE(stdout, *) "iwann = ", iwann, "center = (",&
+      centers(0, iwann), ",", centers(1, iwann), ",", centers(2, iwann) 
   END DO
- 
+  IF (ANY( centers(:, iwann) .lt. (-0.5 -1.D-03) ) .or. &
+  ANY( centers(:, iwann) .gt. (0.5 -1.D-03) )) THEN
+    WRITE(stdout,*) "WARNING!! some of the wannier centers are not in what we expect to be the &
+     central unit cell with crystal coordinates in [-0.5, 0.5)."
+    WRITE(stdout,*) "To exploit all the symmetries, rerun the wannierization with the flag "
+    WRITE(stdout,*)  "translate_home_cell = .true." 
+  END IF
+!
+  !add loop over wf to rerun wannierization with translate_home_cell
+  !
+  !
   ! construct rir
   !
   CALL kcw_set_symm( dffts%nr1,  dffts%nr2,  dffts%nr3, &
@@ -170,50 +172,12 @@ SUBROUTINE symmetries_of_wannier_function()
         CALL calculate_phase(Gvector, phase)
         
         
-        onlyone = .false.
-        rhowann_aux2(:) = rho_rotated(:)/rhowann(:,iRq,iwann)
-        !
-        !trial calculating fourier transform and checking which component is nonzero
-           
-        CALL fwfft('Rho', rhowann_aux2(:), dffts)
-        ig = 1
-        do ir=1, dffts%nnr
-          if ( ABS(rhowann_aux2(ir)) .gt. 1.d-02 ) THEN
-            if ( onlyone ) then
-              onlyone = .false.
-              exit
-            else 
-              onlyone = .true.
-              ig = ir
-            end if 
-          end if
-        end do
-        !
-        !trial calculating G from the exponential
-
-        !DO ir = 1, dffts%nnr
-        !  phase(ir) = EXP(-IMAG*tpi*dot_product(DBLE(mill(:,ig)),r(ir,:)))
-        !END DO
-
         rhowann_aux(:) = rho_rotated(:) - phase(:)*rhowann(:,iRq,iwann) 
         rhowann_aux(:) = rhowann_aux(:)/dffts%nnr
-
-        !WRITE(*,*) "iwann, isym, iq", iwann, isym, iq, SUM( ABS(rhowann_aux(:)) )
-        !
-        !WRITE(*,*) "iwann: ", iwann, "iq", iq, "iRq", iRq, SUM (ABS(rhowann_aux(:)))
-        !IF (SUM (ABS(rhowann_aux(:))) .lt. 1.D-01) THEN
-        !  WRITE(*,*) "YES Gvector", Gvector, "isym=", isym, "onlyone ", onlyone, &
-        !  SUM( ABS(rhowann_aux(:)) )
-        !  !"ggg", ggg,&
-        !  !"g", mill(:,ig)!dffts%nl(ig))
-        !  !WRITE(*,*) "iwann", iwann, "iq", iq, "respected symmetry", isym,"."
-        !ELSE 
-        !  WRITE(*,*) "NO  Gvector", Gvector, "isym=", isym, "onlyone ", onlyone, &
-        !  SUM( ABS(rhowann_aux(:)) )   !"ggg", ggg,&
-        !     !"g", mill(:,ig)!dffts%nl(ig))
-        !END IF
         WRITE(*,*) "iq", iq, "isym", isym, "iwann", iwann, "SUM.", SUM( ABS(rhowann_aux(:)))
-        IF ( SUM( ABS(rhowann_aux(:)) ) .gt. 1.D-02 )  THEN
+        delta_rho = SUM( ABS(rhowann_aux(:)) )
+        CALL mp_sum (delta_rho, intra_bgrp_comm)
+        IF ( delta_rho .gt. 1.D-02 )  THEN
           EXIT
         END IF
         IF( iq .eq. nkstot/nspin ) THEN
