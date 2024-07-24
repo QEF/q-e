@@ -54,7 +54,6 @@ subroutine dynmat_nlcc (imode0, drhoscf, npe)
   allocate (dvaux(  dfftp%nnr, nspin_mag))
 
   dyn1 (:,:) = (0.d0, 0.d0)
-  dvaux(:, :) = (0.d0, 0.d0)
 !
 !  compute the exchange and correlation potential for this mode
 !
@@ -66,6 +65,8 @@ subroutine dynmat_nlcc (imode0, drhoscf, npe)
   do ipert = 1, npe
      mode = imode0 + ipert
      call addcore(u(1, mode), drhoc)
+     !
+     dvaux(:, :) = (0.d0, 0.d0)
      CALL dv_of_drho_xc(dvaux, drho = drhoscf(1, 1, ipert), drhoc = drhoc)
      !
      mode1 = 0
