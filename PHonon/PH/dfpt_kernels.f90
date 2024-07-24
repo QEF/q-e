@@ -22,7 +22,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !!    For DFPT+U also the bare perturbation of the Hubbard potential should be included.
    !!    This data is stored in the buffer iudvpsi with length lrdvpsi.
    !!
-   !! THEN, it performs the following tasks:
+   !! Then, it performs the following tasks:
    !! b) compute the wavefunction response \(\Delta \psi\) and the charge density response
    !!    \(\Delta \rho\text{SCF}\) by calling sternheimer_kernel.
    !!    Inside sternheimer_kernel, the following tasks are performed:
@@ -38,8 +38,8 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !! g) Mix the potentials;
    !! h) If converged, return. Otherwise, return to step b.
    !!
-   !! For systems with noncollinear magnetism ( \(\text{noncolin}=\text{TRUE}\) and
-   !! \(\text{domag}=\text{TRUE}\) ), the linear system is solved twice (\(\text{nsolv}=2\).
+   !! For systems with noncollinear magnetism (noncolin = true and domag = true), the linear
+   !! system is solved twice (nsolv = 2).
    !! The first case \(\text{isolv}=1\) is the ordinary one, while the second case
    !! \(\text{isolv}=2\) needs the time-reversed wave functions. For the theoretical
    !! background, please refer to:
@@ -53,15 +53,15 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !!    - iudvpsi : Unit for the buffer storing dV_bare * psi
    !!    - option : Option that tells the type of perturbation. phonon / efield / ...
    !!
-   !! Output:
+   !! Input/Output:
    !!    - drhos : change of the charge density (smooth part only, but allocated with dfftp)
    !!    - drhop : change of the charge density (smooth and hard parts, dfftp)
    !!    - dvscfs : change of the scf potential (smooth part only, dffts)
    !!    - dvscfp : change of the scf potential (smooth and hard parts, dfftp)
    !!    - dbecsum : change of the becsum (used if USPP or PAW)
-   !! (These are zero in the first iteration, nonzero input is used for restart.)
+   !! (When restarting, nonzero input is used. When starting from scratch, zero input is used.)
    !!
-   !! Output (in module variable, not in argument):
+   !! Output (stored in modules, not in argument):
    !!    - dpsi : Wavefunction perturbation dpsi. Stored in buffer iudwf with length lrdwf
    !!    - def : Fermi energy shift (only for metals at q=0)
    !!
@@ -77,7 +77,6 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !! -> dvscfs, dvscfp    -> ...
    !!
    !! NOTE: The following features are not implemented.
-   !!    - Restart
    !!    - Custom convergence parameter
    !!    - Custom printing
    !!
