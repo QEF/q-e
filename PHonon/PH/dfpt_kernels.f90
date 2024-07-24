@@ -265,9 +265,9 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       ! i.e. the scf variation of the occupation matrix ns.
       !
       IF (option == 'phonon') THEN
-         IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0, imode0, irr, .TRUE.)
+         IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0, imode0, .TRUE.)
       ELSEIF (option == 'efield') THEN
-         IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0, 0, 1, .FALSE.)
+         IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0, 0, .FALSE.)
       ELSE
          CALL errore('dfpt_kernel', 'Unknown option' // TRIM(option), 1)
       ENDIF

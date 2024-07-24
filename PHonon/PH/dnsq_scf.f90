@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag) 
+SUBROUTINE dnsq_scf (npe, lmetq0, imode0, lflag)
   !-----------------------------------------------------------------------
   !! DFPT+U: This routine calculates, for each SCF iteration, 
   !! the SCF variation of the occupation matrix ns, for npe perturbations.
@@ -60,8 +60,6 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   !! TRUE for phonon calculation, FALSE for electric field calculation
   INTEGER , INTENT(IN) :: imode0
   !! the position of the modes
-  INTEGER , INTENT(IN) :: irr
-  !! the irreducible representation
   !
   ! ... local variables
   !
@@ -107,7 +105,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
         nrec = (ipert - 1) * nksq + ik
         !
         ! At each SCF iteration for each ik and ipert read dpsi on iunit iudwf
-        ! iudwf contains data for the actual irreducible representation irr.
+        ! iudwf contains data for the actual perturbation ipert.
         !
         CALL get_buffer (dpsi, lrdwf, iudwf, nrec)
         !
@@ -255,18 +253,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   !
   ! Symmetrize dnsscf
   !
-  IF (.NOT.lflag) THEN
-     !
-     ! Symmetrization in the case of the electric field calculation
-     !
-     CALL syme_dns (ldim, npe, dnsscf) 
-     !  
-  ELSE
-     ! Symmetrization in the case of the phonon calculation
-     !
-     CALL sym_dns (ldim, npe, irr, dnsscf)  
-     !
-  ENDIF
+  CALL sym_dns(ldim, npe, dnsscf)
   !
   ! Write symmetrized dnsscf in the pattern basis 
   ! to the standard output
@@ -304,7 +291,7 @@ END SUBROUTINE dnsq_scf
 SUBROUTINE dnsq_store(npe, imode0)
 !----------------------------------------------------------------------------
   !! Store the computed dnsscf in the full matrix dnsscf_all_modes
-  !! (i.e for all modes and not only for the npe related to irr)
+  !! (i.e for all modes and not only for the npe irreducible representations)
   !
   USE ions_base,     ONLY : nat, ityp
   USE lsda_mod,      ONLY : nspin

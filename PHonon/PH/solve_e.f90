@@ -188,7 +188,7 @@ subroutine solve_e
      ! DFPT+U: at each iteration calculate dnsscf,
      ! i.e. the scf variation of the occupation matrix ns.
      !
-     IF (lda_plus_u .AND. (iter /= 1)) CALL dnsq_scf(3, .false., 0, 1, .false.)
+     IF (lda_plus_u .AND. (iter /= 1)) CALL dnsq_scf(3, .false., 0, .false.)
      !
      ! set threshold for the iterative solution of the linear system
      !
