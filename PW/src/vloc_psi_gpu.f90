@@ -205,7 +205,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
         hm_vec(1)=group_size ; hm_vec(2)=n ; hm_vec(3)=group_size
         ebnd = ibnd+group_size-1
         !$acc parallel loop collapse(2)
-        DO idx = 2, group_size
+        DO idx = 1, group_size
            DO j = 1, n
               psi(j,idx) = psi_d(j,ibnd+idx-1)
            END DO
