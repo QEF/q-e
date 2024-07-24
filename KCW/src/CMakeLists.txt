@@ -55,6 +55,7 @@ set(src_kcw
     kcw_kpoint_grid.f90 #Giovanni Cistaro
     write_qlist_ibz.f90 #Giovanni Cistaro
     read_qlist_ibz.f90 #Giovanni Cistaro
+    kcw_psymdvscf.f90 #Giovanni Cistaro
     kcw_symdvscf.f90 #Giovanni Cistaro
     kcw_read_sym.f90 #Giovanni Cistaro
     kcw_write_sym.f90 #Giovanni Cistaro

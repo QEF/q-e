@@ -66,20 +66,18 @@
                !CALL invfft ('Wave', psic, dffts)
                IF (isym > 1) THEN
 #if defined(__MPI)
-gpsi(1:dffts%nnr) = psi(rir(1:(dffts%nnr),isym))
-
-!                  ! gather among all the CPUs
-!                  CALL gather_grid(dffts, psi, temppsi_all) 
-!                  ! gathers all the piecies of psi to temppsi_all
-!                  ! (Giovanni Cistaro)
-!                  !
-!                  ! apply rotation
-!                  psi_all(1:dffts%nnr) = temppsi_all(rir(1:(dffts%nnr),isym)) 
-!                  !rotates the space of temppsic_all and builds 
-!                  !psic_all with it Giovanni Cistaro)
-!                  !
-!                  ! scatter back a piece to each CPU
-!                  CALL scatter_grid(dffts, psi_all, gpsi)
+                 ! gather among all the CPUs
+                 CALL gather_grid(dffts, psi, temppsi_all) 
+                 ! gathers all the piecies of psi to temppsi_all
+                 ! (Giovanni Cistaro)
+                 !
+                 ! apply rotation
+                 psi_all(1:dffts%nnr) = temppsi_all(rir(1:(dffts%nnr),isym)) 
+                 !rotates the space of temppsic_all and builds 
+                 !psic_all with it Giovanni Cistaro)
+                 !
+                 ! scatter back a piece to each CPU
+                 CALL scatter_grid(dffts, psi_all, gpsi)
 #else
                  gpsi(1:dffts%nnr) = psi(rir(1:(dffts%nnr),isym))
 #endif

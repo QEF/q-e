@@ -25,7 +25,7 @@ SUBROUTINE kcw_symdvscf (dvtosym)
     USE symm_base,        ONLY : s
     USE cell_base,        ONLY : bg, at
     USE noncollin_module, ONLY : noncolin
-  
+    USE qpoint,            ONLY : xq
     implicit none
   
     complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
@@ -41,6 +41,9 @@ SUBROUTINE kcw_symdvscf (dvtosym)
     ! auxiliary space
     ! the multiplication factor
     ! the phase factor
+    COMPLEX(DP)    :: phase_ft
+    COMPLEX(DP)    :: imag
+    REAL(DP)       :: xq_cryst(3)
     !
     if (nsymq == 1 .and. (.not.minus_q) ) return
     !
@@ -51,6 +54,10 @@ SUBROUTINE kcw_symdvscf (dvtosym)
     n(1) = tpi / DBLE(dfftp%nr1)
     n(2) = tpi / DBLE(dfftp%nr2)
     n(3) = tpi / DBLE(dfftp%nr3)
+    !
+    xq_cryst = xq
+    imag = (0.D0, 1.D0)
+    CALL cryst_to_cart(1,xq_cryst,at,-1)
     !
     CALL scale_sym_ops( nsymq, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
          s_scaled, ftau )
@@ -172,7 +179,8 @@ SUBROUTINE kcw_symdvscf (dvtosym)
              do i = 1, dfftp%nr1
                 !
                 do isym = 1, nsymq
-                   !
+                  phase_ft = EXP(- imag * tpi * dot_product( xq_cryst(:), ft(:, isym) ) ) 
+                  !
                    irot = isym
                    !
                    ! Rotation and fractional translation: S^-1 * r - ftau
@@ -184,10 +192,10 @@ SUBROUTINE kcw_symdvscf (dvtosym)
                    !
                    IF ( t_rev(isym) == 0 ) THEN
                       dvsym(i,j,k) = dvsym(i,j,k) + & 
-                                dvtosym(ri,rj,rk,is) * phase(isym) 
+                                dvtosym(ri,rj,rk,is) * phase(isym) * phase_ft
                    ELSE
                       dvsym(i,j,k) = dvsym(i,j,k) + & 
-                         conjg( dvtosym(ri,rj,rk,is) * phase(isym) )  
+                         conjg( dvtosym(ri,rj,rk,is) * phase(isym) * phase_ft )  
                    ENDIF
                    !
                 enddo
