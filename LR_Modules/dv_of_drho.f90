@@ -13,7 +13,7 @@ PUBLIC :: dv_of_drho_xc
 CONTAINS
 
 !-----------------------------------------------------------------------
-subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
+subroutine dv_of_drho (dvscf, drhoc)
   !-----------------------------------------------------------------------
   !
   !  This routine computes the change of the self consistent potential
@@ -41,12 +41,12 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   COMPLEX(DP), INTENT(INOUT) :: dvscf(dfftp%nnr, nspin_mag)
   ! input:  response charge density
   ! output: response Hartree-and-XC potential
-  LOGICAL, INTENT(IN) :: add_nlcc
-  ! input: if true add core charge density
   COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoc(dfftp%nnr)
   ! input: response core charge density 
   ! (needed only for PHonon when add_nlcc=.true.)
   
+  LOGICAL :: add_nlcc
+  ! if true add core charge density
   INTEGER :: is, ig
   ! counter on r vectors
   ! counter on spin polarizations
@@ -67,8 +67,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   allocate (dvaux( dfftp%nnr, nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
   !
-  if (add_nlcc .and. .not.present(drhoc)) &
-     & CALL errore( 'dv_of_drho', 'drhoc is not present in the input of the routine', 1 )   
+  add_nlcc = PRESENT(drhoc)
   !
   ! 1) The exchange-correlation contribution is computed in real space
   !

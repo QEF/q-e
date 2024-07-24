@@ -39,7 +39,7 @@
      !
      ! Calculates the local part of the scf potential
      !
-     call dv_of_drho (derho (1, 1), .false.)
+     call dv_of_drho (derho (1, 1))
      !
      if (doublegrid) then
         call fft_interpolate(dfftp, derho (:, 1), dffts, dvscfs (:, ipl) )

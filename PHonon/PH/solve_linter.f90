@@ -430,7 +430,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         call addcore(u(1, imode0+ipert), drhoc)
         !
         ! Compute the response HXC potential
-        call dv_of_drho (dvscfout(1,1,ipert), .true., drhoc)
+        call dv_of_drho (dvscfout(1,1,ipert), drhoc = drhoc)
         !
      enddo
      !

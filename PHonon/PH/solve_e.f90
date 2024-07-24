@@ -247,7 +247,7 @@ subroutine solve_e
         IF (lnoloc) then
            dvscfout(:,:,ipol)=(0.d0,0.d0)
         ELSE
-           call dv_of_drho (dvscfout (1, 1, ipol), .false.)
+           call dv_of_drho (dvscfout (1, 1, ipol))
         ENDIF
      enddo
      !

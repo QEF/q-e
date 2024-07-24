@@ -122,7 +122,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Calculation of the response HXC potential
      ! from the response charge density.
      !
-     CALL dv_of_drho (dvrsc, .false.)
+     CALL dv_of_drho (dvrsc)
      !
      ! Interpolation of the HXC potential from the thick mesh 
      ! to a smoother mesh (if doublegrid=.true.)
