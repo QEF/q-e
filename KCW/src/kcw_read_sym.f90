@@ -34,7 +34,7 @@ SUBROUTINE reset_symmetry_op(iwann)
   USE symm_base,           ONLY : invsym, s, ft, nsym, inverse_s, nrot
   USE symm_base,           ONLY : s_axis_to_cart
   USE symm_base,           ONLY : copy_sym, time_reversal
-  USE symm_base,           ONLY : is_group
+  !USE symm_base,           ONLY : is_group
   USE io_global,            ONLY : stdout, ionode
   USE control_kcw,         ONLY : nsym_old, mp1, mp2, mp3
   USE cell_base,          ONLY: bg
@@ -77,10 +77,10 @@ SUBROUTINE reset_symmetry_op(iwann)
   nsym = copy_sym( nrot, sym )
   WRITE(stdout,*) "number of symmetry for iwann = ", iwann, ":", nsym
   !
-  IF ( .NOT. is_group( nsym ) ) THEN
-    CALL infomsg( 'find_sym', 'not a group! symmetry disabled' )
-    nsym = 1
-  END IF
+  !IF ( .NOT. is_group( nsym ) ) THEN
+  !  CALL infomsg( 'find_sym', 'not a group! symmetry disabled' )
+  !  nsym = 1
+  !END IF
   !
   ! ... check if inversion (I) is a symmetry.
   ! If so, it should be the (nsym/2+1)-th operation of the group

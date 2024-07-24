@@ -21,7 +21,7 @@ SUBROUTINE screen_coeff ()
   USE control_kcw,          ONLY : kcw_iverbosity, spin_component, num_wann, iorb_start, l_do_alpha, &
                                    iorb_end, alpha_final, nqstot, eps_inf, l_vcut, l_unique_manifold, &  
                                    group_alpha, tmp_dir_kcw, iurho_wann, tmp_dir_kcwq, x_q, tmp_dir_save, &
-                                   i_orb, nrho, wq_ibz, fbz2ibz, irr_bz
+                                   i_orb, nrho, wq_ibz, fbz2ibz, irr_bz, setup_pw
   USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_mag, npol
   USE buffers,              ONLY : get_buffer, save_buffer
   USE io_global,            ONLY : stdout, ionode
@@ -67,7 +67,7 @@ SUBROUTINE screen_coeff ()
   COMPLEX(DP), ALLOCATABLE  :: rhog(:,:), delta_vg(:,:), vh_rhog(:), drhog_scf(:,:), drhor_scf(:,:), delta_vg_(:,:)
   ! wanier density, perturbing potential, hartree potential, density variation (g and r), perturbing pot with G0=0 
   !
-  LOGICAL :: do_band, setup_pw 
+  LOGICAL :: do_band 
   !
   COMPLEX(DP) :: phase(dffts%nnr), wann_c(dffts%nnr,num_wann,nrho), rho_c(dffts%nnr,num_wann,nrho)
   !! The phase associated to the hift k+q-> k'
@@ -126,7 +126,7 @@ SUBROUTINE screen_coeff ()
   nsym_old = nsym
   !
   DO iq = iq_start, nqs
-    !! For each q in the mesh 
+      !! For each q in the mesh 
     !
     CALL kcw_prepare_q ( do_band, setup_pw, iq ) 
     IF (kcw_iverbosity .gt. -1 ) WRITE(stdout,'(8x, "INFO: prepare_q DONE",/)') 

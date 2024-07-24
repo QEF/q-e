@@ -19,6 +19,7 @@ SUBROUTINE kcw_psymdvscf (dvtosym)!(nper, irr, dvtosym)
   USE scatter_mod,  ONLY : cgather_sym
 
   USE lr_symm_base, ONLY : nsymq, minus_q
+  USE control_kcw,  ONLY : irr_bz
   !
   IMPLICIT NONE
   !
@@ -38,7 +39,7 @@ SUBROUTINE kcw_psymdvscf (dvtosym)!(nper, irr, dvtosym)
   COMPLEX(DP), ALLOCATABLE :: ddvtosym (:,:)!,:)
   ! the potential to symm
 
-
+  if ( .not. irr_bz ) RETURN
   IF (nsymq.EQ.1.AND. (.NOT.minus_q) ) RETURN
   CALL start_clock ('psymdvscf')
 
@@ -67,9 +68,8 @@ SUBROUTINE kcw_psymdvscf (dvtosym)!(nper, irr, dvtosym)
 
   CALL stop_clock ('psymdvscf')
 #else
-
+   if ( .not. irr_bz ) RETURN
   CALL kcw_symdvscf (dvtosym)!(nper, irr, dvtosym)
-
 #endif
 
   RETURN

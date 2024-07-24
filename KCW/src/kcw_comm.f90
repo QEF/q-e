@@ -128,9 +128,9 @@ MODULE control_kcw
   !index of q point in xq_ibz in array xk
   INTEGER, ALLOCATABLE     :: fbz2ibz(:, :)
   !index of q point xk in array xq_ibz
-  LOGICAL                  :: irr_bz = .true.
+  LOGICAL                  :: irr_bz = .false.
   INTEGER                  :: nsym_old
   !to keep track of number of symmetries of crystal, without restrictions
-  
+  LOGICAL                  :: setup_pw
 END MODULE control_kcw
 
