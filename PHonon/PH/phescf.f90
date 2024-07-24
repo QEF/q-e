@@ -88,7 +88,8 @@ SUBROUTINE phescf()
      !
      WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
      !
-     CALL solve_e()
+   !   CALL solve_e()
+     CALL solve_e_new()
      !
      WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
      !

@@ -93,6 +93,7 @@ subroutine print_clock_ph
      WRITE( stdout, * )
      call print_clock ('phqscf')
      call print_clock ('solve_linter')
+     call print_clock ('dfpt_kernel')
      call print_clock ('sth_kernel')
      call print_clock ('h_prec')
      call print_clock ('apply_dpot_b')

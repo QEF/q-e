@@ -260,12 +260,3 @@ MODULE ldaU_lr
   !! S * atomic wfc at k+q
   !
 END MODULE ldaU_lr
-
-MODULE nc_mag_aux_lr
-  USE kinds,      ONLY : DP
-  SAVE
-
-  COMPLEX (DP), ALLOCATABLE :: deeq_nc_save(:,:,:,:,:), &
-                               int1_nc_save(:,:,:,:,:,:), &
-                               int3_save(:, :, :, :, :, :)
-END MODULE nc_mag_aux_lr
