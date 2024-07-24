@@ -628,8 +628,6 @@
     USE constants_epw,    ONLY : zero, czero
     USE mp_images,        ONLY : intra_image_comm
     USE elph2,            ONLY : veff, ig_s, ig_e
-    USE Coul_cut_2D,      ONLY : do_cutoff_2D
-    USE Coul_cut_2D_ph,   ONLY : lr_Vlocq
     !
     IMPLICIT NONE
     !
@@ -782,21 +780,12 @@
                   !
                   nta = ityp(na)
                   !
-                  IF (do_cutoff_2D) THEN
-                    DO ig = 1, ngvec
-                      sk(ig) = (vlocq(ig + ig_s - 1, nta) + lr_Vlocq (ig + ig_s - 1, nta)) &
-                               * eigts1(mill(1, ig + ig_s - 1), na) &
-                               * eigts2(mill(2, ig + ig_s - 1), na) &
-                               * eigts3(mill(3, ig + ig_s - 1), na)
-                    ENDDO
-                  ELSE
-                    DO ig = 1, ngvec
-                      sk(ig) = vlocq(ig + ig_s - 1, nta) &
-                               * eigts1(mill(1, ig + ig_s - 1), na) &
-                               * eigts2(mill(2, ig + ig_s - 1), na) &
-                               * eigts3(mill(3, ig + ig_s - 1), na)
-                    ENDDO
-                  ENDIF
+                  DO ig = 1, ngvec
+                    sk(ig) = vlocq(ig + ig_s - 1, nta) &
+                             * eigts1(mill(1, ig + ig_s - 1), na) &
+                             * eigts2(mill(2, ig + ig_s - 1), na) &
+                             * eigts3(mill(3, ig + ig_s - 1), na)
+                  ENDDO
                   !
                   DO ipol = 1, 3
                     DO ig = 1, ngvec
@@ -1224,4 +1213,3 @@
   !-----------------------------------------------------------------------------
   END MODULE dvqpsi
   !-----------------------------------------------------------------------------
-
