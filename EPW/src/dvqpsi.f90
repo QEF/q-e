@@ -61,8 +61,6 @@
     USE xc_lib,                ONLY : xclib_dft_is
     USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
-    USE Coul_cut_2D,           ONLY : do_cutoff_2D
-    USE Coul_cut_2D_ph,        ONLY : cutoff_localq
     !
     IMPLICIT NONE
     !
@@ -164,9 +162,6 @@
           gu = gu0 + g(1, ig) * u1 + g(2, ig) * u2 + g(3, ig) * u3
           aux1(dffts%nl(ig)) = aux1(dffts%nl(ig)) + vlocq(ig, nt) * gu * fact * gtau
         ENDDO
-        IF (do_cutoff_2D) THEN
-          CALL cutoff_localq(aux1, fact, u1, u2, u3, gu0, nt, na)
-        ENDIF
         !
       ENDIF
     ENDDO
