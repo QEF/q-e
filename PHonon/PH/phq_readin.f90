@@ -767,6 +767,8 @@ SUBROUTINE phq_readin()
           " Electron-phonon with Hubbard U is not supported",1)
      IF (lraman) CALL errore("phq_readin", &
           " The phonon code with Raman and Hubbard U is not implemented",1)
+     IF (magnetic_sym) CALL errore("phq_readin", &
+          " The phonon code with noncollinear magnetism and Hubbard U is not implemented", 1)
      !
   ENDIF
   ! checks
