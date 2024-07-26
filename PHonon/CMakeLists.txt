@@ -136,7 +136,6 @@ set(src_ph
     PH/symm.f90
     PH/symmorphic_or_nzb.f90
     PH/swfc.f90
-    PH/syme_dns.f90
     PH/sym_dns.f90
     PH/sym_dns_wrapper.f90
     PH/transform_int_so.f90
