@@ -160,21 +160,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
                    jkb, ih, jh, ibnd_loc,ijkb0,nh_np, nproc, &
                    nbnd_loc, nbnd_begin, icyc, ishift
-       REAL(DP) :: dot11, dot21, dot31, dot22, dot32, dot33,  &
-                   qm1i, gk1, gk2, gk3, wg_nk, fac, evps, aux,&
-                   Re_worksum, Im_worksum
+       REAL(DP) :: sigmaij
        COMPLEX(DP) :: worksum, cv, wsum1, wsum2, wsum3, evci
        !
-       REAL(DP), ALLOCATABLE :: deff(:,:,:)
-       COMPLEX(DP), ALLOCATABLE :: ps(:), dvkb(:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: ps(:), dvkb(:,:)
+       TYPE(bec_type) :: becd
        !
-       REAL(DP) :: deff_, xyz(3,3)
-       !
+       REAL(DP) :: xyz(3,3)
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, 0._DP, &
                   1._DP /
-       REAL(DP), ALLOCATABLE :: becpr(:,:)
-       !$acc declare device_resident(becpr)
        !
        IF( becp%comm /= mp_get_comm_null() ) THEN
           nproc      = becp%nproc
@@ -193,17 +188,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! ... for the moment when using_gpu is true becp is always fully present
        !     in all processors
        !
-       ALLOCATE( becpr(nkb,nbnd_loc) )
-       !$acc kernels present(becp%r)
-       becpr = becp%r
-       !$acc end kernels
+       sigmaij = 0._DP
        !
-       evps = 0._DP
-       !
-       compute_evps: IF ( .NOT. (nproc==1 .AND. me_pool/=root_pool) ) THEN
+       compute_diag: IF ( .NOT. (nproc==1 .AND. me_pool/=root_pool) ) THEN
           !
           !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r) &
-          !$acc copyin( ityp, wg, et, nh ) reduction(+:evps)
+          !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
           DO na = 1, nat
              DO ibnd_loc = 1, nbnd_loc
                 ibnd = ibnd_loc+becp%ibnd_begin-1
@@ -222,162 +212,136 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       jkb = ijkb0 + jh
                       ! For norm-conserving PP, actually qq_at=0 but again,
                       ! it is not worth to make two distinct cases here
-                      evps = evps + ( deeq(ih,jh,na,current_spin) - et(ibnd,ik)*qq_at(ih,jh,na)) * &
+                      sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) - et(ibnd,ik)*qq_at(ih,jh,na)) * &
                            wg(ibnd,ik) * becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
                    END DO
                 END DO
              END DO
           END DO
           !
-       ENDIF compute_evps
+       ENDIF compute_diag
        !
        DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
+          sigmanlc(l,l) = sigmanlc(l,l) - sigmaij
        ENDDO
        !
        ! ... non diagonal contribution - derivative of the Bessel function
        !
-       ALLOCATE( deff(nhm,nhm,nat) )
-       ALLOCATE( ps(nkb) )
-       !$acc data create(deff,ps)
-       ALLOCATE( dvkb(npwx,nkb,4) )
+       CALL allocate_bec_type_acc( nkb, nbnd, becd )
+       !
+       ALLOCATE( dvkb(npwx,nkb) )
        !$acc data create(dvkb)
+       !$acc data present( dvkb, becd )
+       CALL gen_us_dj( ik, dvkb )
        !
-       CALL gen_us_dj( ik, dvkb(:,:,4) )
-       IF ( lmaxkb > 0 ) THEN
-         DO ipol = 1, 3
-           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
-         ENDDO
-       ENDIF
-       !
-       DO icyc = 0, nproc-1
-          !
-          DO ibnd_loc = 1, nbnd_loc
-             !
-             ibnd = ibnd_loc + becp%ibnd_begin - 1
-             CALL compute_deff( deff, et(ibnd,ik) )
-             !
-             !$acc parallel loop
-             DO i = 1, itot
-               ih = ih_list(i)         ; na = na_list(i)
-               ishift = ishift_list(i) ; ikb = ishift + ih
-               !
-               IF (.NOT. is_multinp(i)) THEN
-                  ps(ikb) =  CMPLX(deff(ih,ih,na) * becpr(ikb,ibnd_loc), KIND=DP)
-               ELSE
-                  nh_np = nh_list(i)
-                  !
-                  ps(ikb) = CMPLX( SUM( becpr(ishift+1:ishift+nh_np,ibnd_loc) &
-                                    * deff(ih,1:nh_np,na) ), KIND=DP )
-               ENDIF
-             ENDDO
-             !
-             dot11 = 0._DP ; dot21 = 0._DP ; dot31 = 0._DP
-             dot22 = 0._DP ; dot32 = 0._DP ; dot33 = 0._DP
-             !
-             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
-             !$acc&                                      dot22,dot32,dot33)
-             DO na =1, nat
-                DO i = 1, npw
-                   np = ityp(na)
-                   ijkb0 = shift(na)
-                   nh_np = nh(np)
-                   worksum = (0._DP,0._DP)
-                   DO ih = 1, nh_np
-                      ikb = ijkb0 + ih
-                      worksum = worksum + ps(ikb) * dvkb(i,ikb,4)
-                   ENDDO
-                   Re_worksum = DBLE(worksum) ;  Im_worksum = DIMAG(worksum)
-                   evci = evc(i,ibnd)
-                   gk1  = gk(i,1) ;  gk2 = gk(i,2) ;  gk3 = gk(i,3)
-                   qm1i = qm1(i)
-                   !
-                   cv = evci * CMPLX(gk1 * gk1  * qm1i, KIND=DP)
-                   dot11 = dot11 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
-                   !
-                   cv = evci * CMPLX(gk2 * gk1 * qm1i, KIND=DP)
-                   dot21 = dot21 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
-                   !
-                   cv = evci * CMPLX(gk3 * gk1 * qm1i, KIND=DP)
-                   dot31 = dot31 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
-                   !
-                   cv = evci * CMPLX(gk2 * gk2 * qm1i, KIND=DP)
-                   dot22 = dot22 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
-                   !
-                   cv = evci * CMPLX(gk3 * gk2 * qm1i, KIND=DP)
-                   dot32 = dot32 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
-                   !
-                   cv = evci * CMPLX(gk3 * gk3 * qm1i, KIND=DP)
-                   dot33 = dot33 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
-                ENDDO
-             ENDDO
-             ! ... a factor 2 accounts for the other half of the G-vector sphere
-             sigmanlc(:,1) = sigmanlc(:,1) - 4._DP * wg(ibnd,ik) * [dot11, dot21, dot31] 
-             sigmanlc(:,2) = sigmanlc(:,2) - 4._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
-             sigmanlc(:,3) = sigmanlc(:,3) - 4._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]                  
-             !
-             ! ... non diagonal contribution - derivative of the spherical harmonics
-             ! ... (no contribution from l=0)
-             !
-             IF ( lmaxkb == 0 ) CYCLE 
-             !
-             dot11 = 0._DP ; dot21 = 0._DP ; dot31 = 0._DP
-             dot22 = 0._DP ; dot32 = 0._DP ; dot33 = 0._DP
-             !
-             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)
+       DO ipol = 1,3
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
              DO ikb = 1, nkb
                 DO i = 1, npw
-                   wsum1 = ps(ikb)*dvkb(i,ikb,1)
-                   wsum2 = ps(ikb)*dvkb(i,ikb,2)
-                   wsum3 = ps(ikb)*dvkb(i,ikb,3)
-                   !
-                   evci = evc(i,ibnd)
-                   gk1 = gk(i,1)
-                   gk2 = gk(i,2)
-                   gk3 = gk(i,3)
-                   !
-                   cv = evci * CMPLX(gk1, KIND=DP)
-                   dot11 = dot11 + DBLE(wsum1)* DBLE(cv) + DIMAG(wsum1)*DIMAG(cv)
-                   dot21 = dot21 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv)
-                   dot31 = dot31 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
-                   !
-                   cv = evci * CMPLX(gk2, KIND=DP)
-                   dot22 = dot22 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv) 
-                   dot32 = dot32 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
-                   ! 
-                   cv =  evci * CMPLX(gk3, KIND=DP)
-                   dot33 = dot33 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
-                ENDDO
-             ENDDO 
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,ipol) * gk(i,jpol) * qm1(i)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in dvkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
              !
-             ! ... a factor 2 accounts for the other half of the G-vector sphere
-             !
-             sigmanlc(:,1) = sigmanlc(:,1) -4._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
-             sigmanlc(:,2) = sigmanlc(:,2) -4._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
-             sigmanlc(:,3) = sigmanlc(:,3) -4._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
-          ENDDO
-          !
-          IF ( nproc > 1 ) THEN
-#if defined(__CUDA) || defined(_OPENACC)
-             CALL errore( 'stres_us_gamma', &
-                          'unexpected error nproc be 1 with GPU acceleration', 100 )
-#else
-             CALL mp_circular_shift_left( becp%r, icyc, becp%comm )
-             becpr = becp%r
-             CALL mp_circular_shift_left( becp%ibnd_begin, icyc, becp%comm )
-             CALL mp_circular_shift_left( nbnd_loc, icyc, becp%comm )
-#endif
-          ENDIF
-          !
-       ENDDO
+             !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r)) &
+             !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+             DO na = 1, nat
+                DO ibnd_loc = 1, nbnd_loc
+                   ibnd = ibnd_loc+becp%ibnd_begin-1
+                   np = ityp(na)
+                   ijkb0 = ofsbeta(na)
+                   !$acc loop seq collapse(2)
+                   DO ih = 1, nh(np)
+                      DO jh = 1, nh(np)
+                         ! 
+                         ! a nondiagonal contribution (ih,jh) is present only
+                         ! for US-PP or multiprojector PP:
+                         !   IF ( upf(np)%tvanp) .or. upf(np)%is_multiproj ) 
+                         ! but it is not worth to make two distinct cases here
+                         !
+                         ikb = ijkb0 + ih
+                         jkb = ijkb0 + jh
+                         ! For norm-conserving PP, actually qq_at=0 but again,
+                         ! it is not worth to make two distinct cases here
+                         sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) - &
+                              et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                              wg(ibnd,ik) * becp%r(ikb,ibnd_loc) * &
+                              becd%r(jkb,ibnd_loc)
+                      END DO
+                   END DO
+                END DO
+             END DO
+             sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+          END DO
+          DO jpol = 1,ipol-1
+             sigmanlc(ipol,jpol) = sigmanlc(jpol,ipol)
+          END DO
+       END DO
+       !$acc end data
        !
+       ! ... non diagonal contribution - derivative of the spherical harmonics
+       IF ( lmaxkb <= 0 ) GO TO 10
+       !
+       !$acc data present( dvkb, becd )
+       DO ipol = 1,3
+          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,jpol)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in dvkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r)) &
+             !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+             DO na = 1, nat
+                DO ibnd_loc = 1, nbnd_loc
+                   ibnd = ibnd_loc+becp%ibnd_begin-1
+                   np = ityp(na)
+                   ijkb0 = ofsbeta(na)
+                   !$acc loop seq collapse(2)
+                   DO ih = 1, nh(np)
+                      DO jh = 1, nh(np)
+                         ! 
+                         ! a nondiagonal contribution (ih,jh) is present only
+                         ! for US-PP or multiprojector PP:
+                         !   IF ( upf(np)%tvanp) .or. upf(np)%is_multiproj ) 
+                         ! but it is not worth to make two distinct cases here
+                         !
+                         ikb = ijkb0 + ih
+                         jkb = ijkb0 + jh
+                         ! For norm-conserving PP, actually qq_at=0 but again,
+                         ! it is not worth to make two distinct cases here
+                         sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) - &
+                              et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                              wg(ibnd,ik) * becp%r(ikb,ibnd_loc) * &
+                              becd%r(jkb,ibnd_loc)
+                      END DO
+                   END DO
+                END DO
+             END DO
+             sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+          END DO
+          DO jpol = 1,ipol-1
+             sigmanlc(ipol,jpol) = sigmanlc(jpol,ipol)
+          END DO
+       END DO
+       !$acc end data
 10     CONTINUE
        !
        !$acc end data
        !$acc end data
-       DEALLOCATE( deff, ps )
        DEALLOCATE( dvkb )
-       DEALLOCATE( becpr )
+       CALL deallocate_bec_type_acc( becd ) 
        !
        RETURN
        !
