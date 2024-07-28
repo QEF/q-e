@@ -24,11 +24,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
-  USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
+  USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp, calbec
-  USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
-                                   mp_circular_shift_left 
+  USE mp,                   ONLY : mp_sum
   USE wavefunctions,        ONLY : evc
   USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy
   !
@@ -61,7 +60,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
   !
-  CALL allocate_bec_type_acc( nkb, nbnd, becp, intra_bgrp_comm )
+  CALL allocate_bec_type_acc( nkb, nbnd, becp )
   !$acc data present( vkb, evc, becp )
   CALL calbec( offload_type, npw, vkb, evc, becp )
   !$acc end data
@@ -158,7 +157,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! ... local variables
        !
        INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
-                   jkb, ih, jh, ijkb0
+                   jkb, ih, jh, ijkb0, na_s, na_e, mykey
        REAL(DP) :: sigmaij
        COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
        TYPE(bec_type) :: becd
@@ -171,14 +170,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        sigmaij = 0._DP
        !
-       ! ... the contribution is calculated only on one processor because
-       ! ... partial results are later summed over all processors - FIXME
+       ! ... Calls to calbec are parallelized over the bgrp group
+       ! ... The rest of the calculation is parallelized by subdividing 
+       ! ... the atoms over the bgrp group
        !
-       compute_diag: IF ( me_bgrp == root_bgrp ) THEN
-          !
+       CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
+       !
+       compute_diag: IF ( mykey == 0 ) THEN
           !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r) &
           !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
-          DO na = 1, nat
+          DO na = na_s, na_e
              DO ibnd = 1, nbnd
                 np = ityp(na)
                 ijkb0 = ofsbeta(na)
@@ -207,7 +208,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           DO l = 1, 3
              sigmanlc(l,l) = sigmanlc(l,l) - sigmaij
           ENDDO
-       ENDIF compute_diag
+       END IF compute_diag
        !
        ! ... non diagonal contribution - derivative of the Bessel function
        !
@@ -231,10 +232,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              ! ... becd like becp with derivatives of beta functions in vkb
              CALL calbec( offload_type, npw, vkb, evc, becd )
              !
-             compute_djl: IF ( me_bgrp == root_bgrp ) THEN
-                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r)) &
+             compute_djl: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r) &
                 !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
-                DO na = 1, nat
+                DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
                       ijkb0 = ofsbeta(na)
@@ -250,18 +251,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                               becd%r(jkb,ibnd)
                          END DO
                       END DO
-                  END DO
+                   END DO
                 END DO
                 sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
-             ENDIF compute_djl
+             END IF compute_djl
           END DO
        END DO
-       !$acc end data
        !
        ! ... non diagonal contribution - derivative of the spherical harmonics
        IF ( lmaxkb <= 0 ) GO TO 10
        !
-       !$acc data present( dvkb, becd )
        DO ipol = 1,3
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
           DO jpol = ipol, 3
@@ -276,10 +275,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              ! ... becd like becp with derivatives of beta functions in dvkb
              CALL calbec( offload_type, npw, vkb, evc, becd )
              !
-             compute_dylm: IF ( me_bgrp == root_bgrp ) THEN
-                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r)) &
+             compute_dylm: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r) &
                 !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
-                DO na = 1, nat
+                DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
                       ijkb0 = ofsbeta(na)
@@ -288,22 +287,23 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          DO jh = 1, nh(np)
                             ikb = ijkb0 + ih
                             jkb = ijkb0 + jh
-                             sigmaij = sigmaij + (deeq(ih,jh,na,current_spin) -&
-                              et(ibnd,ik)*qq_at(ih,jh,na) ) * &
-                              wg(ibnd,ik) * becp%r(ikb,ibnd) * &
-                              becd%r(jkb,ibnd)
+                            sigmaij = sigmaij + (deeq(ih,jh,na,current_spin) -&
+                                 et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                                 wg(ibnd,ik) * becp%r(ikb,ibnd) * &
+                                 becd%r(jkb,ibnd)
                          END DO
                       END DO
                    END DO
                 END DO
                 sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
-             ENDIF compute_dylm
+             END IF compute_dylm
           END DO
        END DO
+10     CONTINUE
+       !$acc end data
        !$acc end data
        DEALLOCATE( dvkb )
        CALL deallocate_bec_type_acc( becd ) 
-10     CONTINUE
        DO ipol = 1,3
           DO jpol = 1,ipol-1
              sigmanlc(ipol,jpol) = sigmanlc(jpol,ipol)
