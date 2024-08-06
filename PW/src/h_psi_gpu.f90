@@ -268,11 +268,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !  
   CALL stop_clock_gpu( 'h_psi:pot' )
   !
-  IF (xclib_dft_is('meta')) THEN
-     CALL dev_memcpy(hpsi_host, hpsi_d) ! hpsi_host = hpsi_d
-     call h_psi_meta (lda, n, m, psi_host, hpsi_host)
-     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
-  end if
+  IF (xclib_dft_is('meta')) call h_psi_meta (lda, n, m, psi_d, hpsi_d)
   !
   ! ... Here we add the Hubbard potential times psi
   !
