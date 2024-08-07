@@ -43,7 +43,7 @@ END FUNCTION KSDdot
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
+SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      npwx, npw, nbnd, npol, psi, eig, btype, &
      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
@@ -76,14 +76,11 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   !
   INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, npol, maxter
   INTEGER,     INTENT(IN)    :: btype(nbnd)
-  REAL(DP),    INTENT(IN)    :: precondition_d(npwx*npol), ethr
+  REAL(DP),    INTENT(IN)    :: precondition(npwx*npol), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: eig(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
-#if defined(__CUDA)
-  attributes(DEVICE) :: precondition_d
-#endif
   !
   ! ... local variables
   !
@@ -111,6 +108,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   ! s_1psi( npwx, npw, psi, spsi )
   !
   CALL start_clock( 'ccgdiagg' )
+  !$acc data deviceptr(precondition)
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
@@ -265,8 +263,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         !$acc kernels
         DO i = 1, kdmx
-           g(i)    = hpsi(i) / precondition_d(i)
-           ppsi(i) = spsi(i) / precondition_d(i)
+           g(i)    = hpsi(i) / precondition(i)
+           ppsi(i) = spsi(i) / precondition(i)
         END DO
         !$acc end kernels
         !
@@ -338,7 +336,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         !$acc kernels
         DO i = 1, kdmx
-           g0_d(i) = scg(i) * precondition_d(i)
+           g0_d(i) = scg(i) * precondition(i)
         END DO
         !$acc end kernels
         !
@@ -564,6 +562,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   DEALLOCATE( hpsi )
   DEALLOCATE( scg )
   DEALLOCATE( spsi )
+  !
+  !$acc end data
   !
   CALL stop_clock( 'ccgdiagg' )
   !

@@ -27,7 +27,7 @@ END SUBROUTINE cgcudaDGEMV
 
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
-SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
+SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
                      npwx, npw, nbnd, psi, eig, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
@@ -59,14 +59,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   !
   INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, maxter
   INTEGER,     INTENT(IN)    :: btype(nbnd)
-  REAL(DP),    INTENT(IN)    :: precondition_d(npw), ethr
+  REAL(DP),    INTENT(IN)    :: precondition(npw), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx,nbnd)
   REAL(DP),    INTENT(INOUT) :: eig(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
-#if defined(__CUDA)
-  attributes(DEVICE) :: precondition_d
-#endif
   !
   ! ... local variables
   !
@@ -97,6 +94,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   !
   !
   CALL start_clock( 'rcgdiagg' )
+  !$acc data deviceptr(precondition)
   !
   IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   !
@@ -226,8 +224,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         !$acc kernels 
         DO i = 1, npw
-           g(i)  = hpsi(i) / precondition_d(i)
-           ppsi(i) = spsi(i) / precondition_d(i)
+           g(i)  = hpsi(i) / precondition(i)
+           ppsi(i) = spsi(i) / precondition(i)
         END DO
         !$acc end kernels
         !
@@ -323,10 +321,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         end do
         !$acc end kernels
         !
-        !$cuf kernel do
+        !$acc kernels 
         do i=1, npw
-          g0_d(i) = g0_d(i) * precondition_d(i)
+          g0_d(i) = g0_d(i) * precondition(i)
         end do
+        !$acc end kernels
         !
         !$acc host_data use_device(g)
         gg = 2.D0 * ksDdot( npw2, g(1), 1, g0_d(1), 1 )
@@ -579,6 +578,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   DEALLOCATE( hpsi )
   DEALLOCATE( scg )
   DEALLOCATE( spsi )
+  !
+  !$acc end data
   !
   CALL stop_clock( 'rcgdiagg' )
   !
