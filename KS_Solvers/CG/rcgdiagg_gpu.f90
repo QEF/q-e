@@ -28,7 +28,7 @@ END SUBROUTINE cgcudaDGEMV
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
 SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
-                     npwx, npw, nbnd, psi, e_d, btype, &
+                     npwx, npw, nbnd, psi, eig, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -61,11 +61,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: precondition_d(npw), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx,nbnd)
-  REAL(DP),    INTENT(INOUT) :: e_d(nbnd)
+  REAL(DP),    INTENT(INOUT) :: eig(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
 #if defined(__CUDA)
-  attributes(DEVICE) :: precondition_d, e_d
+  attributes(DEVICE) :: precondition_d
 #endif
   !
   ! ... local variables
@@ -119,7 +119,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   ALLOCATE( psi_aux   ( nbnd ) )
   !
   ! Sync eigenvalues that will remain on the Host
-  e(1:nbnd) = e_d(1:nbnd)
+  e(1:nbnd) = eig(1:nbnd)
   !print *, 'init ', e(1:nbnd)
   !
   avg_iter = 0.D0
@@ -566,7 +566,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   END DO
   !
   avg_iter = avg_iter / DBLE( nbnd )
-  e_d(1:nbnd) = e(1:nbnd)
+  eig(1:nbnd) = e(1:nbnd)
   !
   DEALLOCATE( lagrange )
   DEALLOCATE( lagrange_d )

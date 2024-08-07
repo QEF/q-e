@@ -44,7 +44,7 @@ END FUNCTION KSDdot
 !
 !----------------------------------------------------------------------------
 SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
-     npwx, npw, nbnd, npol, psi, e_d, btype, &
+     npwx, npw, nbnd, npol, psi, eig, btype, &
      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -64,7 +64,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
 #if defined(__VERBOSE)
   USE util_param,     ONLY : stdout
 #endif
-  USE device_memcpy_m,  ONLY : dev_memset, dev_memcpy
+  USE device_memcpy_m,  ONLY : dev_memset
   !
   IMPLICIT NONE
   !
@@ -78,11 +78,11 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: precondition_d(npwx*npol), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
-  REAL(DP),    INTENT(INOUT) :: e_d(nbnd)
+  REAL(DP),    INTENT(INOUT) :: eig(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
 #if defined(__CUDA)
-  attributes(DEVICE) :: precondition_d, e_d
+  attributes(DEVICE) :: precondition_d
 #endif
   !
   ! ... local variables
@@ -551,8 +551,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   !
   avg_iter = avg_iter / DBLE( nbnd )
   !
-  ! STORING e in e_d since eigenvalues are always on the host
-  CALL dev_memcpy(e_d, e)
+  ! STORING e in eig since eigenvalues are always on the host
+  eig = e
   !
   DEALLOCATE( lagrange )
   DEALLOCATE( e )
