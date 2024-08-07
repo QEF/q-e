@@ -110,18 +110,18 @@ SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap
   CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
   !$acc end host_data
 
-  ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx), conv(nbnd) )
+  ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx) )
+  ALLOCATE ( conv(nbnd) )
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
   !$acc kernels
   psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
   !$acc end kernels
-
-  !$acc host_data use_device(psi, hpsi, spsi)
+  !$acc data present(psi, spsi, hpsi)
   call h_psi_ptr (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
   call s_psi_ptr (npwx,npw,nbnd,psi,spsi) ! computes S*psi
-  !$acc end host_data
+  !$acc end data
 
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
