@@ -542,7 +542,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
              !$acc data present(g2kin)
-             !$acc host_data use_device(g2kin,evc, hevc, sevc)
+             !$acc host_data use_device(g2kin)
              CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, evc, hevc, sevc, &
                           et(1,ik), g2kin, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
