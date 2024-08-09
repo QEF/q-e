@@ -10,7 +10,7 @@
 #define ONE  ( 1._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, &
+SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
                       g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
@@ -27,9 +27,9 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi_d, hp
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, npol
-  COMPLEX(DP), INTENT(INOUT) :: psi_d (npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: spsi_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi (npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
   REAL(DP),    INTENT(IN)    :: g2kin_d(npwx)
   INTEGER,     INTENT(IN)    :: btype(nbnd)
@@ -73,7 +73,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi_d, hp
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi_d(:,:), hkpsi_d(:,:), skpsi_d(:,:)
 #if defined(__CUDA)
-  attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d 
   attributes(device) :: kpsi_d, hkpsi_d, skpsi_d    
   attributes(device) :: g2kin_d 
@@ -240,48 +239,30 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi_d, hp
   !
   IF ( ibnd_start > 1 ) THEN
      !
-!$cuf kernel do(1)
-     DO ii = 1, npwx*npol
-       DO jj = 1, ibnd_start-1 
-         psi_d (ii,jj) = ZERO
-         hpsi_d(ii,jj) = ZERO
-       END DO     
-     END DO     
-     IF (uspp) THEN 
-!$cuf kernel do(2)    
-       DO ii = 1, npwx*npol
-         DO jj = 1, ibnd_start-1 
-           spsi_d(ii,jj) = ZERO
-         END DO     
-       END DO     
-     END IF 
+     !$acc kernels
+     psi(:,1:ibnd_start-1) = ZERO
+     hpsi(:,1:ibnd_start-1) = ZERO
+     IF (uspp) spsi(:,1:ibnd_start-1) = ZERO
+     !$acc end kernels
      !
   END IF
   !
   IF ( ibnd_end < nbnd ) THEN
      !
-!$cuf kernel do(1)
-     DO ii = 1, npwx*npol
-       DO jj = ibnd_end+1, nbnd
-         psi_d (ii,jj) = ZERO
-         hpsi_d(ii,jj) = ZERO
-       END DO     
-     END DO     
-     IF (uspp) THEN 
-!$cuf kernel do(2)    
-       DO ii = 1, npwx*npol
-         DO jj = ibnd_end+1, nbnd
-           spsi_d(ii,jj) = ZERO
-         END DO     
-       END DO     
-     END IF 
+     !$acc kernels
+     psi(:,ibnd_end+1:nbnd) = ZERO
+     hpsi(:,ibnd_end+1:nbnd) = ZERO
+     IF (uspp) spsi(:,ibnd_end+1:nbnd) = ZERO
+     !$acc end kernels
      !
   END IF
   !
-  CALL mp_sum( psi_d,  inter_bgrp_comm )
-  CALL mp_sum( hpsi_d, inter_bgrp_comm )
+  !$acc host_data use_device(psi, hpsi, spsi)
+  CALL mp_sum( psi,  inter_bgrp_comm )
+  CALL mp_sum( hpsi, inter_bgrp_comm )
   IF ( uspp ) &
-  CALL mp_sum( spsi_d, inter_bgrp_comm )
+  CALL mp_sum( spsi, inter_bgrp_comm )
+  !$acc end host_data
   !
   DEALLOCATE( phi_d )
   DEALLOCATE( hphi_d )
@@ -318,45 +299,57 @@ CONTAINS
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
-    hpsi_d = ZERO
+    !$acc kernels
+    hpsi = ZERO
+    !$acc end kernels
     !
-    CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )
+    !$acc host_data use_device(psi, hpsi)
+    CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
+    !$acc end host_data
     !
     ! ... Operate the Overlap : S |psi>
     !
     IF ( uspp ) THEN
        !
-       spsi_d = ZERO
+       !$acc kernels
+       spsi = ZERO
+       !$acc end kernels
        !
-       CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d )
+       !$acc host_data use_device(psi, spsi) 
+       CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi )
+       !$acc end host_data
        !
     END IF
     !
     ! ... Matrix element : <psi| H |psi>
     !
+    !$acc host_data use_device(psi, hpsi)
     DO ibnd = ibnd_start, ibnd_end
        !
-       hw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 ) )
+       hw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
        !
     END DO
+    !$acc end host_data
     !
     CALL mp_sum( hw(ibnd_start:ibnd_end), intra_bgrp_comm )
     !
     ! ... Matrix element : <psi| S |psi>
     !
+    !$acc host_data use_device(psi, spsi)
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( uspp ) THEN
           !
-          sw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi_d(1,ibnd), 1, spsi_d(1,ibnd), 1 ) )
+          sw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi(1,ibnd), 1, spsi(1,ibnd), 1 ) )
           !
        ELSE
           !
-          sw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi_d(1,ibnd), 1, psi_d(1,ibnd), 1 ) )
+          sw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi(1,ibnd), 1, psi(1,ibnd), 1 ) )
           !
        END IF
        !
     END DO
+    !$acc end host_data
     !
     CALL mp_sum( sw(ibnd_start:ibnd_end), intra_bgrp_comm )
     !
@@ -414,10 +407,12 @@ CONTAINS
        !
        IF ( conv(ibnd) ) CYCLE
        !
-       CALL ZCOPY_gpu( kdim, psi_d (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
-       CALL ZCOPY_gpu( kdim, hpsi_d(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
+       !$acc host_data use_device(psi, hpsi, spsi)
+       CALL ZCOPY_gpu( kdim, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
+       CALL ZCOPY_gpu( kdim, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL ZCOPY_gpu( kdim, spsi_d(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       CALL ZCOPY_gpu( kdim, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
        psp(ibnd,idiis) = sw(ibnd)
@@ -555,17 +550,11 @@ CONTAINS
           IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vc(:) )
           CALL mp_bcast( vc, root_bgrp, intra_bgrp_comm )
           !
-!$cuf kernel do(1)
-          DO ii = 1, npwx*npol
-            psi_d(ii,ibnd) = ZERO 
-            hpsi_d(ii,ibnd) = ZERO 
-          END DO 
-          IF(uspp) THEN 
-!$cuf kernel do(1)
-            DO ii = 1, npwx*npol
-              spsi_d(ii,ibnd) = ZERO 
-            END DO 
-          END IF
+          !$acc kernels
+          psi(:,ibnd) = ZERO
+          hpsi(:,ibnd) = ZERO
+          IF(uspp) spsi(:,ibnd) = ZERO
+          !$acc end kernels
 !$cuf kernel do(1)
           DO ii = 1, kdmx 
             kpsi_d(ii,kbnd) = ZERO 
@@ -577,9 +566,11 @@ CONTAINS
              !
              kvc = vc(kdiis) 
              !
-             CALL ZAXPY_gpu( kdim, kvc, phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
-             CALL ZAXPY_gpu( kdim, kvc, hphi_d (1,ibnd,kdiis), 1, hpsi_d (1,ibnd), 1 )
-             IF (uspp) CALL ZAXPY_gpu( kdim, kvc, sphi_d (1,ibnd,kdiis), 1, spsi_d (1,ibnd), 1 )
+             !$acc host_data use_device(psi, hpsi, spsi)
+             CALL ZAXPY_gpu( kdim, kvc, phi_d (1,ibnd,kdiis), 1, psi(1,ibnd), 1 )
+             CALL ZAXPY_gpu( kdim, kvc, hphi_d (1,ibnd,kdiis), 1, hpsi (1,ibnd), 1 )
+             IF (uspp) CALL ZAXPY_gpu( kdim, kvc, sphi_d (1,ibnd,kdiis), 1, spsi (1,ibnd), 1 )
+             !$acc end host_data
              !
              ! ... Residual vectors
              !
@@ -606,26 +597,30 @@ CONTAINS
           ! ... Wave functions
           !
           norm = SQRT( sw(ibnd) )
-          CALL ZDSCAL_gpu( kdim, 1._DP / norm, psi_d (1,ibnd), 1 )
-          CALL ZDSCAL_gpu( kdim, 1._DP / norm, hpsi_d(1,ibnd), 1 )
+          !$acc host_data use_device(psi, hpsi, spsi)
+          CALL ZDSCAL_gpu( kdim, 1._DP / norm, psi (1,ibnd), 1 )
+          CALL ZDSCAL_gpu( kdim, 1._DP / norm, hpsi(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL ZDSCAL_gpu( kdim, 1._DP / norm, spsi_d(1,ibnd), 1 )
+          CALL ZDSCAL_gpu( kdim, 1._DP / norm, spsi(1,ibnd), 1 )
+          !$acc end host_data
           !
           ! ... Residual vectors
           !
           ec = CMPLX( hw(ibnd), 0._DP, kind=DP )
           !
-          CALL ZCOPY_gpu( kdim, hpsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+          !$acc host_data use_device(psi, spsi, hpsi)
+          CALL ZCOPY_gpu( kdim, hpsi(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL ZAXPY_gpu( kdim, -ec, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             CALL ZAXPY_gpu( kdim, -ec, spsi(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !
           ELSE
              !
-             CALL ZAXPY_gpu( kdim, -ec, psi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             CALL ZAXPY_gpu( kdim, -ec, psi(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !
           END IF
+          !$acc end host_data
           !
        END IF
        !
@@ -812,13 +807,14 @@ CONTAINS
        !
        ekinj = 0._DP  
        !
-!$cuf kernel do(2)
+       !$acc kernels
        DO ipol = 1, npol
           DO ig = 1, npw
-             ekinj = ekinj + g2kin_d(ig) * ( DBLE ( psi_d(ig+(ipol-1)*npwx,ibnd) ) * DBLE ( psi_d(ig+(ipol-1)*npwx,ibnd) ) + &
-                                             AIMAG( psi_d(ig+(ipol-1)*npwx,ibnd) ) * AIMAG( psi_d(ig+(ipol-1)*npwx,ibnd) )     ) 
+             ekinj = ekinj + g2kin_d(ig) * ( DBLE ( psi(ig+(ipol-1)*npwx,ibnd) ) * DBLE ( psi(ig+(ipol-1)*npwx,ibnd) ) + &
+                                             AIMAG( psi(ig+(ipol-1)*npwx,ibnd) ) * AIMAG( psi(ig+(ipol-1)*npwx,ibnd) )     ) 
           END DO
        END DO
+       !$acc end kernels
        !
        ekin(jbnd) = ekinj
        !
@@ -918,23 +914,25 @@ CONTAINS
        jbnd = jbnd_index(ibnd)
        kbnd = ibnd_index(ibnd)
        !
-       php = DBLE( ZDOTC_gpu( kdim, psi_d (1,ibnd), 1, hpsi_d (1,ibnd), 1 ) )
-       khp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, hpsi_d (1,ibnd), 1 ) )
+       !$acc host_data use_device(psi, hpsi, spsi)
+       php = DBLE( ZDOTC_gpu( kdim, psi (1,ibnd), 1, hpsi (1,ibnd), 1 ) )
+       khp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, hpsi (1,ibnd), 1 ) )
        khk = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, hkpsi_d(1,kbnd), 1 ) )
        !
        IF ( uspp ) THEN
           !
-          psp = DBLE( ZDOTC_gpu( kdim, psi_d (1,ibnd), 1, spsi_d (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, spsi_d (1,ibnd), 1 ) )
+          psp = DBLE( ZDOTC_gpu( kdim, psi (1,ibnd), 1, spsi (1,ibnd), 1 ) )
+          ksp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, spsi (1,ibnd), 1 ) )
           ksk = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, skpsi_d(1,kbnd), 1 ) )
           !
        ELSE
           !
-          psp = DBLE( ZDOTC_gpu( kdim, psi_d (1,ibnd), 1, psi_d (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, psi_d (1,ibnd), 1 ) )
+          psp = DBLE( ZDOTC_gpu( kdim, psi (1,ibnd), 1, psi (1,ibnd), 1 ) )
+          ksp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, psi (1,ibnd), 1 ) )
           ksk = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, kpsi_d(1,kbnd), 1 ) )
           !
        END IF
+       !$acc end host_data
        !
        hmat(1,jbnd) = php
        hmat(2,jbnd) = khp
@@ -1044,18 +1042,20 @@ CONTAINS
        z1 = CMPLX( coef(1,jbnd), 0._DP, kind=DP )
        z2 = CMPLX( coef(2,jbnd), 0._DP, kind=DP )
        !
-       CALL ZSCAL_gpu( kdim, z1, psi_d (1,ibnd), 1 )
-       CALL ZAXPY_gpu( kdim, z2, kpsi_d(1,kbnd), 1, psi_d(1,ibnd), 1 )
+       !$acc host_data use_device(psi, hpsi, spsi)
+       CALL ZSCAL_gpu( kdim, z1, psi (1,ibnd), 1 )
+       CALL ZAXPY_gpu( kdim, z2, kpsi_d(1,kbnd), 1, psi(1,ibnd), 1 )
        !
-       CALL ZSCAL_gpu( kdim, z1, hpsi_d (1,ibnd), 1 )
-       CALL ZAXPY_gpu( kdim, z2, hkpsi_d(1,kbnd), 1, hpsi_d(1,ibnd), 1 )
+       CALL ZSCAL_gpu( kdim, z1, hpsi (1,ibnd), 1 )
+       CALL ZAXPY_gpu( kdim, z2, hkpsi_d(1,kbnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL ZSCAL_gpu( kdim, z1, spsi_d (1,ibnd), 1 )
-          CALL ZAXPY_gpu( kdim, z2, skpsi_d(1,kbnd), 1, spsi_d(1,ibnd), 1 )
+          CALL ZSCAL_gpu( kdim, z1, spsi (1,ibnd), 1 )
+          CALL ZAXPY_gpu( kdim, z2, skpsi_d(1,kbnd), 1, spsi(1,ibnd), 1 )
           !
        END IF
+       !$acc end host_data
        !
     END DO
     !
