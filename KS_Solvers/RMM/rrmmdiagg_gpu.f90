@@ -190,7 +190,7 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   !
   IF ( do_hpsi ) THEN
      !
-     CALL calc_hpsi_gpu( )
+     CALL calc_hpsi_gamma_gpu( )
      !
   END IF
   !
@@ -291,7 +291,7 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
 CONTAINS
   !
   !
-  SUBROUTINE calc_hpsi_gpu( )
+  SUBROUTINE calc_hpsi_gamma_gpu( )
     !
     IMPLICIT NONE
     !
@@ -378,7 +378,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE calc_hpsi_gpu
+  END SUBROUTINE calc_hpsi_gamma_gpu
   !
   SUBROUTINE do_diis_gpu( idiis )
     !
