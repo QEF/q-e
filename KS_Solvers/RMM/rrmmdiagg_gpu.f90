@@ -240,46 +240,21 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   !
   IF ( ibnd_start > 1 ) THEN
      !
-     !$acc parallel loop collapse(2)
-     DO ii = 1, npwx 
-       DO jj = 1,ibnd_start-1  
-           psi(ii,jj)  = ZERO
-           hpsi(ii,jj) = ZERO
-       END DO
-     END DO
-     !
-     IF ( uspp ) THEN
-        !
-        !$acc parallel loop collapse(2)
-        DO ii = 1, npwx 
-          DO jj = 1,ibnd_start-1  
-            spsi(ii,jj) = ZERO
-          END DO
-        END DO
-        !
-     END IF
+     !$acc kernels
+     psi(:,1:ibnd_start-1) = ZERO
+     hpsi(:,1:ibnd_start-1) = ZERO
+     IF ( uspp ) spsi(:,1:ibnd_start-1) = ZERO
+     !$acc end kernels
      !
   END IF
   !
   IF ( ibnd_end < nbnd ) THEN
      !
-     !$acc parallel loop collapse(2)
-     DO ii = 1, npwx 
-       DO jj = ibnd_end+1,nbnd  
-           psi (ii,jj) = ZERO
-           hpsi(ii,jj) = ZERO
-       END DO
-     END DO
-     !
-     IF ( uspp ) THEN
-        !$acc parallel loop collapse(2)
-        DO ii = 1, npwx 
-          DO jj = ibnd_end+1,nbnd
-              spsi(ii,jj) = ZERO
-          END DO
-        END DO
-        !
-     END IF
+     !$acc kernels
+     psi(:,ibnd_end+1:nbnd) = ZERO
+     hpsi(:,ibnd_end+1:nbnd) = ZERO
+     IF ( uspp ) spsi(:,ibnd_end+1:nbnd) = ZERO
+     !$acc end kernels
      !
   END IF
   !
