@@ -10,7 +10,8 @@
 SUBROUTINE stres_us( ik, gk, sigmanlc )
   !----------------------------------------------------------------------------
   !! Nonlocal (separable pseudopotential) contribution to the stress
-  !! NOTICE: sum of partial results over procs is performed in calling routine
+  !! IMPORTANT NOTICE: sum of partial results over processors (inter_pool_comm
+  !! and intra_bgrp_group) is done in the calling routine "stres_knl"
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -43,7 +44,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: qm1(:)
-  !
   REAL(DP) :: q
   INTEGER  :: npw, i
   !
@@ -111,7 +111,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
        TYPE(bec_type) :: becd
        !
-       ! xyz are the three unit vectors in the x,y,z directions
+       !! xyz are the three unit vectors in the x,y,z directions
        REAL(DP) :: xyz(3,3) 
        DATA xyz / 1._DP, 0._DP, 0._DP, &
                   0._DP, 1._DP, 0._DP, &
@@ -135,14 +135,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 !$acc loop seq collapse(2)
                 DO ih = 1, nh(np)
                    DO jh = 1, nh(np)
-                      ! 
-                      ! a nondiagonal contribution (ih,jh) is present only
-                      ! for US-PP or multiprojector PP:
-                      !   IF ( upf(np)%tvanp) .or. upf(np)%is_multiproj ) 
-                      ! but it may not be worth to make two distinct cases
-                      ! For norm-conserving PP, qq_at=0 but again, it may
-                      ! not be worth to make two distinct cases
-                      ! The same applies to the two similar loops below
+                      !! NOTE: in deff(ih,jh)=deeq(ih,jh)-et(i)*qq_at(ih,jh)
+                      !! a nondiagonal contribution (ih,jh) is present only
+                      !! for US-PP or multiprojector PP:
+                      !!   IF ( upf(np)%tvanp) .or. upf(np)%is_multiproj ) 
+                      !! but it may not be worth to make two distinct cases
+                      !! For norm-conserving PP, qq_at=0 but again, it may
+                      !! not be worth to make two distinct cases
+                      !! The same applies to the two similar loops below
                       !
                       ikb = ijkb0 + ih
                       jkb = ijkb0 + jh
@@ -433,6 +433,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    is, js, ijs, jkb, ih, jh, ijkb0, na_s, na_e, mykey
        REAL(DP) :: sigmaij
        COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
+       COMPLEX(DP) :: deff_nc
        TYPE(bec_type) :: becd
        !
        ! xyz are the three unit vectors in the x,y,z directions
@@ -464,20 +465,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ijs = (is-1)*npol+js
                             ! 
                             ! see note in the analogous loop for gamma-only case
+                            ! note that unlike deff, deff_nc is complex
                             !
                             ikb = ijkb0 + ih
                             jkb = ijkb0 + jh
+                            deff_nc = deeq_nc(ih,jh,na,ijs)
                             IF (lspinorb) THEN
-                               sigmaij = sigmaij + ( deeq_nc(ih,jh,na,ijs) - &
-                               et(ibnd,ik)*qq_so(ih,jh,ijs,np) ) * wg(ibnd,ik)*&
-                               CONJG(becp%nc(ikb,is,ibnd)) * &
-                               becp%nc(jkb,js,ibnd)
+                               deff_nc = deff_nc - et(ibnd,ik)*qq_so(ih,jh,ijs,np)
                             ELSE IF (is == js) THEN
-                               sigmaij = sigmaij + ( deeq_nc(ih,jh,na,ijs) - &
-                               et(ibnd,ik)*qq_at(ih,jh,na) ) * wg(ibnd,ik) * &
-                               CONJG(becp%nc(ikb,is,ibnd)) * &
-                               becp%nc(jkb,js,ibnd)
+                               deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
                             END IF
+                            sigmaij = sigmaij + wg(ibnd,ik) * deff_nc * &
+                                 CONJG(becp%nc(ikb,is,ibnd)) * &
+                                 becp%nc(jkb,js,ibnd)
                          END DO
                       END DO
                    END DO
@@ -528,21 +528,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   ! 
                                   ikb = ijkb0 + ih
                                   jkb = ijkb0 + jh
+                                  deff_nc = deeq_nc(ih,jh,na,ijs)
                                   IF (lspinorb) THEN
-                                     sigmaij = sigmaij + &
-                                          ( deeq_nc(ih,jh,na,ijs) - &
-                                          et(ibnd,ik)*qq_so(ih,jh,ijs,np) ) * &
-                                          wg(ibnd,ik) * &
-                                          CONJG(becp%nc(ikb,is,ibnd)) * &
-                                          becd%nc(jkb,js,ibnd)
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_so(ih,jh,ijs,np)
                                   ELSE IF (is == js) THEN
-                                     sigmaij = sigmaij + &
-                                          ( deeq_nc(ih,jh,na,ijs) - &
-                                          et(ibnd,ik)*qq_at(ih,jh,na) ) * &
-                                          wg(ibnd,ik) * &
-                                          CONJG(becp%nc(ikb,is,ibnd)) * &
-                                          becd%nc(jkb,js,ibnd)
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
                                   END IF
+                                  sigmaij = sigmaij + wg(ibnd,ik) * deff_nc * &
+                                       CONJG(becp%nc(ikb,is,ibnd)) * &
+                                       becd%nc(jkb,js,ibnd)
                                END DO
                             END DO
                          END DO
@@ -586,21 +580,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   ijs = (is-1)*npol+js
                                   ikb = ijkb0 + ih
                                   jkb = ijkb0 + jh
+                                  deff_nc = deeq_nc(ih,jh,na,ijs)
                                   IF (lspinorb) THEN
-                                     sigmaij = sigmaij + &
-                                          ( deeq_nc(ih,jh,na,ijs) - &
-                                          et(ibnd,ik)*qq_so(ih,jh,ijs,np) ) * &
-                                          wg(ibnd,ik) * &
-                                          CONJG(becp%nc(ikb,is,ibnd)) * &
-                                          becd%nc(jkb,js,ibnd)
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_so(ih,jh,ijs,np)
                                   ELSE IF (is == js) THEN
-                                     sigmaij = sigmaij + &
-                                          ( deeq_nc(ih,jh,na,ijs) - &
-                                          et(ibnd,ik)*qq_at(ih,jh,na) ) * &
-                                          wg(ibnd,ik) * &
-                                          CONJG(becp%nc(ikb,is,ibnd)) * &
-                                          becd%nc(jkb,js,ibnd)
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
                                   END IF
+                                  sigmaij = sigmaij + wg(ibnd,ik) * deff_nc * &
+                                       CONJG(becp%nc(ikb,is,ibnd)) * &
+                                       becd%nc(jkb,js,ibnd)
                                END DO
                             END DO
                          END DO
