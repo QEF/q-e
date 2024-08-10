@@ -49,7 +49,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE lrus,     ONLY : becp1
   USE phus,     ONLY : alphap, int1_nc
   USE qpoint_aux, ONLY : becpt, alphapt
-  USE nc_mag_aux, ONLY : int1_nc_save, deeq_nc_save
+  USE lr_nc_mag,  ONLY : int1_nc_save, deeq_nc_save
 
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum

@@ -96,7 +96,7 @@ subroutine phq_setup
   USE mp,            ONLY : mp_max, mp_min
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
-  USE nc_mag_aux,    ONLY : deeq_nc_save
+  USE lr_nc_mag,     ONLY : deeq_nc_save
   USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
   USE ldaU_lr,       ONLY : effU

@@ -77,6 +77,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    USE qpoint_aux,            ONLY : ikmks, ikmkmqs, becpt
    USE eqv,                   ONLY : dpsi, dvpsi, evq
    USE apply_dpot_mod,        ONLY : apply_dpot_bands
+   USE lr_nc_mag,             ONLY : lr_apply_time_reversal
    !
    IMPLICIT NONE
    !
@@ -98,7 +99,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !! True if converged at all k points and perturbations
    REAL(DP), INTENT(OUT) :: avg_iter
    !! average number of iterations for the linear equation solver
-   COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
+   COMPLEX(DP), POINTER, INTENT(INOUT) :: dvscfins(:, :, :)
    !! dV_ind calculated in the previous iteration
    COMPLEX(DP), INTENT(INOUT) :: drhoout(dfftp%nnr, nspin_mag, npert)
    !! induced charge density
@@ -135,6 +136,10 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !
    exclude_hubbard_ = .FALSE.
    IF (PRESENT(exclude_hubbard)) exclude_hubbard_ = exclude_hubbard
+   !
+   !  change the sign of the magnetic field if required
+   !
+   IF (time_reversed) CALL lr_apply_time_reversal(first_iter, 2, dvscfins)
    !
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
@@ -284,6 +289,10 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
    !
    !$acc exit data delete(aux2)
+   !
+   !  reset the original magnetic field if it was changed
+   !
+   IF (time_reversed) CALL lr_apply_time_reversal(first_iter, 1, dvscfins)
    !
    DEALLOCATE(aux2)
    DEALLOCATE(h_diag)
