@@ -21,7 +21,7 @@ subroutine allocate_phq
   USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag, lspinorb
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
+  USE lr_nc_mag,     ONLY : int1_nc_save, deeq_nc_save
   USE becmod,        ONLY : becp, allocate_bec_type, allocate_bec_type_acc
   USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw

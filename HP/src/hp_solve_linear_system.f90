@@ -52,10 +52,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
-  USE hp_nc_mag_aux,        ONLY : deeq_nc_save, int3_save   
-  USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt  
-  USE lsda_mod,             ONLY : nspin     
-  USE scf,                  ONLY : vrs    
+  USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt
+  USE lsda_mod,             ONLY : nspin
+  USE lr_nc_mag,            ONLY : lr_apply_time_reversal, deeq_nc_save, int3_nc_save
   !
   IMPLICIT NONE
   !
@@ -155,7 +154,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   IF (noncolin) ALLOCATE (dbecsum_nc (nhm,nhm, nat , nspin , 1, nsolv))
   !
   IF (noncolin.and.domag.and.okvan) THEN
-    ALLOCATE (int3_save( nhm, nhm, nat, nspin_mag, 1, 2))
+    ALLOCATE (int3_nc_save( nhm, nhm, nat, nspin_mag, 1, 2))
     ALLOCATE (dbecsum_aux ( (nhm * (nhm + 1))/2 , nat , nspin_mag , 1))
   ENDIF
   !
@@ -241,17 +240,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      DO isolv = 1, nsolv
         !
-        !  change the sign of the magnetic field if required
-        !
-        IF (isolv == 2) THEN
-           IF ( iter > 1 ) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
-           ENDIF
-           vrs(:, 2:4) = -vrs(:, 2:4)
-           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-        ENDIF
-        !
         ! set threshold for iterative solution of the linear system
         !
         IF ( iter == 1 ) THEN
@@ -276,16 +264,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            WRITE(stdout, '(6x, "sternheimer_kernel not converged. Try to increase thresh_init.")')
         ENDIF
         !
-        !  reset the original magnetic field if it was changed
-        !
-        IF (isolv == 2) THEN
-           IF ( iter > 1 ) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
-           ENDIF
-           vrs(:, 2:4) = -vrs(:, 2:4)
-           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-        ENDIF
      ENDDO ! isolv
      !
      IF (nsolv==2) THEN
@@ -446,7 +424,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         CALL newdq (dvscfin, 1)
         IF (noncolin.AND.domag) then
            !
-           int3_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
+           int3_nc_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
            !
            dvscfin(:,2:4) = -dvscfin(:,2:4)
            IF (okpaw) THEN 
@@ -460,7 +438,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            IF (okpaw) CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,1)
            !
            CALL newdq (dvscfin, 1)
-           int3_save(:,:,:,:,:,2) = int3_nc(:,:,:,:,:)
+           int3_nc_save(:,:,:,:,:,2) = int3_nc(:,:,:,:,:)
            !
            !  restore the correct sign of the magnetic field.
            !
@@ -472,7 +450,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            !
            !  put into int3_nc the coefficient with +B
            !
-           int3_nc(:,:,:,:,:)=int3_save(:,:,:,:,:,1)
+           int3_nc(:,:,:,:,:)=int3_nc_save(:,:,:,:,:,1)
         ENDIF
      ENDIF
      !
@@ -522,7 +500,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   IF (ALLOCATED(dbecsum_nc)) DEALLOCATE (dbecsum_nc)
   IF (ALLOCATED(int3_nc)) DEALLOCATE(int3_nc)
-  IF (ALLOCATED(int3_save)) DEALLOCATE (int3_save)
+  IF (ALLOCATED(int3_nc_save)) DEALLOCATE (int3_nc_save)
   IF (ALLOCATED(dbecsum_aux)) DEALLOCATE (dbecsum_aux)
   !
   !$acc exit data delete(dvscfins)

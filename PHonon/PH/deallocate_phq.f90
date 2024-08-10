@@ -44,7 +44,7 @@ subroutine deallocate_phq
                            dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
+  USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save
   USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
 
   IMPLICIT NONE

@@ -358,7 +358,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
   USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
@@ -511,7 +511,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            IF (isolv==2) THEN
               dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_nc_save(:,:,:,:,ipert,2)
            ENDIF
            !
            CALL apply_dpot_bands(ik, ibnd_lst - ibnd_fst + 1, dvscfins(:, :, ipert), &
@@ -543,7 +543,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            IF (isolv==2) THEN
               dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_nc_save(:,:,:,:,ipert,1)
            ENDIF
            !
            ! If doing Allen-Heine-Cardona (AHC) calculation, we need dvpsi
