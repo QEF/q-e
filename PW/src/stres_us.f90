@@ -73,6 +73,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      ENDIF
   ENDDO
   !
+  !$acc data present(et) copyin( ityp, wg, nh, ofsbeta ) 
   IF ( gamma_only ) THEN
      !
      CALL stres_us_gamma()
@@ -86,6 +87,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      CALL stres_us_k()
     !
   ENDIF
+  !$acc end data
   !
   !$acc end data
   !
@@ -127,7 +129,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        compute_diag: IF ( mykey == 0 ) THEN
           !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r) &
-          !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+          !$acc reduction(+:sigmaij)
           DO na = na_s, na_e
              DO ibnd = 1, nbnd
                 np = ityp(na)
@@ -183,7 +185,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_djl: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r) &
-                !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij)
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
@@ -226,7 +228,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_dylm: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r) &
-                !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij)
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
@@ -292,7 +294,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        compute_diag: IF ( mykey == 0 ) THEN
           !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k) &
-          !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+          !$acc reduction(+:sigmaij)
           DO na = na_s, na_e
              DO ibnd = 1, nbnd
                 np = ityp(na)
@@ -342,7 +344,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_djl: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
-                !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij)
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
@@ -385,7 +387,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_dylm: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
-                !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij)
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
@@ -452,7 +454,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        compute_diag: IF ( mykey == 0 ) THEN
           !$acc parallel loop collapse(2) present(deeq_nc, qq_at, qq_so, becp%nc) &
-          !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+          !$acc reduction(+:sigmaij)
           DO na = na_s, na_e
              DO ibnd = 1, nbnd
                 np = ityp(na)
@@ -514,7 +516,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_djl: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
-                !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij)
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
@@ -567,7 +569,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_dylm: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
-                !$acc copyin( ityp, wg, et, nh ) reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij)
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
