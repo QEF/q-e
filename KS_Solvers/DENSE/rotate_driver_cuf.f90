@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dptr, &
-              npwx, npw, nstart, nbnd, psi_d, npol, overlap, evc_d, hevc_d, sevc_d, e_d, use_para_diag, gamma_only )
+              npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e_d, use_para_diag, gamma_only )
   !----------------------------------------------------------------------------
   !
   !! Driver routine for Hamiltonian diagonalization in the subspace 
@@ -31,11 +31,11 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
   !! number of spin polarizations
   LOGICAL, INTENT(IN) :: overlap
   !! if .FALSE. : S|psi> not needed
-  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx*npol,nstart)
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nstart)
   !! vectors spannign the subspace 
-  COMPLEX(DP), INTENT(INOUT)   :: evc_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT)   :: evc(npwx*npol,nbnd)
   !! input and output eigenvectors (may overlap)
-  COMPLEX(DP), INTENT(OUT)   :: hevc_d(npwx*npol,nbnd), sevc_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(OUT)   :: hevc(npwx*npol,nbnd), sevc(npwx*npol,nbnd)
   !! H|psi> and S|psi>
   REAL(DP),  INTENT(OUT) :: e_d(nbnd)
   !! eigenvalues
@@ -44,7 +44,7 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
   LOGICAL, INTENT(IN) :: gamma_only 
   !! set to true if H matrix is real 
 #if defined(__CUDA)
-  attributes(DEVICE)       :: psi_d, evc_d, hevc_d, sevc_d, e_d
+  attributes(DEVICE)       :: e_d
 #endif
 
   COMPLEX(DP), ALLOCATABLE         :: psi_h(:,:)
@@ -76,8 +76,12 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
         sevc_h => evc_h
      END IF
      !
-     psi_h(1:npwx*npol,1:nstart) = psi_d(1:npwx*npol,1:nstart)
-     evc_h(1:npwx*npol,1:nbnd)   = evc_d(1:npwx*npol,1:nbnd)
+     !$acc kernels copyout(psi_h)
+     psi_h(1:npwx*npol,1:nstart) = psi(1:npwx*npol,1:nstart)
+     !$acc end kernels
+     !$acc kernels copyout(evc_h)
+     evc_h(1:npwx*npol,1:nbnd)   = evc(1:npwx*npol,1:nbnd)
+     !$acc end kernels
      !
      ! use data distributed subroutine
      !
@@ -94,14 +98,22 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
                               npwx, npw, nstart, nbnd, npol, psi_h, evc_h, hevc_h, sevc_h, e_h )
         !
      END IF
-     psi_d(1:npwx*npol,1:nstart) = psi_h(1:npwx*npol,1:nstart)
-     evc_d(1:npwx*npol,1:nbnd)   = evc_h(1:npwx*npol,1:nbnd)
-     hevc_d(1:npwx*npol,1:nbnd)  = hevc_h(1:npwx*npol,1:nbnd)
+     !$acc kernels copyin(psi_h)
+     psi(1:npwx*npol,1:nstart) = psi_h(1:npwx*npol,1:nstart)
+     !$acc end kernels
+     !$acc kernels copyin(evc_h)
+     evc(1:npwx*npol,1:nbnd)   = evc_h(1:npwx*npol,1:nbnd)
+     !$acc end kernels
+     !$acc kernels copyin(hevc_h)
+     hevc(1:npwx*npol,1:nbnd)  = hevc_h(1:npwx*npol,1:nbnd)
+     !$acc end kernels
      e_d(1:nbnd)                 = e_h(1:nbnd)
      !
      DEALLOCATE(psi_h, evc_h, hevc_h, e_h)
      IF(overlap) THEN 
-       sevc_d(1:npwx*npol,1:nbnd)  = sevc_h(1:npwx*npol,1:nbnd)
+       !$acc kernels copyin(sevc_h)
+       sevc(1:npwx*npol,1:nbnd)  = sevc_h(1:npwx*npol,1:nbnd)
+       !$acc end kernels
        DEALLOCATE(sevc_h)
      ELSE
         NULLIFY(sevc_h)
@@ -115,13 +127,13 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
   !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
         CALL rotate_xpsi_gamma_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
-                                 npwx, npw, nstart, nbnd, psi_d, evc_d, hevc_d, sevc_d, e_d )
+                                 npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e_d )
         !
      ELSE
   !write (*,*) 'inside serial k'; FLUSH(6)
         !
         CALL rotate_xpsi_k_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
-                             npwx, npw, nstart, nbnd, npol, psi_d, evc_d, hevc_d, sevc_d, e_d )
+                             npwx, npw, nstart, nbnd, npol, psi, evc, hevc, sevc, e_d )
         !
      END IF
      !
