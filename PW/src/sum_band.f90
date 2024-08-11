@@ -340,14 +340,16 @@ SUBROUTINE sum_band()
        INTEGER ::  ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
        COMPLEX(DP), ALLOCATABLE :: grad_psic(:,:)
-       !$acc declare device_resident(grad_psic)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
        incr = 2
        !$acc enter data create(psic)
-       IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE( grad_psic(npwx,2) )
+       IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          ALLOCATE( grad_psic(npwx,2) )
+          !$acc enter data create(grad_psic)
+       ENDIF
        !
        k_loop: DO ik = 1, nks
           !
@@ -440,6 +442,7 @@ SUBROUTINE sum_band()
        ENDDO k_loop
        !
        IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          !$acc exit data delete(grad_psic)
           DEALLOCATE( grad_psic )
           !$acc update host(rho%kin_r)
        END IF
@@ -474,7 +477,7 @@ SUBROUTINE sum_band()
        ! polaron calculation
        REAL(DP), ALLOCATABLE :: rho_p(:)
        COMPLEX(DP), ALLOCATABLE :: psic_p(:)
-       !$acc declare device_resident(rho_p, psic_p, grad_psic)
+       !$acc declare device_resident(rho_p, psic_p)
        INTEGER :: ierr
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
@@ -500,6 +503,7 @@ SUBROUTINE sum_band()
        ELSE IF (xclib_dft_is('meta') .OR. lxdm) THEN
           incr = 1
           ALLOCATE( grad_psic(npwx,incr) )
+          !$acc enter data create(grad_psic)
        ELSE
           incr = many_fft
        ENDIF
@@ -654,6 +658,7 @@ SUBROUTINE sum_band()
        DEALLOCATE( psicd )
        !
        IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          !$acc exit data delete(grad_psic)
           DEALLOCATE( grad_psic )
           !$acc update host(rho%kin_r)
        END IF
