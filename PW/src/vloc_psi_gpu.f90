@@ -32,7 +32,6 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   COMPLEX(DP), ALLOCATABLE :: psic(:)
-  !$acc declare device_resident(psi,psic)
   INTEGER :: dffts_nnr, idx, ebnd, brange
   INTEGER :: ierr, ioff
   ! ... Variables to handle batched FFT
@@ -48,7 +47,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   ALLOCATE( psi(n,incr) )
   ALLOCATE( psic(dffts_nnr*incr) )
-  !$acc data deviceptr(psi_d,hpsi_d) present(v)
+  !$acc data deviceptr(psi_d,hpsi_d) present(v) create(psi,psic)
   !
   !
   ! ... The local potential V_Loc psi:
@@ -181,7 +180,6 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   COMPLEX(DP), ALLOCATABLE :: psic(:)
-  !$acc declare device_resident(psi,psic)
   !
   INTEGER :: dffts_nnr, idx, group_size, hm_vec(3)
   INTEGER :: ierr, brange
@@ -195,7 +193,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   ALLOCATE( psi(n,incr) )
   ALLOCATE( psic(dffts_nnr*incr) )
-  !$acc data deviceptr(psi_d,hpsi_d) present(v, igk_k)
+  !$acc data deviceptr(psi_d,hpsi_d) present(v, igk_k) create(psi,psic)
   !
   IF (many_fft > 1) THEN
      !
@@ -300,7 +298,6 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   COMPLEX(DP) :: sup, sdwn
   !
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), psic_nc(:,:)
-  !$acc declare device_resident(psi,psic_nc)
   INTEGER :: dffts_nnr, idx, ioff, ii, ie, brange
   INTEGER :: right_nnr, right_nr3, right_inc
   !
@@ -314,7 +311,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   ALLOCATE( psi(n,npol) )
   ALLOCATE( psic_nc(dffts_nnr,npol) )
   !
-  !$acc data deviceptr(psi_d,hpsi_d) present(v, igk_k)
+  !$acc data deviceptr(psi_d,hpsi_d) present(v, igk_k) create(psi,psic_nc)
   !
   ! ... the local potential V_Loc psi. First the psi in real space
   !

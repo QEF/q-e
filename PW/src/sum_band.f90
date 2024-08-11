@@ -474,7 +474,7 @@ SUBROUTINE sum_band()
        ! polaron calculation
        REAL(DP), ALLOCATABLE :: rho_p(:)
        COMPLEX(DP), ALLOCATABLE :: psic_p(:)
-       !$acc declare device_resident(psicd, rho_p, psic_p, grad_psic)
+       !$acc declare device_resident(rho_p, psic_p, grad_psic)
        INTEGER :: ierr
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
@@ -503,7 +503,10 @@ SUBROUTINE sum_band()
        ELSE
           incr = many_fft
        ENDIF
+       !
        ALLOCATE( psicd(dffts%nnr*incr) )
+       !$acc data create(psicd)
+       !
        ! ... This is used as reduction variable on the device
        !
        k_loop: DO ik = 1, nks
@@ -639,6 +642,8 @@ SUBROUTINE sum_band()
           IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
        END DO k_loop
+       !
+       !$acc end data
        !
        IF(sic .and. pol_type == 'h') THEN
           wg_p = 1.0 - wg_p
