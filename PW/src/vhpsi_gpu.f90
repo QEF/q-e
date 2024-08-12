@@ -10,15 +10,12 @@
 #define cublasZgemm zgemm
 #endif
 !-----------------------------------------------------------------------
-SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
+SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   !-----------------------------------------------------------------------
   !! This routine computes the Hubbard potential applied to the electronic
   !! structure of the current k-point. The result is added to hpsi.
   !
   USE kinds,         ONLY : DP
-#if defined(__CUDA)
-  USE becmod,        ONLY : calbec_cuf
-#endif
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
                             is_hubbard_back, Hubbard_l2, offsetU_back, &
@@ -28,6 +25,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE control_flags, ONLY : gamma_only, offload_type
   USE mp,            ONLY : mp_sum
+  USE becmod,        ONLY : calbec
   !
 #if defined(__CUDA)
   USE cudafor
@@ -42,18 +40,15 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !! true dimension of psip, hpsi
   INTEGER, INTENT(IN) :: mps
   !! number of states psip
-  COMPLEX(DP), INTENT(IN) :: psip_d(ldap,mps)
+  COMPLEX(DP), INTENT(IN) :: psip(ldap,mps)
   !! the wavefunction
-  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(ldap,mps)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(ldap,mps)
   !! Hamiltonian dot psi
   !
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: proj_k(:,:)
   REAL(DP), ALLOCATABLE    :: proj_r(:,:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: psip_d, hpsi_d
-#endif
   !
   CALL start_clock_gpu( 'vhpsi' )
   !
@@ -62,18 +57,15 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !$acc data copyin(wfcU)
   !
   ! proj = <wfcU|psip>
-#if defined(__CUDA)
-!civn: remove psip_d and use calbec instead
   if(gamma_only) then
     allocate( proj_r(nwfcU, mps) )
     !$acc enter data create(proj_r)
-    Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_r)
+    Call calbec(offload_type, np, wfcU, psip, proj_r)
   else
     allocate( proj_k(nwfcU, mps) )
     !$acc enter data create(proj_k)
-    Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_k)
+    Call calbec(offload_type, np, wfcU, psip, proj_k)
   endif
-#endif
   !
   IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
      CALL vhpsi_U_gpu()  ! DFT+U
@@ -162,10 +154,10 @@ SUBROUTINE vhpsi_U_gpu()
                       proj_r(offsetU(na)+1,1), nwfcU, 0.0_dp, rtemp_d, ldimaxt )
                  !$acc end host_data
                  !
-                 !$acc host_data use_device(wfcU)
+                 !$acc host_data use_device(wfcU, hpsi)
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
                       wfcU(1,offsetU(na)+1), 2*ldap, rtemp_d, ldimaxt, &
-                      1.0_dp, hpsi_d, 2*ldap )
+                      1.0_dp, hpsi, 2*ldap )
                  !$acc end host_data
                  !
               ELSE
@@ -176,10 +168,10 @@ SUBROUTINE vhpsi_U_gpu()
                       (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
                  !$acc end host_data
                  !
-                 !$acc host_data use_device(wfcU)
+                 !$acc host_data use_device(wfcU, hpsi)
                  CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
                       wfcU(1,offsetU(na)+1), ldap, ctemp_d, ldimaxt, &
-                      (1.0_dp,0.0_dp), hpsi_d, ldap)
+                      (1.0_dp,0.0_dp), hpsi, ldap)
                  !$acc end host_data
                  !
               ENDIF
@@ -209,10 +201,10 @@ SUBROUTINE vhpsi_U_gpu()
                       nwfcU, 0.0_dp, rtemp_d, ldimaxt )
                  !$acc end host_data
                  !
-                 !$acc host_data use_device(wfcU)
+                 !$acc host_data use_device(wfcU, hpsi)
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
                       wfcU(1,offsetU_back(na)+1), 2*ldap, rtemp_d, &
-                      ldimaxt, 1.0_dp, hpsi_d, 2*ldap )
+                      ldimaxt, 1.0_dp, hpsi, 2*ldap )
                  !$acc end host_data
                  !
                  IF (backall(nt)) THEN
@@ -227,10 +219,10 @@ SUBROUTINE vhpsi_U_gpu()
                          nwfcU, 0.0_dp, rtemp_d, ldimaxt )
                     !$acc end host_data
                     !
-                    !$acc host_data use_device(wfcU)
+                    !$acc host_data use_device(wfcU, hpsi)
                     CALL cublasDgemm( 'N', 'N', 2*np, mps, ldim, 1.0_dp, &
                          wfcU(1,offsetU_back1(na)+1), 2*ldap, rtemp_d, &
-                         ldimaxt, 1.0_dp, hpsi_d, 2*ldap )
+                         ldimaxt, 1.0_dp, hpsi, 2*ldap )
                     !$acc end host_data
                     !
                  ENDIF
@@ -245,10 +237,10 @@ SUBROUTINE vhpsi_U_gpu()
                       nwfcU, (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
                  !$acc end host_data
                  !
-                 !$acc host_data use_device(wfcU)
+                 !$acc host_data use_device(wfcU, hpsi)
                  CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
                       wfcU(1,offsetU_back(na)+1), ldap, ctemp_d,           &
-                      ldimaxt, (1.0_dp,0.0_dp), hpsi_d, ldap )
+                      ldimaxt, (1.0_dp,0.0_dp), hpsi, ldap )
                  !$acc end host_data
                  !
                  IF (backall(nt)) THEN
@@ -263,10 +255,10 @@ SUBROUTINE vhpsi_U_gpu()
                          (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
                     !$acc end host_data
                     ! 
-                    !$acc host_data use_device(wfcU)
+                    !$acc host_data use_device(wfcU, hpsi)
                     CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
                          wfcU(1,offsetU_back1(na)+1), ldap, ctemp_d,          &
-                         ldimaxt, (1.0_dp,0.0_dp), hpsi_d, ldap )
+                         ldimaxt, (1.0_dp,0.0_dp), hpsi, ldap )
                     !$acc end host_data
                     !
                  ENDIF

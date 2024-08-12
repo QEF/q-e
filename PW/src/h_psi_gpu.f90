@@ -307,9 +307,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !$acc end host_data
      ELSE
         IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
-          !$acc host_data use_device(psi, hpsi)
           CALL vhpsi_gpu( lda, n, m, psi, hpsi )  ! DFT+U
-          !$acc end host_data
         ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN          ! DFT+U+V
           CALL vhpsi( lda, n, m, psi_host, hpsi_host )
           !$acc host_data use_device(hpsi)
