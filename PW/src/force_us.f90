@@ -42,7 +42,6 @@ SUBROUTINE force_us( forcenl )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
-  !$acc declare device_resident(vkb1)
   TYPE(bec_type) :: becd                  ! contains <dbeta|psi>
   COMPLEX(DP) :: deff_nc
   REAL(DP) :: deff, fnl
@@ -54,6 +53,7 @@ SUBROUTINE force_us( forcenl )
   CALL allocate_bec_type_acc( nkb, nbnd, becp, intra_bgrp_comm )
   CALL allocate_bec_type_acc( nkb, nbnd, becd, intra_bgrp_comm )
   ALLOCATE( vkb1(npwx,nkb) )
+  !$acc data create(vkb1)
   ! 
   ! ... the forces are summed over K-points
   !
@@ -166,6 +166,7 @@ SUBROUTINE force_us( forcenl )
      ENDDO
   ENDDO
   !
+  !$acc end data
   DEALLOCATE( vkb1 )
   CALL deallocate_bec_type_acc( becd )
   CALL deallocate_bec_type_acc( becp )
