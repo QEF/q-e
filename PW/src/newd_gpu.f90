@@ -222,7 +222,7 @@ SUBROUTINE newd_gpu( )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : okvan, deeq, deeq_nc, dvan_d, dvan_so_d
+  USE uspp,                 ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
@@ -241,7 +241,6 @@ SUBROUTINE newd_gpu( )
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb, ierr
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-  REAL(kind=dp), allocatable :: deeq_h( :,:,:,: )
   INTEGER, POINTER :: ityp_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: ityp_d
@@ -263,7 +262,7 @@ SUBROUTINE newd_gpu( )
               DO na = 1, nat
                  DO jh = 1, nht
                     DO ih = 1, nht
-                       IF ( ityp_d(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so_d(ih,jh,is,nt)
+                       IF ( ityp_d(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so(ih,jh,is,nt)
                     END DO
                  END DO
               END DO
@@ -276,10 +275,10 @@ SUBROUTINE newd_gpu( )
               DO jh = 1, nht
                  DO ih = 1, nht
                     IF ( ityp_d(na) == nt ) THEN
-                       deeq_nc(ih,jh,na,1) = dvan_d(ih,jh,nt)
+                       deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt)
                        deeq_nc(ih,jh,na,2) = ( 0.D0, 0.D0 )
                        deeq_nc(ih,jh,na,3) = ( 0.D0, 0.D0 )
-                       deeq_nc(ih,jh,na,4) = dvan_d(ih,jh,nt)
+                       deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt)
                     END IF
                  END DO
               END DO
@@ -294,7 +293,7 @@ SUBROUTINE newd_gpu( )
                     DO jh = 1, nht
                        DO ih = 1, nht
                           !
-                          IF ( ityp_d(na) == nt ) deeq(ih,jh,na,is) = dvan_d(ih,jh,nt)
+                          IF ( ityp_d(na) == nt ) deeq(ih,jh,na,is) = dvan(ih,jh,nt)
                           !
                        END DO
                     END DO
@@ -323,7 +322,6 @@ SUBROUTINE newd_gpu( )
   END IF
   !
   CALL start_clock_gpu( 'newd' )
-  allocate(deeq_h( nhm, nhm, nat, nspin ))
   !
   ! move atom type info to GPU
   CALL buffer%lock_buffer(ityp_d, nat, ierr)
@@ -369,7 +367,7 @@ SUBROUTINE newd_gpu( )
               DO ih = 1, nht
                  DO jh = 1, nht
                     IF ( ityp_d(na) == nt ) THEN
-                       deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan_d(ih,jh,nt)
+                       deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan(ih,jh,nt)
                     END IF
                  END DO
               END DO
@@ -437,7 +435,7 @@ SUBROUTINE newd_gpu( )
                         !
                         IF ( ityp_d(na) == nt ) THEN
                            !
-                           deeq_nc(ih,jh,na,ijs) = dvan_so_d(ih,jh,ijs,nt)
+                           deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
                            !
                            DO kh = 1, nhnt
                               !
@@ -479,7 +477,7 @@ SUBROUTINE newd_gpu( )
                         !
                         IF ( ityp_d(na) == nt ) THEN
                            !
-                           deeq_nc(ih,jh,na,ijs) = dvan_so_d(ih,jh,ijs,nt)
+                           deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
                            !
                            DO kh = 1, nhnt
                               !
@@ -533,17 +531,17 @@ SUBROUTINE newd_gpu( )
                IF ( ityp_d(na) == nt ) THEN
                   !
                   IF (lspinorb) THEN
-                     deeq_nc(ih,jh,na,1) = dvan_so_d(ih,jh,1,nt) + &
+                     deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
                                            deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
                      !
-                     deeq_nc(ih,jh,na,4) = dvan_so_d(ih,jh,4,nt) + &
+                     deeq_nc(ih,jh,na,4) = dvan_so(ih,jh,4,nt) + &
                                            deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
                      !
                   ELSE
-                     deeq_nc(ih,jh,na,1) = dvan_d(ih,jh,nt) + &
+                     deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
                                            deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
                      !
-                     deeq_nc(ih,jh,na,4) = dvan_d(ih,jh,nt) + &
+                     deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt) + &
                                            deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
                      !
                   END IF
