@@ -50,9 +50,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: proj_k(:,:)
-  !$acc declare device_resident(proj_k)
   REAL(DP), ALLOCATABLE    :: proj_r(:,:)
-  !$acc declare device_resident(proj_r)
 #if defined(__CUDA)
   attributes(DEVICE) :: psip_d, hpsi_d
 #endif
@@ -68,9 +66,11 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
 !civn: remove psip_d and use calbec instead
   if(gamma_only) then
     allocate( proj_r(nwfcU, mps) )
+    !$acc enter data create(proj_r)
     Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_r)
   else
     allocate( proj_k(nwfcU, mps) )
+    !$acc enter data create(proj_k)
     Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_k)
   endif
 #endif
@@ -84,8 +84,10 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !$acc end data
   !
   if(gamma_only) then
+    !$acc exit data delete(proj_r)
     deallocate( proj_r )
   else
+    !$acc exit data delete(proj_k)
     deallocate( proj_k )
   endif
   !
