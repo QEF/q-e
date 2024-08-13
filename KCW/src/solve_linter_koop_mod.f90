@@ -210,9 +210,6 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
        IF (isolv == 2) THEN 
           IF ( iter > 1 ) dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :) 
           vrs(:, 2:4) = -vrs(:, 2:4)
-#if defined(__CUDA)
-           vrs_d = vrs
-#endif
        ENDIF    
        !
        IF (iter == 1 ) THEN
@@ -242,9 +239,6 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
        IF (isolv == 2) THEN 
           IF ( iter > 1 ) dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :) 
           vrs(:, 2:4) = -vrs(:, 2:4)
-#if defined(__CUDA)
-           vrs_d = vrs
-#endif
        ENDIF    
        !
      ENDDO
