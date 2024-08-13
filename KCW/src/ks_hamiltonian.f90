@@ -10,6 +10,8 @@ SUBROUTINE ks_hamiltonian (evc, ik, h_dim)
   !---------------------------------------------------------------------
   !
   !! This routine compute and diagonalize the KS Hamiltonian 
+  !! Non-collinear case is NOT implemented!
+  !! OBSOLETE?
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
@@ -24,14 +26,16 @@ SUBROUTINE ks_hamiltonian (evc, ik, h_dim)
   USE constants,            ONLY : rytoev
   USE control_kcw,          ONLY : Hamlt, calculation, spin_component, check_ks
   USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : npol, nspin_lsda, nspin_gga, nspin_mag
+
   ! 
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)    :: ik, h_dim
   ! 
-  COMPLEX(DP), INTENT(IN) :: evc(npwx,h_dim)
+  COMPLEX(DP), INTENT(IN) :: evc(npwx*npol,h_dim)
   !
-  COMPLEX(DP) :: hpsi(npwx,h_dim), ham(h_dim,h_dim), hij, eigvc(npwx,h_dim)
+  COMPLEX(DP) :: hpsi(npwx*npol,h_dim), ham(h_dim,h_dim), hij, eigvc(npwx*npol,h_dim)
   !
   REAL(DP) :: eigvl(h_dim), check
   !
@@ -57,7 +61,7 @@ SUBROUTINE ks_hamiltonian (evc, ik, h_dim)
      DO jband = iband, h_dim
         !
         hij = 0.D0
-        DO ig = 1, npw
+        DO ig = 1, npw*npol
            hij = hij + CONJG(evc(ig,iband)) * hpsi(ig,jband)
         ENDDO
         CALL mp_sum (hij, intra_bgrp_comm)

@@ -1,0 +1,23 @@
+This example shows how to use the KCW code to compute the band structure
+of bulk ferromagnetic CrI3. 
+NB: the calculation is unconverged
+
+1) run a standard scf calculation at LDA level on a regular 2x2x2 mesh. 
+   The regular mesh is needed by Wannier90. Ideally you can run scf with 
+   symmetry and then a nscf calculation on a regular grid. 
+   input=cri3.scf.in, output=cri3.scf.out
+
+For each spin channel: 
+2) perform a separate wannierization for the different blocks of bands
+   results in SPIN-*/wann_block*
+
+3) prepare the KCW calculation 
+   input=cri3.kcw-wann2kcw.in, output=cri3.kcw-wann2kcw.out
+
+4) Use a screening coefficient equal to 1/epsilon_infinity for all the 
+   Wannier functions.
+
+5) calculate, interpolate and diagonalize the KI Hamiltonian 
+   input=cri3.kcw-ham.in, output=cri3.kcw-ham.out
+
+The CrI3 band structure is in cri3.kcw_bands.dat.

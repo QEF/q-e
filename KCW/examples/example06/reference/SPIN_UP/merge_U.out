@@ -1,0 +1,22 @@
+ Merging            4  blocks
+ what = U
+ block #            1 file = wann_block1/wann_u.mat nbnd =            2
+ block #            2 file = wann_block2/wann_u.mat nbnd =            6
+ block #            3 file = wann_block3/wann_u.mat nbnd =            6
+ block #            4 file = wann_block4/wann_u.mat nbnd =           24
+ Final # of bands   =           38
+ Final # of kpoints =            8
+ Reading wann_block1/wann_u.mat
+ istart =            1  iend =            2
+ Reading wann_block2/wann_u.mat
+ istart =            3  iend =            8
+ Reading wann_block3/wann_u.mat
+ istart =            9  iend =           14
+ Reading wann_block4/wann_u.mat
+ istart =           15  iend =           38
+ Final # of bands   =           38
+ Final # of kpoints =            8
+ Writing wann_u.mat
+
+ GAME OVER
+
