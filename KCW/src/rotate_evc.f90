@@ -36,9 +36,10 @@
       !COMPLEX(DP), ALLOCATABLE :: phase(:), gpsi_tmp(:,:)
       COMPLEX(DP), ALLOCATABLE :: temppsi_all(:)
       COMPLEX(DP), ALLOCATABLE :: psi_all(:)
-      !nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x !Giovanni Cistaro ->  global number of r points
+      INTEGER :: nxxs
+      nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x !Giovanni Cistaro ->  global number of r points
       !IF(.not. ALLOCATED(gpsi)) ALLOCATE(gpsi(dffts%nnr))
-      ALLOCATE( psi_all(dffts%nnr), temppsi_all(dffts%nnr))!, gpsi_tmp(npwx,2))!, stat=ierr)
+      ALLOCATE( psi_all(nxxs), temppsi_all(nxxs))!, gpsi_tmp(npwx,2))!, stat=ierr)
       !IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all/temppsic_all/gpsi_tmp', 1)
       !ALLOCATE( phase(dffts%nnr))!, stat=ierr)
       !IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
@@ -72,14 +73,14 @@
                  ! (Giovanni Cistaro)
                  !
                  ! apply rotation
-                 psi_all(1:dffts%nnr) = temppsi_all(rir(1:(dffts%nnr),isym)) 
+                 psi_all(1:nxxs) = temppsi_all(rir(1:(nxxs),isym)) 
                  !rotates the space of temppsic_all and builds 
                  !psic_all with it Giovanni Cistaro)
                  !
                  ! scatter back a piece to each CPU
                  CALL scatter_grid(dffts, psi_all, gpsi)
 #else
-                 gpsi(1:dffts%nnr) = psi(rir(1:(dffts%nnr),isym))
+                 gpsi(1:nnxs) = psi(rir(1:(nxxs),isym))
 #endif
                ELSE
                  gpsi = psi 
