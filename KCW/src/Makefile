@@ -56,10 +56,17 @@ kcw_init_q.o\
 kcw_allocate_q.o\
 kcw_deallocate_q.o\
 setup_coulomb_exx.o\
-coulomb.o
-#restore_symm.o 
-#check_density.o 
-#setup_coulomb.o\
+coulomb.o\
+kcw_set_symm.o\
+rotate_evc.o\
+symmetries_of_wannier_function.o\
+kcw_kpoint_grid.o\
+write_qlist_ibz.o\
+read_qlist_ibz.o\
+kcw_psymdvscf.o\
+kcw_symdvscf.o\
+kcw_read_sym.o\
+kcw_write_sym.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PHonon/PH/libph.a ../../PW/src/libpw.a ### FIXME: libph.a is needed to call run_nsn_ph (to apply t_rev)
