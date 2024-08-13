@@ -605,7 +605,7 @@
       USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
       USE atom,               ONLY: rgrid
       USE uspp,               ONLY: indv
-      use uspp,               only: qq_nt, qq_nt_d, beta
+      use uspp,               only: qq_nt, beta
       USE betax,              only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
       use control_flags,      only: iprint, iverbosity
@@ -782,21 +782,7 @@
          end do
 
       end do
-
-#if defined (__CUDA)
-      call dev_memcpy(qq_nt_d,qq_nt)
-      !
-      !$cuf kernel do (3)
-      DO is = 1, SIZE(qq_nt_d,3)
-         DO jv=1,SIZE(qq_nt_d,2)
-            DO iv=1,SIZE(qq_nt_d,1)
-               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
-                  qq_nt_d(iv,jv,is) = 0.0d0
-               END IF
-            END DO
-         END DO
-      END DO
-#endif
+      !$acc update device (qq_nt)
 !
 !
       if (tpre) then
@@ -1041,7 +1027,7 @@
       use io_global,         only: stdout
       use gvecw,             only: ngw
       use cell_base,         only: ainv
-      use uspp,              only: qq_nt, qq_nt_d, nhtolm, beta
+      use uspp,              only: qq_nt, nhtolm, beta
       use constants,         only: pi, fpi
       use ions_base,         only: nsp
       use uspp_param,        only: upf, lmaxq, nbetam, nh
@@ -1135,21 +1121,8 @@
          end do
 
       end do
+      !$acc update device(qq_nt)
 
-#if defined (__CUDA)
-      call dev_memcpy(qq_nt_d,qq_nt)
-      !
-      !$cuf kernel do (3)
-      DO is = 1, SIZE(qq_nt_d,3)
-         DO jv=1,SIZE(qq_nt_d,2)
-            DO iv=1,SIZE(qq_nt_d,1)
-               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
-                  qq_nt_d(iv,jv,is) = 0.0d0
-               END IF
-            END DO
-         END DO
-      END DO
-#endif
 !
       if (tpre) then
 !     ---------------------------------------------------------------

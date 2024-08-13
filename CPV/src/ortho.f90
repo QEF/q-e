@@ -399,7 +399,7 @@ CONTAINS
    !
 
    SUBROUTINE compute_qs_times_betas( bephi, bec_row, qbephi, qbecp, idesc )
-      USE uspp,           ONLY: nkb, qq_nt, qq_nt_d, ofsbeta, nkbus
+      USE uspp,           ONLY: nkb, qq_nt, ofsbeta, nkbus
       USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: nspin, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nupdwn, iupdwn
       USE ions_base,      ONLY: na, nat, nsp, ityp
@@ -453,27 +453,18 @@ CONTAINS
                      indv = ofsbeta(ia)
                      nhs  = nh(is)
 #if defined (__CUDA)
-                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
+                     !$acc host_data use_device(qq_nt)
+                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bephi_col(indv+1,(iss-1)*nrcx+1), SIZE(bephi_col,1), 0.0d0, qbephi(indv+1,1,iss), SIZE(qbephi,1))
-                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
+                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bec_col(indv+1,(iss-1)*nrcx+1), SIZE(bec_col,1), 0.0d0, qbecp(indv+1,1,iss), SIZE(qbecp,1))
+                     !$acc end host_data
 #else
                      CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bephi_col(indv+1,(iss-1)*nrcx+1), SIZE(bephi_col,1), 0.0d0, qbephi(indv+1,1,iss), SIZE(qbephi,1))
                      CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bec_col(indv+1,(iss-1)*nrcx+1), SIZE(bec_col,1), 0.0d0, qbecp(indv+1,1,iss), SIZE(qbecp,1))
 #endif
-! !$cuf kernel do (2)
-!                     DO iv=1,nhs
-!                        DO i = 1, nc
-!                           DO jv = 1, nhs
-!                              qbephi(indv+iv,i,iss) = qbephi(indv+iv,i,iss) + &
-!                                                         qq_nt_d(iv,jv,is) * bephi_col(indv+jv,i+(iss-1)*nrcx)
-!                              qbecp(indv+iv,i,iss) = qbecp(indv+iv,i,iss) + &
-!                                                        qq_nt_d(iv,jv,is) * bec_col(indv+jv,i+(iss-1)*nrcx)
-!                           END DO
-!                        END DO
-!                     END DO
                   END IF
                END DO
             ENDIF

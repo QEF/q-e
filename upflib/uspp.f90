@@ -35,7 +35,6 @@ MODULE uspp
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, ofsbeta, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
-  PUBLIC :: qq_nt_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
   PUBLIC :: dbeta
@@ -88,14 +87,6 @@ MODULE uspp
        qq_so(:,:,:,:),           &! Q_{nm}
        dvan_so(:,:,:,:),         &! D_{nm}
        deeq_nc(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
-  !
-  ! GPU vars
-  !
-  REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
-#if defined(__CUDA)
-  attributes (DEVICE) :: qq_nt_d
-#endif
-
   !
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
@@ -355,14 +346,6 @@ CONTAINS
     endif
     allocate( ofsbeta(nat) )
     !
-    ! GPU-vars (protecting zero-size allocations)
-    !
-    if (use_gpu) then
-      !
-      if (nhm>0) allocate( qq_nt_d(nhm,nhm,nsp) )
-      !
-    endif
-    !
   end subroutine allocate_uspp
   !
   !-----------------------------------------------------------------------
@@ -429,9 +412,6 @@ CONTAINS
     ENDIF
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
-    !
-    ! GPU variables
-    IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
     !
   END SUBROUTINE deallocate_uspp
   !
