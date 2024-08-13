@@ -1,0 +1,20 @@
+&CONTROL
+   prefix           = 'si'
+   outdir           = '../out'
+   kcw_iverbosity   = 1
+   kcw_at_ks        = .false.
+   calculation      = 'wann2kcw'
+   mp1              = 4
+   mp2              = 4
+   mp3              = 4
+   read_unitary_matrix = .true.
+   l_vcut           = .true.
+/
+&WANNIER
+   seedname         = 'wann'
+   check_ks         = .true.
+   num_wann_occ     = 8
+   num_wann_emp     = 8
+   have_empty       = .true.
+   has_disentangle  = .true.
+/

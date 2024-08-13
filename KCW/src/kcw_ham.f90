@@ -15,6 +15,9 @@ SUBROUTINE kcw_ham
   !!  a PWscf calculation and the U matrices from W90
   !!   
   !!  Code written by Nicola Colonna and Riccardo de Gennaro (EPFL April 2019) 
+  !!
+  !!  Non-collinear code written in 2022-24 by 
+  !!  Antimo Marrazzo (SISSA, UniTS) and Nicola Colonna (PSI)
   !
   USE control_kcw,               ONLY : do_bands, write_hr
   USE interpolation,         ONLY : interpolate_ham, dealloc_interpolation
@@ -24,6 +27,7 @@ SUBROUTINE kcw_ham
   USE scf,                   ONLY : rho
   USE lsda_mod,              ONLY : nspin
   USE units_lr,              ONLY : iuwfc
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   !
   !
   IMPLICIT NONE
@@ -49,7 +53,7 @@ SUBROUTINE kcw_ham
   ! WRITE data file
   iunwfc = iuwfc
   prefix = TRIM(prefix)//"_kcw"
-  CALL write_scf(rho, nspin)
+  CALL write_scf(rho, nspin_mag)
   !CALL punch('config-only')
   CALL punch ('all')
   !

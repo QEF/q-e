@@ -12,7 +12,7 @@ SUBROUTINE read_hr()
   ! ...  This routine calculates KC matrix H(R) - if not calculated
   ! ...  already - and it prints it into a formatted file
   !
-  USE control_kcw,          ONLY : Hamlt_R, num_wann, irvect
+  USE control_kcw,          ONLY : Hamlt_R, num_wann, irvect, nkstot_eff
   USE klist,                ONLY : nkstot
   USE lsda_mod,             ONLY : nspin
   USE interpolation,        ONLY : real_ham
@@ -33,6 +33,11 @@ SUBROUTINE read_hr()
   LOGICAL :: exst
   !
   !
+  IF (nspin == 4) THEN
+    nkstot_eff = nkstot
+  ELSE
+    nkstot_eff = nkstot/nspin
+  ENDIF
   !
   !
   !
@@ -48,7 +53,7 @@ SUBROUTINE read_hr()
     READ( 100, *) header
     READ( 100, '(10x,i5,16x,i5)' ) num_r, num_wann
     !WRITE(*,*) num_r, nkstot
-    IF (num_r /= nkstot/nspin) & 
+    IF (num_r /= nkstot_eff) & 
       CALL errore('read_hr', 'Number of R/k point DOES not MATCH',num_r)
   ENDIF
   !

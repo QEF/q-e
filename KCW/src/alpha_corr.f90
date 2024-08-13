@@ -90,7 +90,8 @@ SUBROUTINE alpha_corr ( iwann, delta)
       USE fft_interfaces,        ONLY : fwfft
       USE lsda_mod,              ONLY : nspin, isk, lsda
       USE klist,                 ONLY : nkstot, ngk, igk_k, nks
-      USE control_kcw,           ONLY : evc0, iuwfc_wann, num_wann, spin_component, nqstot, iurho_wann
+      USE control_kcw,           ONLY : evc0, iuwfc_wann, num_wann, spin_component, nqstot, iurho_wann,&
+                                        nkstot_eff, nrho
       USE wvfct,                 ONLY : npwx
       USE cell_base,             ONLY : omega
       USE mp_bands,              ONLY : intra_bgrp_comm
@@ -98,26 +99,28 @@ SUBROUTINE alpha_corr ( iwann, delta)
       USE mp,                    ONLY : mp_sum
       USE eqv,                   ONLY : dmuxc
       USE gvecs,                 ONLY : ngms
+      USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
       !
       !
       IMPLICIT NONE 
       !  
       INTEGER, INTENT (IN) :: iwann
-      INTEGER :: ik, npw, lrrho, iq, ir, is 
+      INTEGER :: ik, npw, lrrho, iq, ir, is, ip, iss
       REAL(DP), INTENT (OUT) :: en, eig, krnl 
-      REAL(DP) ::  vtxc, etxc, vxc(dffts%nnr,nspin), eig_k, krnl_q
+      REAL(DP) ::  vtxc, etxc, vxc(dffts%nnr,nspin_mag), eig_k, krnl_q
       INTEGER :: lrwfc
-      COMPLEX(DP) :: evc_g (npwx), evc_r (dffts%nnr)
-      COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin)
-      COMPLEX(DP), ALLOCATABLE  :: rho_wann_g(:), delta_vg(:,:), aux(:)
+      COMPLEX(DP) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
+      COMPLEX(DP) :: rhowann(dffts%nnr, num_wann, nrho), rhor(dffts%nnr,nrho), delta_vr(dffts%nnr,nspin_mag)
+      COMPLEX(DP), ALLOCATABLE  :: rho_wann_g(:,:), delta_vg(:,:), aux(:)
+      INTEGER :: ik_eff
       !
-      ALLOCATE ( rho_wann_g (ngms) , delta_vg(ngms,nspin), aux (dffts%nnr) )
+      ALLOCATE ( rho_wann_g (ngms,nrho) , delta_vg(ngms,nspin_mag), aux (dffts%nnr) )
       ! 
       ! The Exc(N) energy: just the xc energy in the PC times the SC dimension
       !
       etxc = 0.D0; vtxc = 0.D0; vxc(:,:) = 0.D0
       CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
-      en = etxc*nkstot/nspin
+      en = etxc*nkstot_eff
       !
       ! The xc contribution to the expertation value of the DFT Ham on the Wann function
       ! eig = \sum_k <u_nk | vxc[\rho] u_nk > (A part from prefactors that needs to be checked 
@@ -129,49 +132,81 @@ SUBROUTINE alpha_corr ( iwann, delta)
         !
         IF ( lsda .AND. isk(ik) /= spin_component) CYCLE
         npw = ngk(ik)
-        lrwfc = num_wann * npwx 
-        CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik )
+        lrwfc = num_wann * npwx * npol
+        ik_eff = ik-(spin_component-1)*nkstot_eff
+        CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
         evc_g(:) =  evc0(:,iwann)
         !CALL get_buffer ( evc, nwordwfc, iuwfc, ik )
         !evc_g(:) =  evc(:,iwann)
         !
-        evc_r(:) = ZERO
+        evc_r(:,:) = ZERO
         CALL invfft_wave (npw, igk_k (1,ik), evc_g , evc_r )
         !! The wfc in R-space at k
-        eig_k = sum ( vxc(:,spin_component) * evc_r(:) * CONJG(evc_r(:) ) )
+        IF (nspin_mag==2) THEN
+            eig_k = sum ( vxc(:,spin_component) * evc_r(:,1) * CONJG(evc_r(:,1) ) ) !check the (:,->1)
+        ELSE
+            eig_k = sum ( vxc(:,1) * (evc_r(:,1) * CONJG(evc_r(:,1) )+evc_r(:,2) * CONJG(evc_r(:,2)))) + & 
+                    sum ( vxc(:,2) * (conjg(evc_r(:,1))*evc_r(:,2) + conjg(evc_r(:,2))*evc_r(:,1))) + & 
+                    sum ( vxc(:,3) * (-CMPLX(0.D0,1.D0, kind=DP) * conjg(evc_r(:,1))*evc_r(:,2) & 
+                                     + CMPLX(0.D0,1.D0, kind=DP) * conjg(evc_r(:,2))*evc_r(:,1))) + & 
+                    sum ( vxc(:,4) * ( conjg(evc_r(:,1))*evc_r(:,1) - conjg(evc_r(:,2))*evc_r(:,2)))
+        END IF
         eig_k = eig_k/( dffts%nr1*dffts%nr2*dffts%nr3 )
         CALL mp_sum (eig_k, intra_bgrp_comm) 
         eig = eig + eig_k
         !
       ENDDO
       CALL mp_sum (eig, inter_pool_comm )
-      eig = eig/(nkstot/nspin)
+      eig = eig/(nkstot_eff)
       !
       ! The kernel term (as in bare_pot.f90, but only xc contribution)
       !
       DO iq = 1, nqstot
         !
-        lrrho=num_wann*dffts%nnr
+        lrrho=num_wann * dffts%nnr * nrho
         CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
-        rhor(:) = rhowann(:,iwann)
+        rhor(:,:) = rhowann(:,iwann,:)
         !
-        aux(:) = rhor(:)/omega
-        CALL fwfft ('Rho', aux, dffts)  ! NsC: Dense or smooth grid?? I think smooth is the right one. 
-        rho_wann_g(:) = aux(dffts%nl(:))
+        DO ip=1,nrho
+          aux(:) = rhor(:,ip)/omega
+          CALL fwfft ('Rho', aux, dffts)  ! NsC: Dense or smooth grid?? I think smooth is the right one. 
+          rho_wann_g(:,ip) = aux(dffts%nl(:))
+        END DO
+        !OLD IMPLEMENTATION FOR NSPIN==2
+        !aux(:) = rhor(:)/omega
+        !CALL fwfft ('Rho', aux, dffts)  ! NsC: Dense or smooth grid?? I think smooth is the right one. 
+        !rho_wann_g(:) = aux(dffts%nl(:))
         !
         delta_vr = CMPLX(0.D0,0.D0, kind=DP)
-        DO is = 1, nspin
-           DO ir = 1, dffts%nnr
-              delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir)/omega
-           ENDDO
-        ENDDO
+        IF (nspin_mag==2) THEN
+          DO is = 1, nspin_mag
+            DO ir = 1, dffts%nnr
+              delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir,1)/omega
+            END DO
+          END DO
+        ELSE
+          DO is = 1, nspin_mag
+              DO ir = 1, dffts%nnr
+                  DO iss = 1, nspin_mag
+                delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,iss) * rhor(ir,iss)/omega
+              END DO
+            END DO
+          END DO
+        END IF
         ! In g-space
-        DO is = 1, nspin
+        DO is = 1, nspin_mag
           aux(:) = delta_vr(:,is)
           CALL fwfft ('Rho', aux, dffts)
           delta_vg(:,is) = aux(dffts%nl(:))
         ENDDO
-        krnl_q = sum (CONJG(rho_wann_g (:)) * delta_vg(:,spin_component))*omega
+        IF (nspin_mag==2) THEN
+          krnl_q = sum (CONJG(rho_wann_g (:,1)) * delta_vg(:,spin_component))*omega
+        ELSE
+          krnl_q = 0.0_DP
+          DO ip=1,nrho
+            krnl_q = krnl_q + sum (CONJG(rho_wann_g (:,ip)) * delta_vg(:,ip))*omega
+          END DO
+        END IF
         CALL mp_sum (krnl_q, intra_bgrp_comm)
         krnl = krnl + krnl_q/nqstot
       ENDDO
@@ -192,13 +227,14 @@ SUBROUTINE alpha_corr ( iwann, delta)
       USE lsda_mod,              ONLY : nspin
       USE klist,                 ONLY : nkstot
       USE control_kcw,           ONLY : num_wann, nqstot, iurho_wann, &
-                                        rvect, x_q
+                                        rvect, x_q, nkstot_eff, nrho
       USE cell_base,             ONLY : omega
       USE buffers,               ONLY : get_buffer
       USE mp,                    ONLY : mp_sum
       USE constants,             ONLY : tpi
       !USE funct,                 ONLY : dft_is_gradient
       USE xc_lib,                ONLY : xclib_dft_is
+      USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
       !
       IMPLICIT NONE 
       !
@@ -208,40 +244,53 @@ SUBROUTINE alpha_corr ( iwann, delta)
       !
       INTEGER :: ir, iq, nspin_aux, segno
       TYPE (scf_type) :: rho_minus1
-      COMPLEX (DP) :: rho_wann_ir(dffts%nnr), rho_wann(dffts%nnr)
+      COMPLEX (DP) :: rho_wann_ir(dffts%nnr,nrho), rho_wann(dffts%nnr,nrho)
       REAL(DP) :: xq(3), xq_(3)
-      COMPLEX(DP) :: rhowann(dffts%nnr, num_wann)
+      COMPLEX(DP) :: rhowann(dffts%nnr, num_wann,nrho)
       COMPLEX(DP) :: phase_sc, phase_pc(dffts%nnr) 
-      COMPLEX(DP), ALLOCATABLE :: nq_r(:), aux(:)
+      COMPLEX(DP), ALLOCATABLE :: nq_r(:,:), aux(:)
       INTEGER :: lrrho
       LOGICAL :: lgamma
-      REAL(DP) ::  vtxc, etxc, vxc(dffts%nnr,2)
+      REAL(DP) ::  vtxc, etxc, vxc(dffts%nnr,nspin_mag)
       !
       COMPLEX(DP) :: imag = (0.D0,1.D0)
       !
-      ALLOCATE ( nq_r (dffts%nnr), aux(dfftp%nnr)  )
+      ALLOCATE ( nq_r (dffts%nnr,nrho), aux(dfftp%nnr)  )
       segno=-1
       IF ( is_emp ) segno=+1
       !
-      nspin_aux=nspin
-      nspin=2
+      nspin_aux=nspin_mag
+      IF (nspin_mag .ne. 4) THEN
+        nspin_mag=2
       CALL create_scf_type (rho_minus1)
-      nspin=nspin_aux
+      ELSE
+      CALL create_scf_type (rho_minus1)
+      END IF
+      nspin_mag=nspin_aux
       !
       rho_wann = CMPLX(0.D0, 0.D0, kind=DP)
       en_pm1 = 0.D0 
       !
-      DO ir = 1, nkstot/nspin
+      DO ir = 1, nkstot_eff
         !
         ! Initialize the spin-component for the N \pm 1 density
-        IF (nspin == 1 ) THEN
+        IF (nspin_mag == 1 ) THEN
           rho_minus1%of_r(:,1) = rho%of_r(:,1)
           rho_minus1%of_r(:,2) = 0.D0
           rho_minus1%of_g(:,1) = rho%of_g(:,1)
           rho_minus1%of_g(:,2) = 0.D0
-        ELSE
+        ELSE IF (nspin_mag == 2) THEN
           rho_minus1%of_r(:,:) = rho%of_r(:,:)
           rho_minus1%of_g(:,:) = rho%of_g(:,:)
+        ELSE
+          rho_minus1%of_r(:,1) = rho%of_r(:,1)
+          rho_minus1%of_r(:,2) = rho%of_r(:,2)
+          rho_minus1%of_r(:,3) = rho%of_r(:,3)
+          rho_minus1%of_r(:,4) = rho%of_r(:,4)
+          rho_minus1%of_g(:,1) = rho%of_g(:,1)
+          rho_minus1%of_g(:,2) = rho%of_g(:,2)
+          rho_minus1%of_g(:,3) = rho%of_g(:,3)
+          rho_minus1%of_g(:,4) = rho%of_g(:,4)                              
         ENDIF
 #ifdef DEBUG
         WRITE(*,'("Int rho Im, Re", 1f15.8, 4i8, f15.6)') SUM(ABS(rho%of_r(:,1))), dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, omega
@@ -272,11 +321,11 @@ SUBROUTINE alpha_corr ( iwann, delta)
            !CALL cryst_to_cart( 1, xq, at, -1 )
            !
            ! the peridoc part of the wannier density for this q
-           lrrho=num_wann*dffts%nnr
+           lrrho=num_wann*dffts%nnr*nrho
            CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
-           nq_r(:) = rhowann(:,iwann)/omega
+           nq_r(:,:) = rhowann(:,iwann,:)/omega
            ! plus or minus depending whether the wannier is empty or full
-           nq_r(:) = segno * nq_r(:)
+           nq_r(:,:) = segno * nq_r(:,:)
            !
 #ifdef DEBUG
            WRITE(*,'("Re nq_r",5f15.8)') REAL(nq_r(1:5))
@@ -293,12 +342,17 @@ SUBROUTINE alpha_corr ( iwann, delta)
            WRITE(*,'("PHASES", 2f12.5, 3x, 10f12.5)') phase_sc, phase_pc(1:5)
 #endif
            ! ... accumulate over q points ...
-           rho_wann_ir(:) = rho_wann_ir(:) + phase_sc*phase_pc(:)*nq_r(:)/nqstot
+           rho_wann_ir(:,1) = rho_wann_ir(:,1) + phase_sc*phase_pc(:)*nq_r(:,1)/nqstot
+           if (nspin_mag==4) then
+            rho_wann_ir(:,2) = rho_wann_ir(:,2) + phase_sc*phase_pc(:)*nq_r(:,2)/nqstot
+            rho_wann_ir(:,3) = rho_wann_ir(:,3) + phase_sc*phase_pc(:)*nq_r(:,3)/nqstot
+            rho_wann_ir(:,4) = rho_wann_ir(:,4) + phase_sc*phase_pc(:)*nq_r(:,4)/nqstot
+           end if
         !
         ENDDO ! q-points LOOP
         !
         ! ... accumulate over R. To compute the integral of the Wannier over the SC ...
-        rho_wann (:) = rho_wann (:) + rho_wann_ir(:)  ! DEBUG
+        rho_wann (:,:) = rho_wann (:,:) + rho_wann_ir(:,:)  ! DEBUG
         !
 #ifdef DEBUG
         WRITE(*,'("Re rhowann(R)", 5f15.8)') REAL(rho_wann_ir(1:5))
@@ -308,13 +362,21 @@ SUBROUTINE alpha_corr ( iwann, delta)
 #endif
         !
         ! ... Add the wannier density to the GS density... 
-        rho_minus1%of_r(:,1) = REAL(rho_wann_ir) + rho_minus1%of_r(:,1)
-        rho_minus1%of_r(:,2) = REAL(rho_wann_ir) + rho_minus1%of_r(:,2)
+        IF (nspin_mag==4) THEN
+        rho_minus1%of_r(:,1) = REAL(rho_wann_ir(:,1)) + rho_minus1%of_r(:,1)
+        rho_minus1%of_r(:,2) = REAL(rho_wann_ir(:,2)) + rho_minus1%of_r(:,2)
+        rho_minus1%of_r(:,3) = REAL(rho_wann_ir(:,3)) + rho_minus1%of_r(:,3)
+        rho_minus1%of_r(:,4) = REAL(rho_wann_ir(:,4)) + rho_minus1%of_r(:,4)
+        ELSE
+        rho_minus1%of_r(:,1) = REAL(rho_wann_ir(:,1)) + rho_minus1%of_r(:,1)
+        rho_minus1%of_r(:,2) = REAL(rho_wann_ir(:,1)) + rho_minus1%of_r(:,2) !@Nicola Colonna please check
+        END IF
         !
         ! NOTA BENE: The following is correct only in a 1 k-point calculation (Supercell) 
         ! This density is periodic in the SC and this FFT does not make sense if nq/=1 
         ! The rho in  G-space is needed to compute the Gradient correction (if present) 
         !IF ( .NOT. dft_is_gradient ( ) .OR. nqstot == 1 ) THEN 
+        ! NB: THE CODE HERE BELOW HAS NOT EXTENDED TO NON-COLLINEAR MODE
         IF ( .NOT. xclib_dft_is('gradient') .OR. nqstot == 1 ) THEN
           !
           aux(:) = rho_minus1%of_r(:,1)
@@ -335,10 +397,15 @@ SUBROUTINE alpha_corr ( iwann, delta)
         WRITE(*,'("Im n-1_g DW",5f15.8)') AIMAG(rho_minus1%of_g(1:5,2))
 #endif
         !
-        nspin_aux=nspin; nspin=2
+        IF (nspin_mag .ne. 4) THEN
+        nspin_aux=nspin_mag; nspin_mag=2
         etxc = 0.D0; vtxc = 0.D0; vxc(:,:) = 0.D0
         CALL v_xc( rho_minus1, rho_core, rhog_core, etxc, vtxc, vxc )
-        nspin=nspin_aux
+        nspin_mag=nspin_aux
+        ELSE
+        etxc = 0.D0; vtxc = 0.D0; vxc(:,:) = 0.D0
+        CALL v_xc( rho_minus1, rho_core, rhog_core, etxc, vtxc, vxc )
+        END IF
         !
         en_pm1 = en_pm1 + etxc
         !

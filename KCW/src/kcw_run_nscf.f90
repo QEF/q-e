@@ -67,7 +67,7 @@ SUBROUTINE kcw_run_nscf (do_band)
   CALL init_run()
   !
   IF (do_band) THEN
-     CALL non_scf()
+     CALL non_scf_ph()
      CALL punch( 'all' )
   ENDIF
   !

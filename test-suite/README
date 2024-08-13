@@ -500,3 +500,10 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of screening coefficients for MLWF
 - Calculation of KI@Wann eigenvalues
+
+##################################
+# kcw-nc-wann-nc : Si FCC NC SOC #
+##################################
+The following features of the code are tested:
+- Calculation of non-collinear screening coefficients for MLWF
+- Calculation of non-collinear KI@Wann eigenvalues

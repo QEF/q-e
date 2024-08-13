@@ -48,17 +48,21 @@ subroutine kcw_q_setup
   !USE funct,            ONLY : dft_is_gradient
   USE xc_lib,           ONLY : xclib_dft_is
   USE control_kcw,      ONLY : niter, alpha_mix
+  USE symm_base,        ONLY : time_reversal
+  USE control_flags,    ONLY : noinv
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   !
   IMPLICIT NONE
   !
   INTEGER :: na, it 
   ! counters
+  logical :: magnetic_sym
   !
   call start_clock ('kcw_q_setup')
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-  call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+  call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin_mag, doublegrid)
   !
   ! 2) If necessary calculate the local magnetization. This information is
   !      needed in find_sym
@@ -105,6 +109,10 @@ subroutine kcw_q_setup
      if (alpha_mix (it) .eq.0.d0) alpha_mix (it) = alpha_mix (it - 1)
      !if (abs(alpha_mix (it)) .lt. 1.0d-6) alpha_mix (it) = alpha_mix (it - 1)
   enddo
+  !
+  ! NsC: Not sure the next two lines are needed
+  magnetic_sym = noncolin .AND. domag
+  time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
   CALL stop_clock ('kcw_q_setup')
   !

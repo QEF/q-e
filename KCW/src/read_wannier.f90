@@ -54,6 +54,7 @@ END subroutine read_wannier
   USE klist,                ONLY : nkstot, xk
   USE cell_base,            ONLY : bg
   USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,      ONLY : npol, nspin_lsda, nspin_gga, nspin_mag
   USE wvfct,                ONLY : nbnd
   USE io_global,            ONLY : stdout
   !
@@ -77,7 +78,6 @@ END subroutine read_wannier
   ! 
   INTEGER ierr
   !
-  nkstot_eff = nkstot/nspin
   !! Here and in W90 We treat always one spin component at the time.
   !! While in PWscf nkstot contain k point for spin up (the first nkstot/nspin 
   !! and spin down (the last nkstot.nspin). See also rotate_ks
@@ -239,14 +239,14 @@ END subroutine read_wannier_unique_manifold
   USE kinds,                ONLY : DP
   USE control_kcw,          ONLY : unimatrx, have_empty, num_wann_occ, seedname, &
                                    has_disentangle, have_empty, num_wann_emp, & 
-                                   unimatrx_opt, num_wann, kcw_iverbosity 
-  USE control_lr,           ONLY : nbnd_occ
+                                   unimatrx_opt, num_wann, kcw_iverbosity, spin_component
   USE mp_global,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_bcast
   USE io_global,            ONLY : ionode, ionode_id
-  USE klist,                ONLY : nkstot, xk
+  USE klist,                ONLY : nkstot, xk, nelec, nelup, neldw
   USE cell_base,            ONLY : bg
   USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : npol, nspin_lsda, nspin_gga, nspin_mag
   USE wvfct,                ONLY : nbnd
   USE io_global,            ONLY : stdout
   !
@@ -273,14 +273,27 @@ END subroutine read_wannier_unique_manifold
   COMPLEX(DP), ALLOCATABLE :: unimatrx_occ(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: unimatrx_emp(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: unimatrx_emp_opt(:,:,:)
-  INTEGER ieff, jeff
+  INTEGER ieff, jeff, nbnd_pw
   !
-  nkstot_eff = nkstot/nspin
+
+  !OLD nkstot_eff = nkstot/nspin
   !! Here and in W90 We treat always one spin component at the time.
   !! While in PWscf nkstot contain k point for spin up (the first nkstot/nspin 
   !! and spin down (the last nkstot.nspin). See also rotate_ks
   !
   u_file=TRIM( seedname ) // '_u.mat'
+  !
+  IF (nspin == 4) THEN
+      nkstot_eff = nkstot
+      nbnd_pw = nint(nelec)
+  ELSE IF (nspin ==2)  THEN
+      nkstot_eff = nkstot/nspin
+      nbnd_pw = nint(nelup)
+      IF (spin_component == 2) nbnd_pw = nint(neldw)
+  ELSE
+      nkstot_eff = nkstot/nspin
+      nbnd_pw= nint(nelec) / 2
+  ENDIF 
   !
   IF (ionode) THEN
      !
@@ -300,7 +313,7 @@ END subroutine read_wannier_unique_manifold
      num_wann_occ = num_wann_file
      !! Store the number of occupied wannier in a  global variable
      !
-     IF (num_wann_occ /= nbnd_occ(1)) & 
+     IF (num_wann_occ /= nbnd_pw) & 
           CALL errore ('read_wannier', 'Mismatch between  num occ bands and num wann', 1)
      !
   ENDIF
@@ -365,7 +378,7 @@ END subroutine read_wannier_unique_manifold
   ENDIF
   !
   !####################
-  !   EMPT YSTATES 
+  !   EMPTY STATES 
   !###################
   !
   ! ... read unitary matrix empty states ...
@@ -427,9 +440,9 @@ END subroutine read_wannier_unique_manifold
   ALLOCATE ( unimatrx_emp( num_wann_emp, num_wann_emp, nkstot_eff) )
   IF (has_disentangle) ALLOCATE (unimatrx_emp_opt(num_ks_file,num_wann_emp,nkstot_eff))
   !
-  IF (ionode) THEN
+  IF (has_disentangle) THEN 
     !
-    IF (has_disentangle) THEN 
+    IF (ionode) THEN
       !
       DO ik = 1, nkstot_eff
         ! 
@@ -449,9 +462,11 @@ END subroutine read_wannier_unique_manifold
       !
     ENDIF
     !
+    !WRITE(*,*) unimatrx_emp_opt
+    CALL mp_bcast( unimatrx_emp_opt, ionode_id, intra_image_comm )
+    !
   ENDIF
   !
-  CALL mp_bcast( unimatrx_emp_opt, ionode_id, intra_image_comm )
   if ( kcw_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Optimal Matrix READ")') 
   !
   IF (ionode) THEN   
