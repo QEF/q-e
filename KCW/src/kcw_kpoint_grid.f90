@@ -58,4 +58,8 @@ SUBROUTINE kcw_kpoint_grid()
     END DO!iq
   END DO!iwann
   !
+  DEALLOCATE( xq_ibz_iwann )
+  DEALLOCATE( wq_ibz_iwann )
+  DEALLOCATE( s_w_iwann )
+  !
 END SUBROUTINE
