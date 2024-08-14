@@ -24,6 +24,7 @@ SUBROUTINE read_qlist_ibz()
   
   DO iwann = 1, num_wann
     iun_qlist_ibz = 155 + iwann
+    WRITE (filename, "(A,I0.3,A)") TRIM(tmp_dir_kcw)//'qlist_ibz_iwann_', iwann, '.txt'
     OPEN (iun_qlist_ibz, file = filename)
     READ(iun_qlist_ibz,*)  nqstot_ibz( iwann )
     DO iq = 1, nqstot

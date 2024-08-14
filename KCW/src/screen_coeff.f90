@@ -122,7 +122,7 @@ SUBROUTINE screen_coeff ()
   !
   nsym_old = nsym
   !
-  IF(irr_bz) CALL read_qlist_ibz()
+  !IF(irr_bz) CALL read_qlist_ibz()
 
   DO iq = iq_start, nqs
       !! For each q in the mesh 
