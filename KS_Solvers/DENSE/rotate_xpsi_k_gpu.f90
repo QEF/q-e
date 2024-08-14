@@ -96,9 +96,7 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsik:hpsi')
   !
-  !$acc host_data use_device(psi, hpsi)
   CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
-  !$acc end host_data
   !
   CALL stop_clock('rotxpsik:hpsi')
   !
@@ -106,9 +104,7 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
      !
      CALL start_clock('rotxpsik:spsi')
      !
-     !$acc host_data use_device(psi, spsi)
      CALL s_psi_ptr( npwx, npw, nstart, psi, spsi )
-     !$acc end host_data
      !
      CALL stop_clock('rotxpsik:spsi')
      !

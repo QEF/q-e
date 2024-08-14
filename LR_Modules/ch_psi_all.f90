@@ -98,10 +98,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ah (:,:) = (0.d0, 0.d0)
   !$acc end kernels
 #if defined(__CUDA)
-  !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
   CALL s_psi_acc (npwx, n, m, h, spsi)
-  !$acc end host_data
 #else
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
@@ -228,9 +226,7 @@ CONTAINS
        endif
        CALL stop_clock_gpu ('ch_psi_calbec')
     ENDIF ! okvan
-    !$acc host_data use_device(hpsi, spsi)
     CALL s_psi_acc (npwx, n, m, hpsi, spsi)
-    !$acc end host_data
     !$acc parallel loop collapse(2)
     DO ibnd = 1, m
        DO ig = 1, n
@@ -330,9 +326,7 @@ CONTAINS
           end if
           CALL stop_clock_gpu ('ch_psi_calbec')
        ENDIF ! okvan
-       !$acc host_data use_device(hpsi, spsi)
        CALL s_psi_acc (npwx, n, m, hpsi, spsi)
-       !$acc end host_data
     ENDIF
     !$acc parallel loop collapse(2)
     DO ibnd = 1, m

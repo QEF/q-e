@@ -22,9 +22,6 @@ SUBROUTINE hs_psi_gpu( lda, n, m, psi, hpsi, spsi )
   !
   INTEGER, INTENT(IN) :: lda, n, m
   COMPLEX (DP) :: psi(lda*npol, m), hpsi(lda*npol,m), spsi(lda*npol,m)
-#if defined (__CUDA)
-  attributes(device) :: psi, hpsi, spsi
-#endif
   !
   CALL start_clock( 'hs_psi' )
   ! 

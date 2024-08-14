@@ -49,6 +49,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE ::  hpsi(:,:), spsi(:,:), w(:,:)
+  COMPLEX(DP), ALLOCATABLE ::  ugly1(:,:), ugly2(:,:) 
+  !$acc declare device_resident(ugly1, ugly2)
   COMPLEX(DP)              ::  buffer(npwx*npol,nbnd), buffer1(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE ::  K(:,:), K_store(:,:), M(:,:), M_store(:,:), cwork(:)
   REAL(DP), ALLOCATABLE    ::  rwork(:)
@@ -162,8 +164,29 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   call start_clock('ppcg:hpsi')
   psi_d = psi
   if (clean)  psi_d(npw+1:npwx,:) = C_ZERO
-  CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )             ; if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO
-  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d) ; if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
+!civn: ugly hack (FIXME)
+  !CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )             ; if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO
+  !if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d) ; if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
+  allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+  !$acc kernels
+  ugly1 = psi_d
+  ugly2 = C_ZERO
+  !$acc end kernels
+  CALL h_psi_ptr( npwx, npw, nbnd, ugly1, ugly2 )
+  !$acc kernels
+  hpsi_d(:,:) = ugly2(:,:)
+  ugly2 = C_ZERO
+  !$acc end kernels
+  if (overlap) THEN
+    CALL s_psi_ptr( npwx, npw, nbnd, ugly1, ugly2)
+    !$acc kernels
+    spsi_d = ugly2
+    !$acc end kernels
+  end if
+  deallocate( ugly1, ugly2 )
+  if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO 
+  if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
+!civn: FIXME END
 
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
@@ -276,7 +299,19 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
      ! ... Compute h*w
      call start_clock('ppcg:hpsi')
      call gpu_threaded_assign( buffer1_d, w_d, kdimx, nact, .true., act_idx_d, .false. )
-     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )     
+!civn: ugly hack (FIXME)
+     !CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )     
+     allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc kernels
+     ugly1 = buffer1_d
+     ugly2 = C_ZERO
+     !$acc end kernels
+     CALL h_psi_ptr( npwx, npw, nbnd, ugly1, ugly2 )
+     !$acc kernels
+     buffer_d = ugly2
+     !$acc end kernels
+     deallocate( ugly1, ugly2 )
+!civn: FIXME END
      if(clean) then 
 !$cuf kernel do(2)
        DO i = npw+1, npwx   
@@ -292,7 +327,19 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        END DO 
      END DO 
      if (overlap) then ! ... Compute s*w
-        CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )   
+!civn: ugly hack (FIXME)
+        !CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )   
+        allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+        !$acc kernels
+        ugly1 = buffer1_d
+        ugly2 = C_ZERO
+        !$acc end kernels
+        CALL s_psi_ptr( npwx, npw, nact, ugly1, ugly2 )
+        !$acc kernels
+        buffer_d = ugly2
+        !$acc end kernels
+        deallocate( ugly1, ugly2 )
+!civn: FIXME END
         IF (clean) THEN 
 !$cuf kernel do(2)
           DO i = npw+1, npwx   

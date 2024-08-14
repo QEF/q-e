@@ -145,9 +145,7 @@ MODULE oscdft_forces_subs
             ! proj = <wfcF|S|psi>
             CALL calbec(offload_type, npw, vkb, evc, becp)
             IF (use_gpu) THEN
-               !$acc host_data use_device(evc, spsi)
                CALL s_psi_acc(npwx, npw, nbnd, evc, spsi)
-               !$acc end host_data
             ELSE
                CALL s_psi(npwx, npw, nbnd, evc, spsi)
             END IF

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
+SUBROUTINE h_psi_gpu( lda, n, m, psi, hpsi )
   !----------------------------------------------------------------------------
   !! This routine computes the product of the Hamiltonian matrix with m 
   !! wavefunctions contained in psi.
@@ -30,13 +30,10 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   !! true dimension of psi, spsi, hpsi
   INTEGER, INTENT(IN) :: m
   !! number of states psi
-  COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m)
   !! the wavefunction
-  COMPLEX(DP), INTENT(OUT) :: hpsi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)
   !! Hamiltonian dot psi
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d
-#endif
   !
   ! ... local variables
   !
@@ -58,12 +55,16 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
      ! use band parallelization here
      ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
      CALL divide_all( inter_bgrp_comm, m, m_start, m_end, recv_counts,displs )
-     CALL mp_type_create_column_section( hpsi_d(1,1), 0, lda*npol, lda*npol, column_type )
+     !$acc host_data use_device(hpsi)
+     CALL mp_type_create_column_section( hpsi(1,1), 0, lda*npol, lda*npol, column_type )
+     !$acc end host_data
      !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
-        CALL h_psi__gpu( lda, n, m_end-m_start+1, psi_d(1,m_start), hpsi_d(1,m_start) )
-     CALL mp_allgather( hpsi_d, column_type, recv_counts, displs, inter_bgrp_comm)
+        CALL h_psi__gpu( lda, n, m_end-m_start+1, psi(1,m_start), hpsi(1,m_start) )
+     !$acc host_data use_device(hpsi)
+     CALL mp_allgather( hpsi, column_type, recv_counts, displs, inter_bgrp_comm)
+     !$acc end host_data
      !
      CALL mp_type_free( column_type )
      DEALLOCATE( recv_counts )
@@ -71,7 +72,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
      !
   ELSE
      ! don't use band parallelization here
-     CALL h_psi__gpu( lda, n, m, psi_d, hpsi_d )
+     CALL h_psi__gpu( lda, n, m, psi, hpsi )
      !
   ENDIF
   !
@@ -83,7 +84,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
 END SUBROUTINE h_psi_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
+SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !----------------------------------------------------------------------------
   !----------------------------------------------------------------------------
   !! This routine computes the product of the Hamiltonian matrix with m 
@@ -91,7 +92,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
 #if defined(__CUDA)
   USE cudafor
-  USE becmod,                  ONLY: calbec_cuf
+  USE becmod,                  ONLY: calbec
 #endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
@@ -122,11 +123,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
-  COMPLEX(DP), INTENT(IN)  :: psi_d(lda*npol,m)
-  COMPLEX(DP), INTENT(OUT) :: hpsi_d(lda*npol,m)
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d
-#endif
+  COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)
   !
   COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
   COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
@@ -151,29 +149,35 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
 
   IF (need_host_copy) THEN
       ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
-      CALL dev_memcpy(psi_host, psi_d)    ! psi_host = psi_d
+      !$acc host_data use_device(psi)
+      CALL dev_memcpy(psi_host, psi)    ! psi_host = psi
+      !$acc end host_data
   ENDIF
 
 
-  !$acc parallel loop collapse(2) present(g2kin, hpsi_d, psi_d)
+  !$acc parallel loop collapse(2) present(g2kin, hpsi, psi)
   DO ibnd = 1, m
      DO i=1, lda
         IF (i <= n) THEN
-           hpsi_d (i, ibnd) = g2kin (i) * psi_d (i, ibnd)
+           hpsi (i, ibnd) = g2kin (i) * psi (i, ibnd)
            IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = g2kin (i) * psi_d (lda+i, ibnd)
+              hpsi (lda+i, ibnd) = g2kin (i) * psi (lda+i, ibnd)
            END IF
         ELSE
-           hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)
+           hpsi (i, ibnd) = (0.0_dp, 0.0_dp)
            IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = (0.0_dp, 0.0_dp)
+              hpsi (lda+i, ibnd) = (0.0_dp, 0.0_dp)
            END IF
         END IF
      END DO
   END DO
 
 
-  IF (need_host_copy) CALL dev_memcpy(hpsi_host, hpsi_d)    ! hpsi_host = hpsi_d
+  IF (need_host_copy) THEN
+    !$acc host_data use_device(hpsi)
+    CALL dev_memcpy(hpsi_host, hpsi)    ! hpsi_host = hpsi
+    !$acc end host_data
+  END IF
 
   CALL start_clock_gpu( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
@@ -203,17 +207,23 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psic back in reciprocal space and add it to hpsi
            CALL fwfft_orbital_gamma( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
-        CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
+        !$acc host_data use_device(hpsi)
+        CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
+        !$acc end host_data
         !
      ELSE
         ! ... usual reciprocal-space algorithm
-        CALL vloc_psi_gamma_gpu ( lda, n, m, psi_d, vrs(1,current_spin), hpsi_d )
+        !$acc host_data use_device(psi, hpsi)
+        CALL vloc_psi_gamma_gpu ( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        !$acc end host_data
         !
      ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
-     CALL vloc_psi_nc_gpu ( lda, n, m, psi_d, vrs, hpsi_d )
+     !$acc host_data use_device(psi, hpsi)
+     CALL vloc_psi_nc_gpu ( lda, n, m, psi, vrs, hpsi )
+     !$acc end host_data
      !
   ELSE  
      ! 
@@ -241,11 +251,17 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            CALL fwfft_orbital_k( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
            !
         ENDDO
-        IF (need_host_copy) CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
+        IF (need_host_copy) THEN
+          !$acc host_data use_device(hpsi)
+          CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
+          !$acc end host_data
+        END IF
         !
      ELSE
         !
-        CALL vloc_psi_k_gpu ( lda, n, m, psi_d, vrs(1,current_spin), hpsi_d )
+        !$acc host_data use_device(psi, hpsi)
+        CALL vloc_psi_k_gpu ( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        !$acc end host_data
         !
      ENDIF
      !
@@ -258,32 +274,45 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
 #if defined(__CUDA)
-!civn: remove evc_d and use calbec instead
-     Call calbec_cuf(offload_type, n, vkb, psi_d, becp, m )
+     Call calbec(offload_type, n, vkb, psi, becp, m )
 #endif
      CALL stop_clock_gpu( 'h_psi:calbec' )
-     CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
+     !$acc host_data use_device(hpsi)
+     CALL add_vuspsi_gpu( lda, n, m, hpsi )
+     !$acc end host_data
      !
   END IF
   !  
   CALL stop_clock_gpu( 'h_psi:pot' )
   !
-  IF (xclib_dft_is('meta')) call h_psi_meta (lda, n, m, psi_d, hpsi_d)
+  IF (xclib_dft_is('meta')) THEN
+     !$acc host_data use_device(hpsi)
+     CALL dev_memcpy(hpsi_host, hpsi) ! hpsi_host = hpsi
+     call h_psi_meta (lda, n, m, psi_host, hpsi_host)
+     CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
+     !$acc end host_data
+  end if
   !
   ! ... Here we add the Hubbard potential times psi
   !
   IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
-     CALL dev_memcpy(hpsi_host, hpsi_d )    ! hpsi_host = hpsi_d
+     !$acc host_data use_device(hpsi)
+     CALL dev_memcpy(hpsi_host, hpsi )    ! hpsi_host = hpsi
+     !$acc end host_data
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
-        CALL dev_memcpy(hpsi_d, hpsi_host)  ! hpsi_d = hpsi_host
+        !$acc host_data use_device(hpsi)
+        CALL dev_memcpy(hpsi, hpsi_host)  ! hpsi = hpsi_host
+        !$acc end host_data
      ELSE
         IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
-          CALL vhpsi_gpu( lda, n, m, psi_d, hpsi_d )  ! DFT+U
+          CALL vhpsi_gpu( lda, n, m, psi, hpsi )  ! DFT+U
         ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN          ! DFT+U+V
           CALL vhpsi( lda, n, m, psi_host, hpsi_host )
-          CALL dev_memcpy(hpsi_d, hpsi_host)
+          !$acc host_data use_device(hpsi)
+          CALL dev_memcpy(hpsi, hpsi_host)
+          !$acc end host_data
         ENDIF
      ENDIF
      !
@@ -294,14 +323,20 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( exx_is_active() ) THEN
      IF ( use_ace) THEN
         IF (gamma_only) THEN
-           CALL vexxace_gamma_gpu(lda,m,psi_d,ee,hpsi_d)
+           !$acc host_data use_device(psi, hpsi)
+           CALL vexxace_gamma_gpu(lda,m,psi,ee,hpsi)
+           !$acc end host_data
         ELSE
-           CALL vexxace_k_gpu(lda,m,psi_d,ee,hpsi_d)
+           !$acc host_data use_device(psi, hpsi)
+           CALL vexxace_k_gpu(lda,m,psi,ee,hpsi)
+           !$acc end host_data
         END IF
      ELSE
-        CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
+        !$acc host_data use_device(hpsi)
+        CALL dev_memcpy(hpsi_host, hpsi ) ! hpsi_host = hpsi
         CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
-        CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
+        CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
+        !$acc end host_data
      END IF
   END IF
   !
@@ -309,7 +344,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   IF ( lelfield ) THEN
      !
-     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
+     !$acc host_data use_device(hpsi)
+     CALL dev_memcpy(hpsi_host, hpsi ) ! hpsi_host = hpsi
+     !$acc end host_data
      IF ( .NOT.l3dstring ) THEN
         CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,gdir, efield )
      ELSE
@@ -317,12 +354,14 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,ipol,efield_cry(ipol) )
         END DO
      END IF
-     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
+     !$acc host_data use_device(hpsi)
+     CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
+     !$acc end host_data
      !
   END IF
 #if defined(__OSCDFT)
   IF ( use_oscdft ) THEN
-     CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi_d, hpsi_d)
+     CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi, hpsi)
   END IF
 #endif
   !
@@ -330,10 +369,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ! ... but it is convenient to explicitly set it to 0 to prevent trouble
   !
   IF ( gamma_only .AND. gstart == 2 ) then
-      !$cuf kernel do(1)
+      !$acc kernels 
       do i=1,m
-         hpsi_d(1,i) = CMPLX( DBLE( hpsi_d(1,i) ), 0.D0 ,kind=DP)
+         hpsi(1,i) = CMPLX( DBLE( hpsi(1,i) ), 0.D0 ,kind=DP)
       end do
+      !$acc end kernels
   end if
   !
   if (need_host_copy) then

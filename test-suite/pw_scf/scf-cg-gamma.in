@@ -9,6 +9,7 @@
     input_dft='pbe'
  /
  &electrons
+  diago_thr_init = 1.D-5
   diagonalization='cg',
   conv_thr    = 1.D-13,
  /

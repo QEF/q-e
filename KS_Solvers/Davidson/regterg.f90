@@ -179,13 +179,11 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  !$acc host_data use_device(psi, hpsi, spsi)
   CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
   !
   ! ... spsi contains s times the basis vectors
   !
   IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
-  !$acc end host_data
   !
   ! ... hr contains the projection of the hamiltonian onto the reduced
   ! ... space vr contains the eigenvectors of hr
@@ -382,11 +380,9 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     !$acc host_data use_device(psi, hpsi, spsi)
      CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-     !$acc end host_data
      !
      ! ... update the reduced hamiltonian
      !

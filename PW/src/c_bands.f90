@@ -382,7 +382,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 IF (.not. use_gpu) THEN
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
-                   !$acc host_data use_device(evc, et)
+                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                    !$acc end host_data
                 END IF
@@ -400,11 +400,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
                 CALL using_h_diag_d(0) ! precondition has intent(in)
-                !$acc host_data use_device(evc, et)
                 CALL rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-                !$acc end host_data
                 !
              END IF
              !
@@ -757,7 +755,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 IF ( .not. use_gpu ) THEN
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
-                   !$acc host_data use_device(evc, et)
+                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                    !$acc end host_data
                 END IF
@@ -774,11 +772,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
                 CALL using_h_diag_d(0)
-                !$acc host_data use_device(evc, et)
                 CALL ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-                !$acc end host_data
              END IF
              !
              avg_iter = avg_iter + cg_iter

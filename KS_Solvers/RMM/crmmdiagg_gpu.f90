@@ -293,9 +293,7 @@ CONTAINS
     hpsi = ZERO
     !$acc end kernels
     !
-    !$acc host_data use_device(psi, hpsi)
     CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
-    !$acc end host_data
     !
     ! ... Operate the Overlap : S |psi>
     !
@@ -305,9 +303,7 @@ CONTAINS
        spsi = ZERO
        !$acc end kernels
        !
-       !$acc host_data use_device(psi, spsi) 
        CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi )
-       !$acc end host_data
        !
     END IF
     !
@@ -889,15 +885,11 @@ CONTAINS
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
-    !$acc host_data use_device(kpsi, hkpsi)
     CALL h_psi_ptr( npwx, npw, notconv, kpsi, hkpsi )
-    !$acc end host_data
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
-    !$acc host_data use_device(kpsi, skpsi)
     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notconv, kpsi, skpsi )
-    !$acc end host_data
     !
     ! ... Create 2 x 2 matrix
     !
