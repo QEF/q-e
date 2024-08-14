@@ -13,7 +13,7 @@ SUBROUTINE symmetries_of_wannier_function()
   USE control_kcw,           ONLY : io_real_space, r
   USE control_kcw,           ONLY : tmp_dir_kcwq, tmp_dir_kcw
   USE control_kcw,           ONLY : ir_end, num_wann
-  USE control_kcw,           ONLY : spin_component
+  USE control_kcw,           ONLY : spin_component, nqstot
   USE mp_bands,              ONLY : root_bgrp, intra_bgrp_comm
   USE gvect,                 ONLY : ig_l2g, mill
   USE gvecs,                 ONLY : doublegrid, ngms
@@ -99,9 +99,10 @@ SUBROUTINE symmetries_of_wannier_function()
   nsym_w = 0
   !
   ! read all the wannier densities for all the q. store it in rhowann
-  DO iq_ = 1, nkstot
-    IF ( lsda .AND. isk(iq_) /= spin_component) CYCLE
-    iq = iq_-(spin_component-1)*nkstot/nspin
+  WRITE(*,*) "NICOLA", nqstot
+  DO iq = 1, nqstot
+    !IF ( lsda .AND. isk(iq_) /= spin_component) CYCLE
+    !iq = iq_-(spin_component-1)*nkstot/nspin
     !
     !name of the folder with q point iq
     !
@@ -148,9 +149,9 @@ SUBROUTINE symmetries_of_wannier_function()
     WRITE(*,*)
     
     DO isym=1, nsym
-      DO iq_=1, nkstot
-        IF ( lsda .AND. isk(iq_) /= spin_component) CYCLE
-        iq = iq_-(spin_component-1)*nkstot/nspin
+      DO iq = 1, nqstot
+        !IF ( lsda .AND. isk(iq_) /= spin_component) CYCLE
+        !iq = iq_-(spin_component-1)*nkstot/nspin
         rhowann_aux = 0.D0
         !WRITE(*,*) "isym", isym, "ft", ft(:, isym)
         !
@@ -180,7 +181,7 @@ SUBROUTINE symmetries_of_wannier_function()
         IF ( delta_rho .gt. 1.D-02 )  THEN
           EXIT
         END IF
-        IF( iq .eq. nkstot/nspin ) THEN
+        IF( iq .eq. nqstot ) THEN
           nsym_w(iwann) = nsym_w(iwann) + 1
           s_w(:,:,nsym_w(iwann),iwann) = s(:,:,isym)
           ft_w(:, nsym_w(iwann), iwann) = ft(:, isym)
@@ -208,6 +209,7 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   USE symm_base,             ONLY:  invs              !index of inverse of symmetry op
   USE klist,                 ONLY:  xk, nkstot        !k points in cartesian coordinates
   USE cell_base,             ONLY : at
+  USE control_kcw,           ONLY : x_q
   !
   IMPLICIT NONE 
   !
@@ -225,7 +227,7 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   !
   ! rotate k point
   !
-  Rxk(:) = MATMUL(xk(:, ik_torotate), sr(:,:,isym))
+  Rxk(:) = MATMUL(x_q(:, ik_torotate), sr(:,:,isym))
   !
   ! Find k point that differs a reciprocal lattice vector from the rotated one
   !
@@ -240,6 +242,8 @@ SUBROUTINE find_kpoint(xk_, ik_, Gvector)
   USE io_global,             ONLY : stdout
   USE klist,                 ONLY:  xk, nkstot        !k points in cartesian coordinates
   USE cell_base,             ONLY : at
+  USE lsda_mod,              ONLY : nspin
+  USE control_kcw,           ONLY : x_q
   !
   IMPLICIT NONE
   !
@@ -259,11 +263,11 @@ SUBROUTINE find_kpoint(xk_, ik_, Gvector)
   LOGICAL               :: isGvec
   !
   Gvector(:) = 0.5 ! Impossible condition, this to check in the end this value changed
-  DO ik = 1, nkstot
+  DO ik = 1, nkstot/nspin
     !
     !delta_xk in cartesian
     !
-    delta_xk(:) = xk_(:) - xk(:, ik)
+    delta_xk(:) = xk_(:) - x_q(:, ik)
     !
     !go to crystal
     !

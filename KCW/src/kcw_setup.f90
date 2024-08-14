@@ -45,7 +45,7 @@ subroutine kcw_setup
   USE control_kcw,       ONLY : evc0, iuwfc_wann, iuwfc_wann_allk, kcw_iverbosity, lgamma_iq, &
                                 spin_component, isq, read_unitary_matrix, x_q, tmp_dir_save, & 
                                 num_wann, num_wann_occ, occ_mat, tmp_dir_kcw, tmp_dir_kcwq, &
-                                io_sp, io_real_space, nrho, nkstot_eff!, wq, nqstot
+                                io_sp, io_real_space, nqstot, nrho, nkstot_eff!, wq, nqstot
   USE io_global,         ONLY : stdout
   USE klist,             ONLY : nkstot, xk, nelec, nelup, neldw
   USE cell_base,         ONLY : at, omega, bg, tpiba
@@ -250,8 +250,8 @@ subroutine kcw_setup
   iun_qlist = 127
   OPEN (iun_qlist, file = TRIM(tmp_dir_kcw)//'qlist.txt')
   !
-  ! 
   nqs = nkstot_eff
+  nqstot = nqs ! FIXME: replace nqs (local) with nqstot (global)
   ALLOCATE (x_q (3, nqs), isq(nqs) )
   ALLOCATE (weight(nqs) )
   iq=1
@@ -350,7 +350,7 @@ subroutine kcw_setup
       !! The periodic part of the perturbation DeltaV_q(G)
       ! 
       sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega
-      WRITE(1005,*) "iwann=", i, "q=", iq, "SH=", REAL(.5*sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega)
+      !WRITE(1005,*) "iwann=", i, "q=", iq, "SH=", REAL(.5*sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega)
       !
     ENDDO
     !
@@ -514,10 +514,12 @@ subroutine kcw_setup
     !
     !create a file with all the info about IBZ for each wannier function
     !
-    CALL write_qlist_ibz()
-    DO i = 1, num_wann
-      CALL write_symmetry_op(i)
-    END DO 
+    IF (ionode) THEN 
+      CALL write_qlist_ibz()
+      DO i = 1, num_wann
+        CALL write_symmetry_op(i)
+      END DO 
+    ENDIF
       !
     !CALL compute_dmn()
   END IF!if for symmetries
