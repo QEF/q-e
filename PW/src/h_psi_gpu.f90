@@ -361,9 +361,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   END IF
 #if defined(__OSCDFT)
   IF ( use_oscdft ) THEN
-     !$acc host_data use_device(psi, hpsi)
      CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi, hpsi)
-     !$acc end host_data
   END IF
 #endif
   !
