@@ -53,6 +53,7 @@ set(src_kcw
     #compute_w0n_unitcell.f90 #Giovanni Cistaro
     symmetries_of_wannier_function.f90 #Giovanni Cistaro
     kcw_kpoint_grid.f90 #Giovanni Cistaro
+    kcw_deallocate_symmetry_arrays.f90 #Giovanni Cistaro
     write_qlist_ibz.f90 #Giovanni Cistaro
     read_qlist_ibz.f90 #Giovanni Cistaro
     kcw_psymdvscf.f90 #Giovanni Cistaro

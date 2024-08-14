@@ -38,9 +38,6 @@ SUBROUTINE screen_coeff ()
   USE coulomb,              ONLY : exxdiv, exxdiv_eps
   USE control_kcw,         ONLY : nsym_old
   USE symm_base,            ONLY : nsym
-  !
-  !USE mp_world,             ONLY : mpime
-  !
   USE cell_base,            ONLY : omega
   !
   IMPLICIT NONE
@@ -125,6 +122,8 @@ SUBROUTINE screen_coeff ()
   !
   nsym_old = nsym
   !
+  IF(irr_bz) CALL read_qlist_ibz()
+
   DO iq = iq_start, nqs
       !! For each q in the mesh 
     !
@@ -302,6 +301,7 @@ SUBROUTINE screen_coeff ()
     ENDDO
     !
     DEALLOCATE ( rhog , delta_vg, vh_rhog, drhog_scf, delta_vg_ )
+    !
     IF (ionode) THEN 
       INQUIRE(file=TRIM(tmp_dir_kcw)//TRIM(prefix)//'.alpha.status', exist=exst)
       IF (.NOT. exst) OPEN(986, file=TRIM(tmp_dir_kcw)//TRIM(prefix)//'.alpha.status')
@@ -311,6 +311,7 @@ SUBROUTINE screen_coeff ()
     !
   ENDDO ! qpoints
   !
+  CALL kcw_deallocate_symmetry_arrays()
   !
   WRITE(stdout,'(/)')
   WRITE( stdout, '(5X,"INFO: LR CALCULATION ... DONE")')

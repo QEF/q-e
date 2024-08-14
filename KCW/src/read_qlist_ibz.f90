@@ -7,11 +7,12 @@ SUBROUTINE read_qlist_ibz()
   USE control_kcw,         ONLY : nqstot_ibz, fbz2ibz, ibz2fbz, wq_ibz, nqstot
   USE control_kcw,         ONLY : xq_ibz
   USE control_kcw,         ONLY : mp1, mp2, mp3
+  USE mp_world, only: mpime
   !
   implicit none
   !
   INTEGER             :: iq, iwann, iq_ibz
-  INTEGER             :: iun_qlist_ibz
+  INTEGER             :: iun_qlist_ibz,i,j
   character(len=1024) :: filename  
   !
   ALLOCATE( nqstot_ibz( num_wann ) )
@@ -20,16 +21,16 @@ SUBROUTINE read_qlist_ibz()
   ALLOCATE( ibz2fbz( mp1*mp2*mp3, num_wann))
   ALLOCATE( fbz2ibz( mp1*mp2*mp3, num_wann))  
   !
+  
   DO iwann = 1, num_wann
     iun_qlist_ibz = 155 + iwann
-    WRITE (filename, "(A,I0.3,A)") TRIM(tmp_dir_kcw)//'qlist_ibz_iwann_', iwann, '.txt'
     OPEN (iun_qlist_ibz, file = filename)
     READ(iun_qlist_ibz,*)  nqstot_ibz( iwann )
-    DO iq = 1, nkstot
-      IF (lsda .AND. isk(iq) /= spin_component) CYCLE
+    DO iq = 1, nqstot
       !
       READ(iun_qlist_ibz,*) iq_ibz, &
                           wq_ibz(iq_ibz, iwann)
+      !
       fbz2ibz(iq, iwann) = iq_ibz
       IF( fbz2ibz(iq, iwann) .ne. -1 ) THEN 
         ibz2fbz(iq_ibz, iwann) = iq
@@ -38,4 +39,4 @@ SUBROUTINE read_qlist_ibz()
     ENDDO!ik 
   END DO!iwann    
   !
-END SUBROUTINE
+  END SUBROUTINE
