@@ -15,7 +15,7 @@ SUBROUTINE kcw_R_points
   !! real primitive cell which all virtual cells are generated from.
   !
   USE cell_base,            ONLY : at
-  USE control_kcw,          ONLY : Rvect, mp1, mp2 ,mp3, irvect
+  USE control_kcw,          ONLY : Rvect, mp1, mp2 ,mp3, irvect, nkstot_eff
   USE klist,                ONLY : nkstot
   USE lsda_mod,             ONLY : nspin
   USE io_global,            ONLY : stdout
@@ -25,7 +25,7 @@ SUBROUTINE kcw_R_points
   INTEGER :: i, j, k, icell, num_R, mptot
   ! Number of unit cells ( = number of q points)
   !
-  num_R = nkstot/nspin
+  num_R = nkstot_eff
   mptot=mp1*mp2*mp3
   IF (num_R .ne. mptot) &
      CALL errore('kcw_R_points', ' Mismatch between num of kpoints and MP grid from input', num_R)

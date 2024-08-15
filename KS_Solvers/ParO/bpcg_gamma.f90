@@ -218,9 +218,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, nve
 !     do l = 1, nactive  ! THIS COULD/SHOULD BE A GLOBAL CALL (ONLY WITHIN ONE BGRP THOUGH)
 !        CALL hs_1psi( npwx, npw, p(:,l), hp(:,l), sp(:,l) ) ! apply H to a single wavefunction (no bgrp parallelization here!)
 !     end do
-     !$acc host_data use_device(p, hp, sp)
      CALL hs_psi_ptr( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
-     !$acc end host_data
      CALL stop_clock( 'pcg:hs_1psi' )
 
      !$acc parallel loop private(i)     

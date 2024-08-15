@@ -52,6 +52,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE ::  hpsi(:,:), spsi(:,:), w(:,:)
+  COMPLEX(DP), ALLOCATABLE ::  ugly1(:,:), ugly2(:,:)
+  !$acc declare device_resident(ugly1, ugly2)
   COMPLEX(DP)              ::  buffer(npwx,nbnd), buffer1(npwx,nbnd)
   REAL(DP), ALLOCATABLE    ::  K(:,:), K_store(:,:), M(:,:), M_store(:,:), work(:)
   INTEGER,  ALLOCATABLE    ::  iwork(:)
@@ -162,8 +164,25 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   call start_clock('ppcg:hpsi')
   IF ( gstart == 2 ) psi(1,1:nbnd) = CMPLX( DBLE( psi(1,1:nbnd) ), 0.D0, kind=DP)
   psi_d = psi
-  CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )
-  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d)
+!civn: ugly hack (FIXME)
+  allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+  !$acc kernels
+  ugly1 = psi_d
+  ugly2 = C_ZERO
+  !$acc end kernels
+  CALL h_psi_ptr( npwx, npw, nbnd, ugly1, ugly2 )
+  !$acc kernels
+  hpsi_d(:,:) = ugly2(:,:)
+  ugly2 = C_ZERO
+  !$acc end kernels
+  if (overlap) THEN
+    CALL s_psi_ptr( npwx, npw, nbnd, ugly1, ugly2)
+    !$acc kernels
+    spsi_d = ugly2
+    !$acc end kernels
+  end if
+  deallocate( ugly1, ugly2 )
+!civn: FIXME END
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')  
   !
@@ -275,11 +294,35 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        END DO 
      END IF
      call gpu_threaded_assign( buffer1_d, w_d, npwx, nact, .true., act_idx_d, .false. )
-     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+!civn: ugly hack (FIXME)
+!     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+     allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc kernels
+     ugly1 = buffer1_d
+     ugly2 = C_ZERO
+     !$acc end kernels
+     CALL h_psi_ptr( npwx, npw, nbnd, ugly1, ugly2 )
+     !$acc kernels
+     buffer_d = ugly2 
+     !$acc end kernels
+     deallocate( ugly1, ugly2 )
+!civn: FIXME END
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      call gpu_threaded_backassign( hw_d, act_idx_d, buffer_d, npwx, nact, .false., hw_d )
      if (overlap) then ! ... Compute s*w
-        CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+!civn: ugly hack (FIXME)
+     !CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+     allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc kernels
+     ugly1 = buffer1_d
+     ugly2 = C_ZERO
+     !$acc end kernels
+     CALL s_psi_ptr( npwx, npw, nact, ugly1, ugly2 )
+     !$acc kernels
+     buffer_d = ugly2 
+     !$acc end kernels
+     deallocate( ugly1, ugly2 )
+!civn: FIXME END
 !        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
         call gpu_threaded_backassign( sw_d, act_idx_d, buffer_d, npwx, nact, .false., sw_d )
      end if

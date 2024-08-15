@@ -100,9 +100,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
-     !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
-     !$acc end host_data
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
@@ -295,9 +293,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      !
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)     
-     !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc( npwx, npw, natomwfc, wfcatom, swfcatom )
-     !$acc end host_data
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !

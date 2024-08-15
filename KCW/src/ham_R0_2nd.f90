@@ -14,6 +14,7 @@ SUBROUTINE ham_R0_2nd ()
   !! This routine compute the KI correction to second order to the the 
   !! Hamiltonian in real space in the basis if Wannier Fuction. 
   !! ONLY Diagonal CORRECTIONS. Obsolete, use hamilt.f90 instead. 
+  !! NOT ported to non-collinear case
   !
   !
   USE kinds,                ONLY : DP
@@ -34,6 +35,7 @@ SUBROUTINE ham_R0_2nd ()
   USE gvecs,                ONLY : ngms
   USE solve_linter_koop_mod 
   USE qpoint,               ONLY : xq
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   !
   !USE mp_world,             ONLY : mpime
   !
@@ -48,7 +50,7 @@ SUBROUTINE ham_R0_2nd ()
   INTEGER :: iwann, jwann, lrrho
   ! ... Band counters, leght of the rho record
   !
-  COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), delta_vr_(dffts%nnr,nspin)
+  COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin_mag), delta_vr_(dffts%nnr,nspin_mag)
   ! The periodic part of the wannier orbital density and potential 
   !
   COMPLEX(DP), ALLOCATABLE  :: rhog(:), delta_vg(:,:), vh_rhog(:), drhog_scf(:,:), delta_vg_(:,:) 
@@ -70,7 +72,7 @@ SUBROUTINE ham_R0_2nd ()
   CHARACTER(LEN=33) :: header
   INTEGER :: i
   !
-  nqs = nkstot/nspin
+  nqs = nkstot/nspin_mag
   !
   ALLOCATE( deltaHq(num_wann,num_wann,nqs) )
   ALLOCATE( deltaHR(num_wann,num_wann,nqs) )
@@ -106,7 +108,7 @@ SUBROUTINE ham_R0_2nd ()
     !! Retrive the rho_wann_q(r) from buffer in REAL space
     IF (kcw_iverbosity .gt. 1 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED")') 
     !
-    ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), drhog_scf (ngms, nspin), delta_vg_(ngms,nspin) )
+    ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin_mag), vh_rhog(ngms), drhog_scf (ngms, nspin_mag), delta_vg_(ngms,nspin_mag) )
     !
     IF ( lgamma ) CALL check_density (rhowann) 
     !! CHECK: For q==0 the sum over k and v should give the density. If not something wrong...

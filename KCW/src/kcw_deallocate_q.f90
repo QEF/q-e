@@ -16,15 +16,16 @@ SUBROUTINE kcw_deallocate_q()
   USE noncollin_module,    ONLY : m_loc
   USE becmod,              ONLY : deallocate_bec_type, becp
   USE uspp,                ONLY : okvan
-  USE qpoint,              ONLY : eigqts, ikks, ikqs
+  USE qpoint,              ONLY : eigqts, ikks, ikqs, nksq
   USE lrus,                ONLY : becp1
   USE gc_lr,               ONLY : grho, gmag, dvxc_rr, dvxc_sr, dvxc_ss, &
                                   & dvxc_s, vsgga, segni
   USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
+  USE qpoint_aux,          ONLY : ikmks, ikmkmqs, becpt, alphapt
   !
   IMPLICIT NONE
-  INTEGER :: ik
+  INTEGER :: ik, ipol
   !
   IF (lgamma) THEN
      if (associated(evq))  nullify(evq)
@@ -38,17 +39,17 @@ SUBROUTINE kcw_deallocate_q()
   if (allocated(nbnd_occ))  deallocate (nbnd_occ)
   if (allocated(ikks))      deallocate (ikks)
   if (allocated(ikqs))      deallocate (ikqs)
+  IF(ALLOCATED(ikmks))      DEALLOCATE(ikmks)
+  IF(ALLOCATED(ikmkmqs))    DEALLOCATE(ikmkmqs)
   if (allocated(m_loc))     deallocate (m_loc)
   !
-  IF (okvan) THEN 
-     if (allocated(eigqts)) deallocate (eigqts)
-     if (allocated(becp1))  then
-        do ik=1,size(becp1)
-           call deallocate_bec_type ( becp1(ik) )
-        enddo
-        deallocate(becp1)
-     endif
-  ENDIF
+  if (allocated(eigqts)) deallocate (eigqts)
+  if (allocated(becp1))  then
+     do ik=1,size(becp1)
+        call deallocate_bec_type ( becp1(ik) )
+     enddo
+     deallocate(becp1)
+  endif
   !
   CALL deallocate_bec_type ( becp )
   !
@@ -62,6 +63,21 @@ SUBROUTINE kcw_deallocate_q()
   if (allocated(segni))           deallocate (segni)
   if (allocated(vsgga))           deallocate (vsgga)
   if (allocated(gmag))            deallocate (gmag)
+  !
+  IF (ALLOCATED(alphapt)) THEN
+     DO ik=1,nksq
+        DO ipol=1,3
+           CALL deallocate_bec_type ( alphapt(ipol,ik) )
+        ENDDO
+     ENDDO
+     DEALLOCATE (alphapt)
+  ENDIF
+  IF (ALLOCATED(becpt))  THEN
+     DO ik=1, nksq
+        CALL deallocate_bec_type ( becpt(ik) )
+     ENDDO
+     DEALLOCATE(becpt)
+  ENDIF
   !
   RETURN
   !

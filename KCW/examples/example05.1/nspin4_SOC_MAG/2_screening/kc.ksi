@@ -1,0 +1,27 @@
+&CONTROL
+   prefix           = 'si'
+   outdir           = '../out'
+   kcw_iverbosity   = 1
+   kcw_at_ks        = .false.
+   calculation      = 'screen'
+   lrpa             = .false.
+   mp1              = 4
+   mp2              = 4
+   mp3              = 4
+   read_unitary_matrix = .true.
+   l_vcut           = .false.
+/
+&WANNIER
+   seedname         = 'wann'
+   check_ks         = .true.
+   num_wann_occ     = 8
+   num_wann_emp     = 8
+   have_empty       = .true.
+   has_disentangle  = .true.
+/
+&SCREEN
+  tr2    =1.0d-18
+  nmix   = 4
+  niter  = 33
+  i_orb = 1
+/

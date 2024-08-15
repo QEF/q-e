@@ -20,7 +20,7 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
   USE gvecs,                ONLY : ngms
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : tpiba2, omega
-  USE control_kcw,          ONLY : spin_component, kcw_iverbosity, x_q 
+  USE control_kcw,          ONLY : spin_component, kcw_iverbosity, x_q, nrho
   USE gvect,                ONLY : g
   USE qpoint,               ONLY : xq
   USE constants,            ONLY : e2, fpi
@@ -30,28 +30,30 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
   USE io_global,            ONLY : stdout
   !USE exx_base,             ONLY : g2_convolution
   USE coulomb,             ONLY : g2_convolution
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
+
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT (OUT) :: rhog(ngms)
+  COMPLEX(DP), INTENT (OUT) :: rhog(ngms,nrho)
   ! ... periodic part of wannier density in G-space
   !
-  COMPLEX(DP), INTENT (OUT) :: delta_vg(ngms,nspin)
+  COMPLEX(DP), INTENT (OUT) :: delta_vg(ngms,nspin_mag)
   ! ... perturbing potential [f_hxc(r,r') x wann(r')] in G-space
   !
-  COMPLEX(DP), INTENT (OUT) :: delta_vg_(ngms,nspin)
+  COMPLEX(DP), INTENT (OUT) :: delta_vg_(ngms,nspin_mag)
   ! ... perturbing potential [f_hxc(r,r') x wann(r')] in G-space without g=0 contribution
   !
   COMPLEX(DP), INTENT (OUT) :: vh_rhog(ngms)
   ! ... Hartree perturbing potential [f_hxc(r,r') x wann(r')] in G-space
   ! 
-  COMPLEX(DP), INTENT (OUT) :: delta_vr(dffts%nnr,nspin)
+  COMPLEX(DP), INTENT (OUT) :: delta_vr(dffts%nnr,nspin_mag)
   ! ... perturbing potential [f_hxc(r,r') x wann(r')] in r-space
   !
-  COMPLEX(DP), INTENT (OUT) :: delta_vr_(dffts%nnr,nspin)
+  COMPLEX(DP), INTENT (OUT) :: delta_vr_(dffts%nnr,nspin_mag)
   ! ... perturbing potential [f_hxc(r,r') x wann(r')] in r-space without g=0 contribution
   !
-  COMPLEX(DP), INTENT (IN)  :: rhor(dffts%nnr)
+  COMPLEX(DP), INTENT (IN)  :: rhor(dffts%nnr,nrho)
   ! ... periodic part of wannier density in r-space
   !
   INTEGER, INTENT (IN)      :: iq
@@ -63,7 +65,7 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
   COMPLEX(DP), ALLOCATABLE  :: vaux(:)
   ! ... auxiliary vector
   !
-  INTEGER                   :: ig, is, ir
+  INTEGER                   :: ig, is, ir, iss, ip
   ! ... counters 
   !
   REAL(DP)                  :: qg2, eh_corr
@@ -80,9 +82,12 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
   COMPLEX(DP)               :: vh_rhog_g0eq0(ngms)
   ! ... The hartree potential with th q+g=0 component set to zero
   !
-  aux(:) = rhor(:)/omega
-  CALL fwfft ('Rho', aux, dffts)  ! NsC: Dense or smooth grid?? I think smooth is the right one. 
-  rhog(:) = aux(dffts%nl(:))
+  DO ip=1,nrho !<---CONSIDER TO SUBSTITUTE WITH nspin_mag
+      aux(:) = rhor(:,ip)/omega
+      CALL fwfft ('Rho', aux, dffts)  ! NsC: Dense or smooth grid?? I think smooth is the right one. 
+      rhog(:,ip) = aux(dffts%nl(:))
+  END DO
+  !WRITE(*,*),'dffts%nl(:)',dffts%nl(:)
   !! The periodic part of the orbital density in g space  
   !
   delta_vr = ZERO
@@ -103,11 +108,11 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
     !
     qg2 = SUM ( (g(:,ig)+x_q(:,iq))**2 )
     !
-    vh_rhog_g0eq0(ig) =  e2 * fpi * rhog(ig) / (tpiba2 * qg2)
+    vh_rhog_g0eq0(ig) =  e2 * fpi * rhog(ig,1) / (tpiba2 * qg2)
     IF (qg2 .lt. 1e-8) vh_rhog_g0eq0(ig) = (0.D0, 0.D0)
     ! ... set to zero the q+g=0 component
     !
-    vh_rhog(ig) =  rhog(ig) * cmplx(fac(ig), 0.d0)
+    vh_rhog(ig) =  rhog(ig,1) * cmplx(fac(ig), 0.d0)
     ! ... the hartree potential possibly with the special treatment of the q+g=0 component  
     !
   ENDDO
@@ -132,38 +137,75 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
   !
   aux=(0.d0,0.d0)
   aux_=(0.d0,0.d0)
-  aux(dffts%nl(:)) = vh_rhog(:)
+  aux(dffts%nl(:)) = vh_rhog(:)                    ! G-space components of the Hartree potential
   aux_(dffts%nl(:)) = vh_rhog_g0eq0(:)
   CALL invfft ('Rho', aux, dffts)
   CALL invfft ('Rho', aux_, dffts)
   !
-  DO is = 1, nspin
+  IF (nspin_mag==4 .and. domag) THEN    ! Perturbing potential due to Hartree
+    delta_vr(:,1) = aux(:)
+    delta_vr(:,2:4) = 0 
+    delta_vr_(:,1) = aux_(:)
+    delta_vr_(:,2:4) = 0 
+  ELSEIF (nspin_mag==4 .and. .NOT. domag) THEN
+   delta_vr(:,1) = aux(:)
+   delta_vr_(:,1) = aux_(:)
+  ELSE
+      DO is = 1, nspin_mag
      !
-     delta_vr(:,is) = aux(:)
-     delta_vr_(:,is) = aux_(:)
+      delta_vr(:,is) = aux(:)
+      delta_vr_(:,is) = aux_(:)
      !
-  END DO
+      END DO
+  END IF
   !
   ! .. Add the xc contribution
   !
   IF (.NOT. lrpa) THEN
      !
-     DO is = 1, nspin
+   IF (( nspin_mag == 4) ) THEN
+      DO is = 1, nspin_mag 
+          DO ir = 1, dffts%nnr
+            DO iss = 1, nspin_mag
+             delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,iss) * rhor(ir,iss)/omega
+             delta_vr_(ir,is) = delta_vr_(ir,is) + dmuxc(ir,is,iss) * rhor(ir,iss)/omega
+             !
+          ENDDO
+          !
+         END DO
+       ENDDO
+   ELSE
+     DO is = 1, nspin_mag
         !
         DO ir = 1, dffts%nnr
            !
-           delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir)/omega
-           delta_vr_(ir,is) = delta_vr_(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir)/omega
+           delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir,1)/omega
+           delta_vr_(ir,is) = delta_vr_(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir,1)/omega
            !
         ENDDO
         !
      ENDDO
      !
+   END IF
   ENDIF
   !
   ! ... Back to g-space
   !
-  DO is = 1, nspin
+!  IF (nspin==4) THEN
+!   DO is = 1, nrho
+!      !
+!      aux(:) = delta_vr(:,is)
+!      aux_(:) = delta_vr_(:,is) 
+!      !
+!      CALL fwfft ('Rho', aux, dffts)
+!      CALL fwfft ('Rho', aux_, dffts)
+!      !
+!      delta_vg(:,is) = aux(dffts%nl(:))
+!      delta_vg_(:,is) = aux_(dffts%nl(:))
+!      !
+!   ENDDO
+!  ELSE
+    DO is = 1, nspin_mag
      !
      aux(:) = delta_vr(:,is)
      aux_(:) = delta_vr_(:,is) 
@@ -174,7 +216,8 @@ SUBROUTINE bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, de
      delta_vg(:,is) = aux(dffts%nl(:))
      delta_vg_(:,is) = aux_(dffts%nl(:))
      !
-  ENDDO
+    ENDDO
+!   ENDIF
   !
   !
 END subroutine bare_pot

@@ -582,9 +582,7 @@ CONTAINS
     ! Compute sevc1_new = H*evc1
     !
 #if defined(__CUDA)
-    !$acc host_data use_device(evc1, sevc1_new)
     CALL h_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
-    !$acc end host_data
 #else
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
 #endif
@@ -601,9 +599,7 @@ CONTAINS
         ENDDO
     ELSE
 #if defined(__CUDA)
-       !$acc host_data use_device(evc1, spsi1)
        CALL s_psi_acc (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
-       !$acc end host_data
 #else            
        CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
 #endif

@@ -27,8 +27,8 @@ END SUBROUTINE cgcudaDGEMV
 
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
-SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
-                     npwx, npw, nbnd, psi_d, e_d, btype, &
+SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
+                     npwx, npw, nbnd, psi, eig, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -59,22 +59,20 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   !
   INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, maxter
   INTEGER,     INTENT(IN)    :: btype(nbnd)
-  REAL(DP),    INTENT(IN)    :: precondition_d(npw), ethr
-  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx,nbnd)
-  REAL(DP),    INTENT(INOUT) :: e_d(nbnd)
+  REAL(DP),    INTENT(IN)    :: precondition(npw), ethr
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx,nbnd)
+  REAL(DP),    INTENT(INOUT) :: eig(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
-#if defined(__CUDA)
-  attributes(DEVICE) :: precondition_d, psi_d, e_d
-#endif
   !
   ! ... local variables
   !
   INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
   REAL(DP),    ALLOCATABLE :: lagrange_d(:)
   REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi_d(:), spsi_d(:), g_d(:), cg_d(:), &
-                              scg_d(:), ppsi_d(:), g0_d(:), psi_aux(:)
+  COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
+                              scg(:), ppsi(:), g0_d(:), psi_aux(:)
+  !$acc declare device_resident(hpsi, spsi, g, cg, scg, ppsi)
   COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                               cg0, e0, es(2), aux
@@ -84,7 +82,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   INTEGER                  :: npw2, npwx2
   REAL(DP)                 :: empty_ethr, ethr_m
 #if defined(__CUDA)
-  attributes(DEVICE) :: lagrange_d, hpsi_d, spsi_d, g_d, cg_d, scg_d, ppsi_d, g0_d
+  attributes(DEVICE) :: lagrange_d, g0_d
 #endif
   !
   ! ... external functions
@@ -96,6 +94,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   !
   !
   CALL start_clock( 'rcgdiagg' )
+  !$acc data deviceptr(precondition)
   !
   IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   !
@@ -104,13 +103,13 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   npw2 = 2 * npw
   npwx2 = 2 * npwx
   !
-  ALLOCATE( spsi_d( npwx ) )
-  ALLOCATE( scg_d(  npwx ) )
-  ALLOCATE( hpsi_d( npwx ) )
-  ALLOCATE( g_d(    npwx ) )
-  ALLOCATE( cg_d(   npwx ) )
+  ALLOCATE( spsi( npwx ) )
+  ALLOCATE( scg(  npwx ) )
+  ALLOCATE( hpsi( npwx ) )
+  ALLOCATE( g(    npwx ) )
+  ALLOCATE( cg(   npwx ) )
   ALLOCATE( g0_d(   npwx ) )
-  ALLOCATE( ppsi_d( npwx ) )
+  ALLOCATE( ppsi( npwx ) )
   !
   ALLOCATE( lagrange_d( nbnd ) )
   ALLOCATE( lagrange  ( nbnd ) )
@@ -118,7 +117,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   ALLOCATE( psi_aux   ( nbnd ) )
   !
   ! Sync eigenvalues that will remain on the Host
-  e(1:nbnd) = e_d(1:nbnd)
+  e(1:nbnd) = eig(1:nbnd)
   !print *, 'init ', e(1:nbnd)
   !
   avg_iter = 0.D0
@@ -141,21 +140,25 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
      !
      ! ... calculate S|psi>
      !
-     CALL s_1psi_ptr( npwx, npw, psi_d(1,m), spsi_d )
+     CALL s_1psi_ptr( npwx, npw, psi(1,m), spsi )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
      lagrange = 0.d0
-     if(m_start.le.m_end) &
-     CALL cgcudaDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi_d(1,m_start), npwx2, spsi_d, 1, 0.D0, lagrange_d(m_start), 1 )
+     if(m_start.le.m_end) then
+       !$acc host_data use_device(psi, spsi)
+       CALL cgcudaDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange_d(m_start), 1 )
+       !$acc end host_data
+     endif 
      if(m_start.le.m_end) lagrange( m_start:m_end ) = lagrange_d( m_start:m_end )
      !print *, 'lagrange ', lagrange(1:m)
 
      CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
-     IF ( gstart == 2 ) THEN
-        psi_aux(1:m) = psi_d(1,1:m)
-        spsi1 = spsi_d(1)
+     IF ( gstart == 2 ) THEN 
+        !$acc update self(psi, spsi)
+        psi_aux(1:m) = psi(1,1:m)
+        spsi1 = spsi(1)
         lagrange(1:m) = lagrange(1:m) - psi_aux(1:m) * spsi1
      END IF
      !
@@ -166,10 +169,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
      !
      DO j = 1, m - 1
         !
-        !$cuf kernel do(1) <<<*,*>>>
+        !$acc kernels 
         DO i = 1, npwx
-           psi_d(i,m)  = psi_d(i,m) - lagrange_d(j) * psi_d(i,j)
+           psi(i,m)  = psi(i,m) - lagrange_d(j) * psi(i,j)
         END DO
+        !$acc end kernels
         !
         !print *, 'psi_norm ', j, psi_norm
         psi_norm = psi_norm - lagrange(j)**2
@@ -179,28 +183,32 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
      psi_norm = SQRT( psi_norm )
      !print *, 'psi_norm 178', psi_norm
      !
-     !$cuf kernel do(1) <<<*,*>>>
+     !$acc kernels
      DO i = 1, npwx
-        psi_d(i,m) = psi_d(i,m) / psi_norm
+        psi(i,m) = psi(i,m) / psi_norm
         ! ... set Im[ psi(G=0) ] -  needed for numerical stability
         IF (i == 1) THEN
-          IF ( gstart == 2 ) psi_d(1,m) = CMPLX( DBLE(psi_d(1,m)), 0.D0 ,kind=DP)
+          IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
         END IF
      END DO
+     !$acc end kernels
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     CALL hs_1psi_ptr( npwx, npw, psi_d(1,m), hpsi_d, spsi_d )
+     CALL hs_1psi_ptr( npwx, npw, psi(1,m), hpsi, spsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
      ! ... NB:  ddot(2*npw,a,1,b,1) = DBLE( zdotc(npw,a,1,b,1) )
      !
-     e(m) = 2.D0 * ksDdot( npw2, psi_d(1,m), 1, hpsi_d, 1 )
+     !$acc host_data use_device(psi, hpsi)
+     e(m) = 2.D0 * ksDdot( npw2, psi(1,m), 1, hpsi, 1 )
+     !$acc end host_data
      !print *, 'e(m)', e(m)
      IF ( gstart == 2 ) THEN
-        psi1  = psi_d(1,m)
-        hpsi1 = hpsi_d(1)
+        !$acc update self(psi, hpsi)
+        psi1  = psi(1,m)
+        hpsi1 = hpsi(1)
         e(m) = e(m) - psi1 * hpsi1
      END IF
      !
@@ -214,20 +222,24 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         ! ... calculate  P (PHP)|y>
         ! ... ( P = preconditioning matrix, assumed diagonal )
         !
-        !$cuf kernel do(1) <<<*,*>>>
+        !$acc kernels 
         DO i = 1, npw
-           g_d(i)  = hpsi_d(i) / precondition_d(i)
-           ppsi_d(i) = spsi_d(i) / precondition_d(i)
+           g(i)  = hpsi(i) / precondition(i)
+           ppsi(i) = spsi(i) / precondition(i)
         END DO
+        !$acc end kernels
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = 2.D0 * ksDdot( npw2, spsi_d(1), 1, g_d(1), 1 )
-        es(2) = 2.D0 * ksDdot( npw2, spsi_d(1), 1, ppsi_d(1), 1 )
+        !$acc host_data use_device(spsi, g, ppsi)
+        es(1) = 2.D0 * ksDdot( npw2, spsi(1), 1, g(1), 1 )
+        es(2) = 2.D0 * ksDdot( npw2, spsi(1), 1, ppsi(1), 1 )
+        !$acc end host_data
         !
         IF ( gstart == 2 ) THEN
            !
-           g1 = g_d(1); ppsi1 = ppsi_d(1); spsi1 = spsi_d(1)
+           !$acc update self(g, ppsi, spsi)
+           g1 = g(1); ppsi1 = ppsi(1); spsi1 = spsi(1)
            !
            es(1) = es(1) - spsi1 * g1
            es(2) = es(2) - spsi1 * ppsi1
@@ -239,10 +251,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         es(1) = es(1) / es(2)
         !
         es1 = es(1)
-        !$cuf kernel do
+        !$acc kernels   
         DO i=1, npwx
-           g_d(i) = g_d(i) - es1 * ppsi_d(i)
+           g(i) = g(i) - es1 * ppsi(i)
         END DO
+        !$acc end kernels
         !
         ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y>  ensures that  
         ! ... <g| S P^2|y> = 0
@@ -251,17 +264,21 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         ! ... scg is used as workspace
         !
-        CALL s_1psi_ptr( npwx, npw, g_d(1), scg_d(1) )
+        CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
         !
         lagrange(1:m-1) = 0.d0
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
-        if(m_start.le.m_end) &
-        CALL cgcudaDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi_d(1,m_start), npw2, scg_d, 1, 0.D0, lagrange_d(m_start), 1 )
+        if(m_start.le.m_end) then
+          !$acc host_data use_device(psi, scg)
+          CALL cgcudaDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange_d(m_start), 1 )
+          !$acc end host_data
+        endif
         if(m_start.le.m_end) lagrange( m_start:m_end ) = lagrange_d( m_start:m_end )
         CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
         IF ( gstart == 2 ) THEN
-           psi_aux(1:m-1) = psi_d(1,1:m-1)
-           scg1 = scg_d(1)
+           !$acc update self(psi, scg)
+           psi_aux(1:m-1) = psi(1,1:m-1)
+           scg1 = scg(1)
            lagrange(1:m-1) = lagrange(1:m-1) - psi_aux(1:m-1) * scg1
         END IF
         !
@@ -270,11 +287,12 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         DO j = 1, ( m - 1 )
            !
            aux = lagrange(j)
-           !$cuf kernel do(1)
+           !$acc kernels 
            DO i = 1, npwx
-              g_d(i)   = g_d(i)   - aux * psi_d(i,j)
-              scg_d(i) = scg_d(i) - aux * psi_d(i,j)
+              g(i)   = g(i)   - aux * psi(i,j)
+              scg(i) = scg(i) - aux * psi(i,j)
            END DO
+           !$acc end kernels
            !
         END DO
         !
@@ -282,9 +300,12 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = 2.D0 * ksDdot( npw2, g_d(1), 1, g0_d(1), 1 )
+           !$acc host_data use_device(g)
+           gg1 = 2.D0 * ksDdot( npw2, g(1), 1, g0_d(1), 1 )
+           !$acc end host_data
            IF ( gstart == 2 ) THEN 
-              g1 = g_d(1) ; g01 = g0_d(1)
+              !$acc update self(g)
+              g1 = g(1) ; g01 = g0_d(1)
               gg1 = gg1 - g1 * g01
            END IF
            !
@@ -294,19 +315,24 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         ! ... gg is <g(n+1)|S|g(n+1)>
         !
-        !$cuf kernel do
+        !$acc kernels   
         do i=1, npwx
-           g0_d(i) = scg_d(i)
+           g0_d(i) = scg(i)
         end do
+        !$acc end kernels
         !
-        !$cuf kernel do
+        !$acc kernels 
         do i=1, npw
-          g0_d(i) = g0_d(i) * precondition_d(i)
+          g0_d(i) = g0_d(i) * precondition(i)
         end do
+        !$acc end kernels
         !
-        gg = 2.D0 * ksDdot( npw2, g_d(1), 1, g0_d(1), 1 )
+        !$acc host_data use_device(g)
+        gg = 2.D0 * ksDdot( npw2, g(1), 1, g0_d(1), 1 )
+        !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           g1 = g_d(1) ; g01 = g0_d(1)
+           !$acc update self(g)
+           g1 = g(1) ; g01 = g0_d(1)
            gg = gg - g1*g01
         END IF
         !
@@ -318,13 +344,14 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
            !
            gg0 = gg
            !
-           !$cuf kernel do
+           !$acc kernels   
            DO i=1, npwx
-              cg_d(i) = g_d(i)
+              cg(i) = g(i)
               ! ... |cg> contains now the conjugate gradient
               ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-              IF ( gstart == 2 .and. i == 1 ) cg_d(1) = CMPLX( DBLE(cg_d(1)), 0.D0 ,kind=DP)
+              IF ( gstart == 2 .and. i == 1 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
            END DO
+           !$acc end kernels
            !
         ELSE
            !
@@ -335,10 +362,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
            gamma = ( gg - gg1 ) / gg0
            gg0   = gg
            !
-           !$cuf kernel do
+           !$acc kernels   
            do i=1, npwx
-              cg_d(i) = g_d(i) + cg_d(i) * gamma
+              cg(i) = g(i) + cg(i) * gamma
            end do
+           !$acc end kernels
            !
            ! ... The following is needed because <y(n+1)| S P^2 |cg(n+1)> 
            ! ... is not 0. In fact :
@@ -346,23 +374,27 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
            !
            psi_norm = gamma * cg0 * sint
            !
-           !$cuf kernel do
+           !$acc kernels   
            do i=1, npwx
-              cg_d(i) = cg_d(i) - psi_norm * psi_d(i,m)
+              cg(i) = cg(i) - psi_norm * psi(i,m)
               ! ... |cg> contains now the conjugate gradient
               ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-              IF ( gstart == 2 .and. i == 1 ) cg_d(1) = CMPLX( DBLE(cg_d(1)), 0.D0 ,kind=DP)
+              IF ( gstart == 2 .and. i == 1 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
            end do
+           !$acc end kernels
            !
         END IF
         !
         ! ... |scg> is S|cg>
         !
-        CALL hs_1psi_ptr( npwx, npw, cg_d(1), ppsi_d(1), scg_d(1) )
+        CALL hs_1psi_ptr( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        cg0 = 2.D0 * ksDdot( npw2, cg_d(1), 1, scg_d(1), 1 )
+        !$acc host_data use_device(cg, scg)
+        cg0 = 2.D0 * ksDdot( npw2, cg(1), 1, scg(1), 1 )
+        !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           cg1 = cg_d(1) ; scg1 = scg_d(1)
+           !$acc update self(cg, scg)
+           cg1 = cg(1) ; scg1 = scg(1)
            cg0 = cg0 - cg1*scg1
         END IF
         !
@@ -378,10 +410,13 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 4.D0 * ksDdot( npw2, psi_d(1,m), 1, ppsi_d(1), 1 )
+        !$acc host_data use_device(psi, ppsi)
+        a0 = 4.D0 * ksDdot( npw2, psi(1,m), 1, ppsi(1), 1 )
+        !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           psi1 = psi_d(1,m)
-           ppsi1 = ppsi_d(1)
+           !$acc update self(psi, ppsi)
+           psi1 = psi(1,m)
+           ppsi1 = ppsi(1)
            a0 = a0 - 2.D0 * psi1 * ppsi1
         END IF
         !
@@ -389,10 +424,13 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
-        b0 = 2.D0 * ksDdot( npw2, cg_d(1), 1, ppsi_d(1), 1 )
+        !$acc host_data use_device(cg, ppsi)
+        b0 = 2.D0 * ksDdot( npw2, cg(1), 1, ppsi(1), 1 )
+        !$acc end host_data 
         IF ( gstart == 2 ) THEN 
-           cg1 = cg_d(1)
-           ppsi1 = ppsi_d(1)
+           !$acc update self(cg, ppsi)
+           cg1 = cg(1)
+           ppsi1 = ppsi(1)
            b0 = b0 - cg1 * ppsi1
         END IF
         !
@@ -430,10 +468,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         ! ... upgrade |psi>
         !
-        !$cuf kernel do
+        !$acc kernels  
         do i=1, npwx
-           psi_d(i,m) = cost * psi_d(i,m) + sint / cg0 * cg_d(i)
+           psi(i,m) = cost * psi(i,m) + sint / cg0 * cg(i)
         end do
+        !$acc end kernels
         !
         ! ... here one could test convergence on the energy
         !
@@ -441,12 +480,13 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
         !
         ! ... upgrade H|psi> and S|psi>
         !
-        !$cuf kernel do
+        !$acc kernels  
         do i=1, npwx
-           spsi_d(i) = cost * spsi_d(i) + sint / cg0 * scg_d(i)
+           spsi(i) = cost * spsi(i) + sint / cg0 * scg(i)
            !
-           hpsi_d(i) = cost * hpsi_d(i) + sint / cg0 * ppsi_d(i)
+           hpsi(i) = cost * hpsi(i) + sint / cg0 * ppsi(i)
         end do
+        !$acc end kernels
         !
      END DO iterate
      !
@@ -488,28 +528,31 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
            !
            e0 = e(m)
            !
-           !$cuf kernel do
+           !$acc kernels  
            do l=1, npwx
-              ppsi_d(l) = psi_d(l,m)
+              ppsi(l) = psi(l,m)
            end do
+           !$acc end kernels
            !
            DO j = m, i + 1, - 1
               !
               e(j) = e(j-1)
               !
-              !$cuf kernel do
+              !$acc kernels  
               do l=1, npwx
-                 psi_d(l,j) = psi_d(l,j-1)
+                 psi(l,j) = psi(l,j-1)
               end do
+              !$acc end kernels
               !
            END DO
            !
            e(i) = e0
            !
-           !$cuf kernel do
+           !$acc kernels  
            do l=1, npwx
-              psi_d(l,i) = ppsi_d(l)
+              psi(l,i) = ppsi(l)
            end do
+           !$acc end kernels
            !
            ! ... this procedure should be good if only a few inversions occur,
            ! ... extremely inefficient if eigenvectors are often in bad order
@@ -522,19 +565,21 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
   END DO
   !
   avg_iter = avg_iter / DBLE( nbnd )
-  e_d(1:nbnd) = e(1:nbnd)
+  eig(1:nbnd) = e(1:nbnd)
   !
   DEALLOCATE( lagrange )
   DEALLOCATE( lagrange_d )
   DEALLOCATE( e )
   DEALLOCATE( psi_aux )
-  DEALLOCATE( ppsi_d )
+  DEALLOCATE( ppsi )
   DEALLOCATE( g0_d )
-  DEALLOCATE( cg_d )
-  DEALLOCATE( g_d )
-  DEALLOCATE( hpsi_d )
-  DEALLOCATE( scg_d )
-  DEALLOCATE( spsi_d )
+  DEALLOCATE( cg )
+  DEALLOCATE( g )
+  DEALLOCATE( hpsi )
+  DEALLOCATE( scg )
+  DEALLOCATE( spsi )
+  !
+  !$acc end data
   !
   CALL stop_clock( 'rcgdiagg' )
   !

@@ -110,7 +110,7 @@ MODULE oscdft_functions_gpu
          CALL stop_clock_gpu("oscdft_hdiag")
       END SUBROUTINE oscdft_h_diag_gpu
 
-      SUBROUTINE oscdft_h_psi_gpu(ctx, lda, n, m, psi_d, hpsi_d)
+      SUBROUTINE oscdft_h_psi_gpu(ctx, lda, n, m, psi, hpsi)
          USE noncollin_module,    ONLY : npol
          USE klist,               ONLY : nks, nelup, neldw
          USE buffers,             ONLY : get_buffer
@@ -123,9 +123,7 @@ MODULE oscdft_functions_gpu
          USE mp,                  ONLY : mp_barrier
          USE becmod,              ONLY : bec_type, allocate_bec_type_acc,&
                                          deallocate_bec_type_acc
-#if defined(__CUDA)
-         USE becmod,              ONLY : calbec_cuf
-#endif
+         USE becmod,              ONLY : calbec
          IMPLICIT NONE
 
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
@@ -133,8 +131,8 @@ MODULE oscdft_functions_gpu
          TYPE(oscdft_indices_type),      POINTER          :: idx
          TYPE(oscdft_wavefunction_type), POINTER          :: wfcO
          INTEGER,                   INTENT(IN)            :: lda, n, m
-         COMPLEX(DP),               INTENT(IN)            :: psi_d(lda*npol,m)
-         COMPLEX(DP),               INTENT(INOUT)         :: hpsi_d(lda*npol,m)
+         COMPLEX(DP),               INTENT(IN)            :: psi(lda*npol,m)
+         COMPLEX(DP),               INTENT(INOUT)         :: hpsi(lda*npol,m)
          INTEGER                                          :: iconstr, ioscdft,&
                                                              ik, h, k, curr_dim,&
                                                              ibnd, i, oidx, isum, osum, jsum,&
@@ -146,9 +144,6 @@ MODULE oscdft_functions_gpu
          TYPE(bec_type), TARGET  :: proj
          REAL(DP),       POINTER :: proj_r(:,:)
          COMPLEX(DP),    POINTER :: proj_k(:,:)
-#if defined(__CUDA)
-         attributes(DEVICE) :: psi_d, hpsi_d
-#endif
 
          inp => ctx%inp
          idx => ctx%idx
@@ -173,10 +168,7 @@ MODULE oscdft_functions_gpu
          !$acc data copyin(wfcO_wfc(:,:))
 
          ! gets <psi|phi_h>, then call ZGERC where this term is turned to its complex conjugate (<phi_h|psi>)
-#if defined(__CUDA)
-!civn: remove evc_d and use calbec instead
-         CALL calbec_cuf(offload_type, n, psi_d, wfcO_wfc, proj)
-#endif
+         CALL calbec(offload_type, n, psi, wfcO_wfc, proj)
 
          DO iconstr=1,idx%nconstr
             ioscdft = idx%iconstr2ioscdft(iconstr)
@@ -201,21 +193,21 @@ MODULE oscdft_functions_gpu
                      ENDIF
                      alpha = CMPLX(occ_const * ctx%multipliers(iconstr), 0.D0, kind=DP)
                      IF (gamma_only) THEN
-                        !$acc data present(wfcO_wfc(:,:), hpsi_d)
-                        !$acc host_data use_device(wfcO_wfc(:,:), proj_r)
+                        !$acc data present(wfcO_wfc(:,:), hpsi)
+                        !$acc host_data use_device(wfcO_wfc(:,:), proj_r, hpsi)
                         CALL MYDGER(2*n,m,DBLE(alpha),&
                                         wfcO_wfc(1,h_off),1,&
                                         proj_r(1:m,k_off),1,&
-                                        hpsi_d,2*lda)
+                                        hpsi,2*lda)
                         !$acc end host_data
                         !$acc end data
                      ELSE
-                        !$acc data present(wfcO_wfc(:,:), hpsi_d)
-                        !$acc host_data use_device(wfcO_wfc(:,:), proj_k)
+                        !$acc data present(wfcO_wfc(:,:), hpsi)
+                        !$acc host_data use_device(wfcO_wfc(:,:), proj_k, hpsi)
                         CALL MYZGERC(n,m,alpha,&
                                      wfcO_wfc(1,h_off),1,&
                                      proj_k(1:m,k_off),1,&
-                                     hpsi_d,lda)
+                                     hpsi,lda)
                         !$acc end host_data
                         !$acc end data
                      END IF

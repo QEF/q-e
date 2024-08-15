@@ -1,9 +1,5 @@
 
-     Program PWSCF v.7.3.1 starts on 17Jul2024 at 17:32:18 
-        Git branch: q-e-v731
-        Last git commit: 7fd60c9bc9fe7a7d1fe6f1049f4afba0eab9aeef-dirty
-        Last git commit date: Thu Feb 29 10:18:05 2024 +0000
-        Last git commit subject: Merge branch 'master_qe_7.3.1' into 'master'
+     Program PWSCF v.7.3.1 starts on 14Aug2024 at 10:46:12 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,13 +10,11 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI & OpenMP), running on       4 processor cores
-     Number of MPI processes:                 4
-     Threads/MPI process:                     1
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     4316 MiB available memory on the printing compute node when the environment starts
- 
+     5941 MiB available memory on the printing compute node when the environment starts
+
      Reading input from uspp-cg-gamma.in
 
      Current dimensions of program PWSCF are:
@@ -38,21 +32,21 @@
 
 
      gamma-point specific algorithms are used
- 
+
      R & G space division:  proc/nbgrp/npool/nimage =       4
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Min         100     100     24                 1544     1544     186
      Max         102     102     26                 1550     1550     190
      Sum         405     405    101                 6187     6187     751
- 
+
      Using Slab Decomposition
- 
+
 
 
      bravais-lattice index     =            1
@@ -147,96 +141,94 @@
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:    11.2 Mb
-
      Self-consistent Calculation
 
      iteration #  1     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  1.00E-02,  avg # of iterations =  3.0
+     ethr =  1.00E-05,  avg # of iterations =  9.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -52.19033531 Ry
-     estimated scf accuracy    <       1.38947140 Ry
+     total energy              =     -52.19293142 Ry
+     estimated scf accuracy    <       1.39137826 Ry
 
      iteration #  2     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
      ethr =  6.32E-03,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -52.35210010 Ry
-     estimated scf accuracy    <       0.11345369 Ry
+     total energy              =     -52.35225741 Ry
+     estimated scf accuracy    <       0.11233345 Ry
 
      iteration #  3     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  5.16E-04,  avg # of iterations =  3.9
+     ethr =  5.11E-04,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -52.37660161 Ry
-     estimated scf accuracy    <       0.02067258 Ry
+     total energy              =     -52.37655433 Ry
+     estimated scf accuracy    <       0.02092370 Ry
 
      iteration #  4     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  9.40E-05,  avg # of iterations =  3.8
+     ethr =  9.51E-05,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -52.38156700 Ry
-     estimated scf accuracy    <       0.00050479 Ry
+     total energy              =     -52.38156726 Ry
+     estimated scf accuracy    <       0.00053575 Ry
 
      iteration #  5     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  2.29E-06,  avg # of iterations =  4.0
+     ethr =  2.44E-06,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -52.38171837 Ry
-     estimated scf accuracy    <       0.00003260 Ry
+     total energy              =     -52.38171697 Ry
+     estimated scf accuracy    <       0.00003391 Ry
 
      iteration #  6     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  1.48E-07,  avg # of iterations =  4.0
+     ethr =  1.54E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -52.38172418 Ry
-     estimated scf accuracy    <       0.00000680 Ry
+     total energy              =     -52.38172368 Ry
+     estimated scf accuracy    <       0.00000919 Ry
 
      iteration #  7     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  3.09E-08,  avg # of iterations =  3.9
+     ethr =  4.18E-08,  avg # of iterations =  3.8
 
      total cpu time spent up to now is        0.3 secs
 
-     total energy              =     -52.38172572 Ry
-     estimated scf accuracy    <       0.00000036 Ry
+     total energy              =     -52.38172565 Ry
+     estimated scf accuracy    <       0.00000055 Ry
 
      iteration #  8     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  1.65E-09,  avg # of iterations =  4.1
+     ethr =  2.52E-09,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
-     total energy              =     -52.38172582 Ry
-     estimated scf accuracy    <       0.00000003 Ry
+     total energy              =     -52.38172580 Ry
+     estimated scf accuracy    <       0.00000009 Ry
 
      iteration #  9     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  1.35E-10,  avg # of iterations =  4.0
+     ethr =  4.19E-10,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
-     estimated scf accuracy    <          5.1E-09 Ry
+     estimated scf accuracy    <          4.6E-09 Ry
 
      iteration # 10     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  2.30E-11,  avg # of iterations =  3.8
+     ethr =  2.08E-11,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
      estimated scf accuracy    <          2.3E-10 Ry
@@ -245,43 +237,43 @@
      CG style diagonalization
      ethr =  1.05E-12,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
-     estimated scf accuracy    <          1.1E-11 Ry
+     estimated scf accuracy    <          2.7E-11 Ry
 
      iteration # 12     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
-     ethr =  1.00E-13,  avg # of iterations =  3.5
+     ethr =  1.23E-13,  avg # of iterations =  3.8
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
-     estimated scf accuracy    <          2.2E-12 Ry
+     estimated scf accuracy    <          2.3E-12 Ry
 
      iteration # 13     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
      ethr =  1.00E-13,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
-     estimated scf accuracy    <          1.8E-13 Ry
+     estimated scf accuracy    <          2.3E-13 Ry
 
      iteration # 14     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
      ethr =  1.00E-13,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
-     estimated scf accuracy    <          2.4E-14 Ry
+     estimated scf accuracy    <          6.4E-14 Ry
 
      iteration # 15     ecut=    20.00 Ry     beta= 0.70
      CG style diagonalization
      ethr =  1.00E-13,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -52.38172583 Ry
      estimated scf accuracy    <          2.2E-15 Ry
@@ -290,7 +282,25 @@
      CG style diagonalization
      ethr =  1.00E-13,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -52.38172583 Ry
+     estimated scf accuracy    <          1.3E-15 Ry
+
+     iteration # 17     ecut=    20.00 Ry     beta= 0.70
+     CG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  3.0
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -52.38172583 Ry
+     estimated scf accuracy    <          1.1E-15 Ry
+
+     iteration # 18     ecut=    20.00 Ry     beta= 0.70
+     CG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  3.0
+
+     total cpu time spent up to now is        0.3 secs
 
      End of self-consistent calculation
 
@@ -302,78 +312,78 @@
      highest occupied level (ev):     0.2955
 
 !    total energy              =     -52.38172583 Ry
-     estimated scf accuracy    <          6.7E-16 Ry
+     estimated scf accuracy    <          5.2E-16 Ry
 
      The total energy is the sum of the following terms:
-     one-electron contribution =     -33.80764583 Ry
-     hartree contribution      =      24.47628135 Ry
-     xc contribution           =     -18.39563171 Ry
+     one-electron contribution =     -33.80764584 Ry
+     hartree contribution      =      24.47628137 Ry
+     xc contribution           =     -18.39563172 Ry
      ewald contribution        =     -24.65472964 Ry
 
-     convergence has been achieved in  16 iterations
+     convergence has been achieved in  18 iterations
 
      Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  1   force =     0.09743966    0.01287428   -0.03638231
-     atom    2 type  1   force =     0.02396833   -0.01957454    0.00038468
-     atom    3 type  1   force =    -0.02106323    0.02354101   -0.00297429
+     atom    1 type  1   force =     0.09743966    0.01287428   -0.03638230
+     atom    2 type  1   force =     0.02396834   -0.01957455    0.00038467
+     atom    3 type  1   force =    -0.02106323    0.02354101   -0.00297430
      atom    4 type  1   force =    -0.07458102    0.02397763   -0.00482522
-     atom    5 type  1   force =    -0.01204817   -0.00435800   -0.00890920
-     atom    6 type  1   force =    -0.00229308   -0.01546522   -0.00006132
-     atom    7 type  2   force =    -0.03637553   -0.05886368    0.11130008
-     atom    8 type  2   force =    -0.02247037    0.07642917    0.01759833
-     atom    9 type  2   force =     0.02200560   -0.02055033   -0.06632893
-     atom   10 type  2   force =     0.02541782   -0.01801031   -0.00980181
+     atom    5 type  1   force =    -0.01204818   -0.00435800   -0.00890920
+     atom    6 type  1   force =    -0.00229308   -0.01546522   -0.00006131
+     atom    7 type  2   force =    -0.03637554   -0.05886368    0.11130008
+     atom    8 type  2   force =    -0.02247037    0.07642916    0.01759832
+     atom    9 type  2   force =     0.02200561   -0.02055033   -0.06632893
+     atom   10 type  2   force =     0.02541782   -0.01801031   -0.00980182
 
      Total force =     0.223162     Total SCF correction =     0.000000
 
      Writing all to output data dir ./pwscf.save/ :
      XML data file, charge density, pseudopotentials, collected wavefunctions
- 
-     init_run     :      0.06s CPU      0.09s WALL (       1 calls)
-     electrons    :      0.18s CPU      0.19s WALL (       1 calls)
+
+     init_run     :      0.09s CPU      0.11s WALL (       1 calls)
+     electrons    :      0.13s CPU      0.16s WALL (       1 calls)
      forces       :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.02s CPU      0.03s WALL (       1 calls)
-     hinit0       :      0.04s CPU      0.06s WALL (       1 calls)
+     potinit      :      0.02s CPU      0.02s WALL (       1 calls)
+     hinit0       :      0.06s CPU      0.08s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.11s CPU      0.12s WALL (      16 calls)
-     sum_band     :      0.01s CPU      0.02s WALL (      16 calls)
-     v_of_rho     :      0.04s CPU      0.04s WALL (      17 calls)
-     newd         :      0.01s CPU      0.01s WALL (      17 calls)
-     mix_rho      :      0.01s CPU      0.01s WALL (      16 calls)
+     c_bands      :      0.07s CPU      0.08s WALL (      18 calls)
+     sum_band     :      0.02s CPU      0.02s WALL (      18 calls)
+     v_of_rho     :      0.04s CPU      0.04s WALL (      19 calls)
+     newd         :      0.01s CPU      0.01s WALL (      19 calls)
+     mix_rho      :      0.00s CPU      0.00s WALL (      18 calls)
 
      Called by c_bands:
-     init_us_2    :      0.00s CPU      0.00s WALL (      33 calls)
-     rcgdiagg     :      0.10s CPU      0.11s WALL (      16 calls)
-     wfcrot       :      0.01s CPU      0.01s WALL (      16 calls)
+     init_us_2    :      0.00s CPU      0.00s WALL (      37 calls)
+     rcgdiagg     :      0.06s CPU      0.07s WALL (      18 calls)
+     wfcrot       :      0.01s CPU      0.01s WALL (      18 calls)
 
      Called by *cgdiagg:
-     h_psi        :      0.06s CPU      0.06s WALL (     489 calls)
-     s_psi        :      0.01s CPU      0.01s WALL (     962 calls)
+     h_psi        :      0.04s CPU      0.04s WALL (     602 calls)
+     s_psi        :      0.00s CPU      0.01s WALL (    1186 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.01s CPU      0.01s WALL (     489 calls)
-     vloc_psi     :      0.04s CPU      0.04s WALL (     489 calls)
-     add_vuspsi   :      0.00s CPU      0.00s WALL (     489 calls)
-     hs_1psi      :      0.06s CPU      0.06s WALL (     473 calls)
-     s_1psi       :      0.01s CPU      0.02s WALL (     473 calls)
+     h_psi:calbec :      0.00s CPU      0.01s WALL (     602 calls)
+     vloc_psi     :      0.03s CPU      0.03s WALL (     602 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     602 calls)
+     hs_1psi      :      0.04s CPU      0.05s WALL (     584 calls)
+     s_1psi       :      0.01s CPU      0.01s WALL (     584 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (     982 calls)
-     fft          :      0.01s CPU      0.03s WALL (     155 calls)
-     ffts         :      0.00s CPU      0.00s WALL (      16 calls)
-     fftw         :      0.03s CPU      0.04s WALL (    1244 calls)
- 
-     Parallel routines
- 
-     PWSCF        :      0.37s CPU      0.45s WALL
+     calbec       :      0.01s CPU      0.01s WALL (    1208 calls)
+     fft          :      0.02s CPU      0.03s WALL (     173 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      18 calls)
+     fftw         :      0.02s CPU      0.03s WALL (    1502 calls)
 
- 
-   This run was terminated on:  17:32:19  17Jul2024            
+     Parallel routines
+
+     PWSCF        :      0.31s CPU      0.36s WALL
+
+
+   This run was terminated on:  10:46:12  14Aug2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

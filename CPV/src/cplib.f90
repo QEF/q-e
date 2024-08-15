@@ -1093,7 +1093,7 @@ subroutine nlinit
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
-                                  dbeta, qq_nt_d
+                                  dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
@@ -1144,9 +1144,7 @@ subroutine nlinit
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
          allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
       END IF
-#ifdef __CUDA
-      ALLOCATE( qq_nt_d(nhm,nhm,nsp) )
-#endif
+      !$acc enter data create (qq_nt)
       !
       !     initialization for vanderbilt species
       !

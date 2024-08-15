@@ -9,8 +9,9 @@
     input_dft='pbe'
  /
  &electrons
+  diago_thr_init = 1.D-5
   diagonalization='cg',
-  conv_thr    = 1.D-15,
+  conv_thr    = 1.D-13,
  /
 ATOMIC_SPECIES
  H 1.007825035 H.pbe-hgh.UPF

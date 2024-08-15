@@ -144,9 +144,7 @@ MODULE oscdft_wfcO
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             CALL calbec(offload_type, npw, vkb, wfcatom, becp)
             IF (use_gpu) THEN
-               !$acc host_data use_device(wfcatom, swfcatom)
                CALL s_psi_acc(npwx, npw, natomwfc, wfcatom, swfcatom)
-               !$acc end host_data
             ELSE
                CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
             END IF

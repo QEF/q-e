@@ -273,6 +273,10 @@ inputs_args = ('Si.scf.in', '1'), ('Si.win', '2'), ('Si.pw2wann.in', '3'), ('Si.
 program = KCW
 inputs_args = ('h2o.scf.in', '1'), ('h2o.kcw-wann2kcw.in', '15'), ('h2o.kcw-screen.in', '16'), ('h2o.kcw-ham.in', '7')
 
+[kcw_wann-nc/]
+program = KCW
+inputs_args = ('Si_nc.scf.in', '1'), ('Si_nc.win', '2'), ('Si_nc.pw2wann.in', '3'), ('Si_nc.win', '4'), ('Si_nc.kcw-wann2kcw.in', '5'), ('Si_nc.kcw-screen.in', '6'), ('Si_nc.kcw-ham.in', '7')
+
 [pp_acf/]
 program = PP
 inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')

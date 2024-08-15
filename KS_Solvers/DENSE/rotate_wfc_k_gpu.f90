@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
-                             npwx, npw, nstart, nbnd, npol, psi_d, evc_d, e_d )
+                             npwx, npw, nstart, nbnd, npol, psi, evc_d, e_d )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
@@ -36,22 +36,23 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   ! number of spin polarizations
   LOGICAL :: overlap
   ! if .FALSE. : S|psi> not needed
-  COMPLEX(DP) :: psi_d(npwx*npol,nstart), evc_d(npwx*npol,nbnd)
+  COMPLEX(DP) :: psi(npwx*npol,nstart), evc_d(npwx*npol,nbnd)
   ! input and output eigenvectors (may overlap)
   REAL(DP)    :: e_d(nbnd)
   ! eigenvalues
 #if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, evc_d, e_d
+  attributes(DEVICE) :: evc_d, e_d
 #endif
   !
   ! ... local variables
   !
   INTEGER :: kdim, kdmx
-  COMPLEX(DP), ALLOCATABLE :: aux_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  !$acc declare device_resident(aux)
   COMPLEX(DP), ALLOCATABLE :: hc_d(:,:), sc_d(:,:), vc_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: aux_d, hc_d, sc_d, vc_d, en_d
+  attributes(DEVICE) :: hc_d, sc_d, vc_d, en_d
 #endif
   INTEGER :: n_start, n_end, my_n, i, j
   !
@@ -74,7 +75,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
      !
   END IF
   !
-  ALLOCATE( aux_d(kdmx, nstart ) )
+  ALLOCATE( aux(kdmx, nstart ) )
   ALLOCATE( hc_d( nstart, nstart) )
   ALLOCATE( sc_d( nstart, nstart) )
   ALLOCATE( vc_d( nstart, nstart) )
@@ -86,16 +87,19 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('rotwfck:hpsi'); !write(*,*) 'start rotwfck:hpsi';FLUSH(6)
-  CALL h_psi_ptr( npwx, npw, nstart, psi_d, aux_d )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   call stop_clock('rotwfck:hpsi') ; !write(*,*) 'stop rotwfck:hpsi';FLUSH(6)
   !
   call start_clock('rotwfck:hc'); !write(*,*) 'start rotwfck:hc';FLUSH(6)
   hc_d=(0.D0,0.D0)
   CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
-  if (n_start .le. n_end) &
-       call ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, &
-                    kdmx, aux_d(1,n_start), kdmx, (0.D0,0.D0), hc_d(1,n_start), nstart )
+  IF (n_start .le. n_end) THEN
+  !$acc host_data use_device(psi, aux)
+    call ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, &
+                 kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), hc_d(1,n_start), nstart )
+  !$acc end host_data
+  END IF
   CALL mp_sum( hc_d, inter_bgrp_comm )
   !
   CALL mp_sum( hc_d, intra_bgrp_comm )
@@ -103,16 +107,22 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   sc_d=(0.D0,0.D0)
   IF ( overlap ) THEN
      !
-     CALL s_psi_ptr( npwx, npw, nstart, psi_d, aux_d )
-     if (n_start .le. n_end) &
-          CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, &
-                      kdmx, aux_d(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
+     IF (n_start .le. n_end) THEN
+       !$acc host_data use_device(psi, aux)
+       CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, &
+                   kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
+       !$acc end host_data
+     END IF
      !
   ELSE
      !
-     if (n_start .le. n_end) &
-          CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, &
-                      kdmx, psi_d(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
+     IF (n_start .le. n_end) THEN
+       !$acc host_data use_device(psi)
+       CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, &
+                   kdmx, psi(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
+       !$acc end host_data
+     END IF
      !
   END IF
   CALL mp_sum( sc_d, inter_bgrp_comm )
@@ -135,19 +145,27 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   ! ...  update the basis set
   !
-  aux_d=(0.D0,0.D0)
-  if (n_start .le. n_end) &
-       CALL ZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi_d(1,n_start), &
-                   kdmx, vc_d(n_start,1), nstart, (0.D0,0.D0), aux_d, kdmx )
-  CALL mp_sum( aux_d, inter_bgrp_comm )
+  !$acc kernels
+  aux=(0.D0,0.D0)
+  !$acc end kernels
+  IF (n_start .le. n_end) THEN
+    !$acc host_data use_device(psi, aux)
+    CALL ZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), &
+                kdmx, vc_d(n_start,1), nstart, (0.D0,0.D0), aux, kdmx )
+    !$acc end host_data
+  END IF
+  !$acc host_data use_device(aux)
+  CALL mp_sum( aux, inter_bgrp_comm )
+  !$acc end host_data
   !
   !
-  !$cuf kernel do(1) <<<*,*>>>
+  !$acc parallel loop collapse(2) 
   DO i=1, nbnd
      DO j=1, kdmx
-       evc_d(j,i) = aux_d(j,i)
+       evc_d(j,i) = aux(j,i)
      END DO
   END DO
+  !$acc end parallel
   !
   call stop_clock('rotwfck:evc') ! ; write(*,*) 'stop rotwfck;evc';FLUSH(6)
   !
@@ -155,7 +173,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   DEALLOCATE( vc_d )
   DEALLOCATE( sc_d )
   DEALLOCATE( hc_d )
-  DEALLOCATE( aux_d )
+  DEALLOCATE( aux )
   call stop_clock('rotwfck'); !write(*,*) 'stop rotwfck';FLUSH(6)
   !call print_clock('rotwfck')
   !call print_clock('rotwfck:hpsi')
