@@ -89,6 +89,7 @@ set(src_ph
     PH/openfilq.f90
     PH/phcom.f90
     PH/ph_restart.f90
+    PH/ph_set_upert.f90
     PH/phescf.f90
     PH/phq_init.f90
     PH/phq_readin.f90
