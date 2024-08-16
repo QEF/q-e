@@ -102,7 +102,6 @@ set(src_ph
     PH/prepare_sym_analysis.f90
     PH/psidspsi.f90
     PH/psymdvscf.f90
-    PH/psyme.f90
     PH/psym_dmag.f90
     PH/psym_dmage.f90
     PH/punch_plot_e.f90
@@ -136,7 +135,6 @@ set(src_ph
     PH/symdvscf.f90
     PH/symdyn_munu.f90
     PH/symdynph_gq.f90
-    PH/syme.f90
     PH/symm.f90
     PH/symmorphic_or_nzb.f90
     PH/swfc.f90
