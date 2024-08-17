@@ -762,7 +762,7 @@ PROGRAM matdyn
         OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
         WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
-           WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
+           WRITE(2, '(10x,4f10.6)')  q(1,n), q(2,n), q(3,n), wq(n)
            WRITE(2,'(6f10.4)') (freq(i,n), i=1,3*nat)
         END DO
         CLOSE(unit=2)
