@@ -7,25 +7,23 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE psymdvscf (nper, irr, dvtosym)
+SUBROUTINE psymdvscf (dvtosym)
   !-----------------------------------------------------------------------
   !! p-symmetrize the potential.
+  !!
+  !! The real space points of dv is distributed, but symmetry may map a point in one
+  !! core to a point in a different core. Hence, gather dvscf in real space, symmetrize,
+  !! and then scatter back.
   !
-  USE kinds,     ONLY : DP
+  USE kinds,            ONLY : DP
+  USE fft_base,         ONLY : dfftp
   USE noncollin_module, ONLY : nspin_mag
-  USE mp_bands,  ONLY : me_bgrp
-  USE fft_base,  ONLY : dfftp
-  USE scatter_mod,  ONLY : cgather_sym
-
-  USE lr_symm_base, ONLY : nsymq, minus_q
+  USE scatter_mod,      ONLY : cgather_sym
+  USE lr_symm_base,     ONLY : nsymq, minus_q, lr_npert
   !
   IMPLICIT NONE
   !
-  INTEGER :: nper
-  !! the number of perturbations
-  INTEGER :: irr
-  !! the representation under consideration
-  COMPLEX(DP) :: dvtosym(dfftp%nnr,nspin_mag,nper)
+  COMPLEX(DP) :: dvtosym(dfftp%nnr, nspin_mag, lr_npert)
   !! the potential to symmetrize
   !
   ! ... local variable
@@ -33,27 +31,30 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
 #if defined (__MPI)
   !
   INTEGER :: i, is, iper, ir3, ioff, ioff_tg, nxyp
-
+  !
   COMPLEX(DP), ALLOCATABLE :: ddvtosym (:,:,:)
   ! the potential to symm
-
-
-  IF (nsymq.EQ.1.AND. (.NOT.minus_q) ) RETURN
+  IF (nsymq == 1 .AND. (.NOT.minus_q) ) RETURN
   CALL start_clock ('psymdvscf')
-
-  ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, nper))
-
-  DO iper = 1, nper
+  !
+  ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, lr_npert))
+  !
+  ! Gather real-space points
+  !
+  DO iper = 1, lr_npert
      DO is = 1, nspin_mag
         CALL cgather_sym (dfftp, dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
-
   ENDDO
-
-  CALL symdvscf (nper, irr, ddvtosym)
-
+  !
+  ! Symmetrize
+  !
+  CALL symdvscf (ddvtosym)
+  !
+  ! Scatter back the real-space points
+  !
   nxyp = dfftp%nr1x * dfftp%my_nr2p
-  DO iper = 1, nper
+  DO iper = 1, lr_npert
      DO is = 1, nspin_mag
         DO ir3 = 1, dfftp%my_nr3p
            ioff    = dfftp%nr1x * dfftp%my_nr2p * (ir3-1)
@@ -63,14 +64,12 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
      ENDDO
   ENDDO
   DEALLOCATE (ddvtosym)
-
+  !
   CALL stop_clock ('psymdvscf')
 #else
-
-  CALL symdvscf (nper, irr, dvtosym)
-
+  !
+  CALL symdvscf(dvtosym)
+  !
 #endif
-
-  RETURN
-
+  !
 END SUBROUTINE psymdvscf

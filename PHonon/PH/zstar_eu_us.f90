@@ -149,7 +149,7 @@ subroutine zstar_eu_us
      !
      call dv_of_drho (dvscf (:, :, ipol), .false.)
   enddo
-  call psyme (dvscf)
+  call psymdvscf(dvscf)
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_3')
