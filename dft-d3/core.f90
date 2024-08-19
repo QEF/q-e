@@ -4028,7 +4028,8 @@ contains
     real(wp) :: res1, res2, gnorm_supercell
 
     if(num) Call errore('pbcgdisp', 'Atom displacement not implemented with numerical forces', 1)
-    if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term', 1)
+    if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term ' // &
+                                 ' (set dftd3_threebody=.false. for phonon calculations)', 1)
 
     ns = shape(g_supercell_)
     g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
