@@ -5,26 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-
-SUBROUTINE cgcudaDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
-#if defined(__CUDA)
-    use cudafor
-    use cublas
-#endif
-    IMPLICIT NONE
-    DOUBLE PRECISION :: ALPHA,BETA
-    INTEGER :: INCX,INCY,LDA,M,N
-    CHARACTER :: TRANS
-    DOUBLE PRECISION :: A(LDA,*),X(*),Y(*)
-#if defined(__CUDA)
-    attributes(device) :: A, X, Y
-#endif
-    !
-    call DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
-    !
-END SUBROUTINE cgcudaDGEMV
-
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
 SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
@@ -87,7 +67,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   ! ... external functions
   !
-  REAL(DP), EXTERNAL :: ksDdot
+  REAL(DP), EXTERNAL :: MYDDOT
   EXTERNAL  hs_1psi_ptr,    s_1psi_ptr 
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
   ! s_1psi( npwx, npw, psi, spsi )
@@ -148,7 +128,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      lagrange = 0.d0
      if(m_start.le.m_end) then
        !$acc host_data use_device(psi, spsi)
-       CALL cgcudaDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange_d(m_start), 1 )
+       CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange_d(m_start), 1 )
        !$acc end host_data
      endif 
      if(m_start.le.m_end) lagrange( m_start:m_end ) = lagrange_d( m_start:m_end )
@@ -202,7 +182,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      ! ... NB:  ddot(2*npw,a,1,b,1) = DBLE( zdotc(npw,a,1,b,1) )
      !
      !$acc host_data use_device(psi, hpsi)
-     e(m) = 2.D0 * ksDdot( npw2, psi(1,m), 1, hpsi, 1 )
+     e(m) = 2.D0 * MYDDOT( npw2, psi(1,m), 1, hpsi, 1 )
      !$acc end host_data
      !print *, 'e(m)', e(m)
      IF ( gstart == 2 ) THEN
@@ -232,8 +212,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
         !$acc host_data use_device(spsi, g, ppsi)
-        es(1) = 2.D0 * ksDdot( npw2, spsi(1), 1, g(1), 1 )
-        es(2) = 2.D0 * ksDdot( npw2, spsi(1), 1, ppsi(1), 1 )
+        es(1) = 2.D0 * MYDDOT( npw2, spsi(1), 1, g(1), 1 )
+        es(2) = 2.D0 * MYDDOT( npw2, spsi(1), 1, ppsi(1), 1 )
         !$acc end host_data
         !
         IF ( gstart == 2 ) THEN
@@ -270,7 +250,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         if(m_start.le.m_end) then
           !$acc host_data use_device(psi, scg)
-          CALL cgcudaDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange_d(m_start), 1 )
+          CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange_d(m_start), 1 )
           !$acc end host_data
         endif
         if(m_start.le.m_end) lagrange( m_start:m_end ) = lagrange_d( m_start:m_end )
@@ -301,7 +281,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
            !$acc host_data use_device(g)
-           gg1 = 2.D0 * ksDdot( npw2, g(1), 1, g0_d(1), 1 )
+           gg1 = 2.D0 * MYDDOT( npw2, g(1), 1, g0_d(1), 1 )
            !$acc end host_data
            IF ( gstart == 2 ) THEN 
               !$acc update self(g)
@@ -328,7 +308,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !$acc end kernels
         !
         !$acc host_data use_device(g)
-        gg = 2.D0 * ksDdot( npw2, g(1), 1, g0_d(1), 1 )
+        gg = 2.D0 * MYDDOT( npw2, g(1), 1, g0_d(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
            !$acc update self(g)
@@ -390,7 +370,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         CALL hs_1psi_ptr( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
         !$acc host_data use_device(cg, scg)
-        cg0 = 2.D0 * ksDdot( npw2, cg(1), 1, scg(1), 1 )
+        cg0 = 2.D0 * MYDDOT( npw2, cg(1), 1, scg(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
            !$acc update self(cg, scg)
@@ -411,7 +391,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
         !$acc host_data use_device(psi, ppsi)
-        a0 = 4.D0 * ksDdot( npw2, psi(1,m), 1, ppsi(1), 1 )
+        a0 = 4.D0 * MYDDOT( npw2, psi(1,m), 1, ppsi(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
            !$acc update self(psi, ppsi)
@@ -425,7 +405,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
         !$acc host_data use_device(cg, ppsi)
-        b0 = 2.D0 * ksDdot( npw2, cg(1), 1, ppsi(1), 1 )
+        b0 = 2.D0 * MYDDOT( npw2, cg(1), 1, ppsi(1), 1 )
         !$acc end host_data 
         IF ( gstart == 2 ) THEN 
            !$acc update self(cg, ppsi)
