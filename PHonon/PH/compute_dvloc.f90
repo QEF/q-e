@@ -149,6 +149,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      deallocate (aux)
      deallocate (auxs)
   endif
+  !$acc end data
   !
   ! Now we compute dV_loc/dtau in real space
   !
