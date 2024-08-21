@@ -172,7 +172,8 @@ SUBROUTINE screen_coeff ()
          iq_ibz = iq
          weight(iq) = 1.D0/nqs  !*nspin ! No SYMM  ! CHECK nspin??? 
       END IF
-      WRITE(stdout, '("iwann= ", i5, " iq = ", i5, " weight = ", f12.8)') iwann, iq, weight(iq)
+      !
+      WRITE(stdout, '(8X, "SYM : iwann= ", i5, " iq = ", i5, " weight = ", f12.8)') iwann, iq, weight(iq)
        !
        ! consider only symmetries respected by wf iwann
        ! in arrays defined in symm_base
