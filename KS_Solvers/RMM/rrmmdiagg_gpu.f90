@@ -297,7 +297,7 @@ CONTAINS
     !
     INTEGER :: ibnd
     !
-    REAL(DP), EXTERNAL :: gpu_DDOT
+    REAL(DP), EXTERNAL :: MYDDOT
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
@@ -324,10 +324,10 @@ CONTAINS
     !$acc host_data use_device(psi, hpsi)
     DO ibnd = ibnd_start, ibnd_end
        !
-       hw(ibnd) = 2._DP * gpu_DDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
+       hw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( gstart == 2 ) &
-          hw(ibnd)= hw(ibnd) - gpu_DDOT( 1, psi(1,ibnd), 1, hpsi(1,ibnd),1)
+          hw(ibnd)= hw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, hpsi(1,ibnd),1)
        !
     END DO
     !$acc end host_data
@@ -341,17 +341,17 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          sw(ibnd) = 2._DP * gpu_DDOT( npw2, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
+          sw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
           !
           IF ( gstart == 2 ) &
-             sw(ibnd)= sw(ibnd) - gpu_DDOT( 1, psi(1,ibnd), 1, spsi(1,ibnd),1)
+             sw(ibnd)= sw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, spsi(1,ibnd),1)
           !
        ELSE
           !
-          sw(ibnd) = 2._DP * gpu_DDOT( npw2, psi(1,ibnd), 1, psi(1,ibnd), 1 )
+          sw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, psi(1,ibnd), 1 )
           !
           IF ( gstart == 2 ) &
-             sw(ibnd )= sw(ibnd) - gpu_DDOT( 1, psi(1,ibnd), 1, psi(1,ibnd),1)
+             sw(ibnd )= sw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, psi(1,ibnd),1)
           !
        END IF
        !
@@ -413,10 +413,10 @@ CONTAINS
        IF ( conv(ibnd) ) CYCLE
        !
        !$acc host_data use_device(psi, hpsi, spsi)
-       CALL DCOPY_gpu( npw2, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
-       CALL DCOPY_gpu( npw2, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL DCOPY_gpu( npw2, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
        !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
@@ -438,15 +438,15 @@ CONTAINS
           !
           er = php(ibnd,kdiis)
           !
-          CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           END IF
           !
@@ -454,19 +454,19 @@ CONTAINS
        !
        er = php(ibnd,idiis)
        !
-       CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       CALL MYDCOPY( npw2, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL DGEMV_gpu( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
                    vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
        !
        IF ( gstart == 2 ) THEN  
@@ -507,21 +507,21 @@ CONTAINS
        !
        DO kdiis = 1, idiis
           !
-          CALL DCOPY_gpu( npw2, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL DCOPY_gpu( npw2, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL DCOPY_gpu( npw2, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL DGEMV_gpu( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
                    vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
        !
        IF ( gstart == 2 ) THEN 
@@ -580,30 +580,30 @@ CONTAINS
              !
              kvr = vr(kdiis) 
              !$acc host_data use_device(psi, hpsi, spsi)
-             CALL DAXPY_gpu( npw2, kvr, phi_d (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
-             CALL DAXPY_gpu( npw2, kvr, hphi_d(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, phi_d (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, hphi_d(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
              IF ( uspp ) &
-             CALL DAXPY_gpu( npw2, kvr, sphi_d(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, sphi_d(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
              !$acc end host_data
              !
              ! ... Residual vectors
              !
              er = php(ibnd,kdiis)
              !
-             CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             CALL MYDCOPY( npw2, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              ELSE
                 !
-                CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              END IF
              !
              !$acc host_data use_device(kpsi)
-             CALL DAXPY_gpu( npw2, kvr, vec1_d(1), 1, kpsi(1,kbnd), 1 )
+             CALL MYDAXPY( npw2, kvr, vec1_d(1), 1, kpsi(1,kbnd), 1 )
              !$acc end host_data
              !
           END DO
@@ -614,10 +614,10 @@ CONTAINS
           !
           norm = SQRT( sw(ibnd) )
           !$acc host_data use_device(psi, hpsi, spsi)
-          CALL DSCAL_gpu( npw2, 1._DP / norm, psi (1,ibnd), 1 )
-          CALL DSCAL_gpu( npw2, 1._DP / norm, hpsi(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, psi (1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, hpsi(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL DSCAL_gpu( npw2, 1._DP / norm, spsi(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, spsi(1,ibnd), 1 )
           !$acc end host_data
           !
           ! ... Residual vectors
@@ -625,21 +625,21 @@ CONTAINS
           er = hw(ibnd)
           !
           !$acc host_data use_device(hpsi, kpsi)
-          CALL DCOPY_gpu( npw2, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
           !$acc end host_data
           !
           IF ( uspp ) THEN
              !
              !$acc host_data use_device(spsi, kpsi)
-             CALL DAXPY_gpu( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL MYDAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
              !$acc end host_data
              !
           ELSE
              !
 !civn: here changed spsi --> psi due to a possible typo in the original version 
-             !CALL DAXPY_gpu( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             !CALL MYDAXPY( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !$acc host_data use_device(psi, kpsi)
-             CALL DAXPY_gpu( npw2, -er, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL MYDAXPY( npw2, -er, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
              !$acc end host_data
              !
           END IF
@@ -819,7 +819,7 @@ CONTAINS
     REAL(DP)              :: c1, c2
     REAL(DP), ALLOCATABLE :: coef(:,:)
     !
-    REAL(DP), EXTERNAL    :: gpu_DDOT
+    REAL(DP), EXTERNAL    :: MYDDOT
 !civn 
     INTEGER :: idx
     REAL(DP) :: ekinj
@@ -989,9 +989,9 @@ CONTAINS
        kbnd = ibnd_index(ibnd)
        !
        !$acc host_data use_device(psi, hpsi, kpsi, hkpsi)
-       php = 2._DP * gpu_DDOT( npw2, psi (1,ibnd), 1, hpsi (1,ibnd), 1 )
-       khp = 2._DP * gpu_DDOT( npw2, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 )
-       khk = 2._DP * gpu_DDOT( npw2, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 )
+       php = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, hpsi (1,ibnd), 1 )
+       khp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 )
+       khk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 )
        !$acc end host_data
        !
        IF ( gstart == 2 ) THEN
@@ -1020,9 +1020,9 @@ CONTAINS
        IF ( uspp ) THEN
           !
           !$acc host_data use_device(psi, spsi, kpsi, skpsi)
-          psp = 2._DP * gpu_DDOT( npw2, psi (1,ibnd), 1, spsi (1,ibnd), 1 )
-          ksp = 2._DP * gpu_DDOT( npw2, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 )
-          ksk = 2._DP * gpu_DDOT( npw2, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 )
+          psp = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, spsi (1,ibnd), 1 )
+          ksp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 )
+          ksk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 )
           !$acc end host_data
           !
           IF ( gstart == 2 ) THEN
@@ -1051,9 +1051,9 @@ CONTAINS
        ELSE
           !
           !$acc host_data use_device(psi, kpsi)
-          psp = 2._DP * gpu_DDOT( npw2, psi (1,ibnd), 1, psi (1,ibnd), 1 )
-          ksp = 2._DP * gpu_DDOT( npw2, kpsi(1,kbnd), 1, psi (1,ibnd), 1 )
-          ksk = 2._DP * gpu_DDOT( npw2, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 )
+          psp = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, psi (1,ibnd), 1 )
+          ksp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, psi (1,ibnd), 1 )
+          ksk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 )
           !$acc end host_data
           !
           IF ( gstart == 2 ) THEN
@@ -1190,16 +1190,16 @@ CONTAINS
        c2 = coef(2,jbnd)
        !
        !$acc host_data use_device(psi, hpsi, spsi, kpsi, hkpsi, skpsi)
-       CALL DSCAL_gpu( npw2, c1, psi (1,ibnd), 1 )
-       CALL DAXPY_gpu( npw2, c2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
+       CALL MYDSCAL( npw2, c1, psi (1,ibnd), 1 )
+       CALL MYDAXPY( npw2, c2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
        !
-       CALL DSCAL_gpu( npw2, c1, hpsi (1,ibnd), 1 )
-       CALL DAXPY_gpu( npw2, c2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
+       CALL MYDSCAL( npw2, c1, hpsi (1,ibnd), 1 )
+       CALL MYDAXPY( npw2, c2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DSCAL_gpu( npw2, c1, spsi (1,ibnd), 1 )
-          CALL DAXPY_gpu( npw2, c2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, c1, spsi (1,ibnd), 1 )
+          CALL MYDAXPY( npw2, c2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
           !
        END IF
        !$acc end host_data

@@ -222,3 +222,168 @@ USE cublas
   return
 end subroutine MYDDOTv3
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine MYDTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  character*1 :: side, uplo, transa, diag 
+  integer :: m, n, lda, ldb 
+  DOUBLE PRECISION :: alpha 
+  DOUBLE PRECISION, dimension(lda, *) :: a 
+  DOUBLE PRECISION, dimension(ldb, *) :: b 
+#if defined(__CUDA)
+  attributes(device) :: a, b 
+  call cublasDTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  
+#endif
+  return
+end subroutine MYDTRSM
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DOUBLE COMPLEX function MYZDOTC(n, zx, incx, zy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  MYZDOTC = cublasZDOTC(n, zx, incx, zy, incy)  
+#endif
+  return
+end function MYZDOTC
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYZSWAP(n, zx, incx, zy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZSWAP(n, zx, incx, zy, incy)  
+#endif
+  return
+END SUBROUTINE MYZSWAP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYZCOPY(n, zx, incx, zy, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx, incy
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZCOPY(n, zx, incx, zy, incy)  
+#endif
+  RETURN
+END SUBROUTINE MYZCOPY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYZAXPY(n, za, zx, incx, zy, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx, incy
+  DOUBLE COMPLEX :: za  
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZAXPY(n, za, zx, incx, zy, incy)  
+#endif
+  RETURN
+END SUBROUTINE MYZAXPY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYZDSCAL(n, da, zx, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx
+  DOUBLE PRECISION :: da
+  DOUBLE COMPLEX, dimension(*) :: zx
+#if defined(__CUDA)
+  attributes(device) :: zx
+  CALL cublasZDSCAL(n, da, zx, incx)
+#endif
+  RETURN
+END SUBROUTINE MYZDSCAL
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYZSCAL(n, za, zx, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx
+  DOUBLE COMPLEX :: za
+  DOUBLE COMPLEX, dimension(*) :: zx
+#if defined(__CUDA)
+  attributes(device) :: zx
+  CALL cublasZSCAL(n, za, zx, incx)
+#endif
+  RETURN
+END SUBROUTINE MYZSCAL
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYDCOPY(n, x, incx, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  INTEGER :: n, incx, incy
+  DOUBLE PRECISION, INTENT(IN)   :: x(*)
+  DOUBLE PRECISION, INTENT(OUT)  :: y(*)
+#if defined(__CUDA)
+  attributes(device) :: x, y
+  call cublasDCOPY(n, x, incx, y, incy)
+#endif
+  RETURN
+END SUBROUTINE MYDCOPY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYDAXPY(n, a, x, incx, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  INTEGER :: n, incx, incy
+  DOUBLE PRECISION, INTENT(IN)  :: a
+  DOUBLE PRECISION, INTENT(IN)  :: x(*) 
+  DOUBLE PRECISION, INTENT(OUT) :: y(*) 
+#if defined(__CUDA)
+  attributes(device) :: x, y
+  call cublasDAXPY( n, a, x, incx, y, incy)
+#endif
+  RETURN
+END SUBROUTINE MYDAXPY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYDSCAL(n, a, x, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  integer :: n, incx
+  DOUBLE PRECISION :: a
+  DOUBLE PRECISION, dimension(*)  :: x
+#if defined(__CUDA)
+  attributes(device) :: x
+  call cublasDSCAL(n, a, x, incx)
+#endif
+  RETURN
+END SUBROUTINE MYDSCAL
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYDSWAP(n, dx, incx, dy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  REAL(8), dimension(*) :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy 
+  CALL cublasDSWAP(n, dx, incx, dy, incy)  
+#endif
+  return
+END SUBROUTINE MYDSWAP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
