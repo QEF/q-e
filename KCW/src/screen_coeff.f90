@@ -123,7 +123,6 @@ SUBROUTINE screen_coeff ()
   nsym_old = nsym
   !
   !IF(irr_bz) CALL read_qlist_ibz()
-
   DO iq = iq_start, nqs
       !! For each q in the mesh 
     !
@@ -311,7 +310,6 @@ SUBROUTINE screen_coeff ()
     !
   ENDDO ! qpoints
   !
-  CALL kcw_deallocate_symmetry_arrays()
   !
   WRITE(stdout,'(/)')
   WRITE( stdout, '(5X,"INFO: LR CALCULATION ... DONE")')
@@ -353,6 +351,8 @@ SUBROUTINE screen_coeff ()
   !
   WRITE(stdout, '(3/)')
   IF ( i_orb == -1 ) CLOSE (876)
+  !
+  CALL kcw_deallocate_symmetry_arrays()
   !
 9010 FORMAT(/, 8x, "iq =", i4, 3x, "iwann =", i4, 3x, "rPi_q =", 2f15.8, 3x, & 
                "rPi_q_RS =", 2f15.8, 3x, "uPi_q =", 2f15.8, 3x, "Self Hartree =", 2f15.8)
