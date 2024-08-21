@@ -106,7 +106,7 @@ SUBROUTINE kcw_symdvscf (dvtosym)
              !
           enddo
           !
-          WRITE(*, *) SUM( ABS( dvtosym(:,:,:,is) - dvsym(:,:,:) ) )
+          !WRITE(*, *) SUM( ABS( dvtosym(:,:,:,is) - dvsym(:,:,:) ) )
           dvtosym(:,:,:,is) = dvsym(:,:,:)
           !
        enddo

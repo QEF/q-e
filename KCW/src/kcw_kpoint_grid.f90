@@ -36,14 +36,15 @@ SUBROUTINE kcw_kpoint_grid()
   ALLOCATE( ibz2fbz( mp1*mp2*mp3, num_wann))
   ALLOCATE( fbz2ibz( mp1*mp2*mp3, num_wann))  
   !
-  WRITE(stdout,*) "Finding symmetries of wannier functions......"
+  !WRITE(stdout,*) "Finding symmetries of wannier functions......"
+  WRITE(stdout,'(/, 5X, "INFO: Finding the IBZ")') 
   DO iwann = 1, num_wann
     nsym_w_iwann = nsym_w(iwann)
     s_w_iwann(:,:,:) = s_w(:,:,:,iwann)
     CALL kpoint_grid ( nsym_w_iwann, time_reversal, .false., s_w_iwann, 0, bg, &
                        mp1*mp2*mp3, 0,0,0, mp1,mp2,mp3, &
                        nqstot_ibz(iwann), xq_ibz_iwann, wq_ibz_iwann )
-    WRITE(*,*) "IWANN = ", iwann, "nqstot_ibz(iwann)", nqstot_ibz(iwann) 
+    WRITE(stdout,'(7X, "iwann =", I5, 3X, "nqstot_ibz =", I5, 3X)') iwann, nqstot_ibz(iwann) 
     !
     !in general, kpoint_grid gives points in other BZ, we find the index
     !in our original FBZ (xk) so that we are able to map xq in xk
