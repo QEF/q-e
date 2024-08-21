@@ -93,6 +93,7 @@ subroutine addcore (uact, drhoc)
   endif ! nlcc_any
   !
   !$acc exit data copyout(drhoc)
+  !$acc end data
   !
   CALL stop_clock_gpu('addcore')
   !
