@@ -162,7 +162,8 @@ SUBROUTINE screen_coeff ()
       !
       IF(irr_bz) THEN
         IF( fbz2ibz(iq, iwann) .eq. -1 ) THEN
-          WRITE(stdout, *) "iq=", iq, "NOT DONE for wf ", iwann, "as fbz2ibz is -1"
+                WRITE(stdout, '(8X, "SYM : iq =", i5, 3x, "NOT DONE for WF =", i5, 3x, &
+                        "as bz2ibz is -1")') iq, iwann
           CYCLE
         END IF
         CALL reset_symmetry_op(iwann) 
