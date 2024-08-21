@@ -205,13 +205,6 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
      !
      DO isolv = 1, nsolv
        !
-       !  Change the sign of the magnetic field if required
-       !
-       IF (isolv == 2) THEN 
-          IF ( iter > 1 ) dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :) 
-          vrs(:, 2:4) = -vrs(:, 2:4)
-       ENDIF    
-       !
        IF (iter == 1 ) THEN
           thresh = 1.d-6
        ELSE
@@ -221,25 +214,15 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
        ! 
        IF ( new ) THEN 
          !
-         IF (noncolin) THEN
-            CALL sternheimer_kernel(iter==1, isolv==2, 1, lrdvwfc, iudvwfc, &
-             thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
-             dbecsum_nc(:,:,:,:,:,isolv))
-         ELSE
-            CALL sternheimer_kernel(iter==1, .FALSE., 1, lrdvwfc, iudvwfc, &
-            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum)
-
-         ENDIF
+         CALL sternheimer_kernel(iter==1, isolv==2, 1, lrdvwfc, iudvwfc, &
+         thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
+         dbecsum_nc(:,:,:,:,:,isolv))
+         !
        ELSE
          ! NsC: NOT UPDATED to NC case. Anyway not used anymore
          CALL sternheimer_kernel_old(iter==1, 1, i_ref, lrdvwfc, iudvwfc, &
              thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum ,delta_vg)
        ENDIF
-       !
-       IF (isolv == 2) THEN 
-          IF ( iter > 1 ) dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :) 
-          vrs(:, 2:4) = -vrs(:, 2:4)
-       ENDIF    
        !
      ENDDO
      !

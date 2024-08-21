@@ -285,7 +285,7 @@ CONTAINS
     !
     INTEGER :: ibnd
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC_gpu
+    COMPLEX(DP), EXTERNAL :: MYZDOTC
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
@@ -312,7 +312,7 @@ CONTAINS
     !$acc host_data use_device(psi, hpsi)
     DO ibnd = ibnd_start, ibnd_end
        !
-       hw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
+       hw(ibnd) = DBLE( MYZDOTC( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
        !
     END DO
     !$acc end host_data
@@ -326,11 +326,11 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          sw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi(1,ibnd), 1, spsi(1,ibnd), 1 ) )
+          sw(ibnd) = DBLE( MYZDOTC( kdim, psi(1,ibnd), 1, spsi(1,ibnd), 1 ) )
           !
        ELSE
           !
-          sw(ibnd) = DBLE( ZDOTC_gpu( kdim, psi(1,ibnd), 1, psi(1,ibnd), 1 ) )
+          sw(ibnd) = DBLE( MYZDOTC( kdim, psi(1,ibnd), 1, psi(1,ibnd), 1 ) )
           !
        END IF
        !
@@ -394,10 +394,10 @@ CONTAINS
        IF ( conv(ibnd) ) CYCLE
        !
        !$acc host_data use_device(psi, hpsi, spsi)
-       CALL ZCOPY_gpu( kdim, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
-       CALL ZCOPY_gpu( kdim, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
+       CALL MYZCOPY( kdim, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
+       CALL MYZCOPY( kdim, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL ZCOPY_gpu( kdim, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       CALL MYZCOPY( kdim, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
        !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
@@ -419,15 +419,15 @@ CONTAINS
           !
           ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
           !
-          CALL ZCOPY_gpu( kdim, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYZCOPY( kdim, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL ZAXPY_gpu( kdim, -ec, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYZAXPY( kdim, -ec, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL ZAXPY_gpu( kdim, -ec, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYZAXPY( kdim, -ec, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           END IF
           !
@@ -435,19 +435,19 @@ CONTAINS
        !
        ec = CMPLX( php(ibnd,idiis), 0._DP, kind=DP )
        !
-       CALL ZCOPY_gpu( kdim, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       CALL MYZCOPY( kdim, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL ZAXPY_gpu( kdim, -ec, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZAXPY( kdim, -ec, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL ZAXPY_gpu( kdim, -ec, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZAXPY( kdim, -ec, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL ZGEMV_gpu( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
+       CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
                    vec1_d(1), 1, ZERO, tc_d(1,jbnd), 1 )
        !
     END DO
@@ -482,21 +482,21 @@ CONTAINS
        !
        DO kdiis = 1, idiis
           !
-          CALL ZCOPY_gpu( kdim, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYZCOPY( kdim, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL ZCOPY_gpu( kdim, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZCOPY( kdim, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL ZCOPY_gpu( kdim, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZCOPY( kdim, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL ZGEMV_gpu( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
+       CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
                    vec1_d(1), 1, ZERO, tc_d(1,jbnd), 1 )
        !
     END DO
@@ -550,29 +550,29 @@ CONTAINS
              kvc = vc(kdiis) 
              !
              !$acc host_data use_device(psi, hpsi, spsi)
-             CALL ZAXPY_gpu( kdim, kvc, phi_d (1,ibnd,kdiis), 1, psi(1,ibnd), 1 )
-             CALL ZAXPY_gpu( kdim, kvc, hphi_d (1,ibnd,kdiis), 1, hpsi (1,ibnd), 1 )
-             IF (uspp) CALL ZAXPY_gpu( kdim, kvc, sphi_d (1,ibnd,kdiis), 1, spsi (1,ibnd), 1 )
+             CALL MYZAXPY( kdim, kvc, phi_d (1,ibnd,kdiis), 1, psi(1,ibnd), 1 )
+             CALL MYZAXPY( kdim, kvc, hphi_d (1,ibnd,kdiis), 1, hpsi (1,ibnd), 1 )
+             IF (uspp) CALL MYZAXPY( kdim, kvc, sphi_d (1,ibnd,kdiis), 1, spsi (1,ibnd), 1 )
              !$acc end host_data
              !
              ! ... Residual vectors
              !
              ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
              !
-             CALL ZCOPY_gpu( kdim, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             CALL MYZCOPY( kdim, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL ZAXPY_gpu( kdim, -ec, sphi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
+                CALL MYZAXPY( kdim, -ec, sphi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
                 !
              ELSE
                 !
-                CALL ZAXPY_gpu( kdim, -ec, phi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
+                CALL MYZAXPY( kdim, -ec, phi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
                 !
              END IF
              !
              !$acc host_data use_device(kpsi)
-             CALL ZAXPY_gpu( kdim, kvc, vec1_d (1), 1, kpsi (1,kbnd), 1 )
+             CALL MYZAXPY( kdim, kvc, vec1_d (1), 1, kpsi (1,kbnd), 1 )
              !$acc end host_data
              !
           END DO
@@ -583,10 +583,10 @@ CONTAINS
           !
           norm = SQRT( sw(ibnd) )
           !$acc host_data use_device(psi, hpsi, spsi)
-          CALL ZDSCAL_gpu( kdim, 1._DP / norm, psi (1,ibnd), 1 )
-          CALL ZDSCAL_gpu( kdim, 1._DP / norm, hpsi(1,ibnd), 1 )
+          CALL MYZDSCAL( kdim, 1._DP / norm, psi (1,ibnd), 1 )
+          CALL MYZDSCAL( kdim, 1._DP / norm, hpsi(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL ZDSCAL_gpu( kdim, 1._DP / norm, spsi(1,ibnd), 1 )
+          CALL MYZDSCAL( kdim, 1._DP / norm, spsi(1,ibnd), 1 )
           !$acc end host_data
           !
           ! ... Residual vectors
@@ -594,15 +594,15 @@ CONTAINS
           ec = CMPLX( hw(ibnd), 0._DP, kind=DP )
           !
           !$acc host_data use_device(psi, spsi, hpsi, kpsi)
-          CALL ZCOPY_gpu( kdim, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          CALL MYZCOPY( kdim, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL ZAXPY_gpu( kdim, -ec, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL MYZAXPY( kdim, -ec, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
              !
           ELSE
              !
-             CALL ZAXPY_gpu( kdim, -ec, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL MYZAXPY( kdim, -ec, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
              !
           END IF
           !$acc end host_data
@@ -766,7 +766,7 @@ CONTAINS
     COMPLEX(DP)           :: z1, z2
     REAL(DP), ALLOCATABLE :: coef(:,:)
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC_gpu
+    COMPLEX(DP), EXTERNAL :: MYZDOTC
     !
     REAL(DP) :: ekinj
     INTEGER :: idx
@@ -901,21 +901,21 @@ CONTAINS
        kbnd = ibnd_index(ibnd)
        !
        !$acc host_data use_device(psi, hpsi, spsi, kpsi, hkpsi, skpsi)
-       php = DBLE( ZDOTC_gpu( kdim, psi (1,ibnd), 1, hpsi (1,ibnd), 1 ) )
-       khp = DBLE( ZDOTC_gpu( kdim, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 ) )
-       khk = DBLE( ZDOTC_gpu( kdim, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 ) )
+       php = DBLE( MYZDOTC( kdim, psi (1,ibnd), 1, hpsi (1,ibnd), 1 ) )
+       khp = DBLE( MYZDOTC( kdim, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 ) )
+       khk = DBLE( MYZDOTC( kdim, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 ) )
        !
        IF ( uspp ) THEN
           !
-          psp = DBLE( ZDOTC_gpu( kdim, psi (1,ibnd), 1, spsi (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC_gpu( kdim, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 ) )
-          ksk = DBLE( ZDOTC_gpu( kdim, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 ) )
+          psp = DBLE( MYZDOTC( kdim, psi (1,ibnd), 1, spsi (1,ibnd), 1 ) )
+          ksp = DBLE( MYZDOTC( kdim, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 ) )
+          ksk = DBLE( MYZDOTC( kdim, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 ) )
           !
        ELSE
           !
-          psp = DBLE( ZDOTC_gpu( kdim, psi (1,ibnd), 1, psi (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC_gpu( kdim, kpsi(1,kbnd), 1, psi (1,ibnd), 1 ) )
-          ksk = DBLE( ZDOTC_gpu( kdim, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 ) )
+          psp = DBLE( MYZDOTC( kdim, psi (1,ibnd), 1, psi (1,ibnd), 1 ) )
+          ksp = DBLE( MYZDOTC( kdim, kpsi(1,kbnd), 1, psi (1,ibnd), 1 ) )
+          ksk = DBLE( MYZDOTC( kdim, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 ) )
           !
        END IF
        !$acc end host_data
@@ -1029,16 +1029,16 @@ CONTAINS
        z2 = CMPLX( coef(2,jbnd), 0._DP, kind=DP )
        !
        !$acc host_data use_device(psi, hpsi, spsi, kpsi, hkpsi, skpsi)
-       CALL ZSCAL_gpu( kdim, z1, psi (1,ibnd), 1 )
-       CALL ZAXPY_gpu( kdim, z2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
+       CALL MYZSCAL( kdim, z1, psi (1,ibnd), 1 )
+       CALL MYZAXPY( kdim, z2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
        !
-       CALL ZSCAL_gpu( kdim, z1, hpsi (1,ibnd), 1 )
-       CALL ZAXPY_gpu( kdim, z2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
+       CALL MYZSCAL( kdim, z1, hpsi (1,ibnd), 1 )
+       CALL MYZAXPY( kdim, z2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL ZSCAL_gpu( kdim, z1, spsi (1,ibnd), 1 )
-          CALL ZAXPY_gpu( kdim, z2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
+          CALL MYZSCAL( kdim, z1, spsi (1,ibnd), 1 )
+          CALL MYZAXPY( kdim, z2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
           !
        END IF
        !$acc end host_data

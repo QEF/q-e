@@ -19,6 +19,8 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program d3hes
 		(3) run phonon
 
           Please note that filhess in d3hess input and dftd3_hess in phonon input, if given, should match.
+          Please also note that second derivatives of the three-body term of d3 dispersion are not implemented, 
+          and phonon calculations with d3 should be run with dftd3_threebody=.false. in the SCF.  
 
         @b {Structure of the input data:}
 	============================

@@ -3,9 +3,9 @@ add_subdirectory(PP)
 
 ###########################################################
 
-qe_install_targets(qe_kcw qe_kcw_exe qe_kcwpp_sh_exe qe_kcwpp_interp_exe)
+qe_install_targets(qe_kcw qe_kcw_exe qe_kcwpp_sh_exe qe_kcwpp_interp_exe qe_kcwpp_merge_wann_exe)
 
 add_custom_target(
     kcw
-    DEPENDS pw qe_pp_pw2wannier90_exe w90 qe_kcw_exe qe_kcwpp_sh_exe qe_kcwpp_interp_exe
+    DEPENDS pw qe_pp_pw2wannier90_exe w90 qe_kcw_exe qe_kcwpp_sh_exe qe_kcwpp_interp_exe qe_kcwpp_merge_wann_exe
     COMMENT "Koopmans spectral functionals")
