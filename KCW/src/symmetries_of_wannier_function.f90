@@ -64,11 +64,11 @@ SUBROUTINE symmetries_of_wannier_function()
   ALLOCATE( centers(3,num_wann) )
   ALLOCATE(cx(3))
   !
-  WRITE( stdout, '(5X, "INFO: Checking Symmetry of the WFs")')
-  WRITE( stdout, '(7X, "INFO: nkstot=", I5, 3X, "nsym=", I5, 3X, "num_wann=", I5)') nkstot, nsym,num_wann
+  WRITE( stdout, '(5X, "SYM : Checking Symmetry of the WFs")')
+  WRITE( stdout, '(7X, "SYM : nkstot=", I5, 3X, "nsym=", I5, 3X, "num_wann=", I5)') nkstot, nsym,num_wann
   !
   !get wannier centres in lattice coordinates
-  WRITE(stdout, '(7X, "INFO: read_wannier_centers ...")', advance='no')
+  WRITE(stdout, '(7X, "SYM : read_wannier_centers ...")', advance='no')
   CALL read_wannier_centers()
   WRITE(stdout, '(" DONE")')
   !
@@ -140,7 +140,7 @@ SUBROUTINE symmetries_of_wannier_function()
   !
   DO iwann=1, num_wann
     !
-    WRITE(stdout, '(/, 7X, "INFO: Checking WF #", I5)') iwann
+    WRITE(stdout, '(/, 7X, "SYM : Checking WF #", I5)') iwann
     !
     DO isym=1, nsym
       !
