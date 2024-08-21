@@ -67,6 +67,7 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
   !IF (nrot .gt. 1) newgrid = reset_grid ( 2, 2, 2, 0, 0, 0  )
   !modenum = 0
   setup_pw = (.NOT.lgamma)
+  IF(irr_bz) setup_pw = .TRUE.
   !
   IF (noncolin.AND.domag) setup_pw=.true. !! NsC need to check this is needed (see comment in PH/prepare_q.f90)
   !
@@ -98,7 +99,6 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
     !
   ENDIF
   !
-  IF(irr_bz) setup_pw = .TRUE.
   do_band=.TRUE.
   !
   xq_ = x_q(:,iq)
