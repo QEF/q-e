@@ -17,7 +17,7 @@ SUBROUTINE psymdvscf (dvtosym)
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
-  USE noncollin_module, ONLY : nspin_mag
+  USE noncollin_module, ONLY : nspin_mag, noncolin, domag
   USE scatter_mod,      ONLY : cgather_sym
   USE lr_symm_base,     ONLY : nsymq, minus_q, lr_npert
   !
@@ -71,5 +71,7 @@ SUBROUTINE psymdvscf (dvtosym)
   CALL symdvscf(dvtosym)
   !
 #endif
+  !
+  IF (noncolin .AND. domag) CALL psym_dmag(dvtosym)
   !
 END SUBROUTINE psymdvscf

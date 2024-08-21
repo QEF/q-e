@@ -233,7 +233,6 @@ subroutine solve_e
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
      if (.not.lgamma_gamma) then
         call psymdvscf(dvscfout)
-        IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
      endif
      !
      !   save the symmetrized linear charge response to file

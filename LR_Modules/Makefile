@@ -43,7 +43,9 @@ set_intq_nc.o \
 lr_sym_mod.o \
 sym_def.o \
 psymdvscf.o \
+psym_dmag.o \
 symdvscf.o \
+sym_dmag.o \
 orthogonalize.o \
 setup_nscf.o \
 set_dbecsum_nc.o \

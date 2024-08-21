@@ -116,8 +116,6 @@ print_clock_ph.o \
 prepare_q.o \
 prepare_sym_analysis.o \
 psidspsi.o \
-psym_dmag.o \
-psym_dmage.o \
 punch_plot_e.o \
 q_points.o \
 q_points_wannier.o \
@@ -143,8 +141,6 @@ solve_linter.o \
 stop_ph.o \
 summarize.o \
 sym_and_write_zue.o \
-sym_dmag.o \
-sym_dmage.o \
 symdyn_munu.o \
 symdynph_gq.o \
 symm.o \

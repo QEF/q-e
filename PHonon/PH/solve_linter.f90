@@ -467,7 +467,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (.not.lgamma_gamma) THEN
         CALL psymdvscf(drhoscfh)
-        IF ( noncolin.and.domag ) CALL psym_dmag( npe, irr, drhoscfh)
         IF (okpaw) THEN
            IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, npertx,irotmq,rtau,xq,tmq)
            CALL PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)

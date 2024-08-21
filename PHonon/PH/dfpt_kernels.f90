@@ -87,8 +87,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !!    1. dnsq_scf : calculating response occupation matrix
    !!    2. addusddens / addusddense : USPP contribution to drho
    !!    3. becsumort : alphasum contribution to dbecsum
-   !!    4. Symmetrization of drhoh and dbecsum
-   !!    5. PAW desymmetrize, ... : Update some USPP/PAW stuff
+   !!    4. PAW related stuff. symmetrization, factor of 2, ...
    !! The plan is to get rid of all these branches by designing a generic subroutine, or
    !! if that is not feasible, by using callback arguments.
    !!
@@ -374,16 +373,6 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       !
       IF (.NOT. lgamma_gamma) THEN
          CALL psymdvscf(drhop)
-         !
-         IF (noncolin .AND. domag) THEN
-            IF (option == 'phonon') THEN
-               CALL psym_dmag(npert, irr, drhop)
-            ELSEIF (option == 'efield') THEN
-               CALL psym_dmage(drhop)
-            ELSE
-               CALL errore('dfpt_kernel', 'Unknown option' // TRIM(option), 1)
-            ENDIF
-         ENDIF
          !
          IF (okpaw) THEN
             IF (option == 'phonon') THEN

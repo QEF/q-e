@@ -116,8 +116,10 @@ subroutine print_clock_ph
 
 #if defined(__MPI)
   call print_clock ('psymdvscf')
+  call print_clock ('psym_dmag')
 #else
   call print_clock ('symdvscf')
+  call print_clock ('sym_dmag')
 #endif
   call print_clock ('newdq')
   call print_clock ('adddvscf')
