@@ -135,7 +135,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
            aux2 (ir) = aux2 (ir) * dvlocin (ir)
         enddo
         !
-        ! and finally dV_loc/dtau * psi is transformed in reciprocal space
+        !  and finally dV_loc/dtau * psi is transformed in reciprocal space
         !
         !$acc host_data use_device(aux2)
         CALL fwfft ('Wave', aux2, dffts)
