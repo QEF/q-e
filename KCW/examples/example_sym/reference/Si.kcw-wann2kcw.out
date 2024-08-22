@@ -10,14 +10,14 @@
 
        Koopmans functional implementation based on DFPT; please cite this program as
 
-          N.Colonna, R. De Gannaro, E. Linscott, and N. Marzari, arXiv:2202.08155   
+        N.Colonna, R. De Gannaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.1 starts on  2Sep2022 at 13: 1:41 
-        Git branch: restructure_solvelinter
-        Last git commit: aa64910deb7f06913952b1cdf4e50c542c61c4d2-dirty
-        Last git commit date: Fri Sep 2 11:16:23 2022 +0200
-        Last git commit subject: Update input_summary KCW
+     Program KCW v.7.3.1 starts on 22Aug2024 at 13:59:35 
+        Git branch: SAWF
+        Last git commit: 58d7a281a27cd18cbc7cd55a4ae07bb41285c63f-dirty
+        Last git commit date: Wed Aug 21 20:38:11 2024 +0200
+        Last git commit subject: Label SYM introduced in output to mark symmetry re
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -28,11 +28,12 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on    12 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       4
-     1537 MiB available memory on the printing compute node when the environment starts
+     K-points division:     npool     =       4
+     R & G space division:  proc/nbgrp/npool/nimage =       3
+     216927 MiB available memory on the printing compute node when the environment starts
  
 
      KCW INPUT SUMMARY 
@@ -40,18 +41,21 @@
 
       CONTROL 
        # title               =       W2K Silicon
-       # out_dir             =/home/nicola/Scriv
+       # out_dir             =/home/colonna_n/CO
        # prefix              =                Si
        # calculation         =          wann2kcw
        # kcw_iverbosity      =                 2
        # kcw_at_ks           =                 F
-       # MP grid             =    -1    -1    -1
+       # MP grid             =     2     2     2
        # spin_component      =                 1
        # homo_only           =                 F
        # read_unitary_matrix =                 T
        # check_ks            =                 T
        # l_vcut              =                 F
        # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
+       # irr_bz              =                 T
 
       WANNIER 
        # seedname            =                Si
@@ -66,7 +70,7 @@
 
      Reading xml data from directory:
 
-     /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si.save/
+     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PBE
@@ -78,8 +82,8 @@
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min          73      73     22                  821      821     152
-     Max          74      74     23                  823      823     153
+     Min          98      98     30                 1095     1095     202
+     Max          99      99     31                 1096     1096     204
      Sum         295     295     91                 3287     3287     609
  
      Using Slab Decomposition
@@ -104,16 +108,16 @@
 
         Rotated Occupation Matrix (ROM) ik=    1   xk =  0.0000  0.0000  0.0000
 
-          1.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 
-        Trace   4.000000000064796
+        Trace   3.999999999809255
         ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
 
         KS Hamiltonian calculation at k=      0.0000      0.0000      0.0000   ...    DONE 
@@ -123,16 +127,16 @@
 
         Rotated Occupation Matrix (ROM) ik=    2   xk = -0.5000  0.5000 -0.5000
 
-          1.0000 -0.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          1.0000 -0.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 
-        Trace   3.999999999974911
+        Trace   3.999999999872709
         ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
 
         KS Hamiltonian calculation at k=     -0.5000      0.5000     -0.5000   ...    DONE 
@@ -142,63 +146,6 @@
 
         Rotated Occupation Matrix (ROM) ik=    3   xk =  0.5000  0.5000  0.5000
 
-          1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-
-        Trace   4.000000000063085
-        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
-
-        KS Hamiltonian calculation at k=      0.5000      0.5000      0.5000   ...    DONE 
-
-        WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-        PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
-
-        Rotated Occupation Matrix (ROM) ik=    4   xk =  0.0000  1.0000  0.0000
-
-          1.0000  0.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-
-        Trace   4.000000000135893
-        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
-
-        KS Hamiltonian calculation at k=      0.0000      1.0000      0.0000   ...    DONE 
-
-        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-
-        Rotated Occupation Matrix (ROM) ik=    5   xk = -0.5000 -0.5000  0.5000
-
-          1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-
-        Trace   3.999999999909298
-        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
-
-        KS Hamiltonian calculation at k=     -0.5000     -0.5000      0.5000   ...    DONE 
-
-        WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-        PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
-
-        Rotated Occupation Matrix (ROM) ik=    6   xk = -1.0000  0.0000  0.0000
-
           1.0000  0.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
          -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000
@@ -208,51 +155,32 @@
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
           0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 
-        Trace   3.999999999886972
+        Trace   3.999999999719611
         ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
 
-        KS Hamiltonian calculation at k=     -1.0000      0.0000      0.0000   ...    DONE 
-
-        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-
-        Rotated Occupation Matrix (ROM) ik=    7   xk =  0.0000  0.0000  1.0000
-
-          1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  1.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-
-        Trace   3.999999999978129
-        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
-
-        KS Hamiltonian calculation at k=      0.0000      0.0000      1.0000   ...    DONE 
-
-        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-
-        Rotated Occupation Matrix (ROM) ik=    8   xk = -0.5000  0.5000  0.5000
-
-          1.0000 -0.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-         -0.0000  0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
-
-        Trace   4.000000000038209
-        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
-
-        KS Hamiltonian calculation at k=     -0.5000      0.5000      0.5000   ...    DONE 
+        KS Hamiltonian calculation at k=      0.5000      0.5000      0.5000   ...    DONE 
 
         WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
         PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
+
+        Rotated Occupation Matrix (ROM) ik=    4   xk =  0.0000  1.0000  0.0000
+
+          1.0000  0.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   4.000000000124873
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=      0.0000      1.0000      0.0000   ...    DONE 
+
+        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
+        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
 
         INFO: Performing a check on the eigenvalues of the rotated KS Hamilotnian ... DONE
 
@@ -262,6 +190,14 @@
      INFO: PREPARING THE KCW CALCULATION ...
 
      INFO: Compute Wannier-orbital Densities ...
+
+     INFO: Coulomb q+G=0 treatment:
+     INFO: Divergence            none    
+     INFO: q-grid dimension         2   2   2
+     INFO: cell volume               270.256360799503
+     INFO: Gamma Extrapolation       F
+     INFO: extrapolation q->0 term not estimated
+     INFO: Bare Coulomb q+G=0            0.00000E+00
 
         ==============================================================================
         iq =     1
@@ -435,39 +371,163 @@
      INFO: PREPARING THE KCW CALCULATION ... DONE
 
 
+     SYM : Checking Symmetry of the WFs
+       SYM : nkstot=   16   nsym=   48   num_wann=    8
+       SYM : read_wannier_centers ... DONE
+             Centers of wannier functions (crys)...
+             iwann=    1   centers = (     -0.124999999792,      0.125000001634,      0.125000001634,)
+             iwann=    2   centers = (      0.125000001634,     -0.125000001634,      0.124999999792,)
+             iwann=    3   centers = (      0.124999999792,      0.125000001634,     -0.125000001634,)
+             iwann=    4   centers = (     -0.125000001634,     -0.125000001634,     -0.125000001634,)
+             iwann=    5   centers = (     -0.125057405431,     -0.125057169747,     -0.125057256287,)
+             iwann=    6   centers = (     -0.125057171588,      0.125057147651,      0.125057143969,)
+             iwann=    7   centers = (      0.125057436733,      0.125057558257,     -0.125057410955,)
+             iwann=    8   centers = (      0.125057103461,     -0.125057167905,      0.125057061111,)
+
+       SYM : Checking WF #    1
+             isym =    1       RESPECTED
+             isym =    5       RESPECTED
+             isym =    9       RESPECTED
+             isym =   14       RESPECTED
+             isym =   18       RESPECTED
+             isym =   23       RESPECTED
+             isym =   25       RESPECTED
+             isym =   29       RESPECTED
+             isym =   33       RESPECTED
+             isym =   38       RESPECTED
+             isym =   42       RESPECTED
+             isym =   47       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =    12
+
+       SYM : Checking WF #    2
+             isym =    1       RESPECTED
+             isym =   20       RESPECTED
+             isym =   22       RESPECTED
+             isym =   29       RESPECTED
+             isym =   34       RESPECTED
+             isym =   37       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =     6
+
+       SYM : Checking WF #    3
+             isym =    1       RESPECTED
+             isym =   19       RESPECTED
+             isym =   24       RESPECTED
+             isym =   30       RESPECTED
+             isym =   33       RESPECTED
+             isym =   37       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =     6
+
+       SYM : Checking WF #    4
+             isym =    1       RESPECTED
+             isym =   17       RESPECTED
+             isym =   21       RESPECTED
+             isym =   30       RESPECTED
+             isym =   34       RESPECTED
+             isym =   38       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =     6
+
+       SYM : Checking WF #    5
+             isym =    1       RESPECTED
+             isym =   17       RESPECTED
+             isym =   21       RESPECTED
+             isym =   30       RESPECTED
+             isym =   34       RESPECTED
+             isym =   38       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =     6
+
+       SYM : Checking WF #    6
+             isym =    1       RESPECTED
+             isym =    5       RESPECTED
+             isym =    9       RESPECTED
+             isym =   14       RESPECTED
+             isym =   18       RESPECTED
+             isym =   23       RESPECTED
+             isym =   25       RESPECTED
+             isym =   29       RESPECTED
+             isym =   33       RESPECTED
+             isym =   38       RESPECTED
+             isym =   42       RESPECTED
+             isym =   47       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =    12
+
+       SYM : Checking WF #    7
+             isym =    1       RESPECTED
+             isym =   19       RESPECTED
+             isym =   24       RESPECTED
+             isym =   30       RESPECTED
+             isym =   33       RESPECTED
+             isym =   37       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =     6
+
+       SYM : Checking WF #    8
+             isym =    1       RESPECTED
+             isym =   20       RESPECTED
+             isym =   22       RESPECTED
+             isym =   29       RESPECTED
+             isym =   34       RESPECTED
+             isym =   37       RESPECTED
+
+             TOTAL NUMBER OF RESPECTED SYMMETRIES =     6
+
+     INFO: Finding the IBZ
+       iwann =    1   nqstot_ibz =    4
+       iwann =    2   nqstot_ibz =    4
+       iwann =    3   nqstot_ibz =    4
+       iwann =    4   nqstot_ibz =    4
+       iwann =    5   nqstot_ibz =    4
+       iwann =    6   nqstot_ibz =    4
+       iwann =    7   nqstot_ibz =    4
+       iwann =    8   nqstot_ibz =    4
+
+     INFO: Orbital Self-Hartree (SH) with Symmetries
+     orb     1     SH   0.274422
+     orb     2     SH   0.274422
+     orb     3     SH   0.274422
+     orb     4     SH   0.274422
+     orb     5     SH   0.095359
+     orb     6     SH   0.095359
+     orb     7     SH   0.095359
+     orb     8     SH   0.095359
  
-     KCW          :      0.15s CPU      0.24s WALL
+     KCW          :      0.67s CPU      0.81s WALL
 
      INITIALIZATION: 
      map          :      0.00s CPU      0.00s WALL (       8 calls)
-     rho_of_q     :      0.05s CPU      0.07s WALL (       8 calls)
+     rho_of_q     :      0.06s CPU      0.06s WALL (       8 calls)
  
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
  
  
  
  
  
-     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
+     h_psi        :      0.00s CPU      0.00s WALL (       4 calls)
  
-     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
-     add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
+     h_psi        :      0.00s CPU      0.00s WALL (       4 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       4 calls)
  
  
  
       General routines
-     calbec       :      0.00s CPU      0.00s WALL (       8 calls)
+     calbec       :      0.00s CPU      0.00s WALL (       4 calls)
      fft          :      0.00s CPU      0.00s WALL (      18 calls)
-     ffts         :      0.02s CPU      0.02s WALL (     448 calls)
-     fftw         :      0.03s CPU      0.04s WALL (    1152 calls)
-     davcio       :      0.00s CPU      0.00s WALL (     184 calls)
+     ffts         :      0.03s CPU      0.03s WALL (     768 calls)
+     fftw         :      0.02s CPU      0.02s WALL (     576 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      92 calls)
  
  
-     KCW          :      0.15s CPU      0.25s WALL
+     KCW          :      0.67s CPU      0.81s WALL
 
  
-   This run was terminated on:  13: 1:41   2Sep2022            
+   This run was terminated on:  13:59:36  22Aug2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

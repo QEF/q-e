@@ -1,5 +1,6 @@
 This example shows how to use the KCW code to compute the band structure
-of FCC Silicon. This requires few steps:
+of FCC Silicon using symmetries. It's the analogous of example01
+This requires few steps:
 
 1) run a standard scf calculation at PBE level on a regular 2x2x2 mesh. 
    The regular mesh is needed by Wannier90. Ideally you can run scf with 

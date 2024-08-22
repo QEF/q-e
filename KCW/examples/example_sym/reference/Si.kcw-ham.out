@@ -10,14 +10,14 @@
 
        Koopmans functional implementation based on DFPT; please cite this program as
 
-          N.Colonna, R. De Gannaro, E. Linscott, and N. Marzari, arXiv:2202.08155   
+        N.Colonna, R. De Gannaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.1 starts on  2Sep2022 at 13: 3:55 
-        Git branch: restructure_solvelinter
-        Last git commit: aa64910deb7f06913952b1cdf4e50c542c61c4d2-dirty
-        Last git commit date: Fri Sep 2 11:16:23 2022 +0200
-        Last git commit subject: Update input_summary KCW
+     Program KCW v.7.3.1 starts on 22Aug2024 at 13:59:56 
+        Git branch: SAWF
+        Last git commit: 58d7a281a27cd18cbc7cd55a4ae07bb41285c63f-dirty
+        Last git commit date: Wed Aug 21 20:38:11 2024 +0200
+        Last git commit subject: Label SYM introduced in output to mark symmetry re
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -28,11 +28,11 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on    12 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       4
-     1488 MiB available memory on the printing compute node when the environment starts
+     R & G space division:  proc/nbgrp/npool/nimage =      12
+     216900 MiB available memory on the printing compute node when the environment starts
  
 
      KCW INPUT SUMMARY 
@@ -40,7 +40,7 @@
 
       CONTROL 
        # title               =            KI H2O
-       # out_dir             =/home/nicola/Scriv
+       # out_dir             =/home/colonna_n/CO
        # prefix              =                Si
        # calculation         =               ham
        # kcw_iverbosity      =                 1
@@ -52,6 +52,9 @@
        # check_ks            =                 T
        # l_vcut              =                 F
        # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
+       # irr_bz              =                 T
 
       WANNIER 
        # seedname            =                Si
@@ -76,7 +79,7 @@
 
      Reading xml data from directory:
 
-     /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si.save/
+     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PBE
@@ -88,8 +91,8 @@
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min          73      73     22                  821      821     152
-     Max          74      74     23                  823      823     153
+     Min          24      24      7                  273      273      49
+     Max          25      25      8                  275      275      54
      Sum         295     295     91                 3287     3287     609
  
      Using Slab Decomposition
@@ -100,15 +103,15 @@
 
      READING SCREENING PARAMETERS
 
-     INFO: alphas read from:/home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/kcw/Si.alpha.dat                                                                                                                                                                                               
-     iwann =     1   alpha =      0.30362265
-     iwann =     2   alpha =      0.30362282
-     iwann =     3   alpha =      0.30362276
-     iwann =     4   alpha =      0.30362276
-     iwann =     5   alpha =      0.20944605
-     iwann =     6   alpha =      0.20944592
-     iwann =     7   alpha =      0.20944599
-     iwann =     8   alpha =      0.20944595
+     INFO: alphas read from:/home/colonna_n/CODES/q-e-kcw/tempdir/kcw/Si.alpha.dat                                                                                                                                                                                                          
+     iwann =     1   alpha =      0.30362275
+     iwann =     2   alpha =      0.30362262
+     iwann =     3   alpha =      0.30362267
+     iwann =     4   alpha =      0.30362291
+     iwann =     5   alpha =      0.20944584
+     iwann =     6   alpha =      0.20944559
+     iwann =     7   alpha =      0.20944607
+     iwann =     8   alpha =      0.20944587
 
      INFO: MLWF read from file: Reading collected, re-writing distributed wavefunctions
 
@@ -337,7 +340,7 @@
 
         KC interpolated eigenvalues at k=      0.5625      0.1250      0.5625
 
-          -2.3114    -2.0806     2.6532     2.9029     7.3122     7.7486    16.3673    17.0870
+          -2.3114    -2.0806     2.6532     2.9029     7.3123     7.7486    16.3673    17.0870
 
         KC interpolated eigenvalues at k=      0.5750      0.1500      0.5750
 
@@ -345,7 +348,7 @@
 
         KC interpolated eigenvalues at k=      0.5875      0.1750      0.5875
 
-          -2.4509    -1.9711     2.5873     3.0361     7.3307     8.1244    15.9896    17.3140
+          -2.4509    -1.9711     2.5873     3.0361     7.3308     8.1244    15.9896    17.3140
 
         KC interpolated eigenvalues at k=      0.6000      0.2000      0.6000
 
@@ -433,7 +436,7 @@
 
         KC interpolated eigenvalues at k=      0.4000      0.4000      0.4000
 
-          -4.6431    -0.2736     4.5689     4.5689     8.3608    12.1035    12.1035    15.2714
+          -4.6431    -0.2736     4.5689     4.5689     8.3608    12.1035    12.1035    15.2715
 
         KC interpolated eigenvalues at k=      0.4500      0.4500      0.4500
 
@@ -473,7 +476,7 @@
 
         KC interpolated eigenvalues at k=      0.5000      0.3000      0.7000
 
-          -2.8966    -1.5906     2.6849     3.1785     7.8303     8.5838    15.6281    17.2488
+          -2.8966    -1.5906     2.6849     3.1785     7.8303     8.5837    15.6282    17.2488
 
         KC interpolated eigenvalues at k=      0.5000      0.2750      0.7250
 
@@ -526,9 +529,10 @@
      ENDING BAND STRUCTURE INTERPOLATION
 
 
-     Writing all to output data dir /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si_kcw.save/
+     Writing all to output data dir /home/colonna_n/CODES/q-e-kcw/tempdir/Si_kcw.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
  
-     KCW          :      0.18s CPU      0.26s WALL
+     KCW          :      0.14s CPU      0.20s WALL
 
      INITIALIZATION: 
  
@@ -539,9 +543,9 @@
  
  
  
-     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
+     h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
  
-     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
+     h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
  
  
@@ -549,15 +553,15 @@
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       8 calls)
      fft          :      0.00s CPU      0.00s WALL (      18 calls)
-     ffts         :      0.04s CPU      0.05s WALL (     448 calls)
-     fftw         :      0.01s CPU      0.01s WALL (     128 calls)
-     davcio       :      0.01s CPU      0.02s WALL (      72 calls)
+     ffts         :      0.01s CPU      0.01s WALL (     512 calls)
+     fftw         :      0.00s CPU      0.00s WALL (     128 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      72 calls)
  
  
-     KCW          :      0.18s CPU      0.26s WALL
+     KCW          :      0.14s CPU      0.20s WALL
 
  
-   This run was terminated on:  13: 3:55   2Sep2022            
+   This run was terminated on:  13:59:56  22Aug2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
