@@ -36,7 +36,7 @@ SUBROUTINE screen_coeff ()
   USE solve_linter_koop_mod 
   !USE exx_base,             ONLY : exx_divergence
   USE coulomb,              ONLY : exxdiv, exxdiv_eps
-  USE control_kcw,         ONLY : nsym_old
+  USE control_kcw,          ONLY : nsym_old
   USE symm_base,            ONLY : nsym
   USE cell_base,            ONLY : omega
   !
@@ -138,24 +138,29 @@ SUBROUTINE screen_coeff ()
     !
     IF (kcw_iverbosity .gt. -1 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED"/)') 
     !
-    IF (setup_pw) CALL kcw_run_nscf(do_band)
-    !
-    IF (kcw_iverbosity .gt. -1 .AND. setup_pw) WRITE(stdout,'(/,8X, "INFO: NSCF calculation DONE",/)')
-    ! ... IF needed run a nscf calculation for k+q
-    ! ... NB: since the k+q is always a p we already have, this could be 
-    !         avoided in principle (see compute_map and rho_of_q). 
-    !         For the moment it's easier to  keep it. 
-    !
-    CALL kcw_initialize_ph ( ) !!! <----- TO UPDATE FOR NC CASE
-    IF (kcw_iverbosity .gt. -1 ) WRITE(stdout,'(8X, "INFO: kcw_q initialization DONE",/)') 
-    !
     ALLOCATE ( rhog (ngms,nrho) , delta_vg(ngms,nspin_mag), vh_rhog(ngms), drhog_scf (ngms, nspin_mag), delta_vg_(ngms,nspin_mag) )
     !
+    ! The NSCF can be run only once for each qpoint if we are not using symmeties
+    ! If using symmetry this nneds to be done inside the wannier loop as each wannier 
+    ! as a different number of symmetries and hence k points (see below)
+    IF (setup_pw .AND. .NOT. irr_bz) THEN 
+       CALL kcw_run_nscf(do_band)
+       IF (kcw_iverbosity .gt. -1) WRITE(stdout,'(/,8X, "INFO: NSCF calculation DONE",/)')
+    ENDIF
+    ! 
+    IF (.NOT. irr_bz) THEN
+       CALL kcw_initialize_ph ( ) 
+       IF (kcw_iverbosity .gt. -1 ) WRITE(stdout,'(8X, "INFO: kcw_q initialization DONE",/)')
+    ENDIF
     !
     IF ( lgamma .AND. .NOT. l_unique_manifold) CALL check_density (rhowann) 
     !
+    !
     DO iwann = iorb_start, iorb_end  ! for each wannier, that is actually the perturbation
+      !
       IF ( .NOT. l_do_alpha (iwann)) CYCLE
+      !
+      WRITE( stdout, '(/, 8x,"Start LR calculation for the wannier #",i3, 3x, "iq =", i3, 3x, "spin =", i3, /)') iwann, iq, spin_component
       !
       ! initialize all quantities that in general depend on the wannier function
       ! (because of symmetry)
@@ -180,19 +185,17 @@ SUBROUTINE screen_coeff ()
        ! in arrays defined in symm_base
        !
        ! now the run_nscf happens inside the loop over wannier functions because 
-       ! symmetries depend on wannier functions.
+       ! symmetries depend on wannier functions. Only if we use symmetries, otherwise
+       ! The NSCF is done outside the Wannier loop as the k and q points are not going to change
        !
-       IF (setup_pw) CALL kcw_run_nscf(do_band)
-       !
-       IF (kcw_iverbosity .gt. -1 .AND. setup_pw) WRITE(stdout,'(/,8X, "INFO: NSCF calculation DONE",/)')
+       IF (setup_pw .AND. irr_bz) THEN 
+          CALL kcw_run_nscf(do_band)
+          IF (kcw_iverbosity .gt. -1) WRITE(stdout,'(/,8X, "INFO: NSCF calculation DONE",/)')
+       ENDIF
        ! ... IF needed run a nscf calculation for k+q
        ! ... NB: since the k+q is always a p we already have, this could be 
        !         avoided in principle (see compute_map and rho_of_q). 
        !         For the moment it's easier to  keep it. 
-       !
-       !
-   
-       !
        !
        ! Skip LR calculation if this orbital match with a one already computed (see group_orbital)
        !
@@ -209,7 +212,7 @@ SUBROUTINE screen_coeff ()
        !
        !get arrays for the phase e^{iGr} when summing over small group of q
        !
-       CALL kcw_initialize_ph ( ) 
+       IF (irr_bz) CALL kcw_initialize_ph ( ) 
        CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_) 
        !! ... The periodic part of the perturbation
        !
@@ -237,7 +240,6 @@ SUBROUTINE screen_coeff ()
        sh(iwann)    = sh(iwann)    + sh_q
        ! Accumulate over q points
        !
-       WRITE( stdout, '(/, 8x,"Start linear response calculation for the wannier #",i3, "    spin =", i3)') iwann, spin_component
        !
        spin_ref = spin_component
        drhog_scf = CMPLX(0.D0,0.D0,kind=DP)
@@ -297,10 +299,11 @@ SUBROUTINE screen_coeff ()
        ! Sum over q points
        !
        !
-       CALL clean_pw_kcw()
+       IF (irr_bz) CALL clean_pw_kcw()
        !
     ENDDO
     !
+    IF (.NOT. irr_bz) CALL clean_pw_kcw( )
     DEALLOCATE ( rhog , delta_vg, vh_rhog, drhog_scf, delta_vg_ )
     !
     IF (ionode) THEN 
