@@ -73,9 +73,8 @@ SUBROUTINE reset_symmetry_op(iwann)
   !
   ! ... Here we re-order all rotations in such a way that true sym.ops
   ! are the first nsym; rotations that are not sym.ops. follow
-  WRITE(stdout,'(/, 8X, "SYM : nrot =", I5)') nrot
   nsym = copy_sym( nrot, sym )
-  WRITE(stdout,'(8X, "SYM : number of symmetry for iwann =", I5, " :", I5)') iwann, nsym
+  WRITE(stdout,'(8X, "SYM : number of symmetry for iwann =", I5, " :", I5, 3x "(out of ", I5, " )")') iwann, nsym, nrot
   !
   !IF ( .NOT. is_group( nsym ) ) THEN
   !  CALL infomsg( 'find_sym', 'not a group! symmetry disabled' )
