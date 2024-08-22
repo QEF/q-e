@@ -42,3 +42,10 @@ cd example06/
 echo "DONE"
 cd $home
 
+echo "Running example_sym"
+cd example_sym/
+./run_example
+./compare.sh
+echo "DONE"
+cd $home
+
