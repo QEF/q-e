@@ -160,7 +160,8 @@ SUBROUTINE screen_coeff ()
       !
       IF ( .NOT. l_do_alpha (iwann)) CYCLE
       !
-      WRITE( stdout, '(/, 8x,"Start LR calculation for the wannier #",i3, 3x, "iq =", i3, 3x, "spin =", i3, /)') iwann, iq, spin_component
+      WRITE( stdout, '(/, 8x,"Start LR calculation for the wannier #",i3, 3x, &
+              "iq =", i3, 3x, "spin =", i3, /)') iwann, iq, spin_component
       !
       ! initialize all quantities that in general depend on the wannier function
       ! (because of symmetry)
