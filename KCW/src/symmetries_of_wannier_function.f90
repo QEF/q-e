@@ -52,6 +52,8 @@ SUBROUTINE symmetries_of_wannier_function()
   REAL(DP)                 :: delta_rho
   !
   !
+  CALL start_clock ( 'check_symm' )
+  !
   IMAG = CMPLX(0.D0, 1.D0, kind=DP)
   ALLOCATE ( rhog (ngms) )
   ALLOCATE (rhowann ( dffts%nnr, nkstot/nspin, num_wann) )
@@ -191,7 +193,10 @@ SUBROUTINE symmetries_of_wannier_function()
     END DO!iq
     WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES = ", I5)') nsym_w(iwann)
   END DO !iwann 
-END SUBROUTINE
+  !
+  CALL stop_clock ( 'check_symm' )
+  !
+END SUBROUTINE symmetries_of_wannier_function
 
 
 
