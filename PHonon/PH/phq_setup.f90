@@ -319,7 +319,7 @@ subroutine phq_setup
   !     nat_todo, atomo, comp_irr
 
   comp_irr(0:nirr) = comp_irr_iq(0:nirr, current_iq)
-  IF (elph) comp_elph(1:nirr) = comp_irr(1:nirr)
+  IF (elph) comp_elph(1:nirr) = comp_irr_iq(1:nirr, current_iq)
   !
   !  The gamma_gamma case needs a different treatment
   !
