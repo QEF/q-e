@@ -202,8 +202,7 @@ set(src_modules
     w1gauss.f90
     deviatoric.f90
     # GPU
-    random_numbers_gpu.f90
-    cuda_subroutines.f90)
+    random_numbers_gpu.f90)
 qe_enable_cuda_fortran("${src_modules}")
 qe_add_library(qe_modules ${src_modules})
 

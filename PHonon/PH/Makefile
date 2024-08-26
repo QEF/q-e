@@ -108,13 +108,13 @@ phq_recover.o \
 phq_setup.o \
 phq_summary.o \
 phqscf.o \
+ph_set_upert.o \
 polariz.o \
 print_clock_ph.o \
 prepare_q.o \
 prepare_sym_analysis.o \
 psidspsi.o \
 psymdvscf.o \
-psyme.o \
 psym_dmag.o \
 psym_dmage.o \
 punch_plot_e.o \
@@ -147,7 +147,6 @@ sym_dmage.o \
 symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
-syme.o \
 symm.o \
 symmorphic_or_nzb.o \
 swfc.o \

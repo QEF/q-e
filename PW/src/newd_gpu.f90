@@ -19,10 +19,6 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
 #if defined(__CUDA)
   USE cudafor
   USE cublas
-#else
-#define cublasZgemm Zgemm
-#define cublasDGEMM Dgemm
-#define cudaDGER    Dger
 #endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp

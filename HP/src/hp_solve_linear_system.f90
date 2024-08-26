@@ -55,6 +55,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt
   USE lsda_mod,             ONLY : nspin
   USE lr_nc_mag,            ONLY : lr_apply_time_reversal, deeq_nc_save, int3_nc_save
+  USE lr_symm_base,         ONLY : lr_npert, upert, upert_mq
   !
   IMPLICIT NONE
   !
@@ -107,6 +108,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
              ik, ikk,    & ! counter on k points
              ndim,       &
              is,         & ! counter on spin polarizations
+             isym,       & ! counter on symmetries
              npw,        & ! number of plane waves at k
              nsolv,      & ! number of linear systems
              isolv,      & ! counter on linear systems    
@@ -146,6 +148,18 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   CALL allocate_bec_type_acc (nkb, nbnd, becp)
   !
   ALLOCATE (dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, 1))
+  !
+  ! Set symmetry representation in lr_symm_base
+  !
+  lr_npert = 1
+  ALLOCATE(upert(lr_npert, lr_npert, nsymq))
+  DO isym = 1, nsymq
+     upert(1, 1, isym) = (1.d0, 0.d0)
+  ENDDO
+  IF (minus_q) THEN
+     ALLOCATE(upert_mq(lr_npert, lr_npert))
+     upert_mq(1, 1) = (1.d0, 0.d0)
+  ENDIF ! minus_q
   !
   nsolv=1
   IF (noncolin.AND.domag) nsolv=2   
@@ -497,6 +511,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   DEALLOCATE (dvscfin)
   DEALLOCATE (dvscfout)
   DEALLOCATE (trace_dns_tot_old)
+  DEALLOCATE (upert)
+  IF (minus_q) DEALLOCATE(upert_mq)
   !
   IF (ALLOCATED(dbecsum_nc)) DEALLOCATE (dbecsum_nc)
   IF (ALLOCATED(int3_nc)) DEALLOCATE(int3_nc)

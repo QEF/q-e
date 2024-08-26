@@ -315,7 +315,7 @@ subroutine solve_e_fpol( iw )
      !   for the three polarizations - symmetrize it
      !
      call mp_sum ( dvscfout, inter_pool_comm )
-     call psyme (dvscfout)
+     call psymdvscf(dvscfout)
      !
      !   save the symmetrized linear charge response to file
      !   calculate the corresponding linear potential response

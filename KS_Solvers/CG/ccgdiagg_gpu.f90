@@ -8,38 +8,6 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
-
-FUNCTION KSDdot( n, A, incx, B, incy) result( res )
-  !
-  USE util_param,     ONLY : DP
-#if defined(__CUDA)
-  USE cudafor
-  USE cublas
-#endif
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: incx,incy,n
-  !
-#if defined(__CUDA)
-  REAL(DP), DEVICE, INTENT(IN) :: A(n), B(n)
-#else
-  REAL(DP),         INTENT(IN) :: A(n), B(n)
-  REAL(DP),         EXTERNAL   :: ddot
-#endif
-  !
-  REAL(DP) :: res
-  !
-#if defined(__CUDA)
-  res = cublasDdot( n, A, incx, B, incy )
-#else
-  res = ddot( n, A, incx, B, incy )
-#endif
-  !
-  RETURN
-  !
-END FUNCTION KSDdot
-
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !
 !----------------------------------------------------------------------------
@@ -102,7 +70,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   ! ... external functions
   !
-  REAL (DP), EXTERNAL :: ksDdot
+  REAL (DP), EXTERNAL :: MYDDOT
   EXTERNAL  hs_1psi_ptr, s_1psi_ptr
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
   ! s_1psi( npwx, npw, psi, spsi )
@@ -249,7 +217,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      ! ... NB:  ddot(2*npw,a,1,b,1) = REAL( zdotc(npw,a,1,b,1) )
      !
      !$acc host_data use_device(psi, hpsi)
-     e(m) = ksDdot( kdim2, psi(1,m), 1, hpsi, 1 )
+     e(m) = MYDDOT( kdim2, psi(1,m), 1, hpsi, 1 )
      !$acc end host_data
      !
      CALL mp_sum( e(m), intra_bgrp_comm )
@@ -271,8 +239,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
         !$acc host_data use_device(spsi, g, ppsi)
-        es(1) = ksDdot( kdim2, spsi(1), 1, g(1), 1 )
-        es(2) = ksDdot( kdim2, spsi(1), 1, ppsi(1), 1 )
+        es(1) = MYDDOT( kdim2, spsi(1), 1, g(1), 1 )
+        es(2) = MYDDOT( kdim2, spsi(1), 1, ppsi(1), 1 )
         !$acc end host_data
         !
         CALL mp_sum( es , intra_bgrp_comm )
@@ -325,7 +293,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
            !$acc host_data use_device(g)
-           gg1 = ksDdot( kdim2, g(1), 1, g0_d(1), 1 )
+           gg1 = MYDDOT( kdim2, g(1), 1, g0_d(1), 1 )
            !$acc end host_data
            !
            CALL mp_sum( gg1, intra_bgrp_comm )
@@ -341,7 +309,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !$acc end kernels
         !
         !$acc host_data use_device(g)
-        gg = ksDdot( kdim2, g(1), 1, g0_d(1), 1 )
+        gg = MYDDOT( kdim2, g(1), 1, g0_d(1), 1 )
         !$acc end host_data
         !
         CALL mp_sum( gg, intra_bgrp_comm )
@@ -396,7 +364,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         CALL hs_1psi_ptr( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
         !$acc host_data use_device(scg, cg)
-        cg0 = ksDdot( kdim2, cg(1), 1, scg(1), 1 )
+        cg0 = MYDDOT( kdim2, cg(1), 1, scg(1), 1 )
         !$acc end host_data
         !
         CALL mp_sum(  cg0 , intra_bgrp_comm )
@@ -412,13 +380,13 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
         !$acc host_data use_device(psi, ppsi)
-        a0 = 2.D0 *  ksDdot( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
+        a0 = 2.D0 *  MYDDOT( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
         !$acc end host_data
         !
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
         !$acc host_data use_device(cg, ppsi)
-        b0 = ksDdot( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
+        b0 = MYDDOT( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
         !$acc end host_data
         !
         CALL mp_sum(  b0 , intra_bgrp_comm )
