@@ -8,6 +8,7 @@ SUBROUTINE kcw_kpoint_grid()
   USE control_kcw,        ONLY : num_wann,nsym_w, s_w
   USE control_kcw,        ONLY : nqstot_ibz, xq_ibz, wq_ibz
   USE control_kcw,        ONLY : mp1, mp2, mp3
+  USE control_kcw,        ONLY : kcw_iverbosity
   USE klist,              ONLY : nkstot, xk
   USE control_kcw,        ONLY : ibz2fbz, fbz2ibz
   USE cell_base,          ONLY : bg
@@ -37,7 +38,7 @@ SUBROUTINE kcw_kpoint_grid()
   ALLOCATE( fbz2ibz( mp1*mp2*mp3, num_wann))  
   !
   !WRITE(stdout,*) "Finding symmetries of wannier functions......"
-  WRITE(stdout,'(/, 5X, "INFO: Finding the IBZ")') 
+  WRITE(stdout,'(/, 5X, "SYM : Finding the IBZ")') 
   DO iwann = 1, num_wann
     nsym_w_iwann = nsym_w(iwann)
     s_w_iwann(:,:,:) = s_w(:,:,:,iwann)
@@ -57,6 +58,12 @@ SUBROUTINE kcw_kpoint_grid()
       wq_ibz( iq, iwann ) = wq_ibz_iwann (iq)
       fbz2ibz( ibz2fbz(iq, iwann), iwann ) = iq
     END DO!iq
+    !
+    IF (kcw_iverbosity .gt. 1) THEN
+      WRITE(stdout,'(9X, "xq(iq="i3, x, ") = ", 3F8.4, 3X, "wq = ", F10.6, 3X, "iq_FBZ = ", I3)') & 
+              (iq, xq_ibz(:, iq, iwann), wq_ibz( iq, iwann ), ibz2fbz(iq,iwann), iq=1,nqstot_ibz(iwann))
+      WRITE(stdout, *)
+    ENDIF 
   END DO!iwann
   !
   DEALLOCATE( xq_ibz_iwann )
