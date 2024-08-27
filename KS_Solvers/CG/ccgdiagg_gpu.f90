@@ -55,7 +55,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER                  :: i, j, k, m, m_start, m_end, iter, moved
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:)
   COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0_d(:), lagrange_d(:)
-  !$acc declare device_resident(g, scg, hpsi, spsi, cg, ppsi)
 #if defined(__CUDA)
   attributes(DEVICE) :: g0_d, lagrange_d
 #endif
@@ -112,6 +111,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE(  ppsi(kdmx), STAT=ierr )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate ppsi ', ABS(ierr) )
+  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi)
+
   ALLOCATE(  g0_d(kdmx), STAT=ierr )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate g0_d ', ABS(ierr) )
@@ -520,6 +521,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! STORING e in eig since eigenvalues are always on the host
   eig = e
   !
+  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi)
   DEALLOCATE( lagrange )
   DEALLOCATE( e )
   DEALLOCATE( lagrange_d )

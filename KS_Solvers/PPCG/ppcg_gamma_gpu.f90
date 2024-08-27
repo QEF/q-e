@@ -53,7 +53,6 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   !
   COMPLEX(DP), ALLOCATABLE ::  hpsi(:,:), spsi(:,:), w(:,:)
   COMPLEX(DP), ALLOCATABLE ::  ugly1(:,:), ugly2(:,:)
-  !$acc declare device_resident(ugly1, ugly2)
   COMPLEX(DP)              ::  buffer(npwx,nbnd), buffer1(npwx,nbnd)
   REAL(DP), ALLOCATABLE    ::  K(:,:), K_store(:,:), M(:,:), M_store(:,:), work(:)
   INTEGER,  ALLOCATABLE    ::  iwork(:)
@@ -166,6 +165,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   psi_d = psi
 !civn: ugly hack (FIXME)
   allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+  !$acc enter data create(ugly1, ugly2)
   !$acc kernels
   ugly1 = psi_d
   ugly2 = C_ZERO
@@ -181,6 +181,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
     spsi_d = ugly2
     !$acc end kernels
   end if
+  !$acc exit data delete(ugly1, ugly2)
   deallocate( ugly1, ugly2 )
 !civn: FIXME END
   avg_iter = 1.d0
@@ -297,6 +298,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
 !civn: ugly hack (FIXME)
 !     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
      allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc enter data create(ugly1, ugly2)
      !$acc kernels
      ugly1 = buffer1_d
      ugly2 = C_ZERO
@@ -305,6 +307,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
      !$acc kernels
      buffer_d = ugly2 
      !$acc end kernels
+     !$acc exit data delete(ugly1, ugly2)
      deallocate( ugly1, ugly2 )
 !civn: FIXME END
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
@@ -313,6 +316,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
 !civn: ugly hack (FIXME)
      !CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
      allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc enter data create(ugly1, ugly2)
      !$acc kernels
      ugly1 = buffer1_d
      ugly2 = C_ZERO
@@ -321,6 +325,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
      !$acc kernels
      buffer_d = ugly2 
      !$acc end kernels
+     !$acc exit data delete(ugly1, ugly2)
      deallocate( ugly1, ugly2 )
 !civn: FIXME END
 !        sw(:,act_idx(1:nact)) = buffer(:,1:nact)

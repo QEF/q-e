@@ -52,7 +52,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
                               scg(:), ppsi(:), g0_d(:), psi_aux(:)
-  !$acc declare device_resident(hpsi, spsi, g, cg, scg, ppsi)
   COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                               cg0, e0, es(2), aux
@@ -90,6 +89,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( cg(   npwx ) )
   ALLOCATE( g0_d(   npwx ) )
   ALLOCATE( ppsi( npwx ) )
+  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi)
   !
   ALLOCATE( lagrange_d( nbnd ) )
   ALLOCATE( lagrange  ( nbnd ) )
@@ -547,6 +547,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   avg_iter = avg_iter / DBLE( nbnd )
   eig(1:nbnd) = e(1:nbnd)
   !
+  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi)
   DEALLOCATE( lagrange )
   DEALLOCATE( lagrange_d )
   DEALLOCATE( e )
