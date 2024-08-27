@@ -92,7 +92,6 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !$acc declare device_resident(ew)
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
-  !$acc declare device_resident(psi, hpsi, spsi)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -154,11 +153,13 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   ALLOCATE( hpsi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
+  !$acc enter data create(psi, hpsi)
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
+     !$acc enter data create(spsi)
   END IF
   !
   ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
@@ -676,8 +677,12 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( hc )
   DEALLOCATE( sc )
   !
-  IF ( uspp ) DEALLOCATE( spsi )
+  IF ( uspp ) THEN
+     !$acc exit data delete(spsi)
+     DEALLOCATE( spsi )
+  END IF
   !
+  !$acc exit data delete(psi, hpsi)
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )
   !

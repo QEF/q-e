@@ -84,9 +84,7 @@ SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap
   !
   INTEGER :: itry, paro_ntr, nconv, nextra, nactive, nbase, ntrust, ndiag, nvecx, nproc_ortho
   REAL(DP), ALLOCATABLE    :: ew(:)
-  !$acc declare device_resident(ew)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
-  !$acc declare device_resident(psi, hpsi, spsi)
   LOGICAL, ALLOCATABLE     :: conv(:)
 
   REAL(DP), PARAMETER      :: extra_factor = 0.5 ! workspace is at most this factor larger than nbnd
@@ -112,6 +110,7 @@ SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap
 
   ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx) )
   ALLOCATE ( conv(nbnd) )
+  !$acc enter data create(psi, hpsi, spsi, ew)
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
@@ -267,6 +266,7 @@ SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap
   !
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
+  !$acc exit data delete(psi, hpsi, spsi, ew)
   DEALLOCATE ( ew, conv, psi, hpsi, spsi )
   CALL mp_type_free( column_type )
 
