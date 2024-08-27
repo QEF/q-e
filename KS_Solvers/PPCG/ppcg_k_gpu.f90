@@ -50,7 +50,6 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   !
   COMPLEX(DP), ALLOCATABLE ::  hpsi(:,:), spsi(:,:), w(:,:)
   COMPLEX(DP), ALLOCATABLE ::  ugly1(:,:), ugly2(:,:) 
-  !$acc declare device_resident(ugly1, ugly2)
   COMPLEX(DP)              ::  buffer(npwx*npol,nbnd), buffer1(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE ::  K(:,:), K_store(:,:), M(:,:), M_store(:,:), cwork(:)
   REAL(DP), ALLOCATABLE    ::  rwork(:)
@@ -168,6 +167,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   !CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )             ; if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO
   !if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d) ; if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
   allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+  !$acc enter data create(ugly1, ugly2)
   !$acc kernels
   ugly1 = psi_d
   ugly2 = C_ZERO
@@ -183,6 +183,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
     spsi_d = ugly2
     !$acc end kernels
   end if
+  !$acc exit data delete(ugly1, ugly2)
   deallocate( ugly1, ugly2 )
   if (clean) hpsi_d(npw+1:npwx,:) = C_ZERO 
   if (clean) spsi_d(npw+1:npwx,:) = C_ZERO
@@ -302,6 +303,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
 !civn: ugly hack (FIXME)
      !CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )     
      allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc enter data create(ugly1, ugly2)
      !$acc kernels
      ugly1 = buffer1_d
      ugly2 = C_ZERO
@@ -310,6 +312,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
      !$acc kernels
      buffer_d = ugly2
      !$acc end kernels
+     !$acc exit data delete(ugly1, ugly2)
      deallocate( ugly1, ugly2 )
 !civn: FIXME END
      if(clean) then 
@@ -330,6 +333,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
 !civn: ugly hack (FIXME)
         !CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )   
         allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+        !$acc enter data create(ugly1, ugly2)
         !$acc kernels
         ugly1 = buffer1_d
         ugly2 = C_ZERO
@@ -338,6 +342,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
         !$acc kernels
         buffer_d = ugly2
         !$acc end kernels
+        !$acc exit data delete(ugly1, ugly2)
         deallocate( ugly1, ugly2 )
 !civn: FIXME END
         IF (clean) THEN 
