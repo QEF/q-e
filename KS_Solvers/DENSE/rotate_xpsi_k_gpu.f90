@@ -53,7 +53,6 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   INTEGER                  :: n_start, n_end, my_n, i, j
   COMPLEX(DP), ALLOCATABLE :: hc_d(:,:), sc_d(:,:), vc_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: tpsi_d(:,:), hpsi(:,:), spsi(:,:)
-  !$acc declare device_resident(hpsi, spsi)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: hc_d, sc_d, vc_d, tpsi_d, en_d
@@ -81,8 +80,11 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   ALLOCATE( tpsi_d( kdmx, nstart ) )
   ALLOCATE( hpsi( kdmx, nstart ) )
-  IF ( overlap ) &
-  ALLOCATE( spsi(kdmx, nstart ) )
+  !$acc enter data create(hpsi)
+  IF ( overlap ) THEN
+    ALLOCATE( spsi(kdmx, nstart ) )
+    !$acc enter data create(spsi)
+  ENDIF
   ALLOCATE( hc_d( nstart, nstart) )    
   ALLOCATE( sc_d( nstart, nstart) )    
   ALLOCATE( vc_d( nstart, nstart) )    
@@ -216,7 +218,11 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   DEALLOCATE( vc_d )
   DEALLOCATE( sc_d )
   DEALLOCATE( hc_d )
-  IF ( overlap ) DEALLOCATE( spsi )
+  IF ( overlap ) THEN
+    !$acc exit data delete(spsi)
+    DEALLOCATE( spsi )
+  ENDIF
+  !$acc exit data delete(hpsi)
   DEALLOCATE( hpsi )
   DEALLOCATE( tpsi_d )
   !
