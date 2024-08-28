@@ -72,7 +72,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   INTEGER :: ii, jj, kk
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
-  !$acc declare device_resident(kpsi, hkpsi, skpsi)
 #if defined(__CUDA)
   attributes(device) :: phi_d, hphi_d, sphi_d 
   attributes(device) :: g2kin_d 
@@ -118,11 +117,13 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   !
   ALLOCATE( hkpsi( kdmx, nbnd ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hkpsi ', ABS(ierr) )
+  !$acc enter data create(kpsi, hkpsi)
   !
   IF ( uspp ) THEN
      !
      ALLOCATE( skpsi( kdmx, nbnd ), STAT=ierr )
      IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate skpsi ', ABS(ierr) )
+     !$acc enter data create(skpsi)
      !
   END IF
   !
@@ -257,9 +258,13 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   DEALLOCATE( phi_d )
   DEALLOCATE( hphi_d )
   IF ( uspp ) DEALLOCATE( sphi_d )
+  !$acc exit data delete(kpsi, hkpsi)
   DEALLOCATE( kpsi )
   DEALLOCATE( hkpsi )
-  IF ( uspp ) DEALLOCATE( skpsi )
+  IF ( uspp ) THEN
+     !$acc exit data delete(skpsi)
+     DEALLOCATE( skpsi )
+  ENDIF
   DEALLOCATE( hc )
   DEALLOCATE( sc )
   DEALLOCATE( php )
