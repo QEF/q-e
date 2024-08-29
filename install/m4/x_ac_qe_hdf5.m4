@@ -129,27 +129,27 @@ if test "$use_parallel" -ne 0; then
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
          elif command -v h5pfc >/dev/null; then
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
 
          elif test -e $with_hdf5_path/bin/h5fc; then 
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
              try_dflags="$try_dflags -D__HDF5_SERIAL"
          elif command -v h5fc>/dev/null; then 
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
              try_dflags="$try_dflags -D__HDF5_SERIAL"
 
