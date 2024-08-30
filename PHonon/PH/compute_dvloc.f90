@@ -80,7 +80,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   nnr = dffts%nnr
   !
-  !$acc data create(dvlocin(1:nnr)) copyin(vlocq) deviceptr(nl_d, nlp_d)
+  !$acc data present_or_copy(dvlocin(1:nnr)) copyin(vlocq) deviceptr(nl_d, nlp_d)
   !$acc kernels present(dvlocin)
   dvlocin(:) = (0.d0, 0.d0)
   !$acc end kernels
@@ -149,13 +149,14 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      deallocate (aux)
      deallocate (auxs)
   endif
-  !$acc end data
   !
   ! Now we compute dV_loc/dtau in real space
   !
   !$acc host_data use_device(dvlocin)
   CALL invfft ('Rho', dvlocin, dffts)
   !$acc end host_data
+  !
+  !$acc end data
   !
 #if !defined(__CUDA)
   DEALLOCATE(nl_d)
