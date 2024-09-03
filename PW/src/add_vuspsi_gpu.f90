@@ -240,6 +240,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        becp_k = becp%k
        !$acc end kernels
        !
+       !$acc data present(deeq) deviceptr(deeaux_d)
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
@@ -255,7 +256,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 !
                 !deeaux_d(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin), 0.0_dp, KIND=dp )
                 !
-                !$acc parallel loop collapse(2) present(deeq)
+                !$acc parallel loop collapse(2)
                 DO j = 1, nhnt
                    DO k = 1, nhnt
                       deeaux_d(k,j) = CMPLX(deeq(k,j,na,current_spin), 0.0_dp, KIND=DP )
@@ -273,6 +274,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           END DO
           !
        END DO
+       !$acc end data
        CALL dev_buf%release_buffer(deeaux_d, ierr) ! DEALLOCATE (deeaux_d)
        !
        !$acc host_data use_device(vkb)
