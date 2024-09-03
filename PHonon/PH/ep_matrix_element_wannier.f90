@@ -220,7 +220,7 @@ SUBROUTINE ep_matrix_element_wannier()
 
       do ipol = 1, 3
         CALL davcio_drho ( dvscfins(:,:,ipol),  lrdrho, iudrho,  ipol,  -1 )
-        call dv_of_drho ( dvscfins(:,:,ipol), .false.)
+        call dv_of_drho ( dvscfins(:,:,ipol))
       end do
 
       CALL apply_dpot_allocate()
@@ -1589,6 +1589,3 @@ END SUBROUTINE write_zeu2epiq
 !   !
 ! END SUBROUTINE elph_scdft_gather_r
 ! 
-
-
-

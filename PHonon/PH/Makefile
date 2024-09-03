@@ -15,7 +15,7 @@ add_for_charges.o \
 add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
-addnlcc.o \
+dynmat_nlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
 addusddense.o \

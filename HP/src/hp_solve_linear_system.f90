@@ -394,7 +394,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ! Compute the response potential dV_HXC from the response charge density.
      ! See Eq. (47) in Ref. [1]
      !
-     CALL dv_of_drho (dvscfout, .FALSE.)
+     CALL dv_of_drho (dvscfout)
      !
      ! Mix the new HXC response potential (dvscfout) with the old one (dvscfin).
      ! Note: dvscfin = 0 for iter = 1 (so there is no mixing).

@@ -5,7 +5,7 @@ set(src_ph
     PH/add_zstar_ue.f90
     PH/add_zstar_ue_us.f90
     PH/addcore.f90
-    PH/addnlcc.f90
+    PH/dynmat_nlcc.f90
     PH/addnlcc_zstar_eu_us.f90
     PH/addusddens.f90
     PH/addusddense.f90
