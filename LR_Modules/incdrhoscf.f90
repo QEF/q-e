@@ -187,9 +187,9 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ! Ultrasoft contribution
   ! Calculate dbecsum = <evc|vkb><vkb|dpsi>
   ! 
+  !$acc end data
   CALL addusdbec (ik, weight, dpsi, dbecsum)
   !
-  !$acc end data
   DEALLOCATE(psi)
   DEALLOCATE(dpsic)
   !

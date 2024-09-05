@@ -168,6 +168,7 @@ subroutine solve_e_fpol( iw )
         ! read unperturbed wavefunctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
+        !$acc update device(evc)
         !
         ! compute beta functions and kinetic energy for k-point ik
         ! needed by h_psi, called by cch_psi_all, called by gmressolve_all
