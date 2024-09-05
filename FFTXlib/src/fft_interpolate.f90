@@ -25,54 +25,38 @@ subroutine fft_interpolate_real (dfft_in, v_in, dfft_out, v_out )
 
   call start_clock ('interpolate')
 
-!$acc data present_or_copyin(v_in) present_or_copyout(v_out)
   IF (dfft_out%grid_id == dfft_in%grid_id) THEN
+     !$acc data present_or_copyin(v_in) present_or_copyout(v_out)     
      !$acc kernels
      v_out (1:dfft_in%nnr) = v_in (1:dfft_in%nnr)
      !$acc end kernels
+     !$acc end data
   ELSE
 
      if (dfft_in%lgamma .neqv. dfft_out%lgamma) &
         call fftx_error__ ('fft_interpolate_real','two grids with inconsistent lgamma values', 1)
 
      ALLOCATE (aux_in( dfft_in%nnr), aux_out(dfft_out%nnr))
-     !$acc enter data create(aux_in, aux_out)
 
-     !$acc kernels
      aux_in (1:dfft_in%nnr) = v_in(1:dfft_in%nnr)
-     !$acc end kernels
-     !$acc host_data use_device(aux_in)
      CALL fwfft ('Rho', aux_in, dfft_in)
-     !$acc end host_data
 
-     !$acc kernels
      aux_out(1:dfft_out%nnr) = (0.d0, 0.d0)
-     !$acc end kernels
 
      ngm = min(dfft_in%ngm, dfft_out%ngm)
 
-     !$acc kernels
      aux_out (dfft_out%nl (1:ngm) ) = aux_in (dfft_in%nl (1:ngm) )
-     !$acc end kernels
      IF (dfft_in%lgamma) THEN
-        !$acc kernels        
         aux_out (dfft_out%nlm (1:ngm) ) = aux_in (dfft_in%nlm (1:ngm) )
-        !$acc end kernels
      ENDIF
 
-     !$acc host_data use_device(aux_out)
      CALL invfft ('Rho', aux_out, dfft_out)
-     !$acc end host_data
 
-     !$acc kernels
      v_out (1:dfft_out%nnr) = aux_out (1:dfft_out%nnr)
-     !$acc end kernels
 
-     !$acc exit data delete(aux_in, aux_out)
      DEALLOCATE (aux_in, aux_out)
 
   END IF
-!$acc end data
 
   call stop_clock ('interpolate')
 
