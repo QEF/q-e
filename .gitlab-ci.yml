@@ -1,5 +1,5 @@
 build:cmake-gnu:
-  tags: [docker]
+  tags: [gitlab-org-docker]
   image: ubuntu:20.04
   variables:
     DEBIAN_FRONTEND: "noninteractive"
@@ -20,7 +20,7 @@ build:cmake-gnu:
 
 
 build:pgi:
-  tags: [docker]
+  tags: [gitlab-org-docker]
   image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
   script:
     - apt-get -qq update

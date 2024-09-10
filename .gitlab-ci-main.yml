@@ -1,7 +1,7 @@
 include: '.gitlab-ci.yml'
 
 build:pw:
-  tags: [docker]
+  tags: [gitlab-org-docker]
   image: ubuntu:20.04
   script:
     - apt-get -qq update
@@ -16,7 +16,7 @@ build:pw:
 #    - rm -r /tmp/save
 
 build:cp:
-  tags: [docker]
+  tags: [gitlab-org-docker]
   image: ubuntu:20.04
   script:
     - apt-get -qq update
@@ -31,7 +31,7 @@ build:cp:
 #    - rm -r /tmp/save
 
 build:cmake-nvhpc:
-  tags: [docker]
+  tags: [gitlab-org-docker]
   image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
   variables:
     DEBIAN_FRONTEND: "noninteractive"
@@ -48,7 +48,7 @@ build:cmake-nvhpc:
             -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make -j 4
 
 build:cmake-nvhpc-nocuda:
-  tags: [docker]
+  tags: [gitlab-org-docker]
   image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
   variables:
     DEBIAN_FRONTEND: "noninteractive"
