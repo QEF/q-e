@@ -69,7 +69,6 @@ program gwl_punch
   use control_flags, ONLY : gamma_only
   use uspp, ONLY : okvan
   use ldaU, ONLY : lda_plus_u
-  USE basis,                ONLY : swfcatom
   use scf, only : vrs, vltot, v, kedtau
   USE klist,                ONLY : xk, wk, nks, nkstot
   USE fft_base,             ONLY : dfftp

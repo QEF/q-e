@@ -10,34 +10,72 @@
 SUBROUTINE allocate_wfc()
   !----------------------------------------------------------------------------
   !! Dynamical allocation of arrays: wavefunctions.  
-  !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\), 
-  !! \(\text{natomwfc}\), \(\text{nwfcU}\).
+  !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\)
   !
+#if defined (__CUDA)
+  use, intrinsic :: iso_c_binding
+  use cudafor
+#endif
   USE io_global,           ONLY : stdout
   USE wvfct,               ONLY : npwx, nbnd
-  USE basis,               ONLY : natomwfc, swfcatom
-  USE fixed_occ,           ONLY : one_atom_occupations
-  USE ldaU,                ONLY : wfcU, nwfcU, lda_plus_u, Hubbard_projectors
   USE noncollin_module,    ONLY : npol
   USE wavefunctions,       ONLY : evc
-  USE wannier_new,         ONLY : use_wannier
-  USE wavefunctions_gpum,  ONLY : using_evc
+  USE control_flags,       ONLY : use_gpu
   !
   IMPLICIT NONE
+  INTEGER :: istat
   !
   !
   ALLOCATE( evc(npwx*npol,nbnd) )
-  CALL using_evc(2)
-  !
-  IF ( one_atom_occupations .OR. use_wannier ) &
-     ALLOCATE( swfcatom(npwx*npol,natomwfc) )
-  IF ( lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) &
-       ALLOCATE( wfcU(npwx*npol,nwfcU) )
+!civn: PIN evc memory here
+#if defined(__CUDA)
+  IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
+  !$acc enter data create(evc)
+#endif
   !
   RETURN
   !
 END SUBROUTINE allocate_wfc
 !
+!----------------------------------------------------------------------------
+SUBROUTINE check_wfc( label, what )
+  !----------------------------------------------------------------------------
+  !! Check consistency between host and device copies of evc 
+  !! by computing the scalar product with matcalc_k
+  !
+  USE kinds,               ONLY :  DP
+  USE wavefunctions,       ONLY : evc
+  USE wvfct,               ONLY : npwx, nbnd
+  USE noncollin_module,    ONLY : npol
+  !
+  IMPLICIT NONE
+  CHARACTER(len=*), INTENT(IN) :: label
+  !! it specifies the meaning of the output
+  CHARACTER(len=2), INTENT(IN) :: what 
+  !! it specifies the meaning of the output
+  COMPLEX(DP), ALLOCATABLE :: evc_copy(:,:)
+  !
+  ALLOCATE( evc_copy(npwx*npol,nbnd) )
+  !
+  IF(what == 'HH') THEN
+    evc_copy(:,:) = evc(:,:)
+  ELSE IF(what == 'DH') THEN
+    !$acc kernels copyout(evc_copy)
+    evc_copy(:,:) = evc(:,:)
+    !$acc end kernels
+  ELSE
+    Call errore('check_wfc', 'wrong what input value', 1)
+  END IF
+  !
+  ! compute the scalar product between host and device values of evc
+  ! and check orthonormality
+  Call wrapmatcalc( label , npwx*npol, nbnd, nbnd, evc_copy, evc)  
+  !
+  DEALLOCATE( evc_copy )
+  !
+  RETURN       
+  !
+END SUBROUTINE check_wfc
 !
 !----------------------------------------------------------------------------
 SUBROUTINE allocate_wfc_k()
@@ -73,14 +111,13 @@ SUBROUTINE allocate_wfc_k()
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
+  !$acc enter data create(vkb) 
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE( g2kin(npwx) )
+  !$acc enter data create(g2kin) 
   !
-#if defined __CUDA
-!$acc enter data create(vkb(1:npwx,1:nkb), g2kin(1:npwx) ) 
-#endif
   !
   RETURN
   !

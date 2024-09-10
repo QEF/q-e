@@ -106,7 +106,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE sci_mod,                 ONLY: p_psi
   USE fft_helper_subroutines
   !
-  USE scf_gpum,                ONLY: using_vrs
 #if defined(__OSCDFT)
   USE plugin_flags,            ONLY : use_oscdft
   USE oscdft_base,             ONLY : oscdft_ctx
@@ -133,10 +132,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-
-  CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
-
-
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
@@ -162,9 +157,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%has_task_groups ) &
-             CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
-
         DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma( psi, ibnd, m )
@@ -180,6 +172,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
         !
+     ELSE IF ( dffts%has_task_groups ) THEN
+        ! ... usual reciprocal-space algorithm, with task groups
+        CALL vloc_psi_tg_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
      ELSE
         ! ... usual reciprocal-space algorithm
         CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
@@ -188,7 +183,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   ELSEIF ( noncolin ) THEN 
      !
-     CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
+     IF ( dffts%has_task_groups ) THEN
+        CALL vloc_psi_tg_nc( lda, n, m, psi, vrs, hpsi )
+     ELSE
+        CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
+     END IF
      !
   ELSE  
      ! 
@@ -196,9 +195,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         !
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
-        !
-        IF ( dffts%has_task_groups ) &
-             CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
         !
         DO ibnd = 1, m
            ! ... transform psi to real space -> psic 
@@ -216,9 +212,12 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            !
         ENDDO
         !
+     ELSE IF ( dffts%has_task_groups ) THEN
+        ! ... usual reciprocal-space algorithm, with task groups
+        CALL vloc_psi_tg_k( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
      ELSE
-        !
-        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        ! ... usual reciprocal-space algorithm
+        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
         !
      ENDIF
      !

@@ -478,7 +478,7 @@ SUBROUTINE newscf
   !-----------------------------------------------------------------------
   !! Set all kind of stuff needed by self-consistent (re-)calculation.
   !
-  USE basis, ONLY: starting_wfc 
+  USE starting_scf, ONLY: starting_wfc 
   USE cellmd,ONLY: lmovecell
   USE gvecs, ONLY: doublegrid
   USE gvect, ONLY: gstart

@@ -11,7 +11,7 @@ module ylmr2_gpum
 ! CUDA Kernel version
 
 use cudafor
-  INTEGER, PARAMETER :: maxl = 14
+  INTEGER, PARAMETER :: maxl = 20
 contains
 attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
   implicit none

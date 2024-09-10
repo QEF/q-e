@@ -217,7 +217,8 @@ SUBROUTINE control_iosys()
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, atm, nat, nsp, &
                             amass
   !
-  USE basis,         ONLY : startingconfig, starting_wfc, starting_pot
+  USE starting_scf,  ONLY : startingconfig, starting_wfc, starting_pot
+  USE starting_scf,  ONLY : starting_charge_ => starting_charge
   !
   USE run_info,      ONLY : title_ => title
   !
@@ -349,9 +350,6 @@ SUBROUTINE control_iosys()
   USE realus,                ONLY : real_space_ => real_space
 
   USE qmmm,                  ONLY : qmmm_config
-
-
-  USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
   !
@@ -1606,7 +1604,7 @@ SUBROUTINE structure_iosys ( )
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                                trd_ht, rd_ht, cell_units
   USE cell_base,        ONLY : cell_base_init, at, alat, omega, bg
-  USE basis,            ONLY : startingconfig
+  USE starting_scf,     ONLY : startingconfig
   USE control_flags,    ONLY : restart, lscf
   USE ions_base,        ONLY : nat, nsp, tau
   !

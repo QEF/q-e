@@ -35,6 +35,7 @@ SUBROUTINE ham_koopmans_k (ik)
   USE solve_linter_koop_mod 
   USE qpoint,               ONLY : xq
   USE wvfct,                ONLY : npwx 
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   !
   !USE mp_world,             ONLY : mpime
   !
@@ -55,10 +56,11 @@ SUBROUTINE ham_koopmans_k (ik)
   INTEGER :: iwann, jwann, lrrho, lrwfc, i
   ! Band counters, leght of the rho record
   !
-  COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), sh(num_wann), delta_vr_(dffts%nnr,nspin)
+  COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), sh(num_wann)
+  COMPLEX(DP) :: delta_vr(dffts%nnr,nspin_mag), delta_vr_(dffts%nnr,nspin_mag)
   ! The periodic part of the wannier orbital density in r space
-  ! The perturbig potential in real space
   ! The self-hartree 
+  ! The perturbig potential in real space
   ! The perturbig potential in real space (without the g=0 contribution) 
   !
   COMPLEX(DP), ALLOCATABLE  :: rhog(:), delta_vg(:,:), vh_rhog(:), delta_vg_(:,:)
@@ -104,7 +106,9 @@ SUBROUTINE ham_koopmans_k (ik)
   LOGICAL :: corr_done=.FALSE.
   ! whether the correction to the current wannier was already done 
   !
-  nqs = nkstot/nspin
+  if (nspin_mag == 4) &
+     CALL errore ('hamilt', ' ham_koopmans_k not implemented for non-collinear magnetic calculations ', 1)
+  nqs = nkstot/nspin_mag !<--- non-collinear not implemented
   nqs = nqstot
   !
   ALLOCATE( deltaH(num_wann,num_wann) )
@@ -145,7 +149,7 @@ SUBROUTINE ham_koopmans_k (ik)
     ! Retrive the rho_wann_q(r) from buffer in REAL space
     IF (kcw_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED"/)') 
     !
-    ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), delta_vg_(ngms,nspin) )
+    ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin_mag), vh_rhog(ngms), delta_vg_(ngms,nspin_mag) )
     !
     IF ( lgamma ) CALL check_density (rhowann) 
     ! CHECK: For q==0 the sum over k and v should give the density. If not something wrong...

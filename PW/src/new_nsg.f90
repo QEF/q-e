@@ -39,8 +39,6 @@ SUBROUTINE new_nsg()
                                    allocate_bec_type, deallocate_bec_type
   USE noncollin_module,     ONLY : npol
   !
-  USE wavefunctions_gpum,   ONLY : using_evc
-  !
   IMPLICIT NONE
   !
   TYPE (bec_type) :: proj     
@@ -55,8 +53,6 @@ SUBROUTINE new_nsg()
   INTEGER, EXTERNAL :: find_viz
   !
   CALL start_clock('new_nsg')
-  !
-  CALL using_evc(0)
   !
   ldim = 0
   DO nt = 1, ntyp
@@ -82,7 +78,6 @@ SUBROUTINE new_nsg()
      npw = ngk(ik)
      !
      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(2)
      !
      ! make the projection
      !
@@ -502,8 +497,6 @@ SUBROUTINE new_nsg_nc()
                                     allocate_bec_type, deallocate_bec_type
    USE noncollin_module,     ONLY : npol, noncolin, domag, lspinorb
    !
-   USE wavefunctions_gpum,   ONLY : using_evc
-   !
    IMPLICIT NONE
    !
    TYPE (bec_type) :: proj     
@@ -519,8 +512,6 @@ SUBROUTINE new_nsg_nc()
    INTEGER, EXTERNAL :: find_viz
    !
    CALL start_clock('new_nsg')
-   !
-   CALL using_evc(0)
    !
    ldim = 0
    DO nt = 1, ntyp
@@ -549,7 +540,6 @@ SUBROUTINE new_nsg_nc()
       npw = ngk(ik)
       !
       IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      IF (nks > 1) CALL using_evc(2)
       !
       ! make the projection
       !

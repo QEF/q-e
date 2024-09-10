@@ -209,7 +209,6 @@ CONTAINS
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     use_parallel_diag
-      USE control_flags,      ONLY: diagonalize_on_host
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
       USE mp_world,           ONLY: mpime
@@ -312,7 +311,8 @@ CONTAINS
                CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
             END IF
          ELSE IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            IF( diagonalize_on_host ) THEN  !  tune here
+#if defined(__diagonalize_on_host)
+!! FIXME: is this case working? useful?
                ALLOCATE( rhos_h, SOURCE = rhos )
                ALLOCATE( rhod_h, MOLD = rhod )
                ALLOCATE( s_h, MOLD = s )
@@ -320,14 +320,14 @@ CONTAINS
                CALL dev_memcpy( s, s_h )
                CALL dev_memcpy( rhod, rhod_h )
                DEALLOCATE( rhos_h, rhod_h, s_h )
-            ELSE
+#else
                CALL collect_matrix( wrk, rhos, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
                IF( idesc(LAX_DESC_IC) == 1 .AND. idesc(LAX_DESC_IR) == 1 ) THEN
                   CALL laxlib_diagonalize( nss, wrk, rhod, stmp, info )
                END IF 
                CALL distribute_matrix( stmp, s, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
                CALL mp_bcast( rhod, 0, idesc(LAX_DESC_COMM) )
-            END IF
+#endif
          END IF
 #else
          CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )
@@ -399,7 +399,7 @@ CONTAINS
    !
 
    SUBROUTINE compute_qs_times_betas( bephi, bec_row, qbephi, qbecp, idesc )
-      USE uspp,           ONLY: nkb, qq_nt, qq_nt_d, ofsbeta, nkbus
+      USE uspp,           ONLY: nkb, qq_nt, ofsbeta, nkbus
       USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: nspin, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nupdwn, iupdwn
       USE ions_base,      ONLY: na, nat, nsp, ityp
@@ -453,27 +453,18 @@ CONTAINS
                      indv = ofsbeta(ia)
                      nhs  = nh(is)
 #if defined (__CUDA)
-                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
+                     !$acc host_data use_device(qq_nt)
+                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bephi_col(indv+1,(iss-1)*nrcx+1), SIZE(bephi_col,1), 0.0d0, qbephi(indv+1,1,iss), SIZE(qbephi,1))
-                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
+                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bec_col(indv+1,(iss-1)*nrcx+1), SIZE(bec_col,1), 0.0d0, qbecp(indv+1,1,iss), SIZE(qbecp,1))
+                     !$acc end host_data
 #else
                      CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bephi_col(indv+1,(iss-1)*nrcx+1), SIZE(bephi_col,1), 0.0d0, qbephi(indv+1,1,iss), SIZE(qbephi,1))
                      CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bec_col(indv+1,(iss-1)*nrcx+1), SIZE(bec_col,1), 0.0d0, qbecp(indv+1,1,iss), SIZE(qbecp,1))
 #endif
-! !$cuf kernel do (2)
-!                     DO iv=1,nhs
-!                        DO i = 1, nc
-!                           DO jv = 1, nhs
-!                              qbephi(indv+iv,i,iss) = qbephi(indv+iv,i,iss) + &
-!                                                         qq_nt_d(iv,jv,is) * bephi_col(indv+jv,i+(iss-1)*nrcx)
-!                              qbecp(indv+iv,i,iss) = qbecp(indv+iv,i,iss) + &
-!                                                        qq_nt_d(iv,jv,is) * bec_col(indv+jv,i+(iss-1)*nrcx)
-!                           END DO
-!                        END DO
-!                     END DO
                   END IF
                END DO
             ENDIF

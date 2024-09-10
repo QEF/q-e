@@ -29,7 +29,8 @@ SUBROUTINE memory_report()
   USE kinds,     ONLY : dp 
   USE constants, ONLY : tpi, fpi, pi, eps16
   USE wvfct,     ONLY : nbnd, nbndx
-  USE basis,     ONLY : natomwfc, starting_wfc
+  USE basis,     ONLY : natomwfc
+  USE starting_scf, ONLY : starting_wfc
   USE cell_base, ONLY : omega, bg, alat
   USE exx,       ONLY : ecutfock, use_ace
   USE exx_base,  ONLY : nkqs
@@ -47,7 +48,6 @@ SUBROUTINE memory_report()
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
   USE uspp_param,ONLY : lmaxkb, upf, nh, nbetam
-  USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem, tqr, iverbosity, rmm_ndim, lforce=>tprnfor, tstress
@@ -73,6 +73,7 @@ SUBROUTINE memory_report()
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
+  REAL(DP), PARAMETER :: dq = 0.01_dp !nterpolation table 
   REAL(dp) :: ram, ram_, ram1, ramk, maxram, totram, add
   INTEGER :: np_ortho(2)
   !

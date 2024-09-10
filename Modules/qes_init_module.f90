@@ -134,6 +134,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_scalarQuantity
     MODULE PROCEDURE qes_init_rism3d
     MODULE PROCEDURE qes_init_rismlaue
+    MODULE PROCEDURE qes_init_two_chem
     !
   END INTERFACE qes_init
   !
@@ -296,7 +297,7 @@ MODULE qes_init_module
                            dft, spin, bands, basis, electron_control, k_points_IBZ, ion_control,&
                            cell_control, symmetry_flags, boundary_conditions, fcp_settings, rism_settings,&
                            solvents, ekin_functional, external_atomic_forces, free_positions,&
-                           starting_atomic_velocities, electric_field, atomic_constraints, spin_constraints &
+                           starting_atomic_velocities, electric_field, atomic_constraints, spin_constraints, twoch_ &
                            )
     !
     IMPLICIT NONE
@@ -326,6 +327,7 @@ MODULE qes_init_module
     TYPE(electric_field_type),OPTIONAL,INTENT(IN) :: electric_field
     TYPE(atomic_constraints_type),OPTIONAL,INTENT(IN) :: atomic_constraints
     TYPE(spin_constraints_type),OPTIONAL,INTENT(IN) :: spin_constraints
+    TYPE(two_chem_type),OPTIONAL,INTENT(IN) :: twoch_
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -413,6 +415,12 @@ MODULE qes_init_module
       obj%spin_constraints = spin_constraints
     ELSE
       obj%spin_constraints_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(twoch_)) THEN
+      obj%twoch__ispresent = .TRUE. 
+      obj%twoch_ = twoch_
+    ELSE
+      obj%twoch__ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_input
@@ -872,14 +880,16 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_species
   !
   !
-  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, bravais_index, alternative_axes,&
-                                      cell, atomic_positions, wyckoff_positions, crystal_positions)
+  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, num_of_atomic_wfc, alat, bravais_index,&
+                                      alternative_axes, cell, atomic_positions, wyckoff_positions, crystal_positions &
+                                      )
     !
     IMPLICIT NONE
     !
     TYPE(atomic_structure_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     INTEGER, OPTIONAL, INTENT(IN) :: nat
+    INTEGER, OPTIONAL, INTENT(IN) :: num_of_atomic_wfc
     REAL(DP), OPTIONAL, INTENT(IN) :: alat
     INTEGER, OPTIONAL, INTENT(IN) :: bravais_index
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: alternative_axes
@@ -896,6 +906,12 @@ MODULE qes_init_module
       obj%nat = nat
     ELSE
       obj%nat_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(num_of_atomic_wfc)) THEN
+      obj%num_of_atomic_wfc_ispresent = .TRUE.
+      obj%num_of_atomic_wfc = num_of_atomic_wfc
+    ELSE
+      obj%num_of_atomic_wfc_ispresent = .FALSE.
     END IF
     IF (PRESENT(alat)) THEN
       obj%alat_ispresent = .TRUE.
@@ -3765,7 +3781,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_gateInfo
   !
   !
-  SUBROUTINE qes_init_convergence_info(obj, tagname, scf_conv, opt_conv)
+  SUBROUTINE qes_init_convergence_info(obj, tagname, scf_conv, opt_conv, wf_collected)
     !
     IMPLICIT NONE
     !
@@ -3773,6 +3789,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     TYPE(scf_conv_type),INTENT(IN) :: scf_conv
     TYPE(opt_conv_type),OPTIONAL,INTENT(IN) :: opt_conv
+    LOGICAL,OPTIONAL,INTENT(IN) :: wf_collected
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -3784,6 +3801,12 @@ MODULE qes_init_module
       obj%opt_conv = opt_conv
     ELSE
       obj%opt_conv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(wf_collected)) THEN
+      obj%wf_collected_ispresent = .TRUE. 
+      obj%wf_collected = wf_collected
+    ELSE
+      obj%wf_collected_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_convergence_info
@@ -3981,19 +4004,26 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_info
   !
   !
-  SUBROUTINE qes_init_outputPBC(obj, tagname, assume_isolated)
+  SUBROUTINE qes_init_outputPBC(obj, tagname, assume_isolated, esm)
     !
     IMPLICIT NONE
     !
     TYPE(outputPBC_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
+    TYPE(esm_type),OPTIONAL,INTENT(IN) :: esm
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%assume_isolated = assume_isolated
+    IF ( PRESENT(esm)) THEN
+      obj%esm_ispresent = .TRUE. 
+      obj%esm = esm
+    ELSE
+      obj%esm_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_outputPBC
   !
@@ -4161,10 +4191,10 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_total_energy
   !
   !
-  SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, wf_collected,&
-                                    starting_k_points, nks, occupations_kind, ks_energies, nbnd,&
-                                    nbnd_up, nbnd_dw, num_of_atomic_wfc, fermi_energy, highestOccupiedLevel,&
-                                    lowestUnoccupiedLevel, two_fermi_energies, smearing)
+  SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, starting_k_points,&
+                                    nks, occupations_kind, ks_energies, nbnd, nbnd_up, nbnd_dw,&
+                                    fermi_energy, highestOccupiedLevel, lowestUnoccupiedLevel,&
+                                    twochem, two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -4177,11 +4207,10 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: nbnd_up
     INTEGER,OPTIONAL,INTENT(IN) :: nbnd_dw
     REAL(DP),INTENT(IN) :: nelec
-    INTEGER,OPTIONAL,INTENT(IN) :: num_of_atomic_wfc
-    LOGICAL,INTENT(IN) :: wf_collected
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
     REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
+    TYPE(two_chem_type),OPTIONAL,INTENT(IN) :: twochem
     REAL(DP), DIMENSION(2),OPTIONAL,INTENT(IN) :: two_fermi_energies
     TYPE(k_points_IBZ_type),INTENT(IN) :: starting_k_points
     INTEGER,INTENT(IN) :: nks
@@ -4215,13 +4244,6 @@ MODULE qes_init_module
       obj%nbnd_dw_ispresent = .FALSE.
     END IF
     obj%nelec = nelec
-    IF ( PRESENT(num_of_atomic_wfc)) THEN
-      obj%num_of_atomic_wfc_ispresent = .TRUE. 
-      obj%num_of_atomic_wfc = num_of_atomic_wfc
-    ELSE
-      obj%num_of_atomic_wfc_ispresent = .FALSE.
-    END IF
-    obj%wf_collected = wf_collected
     IF ( PRESENT(fermi_energy)) THEN
       obj%fermi_energy_ispresent = .TRUE. 
       obj%fermi_energy = fermi_energy
@@ -4239,6 +4261,12 @@ MODULE qes_init_module
       obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
     ELSE
       obj%lowestUnoccupiedLevel_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(twochem)) THEN
+      obj%twochem_ispresent = .TRUE. 
+      obj%twochem = twochem
+    ELSE
+      obj%twochem_ispresent = .FALSE.
     END IF
     IF ( PRESENT(two_fermi_energies)) THEN
       obj%two_fermi_energies_ispresent = .TRUE. 
@@ -5045,6 +5073,29 @@ MODULE qes_init_module
     END IF
     !
   END SUBROUTINE qes_init_rismlaue
+  !
+  !
+  SUBROUTINE qes_init_two_chem(obj, tagname, twochem, nbnd_cond, degauss_cond, nelec_cond)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(two_chem_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    LOGICAL,INTENT(IN) :: twochem
+    INTEGER,INTENT(IN) :: nbnd_cond
+    REAL(DP),INTENT(IN) :: degauss_cond
+    INTEGER,INTENT(IN) :: nelec_cond
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%twochem = twochem
+    obj%nbnd_cond = nbnd_cond
+    obj%degauss_cond = degauss_cond
+    obj%nelec_cond = nelec_cond
+    !
+  END SUBROUTINE qes_init_two_chem
   !
   !
 END MODULE qes_init_module

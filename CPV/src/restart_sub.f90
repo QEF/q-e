@@ -199,6 +199,7 @@ SUBROUTINE from_restart( )
    END IF
    !
    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
+   !$acc update device(eigts1,eigts2,eigts3)
    !
    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !

@@ -55,7 +55,7 @@ PROGRAM cp_postproc
   INTEGER            :: ios, ndr, ierr
   INTEGER, ALLOCATABLE  :: n_atomic(:)
   REAL(DP)           :: atinv(3,3)
-  INTEGER            :: i, j, k, n, ix, iy, iz
+  INTEGER            :: i, j, k, n, ix, iy, iz, int_dum
 
   REAL(DP) :: euler(6)
 
@@ -150,7 +150,7 @@ PROGRAM cp_postproc
   END IF
   !
   CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
-       atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
+       atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav, int_dum)
   !
   !   End of reading from data file
   !

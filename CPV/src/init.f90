@@ -205,6 +205,7 @@
       allocate( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
       allocate( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
       allocate( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
+      !$acc enter data create(eigts1, eigts2, eigts3)
       !
       !     small boxes
       !

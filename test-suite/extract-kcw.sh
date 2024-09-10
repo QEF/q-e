@@ -17,8 +17,8 @@ args=$(echo $fname | awk -F= '{print $NF}')
 
 ### if [[ "$args" == "1" ]]
 ##  then
-# SCF
-e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
+# SCF'
+e1=`grep ^! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
 n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`

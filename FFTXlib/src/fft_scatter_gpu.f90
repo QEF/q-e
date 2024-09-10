@@ -211,8 +211,8 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
 #if defined(__NON_BLOCKING_SCATTER)
         IF (nproc2 > 1) THEN
            kdest = (iproc2-1)*sendsize
-           call mpi_wait( rh(iproc2), MPI_STATUSES_IGNORE, ierr )
-           call mpi_wait( sh(iproc2), MPI_STATUSES_IGNORE, ierr )
+           call mpi_wait( rh(iproc2), MPI_STATUS_IGNORE, ierr )
+           call mpi_wait( sh(iproc2), MPI_STATUS_IGNORE, ierr )
            ierr = cudaMemcpyAsync( f_in_d(kdest + 1), f_in(kdest + 1 ), sendsize, cudaMemcpyHostToDevice, stream )
         END IF
 #endif
@@ -303,8 +303,8 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
         kfrom = offset
 
 #if defined(__NON_BLOCKING_SCATTER)
-        call mpi_wait( rh(iproc2), MPI_STATUSES_IGNORE, ierr )
-        call mpi_wait( sh(iproc2), MPI_STATUSES_IGNORE, ierr )
+        call mpi_wait( rh(iproc2), MPI_STATUS_IGNORE, ierr )
+        call mpi_wait( sh(iproc2), MPI_STATUS_IGNORE, ierr )
 #endif
         !DO k = 1, ncp_(me2)
         !   DO i = 1, desc%nr2p( iproc2 )
@@ -515,8 +515,8 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         it0 = ( iproc3 - 1 ) * sendsize
 #if defined(__NON_BLOCKING_SCATTER)
         IF (nproc3 > 1) THEN
-           CALL mpi_wait( rh(iproc3), MPI_STATUSES_IGNORE, ierr )
-           CALL mpi_wait( sh(iproc3), MPI_STATUSES_IGNORE, ierr )
+           CALL mpi_wait( rh(iproc3), MPI_STATUS_IGNORE, ierr )
+           CALL mpi_wait( sh(iproc3), MPI_STATUS_IGNORE, ierr )
            ierr = cudaMemcpyAsync( f_in_d(it0+1), f_in(it0+1), sendsize, cudaMemcpyHostToDevice, desc%stream_scatter_yz(iproc3)  )
         END IF
 #endif
@@ -609,8 +609,8 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         kdest = ( iproc3 - 1 ) * sendsize
 #if defined(__NON_BLOCKING_SCATTER)
         IF( nproc3 > 1 ) THEN
-           call mpi_wait( rh(iproc3), MPI_STATUSES_IGNORE, ierr )
-           call mpi_wait( sh(iproc3), MPI_STATUSES_IGNORE, ierr )
+           call mpi_wait( rh(iproc3), MPI_STATUS_IGNORE, ierr )
+           call mpi_wait( sh(iproc3), MPI_STATUS_IGNORE, ierr )
         END IF
 #endif
         kfrom = offset

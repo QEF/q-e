@@ -17,6 +17,7 @@ MODULE interpolation
   USE lsda_mod,             ONLY : nspin
   USE klist,                ONLY : nks, nkstot, xk
   USE control_kcw,          ONLY : num_wann, Hamlt, Hamlt_R
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   !
   !
   IMPLICIT NONE
@@ -46,7 +47,7 @@ CONTAINS
     ! ...  This routine takes H(k) on the original mesh of k-points
     ! ...  and interpolates it along the path given in input.
     !
-    USE control_kcw,          ONLY : nks_bands, xk_bands, centers, use_ws_distance
+    USE control_kcw,          ONLY : nks_bands, xk_bands, centers, use_ws_distance, nkstot_eff
     USE constants,            ONLY : rytoev
     !
     !
@@ -59,7 +60,7 @@ CONTAINS
     INTEGER     :: k_to_R     ! FT type: (+1) from k- to R-space, (-1) from R- to k-space
     !
     !
-    ALLOCATE( Hamlt_R(nkstot/nspin,num_wann,num_wann) )
+    ALLOCATE( Hamlt_R(nkstot_eff,num_wann,num_wann) )
     ALLOCATE( centers(3,num_wann) )
     !
     CALL real_ham( Hamlt_R )
@@ -98,6 +99,8 @@ CONTAINS
     ! ...  the original mesh from the PWscf calculation
     !
     !
+    USE control_kcw,     ONLY: nkstot_eff
+    !
     IMPLICIT NONE
     !
     COMPLEX(DP), INTENT(OUT) :: ham(:,:,:)     ! H(R)
@@ -108,9 +111,9 @@ CONTAINS
     !
     !
     k_to_R = +1
-    DO ir = 1, nkstot/nspin
+    DO ir = 1, nkstot_eff
       !
-      CALL FT_ham( Hamlt(1:nkstot/nspin,:,:), num_wann, ham_aux, ir, k_to_R )
+      CALL FT_ham( Hamlt(1:nkstot_eff,:,:), num_wann, ham_aux, ir, k_to_R )
       ham(ir,:,:) = ham_aux 
       !
     ENDDO
@@ -132,7 +135,7 @@ CONTAINS
     USE constants,            ONLY : tpi
     USE lsda_mod,             ONLY : lsda, isk, nspin
     USE control_kcw,          ONLY : spin_component, irvect, xk_bands, centers, &
-                                     use_ws_distance
+                                     use_ws_distance, nkstot_eff
     USE cell_base,            ONLY : at
     !
     !
@@ -141,7 +144,7 @@ CONTAINS
     INTEGER, INTENT(IN)      :: h_dim
     INTEGER, INTENT(IN)      :: ir         ! k-point (or R-point) index
     INTEGER, INTENT(IN)      :: k_to_R     ! FT type: (+1) from k- to R-space, (-1) from R- to k-space
-    COMPLEX(DP), INTENT(IN)  :: ham(nkstot/nspin,h_dim,h_dim)
+    COMPLEX(DP), INTENT(IN)  :: ham(nkstot_eff,h_dim,h_dim)
     !
     COMPLEX(DP), INTENT(OUT) :: ham_t(h_dim,h_dim)
     !
@@ -160,7 +163,7 @@ CONTAINS
           DO ik = 1, nks
             !
             IF ( lsda .AND. isk(ik) /= spin_component) CYCLE
-            ik_eff = ik - (spin_component -1)*nkstot/nspin
+            ik_eff = ik - (spin_component -1)*nkstot_eff
             !
             xq = xk(:,ik)
             CALL cryst_to_cart( 1, xq, at, -1 )
@@ -175,7 +178,7 @@ CONTAINS
         ENDDO
       ENDDO
       !
-      ham_t = ham_t / (nkstot/nspin)   ! 1/Nk factor for the FT from H(k) to H(R)
+      ham_t = ham_t / (nkstot_eff)   ! 1/Nk factor for the FT from H(k) to H(R)
       !
     ELSE IF ( k_to_R == -1 ) THEN      ! build H(k) from H(R). The k-vector here is taken from 
       !                                ! the list xk_bands coming form the card K_POINTS
@@ -192,7 +195,7 @@ CONTAINS
             !
           ENDIF
           !
-          DO ik = 1, nkstot/nspin
+          DO ik = 1, nkstot_eff
             !
             xq = xk_bands(:,ir)
             !

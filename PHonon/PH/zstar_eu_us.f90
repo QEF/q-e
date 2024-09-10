@@ -14,7 +14,7 @@ subroutine zstar_eu_us
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_sum
   USE mp_pools,         ONLY : inter_pool_comm
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm, nbgrp
   USE cell_base,        ONLY : omega
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
   USE buffers,          ONLY : get_buffer
@@ -147,9 +147,9 @@ subroutine zstar_eu_us
      !
      ! call davcio_drho(dvscf(1,1,ipol),lrdrho,iudrho,ipol,-1)
      !
-     call dv_of_drho (dvscf (:, :, ipol), .false.)
+     call dv_of_drho (dvscf (:, :, ipol))
   enddo
-  call psyme (dvscf)
+  call psymdvscf(dvscf)
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_3')
@@ -267,7 +267,7 @@ subroutine zstar_eu_us
 
   fact=1.0_DP
 #if defined(__MPI)
-  fact=1.0_DP/nproc_pool/npool
+  fact=1.0_DP/nproc_pool/npool*nbgrp
 #endif
   IF (okpaw) THEN
      imode0 = 0

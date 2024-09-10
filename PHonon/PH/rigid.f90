@@ -11,7 +11,8 @@ MODULE rigid
   CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat, loto_2d, sign)
+  SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, alph, &
+         bg, omega, alat, loto_2d, sign)
   !-----------------------------------------------------------------------
   !! Compute the rigid-ion (long-range) term for q.  
   !! The long-range term used here, to be added to or subtracted from the
@@ -35,6 +36,8 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! q-vector 
   REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
+  REAL(KIND = DP), INTENT(IN) :: alph
+  !! Ewald parameter
   REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
   REAL(KIND = DP), INTENT(in) :: sign
@@ -65,8 +68,6 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! Loop over q-points
   REAL(KIND = DP):: geg
   !! <q+G| epsil | q+G>
-  REAL(KIND = DP) :: alph
-  !! Ewald parameter
   REAL(KIND = DP) :: fac
   !! Prefactor
   REAL(KIND = DP) :: g1, g2, g3
@@ -94,13 +95,12 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   COMPLEX(KIND = DP) :: facg
   !! Factor
   !
-  ! alph is the Ewald parameter, geg is an estimate of G^2
-  ! such that the G-space sum is convergent for that alph
+  ! geg is an estimate of G^2 such that the G-space sum is convergent 
+  ! given the value of alph
   ! very rough estimate: geg/4/alph > gmax = 14
   ! (exp (-14) = 10^-6)
   !
   gmax = 14.d0
-  alph = 1.0d0
   geg  = gmax * alph * 4.0d0
   ! 
   ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg

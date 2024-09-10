@@ -23,6 +23,7 @@ SUBROUTINE rotate_ks ()
   USE units_lr,              ONLY : iuwfc
   USE wvfct,                 ONLY : npw, nbnd, npwx, current_k
   USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
+  USE noncollin_module,      ONLY : npol, nspin_lsda, nspin_gga, nspin_mag
   USE klist,                 ONLY : ngk, xk, igk_k, nkstot, nks
   USE uspp,                  ONLY : nkb, vkb
   USE uspp_init,             ONLY : init_us_2
@@ -36,7 +37,7 @@ SUBROUTINE rotate_ks ()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, n_orb, ik_eff
+  INTEGER :: ik, n_orb, ik_eff,nkstot_eff
   INTEGER :: lrwfc 
   !
   COMPLEX(DP),EXTERNAL :: zdotc
@@ -61,6 +62,13 @@ SUBROUTINE rotate_ks ()
   !
   ! ... Loop over k_point
   !
+   IF (nspin == 4) THEN
+      nkstot_eff = nkstot
+   ELSE
+      nkstot_eff = nkstot/nspin
+   ENDIF 
+   
+
   k_loop: DO ik = 1, nks
      !
      current_k = ik
@@ -77,7 +85,7 @@ SUBROUTINE rotate_ks ()
      IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      !
      evc0(:,:) = ZERO
-     ik_eff = global_ik - (isk(ik)-1)*(nkstot/nspin)
+     ik_eff = global_ik - (isk(ik)-1)*(nkstot_eff)
      !
      IF (kcw_at_ks) THEN 
         !
@@ -89,12 +97,12 @@ SUBROUTINE rotate_ks ()
      ELSE
         ! 
         !  ... If KI@WANN rotate the KS orbital
-        n_orb = nbnd_occ(ik)
+        n_orb = num_wann
         !
         !  ... If unitary matrix provided, rotate the KS==>MLWF and store in evc0 ...
-        ik_eff = global_ik - (isk(ik)-1)*(nkstot/nspin)
+        ik_eff = global_ik - (isk(ik)-1)*(nkstot_eff)
         !! ... In PW the spin down are treatead as k points. In W90 I have only up or dw
-        !! ... and ik run always from 1 to nkstot/nspin (see read_wannier.f90). 
+        !! ... and ik run always from 1 to nkstot_eff (see read_wannier.f90). 
         !
         occ_mat_aux = 0.D0
         CALL apply_u_matrix(evc, evc0, occ_mat_aux, ik_eff,n_orb)
@@ -106,9 +114,8 @@ SUBROUTINE rotate_ks ()
      !
      ! ... Store the KS states in the Wannier gauge 
      !
-     lrwfc = num_wann * npwx 
-     ik_eff = ik-(spin_component-1)*nkstot/nspin
-     CALL save_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
+     lrwfc = num_wann * npwx * npol
+     CALL save_buffer ( evc0, lrwfc, iuwfc_wann, ik )
      !
      !
      ! ... Check that the rotation did not spoil the KS eigenvalues
@@ -119,7 +126,7 @@ SUBROUTINE rotate_ks ()
   ENDDO k_loop
   !
   IF (check_ks .AND. .NOT. kcw_at_ks )  WRITE( stdout, '(/,8x,A)') &
-               'INFO: Performing a check on the eigenvalues of the rotated KS Hamilotnian ... DONE'
+               'INFO: Performing a check on the eigenvalues of the rotated KS Hamiltonian ... DONE'
   WRITE(stdout, '(/,5X,"INFO: Minimizing orbitals DEFINED")')
   !
 END subroutine rotate_ks

@@ -12,7 +12,7 @@ SUBROUTINE hp_run_nscf (do_band)
   ! This is the main driver of the PWscf program called from the HP code.
   !
   USE control_flags,   ONLY : conv_ions, restart, iverbosity, isolve
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
+  USE starting_scf,    ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir
   USE lsda_mod,        ONLY : nspin
   USE check_stop,      ONLY : check_stop_now

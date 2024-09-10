@@ -50,14 +50,14 @@ MODULE qexsd_init
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
             qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
-            qexsd_init_rism3d, qexsd_init_rismlaue
+            qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm
   !
 CONTAINS
   !
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_convergence_info(obj, n_scf_steps, scf_has_converged, scf_error, &
-                                           optimization_has_converged, n_opt_steps, grad_norm )
+                                           optimization_has_converged, n_opt_steps, grad_norm, wf_collected)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -68,6 +68,7 @@ CONTAINS
       LOGICAL, OPTIONAL, INTENT(IN) :: optimization_has_converged
       INTEGER, OPTIONAL, INTENT(in) :: n_opt_steps
       REAL(DP),OPTIONAL, INTENT(IN) :: grad_norm
+      LOGICAL,OPTIONAL,  INTENT(IN) :: wf_collected
       !
       CHARACTER(27)       :: subname="qexsd_init_convergence_info"
       TYPE(scf_conv_type) :: scf_conv
@@ -81,13 +82,13 @@ CONTAINS
           IF ( .NOT. PRESENT(grad_norm) )   CALL errore(subname,"grad_norm not present",10)
           !
           call qes_init (opt_conv, "opt_conv", optimization_has_converged, n_opt_steps, grad_norm)
-          call qes_init (obj, "convergence_info", scf_conv, opt_conv)
+          call qes_init (obj, "convergence_info", scf_conv, opt_conv, wf_collected)
           call qes_reset (scf_conv)
           CALL qes_reset (opt_conv)
           !
       ELSE 
           !
-          call qes_init (obj, "convergence_info", scf_conv)
+          call qes_init (obj, "convergence_info", scf_conv, WF_COLLECTED = wf_collected)
           call qes_reset (scf_conv)
           !
       ENDIF
@@ -164,7 +165,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_atomic_structure(obj, nsp, atm, ityp, nat, tau, &
-                                           alat, a1, a2, a3, ibrav)
+                                           alat, a1, a2, a3, ibrav, natomwfc)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -176,6 +177,7 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: alat
       REAL(DP),         INTENT(IN) :: a1(:), a2(:), a3(:)
       INTEGER,          INTENT(IN) :: ibrav
+      INTEGER,OPTIONAL, INTENT(IN) :: natomwfc
       !
       INTEGER         :: ia 
       TYPE(atom_type), ALLOCATABLE :: atom(:)
@@ -234,7 +236,7 @@ CONTAINS
       !
       CALL qes_init (obj, "atomic_structure", NAT=nat, ALAT=alat, &
               ATOMIC_POSITIONS=atomic_pos, CELL=cell , &
-              BRAVAIS_INDEX=ibrav_ptr, ALTERNATIVE_AXES = use_alt_axes_ )
+              BRAVAIS_INDEX=ibrav_ptr, ALTERNATIVE_AXES = use_alt_axes_ , NUM_OF_ATOMIC_WFC= natomwfc)
       ! 
       ! cleanup 
       ! 
@@ -928,9 +930,22 @@ CONTAINS
     CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
     CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
     !
+
     CALL qes_init (obj,TAGNAME,ASSUME_ISOLATED =assume_isolated)
     END SUBROUTINE qexsd_init_outputPBC
     !
+    !
+    SUBROUTINE qexsd_init_esm(esm_obj, bc, nfit, w, efield, a, zb, debug, debug_gpmax) 
+      IMPLICIT NONE 
+      TYPE(esm_type),INTENT(INOUT)  :: esm_obj 
+      CHARACTER(LEN=*),INTENT(IN)  :: bc
+      INTEGER,INTENT(IN)            :: nfit
+      REAL(DP),INTENT(IN)           :: w, efield, a 
+      REAL(DP),INTENT(IN),OPTIONAL  :: zb 
+      LOGICAL,INTENT(IN),OPTIONAL   :: debug, debug_gpmax
+      !
+      CALL qes_init (esm_obj, "esm", bc=TRIM(bc), nfit=nfit, w=w, efield=efield, a=a )
+    END SUBROUTINE qexsd_init_esm
     !
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_magnetization(obj, lsda, noncolin, spinorbit, total_mag, total_mag_nc, absolute_mag, &
@@ -1144,9 +1159,9 @@ CONTAINS
     starting_k_points_%tagname = "starting_k_points"
     !
     CALL qes_init  (obj, TAGNAME, LSDA = lsda, NONCOLIN = noncolin, SPINORBIT = lspinorb, NBND = nbnd_opt,  &
-                   NELEC = nelec, WF_COLLECTED = wf_collected, STARTING_K_POINTS = starting_k_points_,      & 
+                   NELEC = nelec, STARTING_K_POINTS = starting_k_points_,      & 
                    NKS = ndim_ks_energies, OCCUPATIONS_KIND = occupations_kind, KS_ENERGIES = ks_objs,      &
-                   NBND_UP = nbnd_up_opt, NBND_DW = nbnd_dw_opt, NUM_OF_ATOMIC_WFC = n_wfc_at,              &
+                   NBND_UP = nbnd_up_opt, NBND_DW = nbnd_dw_opt,              &
                    FERMI_ENERGY = fermi_energy, HIGHESTOCCUPIEDLEVEL = homo,  TWO_FERMI_ENERGIES = ef_updw, & 
                    SMEARING = smearing, LOWESTUNOCCUPIEDLEVEL = lumo)
     DO ik=1,ndim_ks_energies

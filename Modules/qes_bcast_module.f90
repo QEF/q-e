@@ -127,6 +127,7 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_scalarQuantity
     MODULE PROCEDURE qes_bcast_rism3d
     MODULE PROCEDURE qes_bcast_rismlaue
+    MODULE PROCEDURE qes_bcast_two_chem
   END INTERFACE qes_bcast
   !
   CONTAINS
@@ -287,6 +288,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%spin_constraints_ispresent, ionode_id, comm)
     IF (obj%spin_constraints_ispresent) &
       CALL qes_bcast_spin_constraints(obj%spin_constraints, ionode_id, comm)
+    CALL mp_bcast(obj%twoch__ispresent, ionode_id, comm)
+    IF (obj%twoch__ispresent) &
+      CALL qes_bcast_two_chem(obj%twoch_, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_input
   !
@@ -597,6 +601,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%nat_ispresent, ionode_id, comm)
     IF (obj%nat_ispresent) &
       CALL mp_bcast(obj%nat, ionode_id, comm)
+    CALL mp_bcast(obj%num_of_atomic_wfc_ispresent, ionode_id, comm)
+    IF (obj%num_of_atomic_wfc_ispresent) &
+      CALL mp_bcast(obj%num_of_atomic_wfc, ionode_id, comm)
     CALL mp_bcast(obj%alat_ispresent, ionode_id, comm)
     IF (obj%alat_ispresent) &
       CALL mp_bcast(obj%alat, ionode_id, comm)
@@ -2444,6 +2451,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%opt_conv_ispresent, ionode_id, comm)
     IF (obj%opt_conv_ispresent) &
       CALL qes_bcast_opt_conv(obj%opt_conv, ionode_id, comm)
+    CALL mp_bcast(obj%wf_collected_ispresent, ionode_id, comm)
+    IF (obj%wf_collected_ispresent) &
+      CALL mp_bcast(obj%wf_collected, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_convergence_info
   !
@@ -2607,6 +2617,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lread, ionode_id, comm)
     !
     CALL mp_bcast(obj%assume_isolated, ionode_id, comm)
+    CALL mp_bcast(obj%esm_ispresent, ionode_id, comm)
+    IF (obj%esm_ispresent) &
+      CALL qes_bcast_esm(obj%esm, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_outputPBC
   !
@@ -2722,10 +2735,6 @@ MODULE qes_bcast_module
     IF (obj%nbnd_dw_ispresent) &
       CALL mp_bcast(obj%nbnd_dw, ionode_id, comm)
     CALL mp_bcast(obj%nelec, ionode_id, comm)
-    CALL mp_bcast(obj%num_of_atomic_wfc_ispresent, ionode_id, comm)
-    IF (obj%num_of_atomic_wfc_ispresent) &
-      CALL mp_bcast(obj%num_of_atomic_wfc, ionode_id, comm)
-    CALL mp_bcast(obj%wf_collected, ionode_id, comm)
     CALL mp_bcast(obj%fermi_energy_ispresent, ionode_id, comm)
     IF (obj%fermi_energy_ispresent) &
       CALL mp_bcast(obj%fermi_energy, ionode_id, comm)
@@ -2735,6 +2744,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lowestUnoccupiedLevel_ispresent, ionode_id, comm)
     IF (obj%lowestUnoccupiedLevel_ispresent) &
       CALL mp_bcast(obj%lowestUnoccupiedLevel, ionode_id, comm)
+    CALL mp_bcast(obj%twochem_ispresent, ionode_id, comm)
+    IF (obj%twochem_ispresent) &
+      CALL qes_bcast_two_chem(obj%twochem, ionode_id, comm)
     CALL mp_bcast(obj%two_fermi_energies_ispresent, ionode_id, comm)
     IF (obj%two_fermi_energies_ispresent) &
       CALL mp_bcast(obj%two_fermi_energies, ionode_id, comm)
@@ -3235,6 +3247,25 @@ MODULE qes_bcast_module
       CALL mp_bcast(obj%left_buffer_v, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_rismlaue
+  !
+  !
+  SUBROUTINE qes_bcast_two_chem(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(two_chem_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%twochem, ionode_id, comm)
+    CALL mp_bcast(obj%nbnd_cond, ionode_id, comm)
+    CALL mp_bcast(obj%degauss_cond, ionode_id, comm)
+    CALL mp_bcast(obj%nelec_cond, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_two_chem
   !
   !
 END MODULE qes_bcast_module

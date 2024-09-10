@@ -55,7 +55,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_flavor" in
-*:ifort* )
+*:ifort* | *:ifx* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"

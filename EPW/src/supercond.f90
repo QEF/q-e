@@ -1272,11 +1272,11 @@
     !! Counter on iteration steps
     INTEGER :: lda, ldvl, ldvr, lwork, ix, iy, ic
     !! Eigenvalue problem-related variables
-    REAL(KIND = DP) :: wr(adim), wi(adim), vl(adim, adim), vr(adim, adim)
-    !! Eigenvalue problem-related variables
     REAL(KIND = DP) :: alpha, x(adim), y(adim), norm
     !! Eigenvalue problem-related variables
     REAL(KIND = DP), ALLOCATABLE :: work(:)
+    !! Eigenvalue problem-related variables
+    REAL(KIND = DP), ALLOCATABLE :: wr(:), wi(:), vl(:,:), vr(:, :)
     !! Eigenvalue problem-related variables
     !
     IF (tc_linear_solver == 'lapack') THEN
@@ -1287,6 +1287,19 @@
       ldvr     = n
       jobvl    = 'n'
       jobvr    = 'n'
+      ! S.tiwari: some allocations to cure ifort overflow
+      ALLOCATE(vl(n,n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating vl', 1)
+      ALLOCATE(vr(n,n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating vr', 1)
+      ALLOCATE(wr(n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating wr', 1)
+      ALLOCATE(wi(n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating wi', 1)
+      ALLOCATE(work(lwork), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating work', 1) 
+      lwork = -1 
+      !
       wr(:)    = zero
       wi(:)    = zero
       vl(:, :) = zero
@@ -1294,9 +1307,6 @@
       work(:)  = zero
       !
       ! main solver
-      ALLOCATE(work(lwork), STAT = ierr)
-      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating work', 1)
-      lwork = -1
       CALL DGEEV(jobvl, jobvr, n, a, lda, wr, wi, vl, ldvl, vr, ldvr, work, lwork, ierr)
       IF ( ierr /= 0) CALL errore('crit_temp_solver', 'Error eigenvalue solver failed!', 1)
       lwork = MIN(4 * n, INT(work(1)))
@@ -1315,6 +1325,14 @@
         IF (eigen < wr(ic))   eigen = wr(ic)
       ENDDO
       niter = 1
+      DEALLOCATE(vl, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error deallocating vl', 1)
+      DEALLOCATE(vr, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error deallocating vr', 1)
+      DEALLOCATE(wr, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error deallocating wr', 1)
+      DEALLOCATE(wi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error deallocating wi', 1)
     ENDIF
     !
     IF (tc_linear_solver == 'power') THEN

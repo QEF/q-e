@@ -75,6 +75,7 @@ SUBROUTINE lr_dealloc()
   IF (allocated(int3_nc)) DEALLOCATE(int3_nc)
   !
   IF (eels) THEN
+     !$acc exit data delete(evq)
      IF (associated(evq))    DEALLOCATE(evq)
   ELSE
      IF (associated(evq))    NULLIFY(evq)

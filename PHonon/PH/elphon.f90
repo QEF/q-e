@@ -358,7 +358,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
   USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
@@ -464,9 +464,12 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         IF (nksq.GT.1 .OR. nsolv==2) THEN
            IF (lgamma) THEN
               CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+              !$acc update device(evc)
            ELSE
               CALL get_buffer (evc, lrwfc, iuwfc, ikmk)
+              !$acc update device(evc)
               CALL get_buffer (evq, lrwfc, iuwfc, ikmq)
+              !$acc update device(evq)
            ENDIF
         ENDIF
         !
@@ -508,7 +511,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            IF (isolv==2) THEN
               dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_nc_save(:,:,:,:,ipert,2)
            ENDIF
            !
            CALL apply_dpot_bands(ik, ibnd_lst - ibnd_fst + 1, dvscfins(:, :, ipert), &
@@ -540,7 +543,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            IF (isolv==2) THEN
               dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_nc_save(:,:,:,:,ipert,1)
            ENDIF
            !
            ! If doing Allen-Heine-Cardona (AHC) calculation, we need dvpsi
@@ -1418,7 +1421,10 @@ SUBROUTINE elph_prt()
   !
   LOGICAL :: found
   !
-  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr, istatus
+#if defined(__MPI)
+  INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr
   INTEGER :: nksq2, ikk2, ikq2, nkq2, ik1, ik2, ipert, jpert, n
   !
   REAL(DP), PARAMETER :: ryd2mev  = rytoev * 1.0E3_DP

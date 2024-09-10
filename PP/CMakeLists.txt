@@ -4,7 +4,6 @@ set(src_pp
     src/add_shift_cc.f90
     src/add_shift_lc.f90
     src/add_shift_us.f90
-    src/atomic_wfc_nc_proj.f90
     src/chdens_module.f90
     src/chdens_bspline.f90
     src/chdens_bspline_sphere.f90

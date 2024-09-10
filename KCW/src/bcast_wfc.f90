@@ -17,6 +17,7 @@ subroutine bcast_wfc (igk_k_all, ngk_all)
   !
   USE kinds,             ONLY : DP
   USE lsda_mod,          ONLY : nspin, lsda, isk
+  USE noncollin_module,  ONLY : domag, noncolin, nspin_lsda, nspin_gga, nspin_mag, npol
   USE klist,             ONLY : nkstot, nks, igk_k, ngk
   USE buffers,           ONLY : open_buffer, save_buffer,  get_buffer
   USE control_kcw,       ONLY : evc0, iuwfc_wann, iuwfc_wann_allk, num_wann, spin_component
@@ -38,14 +39,19 @@ subroutine bcast_wfc (igk_k_all, ngk_all)
   INTEGER :: global_ik, ik
   ! ... global and local index of the k point 
   !
-  INTEGER   :: lrwfc, ik_eff
-  ! ... record length , counter 
+  INTEGER   :: lrwfc, nkstot_eff
+  ! ... record length , counter, effective number of kpoints
   !
   INTEGER, EXTERNAL :: global_kpoint_index
   ! ... find the global kpoint index given the local one. 
   !
-  ALLOCATE ( evc0_aux(npwx, num_wann, nkstot/nspin) )
-  lrwfc = num_wann * npwx
+  IF (nspin_mag == 4) THEN
+    nkstot_eff = nkstot
+  ELSE
+    nkstot_eff = nkstot/nspin_mag
+  ENDIF 
+  ALLOCATE ( evc0_aux(npwx*npol, num_wann, nkstot_eff) )
+  lrwfc = num_wann * npwx * npol
   evc0_aux = CMPLX(0.0, 0.0, kind=DP)
   igk_k_all = 0
   ngk_all = 0
@@ -53,11 +59,10 @@ subroutine bcast_wfc (igk_k_all, ngk_all)
   DO ik = 1, nks 
      IF (lsda .AND. isk(ik) /= spin_component) CYCLE
      global_ik = global_kpoint_index (nkstot, ik)
-     global_ik = global_ik - (spin_component-1)*nkstot/nspin
-     ik_eff = ik - (spin_component-1)*nkstot/nspin
+     global_ik = global_ik - (spin_component-1)*nkstot_eff
      igk_k_all(:,global_ik) = igk_k(:,ik)
      ngk_all(global_ik) = ngk(ik)
-     CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
+     CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik )
      evc0_aux(:,:,global_ik) = evc0(:,:)
   ENDDO
   !
@@ -66,10 +71,10 @@ subroutine bcast_wfc (igk_k_all, ngk_all)
   CALL mp_sum (ngk_all, inter_pool_comm)
   CALL mp_sum (igk_k_all, inter_pool_comm)
   !
-  DO ik = 1, nkstot/nspin
+  DO ik = 1, nkstot_eff
     !ik_eff = ik + (spin_component-1)*nkstot/nspin
     !WRITE(*,'("NICOLA DOPO", 3i5, 6f20.15)'), my_pool_id, ik, ik, igk_k_all (1:3,ik)
-    lrwfc = num_wann * npwx
+    lrwfc = num_wann * npwx * npol
     evc0(:,:) = evc0_aux (:,:,ik)
     CALL save_buffer (evc0, lrwfc, iuwfc_wann_allk, ik)
   ENDDO

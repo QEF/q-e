@@ -131,6 +131,7 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_scalarQuantity
     MODULE PROCEDURE qes_read_rism3d
     MODULE PROCEDURE qes_read_rismlaue
+    MODULE PROCEDURE qes_read_two_chem
   END INTERFACE qes_read
   !
   CONTAINS
@@ -1083,6 +1084,26 @@ MODULE qes_read_module
       CALL qes_read_spin_constraints(tmp_node, obj%spin_constraints, ierr )
     ELSE
        obj%spin_constraints_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "twoch_")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:inputType","twoch_: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:inputType","twoch_: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%twoch__ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_two_chem(tmp_node, obj%twoch_, ierr )
+    ELSE
+       obj%twoch__ispresent = .FALSE.
     END IF
     !
     !
@@ -2599,6 +2620,13 @@ MODULE qes_read_module
       obj%nat_ispresent = .TRUE.
     ELSE
       obj%nat_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "num_of_atomic_wfc")) THEN
+      CALL extractDataAttribute(xml_node, "num_of_atomic_wfc", obj%num_of_atomic_wfc)
+      obj%num_of_atomic_wfc_ispresent = .TRUE.
+    ELSE
+      obj%num_of_atomic_wfc_ispresent = .FALSE.
     END IF
     ! 
     IF (hasAttribute(xml_node, "alat")) THEN
@@ -11426,6 +11454,34 @@ MODULE qes_read_module
        obj%opt_conv_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "wf_collected")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:convergence_infoType","wf_collected: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:convergence_infoType","wf_collected: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%wf_collected_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%wf_collected , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:convergence_infoType","error reading wf_collected")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:convergence_infoType","error reading wf_collected",10)
+         END IF
+      END IF
+    ELSE
+       obj%wf_collected_ispresent = .FALSE.
+    END IF
+    !
     !
     obj%lwrite = .TRUE.
     !
@@ -12085,6 +12141,26 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:outputPBCType","error reading assume_isolated",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "esm")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputPBCType","esm: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputPBCType","esm: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%esm_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_esm(tmp_node, obj%esm, ierr )
+    ELSE
+       obj%esm_ispresent = .FALSE.
     END IF
     !
     !
@@ -12910,58 +12986,6 @@ MODULE qes_read_module
        END IF
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "num_of_atomic_wfc")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:band_structureType","num_of_atomic_wfc: too many occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:band_structureType","num_of_atomic_wfc: too many occurrences",10)
-        END IF
-    END IF
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%num_of_atomic_wfc_ispresent = .TRUE.
-      tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%num_of_atomic_wfc , IOSTAT = iostat_)
-      IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN
-            CALL infomsg("qes_read:band_structureType","error reading num_of_atomic_wfc")
-            ierr = ierr + 1
-         ELSE
-            CALL errore ("qes_read:band_structureType","error reading num_of_atomic_wfc",10)
-         END IF
-      END IF
-    ELSE
-       obj%num_of_atomic_wfc_ispresent = .FALSE.
-    END IF
-    !
-    tmp_node_list => getElementsByTagname(xml_node, "wf_collected")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:band_structureType","wf_collected: wrong number of occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:band_structureType","wf_collected: wrong number of occurrences",10)
-        END IF
-    END IF
-    !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%wf_collected, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN
-          CALL infomsg("qes_read:band_structureType","error reading wf_collected")
-          ierr = ierr + 1
-       ELSE
-          CALL errore ("qes_read:band_structureType","error reading wf_collected",10)
-       END IF
-    END IF
-    !
     tmp_node_list => getElementsByTagname(xml_node, "fermi_energy")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -13044,6 +13068,26 @@ MODULE qes_read_module
       END IF
     ELSE
        obj%lowestUnoccupiedLevel_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "twochem")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:band_structureType","twochem: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:band_structureType","twochem: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%twochem_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_two_chem(tmp_node, obj%twochem, ierr )
+    ELSE
+       obj%twochem_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "two_fermi_energies")
@@ -15117,6 +15161,123 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_rismlaue
+  !
+  !
+  SUBROUTINE qes_read_two_chem(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(two_chem_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "twochem")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:two_chemType","twochem: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:two_chemType","twochem: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%twochem, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:two_chemType","error reading twochem")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:two_chemType","error reading twochem",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "nbnd_cond")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:two_chemType","nbnd_cond: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:two_chemType","nbnd_cond: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nbnd_cond, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:two_chemType","error reading nbnd_cond")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:two_chemType","error reading nbnd_cond",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "degauss_cond")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:two_chemType","degauss_cond: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:two_chemType","degauss_cond: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%degauss_cond, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:two_chemType","error reading degauss_cond")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:two_chemType","error reading degauss_cond",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "nelec_cond")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:two_chemType","nelec_cond: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:two_chemType","nelec_cond: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nelec_cond, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:two_chemType","error reading nelec_cond")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:two_chemType","error reading nelec_cond",10)
+       END IF
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_two_chem
   !
   !
 END MODULE qes_read_module

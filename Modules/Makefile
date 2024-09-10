@@ -221,8 +221,6 @@ sockets.o
 
 # GPU versions of modules
 MODULES += \
-  wavefunctions_gpu.o \
-  cuda_subroutines.o \
   random_numbers_gpu.o
 
 TLDEPS= libfox libla libfft libutil libmbd librxc libupf

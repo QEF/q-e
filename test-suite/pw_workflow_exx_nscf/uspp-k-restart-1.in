@@ -1,8 +1,7 @@
  &CONTROL
     calculation = 'scf',
     prefix      = 'Graphene_1x1_HSE',
-    outdir      = './out',
-    max_seconds=3
+    outdir      = './out'
  /
 
  &SYSTEM
@@ -20,7 +19,8 @@
  /
  
  &ELECTRONS
-    conv_thr = 1.0d-8
+    conv_thr = 1.0d-8,
+    exx_maxstep = 1
  /
  
 ATOMIC_SPECIES

@@ -67,7 +67,6 @@ MODULE oscdft_occupations
          USE becmod,              ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
          USE lsda_mod,            ONLY : isk, nspin
          USE wavefunctions,       ONLY : evc
-         USE wavefunctions_gpum,  ONLY : using_evc
          USE control_flags,       ONLY : gamma_only
          USE mp_pools,            ONLY : inter_pool_comm
          USE mp,                  ONLY : mp_sum
@@ -110,7 +109,6 @@ MODULE oscdft_occupations
          DO ik=1,nks
             npw = ngk(ik)
             IF (nks > 1) THEN
-               CALL using_evc(2)
                IF (PRESENT(wfc_evc)) THEN
                   CALL get_buffer(evc, wfc_evc%nword, wfc_evc%iun, ik)
                ELSE
@@ -118,7 +116,6 @@ MODULE oscdft_occupations
                END IF
                CALL oscdft_get_buffer(wfcS, ik)
             END IF
-            CALL using_evc(2)
             CALL calbec(npw, wfcS%wfc, evc, proj)
             DO ioscdft=1,inp%noscdft
                IF (inp%spin_index(ioscdft) /= isk(ik)) CYCLE

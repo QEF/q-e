@@ -24,8 +24,6 @@ SUBROUTINE read_file()
   USE wavefunctions,    ONLY : evc
   USE pw_restart_new,   ONLY : read_collected_wfc
   !
-  USE wavefunctions_gpum, ONLY : using_evc
-  !
   IMPLICIT NONE
   !
   INTEGER :: ik
@@ -48,7 +46,6 @@ SUBROUTINE read_file()
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions'
-     CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
@@ -85,7 +82,6 @@ SUBROUTINE read_file_ph( needwf_ph )
   USE pw_restart_new,   ONLY : read_collected_wfc
   USE fft_base,         ONLY : dffts
   !
-  USE wavefunctions_gpum, ONLY : using_evc
   USE pw_restart_new,   ONLY : read_xml_file
   !
   IMPLICIT NONE
@@ -139,7 +135,6 @@ SUBROUTINE read_file_ph( needwf_ph )
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions in '//TRIM(wfc_dir)
-     CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
@@ -229,9 +224,9 @@ SUBROUTINE post_xml_init (  )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE uspp_param,           ONLY : upf
+  USE uspp_param,           ONLY : upf, nhm, nsp
   USE read_pseudo_mod,      ONLY : readpp
-  USE uspp,                 ONLY : becsum
+  USE uspp,                 ONLY : becsum, allocate_uspp
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
@@ -253,7 +248,7 @@ SUBROUTINE post_xml_init (  )
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE io_rho_xml,           ONLY : read_scf
   USE vlocal,               ONLY : strf
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, use_gpu
   USE control_flags,        ONLY : ts_vdw, tqr, tq_smoothing, tbeta_smoothing
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
@@ -269,9 +264,12 @@ SUBROUTINE post_xml_init (  )
   USE rism_module,          ONLY : rism_tobe_alive, rism_pot3d
   USE rism3d_facade,        ONLY : lrism3d, rism3d_initialize, rism3d_read_to_restart
   USE xc_lib,               ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  USE atwfc_mod,            ONLY : init_tab_atwfc
   USE beta_mod,             ONLY : init_tab_beta
   USE klist,                ONLY : qnorm
   !
+  USE tsvdw_module,         ONLY : tsvdw_initialize
+  USE xc_lib,               ONLY : xclib_dft_is
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge, qmax
@@ -327,8 +325,8 @@ SUBROUTINE post_xml_init (  )
   !
   ! ... allocate the potentials
   !
+  call allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
   CALL allocate_locpot()
-  CALL allocate_nlpot()
   IF (okpaw) THEN
      CALL allocate_paw_internals()
      CALL paw_init_onecenter()
@@ -342,6 +340,10 @@ SUBROUTINE post_xml_init (  )
   ! ... bring the charge density to real space
   !
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
+  ! ... bring tau to real space
+  IF  ( xclib_dft_is('meta') ) THEN
+     CALL rho_g2r (dfftp, rho%kin_g, rho%kin_r)
+  ENDIF
   !
   ! ... re-compute the local part of the pseudopotential vltot and
   ! ... the core correction charge (if any) - from hinit0.f90
@@ -363,7 +365,7 @@ SUBROUTINE post_xml_init (  )
   !
   IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   !
-  CALL init_tab_atwfc(omega, intra_bgrp_comm)
+  CALL init_tab_atwfc( qmax, omega, intra_bgrp_comm, ierr )
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
@@ -391,10 +393,10 @@ SUBROUTINE post_xml_init (  )
   ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
   IF ( ts_vdw) THEN
-     ! CALL tsvdw_initialize()
-     ! CALL set_h_ainv()
-     CALL infomsg('read_file_new','*** vdW-TS term will be missing in potential ***')
-     ts_vdw = .false.
+      CALL tsvdw_initialize()
+      CALL set_h_ainv()
+     !CALL infomsg('read_file_new','*** vdW-TS term will be missing in potential ***')
+     !ts_vdw = .false.
   END IF
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &

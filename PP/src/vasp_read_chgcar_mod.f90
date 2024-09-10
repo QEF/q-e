@@ -128,7 +128,7 @@ MODULE vasp_read_chgcar
         INTEGER,                 INTENT(out)  :: ierr
         INTEGER              :: i 
         INTEGER              :: nityp(10)
-        CHARACTER(LEN=3)     :: atm_(10)
+        CHARACTER(LEN=6)     :: atm_(10)
         !
         ierr = 0
         READ( iunchg, * )

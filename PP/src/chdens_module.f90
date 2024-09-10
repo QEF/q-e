@@ -91,7 +91,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   INTEGER, ALLOCATABLE :: ityps (:)
-  CHARACTER (len=3) :: atms(ntypx)
+  CHARACTER (len=6) :: atms(ntypx)
   CHARACTER (len=256) :: filepp(nfilemax)
   CHARACTER (len=20) :: interpolation
   real(DP) :: rhotot
@@ -701,7 +701,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! types of atoms
   ! output unit
   ! output format
-  CHARACTER(len=3) :: atm(*) ! atomic symbols
+  CHARACTER(len=6) :: atm(*) ! atomic symbols
   real(DP) :: e1(3), e2(3), x0(3), m1, m2, g(3,ngm), alat, &
        tau(3,nat), at(3,3)
   ! vectors e1, e2 defining the plane
@@ -931,7 +931,7 @@ SUBROUTINE plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   ! number of points along x, y, z
   ! output format
   ! output unit
-  CHARACTER(len=3) :: atm(*)
+  CHARACTER(len=6) :: atm(*)
 
   real(DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
                    e1(3), e2(3), e3(3), m1, m2, m3
@@ -1037,7 +1037,7 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
   IMPLICIT NONE
   INTEGER :: nat, ityp(nat), nr1x, nr2x, nr3x, nr1, nr2, nr3, &
        output_format, ounit
-  CHARACTER(len=3) :: atm(*)
+  CHARACTER(len=6) :: atm(*)
 
   real(DP) :: alat, tau (3, nat), at (3, 3), rho(nr1x,nr2x,nr3x), &
        bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3

@@ -21,7 +21,8 @@ SUBROUTINE screen_coeff ()
   USE control_kcw,          ONLY : kcw_iverbosity, spin_component, num_wann, iorb_start, l_do_alpha, &
                                    iorb_end, alpha_final, nqstot, eps_inf, l_vcut, l_unique_manifold, &  
                                    group_alpha, tmp_dir_kcw, iurho_wann, tmp_dir_kcwq, x_q, tmp_dir_save, &
-                                   i_orb
+                                   i_orb, nrho
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_mag, npol
   USE buffers,              ONLY : get_buffer, save_buffer
   USE io_global,            ONLY : stdout, ionode
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -42,24 +43,27 @@ SUBROUTINE screen_coeff ()
   !
   IMPLICIT NONE
   ! 
-  INTEGER :: iq, nqs, spin_ref, is
-  !! Counter for the k/q points in the BZ, total number of q points and number of pw for a given k (k+q) point
+  INTEGER :: iq, nqs, spin_ref, is, ip
+  !! Counter for the k/q points in the BZ, total number of q points and number of pw for a given k (k+q) point, spin/magnetizations index ip
   !
   INTEGER :: iwann, jwann, lrrho, iq_start, iun_res
   !! Band counter, leght of the rho record, starting iq (if restart), iunit partial results
   !
-  COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), delta_vr_(dffts%nnr,nspin)
+  COMPLEX(DP) :: rhowann(dffts%nnr, num_wann,nrho), rhor(dffts%nnr,nrho) 
   !! The periodic part of the wannier orbital density
+  !
+  COMPLEX (DP):: delta_vr(dffts%nnr,nspin_mag), delta_vr_(dffts%nnr,nspin_mag)
+  !! The perturbing potential w and w/o q+G=0 contribution
   !
   COMPLEX(DP) :: vki_u(num_wann), sh(num_wann), vki_r(num_wann)
   ! ki unrelaxed and relaxed potential and self-hartree
   !
-  COMPLEX(DP), ALLOCATABLE  :: rhog(:), delta_vg(:,:), vh_rhog(:), drhog_scf(:,:), drhor_scf(:,:), delta_vg_(:,:)
+  COMPLEX(DP), ALLOCATABLE  :: rhog(:,:), delta_vg(:,:), vh_rhog(:), drhog_scf(:,:), drhor_scf(:,:), delta_vg_(:,:)
   ! wanier density, perturbing potential, hartree potential, density variation (g and r), perturbing pot with G0=0 
   !
   LOGICAL :: do_band, setup_pw 
   !
-  COMPLEX(DP) :: phase(dffts%nnr), wann_c(dffts%nnr,num_wann), rho_c(dffts%nnr,num_wann)
+  COMPLEX(DP) :: phase(dffts%nnr), wann_c(dffts%nnr,num_wann,nrho), rho_c(dffts%nnr,num_wann,nrho)
   !! The phase associated to the hift k+q-> k'
   !
   COMPLEX(DP) :: int_rho, int_wann, pi_q_unrelax, pi_q_unrelax_, sh_q, pi_q_relax, pi_q_relax_rs
@@ -77,7 +81,7 @@ SUBROUTINE screen_coeff ()
   !
   IF (nqs == 1) do_real_space = .TRUE. 
   IF (do_real_space) THEN 
-     ALLOCATE ( drhor_scf(dffts%nnr,nspin) ) 
+     ALLOCATE ( drhor_scf(dffts%nnr,nspin_mag) ) 
      drhor_scf = ZERO
   ENDIF
   ! If only 1 K point do also integral in REAL space (Extra check for the Super cell calculation)
@@ -116,11 +120,11 @@ SUBROUTINE screen_coeff ()
   DO iq = iq_start, nqs
     !! For each q in the mesh 
     !
-    CALL kcw_prepare_q ( do_band, setup_pw, iq )
+    CALL kcw_prepare_q ( do_band, setup_pw, iq ) 
     IF (kcw_iverbosity .gt. -1 ) WRITE(stdout,'(8x, "INFO: prepare_q DONE",/)') 
     !! Prepare the q point calculation
     !
-    lrrho=num_wann*dffts%nnr
+    lrrho=num_wann*dffts%nnr*nrho
     tmp_dir = tmp_dir_save  ! the periodic part are written on the original outdir 
     CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
     tmp_dir = tmp_dir_kcwq       ! go back to the q-specific directory
@@ -136,10 +140,10 @@ SUBROUTINE screen_coeff ()
     !         avoided in principle (see compute_map and rho_of_q). 
     !         For the moment it's easier to  keep it. 
     !
-    CALL kcw_initialize_ph ( ) 
+    CALL kcw_initialize_ph ( ) !!! <----- TO UPDATE FOR NC CASE
     IF (kcw_iverbosity .gt. -1 ) WRITE(stdout,'(8X, "INFO: kcw_q initialization DONE",/)') 
     !
-    ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), drhog_scf (ngms, nspin), delta_vg_(ngms,nspin) )
+    ALLOCATE ( rhog (ngms,nrho) , delta_vg(ngms,nspin_mag), vh_rhog(ngms), drhog_scf (ngms, nspin_mag), delta_vg_(ngms,nspin_mag) )
     !
     IF ( lgamma .AND. .NOT. l_unique_manifold) CALL check_density (rhowann) 
     !! ... For q==0 the sum over k and v should give the density. If not something wrong...
@@ -154,21 +158,32 @@ SUBROUTINE screen_coeff ()
        ! Skip LR calculation if this orbital match with a one already computed (see group_orbital)
        !
        drhog_scf (:,:) = ZERO
-       rhog(:)         = ZERO
+       rhog(:,:)         = ZERO
        delta_vg(:,:)   = ZERO
        delta_vg_(:,:)  = ZERO
        vh_rhog(:)      = ZERO
-       rhor(:)         = ZERO
+       rhor(:,:)         = ZERO
        !
-       rhor(:) = rhowann(:,iwann)
+       rhor(:,:) = rhowann(:,iwann,:)
        !! ... The periodic part of the orbital desity in real space
        !
        CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_) 
        !! ... The periodic part of the perturbation
        !
-       pi_q_unrelax  = sum (CONJG(rhog (:)) * delta_vg(:,spin_component)) *weight(iq)*omega
-       pi_q_unrelax_ = sum (CONJG(rhog (:)) * delta_vg_(:,spin_component))*weight(iq)*omega
-       sh_q  = 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:)                ) *weight(iq)*omega
+       IF (nspin==2 .OR. nspin==1) THEN
+        ! This can/should be an IF over noncolin
+        pi_q_unrelax  = sum (CONJG(rhog (:,1)) * delta_vg(:,spin_component)) *weight(iq)*omega
+        pi_q_unrelax_ = sum (CONJG(rhog (:,1)) * delta_vg_(:,spin_component))*weight(iq)*omega
+       ELSEIF (nspin==4) THEN
+        pi_q_unrelax = ZERO
+        pi_q_unrelax_ = ZERO
+        DO ip=1,nspin_mag
+          pi_q_unrelax  = pi_q_unrelax + sum (CONJG(rhog (:,ip)) * delta_vg(:,ip)) *weight(iq)*omega
+          pi_q_unrelax_ = pi_q_unrelax_+ sum (CONJG(rhog (:,ip)) * delta_vg_(:,ip))*weight(iq)*omega
+        END DO
+       ENDIF
+       sh_q  = 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:)) *weight(iq)*omega
+
        !
        CALL mp_sum (pi_q_unrelax,  intra_bgrp_comm)
        CALL mp_sum (pi_q_unrelax_, intra_bgrp_comm)
@@ -198,7 +213,7 @@ SUBROUTINE screen_coeff ()
        !
        pi_q_relax    = ZERO
        pi_q_relax_rs = ZERO
-       DO is =1, nspin
+       DO is =1, nspin_mag
          !
          pi_q_relax = pi_q_relax + sum (CONJG(drhog_scf (:,is)) * delta_vg(:,is))*weight(iq)*omega
          IF (do_real_space) pi_q_relax_rs = pi_q_relax_rs &  
@@ -295,50 +310,6 @@ SUBROUTINE screen_coeff ()
   WRITE(stdout, '(3/)')
   IF ( i_orb == -1 ) CLOSE (876)
   !
-  !! This is TEMPORARY to check the rho_q(r) are correctly computed 
-  rho_c = ZERO
-  wann_c = ZERO
-  DO iq = 1, nqs 
-    !
-    tmp_dir = tmp_dir_save  ! the periodic part are written on the original outdir 
-    lrrho=num_wann*dffts%nnr
-    CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
-    tmp_dir = tmp_dir_kcwq   ! go back to the q-specific directory
-    !
-    xq_(:) = -x_q(:,iq)
-    ! calculate_phase has a - sign inside
-    phase=ZERO
-    CALL calculate_phase(xq_, phase)
-    CALL structure_factor(iq, struct_fact)
-    CALL cryst_to_cart(1, xq_, at, -1)
-    IF (kcw_iverbosity .gt. 1) WRITE(stdout,'(8X, "INFO: iq = ", i5, 3x, "Structure Factor S(q) [Re, Im] = ", 2f12.8,/)') & 
-                                                                iq, struct_fact
-    !
-     DO iwann=iorb_start, iorb_end
-       !
-       wann_c(:,iwann) = wann_c(:,iwann) + phase(:)*rhowann(:,iwann)*weight(iq)
-       rho_c(:,iwann)  = rho_c(:,iwann)  + phase(:)*rhowann(:,iwann)*struct_fact*weight(iq)
-       !
-    ENDDO
-    !
-  ENDDO ! qpoints
-  !
-  IF (kcw_iverbosity .gt. 1) THEN
-  !  write(*,'(/,"DEBUG")')
-    DO iwann= iorb_start, iorb_end
-       int_rho = (0.D0,0.D0)
-       int_rho = SUM (rho_c(:,iwann))/(dffts%nr1*dffts%nr2*dffts%nr3)
-       int_wann = (0.D0,0.D0)
-       int_wann = SUM (wann_c(:,iwann))/(dffts%nr1*dffts%nr2*dffts%nr3)
-       CALL mp_sum( int_rho, intra_bgrp_comm )
-       CALL mp_sum( int_wann, intra_bgrp_comm )
-       WRITE(stdout,'(8X, "iwann= ", i3, 3x, "int rho_wann(r) [Re, Im] =", 2f12.6)') iwann, int_rho
-       WRITE(stdout,'(8X, "iwann= ", i3, 3x, "int Im[rho_wann(r)]      =", 1f12.6)') iwann, AIMAG(int_wann)
-    ENDDO
-  ENDIF
-  !
-
-
 9010 FORMAT(/, 8x, "iq =", i4, 3x, "iwann =", i4, 3x, "rPi_q =", 2f15.8, 3x, & 
                "rPi_q_RS =", 2f15.8, 3x, "uPi_q =", 2f15.8, 3x, "Self Hartree =", 2f15.8)
 9011 FORMAT(/, 8x, "iq =", i4, 3x, "iwann =", i4, 3x, "rPi_q =", 2f15.8, 3x, "uPi_q =", & 
@@ -430,11 +401,11 @@ END SUBROUTINE restart_screen
 SUBROUTINE check_density (rhowann)
   !-----------------------------------------------------------------------
   !
-  ! This routine check that the density computed from rho_wann cis consisten
+  ! This routine check that the density computed from rho_wann is consistent
   ! with the one read from PWSCF
   !
   USE kinds,                ONLY : DP
-  USE control_kcw,          ONLY : num_wann_occ, kcw_iverbosity, num_wann, spin_component
+  USE control_kcw,          ONLY : num_wann_occ, kcw_iverbosity, num_wann, spin_component, nrho
   USE fft_base,             ONLY : dffts, dfftp
   USE mp,                   ONLY : mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -445,18 +416,36 @@ SUBROUTINE check_density (rhowann)
   !
   IMPLICIT NONE
   !
-  INTEGER :: iwann
+  INTEGER :: iwann,ii
   REAL(DP) :: int_rho, w1
+
   COMPLEX(DP) :: density(dffts%nnr)
-  COMPLEX(DP), INTENT (IN) :: rhowann(dffts%nnr, num_wann)
+  COMPLEX(DP), INTENT (IN) :: rhowann(dffts%nnr, num_wann,nrho)
   REAL(DP),    ALLOCATABLE :: rhoup(:), rhodw(:)
+  REAL(DP),    ALLOCATABLE :: int_rhos(:), rhos(:,:), checks(:)
+  COMPLEX(DP),    ALLOCATABLE  :: densities(:,:)
   !
-  ALLOCATE (rhoup(dfftp%nnr), rhodw(dfftp%nnr))
+  if (nspin==4) then
+    ALLOCATE (rhos(dfftp%nnr, nrho))
+    ALLOCATE (densities(dfftp%nnr, nrho))
+    densities(:,:) = (0.D0,0.D0)
+    ALLOCATE (int_rhos(nrho),checks(nrho))
+  else
+    ALLOCATE (rhoup(dfftp%nnr), rhodw(dfftp%nnr))
+  endif
   !
   density = (0.D0,0.D0)
   DO iwann = 1, num_wann_occ ! sum over the bands (rhowann already summed over k) 
-     w1 = 2.D0/nspin  / (omega)    ! true only if wg is the same for each k point (no symm)
-     density(:) = density(:) + w1 * rhowann(:,iwann)
+    if (nspin==4) then
+        w1 = 1.D0/omega
+        do ii=1,nspin 
+            densities(:,ii) = densities(:,ii) + w1 * rhowann(:,iwann,ii)
+        end do
+    else
+        w1 = 2.D0/nspin  / (omega)    ! true only if wg is the same for each k point (no symm)
+        density(:) = density(:) + w1 * rhowann(:,iwann,1)
+    endif 
+
   ENDDO
   !
   if (nspin == 1) then
@@ -464,24 +453,59 @@ SUBROUTINE check_density (rhowann)
      rhoup(:) =  (rho%of_r (:, 1) )
      rhodw(:) =  (rho%of_r (:, 1) )
      !
-  else
+  elseif (nspin == 2) then
      !
      rhoup(:) = ( rho%of_r(:, 1) + rho%of_r(:, 2) )*0.5d0
      rhodw(:) = ( rho%of_r(:, 1) - rho%of_r(:, 2) )*0.5d0
      !
+  else 
+     !
+      rhos(:,1) =  (rho%of_r (:, 1) )
+      rhos(:,2) =  (rho%of_r (:, 2) )
+      rhos(:,3) =  (rho%of_r (:, 3) )
+      rhos(:,4) =  (rho%of_r (:, 4) )
+    
   endif
   !
-  IF (spin_component == 1 ) int_rho = SUM( REAL(density(:))-rhoup(:))/(dffts%nr1*dffts%nr2*dffts%nr3) 
-  IF (spin_component == 2 ) int_rho = SUM( REAL(density(:))-rhodw(:))/(dffts%nr1*dffts%nr2*dffts%nr3) 
-  
-  CALL mp_sum( int_rho, intra_bgrp_comm )
+  if (nspin==4) then
+      do ii=1,nrho
+        checks(ii) = SUM( REAL(densities(:,ii)))/(dffts%nr1*dffts%nr2*dffts%nr3)
+        int_rhos(ii) = SUM( REAL(densities(:,ii))-rhos(:,ii))/(dffts%nr1*dffts%nr2*dffts%nr3)
+        CALL mp_sum( int_rhos(ii), intra_bgrp_comm)
+        CALL mp_sum( checks(ii), intra_bgrp_comm)
+      enddo
+  else
+      IF (spin_component == 1 ) int_rho = SUM( REAL(density(:))-rhoup(:))/(dffts%nr1*dffts%nr2*dffts%nr3) 
+      IF (spin_component == 2 ) int_rho = SUM( REAL(density(:))-rhodw(:))/(dffts%nr1*dffts%nr2*dffts%nr3) 
+      CALL mp_sum( int_rho, intra_bgrp_comm )
+  end if
+
+
   !
-  IF (kcw_iverbosity > 1 ) WRITE(stdout,'(8X, "DEBUG: \int dr [rho - rho_PWSCF] = ",E18.6, /)') int_rho
-  IF ( ABS(int_rho) .gt. 1e-8) THEN
-     WRITE(stdout,'(8X, "DEBUG: \int dr [rho - rho_PWSCF] = ",E18.6,/)') int_rho
-     CALL errore ('check_density','\int dr [rho - rho_PWSCF] > 1e-8; SOMETHING WRONG',1)
-  ENDIF
-  DEALLOCATE (rhoup, rhodw)
+  if (nspin==4) then
+    WRITE(stdout,'(8X, "DEBUG: check 1 = ",E18.6,/)') checks(1)
+    WRITE(stdout,'(8X, "DEBUG: check 2 = ",E18.6,/)') checks(2)
+    WRITE(stdout,'(8X, "DEBUG: check 3 = ",E18.6,/)') checks(3)
+    WRITE(stdout,'(8X, "DEBUG: check 4 = ",E18.6,/)') checks(4)
+
+    do ii=1,nrho
+      IF (kcw_iverbosity > 1 ) WRITE(stdout,'(8X, "DEBUG: rho component (range 1-4)= ",I1, /)') ii
+      IF (kcw_iverbosity > 1 ) WRITE(stdout,'(8X, "DEBUG: \int dr [rho - rho_PWSCF] = ",E18.6, /)') int_rhos(ii)
+      IF ( ABS(int_rhos(ii)) .gt. 1e-4) THEN
+        WRITE(stdout,'(8X, "DEBUG: rho component (range 1-4): ",I1,/)') ii
+        WRITE(stdout,'(8X, "DEBUG: \int dr [rho - rho_PWSCF] = ",E18.6,/)') int_rhos(ii)
+        CALL errore ('check_density','\int dr [rho - rho_PWSCF] > 1e-4; SOMETHING WRONG',1)
+      ENDIF
+    enddo
+    DEALLOCATE (rhos)
+  else
+    IF (kcw_iverbosity > 1 ) WRITE(stdout,'(8X, "DEBUG: \int dr [rho - rho_PWSCF] = ",E18.6, /)') int_rho
+    IF ( ABS(int_rho) .gt. 1e-8) THEN
+       WRITE(stdout,'(8X, "DEBUG: \int dr [rho - rho_PWSCF] = ",E18.6,/)') int_rho
+       CALL errore ('check_density','\int dr [rho - rho_PWSCF] > 1e-8; SOMETHING WRONG',1)
+    ENDIF
+    DEALLOCATE (rhoup, rhodw)
+  endif
   !
-END subroutine
+END subroutine check_density
 

@@ -301,7 +301,7 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
             }
         }
 
-        var print_debug -type LOGICAL {
+        var debug_print -type LOGICAL {
             default { .FALSE. }
             info {
                 If .TRUE., prints additional debug informations.

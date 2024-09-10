@@ -62,12 +62,12 @@ coulomb.o
 #setup_coulomb.o\
 
 LRMODS = ../../LR_Modules/liblrmod.a
-PWOBJS = ../../PW/src/libpw.a
+PWOBJS = ../../PHonon/PH/libph.a ../../PW/src/libpw.a ### FIXME: libph.a is needed to call run_nsn_ph (to apply t_rev)
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
          ../../FFTXlib/src/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a \
           ../..//MBD/libmbd.a
 
-TLDEPS= pwlibs lrmods pp w90 #Dependency. To be compiled first
+TLDEPS= pwlibs lrmods pp w90 phlibs #Dependency. To be compiled first
 
 all : tldeps libs-kcw kcw.x clean_partial
 

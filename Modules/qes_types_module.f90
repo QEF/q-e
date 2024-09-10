@@ -1187,16 +1187,6 @@ MODULE qes_types_module
     !
   END TYPE symmetry_type
   !
-  TYPE :: outputPBC_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    CHARACTER(len=256) :: assume_isolated
-    !
-  END TYPE outputPBC_type
-  !
   TYPE :: total_energy_type
     !
     CHARACTER(len=100) :: tagname
@@ -1397,6 +1387,19 @@ MODULE qes_types_module
     !
   END TYPE rismlaue_type
   !
+  TYPE :: two_chem_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL :: twochem
+    INTEGER :: nbnd_cond
+    REAL(DP) :: degauss_cond
+    INTEGER :: nelec_cond
+    !
+  END TYPE two_chem_type
+  !
   TYPE :: timing_type
     !
     CHARACTER(len=100) :: tagname
@@ -1433,6 +1436,8 @@ MODULE qes_types_module
     !
     INTEGER :: nat
     LOGICAL :: nat_ispresent = .FALSE.
+    INTEGER :: num_of_atomic_wfc
+    LOGICAL :: num_of_atomic_wfc_ispresent = .FALSE.
     REAL(DP) :: alat
     LOGICAL :: alat_ispresent = .FALSE.
     INTEGER :: bravais_index
@@ -1732,6 +1737,8 @@ MODULE qes_types_module
     TYPE(scf_conv_type) :: scf_conv
     LOGICAL  :: opt_conv_ispresent = .FALSE.
     TYPE(opt_conv_type) :: opt_conv
+    LOGICAL  :: wf_collected_ispresent = .FALSE.
+    LOGICAL :: wf_collected
     !
   END TYPE convergence_info_type
   !
@@ -1748,6 +1755,18 @@ MODULE qes_types_module
     INTEGER   :: ndim_symmetry
     !
   END TYPE symmetries_type
+  !
+  TYPE :: outputPBC_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: assume_isolated
+    LOGICAL  :: esm_ispresent = .FALSE.
+    TYPE(esm_type) :: esm
+    !
+  END TYPE outputPBC_type
   !
   TYPE :: magnetization_type
     !
@@ -1788,15 +1807,14 @@ MODULE qes_types_module
     LOGICAL  :: nbnd_dw_ispresent = .FALSE.
     INTEGER :: nbnd_dw
     REAL(DP) :: nelec
-    LOGICAL  :: num_of_atomic_wfc_ispresent = .FALSE.
-    INTEGER :: num_of_atomic_wfc
-    LOGICAL :: wf_collected
     LOGICAL  :: fermi_energy_ispresent = .FALSE.
     REAL(DP) :: fermi_energy
     LOGICAL  :: highestOccupiedLevel_ispresent = .FALSE.
     REAL(DP) :: highestOccupiedLevel
     LOGICAL  :: lowestUnoccupiedLevel_ispresent = .FALSE.
     REAL(DP) :: lowestUnoccupiedLevel
+    LOGICAL  :: twochem_ispresent = .FALSE.
+    TYPE(two_chem_type) :: twochem
     LOGICAL  :: two_fermi_energies_ispresent = .FALSE.
     REAL(DP), DIMENSION(2) :: two_fermi_energies
     TYPE(k_points_IBZ_type) :: starting_k_points
@@ -1950,6 +1968,8 @@ MODULE qes_types_module
     TYPE(atomic_constraints_type) :: atomic_constraints
     LOGICAL  :: spin_constraints_ispresent = .FALSE.
     TYPE(spin_constraints_type) :: spin_constraints
+    LOGICAL  :: twoch__ispresent = .FALSE.
+    TYPE(two_chem_type) :: twoch_
     !
   END TYPE input_type
   !

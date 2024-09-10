@@ -72,7 +72,7 @@ SUBROUTINE force_hub( forceh )
    !
    CALL start_clock_gpu( 'force_hub' )
    !
-   !$acc data  present(vkb) copyin(wfcU) present_or_create(evc) 
+   !$acc data  present(vkb) copyin(wfcU) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
@@ -153,9 +153,7 @@ SUBROUTINE force_hub( forceh )
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type_acc( nkb, nbnd, becp )
       Call calbec(offload_type, npw, vkb, evc, becp ) 
-      !$acc host_data use_device(spsi, evc)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
-      !$acc end host_data
       CALL deallocate_bec_type_acc( becp )
       !
       ! ... Set up various quantities, in particular wfcU which 
@@ -1545,7 +1543,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
-   USE wavefunctions_gpum,   ONLY : using_evc
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, offsetU
    !
    IMPLICIT NONE

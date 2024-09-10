@@ -510,7 +510,7 @@ SUBROUTINE one_sternheimer_step(iu, flag)
        IF (lnoloc) THEN
 !          CALL dv_of_drho_nlf (dvscfout (1, 1, 1))
        ELSE
-          CALL dv_of_drho (dvscfout (1, 1, 1), .FALSE.)
+          CALL dv_of_drho (dvscfout (1, 1, 1))
        ENDIF
        !
        !   mix the new potential with the old

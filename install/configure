@@ -3780,7 +3780,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_flavor" in
-*:ifort* )
+*:ifort* | *:ifx* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
@@ -4316,7 +4316,7 @@ else
                MKLROOT=/opt/intel/mkl
             fi
 	    case "$f90" in
-	       ifort* )
+	       ifort* | ifx* )
       		    mkl_lib="mkl_intel_lp64"
       		    mkl_omp="mkl_intel_thread"
 		    if test "$arch" == "mac686"; then
@@ -6264,6 +6264,18 @@ if test "$ac_res" != no; then :
 fi
 
                 fi
+        fi
+        if test "$have_mpi" -eq 1; then
+           cat > conftest.$ac_ext <<_ACEOF
+program conftest; use mpi; end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  try_dflags="$try_dflags -D__MPI_MODULE"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: mpi module not available" >&5
+$as_echo "mpi module not available" >&6; }
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
         fi
 else
         if test "$use_parallel" -ne 0

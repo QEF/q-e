@@ -37,8 +37,12 @@ is represented by 11000. For the above case, configure QE with:
 ```
 ./configure --with-cuda=$CUDA_HOME --with-cuda-cc=70 --with-cuda-runtime=11.0
 ```
-Alternatively, you may use the (deprecated) tool `get_device_props.py` in
-directory `dev-tools/`.
+One can also use command `nvidia-smi`: for two GPUs with cc70,
+```
+$ nvidia-smi --query-gpu=compute_cap --format=csv
+7.0
+7.0
+```
 
 Enabling faster communications between GPUs, via NVlink or Infiniband RDMA,
 is essential for optimal performance. If your MPI library is built to be

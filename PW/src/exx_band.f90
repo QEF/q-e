@@ -91,16 +91,12 @@ MODULE exx_band
     USE control_flags,        ONLY : io_level
     USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
     USE mp_exx,               ONLY : max_ibands, negrp
-
-    USE wavefunctions_gpum, ONLY : using_evc
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: type
     INTEGER :: lda, n, ik
     LOGICAL :: exst_mem, exst_file
-    !
-    CALL using_evc(0)
     !
     IF (negrp == 1) THEN
        !
@@ -178,7 +174,6 @@ MODULE exx_band
        ! read evc for the local data structure
        !
        IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-       IF ( nks > 1 ) CALL using_evc(2)
        !
        ! transform evc to the EXX data structure
        !

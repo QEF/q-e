@@ -141,22 +141,20 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
            nt = ityp(na)
            IF (is_hubbard(nt)) THEN
               ldim = (2*Hubbard_l(nt) + 1) * npol
-              DO m = 1, ldim
-                 ihubst = offsetU(na) + m   ! I m index
-                 !
-                 !  proj1(ibnd, ihubst) = < S(k)*phi(k) | psi(k) >
-                 !  proj2(ibnd, ihubst) = < S(k+q)*phi(k+q) | dpsi(k+q) > 
-                 ! FIXME: use ZGEMM instead of dot_product
-                 DO ibnd = 1, nbnd_occ(ikk)
-                    proj1(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst), &
-                                                       evc(1:npwx*npol,ibnd) )
-                    proj2(ibnd, ihubst) = DOT_PRODUCT( swfcatomkpq(1:npwx*npol,ihubst), &
-                                                       dpsi(1:npwx*npol,ibnd) )
-                 ENDDO
-              ENDDO 
+              ihubst = offsetU(na) + 1   ! I m index
+              !  proj1(ibnd, ihubst) = < psi(k) | S(k)*phi(k) >
+              !  proj2(ibnd, ihubst) = < dpsi(k+q) | S(k+q)*phi(k+q) >
+              CALL ZGEMM('C', 'N', nbnd_occ(ikk), ldim, npwx*npol, (1.0d0, 0.0d0), &
+                   evc,  npwx*npol, swfcatomk(1, ihubst), npwx*npol,&
+                   (0.0d0, 0.0d0), proj1(1, ihubst), nbnd)
+   
+              CALL ZGEMM('C', 'N', nbnd_occ(ikk), ldim, npwx*npol, (1.d0, 0.d0), &
+                    dpsi,  npwx*npol, swfcatomkpq(1, ihubst), npwx*npol,&
+                    (0.0d0, 0.0d0), proj2(1, ihubst), nbnd)
            ENDIF
            !
         ENDDO
+
         !
         CALL mp_sum(proj1, intra_pool_comm)  
         CALL mp_sum(proj2, intra_pool_comm)
@@ -177,12 +175,14 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                               ihubst1 = offsetU(na) + m1 + (m2 - m1)*(isolv - 1)
                               DO ibnd = 1, nbnd_occ(ikk) 
                                  dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
-                                 wk(ikk) * CONJG(proj1(ibnd,ihubst1+ldim*(isp1-1)) ) * &
-                                                 proj2(ibnd,ihubst2+ldim*(isp2-1))
+                                 wk(ikk) * proj1(ibnd,ihubst1+ldim*(isp1-1))  * &
+                                            CONJG(proj2(ibnd,ihubst2+ldim*(isp2-1)) )
+
                                  IF (.not.domag) THEN 
                                       dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
-                                      wk(ikk) * CONJG(proj1(ibnd,ihubst2+ldim*(isp2-1)) ) * &
-                                                      proj2(ibnd,ihubst1+ldim*(isp1-1))
+                                      wk(ikk) * proj1(ibnd,ihubst2+ldim*(isp2-1))  * &
+                                                CONJG(proj2(ibnd,ihubst1+ldim*(isp1-1)) )
+
                                  ENDIF
                
                                  ! 
@@ -195,8 +195,9 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                                     w1 = weight * wdelta
                                     !
                                     dnsq(m1, m2, is, na) = dnsq(m1, m2, is, na) +  &
-                                                w1 * def(1) * CONJG(proj1(ibnd,ihubst1+ldim*(is1-1))) &
-                                                                  * proj1(ibnd,ihubst2+ldim*(is2-1))
+                                                w1 * def(1) * proj1(ibnd,ihubst1+ldim*(is1-1)) &
+                                                                  * CONJG(proj1(ibnd,ihubst2+ldim*(is2-1)))
+
                                  ENDIF
                               ENDDO
                            ENDDO
@@ -215,8 +216,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                         ihubst2 = offsetU(na) + m2
                         DO ibnd = 1, nbnd_occ(ikk)
                            dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +    &
-                                    wk(ikk) * ( CONJG(proj1(ibnd,ihubst1)) * proj2(ibnd,ihubst2) + &
-                                                CONJG(proj1(ibnd,ihubst2)) * proj2(ibnd,ihubst1) )
+                                    wk(ikk) * ( proj1(ibnd,ihubst1) * CONJG(proj2(ibnd,ihubst2)) + &
+                                                proj1(ibnd,ihubst2) * CONJG(proj2(ibnd,ihubst1)) )
                            !
                            ! Correction for metals at q=0                                                
                            IF (lmetq0) THEN
@@ -227,7 +228,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                               w1 = weight * wdelta
                               !
                               dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +  &
-                              w1 * def(1) * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                              w1 * def(1) * proj1(ibnd,ihubst1) * CONJG(proj1(ibnd,ihubst2))
                               !
                            ENDIF
                         ENDDO 

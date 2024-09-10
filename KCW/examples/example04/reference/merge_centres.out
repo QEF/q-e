@@ -1,0 +1,17 @@
+ Merging            3  blocks
+ what = centres
+ block #            1 file = wann_block1/wann_centres.xyz ncentres = 
+           5
+ block #            2 file = wann_block2/wann_centres.xyz ncentres = 
+           5
+ block #            3 file = wann_block3/wann_centres.xyz ncentres = 
+           4
+ Final number of centres =           14
+ number of atoms =            2
+ Reading wann_block1/wann_centres.xyz
+ Reading wann_block2/wann_centres.xyz
+ Reading wann_block3/wann_centres.xyz
+ Writing wann_centres.xyz
+
+ GAME OVER
+

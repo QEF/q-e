@@ -10,6 +10,7 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG).
 # OBJS_GPU   are GPU-specific
 
 OBJS_DEP= \
+atwfc_mod.o \
 beta_mod.o \
 qrad_mod.o  \
 rhoat_mod.o \
@@ -22,15 +23,13 @@ gen_us_dy.o \
 init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
-init_us_2_acc.o \
-init_tab_atwfc.o
+init_us_2_acc.o
 
 OBJS_NODEP= \
 atom.o \
 atomic_number.o \
 dylmr2.o \
 gth.o \
-interp_atwfc.o \
 paw_variables.o \
 pseudo_types.o \
 radial_grids.o \
@@ -60,7 +59,6 @@ upf_spinorb.o \
 upf_to_internal.o \
 upf_utils.o \
 uspp.o \
-uspp_data.o \
 uspp_param.o \
 write_upf_new.o \
 xmltools.o \

@@ -12,7 +12,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   !
   ! This routine saves to buffer "iunhub" atomic wavefunctions having an
   ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
-  ! "iunhub2" but without S (this is then used to computed Hubbard forces 
+  ! "iunhub_noS" but without S (this is then used to compute Hubbard forces
   ! and stresses). Atomic wavefunctions
   ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
   ! "swfcatom" must NOT be allocated on input.
@@ -94,16 +94,13 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      !
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
-       !$acc update device(wfcatom)
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
-     !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
-     !$acc end host_data
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
@@ -116,7 +113,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      IF ( nks > 1 ) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      ! If save_wfcatom=.TRUE. copy the orthonormalized wfcatom to wfcU and save
-     ! to unit iunhubnoS
+     ! to unit iunhub_noS
      !
      IF (save_wfcatom.and..not.use_gpu) THEN
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
@@ -150,7 +147,6 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
-  USE io_files,         ONLY : iunhub, nwordwfcU
   USE ions_base,        ONLY : nat
   USE basis,            ONLY : natomwfc, wfcatom, swfcatom
   USE klist,            ONLY : nks, xk, ngk, igk_k
@@ -289,7 +285,6 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
-       !$acc update device(wfcatom)
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
@@ -298,9 +293,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      !
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)     
-     !$acc host_data use_device(wfcatom, swfcatom)
      CALL s_psi_acc( npwx, npw, natomwfc, wfcatom, swfcatom )
-     !$acc end host_data
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !

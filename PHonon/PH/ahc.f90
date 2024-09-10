@@ -203,9 +203,12 @@ SUBROUTINE ahc_do_upperfan(ik)
   !
   IF (lgamma) THEN
     CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+    !$acc update device(evc)
   ELSE
     CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+    !$acc update device(evc)
     CALL get_buffer(evq, lrwfc, iuwfc, ikq)
+    !$acc update device(evq)
   ENDIF
   !
   ! Setup for Sternheimer solver

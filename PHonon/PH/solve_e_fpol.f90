@@ -315,7 +315,7 @@ subroutine solve_e_fpol( iw )
      !   for the three polarizations - symmetrize it
      !
      call mp_sum ( dvscfout, inter_pool_comm )
-     call psyme (dvscfout)
+     call psymdvscf(dvscfout)
      !
      !   save the symmetrized linear charge response to file
      !   calculate the corresponding linear potential response
@@ -323,7 +323,7 @@ subroutine solve_e_fpol( iw )
      do ipol=1,3
         if (fildrho.ne.' ') call davcio_drho(dvscfout(1,1,ipol),lrdrho, &
              iudrho,ipol,+1)
-        call dv_of_drho (dvscfout (1, 1, ipol), .false.)
+        call dv_of_drho (dvscfout (1, 1, ipol))
      enddo
      !
      !   mix the new potential with the old

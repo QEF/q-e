@@ -5,7 +5,7 @@ MODULE sic_mod
    ! ... Module for self-interaction-corrected calculations
    !     Written by Stefano Falletta
    !
-   USE basis,            ONLY : starting_pot
+   USE starting_scf,     ONLY : starting_pot
    USE cell_base,        ONLY : omega
    USE ener,             ONLY : esic
    USE fft_base,         ONLY : dfftp, dffts
@@ -58,7 +58,6 @@ MODULE sic_mod
       IF (okvan)                    CALL errore('sic_init', 'norm-conserving pseudopotentials required',1)
       IF (xclib_dft_is('meta'))     CALL errore('sic_init', 'meta-GGA not implemented',1)
       IF (xclib_dft_is('hybrid'))   CALL errore('sic_init', 'hybrid not implemented',1)
-      IF (use_gpu)                  CALL errore('sic_init', 'gpus not implemented',1)
       IF (lbfgs .AND. .NOT. sic_energy) CALL errore('sic_init', 'use damped ion dynamics when sic_energy = .false.',1)
       IF (pol_type == 'e') THEN
          isp = 1

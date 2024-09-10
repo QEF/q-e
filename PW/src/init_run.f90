@@ -15,10 +15,11 @@ SUBROUTINE init_run()
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw, &
-                                 lforce => tprnfor, tstress
+                                 lforce => tprnfor, tstress, tqr, use_gpu
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
                                  gshells, gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
+  USE ions_base,          ONLY : nat, nsp
   USE cell_base,          ONLY : alat, at, bg, set_h_ainv, omega
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
@@ -39,17 +40,18 @@ SUBROUTINE init_run()
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE two_chem,           ONLY : init_twochem, twochem
   USE lsda_mod,           ONLY : nspin
-  USE noncollin_module,   ONLY : domag
+  USE noncollin_module,   ONLY : domag, noncolin, lspinorb
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, &
                                  xclib_dft_is, xclib_set_finite_size_volume, &
                                  dft_has_finite_size_correction
   !
-  USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE rism_module,        ONLY : lrism, rism_alloc3d
   USE extffield,          ONLY : init_extffield
   USE control_flags,      ONLY : scissor
   USE sci_mod,            ONLY : allocate_scissor
+  USE uspp_param,         ONLY : nhm
+  USE uspp,               ONLY : allocate_uspp
   !
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
@@ -109,11 +111,11 @@ SUBROUTINE init_run()
   !
   ! ... variable initialization for parallel symmetrization
   !
-  CALL sym_rho_init (gamma_only )
+  CALL sym_rho_init ( gamma_only )
   !
   ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
   !
-  CALL allocate_nlpot()
+  call allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
   IF (okpaw) THEN
      CALL allocate_paw_internals()
      CALL paw_init_onecenter()
@@ -202,13 +204,16 @@ END SUBROUTINE init_run
 SUBROUTINE pre_init()
   !----------------------------------------------------------------------------
   !
-  USE ions_base,        ONLY : nat, nsp, ityp
+  USE ions_base,        ONLY : nat, ityp
   USE uspp_param,       ONLY : upf, nh, init_uspp_dims
   USE uspp,             ONLY : nkb, nkbus
   IMPLICIT NONE
-  INTEGER :: na, nt, nb
+  INTEGER :: na, nt
   !
-  CALL init_uspp_dims ( )
+  ! init_uspp_dims allocates and fills nh
+  !                calculates nhm, nbetam, nwfcm, lmaxkb, lmaxq
+  !
+  CALL init_uspp_dims( )
   !
   ! calculate the number of beta functions of the solid
   !

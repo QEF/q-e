@@ -123,7 +123,7 @@ CONTAINS
       CHARACTER(len=256)         :: input_line
       CHARACTER(len=80)          :: card
       LOGICAL                    :: tend
-      INTEGER                    :: i
+      INTEGER                    :: i, ios
       !
       ! read_line reads from unit parse_unit
       !
@@ -145,7 +145,8 @@ CONTAINS
          input_line( i : i ) = capital( input_line( i : i ) )
       ENDDO
       !
-      READ (input_line, *) card
+      READ (input_line, *, iostat=ios) card
+      IF(ios/=0) card=''
       !
       IF ( trim(card) == 'AUTOPILOT' ) THEN
          !
@@ -759,6 +760,7 @@ CONTAINS
          IF (tend) GOTO 10
          IF (terr) GOTO 20
          READ(input_line, *, END=10, ERR=20) nkstot
+         IF ( nkstot <= 0 ) GO TO 20
          !
          IF (kband) THEN
 !

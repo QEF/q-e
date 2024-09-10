@@ -26,7 +26,7 @@ SUBROUTINE summary()
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
   USE fft_base,        ONLY : dfftp
   USE fft_base,        ONLY : dffts
-  USE vlocal,          ONLY : starting_charge
+  USE starting_scf,    ONLY : starting_charge
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_u
   USE klist,           ONLY : degauss, smearing, lgauss, ltetra, nkstot, xk, &
