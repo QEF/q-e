@@ -55,9 +55,9 @@ subroutine addcore (uact, drhoc)
   nnp = dfftp%nnr
   !
   !$acc data copyin(drc) deviceptr(nlp_d)
-  !$acc enter data create(drhoc(1:nnp))
+  !$acc data present_or_copyin(drhoc(1:nnp))
   !
-  !$acc kernels present(drhoc)
+  !$acc kernels
   drhoc(:) = (0.d0, 0.d0)
   !$acc end kernels
   !
@@ -92,7 +92,8 @@ subroutine addcore (uact, drhoc)
      !
   endif ! nlcc_any
   !
-  !$acc exit data copyout(drhoc)
+  !$acc update host(drhoc)
+  !$acc end data
   !$acc end data
   !
   CALL stop_clock_gpu('addcore')

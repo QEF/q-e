@@ -112,14 +112,12 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      allocate (aux( dfftp%nnr,nspin))
      nnp=dfftp%nnr
      !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin))
-     !$acc kernels present(drhoc,aux)
-     drhoc(:) = (0.d0, 0.d0)
-     aux(:,:) = (0.0_dp, 0.0_dp)
-     !$acc end kernels
      !
      CALL addcore (uact, drhoc)
      !
+     aux(:,:) = (0.0_dp, 0.0_dp)
      CALL dv_of_drho_xc(aux, drhoc = drhoc)
+     !$acc update device(aux) 
      !
      !$acc exit data delete (drhoc)
      deallocate (drhoc)
