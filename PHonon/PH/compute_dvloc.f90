@@ -108,7 +108,6 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   ! add NLCC when present
   !
   if (nlcc_any.and.addnlcc) then
-     !CALL errore ('dvqpsi_us', 'openacc fpr nlcc_any to be checked', 1)
      allocate (drhoc( dfftp%nnr))
      allocate (aux( dfftp%nnr,nspin))
      nnp=dfftp%nnr
@@ -122,6 +121,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      !
      CALL dv_of_drho_xc(aux, drhoc = drhoc)
      !
+     !$acc exit data delete (drhoc)
      deallocate (drhoc)
      !
      !$acc host_data use_device(aux)
