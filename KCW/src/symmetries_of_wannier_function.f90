@@ -76,7 +76,7 @@ SUBROUTINE symmetries_of_wannier_function()
   !
   !go to crystal coordinates
   !
-  CALL cryst_to_cart( num_wann, centers, at, +1 )
+  !CALL cryst_to_cart( num_wann, centers, at, +1 )
   WRITE(stdout, '(13X, "Centers of wannier functions (crys)...")')
   DO iwann=1, num_wann
     WRITE(stdout, '(13X, "iwann=", I5, 3X, "centers = (", 3(F20.12, ","), ")" )') &
