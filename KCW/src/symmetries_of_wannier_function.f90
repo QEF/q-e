@@ -237,7 +237,7 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   !
   CALL find_kpoint(Rxk, iRk, Gvector)
   !
-  ! WRITE(*,*) "Rxk:", Rxk, "xk:", xk(:, iRk), "Gvector", delta_xk
+  ! WRITE(*,*) "Rxk:", Rxk, "xk:", xk(:, iRk), "Gvector", Gvector
   !WRITE(*,*) "ik", ik, "xk", xk(:, ik)
 END SUBROUTINE 
     
@@ -260,32 +260,35 @@ SUBROUTINE find_kpoint(xk_, ik_, Gvector)
   REAL(DP), INTENT(OUT)    :: Gvector(3)
   ! G connecting xk_ and xk(ik_):
   !      G = xk_ - xk(ik_)
+  REAL(DP)    :: Gvector_cryst(3)
+  ! Same as above but in crystal coordinates
   REAL(DP)              :: delta_xk(3)
   ! differenze of Rxk and xk in cartesian
   REAL(DP)              :: delta_xk_cryst(3)
   ! difference of Rxk and xk in crystal
   LOGICAL               :: isGvec
   !
-  Gvector(:) = 0.5 ! Impossible condition, this to check in the end this value changed
+  Gvector_cryst(:) = 0.5 ! Impossible condition. If not changed at the end of this routine, something wrong
   DO ik = 1, nkstot/nspin
     !
     !delta_xk in cartesian
-    !
     delta_xk(:) = xk_(:) - x_q(:, ik)
     !
     !go to crystal
+    delta_xk_cryst(:)=delta_xk(:)
+    CALL cryst_to_cart(1, delta_xk_cryst, at, -1)
     !
-    delta_xk_cryst(:) = at(1,:)*delta_xk(1) + at(2,:)*delta_xk(2) + &
-                        at(3,:)*delta_xk(3)
     IF( isGvec(delta_xk_cryst) ) THEN 
-      Gvector(:) = delta_xk(:)!delta_xk_cryst(:)    
+      Gvector(:)       = delta_xk(:)
+      Gvector_cryst(:) = delta_xk_cryst(:)
       ik_ = ik
       EXIT
     END IF
   END DO!ik
   !
-  IF ( ANY( Gvector .EQ. 0.5 ) ) THEN 
+  IF ( ANY( Gvector_cryst .EQ. 0.5 ) ) THEN 
     WRITE(stdout, *) "ERROR! Could not find  k point", xk_, "in k mesh grid."
+    CALL errore('find_kpoint', 'Kpoint in the 1BZ NOT FOUND', ik)
   END IF
 END SUBROUTINE
       
