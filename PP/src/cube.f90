@@ -28,7 +28,7 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
 
   IMPLICIT NONE
   INTEGER, INTENT(IN):: nat, ityp(nat), ounit, nr1,nr2,nr3, nr1x,nr2x,nr3x
-  CHARACTER(len=6), INTENT(IN) :: atm(*)
+  CHARACTER(len=*), INTENT(IN) :: atm(*)
   REAL(DP), INTENT(IN) :: alat, tau(3,nat), at(3,3),bg(3,3), rho(nr1x,nr2x,nr3x)
   ! --
   INTEGER          :: i, nt, i1, i2, i3, at_num
