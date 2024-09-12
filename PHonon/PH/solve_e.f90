@@ -234,7 +234,7 @@ subroutine solve_e
      call mp_sum ( dvscfout, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
      if (.not.lgamma_gamma) then
-        call psyme (dvscfout)
+        call psymdvscf(dvscfout)
         IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
      endif
      !
@@ -247,7 +247,7 @@ subroutine solve_e
         IF (lnoloc) then
            dvscfout(:,:,ipol)=(0.d0,0.d0)
         ELSE
-           call dv_of_drho (dvscfout (1, 1, ipol), .false.)
+           call dv_of_drho (dvscfout (1, 1, ipol))
         ENDIF
      enddo
      !

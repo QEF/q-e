@@ -105,7 +105,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! Calculation of the response HXC potential
      ! from the response charge density.
      !
-     CALL dv_of_drho (dvrsc, .false.)
+     CALL dv_of_drho (dvrsc)
      !
      ! USPP: Compute the integral of the HXC response potential with the Q function.
      ! Input : dvrsc = V_HXC(r), Output: int3 = \int V_HXC(r) * Q_nm(r) dr 

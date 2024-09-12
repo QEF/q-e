@@ -395,9 +395,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (lmetq0) THEN
         IF (okpaw) THEN
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, irr, sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, sym_def)
         ELSE
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, irr=irr, sym_def=sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, sym_def=sym_def)
         ENDIF
      ENDIF
      !
@@ -406,7 +406,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   Here we symmetrize them ...
      !
      IF (.not.lgamma_gamma) THEN
-        call psymdvscf (npe, irr, drhoscfh)
+        CALL psymdvscf(drhoscfh)
         IF ( noncolin.and.domag ) CALL psym_dmag( npe, irr, drhoscfh)
         IF (okpaw) THEN
            IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, npertx,irotmq,rtau,xq,tmq)
@@ -426,16 +426,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         !
         ! Compute the response of the core charge density
-        ! IT: Should the condition "imode0+ipert > 0" be removed?
         !
-        if (imode0+ipert > 0) then
-           call addcore (imode0+ipert, drhoc)
-        else
-           drhoc(:) = (0.0_DP,0.0_DP)
-        endif
+        call addcore(u(1, imode0+ipert), drhoc)
         !
         ! Compute the response HXC potential
-        call dv_of_drho (dvscfout(1,1,ipert), .true., drhoc)
+        call dv_of_drho (dvscfout(1,1,ipert), drhoc = drhoc)
         !
      enddo
      !
@@ -564,7 +559,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if
   endif
-  if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
+  if (convt.and.nlcc_any) call dynmat_nlcc (imode0, drhoscfh, npe)
   !
   CALL apply_dpot_deallocate()
   if (allocated(ldoss)) deallocate (ldoss)

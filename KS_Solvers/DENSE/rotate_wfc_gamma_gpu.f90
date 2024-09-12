@@ -52,7 +52,6 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   INTEGER                  :: npw2, npwx2
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
-  !$acc declare device_resident(aux)
   REAL(DP),    ALLOCATABLE :: hr_d(:,:), sr_d(:,:), vr_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined(__CUDA)
@@ -78,6 +77,8 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   ALLOCATE( sr_d( nstart, nstart ) )
   ALLOCATE( vr_d( nstart, nstart ) )
   ALLOCATE( en_d( nstart ) )
+  !$acc enter data create(aux)
+  !
   call start_clock('rotwfcg'); !write(*,*) 'start rotwfcg' ; FLUSH(6)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -175,6 +176,7 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !$acc end parallel 
   call stop_clock('rotwfcg:evc_d'); !write(*,*) 'stop rotwfcg:evc_d' ; FLUSH(6)
   !
+  !$acc exit data delete(aux)
   DEALLOCATE( en_d )
   DEALLOCATE( vr_d )
   DEALLOCATE( sr_d )

@@ -276,7 +276,7 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
      ! NB: always CALL with imode=0 to avoid CALL to addcore in dv_of_drho for 
      !     nlcc pseudo. The CALL is not needed since we are not moving atoms!!
      !
-     CALL dv_of_drho (dvscfout(1,1), .false.) 
+     CALL dv_of_drho (dvscfout(1,1))
      !
      !
      ! ... On output in dvscfin we have the mixed potential

@@ -48,7 +48,6 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   INTEGER :: kdim, kdmx
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
-  !$acc declare device_resident(aux)
   COMPLEX(DP), ALLOCATABLE :: hc_d(:,:), sc_d(:,:), vc_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined(__CUDA)
@@ -80,6 +79,8 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   ALLOCATE( sc_d( nstart, nstart) )
   ALLOCATE( vc_d( nstart, nstart) )
   ALLOCATE( en_d( nstart ) )
+  !$acc enter data create(aux)
+  !
   call start_clock('rotwfck'); !write(*,*) 'start rotwfck';FLUSH(6)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -169,6 +170,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   call stop_clock('rotwfck:evc') ! ; write(*,*) 'stop rotwfck;evc';FLUSH(6)
   !
+  !$acc exit data delete(aux)
   DEALLOCATE( en_d )
   DEALLOCATE( vc_d )
   DEALLOCATE( sc_d )
