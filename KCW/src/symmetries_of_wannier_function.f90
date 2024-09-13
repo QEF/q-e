@@ -41,7 +41,7 @@ SUBROUTINE symmetries_of_wannier_function()
   COMPLEX(DP), ALLOCATABLE :: rho_rotated(:)
   COMPLEX(DP), ALLOCATABLE :: rhog(:)
   CHARACTER (LEN=256)      :: file_base
-  REAL(DP)                 :: Gvector(3)
+  REAL(DP)                 :: Gvector(3), Gvector_cryst(3)
   REAL(DP)                 :: xk_cryst(3,1)
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   COMPLEX(DP), ALLOCATABLE :: phase(:)
@@ -161,7 +161,11 @@ SUBROUTINE symmetries_of_wannier_function()
         !
         ! rotate q point
         !
-        CALL rotate_xk(iq, isym, iRq, Gvector)
+        CALL rotate_xk(iq, isym, iRq, Gvector, Gvector_cryst)
+        IF ( ANY( Gvector_cryst .EQ. 0.5 ) ) THEN 
+          EXIT
+        END IF
+      
         !WRITE(*,*) "k=", xk(:,iq), "Rk=", xk(:, iRq), "Gvector", Gvector, "isym=", isym
         !
         ! compare the two rho, in rho_Rq we apply the phase factor:
@@ -201,7 +205,7 @@ END SUBROUTINE symmetries_of_wannier_function
 
 
 
-SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
+SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector, Gvector_cryst)
 ! This subroutine rotates the vector with index ik_ToRotate with symmetry isym.
 ! Then, it finds which of the k vectors in the mesh matches the rotated one, 
 ! in the sense that they difference is a reciprocal lattice vector. 
@@ -223,7 +227,7 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   !symmetry to apply
   INTEGER,  INTENT(OUT) :: iRk
   !index of Rxk in FBZ
-  REAL(DP), INTENT(OUT) :: Gvector(3)
+  REAL(DP), INTENT(OUT) :: Gvector(3), Gvector_cryst(3)
   ! G vector connecting xk and Rxk (in cartesian!)
   INTEGER               :: ik
   REAL(DP)              :: Rxk(3)
@@ -235,13 +239,13 @@ SUBROUTINE rotate_xk(ik_ToRotate, isym, iRk, Gvector)
   !
   ! Find k point that differs a reciprocal lattice vector from the rotated one
   !
-  CALL find_kpoint(Rxk, iRk, Gvector)
+  CALL find_kpoint(Rxk, iRk, Gvector, Gvector_cryst)
   !
   ! WRITE(*,*) "Rxk:", Rxk, "xk:", xk(:, iRk), "Gvector", Gvector
   !WRITE(*,*) "ik", ik, "xk", xk(:, ik)
 END SUBROUTINE 
     
-SUBROUTINE find_kpoint(xk_, ik_, Gvector)
+SUBROUTINE find_kpoint(xk_, ik_, Gvector, Gvector_cryst)
   USE kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout
   USE klist,                 ONLY:  xk, nkstot        !k points in cartesian coordinates
@@ -257,7 +261,7 @@ SUBROUTINE find_kpoint(xk_, ik_, Gvector)
   ! k point to find (in cartesian coordinates)
   INTEGER,  INTENT(OUT)    :: ik_
   !index of the k point xk_ in xk
-  REAL(DP), INTENT(OUT)    :: Gvector(3)
+  REAL(DP), INTENT(INOUT)    :: Gvector(3)
   ! G connecting xk_ and xk(ik_):
   !      G = xk_ - xk(ik_)
   REAL(DP)    :: Gvector_cryst(3)
@@ -286,10 +290,6 @@ SUBROUTINE find_kpoint(xk_, ik_, Gvector)
     END IF
   END DO!ik
   !
-  IF ( ANY( Gvector_cryst .EQ. 0.5 ) ) THEN 
-    WRITE(stdout, *) "ERROR! Could not find  k point", xk_, "in k mesh grid."
-    CALL errore('find_kpoint', 'Kpoint in the 1BZ NOT FOUND', ik)
-  END IF
 END SUBROUTINE
       
     

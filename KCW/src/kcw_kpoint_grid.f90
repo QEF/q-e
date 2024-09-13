@@ -24,7 +24,7 @@ SUBROUTINE kcw_kpoint_grid()
   ! subset of s, respected by current wannier function iwann
   REAL(DP)               :: xq(3)
   !current q point
-  REAL(DP)               :: Gvector(3)
+  REAL(DP)               :: Gvector(3), Gvector_cryst(3)
   ! G vector connecting xq with xk
   REAL(DP), ALLOCATABLE  :: xq_ibz_iwann(:,:), wq_ibz_iwann(:)
   !
@@ -53,7 +53,7 @@ SUBROUTINE kcw_kpoint_grid()
     fbz2ibz(:, iwann) = -1
     DO iq = 1, nqstot_ibz(iwann)
       xq(:) = xq_ibz_iwann(:, iq)
-      CALL find_kpoint(xq, ibz2fbz(iq,iwann), Gvector)
+      CALL find_kpoint(xq, ibz2fbz(iq,iwann), Gvector, Gvector_cryst)
       xq_ibz(:, iq, iwann) = xk( :, ibz2fbz(iq, iwann) )
       wq_ibz( iq, iwann ) = wq_ibz_iwann (iq)
       fbz2ibz( ibz2fbz(iq, iwann), iwann ) = iq
