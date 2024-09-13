@@ -264,7 +264,7 @@ SUBROUTINE find_kpoint(xk_, ik_, Gvector, Gvector_cryst)
   REAL(DP), INTENT(INOUT)    :: Gvector(3)
   ! G connecting xk_ and xk(ik_):
   !      G = xk_ - xk(ik_)
-  REAL(DP)    :: Gvector_cryst(3)
+  REAL(DP), INTENT(INOUT)    :: Gvector_cryst(3)
   ! Same as above but in crystal coordinates
   REAL(DP)              :: delta_xk(3)
   ! differenze of Rxk and xk in cartesian
