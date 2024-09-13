@@ -83,13 +83,15 @@ SUBROUTINE symmetries_of_wannier_function()
            iwann, centers(1:3, iwann) 
   END DO
   !
-  IF (ANY( centers(:, iwann) .lt. (-0.5 -1.D-03) ) .OR. &
-  ANY( centers(:, iwann) .gt. (0.5 -1.D-03) )) THEN
-    WRITE(stdout,'(5X, "WARNING: some of the wannier centers are not in what we expect to be the &
-    central unit cell with crystal coordinates in [-0.5, 0.5).")') 
-    WRITE(stdout,'(5X, "         To exploit all the symmetries, rerun the wannierization with the flag")')
-    WRITE(stdout,'(5X, "         translate_home_cell = .true.")')
-  END IF
+  DO iwann = 1, num_wann
+     IF (ANY( centers(:, iwann) .lt. (-0.5 -1.D-03) ) .OR. &
+     ANY( centers(:, iwann) .gt. (0.5 -1.D-03) )) THEN
+       WRITE(stdout,'(5X, "WARNING: the wannier center of iwann =", I5," is not in what we expect to be the &
+       central unit cell with crystal coordinates in [-0.5, 0.5).")') iwann 
+       WRITE(stdout,'(5X, "         To exploit all the symmetries, rerun the wannierization with the flag")')
+       WRITE(stdout,'(5X, "         translate_home_cell = .true.")')
+     END IF
+  ENDDO 
 !
   !add loop over wf to rerun wannierization with translate_home_cell
   !
