@@ -56,7 +56,7 @@ SUBROUTINE kcw_readin()
   NAMELIST / CONTROL /  outdir, prefix, read_unitary_matrix, kcw_at_ks, &
                         spread_thr, homo_only, kcw_iverbosity, calculation, &
                         l_vcut, assume_isolated, spin_component, & 
-                        mp1, mp2, mp3, lrpa, io_sp, io_real_space, irr_bz
+                        mp1, mp2, mp3, lrpa, io_sp, io_real_space, irr_bz, shift_centers
   !
   NAMELIST / WANNIER /  num_wann_occ, num_wann_emp, have_empty, has_disentangle, &
                         seedname, check_ks, l_unique_manifold
@@ -82,6 +82,7 @@ SUBROUTINE kcw_readin()
   !! lrpa            : If true the response of the system is evaluated at the RPA level (no xc contribution) 
   !! spread_thr      : the tollerance within which two orbital are considered to have the same spread 
   !! irr_bz          : Use the symmetries to calculate screening coefficients and koopmans hamiltonian
+  !! shift_centers   : When irr_bz=.true., it allows to shift the wannier orbital density in the centre of the axes
   !
   !### WANNIER 
   !! seedname        : seedname for the Wannier calculation
@@ -187,6 +188,7 @@ SUBROUTINE kcw_readin()
   io_sp               = .FALSE.
   io_real_space       = .FALSE.
   irr_bz              = .FALSE.
+  shift_centers       = .FALSE.
   ! 
   ! ...  reading the namelists (if needed)
   !

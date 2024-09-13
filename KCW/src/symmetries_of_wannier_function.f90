@@ -15,7 +15,7 @@ SUBROUTINE symmetries_of_wannier_function()
   USE control_kcw,           ONLY : ir_end, num_wann
   USE control_kcw,           ONLY : spin_component, nqstot, kcw_iverbosity
   USE mp_bands,              ONLY : root_bgrp, intra_bgrp_comm
-  USE gvect,                 ONLY : ig_l2g, mill
+  USE gvect,                 ONLY : ig_l2g, mill, g
   USE gvecs,                 ONLY : doublegrid, ngms
   USE fft_base,              ONLY : dffts
   USE control_flags,         ONLY : gamma_only
@@ -27,7 +27,7 @@ SUBROUTINE symmetries_of_wannier_function()
   USE klist,                 ONLY : nkstot
   USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
   USE cell_base,             ONLY : bg, at
-  USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers
+  USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers, shift_centers
   USE interpolation,         ONLY : read_wannier_centers
   USE io_global,             ONLY : stdout
   USE mp,                    ONLY : mp_sum  
@@ -42,14 +42,16 @@ SUBROUTINE symmetries_of_wannier_function()
   COMPLEX(DP), ALLOCATABLE :: rhog(:)
   CHARACTER (LEN=256)      :: file_base
   REAL(DP)                 :: Gvector(3), Gvector_cryst(3)
-  REAL(DP)                 :: xk_cryst(3,1)
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   COMPLEX(DP), ALLOCATABLE :: phase(:)
+  COMPLEX(DP), ALLOCATABLE :: rhowann_(:,:,:)
   REAL(DP), ALLOCATABLE    :: cx(:)
-  REAL(DP)                 :: ggg(3)
+  REAL(DP)                 :: x_qG_cryst(3)
+  REAL(DP)                 :: x_q_cryst(3)
   REAL(DP)                 :: ft_cart(3)
   LOGICAL                  :: is_satisfied
   REAL(DP)                 :: delta_rho
+  COMPLEX(DP) :: sh
   !
   !
   CALL start_clock ( 'check_symm' )
@@ -58,6 +60,7 @@ SUBROUTINE symmetries_of_wannier_function()
   ALLOCATE ( rhog (ngms) )
   ALLOCATE (rhowann ( dffts%nnr, nkstot/nspin, num_wann) )
   ALLOCATE ( rhowann_aux(dffts%nnr) )
+  ALLOCATE ( rhowann_(dffts%nnr,nqstot,num_wann) )
   ALLOCATE ( rho_rotated(dffts%nnr) )
   ALLOCATE( phase (dffts%nnr) )
   ALLOCATE ( nsym_w(num_wann) )
@@ -139,6 +142,48 @@ SUBROUTINE symmetries_of_wannier_function()
       !
     END DO!iwann
   END DO !iq
+  !copy variable rhowann so that we can shift the center
+  !
+  rhowann_(:,:,:) = rhowann(:,:,:)
+  !
+  !density we will use to check symmetries
+  !
+  IF (shift_centers) THEN
+    DO iwann = 1, num_wann
+      DO iq = 1, nqstot
+        x_q_cryst(:) = xk(:,iq)
+        CALL cryst_to_cart(1, x_q_cryst, at, -1)
+        !
+        !go to G space
+        !
+        rhowann_(:,iq,iwann) = rhowann_(:,iq,iwann)!/omega
+        CALL fwfft ('Rho', rhowann_(:,iq,iwann), dffts)  
+        rhog(:) = rhowann_(dffts%nl(:),iq,iwann)
+        !
+        !apply shift
+        !
+        WRITE(*,*) "iq = ", iq, "x_q_cryst", x_q_cryst, tpi
+        DO ig = 1, ngms
+          x_qG_cryst(:) = g(:,ig)
+          CALL cryst_to_cart(1, x_qG_cryst, at, -1)
+          x_qG_cryst(:) = x_qG_cryst(:) + x_q_cryst(:)
+          rhog(ig) = rhog(ig)*EXP( -IMAG*tpi*DOT_PRODUCT(x_qG_cryst(:),centers(:,iwann)) )
+        END DO
+        !
+        !back to r space
+        !
+        rhowann_(:,iq,iwann) = 0.D0
+        rhowann_(dffts%nl(:),iq,iwann) = rhog(:)
+        CALL invfft ('Rho', rhowann_(:,iq,iwann), dffts)
+      END DO!iq
+    END DO!iwann
+  ENDIF!shift_centers
+
+  !DO iwann = 1, num_wann
+  !  sh = 0.D0
+  !  CALL self_hartree(rhowann_,iwann,sh)
+  !  WRITE(*,*) "iwann = ", iwann, "SH = ", sh
+  !END DO
   !
   ! check which symmetries are satisfied by rhowann(:,:, iwann)
   !
@@ -149,17 +194,15 @@ SUBROUTINE symmetries_of_wannier_function()
     DO isym=1, nsym
       !
       DO iq = 1, nqstot
-        !IF ( lsda .AND. isk(iq_) /= spin_component) CYCLE
-        !iq = iq_-(spin_component-1)*nkstot/nspin
         rhowann_aux = 0.D0
         !WRITE(*,*) "isym", isym, "ft", ft(:, isym)
         !
         ! calculate rho_rotated = rho_q(R^{-1}.r-f)*EXP(-i k.f)
         !
-        CALL rotate_evc(isym, rhowann(:,iq,iwann), rho_rotated)
-        xk_cryst(:,1)=xk(:,iq)
-        CALL cryst_to_cart(1,xk_cryst,at,-1)
-        rho_rotated(:) = rho_rotated(:)*EXP(-IMAG*tpi*dot_product(xk_cryst(:,1),ft(:,isym)))
+        CALL rotate_evc(isym, rhowann_(:,iq,iwann), rho_rotated)
+        x_q_cryst(:)=xk(:,iq)
+        CALL cryst_to_cart(1,x_q_cryst,at,-1)
+        rho_rotated(:) = rho_rotated(:)*EXP(-IMAG*tpi*dot_product(x_q_cryst(:),ft(:,isym)))
         !
         ! rotate q point
         !
@@ -175,7 +218,7 @@ SUBROUTINE symmetries_of_wannier_function()
         !
         CALL calculate_phase(Gvector, phase)
         !
-        rhowann_aux(:) = rho_rotated(:) - phase(:)*rhowann(:,iRq,iwann) 
+        rhowann_aux(:) = rho_rotated(:) - phase(:)*rhowann_(:,iRq,iwann) 
         rhowann_aux(:) = rhowann_aux(:)/dffts%nnr
         !
         delta_rho = SUM( ABS(rhowann_aux(:)) )
@@ -199,6 +242,8 @@ SUBROUTINE symmetries_of_wannier_function()
     END DO!iq
     WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES = ", I5)') nsym_w(iwann)
   END DO !iwann 
+  !
+  DEALLOCATE(rhowann_)
   !
   CALL stop_clock ( 'check_symm' )
   !

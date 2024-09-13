@@ -132,5 +132,7 @@ MODULE control_kcw
   INTEGER                  :: nsym_old
   !to keep track of number of symmetries of crystal, without restrictions
   LOGICAL                  :: setup_pw
+  LOGICAL                  :: shift_centers
+  !variable to decide wether we want to move the wannier centers in the origin when checking symmetries
 END MODULE control_kcw
 
