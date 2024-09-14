@@ -64,12 +64,12 @@ PROGRAM sumpdos
      !
      ! write the manual
      !
-     WRITE(0,"(/,'USAGE: sumpdos [-h] [-f <filein>] [<file1> ... <fileN>]', /, &
+     WRITE(0,"(/,'USAGE: sumpdos [-h] [-f <filein>] [-Ef <value>] [<file1> ... <fileN>]', /, &
           &'  Sum the pdos from the file specified in input and write the sum ', /, &
           &'  to stdout', /, &
           &'     -h           : write this manual',/, &
-          &'     -Ef          : Fermi energy value',/, &
-          &'     -f <filein>  : takes the list of pdos files from <filein> ', /, &
+          &'     -Ef <value>  : Fermi energy value (eV)',/, &
+          &'     -f <filein>  : read the list of pdos files from <filein>', /, &
           &'                    (one per line) instead of command line',/, &
           &'     <fileM>      : the M-th pdos file', &
           & / )")
