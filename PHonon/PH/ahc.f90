@@ -801,7 +801,7 @@ SUBROUTINE compute_psi_gauge(ik)
       ENDDO
       !
       IF (ibnd /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
-      'ibnd /= ahc_nbnd + 1 after loop over degenreate groups at first iq', 1)
+      'ibnd /= ahc_nbnd + 1 after loop over degenerate groups at first iq', 1)
       !
     ENDIF
     !
@@ -938,9 +938,9 @@ SUBROUTINE compute_psi_gauge(ik)
   ENDDO ! igroup
   !
   IF (ibnd_ref /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
-    'ibnd_ref /= ahc_nbnd + 1 after loop over degenreate groups', 1)
+    'ibnd_ref /= ahc_nbnd + 1 after loop over degenerate groups', 1)
   IF (ibnd /= ahc_nbnd_gauge + 1) CALL errore('compute_psi_gauge', &
-    'ibnd /= ahc_nbnd_gauge + 1 after loop over degenreate groups', 1)
+    'ibnd /= ahc_nbnd_gauge + 1 after loop over degenerate groups', 1)
   !
   DEALLOCATE(gauge_mill)
   DEALLOCATE(ndegen_list)
