@@ -799,10 +799,11 @@ SUBROUTINE compute_psi_gauge(ik)
         ibnd = ibnd + ndegen
         !
       ENDDO
+      !
+      IF (ibnd /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
+      'ibnd /= ahc_nbnd + 1 after loop over degenreate groups at first iq', 1)
+      !
     ENDIF
-    !
-    IF (ibnd /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
-    'ibnd /= ahc_nbnd + 1 after loop over degenreate groups at first iq', 1)
     !
     ! 6) Set psi_gauge to identity and return.
     !
