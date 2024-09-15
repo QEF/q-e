@@ -110,6 +110,17 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "9" ]]
+then
+  # nscf2supercond.x
+  echo "Running NSCF2SUPERCOND ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x -input $2 > $3 2> $4
+  cat *.bands.*.dat >> $3
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
 fi
 
 #rm -f input_tmp.in

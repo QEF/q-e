@@ -15,6 +15,7 @@
   !! Authored by Chao Lian, Weng Hong (Denny) Sio, and Jon Lafuente-Bartolome
   !! Partial cleaning by SP (Nov 2023)
   !! Partial cleaning by STiwari (Nov 2023)
+  !! Partial cleaning by JLB (Aug 2024)
   !!
   USE kinds,     ONLY : DP
   USE buffers,   ONLY : open_buffer, get_buffer, save_buffer, close_buffer
@@ -27,83 +28,67 @@
   LOGICAL :: mem_save_h = .FALSE.
   !! The B matrix Bqu
   LOGICAL, ALLOCATABLE :: is_mirror_k(:)
-  !! is this local k and global q point is a mirror point, used for time-reversal symmertry
+  !! .true. if k is a mirror point, used for time-reversal symmetry
   LOGICAL, ALLOCATABLE :: is_mirror_q(:)
-  !! is this local k and global q point is a mirror point, used for time-reversal symmertry
-  LOGICAL, ALLOCATABLE :: is_tri_q(:)
-  !! is this local k and global q point is a mirror point, used for time-reversal symmertry
+  !! .true. if q is a mirror point, used for time-reversal symmertry
   LOGICAL, ALLOCATABLE :: is_tri_k(:)
-  !! is this local k and global q point is a mirror point, used for time-reversal symmertry
+  !! .true. if k is a time-reversal invariant point, used for time-reversal symmetry
+  LOGICAL, ALLOCATABLE :: is_tri_q(:)
+  !! .true. if q is a time-reversal invariant point, used for time-reversal symmetry
   INTEGER :: nbnd_plrn
-  !! FIXME
+  !! Number of bands used in polaron calculations
   INTEGER :: nbnd_g_plrn
-  !! FIXME
+  !! Number of bands in which g is to be interpolated
   INTEGER :: lword_h
-  !! FIXME
+  !! Hamiltonian record size for I/O
   INTEGER :: lword_g
-  !! FIXME
+  !! el-ph matrix element record size for I/O
   INTEGER :: lword_m
   !! FIXME
-  INTEGER :: lword_umn
-  !! FIXME
-  INTEGER :: lword_ekanu
-  !! FIXME
   INTEGER :: io_level_g_plrn
-  !! FIXME
+  !! Write el-ph matrix elements to disk or store in memory
   INTEGER :: io_level_h_plrn
-  !! FIXME
-  INTEGER :: io_level_umn_plrn
-  !! FIXME
-  INTEGER :: io_level_ekanu_plrn
-  !! FIXME
+  !! Write Hamiltonian to disk or store in memory
   INTEGER :: hblocksize
   !! FIXME
   INTEGER :: band_pos
-  !! FIXME
-  INTEGER :: ibvec(-3:3)
-  !! FIXME
+  !! Band in which CBM or VBM is located
   INTEGER :: ik_edge
-  !! FIXME
+  !! k-point in which CBM or VBM is located
   INTEGER :: nRp
   !! Number of unit cells on supercell for non-diagonal supercells
   INTEGER, ALLOCATABLE :: Rp(:,:)
   !! List of unit cell vectors within supercell
   INTEGER, ALLOCATABLE :: select_bands_plrn(:)
-  !! FIXME
+  !! Map from {start_band_plrn, end_band_plrn} to {1, end_band_plrn - start_band_plrn}
   INTEGER, ALLOCATABLE :: kpg_map(:)
-  !! Number of bands in subgroup used in polaron calculations
+  !! Map from a given k1 to its mirror point k2 = -k1 + G
   REAL(KIND = DP) :: wq_model
-  !! phonon freq in vertex model
+  !! Phonon freq in Frohlich model
   REAL(KIND = DP), ALLOCATABLE :: etf_model(:)
-  !! band structure and in vertex model
+  !! Band structure in Frohlich model
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
-  !! Gathered k points coordinates over the pools
+  !! Gathered KS eigenvalues over the pools
   REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
-  !! Generate the maps of k->k+q and k->G-k
+  !! Gathered k-point coordinates over the pools
   COMPLEX(KIND = DP), ALLOCATABLE :: Hamil(:, :)
-  !! polaron eigenvector
-  COMPLEX(KIND = DP), ALLOCATABLE :: eigVec(:, :)
-  !! Gathered eigenvalues over the pools
-  COMPLEX(KIND = DP), ALLOCATABLE :: hEigVec(:, :)
-  !! Gathered eigenvalues over the pools
-  COMPLEX(KIND = DP), ALLOCATABLE :: gq_model(:)
-  !! el-ph matrix element in vertex model
-  COMPLEX(KIND = DP), ALLOCATABLE :: M_mat(:, :, :, :)
-  !! el-ph matrix element in vertex model
-  COMPLEX(KIND = DP), ALLOCATABLE :: epf(:, :, :, :)
-  !! el-ph matrix element in vertex model
-  COMPLEX(KIND = DP), ALLOCATABLE :: epfall(:, :, :, :, :)
-  !! el-ph matrix element in vertex model
-  COMPLEX(KIND = DP), ALLOCATABLE :: rho_mat(:, :, :, :)
-  !! FIXME
+  !! Effective polaron Hamiltonian
+  COMPLEX(KIND = DP), ALLOCATABLE :: eigvec(:, :)
+  !! Polaron wave function coefficients in Bloch basis, Ank
   COMPLEX(KIND = DP), ALLOCATABLE :: Bmat(:,:)
-  !! FIXME
+  !! Polaron displacement coefficients in phono basis, Bqv
+  COMPLEX(KIND = DP), ALLOCATABLE :: gq_model(:)
+  !! el-ph matrix element in a simplified Fr\"ohlich model
+  COMPLEX(KIND = DP), ALLOCATABLE :: epf(:, :, :, :)
+  !! el-ph matrix element in for a given q
+  COMPLEX(KIND = DP), ALLOCATABLE :: epfall(:, :, :, :, :)
+  !! el-ph matrix element for all q
   COMPLEX(KIND = DP) :: berry_phase(1:3)
   !! FIXME
   PUBLIC  :: plrn_prepare
-  !! FIXME
+  !! Subroutine preparing variables for polaron calculations
   PUBLIC  :: plrn_flow_select
-  !! FIXME
+  !! Subroutine selecting polaron scf or post-processing
   !
   CONTAINS
     !
@@ -115,25 +100,22 @@
     !!
     !-----------------------------------------------------------------------
     !
-    USE epwcom,        ONLY : start_band_plrn, end_band_plrn, nbndsub, nstate_plrn, debug_plrn, &
+    USE input,         ONLY : start_band_plrn, end_band_plrn, nbndsub, nstate_plrn, debug_plrn, &
                               cal_psir_plrn, restart_plrn,  interp_Ank_plrn, interp_Bqu_plrn,   &
-                              model_vertex_plrn, full_diagon_plrn, nhblock_plrn, Mmn_plrn, lifc,&
-                              g_start_band_plrn, g_end_band_plrn, lrot, lphase, type_plrn,      &
-                              g_start_energy_plrn, g_end_energy_plrn, nqf1, nqf2, nqf3,         &
-                              model_enband_plrn, model_phfreq_plrn, model_vertex_plrn,          &
-                              g_power_order_plrn, io_lvl_plrn, nkf1, nkf2, nkf3, seed_plrn,     &
-                              m_eff_plrn, kappa_plrn, omega_LO_plrn, fsthick, etf_mem,          &
-                              scell_mat_plrn
-    USE elph2,         ONLY : nkqf, nkf, nqf, nqtotf, nktotf, etf, xkf, xqf, wf, xkq, chw
+                              model_vertex_plrn, nhblock_plrn, g_start_band_plrn,               &
+                              g_end_band_plrn, lrot, lphase, type_plrn, g_start_energy_plrn,    &
+                              g_end_energy_plrn, model_enband_plrn, model_vertex_plrn,          &
+                              g_power_order_plrn, io_lvl_plrn, nkf1, nkf2, nkf3, m_eff_plrn,    &
+                              kappa_plrn, omega_LO_plrn, lfast_kmesh, scell_mat_plrn
+    USE global_var,    ONLY : nkqf, nkf, nqf, nqtotf, nktotf, etf, xkf, xqf
     USE modes,         ONLY : nmodes
-    USE mp_world,      ONLY : mpime
-    USE cell_base,     ONLY : bg, at, omega, alat
-    USE constants_epw, ONLY : czero, cone, pi, ci, twopi, fpi, eps6, eps8, eps5, zero, ryd2ev
-    USE poolgathering, ONLY : poolgather2
+    USE cell_base,     ONLY : bg, omega, alat
+    USE ep_constants,  ONLY : czero, cone, pi, ci, twopi, fpi, eps6, eps8, eps5, zero, ryd2ev
+    USE parallelism,   ONLY : poolgather2
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
     USE io_files,      ONLY : check_tempdir
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+    USE io_global,     ONLY : stdout
     !
     IMPLICIT NONE
     !
@@ -143,106 +125,62 @@
     !! Total q-point in the fsthick
     !
     ! Local variables
-    CHARACTER(LEN = 100) :: fmt_mode
-    !! printing
     LOGICAL :: debug
     !! Debug flag
     LOGICAL :: plrn_scf
-    !! Self-consistent
+    !! .true. if self-consistent polaron calculation is to be performed
     LOGICAL :: exst
     !! Checking on the file presence
     LOGICAL :: pfs
     !! FIXME
-    INTEGER :: inu
-    !! mode index
     INTEGER :: iq
     !! q-point index
     INTEGER :: ik
     !! k-point index
-    INTEGER :: ikk
-    !! k+q point index
-    INTEGER :: jk
-    !! FIXME
-    INTEGER :: iibnd
-    !! band index
-    INTEGER :: jjbnd
-    !! band index
     INTEGER :: ibnd
     !! band index
-    INTEGER :: jbnd
-    !! band index
     INTEGER :: ikq
-    !! FIXME
+    !! k+q point index
     INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
+    !! k-point index in global list
     INTEGER :: ierr
     !! Error status
-    INTEGER :: icount
-    !! FIXME
-    INTEGER :: iter
-    !! FIXME
-    INTEGER :: ix, iy, iz
-    !! FIXME
-    INTEGER :: start_mode
-    !! FIXME
-    INTEGER :: idos
-    !! FIXME
-    INTEGER :: iatm
-    !! FIXME
-    INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: indexkn2
-    !! FIXME
     INTEGER :: ikGamma
-    !! FIXME
+    !! Index of \Gamma point in k-point list
     INTEGER :: iqGamma
-    !! FIXME
-    INTEGER :: io_level
-    !! FIXME
+    !! Index of \Gamma point in q-point list
     INTEGER :: minNBlock
     !! FIXME
     INTEGER :: ishift
-    !! FIXME
+    !! Index of neighbor G-vectors
     INTEGER :: lword_h_tmp
-    !! FIXME
+    !! Temporary Hamiltonian record size for I/O
     INTEGER :: lword_g_tmp
-    !! FIXME
-    INTEGER :: lword_umn_tmp
-    !! FIXME
-    INTEGER :: lword_ekanu_tmp
-    !! FIXME
+    !! Temporary el-ph matrix element record size for I/O
     INTEGER, PARAMETER :: maxword = HUGE(1)
     !! FIXME
     REAL(KIND = DP) :: xxk(3)
-    !! FIXME
-    REAL(KIND = DP) :: xkf_cart(3, nkqf)
-    !! FIXME
-    REAL(KIND = DP) :: xqf_cart(3, nqf)
-    !! FIXME
+    !! k-point coordinates
     REAL(KIND = DP) :: efermi
-    !! FIXME
-    REAL(KIND = DP) :: xkf_len(nkqf)
-    !! FIXME
+    !! Fermi level (VBM or CBM)
     REAL(KIND = DP) :: klen
-    !! FIXME
+    !! Distance to the nearest \Gamma point
     REAL(KIND = DP) :: shift(3)
-    !! FIXME
+    !! Shift G-vector to find nearest \Gamma point
     REAL(KIND = DP) :: rfac
-    !! FIXME
+    !! Numerator of matrix element in Frohlich model
     REAL(KIND = DP), ALLOCATABLE :: rtmp2(:,:)
-    !! FIXME
+    !! Temporary array for gathering eigenvalues across pools
     !
     CALL start_clock('plrn_prepare')
     !
-    IF(etf_mem == 3) THEN
-      CALL errore('polaron_prepare', 'Polaron module not working with etf_mem = 3', 1)
+    IF(lfast_kmesh) THEN
+      CALL errore('polaron_prepare', 'Polaron module not working with lfast_kmesh', 1)
     ENDIF
     !
     WRITE(stdout, '(5x,"fsthick not working in polaron module, selecting all the k/q points.")')
     !! type_plrn denotes whether electron polaron (-1) or hole polaron (+1)
-    !! Legalize the type_plrn input, in case that the user use an arbitrary number
+    !! Legalize the type_plrn input,     in case that the user use an arbitrary number
     IF(type_plrn < 0) THEN
       type_plrn = -1
       WRITE(stdout, '(5x, "The electron polaron is calculated.")')
@@ -296,12 +234,6 @@
     rtmp2 = zero
     CALL poolgather2(3, nktotf * 2, nkqf, xkf, rtmp2)
     xkf_all(1:3, 1:nktotf) = rtmp2(1:3, 1:nktotf * 2:2)
-    !
-    IF(debug_plrn) THEN
-      DO ik = 1, nktotf
-        WRITE(stdout, '(5x, 3f15.6)') xkf_all(1:3, ik)
-      ENDDO
-    ENDIF
     !
     DEALLOCATE(rtmp2, STAT = ierr)
     IF (ierr /= 0) CALL errore('plrn_prepare', 'Error deallocating rtmp2', 1)
@@ -388,9 +320,9 @@
     ENDIF
     !
     IF(interp_Ank_plrn) THEN
-      ALLOCATE(eigVec(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
-      IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating eigVec', 1)
-      eigVec = czero
+      ALLOCATE(eigvec(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating eigvec', 1)
+      eigvec = czero
     ELSE IF(plrn_scf) THEN
        CALL check_tempdir('plrn_tmp', exst, pfs)
        !
@@ -439,9 +371,9 @@
        IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating Hamil', 1)
        !
        ! Allocate and initialize the variables
-       ALLOCATE(eigVec(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
-       IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating eigVec', 1)
-       eigVec = czero
+       ALLOCATE(eigvec(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
+       IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating eigvec', 1)
+       eigvec = czero
        !
        ! Check whether the input is legal, otherwise print warning and stop
        ! Check the input now, because if inputs are illegal, we can stop the calculation
@@ -491,20 +423,20 @@
        !
        ALLOCATE(is_mirror_k(nkf), STAT = ierr)
        IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating is_mirror_k', 1)
+       is_mirror_k = .FALSE.
        ALLOCATE(is_mirror_q(nqf), STAT = ierr)
        IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating is_mirror_q', 1)
+       is_mirror_q = .FALSE.
        ALLOCATE(is_tri_k(nkf), STAT = ierr)
        IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating is_mirror_q', 1)
        is_tri_k = .FALSE.
        ALLOCATE(is_tri_q(nqf), STAT = ierr)
        IF (ierr /= 0) CALL errore('plrn_prepare', 'Error allocating is_mirror_q', 1)
        is_tri_q = .FALSE.
-       is_mirror_q = .false.
-       is_mirror_k = .false.
        !
        WRITE(stdout, '(5x, a)') "Finding the index of -k for each k point."
        ! For two k points k1 and k2, if k1 = G - k2, G is any reciprocal vector
-       ! then k2 is the mirror point if the index of k2 is larger than k1
+       ! then k2 is the mirror point of k1 if the index of k2 is larger than k1
        ! Same rule for q, while is_mirror_q(nqf) is global but is_mirror_k(nkf) is local
        DO ik = 1, nkf
          ik_global = ikqLocal2Global(ik, nktotf)
@@ -557,27 +489,24 @@
     END SUBROUTINE plrn_prepare
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE plrn_save_g_to_file(iq, epfg, wf)
+    SUBROUTINE plrn_save_g_to_file(iq, epfg, wfreq)
     !-----------------------------------------------------------------------
     !!
     !! Save el-ph matrix element to file
     !!
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : g_start_band_plrn, g_end_band_plrn,    &
-                              nbndsub, g_tol_plrn, io_lvl_plrn,      &
-                              g_start_energy_plrn, g_end_energy_plrn
-    USE elph2,         ONLY : nkf, nktotf, nqtotf
-    USE constants_epw, ONLY : eps8, two, czero
+    USE input,         ONLY : g_start_band_plrn, g_end_band_plrn, &
+                              io_lvl_plrn, eps_acoustic
+    USE global_var,    ONLY : nkf
+    USE ep_constants,  ONLY : eps8, two, czero
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE mp_global,     ONLY : inter_pool_comm
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iq
     !! q-point index
-    REAL(KIND = DP), INTENT(in) :: wf(:, :)
-    !! FIXME
+    REAL(KIND = DP), INTENT(in) :: wfreq(:, :)
+    !! Phonon frequency
     COMPLEX(KIND = DP), INTENT(inout) :: epfg(:, :, :, :)
     !! el-ph matrix element
     !
@@ -585,30 +514,18 @@
     INTEGER :: ik
     !! k-point index
     INTEGER :: ikq
-    !! k+q point
+    !! k+q point index
     INTEGER :: imode
     !! mode index
-    INTEGER :: ibnd
-    !! band index
-    INTEGER :: jbnd
-    !! band index
-    INTEGER :: ik_global
-    !! global k-point
-    INTEGER, SAVE :: g_count_sum
-    !! FIXME
-    REAL(KIND = DP) :: eig
-    !! Eigenvalues
-    COMPLEX(KIND = DP) :: ctemp
-    !! Temporary variable
     !
     ! In polaron equations, g is not epf but epf/omega
     ! To ensure a Hermitian Hamiltonian, g_{mnu}(k, -q) is calculated as g*_{nmu}(k-q, q)
     DO ik = 1, nkf
       ikq = ikq_all(ik, iq)
       DO imode = 1, nmodes
-        IF (wf(imode, iq) > eps8) THEN
+        IF (wfreq(imode, iq) > eps_acoustic) THEN
           epf(:, :, imode, ik) = &
-          epfg(g_start_band_plrn:g_end_band_plrn, g_start_band_plrn:g_end_band_plrn, imode, ik) / DSQRT(two * wf(imode, iq))
+          epfg(g_start_band_plrn:g_end_band_plrn, g_start_band_plrn:g_end_band_plrn, imode, ik) / DSQRT(two * wfreq(imode, iq))
         ENDIF
       ENDDO ! imode
     ENDDO ! ik
@@ -628,8 +545,8 @@
     !!
     !! find the global index of k+q for the local ik and global iq
     !!
-    USE elph2, ONLY : nktotf
-    USE epwcom, ONLY : nkf1, nkf2, nkf3
+    USE global_var, ONLY : nktotf
+    USE input,      ONLY : nkf1, nkf2, nkf3
     !
     IMPLICIT NONE
     !
@@ -642,19 +559,19 @@
     INTEGER :: ikq
     ! k+q index
     INTEGER :: ik_global
-    !! FIXME
+    !! k-point index in global list
     INTEGER :: ikq_all
-    !! FIXME
+    !! k+q point index in global list
     INTEGER :: index_target(1:3)
-    !! FIXME
+    !! Auxiliary index
     INTEGER :: index_kq
-    !! FIXME
+    !! Auxiliary index of k+q point
     INTEGER :: ikq_loop
-    !! FIXME
+    !! Loop counter
     REAL(KIND = DP) :: xxk(1:3)
-    !! FIXME
+    !! k+q point coordinates
     REAL(KIND = DP) :: xxk_target(1:3)
-    !! FIXME
+    !! k+q point coordinates in 1BZ
     !
     CALL start_clock('find_k+q')
     ikq_all = 0
@@ -684,19 +601,18 @@
     END FUNCTION ikq_all
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    FUNCTION find_ik(xxk, xkf_all)
+    FUNCTION find_ik(xxk, xkf_global)
     !-----------------------------------------------------------------------
     !!
     !! Find k-point index
     !!
-    USE elph2, ONLY : nktotf
-    USE epwcom, ONLY : nkf1, nkf2, nkf3
+    USE global_var, ONLY : nktotf
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: xxk(1:3)
     !! K-point position per cpu
-    REAL(KIND = DP), INTENT(in) :: xkf_all(1:3, 1:nktotf)
+    REAL(KIND = DP), INTENT(in) :: xkf_global(1:3, 1:nktotf)
     !! global k-points
     !
     ! Local variables
@@ -705,13 +621,13 @@
     INTEGER :: find_ik
     !! k-point index of found k-point
     REAL(KIND = DP) :: xkq(1:3)
-    !! k+q point index
+    !! k-point coordinates
     !
     CALL start_clock('find_k')
     !
     find_ik = 0
     DO ik = 1, nktotf
-      xkq(1:3) = xkf_all(1:3, ik) - xxk(1:3)
+      xkq(1:3) = xkf_global(1:3, ik) - xxk(1:3)
       IF(isGVec(xkq)) THEN
         find_ik = ik
         EXIT
@@ -729,41 +645,41 @@
     SUBROUTINE plrn_flow_select(nrr_k, ndegen_k, irvec_r, nrr_q, ndegen_q, irvec_q, rws, nrws, dims)
     !-----------------------------------------------------------------------
     !!
-    !! FIXME
+    !! Driver which selects whether a self-consistent polaron
+    !! or a post-processing calculation is to be performed.
     !!
-    USE epwcom,        ONLY : cal_psir_plrn, restart_plrn,  interp_Ank_plrn, interp_Bqu_plrn, &
+    !-----------------------------------------------------------------------
+    USE input,         ONLY : cal_psir_plrn,  interp_Ank_plrn, interp_Bqu_plrn, &
                               io_lvl_plrn, scell_mat_plrn
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+    USE io_global,     ONLY : stdout, ionode
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT (in) :: nrr_k
-    !! FIXME
+    !! Number of electronic WS points
     INTEGER, INTENT (in) :: dims
-    !! FIXME
+    !! Dims is either nbndsub if use_ws or 1 if not
     INTEGER, INTENT (in) :: ndegen_k(:,:,:)
-    !! FIXME
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     INTEGER, INTENT (in) :: nrr_q
-    !! FIXME
+    !! number of phonon WS points
     INTEGER, INTENT (in) :: ndegen_q(:,:,:)
-    !! FIXME
+    !! degeneracy of WS points for phonon
     INTEGER, INTENT (in) :: irvec_q(3, nrr_q)
-    !! FIXME
+    !! Coordinates of real space vector for phonons
     INTEGER, INTENT (in) :: nrws
-    !! FIXME
+    !! Number of real-space Wigner-Seitz
     REAL(KIND = DP), INTENT (in) :: irvec_r(3, nrr_k)
-    !! FIXME
+    !! Wigner-Size supercell vectors, store in real instead of integer
     REAL(KIND = DP), INTENT (in) :: rws(:, :)
-    !! FIXME
+    !! Real-space wigner-Seitz vectors
     !
     ! Local variable
-    LOGICAL :: itsopen
-    !! FIXME
     !
     ! Bqu Ank interpolation is not compatible with self-consistency process
     ! Added by Chao Lian for polaron calculations flow select
     ! If postprocess is ON, i.e. Bqu interpolation with saved dtau,
-    ! Ank interpolation with saved Amp, and polaron visulation with saved Wannier function cube files,
+    ! Ank interpolation with saved Amp, and polaron visualization with saved Wannier function cube files,
     ! then self-consistent process is skipped.
     IF (.NOT. (interp_Bqu_plrn .OR. interp_Ank_plrn .OR. cal_psir_plrn)) THEN
       CALL polaron_scf(nrr_k, ndegen_k, irvec_r, nrr_q, ndegen_q, irvec_q, rws, nrws, dims)
@@ -792,24 +708,8 @@
       ENDIF
     ENDIF
     !
-    ! Clean up the allocated arrays, close open files inquire(unit=iepfall, opened=itsopen)
-    ! if (itsopen) CLOSE(iepfall)
-    !
-    ! -- FIXME FIXME FIXME FIXME FIXME ------------------------------------------------------------
-    ! SP - IF ALLOCATED is not permitted. One must correctly allocate and deallocate when needed
-    IF (ALLOCATED(is_mirror_k))      DEALLOCATE(is_mirror_k)
-    IF (ALLOCATED(is_mirror_q))      DEALLOCATE(is_mirror_q)
-    IF (ALLOCATED(is_tri_q))         DEALLOCATE(is_tri_q) !JLB
-    IF (ALLOCATED(is_tri_k))         DEALLOCATE(is_tri_k) !JLB
-    IF (ALLOCATED(Hamil))            DEALLOCATE(Hamil)
-    IF (ALLOCATED(eigVec))           DEALLOCATE(eigVec)
-    IF (ALLOCATED(hEigVec))          DEALLOCATE(hEigVec)
-    IF (ALLOCATED(kpg_map))          DEALLOCATE(kpg_map)
-    IF (ALLOCATED(etf_all))          DEALLOCATE(etf_all)
-    IF (ALLOCATED(xkf_all))          DEALLOCATE(xkf_all)
-    IF (ALLOCATED(select_bands_plrn))DEALLOCATE(select_bands_plrn)
-    IF (ALLOCATED(gq_model))         DEALLOCATE(gq_model)
-    ! -- FIXME FIXME FIXME FIXME FIXME ------------------------------------------------------------
+    ! Deallocate allocated arrays and close open files
+    CALL plrn_close()
     !
     WRITE(stdout, '(/5x, "======================== Polaron Timers ===========================")')
     CALL print_clock('main_prln')
@@ -855,201 +755,98 @@
     !!
     !
     USE modes,         ONLY : nmodes
-    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, twopi,           &
+    USE ep_constants,  ONLY : ryd2mev, one, ryd2ev, two, zero, twopi,           &
                               czero, cone, pi, ci, twopi, eps6, eps8, eps5
-    USE epwcom,        ONLY : type_plrn, full_diagon_plrn, lifc, debug_plrn,    &
+    USE input,         ONLY : type_plrn, full_diagon_plrn, debug_plrn,          &
                               init_sigma_plrn, init_k0_plrn, nstate_plrn,       &
-                              conv_thr_plrn, mixing_Plrn, init_plrn, niter_plrn,&
-                              restart_plrn, nkf1, nkf2, nkf3, seed_plrn,        &
-                              nqf1, nqf2, nqf3, r0_plrn, init_ntau_plrn,        &
-                              efermi_read, fermi_energy, nbndsub, as,           &
-                              model_vertex_plrn, time_rev_A_plrn, beta_plrn,    &
-                              Mmn_plrn, recal_Mmn_plrn, model_vertex_plrn,      &
-                              model_enband_plrn, model_phfreq_plrn,             &
-                              omega_LO_plrn, kappa_plrn, m_eff_plrn,            &
-                              scell_mat_plrn
+                              conv_thr_plrn, init_plrn, niter_plrn,             &
+                              nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, r0_plrn,      &
+                              init_ntau_plrn, nbndsub, as, time_rev_A_plrn,     &
+                              model_phfreq_plrn, omega_LO_plrn, scell_mat_plrn
     USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nkf, nqf, nqtotf,    &
-                              nktotf, xkf, wf, xkq, chw, cu, cuq
-    USE mp_global,     ONLY : inter_pool_comm
-    USE cell_base,     ONLY : bg, alat
+    USE global_var,    ONLY : nqtotf, nktotf, wf
+    USE cell_base,     ONLY : alat
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE poolgathering, ONLY : poolgather2
-    USE ions_base,     ONLY : nat
-    USE mp_world,      ONLY : mpime, world_comm
-    USE epwcom,        ONLY : ethrdg_plrn
-    USE io_var,        ONLY : iunRpscell
+    USE parallelism,   ONLY : poolgather2
+    USE mp_world,      ONLY : world_comm
+    USE input,         ONLY : ethrdg_plrn
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nrr_k
-    !! FIXME
+    !! Number of electronic WS points
     INTEGER, INTENT(in) ::  dims
-    !! FIXME
+    !! Dims is either nbndsub if use_ws or 1 if not
     INTEGER, INTENT(in) :: ndegen_k(:,:,:)
-    !! FIXME
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     INTEGER, INTENT(in) :: nrr_q
-    !! FIXME
+    !! number of phonon WS points
     INTEGER, INTENT(in) :: ndegen_q(:,:,:)
-    !! FIXME
+    !! degeneracy of WS points for phonon
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
-    !! FIXME
+    !! Coordinates of real space vector for phonons
     INTEGER, INTENT(in) :: nrws
-    !! FIXME
+    !! Number of real-space Wigner-Seitz
     REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
-    !! FIXME
+    !! Wigner-Size supercell vectors, store in real instead of integer
     REAL(KIND = DP), INTENT(in) :: rws(:, :)
-    !! FIXME
+    !! Real-space wigner-Seitz vectors
     !
     ! local variables
     CHARACTER(LEN = 256) :: filename
-    !! FIXME
+    !! Output file name
     CHARACTER(LEN = 256) :: tmpch
-    !! FIXME
+    !! Temporary character to assign name to different displacement files
     LOGICAL :: debug
-    !! FIXME
-    LOGICAL :: file_exist
-    !! FIXME
+    !! .true. if extra output is to be printed for debugging
     INTEGER :: inu
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: iq
-    !! FIXME
+    !! q-point counter
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikk
-    !! FIXME
-    INTEGER :: jk
-    !! FIXME
-    INTEGER :: iibnd
-    !! FIXME
-    INTEGER :: jjbnd
-    !! FIXME
+    !! k-point counter
     INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
+    !! band counter
     INTEGER :: ierr
     !! Error status
-    INTEGER :: iRp
-    !! FIXME
     INTEGER :: itau
     !! Atom index
     INTEGER :: iter
-    !! FIXME
-    INTEGER :: icount
-    !! FIXME
-    INTEGER :: ix, iy, iz
-    !! FIXME
-    INTEGER :: start_mode
-    !! FIXME
-    INTEGER :: idos
-    !! FIXME
-    INTEGER :: iatm
-    !! FIXME
+    !! Iteration counter
     INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: indexkn2
-    !! FIXME
+    !! Combined k-point and band index
     INTEGER :: nkf1_p
-    !! FIXME
+    !! Fine k-point grid along b1
     INTEGER :: nkf2_p
-    !! FIXME
+    !! Fine k-point grid along b2
     INTEGER :: nkf3_p
-    !! FIXME
-    INTEGER :: nbnd_plrn_p
-    !! FIXME
+    !! Fine k-point grid along b3
     INTEGER :: nbndsub_p
-    !! FIXME
-    INTEGER :: nPlrn_p
-    !! FIXME
+    !! Number of bands in polaron calculation
     INTEGER :: nktotf_p
-    !! FIXME
-    INTEGER :: iqpg
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
-    INTEGER :: dos_file
-    !! FIXME
-    INTEGER :: wan_func_file
-    !! FIXME
-    INTEGER :: bloch_func_file
-    !! FIXME
-    INTEGER :: bmat_file
-    !! FIXME
-    INTEGER :: dtau_file
-    !! FIXME
-    INTEGER :: itemp
-    !! FIXME
-    INTEGER :: jtemp
-    !! FIXME
-    INTEGER :: ngrid(1:3)
-    !! FIXME
+    !! Number of k-points in the fine grid
     REAL(KIND = DP) :: estmteRt(nstate_plrn)
-    !! FIXME
-    REAL(KIND = DP) :: eigVal(nstate_plrn)
-    !! FIXME
+    !! Polaron eigenvalue in diagonalization
+    REAL(KIND = DP) :: eigval(nstate_plrn)
+    !! Polaron eigenvalue
     REAL(KIND = DP) :: esterr
-    !! FIXME
-    REAL(KIND = DP) :: eb
-    !! FIXME
-    REAL(KIND = DP) :: EPlrnTot
-    !! FIXME
-    REAL(KIND = DP) :: EPlrnElec
-    !! FIXME
-    REAL(KIND = DP) :: EPlrnPhon
-    !! FIXME
-    REAL(KIND = DP) :: EPlrnBeta
-    !! FIXME
-    REAL(KIND = DP) :: EPlrnDisp
-    !! FIXME
-    REAL(KIND = DP) :: xxk(3)
-    !! FIXME
-    REAL(KIND = DP) :: xxq(3)
-    !! FIXME
-    REAL(KIND = DP) :: shift(3)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
-    REAL(KIND = DP) :: disK
-    !! FIXME
-    REAL(KIND = DP) :: disK_t
-    !! FIXME
-    REAL(KIND = DP) :: prefac
-    !! FIXME
-    REAL(KIND = DP) :: norm
-    !! FIXME
+    !! Difference of displacements between scf loops
+    REAL(KIND = DP) :: eplrnelec
+    !! Electron part of polaron formation energy
+    REAL(KIND = DP) :: eplrnphon
+    !! Phonon part of polaron formation energy
     REAL(KIND = DP) :: r_cry(1:3)
-    !! FIXME
-    REAL(KIND = DP) :: totVal_save
-    !! FIXME
-    REAL(KIND = DP) :: b_vec(1:3)
-    !! FIXME
+    !! Polaron center
     REAL(KIND = DP) :: dtau_diff
-    !! FIXME
-    COMPLEX(KIND = DP) :: cufkk(nbndsub, nbndsub)
-    !! FIXME
-    COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: Bmat_save(:,:)
-    !! FIXME
+    !! Max difference between displacements between scf loops
     COMPLEX(KIND = DP), ALLOCATABLE :: eigvec_wan(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: eigvec_wan_save(:, :)
-    !! FIXME
+    !! Polaron wave function coefficients in Wannier basis, Amp
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau(:, :)
-    !! FIXME
+    !! Polaron displacements
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau_save(:, :)
-    !! FIXME
+    !! Polaron displacements from previous iteration to compare
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau_list(:, :, :)
-    !! FIXME
+    !! List of displacements from which scf is to be initiated
     !
     ALLOCATE(dtau(nktotf, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating dtau', 1)
@@ -1057,7 +854,6 @@
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating dtau_save', 1)
     dtau = czero
     dtau_save = czero
-    b_vec(1:3) = (/one / nqf1, one / nqf2, one / nqf3/)
     debug = debug_plrn
     !
     CALL start_clock('main_prln')
@@ -1076,7 +872,7 @@
     !! Initialize Ac(k) based on profile
     !! TODO: ik_bm should be user-adjustable
     CALL start_clock('init_Ank')
-    eigVec = czero
+    eigvec = czero
     SELECT CASE (init_plrn)
       CASE (1)
         ! If k0 has not been set on input, center gaussian at band edge
@@ -1085,14 +881,14 @@
         WRITE(stdout, '(5x, "Initializing polaron wavefunction using Gaussian wave &
            &packet with a width of", ES14.6)') init_sigma_plrn
         WRITE(stdout, '(5x, "centered at k=", 3f14.6)') init_k0_plrn !xkf_all(1:3, ik_edge)
-        CALL init_plrn_gaussian((/zero, zero, zero/), xkf_all, init_k0_plrn, eigVec)
+        CALL init_plrn_gaussian((/zero, zero, zero/), xkf_all, init_k0_plrn, eigvec)
       CASE (3)
         ALLOCATE(eigvec_wan(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
         IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigvec_wan', 1)
         WRITE(stdout, '(5x, a)') "Initializing the polaron wavefunction with previously saved Amp.plrn file"
-        CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, 'Amp.plrn', scell_mat_plrn)
+        CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nstate_plrn, 'Amp.plrn')
         CALL plrn_eigvec_tran('Wan2Bloch', time_rev_A_plrn, eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nbndsub_p, &
-           nrr_k, ndegen_k, irvec_r, dims, eigVec)
+           nrr_k, ndegen_k, irvec_r, dims, eigvec)
         DEALLOCATE(eigvec_wan, STAT = ierr)
         IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating eigvec_wan', 1)
       CASE (6)
@@ -1103,26 +899,26 @@
         !
         IF (init_ntau_plrn == 1) THEN
           filename = 'dtau_disp.plrn'
-          CALL read_plrn_dtau(dtau, nqf1, nqf2, nqf3, nqtotf, nmodes, filename, scell_mat_plrn)
+          CALL read_plrn_dtau(dtau, nqtotf, nmodes, filename, scell_mat_plrn)
           dtau_list(1, :, :) = dtau(:, :)
         ELSE
           DO itau = 1, init_ntau_plrn
             WRITE(tmpch,'(I4)') itau
             filename = TRIM('dtau_disp.plrn_'//ADJUSTL(tmpch))
-            CALL read_plrn_dtau(dtau, nqf1, nqf2, nqf3, nqtotf, nmodes, filename, scell_mat_plrn)
+            CALL read_plrn_dtau(dtau, nqtotf, nmodes, filename, scell_mat_plrn)
             dtau_list(itau, :, :) = dtau(:, :)
           ENDDO
         ENDIF
         !
         CALL mp_bcast(dtau_list, meta_ionode_id, world_comm)
         ! Initialize Ank wavefunction for iterative diagonalization Gaussian
-        ! If k0 has not been set on input, center gaussian at band edge
+        ! If k0 has not been set on input,     center gaussian at band edge
         IF (ALL(init_k0_plrn(:) == 1000.d0)) init_k0_plrn = xkf_all(1:3, ik_edge)
         WRITE(stdout, '(5x, "Initializing polaron wavefunction using Gaussian wave &
         &packet with the width of", f15.7)') init_sigma_plrn
         WRITE(stdout, '(5x, "centered at k=", 3f15.7)') init_k0_plrn !xkf_all(1:3, ik_edge)
-        CALL init_plrn_gaussian((/zero, zero, zero/), xkf_all, init_k0_plrn, eigVec)
-        CALL norm_plrn_wf(eigVec, REAL(nktotf, DP))
+        CALL init_plrn_gaussian((/zero, zero, zero/), xkf_all, init_k0_plrn, eigvec)
+        CALL norm_plrn_wf(eigvec, REAL(nktotf, DP))
       CASE DEFAULT
         CALL errore('polaron_scf','init_plrn not implemented!', 1)
     END SELECT
@@ -1133,28 +929,12 @@
       DO ik = 1, nktotf
         DO ibnd = 1, nbnd_plrn
           indexkn1 = (ik - 1) * nbnd_plrn + ibnd
-          IF (select_bands_plrn(ibnd) /= band_pos) eigVec(indexkn1, 1:nstate_plrn) = czero
+          IF (select_bands_plrn(ibnd) /= band_pos) eigvec(indexkn1, 1:nstate_plrn) = czero
         ENDDO
       ENDDO
-      CALL norm_plrn_wf(eigVec, REAL(nktotf, DP))
+      CALL norm_plrn_wf(eigvec, REAL(nktotf, DP))
     ENDIF
     CALL stop_clock('init_Ank')
-    !
-    IF (debug_plrn) THEN
-      ! SP: IF allocated is not recommanded
-      ! FIXME
-      IF(ALLOCATED(eigvec_wan)) DEALLOCATE(eigvec_wan)
-      ALLOCATE(eigvec_wan(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
-      IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigvec_wan', 1)
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbnd_plrn
-          eigvec_wan(ik + (ibnd-1) * nktotf, 1:nstate_plrn) &
-             = eigVec((ik - 1) * nbnd_plrn + ibnd, 1:nstate_plrn)
-        ENDDO
-      ENDDO
-      DEALLOCATE(eigvec_wan, STAT = ierr)
-      IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating eigvec_wan', 1)
-    ENDIF
     !
     WRITE(stdout, '(5x, "Starting the SCF cycles")')
     IF (full_diagon_plrn) THEN
@@ -1171,10 +951,6 @@
                                           "Formation/eV", "Error/eV"
     ALLOCATE(Bmat(nqtotf, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating Bmat', 1)
-    ALLOCATE(eigvec_wan(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
-    IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigvec_wan', 1)
-    ALLOCATE(eigvec_wan_save(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
-    IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigvec_wan_save', 1)
     !
     IF (scell_mat_plrn) THEN
       CALL read_Rp_in_S()
@@ -1186,8 +962,6 @@
       !
       IF (init_plrn == 6) dtau(:, :) = dtau_list(itau, :, :)
       !
-      eigvec_wan = czero
-      eigvec_wan_save = czero
       estmteRt = 1E3
       esterr = 1E5
       DO iter = 1, niter_plrn
@@ -1202,7 +976,7 @@
             CALL plrn_bmat_tran('Dtau2Bmat', .true., dtau, nqf1, nqf2, nqf3, nrr_q, ndegen_q, irvec_q, rws, nrws, Bmat)
           ENDIF
         ELSE
-          CALL build_plrn_bmat(Bmat, iter == 1)
+          CALL build_plrn_bmat(Bmat)
           !
           IF (scell_mat_plrn) THEN
             CALL scell_plrn_bmat_tran('Bmat2Dtau', .true., Bmat, nqtotf, nRp, Rp, nrr_q, ndegen_q, irvec_q, rws, nrws, dtau)
@@ -1228,29 +1002,9 @@
         !
         CALL stop_clock('cal_bqu')
         !
-        IF (debug_plrn) THEN
-          ! SP: If allocated not recommanded
-          ! FIXME
-          IF (ALLOCATED(Bmat_save)) DEALLOCATE(Bmat_save)
-          ALLOCATE(Bmat_save(nmodes, nqtotf), STAT = ierr)
-          IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating Bmat_save', 1)
-          Bmat_save = czero
-          DO inu = 1, nmodes
-            DO iq = 1, nqtotf
-              Bmat_save(inu, iq) = Bmat(iq, inu) * wf(inu, iq)
-            ENDDO
-          ENDDO
-          Bmat_save = czero
-        ENDIF
-        !
         CALL start_clock('Setup_H')
         !
-        ! S Tiwari: Quick Fix for GNU compiler, should be replaced in future
-        ! 
-        IF (ALLOCATED(Bmat_save)) DEALLOCATE(Bmat_save)
-        ALLOCATE(Bmat_save(nmodes, nqtotf), STAT = ierr)
-        ! FIXME 
-        CALL build_plrn_hamil(Bmat, Bmat_save, iter)
+        CALL build_plrn_hamil(Bmat)
         CALL stop_clock('Setup_H')
         CALL start_clock('DiagonH')
         ! For hole polaron (type_plrn = 1),
@@ -1260,82 +1014,66 @@
         IF (full_diagon_plrn) THEN
           ! Diagonalize Hamiltonian with Serial LAPACK subroutine
           ! Used for testing or robust benchmark
-          CALL diag_serial(estmteRt, eigVec)
+          CALL diag_serial(estmteRt, eigvec)
+          !
+          CALL mp_bcast(estmteRt, meta_ionode_id, world_comm)
+          CALL mp_bcast(eigvec, meta_ionode_id, world_comm)
         ELSE
           ! Diagonalize Hamiltonian with Davidson Solver
-          CALL diag_parallel(estmteRt, eigVec)
+          CALL diag_parallel(estmteRt, eigvec)
         ENDIF
         CALL stop_clock('DiagonH')
         !
         ! Reverse the eigenvalues if it is the hole polaron
         estmteRt(1:nstate_plrn) = (-type_plrn) * estmteRt(1:nstate_plrn)
 
-        ! enforce the time-reversal symmetry: A^T_k = A_k + A^*_{-k}
-        IF (time_rev_A_plrn) CALL check_time_rev_sym(eigVec)
-        CALL norm_plrn_wf(eigVec, REAL(nktotf, dp))
+        ! impose the time-reversal symmetry: A^T_k = A_k + A^*_{-k}
+        IF (time_rev_A_plrn) CALL check_time_rev_sym(eigvec)
+        CALL norm_plrn_wf(eigvec, REAL(nktotf, dp))
         !
-        eigVec = (- type_plrn) * eigVec
-        !
-        IF (debug_plrn) THEN
-          ! SP: If allocated not recommanded
-          ! FIXME
-          IF(ALLOCATED(eigvec_wan)) DEALLOCATE(eigvec_wan)
-          ALLOCATE(eigvec_wan(nktotf * nbnd_plrn, nstate_plrn), STAT = ierr)
-          IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigvec_wan', 1)
-          DO ik = 1, nktotf
-            DO ibnd = 1, nbnd_plrn
-              eigvec_wan(ik + (ibnd-1) * nktotf, 1:nstate_plrn) &
-                 = eigVec((ik - 1) * nbnd_plrn + ibnd, 1:nstate_plrn)
-            ENDDO
-          ENDDO
-          DEALLOCATE(eigvec_wan, STAT = ierr)
-          IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating eigvec_wan,', 1)
-        ENDIF
+        eigvec = (- type_plrn) * eigvec
         !
         CALL start_clock('cal_E_Form')
-        CALL calc_form_energy(EPlrnPhon, EPlrnElec, EPlrnBeta)
+        CALL calc_form_energy(eplrnphon, eplrnelec)
         CALL stop_clock('cal_E_Form')
         !
         ! TODO : use exact number instead of 20 in 20e15.7
         r_cry(1:3) = IMAG(LOG(berry_phase(1:3) * EXP(- twopi * ci * r0_plrn(1:3)))) / twopi
         r_cry(1:3) = r_cry(1:3) - NINT(r_cry(1:3))
-        WRITE(stdout, '(5x, i5, 60e15.4)') iter, estmteRt(1:nstate_plrn) * ryd2ev, EPlrnPhon * ryd2ev, &
-           - EPlrnElec * ryd2ev, (EPlrnElec + EPlrnPhon) * ryd2ev, esterr
-        eigVal = estmteRt
-        totVal_save = EPlrnElec + EPlrnPhon
+        WRITE(stdout, '(5x, i5, 60e15.4)') iter, estmteRt(1:nstate_plrn) * ryd2ev, eplrnphon * ryd2ev, &
+           - eplrnelec * ryd2ev, (eplrnelec + eplrnphon) * ryd2ev, esterr
+        eigval = estmteRt
       ENDDO
       !
       ! Calculate and write the energies
-      WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigVal * ryd2ev
-      WRITE(stdout, '(5x, a, f16.7)')   '     Phonon part (eV): ', EPlrnPhon * ryd2ev
-      WRITE(stdout, '(5x, a, f16.7)')   '   Electron part (eV): ', EPlrnElec * ryd2ev
+      WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigval * ryd2ev
+      WRITE(stdout, '(5x, a, f16.7)')   '     Phonon part (eV): ', eplrnphon * ryd2ev
+      WRITE(stdout, '(5x, a, f16.7)')   '   Electron part (eV): ', eplrnelec * ryd2ev
       IF (init_plrn == 6) THEN
-        WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((-type_plrn) * eigval - EPlrnPhon) * ryd2ev
+        WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((-type_plrn) * eigval - eplrnphon) * ryd2ev
       ELSE
-        WRITE(stdout, '(5x, a, f16.7)')   'Formation Energy (eV): ', (EPlrnElec + EPlrnPhon) * ryd2ev
+        WRITE(stdout, '(5x, a, f16.7)')   'Formation Energy (eV): ', (eplrnelec + eplrnphon) * ryd2ev
       ENDIF
     ENDDO ! init_ntau_plrn
     !
     ! Calculate and write Density of State of Bqnu and Ank
     WRITE(stdout, '(5x, a)') "Calculating density of states to save in dos.plrn"
-    CALL calc_den_of_state(eigVec, Bmat)
+    CALL calc_den_of_state(eigvec, Bmat)
     !
     ! Do Bloch to Wannier transform, with U matrix
     CALL start_clock('Ank_trans')
     WRITE(stdout, '(5x, a)') "Generating the polaron wavefunction in Wannier basis to save in Amp.plrn"
     !
-    ! SP: If allocated is not recommanded
-    ! FIXME
-    IF(ALLOCATED(eigvec_wan)) DEALLOCATE(eigvec_wan)
-    !
     ALLOCATE(eigvec_wan(nbndsub * nktotf, nstate_plrn), STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigvec_wan', 1)
     eigvec_wan = czero
     IF (scell_mat_plrn) THEN
-      CALL scell_plrn_eigvec_tran('Bloch2Wan',.TRUE., eigVec, nktotf, nRp, Rp, nbndsub, nrr_k, &
+      ! JLB: t_rev set to .true. before
+      CALL scell_plrn_eigvec_tran('Bloch2Wan', time_rev_A_plrn, eigvec, nktotf, nRp, Rp, nbndsub, nrr_k, &
               ndegen_k, irvec_r, dims, eigvec_wan)
     ELSE
-      CALL plrn_eigvec_tran('Bloch2Wan',.TRUE., eigVec, nkf1, nkf2, nkf3, nbndsub, nrr_k, &
+      ! JLB: t_rev set to .true. before
+      CALL plrn_eigvec_tran('Bloch2Wan', time_rev_A_plrn, eigvec, nkf1, nkf2, nkf3, nbndsub, nrr_k, &
          ndegen_k, irvec_r, dims, eigvec_wan)
     ENDIF
     CALL stop_clock('Ank_trans')
@@ -1372,14 +1110,12 @@
     !
     DEALLOCATE(dtau, STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating dtau', 1)
+    DEALLOCATE(dtau_save, STAT = ierr)
+    IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating dtau', 1)
     DEALLOCATE(eigvec_wan, STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating eigvec_wan', 1)
     DEALLOCATE(Bmat, STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating Bmat', 1)
-    !
-    ! SP: If allocated is not recommanded
-    ! FIXME
-    IF(ALLOCATED(Rp)) DEALLOCATE(Rp)
     !
     CALL stop_clock('main_prln')
     !
@@ -1387,30 +1123,28 @@
     END SUBROUTINE polaron_scf
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE calc_form_energy(EPlrnPhon, EPlrnElec, EPlrnBeta)
+    SUBROUTINE calc_form_energy(eplrnphon, eplrnelec)
     !-----------------------------------------------------------------------
     !!
     !! Computes the polaron formation energy
     !! Note: Require etf_all to be properly initialized
     !!
-    !!
-    USE constants_epw,   ONLY : zero, czero, twopi, ci, two
+    !-----------------------------------------------------------------------
+    USE ep_constants,    ONLY : zero, czero, twopi, ci, two
     USE modes,           ONLY : nmodes
-    USE elph2,           ONLY : xqf, wf, nqtotf, nktotf, nkf
-    USE epwcom,          ONLY : type_plrn, nstate_plrn, beta_plrn
+    USE global_var,      ONLY : xqf, wf, nqtotf, nktotf, nkf
+    USE input,           ONLY : type_plrn, nstate_plrn
     USE mp,              ONLY : mp_sum
     USE mp_global,       ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(out) :: EPlrnPhon
-    !! FIXME
-    REAL(KIND = DP), INTENT(out) :: EPlrnElec
-    !! FIXME
-    REAL(KIND = DP), INTENT(out) :: EPlrnBeta
-    !! FIXME
+    REAL(KIND = DP), INTENT(out) :: eplrnphon
+    !! Phonon part of polaron formation energy
+    REAL(KIND = DP), INTENT(out) :: eplrnelec
+    !! Electron part of polaron formation energy
     !
-    ! Local variable
+    ! Local variables
     INTEGER :: iq
     !! q point index
     INTEGER :: ik
@@ -1422,38 +1156,20 @@
     INTEGER :: start_mode
     !! FIXME
     INTEGER :: inu
-    !! FIXME
+    !! Phonon mode index
     INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: jbnd
-    !! FIXME
+    !! Electron band index
     INTEGER :: iplrn
-    !! FIXME
+    !! Polaron state index
     INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: indexkn2
-    !! FIXME
-    INTEGER :: indexkn3
-    !! FIXME
-    INTEGER :: ikmbi
-    !! FIXME
-    INTEGER :: ikpbi
-    !! FIXME
-    REAL(KIND = DP):: prefix
-    !! FIXME
-    COMPLEX(KIND = DP) :: Q_i
-    !! FIXME
-    COMPLEX(KIND = DP) :: Mmn(2)
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp(2)
-    !! FIXME
+    !! Combined k-point and band index
     !
     ! Based on Eq. 41 of Ref. 2:
     ! E_{f,ph} = 1/N_p \sum_{q\nu}|B_{q\nu}|^2\hbar\omega_{q\nu}
     ! iq -> q, nqtotf -> N_p
     ! Bmat(iq, inu) -> B_{q\nu}
     ! wf(inu, iq) -> \hbar\omega_{q\nu}
-    EPlrnPhon = zero
+    eplrnphon = zero
     DO iq = 1, nkf
       iq_global = ikqLocal2Global(iq, nqtotf)
       ! JLB - Swapped indices!
@@ -1464,82 +1180,80 @@
         start_mode = 1
       ENDIF
       DO inu = start_mode, nmodes
-        EPlrnPhon = EPlrnPhon - ABS(Bmat(iq_global, inu))**2 * (wf(inu, iq_global) / nqtotf)
+        eplrnphon = eplrnphon - ABS(Bmat(iq_global, inu))**2 * (wf(inu, iq_global) / nqtotf)
       ENDDO
     ENDDO
-    CALL mp_sum(EPlrnPhon, inter_pool_comm)
+    CALL mp_sum(eplrnphon, inter_pool_comm)
     !
     ! E_{f,el} = 1/N_p \sum_{nk}|A_{nk}|^2(\epsilon_{nk}-\epsilon_{F})
     ! indexkn1 -> nk, nktotf -> N_p
-    ! eigVec(indexkn1, iplrn) -> A_{nk}
+    ! eigvec(indexkn1, iplrn) -> A_{nk}
     ! etf_all(select_bands_plrn(ibnd), ik) - ef -> \epsilon_{nk}-\epsilon_{F}
-    EPlrnElec = zero
+    eplrnelec = zero
     ! TODO: what should we do in iplrn
     DO iplrn = 1, nstate_plrn
       DO ik = 1, nkf
         ik_global = ikqLocal2Global(ik, nqtotf)
         DO ibnd = 1, nbnd_plrn
           indexkn1 = (ik_global - 1) * nbnd_plrn + ibnd
-          EPlrnElec = EPlrnElec - type_plrn * ABS(eigVec(indexkn1, iplrn))**2 / nktotf *&
+          eplrnelec = eplrnelec - type_plrn * ABS(eigvec(indexkn1, iplrn))**2 / nktotf *&
              etf_all(select_bands_plrn(ibnd), ik_global)
         ENDDO
       ENDDO
     ENDDO
-    CALL mp_sum(EPlrnElec, inter_pool_comm)
+    CALL mp_sum(eplrnelec, inter_pool_comm)
     !
-    EPlrnBeta = zero
     !-----------------------------------------------------------------------
     END SUBROUTINE calc_form_energy
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE find_band_extreme(type_plrn, etf_all, ik_bm, band_pos, efermi)
+    SUBROUTINE find_band_extreme(type_plrn, enk_all, ik_bm, band_loc, efermi)
     !-----------------------------------------------------------------------
     !!
-    !! type_plrn denotes whether electron polaron (-1) or hole polaron (+1)
     !! Determine the Fermi energy, read from the input or calculated from band structure
     !!
     !-----------------------------------------------------------------------
-    USE constants_epw, ONLY : zero, ryd2ev
-    USE epwcom,        ONLY : efermi_read, fermi_energy
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE elph2,         ONLY : nkqf, nkf, nqf, nqtotf, nktotf
+    USE ep_constants,  ONLY : zero, ryd2ev
+    USE input,         ONLY : efermi_read, fermi_energy
+    USE io_global,     ONLY : stdout
+    USE global_var,    ONLY : nkf, nktotf
     USE mp,            ONLY : mp_max, mp_min, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in)  :: type_plrn
-    !! FIXME
+    !! Whether electron polaron (-1) or hole polaron (+1) is to be calculated
     INTEGER, INTENT(out) :: ik_bm
-    !! FIXME
-    INTEGER, INTENT(out) :: band_pos
-    !! FIXME
-    REAL(KIND = DP), INTENT(in) :: etf_all(:,:)
-    !!
+    !! k-point index for CBM or VBM
+    INTEGER, INTENT(out) :: band_loc
+    !! band index for CBM or VBM
+    REAL(KIND = DP), INTENT(in) :: enk_all(:,:)
+    !! KS eigenvalues
     REAL(KIND = DP), INTENT(out) :: efermi
     !! Fermi energy
     !
     ! Local variable
     INTEGER :: ik
-    !! FIXME
+    !! k-point index
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: k_extreme_local(npool)
-    !! FIXME
+    !! Auxiliary index of CBM or VBM k-point at different pools
     INTEGER :: ipool(1)
-    !! FIXME
+    !! Index to locate CBM or VBM
     REAL(KIND = DP) :: band_edge
-    !! FIXME
+    !! Temporary KS eigenvalue
     REAL(KIND = DP) :: extreme_local(npool)
-    !! FIXME
-    ! type_plrn denotes whether electron polaron (-1) or hole polaron (+1)
+    !! Auxiliary CBM or VBM energy at different pools
+    !
     IF (type_plrn == -1 ) THEN
-      band_pos = select_bands_plrn(1)
+      band_loc = select_bands_plrn(1)
     ELSE IF ( type_plrn == 1 ) THEN
-      band_pos = select_bands_plrn(nbnd_plrn)
+      band_loc = select_bands_plrn(nbnd_plrn)
     ENDIF
     !
-    WRITE(stdout, '(5x, "The band extremes are at band ",  i0)') band_pos
+    WRITE(stdout, '(5x, "The band extremes are at band ",  i0)') band_loc
     !
     ! Determine the Fermi energy, read from the input or calculated from band structure
     ! = 1E4*(-type_plrn)
@@ -1561,7 +1275,7 @@
       !
       DO ik = 1, nkf
         ik_global = ikqLocal2Global(ik, nktotf)
-        band_edge = etf_all(band_pos, ik_global)
+        band_edge = enk_all(band_loc, ik_global)
         !
         IF (type_plrn == 1) THEN
           ! For hole polaron (type_plrn = 1), find the highest eigenvalue
@@ -1597,35 +1311,35 @@
     END SUBROUTINE find_band_extreme
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE gather_band_eigenvalues(etf, etf_all)
+    SUBROUTINE gather_band_eigenvalues(etf, enk_all)
     !-----------------------------------------------------------------------
     !! Gather all the eigenvalues to determine the EBM/VBM,
     !! and calculate the density state of Ank and Bqnu
     !-----------------------------------------------------------------------
-    USE epwcom,        ONLY : nbndsub
-    USE elph2,         ONLY : nkqf, nkf, nqf, nqtotf, nktotf, xkf, xqf, wf, xkq, chw
-    USE constants_epw, ONLY : zero
-    USE poolgathering, ONLY : poolgather2
+    USE input,         ONLY : nbndsub
+    USE global_var,    ONLY : nkqf, nktotf
+    USE ep_constants,  ONLY : zero
+    USE parallelism,  ONLY : poolgather2
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: etf(:, :)
     !! Eigenvalues per cpu
-    REAL(KIND = DP), INTENT(out) :: etf_all(:, :)
+    REAL(KIND = DP), INTENT(out) :: enk_all(:, :)
     !! Eigenvalues (total)
     !
     ! Local variables
     INTEGER :: ierr
     !! Error index
     REAL(KIND = DP), ALLOCATABLE :: rtmp2(:, :)
-    !! FIXME
+    !! Temporary variable to gather eigenvalues across pools
     !
     ALLOCATE(rtmp2(nbndsub, nktotf*2), STAT = ierr)
     IF (ierr /= 0) CALL errore('gather_band_eigenvalues', 'Error allocating rtmp2', 1)
     rtmp2 = zero
     !
     CALL poolgather2 ( nbndsub, nktotf*2, nkqf, etf, rtmp2  )
-    etf_all(1:nbndsub, 1:nktotf) = rtmp2(1:nbndsub, 1:nktotf*2:2)
+    enk_all(1:nbndsub, 1:nktotf) = rtmp2(1:nbndsub, 1:nktotf*2:2)
     !
     DEALLOCATE(rtmp2, STAT = ierr)
     IF (ierr /= 0) CALL errore('gather_band_eigenvalues', 'Error deallocating rtmp2', 1)
@@ -1634,54 +1348,50 @@
     END SUBROUTINE gather_band_eigenvalues
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE cal_phonon_eigenfreq(nrr_q, irvec_q, ndegen_q, rws, nrws, wf)
+    SUBROUTINE cal_phonon_eigenfreq(nrr_q, irvec_q, ndegen_q, rws, nrws, wfreq)
     !-----------------------------------------------------------------------
     !! Calculate the phonon eigen frequencies. This is needed when restarting the polaron
     !! calculation with recalculating el-ph vertex
     !-----------------------------------------------------------------------
     USE modes,         ONLY : nmodes
-    USE elph2,         ONLY : xqf, xkq, chw, nkqf, nkf, nqf, nqtotf, nktotf
-    USE constants_epw, ONLY : zero, eps8, czero
-    USE wan2bloch,     ONLY : dynwan2bloch, dynifc2blochf
-    USE epwcom,        ONLY : type_plrn, full_diagon_plrn, lifc
+    USE global_var,    ONLY : xqf, nqtotf
+    USE ep_constants,  ONLY : zero, eps8, czero
+    USE wannier2bloch, ONLY : dynwan2bloch, dynifc2blochf
+    USE input,         ONLY : lifc
     USE io_global,     ONLY : ionode, stdout
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nrr_q
-    !! FIXME
+    !! number of phonon WS points
     INTEGER, INTENT(in) :: ndegen_q(:,:,:)
-    !! FIXME
+    !! degeneracy of WS points for phonon
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
-    !! FIXME
+    !! Coordinates of real space vector for phonons
     INTEGER, INTENT(in) :: nrws
-    !! FIXME
+    !! Number of real-space Wigner-Seitz
     REAL(KIND = DP), INTENT(in) :: rws(:, :)
-    !! FIXME
-    REAL(KIND = DP), INTENT(out) :: wf(:, :)
-    !! FIXME
+    !! Real-space wigner-Seitz vectors
+    REAL(KIND = DP), INTENT(out) :: wfreq(:, :)
+    !! Phonon frequencies
     !
     ! Local variables
-    LOGICAL  :: mirror_q
-    !! FIXME
     INTEGER  :: inu
-    !! FIXME
-    INTEGER  :: ierr
-    !! FIXME
+    !! Phonon mode counter
     INTEGER  :: iq
-    !! FIXME
+    !! q-point counter
     REAL(KIND = DP) :: w2(nmodes)
-    !! FIXME
+    !! Phonon frequency squared
     REAL(KIND = DP) :: xxq(3)
-    !! FIXME
+    !! q-point coordinates
     COMPLEX(KIND = DP) :: uf(nmodes, nmodes)
-    !! FIXME
+    !! Phonon eigenvectors
     !
     uf = czero
     w2 = zero
     !
     !TODO: make this part parallel over q
-    wf = zero
+    wfreq = zero
     DO iq = 1, nqtotf
       ! iq -> q
       xxq = xqf(1:3, iq)
@@ -1692,13 +1402,13 @@
       ENDIF
       DO inu = 1, nmodes
         IF (w2(inu) > -eps8) THEN
-          wf(inu, iq) =  DSQRT(ABS(w2(inu)))
+          wfreq(inu, iq) =  DSQRT(ABS(w2(inu)))
         ELSE
           IF (ionode) THEN
             WRITE(stdout, '(5x, "WARNING: Imaginary frequency mode ",&
             &I6, " at iq=", I6)') inu, iq
           ENDIF
-          wf(inu, iq) = 0.d0
+          wfreq(inu, iq) = 0.d0
         ENDIF
       ENDDO ! inu
     ENDDO ! iq
@@ -1706,30 +1416,30 @@
     END SUBROUTINE cal_phonon_eigenfreq
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE init_plrn_random(eigVec)
+    SUBROUTINE init_plrn_random(eigvec_init)
     !-----------------------------------------------------------------------
-    USE elph2,         ONLY : nktotf
-    USE constants_epw, ONLY : ci, cone
-    USE epwcom,        ONLY : nstate_plrn
+    USE global_var,    ONLY : nktotf
+    USE ep_constants,  ONLY : ci, cone
+    USE input,         ONLY : nstate_plrn
     !
     IMPLICIT NONE
     !
-    COMPLEX(KIND = DP), INTENT(out) :: eigVec(:, :)
-    !! FIXME
+    COMPLEX(KIND = DP), INTENT(out) :: eigvec_init(:, :)
+    !! Polaron wf coefficients, Ank, upon initialization
     !
     ! Local variables
     INTEGER :: ierr
-    !! Error variable
+    !! Error status
     REAL(KIND = DP), ALLOCATABLE :: rmat_tmp(:, :)
-    !! FIXME
+    !! Temporary variable for random number matrix
     !
     CALL RANDOM_SEED()
     ALLOCATE(rmat_tmp(1:nktotf*nbnd_plrn, 1:nstate_plrn), STAT = ierr)
     IF (ierr /= 0) CALL errore('init_plrn_random', 'Error allocating rmat_tmp', 1)
     CALL RANDOM_NUMBER(rmat_tmp)
-    eigVec(1:nktotf * nbnd_plrn, 1:nstate_plrn) = cone * rmat_tmp(1:nktotf * nbnd_plrn, 1:nstate_plrn)
+    eigvec_init(1:nktotf * nbnd_plrn, 1:nstate_plrn) = cone * rmat_tmp(1:nktotf * nbnd_plrn, 1:nstate_plrn)
     CALL RANDOM_NUMBER(rmat_tmp)
-    eigVec(1:nktotf * nbnd_plrn, 1:nstate_plrn) = eigVec(1:nktotf*nbnd_plrn, 1:nstate_plrn) + &
+    eigvec_init(1:nktotf * nbnd_plrn, 1:nstate_plrn) = eigvec_init(1:nktotf*nbnd_plrn, 1:nstate_plrn) + &
                                                 ci * rmat_tmp(1:nktotf * nbnd_plrn, 1:nstate_plrn)
     DEALLOCATE(rmat_tmp, STAT = ierr)
     IF (ierr /= 0) CALL errore('init_plrn_random', 'Error deallocating rmat_tmp', 1)
@@ -1737,63 +1447,48 @@
     END SUBROUTINE init_plrn_random
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE init_plrn_gaussian(r0, xkf_all, k0, eigVec)
+    SUBROUTINE init_plrn_gaussian(r0, k_all, k0, eigvec_init)
     !-----------------------------------------------------------------------
     !! Initialize Ank coefficients with a Gaussian lineshape
     !-----------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, cone, ci, twopi, one, zero
-    USE epwcom,        ONLY : nstate_plrn, init_sigma_plrn
-    USE elph2,         ONLY : nktotf
+    USE ep_constants,  ONLY : czero, cone, ci, twopi, one, zero
+    USE input,         ONLY : init_sigma_plrn
+    USE global_var,    ONLY : nktotf
     USE cell_base,     ONLY : bg, alat
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: r0(3)
-    !! FIXME
+    !! Center of Gaussian in real space
     REAL(KIND = DP), INTENT(in) :: k0(3)
-    !! FIXME
-    REAL(KIND = DP), INTENT(in) :: xkf_all(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: eigVec(:, :)
-    !! FIXME
+    !! Center of Gaussian in k-space
+    REAL(KIND = DP), INTENT(in) :: k_all(:, :)
+    !! List with all k-point coordinates
+    COMPLEX(KIND = DP), INTENT(out) :: eigvec_init(:, :)
+    !! Polaron wf coefficients, Ank, upon initialization
     !
-    ! Local variable
+    ! Local variables
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ix, iy, iz
-    !! FIXME
+    !! k-point counter
     INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: indexkn2
-    !! FIXME
+    !! Combined k-point and band counter
     INTEGER :: ishift
-    !! FIXME
+    !! Shift counter
     REAL(KIND = DP) :: qcart(3)
-    !! FIXME
+    !! q-point coordinates in cartesian
     REAL(KIND = DP) :: xxq(3)
-    !! FIXME
+    !! q-point coordinates
     REAL(KIND = DP) :: shift(3)
-    !! FIXME
+    !! shift coordinates
     REAL(KIND = DP) :: disK
-    !! FIXME
+    !! Value of Gaussian in neighbor BZs
     COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
+    !! Exponential prefactor from Fourier transform of Gaussian
     !
-    ! Calculating $$ B_{\bq\nu} = \frac{1}{\omega_{\bq,\nu} N_p} \sum_\bk A^\dagger_{\bk+\bq} g_\nu(\bk,\bq) A_\bk $$
-    ! \sum_\bk in local 1 to nkf first, then a inter pool sum
-    ! eq to code: k -> ik, q -> iq, \nu -> inu
-    ! g_\nu(\bk,\bq) -> epfall(:,:, inu, ik, iq)
-    ! \omega_{\bq,\nu} -> wf(inu, iq)
-    ! A_\bk -> eigVec(ik,:), A_{\bk+\bq} -> eigVec(ikq,:)
-    ! B_{\bq\nu} -> Bmat(iq, inu)
-    ! Whole equation translate to: Bmat(iq, inu) = one/(wf(inu, iq)*nqtotf) \sum_\bk conj(eigVec(ikq,:)) * epfall(:,:, inu, ik, iq) * eigVec(ik,:)
-    ! call cal_Bmat(eigVec, wf, kpg_map, ikq_all, epfall, Bmat)
     DO ik = 1, nktotf
-      xxq = xkf_all(1:3, ik) - (k0(:) - INT(k0(:))) ! shift k0 to 1BZ
+      xxq = k_all(1:3, ik) - (k0(:) - INT(k0(:))) ! shift k0 to 1BZ
       CALL dgemv('n', 3, 3, one, bg, 3, xxq, 1, zero, qcart, 1)
       ctemp = EXP(-ci * twopi * DOT_PRODUCT( qcart, r0 ))
       disK = -1
@@ -1806,77 +1501,50 @@
       !
       DO ibnd = 1, nbnd_plrn
         indexkn1 = (ik - 1) * nbnd_plrn + ibnd
-        eigVec(indexkn1, :) = CONE * disK * ctemp
+        eigvec_init(indexkn1, :) = CONE * disK * ctemp
       ENDDO
     ENDDO
     !-----------------------------------------------------------------------
     END SUBROUTINE init_plrn_gaussian
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE build_plrn_bmat(Bmat, first)
+    SUBROUTINE build_plrn_bmat(bqv)
     !-----------------------------------------------------------------------
     !! Create the Bmat
     !-----------------------------------------------------------------------
-    USE elph2,         ONLY : nkf, nqtotf, wf, xqf, nktotf, etf
-    USE epwcom,        ONLY : model_vertex_plrn, nbndsub, debug_plrn, nstate_plrn,      &
-                              mixing_Plrn, type_plrn, io_lvl_plrn, m_eff_plrn,          &
-                              g_start_energy_plrn, g_end_energy_plrn, g_start_band_plrn,&
-                              model_enband_plrn, model_phfreq_plrn, model_vertex_plrn,  &
-                              omega_LO_plrn, kappa_plrn
-    USE constants_epw, ONLY : czero, one, two, zero, cone, eps2, eps8
-    USE mp_world,      ONLY : mpime, world_comm
+    USE global_var,    ONLY : nkf, nqtotf, xqf, nktotf
+    USE input,         ONLY : model_vertex_plrn, io_lvl_plrn,               &
+                              g_start_energy_plrn, g_end_energy_plrn,       &
+                              g_start_band_plrn, model_vertex_plrn
+    USE ep_constants,  ONLY : czero, one, two, zero, cone, eps2, eps8
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
     USE modes,         ONLY : nmodes
     !
     IMPLICIT NONE
     !
-    LOGICAL, INTENT(in) :: first
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: Bmat(:, :)
-    !! FIXME
+    COMPLEX(KIND = DP), INTENT(out) :: bqv(:, :)
+    !! Polaron displacement coefficients in phonon basis, Bqv
     !
     ! Local variables
     INTEGER :: iq
-    !! FIXME
+    !! q-point counter
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
+    !! k-point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: indexkn2
-    !! FIXME
-    INTEGER :: indexkn3
-    !! FIXME
+    !! Electron band counter
     INTEGER :: start_mode
     !! FIXME
     INTEGER :: inu
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: iqpg
-    !! FIXME
-    INTEGER :: jnu
-    !! FIXME
-    INTEGER :: ndegen(nmodes)
-    !! FIXME
+    !! Mirror q-point index
     REAL(KIND = DP) :: eig
-    !! FIXME
-    COMPLEX(KIND = DP) :: prefac
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
-    COMPLEX(KIND = DP) :: Bmat_tmp(nmodes)
-    !! FIXME
+    !! KS eigenvalue
     !
-    Bmat = czero
+    bqv = czero
     DO iq = 1, nqtotf
       IF (model_vertex_plrn) THEN
         epf = czero
@@ -1921,137 +1589,68 @@
       IF ( iq > iqpg ) THEN
         DO inu = start_mode, nmodes!
           ! Enforce the relation B_q = B*_{G-q}
-          Bmat(iq, inu) = CONJG(Bmat(iqpg, inu))
+          bqv(iq, inu) = CONJG(bqv(iqpg, inu))
         ENDDO
       ELSE
         DO inu = start_mode, nmodes
-          Bmat(iq, inu)   = cal_Bmat(iq, inu)
+          bqv(iq, inu)   = cal_Bmat(iq, inu)
         ENDDO
       ENDIF
       !TODO: to be consistent with Denny, whether this is correct?
-      ! IF ( ABS(wf(1, iq)) < eps2 ) Bmat(iq, 1) = czero
+      ! IF ( ABS(wf(1, iq)) < eps2 ) bqv(iq, 1) = czero
     ENDDO
-    ! cal_Bmat only sum over local k, so we have to do mp_sum
-    CALL mp_sum(Bmat, inter_pool_comm )
+    ! cal_bqv only sum over local k, so we have to do mp_sum
+    CALL mp_sum(bqv, inter_pool_comm )
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE build_plrn_bmat
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE build_plrn_hamil(Bmat, Bmat_save, iter)
+    SUBROUTINE build_plrn_hamil(bqv)
     !-----------------------------------------------------------------------
-    !! Create the Hamiltonian
+    !! Build the effective polaron Hamiltonian,
+    !! Eq.(61) of PRB 99, 235139 (2019)
     !-----------------------------------------------------------------------
-    USE elph2,         ONLY : nkf, nqtotf, wf, xqf, nktotf, etf
-    USE epwcom,        ONLY : model_vertex_plrn, nbndsub, io_lvl_plrn, nqf1, nqf2, nqf3, &
-                              nstate_plrn, mixing_Plrn, type_plrn, nhblock_plrn, r0_plrn,&
-                              beta_plrn, g_start_energy_plrn, g_end_energy_plrn,         &
+    USE global_var,    ONLY : nkf, nqtotf, xqf, nktotf
+    USE input,         ONLY : model_vertex_plrn, io_lvl_plrn,  type_plrn,           &
+                              nhblock_plrn, g_start_energy_plrn, g_end_energy_plrn, &
                               g_start_band_plrn
-    USE constants_epw, ONLY : czero, one, two, zero, cone, eps2, eps8, twopi, ci
-    USE mp_world,      ONLY : mpime, world_comm
-    USE mp_global,     ONLY : inter_pool_comm
+    USE ep_constants,  ONLY : czero, one, two, zero, cone, eps2, eps8, twopi, ci
     USE mp,            ONLY : mp_sum
     USE modes,         ONLY : nmodes
-    USE cell_base,     ONLY : at, alat
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: iter
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: Bmat_save(:,:)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: Bmat(:,:)
+    COMPLEX(KIND = DP), INTENT(in) :: bqv(:,:)
     !! FIXME
     !
     ! Local variables
-    LOGICAL, ALLOCATABLE :: saved(:)
-    !! FIXME
     INTEGER :: iq
-    !! FIXME
+    !! q-point counter
     INTEGER :: ik
-    !! FIXME
+    !! k-point counter
     INTEGER :: ikq
-    !! FIXME
+    !! k+q point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Globar k-point index
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
+    !! Electron band counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: indexkn2
-    !! FIXME
-    INTEGER :: start_mode
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: inu
-    !! FIXME
-    INTEGER :: iqpg
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: index_blk
     !! FIXME
     INTEGER :: index_loc
     !! FIXME
-    INTEGER :: idir
-    !! FIXME
-    INTEGER :: jdir
-    !! FIXME
-    INTEGER :: ialpha
-    !! FIXME
-    INTEGER :: ibpi
-    !! FIXME
-    INTEGER :: ibmi
-    !! FIXME
-    INTEGER :: ibpj
-    !! FIXME
-    INTEGER :: ibmj
-    !! FIXME
-    INTEGER :: ivec
-    !! FIXME
-    INTEGER :: ibm
-    !! FIXME
-    INTEGER :: ikpbi
-    !! FIXME
-    INTEGER :: ikmbi
-    !! FIXME
-    INTEGER :: ikpbj
-    !! FIXME
-    INTEGER :: ikmbj
-    !! FIXME
-    REAL(KIND = DP) :: F_mat(1:3,1:3)
-    !! FIXME
-    REAL(KIND = DP) :: b_vec(1:3)
-    !! FIXME
-    REAL(KIND = DP) :: eta(1:3)
-    !! FIXME
-    REAL(KIND = DP) :: a_i
-    !! FIXME
-    REAL(KIND = DP) :: a_j
-    !! FIXME
     REAL(KIND = DP) :: eig
-    !! FIXME
-    COMPLEX(KIND = DP) :: prefac
-    !! FIXME
+    !! KS eigenvalue
     COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
-    COMPLEX(KIND = DP) :: Q_i
-    !! FIXME
-    COMPLEX(KIND = DP) :: Q_j
-    !! FIXME
-    COMPLEX(KIND = DP) :: Mmn(1:4)
-    !! FIXME
-!    COMPLEX(KIND = DP) ::
-    !! FIXME
-!    COMPLEX(KIND = DP) ::
-    !! FIXME
-!    COMPLEX(KIND = DP) ::
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: Bmat_comp(:,:)
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: Hamil_tmp(:, :)
-    !! FIXME
+    !! Prefactor
     !
     test_tags_plrn(1) = .FALSE.
     test_tags_plrn(2) = .FALSE.
@@ -2059,7 +1658,7 @@
     !
     ! Calculate the Hamiltonian with Bq $$H_{n\bk,n'\bk'} = \delta_{n\bk,n'\bk'}\varepsilon_{n\bk} -\frac{2}{N_p} \sum_{\nu} B^*_{\bq,\nu}g_{nn'\nu}(\bk',\bq)$$
     ! H_{n\bk,n'\bk'} -> Hamil(ik, ibnd, ikq, jbnd)
-    ! B^*_{\bq,\nu} -> conj(Bmat(iq, inu))
+    ! B^*_{\bq,\nu} -> conj(bqv(iq, inu))
     ! g_{nn'\nu}(\bk',\bq) -> epf(ibnd, jbnd, inu, ikq, iq)
     ! if q == 0, \delta_{n\bk,n'\bk'}\varepsilon_{n\bk} is diagonal matrix with \varepsilon_{n\bk}
     !
@@ -2126,7 +1725,7 @@
           DO jbnd = 1, nbnd_plrn
             indexkn2 = (ikq - 1) * nbnd_plrn + jbnd
             DO inu = 1, nmodes
-              ctemp = type_plrn * two / REAL(nqtotf, KIND = DP) * (Bmat(iq, inu)) * &
+              ctemp = type_plrn * two / REAL(nqtotf, KIND = DP) * (bqv(iq, inu)) * &
                  CONJG(epf(select_bands_plrn(jbnd) - g_start_band_plrn + 1, &
                        select_bands_plrn(ibnd)- g_start_band_plrn + 1, inu, ik))
               Hamil(indexkn2, index_loc) = Hamil(indexkn2, index_loc) + ctemp
@@ -2154,16 +1753,16 @@
     !! if xxk is the difference of two vectors, then return true if these
     !! two vector are the same
     !-----------------------------------------------------------------------
-    USE constants_epw, ONLY : eps6
+    USE ep_constants,  ONLY : eps6
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: xxk(3)
-    !! FIXME
+    !! k-point coordinate
     !
     ! Local variable
     LOGICAL :: isGVec
-    !! FIXME
+    !! .true. if k-point is a G-vector
     !
     isGVec = &
       ABS(xxk(1) - NINT(xxk(1))) < eps6 .AND. &
@@ -2177,22 +1776,22 @@
     !-----------------------------------------------------------------------
     !! Return the global index of the local k point ik
     !-----------------------------------------------------------------------
-    USE division, ONLY : fkbounds
+    USE parallelism, ONLY : fkbounds
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ikq
-    !! FIXME
+    !! k+q point counter
     INTEGER, INTENT(in) :: nkqtotf
-    !! FIXME
+    !! number of k-points in the fine grid
     !
     ! Local variable
     INTEGER :: ikqLocal2Global
-    !! FIXME
+    !! Index of k+q point in global list
     INTEGER :: startn
-    !! FIXME
+    !! Lower bound for k-points in pools
     INTEGER :: lastn
-    !! FIXME
+    !! Upper bound for k-points in pools
     !
     CALL start_clock('ik_l2g')
     CALL fkbounds(nkqtotf, startn, lastn)
@@ -2211,22 +1810,22 @@
     !-----------------------------------------------------------------------
     !! Return the global index of the local k point ik
     !-----------------------------------------------------------------------
-    USE division, ONLY : fkbounds
+    USE parallelism, ONLY : fkbounds
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ik_g
-    !! FIXME
+    !! Global k-point index
     INTEGER, INTENT(in) :: nktotf
-    !! FIXME
+    !! Number of k-points in global fine grid
     !
     ! Local variable
     INTEGER :: ikGlobal2Local
-    !! FIXME
+    !! Index of k-point in local pool list
     INTEGER :: startn
-    !! FIXME
+    !! Lower bound for k-points in pools
     INTEGER :: lastn
-    !! FIXME
+    !! Upper bound for k-points in pools
     !
     CALL fkbounds(nktotf, startn, lastn)
     !
@@ -2243,16 +1842,16 @@
     !-----------------------------------------------------------------------
     !! Return EXP(-(energy/sigma)**2)
     !-----------------------------------------------------------------------
-    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero
+    USE ep_constants,  ONLY : ryd2mev, one, ryd2ev, two, zero
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: energy(:)
-    !! FIXME
+    !! Energy variable
     REAL(KIND = DP), INTENT(in) :: sigma
-    !! FIXME
+    !! WIdth of Gaussian
     REAL(KIND = DP), INTENT(out) :: f_delta(:)
-    !! FIXME
+    !! Gaussian function
     !
     f_delta = EXP(-(energy / sigma)**2)
     !
@@ -2262,23 +1861,19 @@
     !-----------------------------------------------------------------------
     SUBROUTINE h_psi_plrn(lda, n, m, psi, hpsi)
     !-----------------------------------------------------------------------
-    ! Calculate Hpsi with psi as input to use the diagon sovler in KS_solver cegterg
+    ! Calculate Hpsi with psi as input to use the diagon solver in KS_solver cegterg
     ! cegterg take two external subroutine to calculate Hpsi and Spsi to calculate
     ! ( H - e S ) * evc = 0, since H and S is not saved due to their sizes
     ! Hamil need to be passed to h_psi because the parameter space is fixed
     ! to meet the requirement of Davidson diagonalization.
     !-----------------------------------------------------------------------
-    USE elph2,         ONLY : nkf, nqtotf, wf, xqf, nktotf, etf
-    USE epwcom,        ONLY : model_vertex_plrn, time_rev_A_plrn, nbndsub,    &
-                              mixing_Plrn, type_plrn, nhblock_plrn, beta_plrn
-    USE constants_epw, ONLY : czero, one, two, zero, cone, eps2, ci
-    USE mp_world,      ONLY : mpime, world_comm
+    USE global_var,    ONLY : nkf, nktotf
+    USE input,         ONLY : type_plrn, nhblock_plrn
+    USE ep_constants,  ONLY : czero, one, two, zero, cone, eps2, ci
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
-    USE modes,         ONLY : nmodes
-    USE constants_epw, ONLY : czero
-    USE elph2,         ONLY : nkf, nktotf
-    USE io_global,     ONLY : stdout
+    USE ep_constants,  ONLY : czero
+    USE global_var,    ONLY : nkf, nktotf
     !
     IMPLICIT NONE
     !
@@ -2295,68 +1890,37 @@
     !
     ! Local variables
     INTEGER :: ik
-    !! k-point index
+    !! k-point counter
     INTEGER :: ikq
-    !! FIXME
+    !! k+q point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band index
     INTEGER :: jbnd
-    !! FIXME
+    !! Electron band index
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined electron and k-point index
     INTEGER :: indexkn2
-    !! FIXME
-    INTEGER :: start_mode
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
-    INTEGER :: iqpg
-    !! FIXME
-    INTEGER :: startn
-    !! FIXME
-    INTEGER :: lastn
-    !! FIXME
+    !! Combined electron and k-point index
     INTEGER :: index_loc
     !! FIXME
     INTEGER :: index_blk
     !! FIXME
-    INTEGER :: ibp
-    !! FIXME
-    INTEGER :: ibm
-    !! FIXME
-    INTEGER :: ikpb
-    !! FIXME
-    INTEGER :: ikmb
-    !! FIXME
-    INTEGER :: ivec
-    !! FIXME
-    COMPLEX(KIND = DP) :: prefac
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp2
-    !! FIXME
-    COMPLEX(KIND = DP) :: hamil_kq
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: hamiltonian(:)
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: hpsi_global(:, :)
-    !! FIXME
-    ! Gather psi (dimension nkf) to form eigVec (dimension nktotf)
+    !
+    ! Gather psi (dimension nkf) to form eigvec (dimension nktotf)
     CALL start_clock('cal_hpsi')
     IF (lda < nkf * nbnd_plrn) CALL errore('h_psi_plrn', 'leading dimension of arrays psi is not correct', 1)
-    eigVec = czero
+    eigvec = czero
     DO ik = 1, nkf
       ik_global = ikqLocal2Global(ik, nktotf)
       DO ibnd = 1, nbnd_plrn
         indexkn1 = (ik - 1) * nbnd_plrn + ibnd
         indexkn2 = (ik_global - 1) * nbnd_plrn + ibnd
-        eigVec(indexkn2, 1:m) = psi(indexkn1, 1:m)
+        eigvec(indexkn2, 1:m) = psi(indexkn1, 1:m)
       ENDDO
     ENDDO
-    CALL mp_sum(eigVec, inter_pool_comm)
+    CALL mp_sum(eigvec, inter_pool_comm)
     !
     ! Iterative diagonalization only get the lowest eigenvalues,
     ! however, we will need the highest eigenvalues if we are calculating hole polaron
@@ -2378,7 +1942,7 @@
           DO jbnd = 1, nbnd_plrn
             indexkn2 = (ikq - 1) * nbnd_plrn + jbnd
             hpsi(indexkn1, 1:m) = hpsi(indexkn1, 1:m) - &
-               type_plrn * Hamil(indexkn2, index_loc) * eigVec(indexkn2, 1:m)
+               type_plrn * Hamil(indexkn2, index_loc) * eigvec(indexkn2, 1:m)
           ENDDO
         ENDDO
       ENDDO
@@ -2428,59 +1992,33 @@
     END SUBROUTINE g_psi_plrn
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE get_cfac(xk, nrr_k, ndegen_k, irvec_r, dims, cfac)
+    SUBROUTINE get_cfac(xk, nrr_k, irvec_r, cfac)
     !-----------------------------------------------------------------------
     !! Compute the exponential factor.
     !-----------------------------------------------------------------------
-    USE epwcom,        ONLY : use_ws
-    USE constants_epw, ONLY : twopi, ci, czero
-    USE kinds,         ONLY : DP, i4b
+    USE ep_constants,  ONLY : twopi, ci, czero
+    USE kinds,         ONLY : DP
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nrr_k
-    !! FIXME
-    INTEGER, INTENT(in) :: dims
-    !! FIXME
-    INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
-    !! FIXME
-    REAL(KIND = DP), INTENT(in) :: xk(3), irvec_r(3, nrr_k)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: cfac(nrr_k, dims, dims)
-    !! FIXME
+    !! Number of electronic WS points
+    REAL(KIND = DP), INTENT(in) :: xk(3) 
+    !! k-point coordinates
+    REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    COMPLEX(KIND = DP), INTENT(out) :: cfac(nrr_k)
+    !! Exponential prefactor 
     !
     ! Local Variables
-    INTEGER :: ikk
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: iw
-    !! FIXME
-    INTEGER :: iw2
-    !! FIXME
-    INTEGER :: ir
-    !! FIXME
     REAL(KIND = DP) :: rdotk(nrr_k)
-    !! FIXME
+    !! Dot product between k-point and R WS vector
     !
     cfac = czero
     rdotk = czero
     !
     CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xk, 1, 0.0_dp, rdotk, 1 )
-    !
-    IF (use_ws) THEN
-      DO iw = 1, dims
-        DO iw2 = 1, dims
-          DO ir = 1, nrr_k
-            IF (ndegen_k(ir, iw2, iw) > 0) THEN
-              cfac(ir, iw2, iw) = EXP(ci * rdotk(ir)) / ndegen_k(ir, iw2, iw)
-            ENDIF
-          ENDDO
-        ENDDO
-      ENDDO
-    ELSE
-      cfac(:, 1, 1) = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
-    ENDIF
+    cfac(:) = EXP(ci * rdotk(:))
     !-----------------------------------------------------------------------
     END SUBROUTINE
     !-----------------------------------------------------------------------
@@ -2488,42 +2026,43 @@
     !-----------------------------------------------------------------------
     FUNCTION cal_Bmat(iq, inu)
     !-----------------------------------------------------------------------
-    !! This function calculates the Bq matrix
+    !!
+    !! This function calculates the Bq matrix:
     !! B_{qu} = 1/N_p \sum_{mnk} A^*_{mk+q}A_{nk} [g_{mnu}(k,q)/\hbar\omega_{qu}]
-    !
+    !! Eq.(38) of PRB 99, 235139 (2019)
+    !!
     !-----------------------------------------------------------------------
-    USE elph2,         ONLY : nkf, nktotf, wf, nqtotf
-    USE epwcom,        ONLY : nstate_plrn, model_vertex_plrn
-    USE epwcom,        ONLY : g_start_band_plrn
-    USE constants_epw, ONLY : czero, one, eps2, cone, eps8
-    USE mp_world,      ONLY : mpime, world_comm
+    USE global_var,    ONLY : nkf, nktotf, wf, nqtotf
+    USE input,         ONLY : eps_acoustic, &
+                              g_start_band_plrn
+    USE ep_constants,  ONLY : czero, one, eps2, cone, eps8
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iq
-    !! q index
+    !! q-point counter
     INTEGER, INTENT(in) :: inu
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: ik
-    !! FIXME
+    !! k-point counter
     INTEGER :: ikq
-    !! FIXME
+    !! k+q point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band index
     INTEGER :: jbnd
-    !! FIXME
+    !! Electron-band index
     INTEGER :: iplrn
-    !! FIXME
+    !! Polaron state index
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: indexkn2
-    !! FIXME
+    !! Combined band and k-point index
     COMPLEX(KIND = DP) :: cal_Bmat
-    !! B_{qu}
+    !! Polaron displacement coefficients in phonon basis, Bqv
     COMPLEX(KIND = DP) :: prefac
-    !! FIXME
+    !! Prefactor variable
     !
     ! sum k = sum 1 to nkf + mp_sum (inter_pool)
     ! mp_sum is in polaron_scf
@@ -2537,151 +2076,144 @@
           DO jbnd = 1, nbnd_plrn
             indexkn1 = (ikq - 1) * nbnd_plrn + ibnd
             indexkn2 = (ik_global - 1) * nbnd_plrn + jbnd
-            IF (wf(inu, iq) > eps8 ) THEN
+            IF (wf(inu, iq) > eps_acoustic ) THEN
               prefac = cone / (wf(inu, iq) * REAL(nqtotf, DP))
             ELSE
               prefac = czero
             ENDIF
             ! B_{q\nu} = \frac{1}{N_p}\sum_{nn'k}A^*_{n'k+q}\frac{g_{n'n\nu}(k, q)}{\hbar \omega_{q\nu}} A_{nk}
-            cal_Bmat = cal_Bmat + prefac * (eigVec(indexkn2, iplrn)) * CONJG(eigVec(indexkn1, iplrn)) * &
+            cal_Bmat = cal_Bmat + prefac * (eigvec(indexkn2, iplrn)) * CONJG(eigvec(indexkn1, iplrn)) * &
                (epf(select_bands_plrn(ibnd) - g_start_band_plrn + 1, &
                select_bands_plrn(jbnd) - g_start_band_plrn + 1, inu, ik)) !conjg
           ENDDO
         ENDDO
       ENDDO
     ENDDO
-    !JLB - discard zero or imaginary frequency modes
-    IF (wf(inu, iq) < eps8) THEN
+    ! JLB - discard zero or imaginary frequency modes
+    IF (wf(inu, iq) < eps_acoustic) THEN
       cal_Bmat = czero
     ENDIF
     !-----------------------------------------------------------------------
     END FUNCTION cal_Bmat
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    FUNCTION indexGamma(xkf_all)
+    FUNCTION indexGamma(k_all)
     !-----------------------------------------------------------------------
     !! Find the index of Gamma point i.e. (0, 0, 0) in xkf_all
     !! which contains all the crystal coordinates of the k/q points
     !! if Gamma point is not included, return 0
     !
     !-----------------------------------------------------------------------
-    USE elph2,        ONLY : nkf, nktotf
+    USE global_var,   ONLY : nkf, nktotf
     USE mp,           ONLY : mp_sum
     USE mp_global,    ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(in) :: xkf_all(:, :)
-    !! crystal co-ordinates of k/q points
+    REAL(KIND = DP), INTENT(in) :: k_all(:, :)
+    !! crystal coordinates of k/q points. 
+    !! Renamed from xkf_all to avoid variable shadowing.
     !
     ! Local variable
     INTEGER :: indexGamma
-    !! FIXME
+    !! Index of \Gamma point in global k-point list
     INTEGER :: ik
-    !! FIXME
+    !! k-point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     !
     indexGamma = 0
     !
     DO ik = 1, nkf
       ik_global = ikqLocal2Global(ik, nktotf)
-      IF(isGVec(xkf_all(1:3, ik_global))) THEN
+      IF(isGVec(k_all(1:3, ik_global))) THEN
         indexGamma = ik_global
       ENDIF
     ENDDO
     CALL mp_sum(indexGamma, inter_pool_comm)
     !
-    IF (.NOT. isGVec(xkf_all(1:3, indexGamma))) THEN
+    IF (.NOT. isGVec(k_all(1:3, indexGamma))) THEN
       CALL errore('indexGamma','The index of Gamma point is wrong!', 1)
     ENDIF
     !----------------------------------------------------------------------
     END FUNCTION indexGamma
     !----------------------------------------------------------------------
     !----------------------------------------------------------------------
-    SUBROUTINE norm_plrn_wf(eigVec, norm_new)
+    SUBROUTINE norm_plrn_wf(eigvec_coef, norm_new)
     !----------------------------------------------------------------------
     !! Computes the norm of the polaron wavefunction
     !----------------------------------------------------------------------
-    USE elph2,         ONLY : nkf, nqtotf, wf, nktotf
-    USE epwcom,        ONLY : nstate_plrn, time_rev_A_plrn
-    USE constants_epw, ONLY : czero, one, two, cone
+    USE global_var,    ONLY : nktotf
+    USE input,         ONLY : nstate_plrn
+    USE ep_constants,  ONLY : czero, one, two, cone
     USE mp,            ONLY : mp_sum
-    USE mp_global,     ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: norm_new
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(inout) :: eigVec(:, :)
-    !! FIXME
+    !! Wave function normalization
+    COMPLEX(KIND = DP), INTENT(inout) :: eigvec_coef(:, :)
+    !! Polaron wave function coefficients in Bloch basis, Ank
     !
     ! Local variable
     INTEGER :: iplrn
-    !! FIXME
+    !! Polaron state counter
     REAL(KIND = DP) :: norm
-    !! FIXME
+    !! Normalization
     !
     DO iplrn = 1, nstate_plrn
-      norm = REAL(DOT_PRODUCT(eigVec(1:nbnd_plrn * nktotf, iplrn), eigVec(1:nbnd_plrn * nktotf, iplrn)))
-      eigVec(:, iplrn) = eigVec(:, iplrn) / DSQRT(norm) * SQRT(norm_new)
+      norm = REAL(DOT_PRODUCT(eigvec_coef(1:nbnd_plrn * nktotf, iplrn), eigvec_coef(1:nbnd_plrn * nktotf, iplrn)))
+      eigvec_coef(:, iplrn) = eigvec_coef(:, iplrn) / DSQRT(norm) * SQRT(norm_new)
     ENDDO
     !-----------------------------------------------------------------------
     END SUBROUTINE norm_plrn_wf
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE check_time_rev_sym(eigVec)
+    SUBROUTINE check_time_rev_sym(eigvec_coef)
     !-----------------------------------------------------------------------
+    !! Enforces TR symmetry on polaron wave function coefficients.
+    !! Not used by default, only for testing purposes.
     !-----------------------------------------------------------------------
-    USE elph2,          ONLY : nkf, nqtotf, wf, nktotf
-    USE epwcom,         ONLY : nstate_plrn, time_rev_A_plrn
-    USE constants_epw,  ONLY : czero, one, two, cone
+    USE global_var,     ONLY : nkf, nktotf
+    USE ep_constants,   ONLY : czero, one, two, cone
     USE mp,             ONLY : mp_sum
     USE mp_global,      ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
-    COMPLEX(KIND = DP), INTENT(inout) :: eigVec(:, :)
-    !! FIXME
+    COMPLEX(KIND = DP), INTENT(inout) :: eigvec_coef(:, :)
+    !! Polaron wave function coefficients in Bloch basis, Ank
     !
     ! Local variable
     INTEGER :: ierr
     !! Error status
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
+    !! k-point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band index
     INTEGER :: iplrn
-    !! FIXME
+    !! Polaron state counter
     INTEGER :: ikpg
-    !! FIXME
+    !! Index of mirror k-point
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: indexkn2
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: nPlrn_l
-    !! FIXME
+    !! Number of polaron states
     REAL(KIND = DP) :: norm
-    !! FIXME
-    COMPLEX(KIND = DP) :: temp
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: eigVec_save(:, :)
-    !! FIXME
+    !! Norm of polaron wave function
+    COMPLEX(KIND = DP), ALLOCATABLE :: eigvec_save(:, :)
+    !! Auxiliary array for polaron wave function coefficients
     !
     ! nstate_plrn
     nPlrn_l = 1
     !
-    ALLOCATE(eigVec_save(nktotf * nbnd_plrn, nPlrn_l), STAT = ierr)
-    IF (ierr /= 0) CALL errore('check_time_rev_sym', 'Error allocating eigVec_save', 1)
-    eigVec_save = czero
+    ALLOCATE(eigvec_save(nktotf * nbnd_plrn, nPlrn_l), STAT = ierr)
+    IF (ierr /= 0) CALL errore('check_time_rev_sym', 'Error allocating eigvec_save', 1)
+    eigvec_save = czero
     !
     DO ik = 1, nkf
       ik_global = ikqLocal2Global(ik, nktotf)
@@ -2689,32 +2221,32 @@
       DO ibnd = 1, nbnd_plrn
         indexkn1 = (ikpg - 1) * nbnd_plrn + ibnd
         indexkn2 = (ik_global - 1) * nbnd_plrn + ibnd
-        eigVec_save(indexkn1, 1:nPlrn_l)  = CONJG(eigVec(indexkn2, 1:nPlrn_l))
+        eigvec_save(indexkn1, 1:nPlrn_l)  = CONJG(eigvec(indexkn2, 1:nPlrn_l))
       ENDDO
     ENDDO
-    CALL mp_sum(eigVec_save, inter_pool_comm)
-    eigVec(:, 1:nPlrn_l) = (eigVec(:, 1:nPlrn_l) + eigVec_save(:, 1:nPlrn_l))
+    CALL mp_sum(eigvec_save, inter_pool_comm)
+    eigvec_coef(:, 1:nPlrn_l) = (eigvec_coef(:, 1:nPlrn_l) + eigvec_save(:, 1:nPlrn_l))
     !
     DO iplrn = 1, nPlrn_l
-      norm = REAL(DOT_PRODUCT(eigVec(1:nbnd_plrn*nktotf, iplrn), eigVec(1:nbnd_plrn*nktotf, iplrn)))!nktotf*nbnd_plrn*
-      eigVec(:, iplrn) = eigVec(:, iplrn)/DSQRT(norm)
+      norm = REAL(DOT_PRODUCT(eigvec_coef(1:nbnd_plrn*nktotf, iplrn), eigvec_coef(1:nbnd_plrn*nktotf, iplrn)))!nktotf*nbnd_plrn*
+      eigvec_coef(:, iplrn) = eigvec_coef(:, iplrn)/DSQRT(norm)
     ENDDO
     !
-    DEALLOCATE(eigVec_save, STAT = ierr)
-    IF (ierr /= 0) CALL errore('check_time_rev_sym', 'Error deallocating eigVec_save', 1)
+    DEALLOCATE(eigvec_save, STAT = ierr)
+    IF (ierr /= 0) CALL errore('check_time_rev_sym', 'Error deallocating eigvec_save', 1)
     !-----------------------------------------------------------------------
     END SUBROUTINE check_time_rev_sym
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE diag_serial(estmteRt, eigVec)
+    SUBROUTINE diag_serial(estmteRt, eigvec_coef)
     !-----------------------------------------------------------------------
-    !! Diagonalization
+    !! Serial diagonalization using LAPACK library
     !-----------------------------------------------------------------------
-    USE constants_epw,       ONLY : czero, twopi, ci, cone, zero
-    USE elph2,               ONLY : nkf, nqtotf, nktotf, xkf, etf, chw
-    USE epwcom,              ONLY : nstate_plrn, nkf1, nkf2, nkf3, &
+    USE ep_constants,        ONLY : czero, twopi, ci, cone, zero
+    USE global_var,          ONLY : nkf, nktotf
+    USE input,               ONLY : nstate_plrn, &
                                     type_plrn, nhblock_plrn
-    USE io_global,           ONLY : stdout, ionode, meta_ionode_id
+    USE io_global,           ONLY : ionode, meta_ionode_id
     USE mp_world,            ONLY : world_comm
     USE mp_global,           ONLY : inter_pool_comm
     USE mp,                  ONLY : mp_sum, mp_bcast
@@ -2722,39 +2254,23 @@
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(out) :: estmteRt(:)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: eigVec(:, :)
-    !! FIXME
+    !! Polaron eigenvalue
+    COMPLEX(KIND = DP), INTENT(out) :: eigvec_coef(:, :)
+    !! Polaron eigenvector coefficients
     !
     ! Local variable
     INTEGER :: ierr
     !! Error status
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikk
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
+    !! k-point counter
     INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
-    INTEGER :: icount
-    !! FIXME
+    !! Global k-point index
     INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: jbnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: indexkn2
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: lwork
     !! FIXME
     INTEGER :: info
@@ -2769,20 +2285,12 @@
     !! FIXME
     INTEGER, ALLOCATABLE :: ifail(:)
     !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
-    REAL(KIND = DP) :: xxk(3)
-    !! FIXME
-    REAL(KIND = DP) :: shift(3)
-    !! FIXME
     REAL(KIND = DP), ALLOCATABLE :: rwork(:)
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp
     !! FIXME
     COMPLEX(KIND = DP),  ALLOCATABLE :: work(:)
     !! FIXME
     COMPLEX(KIND = DP),  ALLOCATABLE :: Hamil_save(:,:)
-    !! FIXME
+    !! Auxiliary array for storing Hamiltonian for all k-points
     COMPLEX(KIND = DP),  ALLOCATABLE :: Identity(:,:)
     !! FIXME
     !
@@ -2822,87 +2330,70 @@
         Identity(ibnd, ibnd) = cone
       ENDDO
       !
-      eigVec = czero
+      eigvec_coef = czero
       estmteRt = zero
       !
       CALL ZHEGVX( 1, 'V', 'I', 'U', nktotf * nbnd_plrn, Hamil_save, nktotf * nbnd_plrn, Identity,&
          nktotf * nbnd_plrn, zero, zero, 1, nstate_plrn, zero, mm, estmteRt(1:nstate_plrn), &
-         eigVec, nktotf * nbnd_plrn, work, lwork, rwork, iwork, ifail, info)
+         eigvec_coef, nktotf * nbnd_plrn, work, lwork, rwork, iwork, ifail, info)
       !
       IF (info /= 0) CALL errore('diag_serial','Polaron: diagonal error.', 1)
       DEALLOCATE(rwork, iwork, ifail, work, Identity, STAT = ierr)
       IF (ierr /= 0) CALL errore('diag_serial', 'Error deallocating rwork,', 1)
-      ! SP: the other array above should also be deallocated ?
-      ! FIXME
+      !
     ENDIF
+    !
     DEALLOCATE(Hamil_save, STAT = ierr)
     IF (ierr /= 0) CALL errore('diag_serial', 'Error deallocating Hamil_save,', 1)
-    CALL mp_bcast(estmteRt, meta_ionode_id, world_comm)
-    CALL mp_bcast(eigVec, meta_ionode_id, world_comm)
+    !
     !-----------------------------------------------------------------------
     END SUBROUTINE diag_serial
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE diag_parallel(estmteRt, eigVec)
+    SUBROUTINE diag_parallel(estmteRt, eigvec_coef)
     !-----------------------------------------------------------------------
-    !! Diagonalization routine
+    !! Parallel diagonalization using Davidson library from QE
     !-----------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, twopi, ci, eps5, eps6, eps4, eps2, eps8, eps10
-    USE elph2,         ONLY : nkf, nqtotf, nktotf, xkf, etf, chw
-    USE epwcom,        ONLY : nstate_plrn, nkf1, nkf2, nkf3, ethrdg_plrn, &
-                              adapt_ethrdg_plrn, init_ethrdg_plrn, nethrdg_plrn
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE mp_world,      ONLY : world_comm
+    USE ep_constants,  ONLY : czero, twopi, ci, eps5, eps6, eps4, eps2, eps8, eps10
+    USE global_var,    ONLY : nkf, nktotf
+    USE input,         ONLY : nstate_plrn, ethrdg_plrn, &
+                              adapt_ethrdg_plrn, init_ethrdg_plrn, nethrdg_plrn, &
+                              david_ndim_plrn
+    USE io_global,     ONLY : stdout, ionode
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum, mp_bcast, mp_size, mp_max
-    USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, mp_start_bands
+    USE mp_bands,      ONLY : inter_bgrp_comm, mp_start_bands
     USE mp_bands_util, ONLY : intra_bgrp_comm_ => intra_bgrp_comm, &
                               inter_bgrp_comm_ => inter_bgrp_comm
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(out) :: estmteRt(:)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: eigVec(:, :)
-    !! FIXME
+    !! Polaron eigenvalue
+    COMPLEX(KIND = DP), INTENT(out) :: eigvec_coef(:, :)
+    !! Polaron eigenvector coefficients
     !
     ! Local variable
     INTEGER :: ierr
     !! Error status
-    INTEGER  :: iq
-    !! FIXME
-    INTEGER  :: inu
-    !! FIXME
     INTEGER  :: ik
-    !! FIXME
-    INTEGER  :: ikk
-    !! FIXME
-    INTEGER  :: ikq
-    !! FIXME
+    !! k-point counter
     INTEGER  :: ik_global
-    !! FIXME
-    INTEGER  :: iplrn
-    !! FIXME
-    INTEGER  :: ikpg
-    !! FIXME
-    INTEGER  :: icount
-    !! FIXME
+    !! Global k-point index
     INTEGER  :: ibnd
-    !! FIXME
-    INTEGER  :: jbnd
-    !! FIXME
+    !! Electron band counter
     INTEGER  :: itemp
     !! FIXME
     INTEGER  :: jtemp
     !! FIXME
     INTEGER  :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER  :: indexkn2
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER  :: ithr
-    !! FIXME
+    !! Counter for incremental threshold
     INTEGER  :: nthr
-    !! FiXME
+    !! Number of incremental threshold steps
     INTEGER  :: npw
     !! FIXME
     INTEGER  :: npwx
@@ -2910,35 +2401,17 @@
     INTEGER  :: dav_iter
     !! FIXME
     INTEGER  :: notcnv
-    !! FIXME
+    !! Number of non-converged eigenvalues
     INTEGER  :: btype(nstate_plrn)
     !! FIXME
     INTEGER  :: nhpsi
     !! FIXME
-    INTEGER, ALLOCATABLE :: iwork(:)
-    !! FiXME
-    INTEGER, ALLOCATABLE :: ifail(:)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
-    REAL(KIND = DP) :: xxk(3)
-    !! FIXME
-    REAL(KIND = DP) :: shift(3)
-    !! FIXME
     REAL(KIND = DP) :: ethrdg_init
-    !! FIXME
+    !! Initial incremental threshold
     REAL(KIND = DP) :: ethrdg
-    !! FIXME
-    REAL(KIND = DP), ALLOCATABLE :: rwork(:)
-    !! FIXME
-    COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: work(:)
-    !! FIXME
+    !! Threshold for convergence in diagonalization
     COMPLEX(KIND = DP), ALLOCATABLE :: psi(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: Identity(:, :)
-    !! FIXME
+    !! Eigenvector
     !
     npw = nkf * nbnd_plrn
     npwx = npw
@@ -2969,13 +2442,13 @@
         ethrdg = ethrdg_plrn
       ENDIF
       !
-      ! split eigVector (nqtotf) into parallel pieces psi (nkf), contains corresponding part with Hpsi
+      ! split eigvector (nqtotf) into parallel pieces psi (nkf), contains corresponding part with Hpsi
       DO ik = 1, nkf
         ik_global = ikqLocal2Global(ik, nktotf)
         DO ibnd = 1, nbnd_plrn
           indexkn1 = (ik - 1) * nbnd_plrn + ibnd
           indexkn2 = (ik_global - 1) * nbnd_plrn + ibnd
-          psi(indexkn1, 1:nstate_plrn) = eigVec(indexkn2, 1:nstate_plrn)
+          psi(indexkn1, 1:nstate_plrn) = eigvec_coef(indexkn2, 1:nstate_plrn)
         ENDDO
       ENDDO
       ! inter_bgrp_comm should be some non-existing number,
@@ -2991,7 +2464,7 @@
       !
       CALL start_clock('cegterg_prln')
       CALL cegterg( h_psi_plrn, s_psi_plrn, .FALSE., g_psi_plrn, &
-        npw, npwx, nstate_plrn, nstate_plrn * 10, 1, psi, ethrdg, &
+        npw, npwx, nstate_plrn, nstate_plrn * david_ndim_plrn, 1, psi, ethrdg, &
         estmteRt, btype, notcnv, .FALSE., dav_iter, nhpsi)
       CALL start_clock('cegterg_prln')
       IF(adapt_ethrdg_plrn .AND. ionode) WRITE(stdout, "(a, E14.6, I6, E14.6)") "   ", ethrdg, dav_iter, estmteRt
@@ -3001,16 +2474,16 @@
       intra_bgrp_comm_ = itemp
       inter_bgrp_comm_ = jtemp
       !
-      eigVec = czero
+      eigvec_coef = czero
       DO ik = 1, nkf
         ik_global = ikqLocal2Global(ik, nktotf)
         DO ibnd = 1, nbnd_plrn
           indexkn1 = (ik - 1) * nbnd_plrn + ibnd
           indexkn2 = (ik_global - 1) * nbnd_plrn + ibnd
-          eigVec(indexkn2, 1:nstate_plrn) = psi(indexkn1, 1:nstate_plrn)
+          eigvec_coef(indexkn2, 1:nstate_plrn) = psi(indexkn1, 1:nstate_plrn)
         ENDDO
       ENDDO
-      CALL mp_sum(eigVec, inter_pool_comm)
+      CALL mp_sum(eigvec_coef, inter_pool_comm)
       !
     ENDDO
     !
@@ -3022,99 +2495,59 @@
     !------------------------------------------------------------------------
     SUBROUTINE write_plrn_dtau_xsf(dtau, nqf1, nqf2, nqf3, filename, species)
     !------------------------------------------------------------------------
-    !! Write ionic positions and displacements
+    !! Write ionic positions and displacements in XSF format
     !------------------------------------------------------------------------
-    USE constants_epw,  ONLY : czero, ryd2ev, ryd2mev, zero, bohr2ang
-    USE epwcom,         ONLY : nstate_plrn
-    USE io_global,      ONLY : stdout, ionode, meta_ionode_id
-    USE mp_world,       ONLY : world_comm
+    USE ep_constants,   ONLY : czero, ryd2ev, ryd2mev, zero, bohr2ang
     USE mp,             ONLY : mp_sum, mp_bcast
-    USE modes,          ONLY : nmodes
-    USE ions_base,      ONLY : nat, amass, ityp, tau, atm, nsp, na, ntypx
+    USE ions_base,      ONLY : nat, ityp, tau, ntypx
     USE cell_base,      ONLY : at, alat
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nqf1
-    !! FIXME
+    !! Fine q-point grid along b1
     INTEGER, INTENT(in) :: nqf2
-    !! FIXME
+    !! Fine q-point grid along b2
     INTEGER, INTENT(in) :: nqf3
-    !! FIXME
+    !! Fine q-point grid along b3
     CHARACTER(LEN = *), INTENT(in) :: filename
-    !! FIXME
+    !! Output file name
     COMPLEX(KIND = DP), INTENT(in) :: dtau(:, :)
-    !! FIXME
+    !! Polaron displacements in real space
     INTEGER, INTENT(in), OPTIONAL :: species(50)
-    !! FIXME
+    !! Atomic species in unit cell
     !
     ! Local variables
     INTEGER :: ierr
     !! Error index
-    INTEGER :: wan_func_file
-    !! FIXME
-    INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: nbnd_out
-    !! FIXME
     INTEGER :: nat_all
-    !! FIXME
+    !! Number of atoms in supercell
     INTEGER :: nptotf
-    !! FIXME
+    !! Number of unit cells in supercell
     INTEGER :: nqf_s(1:3)
-    !! FIXME
-    INTEGER :: ix
-    !! FIXME
-    INTEGER :: iy
-    !! FIXME
-    INTEGER :: iz
-    !! FIXME
-    INTEGER :: iRp_local
-    !! FIXME
+    !! q-point grid
     INTEGER :: iRp
-    !! FIXME
+    !! Counter for unit cell vectors in supercell
     INTEGER :: iatm
-    !! FIXME
-    INTEGER :: idir
-    !! FIXME
+    !! Counter for atoms in unit cell
     INTEGER :: iatm_all
-    !! FIXME
-    INTEGER :: iatm_sp
-    !! FIXME
+    !! Counter for atoms in supercell
     INTEGER :: ika
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
-    INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
+    !! Combined atom and cartesian direction index
     INTEGER :: isp
-    !! FIXME
+    !! Atomic species counter
     INTEGER :: Rp_vec(1:3)
-    !! FIXME
+    !! Lattice vector coordinates
     INTEGER, ALLOCATABLE :: elements(:)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! Atomic species array
     REAL(KIND = DP) :: cell(3, 3)
-    !! FIXME
+    !! Supercell coordinates
     REAL(KIND = DP) :: shift(1:3)
-    !! FIXME
+    !! Shift vector coordinates
     REAL(KIND = DP), ALLOCATABLE :: atoms(:,:)
-    !! FIXME
+    !! Atomic position coordinates in supercell
     REAL(KIND = DP), ALLOCATABLE :: displacements(:,:)
-    !! FIXME
+    !! Displacement coordinates in supercell
     !
     ! total number of atoms is
     ! (number of atoms in unit cell) x (number of cells in the supercell)
@@ -3178,97 +2611,55 @@
     !----------------------------------------------------------------------------------------
     !! JLB: Write ionic positions and displacements for transformed supercell
     !----------------------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, ryd2ev, ryd2mev, zero, bohr2ang
-    USE epwcom,        ONLY : nstate_plrn
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE mp_world,      ONLY : world_comm
+    USE ep_constants,  ONLY : czero, ryd2ev, ryd2mev, zero, bohr2ang
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE modes,         ONLY : nmodes
-    USE ions_base,     ONLY : nat, amass, ityp, tau, atm, nsp, na, ntypx
+    USE ions_base,     ONLY : nat, ityp, tau, ntypx
     USE cell_base,     ONLY : at, alat
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(in) :: filename
-    !! FIXME
+    !! Output file name
     INTEGER, INTENT(in) :: nqtotf_p
-    !! FIXME
+    !! Number of q-points in fine grid
     INTEGER, INTENT(in) :: nRp_p
-    !! FIXME
+    !! Number of unit cells within supercell
     INTEGER, INTENT(in) :: Rp_p(:,:)
-    !! FIXME
+    !! Coordinates of lattice vectors in supercell
     REAL(KIND = DP), INTENT(in) :: as_p(3,3)
-    !! FIXME
+    !! Supercell lattice vectors
     COMPLEX(KIND = DP), INTENT(in) :: dtau(:, :)
-    !! FIXME
+    !! Polaron displacement coordinates
     INTEGER, INTENT(in), OPTIONAL :: species(50)
-    !! FIXME
+    !! Atomic species in unit cell
     !
     ! Local variable
     INTEGER :: ierr
     !! Error index
-    INTEGER :: wan_func_file
-    !! FIXME
-    INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: nbnd_out
-    !! FIXME
     INTEGER :: nat_all
-    !! FIXME
-    INTEGER :: nqf_s(1:3)
-    !! FIXME
-    INTEGER :: ix
-    !! FIXME
-    INTEGER :: iy
-    !! FIXME
-    INTEGER :: iz
-    !! FIXME
-    INTEGER :: iRp_local
-    !! FIXME
+    !! Total number of atoms in supercell
     INTEGER :: iRp
-    !! FIXME
+    !! Lattice vector counter in supercell
     INTEGER :: iatm
-    !! FIXME
-    INTEGER :: idir
-    !! FIXME
+    !! Atom counter in unit cell
     INTEGER :: iatm_all
-    !! FIXME
-    INTEGER :: iatm_sp
-    !! FIXME
+    !! Atom counter in supercell
     INTEGER :: ika
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
-    INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
+    !! Combined atom and cartesian direction index
     INTEGER :: isp
-    !! FIXME
+    !! Atomic species counter
     INTEGER :: Rp_vec(1:3)
-    !! FIXME
+    !! Lattice vector coordinates
     INTEGER, ALLOCATABLE :: elements(:)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! Atomic species
     REAL(KIND = DP) :: cell(3, 3)
-    !! FIXME
+    !! Supercell lattice vectors
     REAL(KIND = DP) :: shift(1:3)
-    !! FIXME
+    !! Shift vector coordinates
     REAL(KIND = DP), ALLOCATABLE :: atoms(:,:)
-    !! FIXME
+    !! Atomic position coordinates in supercell
     REAL(KIND = DP), ALLOCATABLE :: displacements(:,:)
-    !! FIXME
+    !! Atomic displacement coordinates in supercell
     !
     ! total number of atoms is
     ! (number of atoms in unit cell) x (number of cells in the supercell)
@@ -3330,409 +2721,397 @@
     !---------------------------------------------------------------------------
     !! Write xsf to file
     !---------------------------------------------------------------------------
+    USE io_var,            ONLY : ixsfplrn
+    !  
     IMPLICIT NONE
     !
     CHARACTER(LEN = *), INTENT(in):: filename
-    !! FIXME
+    !! Output file name
     INTEGER, INTENT(in) :: elements(:)
-    !! FIXME
+    !! Atomic species
     REAL(KIND = DP), INTENT(in) :: cell(3, 3)
-    !! FIXME
+    !! Supercell lattice vectors
     REAL(KIND = DP), INTENT(in) :: atoms(:, :)
-    !! FIXME
+    !! Atomic position coordinates
     REAL(KIND = DP), INTENT(in), OPTIONAL  :: forces(:, :)
-    !! FIXME
+    !! Atomic displacement coordinates
     REAL(KIND = DP), INTENT(in), OPTIONAL  :: data_cube(:, :, :)
-    !! FIXME
+    !! Data for isosurface
     !
     ! Local variables
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
-    INTEGER :: file_unit
-    !! FIXME
-    INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: nbnd_out
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
-    INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
     INTEGER :: ix
-    !! FIXME
+    !! x-coordinate counter
     INTEGER :: iy
-    !! FIXME
+    !! y-coordinate counter
     INTEGER :: iz
-    !! FIXME
-    INTEGER :: nx
-    !! FIXME
-    INTEGER :: ny
-    !! FIXME
-    INTEGER :: nz
-    !! FIXME
+    !! z-coordinate counter
     INTEGER :: iatm
-    !! FIXME
+    !! Atom counter
     INTEGER :: natm
-    !! FIXME
+    !! Number of atoms in supercell
     INTEGER :: shapeTemp(3)
-    !! FIXME
+    !! Shape of isosurface data
     !
-    ! SP: File unit cannot be define here.
-    ! FIXME
-    file_unit = 602
     natm = UBOUND(elements, DIM = 1)
     !
-    OPEN(UNIT = file_unit, FILE = TRIM(filename), FORM = 'formatted', STATUS = 'unknown')
+    OPEN(UNIT = ixsfplrn, FILE = TRIM(filename), FORM = 'formatted', STATUS = 'unknown')
     !
-    WRITE(file_unit, '(a)') '#'
-    WRITE(file_unit, '(a)') '# Generated by the EPW polaron code'
-    WRITE(file_unit, '(a)') '#'
-    WRITE(file_unit, '(a)') '#'
-    WRITE(file_unit, '(a)') 'CRYSTAL'
-    WRITE(file_unit, '(a)') 'PRIMVEC'
-    WRITE(file_unit, '(3f12.7)') cell(1:3, 1)
-    WRITE(file_unit, '(3f12.7)') cell(1:3, 2)
-    WRITE(file_unit, '(3f12.7)') cell(1:3, 3)
-    WRITE (file_unit, '(a)') 'PRIMCOORD'
+    WRITE(ixsfplrn, '(a)') '#'
+    WRITE(ixsfplrn, '(a)') '# Generated by the EPW polaron code'
+    WRITE(ixsfplrn, '(a)') '#'
+    WRITE(ixsfplrn, '(a)') '#'
+    WRITE(ixsfplrn, '(a)') 'CRYSTAL'
+    WRITE(ixsfplrn, '(a)') 'PRIMVEC'
+    WRITE(ixsfplrn, '(3f12.7)') cell(1:3, 1)
+    WRITE(ixsfplrn, '(3f12.7)') cell(1:3, 2)
+    WRITE(ixsfplrn, '(3f12.7)') cell(1:3, 3)
+    WRITE(ixsfplrn, '(a)') 'PRIMCOORD'
     ! The second number is always 1 for PRIMCOORD coordinates,
     ! according to http://www.xcrysden.org/doc/XSF.html
-    WRITE (file_unit, '(2i6)')  natm, 1
+    WRITE(ixsfplrn, '(2i6)')  natm, 1
     !
     DO iatm = 1, natm
       IF (PRESENT(forces)) THEN
-        WRITE(file_unit,'(I3, 3x, 3f15.9, 3x, 3f15.9)') elements(iatm), atoms(1:3, iatm), forces(1:3, iatm)
+        WRITE(ixsfplrn,'(I3, 3x, 3f15.9, 3x, 3f15.9)') elements(iatm), atoms(1:3, iatm), forces(1:3, iatm)
       ELSE
-        WRITE(file_unit,'(I3, 3x, 3f15.9)') elements(iatm), atoms(1:3, iatm)
+        WRITE(ixsfplrn,'(I3, 3x, 3f15.9)') elements(iatm), atoms(1:3, iatm)
       ENDIF
     ENDDO
     !
     IF(PRESENT(data_cube)) THEN
       shapeTemp = SHAPE(data_cube)
-      WRITE(file_unit, '(/)')
-      WRITE(file_unit, '("BEGIN_BLOCK_DATAGRID_3D",/,"3D_field",/, "BEGIN_DATAGRID_3D_UNKNOWN")')
-      WRITE(file_unit, '(3i6)') SHAPE(data_cube)
-      WRITE(file_unit, '(3f12.6)') 0.0, 0.0, 0.0
-      WRITE(file_unit, '(3f12.7)') cell(1:3, 1)
-      WRITE(file_unit, '(3f12.7)') cell(1:3, 2)
-      WRITE(file_unit, '(3f12.7)') cell(1:3, 3)
+      WRITE(ixsfplrn, '(/)')
+      WRITE(ixsfplrn, '("BEGIN_BLOCK_DATAGRID_3D",/,"3D_field",/, "BEGIN_DATAGRID_3D_UNKNOWN")')
+      WRITE(ixsfplrn, '(3i6)') SHAPE(data_cube)
+      WRITE(ixsfplrn, '(3f12.6)') 0.0, 0.0, 0.0
+      WRITE(ixsfplrn, '(3f12.7)') cell(1:3, 1)
+      WRITE(ixsfplrn, '(3f12.7)') cell(1:3, 2)
+      WRITE(ixsfplrn, '(3f12.7)') cell(1:3, 3)
       ! TODO: data cube is probably to large to take in the same way of lattice information
       ! May be usefull and implemented in the furture
-      WRITE(file_unit, *) (((data_cube(ix, iy, iz), ix = 1, shapeTemp(1)), &
+      WRITE(ixsfplrn, *) (((data_cube(ix, iy, iz), ix = 1, shapeTemp(1)), &
         iy = 1, shapeTemp(2)), iz = 1, shapeTemp(3))
-      WRITE (file_unit, '("END_DATAGRID_3D",/, "END_BLOCK_DATAGRID_3D")')
+      WRITE(ixsfplrn, '("END_DATAGRID_3D",/, "END_BLOCK_DATAGRID_3D")')
     ENDIF
-    CLOSE(file_unit)
+    CLOSE(ixsfplrn)
     !----------------------------------------------------------------------------------------
     END SUBROUTINE write_xsf_file
     !----------------------------------------------------------------------------------------
     !----------------------------------------------------------------------------------------
-    SUBROUTINE write_plrn_wf(eigvec_wan, filename, etf_all)
+    SUBROUTINE write_plrn_wf(eigvec_coef, filename, enk_all)
     !----------------------------------------------------------------------------------------
-    !! Write Polaron wavefunction
+    !! Write polaron wavefunction coefficients
     !----------------------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, ryd2ev, ryd2mev
-    USE elph2,         ONLY : nkf, nqtotf, nktotf
-    USE epwcom,        ONLY : nstate_plrn, nkf1, nkf2, nkf3, nbndsub, scell_mat_plrn
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE mp_world,      ONLY : world_comm
+    USE ep_constants,  ONLY : czero, ryd2ev, ryd2mev
+    USE global_var,    ONLY : nktotf
+    USE io_var,        ONLY : iwfplrn
+    USE input,         ONLY : nstate_plrn, nkf1, nkf2, nkf3, nbndsub, scell_mat_plrn
     USE mp,            ONLY : mp_sum, mp_bcast
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = *), INTENT(in) :: filename
-    !! FIXME
-    REAL(KIND = DP), INTENT(in), OPTIONAL :: etf_all(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: eigvec_wan(:, :)
-    !! FIXME
+    !! Output file name
+    REAL(KIND = DP), INTENT(in), OPTIONAL :: enk_all(:, :)
+    !! KS eigenvalues on global fine grid
+    COMPLEX(KIND = DP), INTENT(in) :: eigvec_coef(:, :)
+    !! Polaron wave function coefficients in Bloch (Ank) or Wannier (Amp) basis
     !
     ! Local variables
-    INTEGER :: wan_func_file
-    !! FIXME
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: nbnd_out
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
+    !! Number of bands in polaron wave function expansion
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
+    !! k-point counter
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! Polaron state counter
     !
-    IF(PRESENT(etf_all)) THEN
+    IF(PRESENT(enk_all)) THEN
       nbnd_out = nbnd_plrn
     ELSE
       nbnd_out = nbndsub
     ENDIF
-    ! SP - file number should not be defined here
-    ! FIXME
-    wan_func_file = 602
     !
-    OPEN(UNIT = wan_func_file, FILE = TRIM(filename))
+    OPEN(UNIT = iwfplrn, FILE = TRIM(filename))
+    !
     IF (scell_mat_plrn) THEN
-      WRITE(wan_func_file, '(a, 3I10)') 'Scell', nktotf, nbndsub, nstate_plrn
+      WRITE(iwfplrn, '(a, 3I10)') 'Scell', nktotf, nbndsub, nstate_plrn
     ELSE
-      WRITE(wan_func_file, '(6I10)') nkf1, nkf2, nkf3, nktotf, nbndsub, nstate_plrn
+      WRITE(iwfplrn, '(6I10)') nkf1, nkf2, nkf3, nktotf, nbndsub, nstate_plrn
     ENDIF
     !
     DO ik = 1, nktotf
       DO ibnd = 1, nbnd_out
         DO iplrn = 1, nstate_plrn
           indexkn1 = (ik - 1) * nbnd_out + ibnd
-          IF (PRESENT(etf_all)) THEN
-            WRITE(wan_func_file, '(2I5, 4f15.7)') ik, ibnd, etf_all(select_bands_plrn(ibnd), ik) * ryd2ev, &
-               eigvec_wan(indexkn1, iplrn), ABS(eigvec_wan(indexkn1, iplrn))
+          IF (PRESENT(enk_all)) THEN
+            WRITE(iwfplrn, '(2I5, 4f15.7)') ik, ibnd, enk_all(select_bands_plrn(ibnd), ik) * ryd2ev, &
+               eigvec_coef(indexkn1, iplrn), ABS(eigvec_coef(indexkn1, iplrn))
           ELSE
-            WRITE(wan_func_file, '(2f15.7)') eigvec_wan(indexkn1, iplrn)
+            WRITE(iwfplrn, '(2f15.7)') eigvec_coef(indexkn1, iplrn)
           ENDIF
         ENDDO
       ENDDO
     ENDDO
-    CLOSE(wan_func_file)
+    !
+    CLOSE(iwfplrn)
+    !
     !----------------------------------------------------------------------------
     END SUBROUTINE write_plrn_wf
     !----------------------------------------------------------------------------
     !----------------------------------------------------------------------------
-    SUBROUTINE read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, &
-               nbndsub_p, filename, scell, etf_all)
+    SUBROUTINE read_plrn_wf_grid(nkf1_p, nkf2_p, nkf3_p, nktotf_p, &
+               nbndsub_p, nplrn_p, filename, scell)
     !----------------------------------------------------------------------------
-    !! Read polaron wavefunction.
+    !! Read k-point grid in which polaron wave function has been written to file.
+    !! Needed for correct allocation when interp_plrn_wf.
     !----------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero
-    USE elph2,         ONLY : nkf, nqtotf, nktotf
-    USE epwcom,        ONLY : nstate_plrn, nkf1, nkf2, nkf3
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+    USE ep_constants,  ONLY : czero
+    USE io_global,     ONLY : ionode, meta_ionode_id
+    USE io_var,        ONLY : iwfplrn
     USE mp_world,      ONLY : world_comm
     USE mp,            ONLY : mp_sum, mp_bcast
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = *), INTENT(in) :: filename
-    !! FIXME
+    !! Output file name
     LOGICAL, INTENT(in), OPTIONAL  :: scell
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: eigvec_wan(:, :)
-    !! FIXME
+    !! .true. for non-diagonal supercell calculation
     INTEGER, INTENT(out) :: nkf1_p
-    !! FIXME
+    !! Number of k-points in fine grid along b1
     INTEGER, INTENT(out) :: nkf2_p
-    !! FIXME
+    !! Number of k-points in fine grid along b2
     INTEGER, INTENT(out) :: nkf3_p
-    !! FIXME
+    !! Number of k-points in fine grid along b3
     INTEGER, INTENT(out) :: nktotf_p
-    !! FIXME
+    !! Total number of k-points in fine grid
     INTEGER, INTENT(out) :: nbndsub_p
-    !! FIXME
-    REAL(KIND = DP), INTENT(in), OPTIONAL :: etf_all(:, :)
-    !! FIXME
+    !! Number of bands in polaron wave function expansion
+    INTEGER, INTENT(out) :: nplrn_p
+    !! Number of polaron states    
     !
     ! Local variables
     CHARACTER(LEN = 5) :: dmmy
-    !! Dummy variables read from file
+    !! Dummy variable to read from scell wf file
+    !
+    !
+    OPEN(UNIT = iwfplrn, FILE = 'Amp.plrn')
+    !
+    IF (PRESENT(scell) .AND. scell) THEN
+      READ(iwfplrn, '(a, 3I10)') dmmy, nktotf_p, nbndsub_p, nPlrn_p
+      ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
+      ! Just assigning an arbitrary value
+      nkf1_p = 0
+      nkf2_p = 0
+      nkf3_p = 0
+    ELSE
+      READ(iwfplrn, '(6I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nPlrn_p
+      IF(nkf1_p * nkf2_p * nkf3_p /= nktotf_p) THEN
+        CALL errore("read_plrn_wf_grid", 'Amp.plrn'//'Not generated from the uniform grid!', 1)
+      ENDIF
+    ENDIF
+    !
+    CLOSE(iwfplrn)
+    !
+    !-----------------------------------------------------------------------------------
+    END SUBROUTINE read_plrn_wf_grid
+    !-----------------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
+    SUBROUTINE read_plrn_wf(eigvec_coef, nkf1_p, nkf2_p, nkf3_p, nktotf_p, &
+               nbndsub_p, nplrn_p, filename, enk_all)
+    !----------------------------------------------------------------------------
+    !! Read polaron wavefunction coefficients.
+    !----------------------------------------------------------------------------
+    USE ep_constants,  ONLY : czero
+    USE io_global,     ONLY : ionode, meta_ionode_id
+    USE io_var,        ONLY : iwfplrn
+    USE mp_world,      ONLY : world_comm
+    USE mp,            ONLY : mp_sum, mp_bcast
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN = *), INTENT(in) :: filename
+    !! Output file name
+    COMPLEX(KIND = DP), INTENT(out) :: eigvec_coef(:, :)
+    !! Polaron wave function coefficients in Bloch basis, Ank
+    INTEGER, INTENT(in) :: nkf1_p
+    !! Number of k-points in fine grid along b1
+    INTEGER, INTENT(in) :: nkf2_p
+    !! Number of k-points in fine grid along b2
+    INTEGER, INTENT(in) :: nkf3_p
+    !! Number of k-points in fine grid along b3
+    INTEGER, INTENT(in) :: nktotf_p
+    !! Total number of k-points in fine grid
+    INTEGER, INTENT(in) :: nbndsub_p
+    !! Number of bands in polaron wave function expansion
+    INTEGER, INTENT(in) :: nplrn_p
+    !! Number of polaron states    
+    REAL(KIND = DP), INTENT(in), OPTIONAL :: enk_all(:, :)
+    !! KS eigenvalues in global fine k-point grid
+    !
+    ! Local variables
     INTEGER:: ierr
     !! Error status
-    INTEGER :: wan_func_file
-    !! FIXME
-    INTEGER :: nPlrn_p
-    !! FIXME
     INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
+    !! Combined band and k-poin index
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
+    !! k-point counter
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
+    !! Polaron state counter
     INTEGER :: i1
-    !! FIXME
+    !! Dummy integer to read from file
     INTEGER :: i2
-    !! FIXME
+    !! Dummy integer to read from file
     REAL(KIND = DP) :: r1
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! Dummy real to read from file
     !
-    ! SP - update IF allocated
-    ! FIXME
-    IF (ALLOCATED(eigvec_wan)) DEALLOCATE(eigvec_wan)
+    OPEN(UNIT = iwfplrn, FILE = TRIM(filename))
     !
-    IF(ionode) THEN
-      ! SP - File number should be placed in io_var.f90
-      ! FIXME
-      wan_func_file = 602
-      OPEN(UNIT = wan_func_file, FILE = TRIM(filename))
-      !
-      IF (PRESENT(scell) .AND. scell) THEN
-        READ(wan_func_file, '(a, 3I10)') dmmy, nktotf_p, nbndsub_p, nPlrn_p
-        ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
-        ! Just assigning an arbitrary value
-        nkf1_p = 0
-        nkf2_p = 0
-        nkf3_p = 0
-      ELSE
-        READ(wan_func_file, '(6I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nPlrn_p
-        IF(nkf1_p * nkf2_p * nkf3_p /= nktotf_p) THEN
-          CALL errore("read_plrn_wf", filename//'Not generated from the uniform grid!', 1)
-        ENDIF
-      ENDIF
-      !
-      ALLOCATE(eigvec_wan(nbndsub_p * nktotf_p, nPlrn_p), STAT = ierr)
-      IF (ierr /= 0) CALL errore('read_plrn_wf', 'Error allocating eigvec_wan', 1)
-      !
-      eigvec_wan = czero
-      DO ik = 1, nktotf_p
-        DO ibnd = 1, nbndsub_p
-          DO iplrn = 1, nPlrn_p
-            indexkn1 = (ik - 1) * nbndsub_p + ibnd
-            IF(PRESENT(etf_all)) THEN
-              READ(wan_func_file, '(2I5, 3f15.7)') i1, i2, r1, eigvec_wan(indexkn1, iplrn)
-            ELSE
-              READ(wan_func_file, '(2f15.7)') eigvec_wan(indexkn1, iplrn)
-            ENDIF
-          ENDDO
+    ! First line should have been read already,
+    ! so that eigvec has been properly allocated
+    READ(iwfplrn, *)
+    !
+    eigvec_coef = czero
+    DO ik = 1, nktotf_p
+      DO ibnd = 1, nbndsub_p
+        DO iplrn = 1, nplrn_p
+          indexkn1 = (ik - 1) * nbndsub_p + ibnd
+          IF(PRESENT(enk_all)) THEN ! Ank.plrn is read
+            READ(iwfplrn, '(2I5, 3f15.7)') i1, i2, r1, eigvec_coef(indexkn1, iplrn)
+          ELSE ! Amp.plrn is read
+            READ(iwfplrn, '(2f15.7)') eigvec_coef(indexkn1, iplrn)
+          ENDIF
         ENDDO
       ENDDO
-      CLOSE(wan_func_file)
-    ENDIF
-    CALL mp_bcast(nkf1_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nkf2_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nkf3_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nktotf_p, meta_ionode_id, world_comm)
-    CALL mp_bcast(nPlrn_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nbndsub_p, meta_ionode_id, world_comm)
-    ! SP - IF ALLOCATED should be avoided
-    ! FIXME
-    IF (.NOT. ALLOCATED(eigvec_wan)) THEN
-      ALLOCATE(eigvec_wan(nbndsub_p * nktotf_p, nPlrn_p))
-      eigvec_wan = czero
-    ENDIF
-    CALL mp_bcast (eigvec_wan, meta_ionode_id, world_comm)
+    ENDDO
+    CLOSE(iwfplrn)
+    !
     !-----------------------------------------------------------------------------------
     END SUBROUTINE read_plrn_wf
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
-    SUBROUTINE write_plrn_bmat(eigvec_wan, filename, etf_all)
+    SUBROUTINE write_plrn_bmat(bqv_coef, filename, enk_all)
     !-----------------------------------------------------------------------------------
-    !! Write Bmat and phonon frequency to filename
+    !!
+    !! Write Bqv coeffients (or dtau displacements) and phonon frequencies to filename
     !!
     !-----------------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, ryd2ev, ryd2mev
-    USE elph2,         ONLY : nkf, nqtotf
-    USE epwcom,        ONLY : nstate_plrn, nqf1, nqf2, nqf3, scell_mat_plrn
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE mp_world,      ONLY : world_comm
+    USE ep_constants,  ONLY : czero, ryd2ev, ryd2mev
+    USE global_var,    ONLY : nqtotf
+    USE io_var,        ONLY : idtauplrn
+    USE input,         ONLY : nqf1, nqf2, nqf3, scell_mat_plrn
     USE mp,            ONLY : mp_sum, mp_bcast
     USE modes,         ONLY : nmodes
-    USE ions_base,     ONLY : amass, ityp
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = *), INTENT(in) :: filename
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: eigvec_wan(:, :)
-    !! FIXME
-    REAL(KIND = DP), INTENT(in), OPTIONAL :: etf_all(:, :)
-    !! FIXME
+    !! Output file name
+    COMPLEX(KIND = DP), INTENT(in) :: bqv_coef(:, :)
+    !! Polaron displacement coefficients
+    REAL(KIND = DP), INTENT(in), OPTIONAL :: enk_all(:, :)
+    !! KS eigenvalues in fine grid
     !
     ! Local variables
-    INTEGER :: wan_func_file
-    !! FIXME
-    INTEGER :: indexkn1
-    !! FIXME
-    INTEGER :: nbnd_out
-    !! FIXME
     INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
-    INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! q-point counter
+    INTEGER :: imode
+    !! Phonon mode counter
     !
-    nbnd_out = nmodes
-    ! SP - file index should be placed in io_var
-    ! FIXME
-    wan_func_file = 602
-    !
-    OPEN(UNIT = wan_func_file, FILE = TRIM(filename))
+    OPEN(UNIT = idtauplrn, FILE = TRIM(filename))
     IF (scell_mat_plrn) THEN
-      WRITE(wan_func_file, '(a, 2I10)') 'Scell', nqtotf, nmodes
+      WRITE(idtauplrn, '(a, 2I10)') 'Scell', nqtotf, nmodes
     ELSE
-      WRITE(wan_func_file, '(5I10)') nqf1, nqf2, nqf3, nqtotf, nmodes
+      WRITE(idtauplrn, '(5I10)') nqf1, nqf2, nqf3, nqtotf, nmodes
     ENDIF
     !
-    DO ik = 1, nqtotf
-      DO ibnd = 1, nmodes ! p
-        IF (PRESENT(etf_all)) THEN ! \kappa, \alpha
-          !!JLB: Changed format for improved accuracy
-          WRITE(wan_func_file, '(2I5, 4ES18.10)') ik, ibnd, etf_all(ibnd, ik) * ryd2mev, &
-             eigvec_wan(ik, ibnd), ABS(eigvec_wan(ik, ibnd))
-        ELSE
+    DO iq = 1, nqtotf
+      DO imode = 1, nmodes ! p
+        IF (PRESENT(enk_all)) THEN ! write Bqv
           !JLB: Changed format for improved accuracy
-          WRITE(wan_func_file, '(2ES18.10)') eigvec_wan(ik, ibnd)
+          WRITE(idtauplrn, '(2I5, 4ES18.10)') iq, imode, enk_all(imode, iq) * ryd2mev, &
+                                                  bqv_coef(iq, imode), ABS(bqv_coef(iq, imode))
+        ELSE ! write \dtau
+          !JLB: Changed format for improved accuracy
+          WRITE(idtauplrn, '(2ES18.10)') bqv_coef(iq, imode)
         ENDIF
       ENDDO
     ENDDO
-    CLOSE(wan_func_file)
+    CLOSE(idtauplrn)
     !---------------------------------------------------------------------------------
     END SUBROUTINE write_plrn_bmat
     !---------------------------------------------------------------------------------
-    !---------------------------------------------------------------------------------
-    SUBROUTINE read_plrn_dtau(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nmodes_p,&
-                  filename, scell, etf_all)
-    !---------------------------------------------------------------------------------
-    !! Read dtau from filename
-    !---------------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero
-    USE elph2,         ONLY : nkf, nqtotf, nktotf
-    USE epwcom,        ONLY : nstate_plrn, nkf1, nkf2, nkf3
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+    !----------------------------------------------------------------------------
+    SUBROUTINE read_plrn_dtau_grid(nqf1_p, nqf2_p, nqf3_p, nqtotf_p, &
+               nmodes_p, filename, scell)
+    !----------------------------------------------------------------------------
+    !! Read q-point grid in which polaron displacements have been written to file.
+    !! Needed for correct allocation when interp_plrn_bq.
+    !----------------------------------------------------------------------------
+    USE ep_constants,  ONLY : czero
+    USE io_global,     ONLY : ionode, meta_ionode_id
+    USE io_var,        ONLY : idtauplrn
+    USE mp_world,      ONLY : world_comm
+    USE mp,            ONLY : mp_sum, mp_bcast
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN = *), INTENT(in) :: filename
+    !! Output file name
+    LOGICAL, INTENT(in), OPTIONAL  :: scell
+    !! .true. for non-diagonal supercell calculation
+    INTEGER, INTENT(out) :: nqf1_p
+    !! Number of q-points in fine grid along b1
+    INTEGER, INTENT(out) :: nqf2_p
+    !! Number of q-points in fine grid along b2
+    INTEGER, INTENT(out) :: nqf3_p
+    !! Number of q-points in fine grid along b3
+    INTEGER, INTENT(out) :: nqtotf_p
+    !! Total number of q-points in fine grid
+    INTEGER, INTENT(out) :: nmodes_p
+    !! Number of phonon modes 
+    !
+    ! Local variables
+    CHARACTER(LEN = 5) :: dmmy
+    !! Dummy variable to read from scell wf file
+    !
+    !
+    OPEN(UNIT = idtauplrn, FILE = 'dtau.plrn')
+    !
+    IF (PRESENT(scell) .AND. scell) THEN
+      READ(idtauplrn, '(a, 3I10)') dmmy, nqtotf_p, nmodes_p
+      ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
+      ! Just assigning an arbitrary value
+      nqf1_p = 0
+      nqf2_p = 0
+      nqf3_p = 0
+    ELSE
+      READ(idtauplrn, '(6I10)') nqf1_p, nqf2_p, nqf3_p, nqtotf_p, nmodes_p
+      IF(nqf1_p * nqf2_p * nqf3_p /= nqtotf_p) THEN
+        CALL errore("read_plrn_dtau_grid", 'dtau.plrn'//'Not generated from the uniform grid!', 1)
+      ENDIF
+    ENDIF
+    !
+    CLOSE(idtauplrn)
+    !
+    !-----------------------------------------------------------------------------------
+    END SUBROUTINE read_plrn_dtau_grid
+    !-----------------------------------------------------------------------------------
+    !-----------------------------------------------------------------------------------
+    SUBROUTINE read_plrn_dtau(dtau_read, nqtotf_p, nmodes_p,&
+                  filename, scell, wfreq)
+    !-----------------------------------------------------------------------------------
+    !! Read displacement coefficients in phonon (Bqv) or real-space (dtau) basis from file
+    !-----------------------------------------------------------------------------------
+    USE ep_constants,  ONLY : czero
+    USE io_global,     ONLY : ionode, meta_ionode_id
+    USE io_var,        ONLY : idtauplrn
     USE mp_world,      ONLY : world_comm
     USE mp,            ONLY : mp_sum, mp_bcast
     USE modes,         ONLY : nmodes
@@ -3740,241 +3119,142 @@
     IMPLICIT NONE
     !
     CHARACTER(LEN = *), INTENT(in) :: filename
-    !! FIXME
+    !! Output file name
     LOGICAL, INTENT(in), OPTIONAL :: scell
-    !! FIXME
-    INTEGER, INTENT(out) :: nkf1_p
-    !! FIXME
-    INTEGER, INTENT(out) :: nkf2_p
-    !! FIXME
-    INTEGER, INTENT(out) :: nkf3_p
-    !! FIXME
-    INTEGER, INTENT(out) :: nktotf_p
-    !! FIXME
-    INTEGER, INTENT(out) :: nmodes_p
-    !! FIXME
-    REAL(KIND = DP), INTENT(in), OPTIONAL :: etf_all(:, :) !JLB
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: eigvec_wan(:, :)
-    !! FIXME
+    !! .true. if non-diagonal supercell has been used in polaron calculation
+    INTEGER, INTENT(in) :: nqtotf_p
+    !! Total number of q-points in fine grid
+    INTEGER, INTENT(in) :: nmodes_p
+    !! Number of phonon modes
+    REAL(KIND = DP), INTENT(in), OPTIONAL :: wfreq(:, :)
+    !! Phonon frequencies
+    COMPLEX(KIND = DP), INTENT(out) :: dtau_read(:, :)
+    !! Polaron displacement coefficients
     !
     ! Local variables
-    CHARACTER(LEN = 5) :: dmmy
-    !! FIXME
     INTEGER :: ierr
     !! Error status
-    INTEGER :: wan_func_file
-    !! FIXME
-    INTEGER :: nPlrn_p
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
-    INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
-    INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
     INTEGER :: iatm
-    !! FIXME
-    INTEGER :: icount
-    !! FIXME
+    !! Atom counter
+    INTEGER :: iq
+    !! q-point counter
     INTEGER :: i1
-    !! FIXME
+    !! Dummy integer to read from file
     INTEGER :: i2
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! Dummy integer to read from file
     REAL(KIND = DP) :: r1
-    !! FIXME
+    !! Dummy real to read from file
     !
-    ! SP - IF ALLOCATED should be avoided
-    ! FIXME
-    IF(ALLOCATED(eigvec_wan)) DEALLOCATE(eigvec_wan)
+    OPEN(UNIT = idtauplrn, FILE = TRIM(filename))
     !
-    IF(ionode) THEN
-      ! SP - file index should be placed in io_var
-      ! FIXME
-      wan_func_file = 602
-      OPEN(UNIT = wan_func_file, FILE = TRIM(filename))
-      !
-      IF (PRESENT(scell) .AND. scell) THEN
-        READ(wan_func_file, '(a, 2I10)') dmmy, nktotf_p, nmodes_p
-        ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
-        ! Just assigning an arbitrary value
-        nkf1_p = 0
-        nkf2_p = 0
-        nkf3_p = 0
-      ELSE
-        READ(wan_func_file, '(5I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nmodes_p
-        IF (nkf1_p * nkf2_p * nkf3_p /= nktotf_p) THEN
-          CALL errore('read_plrn_dtau', filename//'Not generated from the uniform grid!', 1)
+    ! JLB:
+    ! First line should have been read already,
+    ! so that dtau has been properly allocated
+    READ(idtauplrn, *)
+    !
+    dtau_read = czero
+    DO iq = 1, nqtotf_p
+      DO iatm = 1, nmodes_p
+        IF(PRESENT(wfreq)) THEN ! read Bqv
+          !JLB: Changed format for improved accuracy
+          READ(idtauplrn, '(2I5, 3ES18.10)') i1, i2, r1, dtau_read(iq, iatm)
+        ELSE ! read \dtau
+          !JLB: Changed format for improved accuracy
+          READ(idtauplrn, '(2ES18.10)') dtau_read(iq, iatm)
         ENDIF
-      ENDIF
-      !
-      IF(nmodes /= nmodes_p) THEN
-        CALL errore('read_plrn_dtau', "Number of phonon modes are different with last run", 1)
-      ENDIF
-      !
-      ALLOCATE(eigvec_wan(nktotf_p, nmodes_p), STAT = ierr)
-      IF (ierr /= 0) CALL errore('read_plrn_dtau', 'Error allocating eigvec_wan', 1)
-      !
-      eigvec_wan = czero
-      DO icount = 1, nktotf_p
-        DO iatm = 1, nmodes_p
-          IF(PRESENT(etf_all)) THEN
-            !JLB: Changed format for improved accuracy
-            READ(wan_func_file, '(2I5, 3ES18.10)') i1, i2, r1, eigvec_wan(icount, iatm)
-          ELSE
-            !JLB: Changed format for improved accuracy
-            READ(wan_func_file, '(2ES18.10)') eigvec_wan(icount, iatm)
-          ENDIF
-        ENDDO
       ENDDO
-      CLOSE(wan_func_file)
-    ENDIF
-    CALL mp_bcast(nkf1_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nkf2_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nkf3_p,  meta_ionode_id, world_comm)
-    CALL mp_bcast(nktotf_p,meta_ionode_id, world_comm)
-    CALL mp_bcast(nmodes_p, meta_ionode_id, world_comm)
-    ! SP - If allocated should be avoided
-    ! FIXME
-    IF(.NOT. ALLOCATED(eigvec_wan)) THEN
-      ALLOCATE(eigvec_wan(nktotf_p, nmodes_p))
-      eigvec_wan = czero
-    ENDIF
-    CALL mp_bcast(eigvec_wan, meta_ionode_id, world_comm)
+    ENDDO
+    CLOSE(idtauplrn)
     !--------------------------------------------------------------------------------
     END SUBROUTINE read_plrn_dtau
     !--------------------------------------------------------------------------------
     !--------------------------------------------------------------------------------
-    SUBROUTINE plrn_eigvec_tran(ttype, t_rev, eigVecIn, nkf1_p, nkf2_p, nkf3_p, &
-               nbndsub_p, nrr_k, ndegen_k, irvec_r, dims, eigVecOut, ip_center)
+    SUBROUTINE plrn_eigvec_tran(ttype, t_rev, eigvecin, nkf1_p, nkf2_p, nkf3_p, &
+               nbndsub_p, nrr_k, ndegen_k, irvec_r, dims, eigvecout, ip_center)
     !--------------------------------------------------------------------------------
-    !! Fourier transform from eigVecIn to eigVecOut
+    !! Fourier transform from eigvecin to eigvecout
     !! ttype is 'Bloch2Wan' or 'Wan2Bloch'
     !! Parallel version, each pool calculates its own k point set (nkf),
     !! then the mp_sum is used to sum over different pools.
     !! require the correct initialization of Rp_array
     !--------------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, twopi, ci, cone, two
-    USE elph2,         ONLY : nkf, xkf, etf, chw, nktotf
-    USE epwcom,        ONLY : nstate_plrn, nbndsub, time_rev_A_plrn, nkf1, nkf2, nkf3
-    USE wan2bloch,     ONLY : hamwan2bloch !!=> hamwan2bloch_old
+    USE ep_constants,  ONLY : czero, twopi, ci, cone, two
+    USE global_var,    ONLY : nkf, xkf, chw, nktotf
+    USE input,         ONLY : nstate_plrn, nbndsub
+    USE wannier2bloch, ONLY : hamwan2bloch !!=> hamwan2bloch_old
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : stdout
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 9), INTENT(in) :: ttype
-    !! FIXME
+    !! Transformation direction, 'Bloch2Wan' or 'Wan2Bloch'
     LOGICAL, INTENT(in) :: t_rev
-    !! FIXME
+    !! .true. if time reversal symmetry is to be imposed in the Ank coefficients
     INTEGER, INTENT(in) :: nkf1_p
-    !! FIXME
+    !! Fine k-point grid along b1
     INTEGER, INTENT(in) :: nkf2_p
-    !! FIXME
+    !! Fine k-point grid along b2
     INTEGER, INTENT(in) :: nkf3_p
-    !! FIXME
+    !! Fine k-point grid along b2
     INTEGER, INTENT(in) :: nbndsub_p
-    !! FIXME
+    !! Number of bands
     INTEGER, INTENT(in) :: nrr_k
-    !! FIXME
+    !! Number of electronic WS points
     INTEGER, INTENT(in) :: dims
-    !! FIXME
+    !! Dims is either nbndsub if use_ws or 1 if not
     INTEGER, INTENT(in) :: ndegen_k(:,:,:)
-    !! FIXME
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     INTEGER, INTENT(in), OPTIONAL :: ip_center(1:3)
-    !! FIXME
+    !! Center of polaron wave function, to shift supercell accordingly
     REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: eigVecOut(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: eigvecIn(:, :)
-    !! FIXME
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    COMPLEX(KIND = DP), INTENT(out) :: eigvecout(:, :)
+    !! Output wave function coefficients
+    COMPLEX(KIND = DP), INTENT(in) :: eigvecin(:, :)
+    !! Input wave function coefficients
     !
     ! Local variables
     LOGICAL :: is_mirror
-    !! FIXME
-    INTEGER :: idir
-    !! FIXME
+    !! .true. if k-point is a time-reversal mirror point
     INTEGER :: itype
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
+    !! Transformation direction
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikk
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
+    !! k-point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: iplrn
-    !! FIXME
+    !! Polaron state counter
     INTEGER :: ikpg
-    !! FIXME
-    INTEGER :: icount
-    !! FIXME
+    !! Index of mirror k-point
+    INTEGER :: ikglob
+    !! Global inner k-point counter
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: ix
-    !! FIXME
-    INTEGER :: iy
-    !! FIXME
-    INTEGER :: iz
-    !! FIXME
+    !! Electron band counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: indexkn2
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: i_vec(3)
-    !! FIXME
+    !! Shifted lattice vector coordinates
     INTEGER :: center_shift(1:3)
-    !! FIXME
+    !! Shift coordinates
     INTEGER :: nkf_p(3)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
+    !! k-point coordinates for shift
     REAL(KIND = DP) :: xxk(3)
-    !! FIXME
-    REAL(KIND = DP) :: shift(3)
-    !! FIXME
+    !! k-point coordinates
     REAL(KIND = DP) :: etf_tmp(nbndsub)
-    !! FIXME
-    REAL(KIND = DP) :: phi
-    !! FIXME
-    REAL(KIND = DP) :: maxreal !JLB
-    !! FIXME
+    !! Eigenvalues after interpolated KS Hamiltonian diagonalization
     COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
+    !! Exponential prefactor
     COMPLEX(KIND = DP) :: cufkk(nbndsub, nbndsub)
-    !! FIXME
-    COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
-    !! FIXME
-    COMPLEX(KIND = DP) :: cufkk_k(nbndsub, nbndsub, nktotf)
-    !! FIXME
-    COMPLEX(KIND = DP) :: phase !JLB
-    !! FIXME
+    !! U_{mn} matrices after interpolated KS Hamiltonian diagonalization
+    COMPLEX(KIND = DP) :: cfac(nrr_k)
+    !! Exponential factor for Hamiltonian transformation
     COMPLEX(KIND = DP) :: expTable(3)
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: cufkkg ( :, :, :)
-    !! FIXME
+    !! Table for exponential factors
     !
     nkf_p(1:3) = (/nkf1_p, nkf2_p, nkf3_p/)
     IF (nbndsub_p /= nbndsub) CALL errore('plrnwfwan2bloch','Different bands included in last calculation!', 1)
@@ -3996,160 +3276,130 @@
     !! ibnd -> m, jbnd -> n
     !! R_p from 1 to nkf1/2/3_p, note that loop in the sequence of ix, iy, and iz,
     !! This sequence need to be consistent every time transpose between eigvec_wann and eigvec
-    eigVecOut = czero
-    ! S Tiwari: quickfix for ikpg
-    ikpg=0
-    ! FIXME
+    eigvecout = czero
     DO ik = 1, nkf
       xxk = xkf(1:3, 2 * ik - 1)
       expTable(1:3) = EXP( twopi * ci * xxk(1:3) )
       ik_global = ikqLocal2Global(ik, nktotf)
-      is_mirror = (t_rev .AND. (ik_global > ikpg))
       !
-      CALL get_cfac(xxk, nrr_k, ndegen_k, irvec_r, dims, cfac)
+      IF (t_rev) THEN
+        ikpg = kpg_map(ik_global)
+        is_mirror = (ik_global > ikpg)
+      END IF
+      !
+      CALL get_cfac(xxk, nrr_k, irvec_r, cfac)
       !
       CALL hamwan2bloch ( nbndsub, nrr_k, cufkk(1:nbndsub, 1:nbndsub), &
-         etf_tmp, chw, cfac, dims, is_mirror)
+         etf_tmp, chw, cfac, is_mirror)
       !
       IF(itype == 1) cufkk(1:nbndsub, 1:nbndsub) = CONJG(TRANSPOSE(cufkk(1:nbndsub, 1:nbndsub)))
       DO iplrn = 1, nstate_plrn
-        !icount = 0
+        !ikglob = 0
         !! loop over all Wannier position p
         IF (nkf1_p == 0 .OR. nkf2_p == 0 .OR. nkf3_p == 0) THEN
           CALL errore('plrn_eigvec_tran','Wrong k grid, use nkf1/2/3 to give k grid!', 1)
         ENDIF
-        DO icount = 1, nkf1_p * nkf2_p * nkf3_p
-          i_vec(1:3) = MODULO(index_Rp(icount, nkf_p) + center_shift, nkf_p)
+        DO ikglob = 1, nkf1_p * nkf2_p * nkf3_p
+          i_vec(1:3) = MODULO(index_Rp(ikglob, nkf_p) + center_shift, nkf_p)
           ! Same as EXP(twopi * ci * DOT_PRODUCT((/ix, iy, iz/), xxk)), to save time
           ctemp = PRODUCT(expTable(1:3)**i_vec(1:3))
           DO ibnd = 1, nbndsub_p ! loop over all Wannier state m
             DO jbnd = 1, nbnd_plrn ! loop over all Bloch state n
-              indexkn1 = (icount - 1) * nbndsub + ibnd !mp
+              indexkn1 = (ikglob - 1) * nbndsub + ibnd !mp
               indexkn2 = (ik_global - 1) * nbnd_plrn + jbnd !nk
               SELECT CASE(itype)
                 CASE(1)  ! Bloch2Wan !
-                   eigVecOut(indexkn1, iplrn) = eigVecOut(indexkn1, iplrn) + &
-                      eigVecIn(indexkn2, iplrn) * ctemp / nktotf * cufkk(ibnd, select_bands_plrn(jbnd)) !JLB: Conjugate transpose taken above!
+                   eigvecout(indexkn1, iplrn) = eigvecout(indexkn1, iplrn) + &
+                      eigvecin(indexkn2, iplrn) * ctemp / nktotf * cufkk(ibnd, select_bands_plrn(jbnd)) !JLB: Conjugate transpose taken above!
                 CASE(-1) ! Wan2Bloch !
-                   eigVecOut(indexkn2, iplrn) = eigVecOut(indexkn2, iplrn) + &
-                      eigVecIn(indexkn1, iplrn) * CONJG(ctemp) * cufkk(select_bands_plrn(jbnd), ibnd) !JLB
+                   eigvecout(indexkn2, iplrn) = eigvecout(indexkn2, iplrn) + &
+                      eigvecin(indexkn1, iplrn) * CONJG(ctemp) * cufkk(select_bands_plrn(jbnd), ibnd) !JLB
               END SELECT
             ENDDO ! jbnd
           ENDDO ! ibnd
-        ENDDO
-      ENDDO !iplrn
+        ENDDO ! ikglob
+      ENDDO ! iplrn
     ENDDO ! ik
     ! MPI sum due to the loop ik is within local k set
-    CALL mp_sum(eigVecOut, inter_pool_comm)
+    CALL mp_sum(eigvecout, inter_pool_comm)
     !-----------------------------------------------------------------------------------
     END SUBROUTINE plrn_eigvec_tran
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
-    SUBROUTINE scell_plrn_eigvec_tran(ttype, t_rev, eigVecIn, nktotf_p, nRp_p, Rp_p, &
-                                nbndsub_p, nrr_k, ndegen_k, irvec_r, dims, eigVecOut)
+    SUBROUTINE scell_plrn_eigvec_tran(ttype, t_rev, eigvecin, nktotf_p, nRp_p, Rp_p, &
+                                nbndsub_p, nrr_k, ndegen_k, irvec_r, dims, eigvecout)
     !-----------------------------------------------------------------------------------
     !! JLB: Fourier transform for non-diagonal supercells
     !-----------------------------------------------------------------------------------
-    USE constants_epw, ONLY : czero, twopi, ci, cone, two
-    USE elph2,         ONLY : nkf, xkf, etf, chw, nktotf
-    USE epwcom,        ONLY : nstate_plrn, nbndsub, time_rev_A_plrn, scell_mat_plrn
-    USE wan2bloch,     ONLY : hamwan2bloch !!=> hamwan2bloch_old
+    USE ep_constants,  ONLY : czero, twopi, ci, cone, two
+    USE global_var,    ONLY : nkf, xkf, chw, nktotf
+    USE input,         ONLY : nstate_plrn, nbndsub
+    USE wannier2bloch, ONLY : hamwan2bloch !!=> hamwan2bloch_old
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : stdout, ionode
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 9), INTENT(in) :: ttype
-    !! FIXME
+    !! Transformation direction, 'Bloch2Wan' or 'Wan2Bloch'
     LOGICAL, INTENT(in) :: t_rev
-    !! FIXME
+    !! .true. if time-reversal symmetry is to be imposed
     INTEGER, INTENT(in) :: nktotf_p
-    !! FIXME
+    !! Number of k-points in fine grid
     INTEGER, INTENT(in) :: nRp_p
-    !! FIXME
+    !! Number of unit cells within supercell
     INTEGER, INTENT(in) :: Rp_p(:,:)
-    !! FIXME
+    !! Lattice vector coefficients in supercell
     INTEGER, INTENT(in) :: nbndsub_p
-    !! FIXME
+    !! Number of bands in polaron expansion
     INTEGER, INTENT(in) :: nrr_k
-    !! FIXME
+    !! Number of electronic WS points
     INTEGER, INTENT(in) :: dims
-    !! FIXME
+    !! Dims is either nbndsub if use_ws or 1 if not
     INTEGER, INTENT(in) :: ndegen_k(:,:,:)
-    !! FIXME
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(out) :: eigVecOut(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: eigvecIn(:, :)
-    !! FIXME
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    COMPLEX(KIND = DP), INTENT(out) :: eigvecout(:, :)
+    !! Output wave function coefficients
+    COMPLEX(KIND = DP), INTENT(in) :: eigvecin(:, :)
+    !! Input wave function coefficients
+    !
     ! Local Variables
-    COMPLEX(KIND=dp) :: expTable(3)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp
-    !! FIXME
     REAL(KIND = DP) :: xxk(3)
-    !! FIXME
-    REAL(KIND = DP) :: shift(3)
-    !! FIXME
+    !! k-point coordinates
     REAL(KIND = DP) :: etf_tmp(nbndsub)
-    !! FIXME
-    REAL(KIND = DP) :: phi
-    !! FIXME
-    REAL(KIND = DP) :: maxreal !JLB
-    !! FIXME
+    !! Eigenvalues after interpolated KS Hamiltonian diagonalization
     COMPLEX(KIND = DP) :: ctemp
-    !! FIXME
+    !! Exponential prefactor
     COMPLEX(KIND = DP) :: cufkk(nbndsub, nbndsub)
-    !! FIXME
-    COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
-    !! FIXME
-    COMPLEX(KIND = DP) :: cufkk_k(nbndsub, nbndsub, nktotf)
-    !! FIXME
-    COMPLEX(KIND = DP) :: phase !JLB
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: cufkkg ( :, :, :)
-    !! FIXME
-    INTEGER :: idir
-    !! FIXME
+    !! U_{mn} matrices after interpolated KS Hamiltonian diagonalization
     INTEGER :: itype
-    !! FIXME
-    INTEGER :: iq
-    !! FIXME
-    INTEGER :: inu
-    !! FIXME
+    !! Transformation direction
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikk
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
+    !! k-point counter
     INTEGER :: ik_global
-    !! FIXME
+    !! Global k-point index
     INTEGER :: iplrn
-    !! FIXME
+    !! Polaron state counter
     INTEGER :: ikpg
-    !! FIXME
+    !! Index of mirror k-point
     INTEGER :: iRp
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: ix
-    !! FIXME
-    INTEGER :: iy
-    !! FIXME
-    INTEGER :: iz
-    !! FIXME
+    !! Electron band counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: indexkn2
-    !! FIXME
+    !! Combined band and k-point index
     LOGICAL :: is_mirror
-    !! FIXME
+    !! .true. if k-point is time-reversal mirror point
+    INTEGER :: ierr
+    !! Error status
+    COMPLEX(KIND = DP), ALLOCATABLE :: cfac(:, :, :)
+    !! Exponential prefactor
     !
     IF (nbndsub_p /= nbndsub) CALL errore('scell_plrn_eigvec_tran','Different bands included in last calculation!',1)
     IF (ttype == 'Bloch2Wan') THEN
@@ -4159,20 +3409,24 @@
     ELSE
       CALL errore('scell_plrn_eigvec_tran', 'Illegal translate form; should be Bloch2Wan or Wan2Bloch!', 1)
     ENDIF
+    !
+    ALLOCATE(cfac(nrr_k, dims, dims), STAT = ierr)
+    IF(ierr /= 0) CALL errore('scell_plrn_eigvec_tran', 'Error allocating cfac', 1)
+    !
     !! itype =  1 : Bloch2Wan: A_{mp} =  \frac{1}{N_p} \sum_{nk}A_{nk} \exp\left(ik\cdot R_p\right)U^\dagger_{mnk}
     !! itype = -1 : Wan2Bloch: A_{nk} = \sum_{mp}A_{mp}\exp(-ik\cdot R_p) U_{mnk}
     !! ibnd -> m, jbnd -> n
     !! R_p from 1 to nktotf_p
     !! This sequence need to be consistent every time transpose between eigvec_wann and eigvec
-    eigVecOut = czero
+    eigvecout = czero
     DO ik = 1, nkf
       xxk = xkf(1:3, 2 * ik - 1)
       ik_global = ikqLocal2Global(ik, nktotf)
       is_mirror = (t_rev .AND. (ik_global > ikpg))
       !
-      CALL get_cfac(xxk, nrr_k, ndegen_k, irvec_r, dims, cfac)
+      CALL get_cfac(xxk, nrr_k, irvec_r, cfac)
       CALL hamwan2bloch ( nbndsub, nrr_k, cufkk(1:nbndsub, 1:nbndsub), &
-         etf_tmp, chw, cfac, dims, is_mirror)
+         etf_tmp, chw, cfac, is_mirror)
       IF(itype == 1) cufkk(1:nbndsub, 1:nbndsub) = CONJG(TRANSPOSE(cufkk(1:nbndsub, 1:nbndsub)))
       !
       DO iplrn = 1, nstate_plrn
@@ -4186,11 +3440,11 @@
               indexkn2 = (ik_global - 1) * nbnd_plrn + jbnd !nk
               SELECT CASE(itype)
                 CASE(1)  ! Bloch2Wan !
-                   eigVecOut(indexkn1, iplrn) = eigVecOut(indexkn1, iplrn) + &
-                      eigVecIn(indexkn2, iplrn) * ctemp / nktotf * cufkk(ibnd, select_bands_plrn(jbnd))
+                   eigvecout(indexkn1, iplrn) = eigvecout(indexkn1, iplrn) + &
+                      eigvecin(indexkn2, iplrn) * ctemp / nktotf * cufkk(ibnd, select_bands_plrn(jbnd))
                 CASE(-1) ! Wan2Bloch !
-                   eigVecOut(indexkn2, iplrn) = eigVecOut(indexkn2, iplrn) + &
-                      eigVecIn(indexkn1, iplrn) * CONJG(ctemp) * cufkk(select_bands_plrn(jbnd), ibnd)
+                   eigvecout(indexkn2, iplrn) = eigvecout(indexkn2, iplrn) + &
+                      eigvecin(indexkn1, iplrn) * CONJG(ctemp) * cufkk(select_bands_plrn(jbnd), ibnd)
               END SELECT
             ENDDO ! jbnd
           ENDDO ! ibnd
@@ -4198,146 +3452,179 @@
       ENDDO !iplrn
     ENDDO ! ik
     ! MPI sum due to the loop ik is within local k set
-    CALL mp_sum(eigVecOut, inter_pool_comm)
+    CALL mp_sum(eigvecout, inter_pool_comm)
+    !
+    DEALLOCATE(cfac, STAT = ierr)
+    IF(ierr /= 0) CALL errore('scell_plrn_eigvec_tran', 'Error deallocating cfac', 1)
+    !
     !-----------------------------------------------------------------------------------
     END SUBROUTINE scell_plrn_eigvec_tran
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
-    SUBROUTINE interp_plrn_wf(nrr_k, ndegen_k, irvec_r, dims)
+    SUBROUTINE interp_plrn_wf(nrr_k, ndegen_k, irvec_r, dims, scell)
     !-----------------------------------------------------------------------------------
-    !! Interpolate Ank and write to Ank.band.plrn,
-    !! especially used to visualize phonon contribution to polaron in band-mode
+    !! Interpolate polaron wave function coeffcients (Ank) and write to Ank.band.plrn.
+    !! Mostly used to visualize contributions from different bands and k-points.
     !-----------------------------------------------------------------------------------
-    USE constants_epw, ONLY : zero, ryd2ev, czero
-    USE io_global,     ONLY : stdout, ionode
-    USE epwcom,        ONLY : type_plrn, nbndsub, nstate_plrn
-    USE elph2,         ONLY : nktotf, etf
+    USE ep_constants,  ONLY : zero, ryd2ev, czero
+    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+    USE io_var,        ONLY : iwfplrn
+    USE mp_world,      ONLY : world_comm
+    USE mp,            ONLY : mp_bcast
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nrr_k
-    !! FIXME
-    INTEGER, INTENT(in) :: dims
-    !! FIXME
+    !! Number of electronic WS points
     INTEGER, INTENT(in) :: ndegen_k(:,:,:)
-    !! FIXME
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
     REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
-    !! FIXME
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    INTEGER, INTENT(in) :: dims
+    !! Dims is either nbndsub if use_ws or 1 if not
+    LOGICAL, INTENT(in), OPTIONAL  :: scell
+    !! .true. for non-diagonal supercell calculation
     !
     ! Local variables
-    INTEGER :: iRp
-    !! FIXME
-    INTEGER :: Rp_vec(3)
-    !! FIXME
-    INTEGER :: i_center(2)
-    !! FIXME
-    INTEGER :: ip_center(3)
-    !! FIXME
-    INTEGER :: nkf1_p
-    !! FIXME
-    INTEGER :: nkf2_p
-    !! FIXME
-    INTEGER :: nkf3_p
-    !! FIXME
-    INTEGER :: nktotf_p
-    !! FIXME
-    INTEGER :: nbndsub_p
-    !! FIXME
-    INTEGER :: ik_bm
-    !! FIXME
-    INTEGER :: band_pos
-    !! FIXME
     INTEGER :: ierr
-    !! FIXME
-    REAL(KIND = DP) :: efermi
-    !! FIXME
-    REAL(KIND = DP), ALLOCATABLE :: dtau_r(:, :)
-    !! FIXME
+    !! Error code when reading file
+    INTEGER :: i_center(2)
+    !! Index of polaron center lattice vector
+    INTEGER :: ip_center(3)
+    !! Coordinates of polaron center
+    INTEGER :: nkf1_p
+    !! Fine k-point grid along b1
+    INTEGER :: nkf2_p
+    !! Fine k-point grid along b2
+    INTEGER :: nkf3_p
+    !! Fine k-point grid along b3
+    INTEGER :: nktotf_p
+    !! Number of k-points in fine grid
+    INTEGER :: nbndsub_p
+    !! Number of bands in polaron expansion
+    INTEGER :: nplrn_p
+    !! Number of polaron states
     COMPLEX(KIND = DP), ALLOCATABLE :: eigvec_wan(:, :)
-    !! FIXME
+    !! Polaron wave function coefficients in Wannier basis, Amp
     !
     IF (ionode) WRITE(stdout, "(5x, a)") "Start of interpolation of electronic band structure."
-    IF (.NOT. ALLOCATED(etf_all)) THEN
-      CALL errore('interp_plrn_wf','etf_all should be correctly prepared before calling interp_plrn_wf', 1)
-    ENDIF
     !
-    !!FIXME: When selecting band in solving polaron, nbndsub_p should be changed when output
-    CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, 'Amp.plrn')
+    ! read Amp.plrn, save eigvec_wan for the latter use
+    IF(ionode) THEN
+      CALL read_plrn_wf_grid(nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p, 'Amp.plrn')
+    END IF
+    CALL mp_bcast(nkf1_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nkf2_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nkf3_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nktotf_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nbndsub_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nplrn_p,  meta_ionode_id, world_comm)
+    !
+    ALLOCATE(eigvec_wan(nktotf_p * nbndsub_p, nplrn_p), STAT = ierr)
+    IF (ierr /= 0) CALL errore('interp_plrn_wf', 'Error allocating eigvec_wan', 1)    
+    !
+    IF (ionode) THEN
+      CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p, 'Amp.plrn')
+    END IF
+    CALL mp_bcast(eigvec_wan, meta_ionode_id, world_comm)
     !
     i_center = MAXLOC(ABS(eigvec_wan))
     !
     ip_center = index_Rp(i_center(1) / nbndsub_p + 1, (/nkf1_p, nkf2_p, nkf3_p/))
     WRITE(stdout, '(5x, a, i8, 3i5)') "The largest Amp ", i_center(1), ip_center
     !
-    CALL plrn_eigvec_tran('Wan2Bloch', .false., eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nbndsub_p, &
-       nrr_k, ndegen_k, irvec_r, dims, eigVec, ip_center)
+    ! JLB: kpg_map cannot be generally defined in interpolation k-paths,
+    !      thus t_rev set to .false.
+    CALL plrn_eigvec_tran('Wan2Bloch', .FALSE., eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nbndsub_p, &
+       nrr_k, ndegen_k, irvec_r, dims, eigvec, ip_center)
     !
-    CALL write_plrn_wf(eigVec, 'Ank.band.plrn', etf_all)
+    CALL write_plrn_wf(eigvec, 'Ank.band.plrn', etf_all)
     !
-    ! SP - If allocated should be avoided
-    ! FIXME
-    IF(ALLOCATED(eigvec_wan)) DEALLOCATE(eigvec_wan)
+    DEALLOCATE(eigvec_wan, STAT = ierr)
+    IF(ierr /= 0) CALL errore('interp_plrn_wf', 'Error deallocating eigvec_wan', 1)
+    !
     !-----------------------------------------------------------------------------------
     END SUBROUTINE interp_plrn_wf
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
-    SUBROUTINE interp_plrn_bq(nrr_q, ndegen_q, irvec_q, rws, nrws)
+    SUBROUTINE interp_plrn_bq(nrr_q, ndegen_q, irvec_q, rws, nrws, scell)
     !-----------------------------------------------------------------------------------
-    !! Interpolate bmat and write to Bmat.band.plrn,
-    !! especially used to visualize phonon contribution to polaron in band-mode
+    !! Interpolate polaron displacements coefficients (Bqv) and write to Bmat.band.plrn.
+    !! Mostly used to visualize contributions from each phonon mode and q-point.
     !-----------------------------------------------------------------------------------
-    USE elph2,         ONLY : xqf, wf, nqtotf
+    USE global_var,    ONLY : wf, nqtotf
     USE modes,         ONLY : nmodes
-    USE constants_epw, ONLY : czero
-    USE io_global,     ONLY : stdout, ionode
+    USE ep_constants,  ONLY : czero
+    USE io_global,     ONLY : ionode, meta_ionode_id
+    USE io_var,        ONLY : idtauplrn
+    USE mp_world,      ONLY : world_comm
+    USE mp,            ONLY : mp_bcast
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nrr_q
-    !! FIXME
+    !! number of phonon WS points
     INTEGER, INTENT(in) :: ndegen_q(:,:,:)
-    !! FIXME
+    !! degeneracy of WS points for phonon
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
-    !! FIXME
+    !! Coordinates of real space vector for phonons
     INTEGER,  INTENT(in) :: nrws
-    !! FIXME
+    !! Number of real-space Wigner-Seitz
     REAL(KIND = DP), INTENT(in) :: rws(:, :)
-    !! FIXME
+    !! Real-space wigner-Seitz vectors
+    LOGICAL, INTENT(in), OPTIONAL  :: scell
+    !! .true. for non-diagonal supercell calculation
     !
     ! Local variables
+    CHARACTER(LEN = 5) :: dmmy
+    !! Dummy variables read from file
     INTEGER :: nqf1_p
-    !! FIXME
+    !! Fine q-point grid along b1
     INTEGER :: nqf2_p
-    !! FIXME
+    !! Fine q-point grid along b2
     INTEGER :: nqf3_p
-    !! FIXME
+    !! Fine q-point grid along b3
     INTEGER :: nqtotf_p
-    !! FIXME
+    !! Number of q-points in fine grid
     INTEGER :: nmodes_p
-    !! FIXME
+    !! Number of phonon modes
     INTEGER :: ierr
-    !! FIXME
+    !! Error status
     INTEGER :: iRp
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: ina
-    !! FIXME
-    INTEGER :: Rp_vec(3)
-    !! FIXME
+    !! Atom counter
     INTEGER :: i_center(2)
-    !! FIXME
+    !! Index of polaron center
     INTEGER :: ip_center(3)
-    !! FIXME
-    COMPLEX(KIND = DP), ALLOCATABLE :: Bmat(:,:)
-    !! FIXME
+    !! Coordinates of polaron center
+    COMPLEX(KIND = DP), ALLOCATABLE :: bqv_coef(:,:)
+    !! Polaron displacement coefficients in phonon basis, Bqv
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau(:, :)
-    !! FIXME
+    !! Polaron displacements in real space
     REAL(KIND = DP),    ALLOCATABLE :: dtau_r(:, :)
-    !! FIXME
+    !! Auxiliary polaron displacements to find polaron center
     !
-    CALL read_plrn_dtau(dtau, nqf1_p, nqf2_p, nqf3_p, nqtotf_p, nmodes_p, 'dtau.plrn')
+    IF(ionode) THEN
+      CALL read_plrn_dtau_grid(nqf1_p, nqf2_p, nqf3_p, nqtotf_p, nmodes_p, 'dtau.plrn')
+    ENDIF
+    CALL mp_bcast(nqf1_p,   meta_ionode_id, world_comm)
+    CALL mp_bcast(nqf2_p,   meta_ionode_id, world_comm)
+    CALL mp_bcast(nqf3_p,   meta_ionode_id, world_comm)
+    CALL mp_bcast(nqtotf_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nmodes_p, meta_ionode_id, world_comm)
     !
+    ALLOCATE(dtau(nqtotf_p, nmodes_p), STAT = ierr)
+    IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error allocating dtau', 1)    
+    !
+    IF (ionode) THEN
+      CALL read_plrn_dtau(dtau, nqtotf_p, nmodes_p, 'dtau.plrn')
+    END IF
+    CALL mp_bcast(dtau, meta_ionode_id, world_comm)
+    !
+    ! Locate max displacement to center supercell
     ALLOCATE(dtau_r(nqtotf_p, nmodes/3), STAT = ierr)
-    IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error allocating Bmat', 1)
+    IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error allocating dtau_e', 1)
     dtau_r = czero
     DO iRp = 1, nqtotf_p
       DO ina = 1, nmodes / 3 ! ika -> kappa alpha
@@ -4346,22 +3633,22 @@
     ENDDO
     i_center = MAXLOC(ABS(dtau_r))
     ip_center = index_Rp(i_center(1), (/nqf1_p, nqf2_p, nqf3_p/))
+    DEALLOCATE(dtau_r, STAT = ierr)
+    IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error deallocating dtau_r', 1)
     !
-    ALLOCATE(Bmat(nqtotf, nmodes), STAT = ierr)
+    ALLOCATE(bqv_coef(nqtotf, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error allocating Bmat', 1)
-    Bmat = czero
+    bqv_coef = czero
     !
     CALL plrn_bmat_tran('Dtau2Bmat', .false., dtau, nqf1_p, nqf2_p, nqf3_p, &
-       nrr_q, ndegen_q, irvec_q, rws, nrws, Bmat, ip_center)
+       nrr_q, ndegen_q, irvec_q, rws, nrws, bqv_coef, ip_center)
     !
-    IF (ionode) CALL write_plrn_bmat(Bmat, 'Bmat.band.plrn', wf)
+    IF (ionode) CALL write_plrn_bmat(bqv_coef, 'Bmat.band.plrn', wf)
     !
     DEALLOCATE(dtau, STAT = ierr)
     IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error deallocating dtau', 1)
-    DEALLOCATE(Bmat, STAT = ierr)
+    DEALLOCATE(bqv_coef, STAT = ierr)
     IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error deallocating Bmat', 1)
-    DEALLOCATE(dtau_r, STAT = ierr)
-    IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error deallocating dtau_r', 1)
     !-----------------------------------------------------------------------------------
     END SUBROUTINE interp_plrn_bq
     !-----------------------------------------------------------------------------------
@@ -4369,121 +3656,93 @@
     SUBROUTINE plrn_bmat_tran(ttype, t_rev, mat_in, nqf1_p, nqf2_p, nqf3_p, &
           nrr_q, ndegen_q, irvec_q, rws, nrws, mat_out, ip_center)
     !-----------------------------------------------------------------------------------
-    !! Fourier transform between Bmat and dtau
+    !! Fourier transform between Bmat and dtau,
+    !! Eq.(39) of PRB 99, 235139 (2019).
     !! Dtau2Bmat : B_{q\nu} = -1/N_p\sum_{\kappa\alpha p}C_{q\kappa \nu}\Delta\tau_{\kappa\alpha p}  e_{\kappa\alpha\nu}(q)\exp(iqR_p)
     !! Bmat2Dtau : \Delta \tau_{\kappa\alpha p} = -\sum_{q\nu} 1/(C_{q\kappa \nu}) B^*_{q\nu} e_{\kappa\alpha,\nu}(q) \exp(iqR_p)
     !! C_{q\kappa \nu} = N_p\left(\frac{M_k\omega_{q\nu}}{2\hbar}\right)^{\frac{1}{2}} = N_p(M_k)^{\frac{1}{2}}D_{q\nu}
     !! D_{q \nu} = \left(\frac{\omega_{q\nu}}{2\hbar}\right)^{\frac{1}{2}}
     !-----------------------------------------------------------------------------------
-    USE elph2,         ONLY : xqf, nqtotf, nkf, wf
+    USE global_var,    ONLY : xqf, nqtotf, wf
     USE modes,         ONLY : nmodes
-    USE constants_epw, ONLY : eps8, czero, one, two, twopi, zero, ci, cone
+    USE ep_constants,  ONLY : eps8, czero, one, two, twopi, zero, ci, cone
     USE ions_base,     ONLY : amass, ityp
-    USE wan2bloch,     ONLY : dynwan2bloch, dynifc2blochf
-    USE epwcom,        ONLY : lifc, type_plrn
+    USE wannier2bloch, ONLY : dynwan2bloch, dynifc2blochf
+    USE input,         ONLY : lifc, type_plrn, eps_acoustic
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
-    USE division,      ONLY : fkbounds
-    USE io_global,     ONLY : stdout
+    USE parallelism,   ONLY : fkbounds
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 9), INTENT(in) :: ttype
-    !! FIXME
+    !! Transformation direction, 'Bloch2Wan' or 'Wan2Bloch'
     LOGICAL, INTENT(in) :: t_rev
-    !! FIXME
+    !! .true. if time-reversal symmetry is to be imposed in the Bqv coefficients
     INTEGER, INTENT(in) :: nqf1_p
-    !! FIXME
+    !! Fine q-point grid along b1
     INTEGER, INTENT(in) :: nqf2_p
-    !! FIXME
+    !! Fine q-point grid along b2
     INTEGER, INTENT(in) :: nqf3_p
-    !! FIXME
+    !! Fine q-point grid along b3
     INTEGER, INTENT(in) :: nrr_q
-    !! FIXME
+    !! number of phonon WS points
     INTEGER, INTENT(in) :: ndegen_q(:,:,:)
-    !! FIXME
+    !! degeneracy of WS points for phonon
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
-    !! FIXME
+    !! Coordinates of real space vector for phonons
     INTEGER, INTENT(in) :: nrws
-    !! FIXME
+    !! Number of real-space Wigner-Seitz
     INTEGER, INTENT(in), OPTIONAL :: ip_center(1:3)
-    !! FIXME
+    !! Coordinates of polaron center, for shifting supercell
     REAL(KIND = DP), INTENT(in) :: rws(:, :)
-    !! FIXME
+    !! Real-space wigner-Seitz vectors
     COMPLEX(KIND = DP), INTENT(in) :: mat_in(:, :)
-    !! FIXME
+    !! Input matrix with Bqv/dtau coefficients
     COMPLEX(KIND = DP), INTENT(out) :: mat_out(:, :)
-    !! FIXME
+    !! Output matrix with dtau/Bqv coefficients
     !
     ! Local variables
     LOGICAL :: mirror_q
-    !! FIXME
-    INTEGER :: jnu
-    !! FIXME
-    INTEGER :: ndegen(nmodes)
-    !! FIXME
-    INTEGER :: imode
-    !! FIXME
-    INTEGER :: jmode
-    !! FIXME
+    !! .true. if q1 is TR mirror of another q2 point
     INTEGER :: iq
-    !! FIXME
+    !! q-point counter
     INTEGER :: inu
-    !! FIXME
-    INTEGER :: ierr
-    !! FIXME
-    INTEGER :: imu
-    !! FIXME
-    INTEGER :: iatm
-    !! FIXME
-    INTEGER :: idir
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: itype
-    !! FIXME
+    !! Transformation direction
     INTEGER :: ika
-    !! FIXME
+    !! Combined atom and cartesian direction counter
     INTEGER :: ip_start
-    !! FIXME
+    !! Initial lattice vector in this pool
     INTEGER :: ip_end
-    !! FIXME
+    !! Final lattice vector in this pool
     INTEGER :: iRp
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: nqf_p(1:3)
-    !! FIXME
-    INTEGER :: ix, iy, iz
-    !! FIXME
+    !! Fine q-point grid
     INTEGER :: ina
-    !! FIXME
-    INTEGER :: nqtotf_p
-    !! FIXME
-    INTEGER :: iqpg
-    !! FIXME
-    INTEGER :: nqf
-    !! FIXME
+    !! Atom counter
     INTEGER :: nptotf
-    !! FIXME
-    INTEGER :: start_modes
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: Rp_vec(1:3)
-    !! FIXME
+    !! Lattice vector coordinates
     INTEGER :: center_shift(1:3)
-    !! FIXME
+    !! Coordinates of shift to center supercell around polaron
     REAL(KIND = DP) :: xxq(3)
-    !! FIXME
+    !! q-point coordinate
     REAL(KIND = DP) :: xxq_r(3)
-    !! FIXME
+    !! q-point coordinate in case time-reversal has to be taken
     REAL(KIND = DP) :: ctemp
-    !! FIXME
+    !! Prefactor
     REAL(KIND = DP) :: w2(nmodes)
-    !! FIXME
+    !! Phonon frequency squared
     COMPLEX(KIND = DP) :: dtemp
-    !! FIXME
-    COMPLEX(KIND = DP) :: shift(3)
-    !! FIXME
+    !! Prefactor
     COMPLEX(KIND = DP) :: expTable(3)
-    !! FIXME
+    !! Multiplications within exponential
     COMPLEX(KIND = DP) :: uf(nmodes, nmodes)
-    !! FIXME
+    !! Phonon eigenvectors
     !
     nptotf = nqf1_p * nqf2_p * nqf3_p
     nqf_p(1:3) = (/nqf1_p, nqf2_p, nqf3_p/)
@@ -4544,9 +3803,8 @@
       ! For mirror q, calculate the time-symmetric q' and get uf from q'
       ! e_{\kappa\alpha\nu}(-q)= e^*_{\kappa\alpha\nu}(q)
       !!IF(t_rev .and. iq > iqpg) uf = CONJG(uf) !transpose
-      start_modes = 1
-      DO inu = start_modes, nmodes ! inu -> nu
-        IF (wf(inu, iq) < eps8) CYCLE !JLB - cycle zero and imaginary frequency modes
+      DO inu = 1, nmodes ! inu -> nu
+        IF (wf(inu, iq) < eps_acoustic) CYCLE !JLB - cycle zero and imaginary frequency modes
         DO ika = 1, nmodes ! ika -> kappa alpha
           ina = (ika - 1) / 3 + 1
           ctemp = DSQRT(two / (wf(inu, iq) * amass(ityp(ina))))
@@ -4584,99 +3842,74 @@
     !-----------------------------------------------------------------------------------
     !! JLB: Fourier transform between Bmat and dtau for non-diagonal supercells
     !-----------------------------------------------------------------------------------
-    USE elph2,         ONLY : xqf, nqtotf, nkf, wf
+    USE global_var,    ONLY : xqf, wf
     USE modes,         ONLY : nmodes
-    USE constants_epw, ONLY : eps8, czero, one, two, twopi, zero, ci, cone
+    USE ep_constants,  ONLY : eps8, czero, one, two, twopi, zero, ci, cone
     USE ions_base,     ONLY : amass, ityp
-    USE wan2bloch,     ONLY : dynwan2bloch, dynifc2blochf
-    USE epwcom,        ONLY : lifc, type_plrn
+    USE wannier2bloch, ONLY : dynwan2bloch, dynifc2blochf
+    USE input,         ONLY : lifc, type_plrn, eps_acoustic
     USE mp_global,     ONLY : inter_pool_comm
     USE mp,            ONLY : mp_sum
-    USE division,      ONLY : fkbounds
-    USE io_global,     ONLY : stdout, ionode
+    USE parallelism,   ONLY : fkbounds
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 9), INTENT(in) :: ttype
-    !! FIXME
+    !! Transformation direction, 'Bloch2Wan' or 'Wan2Bloch'
     LOGICAL, INTENT(in) :: t_rev
-    !! FIXME
+    !! .true. if time-reversal symmetry is to be imposed in Bqv coefficients
     INTEGER, INTENT(in) :: nqtotf_p
-    !! FIXME
+    !! Number of q-points in fine grid
     INTEGER, INTENT(in) :: nRp_p
-    !! FIXME
+    !! Number of unit cells within supercell
     INTEGER, INTENT(in) :: Rp_p(:,:)
-    !! FIXME
+    !! Lattice vector coordinates within supercell
     INTEGER, INTENT(in) :: nrr_q
-    !! FIXME
+    !! number of phonon WS points
     INTEGER, INTENT(in) :: ndegen_q(:,:,:)
-    !! FIXME
+    !! degeneracy of WS points for phonon
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
-    !! FIXME
+    !! Coordinates of real space vector for phonons
     INTEGER, INTENT(in) :: nrws
-    !! FIXME
+    !! Number of real-space Wigner-Seitz
     REAL(KIND = DP), INTENT(in) :: rws(:, :)
-    !! FIXME
+    !! Real-space wigner-Seitz vectors
     COMPLEX(KIND = DP), INTENT(in) :: mat_in(:, :)
-    !! FIXME
+    !! Input matrix with Bqv/dtau coefficients
     COMPLEX(KIND = DP), INTENT(out) :: mat_out(:, :)
-    !! FIXME
+    !! Output matrix with dtau/Bqv coefficients
     !
     ! Local variables
     LOGICAL :: mirror_q
-    !! FIXME
+    !! .true. if q1 is a TR mirror point of another q2 point
     INTEGER :: iq
-    !! FIXME
+    !! q-point counter
     INTEGER :: inu
-    !! FIXME
-    INTEGER :: ierr
-    !! FIXME
-    INTEGER :: imu
-    !! FIXME
-    INTEGER :: iatm
-    !! FIXME
-    INTEGER :: idir
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: itype
-    !! FIXME
+    !! Atom type counter
     INTEGER :: ika
-    !! FIXME
+    !! Combined atom and cartesian direction counter
     INTEGER :: ip_start
-    !! FIXME
+    !! Initial lattice vector within this pool
     INTEGER :: ip_end
-    !! FIXME
+    !! Final lattice vector within this pool
     INTEGER :: iRp
-    !! FIXME
-    INTEGER :: ix, iy, iz
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: ina
-    !! FIXME
-    INTEGER :: iqpg
-    !! FIXME
-    INTEGER :: nqf
-    !! FIXME
-    INTEGER :: start_modes
-    !! FIXME
-    INTEGER :: jnu
-    !! FIXME
-    INTEGER :: ndegen(nmodes)
-    !! FIXME
-    INTEGER :: imode
-    !! FIXME
-    INTEGER :: jmode
-    !! FIXME
+    !! Atom counter
     REAL(KIND = DP) :: xxq(3)
-    !! FIXME
+    !! q-point coordinate
     REAL(KIND = DP) :: xxq_r(3)
-    !! FIXME
+    !! auxiliary q-point coordinate in case TR is to be imposed
     REAL(KIND = DP) :: ctemp
-    !! FIXME
+    !! Prefactor
     REAL(KIND = DP) :: w2(nmodes)
-    !! FIXME
+    !! Phonon frequency squared
     COMPLEX(KIND = DP) :: dtemp
-    !! FIXME
+    !! Prefactor
     COMPLEX(KIND = DP) :: uf(nmodes, nmodes)
-    !! FIXME
+    !! Phonon eigenvectors
     !
     IF (ttype == 'Bmat2Dtau') THEN
       itype =  1
@@ -4727,7 +3960,7 @@
       ! e_{\kappa\alpha\nu}(-q)= e^*_{\kappa\alpha\nu}(q)
       !IF(t_rev .and. iq > iqpg) uf = CONJG(uf) !transpose
       DO inu = 1, nmodes ! inu -> nu
-        IF (wf(inu, iq) < eps8) CYCLE !JLB - cycle zero and imaginary frequency modes
+        IF (wf(inu, iq) < eps_acoustic) CYCLE !JLB - cycle zero and imaginary frequency modes
         DO ika = 1, nmodes ! ika -> kappa alpha
           ina = (ika - 1) / 3 + 1
           ctemp = DSQRT(two / (wf(inu, iq) * amass(ityp(ina))))
@@ -4755,80 +3988,62 @@
     END SUBROUTINE scell_plrn_bmat_tran
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
-    SUBROUTINE calc_den_of_state(eigVec, Bmat)
+    SUBROUTINE calc_den_of_state(eigvec_coef, bqv_coef)
     !-----------------------------------------------------------------------------------
-    !! Compute the DOS.
+    !! Compute the DOS for Ank and Bqv coefficients
     !-----------------------------------------------------------------------------------
-    USE epwcom,        ONLY : nDOS_plrn, edos_max_plrn, edos_min_plrn, edos_sigma_plrn,   &
-                              pdos_max_plrn, pdos_min_plrn, pdos_sigma_plrn, nstate_plrn, &
-                              nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, nqtotf, nktotf, xkf, ibndmin, ibndmax, wf
+    USE input,         ONLY : nDOS_plrn, edos_max_plrn, edos_min_plrn, edos_sigma_plrn,   &
+                              pdos_max_plrn, pdos_min_plrn, pdos_sigma_plrn
+    USE global_var,    ONLY : nqtotf, nktotf, wf
+    USE io_var,        ONLY : idosplrn
     USE modes,         ONLY : nmodes
-    USE constants_epw, ONLY : ryd2mev, czero, one, ryd2ev, two, zero, cone, pi, ci, twopi,&
+    USE ep_constants,  ONLY : ryd2mev, czero, one, ryd2ev, two, zero, cone, pi, ci, twopi,&
                               eps6, eps8, eps5
     !
     IMPLICIT NONE
     !
-    COMPLEX(KIND = DP), INTENT(in) :: eigVec(:, :)
-    !! FIXME
-    COMPLEX(KIND = DP), INTENT(in) :: Bmat(:, :)
-    !! FIXME
+    COMPLEX(KIND = DP), INTENT(in) :: eigvec_coef(:, :)
+    !! Polaron wave function coefficients in the Bloch basis, Ank
+    COMPLEX(KIND = DP), INTENT(in) :: bqv_coef(:, :)
+    !! Polaron displacement coefficients in the phonon basis, Bqv
     !
     ! Local variables
     INTEGER :: ierr
     !! Error status
     INTEGER :: idos
-    !! FIXME
+    !! Counter for DOS
     INTEGER :: iq
-    !! FIXME
+    !! q-point counter
     INTEGER :: inu
-    !! FIXME
+    !! Phonon mode counter
     INTEGER :: ik
-    !! FIXME
-    INTEGER :: ikk
-    !! FIXME
-    INTEGER :: ikq
-    !! FIXME
-    INTEGER :: ik_global
-    !! FIXME
+    !! k-point counter
     INTEGER :: iplrn
-    !! FIXME
-    INTEGER :: ikpg
-    !! FIXME
-    INTEGER :: icount
-    !! FIXME
+    !! Polaron state counter
     INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: ix, iy, iz
-    !! FIXME
-    INTEGER :: dos_file
-    !! FIXME
+    !! Electron band counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     REAL(KIND = DP) :: temp
-    !! FIXME
-    REAL(KIND = DP), ALLOCATABLE :: rmat_tmp(:, :)
-    !! FIXME
-    REAL(KIND = DP), ALLOCATABLE :: rvec_tmp(:)
-    !! FIXME
+    !! Temporary max or min eigenvalue
+    REAL(KIND = DP), ALLOCATABLE :: f_tmp(:)
+    !! Temporary Gaussian function
     REAL(KIND = DP), ALLOCATABLE :: edos(:)
-    !! FIXME
+    !! Ank DOS
     REAL(KIND = DP), ALLOCATABLE :: pdos(:)
-    !! FIXME
+    !! Bqv DOS
     REAL(KIND = DP), ALLOCATABLE :: edos_all(:)
-    !! FIXME
+    !! Electron DOS
     REAL(KIND = DP), ALLOCATABLE :: pdos_all(:)
-    !! FIXME
+    !! Phonon DOS
     REAL(KIND = DP), ALLOCATABLE :: e_grid(:)
-    !! FIXME
+    !! Grid of energy points to compute Ank DOS
     REAL(KIND = DP), ALLOCATABLE :: p_grid(:)
-    !! FIXME
+    !! Grid of energy points to compute Bqv DOS
     !
     !Calculating DOS
-    ALLOCATE(rvec_tmp(nDOS_plrn), STAT = ierr)
-    IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating rvec_tmp', 1)
+    ALLOCATE(f_tmp(nDOS_plrn), STAT = ierr)
+    IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating f_tmp', 1)
     ALLOCATE(e_grid(nDOS_plrn), STAT = ierr)
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating e_grid', 1)
     ALLOCATE(edos(nDOS_plrn), STAT = ierr)
@@ -4852,10 +4067,10 @@
         ! TODO : iplrn
         DO iplrn = 1, 1
           CALL cal_f_delta(e_grid - (etf_all(select_bands_plrn(ibnd), ik) * ryd2ev), &
-             edos_sigma_plrn, rvec_tmp)
+             edos_sigma_plrn, f_tmp)
           indexkn1 = (ik - 1) * nbnd_plrn + ibnd
-          edos = edos + (ABS(eigVec(indexkn1, iplrn))**2) * rvec_tmp
-          edos_all = edos_all + rvec_tmp
+          edos = edos + (ABS(eigvec_coef(indexkn1, iplrn))**2) * f_tmp
+          edos_all = edos_all + f_tmp
         ENDDO
       ENDDO
     ENDDO
@@ -4881,27 +4096,24 @@
     pdos_all = zero
     DO iq = 1, nqtotf
       DO inu = 1, nmodes
-        CALL cal_f_delta(p_grid - wf(inu, iq) * ryd2mev, pdos_sigma_plrn, rvec_tmp)
-        pdos = pdos + (ABS(Bmat(iq, inu))**2) * rvec_tmp
-        pdos_all = pdos_all + rvec_tmp
+        CALL cal_f_delta(p_grid - wf(inu, iq) * ryd2mev, pdos_sigma_plrn, f_tmp)
+        pdos = pdos + (ABS(bqv_coef(iq, inu))**2) * f_tmp
+        pdos_all = pdos_all + f_tmp
       ENDDO
     ENDDO
     !
-    ! SP - file accession should be done in io_var
-    ! FIXME
-    dos_file = 601
-    OPEN(UNIT = dos_file, FILE = 'dos.plrn')
-    WRITE(dos_file, '(/2x, a/)') '#energy(ev)  A^2   edos  energy(mev)  B^2  pdos'
+    OPEN(UNIT = idosplrn, FILE = 'dos.plrn')
+    WRITE(idosplrn, '(/2x, a/)') '#energy(ev)  A^2   edos  energy(mev)  B^2  pdos'
     DO idos = 1, nDOS_plrn
-      WRITE(dos_file, '(6f15.7)') e_grid(idos), edos(idos), &
+      WRITE(idosplrn, '(6f15.7)') e_grid(idos), edos(idos), &
          edos_all(idos), p_grid(idos), pdos(idos), pdos_all(idos)
     ENDDO
-    CLOSE(dos_file)
+    CLOSE(idosplrn)
     !
     DEALLOCATE(pdos_all)
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating pdos_all', 1)
-    DEALLOCATE(rvec_tmp)
-    IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating rvec_tmp', 1)
+    DEALLOCATE(f_tmp)
+    IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating f_tmp', 1)
     DEALLOCATE(e_grid)
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating e_grid', 1)
     DEALLOCATE(edos)
@@ -4918,141 +4130,134 @@
     !-----------------------------------------------------------------------------------
     SUBROUTINE write_real_space_wavefunction()
     !-----------------------------------------------------------------------------------
-    !! Write real space wavefunction to file.
+    !! Write polaron wave function in real space to file.
     !-----------------------------------------------------------------------------------
-    USE constants_epw, ONLY : zero, czero, cone, twopi, ci, bohr2ang
-    USE epwcom,        ONLY : nbndsub, step_wf_grid_plrn
-    USE io_var,        ONLY : iun_plot
-    USE io_files,      ONLY : prefix
+    USE ep_constants,  ONLY : zero, czero, cone, twopi, ci, bohr2ang
+    USE input,         ONLY : nbndsub, step_wf_grid_plrn
     USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+    USE io_var,        ONLY : ipsirplrn
+    USE mp_world,      ONLY : world_comm
     USE cell_base,     ONLY : at, alat
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE mp_world,      ONLY : world_comm
-    USE division,      ONLY : fkbounds
+    USE parallelism,   ONLY : fkbounds
     USE mp_global,     ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 60) :: plrn_file
-    !! FIXME
+    !! Name of output file
     INTEGER :: ierr
     !! Error status
     INTEGER :: nkf1_p
-    !! FIXME
+    !! Fine k-point grid along b1
     INTEGER :: nkf2_p
-    !! FIXME
+    !! Fine k-point grid along b2
     INTEGER :: nkf3_p
-    !! FIXME
+    !! Fine k-point grid along b3
     INTEGER :: nktotf_p
-    !! FIXME
-    INTEGER :: nbnd_plrn_p
-    !! FIXME
+    !! Number of k-points in fine grid
+    INTEGER :: nbndsub_p
+    !! Number of bands in polaron wave function expansion
+    INTEGER :: nplrn_p
+    !! Number of polaron states
     INTEGER :: nqf_p(3)
-    !! FIXME
+    !! Fine q-point grid
     INTEGER :: nqtotf_p
-    !! FIXME
+    !! Number of k-points in fine grid
     INTEGER :: nmodes_p
-    !! FIXME
+    !! Number of phonon modes
     INTEGER :: ibnd
-    !! FIXME
-    INTEGER :: jbnd
-    !! FIXME
-    INTEGER :: iline
-    !! FIXME
-    INTEGER :: nAtoms
-    !! FIXME
+    !! Electron band index
     INTEGER :: idir
-    !! FIXME
-    INTEGER :: file_unit
-    !! FIXME
-    INTEGER :: igrid
-    !! FIXME
-    INTEGER :: itemp
-    !! FIXME
+    !! Cartesian direction counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: nxx, nyy, nzz
-    !! FIXME
-    INTEGER :: ipx, ipy, ipz
-    !! FIXME
+    !! Number of grid points in real space supercell along cartesian directions
     INTEGER :: ip_min
-    !! FIXME
+    !! Initial lattice vector within this pool
     INTEGER :: ip_max
-    !! FIXME
+    !! Final lattice vector within this pool
     INTEGER :: ig_vec(1:3)
-    !! FIXME
-    INTEGER :: iscx, iscy, iscz
-    !! FIXME
-    INTEGER :: ie
-    !! FIXME
-    INTEGER :: i_species
-    !! FIXME
-    INTEGER :: ivec
-    !! FIXME
+    !! Supercell latice vector coordinates
     INTEGER :: iRp
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: n_grid(3)
-    !! FIXME
+    !! Number of grid points in cell where Wannier functions are written
     INTEGER :: grid_start(3)
-    !! FIXME
+    !! Initial grid point within this pool
     INTEGER :: grid_end(3)
-    !! FIXME
+    !! Final grid point within this pool
     INTEGER :: n_grid_super(3)
-    !! FIXME
+    !! Number of grid points in supercellcell where polaron wave function is written
     INTEGER :: r_grid_vec(3)
-    !! FIXME
+    !! Grid point coordinates
     INTEGER :: rpc(1:3)
-    !! FIXME
-    INTEGER :: ipc(1:3)
-    !! FIXME
-    INTEGER :: shift_start(1:3)
-    !! FIXME
+    !! Grid point coordinates for lattice vectors
     INTEGER :: species(50)
-    !! FIXME
+    !! Atomic species counter
     INTEGER :: Rp_vec(1:3)
-    !! FIXME
+    !! Lattice vector coordinates
     INTEGER :: shift(1:3)
-    !! FIXME
+    !! Shift vector coordinates
     INTEGER :: ishift
-    !! FIXME
+    !! Shift counter
     REAL(KIND = DP) :: orig(3)
-    !! FIXME
-    REAL(KIND = DP) :: rtempvec(4)
-    !! FIXME
+    !! Supercell origin coordinates
     REAL(KIND = DP) :: cell(3, 3)
-    !! FIXME
-    REAL(KIND = DP) :: rtemp(5)
-    !! FIXME
-    REAL(KIND = DP) :: tempDen(5, 5, 5)
-    !! FIXME
+    !! Supercell lattice vectors
     REAL(KIND = DP) :: r_cry(3)
-    !! FIXME
+    !! Polaron center in crystal coords
     REAL(KIND = DP) :: r_cart(3)
-    !! FIXME
+    !! Polaron center in cart coord
     REAL(KIND = DP), ALLOCATABLE :: wann_func(:, :, :, :)
-    !! FIXME
-    REAL(KIND = DP), ALLOCATABLE :: rvec(:)
-    !! FIXME
-    COMPLEX(KIND = DP) :: Amp
-    !! FIXME
+    !! Wannier function in real space
     COMPLEX(KIND = DP) :: ctemp(1:3)
-    !! FIXME
+    !! Prefactor for polaron center calculation
     COMPLEX(KIND = DP) :: b_vec(1:3)
-    !! FIXME
+    !! Prefactor for polaron center calculation
     COMPLEX(KIND = DP), ALLOCATABLE :: eigvec_wan(:, :)
-    !! FIXME
+    !! Polaron wave function coefficients in Wannier basis, Amp
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau(:, :)
-    !! FIXME
+    !! Polaron displacements in real space
     COMPLEX(KIND = DP), ALLOCATABLE :: cvec(:)
-    !! FIXME
+    !! Polaron wave function magnitude squared at each grid point
     !
-    ! SP - File number should be allocated in io_var
-    ! FIXME
-    file_unit = 60512
     ! read Amp.plrn, save eigvec_wan for the latter use
-    CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbnd_plrn_p, 'Amp.plrn')
+    IF (ionode) THEN
+      CALL read_plrn_wf_grid(nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p, 'Amp.plrn')
+    END IF
+    CALL mp_bcast(nkf1_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nkf2_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nkf3_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nktotf_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nbndsub_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nplrn_p,  meta_ionode_id, world_comm)
+    !
+    ALLOCATE(eigvec_wan(nktotf_p * nbndsub_p, nplrn_p), STAT = ierr)
+    IF (ierr /= 0) CALL errore('interp_plrn_wf', 'Error allocating eigvec_wan', 1)  
+    !
+    IF (ionode) THEN
+      CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p, 'Amp.plrn')
+    END IF
+    CALL mp_bcast(eigvec_wan, meta_ionode_id, world_comm)
+    !
     ! read dtau.plrn, get the displacement.
-    CALL read_plrn_dtau(dtau, nqf_p(1), nqf_p(2), nqf_p(3), nqtotf_p, nmodes_p, 'dtau.plrn')
+    IF (ionode) THEN
+      CALL read_plrn_dtau_grid(nqf_p(1), nqf_p(2), nqf_p(3), nqtotf_p, nmodes_p, 'dtau.plrn')
+    END IF
+    CALL mp_bcast(nqf_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nqtotf_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nmodes_p, meta_ionode_id, world_comm)
+    !
+    ALLOCATE(dtau(nqtotf_p, nmodes_p), STAT = ierr)
+    IF (ierr /= 0) CALL errore('interp_plrn_bq', 'Error allocating dtau', 1)     
+    !
+    IF (ionode) THEN
+      CALL read_plrn_dtau(dtau, nqtotf_p, nmodes_p, 'dtau.plrn')
+    END IF
+    CALL mp_bcast(dtau, meta_ionode_id, world_comm)
+    !
     ! read cube files for the real-space Wannier function Wm(r)
     CALL read_wannier_cube(select_bands_plrn, wann_func, species, &
        n_grid, grid_start, grid_end)
@@ -5062,22 +4267,23 @@
     cell(1:3, 3) = at(1:3, 3) * nqf_p(3) * alat
     !
     plrn_file = 'psir_plrn.xsf'
-    ! Write the file head including information of structures,
-    ! using the same format of
-    CALL write_plrn_dtau_xsf(dtau, nqf_p(1), nqf_p(2), nqf_p(3), plrn_file, species)
+    ! Write the file head including information of structures
+    IF (ionode) THEN
+      CALL write_plrn_dtau_xsf(dtau, nqf_p(1), nqf_p(2), nqf_p(3), plrn_file, species)
+    END IF
     !
     orig(1:3) = zero
     n_grid_super(1:3) = nqf_p(1:3) * n_grid(1:3)
     !
     IF (ionode) THEN
-      OPEN(UNIT = file_unit, FILE = TRIM(plrn_file), POSITION='APPEND')
-      WRITE(file_unit, '(/)')
-      WRITE(file_unit, '("BEGIN_BLOCK_DATAGRID_3D",/,"3D_field",/, "BEGIN_DATAGRID_3D_UNKNOWN")')
-      WRITE(file_unit, '(3i6)')  n_grid_super / step_wf_grid_plrn
-      WRITE(file_unit, '(3f12.6)') zero, zero, zero
-      WRITE(file_unit, '(3f12.7)') cell(1:3, 1) * bohr2ang
-      WRITE(file_unit, '(3f12.7)') cell(1:3, 2) * bohr2ang
-      WRITE(file_unit, '(3f12.7)') cell(1:3, 3) * bohr2ang
+      OPEN(UNIT = ipsirplrn, FILE = TRIM(plrn_file), POSITION='APPEND')
+      WRITE(ipsirplrn, '(/)')
+      WRITE(ipsirplrn, '("BEGIN_BLOCK_DATAGRID_3D",/,"3D_field",/, "BEGIN_DATAGRID_3D_UNKNOWN")')
+      WRITE(ipsirplrn, '(3i6)')  n_grid_super / step_wf_grid_plrn
+      WRITE(ipsirplrn, '(3f12.6)') zero, zero, zero
+      WRITE(ipsirplrn, '(3f12.7)') cell(1:3, 1) * bohr2ang
+      WRITE(ipsirplrn, '(3f12.7)') cell(1:3, 2) * bohr2ang
+      WRITE(ipsirplrn, '(3f12.7)') cell(1:3, 3) * bohr2ang
     ENDIF
     !
     b_vec(1:3) = twopi * ci / REAL(n_grid_super(1:3))
@@ -5088,7 +4294,6 @@
     CALL fkbounds(nqtotf_p, ip_min, ip_max)
     !
     ctemp = czero
-    rtemp = czero
     DO nzz = 1, n_grid_super(3), step_wf_grid_plrn
       DO nyy = 1, n_grid_super(2), step_wf_grid_plrn
         cvec = czero
@@ -5115,7 +4320,7 @@
         CALL mp_sum(cvec, inter_pool_comm)
         IF(ionode) THEN
           !JLB: Changed to |\Psi(r)|^{2}, I think it's physically more meaningful
-          WRITE (file_unit, '(5e13.5)', ADVANCE='yes') ABS(cvec(::step_wf_grid_plrn))**2
+          WRITE (ipsirplrn, '(5e13.5)', ADVANCE='yes') ABS(cvec(::step_wf_grid_plrn))**2
         ENDIF
         ! Calculate the center of polaron
         ! TODO: not parallel, all the processors are doing the same calculations
@@ -5139,15 +4344,17 @@
       WRITE(stdout, "(5x, 'The position of polaron:')")
       WRITE(stdout, "(5x, 3f9.4, ' in crystal coordinates')") r_cry(1:3)
       WRITE(stdout, "(5x, 3f9.4, ' in Cartesian coordinates (Angstrom)')") r_cart(1:3)
-      WRITE (file_unit, '("END_DATAGRID_3D",/, "END_BLOCK_DATAGRID_3D")')
-      CLOSE(file_unit)
+      WRITE(ipsirplrn, '("END_DATAGRID_3D",/, "END_BLOCK_DATAGRID_3D")')
+      CLOSE(ipsirplrn)
       WRITE(stdout, "(5x, '|\Psi(r)|^2 written to file.')")
     ENDIF
+    DEALLOCATE(dtau, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating dtau', 1)
+    DEALLOCATE(eigvec_wan , STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating wann_func', 1)
     DEALLOCATE(wann_func, STAT = ierr)
     IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating wann_func', 1)
     DEALLOCATE(cvec , STAT = ierr)
-    IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating wann_func', 1)
-    DEALLOCATE(eigvec_wan , STAT = ierr)
     IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating wann_func', 1)
     !-----------------------------------------------------------------------------------
     END SUBROUTINE write_real_space_wavefunction
@@ -5159,15 +4366,14 @@
     !!     xsf format no longer compatible,
     !!     as .cube files are written in primitive coords.
     !-----------------------------------------------------------------------------------
-    USE constants_epw, ONLY : zero, czero, cone, twopi, ci, bohr2ang
-    USE epwcom,        ONLY : nbndsub, step_wf_grid_plrn, as, scell_mat
-    USE io_var,        ONLY : iun_plot, iunRpscell, iunpsirscell
-    USE io_files,      ONLY : prefix
+    USE ep_constants,  ONLY : zero, czero, cone, twopi, ci, bohr2ang
+    USE input,         ONLY : nbndsub, step_wf_grid_plrn, as
+    USE io_var,        ONLY : iunpsirscell
     USE io_global,     ONLY : stdout, ionode, meta_ionode_id
     USE cell_base,     ONLY : at, alat
     USE mp,            ONLY : mp_sum, mp_bcast
     USE mp_world,      ONLY : world_comm
-    USE division,      ONLY : fkbounds
+    USE parallelism,   ONLY : fkbounds
     USE mp_global,     ONLY : inter_pool_comm
     USE low_lvl,       ONLY : matinv3
     !
@@ -5178,78 +4384,92 @@
     INTEGER :: ierr
     !! Error status
     INTEGER :: nktotf_p
-    !! FIXME
+    !! Number of k-points in fine grid
     INTEGER :: nkf1_p
-    !! FIXME
+    !! Fine k-point grid along b1
     INTEGER :: nkf2_p
-    !! FIXME
+    !! Fine k-point grid along b2
     INTEGER :: nkf3_p
-    !! FIXME
-    INTEGER :: nbnd_plrn_p
-    !! FIXME
+    !! Fine k-point grid along b3
+    INTEGER :: nbndsub_p
+    !! Number of bands in polaron wave function expansion
+    INTEGER :: nplrn_p
+    !! Number of polaron states
     INTEGER :: species(50)
-    !! FIXME
+    !! Atomic species in unit cell
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: indexkn1
-    !! FIXME
+    !! Combined band and k-point index
     INTEGER :: ig_vec(1:3)
-    !! FIXME
+    !! Supercell latice vector coordinates
     INTEGER :: ir1, ir2, ir3
-    !! FIXME
+    !! Real space grid counters
     INTEGER :: iRp1
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: iRp2
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: n_grid_total
-    !! FIXME
+    !! Number of points in real space grid within supercell
     INTEGER :: ip_min
-    !! FIXME
+    !! First lattice vector within this pool 
     INTEGER :: ip_max
-    !! FIXME
+    !! Last lattice vector within this pool
     INTEGER :: n_grid(3)
-    !! FIXME
+    !! Number of grid points in cell where Wannier functions are written
     INTEGER :: grid_start(3)
-    !! FIXME
+    !! Initial grid point within this pool
     INTEGER :: grid_end(3)
-    !! FIXME
-    INTEGER :: n_grid_super(3)
-    !! FIXME
+    !! Final grid point within this pool
     INTEGER :: r_in_crys_p_sup(3)
-    !! FIXME
+    !! Real space grid point indices in supercell
     INTEGER :: ishift
-    !! FIXME
+    !! Shift counter
     INTEGER :: shift(3)
-    !! FIXME
+    !! Shift vector coordinates
     REAL(KIND = DP) :: r_in_crys_p(3)
-    !! FIXME
+    !! Unit cell grid points in crystal coordinates
     REAL(KIND = DP) :: r_in_crys_s(3)
-    !! FIXME
+    !! Supercell grid points in crystal coordinates
     REAL(KIND = DP) :: r_in_cart(3)
-    !! FIXME
-    REAL(KIND = DP) :: Rp_in_cart(3)
-    !! FIXME
+    !! Supercell grid points in cartesian coordinates
     REAL(KIND = DP) :: p2s(3, 3)
-    !! FIXME
+    !! Primitive to supercell coordinate transformation
     REAL(KIND = DP) :: s2p(3,3)
-    !! FIXME
+    !! Supercell to primitive coordinate transformation
     REAL(KIND = DP), ALLOCATABLE :: wann_func(:, :, :, :)
-    !! FIXME
-    REAL(KIND = DP), ALLOCATABLE :: rvec(:)
-    !! FIXME
+    !! Wannier functions in real space grid
     COMPLEX(KIND = DP) :: cvec
-    !! FIXME
+    !! Polaron wave function modulus squared
     COMPLEX(KIND = DP), ALLOCATABLE :: eigvec_wan(:, :)
-    !! FIXME
+    !! Polaron wave function coefficient in Wannier basis, Amp
     !
     ! Broadcast supercell lattice vectors
     CALL mp_bcast(as, meta_ionode_id, world_comm)
     !
     ! read Amp.plrn, save eigvec_wan
-    CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbnd_plrn_p, 'Amp.plrn', .true.)
+    IF (ionode) THEN
+      CALL read_plrn_wf_grid(nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p, 'Amp.plrn')
+    END IF
+    CALL mp_bcast(nkf1_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nkf2_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nkf3_p,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nktotf_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nbndsub_p, meta_ionode_id, world_comm)
+    CALL mp_bcast(nplrn_p,  meta_ionode_id, world_comm)
+    !
+    ALLOCATE(eigvec_wan(nktotf_p * nbndsub_p, nplrn_p), STAT = ierr)
+    IF (ierr /= 0) CALL errore('interp_plrn_wf', 'Error allocating eigvec_wan', 1)  
+    !
+    IF (ionode) THEN
+      CALL read_plrn_wf(eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p, 'Amp.plrn')
+    END IF
+    CALL mp_bcast(eigvec_wan, meta_ionode_id, world_comm)
+    !
     ! read cube files for the real-space Wannier function Wm(r)
     CALL read_wannier_cube(select_bands_plrn, wann_func, species, &
        n_grid, grid_start, grid_end)
+    !
     ! Read list of Rp-s within supercell
     CALL read_Rp_in_S()
     WRITE(stdout, '(a, i12)') "     Number of unit cells within supercell:", nRp
@@ -5346,67 +4566,63 @@
     !-----------------------------------------------------------------------------------
     !! Read the nth Wannier function from prefix_0000n.cube file
     !-----------------------------------------------------------------------------------
-    USE constants_epw, ONLY : zero, czero, cone
+    USE ep_constants,  ONLY : zero, czero, cone
     USE io_var,        ONLY : iun_plot
     USE io_files,      ONLY : prefix
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
-    USE cell_base,     ONLY : at, alat
+    USE io_global,     ONLY : ionode, meta_ionode_id
     USE mp,            ONLY : mp_sum, mp_bcast
     USE mp_world,      ONLY : world_comm
-    USE division,      ONLY : fkbounds
-    USE mp_global,     ONLY : inter_pool_comm
-    USE epwcom,        ONLY : nbndsub
+    USE parallelism,   ONLY : fkbounds
+    USE input,         ONLY : nbndsub
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in)  :: select_bands(:)
-    !! FIXME
+    !! Wannier functions in which polaron wave function has been expanded
     INTEGER, INTENT(out) :: species(50)
-    !! FIXME
+    !! Atomic species
     INTEGER, INTENT(out) :: n_grid(3)
-    !! FIXME
+    !! Number of points in real space grid where Wannier functions are written
     INTEGER, INTENT(out) :: grid_start_min(3)
-    !! FIXME
+    !! Initial grid point within this pool
     INTEGER, INTENT(out) :: grid_end_max(3)
-    !! FIXME
+    !! Final grid point within this pool
     REAL(KIND = DP), ALLOCATABLE, INTENT(out) :: wann_func(:, :, :, :)
-    !! FIXME
+    !! Wannier function in real space
     !
     ! Local variables
     CHARACTER(LEN = 60) :: wancube
-    !! FIXME
+    !! Name of file containing Wannier function
     CHARACTER(LEN = 60) :: temp_str
-    !! FIXME
+    !! Temporary string
     INTEGER :: ierr
     !! Error status
-    INTEGER :: ibnd_index
-    !! FIXME
     INTEGER :: ibnd
-    !! FIXME
+    !! Electron band counter
     INTEGER :: ie
-    !! FIXME
+    !! Atomic species counter
     INTEGER :: idir
-    !! FIXME
+    !! Cartesian direction counter
     INTEGER :: i_species
-    !! FIXME
+    !! Atomic species index
     INTEGER :: nbnd
-    !! FIXME
+    !! Number of Wannier funcions in which polaron wave function is expanded
     INTEGER :: iline
-    !! FIXME
+    !! Counter along line
     INTEGER :: nAtoms
-    !! FIXME
+    !! Total number of atoms
     INTEGER :: nxx, nyy, nzz
-    !! FIXME
+    !! Number of grid points in Cartesian directions
     INTEGER :: n_len_z
-    !! FIXME
+    !! Number of grid points within this pool
     INTEGER :: grid_start(3)
-    !! FIXME
+    !! Initial grid point within this loop
     INTEGER :: grid_end(3)
-    !! FIXME
+    !! Final grid point within this loop
     REAL(KIND = DP) :: rtempvec(4)
-    !! FIXME
+    !! Temporary vector to be read from .cube file
     REAL(KIND = DP) :: norm
-    !! FIXME
+    !! Wannier function normalization
     !
     nbnd = SIZE(select_bands)
     ! find the max and min of real space grid of Wannier functions of all Wannier orbitals
@@ -5489,23 +4705,23 @@
     SUBROUTINE read_Rp_in_S()
     !-----------------------------------------------------------------------------------
     ! JLB
-    !! Read list of Rp unit cell vectors contained on transformed supercell
+    !! Allocate and read list of Rp unit cell vectors contained on transformed supercell
     !-----------------------------------------------------------------------------------
     USE io_var,    ONLY : iunRpscell
-    USE io_global, ONLY : stdout, ionode, meta_ionode_id
+    USE io_global, ONLY : ionode, meta_ionode_id
     USE mp,        ONLY : mp_bcast
     USE mp_world,  ONLY : world_comm
-    USE elph2,     ONLY : nqtotf
+    USE global_var,ONLY : nqtotf
     !
     IMPLICIT NONE
     !
     ! Local variables
     INTEGER :: iRp
-    !! FIXME
+    !! Lattice vector counter
     INTEGER :: ierr
-    !! FIXME
+    !! Error status
     INTEGER :: nRp2
-    !! FIXME
+    !! Number of lattice vectors within supercell
     !
     IF (ionode) THEN
       OPEN(UNIT = iunRpscell, FILE = 'Rp.scell.plrn', FORM = 'formatted', STATUS = 'unknown')
@@ -5535,20 +4751,20 @@
     !-----------------------------------------------------------------------------------
     !! Index
     !-----------------------------------------------------------------------------------
-    USE epwcom, ONLY: nqf1, nqf2, nqf3
+    USE input,      ONLY: nqf1, nqf2, nqf3
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iRp
-    !! FIXME
+    !! Lattice vector index
     INTEGER, INTENT(in), OPTIONAL  :: nqfs(1:3)
-    !! FIXME
+    !! k/q points along each direcion in grid
     !
     ! Local variable
     INTEGER  :: index_Rp(1:3)
-    !! FIXME
+    !! Lattice vector in crystal coords
     INTEGER  :: nqf_c(1:3)
-    !! FIXME
+    !! k/q points along each direcion in grid
     !
     IF (PRESENT(nqfs)) THEN
       nqf_c(1:3) = nqfs(1:3)
@@ -5567,43 +4783,18 @@
     END FUNCTION index_Rp
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
-    FUNCTION index_xp(delta_p)
-    !-----------------------------------------------------------------------------------
-    !! FIXME
-    !-----------------------------------------------------------------------------------
-    USE elph2,  ONLY : nqtotf
-    USE epwcom, ONLY : nqf1, nqf2, nqf3
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in)  :: delta_p(1:3)
-    !! FIXME
-    !
-    ! Local variable
-    INTEGER :: index_xp
-    !! FIXME
-    !
-    index_xp = delta_p(1) * nqf2 * nqf3 + delta_p(2) * nqf3 + delta_p(3) + 1
-    !
-    IF (.NOT. ALL(index_Rp(index_xp) == delta_p(1:3))) THEN
-       CALL errore('index_xp', 'index_Rp not correct!', 1)
-    ENDIF
-    !-----------------------------------------------------------------------------------
-    END FUNCTION index_xp
-    !-----------------------------------------------------------------------------------
-    !-----------------------------------------------------------------------------------
     FUNCTION index_shift(ishift)
     !-----------------------------------------------------------------------------------
-    !! FIXME
+    !! Find supercell lattice vector in crystal coords for shift loop around neighbors
     !-----------------------------------------------------------------------------------
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ishift
-    !! FIXME
+    !! Shift vector index
     !
     ! Local variable
     INTEGER  :: index_shift(1:3)
-    !! FIXME
+    !! Shift vector crystal coords.
     !
     index_shift(1) = (ishift - 1) / 9 - 1
     index_shift(2) = MOD(ishift - 1, 9) / 3 - 1
@@ -5615,6 +4806,56 @@
     !-----------------------------------------------------------------------------------
     END FUNCTION index_shift
     !-----------------------------------------------------------------------------------
+    !
+    SUBROUTINE plrn_close()
+    !-----------------------------------------------------------------------------------
+    !! Deallocate arrays and close polaron calculations
+    !-----------------------------------------------------------------------------------
+    USE input,         ONLY : model_vertex_plrn, interp_Ank_plrn, &
+                              interp_Bqu_plrn, cal_psir_plrn, scell_mat_plrn
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ierr
+    !! Error status
+    !
+    IF (.NOT. (interp_Ank_plrn .OR. interp_Bqu_plrn .OR. cal_psir_plrn)) THEN
+      DEALLOCATE(is_mirror_k, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating is_mirror_k', 1)
+      DEALLOCATE(is_mirror_q, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating is_mirror_q', 1)
+      DEALLOCATE(is_tri_k, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating is_tri_k', 1)
+      DEALLOCATE(is_tri_q, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating is_tri_q', 1)
+      DEALLOCATE(kpg_map, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating kpg_map', 1)
+      DEALLOCATE(Hamil, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating Hamil', 1)
+    ENDIF
+    DEALLOCATE(etf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating Hamil', 1)
+    DEALLOCATE(xkf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating xkf_all', 1)
+    DEALLOCATE(select_bands_plrn, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating select_bands_plrn', 1)
+    IF (interp_Ank_plrn .OR. (.NOT. (interp_Bqu_plrn .OR. cal_psir_plrn))) THEN
+      DEALLOCATE(eigvec, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating eigvec', 1)
+    END IF
+    IF (scell_mat_plrn) THEN
+      DEALLOCATE(Rp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating Rp', 1)
+    END IF
+    IF (model_vertex_plrn) THEN
+      DEALLOCATE(gq_model, STAT = ierr)
+      IF (ierr /= 0) CALL errore('plrn_close', 'Error deallocating gq_model', 1)
+    END IF
+    !
+    !-----------------------------------------------------------------------------------    
+    END SUBROUTINE plrn_close
+    !-----------------------------------------------------------------------------------
+  !  
   !-----------------------------------------------------------------------------------
   END MODULE polaron
   !-----------------------------------------------------------------------------------

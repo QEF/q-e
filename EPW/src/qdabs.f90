@@ -32,13 +32,13 @@
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nstemp, fsthick, degaussw,                                  &
-                              eps_acustic, efermi_read, fermi_energy, nq_init,            &
-                              vme, omegamin, omegamax, omegastep, len_mesh, meshnum,      &
+    USE input,         ONLY : nstemp, fsthick, degaussw,                                  &
+                              eps_acoustic, efermi_read, fermi_energy, nq_init,           &
+                              omegamin, omegamax, omegastep, len_mesh, meshnum,           &
                               wf_quasi, start_mesh, mode_res, QD_bin, QD_min, do_CHBB
-    USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf,             &
+    USE global_var,    ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf,             &
                               sigmar_all, efnew, gtemp,nkqtotf,nkqf,                      &
-                              dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz,            &
+                              omegap, epsilon2_abs, epsilon2_abs_lorenz,                  &
                               vmef, epsilon2_direct, epsilon2_indirect, epsilon2_qdirect, &
                               totf, nbndfst, nktotf, Energy, E_mesh, H_quad, xkf, xqf,    &
                               E_grid, Qa, tot, totcv, Eigenvec, Eigenval, n_q, sum_E,     &
@@ -48,16 +48,16 @@
                               stop_qdabs, H_temp, size_m, c_ph, c_dir, c_ph_v, c_dir_v,   &
                               r_tot, H_mat, H_ind1, H_ind2, Eigenvec_alloc_write,         &
                               xkf_write
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci,         &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci,         &
                               eps6, czero, eps8, eps4,eps5
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm,npool, my_pool_id
     USE cell_base,     ONLY : omega,bg,at
-    USE division,      ONLY : fkbounds2
+    USE parallelism,   ONLY : fkbounds2
     USE mp_world,      ONLY : mpime, world_comm
-    USE grid,          ONLY : kpmq_map
+    USE bzgrid,        ONLY : kpmq_map
     USE low_lvl,       ONLY : init_random_seed
-    USE epw_stop,      ONLY : stop_epw
+    USE stop,          ONLY : stop_epw
     !
     IMPLICIT NONE
     !
@@ -128,7 +128,7 @@
     REAL(KIND = DP) :: imode_rr
     !! mode for determining occupation number for MC
     REAL(KIND = DP) :: i_rr
-    !! index for MC 
+    !! index for MC
     REAL(KIND = DP) :: start
     !! Internals for timing, variables for MC integration
     REAL(KIND = DP) :: finish
@@ -154,7 +154,7 @@
     ! END allocating variables for qdabs
     !
     IF ((iq == nqtotf) .AND. (mesh == 1) .AND. (run_quad == 1)) THEN
-      ! Monte-Carlo method of integration     
+      ! Monte-Carlo method of integration
       !
       IF (n == -3) THEN
         WRITE(stdout, '(/5x,a)') 'Monte-Carlo method &
@@ -216,7 +216,7 @@
       ! Monte-Carlo integration
     ENDIF
     ! Starting to build quasi degnerate states and Hamiltonian
-    ! 
+    !
     IF (mesh > 0) THEN ! This is here in case we implement adaptive grid
       ! Build H_quad which has all the interaction strengths over k and k+q
       !
@@ -225,7 +225,7 @@
         WRITE(stdout, '(/5x,a,I10)') 'Performing mesh =', mesh
         !
         IF (INT(Energy(mesh, my_pool_id + 1, 1)) > 0) THEN
-          !  
+          !
           ALLOCATE(H_quad(INT(Energy(mesh, my_pool_id + 1, 1)), 14), STAT = ierr)
           IF (ierr /= 0) CALL errore('qdabs_main','Error allocating H_quad', 1)
           H_quad = -1!0.d0
@@ -241,11 +241,11 @@
         ALLOCATE(H_temp(INT(MAXVAL(Energy(mesh,:,1))), 13), STAT=ierr)
         IF (ierr /= 0) CALL errore('qdabs_main','Error allocating H_temp', 1)
         H_temp = 0.d0
-        WRITE(stdout,'(/5x,a,3I10)') 'Size of H_temp',nqtotf,INT(MAXVAL(Energy(mesh,:,1))),&
-                                                  INT(Energy(mesh, my_pool_id + 1, 1))
+        IF (iverbosity == 5) WRITE(stdout,'(/5x,a,3I10)') 'Size of H_temp', & 
+            nqtotf,INT(MAXVAL(Energy(mesh,:,1))), INT(Energy(mesh, my_pool_id + 1, 1))
       ENDIF
       CALL mp_barrier(inter_pool_comm)
-      !   
+      !
       IF ((len_mesh > 2) .AND. (run_quad == 1)) THEN
         !
         CALL build_quasi_eig(iq, E_mesh, len_mesh, mesh, n)
@@ -263,9 +263,9 @@
           !
           CALL mp_sum(Energy, inter_pool_comm)
           CALL mp_barrier(inter_pool_comm)
-          !  
+          !
           E_grid = 0.d0
-          !  
+          !
           DO i = 1,npool
             DO j = 1,len_mesh
               E_grid(j) = E_grid(j)+Energy(j, i, 1)
@@ -281,7 +281,7 @@
               Energy(j, 1, 3) = Energy(j, 1, 3)+Energy(j, i, 3)
             ENDDO
           ENDDO
-          ! Write Energies which have the JDOS and QD JDOS  
+          ! Write Energies which have the JDOS and QD JDOS
           IF (my_pool_id == ionode_id) THEN
             !
             nameF = 'Energy.dat'
@@ -301,7 +301,8 @@
         ! END writing Energy
         !
         WRITE(stdout, '(5x,a)') 'Finished sorting, Entering eigenvalue calculation'
-        WRITE(stdout, '(5x,a,I10)') 'Number of states in mesh = ', INT(E_grid(mesh))
+        IF (iverbosity == 5) WRITE(stdout, '(5x,a,I10)') 'Number of states in mesh = & 
+                             ', INT(E_grid(mesh))
         !
         CALL mp_barrier(inter_pool_comm)
         !
@@ -317,16 +318,16 @@
           ! One should always check if r_tot<size_v*size_m
           !
           size_m=INT(E_grid(mesh))
-          ! This is risky because if we assume all states are independent, the 
+          ! This is risky because if we assume all states are independent, the
           ! maximum size should be 4*size(H_mat) but ideally that does not happen
           ! Weird eigenvalues are a result of this problem but there is no
-          ! alternative     
+          ! alternative
           IF (size_m < 500) THEN
             size_v=4
           ELSE
             size_v=3
           ENDIF
-          WRITE(stdout, '(/5x,a,I10)') 'QD array rank = ', size_m
+          IF (iverbosity == 5) WRITE(stdout, '(/5x,a,I10)') 'QD array rank = ', size_m
           !
           ALLOCATE(Eigenval(size_m), STAT = ierr)
           IF (ierr /= 0) CALL errore('qdabs_main', 'Error allocating Eigenval(size_m)', 1)
@@ -346,7 +347,7 @@
           CALL build_quasi_hamiltonian(E_mesh, len_mesh, mesh, n)
           !
           totf= INT(tot-totcv)
-          !  
+          !
           CALL mp_barrier(inter_pool_comm)
           !
           DEALLOCATE(H_quad, STAT = ierr)
@@ -354,7 +355,9 @@
           DEALLOCATE(H_temp, STAT = ierr)
           IF (ierr /= 0) CALL errore('qdabs', 'Error deallocating H_temp', 1)
           !
-          WRITE(stdout,'(/5x,a,I10,I10,3I10)') 'tot, totf,totcv,size_tot', tot, totf, totcv, size_tot
+          IF (iverbosity == 5) THEN  
+            WRITE(stdout,'(/5x,a,I10,I10,3I10)') 'tot, totf,totcv,size_tot', tot, totf, totcv, size_tot
+          ENDIF   
           !
           IF (size_tot > 0) THEN
             ALLOCATE(Eigenvec_alloc_pool(size_tot, tot), STAT = ierr)
@@ -372,24 +375,24 @@
             index_buf_pool = -1
           ENDIF
           CALL mp_barrier(inter_pool_comm)
-          WRITE(stdout,'(/5x,a)') 'Allocated Eigenvec_pool'
-          !  
+          IF (iverbosity == 5) WRITE(stdout,'(/5x,a)') 'Allocated Eigenvec_pool'
+          !
           CALL diag_quasi_hamiltonian(E_mesh, len_mesh, mesh, n)
-          !  
+          !
           CALL mp_barrier(inter_pool_comm)
-          !  
+          !
           IF (wf_quasi /= -1 ) THEN
             IF (wf_quasi == 1) THEN
               ALLOCATE(Eigenvec_alloc_write(npool, 30, tot), STAT=ierr)
               IF (ierr /= 0) CALL errore('qdabs_main', 'Error allocating Eigenvec_alloc_write(tot)', 1)
               ALLOCATE(xkf_write(npool, 30, tot, 6), STAT=ierr)
               IF (ierr /= 0) CALL errore('qdabs_main', 'Error allocating xkf_write(tot)', 1)
-              !  
+              !
             ENDIF
             CALL write_wf_quasi(mesh, wf_quasi)
             !
           ENDIF
-          !   
+          !
           CALL mp_barrier(inter_pool_comm)
           !
           DEALLOCATE(H_mat, STAT = ierr)
@@ -412,14 +415,14 @@
           epsilon2_qdirect2_DW = 0.d0
           c_ph_v = 0.d0
           c_dir_v = 0.d0
-          !  
+          !
           ! Obtain maximum number of elements per pool
-          !  
-          WRITE(stdout,'(/5x,a)') 'Finished distributing Eigenvec:'
+          !
+          IF (iverbosity == 5) WRITE(stdout,'(/5x,a)') 'Finished distributing Eigenvec:'
           !
           CALL mp_bcast(Eigenval,ionode_id, world_comm)
           CALL mp_barrier(inter_pool_comm)
-          ! Distribution of Eigenvectors finished 
+          ! Distribution of Eigenvectors finished
           IF (iverbosity == 5) THEN
             WRITE(stdout,'(a,I10,2I10)') 'Number of total states, phonon states, and direct states', &
                     INT(tot), INT(totf), INT(totcv)
@@ -442,7 +445,7 @@
         !
         IF (do_CHBB) THEN
           IF (iq == 1) THEN
-            WRITE(stdout,'(/5x,a)') 'You are additionally performing CHBB   &
+            WRITE(stdout, '(/5x, a)') 'You are additionally performing CHBB   &
                                      calculations (expect slowdown) '
           ENDIF
           CALL calc_CHBB(nomega, iq)
@@ -455,19 +458,20 @@
         !
       ENDIF
       !
-      ! Now calculate for QD states 
+      ! Now calculate for QD states
       !
       IF ((run_quad == 2) .AND. (E_grid(mesh) > 0) .AND. (stop_qdabs == 0)) THEN
         !
         ! epsilon2 for each QD state
         !
+        IF (iq == 1) WRITE(stdout, '(/5x, a)') 'Performing epsilon summation'
         CALL calc_qdirect(mesh, nomega, iq, n, sum_E, tot_calc, .False.)
-        ! 
+        !
         IF ((mesh > 0) .AND. (mesh < len_mesh)) THEN
           ! states which are in the QD bin but not QD
           !
           CALL calc_qdirect_DW(mesh, nomega, iq, n, sum_E, 2, tot_calc_DW)
-          ! 
+          !
         ENDIF
         !
         ! Sum QD epsilon2 for all q points
@@ -487,7 +491,7 @@
           CALL mp_sum(tot_calc_DW, inter_pool_comm)
           CALL mp_barrier(inter_pool_comm)
           !
-          IF (ABS(tot-tot_calc_DW) > 0) THEN
+          IF ((iverbosity == 5) .AND. (ABS(tot-tot_calc_DW) > 0)) THEN
             ! This checks if all the states in the QD bin are found when
             ! summation over k,q is performed
             ! For mp_mesh_k, tot and tot_calc may not be equal because of extra
@@ -503,7 +507,7 @@
           DO i = 1, tot
             !
             IF (iverbosity == 5) THEN
-              !   
+              !
               WRITE(stdout,'(/5x,a,E22.14)') 'Eigenval', REAL(Eigenval(i))*ryd2ev
             ENDIF
             ! Sum over all photon energies !!!!!!!!!!!!!!!!!1
@@ -540,7 +544,7 @@
             ENDDO ! Photon
           ENDDO ! tot, Eigenval
           CALL mp_barrier(inter_pool_comm)
-          ! QD  
+          ! QD
           IF (iverbosity == 5) THEN
             ! To debug distribution of k points !
             l = 0
@@ -556,14 +560,14 @@
           ENDIF
           CALL mp_barrier(inter_pool_comm)
           CALL mp_sum(tot_pool, inter_pool_comm)
-          WRITE(stdout,'(/5x,a,I10)') 'tot_pool_sum =', tot_pool
+          IF (iverbosity == 5) WRITE(stdout,'(/5x,a,I10)') 'tot_pool_sum =', tot_pool
           !
           epsilon2_abs(:, :, 3, 1) = epsilon2_abs(:, :, 1, 1)
           ! Set everything to startig values for next meshpoint
           ! calculation
           !
           ! Deallocate everything that belongs to pools which changes
-          ! in next mesh calculation 
+          ! in next mesh calculation
           DEALLOCATE(Eigenvec_alloc_pool, STAT = ierr)
           IF (ierr /= 0)CALL errore('qdabs_main', 'Error deallocating Eigenvec_alloc_pool2(tot,tot)', 1)
           DEALLOCATE(index_buf_pool, STAT = ierr)
@@ -581,12 +585,12 @@
           DEALLOCATE(c_dir_v, STAT = ierr)
           IF (ierr /= 0) CALL errore('qdabs_main', 'Error deallocating epsilon2_qdirect2', 1)
           IF (wf_quasi == 1 ) THEN
-            ! 
+            !
             DEALLOCATE(Eigenvec_alloc_write, STAT = ierr)
             IF (ierr /= 0) CALL errore('qdabs_main', 'Error deallocating Eigenvec_alloc_write(tot)', 1)
             DEALLOCATE(xkf_write, STAT = ierr)
             IF (ierr /= 0) CALL errore('qdabs_main', 'Error deallocating Eigenvec_alloc_write(tot)', 1)
-            ! 
+            !
           ENDIF
           !
           CALL mp_barrier(inter_pool_comm)
@@ -604,8 +608,8 @@
     ENDIF
     ! Last calculation of mesh write everything
     ! stop_qdabs for future imeplementation to stop calculation at a meshgrid
-    ! 
-    IF (((iq == nqtotf) .AND. (mesh == meshnum) .AND. & 
+    !
+    IF (((iq == nqtotf) .AND. (mesh == meshnum) .AND. &
        (run_quad == 2)) .OR. (stop_qdabs == 1)) THEN
       !
       CALL mp_barrier(inter_pool_comm)
@@ -625,7 +629,7 @@
       stop_qdabs = 1
     ENDIF
     CALL mp_barrier(inter_pool_comm)
-    ! 
+    !
     ! END Write
     !
     IF (stop_qdabs == 1) THEN
@@ -651,34 +655,34 @@
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nstemp, fsthick, degaussw,                                  &
-                              eps_acustic, efermi_read, fermi_energy, nq_init, vme,       &
+    USE input,         ONLY : nstemp, fsthick, degaussw,                                  &
+                              eps_acoustic, efermi_read, fermi_energy, nq_init, vme,       &
                               omegamin, omegamax, omegastep, len_mesh, meshnum, wf_quasi, &
                               start_mesh, mode_res, QD_bin, QD_min, lifc
-    USE elph2,         ONLY : nqtotf, wf, wqf,nkqtotf,nkqf, omegap, epsilon2_abs,         &
+    USE global_var,    ONLY : nqtotf, wf, wqf,nkqtotf,nkqf, omegap, epsilon2_abs,         &
                               epsilon2_abs_lorenz, epsilon2_direct, epsilon2_indirect,    &
                               epsilon2_qdirect, nktotf, Energy, E_mesh, E_grid,           &
                               epsilon2_qdirect2, epsilon2_qdirect2_DW, stop_qdabs, c_ph,  &
                               c_dir, c_ph_v, c_dir_v, r_tot, tot_calc, tot_calc_DW, gtemp,&
                               xqf
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci,         &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci,         &
                               eps6, czero, eps8, eps4,eps5
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
     USE cell_base,     ONLY : omega,bg,at
-    USE division,      ONLY : fkbounds2
+    USE parallelism,   ONLY : fkbounds2
     USE mp_world,      ONLY : mpime, world_comm
-    USE grid,          ONLY : kpmq_map
-    USE wan2bloch,     ONLY : dynwan2bloch, dynifc2blochf
+    USE bzgrid,        ONLY : kpmq_map
+    USE wannier2bloch, ONLY : dynwan2bloch, dynifc2blochf
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in)            :: nrr_q
-    !! Number of WS points for phonons 
+    !! Number of WS points for phonons
     INTEGER, INTENT(in)            :: irvec_q(:, :)
     !! INTEGER components of the ir-th Wigner-Seitz grid point for phonons
     INTEGER, INTENT(in)            :: ndegen_q(:, :, :)
-    !! Wigner-Seitz weights for the phonon grid that 
+    !! Wigner-Seitz weights for the phonon grid that
     !! depend on atomic positions $R + \tau(nb) - \tau(na)$
     REAL(KIND = DP), INTENT(in)    :: rws(0:3, 200)
     !! Number of real-space Wigner-Seitz vectors
@@ -736,7 +740,7 @@
     WRITE(stdout, '(5x,"Phonon-assisted absorption with quasidegenerate perturbation")')
     WRITE(stdout, '(5x,a/)') REPEAT('=',67)
     !
-    IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a)') 'The following temperatures are calculated:'
     DO itemp = 1, nstemp
       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
@@ -744,7 +748,7 @@
     WRITE(stdout,'(/5x,a,f10.6,a)' ) 'size for cell = ', (omega), ' per A'
     WRITE(stdout, '(/5x,a,I10)' ) 'nqtotf = ', nqtotf
     WRITE(stdout, '(/5x,a,I10)' ) 'nktotf = ', nktotf
-    ! 
+    !
     ALLOCATE(omegap(nomega), STAT = ierr)
     IF (ierr /= 0) CALL errore('prepare_qdabs', 'Error allocating omegap', 1)
     ALLOCATE(epsilon2_abs(3, nomega, neta + mode_res, nstemp), STAT = ierr)
@@ -799,7 +803,7 @@
     ELSE
       CALL dynifc2blochf(nmodes, rws, nrws, xxq_r, uf, w2, .false.)
     ENDIF
-    ! 
+    !
     DO iw = 1, nomega
       !
       omegap(iw) = omegamin + (iw - 1) * omegastep
@@ -826,7 +830,7 @@
       WRITE(stdout, '(/5x,a,I10)') 'Number of QDPT meshgrids to be performed: ', meshnum
       !
     ENDIF
-    ! 
+    !
     ALLOCATE(Energy(len_mesh, npool, 3), STAT=ierr)
     IF (ierr /= 0) CALL errore('prepare_qdabs', 'Error allocating Energy', 1)
     ALLOCATE(E_mesh(len_mesh), STAT=ierr)
@@ -873,13 +877,13 @@
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nstemp, omegamin, omegamax, omegastep,                      &
+    USE input,         ONLY : nstemp, omegamin, omegamax, omegastep,                      &
                               start_mesh, mode_res, QD_bin, QD_min, meshnum, do_CHBB
-    USE elph2,         ONLY : gtemp, nkqtotf, nkqf, c_dir, c_ph,                          &
+    USE global_var,    ONLY : gtemp, nkqtotf, nkqf, c_dir, c_ph,                          &
                               omegap, epsilon2_abs, epsilon2_abs_lorenz,                  &
                               epsilon2_direct, epsilon2_indirect, epsilon2_qdirect,       &
                               epsilon2_qdirect2, epsilon2_qdirect2_DW, sum_E
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
     !
@@ -906,7 +910,7 @@
     INTEGER :: ierr,ipol
     !! Error status and current pool index
     INTEGER,PARAMETER :: neta = 9
-    !! Number of broadening parameter for CHBB theory  
+    !! Number of broadening parameter for CHBB theory
     INTEGER :: neta1
     !! Number of modes+broadening
     !
@@ -932,6 +936,12 @@
                              & epsilon2_indabs_X_finalmesh.dat'
     WRITE(stdout, '(5x,a)')
     !
+    !Putting epsilon_x, epsilon_y, epsilon_z in m= 6, 7, 8
+    DO ipol = 1, 3
+      epsilon2_abs(ipol, :, 6, :) = epsilon2_abs(1, :, 1, :)
+      epsilon2_abs(ipol, :, 7, :) = epsilon2_abs(2, :, 1, :)
+      epsilon2_abs(ipol, :, 8, :) = epsilon2_abs(3, :, 1, :)
+    ENDDO
     ! Output to file
     neta1=neta+mode_res
     DO itemp = 1,nstemp
@@ -944,14 +954,14 @@
       WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy using QDPT'
       WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
       WRITE(iuindabs, '(a)') '# omega(eV), im(epsilon), im(epsilon(mid-eigs)), im(epsilon_QD), im(epsilon_phonon),&
-                                im(epsilon_direct), 0, 0, 0, 0, im(epsilon2(modes) '
+                                im(epsilon_direct), im(epsilon_x), im(epsilon_y), im(epsilon_z), 0, im(epsilon2(modes) '
       DO iw = 1, nomega
         WRITE(iuindabs, format_string) omegap(iw) * ryd2ev,(SUM(epsilon2_abs(:, iw, m, itemp)) / 3.0d0, m = 1, neta1)
       ENDDO
       CLOSE(iuindabs)
       !
       nameF = 'c_dir' // trim(adjustl(tp)) // 'K_' // trim(adjustl(mn)) // '.dat'
-      !  
+      !
       OPEN(UNIT = iuindabs, FILE = nameF)
       WRITE(iuindabs, '(a)') '# Direct contribution to epsilon2 vs energy'
       WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
@@ -959,9 +969,9 @@
         WRITE(iuindabs,'(/5x,2E22.14)' ) omegap(iw) * ryd2ev,(SUM(c_dir(:,iw))/3.0d0)
       ENDDO
       CLOSE(iuindabs)
-      !  
+      !
       nameF = 'c_ph' // trim(adjustl(tp)) // 'K_' // trim(adjustl(mn)) // '.dat'
-      !  
+      !
       OPEN(UNIT = iuindabs, FILE = nameF)
       WRITE(iuindabs, '(a)') '# Phonon-assisted contribution to epsilon2 versus energy'
       WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
@@ -1042,9 +1052,9 @@
      .OR. ((final_Ec <= bound_up) .AND. (final_Ec >= bound_dn)))) THEN
       !
       check_element = 1
-      !  
+      !
     ELSE
-      !  
+      !
       check_element = 0
     ENDIF
     !
@@ -1063,18 +1073,18 @@
     USE io_global,     ONLY : stdout
     USE control_flags, ONLY : iverbosity
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fermi_energy, eps_acustic,               & 
+    USE input,         ONLY : nstemp, fermi_energy, eps_acoustic,               &
                               degaussw, fsthick,filkf
-    USE elph2,         ONLY : etf, ibndmin, nkf,nqtotf, wf, wqf,               &
+    USE global_var,    ONLY : etf, ibndmin, nkf,nqtotf, wf, wqf,               &
                               nbndfst, nktotf, nkqtotf, epf17, nkqf, xkf, xqf, &
                               wkf, gtemp, totf_pool, totcv_pool, tot_pool,     &
                               index_buf_pool, H_quad, stop_qdabs, Energy, maxdim
     USE mp,            ONLY : mp_barrier, mp_bcast
     USE mp_global,     ONLY : my_pool_id, npool, inter_pool_comm
     USE cell_base,     ONLY : omega
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi,  &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi,  &
                               ci, eps40, czero, eps8
-    USE grid,          ONLY : kpmq_map
+    USE bzgrid,        ONLY : kpmq_map
     !
     IMPLICIT NONE
     !
@@ -1090,7 +1100,7 @@
     !! Type of approximation for occupation number
     !
     ! Local variables
-    !    
+    !
     INTEGER :: i,ii,j,c,v,pool_id,ab,l,leng,suc,nk
     !! integers used for do loops and if statements
     INTEGER :: cv,k_init,k_final,check
@@ -1120,12 +1130,12 @@
     REAL(KIND = DP) :: nqv(nmodes),nq
     !! phonon occupation
     REAL(KIND = DP), EXTERNAL :: w0gauss
-    !! Gaussian weight function 
+    !! Gaussian weight function
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Fermi-Dirac distribution function (when -99)
     REAL(KIND = DP) :: xt(3)
     !! Buffer array
-    ! 
+    !
     ii = 1
     xt = 0.d0
     cv = 0
@@ -1145,7 +1155,7 @@
         k_final = -1
         CALL kpmq_map(xkf(:,ikk), xqf(:,iq), 1, k_final)
         CALL kpmq_map(xkf(:,ikk), xt, 1, k_init)
-        ! 
+        !
         DO c = 1, nbndfst
           IF (etf(ibndmin - 1 + c, ikk) <= fermi_energy) CYCLE
           !
@@ -1168,17 +1178,17 @@
               IF ((ABS(ekkcb) > fsthick) .OR. (ABS(ekqcb) > fsthick)) CYCLE
               !
               DO imode = 1, nmodes
-                IF (wf(imode, iq) < eps_acustic) CYCLE
+                IF (wf(imode, iq) < eps_acoustic) CYCLE
                 DO ab = 1, 2
                   nqv(imode) = wgauss(-wf(imode,iq) / gtemp(1), -99)
                   nqv(imode) = nqv(imode) / (one - two * nqv(imode))
-
+                  !  
                   IF (n == -1) THEN
                     nq = nqv(imode)
                   ELSEIF (n == -2) THEN
                     nq = FLOOR(nqv(imode))
                   ENDIF
-
+                  !  
                   IF (cv==10) THEN
                     ! c->c' type transition |vk>|ck>   -> |vk>|ck+q>
                     initial_E = ekkcb-ekkvb
@@ -1188,7 +1198,7 @@
                     initial_E = ekqcb-emkq
                     final_E = ekqcb-emkq+emkq-ekkvb
                   ENDIF
-
+                  !
                   IF (ab==1) THEN
                     ! Emission
                     final_E = final_E+wf(imode,iq)
@@ -1198,17 +1208,17 @@
                     final_E = final_E-wf(imode,iq)
                     nq = nq-1
                   ENDIF
-                  !   
+                  !
                   pool_id = my_pool_id+1
                   !
                   IF (meshin == 1) THEN
                     weightd = (w0gauss((initial_E-E_mesh(mesh)) / degaussw, 0) / degaussw) * &
                       (w0gauss((final_E-E_mesh(mesh)) / degaussw, 0) / degaussw)
-
+                    !
                     Energy(mesh,pool_id,2) = Energy(mesh,pool_id,2) + weightd * (wkf(ikk) / 2.0) * &
                                                       wqf(iq)* (1.0/omega)
                     weightd= (w0gauss((initial_E-E_mesh(mesh)) / degaussw, 0) / degaussw)
-
+                    !
                     Energy(mesh,pool_id,3) = Energy(mesh,pool_id,3) + weightd * (wkf(ikk) / 2.0) * &
                                                        (1.0/omega)
                     !WRITE(stdout,'(a,E22.14)') 'Energy',Energy(mesh,pool_id,2)
@@ -1237,13 +1247,13 @@
                        ! check = INT(check_final(c, k_final, k_init, v, iq, imode, tot_pool, &
                        !     index_buf_pool(1:tot_pool, 1:5), nq, 2))
                       !ENDIF
-                      !  
+                      !
                       IF (check == -1) THEN
                         suc = 2
                       ELSE
                         WRITE(stdout, '(5x,a)') 'Found_match'
                       ENDIF
-                      ! 
+                      !
                     ELSE
                       suc = 0
                     ENDIF
@@ -1268,7 +1278,7 @@
                         H_quad(ii, 7) = 1.0*CONJG(epf17(v, j, imode, k)) &
                                    * DSQRT(wqf(iq)) * (1.0 / (DSQRT(2 * (wf(imode, iq)))))
                       ENDIF
-
+                      !  
                       H_quad(ii, 8) = v
                       H_quad(ii, 9) = emkq
                       IF (ab == 1) THEN
@@ -1283,11 +1293,11 @@
                       ii = ii+1
                       !
                     ENDIF ! suc == 2 and meshin > 1
-                  ENDIF !suc >0 
+                  ENDIF !suc >0
                 ENDDO ! absorption or emission
-              ENDDO ! imode 
+              ENDDO ! imode
             ENDDO ! virtual band c or v
-          ENDDO ! valence band 
+          ENDDO ! valence band
         ENDDO ! conduction band
       ENDDO ! kpoint
     ENDDO! mesh
@@ -1316,9 +1326,9 @@
     USE io_global,     ONLY : stdout, ionode_id
     USE modes,         ONLY : nmodes
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nstemp, fermi_energy, nkf1, nkf2, nkf3,    &
+    USE input,         ONLY : nstemp, fermi_energy, nkf1, nkf2, nkf3,    &
                               mp_mesh_k, filkf
-    USE elph2,         ONLY : etf, ibndmin, gtemp, nkf, nqtotf, wf, wqf, & 
+    USE global_var,    ONLY : etf, ibndmin, gtemp, nkf, nqtotf, wf, wqf, &
                               nbndfst, epf17, nkqtotf, xkf, nkqf,        &
                               bztoibz, H_quad, Energy, stop_qdabs,       &
                               Eigenvec_alloc_pool, Eigenval,do_elpa,     &
@@ -1329,9 +1339,9 @@
     USE mp_global,     ONLY : my_pool_id, npool, inter_pool_comm!,mp_rank
     USE mp,            ONLY : mp_bcast,mp_barrier,mp_sum
     USE cell_base,     ONLY : omega, at, bg
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two,      &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two,      &
                               zero, pi, ci, eps8, eps20, czero, eps40
-    USE grid,          ONLY : kpmq_map
+    USE bzgrid,        ONLY : kpmq_map
     !
     IMPLICIT NONE
     !
@@ -1344,8 +1354,8 @@
     INTEGER, INTENT(in) :: n
     !! Approximation on occupation number
     !
-    ! Local variables 
-    !   
+    ! Local variables
+    !
     INTEGER :: i, j, l, iq, totf
     !! Counter on eigenstates and total states
     INTEGER :: c, v, cv, t, nk
@@ -1402,10 +1412,10 @@
     IF (my_pool_id == ionode_id) THEN
       ALLOCATE(indtot(size_m, 5), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_quasi', 'Error allocating indtot(size_m,5)', 1)
-      !  
+      !
       ALLOCATE(indtotf(size_m), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_quasi', 'Error allocating indtotf(size_m)', 1)
-      !   
+      !
       ALLOCATE(indtotcv(size_m), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_quasi', 'Error allocating indtotcv(size_m)', 1)
       !
@@ -1443,12 +1453,12 @@
           H_temp(1:size_temp, 13) = H_quad(:, 14)
         ENDIF
       ENDIF
-
+      !  
       CALL mp_barrier(inter_pool_comm)
       CALL mp_bcast(H_temp, ipool - 1, inter_pool_comm)
       CALL mp_bcast(size_temp, ipool - 1, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
-
+      !  
       IF ((my_pool_id == ionode_id) .and. (size_temp > 0)) THEN
         DO ii =1, size_temp
           IF ((INT(H_temp(ii, 10)) > 0 ) .AND. (INT(H_temp(ii, 10)) < 22 )) THEN
@@ -1466,7 +1476,7 @@
             k_final = INT(H_temp(ii, 12))
             iq = INT(H_temp(ii, 13))
             IF (iverbosity == 5) THEN
-              !  
+              !
               IF ((cv > 21) .OR. (cv < 10)) THEN
                 !
                 WRITE(stdout,'(/5x,a,9I10,5E22.14)') 'Error:cv,c,v,j,k_init,k_final,ipool,&
@@ -1481,7 +1491,7 @@
               nq = wgauss(-wf(imode,iq) / gtemp(1), -99)
               nq = nq / (one - two * nq)
             ELSEIF (n == -2) THEN
-              !  
+              !
               nq = wgauss(-wf(imode,iq) / gtemp(1), -99)
               nq = FLOOR( nq / (one - two * nq))
             ELSEIF (n == -3) THEN
@@ -1490,7 +1500,7 @@
             ENDIF
             !
             IF (cv == 10) THEN
-              !  
+              !
               final_e = ekkcb - ekkvb - ekkcb + emkq + wf(imode,iq)
               initial_E = ekkcb - ekkvb
               Num = nq + 1
@@ -1516,14 +1526,14 @@
               suc1 = -1
               suc2 = -1
             ENDIF
-            !    
+            !
             inter = inter*SQRT(Num)
             !
             IF (Num == nq+1) THEN
               !
               Num = nq+1
             ELSEIF (Num == nq) THEN
-              !  
+              !
               Num = nq-1
             ENDIF
             IF ((final_e < E_mesh(mesh)) .OR. (final_e > E_mesh(mesh + 1)))  THEN
@@ -1558,9 +1568,9 @@
               DO l = 1, totf
                 IF ((ABS(numc-INT(indtot(l, 1))) < eps8) .AND. &
                     (ABS(numv-INT(indtot(l, 2))) < eps8) .AND. &
-                    (ABS(numq-INT(indtot(l, 3))) < eps8) .AND. & 
+                    (ABS(numq-INT(indtot(l, 3))) < eps8) .AND. &
                     (ABS(Num-indtot(l, 4)) < eps8)) THEN
-                  !    
+                  !
                   suc2 = 1
                   index2 = INT(indtotf(l))
                 ENDIF
@@ -1579,7 +1589,7 @@
                 IF ((numci == INT(indtoti(l, 1))) .AND. &
                     (numvi == INT(indtoti(l, 2)))) THEN
                   IF (Num >= 0) THEN
-                    !    
+                    !
                     index1 = INT(indtotcv(l))
                     suc1 = 1
                   ENDIF
@@ -1591,13 +1601,13 @@
                    (ABS(numv-INT(indtot(l, 2))) < eps8) .AND. &
                    (ABS(numq-INT(indtot(l, 3))) < eps8) .AND. &
                    (ABS(Num-indtot(l, 4)) < eps8)) THEN
-                  ! 
+                  !
                   suc2 = 1
                   index2 = INT(indtotf(l))
                 ENDIF
               ENDDO
             ENDIF
-
+            !
             IF (suc1 == 1) THEN
               IF (suc2 == 1) THEN
                 r_tot = r_tot + 1
@@ -1664,7 +1674,7 @@
                 index2 = tot + 2
                 indtotcv(totcv + 1) = index1
                 indtotf(totf + 1) = index2
-                ! 
+                !
                 r_tot = r_tot + 1
                 H_mat(r_tot) = inter
                 H_ind1(r_tot) = index1
@@ -1701,7 +1711,7 @@
           ENDIF
           suc1 = 0
           suc2 = 0
-          !  
+          !
         ENDDO ! size_temp
       ENDIF ! IF this pool has any interactions
       CALL mp_barrier(inter_pool_comm)
@@ -1716,13 +1726,13 @@
     IF (my_pool_id==ionode_id) THEN
       ! Many body Hamiltonian built
       ! Diagonalization of many body Hamiltonian
-      !  
-      WRITE(stdout, '(/5x,a,I10)') 'matrix rank =', tot
-      !  
+      !
+      WRITE(stdout, '(/5x,a,I10)') 'QD matrix rank =', tot
+      !
       IF (tot == 0) THEN
         WRITE(stdout, '(/5x,a)') 'no states'
       ENDIF
-      !  
+      !
       DO i = 1, totcv
         index_buf(INT(indtotcv(i)), 6)  = indtoti(i, 3)
         index_buf(INT(indtotcv(i)), 5)  = indtotcv(i)
@@ -1734,20 +1744,20 @@
         index_buf(INT(indtotf(i)), 5) = indtotf(i)
         index_buf(INT(indtotf(i)), 1:4) = indtot(i, 1:4)
       ENDDO
-      !  
+      !
       suc1 = 0
-      !  
+      !
       IF (suc1 == 0) THEN
         IF (iverbosity == 5) THEN
           WRITE(stdout,'(/5x,a)') 'Matrix is Hermitian'
-        ENDIF          
+        ENDIF
       ENDIF
-      ! FIX in future  
+      ! FIX in future
       DEALLOCATE(indtot)
       DEALLOCATE(indtotf)
       DEALLOCATE(indtotcv)
       DEALLOCATE(indtoti)
-      !  
+      !
     ENDIF
     !
     CALL mp_barrier(inter_pool_comm)
@@ -1761,17 +1771,17 @@
     tot_pool_a = 0.d0
     size_tot = 0
     DO i = 1, tot
-      !  
+      !
       tot_pool_a(INT(index_buf(i, 6))) = tot_pool_a(INT(index_buf(i, 6))) + 1.0
-      !  
+      !
     ENDDO
     CALL mp_barrier(inter_pool_comm)
     !
     size_tot = INT(MAXVAL(tot_pool_a))
     !
-    WRITE(stdout, '(/5x,a,2I10)') 'Size of Eigenvec:', size_tot, tot
+    IF (iverbosity == 5) WRITE(stdout, '(/5x,a,2I10)') 'Size of Eigenvec:', size_tot, tot
     CALL mp_barrier(inter_pool_comm)
-    WRITE(stdout, '(/5x,a,I10)') 'Building Hamiltonian calculation with r_tot:', r_tot
+    WRITE(stdout, '(/5x,a,I10)') 'Building Hamiltonian with total elements:', r_tot
     !
     !---------------------------------------------------------------------------
     END SUBROUTINE build_quasi_hamiltonian
@@ -1792,14 +1802,14 @@
     !! local to gobal index, and then leading dimension that belongs to |vk>|ck+q> is
     !! redistributed to their respective pools using
     !! index_buff_pool(index,5):-> poolf
-    !    
+    !
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iuindabs
     USE io_global,     ONLY : stdout,ionode_id
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fermi_energy, nkf1,                               &
+    USE input,         ONLY : nstemp, fermi_energy, nkf1,                               &
                               nkf2, nkf3, mp_mesh_k
-    USE elph2,         ONLY : etf, ibndmin, gtemp, nkf, nqtotf, wf, wqf, nbndfst, epf17,&
+    USE global_var,    ONLY : etf, ibndmin, gtemp, nkf, nqtotf, wf, wqf, nbndfst, epf17,&
                               nkqtotf, xkf, nkqf, bztoibz, Energy, stop_qdabs,          &
                               Eigenvec_alloc_pool, Eigenval, do_elpa, size_m, r_tot,    &
                               tot_pool, index_buf_pool, Eigenvec, index_buf, tot,       &
@@ -1807,18 +1817,18 @@
     USE mp_global,     ONLY : my_pool_id, npool, inter_pool_comm!,mp_rank
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE cell_base,     ONLY : omega, at, bg
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi,ci, eps8,  &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi,ci, eps8,  &
                               eps20, czero, eps40
-    USE grid,          ONLY : kpmq_map
+    USE control_flags, ONLY : iverbosity 
 #if defined(__ELPA)
     USE elpa
     !
     class(elpa_t), pointer :: elp
-    !! Elpa API 
+    !! Elpa API
 #endif
     REAL(KIND = DP), INTENT(in) :: E_mesh(len_mesh)
-    !! Energy mesh-grid for QDPT    
- 
+    !! Energy mesh-grid for QDPT
+
     INTEGER, INTENT(in) :: len_mesh
     !! Length of meshgrid for QDPT
     INTEGER, INTENT(in) :: mesh
@@ -1859,7 +1869,7 @@
     ! --------------------------------------------------------------------------------!!
     !! All variables are for diagonalization
     CHARACTER(len=8)                   :: task_suffix
-    !! ELPA related task 
+    !! ELPA related task
     INTEGER                            :: success
     !! Success for ELPA diagonalization or not
     INTEGER                            :: nblk, info
@@ -1877,7 +1887,7 @@
     INTEGER                            :: na_rows_max(npool),na_cols_max(npool)
     !! maximum number of elements(row/column) in each processor
     INTEGER, ALLOCATABLE               :: loc(:)
-    !! location in an array 
+    !! location in an array
     INTEGER                            :: STATUS
     !! Status if diagonalization
     INTEGER, PARAMETER                 :: error_units = 0
@@ -1887,7 +1897,7 @@
     !!---------------------------------------------------------------------------------!!
     nblk=8
     CALL cpu_time(start)
-    WRITE(stdout, '(/5x,a)') 'Entered diag_quasi_Hamiltonian'
+    WRITE(stdout, '(/5x,a)') 'Starting diagonalization'
 #if defined(__ELPA)
     size_vec = MINVAL((/2500 * CEILING(npool/200.d0), 6000/))
 #else
@@ -1895,7 +1905,7 @@
 #endif
     ALLOCATE(Eigenvec(size_vec, size_vec), STAT = ierr)
     IF (ierr /= 0) CALL errore('diag_quasi', 'Error allocating Eigenvec(size_vec,size_vec)', 1)
-    WRITE(stdout, '(/5x,a)') ' Allocated Eigenvec'
+    IF (iverbosity == 5) WRITE(stdout, '(/5x,a)') ' Allocated Eigenvec'
     !
     Eigenvec = 0.d0
     Eigenval = 0.d0
@@ -1920,9 +1930,11 @@
       !
       IF (info /= 0) WRITE(stdout, '(/5x,a)') 'Failed diagonalization'
       !
-      WRITE(stdout, '(/5x,a)') 'OMP diagonalization done'
-      WRITE(stdout, '(/5x,a,2I10)') 'Finished Eigenvec calculation OMP with total  & 
+      WRITE(stdout, '(/5x,a)') 'LAPACK diagonalization complete'
+      IF (iverbosity == 5) THEN
+        WRITE(stdout, '(/5x,a,2I10)') 'Finished Eigenvec calculation OMP with total  &
                             &interactions: ', r_tot
+      ENDIF  
       !
       DEALLOCATE(H_f, STAT = ierr)
       IF (ierr /= 0) CALL errore('diag_quasi', 'Error deallocating H_f', 1)
@@ -1932,7 +1944,7 @@
       IF (ierr /= 0) CALL errore('diag_quasi', 'Error deallocating H_f', 1)
       !
       do_elpa = 0
-      !  
+      !
     ELSEIF (tot >= size_vec) THEN
       do_elpa = 1
     ENDIF
@@ -1941,30 +1953,30 @@
     tot_pool = 0
     t = 1
     IF (do_elpa == 0) THEN
-      WRITE(stdout, '(/5x,a)') 'Doing OMP'
+      WRITE(stdout, '(/5x,a)') 'Used LAPACK for diagonalization'
       !
       CALL mp_bcast(Eigenvec, ionode_id, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
-      !  
+      !
       DO i = 1, tot
         IF (my_pool_id == INT(index_buf(i, 6)) - 1) THEN
-          ! 
+          !
           Eigenvec_alloc_pool(t, 1:tot) = Eigenvec(i, 1:tot)
           index_buf_pool(t, 1:4) = index_buf(i, 1:4)
           index_buf_pool(t, 5) = t
           index_buf_pool(t, 6) = index_buf(i, 6)
           t = t + 1
-          ! 
+          !
         ENDIF
       ENDDO
       CALL mp_barrier(inter_pool_comm)
-      !  
+      !
       tot_pool = t - 1
       CALL mp_sum(Eigenval, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
 #if defined(__ELPA)
     ELSEIF (do_elpa == 1) THEN
-      WRITE(stdout, '(/5x,a)'),'Doing ELPA'
+      WRITE(stdout, '(/5x,a)'),'Using ELPA for diagonalization'
       DO np_cols = NINT(SQRT(REAL(npool))), 2, -1
         IF (MOD(npool, np_cols) == 0 ) exit
       ENDDO
@@ -1976,8 +1988,8 @@
       !
       CALL BLACS_Gridinit(my_blacs_ctxt, 'C', np_rows, np_cols)
       CALL BLACS_Gridinfo(my_blacs_ctxt, nprow, npcol, my_prow, my_pcol)
-      !  
-      IF (my_pool_id == ionode_id) THEN
+      !
+      IF ((my_pool_id == ionode_id) .AND. (iverbosity == 5)) THEN
         WRITE(stdout,'(/5x,a)'),'| Past BLACS_Gridinfo.'
       ENDIF
       ! determine the neccessary size of the distributed matrices,
@@ -2000,11 +2012,11 @@
       totx = INT(maxval(na_rows_max))
       toty = INT(maxval(na_cols_max))
       !
-      IF (my_pool_id == ionode_id) THEN
+      IF ((my_pool_id == ionode_id) .AND. (iverbosity == 5)) THEN
            WRITE(stdout, '(/5x,a,I10,I10,I10)'), 'na_rows,na_cols,my_prow', na_rows, na_cols, my_prow
            WRITE(stdout,'(/5x,a,I10,I10,I10)'), 'nprow,npcol,my_pcol', nprow, npcol, my_pcol
       ENDIF
-      !  
+      !
       ! set up the scalapack descriptor for the checks below
       ! For ELPA the following restrictions hold:
       ! - block sizes in both directions must be identical (args 4 a. 5)
@@ -2012,7 +2024,7 @@
       !   row/col 0/0 (arg 6 and 7)
       !
       CALL descinit(sc_desc, totn, totn, nblk, nblk, 0, 0, my_blacs_ctxt, na_rows, info)
-      !  
+      !
       IF (info .NE. 0) THEN
         WRITE(error_units,*) 'Error in BLACS descinit! info=',info
         WRITE(error_units,*) 'Most likely this happend since you want to use'
@@ -2022,7 +2034,7 @@
         WRITE(error_units,*) 'Try reducing the number of MPI tasks...'
        ! call MPI_ABORT(inter_pool_comm, 1, mpierr)
       ENDIF
-      !  
+      !
       ! Error is not assigned for these because there are some issus
       ALLOCATE(al (na_rows, na_cols))
       ALLOCATE(zl (na_rows, na_cols))
@@ -2037,12 +2049,12 @@
       buff = 0.d0
       buff_ind = 0
       CALL mp_barrier(inter_pool_comm)
-      WRITE(stdout, '(/5x,a)') 'Past initial array allocation'
-      !  
-      ! Distribute the Hamiltonian to different processors 
+      IF ( iverbosity ==5) WRITE(stdout, '(/5x,a)') 'Past initial array allocation'
+      !
+      ! Distribute the Hamiltonian to different processors
       !
       DO i = 1, r_tot
-        !    
+        !
         jg = H_ind1(i)
         kg = H_ind2(i)
         !
@@ -2053,7 +2065,7 @@
         kl = INDXG2L(kg, nblk, 0, 0, npcol)!FLOOR((k-1)/REAL(npcol))
         kp = INDXG2P(kg, nblk, 0, 0, npcol) !mod(k-1,npcol)
         IF ((jp == my_prow) .AND. (kp == my_pcol)) THEN
-          !  
+          !
           IF ((jl <= na_rows) .AND. (kl <= na_cols)) THEN
             !
             al(jl, kl) = inter
@@ -2064,16 +2076,16 @@
       !
       CALL mp_barrier(inter_pool_comm)
       !
-      WRITE(stdout, '(/5x,a)'),'finished Hamiltonian setup'
-      !  
-      ! Start ELPA diagonalization 
-      !  
+      IF (iverbosity == 5) WRITE(stdout, '(/5x,a)'),'finished Hamiltonian setup'
+      !
+      ! Start ELPA diagonalization
+      !
       IF (elpa_init(20180501) /= elpa_ok) THEN
         WRITE(stdout, *), "ELPA API version not supported"
         STOP
       ENDIF
-      elp => elpa_allocate()    
-      !  
+      elp => elpa_allocate()
+      !
       ! set parameters decribing the matrix and it's MPI distribution
       CALL elp%set("na", totn, success)
       CALL elp%set("nev", totn, success)
@@ -2090,13 +2102,13 @@
       !
       WRITE(stdout, '(/5x,a)')'| Entering one-step ELPA solver ... '
       !
-      !  
+      !
       CALL mp_barrier(inter_pool_comm) ! for correct timings only
       CALL elp%eigenvectors(al, ev, zl, success)
       CALL mp_barrier(inter_pool_comm) ! for correct timings only
-      !  
+      !
       WRITE(stdout, '(/5x,a)') '| One-step ELPA solver complete.'
-      !  
+      !
       ! Redistribute the Eigenvector's leading dimension n of E(n,:) to different
       ! pools
       ! The pool is already decided when we build the Hamiltonian and resides
@@ -2111,12 +2123,12 @@
       CALL mp_barrier(inter_pool_comm)
       t = 0
       ALLOCATE(loc(tot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('diag_quasi', 'Error allocating loc', 1) 
+      IF (ierr /= 0) CALL errore('diag_quasi', 'Error allocating loc', 1)
       loc = 0
       l = 0
       DO jl = 1, totx
         IF (MOD(jl, 500) == 0) THEN
-          WRITE(stdout,'(/5x,a,I10)'),'progression row matrix distributed', jl
+          WRITE(stdout,'(/5x, a, I10, a, I10)'),'Eigenvector re-distributed = ', jl, '/' , totx
         ENDIF
         DO kl = 1, toty
           IF ((jl <= na_rows) .AND. (kl <= na_cols)) THEN
@@ -2144,15 +2156,15 @@
               IF (ANY(loc == INT(buff_ind(i, 1)))) THEN
                 !
                 DO l = 1, INT(buff_ind(i, 2))
-                  Eigenvec_alloc_pool(FINDLOC(loc, INT(buff_ind(i, 1))),buff_ind(i, l + 2)) = &  
+                  Eigenvec_alloc_pool(FINDLOC(loc, INT(buff_ind(i, 1))),buff_ind(i, l + 2)) = &
                                                                       buff(i, l)
                 ENDDO
               ELSE
                 t = t+1
                 DO l = 1, INT(buff_ind(i,2))
-                  ! 
+                  !
                   Eigenvec_alloc_pool(t, INT(buff_ind(i, l + 2))) = buff(i, l)
-                  ! 
+                  !
                 ENDDO
                 index_buf_pool(t, 1:4) = index_buf(INT(buff_ind(i, 1)), 1:4)
                 index_buf_pool(t, 5) = t
@@ -2170,24 +2182,22 @@
       ENDDO
       CALL mp_barrier(inter_pool_comm)
       DEALLOCATE(loc, STAT = ierr)
-      IF (ierr /= 0) CALL errore('diag_quasi', 'Error deallocating loc', 1) 
+      IF (ierr /= 0) CALL errore('diag_quasi', 'Error deallocating loc', 1)
       !
       tot_pool = t
-      !   
+      !
       CALL mp_sum(t, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
       !
-      IF (my_pool_id == 0) THEN
-        !
-        WRITE(stdout, '(/5x,a,2I10)') 'finished building eigenvectors with tot and tot_pool', tot, t
-      ENDIF
-      !  
+      IF (iverbosity == 5) WRITE(stdout, '(/5x,a,2I10)') 'Finished building eigenvectors & 
+                                with tot and tot_pool', tot, t
+      !
       Eigenval(1:tot) = ev(:)
-      !  
+      !
       CALL mp_barrier(inter_pool_comm)
       CALL elpa_deallocate(elp)
       CALL elpa_uninit()
-      !  
+      !
       IF (my_pool_id == ionode_id) THEN
         !
         PRINT '(/5x,a)','| deallocated elpa.'
@@ -2208,7 +2218,8 @@
     !
     CALL cpu_time(finish)
     !
-    WRITE(stdout,'(/5x,a,E22.14,a)') 'Time for QD bin calculation: ', (finish-start), 'S'
+    IF (iverbosity == 5) WRITE(stdout,'(/5x,a,E22.14,a)') 'Time taken for QD bin calculation: ', &
+                         (finish-start), 'S'
     !
     !---------------------------------------------------------------------------
     END SUBROUTINE diag_quasi_hamiltonian
@@ -2232,10 +2243,10 @@
     USE io_var,        ONLY : iuindabs,iunkf
     USE io_global,     ONLY : stdout
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fermi_energy, fsthick,           &
+    USE input,         ONLY : nstemp, fermi_energy, fsthick,           &
                               nkf1, nkf2, nkf3, filkf, mp_mesh_k,      &
                               nq_init
-    USE elph2,         ONLY : etf, ibndmin, nkf,nqtotf, wf, wqf,       &
+    USE global_var,    ONLY : etf, ibndmin, nkf,nqtotf, wf, wqf,       &
                               nbndfst, nkqtotf, epf17, nkqtotf, xkf,   &
                               Eigenval, Eigenvec_alloc_pool, tot,      &
                               tot_pool, H_ind1, H_ind2, H_mat, r_tot,  &
@@ -2245,20 +2256,20 @@
     USE mp_global,     ONLY : my_pool_id, npool, inter_pool_comm,      &
                               ionode_id
     USE cell_base,     ONLY : omega
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two,    &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two,    &
                               zero, pi, ci, eps6, czero, eps20, eps4
-    USE grid,          ONLY : kpmq_map
+    USE bzgrid,        ONLY : kpmq_map
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: mesh
-    !! Current meshgrid    
+    !! Current meshgrid
     INTEGER, INTENT(in) :: typ
-    !! Type of information to be printed  
+    !! Type of information to be printed
     !
     !Local variables
-    ! 
+    !
     INTEGER :: i, j, k, t, nktotf, numc, numv, k_init, ikk, ierr,      &
                ikq, ik, cbnd, vbnd, check, indexq, nkfinal,            &
                xk, ipool, num, iqq, xk_final, k_final,                 &
@@ -2290,7 +2301,7 @@
     REAL(KIND = DP) :: xt(3),ef0,zeropool(npool),nqv(nmodes)
     !! k point buffer array, Fermi_energy, array of zeros, phonon occupation
     REAL(KIND = DP), EXTERNAL :: wgauss
-    !! Bose-Einstein distribution 
+    !! Bose-Einstein distribution
     REAL(KIND = DP),ALLOCATABLE :: xread(:,:)
     !! Array that stores kpoints provided by the user
     COMPLEX(KIND = DP), ALLOCATABLE:: Eigenvec_alloc_pool2(:,:)
@@ -2304,7 +2315,7 @@
       Eigenvec_alloc_write = 0.d0
       xkf_write = 0.d0
       OPEN(UNIT = iunkf, FILE = 'kpoints.txt')
-      !    
+      !
       READ(iunkf,*) num
       ALLOCATE(xread(3, num), STAT = ierr)
       IF (ierr /= 0) CALL errore('write_wf_quasi', 'Error allocating xread in wf_quasi', 1)
@@ -2323,7 +2334,7 @@
           ikk = 2 * ik-1
           xt = 0.d0
           k_init = -1
-          !  
+          !
           IF ((ABS(xkf(1,ikk)-xread(1,i))  <= eps4) .AND. &
               (ABS(xkf(2,ikk)-xread(2,i))  <= eps4) .AND. &
               (ABS(xkf(3,ikk)-xread(3,i))  <= eps4)) THEN
@@ -2334,11 +2345,11 @@
           ENDIF
         ENDDO
       ENDDO
-      !  
+      !
       CALL mp_barrier(inter_pool_comm)
       CALL mp_sum(x_final, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
-      !  
+      !
       k_init    = -1
       k_final   = -1
       q_final   = -1
@@ -2346,7 +2357,7 @@
       X(1)      = -1
       X(2)      =  1
       check2(:) = 1
-      !  
+      !
       DO iqq = 1, nqtotf + 1
         DO ik = 1, nkf
           !
@@ -2361,7 +2372,7 @@
             CALL kpmq_map(xqf(:, iqq), xt, 1, q_final)
             !
           ELSE
-            ! 
+            !
             CALL kpmq_map(xkf(:, ikk), xqf(:, nqtotf), 1, k_final)
             !
           ENDIF
@@ -2388,7 +2399,7 @@
                   check = -1
                   IF ((iqq == nqtotf + 1) .AND. (imode == nmodes)) THEN
                     DO i = 1, size_tot
-                      !  
+                      !
                       numc = (cbnd - 1) * nktotf + k_init
                       numv = (vbnd - 1) * nktotf + k_init
                       IF ((numc == INT(index_buf_pool(i, 1))) .AND. &
@@ -2401,7 +2412,7 @@
                   ELSE
                     check = INT(check_final(cbnd, k_final, k_init, vbnd, iqq, imode, tot_pool, &
                                 index_buf_pool(1:tot_pool, :), (nq - (1 * X(ab))), 2))
-                    ! 
+                    !
                     IF (check /= -1) THEN
                       indexq = INT(index_buf_pool(check, 5))
                     ENDIF
@@ -2420,7 +2431,7 @@
                           ENDIF
                           IF (ABS(x_final(j) - k_final) == 0) THEN
                             xk_final = j
-                          ENDIF    
+                          ENDIF
                           IF (ABS(x_final(j) - q_final) == 0) THEN
                             xq_final = j
                           ENDIF
@@ -2455,15 +2466,15 @@
           ENDDO !cbnd
         ENDDO !ik
         IF (MOD(iqq, 100) == 0) THEN
-          WRITE(stdout,'(/5x,a,I10)') 'progression write iq:', iqq
+          WRITE(stdout,'(/5x,a,I10)') 'Progression write iq:', iqq
         ENDIF
       ENDDO!iq
-      !  
+      !
       CALL mp_barrier(inter_pool_comm)
       CALL mp_sum(Eigenvec_alloc_write, inter_pool_comm)
       CALL mp_sum(xkf_write, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
-      !  
+      !
       WRITE(stdout,'(a)') 'Done distributing'
       WRITE(tp,"(I10)") mesh
       nameF = './quasi_bands/mesh_' // trim(adjustl(tp)) // '.dat'
@@ -2475,13 +2486,13 @@
         DO i = 1, 30
           DO t = 1, tot
             IF (ABS(Eigenvec_alloc_write(ipool, i, t)) > eps20) THEN
-              !   
+              !
               WRITE(iuindabs,'(I10,9E22.14)') t, xkf_write(ipool, i, t, 1),  &
                       xkf_write(ipool, i, t, 2), xkf_write(ipool, i, t, 3),  &
                       xkf_write(ipool, i, t, 4), xkf_write(ipool, i, t, 5),  &
                       xkf_write(ipool, i, t, 6), REAL(Eigenval(t)) * ryd2ev, &
                       Eigenvec_alloc_write(ipool, i, t)
-              !   
+              !
             ENDIF
           ENDDO
         ENDDO
@@ -2510,7 +2521,7 @@
     ELSEIF (typ == 3) THEN
       WRITE(tp,"(I10)") mesh
       nameF = './quasi_bands/c_' // trim(adjustl(tp)) // '.dat'
-      !  
+      !
       OPEN(UNIT = iuindabs, FILE = nameF)
       DO k = 1, tot
         WRITE(iuindabs,'(4E22.14)') SUM(c_dir_v(1:3, k)), SUM(c_ph_v(1:3, k))
@@ -2563,23 +2574,23 @@
     USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fsthick, degaussw,                            &
-                              eps_acustic, efermi_read, fermi_energy,               &
-                              vme, omegamin, omegamax, omegastep, len_mesh,         &
+    USE input,         ONLY : nstemp, fsthick, degaussw,                            &
+                              eps_acoustic, efermi_read, fermi_energy,              &
+                              omegamin, omegamax, omegastep, len_mesh,              &
                               nkf1,nkf2,nkf3,scissor,DW,filkf,mode_res
-    USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf,       &
+    USE global_var,    ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf,       &
                               sigmar_all, efnew, gtemp, nkqtotf, nkqf,              &
-                              dmef, omegap, vmef, nbndfst, xkf, xqf, etf_ks,        &
+                              omegap, vmef, nbndfst, xkf, xqf, etf_ks,              &
                               index_buf_pool, totf_pool, totcv_pool, tot, tot_pool, &
                               epsilon2_qdirect2, epsilon2_qdirect2_DW, E_mesh,      &
                               epsilon2_indirect, Eigenval, c_ph_v,                  &
                               c_dir_v, totf, totcv, Eigenvec_alloc_pool, r_tot, n_q
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi,   &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi,   &
                               ci, eps6, czero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
     USE cell_base,     ONLY : omega,bg, at
-    USE grid,          ONLY : kpmq_map
+    USE bzgrid,        ONLY : kpmq_map
     !
     IMPLICIT NONE
     !
@@ -2597,7 +2608,7 @@
     !! total many-body states calculated
     LOGICAL, INTENT(in)    :: last_calc
     !! If this is the q-point calculation
-    ! 
+    !
     ! Local variables
     !
     INTEGER :: i, pool_id, k_init, k_final, k_final2, check, check2, vec
@@ -2647,7 +2658,7 @@
     REAL(KIND = DP) :: wgkk, wgkq
     !! Fermi-Dirac occupation factor $f_{nk+q}(T)$, $f_{nk}(T)$
     REAL(KIND = DP) :: xt(3),xxk(3),xxkq(3)
-    !! Buffer k-point, k+G(0), k+q 
+    !! Buffer k-point, k+G(0), k+q
     REAL(KIND = DP) :: weighta, weighte, weightd, weightq
     !!- delta function for absorption, emission, direct
     REAL(KIND = DP) :: inv_eptemp0
@@ -2670,7 +2681,7 @@
     COMPLEX(KIND = DP) :: vkq(3, nbndfst, nbndfst)
     !! Velocity matrix elements at k, k+q
     COMPLEX(KIND = DP) :: Aa(3), Ae(3), Ba(3), Be(3), Ca(3), Ce(3), Da(3), De(3), Qa(3), &
-                          DWca(3), DWva(3)    
+                          DWca(3), DWva(3)
     !! For summation over virutal states
     COMPLEX(KIND = DP) :: epf(nbndfst, nbndfst, nmodes)
     !! Electron-phonon coupling
@@ -2680,7 +2691,7 @@
     inv_degaussw = 1.0 / degaussw
     !
     ! 300 K
-    ! Epsilon2 prefactor for velocity matrix elements, including factor of 2 
+    ! Epsilon2 prefactor for velocity matrix elements, including factor of 2
     ! for spin (weights for k-points are divided by 2 to be normalized to 1)
     ! C = 8*pi^2*e^2 = 8*pi^2*2 approx 157.9136704
     !
@@ -2704,7 +2715,7 @@
       ELSEIF (n == -2) THEN
         nq = FLOOR(nqv(imode))
       ELSEIF (n == -3) THEN
-        ! 
+        !
         nq = n_q(iq,imode)
       ENDIF
       sum_E = sum_E+(nq*wf(imode,iq))
@@ -2717,23 +2728,13 @@
         ikq = ikk + 1
         CALL kpmq_map(xkf(:, ikk), xqf(:, iq), 1, k_final)
         CALL kpmq_map(xkf(:, ikk), xt, 1, k_init)
-        IF (vme == 'wannier') THEN
-          DO cbnd = 1, nbndfst
-            DO vbnd = 1, nbndfst
-              ! vmef is in units of Ryd * bohr
-              vkk(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk) !* (wkf(ikk)/2.0)
-              vkq(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq) !* (wkf(ikk)/2.0)
-            ENDDO
+        DO cbnd = 1, nbndfst
+          DO vbnd = 1, nbndfst
+            ! vmef is in units of Ryd * bohr
+            vkk(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk) !* (wkf(ikk)/2.0)
+            vkq(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq) !* (wkf(ikk)/2.0)
           ENDDO
-        ELSE
-          DO cbnd = 1, nbndfst
-            DO vbnd = 1, nbndfst
-             ! Dme's already corrected for GW corrections in wan2bloch.f90
-              vkk(:, cbnd, vbnd) = 1.0 * dmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk) !* (wkf(ikk)/2.0)
-              vkq(:, cbnd, vbnd) = 1.0 * dmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq) !* (wkf(ikk)/2.0)
-            ENDDO
-          ENDDO
-        ENDIF
+        ENDDO
         !
         DO cbnd = 1, nbndfst
           !  the energy of the electron at k (relative to Ef)
@@ -2788,7 +2789,7 @@
                     suc = 0
                   ENDIF
                   !
-                  IF (wf(imode,iq) < eps_acustic) CYCLE
+                  IF (wf(imode,iq) < eps_acoustic) CYCLE
                   !
                   Aa = czero
                   Ba = czero
@@ -2810,19 +2811,19 @@
                     final_e = (E_mesh(mesh) + E_mesh(mesh + 1)) / 2.0
                     !c-c' transition
                     IF ((ekmq > zero) .AND. (ekmk > zero)) THEN
-                      !  
+                      !
                       IF ((mesh > 1) .AND. (mesh < len_mesh-1)) THEN
-                        !   
-                        IF (((ekmk - ekkvb) < E_mesh(mesh))  .OR. & 
+                        !
+                        IF (((ekmk - ekkvb) < E_mesh(mesh))  .OR. &
                             ((ekmk - ekkvb) > E_mesh(mesh + 1))) THEN
-                          ! 
+                          !
                           Aa(:) = Aa(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd)         &
                                            /(final_e - (ekmk - ekkvb))
                           DWca(:) = DWca(:) + epf(cbnd, mbnd, imode) * epf(mbnd, cbnd, imode) &
                                            /(final_e - (ekmk - ekkvb))
                           !
                         ENDIF
-                        !   
+                        !
                       ELSEIF (mesh >= len_mesh - 1) THEN
                         !
                         IF ((ekmk - ekkvb) < E_mesh(mesh)) THEN
@@ -2835,7 +2836,7 @@
                         ENDIF
                         !
                       ELSEIF (mesh <= 1) THEN
-                        !    
+                        !
                         IF ((ekmk-ekkvb) > E_mesh(mesh + 1)) THEN
                           !
                           Aa(:) = Aa(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd)         &
@@ -2850,7 +2851,7 @@
                                        / (ekkvb - ekmq - wf(imode, iq) * alpha)
                     !v-v' transition
                     ELSEIF ((ekmq < zero) .AND. (ekmk < zero)) THEN
-                      !  
+                      !
                       IF ((mesh > 1) .AND. (mesh < len_mesh - 1)) THEN
                         !
                         IF (((ekqcb - ekmq) < E_mesh(mesh)) .OR. &
@@ -2870,17 +2871,17 @@
                                   /(final_e - (ekqcb - ekmq))
                           DWva(:) = DWva(:) + epf(vbnd, mbnd, imode) * epf(mbnd, vbnd, imode) &
                                   /(final_e - (ekqcb - ekmq))
-                          !  
+                          !
                         ENDIF
                       ELSEIF (mesh <= 1) THEN
-                        !    
+                        !
                         IF ((ekqcb - ekmq) > E_mesh(mesh + 1)) THEN
-                          ! 
+                          !
                           Ba(:) = Ba(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode)         &
                                   /(final_e - (ekqcb - ekmq))
                           DWva(:) = DWva(:) + epf(vbnd, mbnd, imode) * epf(mbnd, vbnd, imode) &
                                   /(final_e - (ekqcb - ekmq))
-                          !  
+                          !
                         ENDIF
                       ENDIF
                       Da(:) = Da(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd)             &
@@ -2892,7 +2893,7 @@
                   IF (n < 2) THEN
                     pfac  =  nq + ((1.0 / 2.0) * alpha + (1.0 / 2.0))
                   ELSE
-                    !  Experimental  
+                    !  Experimental
                     pfac = (nq + 1.0/2 + alpha*(1.0/2))*(EXP(-nq*wf(imode,iq)))
                   ENDIF
                   IF ((suc == 1) .AND. (.NOT. last_calc)) THEN
@@ -2903,7 +2904,7 @@
                     De(:) = Da(:)
                     !
                     DO ipol = 1, 3
-                      !  
+                      !
                       epsilon2_qdirect2(ipol, 1:tot,1) = epsilon2_qdirect2(ipol, 1:tot,1) +         &
                                                    DSQRT(wkf(ikk) / 2.0) * DSQRT(wqf(iq)) *         &
                               (DSQRT(pfac)  * (Ae(ipol) + Be(ipol) + Ce(ipol) + De(ipol)) *         &
@@ -2916,7 +2917,7 @@
                              (DSQRT(pfac) * (Ae(ipol) + Be(ipol) + Ce(ipol) + De(ipol)) *           &
                              CONJG(Eigenvec_alloc_pool(indexq, 1:tot)) / DSQRT(2.0 * wf(imode, iq)))
                       ENDIF
-                      !  
+                      !
                       c_ph_v(ipol, 1:tot) = c_ph_v(ipol, 1:tot) + DSQRT(wkf(ikk) / 2.0)  *          &
                                                          DSQRT(wqf(iq)) * (DSQRT(pfac)   *          &
                                              (Ae(ipol) + Be(ipol) + Ce(ipol) + De(ipol)) *          &
@@ -2927,7 +2928,7 @@
                                        ((pfac)  * CONJG(Eigenvec_alloc_pool(indexq, 1:tot)) *       &
                                                                     (Dwca(ipol)+DWva(ipol)) *       &
                                 Eigenvec_alloc_pool(indexq, 1:tot) / (2.0 * wf(imode, iq)))
-                    ENDDO ! ipol 
+                    ENDDO ! ipol
                   ENDIF ! last_calc
                 ENDDO ! absorption and emission
               ENDDO  ! imode
@@ -2954,21 +2955,21 @@
                       !
                       Qa(ipol) = vkk(ipol, cbnd, vbnd)!*CONJG(Eigenvec_alloc_pool(indexq,vec))
                       epsilon2_qdirect2(ipol, 1:tot, 1) = epsilon2_qdirect2(ipol, 1:tot, 1) +   &
-                                                         (Qa(ipol)) * DSQRT(wkf(ikk) / 2.0) *   & 
+                                                         (Qa(ipol)) * DSQRT(wkf(ikk) / 2.0) *   &
                                                    CONJG(Eigenvec_alloc_pool(indexq, 1:tot))
-                      !   
+                      !
                       c_dir_v(ipol, 1:tot) = c_dir_v(ipol, 1:tot) +  Qa(ipol) *                 &
                            DSQRT(wkf(ikk) / 2.0) * CONJG(Eigenvec_alloc_pool(indexq, 1:tot))
                       !
                     ENDDO ! ipol
                     !
-                  ELSE  
+                  ELSE
                     ! DW term
                     DO vec = 1, tot
                       Qa(:) = vkk(:, cbnd, vbnd) * CONJG(Eigenvec_alloc_pool(indexq, vec))
                       epsilon2_qdirect2(:, vec, 1) = epsilon2_qdirect2(:, vec, 1) +             &
                                                     (Qa(:)) * DSQRT(wkf(ikk)/2.0)
-                      !  
+                      !
                       DO l = 1, tot
                         IF (l /= vec) THEN
                           IF (ABS(REAL(Eigenval(vec) - Eigenval(l))) > 0.0001) THEN
@@ -3006,23 +3007,23 @@
     USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fsthick, degaussw,                                 &
-                              eps_acustic, efermi_read, fermi_energy,                    &
-                              vme, omegamin, omegamax, omegastep, len_mesh,              &
+    USE input,         ONLY : nstemp, fsthick, degaussw,                                 &
+                              eps_acoustic, efermi_read, fermi_energy,                   &
+                              omegamin, omegamax, omegastep, len_mesh,                   &
                               nkf1, nkf2, nkf3, scissor,filkf, mode_res
-    USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf,            &
+    USE global_var,    ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf,            &
                               sigmar_all, efnew, gtemp, nkqtotf, nkqf, etf_ks,           &
-                              dmef, omegap, vmef, nbndfst, xkf, xqf, index_buf_pool,     &
+                              omegap, vmef, nbndfst, xkf, xqf, index_buf_pool,           &
                               totf_pool, tot_pool, tot, totcv_pool, n_q, E_mesh,         &
                               epsilon2_qdirect, Eigenval, c_ph, c_dir, totf, totcv
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6,  &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6,  &
                               czero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
     USE cell_base,     ONLY : omega, bg, at
-    USE grid,          ONLY : kpmq_map
+    USE bzgrid,        ONLY : kpmq_map
     !
-    IMPLICIT NONE 
+    IMPLICIT NONE
     !
     INTEGER, INTENT(in)  :: mesh
     !! Index of the current meshgrid
@@ -3031,7 +3032,7 @@
     INTEGER, INTENT(in)  :: iq
     !! q-point index
     INTEGER, INTENT(in)  :: n
-    !! phonon occupation approximation 
+    !! phonon occupation approximation
     REAL(KIND = DP), INTENT(inout) :: sum_E
     !! Total energy summation
     INTEGER, INTENT(in)  :: calc
@@ -3118,7 +3119,7 @@
     !! summation
     COMPLEX(KIND = DP) :: epf(nbndfst, nbndfst, nmodes)
     !! electron-phonon matrix
-    !    
+    !
     itemp = 1
     ! QDPT works for only one temperature
     ef0=fermi_energy
@@ -3160,28 +3161,18 @@
           ikq = ikk + 1
           xxk(:) = xkf(:, ikk)
           xxkq(:) = xqf(:, iq)
-          !  
+          !
           k_init = -1
           k_final = -1
           CALL kpmq_map(xxk, xxkq, 1, k_final)
           CALL kpmq_map(xxk, xt, 1, k_init)
-          IF (vme == 'wannier') THEN
-            DO cbnd = 1, nbndfst
-              DO vbnd = 1, nbndfst
-                ! vmef is in units of Ryd * bohr
-                vkk(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk) !* (wkf(ikk)/2.0)
-                vkq(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq) !* (wkf(ikk)/2.0)
-              ENDDO
+          DO cbnd = 1, nbndfst
+            DO vbnd = 1, nbndfst
+              ! vmef is in units of Ryd * bohr
+              vkk(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk) !* (wkf(ikk)/2.0)
+              vkq(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq) !* (wkf(ikk)/2.0)
             ENDDO
-          ELSE
-            DO cbnd = 1, nbndfst
-              DO vbnd = 1, nbndfst
-               ! Dme's already corrected for GW corrections in wan2bloch.f90
-                vkk(:, cbnd, vbnd) = 1.0 * dmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk) !* (wkf(ikk)/2.0)
-                vkq(:, cbnd, vbnd) = 1.0 * dmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq) !* (wkf(ikk)/2.0)
-              ENDDO
-            ENDDO
-          ENDIF
+          ENDDO
           !
           DO cbnd = 1, nbndfst
             !  the energy of the electron at k (relative to Ef)
@@ -3222,24 +3213,24 @@
                           suc = 1
                           tot_calc_DW = tot_calc_DW + 1
                         ENDIF
-                      ENDIF   
-                      !  
+                      ENDIF
+                      !
                     ELSEIF (ab == 2) THEN
                       alpha = -1.0
-                      IF (calc /= 1) THEN 
+                      IF (calc /= 1) THEN
                         check = INT(check_final(cbnd, k_final, k_init, vbnd, iq, imode, &
                                    tot_pool, index_buf_pool(1:tot_pool, 1:5), nq - 1, 2))
                         IF (check /= -1) THEN
                           suc = 1
                           tot_calc_DW = tot_calc_DW + 1
-                        ENDIF                        
+                        ENDIF
                       ENDIF
                     ENDIF
                     !
                     IF (((ekqcb - ekkvb + alpha * wf(imode, iq)) < E_mesh(mesh)) .OR. &
                        ((ekqcb - ekkvb + alpha * wf(imode, iq)) > E_mesh(mesh + 1))) CYCLE
                     !
-                    IF (wf(imode, iq) > eps_acustic) THEN
+                    IF (wf(imode, iq) > eps_acoustic) THEN
                       !
                       Aa = czero
                       Ba = czero
@@ -3256,15 +3247,15 @@
                         ekmk = etf(ibndmin - 1 + mbnd, ikk) - ef0
                         ! The energy of the electron at k+q (relative to Ef)
                         ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
-                        !    
+                        !
                         IF (calc == 1) THEN
                           final_e = ekqcb - ekkvb + alpha * wf(imode, iq)
                         ELSEIF (calc == 2) THEN
                           final_e = (E_mesh(mesh) + E_mesh(mesh + 1)) / 2.0
                         ENDIF
-                        !  
+                        !
                         IF ((ekmq > zero) .AND. (ekmk > zero)) THEN
-                          !c->c'  
+                          !c->c'
                           IF ((mesh > 2) .AND. (mesh < len_mesh-1)) THEN
                             !
                             IF (((ekmk - ekkvb) < E_mesh(mesh)) .OR. &
@@ -3293,7 +3284,7 @@
                           !
                         !
                         ELSEIF ((ekmq < zero) .AND. (ekmk < zero)) THEN
-                          ! v->v'  
+                          ! v->v'
                           IF ((mesh > 2) .AND. (mesh < len_mesh - 1 )) THEN
                             !
                             IF (((ekqcb - ekmq) < E_mesh(mesh)) .OR. &
@@ -3304,9 +3295,9 @@
                               !
                             ENDIF
                           ELSEIF ((mesh >= len_mesh - 1)) THEN
-                        
+
                             IF ((ekqcb - ekmq) < E_mesh(mesh)) THEN
-                        
+
                               Ba(:) = Ba(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode) &
                                           /(final_e - (ekqcb - ekmq))
                               !
@@ -3314,7 +3305,7 @@
                           ELSEIF (mesh <= 2) THEN
                             !
                             IF ((ekqcb - ekmq) > E_mesh(mesh + 1)) THEN
-                              !   
+                              !
                               Ba(:) = Ba(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode) &
                                           /(final_e - (ekqcb - ekmq))
                               !
@@ -3324,9 +3315,9 @@
                            ! v->c'
                            Da(:) = Da(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd)    &
                                    /(ekmk-ekqcb-wf(imode,iq)*alpha)
-                           ! 
+                           !
                         ENDIF
-                        ! 
+                        !
                       ENDDO ! mbnd
                       !
                       IF (n < 2) THEN
@@ -3338,14 +3329,14 @@
                       IF (suc == 1) THEN
                         CYCLE
                       ELSEIF (suc == 0) THEN
-                        ! 
+                        !
                         Ae(:) = Aa(:)
                         Be(:) = Ba(:)
                         Ce(:) = Ca(:)
                         De(:) = Da(:)
                         DO iw = 1, nomega
                           !
-                          weighta = w0gauss((ekqcb - ekkvb - omegap(iw) + & 
+                          weighta = w0gauss((ekqcb - ekkvb - omegap(iw) + &
                                 alpha * wf(imode, iq)) / degaussw, 0) / degaussw
                           weightd = w0gauss((ekkcb - ekkvb - omegap(iw)) / (1.0*degaussw), 0) / (1.0 * degaussw)
                           !
@@ -3364,36 +3355,36 @@
                                                                 ABS(Ae(ipol) + Be(ipol)+Ce(ipol)+De(ipol))**2 &
                                                                   / (2 * wf(imode,iq) * omega)))
                               ENDIF
-                      
+
                               IF (imode <= mode_res) THEN
-                                epsilon2_qdirect(ipol, iw, neta+imode, itemp) =                     &  
+                                epsilon2_qdirect(ipol, iw, neta+imode, itemp) =                     &
                                               epsilon2_qdirect(ipol, iw, neta + imode, itemp) +     &
                                                                    (wkf(ikk) / 2.0) * wqf(iq) *     &
                                     (((cfac / omegap(iw)**2) * pfac  * weighta * ABS(Ae(ipol) +     &
                                   Be(ipol) + Ce(ipol) + De(ipol))**2 / (2 * wf(imode, iq) * omega)))
                               ENDIF
-                              !  
+                              !
                               c_ph(ipol, iw) = c_ph(ipol, iw) + (wkf(ikk) / 2.0) * wqf(iq) *        &
                                   (((cfac / omegap(iw)**2) * pfac  * weighta * ABS(Ae(ipol) +       &
                                   Be(ipol) + Ce(ipol) + De(ipol))**2 / (2 * wf(imode, iq) * omega)))
-                              !          
+                              !
                             ENDIF
                             epsilon2_qdirect(ipol, iw, 4, itemp) = epsilon2_qdirect(ipol, iw, 4, itemp) + &
                                                                              (wkf(ikk) / 2.0) * wqf(iq) * &
                                                 ((cfac / omegap(iw)**2 * pfac  * weighta * ABS(Ae(ipol) + &
                                    Be(ipol) + Ce(ipol) + De(ipol))**2 / (2 * wf(imode,iq) * omega)))
-                            ! 
+                            !
                           ENDDO ! ipol
-                        ENDDO ! omega  
+                        ENDDO ! omega
                       ENDIF ! success
-                    ENDIF ! eps_acustic
+                    ENDIF ! eps_acoustic
                   ENDDO ! absorption and emission
                 ENDDO  ! imode
-                ! 
+                !
                 IF (iq == nqtotf) THEN
                   Qa = czero
                   suc = 0
-                  !  
+                  !
                   DO i = 1, tot_pool
                     numc = (cbnd-1)*nktotf+k_init
                     numv = (vbnd-1)*nktotf+k_init
@@ -3404,15 +3395,15 @@
                       suc = 1
                       tot_calc_DW = tot_calc_DW+1
                     ENDIF
-                    ! 
+                    !
                   ENDDO
-                  !   
+                  !
                   IF ((suc == 0) .AND. ((ekkcb - ekkvb) > E_mesh(mesh)) .AND. &
                       ((ekkcb - ekkvb) < E_mesh(mesh + 1))) THEN
                     !
                     Qa(:) = vkk(:, cbnd, vbnd)
                     DO iw=1, nomega
-                      !   
+                      !
                       weightq= (w0gauss((ekkcb - ekkvb - omegap(iw)) / degaussw, 0) / degaussw) * &
                                (wkf(ikk) / 2.0)
                       !
@@ -3421,7 +3412,7 @@
 
                           epsilon2_qdirect(ipol, iw, 1, itemp) = epsilon2_qdirect(ipol, iw, 1, itemp) + &
                                   ((cfac / omegap(iw)**2 ) * weightq * ABS(Qa(ipol))**2 / omega**1)
-                          c_dir(ipol, iw) = c_dir(ipol,iw) + ((cfac / omegap(iw)**2 ) * weightq *       & 
+                          c_dir(ipol, iw) = c_dir(ipol,iw) + ((cfac / omegap(iw)**2 ) * weightq *       &
                                              ABS(Qa(ipol))**2 / omega**1)
                           !
                         ENDIF
@@ -3440,7 +3431,7 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE calc_qdirect_DW
     !--------------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     FUNCTION check_final(cbnd, k_final, k_init, vbnd, iq, imode, totf, &
                 indextot, n, test)
@@ -3450,10 +3441,10 @@
     !! |vk>|ck+q> in the row of Eigenvec matrix.
     !
     USE io_global,     ONLY : stdout, ionode_id
-    USE elph2,         ONLY : nqtotf, nkqtotf
-    USE epwcom,        ONLY : nkf1, nkf2, nkf3, filkf
+    USE global_var,    ONLY : nqtotf, nkqtotf
+    USE input,         ONLY : nkf1, nkf2, nkf3, filkf
     USE kinds,         ONLY : DP
-    USE constants_epw,     ONLY : eps4, eps8
+    USE ep_constants,      ONLY : eps4, eps8
     !
     IMPLICIT NONE
     !
@@ -3497,13 +3488,13 @@
     numq = (imode - 1) * nqtotf + iq
     !
     DO l = 1, totf
-      !  
+      !
       IF (test == 2) THEN
-        IF ((ABS(numc - INT(indextot(l, 1))) < eps8) .AND. & 
+        IF ((ABS(numc - INT(indextot(l, 1))) < eps8) .AND. &
             (ABS(numv - INT(indextot(l, 2))) < eps8) .AND. &
             (ABS(numq - INT(indextot(l, 3))) < eps8) .AND. &
             (ABS(n - (indextot(l, 4))) < eps8)) THEN
-          !  
+          !
           check_final = l
         ENDIF
       ELSE
@@ -3523,10 +3514,10 @@
     !! This function finds the processor/pool where this particular k_in will end
     !! up in case of mp_mesh_k
     USE io_global,     ONLY : stdout, ionode_id
-    USE elph2,         ONLY : nkqtotf,nkf,bztoibz
-    USE epwcom,        ONLY : mp_mesh_k
+    USE global_var,    ONLY : nkqtotf,nkf,bztoibz
+    USE input,         ONLY : mp_mesh_k
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : eps4, eps8
+    USE ep_constants,  ONLY : eps4, eps8
     USE mp_global,     ONLY : npool
     !
     IMPLICIT NONE
@@ -3534,8 +3525,8 @@
     INTEGER, INTENT(in) :: k_in
     !! input k-point
     INTEGER             :: rest, k, pool_final
-    !! final pool index 
-    !  
+    !! final pool index
+    !
     k = k_in
     pool_final = CEILING(k / REAL(nkf))
     rest=(nkqtotf - (2 * (nkqtotf /(2 * npool))) * npool) / 2
@@ -3568,15 +3559,15 @@
     USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fsthick, degaussw,                      &
-                              eps_acustic, efermi_read, fermi_energy,         &
-                              vme, omegamin, omegamax, omegastep
-    USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
+    USE input,         ONLY : nstemp, fsthick, degaussw,                      &
+                              eps_acoustic, efermi_read, fermi_energy,        &
+                              omegamin, omegamax, omegastep
+    USE global_var,    ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, nkqtotf, nkqf,        &
-                              dmef, omegap, vmef, nbndfst, nktotf, xkf, xqf,  &
+                              omegap, vmef, nbndfst, nktotf, xkf, xqf,        &
                               epsilon2_direct, epsilon2_indirect,             &
                               epsilon2_qdirect, E_mesh
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, &
+    USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, &
                               ci, eps6, czero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
@@ -3593,7 +3584,7 @@
     !
     INTEGER :: ikk,ikq,ik,cbnd,vbnd,mbnd,iw,imode
     !! Index for k-point, k+q point, global-k, conduction valence and empty
-    !! bands, photon index, mode index  
+    !! bands, photon index, mode index
     REAL(KIND = DP) :: alpha
     !! +1 or -1
     INTEGER :: ipol
@@ -3645,7 +3636,7 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! This function computes the derivative of the Fermi-Dirac function
     !! It is therefore an approximation for a delta function
-    REAL(KIND = DP) :: eta(neta) = (/ 0.000, 0.002, 0.005, 0.01, 0.02, & 
+    REAL(KIND = DP) :: eta(neta) = (/ 0.000, 0.002, 0.005, 0.01, 0.02, &
                       0.05, 0.1, 0.2, 0.5 /) / ryd2eV
     !! Broadening parameter
     COMPLEX(KIND = DP) :: vkk(3, nbndfst, nbndfst)
@@ -3662,7 +3653,7 @@
     !
     inv_degaussw = 1.0 / degaussw
     !
-    ! Epsilon2 prefactor for velocity matrix elements, including factor of 2 
+    ! Epsilon2 prefactor for velocity matrix elements, including factor of 2
     ! for spin (weights for k-points are divided by 2 to be normalized to 1)
     ! C = 8*pi^2*e^2 = 8*pi^2*2 approx 157.9136704
     !
@@ -3680,31 +3671,19 @@
           wq(imode) = wf(imode, iq)
           !
           epf(:, :, imode) = epf17(:, :, imode,ik)
-          IF (wq(imode) > eps_acustic) THEN
+          IF (wq(imode) > eps_acoustic) THEN
             nqv(imode) = wgauss(-wq(imode) / gtemp(itemp), -99)
             nqv(imode) = nqv(imode) / (one - two * nqv(imode))
           ENDIF
         ENDDO
         !
-        IF (vme=='wannier') THEN
-          DO cbnd = 1, nbndfst
-            DO vbnd = 1, nbndfst
-              vkk(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk)
-              vkq(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq)
-            ENDDO
+        DO cbnd = 1, nbndfst
+          DO vbnd = 1, nbndfst
+            vkk(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk)
+            vkq(:, cbnd, vbnd) = vmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq)
           ENDDO
-        ELSE
-          DO cbnd = 1, nbndfst
-            DO vbnd = 1, nbndfst
-              ! Dme's already corrected for GW corrections in wan2bloch.f90
-              vkk(:, cbnd, vbnd) = 1.0 * dmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikk)
-              vkq(:, cbnd, vbnd) = 1.0 * dmef(:, ibndmin - 1 + cbnd, ibndmin - 1 + vbnd, ikq)
-
-            ENDDO
-          ENDDO
-        ENDIF
+        ENDDO
         !
-
         DO cbnd = 1, nbndfst
 
           !  the energy of the electron at k (relative to Ef)
@@ -3725,10 +3704,10 @@
               IF ((ABS(ekqcb) < fsthick) .AND. (ekqcb < ekkvb + wq(nmodes) + omegamax + 6.0 * degaussw)) THEN
                 DO imode = 1, nmodes
                   !
-                  IF (wq(imode) > eps_acustic) THEN
+                  IF (wq(imode) > eps_acoustic) THEN
                     !
                     DO m = 1, neta
-                      !  
+                      !
                       Aa = czero
                       Ba = czero
                       Ca = czero
@@ -3749,13 +3728,13 @@
                         IF ((ekmk > zero) .AND. (ekmq > zero)) THEN
                           Aa(:) = Aa(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd) &
                                   / (ekqcb - ekmk + wq(imode) + ci * eta(m))
-                          !  
+                          !
                           Ae(:) = Ae(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd) &
                                   / (ekqcb - ekmk - wq(imode) + ci * eta(m))
-                          !  
+                          !
                           Ca(:) = Ca(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode) &
                                   / (ekkvb - ekmq - wq(imode) + ci * eta(m))
-                          !  
+                          !
                           Ce(:) = Ce(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode) &
                                   / (ekkvb - ekmq + wq(imode) + ci * eta(m))
                           !
@@ -3763,7 +3742,7 @@
                         ELSEIF ((ekmk < zero) .AND. (ekmq < zero)) THEN
                           Ba(:) = Ba(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode) &
                                   / (ekmq - ekkvb + wq(imode) + ci * eta(m))
-                          !  
+                          !
                           Be(:) = Be(:) + vkq(:, cbnd, mbnd) * epf(mbnd, vbnd, imode) &
                                   / (ekmq - ekkvb - wq(imode) + ci * eta(m))
                           !
@@ -3772,7 +3751,7 @@
                           !
                           De(:) = De(:) + epf(cbnd, mbnd, imode) * vkk(:, mbnd, vbnd) &
                                   / (ekmk - ekqcb + wq(imode) + ci * eta(m))
-                          !  
+                          !
                         ENDIF
                       ENDDO
                       !
