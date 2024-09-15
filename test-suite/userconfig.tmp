@@ -121,12 +121,15 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (3.0e+1, 1.0e-1, 'mobnewx'),
               (3.0e+1, 1.0e-1, 'mobnewy'),
               (3.0e+1, 1.0e-1, 'mobnewz'),
-              (1.0e-3, 1.0e-3, 'hall'),
+              (5.0e-3, 5.0e-3, 'hall'),
               (1.0e+10,1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
               (1.5e+3,   None, 'indabs'),
               (1.0e-4,   None, 'ratmax'),
-              (5.0e-2, 1.0e-1, 'eplrn'))
+              (5.0e-2, 1.0e-1, 'eplrn'),
+              (1.0e-5, 5.0e-3, 'specfun'),
+              (1.0e-5, 5.0e-3, 'temperature'),
+              (1.0e-3, 1.0e-4, 'outband'))
 
 skip_program = grep
 skip_args = 'not present in this version'

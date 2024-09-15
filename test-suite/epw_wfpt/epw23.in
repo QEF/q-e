@@ -8,11 +8,14 @@
 
   iverbosity  = 0
   etf_mem     = 0
+  epw_memdist = .true.
+
   use_ws = .true.
   lpolar = .true.
+  vme    = 'wannier'
 
   degaussw = 0.05 ! eV
-  temps = 0.01  600.0
+  temps = 0.0  600.0
 
   filkf = 'kpath.GammaX.txt'
   nqf1 = 5
@@ -21,11 +24,17 @@
 
   nbndsub     =  8
 
-  wfpt = .true.
-  elecselfen_ahc = .true.
+  lwfpt = .true.
   ahc_nbnd = 9
   ahc_win_max = 13.0
   ahc_win_min = -100.0
+
+  elecselfen = .true.
+
+  specfun_el   = .true.
+  wmin_specfun = -3.0
+  wmax_specfun = 3.0
+  nw_specfun   = 20
 
   lifc        = .true.
 
@@ -43,5 +52,7 @@
   nq1         = 2
   nq2         = 2
   nq3         = 2
+
+  lopt_w2b = .true.
  /
 
