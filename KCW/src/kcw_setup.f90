@@ -107,6 +107,7 @@ subroutine kcw_setup
   COMPLEX(DP), ALLOCATABLE :: rho_c(:,:,:),wann_c(:,:,:)
   COMPLEX(DP) :: phase(dffts%nnr)
   INTEGER :: iwann
+  REAL (DP) :: sh_q
   !
   ALLOCATE ( delta_vg(ngms,nspin_mag), vh_rhog(ngms), delta_vg_(ngms,nspin_mag) )
   !WRITE(*,*), 'NGMS', ngms
@@ -350,7 +351,13 @@ subroutine kcw_setup
       !! The periodic part of the perturbation DeltaV_q(G)
       ! 
       sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega
-      !WRITE(1005,*) "iwann=", i, "q=", iq, "SH=", REAL(.5*sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega)
+#ifdef DEBUG
+      sh_q  =sum (0.5D0*CONJG(rhog (:,1)) * vh_rhog(:) )*omega
+      CALL mp_sum (sh_q,    intra_bgrp_comm)
+      WRITE(1005,*) "iwann=", i, "q=", iq, "weight=", weight(iq), &
+                    "nq eq=", INT(weight(iq)/weight(iq)), &
+                    "SH="   , REAL(sh_q)
+#endif
       !
     ENDDO
     !
@@ -501,6 +508,13 @@ subroutine kcw_setup
         !! The periodic part of the perturbation DeltaV_q(G)
         ! 
         sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:) )*wq_ibz(iq_ibz, i)*omega
+#ifdef DEBUG
+        sh_q  =sum (0.5D0*CONJG(rhog (:)) * vh_rhog(:) )*omega
+        CALL mp_sum (sh_q,    intra_bgrp_comm)
+        WRITE(2005,*) "iwann=", i, "q=", iq, "weight=", wq_ibz(iq_ibz, i), &
+                      "nq eq=", INT(wq_ibz(iq_ibz, i)/weight(iq)), &
+                      "SH="   , REAL(sh_q)
+#endif
       END DO!iwann
     END DO!iq
 
