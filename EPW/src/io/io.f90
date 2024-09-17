@@ -352,9 +352,11 @@
     !! Type of IOlength
     REAL(KIND = DP) :: dummy
     !! Dummy variable
+#if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_recl
     !! Record length for parallel reading epmatwp 
     INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_offset
+#endif
     !! Offset for parallel reading epmatwp 
     INTEGER :: irn
     !! Mode*WS-vector Index
