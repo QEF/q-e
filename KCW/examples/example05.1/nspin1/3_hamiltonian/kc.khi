@@ -1,0 +1,34 @@
+&CONTROL
+   prefix           = 'si'
+   outdir           = '../out'
+   kcw_iverbosity   = 1
+   kcw_at_ks        = .false.
+   calculation      = 'ham'
+   lrpa             = .false.
+   mp1              = 4
+   mp2              = 4
+   mp3              = 4
+   read_unitary_matrix = .true.
+   l_vcut           = .false.
+/
+&WANNIER
+   seedname         = 'wann'
+   check_ks         = .true.
+   num_wann_occ     = 4
+   num_wann_emp     = 4
+   have_empty       = .true.
+   has_disentangle  = .true.
+/
+&HAM
+  do_bands = .true.
+  use_ws_distance = .true.
+  write_hr = .true.
+  on_site_only = .true.
+/
+K_POINTS crystal_b
+5
+ 0.50000   0.50000   0.50000 15 ! L
+ 0.00000   0.00000   0.00000 15 ! G
+ 0.50000   0.00000   0.50000 15 ! X
+ 0.37500   0.37500   0.75000 15 ! K
+ 0.00000   0.00000   0.00000  1 !G

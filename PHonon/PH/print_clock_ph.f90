@@ -122,6 +122,8 @@ subroutine print_clock_ph
   call print_clock ('adddvscf')
 
 
+  call print_clock ('com_dvloc')
+  call print_clock ('addcore')
   call print_clock ('drhodvus')
   WRITE( stdout, * )
   call print_clock ('dvqpsi_us')

@@ -2476,8 +2476,6 @@ END MODULE convergence_gw
  SUBROUTINE read_wing ( rho, nspin, gamma_only,ipol,iw )
       !
       USE scf,              ONLY : scf_type
-      USE paw_variables,    ONLY : okpaw
-      USE ldaU,             ONLY : lda_plus_u, starting_ns
       USE noncollin_module, ONLY : noncolin, domag
       USE gvect,            ONLY : ig_l2g
       USE io_files,         ONLY : seqopn, prefix, tmp_dir, postfix

@@ -78,8 +78,11 @@ subroutine zstar_eu
               !
               call get_buffer (dpsi, lrdwf, iudwf, nrec)
               do ibnd = 1, nbnd_occ(ikk)
-                 zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
-                      dot_product( dpsi(:,ibnd), dvpsi(:,ibnd) )
+                 zstareu0(jpol, mode) = zstareu0(jpol, mode) - 2.d0 * weight * &
+                      dot_product(dpsi(1:npw, ibnd), dvpsi(1:npw, ibnd))
+                 IF (noncolin) &
+                 zstareu0(jpol, mode)=zstareu0 (jpol, mode) - 2.d0 * weight * &
+                      dot_product(dpsi(1+npwx:npw+npwx, ibnd), dvpsi(1+npwx:npw+npwx, ibnd))
               enddo
            enddo
         enddo

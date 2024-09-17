@@ -12,7 +12,7 @@ SUBROUTINE kcw_run_nscf (do_band)
   ! This is the main driver of the PWscf program called from the KCW code.
   !
   USE control_flags,   ONLY : conv_ions, restart, iverbosity, isolve
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
+  USE starting_scf,    ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : tmp_dir, wfc_dir
   USE fft_types,       ONLY : fft_type_allocate
   USE fft_base,        ONLY : dffts, dfftp
@@ -67,7 +67,7 @@ SUBROUTINE kcw_run_nscf (do_band)
   CALL init_run()
   !
   IF (do_band) THEN
-     CALL non_scf()
+     CALL non_scf_ph()
      CALL punch( 'all' )
   ENDIF
   !

@@ -470,13 +470,14 @@ subroutine solve_head
         head(first_f+i-1,2)=epsilon_g(2,2,i)
         head(first_f+i-1,3)=epsilon_g(3,3,i)
 
-
+        call ph_set_upert_e()
 #if defined(__MPI)
         call mp_sum ( pola_charge(:,:,:,i) , inter_pool_comm )
-        call psyme (pola_charge(:,:,:,i))
+        call psymdvscf (pola_charge(:,:,:,i))
 #else
-        call syme (pola_charge(:,:,:,i))
+        call symdvscf (pola_charge(:,:,:,i))
 #endif
+        call ph_deallocate_upert()
         call create_scf_type ( wing, .true. )
         do ipol=1,3
            CALL fwfft ('Rho',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)

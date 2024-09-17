@@ -32,8 +32,6 @@ SUBROUTINE new_evc()
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
-  USE wavefunctions_gpum,   ONLY : using_evc
-  !
   IMPLICIT NONE
   !
   INTEGER :: ik, ibnd, jbnd, igroup, npw
@@ -64,13 +62,11 @@ SUBROUTINE new_evc()
   !
   ! ... we start a loop over k points
   !
-  CALL using_evc(0) ! save buffer is intent(in)
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk(ik)
      IF (nks > 1) &
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-     IF (nks > 1) CALL using_evc(2)
      !
      CALL get_buffer( swfcatom, nwordatwfc, iunsat, ik )
      !
@@ -129,7 +125,6 @@ SUBROUTINE new_evc()
         !
         current_band = natomwfc+1
         !
-        CALL using_evc(1)
         DO ibnd = 1, natomwfc
            IF (ind(ibnd) > natomwfc) THEN
               DO jbnd = current_band, nbnd
@@ -236,7 +231,6 @@ SUBROUTINE new_evc()
                                      proj(:,start_band(igroup)+jbnd-1)
               ENDDO
            ENDDO
-           CALL using_evc(1)
            evc(:,start_band(igroup):start_band(igroup)+nsize-1)= aux(:,:)
            proj(:,start_band(igroup):start_band(igroup)+nsize-1)= aux_proj(:,:)
            DEALLOCATE( aux )
@@ -250,7 +244,6 @@ SUBROUTINE new_evc()
      !
      ! ... Finally, we order the new bands as the atomic states
      !
-     CALL using_evc(1)
      ALLOCATE( aux(npwx*npol,natomwfc) )
      used_atwfc = 0
      DO ibnd = 1, natomwfc
@@ -272,11 +265,13 @@ SUBROUTINE new_evc()
      !
      ! ... If needed save the new bands on disk
      !
-     ! CALL using_evc(1) (already done above, no functions call in between)
      IF (nks > 1) THEN
         CALL save_buffer( evc, nwordwfc, iunwfc, ik )
      ENDIF
   ENDDO
+  !
+  ! update current evc on device (expecially for gamma_only case)
+  !$acc update device(evc)
   !
   DEALLOCATE( group_size )
   DEALLOCATE( start_band )

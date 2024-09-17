@@ -36,6 +36,8 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   !! the wavefunction
   COMPLEX(DP) :: hpsi(ldap,mp)
   !! Hamiltonian dot psip
+  !FIXME! this variable should be mapped with openACC 
+  !$acc declare deviceptr(hpsi,psip) 
   !
   ! ... local variables
   !
@@ -52,6 +54,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   IF (gamma_only) dim_g = 2
   !
   ALLOCATE( psi_g(psdim,dim_g) )
+  !$acc enter data create(psi_g, psic) copyin(kedtau) 
   !
   IF (gamma_only) THEN
      !
@@ -64,6 +67,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
         !
         DO j = 1, 3
            !
+           !$acc parallel loop  
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,i)) * tpiba
               psi_g(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * psip(i,im)
@@ -76,10 +80,13 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            CALL wave_g2r( psi_g(1:np,1:brange), psic, dffts )
            !
+           !$acc kernels 
            psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs)
+           !$acc end kernels
            !
            CALL wave_r2g( psic(1:dffts%nnr), psi_g(:,1:brange), dffts )
            !
+           !$acc parallel loop 
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,i)) * tpiba
               hpsi(i,im) = hpsi(i,im) - ci * kplusgi * fac * psi_g(i,1)
@@ -96,6 +103,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
      DO im = 1, mp
         DO j = 1, 3
            !
+           !$acc parallel loop 
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba
               psi_g(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * psip(i,im)
@@ -103,10 +111,13 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            CALL wave_g2r( psi_g(1:np,1:1), psic, dffts, igk=igk_k(:,current_k) )
            !
+           !$acc kernels 
            psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs)
+           !$acc end kernels 
            !
            CALL wave_r2g( psic(1:dffts%nnr), psi_g(1:np,1:1), dffts, igk=igk_k(:,current_k) )
            !
+           !$acc parallel loop 
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba
               hpsi(i,im) = hpsi(i,im) - CMPLX(0._DP,kplusgi,KIND=DP) * psi_g(i,1)
@@ -117,6 +128,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
      !
   ENDIF
   !
+  !$acc exit data delete(psi_g,psic,kedtau)
   DEALLOCATE( psi_g )
   !
   CALL stop_clock( 'h_psi_meta' )

@@ -7,19 +7,25 @@
 Module ifconstants
   ! This code generates ZG displacements
   !
-  ! All variables read from file that need dynamical allocation
+  !! All variables read from file that need dynamical allocation.
   !
   USE kinds, ONLY: DP
-  REAL(DP), ALLOCATABLE :: frc(:, :, :, :, :, :, :), tau_blk(:, :),  zeu(:, :, :), &
-               m_loc(:, :)
-  ! frc : interatomic force constants in REAL space
-  ! tau_blk : atomic positions for the original cell
-  ! zeu : effective charges for the original cell
-  ! m_loc: the magnetic moments of each atom
+  !
+  REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:)
+  !! interatomic force constants in real space
+  REAL(DP), ALLOCATABLE :: frc_lr(:,:,:,:,:,:,:)
+  !! long-range part of interatomic force constants in real space
+  REAL(DP), ALLOCATABLE :: tau_blk(:,:)
+  !! atomic positions for the original cell
+  REAL(DP), ALLOCATABLE :: zeu(:,:,:)
+  !! effective charges for the original cell
+  REAL(DP), ALLOCATABLE :: m_loc(:,:)
+  !! the magnetic moments of each atom
   INTEGER, ALLOCATABLE  :: ityp_blk(:)
-  ! ityp_blk : atomic types for each atom of the original cell
+  !! atomic types for each atom of the original cell
   !
   CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
+  !
 end Module ifconstants
 !
 !-------------------------------------------------------------------------
@@ -28,20 +34,23 @@ PROGRAM ZG
   !-----------------------------------------------------------------------
   !! authors: Marios Zacharias, Feliciano Giustino 
   !! acknowledgement: Sabyasachi Tiwari for help packaging this release
-  !! version: v1.1
+  !! version: v1.2
   !! license: GNU
   !
   !  This program generates the ZG displacements for a list of
   !  q vectors that are comensurate to the supercell size to be employed for 
-  !  the special displacement method. The first part of the code is obtained by 
-  !  modifying the matdyn.f90 subroutine of QE. The program starts from the 
+  !  the special displacement method (SDM). The first part of the code is obtained
+  !  by modifying the matdyn.f90 subroutine of QE. The program starts from the 
   !  interatomic force constants generated from the DFPT phonon code through
-  !  the companion program q2r.
+  !  the companion program q2r. 
   !
   !  ZG_displacements generate a supercell of the original cell with the atoms 
   !  displaced via Eq. (2) of https://doi.org/10.1103/PhysRevResearch.2.013357. 
   !  Data required for the ZG displacements is read from the force constant 
   !  file "*.fc" and.
+  !
+  !  The anharmonic special displacement method (ASDM) using ZG displacements 
+  !  is also implemented: https://doi.org/10.1103/PhysRevB.108.035155
   !
   !  Input cards for ZG.in: namelist &input (first six as for matdyn.f90)
   !     flfrc     file produced by q2r containing force constants (needed)
@@ -55,22 +64,26 @@ PROGRAM ZG
   !                  the diagonal elements of the force constants matrix)
   !               - 'crystal': 3 translational asr imposed by optimized
   !                  correction of the force constants (projection).
+  !               - 'all': 3 translational asr + 3 rotational asr + 15 Huang
+  !                  conditions for vanishing stress tensor, imposed by
+  !                  optimized correction of the force constants (projection).
+  !                  Remember to set write_lr to .true. to write long-range
+  !                  force constants into file when running q2r and set read_lr
+  !                  to .true. when running ZG for the case of polar system.
   !               - 'one-dim': 3 translational asr + 1 rotational asr
   !                  imposed by optimized correction of the force constants
   !                  (the rotation axis is the direction of periodicity;
-  !                   it will work only IF this axis considered is one of
+  !                   it will work only if this axis considered is one of
   !                   the cartesian axis).
   !               - 'zero-dim': 3 translational asr + 3 rotational asr
   !                  imposed by optimized correction of the force constants
   !               Note that in certain cases, not all the rotational asr
-  !               can be applied (e.g. IF there are only 2 atoms in a
-  !               molecule or IF all the atoms are aligned, etc.).
+  !               can be applied (e.g. if there are only 2 atoms in a
+  !               molecule or if all the atoms are aligned, etc.).
   !               In these cases the supplementary asr are cancelled
   !               during the orthonormalization procedure (see below).
-  !               using tetrahedra and a uniform q-point grid (see below)
-  !               NB: may not work properly in noncubic materials
-  !               IF .FALSE. calculate phonon bands from the list of q-points
-  !               supplied in input (default)
+  !     huang     if .true. (default) Huang conditions for vanishing 
+  !               stress tensor are included in asr='all'.
   !     amass     masses of atoms in the supercell (a.m.u.), one per atom type
   !               (default: use masses read from file flfrc)
   !    "q_in_band_form" and "q_in_cryst_coord" meaningful if "q_external" 
@@ -111,10 +124,18 @@ PROGRAM ZG
   !     "T"                  : Real number indicating the temperature at which the calculations will be performed. 
   !                            "T" essentially defines the amplitude of the normal coordinates. 
   !                            (default 0.00)
+  !     "T_array(1), etc.."  : Real number indicating the temperature at which the calculations will be performed. 
+  !                            Fill T_array for generating ZG configurations for different temperatures. 
+  !                            If nconfs = 1, the same set of signs is maintained for all temperatures. This is 
+  !                            important for consistency reasons. If nconfs > 1 then "nconfs" ZG configurations
+  !                            are generated each temperature specified in T_array. A maximum of 100 temperatures
+  !                            are allowed. 
+  !                            (default -1)
   !     "dim1","dim2","dim3" : Integers corresponding to the dimensionality of the supercell.
   !                            (default 0,0,0)
-  !     "atm_zg(1), etc.."   : String describing the element of each atomic species
-  !                            (default "Element")
+  !     "atm_zg(1), etc.."   : String describing the element of each atomic species. If not specified from input
+  !                            the code reads atm_zg(:) from the flfrc file. 
+  !                            (default ' ')
   !     "flscf"              : String for the name of the scf input file used to calculate the phonons. The 
   !                            code will read information for preparing the input file for the supercell 
   !                            scf calculation. If left empty the code will not generate the input file for
@@ -135,12 +156,16 @@ PROGRAM ZG
   !                            size the order of using the "+,-,+,-" set and its permutations is  
   !                            important giving different results. Therefore the algorithm checks 
   !                            the combination that brings the error lower than a threshold.
+  !                            If integer "nconfs" > 1 then "niters" necomes equal to "nconfs".
   !                            (default 15000)
+  !     "nconfs"             : Integer. If greater than 1 allows "nconfs" ZG configurations for each temperature
+  !                            to be generated. "compute_error" is set to .false. 
   !     "compute_error"      : Logical flag: if set to .true. allows the code to find the optimal ZG configuration 
   !                            by minimizing the error based on the "threshold" flag (see below). Set it
   !                            to .false. if speed up is required. Setting it to .false. is useful when 
   !                            (i) large supercell sizes are considered for which the error is minimized by 
-  !                            the first set of signs, and (ii) only single phonon displacements are of interest (see below) 
+  !                            the first set of signs, and (ii) "single_ph_displ" is .true. (see below), 
+  !                            and (iii) "nconfs" is larger than 1.
   !                            (default .true.)
   !     "error_thresh"        : Real number indicating the error at which the algorithm stops while it's 
   !                            looking for possible combinations of signs. Once this limit is reached 
@@ -157,8 +182,8 @@ PROGRAM ZG
   !                            (default .true.)
   !     "fd_displ"           : Real number representing the displacement applied along each direction and atom of the 
   !                            ZG configuration.
-  !                            (default 0.01058) 
   !                            Meaningful only if ASDM and ZG_conf are true.
+  !                            (default 0.01058) 
   !     "read_fd_forces"     : Logical flag that enables reading of the forces from folder "fd_forces" after
   !                            performing finite differences on the polymorphous or the ZG-configuration.
   !                            Meaningful only if ASDM is true and IFCs have been calculated.
@@ -244,8 +269,8 @@ PROGRAM ZG
   USE bz_form,          ONLY : transform_label_coord
   USE parser,           ONLY : read_line
   USE rigid,            ONLY : dyndiag, nonanal, nonanal_ifc
-
-  USE ifconstants,      ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
+  !
+  USE ifconstants,      ONLY : frc, frc_lr, atm, zeu, tau_blk, ityp_blk, m_loc
   !
   IMPLICIT NONE
   !
@@ -256,7 +281,7 @@ PROGRAM ZG
   INTEGER, PARAMETER  :: ntypx= 10, nrwsx=200
   REAL(DP), PARAMETER :: eps = 1.0d-6
   INTEGER             :: nr1, nr2, nr3, nsc, ibrav
-  CHARACTER(LEN=256)  :: flfrc, flscf, flfrq, flweights
+  CHARACTER(LEN=256)  :: flfrc, flscf, flfrq, flweights, fildyn, fildyn_prefix
   CHARACTER(LEN= 10)  :: asr
   LOGICAL             :: has_zstar, q_in_cryst_coord, loto_disable
   COMPLEX(DP), ALLOCATABLE :: dyn(:, :, :, :), dyn_blk(:, :, :, :), frc_ifc(:, :, :, :)
@@ -279,7 +304,7 @@ PROGRAM ZG
 
   INTEGER  :: nspin_mag, nqs, ios
   !
-  LOGICAL  :: xmlifc, lo_to_split, loto_2d, na_ifc, fd, nosym
+  LOGICAL  :: xmlifc, lo_to_split, loto_2d, na_ifc, fd, nosym, read_lr, huang
   !
   REAL(DP) :: qhat(3), qh, E, qq 
   REAL(DP) :: delta
@@ -304,11 +329,12 @@ PROGRAM ZG
   CHARACTER(len=80) :: k_points = 'tpiba'
   ! 
   CHARACTER(LEN=3)         :: atm_zg(ntypx)
-  LOGICAL                  :: ZG_conf, synch, incl_qA, q_external
+  LOGICAL                  :: ZG_conf, synch, incl_qA, q_external, multi_ZG
   LOGICAL                  :: ZG_strf, compute_error, single_ph_displ
-  INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf
-  REAL(DP)                 :: error_thresh, T, qhat_in(3)
+  INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf, nconfs
+  REAL(DP)                 :: error_thresh, T, qhat_in(3), T_array(100)
   REAL(DP)                 :: atmsf_a(ntypx,5), atmsf_b(ntypx,5) 
+  REAL(DP)                 :: alph ! Ewald coefficient for non-analytical term  
   REAL(DP),    ALLOCATABLE :: q_nq(:, :) ! 3, nq
   COMPLEX(DP), ALLOCATABLE :: z_nq(:, :, :) ! nomdes, nmodes, nq
   ! 
@@ -326,11 +352,12 @@ PROGRAM ZG
   !
   NAMELIST /input/ flfrc, amass, asr, at, ntyp, loto_2d, loto_disable, &
        &           q_in_band_form, q_in_cryst_coord, point_label_type,  &
-       &           na_ifc, fd, &
+       &           na_ifc, fd, read_lr, huang, fildyn, fildyn_prefix, &
 ! we add the inputs for generating the ZG-configuration
        &           ZG_conf, dim1, dim2, dim3, niters, error_thresh, q_external, & 
        &           compute_error, synch, atm_zg, T, incl_qA, single_ph_displ, & 
-       &           ZG_strf, flscf, ph_unfold, qhat_in, ASDM
+       &           ZG_strf, flscf, ph_unfold, qhat_in, ASDM, &
+       &           T_array, nconfs
 !
   NAMELIST / A_ZG / apply_fd, read_fd_forces, incl_epsil, iter_idx, iter_idx0, & 
                     fd_displ, poly, poly_fd_forces, mixing, update_equil
@@ -356,6 +383,8 @@ PROGRAM ZG
      !
      asr = 'no'
      flfrc = ' '
+     fildyn = ' '
+     fildyn_prefix = ' '
      amass(:) = 0.d0
      amass_blk(:) = 0.d0
      at(:, :) = 0.d0
@@ -367,21 +396,26 @@ PROGRAM ZG
      fd               = .FALSE.
      loto_2d          = .FALSE.
      loto_disable     = .FALSE.
+     read_lr          = .FALSE.
+     huang            = .TRUE.
      ! 
-     flscf         = ' '
+     flscf           = ' '
      ZG_conf         = .TRUE.
      compute_error   = .TRUE.
      synch           = .FALSE.
      q_external      = .FALSE.
      incl_qA         = .TRUE.
      single_ph_displ = .FALSE.
+     multi_ZG        = .FALSE.
      T               = 0
+     T_array         = -1
      error_thresh    = 3.0E-01
      dim1            = 0
      dim2            = 0
      dim3            = 0
+     nconfs          = 1
      niters          = 15000 
-     atm_zg          = "Element"
+     atm_zg          = ' '
      ZG_strf         = .FALSE.
      ph_unfold       = .FALSE.
      ASDM            = .FALSE.
@@ -432,6 +466,8 @@ PROGRAM ZG
      !
      CALL mp_bcast(asr, ionode_id, world_comm)
      CALL mp_bcast(flfrc, ionode_id, world_comm)
+     CALL mp_bcast(fildyn,ionode_id, world_comm)
+     CALL mp_bcast(fildyn_prefix,ionode_id, world_comm)
      CALL mp_bcast(amass, ionode_id, world_comm)
      CALL mp_bcast(amass_blk, ionode_id, world_comm)
      CALL mp_bcast(at, ionode_id, world_comm)
@@ -443,6 +479,8 @@ PROGRAM ZG
      CALL mp_bcast(point_label_type, ionode_id, world_comm)
      CALL mp_bcast(loto_2d, ionode_id, world_comm) 
      CALL mp_bcast(loto_disable,ionode_id, world_comm)
+     CALL mp_bcast(read_lr,ionode_id, world_comm)
+     CALL mp_bcast(huang,ionode_id, world_comm)
      ! 
      CALL mp_bcast(ZG_conf, ionode_id, world_comm)
      CALL mp_bcast(flscf, ionode_id, world_comm)
@@ -452,14 +490,17 @@ PROGRAM ZG
      CALL mp_bcast(incl_qA, ionode_id, world_comm)
      CALL mp_bcast(single_ph_displ, ionode_id, world_comm)
      CALL mp_bcast(T, ionode_id, world_comm)
+     CALL mp_bcast(T_array, ionode_id, world_comm)
      CALL mp_bcast(error_thresh, ionode_id, world_comm)
      CALL mp_bcast(dim1, ionode_id, world_comm)
      CALL mp_bcast(dim2, ionode_id, world_comm)
      CALL mp_bcast(dim3, ionode_id, world_comm)
      CALL mp_bcast(niters, ionode_id, world_comm)
+     CALL mp_bcast(nconfs, ionode_id, world_comm)
      CALL mp_bcast(atm_zg, ionode_id, world_comm)
      CALL mp_bcast(qhat_in, ionode_id, world_comm)
      CALL mp_bcast(ZG_strf, ionode_id, world_comm)
+     CALL mp_bcast(multi_ZG, ionode_id, world_comm)
      CALL mp_bcast(ph_unfold, ionode_id, world_comm)
      CALL mp_bcast(ASDM, ionode_id, world_comm)
      CALL mp_bcast(apply_fd, ionode_id, world_comm)
@@ -491,21 +532,48 @@ PROGRAM ZG
      CALL mp_bcast(flfrq, ionode_id, world_comm)
      CALL mp_bcast(flweights, ionode_id, world_comm)
      !
+     ! Checks 
      IF (loto_2d .AND. loto_disable) CALL errore('ZG', &
          'loto_2d and loto_disable cannot be both true', 1)
      ! 
      IF (ZG_conf .AND. ph_unfold) CALL errore('ZG', &
          'ZG_conf and ph_unfold cannot be both true', 1)
      ! 
-     ! To check that user specifies supercell dimensions
-     IF (ZG_conf) THEN 
-        IF (dim1 < 1) CALL errore('ZG', 'reading supercell size, check dim1', 1)
-        IF (dim2 < 1) CALL errore('ZG', 'reading supercell size, check dim2', 1)
-        IF (dim3 < 1) CALL errore('ZG', 'reading supercell size, check dim3', 1)
-        IF ( single_ph_displ .AND. compute_error  ) CALL errore('ZG', & 
-             "for single phonon displacements set 'compute_error' to false", 1)
+     IF (dim1 < 1) CALL errore('ZG', 'reading supercell size, check dim1', 1)
+     IF (dim2 < 1) CALL errore('ZG', 'reading supercell size, check dim2', 1)
+     IF (dim3 < 1) CALL errore('ZG', 'reading supercell size, check dim3', 1)
+     IF (nconfs < 1) CALL errore('ZG', 'nconfs must be larger than 1', 1)
+     IF (nconfs > 1) multi_ZG = .true. 
+     IF (nconfs > 1) niters = nconfs 
+     !
+     IF ( T < 0 - eps) CALL errore('ZG', 'Temperature cannot be negative', 1)
+     DO it = 1, 100
+       IF (T_array(it) < -1 - eps) CALL errore('ZG', &
+          "Temperature cannot be negative", 1)
+     ENDDO
+     !
+     IF ( single_ph_displ .AND. compute_error ) CALL errore('ZG', & 
+          "for single phonon displacements set 'compute_error' to false", 1)
+     IF ( single_ph_displ .AND. multi_ZG ) CALL errore('ZG', & 
+          "for single phonon displacements set nconfs to 1", 1)
+     IF ( single_ph_displ .AND. (ABS(SUM(T_array) + 100) > eps) ) CALL errore('ZG', & 
+          "for single phonon displacements do not specify T_array but use T", 1)
+     !
+     ! for multi ZG configurations set compute_error = .false. and error_thresh = 2
+     IF (multi_ZG) THEN 
+       error_thresh = 2.d0
+       compute_error = .FALSE.
+       IF (ionode) WRITE(*,*) "=============================================="
+       IF (ionode) WRITE(*,*) " nconfs larger than 1, multiple ZG configurations are generated .."
+       IF (ionode) WRITE(*,*) "=============================================="
      ENDIF
      !
+     IF (ABS(SUM(T_array) + 100) > eps) compute_error = .FALSE. ! for consistency do not compute error for multiple temperatures
+     !
+     IF (ASDM .AND. multi_ZG) CALL errore('ASDM', &
+         "for ASDM set nconfs to 1", 1)
+     IF (ASDM .AND. (ABS(SUM(T_array) + 100) > eps)) CALL errore('ASDM', &
+         '"ASDM" does not work for multiple temperatures, use only "T" flag', 1)
      IF (ASDM .AND. apply_fd .AND. read_fd_forces) CALL errore('ASDM', &
          '"apply_fd" and "read_fd_forces" cannot be both true', 1)
      IF (ASDM .AND. iter_idx < 0 ) CALL errore('ASDM', &
@@ -520,6 +588,7 @@ PROGRAM ZG
        apply_fd = .FALSE.
        read_fd_forces = .FALSE.
      ENDIF
+     !
      IF (ASDM .AND. poly_fd_forces .AND. .NOT. poly) CALL errore('ASDM', &
          'for "poly_fd_forces", turn flag "poly" true', 1)
      !
@@ -528,37 +597,58 @@ PROGRAM ZG
             'reading supercell size', 1) 
        IF ((ng1 < 1)  .OR. (ng2 < 1) .OR. (ng3 < 1)) CALL errore('ph_unfold', & 
             'wrong g-vectors', 1)
+       IF (ABS(SUM(T_array) + 100) > eps) CALL errore('ph_unfold', &
+            '"ph_unfold" does not work for multiple temperatures, use only "T" flag', 1)
        q_external = .true.
        !IF (.NOT. q_external) CALL errore('ph_unfold', 'set q_external = .true.', 1)
      ENDIF 
      !
      ! read force constants
      !
+      IF ( trim( fildyn ) /= ' ' ) THEN
+        IF (ionode) THEN
+           WRITE(stdout, *)
+           WRITE(stdout, '(4x,a)') ' fildyn has been provided, running q2r...'
+        END IF
+        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, .false., loto_2d, read_lr)
+     END IF
+     !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
      xmlifc=has_xml(flfrc)
      IF (xmlifc) THEN
-        CALL read_dyn_mat_param(flfrc, ntyp_blk, nat_blk)
-        ALLOCATE (m_loc(3, nat_blk))
-        ALLOCATE (tau_blk(3, nat_blk))
+        CALL read_dyn_mat_param(flfrc,ntyp_blk,nat_blk)
+        ALLOCATE (m_loc(3,nat_blk))
+        ALLOCATE (tau_blk(3,nat_blk))
         ALLOCATE (ityp_blk(nat_blk))
         ALLOCATE (atm(ntyp_blk))
-        ALLOCATE (zeu(3, 3, nat_blk))
+        ALLOCATE (zeu(3,3,nat_blk))
         CALL read_dyn_mat_header(ntyp_blk, nat_blk, ibrav, nspin_mag, &
                  celldm, at_blk, bg_blk, omega_blk, atm, amass_blk, &
                  tau_blk, ityp_blk,  m_loc, nqs, has_zstar, epsil, zeu )
-        alat= celldm(1)
-        call volume(alat, at_blk(1, 1), at_blk(1, 2), at_blk(1, 3), omega_blk)
-        CALL read_ifc_param(nr1, nr2, nr3)
-        ALLOCATE(frc(nr1, nr2, nr3, 3, 3, nat_blk, nat_blk))
-        CALL read_ifc(nr1, nr2, nr3, nat_blk,frc)
+        alat=celldm(1)
+        call volume(alat,at_blk(1,1),at_blk(1,2),at_blk(1,3),omega_blk)
+        CALL read_ifc_param(nr1,nr2,nr3)
+        ALLOCATE(frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
+        ALLOCATE(frc_lr(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
+        frc_lr = 0.d0
+        if (read_lr) THEN
+           CALL read_ifc(alph,nr1,nr2,nr3,nat_blk,frc,frc_lr)
+        else
+           CALL read_ifc(alph,nr1,nr2,nr3,nat_blk,frc)
+        end if
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
-            amass_blk, omega_blk, has_zstar)
+            amass_blk, omega_blk, has_zstar, alph, read_lr)
      ENDIF
      !
      CALL recips ( at_blk(1, 1), at_blk(1, 2), at_blk(1, 3),  &
           bg_blk(1, 1), bg_blk(1, 2), bg_blk(1, 3) )
+     !
+     ! if atm_zg is not specified from input
+     DO it = 1, ntyp_blk
+       IF (atm_zg(it) .EQ. ' ') atm_zg(it) = atm(it)
+     ENDDO
      !
      ! set up (super)cell
      !
@@ -730,9 +820,9 @@ PROGRAM ZG
      ENDIF ! q_external, q-list
      !
      IF (asr /= 'no') THEN
-        CALL set_asr (asr, nr1, nr2, nr3, frc, zeu, &
-             nat_blk, ibrav, tau_blk)
-     ENDIF
+        CALL set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, &
+             nat_blk, ibrav, tau_blk, at_blk, huang)
+     END IF
      !
      ALLOCATE ( dyn(3, 3, nat, nat), dyn_blk(3, 3, nat_blk, nat_blk) )
      ALLOCATE ( z(3 * nat, 3 * nat), w2(3 * nat, nq), f_of_q(3, 3, nat, nat) )
@@ -773,12 +863,12 @@ PROGRAM ZG
            CALL nonanal_ifc (nat,nat_blk,itau_blk,epsil,qhat,zeu,omega,dyn, &
                            nr1, nr2, nr3,f_of_q)
         ENDIF
-        
-        CALL setupmat (q(1, n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
+        ! 
+        CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
-                   loto_2d, &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc, f_of_q, fd)
-
+             loto_2d, epsil, zeu, alph, &
+             frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
+        !
         IF (.not.loto_2d) THEN
         qhat(1) = q(1, n) * at(1, 1) + q(2, n) * at(2, 1) + q(3, n) * at(3, 1)
         qhat(2) = q(1, n) * at(1, 2) + q(2, n) * at(2, 2) + q(3, n) * at(3, 2)
@@ -880,13 +970,13 @@ PROGRAM ZG
           CALL ZG_configuration(nq, nat, ntyp, amass, ityp, q_nq, w2, z_nq, & 
                                 dim1, dim2, dim3, niters, error_thresh, &
                                 synch, tau, alat, atm_zg, ntypx, at, &
-                                q_in_cryst_coord, q_external, T, incl_qA, & 
-                                compute_error, single_ph_displ, & 
+                                q_in_cryst_coord, q_external, T, T_array, incl_qA, & 
+                                compute_error, single_ph_displ, multi_ZG, & 
                                 ZG_strf, qpts_strf, atmsf_a, atmsf_b, &
                                 nrots, kres1, kres2, kmin, kmax, col1, col2, Np, & 
                                 flscf, ASDM, apply_fd, read_fd_forces, incl_epsil, & 
                                 iter_idx, iter_idx0, fd_displ, ibrav, epsil, zeu, & 
-                                poly, poly_fd_forces, mixing, update_equil)
+                                poly, poly_fd_forces, mixing, update_equil, alph)
      ! 
      !
      IF (ph_unfold .AND. .NOT. ZG_conf) & 
@@ -903,6 +993,7 @@ PROGRAM ZG
      !
      DEALLOCATE(num_rap_mode)
      DEALLOCATE(high_sym)
+     DEALLOCATE(frc_lr)
   !
 
   CALL environment_end('ZG')
@@ -915,11 +1006,12 @@ END PROGRAM ZG
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
-                    ibrav, alat, at, ntyp, amass, omega, has_zstar )
+     ibrav, alat, at, ntyp, amass, omega, &
+     has_zstar, alph, read_lr )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
-  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
+  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, frc_lr, zeu, atm
   USE cell_base,  ONLY : celldm
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
@@ -929,119 +1021,138 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   IMPLICIT NONE
   ! I/O variable
   CHARACTER(LEN=256) :: flfrc
-  INTEGER :: ibrav, nr1, nr2, nr3, nat, ntyp
-  REAL(DP) :: alat, at(3, 3), epsil(3, 3)
-  LOGICAL :: has_zstar
+  CHARACTER(LEN=80)  :: line
+  INTEGER :: ibrav, nr1,nr2,nr3,nat, ntyp
+  REAL(DP) :: alat, at(3,3), epsil(3,3), alph
+  LOGICAL :: has_zstar, read_lr
   ! local variables
   INTEGER :: i, j, na, nb, m1,m2,m3
-  INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
+  INTEGER :: ios, ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
   REAL(DP) :: amass(ntyp), amass_from_file, omega
   INTEGER :: nt
-  CHARACTER(LEN=3) :: atm
   !
   !
-  IF (ionode) OPEN (unit= 1,file=flfrc, status ='old',form='formatted')
+  IF (ionode) OPEN (unit=1,file=flfrc,status='old',form='formatted')
   !
   !  read cell data
   !
   IF (ionode)THEN
-     READ(1,*) ntyp, nat, ibrav,(celldm(i), i = 1,6)
-     IF (ibrav== 0) THEN
-        read(1,*) ((at(i, j), i = 1, 3), j =1, 3)
-     ENDIF
+     READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+     if (ibrav==0) then
+        read(1,*) ((at(i,j),i=1,3),j=1,3)
+     end if
   ENDIF
   CALL mp_bcast(ntyp, ionode_id, world_comm)
   CALL mp_bcast(nat, ionode_id, world_comm)
   CALL mp_bcast(ibrav, ionode_id, world_comm)
   CALL mp_bcast(celldm, ionode_id, world_comm)
-  IF (ibrav== 0) THEN
+  IF (ibrav==0) THEN
      CALL mp_bcast(at, ionode_id, world_comm)
   ENDIF
   !
-  CALL latgen(ibrav, celldm, at(1, 1), at(1, 2), at(1, 3), omega)
+  CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   alat = celldm(1)
   at = at / alat !  bring at in units of alat
-  CALL volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
+  CALL volume(alat,at(1,1),at(1,2),at(1,3),omega)
   !
   !  read atomic types, positions and masses
   !
-  DO nt = 1, ntyp
-     IF (ionode) READ(1,*) i, atm, amass_from_file
-     CALL mp_bcast(i, ionode_id, world_comm)
-     CALL mp_bcast(atm, ionode_id, world_comm)
-     CALL mp_bcast(amass_from_file, ionode_id, world_comm)
-     IF (i.NE.nt) CALL errore ('readfc','wrong data read', nt)
+  ALLOCATE (atm(ntyp))
+  DO nt = 1,ntyp
+     IF (ionode) READ(1,*) i,atm(nt),amass_from_file
+     CALL mp_bcast(i,ionode_id, world_comm)
+     CALL mp_bcast(amass_from_file,ionode_id, world_comm)
+     IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
         amass(nt) = amass_from_file/amu_ry
      ELSE
-        WRITE(stdout,*) 'for atomic type', nt,' mass from file not used'
-     ENDIF
-  ENDDO
+        WRITE(stdout,*) 'for atomic type',nt,' mass from file not used'
+     END IF
+  END DO
+  CALL mp_bcast(atm,ionode_id, world_comm)
+  CALL mp_bcast(amass,ionode_id, world_comm)
   !
-  ALLOCATE (tau(3, nat), ityp(nat), zeu(3, 3, nat))
+  ALLOCATE (tau(3,nat), ityp(nat), zeu(3,3,nat))
   !
-  DO na= 1, nat
-     IF (ionode) READ(1,*) i, ityp(na),(tau(j, na), j = 1, 3)
-     CALL mp_bcast(i, ionode_id, world_comm)
-     IF (i.NE.na) CALL errore ('readfc','wrong data read', na)
-  ENDDO
-  CALL mp_bcast(ityp, ionode_id, world_comm)
-  CALL mp_bcast(tau, ionode_id, world_comm)
+  DO na=1,nat
+     IF (ionode) READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+     CALL mp_bcast(i,ionode_id, world_comm)
+     IF (i.NE.na) CALL errore ('readfc','wrong data read',na)
+  END DO
+  CALL mp_bcast(ityp,ionode_id, world_comm)
+  CALL mp_bcast(tau,ionode_id, world_comm)
   !
-  !  read macroscopic variable
+  !  read macroscopic variables
   !
-  IF (ionode) READ (1,*) has_zstar
-  CALL mp_bcast(has_zstar, ionode_id, world_comm)
-  IF (has_zstar) THEN
-     IF (ionode) READ(1,*) ((epsil(i, j), j = 1, 3), i =1, 3)
-     CALL mp_bcast(epsil, ionode_id, world_comm)
-     IF (ionode) THEN
-        DO na= 1, nat
-           READ(1,*)
-           READ(1,*) ((zeu(i, j, na), j = 1, 3), i =1, 3)
-        ENDDO
-     ENDIF
-     CALL mp_bcast(zeu, ionode_id, world_comm)
-  ELSE
-     zeu  (:, :, :) = 0.d0
-     epsil(:, :) = 0.d0
+  alph = 1.0_dp
+  IF (ionode) THEN
+     READ (1,'(a)') line
+     READ(line,*,iostat=ios) has_zstar, alph
+     IF ( ios /= 0 ) READ(line,*) has_zstar
   ENDIF
   !
-  IF (ionode) READ (1,*) nr1, nr2, nr3
-  CALL mp_bcast(nr1, ionode_id, world_comm)
-  CALL mp_bcast(nr2, ionode_id, world_comm)
-  CALL mp_bcast(nr3, ionode_id, world_comm)
+  CALL mp_bcast(has_zstar,ionode_id, world_comm)
+  IF (has_zstar) THEN
+     CALL mp_bcast(alph,ionode_id, world_comm)
+     IF (ionode) READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
+     CALL mp_bcast(epsil,ionode_id, world_comm)
+     IF (ionode) THEN
+        DO na=1,nat
+           READ(1,*)
+           READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
+        END DO
+     ENDIF
+     CALL mp_bcast(zeu,ionode_id, world_comm)
+  ELSE
+     zeu  (:,:,:) = 0.d0
+     epsil(:,:) = 0.d0
+  END IF
   !
-  !  read REAL-space interatomic force constants
+  IF (ionode) READ (1,*) nr1,nr2,nr3
+  CALL mp_bcast(nr1,ionode_id, world_comm)
+  CALL mp_bcast(nr2,ionode_id, world_comm)
+  CALL mp_bcast(nr3,ionode_id, world_comm)
   !
-  ALLOCATE ( frc(nr1, nr2, nr3, 3, 3, nat, nat) )
-  frc(:, :, :, :, :, :, :) = 0.d0
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           DO nb= 1, nat
+  !  read real-space interatomic force constants
+  !
+  ALLOCATE ( frc(nr1,nr2,nr3,3,3,nat,nat) )
+  frc(:,:,:,:,:,:,:) = 0.d0
+  ALLOCATE ( frc_lr(nr1,nr2,nr3,3,3,nat,nat) )
+  frc_lr(:,:,:,:,:,:,:) = 0.d0
+  DO i=1,3
+     DO j=1,3
+        DO na=1,nat
+           DO nb=1,nat
               IF (ionode) READ (1,*) ibid, jbid, nabid, nbbid
-              CALL mp_bcast(ibid, ionode_id, world_comm)
-              CALL mp_bcast(jbid, ionode_id, world_comm)
-              CALL mp_bcast(nabid, ionode_id, world_comm)
-              CALL mp_bcast(nbbid, ionode_id, world_comm)
+              CALL mp_bcast(ibid,ionode_id, world_comm)
+              CALL mp_bcast(jbid,ionode_id, world_comm)
+              CALL mp_bcast(nabid,ionode_id, world_comm)
+              CALL mp_bcast(nbbid,ionode_id, world_comm)
               IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
                  na.NE.nabid .OR. nb.NE.nbbid)                      &
-                 CALL errore  ('readfc','error in reading', 1)
-              IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,        &
-                          frc(m1,m2,m3, i, j, na, nb),                  &
-                           m1= 1, nr1),m2 =1, nr2),m3=1, nr3)
-               
-              CALL mp_bcast(frc(:, :, :, i, j, na, nb), ionode_id, world_comm)
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
+                 CALL errore  ('readfc','error in reading',1)
+              IF (read_lr) THEN
+                 IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,     &
+                             frc(m1,m2,m3,i,j,na,nb),               &
+                             frc_lr(m1,m2,m3,i,j,na,nb),            &
+                             m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              ELSE
+                 IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,     &
+                             frc(m1,m2,m3,i,j,na,nb),               &
+                             m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              END IF
+              CALL mp_bcast(frc(:,:,:,i,j,na,nb),ionode_id, world_comm)
+              CALL mp_bcast(frc_lr(:,:,:,i,j,na,nb),ionode_id, world_comm)
+           END DO
+        END DO
+     END DO
+  END DO
   !
-  IF (ionode) CLOSE(unit= 1)
+  IF (ionode) CLOSE(unit=1)
   !
   RETURN
 END SUBROUTINE readfc
+!
 !
 !-----------------------------------------------------------------------
 SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3, frc, & 
@@ -1096,6 +1207,7 @@ SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3, frc, &
     ENDDO
   ENDIF FIRST_TIME
   !
+  !
   ALLOCATE(ttt(3, nat, nr1, nr2, nr3))
   ALLOCATE(tttx(3, nat*nr1*nr2*nr3))
   ttt(:, :, :, :, :) = 0.d0
@@ -1149,7 +1261,7 @@ SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3, frc, &
         ENDDO
         IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
           ! WRITE(stdout,*) total_weight
-          ! CALL errore ('frc_blk','wrong total_weight', 1)
+           CALL errore ('frc_blk','wrong total_weight', 1)
         ENDIF
      ENDDO
   ENDDO
@@ -1160,8 +1272,8 @@ END SUBROUTINE frc_blk
 !-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
-     &         loto_2d, &
-     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
+     &         loto_2d, epsil, zeu, alph, &
+     &         frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -1175,313 +1287,314 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   ! I/O variables
   !
   INTEGER:: nr1, nr2, nr3, nat, nat_blk, nsc, nrws, itau_blk(nat)
-  REAL(DP) :: q(3), tau(3, nat), at(3, 3), bg(3, 3), alat,      &
-                  epsil(3, 3), zeu(3, 3, nat_blk), rws(0:3, nrws),   &
-                  frc(nr1, nr2, nr3, 3, 3, nat_blk, nat_blk)
-  REAL(DP) :: tau_blk(3, nat_blk), at_blk(3, 3), bg_blk(3, 3), omega_blk
-  COMPLEX(DP) dyn_blk(3, 3, nat_blk, nat_blk), f_of_q(3, 3, nat, nat)
-  COMPLEX(DP) ::  dyn(3, 3, nat, nat)
-  LOGICAL :: has_zstar, na_ifc, fd
+  REAL(DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat, alph,    &
+                  epsil(3,3), zeu(3,3,nat_blk), rws(0:3,nrws),   &
+                  frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
+  REAL(DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
+  COMPLEX(DP) dyn_blk(3,3,nat_blk,nat_blk), f_of_q(3,3,nat,nat)
+  COMPLEX(DP) ::  dyn(3,3,nat,nat)
+  LOGICAL :: has_zstar, na_ifc, fd, loto_2d
   !
   ! local variables
   !
   REAL(DP) :: arg
   COMPLEX(DP) :: cfac(nat)
-  INTEGER :: i, j, k, na, nb, na_blk, nb_blk, iq
-  REAL(DP) :: qp(3), qbid(3, nsc) ! automatic array
-  LOGICAL ::  loto_2d
+  INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq
+  REAL(DP) :: qp(3), qbid(3,nsc) ! automatic array
   !
   !
-  CALL q_gen(nsc,qbid, at_blk, bg_blk, at, bg)
+  CALL q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
   !
-  DO iq= 1, nsc
+  DO iq=1,nsc
      !
-     DO k = 1, 3
-        qp(k) = q(k) + qbid(k, iq)
-     ENDDO
+     DO k=1,3
+        qp(k)= q(k) + qbid(k,iq)
+     END DO
      !
-     dyn_blk(:, :, :, :) = (0.d0,0.d0)
-     CALL frc_blk (dyn_blk, qp,tau_blk, nat_blk,              &
-          &              nr1, nr2, nr3,frc, at_blk, bg_blk, rws, nrws, f_of_q, fd)
-      IF (has_zstar .and. .not. na_ifc) &
-           CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp,tau_blk,   &
-                        epsil, zeu, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0)
-     !
-     DO na= 1, nat
+     dyn_blk(:,:,:,:) = (0.d0,0.d0)
+     CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
+          &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q,fd)
+     IF (has_zstar .and. .not.na_ifc) &
+          CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp, tau_blk,   &
+          epsil, zeu, alph, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0 )
+      !
+     DO na=1,nat
         na_blk = itau_blk(na)
-        DO nb= 1, nat
+        DO nb=1,nat
            nb_blk = itau_blk(nb)
            !
-           arg=tpi* ( qp(1) * ( (tau(1, na) -tau_blk(1, na_blk)) -   &
-                                (tau(1, nb) -tau_blk(1, nb_blk)) ) + &
-                      qp(2) * ( (tau(2, na) -tau_blk(2, na_blk)) -   &
-                                (tau(2, nb) -tau_blk(2, nb_blk)) ) + &
-                      qp(3) * ( (tau(3, na) -tau_blk(3, na_blk)) -   &
-                                (tau(3, nb) -tau_blk(3, nb_blk)) ) )
+           arg=tpi* ( qp(1) * ( (tau(1,na)-tau_blk(1,na_blk)) -   &
+                                (tau(1,nb)-tau_blk(1,nb_blk)) ) + &
+                      qp(2) * ( (tau(2,na)-tau_blk(2,na_blk)) -   &
+                                (tau(2,nb)-tau_blk(2,nb_blk)) ) + &
+                      qp(3) * ( (tau(3,na)-tau_blk(3,na_blk)) -   &
+                                (tau(3,nb)-tau_blk(3,nb_blk)) ) )
            !
-           cfac(nb) = CMPLX(COS(arg),SIN(arg), kind= DP)/nsc
+           cfac(nb) = CMPLX(COS(arg),SIN(arg),kind=DP)/nsc
            !
-        ENDDO ! nb
+        END DO ! nb
         !
-        DO i = 1, 3
-           DO j = 1, 3
+        DO i=1,3
+           DO j=1,3
               !
-              DO nb= 1, nat
+              DO nb=1,nat
                  nb_blk = itau_blk(nb)
-                 dyn(i, j, na, nb) = dyn(i, j, na, nb) + cfac(nb) * &
-                      dyn_blk(i, j, na_blk, nb_blk)
-              ENDDO ! nb
+                 dyn(i,j,na,nb) = dyn(i,j,na,nb) + cfac(nb) * &
+                      dyn_blk(i,j,na_blk,nb_blk)
+              END DO ! nb
               !
-           ENDDO ! j
-        ENDDO ! i
-     ENDDO ! na
+           END DO ! j
+        END DO ! i
+     END DO ! na
      !
-  ENDDO ! iq
+  END DO ! iq
   !
   RETURN
 END SUBROUTINE setupmat
 !
-!
 !----------------------------------------------------------------------
-SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
+SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, at_blk, huang)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
-  USE io_global,  ONLY : ionode, stdout
+  USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
-  CHARACTER (LEN= 10), INTENT(in) :: asr
-  INTEGER, INTENT(in) :: nr1, nr2, nr3, nat, ibrav
-  REAL(DP), INTENT(in) :: tau(3, nat)
-  REAL(DP), INTENT(inout) :: frc(nr1, nr2, nr3, 3, 3, nat, nat), zeu(3, 3, nat)
+  CHARACTER (LEN=10), intent(in) :: asr
+  LOGICAL, intent(in) :: huang
+  INTEGER, intent(in) :: nr1, nr2, nr3, nat, ibrav
+  REAL(DP), intent(in) :: tau_blk(3,nat), at_blk(3,3), frc_lr(nr1,nr2,nr3,3,3,nat,nat)
+  REAL(DP), intent(inout) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat)
   !
-  INTEGER :: axis, n, i, j, na, nb, n1, n2, n3, m, p, k,l,q, r, i1, j1, na1
-  REAL(DP) :: zeu_new(3, 3, nat)
-  REAL(DP), ALLOCATABLE :: frc_new(:, :, :, :, :, :, :)
+  INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1, ip,ieq,neq
+  INTEGER :: huang_set(4,15)
+  REAL(DP) :: zeu_new(3,3,nat), tau(3,48), rcell(3), r_ws(3), eps
+  REAL(DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
+  parameter (eps=1.0d-8)
   type vector
-     REAL(DP), pointer :: vec(:, :, :, :, :, :, :)
+     real(DP),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
   !
-  type (vector) u(6*3*nat)
+  type (vector) u(6*3*nat+15)
   ! These are the "vectors" associated with the sum rules on force-constants
   !
-  integer :: u_less(6*3*nat), n_less, i_less
+  integer :: u_less(6*3*nat),n_less,i_less
   ! indices of the vectors u that are not independent to the preceding ones,
   ! n_less = number of such vectors, i_less = temporary parameter
   !
-  integer, allocatable :: ind_v(:, :, :)
-  REAL(DP), allocatable :: v(:, :)
+  integer, allocatable :: ind_v(:,:,:)
+  real(DP), allocatable :: v(:,:)
   ! These are the "vectors" associated with symmetry conditions, coded by
   ! indicating the positions (i.e. the seven indices) of the non-zero elements (there
-  ! should be only 2 of them) and the value of that element. We DO so in order
+  ! should be only 2 of them) and the value of that element. We do so in order
   ! to limit the amount of memory used.
   !
-  REAL(DP), allocatable :: w(:, :, :, :, :, :, :), x(:, :, :, :, :, :, :)
+  real(DP), allocatable :: w(:,:,:,:,:,:,:), x(:,:,:,:,:,:,:)
   ! temporary vectors and parameters
-  REAL(DP) :: scal, norm2, sum
+  real(DP) :: scal,norm2, sum
   !
-  REAL(DP) :: zeu_u(6 * 3, 3, 3, nat)
+  real(DP) :: zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
-  integer :: zeu_less(6 * 3), nzeu_less, izeu_less
+  integer :: zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  REAL(DP) :: zeu_w(3, 3, nat), zeu_x(3, 3, nat)
+  real(DP) :: zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
 
-  ! Initialization. n is the number of sum rules to be considered (IF asr.ne.'simple')
+  ! Initialization. n is the number of sum rules to be considered (if asr.ne.'simple')
   ! and 'axis' is the rotation axis in the case of a 1D system
-  ! (i.e. the rotation axis is (Ox) IF axis ='1', (Oy) if axis='2' and (Oz) if axis='3')
+  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3')
   !
   if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim') &
-                      .and.(asr.ne.'zero-dim')) THEN
+                      .and.(asr.ne.'zero-dim').and.(asr.ne.'all')) then
      call errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
-  ENDIF
+  endif
   !
-  if(asr.eq.'simple') THEN
+  if(asr.eq.'simple') then
      !
      ! Simple Acoustic Sum Rule on effective charges
      !
-     DO i = 1, 3
-        DO j = 1, 3
-           sum= 0.0d0
-           DO na= 1, nat
-              sum = sum + zeu(i, j, na)
-           ENDDO
-           DO na= 1, nat
-              zeu(i, j, na) = zeu(i, j, na) - sum/nat
-           ENDDO
-        ENDDO
-     ENDDO
+     do i=1,3
+        do j=1,3
+           sum=0.0d0
+           do na=1,nat
+              sum = sum + zeu(i,j,na)
+           end do
+           do na=1,nat
+              zeu(i,j,na) = zeu(i,j,na) - sum/nat
+           end do
+        end do
+     end do
      !
-     ! Simple Acoustic Sum Rule on force constants in REAL space
+     ! Simple Acoustic Sum Rule on force constants in real space
      !
-     DO i = 1, 3
-        DO j = 1, 3
-           DO na= 1, nat
-              sum= 0.0d0
-               DO nb= 1, nat
-                  DO n1= 1, nr1
-                     DO n2 = 1, nr2
-                        DO n3= 1, nr3
-                           sum=sum+frc(n1, n2, n3, i, j, na, nb)
-                        ENDDO
-                     ENDDO
-                  ENDDO
-               ENDDO
-               frc(1, 1, 1, i, j, na, na) = frc(1, 1, 1, i, j, na, na) - sum
-               !               WRITE(6,*) ' na, i, j, sum = ', na, i, j, sum
-            ENDDO
-         ENDDO
-      ENDDO
+     do i=1,3
+        do j=1,3
+           do na=1,nat
+              sum=0.0d0
+               do nb=1,nat
+                  do n1=1,nr1
+                     do n2=1,nr2
+                        do n3=1,nr3
+                           sum=sum+frc(n1,n2,n3,i,j,na,nb)
+                        end do
+                     end do
+                  end do
+               end do
+               frc(1,1,1,i,j,na,na) = frc(1,1,1,i,j,na,na) - sum
+               !               write(6,*) ' na, i, j, sum = ',na,i,j,sum
+            end do
+         end do
+      end do
       !
       return
       !
-   ENDIF
+  end if
   if(asr.eq.'crystal') n=3
-  if(asr.eq.'one-dim') THEN
+  if(asr.eq.'one-dim') then
      ! the direction of periodicity is the rotation axis
-     ! It will work only IF the crystal axis considered is one of
-     ! the cartesian axis (typically, ibrav= 1, 6 or 8, or 4 along the
+     ! It will work only if the crystal axis considered is one of
+     ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
      ! z-direction)
-     IF (nr1*nr2*nr3.eq.1) axis =3
-     IF ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis = 1
-     IF ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis =2
-     IF ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis =3
-     IF (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
-          (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) THEN
+     if (nr1*nr2*nr3.eq.1) axis=3
+     if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
+     if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
+     if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
+     if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
+          (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
         call errore('set_asr','too many directions of &
-             & periodicity in 1D system', axis)
-     ENDIF
-     IF ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
-          ((ibrav.ne.4).or.(axis.ne.3)) ) THEN
-        WRITE(stdout,*) 'asr: rotational axis may be wrong'
-     ENDIF
-     WRITE(stdout,'("asr rotation axis in 1D system= ",I4)') axis
+             & periodicity in 1D system',axis)
+     endif
+     if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
+          ((ibrav.ne.4).or.(axis.ne.3)) ) then
+        write(stdout,*) 'asr: rotational axis may be wrong'
+     endif
+     write(stdout,'("asr rotation axis in 1D system= ",I4)') axis
      n=4
-  ENDIF
+  endif
   if(asr.eq.'zero-dim') n=6
+  if(asr.eq.'all') n=21
   !
   ! Acoustic Sum Rule on effective charges
   !
   ! generating the vectors of the orthogonal of the subspace to project
   ! the effective charges matrix on
   !
-  zeu_u(:, :, :, :) = 0.0d0
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           zeu_new(i, j, na) =zeu(i, j, na)
-        ENDDO
-     ENDDO
-  ENDDO
+  zeu_u(:,:,:,:)=0.0d0
+  do i=1,3
+     do j=1,3
+        do na=1,nat
+           zeu_new(i,j,na)=zeu(i,j,na)
+        enddo
+     enddo
+  enddo
   !
-  p = 0
-  DO i = 1, 3
-     DO j = 1, 3
+  p=0
+  do i=1,3
+     do j=1,3
         ! These are the 3*3 vectors associated with the
         ! translational acoustic sum rules
-        p = p + 1
-        zeu_u(p, i, j,:) = 1.0d0
+        p=p+1
+        zeu_u(p,i,j,:)=1.0d0
         !
-     ENDDO
-  ENDDO
+     enddo
+  enddo
   !
-  IF (n.eq.4) THEN
-     DO i = 1, 3
+  if (n.eq.4) then
+     do i=1,3
         ! These are the 3 vectors associated with the
         ! single rotational sum rule (1D system)
-        p = p + 1
-        DO na= 1, nat
-           zeu_u(p, i, MOD(axis, 3) + 1, na) = -tau(MOD(axis + 1, 3) + 1, na)
-           zeu_u(p, i, MOD(axis + 1, 3) + 1, na) = tau(MOD(axis, 3) + 1, na)
-        ENDDO
+        p=p+1
+        do na=1,nat
+           zeu_u(p,i,MOD(axis,3)+1,na)=-tau_blk(MOD(axis+1,3)+1,na)
+           zeu_u(p,i,MOD(axis+1,3)+1,na)=tau_blk(MOD(axis,3)+1,na)
+        enddo
         !
-     ENDDO
-  ENDIF
+     enddo
+  endif
   !
-  IF (n.eq.6) THEN
-     DO i = 1, 3
-        DO j = 1, 3
+  if (n.eq.6) then
+     do i=1,3
+        do j=1,3
            ! These are the 3*3 vectors associated with the
            ! three rotational sum rules (0D system - typ. molecule)
-           p = p + 1
-           DO na= 1, nat
-              zeu_u(p, i, MOD(j, 3) + 1, na) = -tau(MOD(j + 1, 3) + 1, na)
-              zeu_u(p, i, MOD(j + 1, 3) + 1, na) = tau(MOD(j, 3) + 1, na)
-           ENDDO
+           p=p+1
+           do na=1,nat
+              zeu_u(p,i,MOD(j,3)+1,na)=-tau_blk(MOD(j+1,3)+1,na)
+              zeu_u(p,i,MOD(j+1,3)+1,na)=tau_blk(MOD(j,3)+1,na)
+           enddo
            !
-        ENDDO
-     ENDDO
-  ENDIF
+        enddo
+     enddo
+  endif
   !
   ! Gram-Schmidt orthonormalization of the set of vectors created.
   !
-  nzeu_less = 0
-  DO k = 1, p
-     zeu_w(:, :, :) =zeu_u(k, :, :, :)
-     zeu_x(:, :, :) =zeu_u(k, :, :, :)
-     DO q= 1, k- 1
-        r = 1
-        DO izeu_less = 1, nzeu_less
-           IF (zeu_less(izeu_less).eq.q) r = 0
-        ENDDO
-        IF (r.ne.0) THEN
-           call sp_zeu(zeu_x, zeu_u(q, :, :, :), nat, scal)
-           zeu_w(:, :, :) = zeu_w(:, :, :) - scal* zeu_u(q, :, :, :)
-        ENDIF
-     ENDDO
-     call sp_zeu(zeu_w, zeu_w, nat, norm2)
-     IF (norm2.gt.1.0d-16) THEN
-        zeu_u(k, :, :, :) = zeu_w(:, :, :) / DSQRT(norm2)
-     ELSE
-        nzeu_less =nzeu_less+ 1
-        zeu_less(nzeu_less) =k
-     ENDIF
-  ENDDO
+  nzeu_less=0
+  do k=1,p
+     zeu_w(:,:,:)=zeu_u(k,:,:,:)
+     zeu_x(:,:,:)=zeu_u(k,:,:,:)
+     do q=1,k-1
+        r=1
+        do izeu_less=1,nzeu_less
+           if (zeu_less(izeu_less).eq.q) r=0
+        enddo
+        if (r.ne.0) then
+           call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
+           zeu_w(:,:,:) = zeu_w(:,:,:) - scal* zeu_u(q,:,:,:)
+        endif
+     enddo
+     call sp_zeu(zeu_w,zeu_w,nat,norm2)
+     if (norm2.gt.1.0d-16) then
+        zeu_u(k,:,:,:) = zeu_w(:,:,:) / DSQRT(norm2)
+     else
+        nzeu_less=nzeu_less+1
+        zeu_less(nzeu_less)=k
+     endif
+  enddo
   !
   ! Projection of the effective charge "vector" on the orthogonal of the
   ! subspace of the vectors verifying the sum rules
   !
-  zeu_w(:, :, :) = 0.0d0
-  DO k = 1, p
-     r = 1
-     DO izeu_less = 1, nzeu_less
-        IF (zeu_less(izeu_less).eq.k) r = 0
-     ENDDO
-     IF (r.ne.0) THEN
-        zeu_x(:, :, :) = zeu_u(k, :, :, :)
-        call sp_zeu(zeu_x, zeu_new, nat, scal)
-        zeu_w(:, :, :) = zeu_w(:, :, :) + scal * zeu_u(k, :, :, :)
-     ENDIF
-  ENDDO
+  zeu_w(:,:,:)=0.0d0
+  do k=1,p
+     r=1
+     do izeu_less=1,nzeu_less
+        if (zeu_less(izeu_less).eq.k) r=0
+     enddo
+     if (r.ne.0) then
+        zeu_x(:,:,:)=zeu_u(k,:,:,:)
+        call sp_zeu(zeu_x,zeu_new,nat,scal)
+        zeu_w(:,:,:) = zeu_w(:,:,:) + scal*zeu_u(k,:,:,:)
+     endif
+  enddo
   !
   ! Final substraction of the former projection to the initial zeu, to get
   ! the new "projected" zeu
   !
-  zeu_new(:, :, :) = zeu_new(:, :, :) - zeu_w(:, :, :)
-  call sp_zeu(zeu_w, zeu_w, nat, norm2)
-  IF (ionode) WRITE(*,*)
-  WRITE(stdout,'("Norm of the difference between old and new effective ", &
-       & "charges: ", F25.20)') SQRT(norm2)
+  zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
+  call sp_zeu(zeu_w,zeu_w,nat,norm2)
+  write(stdout,'(" Norm of the difference between old and new effective ", &
+       & "charges: ",F25.20/)') SQRT(norm2)
   !
   ! Check projection
   !
-  !WRITE(6,'("Check projection of zeu")')
-  !DO k = 1, p
-  !  zeu_x(:, :, :) =zeu_u(k,:, :, :)
-  !  call sp_zeu(zeu_x, zeu_new, nat, scal)
-  !  IF (DABS(scal).gt.1d- 10) WRITE(6,'("k = ",I8," zeu_new|zeu_u(k) = ", F15.10)') k, scal
-  !ENDDO
+  !write(6,'("Check projection of zeu")')
+  !do k=1,p
+  !  zeu_x(:,:,:)=zeu_u(k,:,:,:)
+  !  call sp_zeu(zeu_x,zeu_new,nat,scal)
+  !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," zeu_new|zeu_u(k)= ",F15.10)') k,scal
+  !enddo
   !
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           zeu(i, j, na) = zeu_new(i, j, na)
-        ENDDO
-     ENDDO
-  ENDDO
+  do i=1,3
+     do j=1,3
+        do na=1,nat
+           zeu(i,j,na)=zeu_new(i,j,na)
+        enddo
+     enddo
+  enddo
   !
   ! Acoustic Sum Rule on force constants
   !
@@ -1489,257 +1602,473 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! generating the vectors of the orthogonal of the subspace to project
   ! the force-constants matrix on
   !
-  DO k = 1, 18*nat
-     ALLOCATE(u(k) % vec(nr1, nr2, nr3, 3, 3, nat, nat))
-     u(k) % vec (:, :, :, :, :, :, :) = 0.0d0
-  ENDDO
-  ALLOCATE (frc_new(nr1, nr2, nr3, 3, 3, nat, nat))
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           DO nb= 1, nat
-              DO n1= 1, nr1
-                 DO n2 = 1, nr2
-                    DO n3= 1, nr3
-                       frc_new(n1, n2, n3, i, j, na, nb) =frc(n1, n2, n3, i, j, na, nb)
-                    ENDDO
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
+  do k=1,18*nat+15
+     allocate(u(k) % vec(nr1,nr2,nr3,3,3,nat,nat))
+     u(k) % vec (:,:,:,:,:,:,:)=0.0d0
+  enddo
+  ALLOCATE (frc_new(nr1,nr2,nr3,3,3,nat,nat))
+  if (asr.eq.'all') then
+     frc_new(:,:,:,:,:,:,:)=frc(:,:,:,:,:,:,:)+frc_lr(:,:,:,:,:,:,:)
+  else
+     frc_new(:,:,:,:,:,:,:)=frc(:,:,:,:,:,:,:)
+  endif
   !
-  p = 0
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
+  p=0
+  do i=1,3
+     do j=1,3
+        do na=1,nat
            ! These are the 3*3*nat vectors associated with the
            ! translational acoustic sum rules
-           p = p + 1
-           u(p) % vec (:, :, :, i, j, na,:) = 1.0d0
+           p=p+1
+           u(p) % vec (:,:,:,i,j,na,:)=1.0d0
            !
-        ENDDO
-     ENDDO
-  ENDDO
+        enddo
+     enddo
+  enddo
   !
-  IF (n.eq.4) THEN
-     DO i = 1, 3
-        DO na= 1, nat
+  if (n.eq.4) then
+     do i=1,3
+        do na=1,nat
            ! These are the 3*nat vectors associated with the
            ! single rotational sum rule (1D system)
-           p = p + 1
-           DO nb= 1, nat
-              u(p) % vec (:, :, :, i, MOD(axis, 3) + 1, na, nb) =-tau(MOD(axis+ 1, 3) + 1, nb)
-              u(p) % vec (:, :, :, i, MOD(axis+ 1, 3) + 1, na, nb) =tau(MOD(axis, 3) + 1, nb)
-           ENDDO
+           p=p+1
+           do nb=1,nat
+              u(p) % vec (:,:,:,i,MOD(axis,3)+1,na,nb)=-tau_blk(MOD(axis+1,3)+1,nb)
+              u(p) % vec (:,:,:,i,MOD(axis+1,3)+1,na,nb)=tau_blk(MOD(axis,3)+1,nb)
+           enddo
            !
-        ENDDO
-     ENDDO
-  ENDIF
+        enddo
+     enddo
+  endif
   !
-  IF (n.eq.6) THEN
-     DO i = 1, 3
-        DO j = 1, 3
-           DO na= 1, nat
+  if (n.eq.6) then
+     do i=1,3
+        do j=1,3
+           do na=1,nat
               ! These are the 3*3*nat vectors associated with the
               ! three rotational sum rules (0D system - typ. molecule)
-              p = p + 1
-              DO nb= 1, nat
-                 u(p) % vec (:, :, :, i, MOD(j, 3) + 1, na, nb) =-tau(MOD(j+ 1, 3) + 1, nb)
-                 u(p) % vec (:, :, :, i, MOD(j+ 1, 3) + 1, na, nb) =tau(MOD(j, 3) + 1, nb)
-              ENDDO
+              p=p+1
+              do nb=1,nat
+                 u(p) % vec (:,:,:,i,MOD(j,3)+1,na,nb)=-tau_blk(MOD(j+1,3)+1,nb)
+                 u(p) % vec (:,:,:,i,MOD(j+1,3)+1,na,nb)=tau_blk(MOD(j,3)+1,nb)
+              enddo
               !
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDIF
+           enddo
+        enddo
+     enddo
+  endif
   !
-  ALLOCATE (ind_v(9*nat*nat*nr1*nr2*nr3, 2,7), v(9*nat*nat*nr1*nr2*nr3, 2) )
-  m= 0
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           DO nb= 1, nat
-              DO n1= 1, nr1
-                 DO n2 = 1, nr2
-                    DO n3= 1, nr3
+  if (n.eq.21) then
+     !
+     !! Please consider citing C. Lin, S. Ponc\'e and N. Marzari, npj Comput Mater 8, 236 (2022)
+     !! if asr='all' is used.
+     !
+     ! Born-Huang invariance conditions
+     do i=1,3
+        do j=1,3
+           do na=1,nat
+              ! These are 3*3*nat vectors associated with the three
+              ! rotational sum rules (valid for system of any dimension).
+              ! These differ from the case of n=6 (zero-dim), where atom b is
+              ! in supercell and its position is wrapped to its nearest periodic
+              ! image with the correct weight in the case of degeneracy.
+              p=p+1
+              do nb=1,nat
+                 do n1=1,nr1
+                    do n2=1,nr2
+                       do n3=1,nr3
+                          rcell=matmul(at_blk,(/n1,n2,n3/)-(/1,1,1/))
+                          r_ws=rcell-tau_blk(:,nb)+tau_blk(:,na)
+                          call ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+                          do ieq=1,neq
+                             u(p) % vec (n1,n2,n3,i,MOD(j,3)+1,na,nb)=&
+                             u(p) % vec (n1,n2,n3,i,MOD(j,3)+1,na,nb)-(tau(MOD(j+1,3)+1,ieq)-tau_blk(MOD(j+1,3)+1,na))/DBLE(neq)
+                             u(p) % vec (n1,n2,n3,i,MOD(j+1,3)+1,na,nb)=&
+                             u(p) % vec (n1,n2,n3,i,MOD(j+1,3)+1,na,nb)+(tau(MOD(j,3)+1,ieq)-tau_blk(MOD(j,3)+1,na))/DBLE(neq)
+                          enddo  
+                       enddo
+                    enddo
+                 enddo
+              enddo
+              !call sp1(frc_new, u(p) % vec (:,:,:,:,:,:,:), nr1,nr2,nr3,nat,scal)
+              !write(*,*) scal
+              !
+              where(abs(u(p) % vec)<eps) u(p) % vec=0.d0
+           enddo
+        enddo
+     enddo
+     !
+     ! Huang conditions
+     if (huang) then
+     do na=1,nat
+        do nb=1,nat
+           do n1=1,nr1
+              do n2=1,nr2
+                 do n3=1,nr3
+                    ! These are 15 vectors for vanishing stress tensor
+                    rcell=matmul(at_blk,(/n1,n2,n3/)-(/1,1,1/))
+                    r_ws=rcell-tau_blk(:,nb)+tau_blk(:,na)
+                    call ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+                    !
+                    do ieq=1,neq
+                       ! 1 1 1 2, yx
+                       huang_set(:,1)=(/1,1,1,2/)
+                       u(p+1) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+1) % vec (n1,n2,n3,1,1,na,nb)-tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+1) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+1) % vec (n1,n2,n3,1,2,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 1 3, zx
+                       huang_set(:,2)=(/1,1,1,3/)
+                       u(p+2) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+2) % vec (n1,n2,n3,1,1,na,nb)-tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+2) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+2) % vec (n1,n2,n3,1,3,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 2 2, xx-yy
+                       huang_set(:,3)=(/1,1,2,2/)
+                       u(p+3) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+3) % vec (n1,n2,n3,1,1,na,nb)-tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+3) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+3) % vec (n1,n2,n3,2,2,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 2 3
+                       huang_set(:,4)=(/1,1,2,3/)
+                       u(p+4) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+4) % vec (n1,n2,n3,1,1,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+4) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+4) % vec (n1,n2,n3,2,3,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 3 3, xx-zz
+                       huang_set(:,5)=(/1,1,3,3/)
+                       u(p+5) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+5) % vec (n1,n2,n3,1,1,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+5) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+5) % vec (n1,n2,n3,3,3,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 2 1 3
+                       huang_set(:,6)=(/1,2,1,3/)
+                       u(p+6) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+6) % vec (n1,n2,n3,1,2,na,nb)-tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+6) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+6) % vec (n1,n2,n3,1,3,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 2 2 2, xy
+                       huang_set(:,7)=(/1,2,2,2/)
+                       u(p+7) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+7) % vec (n1,n2,n3,1,2,na,nb)-tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+7) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+7) % vec (n1,n2,n3,2,2,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 2 2 3
+                       huang_set(:,8)=(/1,2,2,3/)
+                       u(p+8) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+8) % vec (n1,n2,n3,1,2,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+8) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+8) % vec (n1,n2,n3,2,3,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 2 3 3
+                       huang_set(:,9)=(/1,2,3,3/)
+                       u(p+9) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+9) % vec (n1,n2,n3,1,2,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+9) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+9) % vec (n1,n2,n3,3,3,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 3 2 2
+                       huang_set(:,10)=(/1,3,2,2/)
+                       u(p+10) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+10) % vec (n1,n2,n3,1,3,na,nb)-tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+10) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+10) % vec (n1,n2,n3,2,2,na,nb)+tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       ! 1 3 2 3
+                       huang_set(:,11)=(/1,3,2,3/)
+                       u(p+11) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+11) % vec (n1,n2,n3,1,3,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+11) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+11) % vec (n1,n2,n3,2,3,na,nb)+tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       ! 1 3 3 3, xz
+                       huang_set(:,12)=(/1,3,3,3/)
+                       u(p+12) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+12) % vec (n1,n2,n3,1,3,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+12) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+12) % vec (n1,n2,n3,3,3,na,nb)+tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       ! 2 2 2 3, zy
+                       huang_set(:,13)=(/2,2,2,3/)
+                       u(p+13) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+13) % vec (n1,n2,n3,2,2,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+13) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+13) % vec (n1,n2,n3,2,3,na,nb)+tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 2 2 3 3, yy-zz
+                       huang_set(:,14)=(/2,2,3,3/)
+                       u(p+14) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+14) % vec (n1,n2,n3,2,2,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+14) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+14) % vec (n1,n2,n3,3,3,na,nb)+tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 2 3 3 3, yz
+                       huang_set(:,15)=(/2,3,3,3/)
+                       u(p+15) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+15) % vec (n1,n2,n3,2,3,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+15) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+15) % vec (n1,n2,n3,3,3,na,nb)+tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                    enddo
+                    !
+                 enddo
+              enddo
+           enddo
+        enddo
+     enddo
+     !
+     do ip=1,15
+        where(abs(u(p+ip) % vec)<eps) u(p+ip) % vec=0.d0
+        call sp1(u(p+ip) % vec (:,:,:,:,:,:,:), frc_new, nr1,nr2,nr3,nat,scal)
+        write(stdout,'(A, 4I4, A, F20.16)') " Huang before: ", huang_set(:,ip), ",   residual stress: ", scal
+     enddo
+     write(stdout,*)
+     p=p+15
+     endif
+     !
+  endif
+  !
+  allocate (ind_v(9*nat*nat*nr1*nr2*nr3,2,7), v(9*nat*nat*nr1*nr2*nr3,2) )
+  m=0
+  do i=1,3
+     do j=1,3
+        do na=1,nat
+           do nb=1,nat
+              do n1=1,nr1
+                 do n2=1,nr2
+                    do n3=1,nr3
                        ! These are the vectors associated with the symmetry constraints
-                       q= 1
-                       l= 1
-                       DO while((l.le.m).and.(q.ne.0))
-                          IF ((ind_v(l, 1, 1).eq.n1).and.(ind_v(l, 1, 2).eq.n2).and. &
-                               (ind_v(l, 1, 3).eq.n3).and.(ind_v(l, 1,4).eq.i).and. &
-                               (ind_v(l, 1,5).eq.j).and.(ind_v(l, 1,6).eq.na).and. &
-                               (ind_v(l, 1,7).eq.nb)) q= 0
-                          IF ((ind_v(l, 2, 1).eq.n1).and.(ind_v(l, 2, 2).eq.n2).and. &
-                               (ind_v(l, 2, 3).eq.n3).and.(ind_v(l, 2,4).eq.i).and. &
-                               (ind_v(l, 2,5).eq.j).and.(ind_v(l, 2,6).eq.na).and. &
-                               (ind_v(l, 2,7).eq.nb)) q= 0
-                          l=l+ 1
-                       ENDDO
-                       IF ((n1.eq.MOD(nr1 + 1-n1, nr1) + 1).and.(n2.eq.MOD(nr2 + 1-n2, nr2) + 1) &
-                            .and.(n3.eq.MOD(nr3 + 1-n3, nr3) + 1).and.(i.eq.j).and.(na.eq.nb)) q= 0
-                       IF (q.ne.0) THEN
-                          m=m+ 1
-                          ind_v(m, 1, 1) =n1
-                          ind_v(m, 1, 2) =n2
-                          ind_v(m, 1, 3) =n3
-                          ind_v(m, 1,4) =i
-                          ind_v(m, 1,5) =j
-                          ind_v(m, 1,6) =na
-                          ind_v(m, 1,7) =nb
-                          v(m, 1) = 1.0d0/DSQRT(2.0d0)
-                          ind_v(m, 2, 1) =MOD(nr1 + 1-n1, nr1) + 1
-                          ind_v(m, 2, 2) =MOD(nr2 + 1-n2, nr2) + 1
-                          ind_v(m, 2, 3) =MOD(nr3 + 1-n3, nr3) + 1
-                          ind_v(m, 2,4) =j
-                          ind_v(m, 2,5) =i
-                          ind_v(m, 2,6) =nb
-                          ind_v(m, 2,7) =na
-                          v(m, 2) =- 1.0d0/DSQRT(2.0d0)
-                       ENDIF
-                    ENDDO
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
+                       q=1
+                       l=1
+                       do while((l.le.m).and.(q.ne.0))
+                          if ((ind_v(l,1,1).eq.n1).and.(ind_v(l,1,2).eq.n2).and. &
+                               (ind_v(l,1,3).eq.n3).and.(ind_v(l,1,4).eq.i).and. &
+                               (ind_v(l,1,5).eq.j).and.(ind_v(l,1,6).eq.na).and. &
+                               (ind_v(l,1,7).eq.nb)) q=0
+                          if ((ind_v(l,2,1).eq.n1).and.(ind_v(l,2,2).eq.n2).and. &
+                               (ind_v(l,2,3).eq.n3).and.(ind_v(l,2,4).eq.i).and. &
+                               (ind_v(l,2,5).eq.j).and.(ind_v(l,2,6).eq.na).and. &
+                               (ind_v(l,2,7).eq.nb)) q=0
+                          l=l+1
+                       enddo
+                       if ((n1.eq.MOD(nr1+1-n1,nr1)+1).and.(n2.eq.MOD(nr2+1-n2,nr2)+1) &
+                            .and.(n3.eq.MOD(nr3+1-n3,nr3)+1).and.(i.eq.j).and.(na.eq.nb)) q=0
+                       if (q.ne.0) then
+                          m=m+1
+                          ind_v(m,1,1)=n1
+                          ind_v(m,1,2)=n2
+                          ind_v(m,1,3)=n3
+                          ind_v(m,1,4)=i
+                          ind_v(m,1,5)=j
+                          ind_v(m,1,6)=na
+                          ind_v(m,1,7)=nb
+                          v(m,1)=1.0d0/DSQRT(2.0d0)
+                          ind_v(m,2,1)=MOD(nr1+1-n1,nr1)+1
+                          ind_v(m,2,2)=MOD(nr2+1-n2,nr2)+1
+                          ind_v(m,2,3)=MOD(nr3+1-n3,nr3)+1
+                          ind_v(m,2,4)=j
+                          ind_v(m,2,5)=i
+                          ind_v(m,2,6)=nb
+                          ind_v(m,2,7)=na
+                          v(m,2)=-1.0d0/DSQRT(2.0d0)
+                       endif
+                    enddo
+                 enddo
+              enddo
+           enddo
+        enddo
+     enddo
+  enddo
   !
   ! Gram-Schmidt orthonormalization of the set of vectors created.
   ! Note that the vectors corresponding to symmetry constraints are already
   ! orthonormalized by construction.
   !
-  n_less = 0
-  ALLOCATE (w(nr1, nr2, nr3, 3, 3, nat, nat), x(nr1, nr2, nr3,3,3, nat, nat))
-  DO k = 1, p
-     w(:, :, :, :, :, :, :) =u(k) % vec (:, :, :, :, :, :, :)
-     x(:, :, :, :, :, :, :) =u(k) % vec (:, :, :, :, :, :, :)
-     DO l= 1,m
+  n_less=0
+  allocate (w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat))
+  do k=1,p
+     w(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
+     x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
+     do l=1,m
         !
-        call sp2(x,v(l,:), ind_v(l,:, :), nr1, nr2, nr3, nat, scal)
-        DO r = 1, 2
-           n1=ind_v(l, r, 1)
-           n2 =ind_v(l, r, 2)
-           n3=ind_v(l, r, 3)
-           i =ind_v(l, r,4)
-           j =ind_v(l, r,5)
-           na=ind_v(l, r,6)
-           nb=ind_v(l, r,7)
-           w(n1, n2, n3, i, j, na, nb) =w(n1, n2, n3, i, j, na, nb) -scal*v(l, r)
-        ENDDO
-     ENDDO
-     IF (k.le.(9*nat)) THEN
-        na1=MOD(k, nat)
-        IF (na1.eq.0) na1=nat
-        j1=MOD((k-na1)/nat, 3) + 1
-        i1=MOD((((k-na1)/nat) -j1 + 1)/3, 3) + 1
-     ELSE
+        call sp2(x,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
+        do r=1,2
+           n1=ind_v(l,r,1)
+           n2=ind_v(l,r,2)
+           n3=ind_v(l,r,3)
+           i=ind_v(l,r,4)
+           j=ind_v(l,r,5)
+           na=ind_v(l,r,6)
+           nb=ind_v(l,r,7)
+           w(n1,n2,n3,i,j,na,nb)=w(n1,n2,n3,i,j,na,nb)-scal*v(l,r)
+        enddo
+     enddo
+     if (k.le.(9*nat)) then
+        na1=MOD(k,nat)
+        if (na1.eq.0) na1=nat
+        j1=MOD((k-na1)/nat,3)+1
+        i1=MOD((((k-na1)/nat)-j1+1)/3,3)+1
+     else
         q=k-9*nat
-        IF (n.eq.4) THEN
-           na1=MOD(q, nat)
-           IF (na1.eq.0) na1=nat
-           i1=MOD((q-na1)/nat, 3) + 1
-        ELSE
-           na1=MOD(q, nat)
-           IF (na1.eq.0) na1=nat
-           j1=MOD((q-na1)/nat, 3) + 1
-           i1=MOD((((q-na1)/nat) -j1 + 1)/3, 3) + 1
-        ENDIF
-     ENDIF
-     DO q= 1, k- 1
-        r = 1
-        DO i_less = 1, n_less
-           IF (u_less(i_less).eq.q) r = 0
-        ENDDO
-        IF (r.ne.0) THEN
-           call sp3(x,u(q) % vec (:, :, :, :, :, :, :), i1, na1, nr1, nr2, nr3, nat, scal)
-           w(:, :, :, :, :, :, :) = w(:, :, :, :, :, :, :) - scal* u(q) % vec (:, :, :, :, :, :, :)
-        ENDIF
-     ENDDO
-     call sp1(w,w, nr1, nr2, nr3, nat, norm2)
-     IF (norm2.gt.1.0d-16) THEN
-        u(k) % vec (:, :, :, :, :, :, :) = w(:, :, :, :, :, :, :) / DSQRT(norm2)
-     ELSE
-        n_less =n_less+ 1
-        u_less(n_less) =k
-     ENDIF
-  ENDDO
+        if (k.le.(18*nat)) then
+           if (n.eq.4) then
+              na1=MOD(q,nat)
+              if (na1.eq.0) na1=nat
+              i1=MOD((q-na1)/nat,3)+1
+           else
+              na1=MOD(q,nat)
+              if (na1.eq.0) na1=nat
+              j1=MOD((q-na1)/nat,3)+1
+              i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
+           endif
+        endif
+     endif
+     do q=1,k-1
+        r=1
+        do i_less=1,n_less
+           if (u_less(i_less).eq.q) r=0
+        enddo
+        if (r.ne.0) then
+           if (k.le.(18*nat)) then
+              call sp3(x,u(q) % vec (:,:,:,:,:,:,:), i1,na1,nr1,nr2,nr3,nat,scal)
+           else
+              call sp1(x,u(q) % vec (:,:,:,:,:,:,:), nr1,nr2,nr3,nat,scal)
+           endif
+           w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) - scal * u(q) % vec (:,:,:,:,:,:,:)
+        endif
+     enddo
+     call sp1(w,w,nr1,nr2,nr3,nat,norm2)
+     if (norm2.gt.eps) then
+        u(k) % vec (:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) / DSQRT(norm2)
+     else
+        n_less=n_less+1
+        u_less(n_less)=k
+     endif
+  enddo
   !
   ! Projection of the force-constants "vector" on the orthogonal of the
   ! subspace of the vectors verifying the sum rules and symmetry contraints
   !
-  w(:, :, :, :, :, :, :) = 0.0d0
-  DO l= 1,m
-     call sp2(frc_new,v(l,:), ind_v(l,:, :), nr1, nr2, nr3, nat, scal)
-     DO r = 1, 2
-        n1=ind_v(l, r, 1)
-        n2 =ind_v(l, r, 2)
-        n3=ind_v(l, r, 3)
-        i =ind_v(l, r,4)
-        j =ind_v(l, r,5)
-        na=ind_v(l, r,6)
-        nb=ind_v(l, r,7)
-        w(n1, n2, n3, i, j, na, nb) =w(n1, n2, n3, i, j, na, nb) +scal*v(l, r)
-     ENDDO
-  ENDDO
-  DO k = 1, p
-     r = 1
-     DO i_less = 1, n_less
-        IF (u_less(i_less).eq.k) r = 0
-     ENDDO
-     IF (r.ne.0) THEN
-        x(:, :, :, :, :, :, :) =u(k) % vec (:, :, :, :, :, :, :)
-        call sp1(x,frc_new, nr1, nr2, nr3, nat, scal)
-        w(:, :, :, :, :, :, :) = w(:, :, :, :, :, :, :) + scal*u(k)%vec(:, :, :, :, :, :, :)
-     ENDIF
-     DEALLOCATE(u(k) % vec)
-  ENDDO
+  w(:,:,:,:,:,:,:)=0.0d0
+  do l=1,m
+     call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
+     do r=1,2
+        n1=ind_v(l,r,1)
+        n2=ind_v(l,r,2)
+        n3=ind_v(l,r,3)
+        i=ind_v(l,r,4)
+        j=ind_v(l,r,5)
+        na=ind_v(l,r,6)
+        nb=ind_v(l,r,7)
+        w(n1,n2,n3,i,j,na,nb)=w(n1,n2,n3,i,j,na,nb)+scal*v(l,r)
+     enddo
+  enddo
+  do k=1,p
+     r=1
+     do i_less=1,n_less
+        if (u_less(i_less).eq.k) r=0
+     enddo
+     if (r.ne.0) then
+        x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
+        call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
+        w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) + scal*u(k)%vec(:,:,:,:,:,:,:)
+     endif
+     deallocate(u(k) % vec)
+  enddo
   !
   ! Final substraction of the former projection to the initial frc, to get
   ! the new "projected" frc
   !
-  frc_new(:, :, :, :, :, :, :) =frc_new(:, :, :, :, :, :, :) - w(:, :, :, :, :, :, :)
-  call sp1(w,w, nr1, nr2, nr3, nat, norm2)
-  WRITE(stdout,'("Norm of the difference between old and new force-constants:",&
-       &     F25.20)') SQRT(norm2)
+  frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - w(:,:,:,:,:,:,:)
+  if (asr.eq.'all') frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - frc_lr(:,:,:,:,:,:,:)
+  call sp1(w,w,nr1,nr2,nr3,nat,norm2)
+  write(stdout,'(" Norm of the difference between old and new force-constants:",&
+       &     F25.20/)') SQRT(norm2)
   !
   ! Check projection
   !
-  !WRITE(6,'("Check projection IFC")')
-  !DO l= 1,m
-  !  call sp2(frc_new,v(l,:), ind_v(l,:, :), nr1, nr2, nr3, nat, scal)
-  !  IF (DABS(scal).gt.1d- 10) WRITE(6,'("l= ",I8," frc_new|v(l) = ", F15.10)') l, scal
-  !ENDDO
-  !DO k = 1, p
-  !  x(:, :, :, :, :, :, :) =u(k) % vec (:, :, :, :, :, :, :)
-  !  call sp1(x,frc_new, nr1, nr2, nr3, nat, scal)
-  !  IF (DABS(scal).gt.1d- 10) WRITE(6,'("k = ",I8," frc_new|u(k) = ", F15.10)') k, scal
-  !  DEALLOCATE(u(k) % vec)
-  !ENDDO
+  !write(6,'("Check projection IFC")')
+  !do l=1,m
+  !  call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
+  !  if (DABS(scal).gt.1d-10) write(6,'("l= ",I8," frc_new|v(l)= ",F15.10)') l,scal
+  !enddo
+  !do k=1,p
+  !  x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
+  !  call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
+  !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," frc_new|u(k)= ",F15.10)') k,scal
+  !  deallocate(u(k) % vec)
+  !enddo
   !
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           DO nb= 1, nat
-              DO n1= 1, nr1
-                 DO n2 = 1, nr2
-                    DO n3= 1, nr3
-                       frc(n1, n2, n3, i, j, na, nb) =frc_new(n1, n2, n3, i, j, na, nb)
-                    ENDDO
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
-  DEALLOCATE (x, w)
-  DEALLOCATE (v, ind_v)
-  DEALLOCATE (frc_new)
+  frc(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:)
+  !
+  deallocate (x, w)
+  deallocate (v, ind_v)
+  deallocate (frc_new)
   !
   return
 end subroutine set_asr
+!
+!-----------------------------------------------------------------------
+SUBROUTINE ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+  !-----------------------------------------------------------------------
+  !! Used in set_asr
+  !! Determine the nearest periodic image for an atom pair
+  !! Calculte the number of degeneracies as weight when
+  !! on the surface of the optimal Wigner-Seitz cell
+  !
+  USE kinds, ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: nr1,nr2,nr3
+  !! Supercell size
+  INTEGER, INTENT(out) :: neq
+  !! Weight of the degeneracy
+  REAL(DP), INTENT(in) :: r_ws(3)
+  !! Original position in the supercell
+  REAL(DP), INTENT(in) :: at_blk(3, 3)
+  !! Lattice vector of the primitive cell
+  REAL(DP), INTENT(out) :: tau(3, 48)
+  !! Nearest periodic atomic position 
+  !
+  ! Local variable
+  INTEGER :: n1, n2, n3
+  !! Search around the cell to a maximum of 2 around
+  REAL(DP) :: rnorm
+  !! Distance betweem origin cell and current cell
+  REAL(DP) :: eps
+  !! Tolerence
+  REAL(DP) :: tau_tmp(3)
+  !! Position of the current cell 
+  REAL(DP) :: at(3,3)
+  !! Lattice vector of the supercell
+  REAL(DP) :: rmin
+  !! Minimal distance
+  ! 
+  ! Large tolerence to find degeneracy position in case of bad relaxation
+  eps = 1.0d-5
+  !
+  at(:, 1) = at_blk(:, 1) * DBLE(nr1)
+  at(:, 2) = at_blk(:, 2) * DBLE(nr2)
+  at(:, 3) = at_blk(:, 3) * DBLE(nr3)
+  !
+  rmin = HUGE(rmin)
+  DO n1 = -2,2
+    DO n2 = -2,2
+      DO n3 = -2,2
+        tau_tmp = r_ws + n1 * at(:, 1) + n2 * at(:, 2) + n3 * at(:, 3)
+        rnorm = NORM2(tau_tmp)
+        IF (ABS(rnorm - rmin) .gt. eps) THEN
+          IF (rnorm .lt. rmin) THEN
+            neq = 1
+            rmin = rnorm
+            tau(:, neq) = tau_tmp
+          ENDIF
+        ELSE
+          neq = neq + 1
+          tau(:, neq) = tau_tmp
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
+  !
+  RETURN
+  !
+!-----------------------------------------------------------------------
+END SUBROUTINE ws_all
+!-----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
 subroutine sp_zeu(zeu_u, zeu_v, nat, scal)
@@ -2093,255 +2422,6 @@ END SUBROUTINE read_tau
 !---------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
-subroutine setgam (q, gam, nat, at, bg,tau, itau_blk, nsc, alat, &
-     &             gam_blk, nat_blk, at_blk, bg_blk,tau_blk, omega_blk, &
-     &             frcg, nr1, nr2, nr3, rws, nrws, fd)
-  !-----------------------------------------------------------------------
-  ! compute the dynamical matrix (the analytic part only)
-  !
-  USE kinds,       ONLY : DP
-  USE constants,   ONLY : tpi
-  implicit none
-  !
-  ! I/O variables
-  !
-  integer        :: nr1, nr2, nr3, nat, nat_blk,  &
-                    nsc, nrws, itau_blk(nat)
-  REAL(DP)       :: q(3), tau(3, nat), at(3, 3), bg(3, 3), alat, rws(0:3, nrws)
-  REAL(DP)       :: tau_blk(3, nat_blk), at_blk(3, 3), bg_blk(3, 3), omega_blk, &
-                    frcg(nr1, nr2, nr3, 3, 3, nat_blk, nat_blk)
-  COMPLEX(DP)    :: gam_blk(3, 3, nat_blk, nat_blk),f_of_q(3, 3, nat, nat)
-  COMPLEX(DP)    ::  gam(3, 3, nat, nat)
-  LOGICAL        :: fd
-  !
-  ! local variables
-  !
-  REAL(DP)        :: arg
-  complex(DP)     :: cfac(nat)
-  integer         :: i, j, k, na, nb, na_blk, nb_blk, iq
-  REAL(DP)        :: qp(3), qbid(3, nsc) ! automatic array
-  !
-  !
-  call q_gen(nsc,qbid, at_blk, bg_blk, at, bg)
-  !
-  f_of_q=(0.0_DP,0.0_DP)
-  DO iq= 1, nsc
-     !
-     DO k = 1, 3
-        qp(k) = q(k) + qbid(k, iq)
-     ENDDO
-     !
-     gam_blk(:, :, :, :) = (0.d0,0.d0)
-     CALL frc_blk (gam_blk, qp,tau_blk, nat_blk,              &
-                   nr1, nr2, nr3,frcg, at_blk, bg_blk, rws, nrws,f_of_q, fd)
-     !
-     DO na= 1, nat
-        na_blk = itau_blk(na)
-        DO nb= 1, nat
-           nb_blk = itau_blk(nb)
-           !
-           arg = tpi * ( qp(1) * ( (tau(1, na) -tau_blk(1, na_blk)) -   &
-                                (tau(1, nb) -tau_blk(1, nb_blk)) ) + &
-                      qp(2) * ( (tau(2, na) -tau_blk(2, na_blk)) -   &
-                                (tau(2, nb) -tau_blk(2, nb_blk)) ) + &
-                      qp(3) * ( (tau(3, na) -tau_blk(3, na_blk)) -   &
-                                (tau(3, nb) -tau_blk(3, nb_blk)) ) )
-           !
-           cfac(nb) = CMPLX(cos(arg), sin(arg), kind=dp)/nsc
-           !
-        ENDDO ! nb
-        DO nb= 1, nat
-           DO i = 1, 3
-              DO j = 1, 3
-                 nb_blk = itau_blk(nb)
-                 gam(i, j, na, nb) = gam(i, j, na, nb) + cfac(nb) * &
-                     gam_blk(i, j, na_blk, nb_blk)
-              ENDDO ! j
-              ENDDO ! i
-        ENDDO ! nb
-     ENDDO ! na
-     !
-  ENDDO ! iq
-  !
-  return
-end subroutine setgam
-!
-!--------------------------------------------------------------------
-function dos_gam (nbndx, nq, jbnd, gamma, et, ef)
-  !--------------------------------------------------------------------
-  ! calculates weights with the tetrahedron method (Bloechl version)
-  ! this subroutine is based on tweights.f90 belonging to PW
-  ! it calculates a2F on the surface of given frequency <=> histogram
-  ! Band index means the frequency mode here
-  ! and "et" means the frequency(mode,q-point)
-  !
-  USE kinds,       ONLY: DP
-  USE parameters
-  USE ktetra, ONLY : ntetra, tetra
-  implicit none
-  !
-  integer :: nq, nbndx, jbnd
-  REAL(DP) :: et(nbndx, nq), gamma(nbndx, nq), func
-
-  REAL(DP) :: ef
-  REAL(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4)
-  integer      :: ik, ibnd, nt, nk, ns, i, ik1, ik2, ik3, ik4, itetra(4)
-
-  REAL(DP) ::   f12,f13,f14,f23,f24,f34, f21,f31,f41,f42,f32,f43
-  REAL(DP) ::   P1,P2,P3,P4, G, o13, Y1,Y2,Y3,Y4, eps,vol, Tint
-  REAL(DP) :: dos_gam
-
-  Tint = 0.0d0
-  o13 = 1.0_dp/3.0_dp
-  eps  = 1.0d-14
-  vol  = 1.0d0/ntetra
-  P1 = 0.0_dp
-  P2 = 0.0_dp
-  P3 = 0.0_dp
-  P4 = 0.0_dp
-  DO nt = 1, ntetra
-     ibnd = jbnd
-     !
-     ! etetra are the energies at the vertexes of the nt-th tetrahedron
-     !
-     DO i = 1, 4
-        etetra(i) = et(ibnd, tetra(i, nt))
-     ENDDO
-     itetra(1) = 0
-     call hpsort (4, etetra, itetra)
-     !
-     ! ...sort in ascending order: e1 < e2 < e3 < e4
-     !
-     e1 = etetra (1)
-     e2 = etetra (2)
-     e3 = etetra (3)
-     e4 = etetra (4)
-     !
-     ! kp1-kp4 are the irreducible k-points corresponding to e1- e4
-     !
-     ik1 = tetra(itetra(1), nt)
-     ik2 = tetra(itetra(2), nt)
-     ik3 = tetra(itetra(3), nt)
-     ik4 = tetra(itetra(4), nt)
-     Y1  = gamma(ibnd, ik1)/et(ibnd, ik1)
-     Y2  = gamma(ibnd, ik2)/et(ibnd, ik2)
-     Y3  = gamma(ibnd, ik3)/et(ibnd, ik3)
-     Y4  = gamma(ibnd, ik4)/et(ibnd, ik4)
-
-     IF ( e3 < ef .and. ef < e4) THEN
-
-        f14 = (ef- e4)/(e1- e4)
-        f24 = (ef- e4)/(e2- e4)
-        f34 = (ef- e4)/(e3- e4)
-
-        G  =  3.0_dp * f14 * f24 * f34 / (e4- ef)
-        P1 =  f14 * o13
-        P2 =  f24 * o13
-        P3 =  f34 * o13
-        P4 =  (3.0_dp - f14 - f24 - f34 ) * o13
-
-     ELSE IF ( e2 < ef .and. ef < e3 ) THEN
-
-        f13 = (ef- e3)/(e1- e3)
-        f31 = 1.0_dp - f13
-        f14 = (ef- e4)/(e1- e4)
-        f41 = 1.0_dp-f14
-        f23 = (ef- e3)/(e2- e3)
-        f32 = 1.0_dp - f23
-        f24 = (ef- e4)/(e2- e4)
-        f42 = 1.0_dp - f24
-
-        G   =  3.0_dp * (f23*f31 + f32*f24)
-        P1  =  f14 * o13 + f13*f31*f23 / G
-        P2  =  f23 * o13 + f24*f24*f32 / G
-        P3  =  f32 * o13 + f31*f31*f23 / G
-        P4  =  f41 * o13 + f42*f24*f32 / G
-        G   =  G / (e4- e1)
-
-     ELSE IF ( e1 < ef .and. ef < e2 ) THEN
-
-        f12 = (ef- e2)/(e1- e2)
-        f21 = 1.0_dp - f12
-        f13 = (ef- e3)/(e1- e3)
-        f31 = 1.0_dp - f13
-        f14 = (ef- e4)/(e1- e4)
-        f41 = 1.0_dp - f14
-
-        G  =  3.0_dp * f21 * f31 * f41 / (ef- e1)
-        P1 =  o13 * (f12 + f13 + f14)
-        P2 =  o13 * f21
-        P3 =  o13 * f31
-        P4 =  o13 * f41
-
-     ELSE
-
-        G = 0.0_dp
-
-     ENDIF
-
-     Tint = Tint + G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4) * vol
-
-  ENDDO   ! ntetra
-
-
-  dos_gam = Tint  !2 because DOS_ee is per 1 spin
-
-  return
-end function dos_gam
-!
-!
-!-----------------------------------------------------------------------
-subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
-  !-----------------------------------------------------------------------
-  !
-  USE kinds,       ONLY : DP
-  USE io_global,   ONLY : ionode, ionode_id, stdout
-  USE mp,          ONLY : mp_bcast
-  USE mp_world,    ONLY : world_comm
-  implicit none
-  ! I/O variable
-  integer, INTENT(in) ::  nr1, nr2, nr3, nat
-  REAL(DP), INTENT(out) :: frcg(nr1, nr2, nr3, 3, 3, nat, nat)
-  ! local variables
-  integer i, j, na, nb, m1,m2,m3, ifn
-  integer ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
-  !
-  !
-  IF (ionode) READ (ifn,*) m1, m2, m3
-  CALL mp_bcast(m1, ionode_id, world_comm)
-  CALL mp_bcast(m2, ionode_id, world_comm)
-  CALL mp_bcast(m3, ionode_id, world_comm)
-  IF ( m1 /= nr1 .or. m2 /= nr2 .or. m3 /= nr3) &
-       call errore('readfg','inconsistent nr1, nr2, nr3 read', 1)
-  DO i = 1, 3
-     DO j = 1, 3
-        DO na= 1, nat
-           DO nb= 1, nat
-              IF (ionode) read (ifn, *) ibid, jbid, nabid, nbbid
-              CALL mp_bcast(ibid, ionode_id, world_comm)
-              CALL mp_bcast(jbid, ionode_id, world_comm)
-              CALL mp_bcast(nabid, ionode_id, world_comm)
-              CALL mp_bcast(nbbid, ionode_id, world_comm)
-              
-              if(i.ne.ibid.or.j.ne.jbid.or.na.ne.nabid.or.nb.ne.nbbid)  THEN
-                  WRITE(stdout,*) i, j, na, nb,'  <>  ', ibid, jbid, nabid, nbbid
-                  call errore  ('readfG','error in reading', 1)
-              ELSE
-                  IF (ionode) read (ifn,*) (((m1bid, m2bid, m3bid,     &
-                                 frcg(m1,m2,m3, i, j, na, nb), &
-                                 m1= 1, nr1),m2 =1, nr2),m3=1, nr3)
-              ENDIF
-              CALL mp_bcast(frcg(:, :, :, i, j, na, nb), ionode_id, world_comm)
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
-  !
-  IF (ionode) CLOSE(ifn)
-  !
-  return
-end subroutine readfg
-!
 !
 SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
                   amass, num_rap_mode, nspin_mag )
@@ -2686,13 +2766,13 @@ END SUBROUTINE phonon_unfolding
 !!
 SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, & 
                       dim1, dim2, dim3, niters, error_thresh, synch, tau, alat, atm, &
-                      ntypx, at, q_in_cryst_coord, q_external, T, incl_qA, & 
-                      compute_error, single_ph_displ, &
+                      ntypx, at, q_in_cryst_coord, q_external, T, T_array, incl_qA, & 
+                      compute_error, single_ph_displ, multi_ZG, &
                       ZG_strf, qpts_strf, atmsf_a, atmsf_b, &
                       nrots, kres1, kres2, kmin, kmax, col1, col2, Np, &
                       flscf, ASDM, apply_fd, read_fd_forces, incl_epsil, & 
                       iter_idx, iter_idx0, fd_displ, ibrav, epsil, zeu, & 
-                      poly, poly_fd_forces, mixing, update_equil)
+                      poly, poly_fd_forces, mixing, update_equil, alph)
   !        
   USE kinds,      ONLY : dp
   USE constants,  ONLY : amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
@@ -2714,7 +2794,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   ! input
   CHARACTER(LEN=3),   INTENT(in) :: atm(ntypx)
   CHARACTER(LEN=256), INTENT(in) :: flscf
-  LOGICAL, INTENT(in)          :: synch, q_in_cryst_coord, q_external, ZG_strf
+  LOGICAL, INTENT(in)          :: synch, q_in_cryst_coord, q_external, ZG_strf, multi_ZG
   LOGICAL, INTENT(in)          :: incl_qA, compute_error, single_ph_displ, ASDM, mixing
   LOGICAL, INTENT(in)          :: apply_fd, read_fd_forces, incl_epsil, poly, poly_fd_forces, update_equil
   INTEGER, INTENT(in)          :: dim1, dim2, dim3, niters, qpts_strf
@@ -2723,16 +2803,16 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   INTEGER, INTENT(in)          :: ityp(nat)
   INTEGER, INTENT(in)          :: nrots, kres1, kres2, col1, col2, Np
   INTEGER, INTENT(in)          :: ibrav ! for read_fd_forces in ASDM
-  REAL(DP), INTENT(in)         :: kmin, kmax, fd_displ ! for apply_fd
-  REAL(DP), INTENT(in)         :: error_thresh, alat, T
+  REAL(DP), INTENT(in)         :: kmin, kmax, fd_displ, alph 
+  REAL(DP), INTENT(in)         :: error_thresh, alat, T, T_array(100)
   REAL(DP), INTENT(in)         :: at(3, 3), atmsf_a(ntypx,5), atmsf_b(ntypx,5), zeu(3, 3, nat)
   ! zeu for read_fd_forces so we can print it
   REAL(DP), INTENT(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
   COMPLEX(DP), INTENT(in)      :: z_nq(3 * nat, 3 * nat, nq)
   ! 
-  CHARACTER(len=256)           :: filename, pt_T, pt_1, pt_2, pt_3
+  CHARACTER(len=256)           :: filename, pt_T, pt_1, pt_2, pt_3, pt_kk
   !
-  INTEGER                  :: nat3, na, nta, ipol, i, j, k, qp, ii, p, kk
+  INTEGER                  :: nat3, na, nta, ipol, i, j, k, qp, ii, p, kk, tt
   INTEGER                  :: nq_tot, pn, combs, combs_all, sum_zg
   INTEGER                  :: lower_bnd, upper_bnd
   INTEGER                  :: ctr, ctr2, ctrA, ctrB, ctrAB
@@ -2745,7 +2825,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   REAL(DP)                 :: freq(3 * nat, nq), ph_w(3 * nat, nq), l_q(3 * nat, nq)
   REAL(DP)                 :: q_A(3), q_B(3), p_q(3 * nat, nq), FE_q(3 * nat, nq), epsil(3, 3)
   ! epsil for read_fd_forces
-  REAL(DP)                 :: hbar, ang, u_rand, dotp, PE_nq, KE_nq, FE_nq
+  REAL(DP)                 :: hbar, ang, u_rand, dotp, PE_nq, KE_nq, FE_nq, Tc
   !
   REAL(DP), PARAMETER      :: eps = 1.0d-6, eps2 = 1.0d-15
   ! l_q --> amplitude \sigma at temperature T
@@ -2795,7 +2875,6 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   ! pointless to allocate more signs for a large number of branches
   IF ( nat3 > 12) pn = 2**(12 - 1) 
   !
-  !
   ! create equilibrium configuration
   ALLOCATE(equil_p(nq_tot, nat, 3), crystal_pos(nq_tot, nat, 3))
   !
@@ -2805,6 +2884,9 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   !
   CALL mp_bcast(crystal_pos, ionode_id, world_comm)
   !
+  IF (ionode) WRITE(*,*)
+  IF (ionode) WRITE(*,*) "ZG calculation starts ..."
+  IF (ionode) WRITE(*,*)
   IF ( TRIM(flscf) /= ' ' .AND. ionode) WRITE(*,*) "=============================================="
   IF ( TRIM(flscf) /= ' ') CALL read_input_file( 'PW', flscf )
   IF ( TRIM(flscf) /= ' ' .AND. ionode) WRITE(*,*) "=============================================="
@@ -2903,9 +2985,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
     WRITE(*,*) 
     DO qp = 1, nq
       DO i = 1, nat3 
-     !   IF (w2(i, qp) .lt. 1.0E-8) THEN
         IF (w2(i, qp) .lt. 0.0d0) THEN
-            dotp = -SQRT(ABS(w2(i, qp))) * ry_to_thz * tpi
+            dotp = -SQRT(ABS(w2(i, qp))) * ry_to_thz
             WRITE(*,'(A, F14.6, A, I2, A, I2)') "  WARNING: Negative freq. (Thz):", dotp, & 
                                                 "  mode: ",i, "  q-point: ", qp 
             WRITE(*,*)
@@ -2916,37 +2997,14 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
       ENDDO
     ENDDO
     IF (dotp .lt. 0.0d0) WRITE(*,'(100A)') "  We freeze them, but dynamically stable phonons are recommended ..."
+    ! Freezing is performed below for l_q
     WRITE(*,*)
   ENDIF
   CALL mp_bcast(freq, ionode_id, world_comm)
   !
-  ph_w = freq * ry_to_thz * (1.0E12) * tpi ! correct frequency for phonons in SI
+  ph_w = freq * ry_to_thz * (1.0E12) * tpi ! w for phonons in SI
   !
-  ! set amplitudes of displacements l_q = \sigma_\bq\nu and momenta 
-  p_q = 0.0d0
-  l_q = 0.0d0
-  FE_q = 0.0d0
-  DO qp = 1, nq
-    DO i = 1, nat3 
-       IF (w2(i, qp) .lt. 0.0d0 + eps2) THEN
-        l_q(i, qp) = 0.d0
-        p_q(i, qp) = 0.d0
-      ELSE
-      ! σν,T**2 = (2nν,T + 1) lν**2 ,
-      ! V 0 + \sum \hbar ων /2 − kBT ln[1 + nB(ων ,T )]
-        ! Free energy
-        FE_q(i,qp) = hbar * ph_w(i, qp) / 2.0d0 - K_BOLTZMANN_SI * T * & 
-                     LOG( 1.0d0 + 1.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1.0d0))
-        !
-        l_q(i, qp) = SQRT(hbar / ph_w(i, qp) / 2.0d0 / AMU_SI / ang**2.0d0) * & 
-                     SQRT(DBLE(1.0d0 + 2.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1.0d0))) 
-        p_q(i, qp) = hbar / SQRT(2.0d0) / (SQRT(hbar / ph_w(i, qp) / 2.0d0 /AMU_SI)) / ang * & !*1.0E-12& 
-                     SQRT(DBLE(0.5d0 + 1.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1.0d0))) 
-      ENDIF
-                   ! we can multiply by 1.0E-12 to get 'picos'
-    ENDDO
-  ENDDO
-  !     
+  !
   IF (q_external) THEN
       IF (q_in_cryst_coord .EQV. .FALSE.) THEN
       ! in both cases convert them to crystal 
@@ -2957,34 +3015,12 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
     ELSE 
     CALL cryst_to_cart(nq, q, at, -1)
   ENDIF
-  !
-  ! for accoustic modes put l_q\nu = 0 and p_q\nu = 0 so we freeze them
-  !
-  DO qp = 1, nq
-    q_A = q(:, qp)  ! q_A to find IF q belongs in A
-    IF (((ABS(q_A(1)) < eps)) .AND. & 
-        ((ABS(q_A(2)) < eps)) .AND. &
-        ((ABS(q_A(3)) < eps)))  THEN
-        !
-        l_q(1, qp) = 0.0d0
-        l_q(2, qp) = 0.0d0
-        l_q(3, qp) = 0.0d0
-        p_q(1, qp) = 0.0d0
-        p_q(2, qp) = 0.0d0
-        p_q(3, qp) = 0.0d0
-        !
-    ENDIF
-  ENDDO
-  !
   ! To distinguish between different sets of qpoints, A, B, C
   ! to find how many points belong to set A and then allocate matrix accordingly
   ! NOTE that we want the qpoints always in crystal coordinates
   !
   ctrA  = 0
   ctrAB = 0
-  PE_nq = 0.0d0
-  KE_nq = 0.0d0
-  FE_nq = 0.0d0
   !
   DO qp = 1, nq
     q_A = q(:, qp) + q(:, qp) ! q_A to find IF q belongs in A
@@ -2994,42 +3030,17 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   !     WRITE(*,*) "set A", qp, q(:, qp)
        ctrA  = ctrA + 1
        ctrAB = ctrAB + 1
-       DO i = 1, nat3 
-         FE_nq = FE_nq + FE_q(i, qp) / RYDBERG_SI
-         PE_nq = PE_nq + 0.5d0 * AMU_SI * ph_w(i, qp)**2.d0 * l_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI
-         KE_nq = KE_nq + 0.5d0 / AMU_SI * p_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI
-       ENDDO
     ELSE
        ctrAB = ctrAB + 1
-       DO i = 1, nat3 
-         FE_nq = FE_nq + 2.0d0 * FE_q(i, qp) / RYDBERG_SI
-         PE_nq = PE_nq + 2.0d0 * 0.5d0 * AMU_SI * ph_w(i, qp)**2.d0 * l_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI 
-         KE_nq = KE_nq + 2.0d0 * 0.5d0 / AMU_SI * p_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI
-       ENDDO
     ENDIF
   ENDDO 
   !
   ctrB = ctrAB - ctrA
   IF (ionode) THEN
-    WRITE(*,*) "=============================================="
-    WRITE(*,*)
-    WRITE(*,'(A30, 1F13.8, A4)') "Total vibrational energy: ", PE_nq + KE_nq, "Ry" 
-    WRITE(*,*)
-    WRITE(*,'(A30, 1F13.8, A4)') "Potential energy: ", PE_nq, "Ry" 
-    WRITE(*,*)
-    WRITE(*,'(A30, 1F13.8, A4)') "Kinetic energy: ", KE_nq, "Ry" 
-    WRITE(*,*)
-    WRITE(*,'(A30, 1F13.8, A4)') "Vibrational free energy: ", FE_nq, "Ry" 
-    WRITE(*,*)
-    WRITE(*,*) "Note that the total energy output from a DFT-ZG calculation" 
-    WRITE(*,*) "calculation accounts for half the total vibrational energy"
-    WRITE(*,*)
-    WRITE(*,*) "=============================================="
-    !
     WRITE(*,*) 
     WRITE(*,'(A26, 3I6)') "Points in sets AB, A, B :", ctrAB, ctrA, ctrB
-    WRITE(*,*) 
     WRITE(*,*) "=============================================="
+    WRITE(*,*) 
   ENDIF
   ! 
   ALLOCATE(qA(ctrA, 3), qB(ctrB, 3), z_nq_A(nat3, nat3, ctrA), z_nq_B(nat3, nat3, ctrB))  
@@ -3195,7 +3206,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   !
   !
   ! Initialize sign matrices: 
-  ! sign matrices Mx and My . Total entries of Mx are 2^nmodes/2. 
+  ! sign matrix Mx: Total entries are 2^nmodes/2. 
   ! Divided by two so we get only independent entries:
   ! i.e. [1 1 1 1 1 1] gives same result to [- 1 -1 -1 -1 -1 -1]. 
   ! 
@@ -3209,7 +3220,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
     ! for systems with large unit-cells.
   ELSE
     DO i = 1, nat3
-      DO p = 1, 2*pn
+      DO p = 1, 2 * pn
          call random_number(u_rand)
          IF (u_rand .LE. 0.5) M_mat(p, i) = -1
          IF (u_rand .GT. 0.5) M_mat(p, i) =  1
@@ -3238,7 +3249,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   ! checks
   !IF (ionode) WRITE(*,*) "Sign matrix"
   !IF (ionode) WRITE(*,*) "-----------"
-  DO j = 1, 2 * pn !2** (nat3)
+  DO j = 1, 2 * pn 
     IF (MOD(j, 2) == 0) M_mat(j, :) = -1 * M_mat(j, :)
   !  IF (ionode) WRITE(*,'(100i3)') M_mat(j, :)
   ENDDO
@@ -3263,537 +3274,649 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
     ALLOCATE(Bx_vect(combs_all), E_vect(combs_all, ctrAB))
   ENDIF
   !
-  
+  ! Multiple temperatures loop, T_array = -1 if not specified
   !
-  !
-  IF (ionode) THEN
-    IF (T < 10000.d0 - eps .AND. T > 1000.d0 - eps) WRITE(pt_T,'(1F7.2)') T 
-    IF (T < 1000.d0 - eps .AND. T > 100.d0 - eps) WRITE(pt_T,'(1F6.2)') T 
-    IF (T < 100.d0 - eps .AND. T > 10.d0 - eps) WRITE(pt_T,'(1F5.2)') T 
-    IF (T < 10.d0 - eps .AND. T > 0.d0 - eps) WRITE(pt_T,'(1F4.2)') T 
+  DO tt = 1, 100 
     !
+    IF ((tt .NE. 100) .AND. (T_array(tt) .LT. -eps)) THEN
+       cycle
+    ELSE
+       Tc = T_array(tt) 
+    ENDIF
     !
-    filename = 'ZG-configuration_' // TRIM( pt_T ) // 'K.dat' 
-    OPEN (unit = 80, file = filename, status = 'unknown', form = 'formatted')
-    filename = 'ZG-velocities_' // TRIM( pt_T ) // 'K.dat'
-    OPEN (unit = 81, file = filename, status = 'unknown', form = 'formatted')
+    IF ((tt .EQ. 100) .AND. (T_array(tt) .GT. -eps)) Tc = T_array(tt)
+    IF ((tt .EQ. 100) .AND. (T_array(tt) .LT. -eps)) Tc = T 
     !
-    IF ( TRIM(flscf) /= ' ') THEN
-        OPEN (unit = 82, file = 'ZG-scf_' //  TRIM( pt_1 ) // TRIM( pt_2 ) // TRIM( pt_3 ) // & 
-                                '_' // TRIM( pt_T ) // 'K.in', status = 'unknown', form = 'formatted')
-        WRITE(82,*) "&control"
-        WRITE(82,'(100A)') "  calculation = '", TRIM(calculation),"'"
-        WRITE(82,'(100A)') "  restart_mode = '", TRIM(restart_mode),"'"
-        WRITE(82,'(100A)') "  prefix = 'ZG-", TRIM(prefix),"'"  
-        WRITE(82,'(100A)') "  pseudo_dir = '", TRIM(pseudo_dir),"'"  
-        WRITE(82,'(100A)') "  outdir = '", TRIM(outdir),"'"  
-        WRITE(82,'(100A)') "/"
-        WRITE(82,'(100A)') "&system"
-        WRITE(82,'(100A)') "  ibrav = 0"  
-        WRITE(82,'(A7,1i5)') "  nat =", nat * nq_tot
-        WRITE(82,'(A8,1i5)') "  ntyp =", ntyp
-        WRITE(82,'(A11,1F7.2)') "  ecutwfc =", ecutwfc 
-        WRITE(82,'(100A)') "  occupations = '", TRIM(occupations),"'"
-        WRITE(82,'(100A)') "  smearing = '", TRIM(smearing),"'"
-        WRITE(82,'(A11,1D10.1)') "  degauss =", degauss
-        WRITE(82,'(100A)') "/"
-        WRITE(82,'(100A)') "&electrons"
-        WRITE(82,'(100A)') "  diagonalization = '",TRIM(diagonalization),"'"
-        WRITE(82,'(100A)') "  mixing_mode= '",TRIM(mixing_mode),"'"
-        WRITE(82,'(A16,1F4.2)') "  mixing_beta = ", mixing_beta
-        WRITE(82,'(A12,1D10.1)') "  conv_thr = ", conv_thr
-        WRITE(82,'(100A)') "/"
-        !
-        WRITE(82,'(100A)') "ATOMIC_SPECIES"
-        DO k = 1, ntyp ! type of atom
-          WRITE(82,'(A6, 1F8.3, A, A)') atm(k), amass(k), ' ', TRIM(atom_pfile(k))
-        ENDDO
-        !
-        WRITE(82,'(100A)') "K_POINTS automatic"
-        WRITE(82,'(6i4)') NINT(nk1/DBLE(dim1)), NINT(nk2/DBLE(dim2)), & 
-                          NINT(nk3/DBLE(dim3)), k1, k2, k3
-        !
-        WRITE(82,'(100A)') "CELL_PARAMETERS (angstrom)"
-        WRITE(82,'(3F16.8)') DBLE(at(:, 1) * alat * dim1 * BOHR_RADIUS_ANGS )
-        WRITE(82,'(3F16.8)') DBLE(at(:, 2) * alat * dim2 * BOHR_RADIUS_ANGS )
-        WRITE(82,'(3F16.8)') DBLE(at(:, 3) * alat * dim3 * BOHR_RADIUS_ANGS )
-        !
-        WRITE(82,'(100A)') "ATOMIC_POSITIONS (angstrom)"
-       !
-    ENDIF ! flscf
-  ENDIF ! ionode
-  !
-  IF (single_ph_displ) THEN
-    pn = 2
-    ! when single_ph_displ = .true. we set pn = 2
-    ! pointless to allocate signs for signle_phonon_displacements
-    WRITE(*, *) " WARNING: 'single_ph_displ' flag is on, so error is not minimized" 
-  ENDIF
-  !
-  ! Instead of taking all possible permutations which are pn = 2** (nmodes- 1)! 
-  ! we just select possible permutations until the error is lower than a
-  ! threshold. The lower the threshold the longer the algorithm can take.
-  DO kk = 1, niters
-  ! Allocate original matrices ! half the entries of M_mat
-  ! We also make the inherent choice that each column of Mx_mat_or 
-  ! has the same number of positive and negative signs 
-    Mx_mat_or = 1
-    DO i = 1, 2 * pn / 4, 2
-      Mx_mat_or(i, :) = M_mat(i, :)
+    IF (ionode) WRITE(*,'(A20, 1F8.2,A3)') 'Temperature is: ' , Tc, ' K'
+    ! set amplitudes of displacements l_q = \sigma_\bq\nu and momenta 
+    p_q = 0.0d0
+    l_q = 0.0d0
+    FE_q = 0.0d0
+    DO qp = 1, nq
+      DO i = 1, nat3 
+         IF (w2(i, qp) .LT. 0.0d0 + eps2) THEN
+          l_q(i, qp) = 0.d0
+          p_q(i, qp) = 0.d0
+        ELSE
+        ! σν,T**2 = (2nν,T + 1) lν**2 ,
+        ! V 0 + \sum \hbar ων /2 − kBT ln[1 + nB(ων ,T )]
+          ! Free energy
+          FE_q(i,qp) = hbar * ph_w(i, qp) / 2.0d0 - K_BOLTZMANN_SI * Tc * & 
+                       LOG( 1.0d0 + 1.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * Tc)) - 1.0d0))
+          !
+          l_q(i, qp) = SQRT(hbar / ph_w(i, qp) / 2.0d0 / AMU_SI / ang**2.0d0) * & 
+                       SQRT(DBLE(1.0d0 + 2.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * Tc)) - 1.0d0))) 
+          p_q(i, qp) = hbar / SQRT(2.0d0) / (SQRT(hbar / ph_w(i, qp) / 2.0d0 /AMU_SI)) / ang * & !*1.0E-12& 
+                       SQRT(DBLE(0.5d0 + 1.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * Tc)) - 1.0d0))) 
+        ENDIF
+                     ! we can multiply by 1.0E-12 to get 'picos'
+      ENDDO
     ENDDO
-    ctr = 1
-    DO i = 2, 2 * pn / 4, 2
-      Mx_mat_or(i, :) = M_mat(2 * pn + 1 - i, :)
-      ctr = ctr + 1
-    ENDDO
-    DO i = 2 * pn / 4 + 1, 2 * pn / 2, 2
-      Mx_mat_or(i, :) = M_mat(i + 1, :)
-      ctr = ctr + 1
-    ENDDO
-    DO i = 2 * pn / 4 + 2, 2 * pn / 2, 2
-      Mx_mat_or(i, :) = M_mat(2 * pn + 2 - i, :)
-      ctr = ctr + 1
-    ENDDO
+    !     
+    ! for accoustic modes put l_q\nu = 0 and p_q\nu = 0 so we freeze them
     !
-    !
-    !
-    DO i = pn, 1, -1
-    ! To generate integer numbers from 1 to pn
-    ! and ALLOCATE the M_x,y matrices ! so we DO not have specific order !
-      call random_number(u_rand)
-      ii = 1 + FLOOR(i * u_rand) 
-      Mx_mat(i, :) = Mx_mat_or(ii, :)
-      Mx_mat_or(ii, :) = Mx_mat_or(i, :) ! so I DO not repeat this entry
-    ENDDO  
-    ! DO q-points in sets A n B
-    ! based on the sets of signs we genereated from the above loop
-    DO ii = 1, ctrAB ! loop over qpoints
-    ! change the signs of Mx in every 2^(nmodes-2) entries 
-    ! I use Mx_mat_or to apply concatenate matrices and obtain set E
-      IF (mod(ii, pn) .EQ. 1) THEN
-        Mx_mat_or(1 : pn - 1, :) = Mx_mat(2 : pn, :) ! second element goes to the top
-        Mx_mat_or(pn, :) = Mx_mat(1, :) ! first element goes to the bottom
+    DO qp = 1, nq
+      q_A = q(:, qp)  ! q_A to find IF q belongs in A
+      IF (((ABS(q_A(1)) < eps)) .AND. & 
+          ((ABS(q_A(2)) < eps)) .AND. &
+          ((ABS(q_A(3)) < eps)))  THEN
+          !
+          l_q(1, qp) = 0.0d0
+          l_q(2, qp) = 0.0d0
+          l_q(3, qp) = 0.0d0
+          p_q(1, qp) = 0.0d0
+          p_q(2, qp) = 0.0d0
+          p_q(3, qp) = 0.0d0
+          !
       ENDIF
-      Mx_mat = Mx_mat_or
-      ! to take antithetics every pn
-      ! Remember always the error goes to very small as long we have equal number of + and - signs
-      ! and displacements remain around equilibrium ! 
-      IF (mod(ii, pn).EQ.1) THEN
-          Mx_mat = -Mx_mat
-      ENDIF
-      !
-      ! 
-      ! Cx_matAB contains all the sigmas with the appropriates signs 
-      IF (MOD(ii, pn) > 0) THEN
-        DO k = 1, nat3
-          Cx_matAB(k, ii)  = l_q(k, ii) * Mx_mat(mod(ii, pn), k) ! mod so values of every pn q-points are repeated
-          Cpx_matAB(k, ii) = p_q(k, ii) * Mx_mat(mod(ii, pn), k) ! mod so values of every pn q-points are repeated
-        ENDDO
+    ENDDO
+    !
+    ! Compute total energies
+    !
+    PE_nq = 0.0d0
+    KE_nq = 0.0d0
+    FE_nq = 0.0d0
+    !
+    DO qp = 1, nq
+      q_A = q(:, qp) + q(:, qp) ! q_A to find IF q belongs in A
+      IF (((ABS(q_A(1)) < eps) .OR. (ABS(ABS(q_A(1)) - 1) < eps)) .AND. &
+          ((ABS(q_A(2)) < eps) .OR. (ABS(ABS(q_A(2)) - 1) < eps)) .AND. &
+          ((ABS(q_A(3)) < eps) .OR. (ABS(ABS(q_A(3)) - 1) < eps))) THEN
+         DO i = 1, nat3 
+           FE_nq = FE_nq + FE_q(i, qp) / RYDBERG_SI
+           PE_nq = PE_nq + 0.5d0 * AMU_SI * ph_w(i, qp)**2.d0 * l_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI
+           KE_nq = KE_nq + 0.5d0 / AMU_SI * p_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI
+         ENDDO
       ELSE
-        DO k = 1, nat3
-          Cx_matAB(k, ii)  = l_q(k, ii) * Mx_mat(pn, k)
-          Cpx_matAB(k, ii) = p_q(k, ii) * Mx_mat(pn, k)
-        ENDDO
+         DO i = 1, nat3 
+           FE_nq = FE_nq + 2.0d0 * FE_q(i, qp) / RYDBERG_SI
+           PE_nq = PE_nq + 2.0d0 * 0.5d0 * AMU_SI * ph_w(i, qp)**2.d0 * l_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI 
+           KE_nq = KE_nq + 2.0d0 * 0.5d0 / AMU_SI * p_q(i, qp)**2.d0 * ang**2.0d0 / RYDBERG_SI
+         ENDDO
       ENDIF
-      ! create R matrix that contains Re[e_ka^nu(q) * e_k'a'^nu'* (q)]
-      IF (compute_error) THEN
-        R_mat = 0.0d0
-        D_vect = 0.0d0
-        ctr = 1
-        DO p = 1, nat3
-          DO qp = 1, nat3 !those are for \k \a, \k' \a'
-            ctr2 = 1
-          !------------------------------
-            DO i = 1, nat3
-              DO j = 1, nat3
-                D_vect(ctr, ii) = D_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * & 
-                                                         Cx_matAB(i, ii) * Cx_matAB(j, ii)
-                R_mat(ctr, ctr2) = DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii)))
-                ctr2 = ctr2 + 1
-              ENDDO
-            ENDDO
-          !----------------------------
-            ctr = ctr + 1
-          ENDDO
-        ENDDO ! end p loop ! R_mat is filled 
-        !
-        Bx_vect = 0.d0
-        ! Bx_vect will contain all the cross terms v .neq. v' and diagonal for each q
-        ctr = 1
-        DO i = 1, nat3
-          DO j = 1, nat3
-            Bx_vect(ctr) = Cx_matAB(i, ii) * Cx_matAB(j, ii)
-            ctr = ctr + 1
-          ENDDO
-        ENDDO
+    ENDDO 
     !
-        E_vect(:, ii) = 0.d0
-    !   E_vect contains only the diagonal terms (i.e. v = v')
+    IF (ionode) THEN
+      WRITE(*,*) "=============================================="
+      WRITE(*,*)
+      WRITE(*,'(A30, 1F13.8, A7, 1F7.2, A2)') "Total vibrational energy: ", PE_nq + KE_nq, " Ry at ", Tc, " K"
+      WRITE(*,*)
+      WRITE(*,'(A30, 1F13.8, A7, 1F7.2, A2)') "Potential energy: ", PE_nq, " Ry at ", Tc, " K"
+      WRITE(*,*)
+      WRITE(*,'(A30, 1F13.8, A7, 1F7.2, A2)') "Kinetic energy: ", KE_nq, " Ry at ", Tc, " K"
+      WRITE(*,*)
+      WRITE(*,'(A30, 1F16.8, A7, 1F7.2, A2)') "Vibrational free energy: ", FE_nq, " Ry at ", Tc, " K"
+      WRITE(*,*)
+      WRITE(*,*) "Note that the total energy output from a DFT-ZG calculation" 
+      WRITE(*,*) "calculation accounts for half the total vibrational energy"
+      WRITE(*,*)
+      !
+    ENDIF
+    !
+    IF (ionode) THEN
+      IF (Tc < 10000.d0 - eps .AND. Tc > 1000.d0 - eps) WRITE(pt_T,'(1F7.2)') Tc 
+      IF (Tc < 1000.d0 - eps .AND. Tc > 100.d0 - eps) WRITE(pt_T,'(1F6.2)') Tc 
+      IF (Tc < 100.d0 - eps .AND. Tc > 10.d0 - eps) WRITE(pt_T,'(1F5.2)') Tc
+      IF (Tc < 10.d0 - eps .AND. Tc > 0.d0 - eps) WRITE(pt_T,'(1F4.2)') Tc
+      !
+      !
+      IF (.NOT. multi_ZG) filename = 'ZG-configuration_' // TRIM( pt_T ) // 'K.dat' 
+      IF (.NOT. multi_ZG) OPEN (unit = 80, file = filename, status = 'unknown', form = 'formatted')
+      IF (.NOT. multi_ZG) filename = 'ZG-velocities_' // TRIM( pt_T ) // 'K.dat'
+      IF (.NOT. multi_ZG) OPEN (unit = 81, file = filename, status = 'unknown', form = 'formatted')
+      !
+      IF ( TRIM(flscf) /= ' ') THEN
+          OPEN (unit = 82, file = 'ZG-scf_' //  TRIM( pt_1 ) // TRIM( pt_2 ) // TRIM( pt_3 ) // & 
+                                  '_' // TRIM( pt_T ) // 'K.in', status = 'unknown', form = 'formatted')
+          WRITE(82,*) "&control"
+          WRITE(82,'(100A)') "  calculation = '", TRIM(calculation),"'"
+          WRITE(82,'(100A)') "  restart_mode = '", TRIM(restart_mode),"'"
+          WRITE(82,'(100A)') "  prefix = 'ZG-", TRIM(pt_T), "K-", TRIM(prefix),"'" 
+          WRITE(82,'(100A)') "  pseudo_dir = '", TRIM(pseudo_dir),"'"  
+          WRITE(82,'(100A)') "  outdir = '", TRIM(outdir),"'"  
+          WRITE(82,'(100A)') "/"
+          WRITE(82,'(100A)') "&system"
+          WRITE(82,'(100A)') "  ibrav = 0"  
+          WRITE(82,'(A7,1i5)') "  nat =", nat * nq_tot
+          WRITE(82,'(A8,1i5)') "  ntyp =", ntyp
+          WRITE(82,'(A11,1F7.2)') "  ecutwfc =", ecutwfc 
+          WRITE(82,'(100A)') "  occupations = '", TRIM(occupations),"'"
+          WRITE(82,'(100A)') "  smearing = '", TRIM(smearing),"'"
+          WRITE(82,'(A11,1D10.1)') "  degauss =", degauss
+          WRITE(82,'(100A)') "/"
+          WRITE(82,'(100A)') "&electrons"
+          WRITE(82,'(100A)') "  diagonalization = '",TRIM(diagonalization),"'"
+          WRITE(82,'(100A)') "  mixing_mode= '",TRIM(mixing_mode),"'"
+          WRITE(82,'(A16,1F4.2)') "  mixing_beta = ", mixing_beta
+          WRITE(82,'(A12,1D10.1)') "  conv_thr = ", conv_thr
+          WRITE(82,'(100A)') "/"
+          !
+          WRITE(82,'(100A)') "ATOMIC_SPECIES"
+          DO k = 1, ntyp ! type of atom
+            WRITE(82,'(A6, 1F8.3, A, A)') atm(k), amass(k), ' ', TRIM(atom_pfile(k))
+          ENDDO
+          !
+          WRITE(82,'(100A)') "K_POINTS automatic"
+          WRITE(82,'(6i4)') NINT(nk1/DBLE(dim1)), NINT(nk2/DBLE(dim2)), & 
+                            NINT(nk3/DBLE(dim3)), k1, k2, k3
+          !
+          WRITE(82,'(100A)') "CELL_PARAMETERS (angstrom)"
+          WRITE(82,'(3F16.8)') DBLE(at(:, 1) * alat * dim1 * BOHR_RADIUS_ANGS )
+          WRITE(82,'(3F16.8)') DBLE(at(:, 2) * alat * dim2 * BOHR_RADIUS_ANGS )
+          WRITE(82,'(3F16.8)') DBLE(at(:, 3) * alat * dim3 * BOHR_RADIUS_ANGS )
+          !
+          WRITE(82,'(100A)') "ATOMIC_POSITIONS (angstrom)"
+         !
+      ENDIF ! flscf
+    ENDIF ! ionode
+    !
+    IF (single_ph_displ) THEN
+      pn = 2
+      ! when single_ph_displ = .true. we set pn = 2
+      ! pointless to allocate signs for signle_phonon_displacements
+      WRITE(*, *) " WARNING: 'single_ph_displ' flag is on, so error is not minimized" 
+    ENDIF
+    !
+    ! Instead of taking all possible permutations which are pn = 2** (nmodes- 1)! 
+    ! we just select possible permutations until the error is lower than a
+    ! threshold. The lower the threshold the longer the algorithm can take.
+    DO kk = 1, niters
+    !
+      IF (multi_ZG .AND. ionode) WRITE(pt_kk,'(i5.5)') kk
+      IF (multi_ZG .AND. ionode) filename = 'ZG-configuration_' // TRIM( pt_T ) // 'K_' // TRIM( pt_kk ) // '.dat'
+      IF (multi_ZG .AND. ionode) OPEN (unit = 80, file = filename, status = 'unknown', form = 'formatted')
+      IF (multi_ZG .AND. ionode) filename = 'ZG-velocities_' // TRIM( pt_T ) // 'K_' // TRIM( pt_kk ) // '.dat' 
+      IF (multi_ZG .AND. ionode) OPEN (unit = 81, file = filename, status = 'unknown', form = 'formatted')
+      !
+      ! Allocate original matrices ! half the entries of M_mat
+      ! We also make the inherent choice that each column of Mx_mat_or 
+      ! has the same number of positive and negative signs 
+      Mx_mat_or = 1
+      DO i = 1, 2 * pn / 4, 2
+        Mx_mat_or(i, :) = M_mat(i, :)
+      ENDDO
+      ctr = 1
+      DO i = 2, 2 * pn / 4, 2
+        Mx_mat_or(i, :) = M_mat(2 * pn + 1 - i, :)
+        ctr = ctr + 1
+      ENDDO
+      DO i = 2 * pn / 4 + 1, 2 * pn / 2, 2
+        Mx_mat_or(i, :) = M_mat(i + 1, :)
+        ctr = ctr + 1
+      ENDDO
+      DO i = 2 * pn / 4 + 2, 2 * pn / 2, 2
+        Mx_mat_or(i, :) = M_mat(2 * pn + 2 - i, :)
+        ctr = ctr + 1
+      ENDDO
+      !
+      !
+      DO i = pn, 1, -1
+      ! To generate integer numbers from 1 to pn
+      ! M_x matrices entries do not have specific order
+        IF ( (ABS(SUM(T_array) + 100) < eps) .OR. multi_ZG ) THEN ! Keep same signs for one configuration 
+                                                                  ! and multi temperatures (for consistency). 
+          CALL RANDOM_NUMBER(u_rand) 
+          ii = 1 + FLOOR(i * u_rand) 
+          Mx_mat(i, :) = Mx_mat_or(ii, :)
+          Mx_mat_or(ii, :) = Mx_mat_or(i, :) ! so I do not repeat this entry
+        ELSE 
+          Mx_mat = Mx_mat_or
+        ENDIF
+      ENDDO  
+      ! DO q-points in sets A and B
+      ! based on the sets of signs we genereated from the above loop
+      DO ii = 1, ctrAB ! loop over qpoints
+      ! change the signs of Mx in every 2^(nmodes-2) entries 
+      ! I use Mx_mat_or to apply concatenate matrices and obtain set E
+        IF (mod(ii, pn) .EQ. 1) THEN
+          Mx_mat_or(1 : pn - 1, :) = Mx_mat(2 : pn, :) ! second element goes to the top
+          Mx_mat_or(pn, :) = Mx_mat(1, :) ! first element goes to the bottom
+        ENDIF
+        Mx_mat = Mx_mat_or
+        ! to take antithetics every pn
+        ! Error goes small as long as we have equal number of + and - signs
+        ! and displacements remain around equilibrium  
+        IF (mod(ii, pn) .EQ. 1) THEN
+            Mx_mat = -Mx_mat
+        ENDIF
+        !
+        ! 
+        ! Cx_matAB contains all the sigmas with the appropriate signs 
+        IF (MOD(ii, pn) > 0) THEN
+          DO k = 1, nat3
+            Cx_matAB(k, ii)  = l_q(k, ii) * Mx_mat(mod(ii, pn), k) ! mod so values of every pn q-points are repeated
+            Cpx_matAB(k, ii) = p_q(k, ii) * Mx_mat(mod(ii, pn), k) ! 
+          ENDDO
+        ELSE
+          DO k = 1, nat3
+            Cx_matAB(k, ii)  = l_q(k, ii) * Mx_mat(pn, k)
+            Cpx_matAB(k, ii) = p_q(k, ii) * Mx_mat(pn, k)
+          ENDDO
+        ENDIF
+        IF (compute_error) THEN
+          ! R matrix contains Re[e_ka^nu(q) * e_k'a'^nu'* (q)]
+          R_mat = 0.0d0
+          D_vect = 0.0d0
+          ctr = 1
+          DO p = 1, nat3
+            DO qp = 1, nat3 !those are for \k \a, \k' \a'
+              ctr2 = 1
+            !------------------------------
+              DO i = 1, nat3
+                DO j = 1, nat3
+                  D_vect(ctr, ii) = D_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * & 
+                                                           Cx_matAB(i, ii) * Cx_matAB(j, ii)
+                  R_mat(ctr, ctr2) = DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii)))
+                  ctr2 = ctr2 + 1
+                ENDDO
+              ENDDO
+            !----------------------------
+              ctr = ctr + 1
+            ENDDO
+          ENDDO ! end p loop ! R_mat is filled 
+          !
+          Bx_vect = 0.d0
+          ! Bx_vect will contain all the cross terms v .neq. v' and diagonal for each q
+          ctr = 1
+          DO i = 1, nat3
+            DO j = 1, nat3
+              Bx_vect(ctr) = Cx_matAB(i, ii) * Cx_matAB(j, ii)
+              ctr = ctr + 1
+            ENDDO
+          ENDDO
+      !
+          E_vect(:, ii) = 0.d0
+      !   E_vect contains only the diagonal terms (i.e. v = v')
+          ctr = 1
+          DO p = 1, nat3 ! those are for \k \a, \k' \a'
+            DO qp = 1, nat3
+              DO i = 1, nat3
+                DO j = 1, nat3
+                  IF (j == i) THEN
+                    E_vect(ctr, ii) = E_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * Cx_matAB(i, ii)**2
+                  ENDIF
+                ENDDO
+              ENDDO
+              ctr = ctr + 1
+            ENDDO
+          ENDDO ! p loop
+      !   D_vect(:, ii) = MATMUL(R_mat, Bx_vect)
+      !   D_vect contains the diagonal and the non-diagonal terms (i.e. v = v' and v .neq. v')
+      !   E_vect contains only the diagonal terms (i.e. v = v')
+      !   F_vect contains the error (i.e. each entry is the contribution from v \neq v') at each q point to minimize
+      !   checks
+          F_vect(:, ii) = D_vect(:, ii) - E_vect(:, ii)
+      !
+      ENDIF ! compute_error
+      ENDDO ! ii loop over qpoints
+      !
+      !
+      !Compute error 
+      !
+      !
+      IF (compute_error) THEN
+        sum_er_D = 0.0d0
+        sum_er_B = 0.0d0
+        ! sum_er_D : contains the error from \nu and \nu' every pn
+        !!!!!!!
+        IF (ionode) THEN
+          WRITE(*,*) 
+          WRITE(*,*) "Searching for optimum configuration..."
+          WRITE(*,'(A11, i8)') "  Attempt #", kk 
+        ENDIF
+        !
+        DO p = 1, combs_all
+          ctr = 1
+          DO i = 0, INT(ctrAB / pn) - 1 
+            sum_er_D(p, ctr) =SUM(F_vect(p, pn * i + 1 : pn * (i + 1))) ! pn) is the length of Mx
+            ctr = ctr + 1
+          ENDDO 
+          ! Here we add the reminder IF ctrAB is not divided exactly by pn
+          IF (mod(ctrAB, pn) > 0) THEN
+            sum_er_D(p, ctr) = SUM(F_vect(p, ctrAB - mod(ctrAB, pn) + 1 : ctrAB)) ! add the remaining terms
+          ENDIF
+          ! evaluate also error from all q-points in B
+          DO i = 1, ctrAB
+            sum_er_B(p) = sum_er_B(p) + F_vect(p, i) ! 
+          ENDDO 
+          !
+        ENDDO ! end p-loop
+        ! 
+        sum_er_B2 = 0.0d0
+        ctr2 = 1
+        DO j = 1, NINT(nq_tot / 2.0d0)
+          DO p = 1, combs_all ! for ever \k,\a,\k',\a'
+            DO i = 1, ctrAB ! over qpoints
+              dotp = 0.0d0
+              DO ii = 1, 3
+                !dotp = dotp + q(i, ii) * Rlist(j, ii)!
+                ! q(3, nq)
+                dotp = dotp + q(ii, i) * Rlist(j, ii)
+              ENDDO ! ii
+              sum_er_B2(ctr2) = sum_er_B2(ctr2) + cos(tpi * dotp) * F_vect(p, i)
+              !
+            ENDDO ! i
+            ctr2 = ctr2 + 1
+          ENDDO ! p     
+        ENDDO ! j
+        !
+        sum_diag_D = 0.0d0
+        sum_diag_B = 0.0d0
+        ! sum_diag_D : contains the diagonal terms 
+        DO p = 1, combs_all
         ctr = 1
+          DO i = 0, INT(ctrAB / pn) - 1 
+            sum_diag_D(p, ctr) =SUM(E_vect(p, pn * i + 1 : pn * (i + 1))) ! pn) is the length of Mx
+            ctr = ctr + 1
+          ENDDO
+          ! Here we add the reminder IF ctrAB is not divided exactly by pn
+          IF (mod(ctrAB, pn) > 0) THEN
+            sum_diag_D(p, ctr) = SUM(E_vect(p, ctrAB - mod(ctrAB, pn) + 1 : ctrAB)) ! add the remaining terms
+          ENDIF
+          DO i = 1, ctrAB
+            sum_diag_B(p) = sum_diag_B(p) + E_vect(p, i) ! pn) is the length of Mx
+          ENDDO
+        ENDDO ! end p-loop
+        sum_diag_B2 = 0.0d0
+        ctr = 1
+        sum_zg = 0
+        ratio_zg = 0.0
+        !
         DO p = 1, nat3 ! those are for \k \a, \k' \a'
           DO qp = 1, nat3
-            DO i = 1, nat3
-              DO j = 1, nat3
-                IF (j == i) THEN
-                  E_vect(ctr, ii) = E_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * Cx_matAB(i, ii)**2
-                ENDIF
-              ENDDO
-            ENDDO
+            IF (p == qp) THEN
+              ratio_zg(ctr) = sum_er_B(ctr) / sum_diag_B(ctr)
+              !!! WRITE(*,*) "Error from each branch", sum_diag_B(ctr), sum_er_B(ctr), p , qp, ratio_zg(ctr)
+              IF (ABS(ratio_zg(ctr)) < error_thresh) THEN
+                sum_zg = sum_zg + 1
+              ENDIF   
+            ENDIF
             ctr = ctr + 1
           ENDDO
-        ENDDO ! p loop
-    !   D_vect(:, ii) = MATMUL(R_mat, Bx_vect)
-    !   D_vect contains the diagonal and the non-diagonal terms (i.e. v = v' and v .neq. v')
-    !   E_vect contains only the diagonal terms (i.e. v = v')
-    !   F_vect contains the error (i.e. each entry is the contribution from v \neq v') at each q point to minimize
-    !   checks
-        F_vect(:, ii) = D_vect(:, ii) - E_vect(:, ii)
-    !
-    ENDIF ! compute_error
-    ENDDO ! ii loop over qpoints
-    !
-    !
-    !Compute error 
-    !
-    !
-    IF (compute_error) THEN
-      sum_er_D = 0.0d0
-      sum_er_B = 0.0d0
-      ! sum_er_D : contains the error from \nu and \nu' every pn
-      !!!!!!!
-      IF (ionode) THEN
-        WRITE(*,*) 
-        WRITE(*,*) "Searching for optimum configuration..."
-        WRITE(*,'(A11, i8)') "  Attempt #", kk 
-      ENDIF
-      !
-      DO p = 1, combs_all
-        ctr = 1
-        DO i = 0, INT(ctrAB / pn) - 1 
-          sum_er_D(p, ctr) =SUM(F_vect(p, pn * i + 1 : pn * (i + 1))) ! pn) is the length of Mx
-          ctr = ctr + 1
-        ENDDO 
-        ! Here we add the reminder IF ctrAB is not divided exactly by pn
-        IF (mod(ctrAB, pn) > 0) THEN
-          sum_er_D(p, ctr) = SUM(F_vect(p, ctrAB - mod(ctrAB, pn) + 1 : ctrAB)) ! add the remaining terms
-        ENDIF
-        ! evaluate also error from all q-points in B
-        DO i = 1, ctrAB
-          sum_er_B(p) = sum_er_B(p) + F_vect(p, i) ! 
-        ENDDO 
+        ENDDO
         !
-      ENDDO ! end p-loop
-      ! 
-      sum_er_B2 = 0.0d0
-      ctr2 = 1
-      DO j = 1, NINT(nq_tot / 2.0d0)
-        DO p = 1, combs_all ! for ever \k,\a,\k',\a'
-          DO i = 1, ctrAB ! over qpoints
-            dotp = 0.0d0
-            DO ii = 1, 3
-              !dotp = dotp + q(i, ii) * Rlist(j, ii)!
-              ! q(3, nq)
-              dotp = dotp + q(ii, i) * Rlist(j, ii)
-            ENDDO ! ii
-            sum_er_B2(ctr2) = sum_er_B2(ctr2) + cos(tpi * dotp) * F_vect(p, i)
-            !
-          ENDDO ! i
-          ctr2 = ctr2 + 1
-        ENDDO ! p     
-      ENDDO ! j
+        IF (ionode) WRITE(*,'(A, 1F12.6)') "      Total error:", SUM(ABS(ratio_zg)) / nat3
+        IF (ionode) WRITE(*,*) 
+        IF (ionode .AND. SUM(ABS(ratio_zg)) / nat3 < error_thresh ) & 
+                    WRITE(*,*) "Optimum configuration found !"
+      ENDIF ! compute_error
       !
-      sum_diag_D = 0.0d0
-      sum_diag_B = 0.0d0
-      ! sum_diag_D : contains the diagonal terms 
-      DO p = 1, combs_all
-      ctr = 1
-        DO i = 0, INT(ctrAB / pn) - 1 
-          sum_diag_D(p, ctr) =SUM(E_vect(p, pn * i + 1 : pn * (i + 1))) ! pn) is the length of Mx
-          ctr = ctr + 1
-        ENDDO
-        ! Here we add the reminder IF ctrAB is not divided exactly by pn
-        IF (mod(ctrAB, pn) > 0) THEN
-          sum_diag_D(p, ctr) = SUM(E_vect(p, ctrAB - mod(ctrAB, pn) + 1 : ctrAB)) ! add the remaining terms
-        ENDIF
-        DO i = 1, ctrAB
-          sum_diag_B(p) = sum_diag_B(p) + E_vect(p, i) ! pn) is the length of Mx
-        ENDDO
-      ENDDO ! end p-loop
-      sum_diag_B2 = 0.0d0
-      ctr = 1
-      sum_zg = 0
-      ratio_zg = 0.0
-      !
-      DO p = 1, nat3 ! those are for \k \a, \k' \a'
-        DO qp = 1, nat3
-          IF (p == qp) THEN
-            ratio_zg(ctr) = sum_er_B(ctr) / sum_diag_B(ctr)
-            !!! WRITE(*,*) "Error from each branch", sum_diag_B(ctr), sum_er_B(ctr), p , qp, ratio_zg(ctr)
-            IF (ABS(ratio_zg(ctr)) < error_thresh) THEN
-              sum_zg = sum_zg + 1
-            ENDIF   
+      !IF (sum_zg == nat3) THEN
+      IF (SUM(ABS(ratio_zg)) / nat3 < error_thresh ) THEN
+        ctrA = 0
+        ctrB = 0
+        !
+        DO qp = 1, ctrAB
+          q_A = q(:, qp) +  q(:, qp) ! q_A to find IF q belongs in A
+          IF (((ABS(q_A(1)) < eps) .OR. (ABS(ABS(q_A(1)) - 1) < eps)) .AND. &
+              ((ABS(q_A(2)) < eps) .OR. (ABS(ABS(q_A(2)) - 1) < eps)) .AND. &
+              ((ABS(q_A(3)) < eps) .OR. (ABS(ABS(q_A(3)) - 1) < eps))) THEN
+                ctrA = ctrA + 1
+                Cx_matA(:, ctrA) = Cx_matAB(:, qp)
+                Cpx_matA(:, ctrA) = Cpx_matAB(:, qp)
+                z_nq_A(:, :, ctrA) =  z_zg(:, :, qp)
+                qA(ctrA, :) =  q(:, qp)
+                IF (ABS(qA(ctrA, 1)) < eps) qA(ctrA, 1) = 0.0
+                IF (ABS(qA(ctrA, 2)) < eps) qA(ctrA, 2) = 0.0
+                IF (ABS(qA(ctrA, 3)) < eps) qA(ctrA, 3) = 0.0
+          ELSE
+                ctrB = ctrB + 1
+                Cx_matB(:, ctrB) = Cx_matAB(:, qp)
+                Cpx_matB(:, ctrB) = Cpx_matAB(:, qp)
+                z_nq_B(:, :, ctrB) =  z_zg(:, :, qp)
+                qB(ctrB,:) = q(:, qp)
+                IF (ABS(qB(ctrB, 1)) < eps) qB(ctrB, 1) = 0.0
+                IF (ABS(qB(ctrB, 2)) < eps) qB(ctrB, 2) = 0.0
+                IF (ABS(qB(ctrB, 3)) < eps) qB(ctrB, 3) = 0.0
+              !
           ENDIF
-          ctr = ctr + 1
         ENDDO
-      ENDDO
-      !
-      IF (ionode) WRITE(*,'(A, 1F12.6)') "      Total error:", SUM(ABS(ratio_zg)) / nat3
-      IF (ionode) WRITE(*,*) 
-      IF (ionode .AND. SUM(ABS(ratio_zg)) / nat3 < error_thresh ) & 
-                  WRITE(*,*) "Optimum configuration found !"
-    ENDIF ! compute_error
-    !
-    !IF (sum_zg == nat3) THEN
-    IF (SUM(ABS(ratio_zg)) / nat3 < error_thresh ) THEN
-      ctrA = 0
-      ctrB = 0
-      !
-      DO qp = 1, ctrAB
-        q_A = q(:, qp) +  q(:, qp) ! q_A to find IF q belongs in A
-        IF (((ABS(q_A(1)) < eps) .OR. (ABS(ABS(q_A(1)) - 1) < eps)) .AND. &
-            ((ABS(q_A(2)) < eps) .OR. (ABS(ABS(q_A(2)) - 1) < eps)) .AND. &
-            ((ABS(q_A(3)) < eps) .OR. (ABS(ABS(q_A(3)) - 1) < eps))) THEN
-              ctrA = ctrA + 1
-              Cx_matA(:, ctrA) = Cx_matAB(:, qp)
-              Cpx_matA(:, ctrA) = Cpx_matAB(:, qp)
-              z_nq_A(:, :, ctrA) =  z_zg(:, :, qp)
-              qA(ctrA, :) =  q(:, qp)
-              IF (ABS(qA(ctrA, 1)) < eps) qA(ctrA, 1) = 0.0
-              IF (ABS(qA(ctrA, 2)) < eps) qA(ctrA, 2) = 0.0
-              IF (ABS(qA(ctrA, 3)) < eps) qA(ctrA, 3) = 0.0
-        ELSE
-              ctrB = ctrB + 1
-              Cx_matB(:, ctrB) = Cx_matAB(:, qp)
-              Cpx_matB(:, ctrB) = Cpx_matAB(:, qp)
-              z_nq_B(:, :, ctrB) =  z_zg(:, :, qp)
-              qB(ctrB,:) = q(:, qp)
-              IF (ABS(qB(ctrB, 1)) < eps) qB(ctrB, 1) = 0.0
-              IF (ABS(qB(ctrB, 2)) < eps) qB(ctrB, 2) = 0.0
-              IF (ABS(qB(ctrB, 3)) < eps) qB(ctrB, 3) = 0.0
+        !
+        IF (ionode) THEN
+          IF (single_ph_displ) THEN
+              WRITE(*,*) "Print single phonon displacements" 
+              CALL single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, & 
+                                 ntypx, qA, qB, amass, atm, equil_p, & 
+                                 Rlist, z_nq_B, z_nq_A, Cx_matB, & 
+                                 Cx_matA, Cpx_matB, Cpx_matA)
+          ENDIF
+          !     
+          IF (compute_error) THEN
+            WRITE(*,*)
+            WRITE(*,'(A, 1F12.6)') " Sum of diagonal terms per q-point:", DBLE(SUM(sum_diag_B) / ctrAB)
+            WRITE(*,'(A, 1F12.6,i8)') " Error and niter index:", SUM(ABS(ratio_zg)) / nat3, kk !
+            WRITE(*,*)
+          ENDIF
+          WRITE(*,*) "=============================================="
+          WRITE(*,*) 
+          WRITE(*,*) "Print ZG configuration"
+          WRITE(*,*) 
+          !WRITE(80,*) "Sum of error per q-point and loop index:", SUM(sum_er_B)/ctrAB, kk !
+          WRITE(80,'(A20, 1F8.2,A3)') 'Temperature is: ' , Tc, ' K'
+          WRITE(80,*) "Atomic positions", nat * nq_tot
+          WRITE(81,*) "ZG-Velocities (Ang/ps)"
+        ENDIF
+        ! Generate displacements and velocities.
+        ! Remember nq_tot is also equal to the number of cells
+        ! Here the displacements are generated according to 
+        ! Np^(- 1/2)(Mo/Mk)^(1/2)[\sum_{q \in B} e^{1qR_p}e^v_{ka}(q)(x_{qv}+y_{q\nu})
+        ! z_zg(nat3, nat3, nq)) 
+        !
+        D_tau = 0.0d0
+        P_tau = 0.0d0
+        ! 
+        ! Main loop to construct ZG configuration
+        !
+        CALL fkbounds( nq_tot, lower_bnd, upper_bnd )
+        !
+        DO p = lower_bnd, upper_bnd !1, nq_tot
+          ctr = 1
+          DO k = 1, nat ! k represents the atom
+            nta = ityp(k)
+            DO i = 1, 3  ! i is for cart directions
             !
-        ENDIF
-      ENDDO
-      !
-      IF (ionode) THEN
-        IF (single_ph_displ) THEN
-            WRITE(*,*) "Print single phonon displacements" 
-            CALL single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, & 
-                               ntypx, qA, qB, amass, atm, equil_p, & 
-                               Rlist, z_nq_B, z_nq_A, Cx_matB, & 
-                               Cx_matA, Cpx_matB, Cpx_matA)
-        ENDIF
-        !     
-        IF (compute_error) THEN
-          WRITE(*,*)
-          WRITE(*,'(A, 1F12.6)') " Sum of diagonal terms per q-point:", DBLE(SUM(sum_diag_B) / ctrAB)
-          WRITE(*,'(A, 1F12.6,i8)') " Error and niter index:", SUM(ABS(ratio_zg)) / nat3, kk !
-          WRITE(*,*)
-        ENDIF
-        WRITE(*,*) "=============================================="
-        WRITE(*,*) 
-        WRITE(*,*) "Print ZG configuration"
-        WRITE(*,*) 
-        !WRITE(80,*) "Sum of error per q-point and loop index:", SUM(sum_er_B)/ctrAB, kk !
-        WRITE(80,'(A20, 1F8.2,A3)') 'Temperature is: ' , T ,' K'
-        WRITE(80,*) "Atomic positions", nat * nq_tot
-        WRITE(81,*) "ZG-Velocities (Ang/ps)"
-      ENDIF
-      ! Generate displacements and velocities.
-      ! Remember nq_tot is also equal to the number of cells
-      ! Here the displacements are generated according to 
-      ! Np^(- 1/2)(Mo/Mk)^(1/2)[\sum_{q \in B} e^{1qR_p}e^v_{ka}(q)(x_{qv}+y_{q\nu})
-      ! z_zg(nat3, nat3, nq)) 
-      !
-      D_tau = 0.0d0
-      P_tau = 0.0d0
-      ! 
-      ! Main loop to construct ZG configuration
-      !
-      CALL fkbounds( nq_tot, lower_bnd, upper_bnd )
-      !
-      DO p = lower_bnd, upper_bnd !1, nq_tot
+              DO qp = 1, ctrB
+                dotp = 0.0d0
+                DO ii = 1, 3
+                  dotp = dotp + qB(qp, ii) * Rlist(p, ii) * tpi ! dot product between q and R 
+                ENDDO
+                DO j = 1, nat3        
+                  D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(CMPLX(COS(dotp), SIN(dotp), kind=dp) &
+                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * Cx_matB(j, qp)) !) 
+                  P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(CMPLX(COS(dotp), SIN(dotp), kind=dp) &
+                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * Cpx_matB(j, qp)) / (amass(nta) * AMU_SI)
+                  ! Here we calculate the momenta of the nuclei and finally 
+                  !we divide by (amass(nta) *AMU_SI) to get the velocities.
+                ENDDO
+              ENDDO ! qp loop
+              !
+              IF (incl_qA) THEN ! If we want to include modes in set A. Those modes are known
+                              ! to break the degeneracy for finite size systems
+                DO qp = 1, ctrA
+                  dotp = 0.0d0
+                  DO ii = 1, 3
+                    dotp = dotp + qA(qp, ii) * Rlist(p, ii)! 
+                  ENDDO
+                  DO j = 1, nat3
+                    D_tau(p, k, i) = D_tau(p, k, i) + SQRT(1.0d0 / nq_tot / amass(nta)) * cos(tpi * dotp) &
+                                             * DBLE(z_nq_A(ctr, j, qp) * Cx_matA(j, qp)) ! 
+                    P_tau(p, k, i) = P_tau(p, k, i) + SQRT(1.0d0 / nq_tot * amass(nta)) * cos(tpi * dotp) &
+                                             * DBLE(z_nq_A(ctr, j, qp) * Cpx_matA(j, qp)) / (amass(nta) * AMU_SI) !
+                  ENDDO
+                ENDDO
+              ENDIF ! IF incl_qA
+              !
+              ctr = ctr + 1 ! for k and i
+              !IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
+              IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', 1)
+              D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
+            ENDDO ! end i for cart directions
+          ENDDO ! end k loop over nat
+        ENDDO ! end p loop over unit cells
+        ! print displacements
+        !
+        CALL mp_sum(D_tau, inter_pool_comm)
+        CALL mp_sum(P_tau, inter_pool_comm)
+        CALL mp_barrier(inter_pool_comm)
+        !
+        IF (ionode) THEN
+          DO k = 1, nat ! k represents the atom
+            DO p = 1, nq_tot 
+              WRITE(80,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
+              IF (flscf /= ' ' .AND. (.NOT. multi_ZG)) WRITE(82,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
+              WRITE(*,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
+              WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k, :) * 1.0E-12 ! multiply to obtain picoseconds 
+            ENDDO
+          ENDDO 
+          !!WRITE(80,*) "sign matrices" 
+          !!DO i = 1, pn
+          !!    WRITE(80,'(5I)') Mx_mat(i,1:5)
+          !!ENDDO
+          WRITE(*,*) 
+          WRITE(*,*) "=============================================="
+          WRITE(*,*) 
+          WRITE(*,'(100A)') ' Anisotropic mean-squared displacement tensor vs exact values (Ang^2):'
+          WRITE(81,'(100A)') ' ZG-velocities vs exact velocities from momentum operator in second quantization:'
+        ENDIF ! ionode
+        !
+        ! Exact anisotropic displacement parameter
+        DW_fact  = 0.0d0
+        DWp_fact = 0.0d0
         ctr = 1
         DO k = 1, nat ! k represents the atom
           nta = ityp(k)
           DO i = 1, 3  ! i is for cart directions
           !
             DO qp = 1, ctrB
-              dotp = 0.0d0
-              DO ii = 1, 3
-                dotp = dotp + qB(qp, ii) * Rlist(p, ii) * tpi ! dot product between q and R 
+              DO j = 1, nat3
+                DW_fact(k, i) = DW_fact(k, i) + 2.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_B(ctr, j, qp) & 
+                                           * CONJG(z_nq_B(ctr, j, qp)) * Cx_matB(j, qp)**2
+                DWp_fact(k, i) = DWp_fact(k, i) + 2.0d0 * amass(nta) / DBLE(nq_tot) * z_nq_B(ctr, j, qp) & 
+                                          * CONJG(z_nq_B(ctr, j, qp)) * Cpx_matB(j, qp)**2 & 
+                                          / ((amass(nta) * AMU_SI)**2) * 1.0E-24
               ENDDO
-              DO j = 1, nat3        
-                D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(CMPLX(COS(dotp), SIN(dotp), kind=dp) &
-                               * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * Cx_matB(j, qp)) !) 
-                P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(CMPLX(COS(dotp), SIN(dotp), kind=dp) &
-                               * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * Cpx_matB(j, qp)) / (amass(nta) * AMU_SI)
-                ! Here we calculate the momenta of the nuclei and finally 
-                !we divide by (amass(nta) *AMU_SI) to get the velocities.
-              ENDDO
-            ENDDO ! qp loop
+            ENDDO
             !
-            IF (incl_qA) THEN ! If we want to include modes in set A. Those modes are known
-                            ! to break the degeneracy for finite size systems
+            IF (incl_qA) THEN ! 
               DO qp = 1, ctrA
-                dotp = 0.0d0
-                DO ii = 1, 3
-                  dotp = dotp + qA(qp, ii) * Rlist(p, ii)! 
-                ENDDO
                 DO j = 1, nat3
-                  D_tau(p, k, i) = D_tau(p, k, i) + SQRT(1.0d0 / nq_tot / amass(nta)) * cos(tpi * dotp) &
-                                           * DBLE(z_nq_A(ctr, j, qp) * Cx_matA(j, qp)) ! 
-                  P_tau(p, k, i) = P_tau(p, k, i) + SQRT(1.0d0 / nq_tot * amass(nta)) * cos(tpi * dotp) &
-                                           * DBLE(z_nq_A(ctr, j, qp) * Cpx_matA(j, qp)) / (amass(nta) * AMU_SI) !
+                  DW_fact(k, i) = DW_fact(k, i) + 1.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_A(ctr, j, qp) & 
+                                  * CONJG(z_nq_A(ctr, j, qp)) * Cx_matA(j, qp)**2
+                  DWp_fact(k, i) = DWp_fact(k, i) + amass(nta) / DBLE(nq_tot) * z_nq_A(ctr, j, qp) * CONJG(z_nq_A(ctr, j, qp)) & 
+                                  * Cpx_matA(j, qp)**2 / ((amass(nta) * AMU_SI)**2) * 1.0E-24
                 ENDDO
               ENDDO
-            ENDIF ! IF incl_qA
-            !
+            ENDIF
+           !
             ctr = ctr + 1 ! for k and i
-            !IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
-            IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', 1)
-            D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
           ENDDO ! end i for cart directions
         ENDDO ! end k loop over nat
-      ENDDO ! end p loop over unit cells
-      ! print displacements
-      !
-      CALL mp_sum(D_tau, inter_pool_comm)
-      CALL mp_sum(P_tau, inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-      !
-      IF (ionode) THEN
-        DO k = 1, nat ! k represents the atom
-          DO p = 1, nq_tot 
-            WRITE(80,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
-            IF (flscf /= ' ') WRITE(82,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
-            WRITE(*,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
-            WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k, :) * 1.0E-12 ! multiply to obtain picoseconds 
-          ENDDO
-        ENDDO 
-        !WRITE(80,*) "sign matrices" 
-        !DO i = 1, pn
-        !    WRITE(80,*) Mx_mat(i,:)
-        !ENDDO
-        WRITE(*,*) 
-        WRITE(*,*) "=============================================="
-        WRITE(*,*) 
-        WRITE(*,'(100A)') ' Anisotropic mean-squared displacement tensor vs exact values (Ang^2):'
-        WRITE(81,'(100A)') ' ZG-velocities vs exact velocities from momentum operator in second quantization:'
-      ENDIF ! ionode
-      !
-      ! Exact anisotropic displacement parameter
-      DW_fact  = 0.0d0
-      DWp_fact = 0.0d0
-      ctr = 1
-      DO k = 1, nat ! k represents the atom
-        nta = ityp(k)
-        DO i = 1, 3  ! i is for cart directions
         !
-          DO qp = 1, ctrB
-            DO j = 1, nat3
-              DW_fact(k, i) = DW_fact(k, i) + 2.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_B(ctr, j, qp) & 
-                                         * CONJG(z_nq_B(ctr, j, qp)) * Cx_matB(j, qp)**2
-              DWp_fact(k, i) = DWp_fact(k, i) + 2.0d0 * amass(nta) / DBLE(nq_tot) * z_nq_B(ctr, j, qp) & 
-                                        * CONJG(z_nq_B(ctr, j, qp)) * Cpx_matB(j, qp)**2 & 
-                                        / ((amass(nta) * AMU_SI)**2) * 1.0E-24
-            ENDDO
+
+
+        T_fact(:,:) = 0.d0
+        Tp_fact(:,:) = 0.d0
+        DO k = 1, nat
+          DO p = 1, nq_tot
+            T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1))**2 / nq_tot
+            T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 2) - equil_p(p, k, 2))**2 / nq_tot
+            T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 3) - equil_p(p, k, 3))**2 / nq_tot
+            Tp_fact(k, 1) =  Tp_fact(k, 1) + (P_tau(p, k, 1))**2 / nq_tot * 1.0E-24
+            Tp_fact(k, 2) =  Tp_fact(k, 2) + (P_tau(p, k, 2))**2 / nq_tot * 1.0E-24
+            Tp_fact(k, 3) =  Tp_fact(k, 3) + (P_tau(p, k, 3))**2 / nq_tot * 1.0E-24
           ENDDO
-          !
-          IF (incl_qA) THEN ! 
-            DO qp = 1, ctrA
-              DO j = 1, nat3
-                DW_fact(k, i) = DW_fact(k, i) + 1.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_A(ctr, j, qp) & 
-                                * CONJG(z_nq_A(ctr, j, qp)) * Cx_matA(j, qp)**2
-                DWp_fact(k, i) = DWp_fact(k, i) + amass(nta) / DBLE(nq_tot) * z_nq_A(ctr, j, qp) * CONJG(z_nq_A(ctr, j, qp)) & 
-                                * Cpx_matA(j, qp)**2 / ((amass(nta) * AMU_SI)**2) * 1.0E-24
-              ENDDO
-            ENDDO
-          ENDIF
-         !
-          ctr = ctr + 1 ! for k and i
-        ENDDO ! end i for cart directions
-      ENDDO ! end k loop over nat
-      !
-
-
-      T_fact(:,:) = 0.d0
-      Tp_fact(:,:) = 0.d0
-      DO k = 1, nat
-        DO p = 1, nq_tot
-          T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1))**2 / nq_tot
-          T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 2) - equil_p(p, k, 2))**2 / nq_tot
-          T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 3) - equil_p(p, k, 3))**2 / nq_tot
-          Tp_fact(k, 1) =  Tp_fact(k, 1) + (P_tau(p, k, 1))**2 / nq_tot * 1.0E-24
-          Tp_fact(k, 2) =  Tp_fact(k, 2) + (P_tau(p, k, 2))**2 / nq_tot * 1.0E-24
-          Tp_fact(k, 3) =  Tp_fact(k, 3) + (P_tau(p, k, 3))**2 / nq_tot * 1.0E-24
         ENDDO
-      ENDDO
-      IF (ionode) THEN 
-        WRITE(*,*)
-        DO k = 1, nat
-          nta = ityp(k)
-          WRITE(*,'(A6, 2i2)') " Atom: ", k 
-          WRITE(*,'(A8)') " --------"
-          WRITE(*,'(A10, A6, 3F11.6)') " ZG_conf:", atm(nta), T_fact(k, 1), T_fact(k, 2), T_fact(k, 3)
-      !    WRITE(*,'(A20, 3F11.6)') "  Exact values" 
-          WRITE(*,'(A10, A6, 3F11.6)') " Exact:", atm(nta), DW_fact(k, 1), DW_fact(k, 2), DW_fact(k, 3)
+        IF (ionode) THEN 
           WRITE(*,*)
-          !Here we print the mean velocities
-          WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(Tp_fact(k, 1)), SQRT(Tp_fact(k, 2)), SQRT(Tp_fact(k, 3))
-          WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(DWp_fact(k, 1)), SQRT(DWp_fact(k, 2)), SQRT(DWp_fact(k, 3))
-          !
-        ENDDO
-      ENDIF
-      !
-      ! off-diagonal terms of tensor
-      IF (ionode) WRITE(*,*) 
-      IF (ionode) WRITE(*,*) "  off-diagonal terms"
+          DO k = 1, nat
+            nta = ityp(k)
+            WRITE(*,'(A6, 2i2)') " Atom: ", k 
+            WRITE(*,'(A8)') " --------"
+            WRITE(*,'(A10, A6, 3F11.6)') " ZG_conf:", atm(nta), T_fact(k, 1), T_fact(k, 2), T_fact(k, 3)
+        !    WRITE(*,'(A20, 3F11.6)') "  Exact values" 
+            WRITE(*,'(A10, A6, 3F11.6)') " Exact:", atm(nta), DW_fact(k, 1), DW_fact(k, 2), DW_fact(k, 3)
+            WRITE(*,*)
+            !Here we print the mean velocities
+            WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(Tp_fact(k, 1)), SQRT(Tp_fact(k, 2)), SQRT(Tp_fact(k, 3))
+            WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(DWp_fact(k, 1)), SQRT(DWp_fact(k, 2)), SQRT(DWp_fact(k, 3))
+            !
+          ENDDO
+        ENDIF
+        !
+        ! off-diagonal terms of tensor
+        IF (ionode) WRITE(*,*) 
+        IF (ionode) WRITE(*,*) "  off-diagonal terms"
 
-      T_fact(:,:) = 0.d0
-      Tp_fact(:,:) = 0.d0
-      DO k = 1, nat
-        DO p = 1, nq_tot
-          T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
-                                         (D_tau(p, k, 2) - equil_p(p, k, 2)) / nq_tot
-          T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
-                                         (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
-          T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 2) - equil_p(p, k, 2)) * & 
-                                         (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
-        ENDDO
-      ENDDO
-      IF (ionode) THEN 
+        T_fact(:,:) = 0.d0
+        Tp_fact(:,:) = 0.d0
         DO k = 1, nat
-          nta = ityp(k)
-          WRITE(*,'(A6, 3F11.6)') atm(nta), T_fact(k, 1), T_fact(k, 2), T_fact(k, 3) 
+          DO p = 1, nq_tot
+            T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
+                                           (D_tau(p, k, 2) - equil_p(p, k, 2)) / nq_tot
+            T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
+                                           (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
+            T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 2) - equil_p(p, k, 2)) * & 
+                                           (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
+          ENDDO
         ENDDO
-      ENDIF ! (ionode)
-      EXIT ! exit kk-loop if the error is less than a threshold
-    ENDIF
+        IF (ionode) THEN 
+          DO k = 1, nat
+            nta = ityp(k)
+            WRITE(*,'(A6, 3F11.6)') atm(nta), T_fact(k, 1), T_fact(k, 2), T_fact(k, 3) 
+          ENDDO
+        ENDIF ! (ionode)
+        IF (.NOT. multi_ZG) EXIT ! exit kk-loop if the error is less than a threshold
+      ENDIF
+    !
+      IF (ionode .AND. multi_ZG) CLOSE(80) ! close ZG-configuration file
+      IF (ionode .AND. multi_ZG) CLOSE(81) ! close ZG-velocities file
+    !
+    ENDDO ! end kk for niters
+    !
+    IF (ionode .AND. (.NOT. multi_ZG)) CLOSE(80) ! close ZG-configuration file
+    IF (ionode .AND. (.NOT. multi_ZG)) CLOSE(81) ! close ZG-velocities file
+    IF (TRIM(flscf) /= ' ' .AND. ionode) CLOSE(82) ! close ZG-scf file
+    !
+    IF (ionode) WRITE(*,*) 
+    IF ( ZG_strf .AND. ( SUM(ABS(ratio_zg)) / nat3 < error_thresh ) .AND. ionode ) & 
+    WRITE(*,*) "Computing ZG structure factor ..."
+    IF ( ZG_strf .AND. ( SUM(ABS(ratio_zg)) / nat3 < error_thresh) ) &
+               call ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
+                            nat, alat, ityp, ntypx, atmsf_a, atmsf_b, & 
+                            nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
+    !
+    IF (ionode) WRITE(*,*)
+    IF (SUM(ABS(ratio_zg)) / nat3 > error_thresh .AND. ionode ) & 
+        CALL errore('ZG', 'Error is not less than threshold', 5 )
   !
-  ENDDO ! end kk for niters
-  !
-  IF (ionode) CLOSE(80) ! close ZG-configuration file
-  IF (ionode) CLOSE(81) ! close ZG-velocities file
-  IF (TRIM(flscf) /= ' ' .AND. ionode) CLOSE(82) ! close ZG-scf file
-  !
-  IF (ionode) WRITE(*,*) 
-  IF ( ZG_strf .AND. ( SUM(ABS(ratio_zg)) / nat3 < error_thresh ) .AND. ionode ) & 
-  WRITE(*,*) "Computing ZG structure factor ..."
-  IF ( ZG_strf .AND. ( SUM(ABS(ratio_zg)) / nat3 < error_thresh) ) &
-             call ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
-                          nat, alat, ityp, ntypx, atmsf_a, atmsf_b, & 
-                          nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
-  !
-  IF (ionode) WRITE(*,*)
-  IF (SUM(ABS(ratio_zg)) / nat3 > error_thresh .AND. ionode ) & 
-      CALL errore('ZG', 'Error is not less than threshold', 5 )
+  ENDDO ! tt, multiple temperatures
   !
   ! Perform ASDM if ASDM is true
   IF (ionode .AND. ASDM) & 
     CALL ASDM_IFC(nat, nq_tot, D_tau, flscf, pt_T, ntyp, ntypx, atm, ityp, amass, & 
                   dim1, dim2, dim3, at, crystal_pos, alat, tau, fd_displ, & 
                   apply_fd, read_fd_forces, incl_epsil, iter_idx, iter_idx0, poly, & 
-                  ibrav, epsil, zeu, poly_fd_forces, mixing, update_equil)
+                  ibrav, epsil, zeu, poly_fd_forces, mixing, update_equil, alph)
     
   ! 
   DEALLOCATE(T_fact, Tp_fact, DW_fact, DWp_fact)
@@ -3986,7 +4109,6 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
  !
  END SUBROUTINE create_supercell
 
-
  SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
                           ntypx, qA, qB, amass, atm, equil_p, &
                           Rlist, z_nq_B, z_nq_A, Cx_matB, &
@@ -4008,27 +4130,34 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
  !
   INTEGER                      :: i, j, k, p, ii, ctr, nta, qp
   REAL(DP)                     :: dotp
-  REAL(DP), ALLOCATABLE        :: D_tau(:, :, :), P_tau(:, :, :)
+  REAL(DP), ALLOCATABLE        :: D_tau(:, :, :), P_tau(:, :, :), D_tau_ant(:, :, :)
   COMPLEX(DP)                  :: imagi
   !
   !
   imagi = (0.0d0, 1.0d0) !imaginary unit
   !
-  ALLOCATE(D_tau(nq_tot, nat, 3), P_tau(nq_tot, nat, 3))
+  ALLOCATE(D_tau(nq_tot, nat, 3), P_tau(nq_tot, nat, 3), D_tau_ant(nq_tot, nat, 3))
   !
   ! 
   filename = 'single_phonon-displacements.dat' !'.fp'
   OPEN (unit = 85, file = filename, status = 'unknown', form = 'formatted')
+  filename = 'single_phonon-displacements_antith.dat' !'.fp'
+  OPEN (unit = 87, file = filename, status = 'unknown', form = 'formatted')
   !
   filename = 'single_phonon-velocities.dat' !'.fp'
   OPEN (unit = 86, file = filename, status = 'unknown', form = 'formatted')
   ! Main loop to give single phonon displacements / velocities
   WRITE(85,'(A50)') "Displaced positions along phonon modes in set B"
+  IF (ctrB .EQ. 0) WRITE(85,'(A50)') "  No phonons in set B" 
+  WRITE(87,'(A50)') "Displaced positions along phonon modes in set B"
+  IF (ctrB .EQ. 0) WRITE(87,'(A50)') "  No phonons in set B" 
    DO qp = 1, ctrB
      DO j = 1, nat3        
        WRITE(85,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
        WRITE(86,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
+       WRITE(87,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
        D_tau = 0.0d0
+       D_tau_ant = 0.d0
        P_tau = 0.0d0
        DO p = 1, nq_tot
          dotp = 0.0d0
@@ -4046,12 +4175,13 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
             ! Here we calculate the momenta of the nuclei and finally 
             ! we divide by (amass(nta) *AMU_SI) to get the velocities.
             ctr = ctr + 1 ! for k and i
-            !IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
-            IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', 1)
+            IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', 1 )
+            D_tau_ant(p, k, i) = equil_p(p, k, i) - D_tau(p, k, i)
             D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
            ENDDO ! i loop
          ! write output data
          WRITE(85,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
+         WRITE(87,'(A6, 3F13.8)') atm(ityp(k)), D_tau_ant(p, k, :) 
          WRITE(86,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
          !
          ENDDO ! k loop
@@ -4060,11 +4190,16 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
    ENDDO ! qp loop
    !
    WRITE(85,'(A50)') "Displaced positions along phonon modes in set A"
+   IF (ctrA .EQ. 0) WRITE(85,'(A50)') "  No phonons in set A" 
+   WRITE(87,'(A50)') "Displaced positions along phonon modes in set A"
+   IF (ctrA .EQ. 0) WRITE(87,'(A50)') "  No phonons in set A"
    DO qp = 1, ctrA
      DO j = 1, nat3        
        WRITE(85,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
        WRITE(86,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
+       WRITE(87,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
        D_tau = 0.0d0
+       D_tau_ant = 0.d0
        P_tau = 0.0d0
        DO p = 1, nq_tot
          dotp = 0.0d0
@@ -4082,12 +4217,13 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
             ! Here we calculate the momenta of the nuclei and finally 
             !we divide by (amass(nta) *AMU_SI) to get the velocities.
             ctr = ctr + 1 ! for k and i
-            !IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
-            IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', 1)
+            IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', 1 )
+            D_tau_ant(p, k, i) = equil_p(p, k, i) - D_tau(p, k, i)
             D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
            ENDDO ! i loop
          ! write output data
          WRITE(85,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
+         WRITE(87,'(A6, 3F13.8)') atm(ityp(k)), D_tau_ant(p, k, :) 
          WRITE(86,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
          !
          ENDDO ! k loop
@@ -4097,7 +4233,7 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
        !
  !      
  !
-  DEALLOCATE(D_tau, P_tau)
+  DEALLOCATE(D_tau, P_tau, D_tau_ant)
   CLOSE(85)
   CLOSE(86)
  !
@@ -4226,9 +4362,6 @@ SUBROUTINE disca_broadening(strf_rot, steps, kres1, kres2, alat, &
                             kmin, kmax, col1, col2, Np, flstrfout)
 !-------------------------------------------------------------------------
 !! authors: Marios Zacharias, Feliciano Giustino 
-!! acknowledgement: Hyungjun Lee for help packaging this release
-!! version: v0.1
-!! license: GNU
 !
 USE kinds,       ONLY : dp
 USE mp_global,   ONLY : inter_pool_comm
@@ -4311,7 +4444,7 @@ END SUBROUTINE
   SUBROUTINE ASDM_IFC(nat, nq_tot, D_tau, flscf, pt_T, ntyp, ntypx, atm, ityp, amass, &
                       dim1, dim2, dim3, at, crystal_pos, alat, tau, fd_displ, & 
                       apply_fd, read_fd_forces, incl_epsil, iter_idx, iter_idx0, poly, &
-                      ibrav, epsil, zeu, poly_fd_forces, mixing, update_equil)
+                      ibrav, epsil, zeu, poly_fd_forces, mixing, update_equil, alph)
 
   USE kinds,      ONLY : dp
   USE constants,  ONLY : amu_ry, BOHR_RADIUS_ANGS
@@ -4336,7 +4469,7 @@ END SUBROUTINE
   INTEGER, INTENT(in)          :: dim1, dim2, dim3
   ! nq is the number of qpoints in sets A and B
   INTEGER, INTENT(in)          :: ityp(nat), ibrav ! for read_fd_forces
-  REAL(DP), INTENT(in)         :: amass(ntyp), crystal_pos(nq_tot, nat, 3) 
+  REAL(DP), INTENT(in)         :: amass(ntyp), crystal_pos(nq_tot, nat, 3), alph 
   REAL(DP), INTENT(in)         :: epsil(3, 3), zeu(3, 3, nat), tau(3, nat), alat, fd_displ
   !
   CHARACTER (len=34)           :: A1 ! for read_fd_forces
@@ -4462,9 +4595,9 @@ END SUBROUTINE
         READ (iu, *) ! skip empty lines
         DO kk = 1, nat
           DO qp = 1, nq_tot
-            READ(iu,'(A3,3X,3F20.10)') A1, D_tau(qp, kk, :)
+            READ(iu,'(A6,3X,3F20.10)') A1, D_tau(qp, kk, :)
             ! Format should be the same with output_tau.f90 in PW/src
-            !WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
+            ! WRITE( stdout,'(A6,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
           ENDDO ! qp
         ENDDO ! kk
         EXIT ! exit do loop                
@@ -4770,15 +4903,20 @@ END SUBROUTINE
     DO kk = 1, nat
       DO qp = 1, nq_tot
          equil_p2(:, ctr) = crystal_pos(qp, kk, :) 
-         IF (equil_p2(1, ctr) < 0.d0) equil_p2(1, ctr) = equil_p2(1, ctr) + 1 ! only positive coord.
-         IF (equil_p2(2, ctr) < 0.d0) equil_p2(2, ctr) = equil_p2(2, ctr) + 1 ! only positive coord.
-         IF (equil_p2(3, ctr) < 0.d0) equil_p2(3, ctr) = equil_p2(3, ctr) + 1 ! only positive coord.
+         ! Crystal coords in [0, 1] range
+         IF (equil_p2(1, ctr) < 0.d0) equil_p2(1, ctr) = equil_p2(1, ctr) + 1 
+         IF (equil_p2(1, ctr) > 1.d0) equil_p2(1, ctr) = equil_p2(1, ctr) - 1 
+         IF (equil_p2(2, ctr) < 0.d0) equil_p2(2, ctr) = equil_p2(2, ctr) + 1 
+         IF (equil_p2(2, ctr) > 1.d0) equil_p2(2, ctr) = equil_p2(2, ctr) - 1 
+         IF (equil_p2(3, ctr) < 0.d0) equil_p2(3, ctr) = equil_p2(3, ctr) + 1 
+         IF (equil_p2(3, ctr) > 1.d0) equil_p2(3, ctr) = equil_p2(3, ctr) - 1 
          ctr = ctr + 1
       ENDDO
     ENDDO
     !
     ! Apply transl and fill irt_trans
     ALLOCATE(eqp_tmp(3, nat * nq_tot), irt_trans(nat * nq_tot, nq_tot))
+    irt_trans = 0
     !
     ctr = 1
     DO i = 0, dim1 - 1
@@ -4893,7 +5031,7 @@ END SUBROUTINE
       WRITE(85, '(2i5,3f18.10)') kk, ityp(kk), (tau(j, kk),j = 1, 3)
     ENDDO
     !
-    WRITE (85, *) incl_epsil
+    WRITE (85, *) incl_epsil, alph
     IF (incl_epsil) THEN
       WRITE(85, '(3f24.12)') ((epsil(i, j), j = 1, 3), i = 1, 3)
       DO kk = 1, nat
@@ -5145,15 +5283,20 @@ END SUBROUTINE
     DO kk = 1, nat
       DO qp = 1, nq_tot
          equil_p2(:, ctr) = crystal_pos(qp, kk, :) 
-         IF (equil_p2(1, ctr) < 0.d0) equil_p2(1, ctr) = equil_p2(1, ctr) + 1 ! only positive coord.
-         IF (equil_p2(2, ctr) < 0.d0) equil_p2(2, ctr) = equil_p2(2, ctr) + 1 ! only positive coord.
-         IF (equil_p2(3, ctr) < 0.d0) equil_p2(3, ctr) = equil_p2(3, ctr) + 1 ! only positive coord.
+         ! Crystal coords in [0, 1] range
+         IF (equil_p2(1, ctr) < 0.d0) equil_p2(1, ctr) = equil_p2(1, ctr) + 1 
+         IF (equil_p2(1, ctr) > 1.d0) equil_p2(1, ctr) = equil_p2(1, ctr) - 1 
+         IF (equil_p2(2, ctr) < 0.d0) equil_p2(2, ctr) = equil_p2(2, ctr) + 1 
+         IF (equil_p2(2, ctr) > 1.d0) equil_p2(2, ctr) = equil_p2(2, ctr) - 1 
+         IF (equil_p2(3, ctr) < 0.d0) equil_p2(3, ctr) = equil_p2(3, ctr) + 1 
+         IF (equil_p2(3, ctr) > 1.d0) equil_p2(3, ctr) = equil_p2(3, ctr) - 1 
          ctr = ctr + 1
       ENDDO
     ENDDO
     !
     ! Apply transl and fill irt_trans
     ALLOCATE(eqp_tmp(3, nat * nq_tot), irt_trans(nat * nq_tot, nq_tot))
+    irt_trans = 0
     !
     ctr = 1
     DO i = 0, dim1 - 1
@@ -5445,7 +5588,7 @@ END SUBROUTINE
       WRITE(85, '(2i5,3f18.10)') kk, ityp(kk), (new_tau(j, kk),j = 1, 3)
     ENDDO
     !
-    WRITE (85, *) incl_epsil
+    WRITE (85, *) incl_epsil, alph
     IF (incl_epsil) THEN
       WRITE(85, '(3f24.12)') ((epsil(i, j), j = 1, 3), i = 1, 3)
       DO kk = 1, nat

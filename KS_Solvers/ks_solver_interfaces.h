@@ -35,7 +35,7 @@ INTERFACE rotate_xpsi
   END SUBROUTINE rotate_xpsi_driver 
 #if defined (__CUDA) 
   SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dptr, &
-      npwx, npw, nstart, nbnd, psi_d, npol, overlap, evc_d, hevc_d, sevc_d, e_d, use_para_diag, gamma_only )
+      npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e_d, use_para_diag, gamma_only )
   !! Driver routine for Hamiltonian diagonalization in the subspace 
   !! spanned by nstart states psi ( atomic or random wavefunctions ).
   !! Interface for the CUDA-Fortran case. 
@@ -52,11 +52,11 @@ INTERFACE rotate_xpsi
   !! number of spin polarizations
   LOGICAL, INTENT(IN) :: overlap
   !! if .FALSE. : S|psi> not needed
-  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx*npol,nstart)
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nstart)
   !! vectors spannign the subspace 
-  COMPLEX(DP), INTENT(INOUT)   :: evc_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT)   :: evc(npwx*npol,nbnd)
   !! input and output eigenvectors (may overlap)
-  COMPLEX(DP), INTENT(OUT)   :: hevc_d(npwx*npol,nbnd), sevc_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(OUT)   :: hevc(npwx*npol,nbnd), sevc(npwx*npol,nbnd)
   !! H|psi> and S|psi>
   REAL(DP),  INTENT(OUT) :: e_d(nbnd)
   !! eigenvalues
@@ -64,7 +64,7 @@ INTERFACE rotate_xpsi
   !! if true, use parallel diagonalization 
   LOGICAL, INTENT(IN) :: gamma_only 
   !! set to true if H matrix is real 
-  attributes(DEVICE)       :: psi_d, evc_d, hevc_d, sevc_d, e_d
+  attributes(DEVICE)       :: e_d
   EXTERNAL :: h_psi_hptr, h_psi_dptr, s_psi_hptr, s_psi_dptr 
 END SUBROUTINE rotate_xpsi_driver_cuf
 #endif 

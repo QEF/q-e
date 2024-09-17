@@ -139,7 +139,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
-  !$acc enter data create(rho(1:my_nbnd),a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd),hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,evc,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
+  !$acc enter data create(rho(1:my_nbnd),a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd),hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
   !$acc kernels present(g,t,h,hold)
   g=(0.d0,0.d0)
   t=(0.d0,0.d0)
@@ -323,7 +323,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !CALL stop_clock('loop4')
   enddo
 100 continue
-  !$acc exit data delete(rho,evq,evc,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
+  !$acc exit data delete(rho,evq,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
 

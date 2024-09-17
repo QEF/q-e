@@ -22,7 +22,7 @@ SUBROUTINE stres_hub ( sigmah )
                                   lda_plus_u_kind, Hubbard_projectors, is_hubbard_back, &
                                   ldim_back, ldmx_b, nsg, v_nsg, max_num_neighbors, &
                                   ldim_u, Hubbard_V, at_sc, neighood, ldmx_tot, &
-                                  wfcU, nwfcU, copy_U_wfc, Hubbard_J
+                                  wfcU, nwfcU, Hubbard_J
    USE becmod,             ONLY : becp, calbec, allocate_bec_type_acc, deallocate_bec_type_acc
    USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
    USE uspp,               ONLY : nkb, vkb, okvan
@@ -83,7 +83,10 @@ SUBROUTINE stres_hub ( sigmah )
    ALLOCATE (spsi(npwx*npol,nbnd))
    ALLOCATE (wfcatom(npwx*npol,natomwfc))
    ALLOCATE (at_dy(npwx*npol,natomwfc), at_dj(npwx*npol,natomwfc))
-   IF (okvan) ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
+   IF (okvan) THEN
+      ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
+      !$acc enter data create (us_dy, us_dj)
+   END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
       ALLOCATE (eigenval(natomwfc))
@@ -157,7 +160,10 @@ SUBROUTINE stres_hub ( sigmah )
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
-      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      IF (nks > 1) THEN
+        CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+        !$acc update device(evc)
+      END IF
       !
       CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE.)
       !
@@ -166,12 +172,8 @@ SUBROUTINE stres_hub ( sigmah )
       ! Compute spsi = S * psi
       CALL allocate_bec_type_acc ( nkb, nbnd, becp)
       !
-      !$acc data present_or_copyin(evc)
       CALL calbec( offload_type, npw, vkb, evc, becp )
-      !$acc host_data use_device(evc, spsi)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
-      !$acc end host_data
-      !$acc end data
       !
       CALL deallocate_bec_type_acc (becp)
       !
@@ -417,7 +419,10 @@ SUBROUTINE stres_hub ( sigmah )
    DEALLOCATE (spsi)
    DEALLOCATE (wfcatom)
    DEALLOCATE (at_dy, at_dj)
-   IF (okvan) DEALLOCATE (us_dy, us_dj)
+   IF (okvan) THEN
+      !$acc exit data delete (us_dy, us_dj)
+      DEALLOCATE (us_dy, us_dj)
+   END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
@@ -598,7 +603,6 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    USE klist,             ONLY : ngk
    USE lsda_mod,          ONLY : nspin, current_spin
    USE wvfct,             ONLY : nbnd, npwx, wg
-   USE becmod,            ONLY : bec_type, allocate_bec_type, deallocate_bec_type
    USE noncollin_module,  ONLY : npol, noncolin
    USE mp_pools,          ONLY : intra_pool_comm
    USE mp,                ONLY : mp_sum
@@ -1036,7 +1040,6 @@ SUBROUTINE dngdepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
    USE klist,             ONLY : ngk
    USE lsda_mod,          ONLY : nspin, current_spin
    USE wvfct,             ONLY : nbnd, npwx, wg
-   USE becmod,            ONLY : bec_type, allocate_bec_type, deallocate_bec_type
    USE mp_pools,          ONLY : intra_pool_comm
    USE mp,                ONLY : mp_sum
    USE ldaU,              ONLY : nwfcU, Hubbard_l, is_hubbard, Hubbard_l2, &
@@ -1425,7 +1428,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       !
    ENDDO
    !
-   !$acc data copyin(a1_temp, a2_temp, at_dj)
+   !$acc data copyin(a1_temp, a2_temp, at_dj, at_dy)
    !
    DO na = 1, nat
       nt = ityp(na)
@@ -1627,7 +1630,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    IF (okvan) THEN
       ALLOCATE(dproj_us(nwfcU,nb_s:nb_e))
-      !$acc data create(dproj_us) copyin(evc) 
+      !$acc data create(dproj_us) 
       CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
                          nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey, .true.)
       ! dproj + dproj_us
@@ -1730,7 +1733,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    !
    ijkb0 = 0
    !
-   !$acc data copyin(us_dj, qq_at, a1_temp, a2_temp)
+   !$acc data present(us_dj) copyin(qq_at, a1_temp, a2_temp)
    DO nt = 1, ntyp
       !
       ALLOCATE ( Adbeta(lA,npol*nh(nt)) )
@@ -2121,7 +2124,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
       !
    ENDDO
    !
-   !$acc data copyin(a1_temp, a2_temp, at_dy, at_dj, us_dy, us_dj, qq_at, wfcU)
+   !$acc data present(us_dy, us_dj) copyin(a1_temp, a2_temp, at_dy, at_dj, qq_at, wfcU)
    !$acc data create(dwfc) 
    !
    DO na = 1, nat
@@ -2196,9 +2199,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   ENDDO
                ENDIF   
                !
-               !$acc data present_or_copyin(evc)
                CALL calbec(offload_type, npw, dbeta, evc, dbetapsi )
-               !$acc end data
                CALL calbec(offload_type, npw, wfcU, dbeta, wfatdbeta )
                !
                ! dbeta is now used as work space to store vkb
@@ -2210,9 +2211,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                ENDDO
                !
                CALL calbec(offload_type, npw, wfcU, dbeta, wfatbeta )
-               !$acc data present_or_copyin(evc)
                CALL calbec(offload_type, npw, dbeta, evc, betapsi0 )
-               !$acc end data
                !
                ! here starts band parallelization
                ! beta is here used as work space to calculate dbetapsi

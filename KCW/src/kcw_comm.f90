@@ -46,7 +46,9 @@ MODULE control_kcw
   LOGICAL  :: use_ws_distance                           ! if TRUE uses Wannier centers in the interpolation
   LOGICAL  :: write_hr                                  ! if TRUE prints KC H(R) to file
   INTEGER,  ALLOCATABLE   :: map_ikq(:)                 ! map k+q -> p+G 
+  INTEGER,  ALLOCATABLE   :: map_ikq_minus(:)           ! map k-q -> p+G 
   REAL(DP), ALLOCATABLE :: shift_1bz(:,:)               ! the G to brings k+q inside the 1BZ
+  REAL(DP), ALLOCATABLE :: shift_1bz_minus(:,:)         ! the G to brings k-q inside the 1BZ
   INTEGER :: kcw_iverbosity                              ! set the verbosity 
   INTEGER :: spin_component                             ! which spin component to compute 
   INTEGER, ALLOCATABLE :: isq(:)                        ! the spin of the q point
@@ -56,6 +58,8 @@ MODULE control_kcw
   INTEGER :: iorb_start, iorb_end                       
   REAL (DP), ALLOCATABLE :: wq(:)                       ! weight of the point q
   INTEGER :: nqstot                                     ! total number of q points 
+  INTEGER :: nrho
+  INTEGER :: nkstot_eff
   !
   CHARACTER(len=256) :: calculation                     ! set which calculation (screen or ham)
   !
@@ -95,6 +99,8 @@ MODULE control_kcw
   !
   LOGICAL, ALLOCATABLE :: lgamma_iq(:)
   !! if TRUE this q is gamma.
+  !
+  LOGICAL :: io_sp, io_real_space
   !
 END MODULE control_kcw
 

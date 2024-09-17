@@ -44,10 +44,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, npwx
-  USE scf,                  ONLY : rho, vrs
-#if defined(__CUDA)
-  USE scf_gpum,             ONLY : vrs_d
-#endif
+  USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
   USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
@@ -85,11 +82,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE dv_of_drho_lr,        ONLY : dv_of_drho
   USE fft_interfaces,       ONLY : fft_interpolate
   USE ldaU,                 ONLY : lda_plus_u
-  USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE response_kernels,     ONLY : sternheimer_kernel
   USE uspp_init,            ONLY : init_us_2
   USE sym_def_module,       ONLY : sym_def
+  USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   implicit none
 
   integer :: irr
@@ -188,7 +185,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
   IF (noncolin.AND.domag.AND.okvan) THEN
-     ALLOCATE (int3_save( nhm, nhm, nat, nspin_mag, npe, 2))
+     ALLOCATE (int3_nc_save( nhm, nhm, nat, nspin_mag, npe, 2))
      ALLOCATE (dbecsum_aux ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
   ENDIF
   CALL apply_dpot_allocate()
@@ -267,6 +264,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         IF (nksq > 1 .OR. nsolv == 2) THEN
            CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+           !$acc update device(evc)
         ENDIF
         !
         DO ipert = 1, npe
@@ -323,23 +321,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      DO isolv = 1, nsolv
         !
-        !  change the sign of the magnetic field if required
-        !
-        IF (isolv == 2) THEN
-           IF (.NOT. first_iter) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
-           ENDIF
-           vrs(:, 2:4) = -vrs(:, 2:4)
-#if defined(__CUDA)
-           vrs_d = vrs
-#endif
-           IF (okvan) THEN
-                   deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-                   !$acc update device(deeq_nc)
-           ENDIF
-        ENDIF
-        !
         ! set threshold for iterative solution of the linear system
         !
         IF (first_iter) THEN
@@ -353,23 +334,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
             thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
             dbecsum_nc(:,:,:,:,:,isolv))
-        !
-        !  reset the original magnetic field if it was changed
-        !
-        IF (isolv == 2) THEN
-           IF (.NOT. first_iter) THEN
-              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
-              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
-           ENDIF
-           vrs(:, 2:4) = -vrs(:, 2:4)
-#if defined(__CUDA)
-           vrs_d = vrs
-#endif
-           IF (okvan) THEN
-                   deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-                   !$acc update device(deeq_nc)
-           ENDIF
-        ENDIF
         !
      END DO ! isolv
      !
@@ -431,9 +395,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (lmetq0) THEN
         IF (okpaw) THEN
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, irr, sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, sym_def)
         ELSE
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, irr=irr, sym_def=sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, sym_def=sym_def)
         ENDIF
      ENDIF
      !
@@ -442,7 +406,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   Here we symmetrize them ...
      !
      IF (.not.lgamma_gamma) THEN
-        call psymdvscf (npe, irr, drhoscfh)
+        CALL psymdvscf(drhoscfh)
         IF ( noncolin.and.domag ) CALL psym_dmag( npe, irr, drhoscfh)
         IF (okpaw) THEN
            IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, npertx,irotmq,rtau,xq,tmq)
@@ -462,16 +426,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         !
         ! Compute the response of the core charge density
-        ! IT: Should the condition "imode0+ipert > 0" be removed?
         !
-        if (imode0+ipert > 0) then
-           call addcore (imode0+ipert, drhoc)
-        else
-           drhoc(:) = (0.0_DP,0.0_DP)
-        endif
+        call addcore(u(1, imode0+ipert), drhoc)
         !
         ! Compute the response HXC potential
-        call dv_of_drho (dvscfout(1,1,ipert), .true., drhoc)
+        call dv_of_drho (dvscfout(1,1,ipert), drhoc = drhoc)
         !
      enddo
      !
@@ -519,11 +478,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         call newdq (dvscfin, npe)
         !
         !  In the noncollinear magnetic case computes the int3 coefficients with
-        !  the opposite sign of the magnetic field. They are saved in int3_save,
+        !  the opposite sign of the magnetic field. They are saved in int3_nc_save,
         !  that must have been allocated by the calling routine
         !
         IF (noncolin.AND.domag) THEN
-           int3_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
+           int3_nc_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
            IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
            DO ipert=1,npe
               dvscfin(:,2:4,ipert)=-dvscfin(:,2:4,ipert)
@@ -538,7 +497,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !   here compute the int3 integrals
            !
            CALL newdq (dvscfin, npe)
-           int3_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
+           int3_nc_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
            !
            !  restore the correct sign of the magnetic field.
            !
@@ -550,7 +509,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !
            !  put into int3_nc the coefficient with +B
            !
-           int3_nc(:,:,:,:,:)=int3_save(:,:,:,:,:,1)
+           int3_nc(:,:,:,:,:)=int3_nc_save(:,:,:,:,:,1)
         ENDIF
      END IF
      !
@@ -600,7 +559,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if
   endif
-  if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
+  if (convt.and.nlcc_any) call dynmat_nlcc (imode0, drhoscfh, npe)
   !
   CALL apply_dpot_deallocate()
   if (allocated(ldoss)) deallocate (ldoss)
@@ -620,7 +579,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   deallocate(aux2)
   deallocate(drhoc)
   IF (noncolin.AND.domag.AND.okvan) THEN
-     DEALLOCATE (int3_save)
+     DEALLOCATE (int3_nc_save)
      DEALLOCATE (dbecsum_aux)
   ENDIF
 

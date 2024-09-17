@@ -1,0 +1,30 @@
+This example shows how to use the auxiliary tool merge_wann.x to 
+merge the results of a block wannierizations into a unique one and 
+then run a kcw calculaton for GaAs. This is needed in case we do 
+not want the Wannierization to mix KS states too far in energy.
+
+1) run a standard scf and nscf calculation at PBE level on a regular 2x2x2 mesh. 
+   The regular mesh is needed by Wannier90. 
+   input=GaAs.(n)scf.in, output=GaAs.(n)scf.out
+
+2) perform a separate wannierization for the occupied manifold. 
+   Using exclude_bands we perform 3 different wannierzations
+   results in ./wann_*block 
+
+3) use the merge_wann.x tool to merge the U matrices (and centers) in 
+   unique U (and centres) file 
+
+4) prepare the KCW calculation 
+   input=kc.w2ki output=kc.w2ko
+
+5) calculate, interpolate and diagonalize the KI Hamiltonian 
+   input=kc.khi, output=kc.kho
+
+The band structure is in GaAs.kcw_bands.dat.
+
+NB: this is a miningless calculation as 
+ i)  we use nspin = 1  
+ ii) the screening coefficients are set to 1
+
+NB2: run_example_1block perform a standard procedure, i.e. 
+     without the block wannierization. This is for reference

@@ -58,3 +58,11 @@ target_link_libraries(qe_kcwpp_ups_exe
         qe_modules
         qe_pp
         qe_upflib)
+
+###########################################################
+# merge_wann.x
+###########################################################
+set(src_merge_wann_x merge_wann.f90)
+qe_add_executable(qe_kcwpp_merge_wann_exe ${src_merge_wann_x})
+set_target_properties(qe_kcwpp_merge_wann_exe PROPERTIES OUTPUT_NAME merge_wann.x)
+target_link_libraries(qe_kcwpp_merge_wann_exe)

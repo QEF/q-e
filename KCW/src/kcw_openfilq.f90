@@ -12,17 +12,18 @@ SUBROUTINE kcw_openfilq()
   !! This subroutine opens all the files necessary for the LR 
   !! calculation at a given q.
   !
-  USE control_flags,   ONLY : io_level
-  USE units_lr,        ONLY : iuwfc, lrwfc, iudwf, lrdwf
-  USE io_files,        ONLY : tmp_dir, diropn, seqopn
-  USE control_kcw,     ONLY : tmp_dir_kcwq, iudvwfc, lrdvwfc, tmp_dir_save
-  USE wvfct,           ONLY : nbnd, npwx
-  USE io_files,        ONLY : prefix
-  USE noncollin_module,ONLY : npol
-  USE buffers,         ONLY : open_buffer
-  USE input_parameters,ONLY : nk1, nk2, nk3
+  USE control_flags,     ONLY : io_level
+  USE units_lr,          ONLY : iuwfc, lrwfc, iudwf, lrdwf
+  USE io_files,          ONLY : tmp_dir, diropn, seqopn
+  USE control_kcw,       ONLY : tmp_dir_kcwq, iudvwfc, lrdvwfc, tmp_dir_save
+  USE wvfct,             ONLY : nbnd, npwx
+  USE io_files,          ONLY : prefix
+  USE noncollin_module,  ONLY : npol
+  USE buffers,           ONLY : open_buffer
+  USE input_parameters,  ONLY : nk1, nk2, nk3
 
-  USE control_lr,      ONLY : lgamma
+  USE control_lr,        ONLY : lgamma
+  USE noncollin_module,  ONLY : domag, noncolin
   !
   IMPLICIT NONE
   !
@@ -41,6 +42,7 @@ SUBROUTINE kcw_openfilq()
   tmp_dir=tmp_dir_kcwq
   !
   IF (lgamma.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0) tmp_dir=tmp_dir_save
+  IF ( noncolin.AND.domag ) tmp_dir=tmp_dir_kcwq
   !
   iuwfc = 30
   lrwfc = nbnd * npwx * npol

@@ -32,7 +32,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   ! local variables
   !
   real(DP), parameter :: eps = 1.0d-9
-  integer, parameter :: maxl = 14
+  integer, parameter :: maxl = 20
   real(DP) :: cost , sent, phi 
   real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm, lm1, lm2

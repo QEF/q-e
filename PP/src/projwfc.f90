@@ -898,7 +898,7 @@ SUBROUTINE projwave( filproj, filowdin, lsym, diag_basis, lwrite_ovp )
         !    AlexS - To project on real harmonics, not on spinors.  
         CALL atomic_wfc_nc_updown(ik, wfcatom)
      ELSE IF ( noncolin ) THEN
-        CALL atomic_wfc_nc_proj (ik, wfcatom)
+        CALL atomic_wfc_nc_proj(ik, wfcatom)
      ELSE
         CALL atomic_wfc (ik, wfcatom)
      ENDIF

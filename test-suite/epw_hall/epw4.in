@@ -32,7 +32,6 @@
   ii_n = 1.0d17
   ii_scattering = .true.
   ii_only = .false.
-  ii_eps0 = 6.629671
 
   nstemp      = 1
   temps       = 300

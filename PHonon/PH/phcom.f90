@@ -550,16 +550,6 @@ MODULE ldaU_ph
   !
 END MODULE ldaU_ph
 
-MODULE nc_mag_aux
-  USE kinds,      ONLY : DP
-  SAVE
-  
-  COMPLEX (DP), ALLOCATABLE ::  &
-                               deeq_nc_save(:,:,:,:,:), &
-                               int1_nc_save(:,:,:,:,:,:), &
-                               int3_save(:, :, :, :, :, :)
-END MODULE nc_mag_aux
-
 !MODULE qpoint_aux
 !  USE kinds,      ONLY : DP
 !  USE becmod,     ONLY : bec_type
@@ -588,6 +578,5 @@ MODULE phcom
   USE disp
   USE grid_irr_iq
   USE ldaU_ph
-  USE nc_mag_aux
 !  USE qpoint_aux
 END MODULE phcom

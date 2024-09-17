@@ -44,7 +44,7 @@ SUBROUTINE setup()
   USE io_files,           ONLY : xmlfile
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,              ONLY : starting_pot, natomwfc
+  USE starting_scf,       ONLY : starting_pot
   USE fft_support,        ONLY : good_fft_order
   USE gvect,              ONLY : gcutm, ecutrho
   USE gvecw,              ONLY : gcutw, ecutwfc
@@ -102,7 +102,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nbnd_, nr3, nk_ 
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nbnd_, nr3, nk_, natomwfc 
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
@@ -433,9 +433,6 @@ SUBROUTINE setup()
   !
   IF ( .NOT. lscf ) niter = 1
   !
-  ! ... set number of atomic wavefunctions
-  !
-  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
   ! ... set the max number of bands used in iterative diagonalization
   !
@@ -657,6 +654,7 @@ SUBROUTINE setup()
   IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
   IF (one_atom_occupations) THEN
+     natomwfc = n_atom_wfc( nat, ityp, noncolin )
      DO ik=1,nkstot
         DO ibnd=natomwfc+1, nbnd
            IF (f_inp(ibnd,ik)> 0.0_DP) CALL errore('setup', &

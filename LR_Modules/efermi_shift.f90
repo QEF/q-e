@@ -14,17 +14,16 @@ MODULE efermi_shift
   !
   ! Define an abstract interface to use a callback
   ABSTRACT INTERFACE
-     SUBROUTINE def_symmetrization(def, irr)
+     SUBROUTINE def_symmetrization(def)
         USE kinds, ONLY : DP
-        INTEGER :: irr
-        COMPLEX(DP) :: def(3)
+        COMPLEX(DP), INTENT(inout) :: def(3)
      END SUBROUTINE
   END INTERFACE
   !
 CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, irr, sym_def)
+SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, sym_def)
   !-----------------------------------------------------------------------
   !! This routine takes care of the effects of a shift of Ef, due to the
   !! perturbation, that can take place in a metal at q=0
@@ -61,8 +60,6 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, irr, sym_de
   REAL(DP), INTENT(IN), OPTIONAL :: becsum1((nhm*(nhm+1))/2, nat, nspin_mag)
   !! becsum1 = wdelta * <psi|beta> <beta|psi>
   !! (where wdelta is a Dirac-delta-like function)
-  INTEGER, INTENT(IN), OPTIONAL :: irr
-  !! index of the current irr. rep. Used only in sym_def.
   PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
   !! Symmetrization routine for the fermi energy change
   !
@@ -104,7 +101,7 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, irr, sym_de
   !
   ! symmetrizes the Fermi energy shift
   !
-  IF (present(sym_def)) CALL sym_def(def, irr)
+  IF (present(sym_def)) CALL sym_def(def)
   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
        (ipert, def (ipert) , ipert = 1, npert )
   !

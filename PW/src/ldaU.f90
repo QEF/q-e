@@ -14,7 +14,6 @@ MODULE ldaU
   USE upf_params,    ONLY : lqmax
   ! FIXME: lqmax should not be used (see starting_ns* below)
   USE parameters,    ONLY : ntypx, natx, sc_size
-  USE basis,         ONLY : natomwfc
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE control_flags, ONLY : dfpt_hub
   !
@@ -439,11 +438,11 @@ CONTAINS
        !
        ! The allocation should be moved into scf_mod ?
        !
-       ALLOCATE ( v_nsg ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( nsg   ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( phase_fac(nat*num_uc))
-       ALLOCATE ( ll(ldmx_tot, ntyp))
+       IF (.NOT.ALLOCATED(v_nsg))     ALLOCATE ( v_nsg ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
+       IF (.NOT.ALLOCATED(nsg))       ALLOCATE ( nsg   ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
+       IF (.NOT.ALLOCATED(nsgnew))    ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
+       IF (.NOT.ALLOCATED(phase_fac)) ALLOCATE ( phase_fac(nat*num_uc))
+       IF (.NOT.ALLOCATED(ll))        ALLOCATE ( ll(ldmx_tot, ntyp))
        !
        ! ll is a label of all the Hubbard states telling the l of that states. 
        ! It is equal to Hubbard_l for the first 2*Hubbard_l+1 states, 
@@ -502,8 +501,9 @@ CONTAINS
     ENDIF
     !
     ! nwfcU is set to natomwfc by the routine above
-    IF ( nwfcU /= natomwfc ) &
-         CALL errore( 'offset_atom_wfc', 'wrong number of wavefunctions', 1 )
+    ! check below disabled because it introduces a dependency upon natomwfc
+    ! IF ( nwfcU /= natomwfc ) &
+    !     CALL errore( 'offset_atom_wfc', 'wrong number of wavefunctions', 1 )
     !
     ! For each atom, compute the index of its projectors (among projectors only)
     !
@@ -519,7 +519,6 @@ CONTAINS
        ALLOCATE ( offsetU_back1(nat) )
        CALL offset_atom_wfc ( .TRUE., 3, offsetU_back1, nwfcU )
     ENDIF
-    ! nwfcU is set to natomwfc by the routine above
     !
     RETURN
     !

@@ -128,6 +128,7 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_scalarQuantity
     MODULE PROCEDURE qes_reset_rism3d
     MODULE PROCEDURE qes_reset_rismlaue
+    MODULE PROCEDURE qes_reset_two_chem
   END INTERFACE qes_reset
   !
   CONTAINS
@@ -269,6 +270,9 @@ MODULE qes_reset_module
     IF (obj%spin_constraints_ispresent) &
       CALL qes_reset_spin_constraints(obj%spin_constraints)
     obj%spin_constraints_ispresent = .FALSE.
+    IF (obj%twoch__ispresent) &
+      CALL qes_reset_two_chem(obj%twoch_)
+    obj%twoch__ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_input
   !
@@ -504,6 +508,7 @@ MODULE qes_reset_module
     obj%crystal_positions_ispresent = .FALSE.
     CALL qes_reset_cell(obj%cell)
     obj%nat_ispresent = .FALSE.
+    obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%alat_ispresent = .FALSE.
     obj%bravais_index_ispresent = .FALSE.
     obj%alternative_axes_ispresent = .FALSE.
@@ -1805,6 +1810,7 @@ MODULE qes_reset_module
     IF (obj%opt_conv_ispresent) &
       CALL qes_reset_opt_conv(obj%opt_conv)
     obj%opt_conv_ispresent = .FALSE.
+    obj%wf_collected_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_convergence_info
   !
@@ -1932,6 +1938,9 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    IF (obj%esm_ispresent) &
+      CALL qes_reset_esm(obj%esm)
+    obj%esm_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_outputPBC
   !
@@ -1996,10 +2005,12 @@ MODULE qes_reset_module
     obj%nbnd_ispresent = .FALSE.
     obj%nbnd_up_ispresent = .FALSE.
     obj%nbnd_dw_ispresent = .FALSE.
-    obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
     obj%lowestUnoccupiedLevel_ispresent = .FALSE.
+    IF (obj%twochem_ispresent) &
+      CALL qes_reset_two_chem(obj%twochem)
+    obj%twochem_ispresent = .FALSE.
     obj%two_fermi_energies_ispresent = .FALSE.
     CALL qes_reset_k_points_IBZ(obj%starting_k_points)
     CALL qes_reset_occupations(obj%occupations_kind)
@@ -2378,6 +2389,19 @@ MODULE qes_reset_module
     obj%left_buffer_v_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_rismlaue
+  !
+  !
+  SUBROUTINE qes_reset_two_chem(obj)
+    !
+    IMPLICIT NONE
+    TYPE(two_chem_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    !
+  END SUBROUTINE qes_reset_two_chem
   !
   !
 END MODULE qes_reset_module

@@ -29,18 +29,16 @@
     !
     USE kinds,             ONLY : DP
     USE io_global,         ONLY : stdout
-    USE control_flags,     ONLY : iverbosity
-    USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
+    USE input,             ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
                                   limag, lpade, lacon, npade, fbw
-    USE elph2,             ONLY : gtemp
-    USE eliashbergcom,     ONLY : nsw, nsiw, deltai, deltaip, delta, deltap, &
+    USE supercond_common,  ONLY : nsw, nsiw, deltai, deltaip, delta, deltap, &
                                   znormi, znormip, shifti, shiftip
-    USE constants_epw,     ONLY : kelvin2eV, ci, zero
+    USE ep_constants,      ONLY : kelvin2eV, ci, zero
     USE supercond,         ONLY : dos_quasiparticle, gen_freqgrid_iaxis, &
                                   eliashberg_grid
     USE utilities,         ONLY : mix_wrap
     USE printing,          ONLY : prtheader_supercond
-    USE io_eliashberg,     ONLY : read_dos
+    USE io_supercond,      ONLY : read_dos
     !
     IMPLICIT NONE
     !
@@ -78,9 +76,9 @@
     !
     DO itemp = 1, nstemp ! loop over temperature
       !
-      CALL prtheader_supercond(itemp, 1)
       CALL start_clock('iaxis_imag')
       CALL gen_freqgrid_iaxis(itemp)
+      CALL prtheader_supercond(itemp, 1)
       !
       IF (limag) THEN
         !
@@ -277,16 +275,16 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, &
+    USE input,         ONLY : nsiter, muc, conv_thr_iaxis, &
                               fbw, dos_del, muchem
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsiw, gap0, wsi, wsn, keri, muintr, &
+    USE global_var,    ONLY : gtemp
+    USE supercond_common,     ONLY : nsiw, gap0, wsi, wsn, keri, muintr, &
                               deltai, deltaip, znormi, nznormi, &
                               znormip, shifti, shiftip, ef0, &
                               en, dosen, ndos, dosef
-    USE constants_epw, ONLY : kelvin2eV, zero, one
-    USE constants,     ONLY : pi
-    USE io_eliashberg, ONLY : eliashberg_write_iaxis
+    USE ep_constants,  ONLY : kelvin2eV, zero, one
+    USE ep_constants,  ONLY : pi
+    USE io_supercond,  ONLY : eliashberg_write_iaxis
     !
     IMPLICIT NONE
     !
@@ -326,7 +324,7 @@
     REAL(KIND = DP) :: dFE
     !! free energy difference between supercond and normal states
     REAL(KIND = DP), ALLOCATABLE, SAVE :: inv_wsi(:)
-    !! Invese imaginary freq. inv_wsi = 1/wsi. Defined for efficiency reason    
+    !! Invese imaginary freq. inv_wsi = 1/wsi. Defined for efficiency reason
     REAL(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
@@ -413,7 +411,7 @@
           kernelp = lambdam + lambdap
           nznormi(iw) = nznormi(iw) + kernelm
           ! Eqs. (4.1-4.3) in Picket, PRB 26, 1186 (1982) for FBW
-          ! using kernelm and kernelp the sum over |wp| < wscut 
+          ! using kernelm and kernelp the sum over |wp| < wscut
           ! is rewritten as a sum over iwp = 1, nsiw(itemp)
           znormi(iw) = znormi(iw) + zesqrt * kernelm
           deltai(iw) = deltai(iw) + desqrt * (kernelp - 2.d0 * muc)
@@ -442,7 +440,7 @@
         desqrt = deltaip(iwp) * esqrt
         !
         DO iw = 1, nsiw(itemp) ! loop over omega
-          ! SH: For general case (including sparse sampling) 
+          ! SH: For general case (including sparse sampling)
           !       "actual" matsubara indices n1/n2 are needed instead of iw/iwp
           lambdam = keri(ABS(wsn(iw) - wsn(iwp)) + 1)
           lambdap = keri(ABS(wsn(iw) + wsn(iwp) + 1) + 1)
@@ -459,7 +457,7 @@
       ENDDO ! iwp
       !
       absdelta = zero
-      reldelta = zero    
+      reldelta = zero
       DO iw = 1, nsiw(itemp) ! loop over omega
         znormi(iw)  = 1.d0 + pi * gtemp(itemp) * znormi(iw) * inv_wsi(iw)
         ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
@@ -508,7 +506,7 @@
         WRITE(stdout, '(a)') ' '
       ENDIF
       !
-      ! Compute the free energy difference between the superconducting and normal states      
+      ! Compute the free energy difference between the superconducting and normal states
       dFE = zero
       DO iw = 1, nsiw(itemp)
         omega = DSQRT(wsi(iw) * wsi(iw) + deltai(iw) * deltai(iw))
@@ -516,14 +514,17 @@
             * (znormi(iw) - nznormi(iw) * wsi(iw) / omega)
       ENDDO
       dFE = dFE * pi * gtemp(itemp)
+      ! HM: We multiply it by two to account for the contribution 
+      ! from the negative Matsubara frequencies.
+      dFE = dFE * 2.0d0
       !
       WRITE(stdout, '(5x, a, i3, a, f8.3, a, a, f12.6, a)') &
               'Temp (itemp = ', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K', &
               '  Free energy = ', dFE * 1000.0, ' meV'
       WRITE(stdout, '(a)') ' '
-      !            
+      !
       DEALLOCATE(inv_wsi, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating inv_wsi', 1)      
+      IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating inv_wsi', 1)
       DEALLOCATE(deltaold, STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating deltaold', 1)
       DEALLOCATE(keri, STAT = ierr)
@@ -547,13 +548,13 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade, nstemp
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsw, dwsph, ws, gap0, a2f_iso, dsumi, zsumi, &
+    USE input,         ONLY : nqstep, nsiter, conv_thr_racon, lpade
+    USE global_var,    ONLY : gtemp
+    USE supercond_common,     ONLY : nsw, dwsph, ws, gap0, a2f_iso, dsumi, zsumi, &
                               delta, deltap, znorm, znormp, gp, gm
-    USE constants_epw, ONLY : ci, zero, czero, cone
-    USE constants,     ONLY : pi
-    USE io_eliashberg, ONLY : eliashberg_write_raxis
+    USE ep_constants,  ONLY : ci, zero, czero, cone
+    USE ep_constants,  ONLY : pi
+    USE io_supercond,  ONLY : eliashberg_write_raxis
     USE supercond,     ONLY : gamma_acont
     !
     IMPLICIT NONE
@@ -618,7 +619,7 @@
       !
       !! Eq.(28) in Margine and Giustino, PRB 87, 024505 (2013)
       DO iwp = 1, nqstep ! loop over omega_prime
-        DO iw = 1, nsw ! loop over omega      
+        DO iw = 1, nsw ! loop over omega
           CALL gamma_acont(ws(iw), ws(iwp), gtemp(itemp), rgammap, rgammam)
           gp(iw, iwp) = rgammap
           gm(iw, iwp) = rgammam
@@ -722,11 +723,11 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : fbw
-    USE eliashbergcom, ONLY : nsw, ws, wsi, gap0, delta, znorm, deltai, znormi, shift, shifti
-    USE constants_epw, ONLY : cone, ci, zero, czero
+    USE input,         ONLY : fbw
+    USE supercond_common,     ONLY : nsw, ws, wsi, delta, znorm, deltai, znormi, shift, shifti
+    USE ep_constants,  ONLY : cone, ci, zero, czero
     USE utilities,     ONLY : pade_coeff, pade_eval
-    USE io_eliashberg, ONLY : eliashberg_write_raxis
+    USE io_supercond,  ONLY : eliashberg_write_raxis
     !
     IMPLICIT NONE
     !
@@ -857,10 +858,10 @@
     !! SH: Modified to allow for sparse sampling of Matsubara freq. (Nov 2021).
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : zero
-    USE constants,     ONLY : pi
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsiw, keri, wsn
+    USE ep_constants,  ONLY : zero
+    USE ep_constants,  ONLY : pi
+    USE global_var,    ONLY : gtemp
+    USE supercond_common,     ONLY : nsiw, keri, wsn
     !
     IMPLICIT NONE
     !
@@ -908,10 +909,10 @@
     !! computes lambda(n - n')
     !! reference W. E. Pickett, PRB 26, 1186 (1982)
     !!
-    USE kinds, ONLY : DP
-    USE epwcom, ONLY : nqstep
-    USE constants_epw, ONLY : zero
-    USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph
+    USE kinds,            ONLY : DP
+    USE input,            ONLY : nqstep
+    USE ep_constants,     ONLY : zero
+    USE supercond_common, ONLY : a2f_iso, wsph, dwsph
     !
     IMPLICIT NONE
     !
@@ -945,9 +946,9 @@
     !! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : muc
-    USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, deltai, dsumi, zsumi
-    USE constants_epw, ONLY : zero
+    USE input,         ONLY : muc
+    USE supercond_common,     ONLY : nsw, nsiw, ws, wsi, deltai, dsumi, zsumi
+    USE ep_constants,  ONLY : zero
     !
     IMPLICIT NONE
     !
@@ -967,7 +968,7 @@
     REAL(KIND = DP) :: zesqrt
     !! w / sqrt{w^2+\delta^2}
     REAL(KIND = DP) :: desqrt
-    !! \delta / sqrt{w^2+\delta^2}    
+    !! \delta / sqrt{w^2+\delta^2}
     REAL(KIND = DP) :: kernelr
     !! 2 * Re[lambda(w - iw_n)]
     REAL(KIND = DP) :: kerneli
@@ -986,13 +987,13 @@
     DO iwp = 1, nsiw(itemp) ! loop over iw_n
       esqrt = 1.d0 / DSQRT(wsi(iwp) * wsi(iwp) + deltai(iwp) * deltai(iwp))
       zesqrt =  wsi(iwp) * esqrt
-      desqrt =  deltai(iwp) * esqrt    
+      desqrt =  deltai(iwp) * esqrt
       DO iw = 1, nsw ! loop over omega
         CALL lambdai_iso(ws(iw), wsi(iwp), lambda_eph)
         kernelr = 2.d0 * REAL(lambda_eph)
         kerneli = 2.d0 * AIMAG(lambda_eph)
-        zsumi(iw) = zsumi(iw) + zesqrt * kerneli 
-        dsumi(iw) = dsumi(iw) + desqrt * (kernelr - 2.d0 * muc) 
+        zsumi(iw) = zsumi(iw) + zesqrt * kerneli
+        dsumi(iw) = dsumi(iw) + desqrt * (kernelr - 2.d0 * muc)
       ENDDO
     ENDDO
     !
@@ -1010,9 +1011,9 @@
     !! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
     !!
     USE kinds, ONLY : DP
-    USE epwcom,        ONLY : nqstep
-    USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph
-    USE constants_epw, ONLY : ci, czero
+    USE input,         ONLY : nqstep
+    USE supercond_common,     ONLY : a2f_iso, wsph, dwsph
+    USE ep_constants,  ONLY : ci, czero
     !
     IMPLICIT NONE
     !
@@ -1050,10 +1051,10 @@
     !
     USE kinds,             ONLY : DP
     USE io_global,         ONLY : stdout
-    USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
-    USE elph2,             ONLY : gtemp
-    USE eliashbergcom,     ONLY : nsw, delta, deltap, gap0
-    USE constants_epw,     ONLY : kelvin2eV, ci, zero
+    USE input,             ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
+    USE global_var,        ONLY : gtemp
+    USE supercond_common,         ONLY : nsw, delta, deltap, gap0
+    USE ep_constants,      ONLY : kelvin2eV, ci, zero
     USE supercond,         ONLY : gen_freqgrid_raxis, eliashberg_grid
     USE utilities,         ONLY : mix_wrap
     USE printing,          ONLY : prtheader_supercond
@@ -1195,13 +1196,13 @@
     USE io_var,        ONLY : iufilker
     USE io_global,     ONLY : stdout
     USE io_files,      ONLY : prefix
-    USE epwcom,        ONLY : nqstep, nsiter, muc, conv_thr_raxis, &
-                              kerwrite, kerread, nstemp
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsw, ws, dwsph, gap0, bewph, fdwp, &
+    USE input,         ONLY : nqstep, nsiter, muc, conv_thr_raxis, &
+                              kerwrite, kerread
+    USE global_var,    ONLY : gtemp
+    USE supercond_common,     ONLY : nsw, ws, dwsph, gap0, bewph, fdwp, &
                               kp, km, delta, deltap, znorm, wsph
-    USE constants_epw, ONLY : kelvin2eV, ci, eps6, zero, one, czero
-    USE io_eliashberg, ONLY : eliashberg_write_raxis
+    USE ep_constants,  ONLY : kelvin2eV, ci, eps6, zero, one, czero
+    USE io_supercond,  ONLY : eliashberg_write_raxis
     !
     IMPLICIT NONE
     !
@@ -1230,7 +1231,7 @@
     REAL(KIND = DP) :: temp
     !! Temperature in K
     REAL(KIND = DP) :: inv_etemp
-    !! Invese temperature inv_etemp = 1/temp. Defined for efficiency reason    
+    !! Invese temperature inv_etemp = 1/temp. Defined for efficiency reason
     REAL(KIND = DP) :: a, b, c, d
     !! Temporary variables for reading kernelp and kernelm from file
     REAL(KIND = DP) :: absdelta, reldelta, errdelta
@@ -1238,7 +1239,7 @@
     REAL(KIND = DP) :: zesqrt
     !! w / sqrt{w^2+\delta^2}
     REAL(KIND = DP) :: desqrt
-    !! \delta / sqrt{w^2+\delta^2}    
+    !! \delta / sqrt{w^2+\delta^2}
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac
     !
@@ -1270,7 +1271,7 @@
       km(:, :) = czero
       !
       inv_etemp = one / gtemp(itemp)
-      !      
+      !
       ! Fermi Dirac distribution
       fdwp(iw) = zero
       DO iw = 1, nsw
@@ -1336,16 +1337,16 @@
     DO iwp = 1, nsw ! loop over omega_prime
       esqrt = 1.d0 / SQRT(ws(iwp) * ws(iwp) - deltap(iwp) * deltap(iwp))
       zesqrt =  REAL(ws(iwp) * esqrt)
-      desqrt =  REAL(deltap(iwp) * esqrt)    
+      desqrt =  REAL(deltap(iwp) * esqrt)
       DO iw = 1, nsw ! loop over omega
         znorm(iw) = znorm(iw) + zesqrt * km(iw, iwp)
         delta(iw) = delta(iw) + desqrt &
                   * (kp(iw, iwp) - muc * (1.d0 - 2.d0 * fdwp(iwp)))
       ENDDO ! iw
-    ENDDO ! iwp  
+    ENDDO ! iwp
     !
     absdelta = zero
-    reldelta = zero    
+    reldelta = zero
     DO iw = 1, nsw ! loop over omega
       znorm(iw) = znorm(iw) * dwsph
       znorm(iw) = 1.d0 - znorm(iw) / ws(iw)
@@ -1398,10 +1399,10 @@
     !! reference M. J. Holcomb, PRB 54, 6648 (1996)
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : ci, eps6, zero, czero, one
-    USE constants,     ONLY : pi
-    USE epwcom,        ONLY : nqstep
-    USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph, ws, bewph, fdwp
+    USE ep_constants,  ONLY : ci, eps6, zero, czero, one
+    USE ep_constants,  ONLY : pi
+    USE input,         ONLY : nqstep
+    USE supercond_common,     ONLY : a2f_iso, wsph, dwsph, ws, bewph, fdwp
     !
     IMPLICIT NONE
     !
@@ -1417,8 +1418,6 @@
     ! Local variables
     INTEGER :: iwph
     !! Counter on frequency
-    INTEGER :: ierr
-    !! Error status
     !
     REAL(KIND = DP) :: degaussw0
     !! smearing
@@ -1507,10 +1506,10 @@
     !
     USE kinds,             ONLY : DP
     USE io_global,         ONLY : stdout
-    USE epwcom,            ONLY : limag, nstemp, muc, tc_linear, tc_linear_solver
-    USE elph2,             ONLY : gtemp
-    USE eliashbergcom,     ONLY : nsiw, wsi, wsn
-    USE constants_epw,     ONLY : Kelvin2eV, zero, pi
+    USE input,             ONLY : nstemp, muc, tc_linear_solver
+    USE global_var,        ONLY : gtemp
+    USE supercond_common,         ONLY : nsiw, wsi, wsn
+    USE ep_constants,      ONLY : Kelvin2eV, zero, pi
     USE supercond,         ONLY : gen_freqgrid_iaxis, eliashberg_grid, crit_temp_solver
     !
     IMPLICIT NONE
@@ -1658,11 +1657,11 @@
     !! HP: updated for the isotropic calculation (Jan 2022)
     !!
     USE kinds,          ONLY : DP
-    USE eliashbergcom,  ONLY : wsi, nsiw, deltaip, znormip, shiftip, &
+    USE supercond_common,      ONLY : wsi, nsiw, deltaip, znormip, shiftip, &
                                en, ndos, dosen, dosef
-    USE elph2,          ONLY : gtemp
-    USE epwcom,         ONLY : dos_del, broyden_beta, nsiter
-    USE constants_epw,  ONLY : zero, one, eps6
+    USE global_var,     ONLY : gtemp
+    USE input,          ONLY : dos_del, broyden_beta, nsiter
+    USE ep_constants,   ONLY : zero, one, eps6
     !
     IMPLICIT NONE
     !
@@ -1682,7 +1681,7 @@
     INTEGER :: iw
     !! Index for Matsubara frequencies
     INTEGER :: ie
-    !! Counter on energy grid 
+    !! Counter on energy grid
     INTEGER :: iter
     !! Counter for iterations
     REAL(KIND = DP) :: delta
@@ -1757,8 +1756,8 @@
     !!
     !----------------------------------------------------------------------
     !
-    USE epwcom,        ONLY : fbw
-    USE eliashbergcom, ONLY : wsi, wsn, deltai, deltaip, znormi, nznormi, &
+    USE input,         ONLY : fbw
+    USE supercond_common,     ONLY : wsi, wsn, deltai, deltaip, znormi, nznormi, &
                               znormip, shifti, shiftip
     !
     IMPLICIT NONE
@@ -1802,8 +1801,8 @@
     !!
     !!  deallocates the variables allocated for real-axis solutions
     !!
-    USE epwcom,        ONLY : limag, lacon, lreal, fbw
-    USE eliashbergcom, ONLY : ws, delta, deltap, znorm, znormp, shift, &
+    USE input,         ONLY : limag, lacon, lreal, fbw
+    USE supercond_common,     ONLY : ws, delta, deltap, znorm, znormp, shift, &
                               gp, gm, dsumi, zsumi, fdwp, bewph, kp, km
     !
     IMPLICIT NONE
@@ -1821,7 +1820,7 @@
     DEALLOCATE(znorm, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_iso_raxis', 'Error deallocating znorm', 1)
     !
-    ! analytic_cont_iso   
+    ! analytic_cont_iso
     IF (limag .AND. lacon) THEN
       DEALLOCATE(deltap, STAT = ierr)
       IF (ierr /= 0) CALL errore('deallocate_iso_raxis', 'Error deallocating deltap', 1)
@@ -1865,12 +1864,12 @@
     SUBROUTINE deallocate_iso()
     !----------------------------------------------------------------------
     !!
-    !!  deallocates the variables allocated by eliashberg_init, read_a2f, 
+    !!  deallocates the variables allocated by eliashberg_init, read_a2f,
     !!  eliashberg_grid
     !!
-    USE epwcom,        ONLY : limag, fbw
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : a2f_iso, wsph, nsiw, en, dosen
+    USE input,         ONLY : limag, fbw
+    USE global_var,    ONLY : gtemp
+    USE supercond_common, ONLY : a2f_iso, wsph, nsiw, en, dosen
     !
     IMPLICIT NONE
     !

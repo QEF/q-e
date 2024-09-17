@@ -72,6 +72,8 @@ SUBROUTINE phqscf
   DO irr = 1, nirr
      IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) THEN
         npe=npert(irr)
+        CALL ph_set_upert_phonon(irr)
+        !
         ALLOCATE (drhoscfs( dfftp%nnr , nspin_mag, npe))
         imode0 = 0
         DO irr1 = 1, irr - 1
@@ -144,6 +146,8 @@ SUBROUTINE phqscf
            IF (okpaw) DEALLOCATE (int3_paw)
            IF (noncolin) DEALLOCATE(int3_nc)
         ENDIF
+        CALL ph_deallocate_upert()
+        !
         tcpu = get_clock ('PHONON')
         !
         DEALLOCATE (drhoscfs)

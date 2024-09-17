@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2001 Quantum ESPRESSO
+# Copyright (C) 2024 Quantum ESPRESSO
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -90,5 +90,9 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "9" ]]
+then 
+   echo "Running DYNMAT ... " 
+   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dynmat.x < $2 > $3 2> $4  
 fi
 

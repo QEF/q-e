@@ -1,4 +1,4 @@
-!
+!!
 ! Copyright (C) 2003-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -17,12 +17,14 @@ SUBROUTINE koopmans_ham ()
   USE klist,                 ONLY : nkstot, xk
   USE lsda_mod,              ONLY : nspin
   USE control_kcw,           ONLY : num_wann, Hamlt, nqstot, l_alpha_corr, evc0, &
-                                    alpha_final, num_wann_occ, on_site_only, iuwfc_wann
+                                    alpha_final, num_wann_occ, on_site_only, iuwfc_wann, &
+                                    nkstot_eff
   USE constants,             ONLY : rytoev
   USE wvfct,                 ONLY : npwx, npw, et, nbnd
   USE units_lr,              ONLY : lrwfc, iuwfc
   USE wavefunctions,         ONLY : evc
   USE buffers,               ONLY : get_buffer, save_buffer
+  USE noncollin_module,      ONLY : npol, nspin_lsda, nspin_gga, nspin_mag
   !
   IMPLICIT NONE
   !
@@ -36,7 +38,7 @@ SUBROUTINE koopmans_ham ()
   COMPLEX(DP) deltah_real (num_wann, num_wann)
   !
   ! the KI hamiltonian, the KI contribution, and the new eigenvectors at a given k-point
-  COMPLEX(DP) :: ham(num_wann,num_wann), deltaH(num_wann,num_wann), eigvc(npwx,num_wann)
+  COMPLEX(DP) :: ham(num_wann,num_wann), deltaH(num_wann,num_wann), eigvc(npwx*npol,num_wann)
   !
   ! The new eigenalues 
   REAL(DP) :: eigvl(num_wann)
@@ -83,7 +85,7 @@ SUBROUTINE koopmans_ham ()
   ehomo_ks=-1D+6
   elumo_ks=+1D+6
   !
-  DO ik = 1, nkstot/nspin
+  DO ik = 1, nkstot_eff
     !
     deltah_real = CMPLX(0.D0, 0.D0, kind = DP)
     !
@@ -150,18 +152,19 @@ SUBROUTINE koopmans_ham ()
     CALL cdiagh( num_wann, ham, num_wann, eigvl, eigvc )
     WRITE( stdout, '(10x, "KI  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
+    nbnd = num_wann
     ! Canonical wfc at each k point (overwrite the evc from DFT)
-    lrwannfc = num_wann*npwx
-    !write (*,'("NICOLA lrwannfc", i20)') lrwannfc, iuwfc_wann
+    lrwannfc = num_wann*npwx*npol
+    !
     CALL get_buffer ( evc0, lrwannfc, iuwfc_wann, ik )
     ! Retrive the ks function at k (in the Wannier Gauge)
-    CALL ZGEMM( 'N','N', npw, num_wann, num_wann, ONE, evc0, npwx, eigvc, num_wann, &
-                 ZERO, evc, npwx )
-    lrwfc = nbnd * npwx
-    !write (*,'("NICOLA lrwfc", i20)') lrwfc, iuwfc, nbnd, SIZE(evc)
+    CALL ZGEMM( 'N','N', npw*npol, num_wann, num_wann, ONE, evc0, npwx*npol, eigvc, num_wann, &
+                 ZERO, evc, npwx*npol )
+    lrwfc = nbnd * npwx*npol
+    !
     CALL save_buffer ( evc, lrwfc, iuwfc, ik )
     !
-    nbnd = num_wann
+    !nbnd = num_wann
     DO iwann = 1, nbnd
       et(iwann,ik) = eigvl(iwann)
     ENDDO
@@ -181,7 +184,7 @@ SUBROUTINE koopmans_ham ()
   ! 
   ! For an isolated molecule the full Hamiltonian is also available
   ik=1
-  IF (nkstot/nspin == 1) CALL full_ham ( ik )
+  IF (nkstot/nspin == 1 .AND. .NOT. nspin_mag==4 ) CALL full_ham ( ik )
   ! ... formats
   !
 9043 FORMAT(/,8x,'KS       highest occupied level (ev): ',F10.4 )
@@ -274,13 +277,14 @@ SUBROUTINE koopmans_ham ()
     USE kinds,                ONLY : DP
     USE io_global,            ONLY : stdout
     USE control_kcw,          ONLY : num_wann, nqstot, iurho_wann, &
-                                     spin_component
+                                     spin_component, nrho, x_q, kcw_iverbosity
     USE fft_base,             ONLY : dffts
     USE cell_base,            ONLY : omega
     USE gvecs,                ONLY : ngms
     USE mp_bands,             ONLY : intra_bgrp_comm
     USE mp,                   ONLY : mp_sum
     USE buffers,              ONLY : get_buffer
+    USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_mag, npol
     !
     IMPLICIT NONE
     !
@@ -288,27 +292,40 @@ SUBROUTINE koopmans_ham ()
     COMPLEX(DP), INTENT(INOUT) :: deltah_scal (num_wann, num_wann)
     !
     ! Couters for the q point, wannier index. record length for the wannier density
-    INTEGER :: iq, iwann, lrrho
+    INTEGER :: iq, iwann, lrrho, ip
     !
     ! The periodic part of the wannier orbital density
-    COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), delta_vr_(dffts%nnr,nspin)
+    COMPLEX(DP) :: rhowann(dffts%nnr, num_wann, nrho), rhor(dffts%nnr,nrho)
+    COMPLEX(DP) :: delta_vr(dffts%nnr,nspin_mag), delta_vr_(dffts%nnr,nspin_mag)
     !
     ! The self Hartree
     COMPLEX(DP) :: sh(num_wann)
     !
     ! Auxiliary variables 
-    COMPLEX(DP), ALLOCATABLE  :: rhog(:), delta_vg(:,:), vh_rhog(:), delta_vg_(:,:)
+    COMPLEX(DP), ALLOCATABLE  :: rhog(:,:), delta_vg(:,:), vh_rhog(:), delta_vg_(:,:), wann_c(:,:,:), rho_c(:,:,:)
     !
     ! The weight of each q point
     REAL(DP) :: weight(nqstot)
     !
+    COMPLEX(DP) :: struct_fact,int_rho,int_wann
+    COMPLEX(DP) :: phase(dffts%nnr)
+    REAL(DP) :: xq_(3)
+    !
     WRITE( stdout, '(/,5X, "INFO: KC SCALAR TERM CALCULATION ... START")')
     !
-    ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), delta_vg_(ngms,nspin) )
+    ALLOCATE ( rhog (ngms,nrho) , delta_vg(ngms,nspin_mag), vh_rhog(ngms), delta_vg_(ngms,nspin_mag) )
+    !
+    ALLOCATE ( wann_c(dffts%nnr,num_wann,nrho),rho_c(dffts%nnr,num_wann,nrho) )
+    !
+    wann_c = ZERO
+    rho_c = ZERO
+    sh = ZERO
     !
     DO iq = 1, nqstot
       !
-      lrrho=num_wann*dffts%nnr
+      !!!CALL structure_factor(iq, struct_fact)
+      !
+      lrrho=num_wann*dffts%nnr*nrho
       CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
       !! Retrive the rho_wann_q(r) from buffer in REAL space
       !
@@ -316,31 +333,38 @@ SUBROUTINE koopmans_ham ()
       !
       DO iwann = 1, num_wann  ! for each band, that is actually the perturbation
          !
-         rhog(:)         = CMPLX(0.D0,0.D0,kind=DP)
+         rhog(:,:)       = CMPLX(0.D0,0.D0,kind=DP)
          delta_vg(:,:)   = CMPLX(0.D0,0.D0,kind=DP)
          vh_rhog(:)      = CMPLX(0.D0,0.D0,kind=DP)
-         rhor(:)         = CMPLX(0.D0,0.D0,kind=DP)
+         rhor(:,:)       = CMPLX(0.D0,0.D0,kind=DP)
          !
-         rhor(:) = rhowann(:,iwann)
-         !! The periodic part of the orbital desity in real space
+         rhor(:,:) = rhowann(:,iwann,:)
+         !! The periodic part of the orbital density in real space
          !
          CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_ )
          !! The periodic part of the perturbation DeltaV_q(G)
          ! 
-         sh(iwann) = sh(iwann) + 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:)                )*weight(iq)*omega
-         deltah_scal(iwann, iwann) = deltah_scal(iwann,iwann) - 0.5D0 * sum (CONJG(rhog (:)) * delta_vg(:,spin_component)) &
-                                     * weight(iq) * omega
-         !
+         sh(iwann) = sh(iwann) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:))*weight(iq)*omega
+         IF (nspin_mag==2) THEN
+           deltah_scal(iwann, iwann) = deltah_scal(iwann,iwann) - 0.5D0 * sum (CONJG(rhog (:,1)) * delta_vg(:,spin_component)) &
+                                       * weight(iq) * omega
+         ELSE
+           DO ip =1,nspin_mag
+              deltah_scal(iwann, iwann) = deltah_scal(iwann,iwann) - 0.5D0 * sum (CONJG(rhog (:,ip)) * delta_vg(:,ip)) &
+                                          * weight(iq) * omega
+          END DO
+        END IF
       ENDDO
       ! 
     ENDDO ! qpoints
+
     WRITE( stdout, '(/,5X, "INFO: KC SCALAR TERM CALCULATION ... END")')
     !
     DEALLOCATE ( rhog , delta_vg, vh_rhog, delta_vg_ )
     !
     CALL mp_sum (deltah_scal, intra_bgrp_comm)
     CALL mp_sum (sh, intra_bgrp_comm)
-   !
+    !
   END SUBROUTINE ham_scalar
   !
   !-----------------------------------------------------------------------
@@ -357,7 +381,8 @@ SUBROUTINE koopmans_ham ()
     USE mp,                   ONLY : mp_sum
     USE control_kcw,          ONLY : spin_component, num_wann, x_q, &
                                      num_wann_occ, evc0, iuwfc_wann, &
-                                     map_ikq, shift_1bz
+                                     map_ikq, shift_1bz, nrho, &
+                                     map_ikq_minus, shift_1bz_minus
     USE buffers,              ONLY : get_buffer, save_buffer
     USE io_global,            ONLY : stdout
     USE control_kcw,          ONLY : iurho_wann
@@ -376,6 +401,7 @@ SUBROUTINE koopmans_ham ()
     USE noncollin_module,     ONLY : npol
     !
     USE constants,            ONLY : rytoev
+    USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_mag, npol
     ! 
     !
     IMPLICIT NONE
@@ -392,14 +418,14 @@ SUBROUTINE koopmans_ham ()
     INTEGER :: iwann, jwann, lrrho, lrwfc
     ! Band counters, leght of the rho record
     !
-    COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), sh(num_wann), &
-                   delta_vr_(dffts%nnr,nspin)
+    COMPLEX(DP) :: rhowann(dffts%nnr, num_wann,nrho), rhor(dffts%nnr,nrho), delta_vr(dffts%nnr,nspin_mag), sh(num_wann), &
+                   delta_vr_(dffts%nnr,nspin_mag)
     ! The periodic part of the wannier orbital density in r space
     ! The perturbig potential in real space
     ! The self-hartree 
     ! The perturbig potential in real space (without the g=0 contribution) 
     !
-    COMPLEX(DP), ALLOCATABLE  :: rhog(:), delta_vg(:,:), vh_rhog(:), delta_vg_(:,:)
+    COMPLEX(DP), ALLOCATABLE  :: rhog(:,:), delta_vg(:,:), vh_rhog(:), delta_vg_(:,:)
     ! The periodic parte of the wannier density in G-space 
     ! The perturbig potential in G space
     ! The hartree potential due to the wannier in G-space 
@@ -410,23 +436,27 @@ SUBROUTINE koopmans_ham ()
     !
     INTEGER :: ikq, npw_k, npw_kq
     ! Counter for the k/q points in the BZ, total number of q points and number of pw for a given k (k+q) point
+    INTEGER :: ikq_m, npw_kq_m
     !
     COMPLEX(DP) ::  evc0_kq(npwx*npol, num_wann)
     ! Auxiliary vector to store the wfc at k+q
     !
-    COMPLEX(DP) :: rho_r_nm(dffts%nnr), rho_g_nm(ngms), aux(dffts%nnr)
-    REAL(DP) :: g_vect(3)
+    COMPLEX(DP) :: rho_r_nm(dffts%nnr,nrho), rho_g_nm(ngms,nrho), aux(dffts%nnr)
+    REAL(DP) :: g_vect(3),g_vect_m(3)
     ! G vector that shift the k+q inside the 1BZ
     !
-    COMPLEX(DP) :: evc_k_g (npwx*npol), evc_k_r (dffts%nnr), phase(dffts%nnr)
-    ! Auxiliary wfc in reciprocal and real space, the phase associated to the hift k+q-> k'
+    COMPLEX(DP) :: evc_k_g (npwx*npol), evc_k_r (dffts%nnr,npol), phase(dffts%nnr)
+    ! Auxiliary wfc in reciprocal and real space, the phase associated to the hift k+q-> k', and to k-q
     !
-    COMPLEX(DP) :: evc_kq_g (npwx*npol), evc_kq_r (dffts%nnr)
+    COMPLEX(DP) :: evc_kq_g (npwx*npol), evc_kq_r (dffts%nnr,npol)
     ! Auxiliary wfc in reciprocal and real space
     !
-    LOGICAL :: off_diag = .TRUE.
+    LOGICAL :: off_diag = .TRUE., debug_nc = .true.
     ! compute Off-diagonal elements. NsC: not sure off_diag=.false. here makes sense: DO NOT CHANGE!!!!
+    INTEGER :: ip, is, iss
     !
+    IF (nspin_mag==2 .AND. debug_nc) &
+      WRITE (stdout, '(/,5X,"INFO: debug_nc = ", L2, " Note: the k-q formula will be used.")') debug_nc
     WRITE( stdout, '(/,/,5X,"INFO: KI[2nd] HAMILTONIAN CALCULATION ik= ", i4, " ...", /)') ik
     !
     nqs = nqstot
@@ -434,14 +464,16 @@ SUBROUTINE koopmans_ham ()
     !
     deltaH = CMPLX(0.D0,0.D0,kind=DP)
     sh     = CMPLX(0.D0,0.D0,kind=DP)
+    rho_r_nm = CMPLX(0.D0,0.D0,kind=DP)
     !
-    lrwfc = num_wann*npwx
+    lrwfc = num_wann*npwx*npol
     CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik )
     ! Retrive the ks function at k (in the Wannier Gauge)
     ! IF (kcw_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: u_k(g) RETRIEVED"/)') 
     !
-    CALL compute_map_ikq_single (ik)
-    ! find tha map k+q --> k'+G and store the res 
+    CALL compute_map_ikq_single (ik,.true.)
+    ! find the map k+q --> k'+G and store the res 
+    ! find also the map k-q --> k'+G and store the res 
     !
     DO iq = 1, nqs
       !! Sum over the BZ 
@@ -450,40 +482,52 @@ SUBROUTINE koopmans_ham ()
       !
       lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
       !
-      lrrho=num_wann*dffts%nnr
+      lrrho=num_wann* dffts%nnr *nrho
       CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
       ! Retrive the rho_wann_q(r) from buffer in REAL space
       !IF (kcw_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED"/)') 
       !
-      ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), delta_vg_(ngms,nspin) )
+      ALLOCATE ( rhog (ngms,nrho) , delta_vg(ngms,nspin_mag), vh_rhog(ngms), delta_vg_(ngms,nspin_mag) )
       !
       weight(iq) = 1.D0/nqs ! No SYMM 
       !
       !WRITE(stdout, '("weight =", i5, f12.8)') iq, weight(iq)
       !
-      ikq = map_ikq(iq)
-      g_vect(:) = shift_1bz(:,iq)
-      ! The index ikq in the 1BZ corresponding at the k+q, and the vector G_bar defining the shift 
-      ! xk(:,ikq)+G_bar = xk(:,k+q)
-      ! see compute_map_ikq_single.f90
-      !
-      phase(:) = 0.D0
-      CALL calculate_phase(g_vect, phase) 
-      ! Calculate the phase associated to the k+q-> ikq map: exp[ -i(G_bar * r) ]
+      IF (nspin==4 .or. debug_nc ) THEN 
+        ikq_m = map_ikq_minus(iq)
+        g_vect_m(:) = shift_1bz_minus(:,iq)
+        phase(:) = 0.D0
+        CALL calculate_phase(g_vect_m, phase) 
+        ! Calculate the phase associated to the k-q-> ikq map: exp[ -i(G_bar * r) ]
+      ELSE
+        ikq = map_ikq(iq)
+        g_vect(:) = shift_1bz(:,iq)
+        ! The index ikq in the 1BZ corresponding at the k+q, and the vector G_bar defining the shift 
+        ! xk(:,ikq)+G_bar = xk(:,k+q)
+        ! see compute_map_ikq_single.f90  
+        phase(:) = 0.D0
+        CALL calculate_phase(g_vect, phase) 
+        ! Calculate the phase associated to the k+q-> ikq map: exp[ -i(G_bar * r) ]
+      END IF
       !
       evc0_kq = CMPLX(0.D0,0.D0,kind=DP)
-      lrwfc = num_wann * npwx 
-      CALL get_buffer ( evc0_kq, lrwfc, iuwfc_wann, ikq )
-      ! Retrive the ks function at k+q (in the Wannier Gauge): 
+      lrwfc = num_wann * npwx * npol
+      IF (nspin==4 .or. debug_nc ) THEN
+        CALL get_buffer ( evc0_kq, lrwfc, iuwfc_wann, ikq_m )
+        !Retrive the ks function at k-q (in the Wannier Gauge):
+      ELSE
+        CALL get_buffer ( evc0_kq, lrwfc, iuwfc_wann, ikq )
+        ! Retrive the ks function at k+q (in the Wannier Gauge): 
+      ENDIF
       !
       !IF (kcw_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: u_kq(g) RETRIEVED")') 
       !
       DO iwann = num_wann_occ+1, num_wann
 !      DO iwann = 1, num_wann
-         !
+         !         
          npw_k = ngk(ik)
          evc_k_g(:) =  evc0(:,iwann)
-         evc_k_r(:) = CMPLX(0.D0,0.D0,kind=DP)
+         evc_k_r(:,:) = CMPLX(0.D0,0.D0,kind=DP)
          CALL invfft_wave (npw_k, igk_k (1,ik), evc_k_g , evc_k_r )
          !! The wfc R=0 n=iwann in R-space at k
          !
@@ -492,26 +536,57 @@ SUBROUTINE koopmans_ham ()
             !
             IF (.NOT. off_diag .AND. jwann /= iwann) CYCLE 
             !
-            rhog(:)         = CMPLX(0.D0,0.D0,kind=DP)
+            rhog(:,:)         = CMPLX(0.D0,0.D0,kind=DP)
             delta_vg(:,:)   = CMPLX(0.D0,0.D0,kind=DP)
             vh_rhog(:)      = CMPLX(0.D0,0.D0,kind=DP)
-            rhor(:)         = CMPLX(0.D0,0.D0,kind=DP)
+            rhor(:,:)         = CMPLX(0.D0,0.D0,kind=DP)
             !
-            rhor(:) = rhowann(:,jwann)
-            ! The periodic part of the orbital desity R=0, n=iwann in real space
+            rhor(:,:) = rhowann(:,jwann,:)
+            ! The periodic part of the orbital density R=0, n=iwann in real space
             !
             CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_ )
             ! The periodic part of the perturbation DeltaV_q(G)
             !
-            npw_kq = ngk(ikq)
             evc_kq_g = evc0_kq(:,jwann)
             evc_kq_r = CMPLX(0.D0,0.D0,kind=DP)
-            CALL invfft_wave (npw_kq, igk_k (1,ikq), evc_kq_g , evc_kq_r )
+            IF(nspin==4 .or. debug_nc ) THEN
+              npw_kq_m = ngk(ikq_m)
+              CALL invfft_wave (npw_kq_m, igk_k (1,ikq_m), evc_kq_g , evc_kq_r )
+            ELSE
+              npw_kq = ngk(ikq)
+              CALL invfft_wave (npw_kq, igk_k (1,ikq), evc_kq_g , evc_kq_r )
+            END IF
+
             ! The wfc in R-space at k' <-- k+q where k' = (k+q)-G_bar
             ! evc_k+q(r) = sum_G exp[iG r] c_(k+q+G) = sum_G exp[iG r] c_k'+G_bar+G 
             !            = exp[-iG_bar r] sum_G' exp[iG'r] c_k'+G' = exp[-iG_bar r] *evc_k'(r)
             !
-            rho_r_nm(:) = conjg(evc_k_r(:))*evc_kq_r(:)*phase(:)/nqs
+
+            IF (nspin==4) THEN
+              !rho_r_nm(:,1) = rho_r_nm(:,1) + conjg(evc_k_r(:,2))*evc_kq_r(:,2)*phase(:)/nqs 
+              !rho_r_nm(:,1) = CONJG(rho_r_nm(:,1))
+              !rho_r_nm(:,2) = (conjg(evc_k_r(:,1))*evc_kq_r(:,2)+conjg(evc_k_r(:,2))*evc_kq_r(:,1))*phase(:)/nqs 
+              !rho_r_nm(:,3) = CMPLX(0.D0,1.D0, kind=DP)*(conjg(evc_k_r(:,2))*evc_kq_r(:,1)-&
+              !                                                          conjg(evc_k_r(:,1))*evc_kq_r(:,2))*phase(:)/nqs 
+              !rho_r_nm(:,4) = (conjg(evc_k_r(:,1))*evc_kq_r(:,1)-conjg(evc_k_r(:,2))*evc_kq_r(:,2))*phase(:)/nqs
+              !
+              !phase = conjg(phase)
+              ! \sum_{s1,s2} [u^{s1}_{k-q}(r)]^* \sigma_i^{s1,s2} [u^{}s2_{k}(r)] = \rho^i_{k-q,k}(r)
+              ! i is the pauli matrices index i=0,x,y,z
+              rho_r_nm(:,1) = ( conjg(evc_kq_r(:,1))*evc_k_r(:,1)*phase(:) + conjg(evc_kq_r(:,2))*evc_k_r(:,2)*phase(:) )/nqs 
+              rho_r_nm(:,2) = ( conjg(evc_kq_r(:,1))*evc_k_r(:,2)*phase(:) + conjg(evc_kq_r(:,2))*evc_k_r(:,1)*phase(:) )/nqs 
+              rho_r_nm(:,3) = (-CMPLX(0.D0,1.D0, kind=DP) * conjg(evc_kq_r(:,1))*evc_k_r(:,2)*phase(:) & 
+                               +CMPLX(0.D0,1.D0, kind=DP) * conjg(evc_kq_r(:,2))*evc_k_r(:,1)*phase(:) )/nqs
+              rho_r_nm(:,4) = ( conjg(evc_kq_r(:,1))*evc_k_r(:,1)*phase(:) - conjg(evc_kq_r(:,2))*evc_k_r(:,2)*phase(:) )/nqs
+            ELSE IF (nspin==2 .and. debug_nc ) THEN
+              !phase = conjg(phase)
+              rho_r_nm(:,1) = conjg(evc_kq_r(:,1))*evc_k_r(:,1)*phase(:)/nqs 
+              ! rho_{k-q,k}^{ji}
+            ELSE IF (nspin==2 .and. .not. debug_nc) THEN
+              rho_r_nm(:,1) = conjg(evc_k_r(:,1))*evc_kq_r(:,1)*phase(:)/nqs 
+              ! rho_{k,k+q}^{ij}
+            ENDIF
+
             ! generalized density in r-space 
   !          IF (jwann == iwann) THEN
   !            WRITE(*,'("NICOLA evc i", 6F20.15)') evc_k_r(1:3)
@@ -521,9 +596,11 @@ SUBROUTINE koopmans_ham ()
   !          ENDIF
             !WRITE(*,'("NICOLA R", 2i5, 2F20.15)'), iwann, jwann, SUM( delta_vr(:,spin_component)*rho_r_nm(:) )/( dffts%nr1*dffts%nr2*dffts%nr3 )
             !
-            aux(:) = rho_r_nm(:)/omega
-            CALL fwfft ('Rho', aux, dffts)
-            rho_g_nm(:) = aux(dffts%nl(:))
+            DO is=1,nrho
+                aux(:) = rho_r_nm(:,is)/omega    
+                CALL fwfft ('Rho', aux, dffts)
+                rho_g_nm(:,is) = aux(dffts%nl(:))
+            END DO
             ! generalized density in G-spage
   !          IF (jwann == iwann) THEN
   !            WRITE(*,'("NICOLA rho_ij", 6F20.15)') rho_g_nm(1:3)
@@ -533,7 +610,15 @@ SUBROUTINE koopmans_ham ()
   !            WRITE(*,'("NICOLA i, q r ", i5, 10F16.8)') iwann, SUM (CONJG(rho_g_nm (:)) * delta_vg(:,spin_component))*weight(iq)*omega
   !          ENDIF
             !
-            deltaH(iwann, jwann) = deltaH(iwann,jwann) + SUM((rho_g_nm(:))*CONJG(delta_vg(:,spin_component)))*weight(iq)*omega
+            IF (nspin==2 .and. .not. debug_nc) THEN
+              deltaH(iwann, jwann) = deltaH(iwann,jwann) + SUM((rho_g_nm(:,1))*CONJG(delta_vg(:,spin_component)))*weight(iq)*omega
+            ELSE IF (nspin==2 .and. debug_nc ) THEN 
+              deltaH(iwann, jwann) = deltaH(iwann,jwann) + SUM(delta_vg(:,spin_component)*conjg(rho_g_nm(:,1)))*weight(iq)*omega
+            ELSE
+              DO is=1,nspin_mag
+                deltaH(iwann, jwann) = deltaH(iwann,jwann) + SUM(CONJG(rho_g_nm(:,is))*(delta_vg(:,is)))*weight(iq)*omega
+              END DO
+            END IF
             !deltaH(jwann, iwann) = deltaH(jwann,iwann) + SUM(rho_g_nm(:)*CONJG(delta_vg(:,spin_component)))*weight(iq)*omega
             !WRITE(*,'("NICOLA G", 2i5, 2F20.15)') iwann, jwann, SUM (CONJG(rho_g_nm (:)) * delta_vg(:,spin_component))*weight(iq)*omega
             !WRITE(*,'("NICOLA G", 2i5, 2F20.15)') iwann, jwann, SUM (rho_g_nm (:) * CONJG(delta_vg(:,spin_component)))*weight(iq)*omega

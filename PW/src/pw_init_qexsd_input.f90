@@ -611,13 +611,9 @@
   !-------------------------------------------------------------------------------------------------------------------------------
   !                                            FREE POSITIONS
   !---------------------------------------------------------------------------------------------------------------------------- 
-  IF ( TRIM(calculation) .NE. "scf" .AND. TRIM(calculation) .NE. "nscf" .AND. &
-                                           TRIM(calculation) .NE. "bands") THEN
-      obj%free_positions_ispresent=.TRUE.
-      CALL qexsd_init_free_positions( obj%free_positions, rd_if_pos, ip_nat)
-  ELSE
-      obj%free_positions_ispresent = .FALSE.
-  END IF
+  ! Always dump free positions, regardless of the calculation
+  obj%free_positions_ispresent = .TRUE.
+  CALL qexsd_init_free_positions( obj%free_positions, rd_if_pos, ip_nat)
   !----------------------------------------------------------------------------------------------------------------------------
   !                                  STARTING IONIC VELOCITIES 
   !-----------------------------------------------------------------------------------------------------------------------------

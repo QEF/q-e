@@ -102,7 +102,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ALLOCATE( sevc1_new(npwx*npol,nbnd,nks))
   !
   nnr_siz= dffts%nnr
-!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) copyout(sevc1_new(1:npwx*npol,1:nbnd,1:nks)) create(spsi1(1:npwx, 1:nbnd)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1))
+!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) create(sevc1_new(1:npwx*npol,1:nbnd,1:nks), spsi1(1:npwx, 1:nbnd)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1))
   !
   d_deeq(:,:,:,:)=0.0d0
   !$acc kernels
@@ -163,7 +163,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            DEALLOCATE ( dvrs )  ! to save memory
            !
-           CALL dv_of_drho(dvrs_temp,.FALSE.)
+           CALL dv_of_drho(dvrs_temp)
            !
            ALLOCATE ( dvrs(dfftp%nnr, nspin) )
            !
@@ -179,7 +179,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            dvrsc(:,1) = rho_1c(:,1)
            !
-           CALL dv_of_drho(dvrsc,.FALSE.)
+           CALL dv_of_drho(dvrsc)
            !
         ENDIF
         !
@@ -303,8 +303,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ! [H(k) - E(k)] * evc1(k). Keep this in mind if you want to
   ! generalize this subroutine to metals. 
   !
+  !$acc data copyin(evc0)
   DO ik = 1, nks
      !
+
      CALL orthogonalize(sevc1_new(:,:,ik), evc0(:,:,ik), ik, ik, &
                                   & sevc0(:,:,ik), ngk(ik), .true.)
      !$acc kernels                     
@@ -312,6 +314,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !$acc end kernels
      !
   ENDDO 
+  !$acc end data
   !
   !
   ! Here we apply the S^{-1} operator.
@@ -579,9 +582,7 @@ CONTAINS
     ! Compute sevc1_new = H*evc1
     !
 #if defined(__CUDA)
-    !$acc host_data use_device(evc1, sevc1_new)
     CALL h_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
-    !$acc end host_data
 #else
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
 #endif
@@ -598,9 +599,7 @@ CONTAINS
         ENDDO
     ELSE
 #if defined(__CUDA)
-       !$acc host_data use_device(evc1, spsi1)
        CALL s_psi_acc (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
-       !$acc end host_data
 #else            
        CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
 #endif

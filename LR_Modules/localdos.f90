@@ -31,9 +31,6 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE wvfct,            ONLY : nbnd, npwx, et
   USE becmod,           ONLY : calbec, bec_type, allocate_bec_type_acc, deallocate_bec_type_acc
   USE wavefunctions,    ONLY : evc, psic, psic_nc
-#if defined(__CUDA)
-  USE wavefunctions_gpum,   ONLY : evc_d
-#endif
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : upf, nh, nhm
   USE qpoint,           ONLY : nksq, ikks
@@ -80,7 +77,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   INTEGER, POINTER, DEVICE :: nl_d(:)
   !
   nl_d  => dffts%nl_d
-  evc_d = evc
+  !$acc update device(evc) 
 #else
   INTEGER, ALLOCATABLE :: nl_d(:)
   !
@@ -114,13 +111,11 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      !
      if (nksq > 1) then
              call get_buffer (evc, lrwfc, iuwfc, ikks(ik))
-#if defined(__CUDA)
-             evc_d = evc
-#endif
+             !$acc update device(evc)
      endif
      call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb, .true.)
      !
-     !$acc data copyin(evc) present(vkb, becp)
+     !$acc data present(vkb, becp)
      call calbec ( offload_type, npw, vkb, evc, becp)
      !$acc end data
      !
@@ -142,13 +137,8 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
            !$acc end kernels
            !$acc parallel loop present(igk_k, psic_nc)
            do ig = 1, npw
-#if defined(__CUDA)
-              psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc_d (ig, ibnd)
-              psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc_d (ig+npwx, ibnd)
-#else
               psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc (ig, ibnd)
               psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc (ig+npwx, ibnd)
-#endif
            enddo
            !$acc end parallel loop
            !$acc host_data use_device(psic_nc)
@@ -187,11 +177,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
            !$acc end kernels
            !$acc parallel loop present(psic)
            do ig = 1, npw
-#if defined(__CUDA)
-              psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc_d (ig, ibnd)
-#else
               psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc (ig, ibnd)
-#endif
            enddo
            !$acc end parallel loop
            !$acc host_data use_device(psic)

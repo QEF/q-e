@@ -5,10 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------------
-! TB
-! included gate related energy
-!----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
@@ -50,8 +46,6 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : nat
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   USE loc_scdm_k,           ONLY : localize_orbitals_k
-  !
-  USE scf_gpum,             ONLY : using_vrs
   !
   USE add_dmft_occ,         ONLY : dmft
   USE rism_module,          ONLY : lrism, rism_calc3d
@@ -149,7 +143,6 @@ SUBROUTINE electrons()
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
-           CALL using_vrs(1)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -161,6 +154,7 @@ SUBROUTINE electrons()
   ENDIF
   !
   !  ... energy calculation of neutral case
+  !  ... FIXME: these lines should be called before electrons, not inside it
   !
   IF (sic .and. sic_energy) THEN
      WRITE(stdout,'(5x,"Energy calculation for the neutral polaron")')
@@ -245,7 +239,6 @@ SUBROUTINE electrons()
         IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
-        CALL using_vrs(1)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -398,7 +391,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm, &
                                    ntyp => nsp
-  USE basis,                ONLY : starting_pot
+  USE starting_scf,         ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, g, gg, gcutm
@@ -465,7 +458,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE libmbd_interface,     ONLY : EmbdvdW
   USE add_dmft_occ,         ONLY : dmft, dmft_update, v_dmft, dmft_updated
   !
-  USE scf_gpum,             ONLY : using_vrs
   USE device_fbuff_m,       ONLY : dev_buf, pin_buf
   USE pwcom,                ONLY : report_mag 
   USE makovpayne,           ONLY : makov_payne
@@ -716,8 +708,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
             WRITE( stdout, '(5X,"WARNING: electron_maxstep > 1 not recommended for dmft = .true.")')
         END IF
         !
-        IF (.not. use_gpu) CALL sum_band()
-        IF (      use_gpu) CALL sum_band_gpu()
+        CALL sum_band()
         !
         ! ... if DMFT update was made, make sure it is only done in the first iteration
         ! ... (generally in this mode it should only run a single iteration, but just to make sure!)
@@ -991,13 +982,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      ! ... define the total local potential (external + scf)
      !
-     CALL using_vrs(1)
-     CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
-     !
-     ! ... interpolate the total local potential
-     !
-     CALL using_vrs(1) ! redundant
-     CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
+                   nspin, doublegrid )
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
@@ -1842,7 +1828,6 @@ FUNCTION exxenergyace( )
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only, use_gpu
   USE wavefunctions,      ONLY : evc
-  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   !
   IMPLICIT NONE
   !
@@ -1857,9 +1842,6 @@ FUNCTION exxenergyace( )
   domat = .TRUE.
   exxenergyace=0.0_dp
   !
-  IF (.NOT. use_gpu) CALL using_evc(0)
-  IF (      use_gpu) CALL using_evc_d(0)
-  !
   DO ik = 1, nks
      npw = ngk (ik)
      !
@@ -1867,17 +1849,26 @@ FUNCTION exxenergyace( )
      IF ( lsda ) current_spin = isk(ik)
      !
      IF (nks > 1) THEN
-        CALL using_evc(2)
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        IF (use_gpu) CALL using_evc_d(0)
+        !$acc update device(evc)
      ENDIF
      !
      IF (gamma_only) THEN
-        IF (.NOT. use_gpu) CALL vexxace_gamma( npw, nbnd, evc, ex )
-        IF (      use_gpu) CALL vexxace_gamma_gpu( npw, nbnd, evc_d, ex )
+        IF (use_gpu) THEN
+          !$acc host_data use_device(evc)
+          CALL vexxace_gamma_gpu( npw, nbnd, evc, ex )
+          !$acc end host_data
+        ELSE
+          CALL vexxace_gamma( npw, nbnd, evc, ex )
+        END IF
      ELSE
-        IF (.NOT. use_gpu) CALL vexxace_k( npw, nbnd, evc, ex )
-        IF (      use_gpu) CALL vexxace_k_gpu( npw, nbnd, evc_d, ex )
+        IF (use_gpu) THEN
+          !$acc host_data use_device(evc)
+          CALL vexxace_k_gpu( npw, nbnd, evc, ex )
+          !$acc end host_data
+        ELSE
+          CALL vexxace_k( npw, nbnd, evc, ex )
+        ENDIF
      ENDIF
      exxenergyace = exxenergyace + ex
   ENDDO

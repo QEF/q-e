@@ -1,8 +1,8 @@
 PROGRAM disca_broadening
 !-------------------------------------------------------------------------
 !! authors: Marios Zacharias, Feliciano Giustino 
-!! acknowledgement: Hyungjun Lee for help packaging this release
-!! version: v0.1
+!! acknowledgement: Sabyasachi Tiwari for help packaging this release
+!! version: v1.2
 !! license: GNU
 !
 USE kinds,       ONLY : dp

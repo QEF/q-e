@@ -27,7 +27,7 @@ SUBROUTINE potinit()
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : alat, omega
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE basis,                ONLY : starting_pot
+  USE starting_scf,         ONLY : starting_pot
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : lsda, nspin
   USE fft_base,             ONLY : dfftp
@@ -55,7 +55,6 @@ SUBROUTINE potinit()
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
   !
-  USE scf_gpum,             ONLY : using_vrs
   USE pwcom,                ONLY : report_mag 
   USE rism_module,          ONLY : lrism, rism_init3d, rism_calc3d
   !
@@ -278,9 +277,7 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
-  !
   ! ... write on output the parameters used in the DFT+U(+V) calculation
   !
   IF ( lda_plus_u ) THEN

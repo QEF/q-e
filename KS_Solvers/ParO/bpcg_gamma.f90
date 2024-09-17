@@ -82,7 +82,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, nve
   !
   COMPLEX(DP), ALLOCATABLE ::  b(:,:),                        & ! RHS for testing
                                p(:,:), hp(:,:), sp(:,:), z(:,:) ! additional working vetors
-  !$acc declare device_resident(b, p, hp, sp, z)
+  !$acc declare device_resident(b, z)
 
   REAL(DP), ALLOCATABLE    ::  spsi0vec (:,:) ! the product of spsi0 and a group of vectors
   !$acc declare device_resident(spsi0vec)
@@ -119,6 +119,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, nve
   ALLOCATE( z( npwx, block_size ), b( npwx, block_size ) )
   ALLOCATE( p(npwx,block_size), hp(npwx,block_size), sp(npwx,block_size) )
   ALLOCATE( spsi0vec(nbnd, block_size) )
+  !$acc enter data create(p, hp, sp)
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
@@ -218,9 +219,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, nve
 !     do l = 1, nactive  ! THIS COULD/SHOULD BE A GLOBAL CALL (ONLY WITHIN ONE BGRP THOUGH)
 !        CALL hs_1psi( npwx, npw, p(:,l), hp(:,l), sp(:,l) ) ! apply H to a single wavefunction (no bgrp parallelization here!)
 !     end do
-     !$acc host_data use_device(p, hp, sp)
      CALL hs_psi_ptr( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
-     !$acc end host_data
      CALL stop_clock( 'pcg:hs_1psi' )
 
      !$acc parallel loop private(i)     
@@ -425,6 +424,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, nve
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 
+  !$acc exit data delete(p, hp, sp)
   DEALLOCATE( spsi0vec )
   DEALLOCATE( b, p, hp, sp, z )
   DEALLOCATE( ethr_cg, ff, ff0, cg_iter )

@@ -16,7 +16,7 @@ SUBROUTINE init_vlocq ( xq )
   USE ions_base,            ONLY : nsp
   USE vloc_mod,             ONLY : vloc_of_g, init_tab_vloc
   USE Coul_cut_2D,          ONLY : do_cutoff_2D     
-  USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg
+  USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg, lr_Vlocq
   USE eqv,                  ONLY : vlocq
   !
   IMPLICIT NONE
@@ -43,19 +43,21 @@ SUBROUTINE init_vlocq ( xq )
   END DO
   DEALLOCATE ( qg )
   !
-  ! for 2d calculations, we need to initialize the fact for the q+G 
-  ! component of the cutoff of the COulomb interaction
+  ! For 2d calculations, we need to initialize the fact for the q+G
+  ! component of the cutoff of the Coulomb interaction
   !
   IF (do_cutoff_2D) call cutoff_fact_qg()
   !
-  !  in 2D calculations the long range part of vlocq(g) (erf/r part)
+  ! In 2D calculations the long range part of vlocq(g) (erf/r part)
   ! was not re-added in g-space because everything is calculated in
   ! radial coordinates, which is not compatible with 2D cutoff. 
-  ! It will be re-added each time vlocq(g) is used in the code. 
   ! Here, this cutoff long-range part of vlocq(g) is computed only once
-  ! by the routine below and stored
+  ! by the routine below, added to vlocq, and stored for possible separate use.
   !
-  IF (do_cutoff_2D) call cutoff_lr_Vlocq() 
+  IF (do_cutoff_2D) THEN
+     CALL cutoff_lr_Vlocq()
+     vlocq = vlocq + lr_Vlocq
+  ENDIF
   !
   RETURN
   !

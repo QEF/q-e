@@ -23,7 +23,7 @@ MODULE qpoint
   INTEGER :: nksq, npwq, nksqtot
   ! the real number of k points
   ! the number of plane waves for q
-  ! the total number of q points 
+  ! the total number of q points
   INTEGER, ALLOCATABLE :: ikks(:), ikqs(:)
   ! the index of k point in the list of k
   ! the index of k+q point in the list of k
@@ -146,6 +146,19 @@ MODULE lr_symm_base
   ! the G associated to the symmetry q<->-q+G
   LOGICAL :: minus_q, & ! if .TRUE. there is the symmetry sending q<->-q
              invsymq    ! if .TRUE. the small group of q has inversion
+  !
+  ! Symmetry representation of the perturbations
+  !
+  INTEGER :: lr_npert
+  !! Number of perturbations considered at the same time.
+  !! e.g., for phonons: dimension of the irreducible representation
+  !! e.g., for electric fields: 3
+  COMPLEX(DP), ALLOCATABLE :: upert(:, :, :)
+  !! Representation of the symmetry in the perturbation basis. Size (lr_npert, lr_npert, nsymq)
+  !! e.g., for phonons: transformation matrix of the patterns
+  !! e.g., for electric fields: transformation matrix of Cartesian vectors
+  COMPLEX(DP), ALLOCATABLE :: upert_mq(:, :)
+  !! Representation of the symmetry that transforms q to -q. Size (lr_npert, lr_npert)
   !
 END MODULE lr_symm_base
 !

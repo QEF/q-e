@@ -24,6 +24,7 @@ SUBROUTINE export_upf(filename, unit_loc)
                      nstoaets, pseudotype, enls, rhoc, vnl, vpsloc, &
                      lgipaw_reconstruction, use_paw_as_gipaw, use_xsd
   use funct, only: get_dft_name
+  use xc_lib, only : xclib_dft_is
   use global_version, only: version_number
   !
   use pseudo_types, only : pseudo_upf, pseudo_config, &
@@ -73,7 +74,11 @@ SUBROUTINE export_upf(filename, unit_loc)
   endif
   if(lpaw)          upf%typ='PAW'
   if(write_coulomb) upf%typ='1/r'
-
+  if (xclib_dft_is('meta')) then
+     call errore('export_upf', 'Cannot write metaGGA pseudopotentials',1)
+  else
+     upf%with_metagga_info=.false.
+  end if
   upf%tpawp = lpaw
   upf%tcoulombp = write_coulomb
   upf%has_gipaw = lgipaw_reconstruction

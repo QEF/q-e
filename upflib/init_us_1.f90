@@ -27,9 +27,7 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
-                           ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
-                           nhtol_d, nhtoj_d, ijtoh_d, dvan_d, &
-                           qq_nt_d, indv_d, dvan_so_d
+                           ap, aainit, qq_so, dvan_so, okvan, ofsbeta
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, lmaxx, &
                            transform_qq_so
@@ -102,8 +100,8 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
      else
         dvan = 0.d0
      end if
-     qq_nt=0.d0
-     qq_at  = 0.d0
+     qq_nt = 0.d0
+     qq_at = 0.d0
   endif
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtolm,
@@ -248,27 +246,23 @@ subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
      end do
   end if
   !
-#if defined __CUDA
-  !
   ! update GPU memory (taking care of zero-dim allocations)
   !
   if (nhm>0) then
-     indv_d=indv
-     nhtol_d=nhtol
-     nhtoj_d=nhtoj
-     ijtoh_d=ijtoh
-     qq_nt_d=qq_nt
-    !$acc update device(qq_at)
+     !$acc update device(indv)
+     !$acc update device(nhtol)
+     !$acc update device(nhtoj)
+     !$acc update device(ijtoh)
+     !$acc update device(qq_at)
      if (is_spinorbit) then
-        dvan_so_d=dvan_so
-      !$acc update device(fcoef)
-      !$acc update device(qq_so)
-     else
-        dvan_d=dvan
+        !$acc update device(dvan_so)
+        !$acc update device(fcoef)
+        !$acc update device(qq_so)
+     else 
+        !$acc update device(dvan)
      endif
   endif
   !
-#endif
   call stop_clock ('init_us_1')
   return
   !

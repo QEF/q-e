@@ -28,7 +28,7 @@ PROGRAM do_ppacf
   !! P. Hyldgaard, Y. Jiao, and V. Shukla, J. Phys.: Condens. Matt. 32, 393001 (2020):     
   !! https://iopscience.iop.org/article/10.1088/1361-648X/ab8250
   !
-  USE basis,                ONLY : starting_wfc
+  USE starting_scf,         ONLY : starting_wfc
   USE constants,            ONLY : e2, pi, fpi
   USE kinds,                ONLY : DP
   USE klist,                ONLY : nks, xk, ngk, igk_k

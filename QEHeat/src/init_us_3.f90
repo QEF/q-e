@@ -25,7 +25,6 @@ contains
       USE constants, ONLY: tpi, pi, fpi
       USE gvect, ONLY: eigts1, eigts2, eigts3, mill, g, gg, ngl, igtongl, gl, gstart
       USE wvfct, ONLY: npwx
-      use uspp_data, ONLY: dq
       ! USE splinelib
       USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
       USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
@@ -37,6 +36,8 @@ contains
       use atom, ONLY: rgrid
 !
       implicit none
+      ! dq must have the same value as in all_currents.f90 
+      real(dp), parameter :: dq = 0.01_dp
       !TYPE(spline_data) :: spl_beta
       real(DP) :: vint
       integer :: ndm

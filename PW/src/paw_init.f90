@@ -176,7 +176,7 @@ MODULE paw_init
     USE paw_variables,        ONLY : okpaw
     USE paw_symmetry,         ONLY : PAW_symmetrize
     USE random_numbers,       ONLY : randy
-    USE basis,                ONLY : starting_wfc
+    USE starting_scf,         ONLY : starting_wfc
     USE noncollin_module,     ONLY : nspin_mag, angle1, angle2
     !
     IMPLICIT NONE
