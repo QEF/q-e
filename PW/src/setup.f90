@@ -512,14 +512,14 @@ SUBROUTINE setup()
      ELSE IF (lberry ) THEN
         !
         CALL kp_strings( nppstr, gdir, nrot_, s, bg, npk, &
-                         k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
+                         k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk, colin_mag)
         nosym = .TRUE.
         nrot_ = 1
         !
      ELSE
         !
         CALL kpoint_grid ( nrot_,time_reversal, skip_equivalence, s, t_rev, bg,&
-                           npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+                           npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, colin_mag)
         !
      END IF
      !
@@ -592,7 +592,7 @@ SUBROUTINE setup()
   !
   IF ( .NOT. lbands ) THEN
      CALL irreducible_BZ (nrot_, s, nsym, time_reversal, &
-                          magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
+                          magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev, colin_mag)
   ELSE
      one = SUM (wk(1:nkstot))
      IF ( one > 0.0_dp ) wk(1:nkstot) = wk(1:nkstot) / one

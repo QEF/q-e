@@ -7,7 +7,7 @@
 !
 !--------------------------------------------------------------------------
 SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
-                        bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk )
+                        bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, colin_mag )
   !-----------------------------------------------------------------------
   !!  Automatic generation of a uniform grid of k-points.
   !
@@ -48,6 +48,8 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
   !! coordinates of k points
   REAL(DP), INTENT(out) :: wk(npk)
   !! weight of k points
+  INTEGER, INTENT(IN), OPTIONAL :: colin_mag
+  ! flag for collinear magnetism
   !
   ! ... local variables
   !
@@ -57,6 +59,12 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
   INTEGER, ALLOCATABLE :: equiv(:)
   LOGICAL :: in_the_list
   REAL(DP), PARAMETER :: eps=1.0d-5
+  INTEGER :: colin_mag_ = -1
+  ! 
+  !  set colin_mag_
+  IF ( PRESENT(colin_mag) ) THEN
+    colin_mag_ = colin_mag
+  ENDIF
   !
   nkr=nk1*nk2*nk3
   ALLOCATE (xkg( 3,nkr),wkk(nkr))
@@ -100,7 +108,7 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
                      + s(i,3,ns) * xkg(3,nk)
               xkr(i) = xkr(i) - nint( xkr(i) )
            ENDDO
-           IF(t_rev(ns)==1) xkr = -xkr
+           IF(t_rev(ns)==1 .AND. colin_mag_ < 2) xkr = -xkr
            xx = xkr(1)*nk1 - 0.5d0*k1
            yy = xkr(2)*nk2 - 0.5d0*k2
            zz = xkr(3)*nk3 - 0.5d0*k3
