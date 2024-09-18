@@ -70,7 +70,7 @@ SUBROUTINE setup()
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, init_hubbard
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard, lda_plus_u_kind
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
@@ -99,6 +99,10 @@ SUBROUTINE setup()
   USE sic_mod,            ONLY : init_sic, occ_f2fn, sic_energy
   USE random_numbers,     ONLY : set_random_seed
   USE dynamics_module,    ONLY : control_temp
+#if defined (__OSCDFT)
+  USE plugin_flags,          ONLY : use_oscdft
+#endif
+
   !
   IMPLICIT NONE
   !
@@ -229,6 +233,26 @@ SUBROUTINE setup()
   ELSE
      colin_mag = 0
   END IF
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( colin_mag == 2 ) THEN
+        CALL infomsg( 'setup', 'colin_mag=2 not implemented for hybrid' )
+        colin_mag = 1
+     ENDIF
+  ENDIF
+  IF (lda_plus_u .AND. lda_plus_u_kind == 2) THEN
+     IF ( colin_mag == 2 ) THEN
+        CALL infomsg( 'setup', 'colin_mag=2 not implemented for lda+U+V' )
+        colin_mag = 1
+     ENDIF
+  ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     IF ( colin_mag == 2 ) THEN
+        CALL infomsg( 'setup', 'colin_mag=2 not implemented for OSCDFT' )
+        colin_mag = 1
+     ENDIF
+  ENDIF
+#endif
   !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
