@@ -22,8 +22,10 @@ MODULE path_input_parameters_module
   !
   USE kinds,      ONLY : DP
   !
+  
   IMPLICIT NONE
   !
+  private
   SAVE
   !
 !=----------------------------------------------------------------------------=!

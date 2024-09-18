@@ -60,8 +60,8 @@ PROGRAM pioud
      CALL pimd_gen_inputs( trim(input_file_), engine_prefix, &                 !!! <----my mod.
                             root, world_comm  )                                !!! <----my mod.
      
-     CALL path_gen_inputs ( trim(input_file_), engine_prefix, &
-                            input_images, root, world_comm )
+     CALL path_gen_inputs( trim(input_file_), engine_prefix, & 
+                            input_images, root, world_comm ) !!! Contains NEB. But can't get ridoff completly since it require to generate pw_1.in 
   ELSE
      WRITE(iunpath,'(/,5X,"No input file found, assuming nothing to parse",/,&
     &               5X,"Searching argument -input_images or --input_images")')
@@ -81,11 +81,11 @@ PROGRAM pioud
      close(unit=unit_tmp)                 !!! <----my mod.
   END IF                                  !!! <----my mod.
   
-  unit_tmp = find_free_unit () 
-  open(unit=unit_tmp,file="neb.dat",status="old")
-  CALL path_read_namelist(unit_tmp)
-  CALL path_read_cards(unit_tmp)
-  close(unit=unit_tmp)
+!   unit_tmp = find_free_unit () 
+!   open(unit=unit_tmp,file="neb.dat",status="old")
+!   CALL path_read_namelist(unit_tmp)
+!   CALL path_read_cards(unit_tmp)
+!   close(unit=unit_tmp)
   
   call match_neb_and_pimd_var   !!! <----my mod.
   !
@@ -107,7 +107,8 @@ PROGRAM pioud
   
   if (meta_ionode)  call pimd_get_amas_and_nat  !!! <----my mod.
   !
-  CALL ioneb()
+!   CALL ioneb()
+  CALL verify_neb_tmpdir()
   CALL set_engine_output()
   !
   ! END INPUT RELATED

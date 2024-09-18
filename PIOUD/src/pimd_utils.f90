@@ -222,6 +222,8 @@ SUBROUTINE pimd_get_amas_and_nat
   amas(:) = 0.0
   mtot=0.0
   DO iat=1,natMD
+     print *,"iat",iat,"natMD",natMD
+     write(*, *) "iat",iat,"natMD",natMD
      amas(iat)=amass(ityp(iat))*10000.d0/5.48579909065d0
      mtot=mtot+amas(iat)
      ion_name(iat)=atm(ityp(iat))
@@ -231,8 +233,8 @@ SUBROUTINE pimd_get_amas_and_nat
 END SUBROUTINE pimd_get_amas_and_nat
 
 
-SUBROUTINE match_neb_and_pimd_var
-  use path_input_parameters_module, only : nstep_path, num_of_images,&
+SUBROUTINE match_neb_and_pimd
+  use path_variables, only : nstep_path, num_of_images,&
                                            first_last_opt
   use pimd_variables, only : nbeadMD,nblocks,nstep_block
   USE io_global, ONLY : meta_ionode,meta_ionode_id
@@ -242,6 +244,8 @@ SUBROUTINE match_neb_and_pimd_var
   implicit none
   
   nstep_path = nblocks*nstep_block
+  write(*,*) nstep_path
+  write(10000,*) nstep_path
   num_of_images = nbeadMD
   !if (nbeadMD.eq.1) num_of_images=2
   first_last_opt=.true.

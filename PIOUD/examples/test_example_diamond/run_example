@@ -16,6 +16,9 @@ $ECHO
 $ECHO "!!! Beware: pioud.x DOES NOT READ FROM STANDARD INPUT"
 $ECHO "!!! run as 'pioud.x -inp input_file_name > output_file_name'"
 $ECHO
+
+TMP_DIR=out
+
 # set the needed environment variables
 . ../../../environment_variables
 
@@ -92,20 +95,6 @@ BEGIN_PIMD_INPUT
   yesturboq=.true.
 /
 END_PIMD_INPUT
-BEGIN_PATH_INPUT
-&PATH
-  restart_mode      = 'from_scratch'
-  string_method     = 'neb',
-  nstep_path        = 20,
-  ds                = 2.D0,
-  opt_scheme        = "broyden",
-  num_of_images     = $nbeadMD,
-  k_max             = 0.3D0,
-  k_min             = 0.2D0,
-  CI_scheme         = "auto",
-  path_thr          = 0.1D0,
-/
-END_PATH_INPUT
 BEGIN_ENGINE_INPUT
 &CONTROL
   prefix         = "diamond"
@@ -144,7 +133,6 @@ K_POINTS automatic
 END_ENGINE_INPUT
 END
 EOF
-
 $ECHO "  running Born-Oppenheimer pioud calculation... "
 $PIOUD_COMMAND -inp diamond.in  > diamond.out
 check_failure $?

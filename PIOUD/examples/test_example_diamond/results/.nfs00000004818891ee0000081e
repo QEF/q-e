@@ -1,0 +1,31 @@
+
+     Program PIOUD v.7.0 starts on 18Sep2024 at 13:28:19 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Serial version
+     792 MiB available memory on the printing compute node when the environment starts
+
+
+     parsing_file_name: diamond.in
+
+----------------------------------------------------------
+      *** Ab Initio PIMD Program ***                      
+ Classical/Quantum (N,V,T) or (N,V,E) molecular dynamics  
+ with Path Integral Langevin approach                     
+----------------------------------------------------------
+
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     Error in routine initialize_polymer (1):
+     nimage is more computing images than polymer images
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+     stopping ...

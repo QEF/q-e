@@ -61,6 +61,7 @@ MODULE trpmd_base
       USE path_variables,   ONLY : path_allocation
       USE fcp_variables,        ONLY : lfcpopt
       USE fcp_opt_routines,     ONLY : fcp_opt_allocation
+      use pimd_variables, ONLY : nbeadMD
       !
       IMPLICIT NONE
       !
@@ -106,6 +107,7 @@ MODULE trpmd_base
       !                  & 'larger than the available number of images', 1 )
       !    !
       ! END IF
+      num_of_images=nbeadMD
       if( nimage > num_of_images ) &
              CALL errore( 'initialize_polymer', 'nimage is ' // &
                         & 'more computing images than polymer images', 1 )
@@ -256,6 +258,7 @@ MODULE trpmd_base
       !
       CALL explore_phasespace_init()
       !
+      write(10000,*)istep_path,nstep_path,pending_image
       IF ( istep_path == nstep_path ) THEN
          !
          CALL write_output()

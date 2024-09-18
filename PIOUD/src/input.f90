@@ -200,14 +200,14 @@ SUBROUTINE ioneb()
   fcp_tot_charge_first_ = fcp_tot_charge_first
   fcp_tot_charge_last_  = fcp_tot_charge_last
   !
-  CALL verify_neb_tmpdir( tmp_dir )
+  CALL verify_neb_tmpdir(  )
   !
   RETURN
   !
 END SUBROUTINE ioneb
 !
 !-----------------------------------------------------------------------
-SUBROUTINE verify_neb_tmpdir( tmp_dir )
+SUBROUTINE verify_neb_tmpdir()
   !-----------------------------------------------------------------------
   !
   USE clib_wrappers,    ONLY : f_mkdir
@@ -217,10 +217,11 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   USE mp_world,         ONLY : world_comm, mpime, nproc
   USE io_global,        ONLY : meta_ionode
   USE mp,               ONLY : mp_barrier
+  USE io_files,      ONLY : tmp_dir
   !
   IMPLICIT NONE
   !
-  CHARACTER(len=*), INTENT(inout) :: tmp_dir
+!   CHARACTER(len=*), INTENT(inout) :: tmp_dir
   !
   INTEGER             :: ios, image, proc, nofi
   LOGICAL             :: exst, parallelfs
