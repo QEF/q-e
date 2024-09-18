@@ -1879,7 +1879,7 @@
     USE input,            ONLY : etf_mem, use_ws, lopt_w2b, epw_memdist
     USE global_var,       ONLY : epmatwp
     USE ep_constants,     ONLY : twopi, ci, czero, cone
-    USE io_var,           ONLY : iunepmatwp2
+    USE io_var,           ONLY : iunepmatwp, iunepmatwp2
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_world,         ONLY : world_comm, mpime
     USE io_global,        ONLY : ionode_id
