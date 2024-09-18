@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 SUBROUTINE kp_strings( nppstr, gdir, nrot, s, bg, npk, &
-                        k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, colin_mag )
+                        k1,k2,k3, nk1,nk2,nk3, nks, xk, wk )
    !! * Generate a k-point grid in the two dimensions other than gdir;
    !! * generate a string of k-points for every k-point in the 2D grid.
    !
@@ -27,7 +27,6 @@ SUBROUTINE kp_strings( nppstr, gdir, nrot, s, bg, npk, &
    INTEGER , INTENT(IN) :: gdir
    INTEGER , INTENT(IN) :: s(3,3,48)
    REAL(DP) , INTENT(IN) :: bg(3,3)
-   INTEGER, INTENT(IN), OPTIONAL :: colin_mag
 
 !  --- Output arguments ---
    INTEGER , INTENT(OUT) :: nks
@@ -44,23 +43,17 @@ SUBROUTINE kp_strings( nppstr, gdir, nrot, s, bg, npk, &
    REAL(DP) :: dk(3)
    REAL(DP) :: xk0(3,npk)
    REAL(DP) :: wk0(npk)
-   INTEGER :: coling_mag_ = -1
 
-!  --- Set colin_mag_
-   IF (PRESENT(colin_mag)) THEN
-      coling_mag_ = colin_mag
-   END IF
 !  --- Generate a k-point grid in the two dimensions other than gdir ---
    IF (gdir == 1) THEN
       CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
-                        npk, k1,k2,k3, 1,nk2,nk3, nks, xk0, wk0, coling_mag_ ) 
-
+                        npk, k1,k2,k3, 1,nk2,nk3, nks, xk0, wk0 ) 
    ELSE IF (gdir == 2) THEN
       CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
-                        npk, k1,k2,k3, nk1,1,nk3, nks, xk0, wk0, coling_mag_ ) 
+                        npk, k1,k2,k3, nk1,1,nk3, nks, xk0, wk0 ) 
    ELSE IF (gdir == 3) THEN
       CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
-                        npk, k1,k2,k3, nk1,nk2,1, nks, xk0, wk0, coling_mag_ ) 
+                        npk, k1,k2,k3, nk1,nk2,1, nks, xk0, wk0 ) 
    ELSE
       CALL errore('kp_strings','gdir different from 1, 2, or 3',1)
    END IF

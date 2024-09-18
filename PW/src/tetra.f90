@@ -45,11 +45,12 @@ CONTAINS
   !
   !--------------------------------------------------------------------------
   SUBROUTINE tetra_init( nsym, s, time_reversal, t_rev, at, bg, npk, &
-                         k1,k2,k3, nk1,nk2,nk3, nks, xk, colin_mag )
+                         k1,k2,k3, nk1,nk2,nk3, nks, xk )
   !-----------------------------------------------------------------------
   !! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994).
   !
   USE kinds,      ONLY : DP
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   ! 
@@ -87,7 +88,6 @@ CONTAINS
   !! in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
   REAL(DP), INTENT(INOUT) :: xk(3,npk)
   !! coordinates of k points
-  INTEGER, INTENT(IN), OPTIONAL :: colin_mag
   !
   ! ... local variables
   !
@@ -97,12 +97,7 @@ CONTAINS
   INTEGER :: nkr, i,j,k, ns, n, nk, ip1, jp1, kp1, &
              n1, n2, n3, n4, n5, n6, n7, n8
   INTEGER, ALLOCATABLE:: equiv(:)
-  INTEGER :: colin_mag_ = -1
   !
-  ! Set colin_mag_
-  IF (PRESENT(colin_mag)) THEN
-     colin_mag_ = colin_mag
-  END IF
   !
   ntetra  = 6*nk1*nk2*nk3
   nntetra = 4
@@ -143,7 +138,7 @@ CONTAINS
                        s(i,2,ns) * xk(2,n) + &
                        s(i,3,ns) * xk(3,n)
            ENDDO
-           IF (t_rev(ns) == 1 .AND. colin_mag_ < 2) xkr = -xkr
+           IF (t_rev(ns) == 1 .AND. colin_mag < 2) xkr = -xkr
            !  xkr is the n-th irreducible k-point rotated wrt the ns-th symmetry
            DO i = 1, 3
               deltap(i) = xkr(i)-xkg(i,nk) - NINT(xkr(i)-xkg(i,nk))
@@ -252,11 +247,12 @@ CONTAINS
   !
   !-----------------------------------------------------------------------
   SUBROUTINE opt_tetra_init( nsym, s, time_reversal, t_rev, at, bg, npk, &
-                             k1, k2, k3, nk1, nk2, nk3, nks, xk, kstep, colin_mag )
+                             k1, k2, k3, nk1, nk2, nk3, nks, xk, kstep )
   !-----------------------------------------------------------------------------
   !! This rouotine sets the corners and additional points for each tetrahedron.
   !
   USE io_global,    ONLY : stdout
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -296,8 +292,6 @@ CONTAINS
   REAL(DP), INTENT(INOUT) :: xk(3,npk)
   !! k points [2 pi / a]
   ! 
-  INTEGER, INTENT(IN), OPTIONAL :: colin_mag
-  !! flag for collinear magnetism
   !
   ! ... local variables
   !
@@ -309,13 +303,7 @@ CONTAINS
   !
   REAL(DP) :: xkr(3), l(4), bvec2(3,3), bvec3(3,4), xkg(3,nk1*nk2*nk3), &
               deltap(3), deltam(3)
-  INTEGER colin_mag_ = -1
   ! 
-  ! Set colin_mag_
-  IF (PRESENT(colin_mag)) THEN
-     colin_mag_ = colin_mag
-  END IF
-  !
   ! Take the shortest diagonal line as the "shaft" of tetrahedral devision
   !
   bvec2(1:3,1) = bg(1:3,1) / REAL(nk1, dp)
@@ -467,7 +455,7 @@ CONTAINS
         DO isym = 1, nsym
            !
            xkr(1:3) = MATMUL(REAL(s(1:3, 1:3, isym), dp), xk(1:3, jk))
-           IF (t_rev(isym) == 1 .AND. colin_mag_ < 2) xkr(1:3) = - xkr(1:3)
+           IF (t_rev(isym) == 1 .AND. colin_mag < 2) xkr(1:3) = - xkr(1:3)
            !  xkr is the n-th irreducible k-point rotated wrt the ns-th symmetry
            deltap(1:3) = xkr(1:3) - xkg(1:3,ik) - NINT(xkr(1:3) - xkg(1:3,ik))
            deltam(1:3) = xkr(1:3) + xkg(1:3,ik) - NINT(xkr(1:3) + xkg(1:3,ik))

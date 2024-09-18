@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE irreducible_BZ( nrot, s, nsym, minus_q, magnetic_sym, at, bg, &
-                           npk, nks, xk, wk, t_rev, colin_mag )
+                           npk, nks, xk, wk, t_rev )
   !-----------------------------------------------------------------------
   !! This routine finds the special points in the irreducible wedge
   !! of the true point group (or small group of q) of the crystal, 
@@ -43,8 +43,6 @@ SUBROUTINE irreducible_BZ( nrot, s, nsym, minus_q, magnetic_sym, at, bg, &
   !! special points
   REAL(DP), INTENT(INOUT) :: wk(npk)
   !! weights for special points
-  INTEGER, INTENT(IN), OPTIONAL :: colin_mag
-   !! flag for collinear magnetism
   !
   ! ... local variables
   !
@@ -55,14 +53,7 @@ SUBROUTINE irreducible_BZ( nrot, s, nsym, minus_q, magnetic_sym, at, bg, &
   !        a n-th coset
   INTEGER :: isym, jsym
   LOGICAL :: sym(48)
-  INTEGER :: colin_mag_
   !
-  ! .. set colin_mag_
-  IF ( PRESENT(colin_mag) ) THEN
-     colin_mag_ = colin_mag
-  ELSE
-     colin_mag_ = -1
-  ENDIF
   !
   ! ... We compute the multiplication table of the group.
   !
@@ -90,7 +81,7 @@ SUBROUTINE irreducible_BZ( nrot, s, nsym, minus_q, magnetic_sym, at, bg, &
      !     of the crystal.
      !
      CALL irrek( at, bg, nrot, invs, nsym, irg, minus_q, npk, nks, xk, &
-                 wk, t_rev, colin_mag_ )
+                 wk, t_rev )
   ENDIF
   !
   RETURN
@@ -100,13 +91,14 @@ END SUBROUTINE irreducible_BZ
 !
 !-----------------------------------------------------------------------
 SUBROUTINE irrek( at, bg, nrot, invs, nsym, irg, minus_q, npk, &
-                  nks, xk, wk, t_rev, colin_mag )
+                  nks, xk, wk, t_rev )
   !-----------------------------------------------------------------------
   !! Given a set of special points in the Irreducible Wedge of some
   !! group, finds the equivalent special points in the IW of one of
   !! its subgroups.
   !
   USE kinds,   ONLY: DP
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -135,8 +127,6 @@ SUBROUTINE irrek( at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   !! weights for special points
   LOGICAL, INTENT(IN) :: minus_q
   ! .TRUE. if symmetries q=-q+G are acceptable
-  INTEGER, INTENT(IN) :: colin_mag
-  ! flag for collinear magnetism
   !
   ! ... local variables
   !
