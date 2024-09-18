@@ -42,7 +42,8 @@
                                twopi, ci, eps6, eps16
   USE io_files,         ONLY : prefix, tmp_dir
   USE io_global,        ONLY : stdout
-  USE io_var,           ONLY : iuntaucb, iunepmatwp2, iunrestart, iuntau
+  USE io_var,           ONLY : iuntaucb, iunepmatwp, iunepmatwp2, iunrestart,      &
+                               iuntau
   USE global_var,       ONLY : ifc, do_cutoff_2D_epw, chw, chw_ks, adapt_smearing, &
                                wf, etf, etf_ks, xqf, xkf, wkf, nqtotf, nkqf, epf17,&
                                nkf, nqf, ibndmin, ibndmax, lambda_all, vmef,       &
@@ -206,6 +207,12 @@
   !! To restart opening files
   INTEGER :: lrepmatw5_restart(npool)
   !! To restart opening files
+  INTEGER :: lrepmatw
+  !! record length while reading file
+  INTEGER*8 :: unf_recl
+  !! Record length
+  INTEGER :: direct_io_factor
+  !! Type of IOlength
   INTEGER, PARAMETER :: nrwsx = 200
   !! Maximum number of real-space Wigner-Seitz
 #if defined(__MPI)
@@ -231,6 +238,8 @@
   !! Real-space wigner-Seitz vectors
   REAL(KIND = DP) :: atws(3, 3)
   !! Maximum vector: at*nq
+  REAL(KIND = DP) :: dummy(3)
+  !! Dummy variable
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
   REAL(KIND = DP) :: etemp_fca
