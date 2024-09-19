@@ -16,7 +16,6 @@ engine_to_trpmd_pos.o \
 engine_to_trpmd_nat_alat.o \
 fcp_opt_routines.o \
 fcp_variables.o \
-input.o \
 trpmd_base.o \
 path_formats.o \
 path_gen_inputs.o \

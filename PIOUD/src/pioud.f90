@@ -108,7 +108,7 @@ PROGRAM pioud
   if (meta_ionode)  call pimd_get_amas_and_nat  !!! <----my mod.
   !
 !   CALL ioneb()
-  CALL verify_neb_tmpdir()
+  ! CALL verify_neb_tmpdir()
   CALL set_engine_output()
   !
   ! END INPUT RELATED
