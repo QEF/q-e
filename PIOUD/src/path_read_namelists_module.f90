@@ -22,7 +22,6 @@ MODULE path_read_namelists_module
   !
   PRIVATE
   !
-  PUBLIC :: path_read_namelist
   !
   ! ... modules needed by read_xml.f90
   !
@@ -191,70 +190,5 @@ MODULE path_read_namelists_module
        RETURN
        !
      END SUBROUTINE
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Namelist parsing main routine
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE path_read_namelist(unit)
-       !-----------------------------------------------------------------------
-       !
-       !  this routine reads data from standard input and puts them into
-       !  module-scope variables (accessible from other routines by including
-       !  this module, or the one that contains them)
-       !  ----------------------------------------------
-       !
-       ! ... declare modules
-       !
-       USE io_global, ONLY : ionode, ionode_id
-       USE mp,        ONLY : mp_bcast
-       USE mp_world,  ONLY : world_comm
-       !
-       IMPLICIT NONE
-       !
-       ! ... declare variables
-       !
-       INTEGER, intent(in) :: unit
-       !
-       !
-       ! ... declare other variables
-       !
-       INTEGER :: ios
-       !
-       ! ... end of declarations
-       !
-       !  ----------------------------------------------
-       !
-       !
-       ! ... default settings for all namelists
-       !
-       CALL path_defaults( )
-       !
-       ! ... Here start reading standard input file
-       !
-       ! ... PATH namelist
-       !
-       ios = 0
-       IF ( ionode ) THEN
-          !
-          READ( unit, path, iostat = ios )
-          !
-       END IF
-       CALL mp_bcast( ios, ionode_id, world_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' path_read_namelists ', &
-                     & ' reading namelist path ', ABS(ios) )
-       END IF
-       !
-       
-       CALL path_bcast( )
-       CALL path_checkin( )
-       !
-       RETURN
-       !
-     END SUBROUTINE path_read_namelist
      !
 END MODULE path_read_namelists_module

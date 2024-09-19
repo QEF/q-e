@@ -25,7 +25,6 @@ MODULE path_input_parameters_module
   
   IMPLICIT NONE
   !
-  private
   SAVE
   !
 !=----------------------------------------------------------------------------=!

@@ -255,7 +255,7 @@ SUBROUTINE match_neb_and_pimd
   
   return
   
-END SUBROUTINE match_neb_and_pimd_var
+END SUBROUTINE match_neb_and_pimd
 
 
 SUBROUTINE refold(idx,rpostmp)

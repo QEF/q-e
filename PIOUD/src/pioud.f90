@@ -23,8 +23,8 @@ PROGRAM pioud
   USE command_line_options,  ONLY : input_file_, ndiag_
   !
   USE trpmd_base,         ONLY : initialize_polymer, explore_phasespace
-  USE path_read_namelists_module, ONLY : path_read_namelist
-  USE path_read_cards_module,     ONLY : path_read_cards
+  ! USE path_read_namelists_module, ONLY : path_read_namelist
+  ! USE path_read_cards_module,     ONLY : path_read_cards
   !
   USE path_input_parameters_module, ONLY : nstep_path, input_images, &
                                            allocate_path_input_ions, &
@@ -83,11 +83,11 @@ PROGRAM pioud
   
 !   unit_tmp = find_free_unit () 
 !   open(unit=unit_tmp,file="neb.dat",status="old")
-!   CALL path_read_namelist(unit_tmp)
-!   CALL path_read_cards(unit_tmp)
+  ! CALL path_read_namelist(unit_tmp)
+  ! CALL path_read_cards(unit_tmp)
 !   close(unit=unit_tmp)
   
-  call match_neb_and_pimd_var   !!! <----my mod.
+  call match_neb_and_pimd   !!! <----my mod.
   !
   do i=1,input_images
     !
