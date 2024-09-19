@@ -236,7 +236,7 @@ MODULE trpmd_base
       !-----------------------------------------------------------------------
       !
       USE path_variables,    ONLY : lneb, lsmd, pos
-      USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
+      USE path_variables,   ONLY : conv_path, istep_path,   &
                                    pending_image, activation_energy, &
                                    err_max, pes, CI_scheme,  &
                                    Emax_index, fixed_tan
@@ -244,7 +244,7 @@ MODULE trpmd_base
       USE path_formats,     ONLY : scf_iter_fmt
       USE fcp_variables,    ONLY : lfcpopt
       !
-      USE pimd_variables,   ONLY : forceMD,rpos,unit_dot_out,irun,restart_pimd    !!! <----my mod.
+      USE pimd_variables,   ONLY : forceMD,rpos,unit_dot_out,irun,restart_pimd,nblocks,nstep_block    !!! <----my mod.
       !
       IMPLICIT NONE
       !
@@ -253,11 +253,14 @@ MODULE trpmd_base
       REAL(DP) :: potenergy  !!! <----my mod.
       !
       REAL(DP), EXTERNAL :: get_clock
+      integer :: nstep_path
       !
       conv_path = .FALSE.
       !
       CALL explore_phasespace_init()
       !
+      
+      nstep_path = nblocks*nstep_block
       write(10000,*)istep_path,nstep_path,pending_image
       IF ( istep_path == nstep_path ) THEN
          !

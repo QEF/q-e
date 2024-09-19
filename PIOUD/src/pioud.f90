@@ -87,7 +87,7 @@ PROGRAM pioud
   ! CALL path_read_cards(unit_tmp)
 !   close(unit=unit_tmp)
   
-  call match_neb_and_pimd   !!! <----my mod.
+  call pimd_mp_bcast   !!! <----my mod.
   !
   do i=1,input_images
     !

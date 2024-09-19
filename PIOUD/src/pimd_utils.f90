@@ -233,15 +233,19 @@ SUBROUTINE pimd_get_amas_and_nat
 END SUBROUTINE pimd_get_amas_and_nat
 
 
-SUBROUTINE match_neb_and_pimd
-  use path_variables, only : nstep_path, num_of_images,&
-                                           first_last_opt
+SUBROUTINE pimd_mp_bcast
+  ! use path_variables, only : nstep_path, num_of_images,&
+  !                                          first_last_opt
   use pimd_variables, only : nbeadMD,nblocks,nstep_block
   USE io_global, ONLY : meta_ionode,meta_ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
 
   implicit none
+
+  integer :: nstep_path
+  integer :: num_of_images
+  logical :: first_last_opt
   
   nstep_path = nblocks*nstep_block
   write(*,*) nstep_path
@@ -255,7 +259,7 @@ SUBROUTINE match_neb_and_pimd
   
   return
   
-END SUBROUTINE match_neb_and_pimd
+END SUBROUTINE pimd_mp_bcast
 
 
 SUBROUTINE refold(idx,rpostmp)
