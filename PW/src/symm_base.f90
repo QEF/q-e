@@ -734,9 +734,6 @@ CONTAINS
       INTEGER :: na, nb, irot
       LOGICAL :: t1, t2
       REAL(DP) , ALLOCATABLE ::  m_org(:), m_op(:)
-      ! debug
-      WRITE( stdout, * ) "sgam_at_collin: nat=", nat
-      WRITE( stdout, * ) "sgam_at_collin: m_loc=", m_loc
       ! magnetization and rotated magnetization in crystal axis
       !
       ALLOCATE( m_org(nat), m_op(nat) )
