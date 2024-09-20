@@ -76,17 +76,15 @@ wfpt.o \
 utilities/screening.o \
 #default : epw
 
-
 PHOBJS = ../../PHonon/PH/libph.a
 W90LIB = ../../external/wannier90/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
-#SCALAPACK_LIBS = -lmkl_blacs_intelmpi_lp64 -lmkl_scalapack_lp64
 
 TLDEPS= pw ph pp
 
-all :   pw ph pp wannier libepw.a epw.x nscf2supercond.x
+all : pw ph pp wannier libepw.a epw.x nscf2supercond.x
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
