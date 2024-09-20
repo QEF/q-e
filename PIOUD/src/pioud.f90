@@ -60,7 +60,7 @@ PROGRAM pioud
      CALL pimd_gen_inputs( trim(input_file_), engine_prefix, &                 !!! <----my mod.
                             root, world_comm  )                                !!! <----my mod.
      
-     CALL path_gen_inputs( trim(input_file_), engine_prefix, & 
+     CALL pw_gen_inputs( trim(input_file_), engine_prefix, & 
                             input_images, root, world_comm ) !!! Contains NEB. But can't get ridoff completly since it require to generate pw_1.in 
   ELSE
      WRITE(iunpath,'(/,5X,"No input file found, assuming nothing to parse",/,&

@@ -18,7 +18,7 @@ fcp_opt_routines.o \
 fcp_variables.o \
 trpmd_base.o \
 path_formats.o \
-path_gen_inputs.o \
+pw_gen_inputs.o \
 path_input_parameters_module.o \
 trpmd_io_routines.o \
 path_io_units_module.o \
