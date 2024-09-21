@@ -425,7 +425,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !-----------------------------------------------------------------------
      SUBROUTINE stres_us_nc()
        !-----------------------------------------------------------------------
-       !! nonlocal contribution to the stress - noncolinear version
+       !! nonlocal contribution to the stress - noncollinear version
        !
        IMPLICIT NONE
        !
@@ -433,7 +433,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
                    is, js, ijs, jkb, ih, jh, ijkb0, na_s, na_e, mykey
-       REAL(DP) :: sigmaij, ps(4) 
+       REAL(DP) :: sigmaij
+       REAL(DP) :: ps(4)
+       ! NOTE: This variable ps, even if not strictly necessary, has been defined as a workaround
+       !       for an issue in nvhpc-24.3 compiler (it fails to perform acc reductons seemingly when
+       !       a >3 number of sequential nested loops are present in a main parallel loop)
+       !
        COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
        COMPLEX(DP) :: deff_nc
        TYPE(bec_type) :: becd
