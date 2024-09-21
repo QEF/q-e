@@ -79,10 +79,9 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  INTEGER :: pol_unpol, fkind_x
+  INTEGER :: pol_unpol
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: dmex_lxc(:), dmcr_lxc(:)
-  LOGICAL :: exch_lxc_avail, corr_lxc_avail
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -90,14 +89,18 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
 #endif
 #endif
   !
-  INTEGER :: ir, length_lxc, length_dlxc
-  REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
+  LOGICAL :: fkind_is_XC
+  INTEGER :: ir, length_lxc, length_dlxc, fkind_x
+  REAL(DP), PARAMETER :: small=1.E-10_DP, rho_trash=0.5_DP
   !
   !$acc data present( rho_in, dmuxc )
   !
   !$acc kernels
   dmuxc(:,:,:) = 0.0_DP
   !$acc end kernels
+  !
+  fkind_x = -1
+  fkind_is_XC = .FALSE.
   !
 #if defined(__LIBXC)
   !
@@ -169,13 +172,19 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
     ENDIF
   ENDIF
   !
+  fkind_is_XC = (fkind_x==XC_EXCHANGE_CORRELATION)
+  !
+#endif
+  !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
-        .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
+        .AND. (.NOT.fkind_is_XC) ) THEN
     rho_threshold_lda = small
     IF ( srd == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( srd == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
     IF ( srd == 4 ) CALL dmxc_nc( length, rho_in, dmuxc )
   ENDIF
+  !
+#if defined(__LIBXC)
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
     SELECT CASE( srd )
@@ -231,29 +240,6 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   ENDIF
   !
   IF ( ANY(is_libxc(1:2)) ) DEALLOCATE( rho_lxc )
-  !
-#else
-  !
-  rho_threshold_lda = small
-  !
-  SELECT CASE( srd )
-  CASE( 1 )
-     !
-     CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
-     !
-  CASE( 2 )
-     !
-     CALL dmxc_lsda( length, rho_in, dmuxc )
-     !
-  CASE( 4 )
-     !
-     CALL dmxc_nc( length, rho_in, dmuxc )
-     !
-  CASE DEFAULT
-     !
-     CALL xclib_error( 'dmxc', 'Wrong ns input', 4 )
-     !
-  END SELECT
   !
 #endif
   !

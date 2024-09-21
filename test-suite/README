@@ -124,6 +124,16 @@ The following features of the code are tested:
 - LSDA stress
 - non-scf calculation
 
+###########################
+# pw_libxc : O, Si and CH #
+###########################
+The following features of the code are tested:
+- Libxc initialization in PW
+- Libxc LDA (pz)
+- Libxc GGA (pbe)
+- Libxc hyb-GGA (hse)
+- Libxc metaGGA (tpss)
+
 ###############
 # pw_md : Si  #
 ###############
