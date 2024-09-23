@@ -26,8 +26,7 @@ PROGRAM pioud
   ! USE path_read_namelists_module, ONLY : path_read_namelist
   ! USE path_read_cards_module,     ONLY : path_read_cards
   !
-  USE path_input_parameters_module, ONLY : nstep_path, input_images, &
-                                           allocate_path_input_ions, &
+  USE path_input_parameters_module, ONLY : allocate_path_input_ions, &
                                            deallocate_path_input_ions
   USE path_io_units_module,  ONLY : iunpath
   !
@@ -39,6 +38,8 @@ PROGRAM pioud
   INTEGER :: unit_tmp, i, iimage
   INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  INTEGER :: input_images = 1 ! Consider we give one image  
+                              !!!added when sperate PIOUD from NEB
   !
   !
   CALL mp_startup ( start_images=.true. )
@@ -59,7 +60,6 @@ PROGRAM pioud
      
      CALL pimd_gen_inputs( trim(input_file_), engine_prefix, &                 !!! <----my mod.
                             root, world_comm  )                                !!! <----my mod.
-     
      CALL pw_gen_inputs( trim(input_file_), engine_prefix, & 
                             input_images, root, world_comm ) !!! Contains NEB. But can't get ridoff completly since it require to generate pw_1.in 
   ELSE
@@ -73,6 +73,8 @@ PROGRAM pioud
      !
   ENDIF
   !
+  
+
   
   IF ( meta_ionode) THEN                  !!! <----my mod.
      unit_tmp = find_free_unit ()                  !!! <----my mod.
