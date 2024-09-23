@@ -218,9 +218,10 @@ SUBROUTINE symmetries_of_wannier_function()
         CALL calculate_phase(Gvector, phase)
         !
         rhowann_aux(:) = rho_rotated(:) - phase(:)*rhowann_(:,iRq,iwann) 
-        rhowann_aux(:) = rhowann_aux(:)/dffts%nnr
+        rhowann_aux(:) = rhowann_aux(:)
         !
-        delta_rho = SUM( ABS(rhowann_aux(:)) )
+        ! integrate difference and normalize with respect to number of r points in the grid
+        delta_rho = SUM( ABS(rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
         CALL mp_sum (delta_rho, intra_bgrp_comm)
         IF (kcw_iverbosity .gt. 2 ) & 
            WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", F20.12)')&
