@@ -114,8 +114,8 @@ elif [[ "$1" == "9" ]]
 then
   # nscf2supercond.x
   echo "Running NSCF2SUPERCOND ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x -input $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x -input $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   cat *.bands.*.dat >> $3
   if [[ -e CRASH ]]
   then
