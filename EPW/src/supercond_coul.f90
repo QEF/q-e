@@ -183,7 +183,7 @@
       ENDIF
       !
       ldum = .TRUE.
-      DO isym = 1, 48
+      DO isym = 1, nrot
         IF (t_rev_read(isym) .NE. t_rev(isym)) THEN
           ldum = .FALSE.
         ENDIF
@@ -194,7 +194,7 @@
       ENDIF
       !
       ldum = .TRUE.
-      DO isym = 1, 48
+      DO isym = 1, nrot
         DO j = 1, 3
           DO i = 1, 3
             IF (s_read(i, j, isym) .NE. s(i, j, isym)) THEN

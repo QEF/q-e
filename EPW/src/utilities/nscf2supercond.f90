@@ -15,9 +15,9 @@
   USE mp_global, ONLY : mp_startup
   USE mp_pools,  ONLY : npool
   USE environment,   ONLY : environment_start, environment_end
-  USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp,        ONLY : mp_bcast
-  USE mp_images, ONLY : intra_image_comm
+  USE io_global, ONLY : meta_ionode, meta_ionode_id, stdout
+  USE mp_global, ONLY : world_comm
+  USE mp,        ONLY : mp_bcast, mp_barrier
   !
   IMPLICIT NONE
   !
@@ -45,7 +45,7 @@
   !
   ios = 0
   !
-  IF ( ionode )  THEN
+  IF ( meta_ionode )  THEN
      !
      CALL input_from_file ( )
      !
@@ -56,17 +56,14 @@
   ENDIF
   !
   !
-  CALL mp_bcast( ios, ionode_id, intra_image_comm )
+  CALL mp_bcast( ios, meta_ionode_id, world_comm)
   IF (ios /= 0) CALL errore ('bands2epw', 'reading bands namelist', abs(ios) )
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
-  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
-  CALL mp_bcast( filband, ionode_id, intra_image_comm )
-  !
-  IF ( npool > 1 ) CALL errore('bands', &
-                  'pools not implemented',npool)
+  CALL mp_bcast( tmp_dir, meta_ionode_id, world_comm)
+  CALL mp_bcast( prefix, meta_ionode_id, world_comm)
+  CALL mp_bcast( filband, meta_ionode_id, world_comm)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -76,6 +73,7 @@
   !
   CALL environment_end ( 'BANDS' )
   !
+  CALL stop_pp()
   STOP
   !
   !-----------------------------------------------------------------------
@@ -100,14 +98,17 @@
   USE noncollin_module,     ONLY : noncolin, lspinorb
   USE control_flags,        ONLY : noinv
   USE lsda_mod,             ONLY : nspin, lsda
-  USE io_global,            ONLY : ionode, ionode_id, stdout
+  USE io_global,            ONLY : meta_ionode, meta_ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
-  USE mp_images,            ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
   CHARACTER (len=*) :: filband
   !
+  INTEGER :: t_rev_tmp(48)
+  !! it is used to copy t_rev(1:nrot)
+  INTEGER :: s_tmp(3, 3, 48)
+  !! it is used to copy s(:,:,1:nrot)
   INTEGER :: ik
   !! Counter on k points
   INTEGER :: isym
@@ -119,21 +120,27 @@
   INTEGER :: ios
   !! IO error message
   !
-  IF ( ionode ) THEN
+  ! HM: Since s is not properly initialized,
+  !     s(:,:,nrot+1:48) may contain uninitialized values, depending on the compiler.
+  s_tmp(:, :, :) = 0
+  s_tmp(:, :, 1:nrot) = s(:, :, 1:nrot)
+  t_rev_tmp(:) = 0
+  t_rev_tmp(1:nrot) = t_rev(1:nrot)
+  !
+  IF ( meta_ionode ) THEN
     OPEN (unit = iunpun, file = filband, status = 'unknown', form = &
-    'formatted', iostat = ios)
-    REWIND (iunpun)
+    'formatted', position = 'rewind', iostat = ios)
     WRITE(iunpun, '(ES23.15)') alat
     WRITE(iunpun, '(ES23.15,2(1x,ES23.15))') at(:,1)
     WRITE(iunpun, '(ES23.15,2(1x,ES23.15))') at(:,2)
     WRITE(iunpun, '(ES23.15,2(1x,ES23.15))') at(:,3)
     WRITE(iunpun, '(I5,1x,I5)') nrot, nsym
     WRITE(iunpun, '(L1)') time_reversal
-    WRITE(iunpun, '(I2,15(1x,I2))') t_rev(1:16)
-    WRITE(iunpun, '(I2,15(1x,I2))') t_rev(17:32)
-    WRITE(iunpun, '(I2,15(1x,I2))') t_rev(33:48)
+    WRITE(iunpun, '(I2,15(1x,I2))') t_rev_tmp(1:16)
+    WRITE(iunpun, '(I2,15(1x,I2))') t_rev_tmp(17:32)
+    WRITE(iunpun, '(I2,15(1x,I2))') t_rev_tmp(33:48)
     DO isym = 1, 48
-      WRITE(iunpun, '(I3,8(1x,I3))') ((s(i, j, isym), i=1,3), j=1,3)
+      WRITE(iunpun, '(I3,8(1x,I3))') ((s_tmp(i, j, isym), i=1,3), j=1,3)
     ENDDO
     WRITE(iunpun, '(L1,1x,I3)') lsda, nspin
     WRITE(iunpun, '(L1)') noinv
