@@ -29,7 +29,7 @@ if(QE_ENABLE_OFFLOAD)
 
   target_link_options(qe_openmp_fortran INTERFACE "$<$<LINK_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>")
 else()
-  target_compile_options(qe_openmp_fortran INTERFACE "-foffload=disable")
+  target_compile_options(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:-foffload=disable>")
 endif()
 
 ############################################################
