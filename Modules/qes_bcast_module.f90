@@ -2528,6 +2528,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lread, ionode_id, comm)
     !
     CALL mp_bcast(obj%nsym, ionode_id, comm)
+    CALL mp_bcast(obj%colin_mag_ispresent, ionode_id, comm)
+    IF (obj%colin_mag_ispresent) &
+      CALL mp_bcast(obj%colin_mag, ionode_id, comm)
     CALL mp_bcast(obj%nrot, ionode_id, comm)
     CALL mp_bcast(obj%space_group, ionode_id, comm)
     CALL mp_bcast(obj%ndim_symmetry, ionode_id, comm)
@@ -2735,6 +2738,12 @@ MODULE qes_bcast_module
     IF (obj%nbnd_dw_ispresent) &
       CALL mp_bcast(obj%nbnd_dw, ionode_id, comm)
     CALL mp_bcast(obj%nelec, ionode_id, comm)
+    CALL mp_bcast(obj%num_of_atomic_wfc_ispresent, ionode_id, comm)
+    IF (obj%num_of_atomic_wfc_ispresent) &
+      CALL mp_bcast(obj%num_of_atomic_wfc, ionode_id, comm)
+    CALL mp_bcast(obj%wf_collected_ispresent, ionode_id, comm)
+    IF (obj%wf_collected_ispresent) &
+      CALL mp_bcast(obj%wf_collected, ionode_id, comm)
     CALL mp_bcast(obj%fermi_energy_ispresent, ionode_id, comm)
     IF (obj%fermi_energy_ispresent) &
       CALL mp_bcast(obj%fermi_energy, ionode_id, comm)

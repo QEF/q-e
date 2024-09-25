@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
-  USE FoX_wxml
-#else
-  USE wxml
-#endif
+#if defined (__fox) 
+  USE  FoX_wxml 
+#else 
+  USE wxml 
+#endif 
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -2799,6 +2799,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nsym')
         CALL xml_addCharacters(xp, obj%nsym)
      CALL xml_EndElement(xp, 'nsym')
+     IF (obj%colin_mag_ispresent) THEN
+        CALL xml_NewElement(xp, "colin_mag")
+           CALL xml_addCharacters(xp, obj%colin_mag)
+        CALL xml_EndElement(xp, "colin_mag")
+     END IF
      CALL xml_NewElement(xp, 'nrot')
         CALL xml_addCharacters(xp, obj%nrot)
      CALL xml_EndElement(xp, 'nrot')
@@ -3056,6 +3061,16 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nelec')
         CALL xml_addCharacters(xp, obj%nelec, fmt='s16')
      CALL xml_EndElement(xp, 'nelec')
+     IF (obj%num_of_atomic_wfc_ispresent) THEN
+        CALL xml_NewElement(xp, "num_of_atomic_wfc")
+           CALL xml_addCharacters(xp, obj%num_of_atomic_wfc)
+        CALL xml_EndElement(xp, "num_of_atomic_wfc")
+     END IF
+     IF (obj%wf_collected_ispresent) THEN
+        CALL xml_NewElement(xp, "wf_collected")
+           CALL xml_addCharacters(xp, obj%wf_collected)
+        CALL xml_EndElement(xp, "wf_collected")
+     END IF
      IF (obj%fermi_energy_ispresent) THEN
         CALL xml_NewElement(xp, "fermi_energy")
            CALL xml_addCharacters(xp, obj%fermi_energy, fmt='s16')
