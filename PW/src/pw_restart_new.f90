@@ -80,7 +80,7 @@ MODULE pw_restart_new
       USE uspp_param,           ONLY : upf
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
-      USE noncollin_module,     ONLY : noncolin, npol
+      USE noncollin_module,     ONLY : noncolin, npol, colin_mag
       USE io_files,             ONLY : psfile, molfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
@@ -383,7 +383,7 @@ MODULE pw_restart_new
          END IF
          CALL qexsd_init_symmetries(output_obj%symmetries, spacegroup, &
               nsym, nrot, s, ft, sname, t_rev, nat, irt, &
-              symop_2_class(1:nrot), verbosity, noncolin)
+              symop_2_class(1:nrot), verbosity, noncolin,colin_mag)
          output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
