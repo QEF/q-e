@@ -1,5 +1,5 @@
 
-     Program PHONON v.7.3.1 starts on 25Sep2024 at 20:22:47 
+     Program PHONON v.7.3.1 starts on 25Sep2024 at 23:35:43 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,7 +13,7 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     34461 MiB available memory on the printing compute node when the environment starts
+     45644 MiB available memory on the printing compute node when the environment starts
 
      Waiting for input...
      Reading input from standard input
@@ -143,40 +143,40 @@
      Representation     2      3 modes -  Done
 
 
-     PHONON       :      0.22s CPU      0.34s WALL
+     PHONON       :      0.24s CPU      0.26s WALL
 
 
           Dielectric constant in cartesian axis 
 
-          (      11.706569421       0.000000000      -0.000000000 )
-          (       0.000000000      11.706569421      -0.000000000 )
-          (      -0.000000000      -0.000000000      11.706569421 )
+          (      11.707519097       0.000000000       0.000000000 )
+          (       0.000000000      11.707519097      -0.000000000 )
+          (       0.000000000       0.000000000      11.707519097 )
 
           Effective charges (d Force / dE) in cartesian axis without acoustic sum rule applied (asr)
 
-           atom    1  Si    Mean Z*:        2.13813
-      Ex  (        2.13813       -0.00000       -0.00000 )
-      Ey  (       -0.00000        2.13813       -0.00000 )
-      Ez  (       -0.00000        0.00000        2.13813 )
-           atom    2  C     Mean Z*:       -4.39410
-      Ex  (       -4.39410        0.00000        0.00000 )
-      Ey  (       -0.00000       -4.39410       -0.00000 )
-      Ez  (        0.00000        0.00000       -4.39410 )
+           atom    1  Si    Mean Z*:        2.13793
+      Ex  (        2.13793        0.00000        0.00000 )
+      Ey  (        0.00000        2.13793        0.00000 )
+      Ez  (        0.00000       -0.00000        2.13793 )
+           atom    2  C     Mean Z*:       -4.39444
+      Ex  (       -4.39444       -0.00000        0.00000 )
+      Ey  (       -0.00000       -4.39444       -0.00000 )
+      Ez  (        0.00000       -0.00000       -4.39444 )
 
-          Effective charges Sum: Mean:       -2.25597
-             -2.25597       -0.00000        0.00000
-              0.00000       -2.25597        0.00000
-              0.00000       -0.00000       -2.25597
+          Effective charges Sum: Mean:       -2.25652
+             -2.25652       -0.00000        0.00000
+             -0.00000       -2.25652       -0.00000
+              0.00000       -0.00000       -2.25652
 
           Effective charges (d Force / dE) in cartesian axis with asr applied: 
-           atom    1  Si    Mean Z*:        3.26612
-      E*x (        3.26612       -0.00000       -0.00000 )
-      E*y (        0.00000        3.26612        0.00000 )
-      E*z (       -0.00000       -0.00000        3.26612 )
-           atom    2  C     Mean Z*:       -3.26612
-      E*x (       -3.26612        0.00000        0.00000 )
-      E*y (       -0.00000       -3.26612       -0.00000 )
-      E*z (        0.00000        0.00000       -3.26612 )
+           atom    1  Si    Mean Z*:        3.26618
+      E*x (        3.26618        0.00000        0.00000 )
+      E*y (        0.00000        3.26618        0.00000 )
+      E*z (        0.00000        0.00000        3.26618 )
+           atom    2  C     Mean Z*:       -3.26618
+      E*x (       -3.26618       -0.00000       -0.00000 )
+      E*y (       -0.00000       -3.26618       -0.00000 )
+      E*z (       -0.00000       -0.00000       -3.26618 )
 
      Number of q in the star =    1
      List of q in the star:
@@ -184,61 +184,61 @@
 
           Dielectric constant in cartesian axis 
 
-          (      11.706569421       0.000000000      -0.000000000 )
-          (       0.000000000      11.706569421      -0.000000000 )
-          (      -0.000000000      -0.000000000      11.706569421 )
+          (      11.707519097       0.000000000       0.000000000 )
+          (       0.000000000      11.707519097      -0.000000000 )
+          (       0.000000000       0.000000000      11.707519097 )
 
           Effective charges (d Force / dE) in cartesian axis without acoustic sum rule applied (asr)
 
-           atom    1  Si    Mean Z*:        2.13813
-      Ex  (        2.13813       -0.00000       -0.00000 )
-      Ey  (       -0.00000        2.13813       -0.00000 )
-      Ez  (       -0.00000        0.00000        2.13813 )
-           atom    2  C     Mean Z*:       -4.39410
-      Ex  (       -4.39410        0.00000        0.00000 )
-      Ey  (       -0.00000       -4.39410       -0.00000 )
-      Ez  (        0.00000        0.00000       -4.39410 )
+           atom    1  Si    Mean Z*:        2.13793
+      Ex  (        2.13793        0.00000        0.00000 )
+      Ey  (        0.00000        2.13793        0.00000 )
+      Ez  (        0.00000       -0.00000        2.13793 )
+           atom    2  C     Mean Z*:       -4.39444
+      Ex  (       -4.39444       -0.00000        0.00000 )
+      Ey  (       -0.00000       -4.39444       -0.00000 )
+      Ez  (        0.00000       -0.00000       -4.39444 )
 
-          Effective charges Sum: Mean:       -2.25597
-             -2.25597       -0.00000        0.00000
-              0.00000       -2.25597        0.00000
-              0.00000       -0.00000       -2.25597
+          Effective charges Sum: Mean:       -2.25652
+             -2.25652       -0.00000        0.00000
+             -0.00000       -2.25652       -0.00000
+              0.00000       -0.00000       -2.25652
 
           Effective charges (d Force / dE) in cartesian axis with asr applied: 
-           atom    1  Si    Mean Z*:        3.26612
-      E*x (        3.26612       -0.00000       -0.00000 )
-      E*y (        0.00000        3.26612        0.00000 )
-      E*z (       -0.00000       -0.00000        3.26612 )
-           atom    2  C     Mean Z*:       -3.26612
-      E*x (       -3.26612        0.00000        0.00000 )
-      E*y (       -0.00000       -3.26612       -0.00000 )
-      E*z (        0.00000        0.00000       -3.26612 )
+           atom    1  Si    Mean Z*:        3.26618
+      E*x (        3.26618        0.00000        0.00000 )
+      E*y (        0.00000        3.26618        0.00000 )
+      E*z (        0.00000        0.00000        3.26618 )
+           atom    2  C     Mean Z*:       -3.26618
+      E*x (       -3.26618       -0.00000       -0.00000 )
+      E*y (       -0.00000       -3.26618       -0.00000 )
+      E*z (       -0.00000       -0.00000       -3.26618 )
 
      Diagonalizing the dynamical matrix
 
      q = (    0.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =      -0.750341 [THz] =     -25.028679 [cm-1]
-     freq (    2) =      -0.750341 [THz] =     -25.028679 [cm-1]
-     freq (    3) =      -0.750341 [THz] =     -25.028679 [cm-1]
-     freq (    4) =      28.631771 [THz] =     955.053087 [cm-1]
-     freq (    5) =      28.631771 [THz] =     955.053087 [cm-1]
-     freq (    6) =      28.631771 [THz] =     955.053087 [cm-1]
+     freq (    1) =      -0.837864 [THz] =     -27.948145 [cm-1]
+     freq (    2) =      -0.837864 [THz] =     -27.948145 [cm-1]
+     freq (    3) =      -0.837864 [THz] =     -27.948145 [cm-1]
+     freq (    4) =      28.626277 [THz] =     954.869803 [cm-1]
+     freq (    5) =      28.626277 [THz] =     954.869803 [cm-1]
+     freq (    6) =      28.626277 [THz] =     954.869803 [cm-1]
  **************************************************************************
 
      Mode symmetry, T_d (-43m)  point group:
 
-     freq (   1-   3) =        -25.0  [cm-1]   --> T_2  G_15 P_4   I+R
-     freq (   4-   6) =        955.1  [cm-1]   --> T_2  G_15 P_4   I+R
+     freq (   1-   3) =        -27.9  [cm-1]   --> T_2  G_15 P_4   I+R
+     freq (   4-   6) =        954.9  [cm-1]   --> T_2  G_15 P_4   I+R
 
-     PHONON       :      0.22s CPU      0.35s WALL
+     PHONON       :      0.24s CPU      0.26s WALL
 
      INITIALIZATION: 
      phq_setup    :      0.00s CPU      0.00s WALL (       1 calls)
 
      init_vloc    :      0.03s CPU      0.03s WALL (       1 calls)
-     init_us_1    :      0.05s CPU      0.05s WALL (       1 calls)
+     init_us_1    :      0.06s CPU      0.06s WALL (       1 calls)
      newd         :      0.00s CPU      0.00s WALL (       1 calls)
 
      DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:
@@ -259,10 +259,10 @@
       Additional routines
 
 
-     PHONON       :      0.22s CPU      0.35s WALL
+     PHONON       :      0.24s CPU      0.26s WALL
 
 
-   This run was terminated on:  20:22:48  25Sep2024            
+   This run was terminated on:  23:35:43  25Sep2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

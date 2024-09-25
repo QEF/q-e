@@ -156,6 +156,8 @@ clean:
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.* \
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
 	@rm -rf ph_*/*.wfc* ph_*/*.hub*
+	@rm -rf ph_1d/dynmat.axsf ph_1d/dynmat.mold
+	@rm -rf ph_2d/bn.frc ph_2d/bn.frq ph_2d/bn.frq.gp
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.dyn.freq
 # Special case for PH ahc
