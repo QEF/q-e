@@ -136,6 +136,8 @@ clean:
 	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test* tddfpt_*/test* kcw_*/test*
 # error files
 	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH tddfpt_*/CRASH kcw_*/CRASH
+# temporary input files
+	@rm -rf pw_*/input_tmp.in ph_*/input_tmp.in cp_*/input_tmp.in hp_*/input_tmp.in pp_*/input_tmp.in epw_*/input_tmp.in zg_*/input_tmp.in tddfpt_*/input_tmp.in kcw_*/input_tmp.in
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
