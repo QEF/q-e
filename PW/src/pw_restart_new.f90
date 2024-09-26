@@ -80,7 +80,7 @@ MODULE pw_restart_new
       USE uspp_param,           ONLY : upf
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
-      USE noncollin_module,     ONLY : noncolin, npol
+      USE noncollin_module,     ONLY : noncolin, npol, colin_mag
       USE io_files,             ONLY : psfile, molfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
@@ -383,7 +383,7 @@ MODULE pw_restart_new
          END IF
          CALL qexsd_init_symmetries(output_obj%symmetries, spacegroup, &
               nsym, nrot, s, ft, sname, t_rev, nat, irt, &
-              symop_2_class(1:nrot), verbosity, noncolin)
+              symop_2_class(1:nrot), verbosity, noncolin,colin_mag)
          output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
@@ -1145,7 +1145,7 @@ MODULE pw_restart_new
       USE esm,             ONLY : do_comp_esm, esm_bc, esm_nfit, esm_w, esm_efield, esm_a
       USE martyna_tuckerman,ONLY: do_comp_mt 
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
-              nspin_lsda, nspin_gga, nspin_mag, domag, lspinorb
+              nspin_lsda, nspin_gga, nspin_mag, domag, lspinorb, colin_mag
       USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
            current_spin
       USE realus,          ONLY : real_space
@@ -1316,7 +1316,7 @@ MODULE pw_restart_new
       IF ( lvalid_input ) THEN 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
               spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
-              noinv, nosym, no_t_rev, input_obj%symmetry_flags )
+              noinv, nosym, no_t_rev, colin_mag, input_obj%symmetry_flags )
          IF (input_obj%electric_field_ispresent) & 
            CALL qexsd_copy_efield ( input_obj%electric_field, &
               tefield, dipfield, edir, emaxpos, eopreg, eamp, &
@@ -1325,7 +1325,7 @@ MODULE pw_restart_new
       ELSE 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
               spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
-              noinv, nosym, no_t_rev )
+              noinv, nosym, no_t_rev ,colin_mag)
       ENDIF
       !! More initialization needed for symmetry
       magnetic_sym = noncolin .AND. domag

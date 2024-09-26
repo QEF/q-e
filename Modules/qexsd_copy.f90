@@ -212,7 +212,7 @@ CONTAINS
   !------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_symmetry ( symms_obj, spacegroup, &
        nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
-       noinv, nosym, no_t_rev, flags_obj )
+       noinv, nosym, no_t_rev, colin_mag, flags_obj)
     !------------------------------------------------------------------------
     ! 
     USE qes_types_module,ONLY : symmetries_type, symmetry_flags_type
@@ -229,6 +229,7 @@ CONTAINS
     REAL(dp), INTENT(OUT):: ft(:,:)
     INTEGER, INTENT(OUT) :: irt(:,:)
     INTEGER, INTENT(OUT) :: t_rev(:)
+    INTEGER, INTENT(OUT) :: colin_mag
     CHARACTER(len=45) ::  sname(:)
     !
     LOGICAL, INTENT(OUT) :: noinv, nosym, no_t_rev
@@ -248,6 +249,11 @@ CONTAINS
     spacegroup = symms_obj%space_group
     nrot = symms_obj%nrot 
     nsym = symms_obj%nsym
+    IF (symms_obj%colin_mag_ispresent) THEN 
+      colin_mag = symms_obj%colin_mag 
+    ELSE 
+      colin_mag = -1 
+    END IF 
     !  
     invsym = .FALSE. 
     DO isym = 1, nrot
