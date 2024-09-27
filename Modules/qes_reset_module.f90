@@ -2006,8 +2006,6 @@ MODULE qes_reset_module
     obj%nbnd_ispresent = .FALSE.
     obj%nbnd_up_ispresent = .FALSE.
     obj%nbnd_dw_ispresent = .FALSE.
-    obj%num_of_atomic_wfc_ispresent = .FALSE.
-    obj%wf_collected_ispresent = .FALSE.
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
     obj%lowestUnoccupiedLevel_ispresent = .FALSE.

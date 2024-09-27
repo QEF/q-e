@@ -13014,62 +13014,6 @@ MODULE qes_read_module
        END IF
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "num_of_atomic_wfc")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:band_structureType","num_of_atomic_wfc: too many occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:band_structureType","num_of_atomic_wfc: too many occurrences",10)
-        END IF
-    END IF
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%num_of_atomic_wfc_ispresent = .TRUE.
-      tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%num_of_atomic_wfc , IOSTAT = iostat_)
-      IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN
-            CALL infomsg("qes_read:band_structureType","error reading num_of_atomic_wfc")
-            ierr = ierr + 1
-         ELSE
-            CALL errore ("qes_read:band_structureType","error reading num_of_atomic_wfc",10)
-         END IF
-      END IF
-    ELSE
-       obj%num_of_atomic_wfc_ispresent = .FALSE.
-    END IF
-    !
-    tmp_node_list => getElementsByTagname(xml_node, "wf_collected")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:band_structureType","wf_collected: too many occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:band_structureType","wf_collected: too many occurrences",10)
-        END IF
-    END IF
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%wf_collected_ispresent = .TRUE.
-      tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%wf_collected , IOSTAT = iostat_)
-      IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN
-            CALL infomsg("qes_read:band_structureType","error reading wf_collected")
-            ierr = ierr + 1
-         ELSE
-            CALL errore ("qes_read:band_structureType","error reading wf_collected",10)
-         END IF
-      END IF
-    ELSE
-       obj%wf_collected_ispresent = .FALSE.
-    END IF
-    !
     tmp_node_list => getElementsByTagname(xml_node, "fermi_energy")
     tmp_node_list_size = getLength(tmp_node_list)
     !

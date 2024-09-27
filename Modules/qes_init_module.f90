@@ -4200,8 +4200,8 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, starting_k_points,&
                                     nks, occupations_kind, ks_energies, nbnd, nbnd_up, nbnd_dw,&
-                                    num_of_atomic_wfc, wf_collected, fermi_energy, highestOccupiedLevel,&
-                                    lowestUnoccupiedLevel, twochem, two_fermi_energies, smearing)
+                                    fermi_energy, highestOccupiedLevel, lowestUnoccupiedLevel,&
+                                    twochem, two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -4214,8 +4214,6 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: nbnd_up
     INTEGER,OPTIONAL,INTENT(IN) :: nbnd_dw
     REAL(DP),INTENT(IN) :: nelec
-    INTEGER,OPTIONAL,INTENT(IN) :: num_of_atomic_wfc
-    LOGICAL,OPTIONAL,INTENT(IN) :: wf_collected
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
     REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
@@ -4253,18 +4251,6 @@ MODULE qes_init_module
       obj%nbnd_dw_ispresent = .FALSE.
     END IF
     obj%nelec = nelec
-    IF ( PRESENT(num_of_atomic_wfc)) THEN
-      obj%num_of_atomic_wfc_ispresent = .TRUE. 
-      obj%num_of_atomic_wfc = num_of_atomic_wfc
-    ELSE
-      obj%num_of_atomic_wfc_ispresent = .FALSE.
-    END IF
-    IF ( PRESENT(wf_collected)) THEN
-      obj%wf_collected_ispresent = .TRUE. 
-      obj%wf_collected = wf_collected
-    ELSE
-      obj%wf_collected_ispresent = .FALSE.
-    END IF
     IF ( PRESENT(fermi_energy)) THEN
       obj%fermi_energy_ispresent = .TRUE. 
       obj%fermi_energy = fermi_energy
