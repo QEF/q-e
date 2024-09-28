@@ -467,16 +467,16 @@ CONTAINS
     !
     if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
+    deallocate (curr%tag)
+    if ( allocated(curr%data) ) deallocate (curr%data)
+    if ( allocated(curr%attr) ) deallocate (curr%attr)
+    if ( allocated(curr%linklist) ) deallocate (curr%linklist)
     if ( associated(curr%prev) ) then
        next => curr%prev
        deallocate(curr)
        curr => next
     else
-       ! if ( nlevel /= -1 ) print *, 'destroy: something not right'
-       if ( allocated(curr%tag ) ) deallocate (curr%tag)
-       if ( allocated(curr%data) ) deallocate (curr%data)
-       if ( allocated(curr%attr) ) deallocate (curr%attr)
-       if ( allocated(curr%linklist) ) deallocate (curr%linklist)
+       if ( nlevel /= -1 ) print *, 'destroy: did not reach root level?'
     end if
     !
   end subroutine destroy
