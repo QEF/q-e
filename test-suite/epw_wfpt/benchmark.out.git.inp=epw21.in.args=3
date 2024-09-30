@@ -29,7 +29,7 @@
                                                      npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.8 starts on  9Jan2024 at 13:58:12 
+     Program EPW v.5.8.1 starts on 24Mar2024 at  2:16:57 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -44,8 +44,8 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     33069 MiB available memory on the printing compute node when the environment starts
- 
+     312595 MiB available memory on the printing compute node when the environment starts
+
      Reading input from epw21.in
 
      No temperature supplied. Setting temps(:) to 300 K.
@@ -60,14 +60,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         451     451    139                 6423     6423    1067
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
 
      --                                                                         
@@ -104,7 +104,7 @@
      site n.  atom      mass           positions (a_0 units)
         1     B      10.8100   tau( 1) = (   -0.12500    0.12500    0.12500  )
         2     As     74.9220   tau( 2) = (    0.12500   -0.12500   -0.12500  )
- 
+
      25 Sym.Ops. (with q -> -q+G )
 
 
@@ -136,21 +136,21 @@
      Using radial grid of  525 points,  2 beta functions with: 
                 l(1) =   0
                 l(2) =   1
-     EPW          :      0.11s CPU      0.13s WALL
+     EPW          :      0.18s CPU      0.19s WALL
 
-     EPW          :      0.11s CPU      0.13s WALL
+     EPW          :      0.18s CPU      0.19s WALL
 
      -------------------------------------------------------------------
      Wannierization on  2 x  2 x  2 electronic grid
      -------------------------------------------------------------------
- 
+
      Spin CASE ( default = unpolarized )
- 
+
      Initializing Wannier90
- 
- 
+
+
      Initial Wannier projections
- 
+
      (   0.12500   0.12500   0.12500) :  l =  -3 mr =   1
      (   0.12500   0.12500   0.12500) :  l =  -3 mr =   2
      (   0.12500   0.12500   0.12500) :  l =  -3 mr =   3
@@ -165,28 +165,28 @@
       - Number of excluded bands is (  3)
       - Number of wannier functions is (  8)
       - All guiding functions are given 
- 
+
   Reading data about k-point neighbours 
- 
+
       - All neighbours are found 
- 
+
      AMN
       k points =     8 in    4 pools
             1 of    2 on ionode
             2 of    2 on ionode
- 
+
      AMN calculated
- 
+
      MMN
       k points =     8 in    4 pools
             1 of    2 on ionode
             2 of    2 on ionode
      MMN calculated
- 
+
      Running Wannier90
- 
+
      Wannier Function centers (cartesian, alat) and spreads (ang):
- 
+
      (  -0.07535   0.17465   0.17465) :   1.02556
      (  -0.07535   0.07535   0.07535) :   1.02556
      (  -0.17465   0.17465   0.07535) :   1.02556
@@ -195,25 +195,25 @@
      (   0.22026  -0.22026  -0.22026) :   0.92973
      (   0.02974  -0.02974  -0.22026) :   0.92973
      (   0.02974  -0.22026  -0.02974) :   0.92973
- 
+
      -------------------------------------------------------------------
-     WANNIER      :      0.49s CPU      0.51s WALL (       1 calls)
+     WANNIER      :      0.46s CPU      0.48s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
- 
+
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.02s CPU      0.02s WALL (       1 calls)
+     kmaps        :      0.01s CPU      0.02s WALL (       1 calls)
      Symmetries of Bravais lattice:  48
      Symmetries of crystal:          24
 
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0055063
+     IFC last   -0.0054915
       Imposed simple ASR
 
      Finished reading ifcs
@@ -229,14 +229,14 @@
 
      Symmetries of small group of q: 24
           in addition sym. q -> -q+G:
- 
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
      Imposing acoustic sum rule on the dynamical matrix
      Read dielectric tensor and effective charges
      Dyn mat calculated from ifcs
- 
+
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -246,7 +246,7 @@
 
      Symmetries of small group of q:  6
           in addition sym. q -> -q+G:
- 
+
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000  -0.500000000   0.500000000
@@ -256,7 +256,7 @@
      Dyn mat calculated from ifcs
      Message from routine init_vloc:
      Interpolation table for Vloc re-allocated
- 
+
         q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
         q(    3 ) = (  -0.5000000   0.5000000   0.5000000 )
         q(    4 ) = (   0.5000000   0.5000000  -0.5000000 )
@@ -269,14 +269,14 @@
 
      Symmetries of small group of q:  8
           in addition sym. q -> -q+G:
- 
+
      Number of q in the star =    3
      List of q in the star:
           1   0.000000000  -1.000000000   0.000000000
           2   0.000000000   0.000000000  -1.000000000
           3  -1.000000000   0.000000000   0.000000000
      Dyn mat calculated from ifcs
- 
+
         q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
         q(    7 ) = (   0.0000000   0.0000000  -1.0000000 )
         q(    8 ) = (  -1.0000000   0.0000000   0.0000000 )
@@ -315,8 +315,8 @@
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =        74Mb
-                   VmPeak =      3767Mb
+     Memory usage:  VmHWM =       180Mb
+                   VmPeak =       888Mb
      ===================================================================
      
      Using uniform q-mesh:     1    1    1
@@ -343,44 +343,45 @@
      We only need to compute        1 q-points
       
      ===================================================================
-     Memory usage:  VmHWM =        74Mb
-                   VmPeak =      3767Mb
+     Memory usage:  VmHWM =       180Mb
+                   VmPeak =       888Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :      1.68s CPU      1.74s WALL (       1 calls)
+     elphon_wrap  :      0.59s CPU      0.67s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
-     init_us_1    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.63s CPU      0.92s WALL (       1 calls)
+     ephwann      :      0.08s CPU      0.26s WALL (       1 calls)
      ep-interp    :      0.00s CPU      0.00s WALL (       1 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.00s WALL (       9 calls)
      ep: step 2   :      0.00s CPU      0.00s WALL (       9 calls)
-     unfold_sthma :      0.04s CPU      0.13s WALL (       5 calls)
+     unfold_sthma :      0.01s CPU      0.08s WALL (       5 calls)
      dg: step 1   :      0.00s CPU      0.00s WALL (      48 calls)
-     dg: step 2   :      0.01s CPU      0.07s WALL (      48 calls)
-     sth: step 1  :      0.01s CPU      0.01s WALL (     288 calls)
-     sth: step 2  :      0.06s CPU      0.27s WALL (     288 calls)
+     dg: step 2   :      0.01s CPU      0.03s WALL (      48 calls)
+     sth: step 1  :      0.00s CPU      0.00s WALL (     288 calls)
+     sth: step 2  :      0.02s CPU      0.15s WALL (     288 calls)
+     wigner_seitz :      0.01s CPU      0.01s WALL (       1 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (       1 calls)
-     HamW2B       :      0.00s CPU      0.00s WALL (       5 calls)
-     ephW2Bp      :      0.00s CPU      0.00s WALL (       1 calls)
-     ephW2B       :      0.00s CPU      0.00s WALL (       1 calls)
-     vmewan2bloch :      0.00s CPU      0.00s WALL (       2 calls)
-     vmewan2bloch :      0.00s CPU      0.00s WALL (       2 calls)
+     HamW2B       :      0.00s CPU      0.00s WALL (       6 calls)
+     ephW2Bp      :      0.00s CPU      0.00s WALL (       2 calls)
+     ephW2B       :      0.00s CPU      0.00s WALL (       2 calls)
+     vmeW2B       :      0.00s CPU      0.00s WALL (       2 calls)
+     rgd_blk_fine :      0.00s CPU      0.00s WALL (       2 calls)
 
 
      Total program execution
-     EPW          :      2.91s CPU      3.30s WALL
+     EPW          :      1.31s CPU      1.60s WALL
 
      % Copyright (C) 2016-2023 EPW-Collaboration                                    
                                                                                     

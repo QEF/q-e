@@ -99,7 +99,9 @@ SUBROUTINE alpha_corr ( iwann, delta)
       USE mp,                    ONLY : mp_sum
       USE eqv,                   ONLY : dmuxc
       USE gvecs,                 ONLY : ngms
-      USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
+      USE noncollin_module,      ONLY : domag, noncolin, m_loc, angle1, angle2, &
+                                        ux, nspin_lsda, nspin_gga, nspin_mag, npol
+      USE dv_of_drho_lr,         ONLY : dv_of_drho_xc
       !
       !
       IMPLICIT NONE 
@@ -113,6 +115,7 @@ SUBROUTINE alpha_corr ( iwann, delta)
       COMPLEX(DP) :: rhowann(dffts%nnr, num_wann, nrho), rhor(dffts%nnr,nrho), delta_vr(dffts%nnr,nspin_mag)
       COMPLEX(DP), ALLOCATABLE  :: rho_wann_g(:,:), delta_vg(:,:), aux(:)
       INTEGER :: ik_eff
+      COMPLEX(DP), ALLOCATABLE :: rhor_(:,:)
       !
       ALLOCATE ( rho_wann_g (ngms,nrho) , delta_vg(ngms,nspin_mag), aux (dffts%nnr) )
       ! 
@@ -178,21 +181,32 @@ SUBROUTINE alpha_corr ( iwann, delta)
         !rho_wann_g(:) = aux(dffts%nl(:))
         !
         delta_vr = CMPLX(0.D0,0.D0, kind=DP)
-        IF (nspin_mag==2) THEN
-          DO is = 1, nspin_mag
-            DO ir = 1, dffts%nnr
-              delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir,1)/omega
-            END DO
-          END DO
+        !
+        ALLOCATE ( rhor_(dffts%nnr,nspin_mag) )
+        rhor_ = CMPLX(0.D0,0.D0,kind=DP)
+        IF (nspin_mag == 4) THEN
+          rhor_=rhor/omega
         ELSE
-          DO is = 1, nspin_mag
-              DO ir = 1, dffts%nnr
-                  DO iss = 1, nspin_mag
-                delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,iss) * rhor(ir,iss)/omega
-              END DO
-            END DO
-          END DO
-        END IF
+          rhor_(:,spin_component) = rhor(:,1)/omega
+        ENDIF
+        CALL dv_of_drho_xc(delta_vr, rhor_)
+        DEALLOCATE (rhor_)
+        !
+!        IF (nspin_mag==2) THEN
+!          DO is = 1, nspin_mag
+!            DO ir = 1, dffts%nnr
+!              delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,spin_component) * rhor(ir,1)/omega
+!            END DO
+!          END DO
+!        ELSE
+!          DO is = 1, nspin_mag
+!              DO ir = 1, dffts%nnr
+!                  DO iss = 1, nspin_mag
+!                delta_vr(ir,is) = delta_vr(ir,is) + dmuxc(ir,is,iss) * rhor(ir,iss)/omega
+!              END DO
+!            END DO
+!          END DO
+!        END IF
         ! In g-space
         DO is = 1, nspin_mag
           aux(:) = delta_vr(:,is)

@@ -4,8 +4,8 @@
   outdir      = './'
 
   elph        = .true.
-  epbwrite    = .true.
-  epbread     = .false.
+  epbwrite    = .false.
+  epbread     = .true.
   epwwrite    = .true.
   epwread     = .false.
 
@@ -41,7 +41,7 @@
   restart      = .true.
   selecqread   = .false.
 
-  wannierize  = .true.
+  wannierize  = .false.
   num_iter    = 5000
   iprint      = 2
   dis_win_max = -0.8

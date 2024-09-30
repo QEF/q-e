@@ -1,4 +1,4 @@
-              Marios Zacharias [1] & Feliciano Giustino [2,3], September 2023
+              Marios Zacharias [1] & Feliciano Giustino [2,3], April 2024
 
 [1] Univ Rennes, INSA Rennes, CNRS, Institut FOTON - UMR 6082, F-35000 Rennes, France 
 [2] Oden Institute for Computational Engineering and Sciences, The University of Texas 
@@ -23,8 +23,8 @@ If you use disca.x for inelastic scattering please do cite the following work:
 
 ---------------------------------------------------------------------------------------------------
 
-Acknowledgement: We thank Hyungjun Lee and Sabyasachi Tiwari, Oden Institute for Computational 
-                 Engineering and Sciences, for help packaging this release. M.Z. acknowledges
+Acknowledgement: We thank Sabyasachi Tiwari, Oden Institute for Computational Engineering 
+                 and Sciences, for help packaging this release. M.Z. acknowledges
                  funding from European Union (project ULTRA-2DPK / HORIZON-MSCA-2022-PF-01 /
                  Grant Agreement No. 101106654)
 
@@ -101,6 +101,13 @@ STEPS for generating the ZG displacements to calculate temperature-dependent pro
        "T"                  : Real number indicating the temperature at which the calculations will be performed. 
                               "T" essentially defines the amplitude of the normal coordinates. 
                               (default 0.00)
+       "T_array(1), etc.."  : Real number indicating the temperature at which the calculations will be performed. 
+                              Fill T_array for generating ZG configurations for different temperatures. 
+                              If nconfs = 1, the same set of signs is maintained for all temperatures. This is 
+                              important for consistency reasons. If nconfs > 1 then "nconfs" ZG configurations
+                              are generated each temperature specified in T_array. A maximum of 100 temperatures
+                              are allowed. 
+                              (default -1)
        "dim1","dim2","dim3" : Integers corresponding to the dimensionality of the supercell i.e.:
                               size of supercell will be [dim1 * a(1), dim2 * a(2), dim3 * a(3)],
                               where a(1), a(2), a(3) are the lattice vectors of the unit cell used
@@ -123,19 +130,23 @@ STEPS for generating the ZG displacements to calculate temperature-dependent pro
                               size the order of using the "+,-,+,-" set and its permutations is  
                               important giving different results. Therefore the algorithm checks 
                               the combination that brings the error lower than a threshold.
+                              If integer "nconfs" > 1 then "niters" necomes equal to "nconfs".
                               (default 15000)
+       "nconfs"             : Integer. If greater than 1 allows "nconfs" ZG configurations for each temperature
+                              to be generated. "compute_error" is set to .false. 
        "compute_error"      : Logical flag: if set to .true. allows the code to find the optimal ZG configuration 
                               by minimizing the error based on the "threshold" flag (see below). Set it
                               to .false. if speed up is required. This is useful when (i) large supercell 
                               sizes are considered for which the error is minimized by the first set of signs, 
-                              (ii) only single phonon displacements are of interest (see below) 
+                              (ii) "single_ph_displ" is .true. (see below), and (iii) "nconfs" is larger than 1.
                               (default .true.)
        "error_thresh"       : Real number indicating the error at which the algorithm stops while it's 
                               looking for possible combinations of signs. Once this limit is reached, 
                               the ZG displacements are constructed. The threshold is usually chosen 
-                              to be less than 5% of the diagonal terms, i.e. those terms that contribute 
-                              to the calculation of temperature-dependent properties. 
-                              (default 0.05)
+                              to be less than 30% of the diagonal terms, i.e. those terms that contribute 
+                              to the calculation of temperature-dependent properties. Meaningless if 
+                              compute_error = .fasle. and/or "nconfs" > 1.
+                              (default 0.30)
        "incl_qA"            : Logical flag, to decide whether to include phonon modes in set A or not. 
                               (default .true.)
        "single_ph_displ"    : Logical flag that allows to displace the nuclei along single phonon modes. 

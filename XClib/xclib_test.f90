@@ -171,6 +171,7 @@ PROGRAM xclib_test
   !
   ! ... xml
   INTEGER :: tag_err
+  LOGICAL :: not_found_skip
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
   CHARACTER(LEN=48) :: xc_data="XC_DATA__________"
@@ -834,6 +835,7 @@ PROGRAM xclib_test
     !
     ! ... read data set from xml file
     !
+    not_found_skip = .FALSE.
     IF (test=='EXECUTE' .AND. mype==root) THEN
       CALL xmlr_opentag( TRIM(xc_data), tag_err )
       IF (tag_err==0) THEN
@@ -889,12 +891,17 @@ PROGRAM xclib_test
         CALL xmlr_closetag()
       ELSE
         CALL print_test_status( skipped2 )
-        GOTO 10
-      ENDIF  
+        not_found_skip = .TRUE.
+      ENDIF
     ENDIF
     !
+#if defined(__MPI)
+    CALL MPI_BCAST( not_found_skip, 1, MPI_LOGICAL, root, MPI_COMM_WORLD, ierr )
+#endif
+    IF (not_found_skip) GOTO 10
+    !
     !==========================================================================
-    ! BUILD ARBITRARY NNR-POINTS LARGE GRID FOR AVERAGES CALCULATIONS
+    ! BUILD ARBITRARY LARGE GRID FOR AVERAGE CALCULATIONS
     !==========================================================================
     !
     fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
@@ -919,20 +926,20 @@ PROGRAM xclib_test
        IF ( MGGA ) THEN
           !tau(ii,1) = fact*ABS(rho(ii,1)*ns)**(5._DP/3._DP)/ns
           tau(ii,1) = SQRT( ABS(SUM(grho(:,ii,1)**2/(rho(ii,1)*3._DP*SIN(DBLE(iip))))) )
-       ENDIF   
+       ENDIF
        !  
-       IF ( POLARIZED ) THEN  
-          !  
-          rho(ii,2) = (1.0_DP - rho(ii,1))*0.7_DP  
-          rho_tz(ii,1) = rho(ii,1) + rho(ii,2)  
-          rho_tz(ii,2) = rho(ii,1) - rho(ii,2)  
+       IF ( POLARIZED ) THEN
           !
-          IF ( GGA .OR. MGGA ) THEN  
-             grho(1,ii,2) = ABS( (1.0_DP - grho(1,ii,1))*0.7_DP )  
+          rho(ii,2) = (1.0_DP - rho(ii,1))*0.7_DP
+          rho_tz(ii,1) = rho(ii,1) + rho(ii,2)
+          rho_tz(ii,2) = rho(ii,1) - rho(ii,2)
+          !
+          IF ( GGA .OR. MGGA ) THEN
+             grho(1,ii,2) = ABS( (1.0_DP - grho(1,ii,1))*0.7_DP )
              grho(2,ii,2) = ABS( (1.0_DP - grho(2,ii,1))*0.6_DP )
              grho(3,ii,2) = ABS( (1.0_DP - grho(3,ii,1))*0.5_DP )
           ENDIF
-          !  
+          !
           IF ( MGGA ) THEN
             !tau(ii,2) = fact*ABS(rho(ii,2)*ns)**(5._DP/3._DP)/ns
             tau(ii,2) = SQRT( ABS(SUM(grho(:,ii,2)**2/(rho(ii,2)*3._DP*SIN(DBLE(iip))))) )
@@ -1028,7 +1035,7 @@ PROGRAM xclib_test
           grho(:,nnr_b+2,2) = grho(:,nnr_b,2)
         ENDIF
         !
-        IF ( MGGA ) THEN  
+        IF ( MGGA ) THEN
           tau(nnr_b+1,:) = tau(nnr_b,:)
           tau(nnr_b+2,:) = tau(nnr_b,:)
           rho(nnr_b+3,:) = rho(nnr_b,:)
@@ -1631,10 +1638,10 @@ PROGRAM xclib_test
  !-------------------------------------------------------------------------
  SUBROUTINE evxc_stats( what, xc_1, aver )
   !------------------------------------------------------------------------
-  !! If test=execute calculates difference between total energy
+  !! If test=EXECUTE calculates difference between total energy
   !! and potential calculated over npoints k-points and values taken from
   !! benchmark data file.  
-  !! If test=generate calculates the total energy and potential 
+  !! If test=GENERATE calculates the total energy and potential 
   !! over npoints k-points.
   !
   IMPLICIT NONE
@@ -1678,7 +1685,7 @@ PROGRAM xclib_test
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E' ) THEN
     IF (mype==root .AND. TRIM(test)=='EXECUTE') CALL print_aver( what, xc_aver(:,1), aver(1) )
   ELSE
-    xc_aver(1,2) = SUM(xc_1(1:nnr,2))/npoints
+    xc_aver(1,2) = SUM(xc_1(1:nnr,2))/DBLE(npoints)
     !
 #if defined(__MPI)
     aver_snd = xc_aver(1,2)
@@ -1688,7 +1695,7 @@ PROGRAM xclib_test
 #endif
     !
     IF (TRIM(what)=='V2c' .AND. GGA ) THEN
-      v2c_ud1_aver(1) = SUM(v2c_ud1(1:nnr))/npoints
+      v2c_ud1_aver(1) = SUM(v2c_ud1(1:nnr))/DBLE(npoints)
       ! 
 #if defined(__MPI)
       aver_sndu = v2c_ud1_aver(1)
@@ -1772,7 +1779,7 @@ PROGRAM xclib_test
       CALL print_aver( what, dxc_aver(:,1), aver(1), ' up-up' )
       CALL print_aver( what, dxc_aver(:,2), aver(2), ' up-down' )
       CALL print_aver( what, dxc_aver(:,3), aver(3), ' down-down' )
-    ENDIF  
+    ENDIF
     !
   ENDIF
   !

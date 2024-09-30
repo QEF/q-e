@@ -425,7 +425,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !-----------------------------------------------------------------------
      SUBROUTINE stres_us_nc()
        !-----------------------------------------------------------------------
-       !! nonlocal contribution to the stress - noncolinear version
+       !! nonlocal contribution to the stress - noncollinear version
        !
        IMPLICIT NONE
        !
@@ -434,6 +434,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
                    is, js, ijs, jkb, ih, jh, ijkb0, na_s, na_e, mykey
        REAL(DP) :: sigmaij
+       REAL(DP) :: ps(4)
+       ! NOTE: This variable ps, even if not strictly necessary, has been defined as a workaround
+       !       for an issue in nvhpc-24.3 compiler (it fails to perform acc reductons seemingly when
+       !       a >3 number of sequential nested loops are present in a main parallel loop)
+       !
        COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
        COMPLEX(DP) :: deff_nc
        TYPE(bec_type) :: becd
@@ -454,14 +459,17 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        compute_diag: IF ( mykey == 0 ) THEN
           !$acc parallel loop collapse(2) present(deeq_nc, qq_at, qq_so, becp%nc) &
-          !$acc reduction(+:sigmaij)
+          !$acc reduction(+:sigmaij) private(ps) 
           DO na = na_s, na_e
              DO ibnd = 1, nbnd
                 np = ityp(na)
                 ijkb0 = ofsbeta(na)
-                !$acc loop seq collapse(4)
+                !$acc loop seq collapse(2)
                 DO ih = 1, nh(np)
                    DO jh = 1, nh(np)
+                      !
+                      ps = 0._dp
+                      !$acc loop seq collapse(2)
                       DO is = 1, npol
                          DO js = 1, npol
                             ijs = (is-1)*npol+js
@@ -477,11 +485,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ELSE IF (is == js) THEN
                                deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
                             END IF
-                            sigmaij = sigmaij + wg(ibnd,ik) * deff_nc * &
+                            ps(ijs) = wg(ibnd,ik) * DBLE(deff_nc * &
                                  CONJG(becp%nc(ikb,is,ibnd)) * &
-                                 becp%nc(jkb,js,ibnd)
+                                 becp%nc(jkb,js,ibnd))
                          END DO
                       END DO
+                      sigmaij = sigmaij + ps(1) + ps(2) + ps(3) + ps(4) 
                    END DO
                 END DO
              END DO
@@ -516,14 +525,17 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_djl: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
-                !$acc reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij) private(ps)  
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
                       ijkb0 = ofsbeta(na)
-                      !$acc loop seq collapse(4)
+                      !$acc loop seq collapse(2)
                       DO ih = 1, nh(np)
                          DO jh = 1, nh(np)
+                            !
+                            ps = 0._dp
+                            !$acc loop seq collapse(2)
                             DO is = 1, npol
                                DO js = 1, npol
                                   ijs = (is-1)*npol+js
@@ -536,11 +548,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   ELSE IF (is == js) THEN
                                      deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
                                   END IF
-                                  sigmaij = sigmaij + wg(ibnd,ik) * deff_nc * &
-                                       CONJG(becp%nc(ikb,is,ibnd)) * &
-                                       becd%nc(jkb,js,ibnd)
+                                  ps(ijs) = wg(ibnd,ik) * DBLE(deff_nc * &
+                                       CONJG(becp%nc(ikb,is,ibnd)) * becd%nc(jkb,js,ibnd))
                                END DO
                             END DO
+                            sigmaij = sigmaij + ps(1) + ps(2) + ps(3) + ps(4) 
                          END DO
                       END DO
                    END DO
@@ -569,14 +581,17 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              compute_dylm: IF ( mykey == 0 ) THEN
                 !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
-                !$acc reduction(+:sigmaij)
+                !$acc reduction(+:sigmaij) private(ps) 
                 DO na = na_s, na_e
                    DO ibnd = 1, nbnd
                       np = ityp(na)
                       ijkb0 = ofsbeta(na)
-                      !$acc loop seq collapse(4)
+                      !$acc loop seq collapse(2)
                       DO ih = 1, nh(np)
                          DO jh = 1, nh(np)
+                            !
+                            ps = 0._dp
+                            !$acc loop seq collapse(2)
                             DO is = 1, npol
                                DO js = 1, npol
                                   ijs = (is-1)*npol+js
@@ -588,11 +603,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   ELSE IF (is == js) THEN
                                      deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
                                   END IF
-                                  sigmaij = sigmaij + wg(ibnd,ik) * deff_nc * &
-                                       CONJG(becp%nc(ikb,is,ibnd)) * &
-                                       becd%nc(jkb,js,ibnd)
+                                  ps(ijs) = wg(ibnd,ik) * DBLE(deff_nc * &
+                                       CONJG(becp%nc(ikb,is,ibnd)) * becd%nc(jkb,js,ibnd))
                                END DO
                             END DO
+                            sigmaij = sigmaij + ps(1) + ps(2) + ps(3) + ps(4)
                          END DO
                       END DO
                    END DO

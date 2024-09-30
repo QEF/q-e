@@ -1,0 +1,12 @@
+phonons of SiC at Gamma with restart - run 3
+ &inputph
+  recover = .true.
+  niter_ph = 5
+
+  tr2_ph=1.0d-18
+  prefix='SiC'
+  epsil=.true.
+  amass(1)=28.08
+  fildyn='SiC.dynG'
+ /
+0.0 0.0 0.0

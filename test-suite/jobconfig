@@ -21,6 +21,10 @@ inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cl
 program = PW
 inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
 
+[pw_libxc/]
+program = PW
+inputs_args = ('lda_pol_atom-lsda.in', ''), ('gga_unpol_atom-pbe.in', ''), ('hyb_gga_unpol_hse-si111.in', ''), ('mgga_unpol_metaGGA.in', '')
+
 [pw_metal/]
 program = PW
 inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,''), ('metal-gaussian.in' ,''), ('metal-tetrahedra.in' ,''), ('metal-tetrahedra-1.in' ,''), ('metal-tetrahedra-2.in','')
@@ -129,6 +133,10 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', 
 program = PH
 inputs_args = ('ch4.scf.in','1'), ('ch4.ph.in', '2'), ('ch4.dynmat.in', '9')  
 
+[ph_restart/]
+program = PH
+inputs_args = ('SiC.scf.in', '1'), ('SiC.phG.in', '2'), ('SiC.phG.restart1.in', '2'), ('SiC.phG.restart2.in', '2'), ('SiC.phG.restart3.in', '2'), ('SiC.phG.restart4.in', '2')
+
 [epw_base/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw12.in', '3'), ('epw13.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')
@@ -155,7 +163,7 @@ inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw
 
 [epw_super/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw7.in', '3'), ('nscf_outerbands.in', '1'), ('nscf2supercond.in', '9'), ('epw8.in', '3')
 
 [epw_polar/]
 program = EPW
@@ -187,7 +195,7 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1')
 
 [epw_hall/]
 program = EPW
-inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5')
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5'), ('epw5.in', '5')
 
 [epw_qdpt/]
 program = EPW

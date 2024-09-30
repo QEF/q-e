@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -87,8 +87,8 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), ALLOCATABLE :: vrrx(:,:), vsrx(:,:), vssx(:,:)
   REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:)
   !
+  INTEGER :: fkind
 #if defined(__LIBXC)
-  INTEGER :: fkind=-10
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: v2rho2_x(:), v2rhosigma_x(:), v2sigma2_x(:)
   REAL(DP), ALLOCATABLE :: v2rho2_c(:), v2rhosigma_c(:), v2sigma2_c(:)
@@ -99,10 +99,11 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
 #endif
 #endif
   !
+  LOGICAL :: fkind_is_XC
   INTEGER :: k, length_dlxc
   REAL(DP) :: rht, zeta, xcoef
   REAL(DP), ALLOCATABLE :: sigma(:)
-  REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
+  REAL(DP), PARAMETER :: small=1.E-10_DP, rho_trash=0.5_DP
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-6
   !
   !$acc data present( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
@@ -117,6 +118,9 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   dvxc_ss(:,:,:) = 0._DP
   !$acc end kernels
   !
+  fkind = -1
+  fkind_is_XC = .FALSE.
+  !
 #if defined(__LIBXC)
   !
   IF ( ANY(is_libxc(3:4)) ) THEN
@@ -127,7 +131,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     IF (sp == 2) length_dlxc = length*3
     !
     ALLOCATE( rho_lxc(length*sp), sigma(length_dlxc) )
-    !$acc data copyout( rho_lxc, sigma )
+    !$acc enter data create( rho_lxc, sigma )
     !
     ! ... set libxc input
     SELECT CASE( sp )
@@ -163,7 +167,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       !
     END SELECT
     !
-    !$acc end data
+    !$acc update self(rho_lxc, sigma)
     !
   ENDIF
   !
@@ -263,10 +267,14 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
   ENDIF
   !
+  fkind_is_XC = (fkind==XC_EXCHANGE_CORRELATION)
+  !
+#endif
+  !
   ! ... QE DERIVATIVE FOR EXCHANGE AND CORRELATION
   !
   IF ( ((.NOT.is_libxc(3).AND.igcx/=0) .OR. (.NOT.is_libxc(4).AND.igcc/=0)) &
-        .AND. fkind/=XC_EXCHANGE_CORRELATION ) THEN
+        .AND. (.NOT.fkind_is_XC) ) THEN
     !
     ALLOCATE( vrrx(length,sp), vsrx(length,sp), vssx(length,sp) )
     ALLOCATE( vrrc(length,sp), vsrc(length,sp), vssc(length) )
@@ -276,13 +284,16 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        !
        IF (.NOT. ALLOCATED(sigma)) THEN
          ALLOCATE( sigma(length) )
-         sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
+         !$acc enter data create(sigma)
        ENDIF
        !
-       !$acc data copyin( sigma )
+       !$acc parallel loop
+       DO k = 1, length
+         sigma(k) = g_in(k,1,1)**2 + g_in(k,2,1)**2 + g_in(k,3,1)**2
+       ENDDO
+       !
        CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
                          vrrc(:,1), vsrc(:,1), vssc )
-       !$acc end data
        !
        !$acc parallel loop
        DO k = 1, length
@@ -334,84 +345,16 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
   ENDIF
   !
-  IF ( ANY(is_libxc(3:4))) DEALLOCATE( rho_lxc )
-  IF ( ALLOCATED(sigma)  ) DEALLOCATE( sigma )
-  !
-#else
-  !
-  ALLOCATE( vrrx(length,sp), vsrx(length,sp), vssx(length,sp) )
-  ALLOCATE( vrrc(length,sp), vsrc(length,sp), vssc(length) )
-  !$acc data create( vrrx, vsrx, vssx, vrrc, vsrc, vssc )
-  !
-  SELECT CASE( sp )
-  CASE( 1 )
-     !
-     ALLOCATE( sigma(length) )
-     !$acc data create( sigma )
-     !
-     !$acc parallel loop
-     DO k = 1, length
-       sigma(k) = g_in(k,1,1)**2 + g_in(k,2,1)**2 + g_in(k,3,1)**2
-     ENDDO
-     !
-     CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
-                       vrrc(:,1), vsrc(:,1), vssc )
-     !
-     !$acc end data
-     DEALLOCATE( sigma )
-     !
-     !$acc parallel loop
-     DO k = 1, length
-       dvxc_rr(k,1,1) = e2*(vrrx(k,1) + vrrc(k,1))
-       dvxc_sr(k,1,1) = e2*(vsrx(k,1) + vsrc(k,1))
-       dvxc_ss(k,1,1) = e2*(vssx(k,1) + vssc(k)  )
-     ENDDO
-     !
-  CASE( 2 )
-     !
-     ALLOCATE( vrzc(length,sp) )
-     !$acc data create( vrzc )
-     !
-     CALL dgcxc_spin( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
-     !
-     !$acc parallel loop
-     DO k = 1, length
-        !
-        rht = r_in(k,1) + r_in(k,2)
-        IF (rht > epsr) THEN
-           zeta = (r_in(k,1) - r_in(k,2))/rht
-           !
-           dvxc_rr(k,1,1) = e2*(vrrx(k,1) + vrrc(k,1) + vrzc(k,1)*(1.d0 - zeta)/rht)
-           dvxc_rr(k,1,2) = e2*(vrrc(k,1) - vrzc(k,1)*(1.d0 + zeta)/rht)
-           dvxc_rr(k,2,1) = e2*(vrrc(k,2) + vrzc(k,2)*(1.d0 - zeta)/rht)
-           dvxc_rr(k,2,2) = e2*(vrrx(k,2) + vrrc(k,2) - vrzc(k,2)*(1.d0 + zeta)/rht)
-        ENDIF
-        !
-        dvxc_sr(k,1,1) = e2 * (vsrx(k,1) + vsrc(k,1))
-        dvxc_sr(k,1,2) = e2 * vsrc(k,1)
-        dvxc_sr(k,2,1) = e2 * vsrc(k,2)
-        dvxc_sr(k,2,2) = e2 * (vsrx(k,2) + vsrc(k,2))
-        !
-        dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k))
-        dvxc_ss(k,1,2) = e2 * vssc(k)
-        dvxc_ss(k,2,1) = e2 * vssc(k)
-        dvxc_ss(k,2,2) = e2 * (vssx(k,2) + vssc(k))
-     ENDDO
-     !
-     !$acc end data
-     DEALLOCATE( vrzc )
-     !
-  CASE DEFAULT
-     !
-     CALL xclib_error( 'dgcxc', 'Wrong ns input', 4 )
-     !
-  END SELECT
-  !
-  !$acc end data
-  DEALLOCATE( vrrx, vsrx, vssx )
-  DEALLOCATE( vrrc, vsrc, vssc )
-  !
+#if defined(__LIBXC)
+  IF ( ANY(is_libxc(3:4))) THEN
+    !$acc exit data delete(rho_lxc)
+    DEALLOCATE( rho_lxc )
+  ENDIF
 #endif
+  IF ( ALLOCATED(sigma) ) THEN
+    !$acc exit data delete(sigma)
+    DEALLOCATE( sigma )
+  ENDIF
   !
   !$acc end data
   !

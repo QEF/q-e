@@ -1,9 +1,9 @@
 
-     Program PWSCF v.7.1 starts on  2Sep2022 at 13: 1:39 
-        Git branch: restructure_solvelinter
-        Last git commit: aa64910deb7f06913952b1cdf4e50c542c61c4d2-dirty
-        Last git commit date: Fri Sep 2 11:16:23 2022 +0200
-        Last git commit subject: Update input_summary KCW
+     Program PWSCF v.7.3.1 starts on 25Sep2024 at 15: 8:54 
+        Git branch: develop
+        Last git commit: bdd82480539e9b5a8a2317b314f3e3ce005b4fba-dirty
+        Last git commit date: Sat Sep 21 21:24:12 2024 +0000
+        Last git commit subject: Merge branch 'XClib_some_updates' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,10 +14,10 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     8 processors
 
      MPI processes distributed on     1 nodes
-     1542 MiB available memory on the printing compute node when the environment starts
+     204023 MiB available memory on the printing compute node when the environment starts
  
      Waiting for input...
      Reading input from standard input
@@ -27,6 +27,7 @@
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  4
  
+     K-points division:     npool     =       2
      R & G space division:  proc/nbgrp/npool/nimage =       4
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
@@ -55,8 +56,8 @@
      scf convergence threshold =      5.0E-13
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation= PBE
-                           (   1   4   3   4   0   0   0)
+     Exchange-correlation= SLA  PW   NOGX NOGC
+                           (   1   4   0   0   0   0   0)
 
      celldm(1)=  10.263102  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -73,22 +74,24 @@
 
 
      PseudoPot. # 1 for Si read from file:
-     /home/nicola/Scrivania/CODES/git/q-e-kcw/pseudo/Si_ONCV_PBE-1.0.upf
-     MD5 check sum: 2de5a83d12544a9ea852f39b88f19b1f
-     Pseudo is Norm-conserving, Zval =  4.0
+     /home/colonna_n/CODES/q-e-kcw/pseudo/Si.upf
+     MD5 check sum: 9e2d726316af3d4752eea8ab0afbb951
+     Pseudo is Norm-conserving + core correction, Zval =  4.0
      Generated using ONCVPSP code by D. R. Hamann
-     Using radial grid of  602 points,  4 beta functions with: 
+     Using radial grid of 1510 points,  6 beta functions with: 
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
+                l(5) =   2
+                l(6) =   2
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      Starting magnetic structure 
      atomic species   magnetization
-        Si           0.000
+     Si              0.000
 
      48 Sym. Ops., with inversion, found (24 have fractional translation)
 
@@ -665,14 +668,14 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (  -0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (  -0.2500000   0.2500000   0.2500000  )
 
    Crystallographic axes
 
      site n.     atom                  positions (cryst. coord.)
-         1           Si  tau(   1) = (  0.0000000  0.0000000  0.0000000  )
-         2           Si  tau(   2) = (  0.2500000  0.2500000  0.2500000  )
+         1        Si     tau(   1) = (  0.0000000  0.0000000  0.0000000  )
+         2        Si     tau(   2) = (  0.2500000  0.2500000  0.2500000  )
 
      number of k points=     8
                        cart. coord. in units 2pi/alat
@@ -699,15 +702,15 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
      Dynamical RAM for                 wfc:       0.03 MB
 
-     Dynamical RAM for     wfc (w. buffer):       0.53 MB
+     Dynamical RAM for     wfc (w. buffer):       0.28 MB
 
      Dynamical RAM for           str. fact:       0.01 MB
 
      Dynamical RAM for           local pot:       0.00 MB
 
-     Dynamical RAM for          nlocal pot:       0.02 MB
+     Dynamical RAM for          nlocal pot:       0.06 MB
 
-     Dynamical RAM for                qrad:       0.21 MB
+     Dynamical RAM for                qrad:       0.72 MB
 
      Dynamical RAM for          rho,v,vnew:       0.23 MB
 
@@ -719,7 +722,7 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
      Dynamical RAM for          h,s,v(r/c):       0.07 MB
 
-     Dynamical RAM for          <psi|beta>:       0.00 MB
+     Dynamical RAM for          <psi|beta>:       0.01 MB
 
      Dynamical RAM for                 psi:       0.06 MB
 
@@ -727,22 +730,22 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
      Dynamical RAM for      wfcinit/wfcrot:       0.07 MB
 
-     Estimated static dynamical RAM per process >       1.32 MB
+     Estimated static dynamical RAM per process >       1.62 MB
 
-     Estimated max dynamical RAM per process >       1.92 MB
+     Estimated max dynamical RAM per process >       2.23 MB
 
-     Estimated total dynamical RAM >       7.70 MB
+     Estimated total dynamical RAM >      16.21 MB
      Generating pointlists ...
      new r_m :   0.1786 (alat units)  1.8332 (a.u.) for type    1
 
      Initial potential from superposition of free atoms
 
-     starting charge       7.9075, renormalised to       8.0000
-     Starting wfcs are random
+     starting charge       7.9989, renormalised to       8.0000
+     Starting wfcs are    8 randomized atomic wfcs +   12 random wfcs
 
      total cpu time spent up to now is        0.1 secs
 
-     per-process dynamical memory:    20.8 Mb
+     per-process dynamical memory:    32.9 Mb
 
      Self-consistent Calculation
 
@@ -750,16 +753,16 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            38 MiB given to the printing process from OS
-            20 MiB allocation reported by mallinfo(arena+hblkhd)
-          1514 MiB available memory on the node where the printing process lives
+            99 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203916 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  1.00E-02,  avg # of iterations =  7.9
+     ethr =  1.00E-02,  avg # of iterations =  6.9
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
-     total energy              =     -15.56589063 Ry
-     estimated scf accuracy    <       0.10448285 Ry
+     total energy              =     -16.84900920 Ry
+     estimated scf accuracy    <       0.11350104 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
@@ -768,16 +771,16 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            20 MiB allocation reported by mallinfo(arena+hblkhd)
-          1510 MiB available memory on the node where the printing process lives
+           102 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203902 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  1.31E-03,  avg # of iterations =  1.6
+     ethr =  1.42E-03,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.3 secs
 
-     total energy              =     -15.57116648 Ry
-     estimated scf accuracy    <       0.00369852 Ry
+     total energy              =     -16.85534381 Ry
+     estimated scf accuracy    <       0.00307226 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
@@ -786,16 +789,16 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            20 MiB allocation reported by mallinfo(arena+hblkhd)
-          1510 MiB available memory on the node where the printing process lives
+           102 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203901 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  4.62E-05,  avg # of iterations =  3.1
+     ethr =  3.84E-05,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.4 secs
 
-     total energy              =     -15.57136627 Ry
-     estimated scf accuracy    <       0.00007607 Ry
+     total energy              =     -16.85543506 Ry
+     estimated scf accuracy    <       0.00007192 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
@@ -804,89 +807,71 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            20 MiB allocation reported by mallinfo(arena+hblkhd)
-          1510 MiB available memory on the node where the printing process lives
+           102 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203901 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  9.51E-07,  avg # of iterations =  3.9
+     ethr =  8.99E-07,  avg # of iterations =  4.5
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.4 secs
 
-     total energy              =     -15.57137568 Ry
-     estimated scf accuracy    <       0.00000033 Ry
+     total energy              =     -16.85543830 Ry
+     estimated scf accuracy    <       0.00000012 Ry
 
-     total magnetization       =    -0.00 Bohr mag/cell
+     total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
      iteration #  5     ecut=    20.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            21 MiB allocation reported by mallinfo(arena+hblkhd)
-          1510 MiB available memory on the node where the printing process lives
+           102 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203900 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  4.11E-09,  avg # of iterations =  2.0
+     ethr =  1.45E-09,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.5 secs
 
-     total energy              =     -15.57137595 Ry
-     estimated scf accuracy    <          5.4E-09 Ry
+     total energy              =     -16.85543839 Ry
+     estimated scf accuracy    <          2.6E-09 Ry
 
-     total magnetization       =    -0.00 Bohr mag/cell
+     total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
      iteration #  6     ecut=    20.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            21 MiB allocation reported by mallinfo(arena+hblkhd)
-          1510 MiB available memory on the node where the printing process lives
+           102 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203900 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  6.73E-11,  avg # of iterations =  2.1
+     ethr =  3.21E-11,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.6 secs
 
-     total energy              =     -15.57137595 Ry
-     estimated scf accuracy    <          6.0E-11 Ry
+     total energy              =     -16.85543839 Ry
+     estimated scf accuracy    <          2.8E-11 Ry
 
-     total magnetization       =    -0.00 Bohr mag/cell
+     total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
      iteration #  7     ecut=    20.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            21 MiB allocation reported by mallinfo(arena+hblkhd)
-          1509 MiB available memory on the node where the printing process lives
+           102 MiB given to the printing process from OS
+            32 MiB allocation reported by mallinfo(arena+hblkhd)
+        203900 MiB available memory on the node where the printing process lives
 ------------------
-     ethr =  7.53E-13,  avg # of iterations =  2.2
-
-     total cpu time spent up to now is        1.2 secs
-
-     total energy              =     -15.57137595 Ry
-     estimated scf accuracy    <          9.6E-13 Ry
-
-     total magnetization       =     0.00 Bohr mag/cell
-     absolute magnetization    =     0.00 Bohr mag/cell
-
-     iteration #  8     ecut=    20.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-
----- Real-time Memory Report at c_bands before calling an iterative solver
-            40 MiB given to the printing process from OS
-            21 MiB allocation reported by mallinfo(arena+hblkhd)
-          1509 MiB available memory on the node where the printing process lives
-------------------
-     ethr =  1.00E-13,  avg # of iterations =  1.1
+     ethr =  3.48E-13,  avg # of iterations =  3.1
  
      Magnetic moment per site  (integrated on atomic sphere of radius R)
-     atom   1 (R=0.179)  charge=  1.8705  magn=  0.0000
-     atom   2 (R=0.179)  charge=  1.8705  magn=  0.0000
+     atom   1 (R=0.179)  charge=  1.8748  magn=  0.0000
+     atom   2 (R=0.179)  charge=  1.8748  magn=  0.0000
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        0.7 secs
 
      End of self-consistent calculation
 
@@ -895,9 +880,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.4905   6.5463   6.5463   6.5463   8.9866   8.9866   8.9866   9.8775
-    14.1923  14.1923  14.4675  17.6508  17.6508  17.6508  21.9360  29.9773
-    29.9773  29.9773  31.0467  31.0467
+    -5.7058   6.3432   6.3432   6.3432   8.7374   8.7374   8.7374   9.4921
+    13.7955  13.9922  13.9922  17.2316  17.2316  17.2316  21.1239  29.3732
+    29.3732  29.3732  30.5347  30.5347
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -906,9 +891,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -917,9 +902,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -928,9 +913,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.3252  -1.3252   3.6152   3.6152   7.1423   7.1423  16.6030  16.6030
-    17.6221  17.6221  19.0492  19.0492  19.5900  19.5900  25.5341  25.5341
-    26.2118  26.2118  26.6215  26.6215
+    -1.5321  -1.5321   3.4046   3.4046   6.7657   6.7657  16.2469  16.2469
+    17.3217  17.3217  18.8315  18.8315  19.0992  19.0992  24.9582  24.9582
+    25.6595  25.6595  26.3238  26.3238
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -939,9 +924,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -950,9 +935,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.3252  -1.3252   3.6152   3.6152   7.1423   7.1423  16.6030  16.6030
-    17.6221  17.6221  19.0492  19.0492  19.5900  19.5900  25.5341  25.5341
-    26.2118  26.2118  26.6215  26.6215
+    -1.5321  -1.5321   3.4046   3.4046   6.7657   6.7657  16.2469  16.2469
+    17.3217  17.3217  18.8315  18.8315  19.0992  19.0992  24.9582  24.9582
+    25.6595  25.6595  26.3238  26.3238
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -961,9 +946,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.3252  -1.3252   3.6152   3.6152   7.1423   7.1423  16.6030  16.6030
-    17.6221  17.6221  19.0492  19.0492  19.5900  19.5900  25.5341  25.5341
-    26.2118  26.2118  26.6215  26.6215
+    -1.5321  -1.5321   3.4046   3.4046   6.7657   6.7657  16.2469  16.2469
+    17.3217  17.3217  18.8315  18.8315  19.0992  19.0992  24.9582  24.9582
+    25.6595  25.6595  26.3237  26.3238
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -972,9 +957,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -986,9 +971,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.4905   6.5463   6.5463   6.5463   8.9866   8.9866   8.9866   9.8775
-    14.1923  14.1923  14.4675  17.6508  17.6508  17.6508  21.9360  29.9773
-    29.9773  29.9773  31.0467  31.0467
+    -5.7058   6.3432   6.3432   6.3432   8.7374   8.7374   8.7374   9.4921
+    13.7955  13.9922  13.9922  17.2316  17.2316  17.2316  21.1239  29.3732
+    29.3732  29.3732  30.5347  30.5347
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -997,9 +982,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -1008,9 +993,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -1019,9 +1004,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.3252  -1.3252   3.6152   3.6152   7.1423   7.1423  16.6030  16.6030
-    17.6221  17.6221  19.0492  19.0492  19.5900  19.5900  25.5341  25.5342
-    26.2118  26.2118  26.6215  26.6215
+    -1.5321  -1.5321   3.4046   3.4046   6.7657   6.7657  16.2469  16.2469
+    17.3217  17.3217  18.8315  18.8315  19.0992  19.0992  24.9582  24.9582
+    25.6595  25.6595  26.3238  26.3238
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -1030,9 +1015,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -1041,9 +1026,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.3252  -1.3252   3.6152   3.6152   7.1423   7.1423  16.6030  16.6030
-    17.6221  17.6221  19.0492  19.0492  19.5900  19.5900  25.5341  25.5341
-    26.2118  26.2118  26.6215  26.6215
+    -1.5321  -1.5321   3.4046   3.4046   6.7657   6.7657  16.2469  16.2469
+    17.3217  17.3217  18.8315  18.8315  19.0992  19.0992  24.9582  24.9582
+    25.6595  25.6595  26.3238  26.3238
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -1052,9 +1037,9 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.3252  -1.3252   3.6152   3.6152   7.1423   7.1423  16.6030  16.6030
-    17.6221  17.6221  19.0492  19.0492  19.5900  19.5900  25.5341  25.5341
-    26.2118  26.2118  26.6215  26.6215
+    -1.5321  -1.5321   3.4046   3.4046   6.7657   6.7657  16.2469  16.2469
+    17.3217  17.3217  18.8315  18.8315  19.0992  19.0992  24.9582  24.9582
+    25.6595  25.6595  26.3237  26.3238
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -1063,86 +1048,87 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.1401  -0.5116   5.3079   5.3079   8.0305   9.7641   9.7641  14.1717
-    17.1033  17.1033  17.8212  17.8212  17.9310  19.5166  26.1583  26.4774
-    28.2323  28.2323  28.4606  28.4606
+    -3.3376  -0.7612   5.1093   5.1093   7.6771   9.4935   9.4935  13.6075
+    16.8413  16.8413  17.4047  17.5078  17.5078  19.0376  25.5733  26.0298
+    27.7389  27.7389  28.0391  28.0391
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
      0.0000   0.0000   0.0000   0.0000   0.0000   0.0000   0.0000   0.0000
      0.0000   0.0000   0.0000   0.0000
 
-     highest occupied, lowest unoccupied level (ev):     6.5463    7.1423
+     highest occupied, lowest unoccupied level (ev):     6.3432    6.7657
 
-!    total energy              =     -15.57137595 Ry
-     estimated scf accuracy    <          1.4E-14 Ry
+!    total energy              =     -16.85543839 Ry
+     estimated scf accuracy    <          2.9E-13 Ry
 
      The total energy is the sum of the following terms:
-     one-electron contribution =       4.84867180 Ry
-     hartree contribution      =       1.26750578 Ry
-     xc contribution           =      -4.89170172 Ry
+     one-electron contribution =       4.94823814 Ry
+     hartree contribution      =       1.25628543 Ry
+     xc contribution           =      -6.26411016 Ry
      ewald contribution        =     -16.79585180 Ry
 
-     total magnetization       =    -0.00 Bohr mag/cell
+     total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
-     convergence has been achieved in   8 iterations
+     convergence has been achieved in   7 iterations
 
-     Writing all to output data dir /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si.save/
+     Writing all to output data dir /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/ :
+     XML data file, charge density, pseudopotentials, collected wavefunctions
  
-     init_run     :      0.05s CPU      0.09s WALL (       1 calls)
-     electrons    :      1.04s CPU      1.15s WALL (       1 calls)
+     init_run     :      0.07s CPU      0.08s WALL (       1 calls)
+     electrons    :      0.50s CPU      0.52s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.03s CPU      0.06s WALL (       1 calls)
-     wfcinit:wfcr :      0.03s CPU      0.05s WALL (      16 calls)
-     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     hinit0       :      0.00s CPU      0.00s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.02s WALL (       1 calls)
+     wfcinit:atom :      0.00s CPU      0.00s WALL (       8 calls)
+     wfcinit:wfcr :      0.01s CPU      0.01s WALL (       8 calls)
+     potinit      :      0.02s CPU      0.02s WALL (       1 calls)
+     hinit0       :      0.03s CPU      0.03s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.88s CPU      0.98s WALL (       8 calls)
-     sum_band     :      0.12s CPU      0.13s WALL (       8 calls)
-     v_of_rho     :      0.04s CPU      0.04s WALL (       9 calls)
-     v_h          :      0.00s CPU      0.00s WALL (       9 calls)
-     v_xc         :      0.03s CPU      0.04s WALL (       9 calls)
-     mix_rho      :      0.00s CPU      0.00s WALL (       8 calls)
+     c_bands      :      0.39s CPU      0.40s WALL (       7 calls)
+     sum_band     :      0.09s CPU      0.09s WALL (       7 calls)
+     v_of_rho     :      0.01s CPU      0.01s WALL (       8 calls)
+     v_h          :      0.00s CPU      0.00s WALL (       8 calls)
+     v_xc         :      0.01s CPU      0.01s WALL (       8 calls)
+     mix_rho      :      0.01s CPU      0.01s WALL (       7 calls)
 
      Called by c_bands:
-     init_us_2    :      0.01s CPU      0.01s WALL (     272 calls)
-     init_us_2:cp :      0.01s CPU      0.01s WALL (     272 calls)
-     cegterg      :      0.86s CPU      0.95s WALL (     128 calls)
+     init_us_2    :      0.02s CPU      0.02s WALL (     120 calls)
+     cegterg      :      0.30s CPU      0.32s WALL (      56 calls)
 
      Called by sum_band:
-     sum_band:wei :      0.00s CPU      0.00s WALL (       8 calls)
-     sum_band:loo :      0.12s CPU      0.12s WALL (       8 calls)
-     sum_band:buf :      0.00s CPU      0.00s WALL (     128 calls)
-     sum_band:ini :      0.00s CPU      0.00s WALL (     128 calls)
+     sum_band:wei :      0.00s CPU      0.00s WALL (       7 calls)
+     sum_band:loo :      0.08s CPU      0.08s WALL (       7 calls)
+     sum_band:buf :      0.00s CPU      0.00s WALL (      56 calls)
+     sum_band:ini :      0.01s CPU      0.01s WALL (      56 calls)
 
      Called by *egterg:
-     cdiaghg      :      0.20s CPU      0.24s WALL (     511 calls)
-     cegterg:over :      0.04s CPU      0.05s WALL (     383 calls)
-     cegterg:upda :      0.01s CPU      0.01s WALL (     383 calls)
-     cegterg:last :      0.02s CPU      0.02s WALL (     277 calls)
-     h_psi        :      0.58s CPU      0.64s WALL (     527 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (     383 calls)
+     cdiaghg      :      0.08s CPU      0.08s WALL (     248 calls)
+     cegterg:over :      0.01s CPU      0.01s WALL (     192 calls)
+     cegterg:upda :      0.00s CPU      0.00s WALL (     192 calls)
+     cegterg:last :      0.00s CPU      0.00s WALL (     126 calls)
+     h_psi        :      0.21s CPU      0.22s WALL (     256 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     192 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.02s CPU      0.02s WALL (     527 calls)
-     vloc_psi     :      0.55s CPU      0.60s WALL (     527 calls)
-     add_vuspsi   :      0.01s CPU      0.01s WALL (     527 calls)
+     h_psi:calbec :      0.01s CPU      0.01s WALL (     256 calls)
+     vloc_psi     :      0.20s CPU      0.21s WALL (     256 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     256 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (     527 calls)
-     fft          :      0.01s CPU      0.01s WALL (     168 calls)
-     ffts         :      0.00s CPU      0.00s WALL (      16 calls)
-     fftw         :      0.56s CPU      0.62s WALL (   16672 calls)
+     calbec       :      0.01s CPU      0.01s WALL (     256 calls)
+     fft          :      0.00s CPU      0.00s WALL (      38 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      14 calls)
+     fftw         :      0.14s CPU      0.15s WALL (    7282 calls)
  
      Parallel routines
  
-     PWSCF        :      1.11s CPU      1.29s WALL
+     PWSCF        :      0.62s CPU      0.66s WALL
 
  
-   This run was terminated on:  13: 1:40   2Sep2022            
+   This run was terminated on:  15: 8:55  25Sep2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
