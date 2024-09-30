@@ -3061,16 +3061,6 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nelec')
         CALL xml_addCharacters(xp, obj%nelec, fmt='s16')
      CALL xml_EndElement(xp, 'nelec')
-     IF (obj%num_of_atomic_wfc_ispresent) THEN
-        CALL xml_NewElement(xp, "num_of_atomic_wfc")
-           CALL xml_addCharacters(xp, obj%num_of_atomic_wfc)
-        CALL xml_EndElement(xp, "num_of_atomic_wfc")
-     END IF
-     IF (obj%wf_collected_ispresent) THEN
-        CALL xml_NewElement(xp, "wf_collected")
-           CALL xml_addCharacters(xp, obj%wf_collected)
-        CALL xml_EndElement(xp, "wf_collected")
-     END IF
      IF (obj%fermi_energy_ispresent) THEN
         CALL xml_NewElement(xp, "fermi_energy")
            CALL xml_addCharacters(xp, obj%fermi_energy, fmt='s16')
