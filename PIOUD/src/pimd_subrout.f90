@@ -2015,7 +2015,7 @@ SUBROUTINE pimd_gen_inputs(parse_file_name,engine_prefix,root,comm)
            READ(parse_unit,'(A512)') dummy
            
            DO WHILE (trim(ADJUSTL(dummy)) /= "END_PIMD_INPUT")
-              IF(myrank==root) WRITE(md_unit,*) trim(ADJUSTL(dummy))
+              IF(myrank==root) WRITE(md_unit,'(A512)') trim(ADJUSTL(dummy))
               READ(parse_unit,'(A512)') dummy
            ENDDO
            

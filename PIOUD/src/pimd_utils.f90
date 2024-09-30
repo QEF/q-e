@@ -234,29 +234,35 @@ END SUBROUTINE pimd_get_amas_and_nat
 
 
 SUBROUTINE pimd_mp_bcast
-  ! use path_variables, only : nstep_path, num_of_images,&
-  !                                          first_last_opt
+  use path_variables, only : nstep_path, num_of_images,&
+                                           first_last_opt
   use pimd_variables, only : nbeadMD,nblocks,nstep_block
   USE io_global, ONLY : meta_ionode,meta_ionode_id
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_world,  ONLY : world_comm, mpime
 
   implicit none
 
-  integer :: nstep_path
-  integer :: num_of_images
-  logical :: first_last_opt
+  ! integer :: nstep_path
+  ! integer :: num_of_images
+  ! logical :: first_last_opt
   
   nstep_path = nblocks*nstep_block
   write(*,*) nstep_path
-  write(10000,*) nstep_path
+  write(10000,*) "nstep_path",nstep_path,num_of_images,"num_of_images", &
+                  nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
   num_of_images = nbeadMD
   !if (nbeadMD.eq.1) num_of_images=2
   first_last_opt=.true.
+  write(10001,*) "nstep_path",nstep_path,num_of_images,"num_of_images", &
+                 nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
   CALL mp_bcast( nstep_path,  meta_ionode_id, world_comm )
   CALL mp_bcast( num_of_images,  meta_ionode_id, world_comm )
   CALL mp_bcast( first_last_opt,  meta_ionode_id, world_comm )
-  
+  CALL mp_bcast( nbeadMD,  meta_ionode_id, world_comm ) !Added Aadhityan #Do we need?
+
+  write(11000+mpime,*) nstep_path,num_of_images,nbeadMD,first_last_opt
+
   return
   
 END SUBROUTINE pimd_mp_bcast
@@ -431,3 +437,94 @@ SUBROUTINE my_refold(idx,rpostmp0,rpostmp1)
   RETURN
   !
 END SUBROUTINE my_refold
+
+SUBROUTINE verify_pioud_tmpdir()
+  !-----------------------------------------------------------------------
+  !
+  USE clib_wrappers,    ONLY : f_mkdir
+  USE path_input_parameters_module, ONLY : restart_mode
+  USE io_files,         ONLY : prefix, check_tempdir, delete_if_present, tmp_dir
+  use pimd_variables, only : nbeadMD !Is it input_images in piioud.f90
+  USE mp_world,         ONLY : world_comm, mpime, nproc
+  USE io_global,        ONLY : meta_ionode
+  USE mp,               ONLY : mp_barrier
+  !
+  IMPLICIT NONE
+  !  !
+  INTEGER             :: ios, image, proc, nofi
+  LOGICAL             :: exst, parallelfs
+  CHARACTER (len=256) :: file_path, filename
+  CHARACTER(len=6), EXTERNAL :: int_to_char
+  !
+  !
+  file_path = trim( tmp_dir ) // trim( prefix )
+  !
+
+  !
+  IF ( restart_mode == 'from_scratch' ) THEN
+     !
+     ! ... let us try to create the scratch directory
+     !
+     CALL check_tempdir ( tmp_dir, exst, parallelfs )
+     !
+  ENDIF
+  !
+  !
+  ! ... if starting from scratch all temporary files are removed
+  ! ... from tmp_dir ( only by the master node )
+  !
+  IF ( meta_ionode ) THEN
+     !
+     ! ... files needed by parallelization among images are removed
+     !
+     CALL delete_if_present( trim( file_path ) // '.newimage' )
+     !
+     ! ... file containing the broyden's history
+     !
+     IF ( restart_mode == 'from_scratch' ) THEN
+        !
+        CALL delete_if_present( trim( file_path ) // '.broyden' )
+        !
+     ENDIF
+     !
+  ENDIF ! end if ionode
+  !
+  !
+  DO image = 1, nbeadMD
+     !
+     file_path = trim( tmp_dir ) // trim( prefix ) //"_" // &
+                 trim( int_to_char( image ) ) // '/'
+     !
+     CALL check_tempdir ( file_path, exst, parallelfs )
+     !
+     ! ... if starting from scratch all temporary files are removed
+     ! ... from tmp_dir ( by all the cpus in sequence )
+     !
+     IF ( restart_mode == 'from_scratch' ) THEN
+        !
+        DO proc = 0, nproc - 1
+           !
+           IF ( proc == mpime ) THEN
+              !
+              ! ... extrapolation file is removed
+              !
+              CALL delete_if_present( trim( file_path ) // &
+                                    & trim( prefix ) // '.update' )
+              !
+              ! ... standard output of the self-consistency is removed
+              !
+              CALL delete_if_present( trim( file_path ) // 'PW.out' )
+              !
+           ENDIF
+           !
+           CALL mp_barrier( world_comm )
+           !
+        ENDDO
+        !
+     ENDIF ! end restart_mode
+     !
+  ENDDO ! end do image
+!
+  RETURN
+  !
+END SUBROUTINE verify_pioud_tmpdir

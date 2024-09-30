@@ -26,7 +26,7 @@ PROGRAM pioud
   ! USE path_read_namelists_module, ONLY : path_read_namelist
   ! USE path_read_cards_module,     ONLY : path_read_cards
   !
-  USE path_input_parameters_module, ONLY : allocate_path_input_ions, &
+  USE path_input_parameters_module, ONLY : input_images, allocate_path_input_ions, &
                                            deallocate_path_input_ions
   USE path_io_units_module,  ONLY : iunpath
   !
@@ -38,11 +38,11 @@ PROGRAM pioud
   INTEGER :: unit_tmp, i, iimage
   INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  INTEGER :: input_images = 1 ! Consider we give one image  
+  ! INTEGER :: input_images = 1 ! Consider we give one image  
                               !!!added when sperate PIOUD from NEB
   !
   !
-  CALL mp_startup ( start_images=.true. )
+  CALL mp_startup ( start_images=.true.)
   !
   CALL environment_start ( 'PIOUD' )   !!! <----my mod.
   !
@@ -62,6 +62,7 @@ PROGRAM pioud
                             root, world_comm  )                                !!! <----my mod.
      CALL pw_gen_inputs( trim(input_file_), engine_prefix, & 
                             input_images, root, world_comm ) !!! Contains NEB. But can't get ridoff completly since it require to generate pw_1.in 
+  !Remove Else or just put no input images.
   ELSE
      WRITE(iunpath,'(/,5X,"No input file found, assuming nothing to parse",/,&
     &               5X,"Searching argument -input_images or --input_images")')
@@ -77,8 +78,8 @@ PROGRAM pioud
 
   
   IF ( meta_ionode) THEN                  !!! <----my mod.
-     unit_tmp = find_free_unit ()                  !!! <----my mod.
-     open(unit=unit_tmp,file="pimd.dat",status="old")      !!! <----my mod.
+    !  unit_tmp = find_free_unit ()                  !!! <----my mod.
+     open(newunit=unit_tmp,file="pimd.dat",status="old")      !!! <----my mod.
      CALL pimd_read_input(unit_tmp)                !!! <----my mod.
      close(unit=unit_tmp)                 !!! <----my mod.
   END IF                                  !!! <----my mod.
@@ -109,8 +110,8 @@ PROGRAM pioud
   
   if (meta_ionode)  call pimd_get_amas_and_nat  !!! <----my mod.
   !
-!   CALL ioneb()
-  ! CALL verify_neb_tmpdir()
+  ! CALL ioneb()
+  CALL verify_pioud_tmpdir()
   CALL set_engine_output()
   !
   ! END INPUT RELATED

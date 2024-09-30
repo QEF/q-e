@@ -74,7 +74,7 @@ MODULE path_input_parameters_module
   CHARACTER(len=80) :: string_method_scheme_allowed(2)
   DATA string_method_scheme_allowed / 'neb', 'sm' /
   !
-  INTEGER :: input_images = 0
+  INTEGER :: input_images = 1
   !
   INTEGER :: num_of_images = 0
   !

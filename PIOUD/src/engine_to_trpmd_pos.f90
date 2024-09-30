@@ -24,6 +24,7 @@ SUBROUTINE engine_to_path_pos(idx)
   !
   USE ions_base, ONLY : tau, ityp
   USE cell_base, ONLY : bg, at
+  use mp_world
   !
   IMPLICIT NONE
   !
@@ -42,6 +43,8 @@ SUBROUTINE engine_to_path_pos(idx)
   ! ... note that this positions array is in Bohr
   !
   pos(1:3*nat,idx) = reshape( tau, (/ 3 * nat /) ) * alat
+  write(14000+mpime,*)input_images,"input_images",minimum_image
+  
   !
   ! If requested, use the translational periodicity of the unit cell to ensure
   ! that the path is smooth (even if atoms in the input images do not move on

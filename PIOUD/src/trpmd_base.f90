@@ -62,6 +62,7 @@ MODULE trpmd_base
       USE fcp_variables,        ONLY : lfcpopt
       USE fcp_opt_routines,     ONLY : fcp_opt_allocation
       use pimd_variables, ONLY : nbeadMD
+      use mp_world
       !
       IMPLICIT NONE
       !
@@ -107,7 +108,8 @@ MODULE trpmd_base
       !                  & 'larger than the available number of images', 1 )
       !    !
       ! END IF
-      num_of_images=nbeadMD
+      ! num_of_images=nbeadMD
+      write(12000+mpime,*) num_of_images,nbeadMD,nimage
       if( nimage > num_of_images ) &
              CALL errore( 'initialize_polymer', 'nimage is ' // &
                         & 'more computing images than polymer images', 1 )
@@ -235,7 +237,7 @@ MODULE trpmd_base
     SUBROUTINE explore_phasespace()
       !-----------------------------------------------------------------------
       !
-      USE path_variables,    ONLY : lneb, lsmd, pos
+      USE path_variables,    ONLY : lneb, lsmd, pos, nstep_path
       USE path_variables,   ONLY : conv_path, istep_path,   &
                                    pending_image, activation_energy, &
                                    err_max, pes, CI_scheme,  &
@@ -243,6 +245,7 @@ MODULE trpmd_base
       USE trpmd_io_routines, ONLY : write_output
       USE path_formats,     ONLY : scf_iter_fmt
       USE fcp_variables,    ONLY : lfcpopt
+      use mp_world
       !
       USE pimd_variables,   ONLY : forceMD,rpos,unit_dot_out,irun,restart_pimd,nblocks,nstep_block    !!! <----my mod.
       !
@@ -253,15 +256,14 @@ MODULE trpmd_base
       REAL(DP) :: potenergy  !!! <----my mod.
       !
       REAL(DP), EXTERNAL :: get_clock
-      integer :: nstep_path
       !
       conv_path = .FALSE.
       !
       CALL explore_phasespace_init()
       !
       
-      nstep_path = nblocks*nstep_block
-      write(10000,*)istep_path,nstep_path,pending_image
+      
+      write(13000+mpime,*)istep_path,nstep_path,pending_image
       IF ( istep_path == nstep_path ) THEN
          !
          CALL write_output()
@@ -271,12 +273,13 @@ MODULE trpmd_base
          RETURN
          !
       END IF
-      
+      write(13000+mpime,*)istep_path,nstep_path,pending_image
       IF ( meta_ionode ) CALL pimd_allocation !!! <----my mod.
       
       IF ( meta_ionode .and. restart_pimd) CALL pimd_restart_traj  !!! <----my mod.
       CALL mp_bcast( pos,  meta_ionode_id, world_comm )   !!! <----my mod.
-      
+      write(13000+mpime,*)istep_path,nstep_path,pending_image
+
       if ( meta_ionode) then 
         write(*,*)
         write(*,*) '-------- computes initial forces and energy --------------' 
@@ -294,6 +297,8 @@ MODULE trpmd_base
       !
       ! ... path optimisation loop
       !
+      write(13000+mpime,*)istep_path,nstep_path,pending_image
+
       optimisation: DO
          !
          ! ... new positions are saved on file:  it has to be done here
