@@ -1,5 +1,9 @@
 
-     Program KC_PP_Self-Hartree v.7.1 starts on 31Aug2022 at  8:55:15 
+     Program KC_PP_Self-Hartree v.7.3.1 starts on 25Sep2024 at 15:49: 3 
+        Git branch: GGA_fix
+        Last git commit: 3fc5531ed12a50bf5b056d0a6fce3c36b32692e5-dirty
+        Last git commit date: Wed Sep 25 15:27:14 2024 +0200
+        Last git commit subject: Update exmaple02. Use LDA pseudos and functional
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -10,30 +14,43 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       4
-     697 MiB available memory on the printing compute node when the environment starts
+     204185 MiB available memory on the printing compute node when the environment starts
  
+
+     KC_PP INPUT SUMMARY 
+     ==========================================
+     # title               =KCWPP Self Hartree
+     # out_dir             =                ./
+     # prefix              =                Si
+     # seedname            =                Si
+     # kcw_iverbosity                        0
+     # num_wann            =                 8
+     # MP grid             =     2     2     2
+     # use_ws_distance     =                 F
+     # have_empty          =                 F
+     # io_sp               =                 F
+     # io_real_space       =                 F
+     ==========================================
+
      INFO: Reading pwscf data
 
      Reading xml data from directory:
 
-     /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si.save/
+     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation= PBE
-                           (   1   4   3   4   0   0   0)
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
  
-     Parallelization info
+     G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min          73      73     22                  821      821     152
-     Max          74      74     23                  823      823     153
      Sum         295     295     91                 3287     3287     609
  
      Using Slab Decomposition
@@ -54,19 +71,19 @@
 
      INFO: WANNIER orbital SH 
 
-     orb, Self hartree     1     0.274422
-     orb, Self hartree     2     0.274422
-     orb, Self hartree     3     0.274422
-     orb, Self hartree     4     0.274422
-     orb, Self hartree     5     0.095359
-     orb, Self hartree     6     0.095359
-     orb, Self hartree     7     0.095359
-     orb, Self hartree     8     0.095359
+     orb, Self hartree     1     0.272879
+     orb, Self hartree     2     0.272879
+     orb, Self hartree     3     0.272879
+     orb, Self hartree     4     0.272879
+     orb, Self hartree     5     0.095365
+     orb, Self hartree     6     0.095366
+     orb, Self hartree     7     0.095366
+     orb, Self hartree     8     0.095366
  
-     KC_PP_Self-H :      0.09s CPU      0.11s WALL
+     KC_PP_Self-H :      0.21s CPU      0.27s WALL
 
  
-   This run was terminated on:   8:55:15  31Aug2022            
+   This run was terminated on:  15:49: 3  25Sep2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

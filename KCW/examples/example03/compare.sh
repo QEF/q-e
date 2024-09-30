@@ -117,7 +117,7 @@ check=1
 
 for i in `seq 1 62`; do 
  grep -A 2 "KC interpolate" results/Si.kcwpp_interp.out | grep -v "KC inter" | grep -v "\-\-" | sed -r '/^\s*$/d' | head -$1 | tail -1 > pp
- grep -A 2 "KC interpolate" reference/Si.kcwpp_interp.out | grep -v "KC inter" | grep -v "\-\-" | sed -r '/^\s*$/d' | head -$1 | tail -1 > pp
+ grep -A 2 "KC interpolate" reference/Si.kcwpp_interp.out | grep -v "KC inter" | grep -v "\-\-" | sed -r '/^\s*$/d' | head -$1 | tail -1 >> pp
  for j in `seq 1 8`; do 
   col=`echo $j+1 | bc`
   eig=`head -1 pp | awk -v col=$col '{print $col}'`
