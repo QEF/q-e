@@ -71,7 +71,9 @@ MODULE path_variables
        error(:)                   ! the error from the true MEP
   REAL(DP), ALLOCATABLE :: &
        pos(:,:),                 &! reaction path
-       grad_pes(:,:)              ! gradients acting on the path
+       grad_pes(:,:),            &! gradients acting on the path
+       stress_pes(:,:)             !Stress
+
   LOGICAL, ALLOCATABLE :: &
        frozen(:)                  ! .TRUE. if the image or mode has not
                                   !        to be optimized
@@ -112,6 +114,8 @@ MODULE path_variables
        ALLOCATE( posold(   dim1, num_of_images ) )
        ALLOCATE( grad(     dim1, num_of_images ) )
        ALLOCATE( grad_pes( dim1, num_of_images ) )
+       ALLOCATE( stress_pes( dim1, num_of_images ) )
+
        !
        ALLOCATE( pes(      num_of_images ) )
        ALLOCATE( k(        num_of_images ) )
@@ -136,6 +140,7 @@ MODULE path_variables
        IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
        IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
+       IF ( ALLOCATED( stress_pes ) )     DEALLOCATE( stress_pes )
        IF ( ALLOCATED( k ) )            DEALLOCATE( k )
        IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
        IF ( ALLOCATED( error ) )        DEALLOCATE( error )

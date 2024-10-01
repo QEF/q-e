@@ -21,18 +21,18 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE basis,            ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec
+  USE control_flags,    ONLY : conv_elec, tstress
   USE cell_base,        ONLY : alat
   USE ions_base,        ONLY : tau, nat, ityp, zv
   USE ener,             ONLY : etot, ef
-  USE force_mod,        ONLY : force
+  USE force_mod,        ONLY : sigma, force
   USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, &
                                exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
                                istep_path, frozen, num_of_images, &
-                               first_last_opt
+                               first_last_opt, stress_pes ! <-- lp
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_images,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
@@ -45,6 +45,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE klist,            ONLY : nelec, tot_charge
   USE extrapolation,    ONLY : update_neb
   USE xc_lib,           ONLY : stop_exx, xclib_dft_is
+  use mp_world
+
 
   
   USE pimd_variables,   ONLY : nbeadMD
@@ -63,8 +65,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
-  fii_ = fii
-  lii_ = lii
+  fii_ = fii ! 1
+  lii_ = lii ! num_of_images aka nbeadMD
   !
   istat = 0
   !
@@ -72,51 +74,61 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   tmp_dir_saved = tmp_dir
   !
-  IF ( nimage > 1 ) THEN
-     !
-     ! ... vectors pes and grad_pes are initialized to zero for all images on
-     ! ... all nodes: this is needed for the final mp_sum()
-     !
-     IF ( my_image_id == root_image ) THEN
-        !
-        FORALL( image = fii:lii, .NOT.frozen(image) )
-           !
-           pes(image)        = 0.D0
-           grad_pes(:,image) = 0.D0
-           !
-        END FORALL
-        !
-     ELSE
-        !
-        pes(fii:lii)        = 0.D0
-        grad_pes(:,fii:lii) = 0.D0
-        !
-     END IF
-     !
-     IF ( lfcpopt ) THEN
-        !
-        IF ( my_image_id == root_image ) THEN
-           !
-           FORALL( image = fii:lii, .NOT.frozen(image) )
-              !
-              fcp_neb_ef(image) = 0.D0
-              !
-           END FORALL
-           !
-        ELSE
-           !
-           fcp_neb_ef(fii:lii) = 0.D0
-           !
-        END IF
-        !
-     END IF
-     !
-  END IF
+  pes        = 0.D0
+  grad_pes = 0.D0
+  stress_pes = 0.D0  ! --> allocated/deallocated in path_variable (path_allocation, path_deallocation) and declared...
+  fcp_neb_ef  = 0.d0 ! needed ?
+
+     !--- lp
+
+!   IF ( nimage > 1 ) THEN
+!      !
+!      ! ... vectors pes and grad_pes are initialized to zero for all images on
+!      ! ... all nodes: this is needed for the final mp_sum()
+!      !
+!      IF ( my_image_id == root_image ) THEN
+!         !
+!         FORALL( image = fii:lii, .NOT.frozen(image) )
+!            !
+!            pes(image)        = 0.D0
+!            grad_pes(:,image) = 0.D0
+!            stress_pes(:,image) = 0.D0
+!            !
+!         END FORALL
+!         !
+!      ELSE
+!         !
+!         pes(fii:lii)        = 0.D0
+!         grad_pes(:,fii:lii) = 0.D0
+!         stress_pes(:,fii:lii) = 0.D0
+!         !
+!      END IF
+!      !
+!      IF ( lfcpopt ) THEN
+!         !
+!         IF ( my_image_id == root_image ) THEN
+!            !
+!            FORALL( image = fii:lii, .NOT.frozen(image) )
+!               !
+!               fcp_neb_ef(image) = 0.D0
+!               !
+!            END FORALL
+!            !
+!         ELSE
+!            !
+!            fcp_neb_ef(fii:lii) = 0.D0
+!            !
+!         END IF
+!         !
+!      END IF
+!      !
+!   END IF
+
+   !--- lp
   !
   ! ... all processes are syncronized (needed to have a readable output)
   !
   CALL mp_barrier( world_comm )
-  !
   !
   ! ... only the first cpu initializes the file needed by parallelization
   ! ... among images
@@ -136,7 +148,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      IF (xclib_dft_is('hybrid')) call stop_exx() 
      CALL do_scf( image, istat )
      !
-     IF ( istat /= 0 ) STOP 99999
+     IF ( istat /= 0 ) GOTO 1
      !
      ! ... the new image is obtained (by ionode only)
      !
@@ -163,17 +175,13 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      ! ... pes and grad_pes are communicated among "image" pools
      !
-      if (nbeadMD.eq.1) then   !!! <----my mod.
-         CALL mp_sum( pes(fii:lii-1),        inter_image_comm )  !!! <----my mod.
-         CALL mp_sum( grad_pes(:,fii:lii-1), inter_image_comm )  !!! <----my mod.
-         IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii-1), inter_image_comm )   !!! <----my mod.
-         CALL mp_sum( istat,               inter_image_comm )   !!! <----my mod.
-      else
-         CALL mp_sum( pes(fii:lii),        inter_image_comm )  !!! <----my mod.
-         CALL mp_sum( grad_pes(:,fii:lii), inter_image_comm )  !!! <----my mod.
-         IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii), inter_image_comm )  !!! <----my mod.
-         CALL mp_sum( istat,               inter_image_comm )  !!! <----my mod.
-      end if  !!! <----my mod.
+
+      CALL mp_sum( pes,        inter_image_comm )  !!! <----my mod.
+      CALL mp_sum( grad_pes,   inter_image_comm )  !!! <----my mod.
+      CALL mp_sum( stress_pes, inter_image_comm )  !!! <----my mod.
+      IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef, inter_image_comm )  !!! <----my mod.
+      CALL mp_sum( istat,               inter_image_comm )  !!! <----my mod.
+
      !
   END IF
   !
@@ -325,6 +333,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       CALL forces()
       !
+      IF(tstress) CALL stress(sigma)
+      !
       ! ... energy is converted from rydberg to hartree
       !
       pes(image) = etot / e2
@@ -332,6 +342,11 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
       grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
+
+      stress_pes(:,image) = RESHAPE( sigma,(/ 9 /) )
+        stress_pes(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
+
+      write(10000000+mpime,*)stress_pes
       !
       ethr = diago_thr_init
       !

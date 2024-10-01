@@ -105,6 +105,7 @@ BEGIN_ENGINE_INPUT
   prefix         = "diamond"
   outdir         = "$TMP_DIR",
   pseudo_dir     = "$PSEUDO_DIR",
+  tstress = .true.
 /
 &SYSTEM
     ibrav = 2 ,

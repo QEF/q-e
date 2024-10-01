@@ -2,6 +2,7 @@
   prefix         = "diamond"
   outdir         = "/home/arivazha/gitlab/q-e-pioud/tempdir",
   pseudo_dir     = "/home/arivazha/gitlab/q-e-pioud/pseudo",
+  tstress = .true.
 /
 &SYSTEM
     ibrav = 2 ,
