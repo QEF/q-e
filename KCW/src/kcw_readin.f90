@@ -321,6 +321,10 @@ SUBROUTINE kcw_readin()
    IF (xclib_dft_is('meta')) &
        call errore('kcw_readin', 'Non-collinear KCW calculation &
                     does not support MGGA', 1 )
+   IF (irr_bz) & 
+       call errore('kcw_readin', 'Non-collinear KCW calculation &
+                    does not support symmetries. Set irr_bz to .false.', 1 )
+
   END IF 
   !
   IF ( nspin == 1 .OR. (nspin==4 .AND. .NOT. domag) ) THEN   !This should be equivalent to nspin_mag==1
