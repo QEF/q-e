@@ -475,18 +475,21 @@ subroutine kcw_setup
         !
         IF ( .NOT. io_real_space ) THEN 
           !
-          file_base=TRIM(tmp_dir_kcwq)//'rhowann_g_iwann_'//TRIM(int_to_char(i))
+          ! FIXME: TO BE UPDATED FOR NC
+          ip=1
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
           CALL read_rhowann_g( file_base, &
                root_bgrp, intra_bgrp_comm, &
-               ig_l2g, 1, rhog(:), .FALSE., gamma_only )
+               ig_l2g, 1, rhog(:,1), .FALSE., gamma_only )
           rhowann_aux=(0.d0,0.d0)
-          rhowann_aux(dffts%nl(:)) = rhog(:)
+          rhowann_aux(dffts%nl(:)) = rhog(:,1)
           CALL invfft ('Rho', rhowann_aux, dffts)
-          rhowann(:, i) = rhowann_aux(:)*omega
+          rhowann_aux(:)= rhowann_aux(:)*omega
         ELSE 
-          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char(i))
+          ! FIXME: TO BE UPDATED FOR NC
+          ip=1
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
           CALL read_rhowann( file_base, dffts, rhowann_aux )
-          rhowann(:, i) = rhowann_aux(:)
         ENDIF
         !
         ! end of read orbital density
@@ -495,21 +498,20 @@ subroutine kcw_setup
         lrpa_save=lrpa
         lrpa = .true.
         !
-        rhog(:)         = CMPLX(0.D0,0.D0,kind=DP)
+        rhog(:,:)       = CMPLX(0.D0,0.D0,kind=DP)
         delta_vg(:,:)   = CMPLX(0.D0,0.D0,kind=DP)
         vh_rhog(:)      = CMPLX(0.D0,0.D0,kind=DP)
-        rhor(:)         = CMPLX(0.D0,0.D0,kind=DP)
+        rhor(:,:)       = CMPLX(0.D0,0.D0,kind=DP)
         !
-        rhor(:) = rhowann(:,i) 
+        rhor(:,1) = rhowann_aux(:)
         !! The periodic part of the orbital desity in real space
         !
         CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_ )
-        rhowann_g(:,i) = rhog
         !! The periodic part of the perturbation DeltaV_q(G)
         ! 
-        sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:) )*wq_ibz(iq_ibz, i)*omega
+        sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:) )*wq_ibz(iq_ibz, i)*omega
 #ifdef DEBUG
-        sh_q  =sum (0.5D0*CONJG(rhog (:)) * vh_rhog(:) )*omega
+        sh_q  =sum (0.5D0*CONJG(rhog (:,1)) * vh_rhog(:) )*omega
         CALL mp_sum (sh_q,    intra_bgrp_comm)
         WRITE(2005,*) "iwann=", i, "q=", iq, "weight=", wq_ibz(iq_ibz, i), &
                       "nq eq=", INT(wq_ibz(iq_ibz, i)/weight(iq)), &
