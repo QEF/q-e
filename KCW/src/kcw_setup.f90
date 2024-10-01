@@ -477,7 +477,7 @@ subroutine kcw_setup
           !
           ! FIXME: TO BE UPDATED FOR NC
           ip=1
-          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_g_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
           CALL read_rhowann_g( file_base, &
                root_bgrp, intra_bgrp_comm, &
                ig_l2g, 1, rhog(:,1), .FALSE., gamma_only )
