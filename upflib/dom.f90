@@ -460,36 +460,28 @@ CONTAINS
        if ( allocated(curr%data) ) write(iun,'(A)') trim(curr%data)
     end if
     ! Go down recursively on the tree (note the call to itself below)
-    if ( allocated( curr%linklist ) ) then
-       linklist => curr%linklist
-       next     => linklist%node
-       lista: do
-          call destroy ( next, iun )
-          if ( .not. associated( linklist%nextlist ) ) exit lista
-          linklist => linklist%nextlist
-          next     => linklist%node
-       end do lista
+    if ( allocated(curr%linklist) ) then
+       linklist => curr%linklist%nextlist
+       call destroy(curr%linklist%node, iun)
+       ! Note that the first element of the linked list is an allocatable member of a node.
+       ! Unlike the following elements that are pointers, it should not be deallocated via a pointer.
+       ! Otherwise, the descriptor of the allocatable object gets corrupted.
+       deallocate (curr%linklist)
+       do while ( associated(linklist) )
+          call destroy(linklist%node, iun)
+          nextlist => linklist%nextlist
+          ! The linked list must be explicitly deallocated to avoid memory leaks
+          deallocate (linklist)
+          linklist => nextlist
+       end do
     end if
     !
     if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
     ! now deallocate all memory
-    deallocate (curr%tag)
+    if ( allocated(curr%tag) ) deallocate (curr%tag)
     if ( allocated(curr%data) ) deallocate (curr%data)
     if ( allocated(curr%attr) ) deallocate (curr%attr)
-    ! The linked list must be explicitly deallocated to avoid memory leaks
-    if ( allocated(curr%linklist) ) then
-       ! Note that the first element of the linked list is allocatable and
-       ! needs to be deallocated as below, unlike the following elements
-       ! that are pointers: maybe not a smart implementation?
-       linklist => curr%linklist%nextlist
-       deallocate (curr%linklist)
-       do while ( associated (linklist) )
-          nextlist => linklist%nextlist
-          deallocate (linklist)
-          linklist => nextlist
-       enddo
-    end if
     !
     if ( associated(curr%prev) ) then
        ! go down one level and deallocate
