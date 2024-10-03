@@ -124,7 +124,9 @@ subroutine kcw_setup_ham
   IF (calculation == 'ham') THEN 
     allocate (dmuxc ( dfftp%nnr , nspin_mag, nspin_mag))
     dmuxc = 0.d0
-    call setup_dmuxc()
+    CALL setup_dmuxc()
+    ! Setup all gradient correction stuff
+    CALL setup_dgc()
     CALL kcw_R_points ()
     CALL read_alpha ()
     IF (nkstot/nspin == 1 .and. nspin.ne.4 ) alpha_final_full = alpha_final

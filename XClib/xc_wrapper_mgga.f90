@@ -216,11 +216,24 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   !$acc update self( rho_lxc, sigma, tau_lxc, lapl_rho )
   !
+#endif
+  !
   IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     IF (ns == 1) THEN
       !
-      CALL tau_xc( length, rho(:,1), sigma, tau(:,1), ex, ec, v1x(:,1), &
+      ALLOCATE( grho2(length,ns) )
+      !$acc data create( grho2 )
+      !
+      !$acc parallel loop
+      DO k = 1, length
+        grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+      ENDDO
+      !
+      CALL tau_xc( length, rho(:,1), grho2, tau(:,1), ex, ec, v1x(:,1), &
                    v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
+      !
+      !$acc end data
+      DEALLOCATE( grho2 )
       !
     ELSEIF (ns == 2) THEN
       !
@@ -230,9 +243,12 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
     ENDIF
   ENDIF
   !
+#if defined(__LIBXC)
+  !
   ! ... META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
+    !
     CALL xc_f03_func_set_dens_threshold( xc_func(5), rho_threshold_mgga )
     IF (libxc_flags(5,0)==1) THEN
       CALL xc_f03_mgga_exc_vxc( xc_func(5), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
@@ -366,33 +382,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   !$acc end data
   DEALLOCATE( rho_lxc, sigma, tau_lxc, lapl_rho )
-  !
-#else
-  !
-  ALLOCATE( grho2(length,ns) )
-  !$acc data create( grho2 )
-  !
-  !$acc parallel loop collapse(2)
-  DO is = 1, ns
-    DO k = 1, length
-      grho2(k,is) = grho(1,k,is)**2 + grho(2,k,is)**2 + grho(3,k,is)**2
-    ENDDO  
-  ENDDO
-  !
-  IF (ns == 1) THEN
-     !
-     CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
-                  v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
-     !
-  ELSEIF (ns == 2) THEN
-     !
-     CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
-                       v2c, v3c )
-     !
-  ENDIF
-  !
-  !$acc end data
-  DEALLOCATE( grho2 )
   !
 #endif
   !

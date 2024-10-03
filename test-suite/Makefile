@@ -136,6 +136,8 @@ clean:
 	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test* tddfpt_*/test* kcw_*/test*
 # error files
 	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH tddfpt_*/CRASH kcw_*/CRASH
+# temporary input files
+	@rm -rf pw_*/input_tmp.in ph_*/input_tmp.in cp_*/input_tmp.in hp_*/input_tmp.in pp_*/input_tmp.in epw_*/input_tmp.in zg_*/input_tmp.in tddfpt_*/input_tmp.in kcw_*/input_tmp.in
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
@@ -154,6 +156,8 @@ clean:
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.* \
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
 	@rm -rf ph_*/*.wfc* ph_*/*.hub*
+	@rm -rf ph_1d/dynmat.axsf ph_1d/dynmat.mold
+	@rm -rf ph_2d/bn.frc ph_2d/bn.frq ph_2d/bn.frq.gp
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.dyn.freq
 # Special case for PH ahc

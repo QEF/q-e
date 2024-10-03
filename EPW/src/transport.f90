@@ -850,8 +850,14 @@
     !! Dummy counter for k-points
     INTEGER :: ibtmp
     !! Dummy counter for bands
+    INTEGER :: direct_io_factor
+    !! Direct IO
+    INTEGER(KIND = i4b) :: dum_int
+    !! Dummy integer
     INTEGER(KIND = 8) :: nind
     !! Number of local elements per cores.
+    INTEGER(KIND = 8) :: unf_recl
+    !! double precision to prevent integer overflow
     INTEGER(KIND = i4b), ALLOCATABLE :: sparse_q(:)
     !! Index mapping for q-points
     INTEGER(KIND = i4b), ALLOCATABLE :: sparse_k(:)

@@ -1673,6 +1673,8 @@
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
+    LOGICAL :: exst
+    !! If the file exist
     INTEGER :: iq
     !! Counter on q-point
     INTEGER :: ir

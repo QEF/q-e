@@ -21,7 +21,7 @@ SUBROUTINE summary()
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, lmovecell
-  USE ions_base,       ONLY : amass
+  USE ions_base,       ONLY : amass, if_pos
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
   USE fft_base,        ONLY : dfftp
@@ -265,6 +265,13 @@ SUBROUTINE summary()
 
   WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
+  !
+  IF ( ALLOCATED( if_pos ) ) THEN
+     IF ( ANY( if_pos(:,:) == 0 ) .AND. iverbosity > 0 ) THEN
+        WRITE( stdout, '(/5x,"Fixed atoms",/5x,"site n.  direction")')
+        WRITE( stdout,'(6x,i4,1x,3i4)') (na, if_pos(:,na), na=1,nat)
+     ENDIF
+  ENDIF
   !
   IF ( llondon ) CALL print_london ( )
   IF ( ldftd3 )  CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, &

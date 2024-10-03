@@ -21,6 +21,10 @@ inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cl
 program = PW
 inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
 
+[pw_libxc/]
+program = PW
+inputs_args = ('lda_pol_atom-lsda.in', ''), ('gga_unpol_atom-pbe.in', ''), ('hyb_gga_unpol_hse-si111.in', ''), ('mgga_unpol_metaGGA.in', '')
+
 [pw_metal/]
 program = PW
 inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,''), ('metal-gaussian.in' ,''), ('metal-tetrahedra.in' ,''), ('metal-tetrahedra-1.in' ,''), ('metal-tetrahedra-2.in','')
@@ -128,6 +132,10 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', 
 [ph_1d/]
 program = PH
 inputs_args = ('ch4.scf.in','1'), ('ch4.ph.in', '2'), ('ch4.dynmat.in', '9')  
+
+[ph_restart/]
+program = PH
+inputs_args = ('SiC.scf.in', '1'), ('SiC.phG.in', '2'), ('SiC.phG.restart1.in', '2'), ('SiC.phG.restart2.in', '2'), ('SiC.phG.restart3.in', '2'), ('SiC.phG.restart4.in', '2')
 
 [epw_base/]
 program = EPW

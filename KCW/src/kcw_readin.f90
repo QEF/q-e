@@ -273,6 +273,9 @@ SUBROUTINE kcw_readin()
      l_vcut = .true.
   ENDIF
   !
+  IF (niter .LT.1 .OR. niter .GT. maxter) CALL errore ('kcw_readin', &
+       'Wrong niter: it must be greater than 0 and less than maxter', maxter)
+  !
   ! read data produced by pwscf
   !
   WRITE( stdout, '(5X,"INFO: Reading pwscf data")')
