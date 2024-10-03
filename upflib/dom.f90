@@ -352,6 +352,7 @@ CONTAINS
                          end if
                          curr => root
                          root = next
+                         deallocate(next)
                       end if
                       !
                       n = m+1
