@@ -440,8 +440,12 @@ CONTAINS
   !
   recursive subroutine destroy ( curr, iun )
     !
+    ! This (obscure) code goes down recursively into the "curr" tree,
+    ! then deallocates (hopefully) everything. If "iun" is present,
+    ! the tree is reprinted to unit "iun". It should have the same
+    !
     type(node), pointer :: curr, next
-    type(nodelist), pointer :: linklist
+    type(nodelist), pointer :: linklist, nextlist
     integer, intent(in), optional :: iun
     !
     nlevel = nlevel + 1
@@ -455,24 +459,40 @@ CONTAINS
        end if
        if ( allocated(curr%data) ) write(iun,'(A)') trim(curr%data)
     end if
+    ! Go down recursively on the tree (note the call to itself below)
     if ( allocated( curr%linklist ) ) then
        linklist => curr%linklist
-       next  => linklist%node
+       next     => linklist%node
        lista: do
           call destroy ( next, iun )
           if ( .not. associated( linklist%nextlist ) ) exit lista
           linklist => linklist%nextlist
-          next  =>  linklist%node
+          next     => linklist%node
        end do lista
     end if
     !
     if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
+    ! now deallocate all memory
     deallocate (curr%tag)
     if ( allocated(curr%data) ) deallocate (curr%data)
     if ( allocated(curr%attr) ) deallocate (curr%attr)
-    if ( allocated(curr%linklist) ) deallocate (curr%linklist)
+    ! The linked list must be explicitly deallocated to avoid memory leaks
+    if ( allocated(curr%linklist) ) then
+       ! Note that the first element of the linked list is allocatable and
+       ! needs to be deallocated as below, unlike the following elements
+       ! that are pointers: maybe not a smart implementation?
+       linklist => curr%linklist%nextlist
+       deallocate (curr%linklist)
+       do while ( associated (linklist) )
+          nextlist => linklist%nextlist
+          deallocate (linklist)
+          linklist => nextlist
+       enddo
+    end if
+    !
     if ( associated(curr%prev) ) then
+       ! go down one level and deallocate
        next => curr%prev
        deallocate(curr)
        curr => next
