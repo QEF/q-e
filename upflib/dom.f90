@@ -352,6 +352,7 @@ CONTAINS
                          end if
                          curr => root
                          root = next
+                         deallocate(next)
                       end if
                       !
                       n = m+1
@@ -439,8 +440,12 @@ CONTAINS
   !
   recursive subroutine destroy ( curr, iun )
     !
+    ! This (obscure) code goes down recursively into the "curr" tree,
+    ! then deallocates (hopefully) everything. If "iun" is present,
+    ! the tree is reprinted to unit "iun". It should have the same
+    !
     type(node), pointer :: curr, next
-    type(nodelist), pointer :: linklist
+    type(nodelist), pointer :: linklist, nextlist
     integer, intent(in), optional :: iun
     !
     nlevel = nlevel + 1
@@ -454,29 +459,37 @@ CONTAINS
        end if
        if ( allocated(curr%data) ) write(iun,'(A)') trim(curr%data)
     end if
-    if ( allocated( curr%linklist ) ) then
-       linklist => curr%linklist
-       next  => linklist%node
-       lista: do
-          call destroy ( next, iun )
-          if ( .not. associated( linklist%nextlist ) ) exit lista
-          linklist => linklist%nextlist
-          next  =>  linklist%node
-       end do lista
+    ! Go down recursively on the tree (note the call to itself below)
+    if ( allocated(curr%linklist) ) then
+       linklist => curr%linklist%nextlist
+       call destroy(curr%linklist%node, iun)
+       ! Note that the first element of the linked list is an allocatable member of a node.
+       ! Unlike the following elements that are pointers, it should not be deallocated via a pointer.
+       ! Otherwise, the descriptor of the allocatable object gets corrupted.
+       deallocate (curr%linklist)
+       do while ( associated(linklist) )
+          call destroy(linklist%node, iun)
+          nextlist => linklist%nextlist
+          ! The linked list must be explicitly deallocated to avoid memory leaks
+          deallocate (linklist)
+          linklist => nextlist
+       end do
     end if
     !
     if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
+    ! now deallocate all memory
+    if ( allocated(curr%tag) ) deallocate (curr%tag)
+    if ( allocated(curr%data) ) deallocate (curr%data)
+    if ( allocated(curr%attr) ) deallocate (curr%attr)
+    !
     if ( associated(curr%prev) ) then
+       ! go down one level and deallocate
        next => curr%prev
        deallocate(curr)
        curr => next
     else
-       ! if ( nlevel /= -1 ) print *, 'destroy: something not right'
-       if ( allocated(curr%tag ) ) deallocate (curr%tag)
-       if ( allocated(curr%data) ) deallocate (curr%data)
-       if ( allocated(curr%attr) ) deallocate (curr%attr)
-       if ( allocated(curr%linklist) ) deallocate (curr%linklist)
+       if ( nlevel /= -1 ) print *, 'destroy: did not reach root level?'
     end if
     !
   end subroutine destroy
