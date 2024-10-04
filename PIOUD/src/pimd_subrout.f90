@@ -2172,6 +2172,8 @@ subroutine pimd_read_input(unit)
      open(unit_dot_forces,file='forces.dat',form='formatted')
      unit_dot_forces_cen = myfind_free_unit()
      open(unit_dot_forces_cen,file='forces_cen.dat',form='formatted')
+     unit_dot_stress = myfind_free_unit()
+     open(unit_dot_stress,file='stress.dat',form='formatted')
      unit_dot_localtemp = myfind_free_unit()
      open(unit_dot_localtemp,file='local_temp.dat',form='formatted')
      unit_dot_sigma   = myfind_free_unit()
@@ -2403,11 +2405,13 @@ subroutine checkpoint(ttk)
                              forceMD,vel,natMD,ion_name,rcentroid,&
                              ndimMD,unit_dot_positions,&
                              unit_dot_velocities,unit_dot_forces,&
+                             unit_dot_stress,&
                              unit_dot_localtemp,rpos,&
                              unit_dot_positions_cen,&
                              unit_dot_forces_cen,&
                              unit_dot_velocities_cen
-  
+  USE path_variables,   ONLY : stress_pes
+  USE constants,        ONLY : ry_kbar
   implicit none
 !    *******************************************************************
 !    ** subroutine to write out the configurations and trajectories   **
@@ -2455,6 +2459,8 @@ subroutine checkpoint(ttk)
            flush(unit_dot_velocities)
            write(unit_dot_forces,'(400e15.5)') ((forceMD(l,i,k),l=1,ndimMD),i=1,natMD)
            flush(unit_dot_forces)
+           write(unit_dot_stress,'(400e15.5)') (stress_pes(l,k),l=1,6)
+           flush(unit_dot_stress)
            if(k.eq.1) write(unit_dot_localtemp,'(e15.5)') ttk
            if(k.eq.1) flush(unit_dot_localtemp)
      enddo
@@ -2527,6 +2533,7 @@ subroutine pimd_close_files()
   use pimd_variables, only : unit_dot_ek, unit_dot_ep,&
                              unit_dot_ep2, unit_dot_eplr,&
                              unit_dot_epsr, unit_dot_forces,&
+                             unit_dot_stress,&
                              unit_dot_localtemp, unit_dot_out,&
                              unit_dot_positions, unit_dot_sigma,&
                              unit_dot_velocities, unit_dot_xyz,&
@@ -2542,6 +2549,7 @@ subroutine pimd_close_files()
   close(unit_dot_eplr)
   close(unit_dot_epsr)
   close(unit_dot_forces)
+  close(unit_dot_stress)
   close(unit_dot_forces_cen)
   close(unit_dot_localtemp)
   close(unit_dot_out)

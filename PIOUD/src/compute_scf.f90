@@ -343,8 +343,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
 
-      stress_pes(:,image) = RESHAPE( sigma,(/ 9 /) )
-        stress_pes(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
+      ! stress_pes(:,image) = RESHAPE( sigma,(/ 9 /) )
+      stress_pes(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
 
       write(10000000+mpime,*)stress_pes
       !
