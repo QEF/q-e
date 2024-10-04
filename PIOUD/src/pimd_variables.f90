@@ -64,6 +64,8 @@ MODULE pimd_variables
        unit_dot_positions_cen, &
        unit_dot_forces,    &
        unit_dot_forces_cen,    &
+     !   unit_dot_stress,    &
+     !   unit_dot_stress_cen,    &
        unit_dot_velocities, &
        unit_dot_velocities_cen, &
        unit_dot_xyz,        &
