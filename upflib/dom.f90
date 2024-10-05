@@ -25,8 +25,8 @@ module dom
      character(:), allocatable :: tag
      character(:), allocatable :: attr
      character(:), allocatable :: data
-     type (node), pointer  :: prev => null()
-     type (nodelist), allocatable :: linklist
+     type (node),     pointer  :: prev => null()
+     type (nodelist), pointer  :: linklist => null()
   end type node
   ! Used for check: parsing and cleaning should end at level -1
   integer :: nlevel = -1
@@ -417,11 +417,11 @@ CONTAINS
   !
   subroutine add_to_list(linklist, next)
     type(node), pointer :: next
-    type(nodelist), allocatable, target :: linklist
+    type(nodelist), pointer :: linklist
     type(nodelist), pointer :: nextlist
     type(nodelist), pointer :: currlist
     !
-    if ( .not. allocated(linklist) ) then
+    if ( .not. associated(linklist) ) then
        allocate(linklist)
        linklist%node => next
        linklist%nextlist => null()
@@ -460,21 +460,14 @@ CONTAINS
        if ( allocated(curr%data) ) write(iun,'(A)') trim(curr%data)
     end if
     ! Go down recursively on the tree (note the call to itself below)
-    if ( allocated(curr%linklist) ) then
-       linklist => curr%linklist%nextlist
-       call destroy(curr%linklist%node, iun)
-       ! Note that the first element of the linked list is an allocatable member of a node.
-       ! Unlike the following elements that are pointers, it should not be deallocated via a pointer.
-       ! Otherwise, the descriptor of the allocatable object gets corrupted.
-       deallocate (curr%linklist)
-       do while ( associated(linklist) )
-          call destroy(linklist%node, iun)
-          nextlist => linklist%nextlist
-          ! The linked list must be explicitly deallocated to avoid memory leaks
-          deallocate (linklist)
-          linklist => nextlist
-       end do
-    end if
+    linklist => curr%linklist
+    do while ( associated(linklist) )
+       call destroy(linklist%node, iun)
+       nextlist => linklist%nextlist
+       deallocate (linklist)
+       ! The linked list must be explicitly deallocated to avoid memory leaks
+       linklist => nextlist
+    end do
     !
     if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
@@ -505,7 +498,7 @@ CONTAINS
     !
     n = -1
     getelementsbytagname => null()
-    if ( allocated( root%linklist ) ) then
+    if ( associated( root%linklist ) ) then
        linklist => root%linklist
        lista: do
           if ( trim(adjustl(tag)) == linklist%node%tag ) then
