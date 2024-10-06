@@ -71,17 +71,12 @@ SUBROUTINE compute_becsum( iflag )
      CALL sum_bec( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      !
   ENDDO k_loop
-  !
   ! ... Use host copy to do the communications
   !$acc update host(becsum)
   !
-  ! ... If the <beta|psi> are distributed, sum over bands
-  !
-  IF( becp%comm /= mp_get_comm_null() .AND. nhm > 0) &
-       CALL mp_sum( becsum, becp%comm )
   CALL deallocate_bec_type_acc( becp )
   !
-  ! ... becsums must be also be summed over bands (with bgrp parallelization)
+  ! ... becsums must be summed over bands (with bgrp parallelization)
   ! ... and over k-points (unsymmetrized).
   !
   CALL mp_sum(becsum, inter_bgrp_comm )
