@@ -136,7 +136,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !$acc declare device_resident (auxk1, auxk2)
   REAL(DP), ALLOCATABLE    :: auxg1(:,:), auxg2(:,:), aux_gk(:,:), aux_egk(:,:)
   !$acc declare device_resident (auxg1, auxg2, aux_gk, aux_egk) 
-  INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
+  INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt, offset
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
@@ -191,7 +191,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
         ! allocate work space used to perform GEMM operations
         !
         IF ( gamma_only ) THEN
-           nbnd_loc = becp%nbnd_loc
+           nbnd_loc = becp%nbnd
            ALLOCATE( auxg1( nbnd_loc, nh(np) ) )
            ALLOCATE( auxg2( nbnd_loc, nh(np) ) )
         ELSE
@@ -241,12 +241,11 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !
               ELSE IF ( gamma_only ) THEN
                  !
-                 ibnd_begin = becp%ibnd_begin
                  !$acc parallel loop collapse(2)
                  DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = offset + ih
-                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
+                       ibnd = (ibnd_start -1) + ibnd_loc
                        auxg1(ibnd_loc,ih) = becp%r(ikb,ibnd_loc)
                        auxg2(ibnd_loc,ih) = becp%r(ikb,ibnd_loc) * wg(ibnd,ik)
                     END DO
@@ -261,7 +260,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                    !$acc parallel loop collapse(2)
                    DO ih = 1, nhnt
                       DO ibnd_loc = 1, nbnd_loc
-                      ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
+                      ibnd = (ibnd_start -1) + ibnd_loc
                       auxg2(ibnd_loc,ih) = et(ibnd,ik) * auxg2(ibnd_loc,ih)
                       END DO
                    END DO
