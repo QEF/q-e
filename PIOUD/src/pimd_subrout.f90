@@ -2174,6 +2174,8 @@ subroutine pimd_read_input(unit)
      open(unit_dot_forces_cen,file='forces_cen.dat',form='formatted')
      unit_dot_stress = myfind_free_unit()
      open(unit_dot_stress,file='stress.dat',form='formatted')
+     unit_dot_stress_cen = myfind_free_unit()
+     open(unit_dot_stress_cen,file='stress_cen.dat',form='formatted')
      unit_dot_localtemp = myfind_free_unit()
      open(unit_dot_localtemp,file='local_temp.dat',form='formatted')
      unit_dot_sigma   = myfind_free_unit()
@@ -2185,6 +2187,8 @@ subroutine pimd_read_input(unit)
      rewind(unit_dot_velocities_cen)
      rewind(unit_dot_forces)
      rewind(unit_dot_forces_cen)
+     rewind(unit_dot_stress) !Not sure what it does Aadhityan A
+     rewind(unit_dot_stress_cen)
      rewind(unit_dot_localtemp)
      rewind(unit_dot_sigma)
   
@@ -2222,6 +2226,10 @@ subroutine pimd_read_input(unit)
      open(unit_dot_localtemp,file='local_temp.dat',position='APPEND',form='formatted')
      unit_dot_sigma  = myfind_free_unit()
      open(unit_dot_sigma,file='sigma.dat',position='APPEND',form='formatted')
+     unit_dot_stress = myfind_free_unit()
+     open(unit_dot_stress,file='stress.dat',position='APPEND',form='formatted')
+     unit_dot_stress_cen = myfind_free_unit()
+     open(unit_dot_stress_cen,file='stress_cen.dat',position='APPEND',form='formatted')
   
   endif
   
@@ -2409,7 +2417,8 @@ subroutine checkpoint(ttk)
                              unit_dot_localtemp,rpos,&
                              unit_dot_positions_cen,&
                              unit_dot_forces_cen,&
-                             unit_dot_velocities_cen
+                             unit_dot_velocities_cen,&
+                             unit_dot_stress_cen
   USE path_variables,   ONLY : stress_pes
   USE constants,        ONLY : ry_kbar
   implicit none
@@ -2419,20 +2428,23 @@ subroutine checkpoint(ttk)
 
   integer :: i,l,k
   real(8) :: ttk
-  real(8), allocatable :: fcentroid(:,:),vcentroid(:,:)
+  real(8), allocatable :: fcentroid(:,:),vcentroid(:,:),scentroid(:)
 !    ********************************************************************
-  allocate(fcentroid(ndimMD,natMD),vcentroid(ndimMD,natMD))
+  allocate(fcentroid(ndimMD,natMD),vcentroid(ndimMD,natMD),scentroid(6))
+  fcentroid=0.0; vcentroid=0.0 ; scentroid=0.0
 
   if(nbeadMD.gt.1) then
 
-     if(nunitcells.gt.1) then
-       fcentroid=0.0; vcentroid=0.0
-       do k=1,nbeadMD
-         fcentroid(:,:)=fcentroid(:,:)+forceMD(:,:,k)
-         vcentroid(:,:)=vcentroid(:,:)+vel(:,:,k)
-       end do
-       fcentroid=fcentroid/nbeadMD; vcentroid=vcentroid/nbeadMD
-     end if
+
+      do k=1,nbeadMD
+        fcentroid(:,:)=fcentroid(:,:)+forceMD(:,:,k)
+        vcentroid(:,:)=vcentroid(:,:)+vel(:,:,k)
+        scentroid(:)=scentroid(:)+stress_pes(:,k)
+        write(90000,*)scentroid
+        write(90001,*)stress_pes
+      end do
+      fcentroid=fcentroid/nbeadMD; vcentroid=vcentroid/nbeadMD; scentroid=scentroid/nbeadMD
+
 
 !!! -------------------write the xyz file for visualizing trajectories------     
      write(unit_dot_xyz,* ) natMD
@@ -2444,13 +2456,18 @@ subroutine checkpoint(ttk)
 !!!--------------------writes velocity,force and position files for postprocessing----------
 !!!--------------------if the number of unit cells > 1 (crystal system)---------------------
 !!!--------------------writes only the centroid coordinatMDes---------------------------------
-
+     write(90002,*)scentroid
      write(unit_dot_positions_cen,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_positions_cen)
      write(unit_dot_velocities_cen,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_velocities_cen)
      write(unit_dot_forces_cen,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_forces_cen)
+     write(unit_dot_stress_cen,'(400e15.5)') scentroid(:)
+     flush(unit_dot_stress_cen)
+
+    !  write(unit_dot_stress_cen,'(400e15.5)') ((scentroid(l,i),l=1,6),i=1,natMD)
+    !  flush(unit_dot_stress_cen)
      
      do k=1,nbeadMD
            write(unit_dot_positions,'(400e15.5)') ((rpos(l,i,k),l=1,ndimMD),i=1,natMD)
@@ -2480,6 +2497,8 @@ subroutine checkpoint(ttk)
      flush(unit_dot_velocities)
      write(unit_dot_forces,'(1500e15.5)') ((forceMD(l,i,1),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_forces)
+     write(unit_dot_stress,'(400e15.5)') (stress_pes(l,1),l=1,6)
+     flush(unit_dot_stress)
      write(unit_dot_localtemp,'(e15.5)') ttk
      flush(unit_dot_localtemp)
 
