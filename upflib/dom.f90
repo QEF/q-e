@@ -25,8 +25,8 @@ module dom
      character(:), allocatable :: tag
      character(:), allocatable :: attr
      character(:), allocatable :: data
-     type (node), pointer  :: prev => null()
-     type (nodelist), allocatable :: linklist
+     type (node),     pointer  :: prev => null()
+     type (nodelist), pointer  :: linklist => null()
   end type node
   ! Used for check: parsing and cleaning should end at level -1
   integer :: nlevel = -1
@@ -36,6 +36,15 @@ module dom
   type :: domexception
      integer :: code
   end type domexception
+  ! The following machinery is used only to ensure that linked lists
+  ! produced by "getelementsbytagname" are properly deallocated when
+  ! "destroy" is called. Not sure this is the smartest way to do that.
+  ! "meta-list" ml is a linked list to linked lists (!)
+  type :: metalist
+     type(nodelist), pointer :: linklist => null()
+     type(metalist), pointer :: prevmeta => null()
+  end type metalist
+  type(metalist), pointer :: ml => null()
   !
   private
   ! Callable routines or interfaces
@@ -103,7 +112,7 @@ CONTAINS
   !
   function parse ( iun, strbuf, ex )
     ! This is where the action is: parse either from unit "iun"
-    ! of from a buffer "strbuf", returns a pointer to the node "root"
+    ! or from a buffer "strbuf", returns a pointer to the node "root"
     ! and optionally an error code in "ex"
     character(len=*), intent (in), optional :: strbuf
     integer, intent(in), optional :: iun
@@ -417,11 +426,11 @@ CONTAINS
   !
   subroutine add_to_list(linklist, next)
     type(node), pointer :: next
-    type(nodelist), allocatable, target :: linklist
+    type(nodelist), pointer :: linklist
     type(nodelist), pointer :: nextlist
     type(nodelist), pointer :: currlist
     !
-    if ( .not. allocated(linklist) ) then
+    if ( .not. associated(linklist) ) then
        allocate(linklist)
        linklist%node => next
        linklist%nextlist => null()
@@ -442,7 +451,8 @@ CONTAINS
     !
     ! This (obscure) code goes down recursively into the "curr" tree,
     ! then deallocates (hopefully) everything. If "iun" is present,
-    ! the tree is reprinted to unit "iun". It should have the same
+    ! the tree is reprinted to unit "iun". Useful for debugging: the
+    ! reprinted tree should have the same structure as the original file
     !
     type(node), pointer :: curr, next
     type(nodelist), pointer :: linklist, nextlist
@@ -460,21 +470,14 @@ CONTAINS
        if ( allocated(curr%data) ) write(iun,'(A)') trim(curr%data)
     end if
     ! Go down recursively on the tree (note the call to itself below)
-    if ( allocated(curr%linklist) ) then
-       linklist => curr%linklist%nextlist
-       call destroy(curr%linklist%node, iun)
-       ! Note that the first element of the linked list is an allocatable member of a node.
-       ! Unlike the following elements that are pointers, it should not be deallocated via a pointer.
-       ! Otherwise, the descriptor of the allocatable object gets corrupted.
-       deallocate (curr%linklist)
-       do while ( associated(linklist) )
-          call destroy(linklist%node, iun)
-          nextlist => linklist%nextlist
-          ! The linked list must be explicitly deallocated to avoid memory leaks
-          deallocate (linklist)
-          linklist => nextlist
-       end do
-    end if
+    linklist => curr%linklist
+    do while ( associated(linklist) )
+       call destroy(linklist%node, iun)
+       nextlist => linklist%nextlist
+       deallocate (linklist)
+       ! The linked list must be explicitly deallocated to avoid memory leaks
+       linklist => nextlist
+    end do
     !
     if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
@@ -489,10 +492,33 @@ CONTAINS
        deallocate(curr)
        curr => next
     else
+       call destroyml ( )
        if ( nlevel /= -1 ) print *, 'destroy: did not reach root level?'
     end if
     !
   end subroutine destroy
+  !
+  subroutine destroyll (linklist)
+    type(nodelist), pointer :: linklist
+    type(nodelist), pointer :: nextlist
+    do while ( associated(linklist) )
+       nextlist => linklist%nextlist
+       deallocate(linklist)
+       ! if ( .not.associated(nextlist) ) exit
+       linklist =>nextlist
+    end do
+  end subroutine destroyll
+  !
+  subroutine destroyml ( )
+    type(metalist), pointer :: prevml
+    ! deallocate all linked lists by going back into "ml"
+    do while ( associated(ml) )
+       call destroyll(ml%linklist)
+       prevml => ml%prevmeta
+       deallocate (ml)
+       ml => prevml
+    end do
+  end subroutine destroyml
   !
   function getelementsbytagname(root,tag)
     !
@@ -501,11 +527,12 @@ CONTAINS
     type(nodelist), pointer :: getelementsbytagname
     !
     type(nodelist), pointer :: linklist, outlist, newlist
+    type(metalist), pointer :: nextml
     integer :: n
     !
     n = -1
     getelementsbytagname => null()
-    if ( allocated( root%linklist ) ) then
+    if ( associated( root%linklist ) ) then
        linklist => root%linklist
        lista: do
           if ( trim(adjustl(tag)) == linklist%node%tag ) then
@@ -525,6 +552,19 @@ CONTAINS
           if ( .not. associated( linklist%nextlist ) ) exit lista
           linklist => linklist%nextlist
        end do lista
+       !
+       ! Store linked list at the end of "meta-list" ml,
+       ! keeping track of the previous one, for later deallocation
+       !
+       if ( .not.associated(ml) ) then
+          allocate(ml)
+       else
+          allocate(nextml)
+          nextml%prevmeta => ml
+          ml => nextml
+       end if
+       ml%linklist => getelementsbytagname
+       !
     end if
     ! if ( n < 0 ) print *, ' tag: ',tag,' not found'
     !
