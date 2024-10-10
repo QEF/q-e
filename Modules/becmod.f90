@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 PWSCF group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -43,12 +43,12 @@ MODULE becmod
 !                     usage: call calbec( offload_type, beta, psi, betapsi )
 !                             - beta, psi, betapsi can be CPU, OpenACC (or OpenMP5), 
 !                             - CPU, OpenACC (and OpenMP5) cases are distinguished by type(offload_type)
-                      calbec_k_acc, calbec_gamma_acc, calbec_gamma_nocomm_acc, calbec_nc_acc, calbec_bec_type_acc, &
-                      calbec_k_cpu, calbec_gamma_cpu, calbec_gamma_nocomm_cpu, calbec_nc_cpu, calbec_bec_type_cpu, &
+                      calbec_k_acc, calbec_gamma_acc, calbec_nc_acc, calbec_bec_type_acc, &
+                      calbec_k_cpu, calbec_gamma_cpu, calbec_nc_cpu, calbec_bec_type_cpu, &
 !                     usage: call calbec( beta, psi, betapsi ) ("old" way to call calbec on CPU)
 !                             - beta, psi, betapsi are CPU-only 
 !                             - this allows to keep unchanged ALL the "old" calbec calls in the code
-                      calbec_k,     calbec_gamma,     calbec_gamma_nocomm,     calbec_nc,     calbec_bec_type
+                      calbec_k,     calbec_gamma,     calbec_nc,     calbec_bec_type
      !
   END INTERFACE
   !
@@ -77,8 +77,6 @@ CONTAINS
     !
     ! beta, psi, betapsi, are assumed OpenACC data on GPU
     !
-    USE mp_bands, ONLY: intra_bgrp_comm
-    !
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
@@ -97,7 +95,7 @@ CONTAINS
 
     IF ( gamma_only ) THEN
        !
-       CALL calbec_gamma_acc ( offload_acc, npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
+       CALL calbec_gamma_acc ( offload_acc, npw, beta, psi, betapsi%r, local_nbnd )
        !
     ELSEIF ( noncolin) THEN
        !
@@ -139,8 +137,6 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_bec_type ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
-    !_
-    USE mp_bands, ONLY: intra_bgrp_comm
     !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
@@ -159,7 +155,7 @@ CONTAINS
 
     IF ( gamma_only ) THEN
        !
-       CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
+       CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd )
        !
     ELSEIF ( noncolin) THEN
        !
@@ -176,71 +172,7 @@ CONTAINS
   END SUBROUTINE calbec_bec_type
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_nocomm_acc ( offload, npw, beta, psi, betapsi, nbnd )
-    !-----------------------------------------------------------------------
-    !
-    ! beta, psi, betapsi, are assumed OpenACC data on GPU
-    !
-    USE mp_bands, ONLY: intra_bgrp_comm
-    IMPLICIT NONE
-    TYPE(offload_kind_acc), INTENT(IN) :: offload
-    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
-    REAL (DP), INTENT (out) :: betapsi(:,:)
-    INTEGER, INTENT (in) :: npw
-    INTEGER, OPTIONAL :: nbnd
-    INTEGER :: m
-    IF ( present (nbnd) ) THEN
-        m = nbnd
-    ELSE
-        m = size ( psi, 2)
-    ENDIF
-    CALL calbec_gamma_acc ( offload_acc, npw, beta, psi, betapsi, m, intra_bgrp_comm )
-    RETURN
-    !
-  END SUBROUTINE calbec_gamma_nocomm_acc
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_nocomm_cpu ( offload, npw, beta, psi, betapsi, nbnd )
-    !-----------------------------------------------------------------------
-    USE mp_bands, ONLY: intra_bgrp_comm
-    IMPLICIT NONE
-    TYPE(offload_kind_cpu), INTENT(IN) :: offload
-    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
-    REAL (DP), INTENT (out) :: betapsi(:,:)
-    INTEGER, INTENT (in) :: npw
-    INTEGER, OPTIONAL :: nbnd
-    INTEGER :: m
-    IF ( present (nbnd) ) THEN
-        m = nbnd
-    ELSE
-        m = size ( psi, 2)
-    ENDIF
-    Call calbec_gamma_nocomm ( npw, beta, psi, betapsi, m )
-    RETURN
-    !
-  END SUBROUTINE calbec_gamma_nocomm_cpu
-  !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_nocomm ( npw, beta, psi, betapsi, nbnd )
-    !-----------------------------------------------------------------------
-    USE mp_bands, ONLY: intra_bgrp_comm
-    IMPLICIT NONE
-    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
-    REAL (DP), INTENT (out) :: betapsi(:,:)
-    INTEGER, INTENT (in) :: npw
-    INTEGER, OPTIONAL :: nbnd
-    INTEGER :: m
-    IF ( present (nbnd) ) THEN
-        m = nbnd
-    ELSE
-        m = size ( psi, 2)
-    ENDIF
-    CALL calbec_gamma ( npw, beta, psi, betapsi, m, intra_bgrp_comm )
-    RETURN
-    !
-  END SUBROUTINE calbec_gamma_nocomm
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_acc ( offload, npw, beta, psi, betapsi, nbnd, comm )
+  SUBROUTINE calbec_gamma_acc ( offload, npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! matrix times matrix with summation index (k=1,npw) running on
     !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
@@ -249,6 +181,7 @@ CONTAINS
     !
     ! beta, psi, betapsi, are assumed OpenACC data on GPU
     !
+    USE mp_bands, ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum, mp_size
     !
     IMPLICIT NONE
@@ -257,7 +190,6 @@ CONTAINS
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
     INTEGER, INTENT (in) :: nbnd
-    INTEGER, INTENT (in) :: comm 
     !
     INTEGER :: nkb, npwx, m
     !
@@ -308,9 +240,9 @@ CONTAINS
         !
     ENDIF
     !
-    IF (mp_size(comm) > 1) THEN
+    IF (mp_size(intra_bgrp_comm) > 1) THEN
       !$acc host_data use_device(betapsi)
-      CALL mp_sum( betapsi( :, 1:m ), comm )
+      CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
       !$acc end host_data
     END IF
     !
@@ -321,40 +253,43 @@ CONTAINS
   END SUBROUTINE calbec_gamma_acc
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_cpu ( offload, npw, beta, psi, betapsi, nbnd, comm )
+  SUBROUTINE calbec_gamma_cpu ( offload, npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     IMPLICIT NONE
     TYPE(offload_kind_cpu), INTENT(IN) :: offload
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
-    INTEGER, INTENT (in) :: nbnd
-    INTEGER, INTENT (in) :: comm 
+    INTEGER, INTENT (in), OPTIONAL :: nbnd
     !
-    Call calbec_gamma ( npw, beta, psi, betapsi, nbnd, comm )
+    Call calbec_gamma ( npw, beta, psi, betapsi, nbnd )
     !
   END SUBROUTINE calbec_gamma_cpu
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd, comm )
+  SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! matrix times matrix with summation index (k=1,npw) running on
     !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
     !
     !! $$ betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j) $$
     !
+    USE mp_bands, ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
-    INTEGER, INTENT (in) :: nbnd
-    INTEGER, INTENT (in) :: comm 
+    INTEGER, INTENT (in), optional :: nbnd
     !
     INTEGER :: nkb, npwx, m
     !
-    m = nbnd
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
     !
     nkb = size (beta, 2)
     IF ( nkb == 0 ) RETURN
@@ -386,7 +321,7 @@ CONTAINS
         !
     ENDIF
     !
-    CALL mp_sum( betapsi( :, 1:m ), comm )
+    CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
     !
     CALL stop_clock( 'calbec' )
     !
