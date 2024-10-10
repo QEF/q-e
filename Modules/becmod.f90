@@ -189,11 +189,15 @@ CONTAINS
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
-    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in), OPTIONAL :: nbnd
     !
     INTEGER :: nkb, npwx, m
     !
-    m = nbnd
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
     !
     nkb = size (beta, 2)
     IF ( nkb == 0 ) RETURN
