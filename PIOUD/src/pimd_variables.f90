@@ -50,6 +50,10 @@ MODULE pimd_variables
        nstep_block,              &! number of steps for block
        iprint,                   &! printing trajectories frequency
        irun                       ! tipe of run: only 0,3 or 4    
+                                   ! irun = 0  - Classical MD with Nosé-Hoover thermostat
+                                   ! irun = 3  - Classical/Quantum Langevin dyn. with Ceriotti integrator
+                                   ! irun = 4  - Quantum Langevin dyn. with PIOUD integrator
+
   
   !
   ! ... "general" real space arrays

@@ -53,10 +53,10 @@ MODULE trpmd_base
       USE path_input_parameters_module, ONLY : restart_mode
       USE path_input_parameters_module, ONLY : nat
       USE path_variables,   ONLY : pos, istep_path, nstep_path,    &
-                                   dim1, num_of_images, pes, grad_pes, mass, &
-                                   use_masses, error, path_length,  &
-                                   deg_of_freedom, frozen, use_freezing, k,  &
-                                   k_min, tune_load_balance, grad, posold,   &
+                                   dim1, num_of_images, pes, grad_pes, &
+                                    path_length,  &
+                                   deg_of_freedom,   &
+                                   tune_load_balance,  & ! posold, 
                                    pending_image, first_last_opt
       USE path_variables,   ONLY : path_allocation
       USE fcp_variables,        ONLY : lfcpopt
@@ -121,23 +121,25 @@ MODULE trpmd_base
       CALL path_allocation()
       if ( lfcpopt ) CALL fcp_opt_allocation()
       !
-      IF ( use_masses ) THEN
+      ! use_masses = .TRUE.
+
+      ! IF ( use_masses ) THEN
+      !    !
+      !    ! ... mass weighted coordinates are used
+      !    !
+      !    DO i = 1, nat
+      !       !
+      !       mass(3*i-2) = amass(ityp(i))
+      !       mass(3*i-1) = amass(ityp(i))
+      !       mass(3*i-0) = amass(ityp(i))
+      !       !
+      !    END DO
+      !    !
+      ! ELSE
+      !    !
+      !    mass = 1.0_DP
          !
-         ! ... mass weighted coordinates are used
-         !
-         DO i = 1, nat
-            !
-            mass(3*i-2) = amass(ityp(i))
-            mass(3*i-1) = amass(ityp(i))
-            mass(3*i-0) = amass(ityp(i))
-            !
-         END DO
-         !
-      ELSE
-         !
-         mass = 1.0_DP
-         !
-      END IF
+      ! END IF
       !
       ! ... initialization of the allocatable arrays
       !
@@ -146,15 +148,15 @@ MODULE trpmd_base
       !
       pes          = 0.0_DP
       grad_pes     = 0.0_DP
-      grad         = 0.0_DP
-      error        = 0.0_DP
-      frozen       = .FALSE.
+      ! grad         = 0.0_DP
+      ! error        = 0.0_DP
+      ! frozen       = .FALSE.
       !
-      k = k_min
+      ! k = k_min
       !
       CALL initial_guess()
       !
-      posold(:,:) = pos(:,:)
+      ! posold(:,:) = pos(:,:)
       !
       ! ... the actual number of degrees of freedom is computed
       !
@@ -207,7 +209,7 @@ MODULE trpmd_base
       !
       USE path_variables, ONLY : num_of_images, &
                                  pending_image, istep_path, pes, &
-                                 first_last_opt, Emin, Emax, Emax_index
+                                 first_last_opt
       USE pimd_variables, ONLY : nbeadMD
       !
       IMPLICIT NONE
@@ -225,9 +227,9 @@ MODULE trpmd_base
       !
       IF ( .NOT. stat ) RETURN
       !
-      Emin       = MINVAL( pes(1:num_of_images) )
-      Emax       = MAXVAL( pes(1:num_of_images) )
-      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      ! Emin       = MINVAL( pes(1:num_of_images) )
+      ! Emax       = MAXVAL( pes(1:num_of_images) )
+      ! Emax_index = MAXLOC( pes(1:num_of_images), 1 )
       !
       RETURN
       !
@@ -237,11 +239,11 @@ MODULE trpmd_base
     SUBROUTINE explore_phasespace()
       !-----------------------------------------------------------------------
       !
-      USE path_variables,    ONLY : lneb, lsmd, pos, nstep_path
+      USE path_variables,    ONLY :  pos, nstep_path ! ,lneb, lsmd
       USE path_variables,   ONLY : conv_path, istep_path,   &
-                                   pending_image, activation_energy, &
-                                   err_max, pes, CI_scheme,  &
-                                   Emax_index, fixed_tan
+                                   pending_image, &
+                                   pes, CI_scheme
+                                  !  Emax_index
       USE trpmd_io_routines, ONLY : write_output
       USE path_formats,     ONLY : scf_iter_fmt
       USE fcp_variables,    ONLY : lfcpopt

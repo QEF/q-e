@@ -6,6 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
+! MODULE kinds
+!      INTEGER, PARAMETER :: DP = KIND(1.0D0)
+! END MODULE kinds
+
+
 MODULE path_variables
   !---------------------------------------------------------------------------
   !
@@ -13,6 +18,7 @@ MODULE path_variables
   !
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
+
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
@@ -21,7 +27,7 @@ MODULE path_variables
   !
   ! ... "general" variables :
   !
-  LOGICAL :: lneb, lsmd
+!   LOGICAL :: lneb, lsmd
   !
   LOGICAL :: restart
   !
@@ -31,11 +37,11 @@ MODULE path_variables
   LOGICAL :: &
        first_last_opt,           &! if .TRUE. the first and the last image
                                   !           are optimised too.
-       use_masses,               &! if .TRUE. mass weighted coordinates are
+     !   use_masses,               &! if .TRUE. mass weighted coordinates are !Aadhityan - Done
                                   !           used
-       fixed_tan,                &! if. TRUE. the projection is done using the
+     !   fixed_tan,                &! if. TRUE. the projection is done using the
                                   !           tangent of the average path
-       use_freezing,             &! if .TRUE. images are optimised according
+     !   use_freezing,             &! if .TRUE. images are optimised according
                                   !           to their error (see frozen array)
        tune_load_balance          ! if .TRUE. the load balance for image
                                   !           parallelisation is tuned at
@@ -48,18 +54,18 @@ MODULE path_variables
        pending_image              ! last image for which scf has not been
                                   ! achieved
   REAL(DP) :: &
-       ds,                       &! the optimization step
-       path_thr,                 &! convergence threshold
-       temp_req,                 &! required temperature
-       activation_energy,        &! forward activatation energy
-       err_max,                  &! the largest error
+     !   ds,                       &! the optimization step
+     !   path_thr,                 &! convergence threshold
+     !   temp_req,                 &! required temperature
+     !   activation_energy,        &! forward activatation energy
+     !   err_max,                  &! the largest error
        path_length                ! length of the path
-  LOGICAL :: &
-       lsteep_des  = .FALSE.,    &! .TRUE. if opt_scheme = "sd"
-       lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"
-       lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
-       lbroyden2   = .FALSE.,    &! .TRUE. if opt_scheme = "broyden2"
-       llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
+!   LOGICAL :: &
+!        lsteep_des  = .FALSE.,    &! .TRUE. if opt_scheme = "sd"
+!        lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"
+!        lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
+!        lbroyden2   = .FALSE.,    &! .TRUE. if opt_scheme = "broyden2"
+!        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
   INTEGER :: &
        istep_path,               &! iteration in the optimization procedure
        nstep_path                 ! maximum number of iterations
@@ -67,39 +73,39 @@ MODULE path_variables
   ! ... "general" real space arrays
   !
   REAL(DP), ALLOCATABLE :: &
-       pes(:),                   &! the potential enrgy along the path
-       error(:)                   ! the error from the true MEP
+       pes(:)                      ! the potential enrgy along the path
+     !   error(:)                   ! the error from the true MEP            !!!Remove it 
   REAL(DP), ALLOCATABLE :: &
        pos(:,:),                 &! reaction path
        grad_pes(:,:),            &! gradients acting on the path
        stress_pes(:,:)             !Stress
 
-  LOGICAL, ALLOCATABLE :: &
-       frozen(:)                  ! .TRUE. if the image or mode has not
-                                  !        to be optimized
+!   LOGICAL, ALLOCATABLE :: &
+!        frozen(:)                  ! .TRUE. if the image or mode has not
+                                  !        to be optimized    !!!Remove it 
   !
   ! ... "neb specific" variables :
 
   CHARACTER(LEN=20) :: &
        CI_scheme                  ! Climbing Image scheme
-  INTEGER :: &
-       Emax_index                 ! index of the image with the highest energy
+  ! INTEGER :: &
+  !      Emax_index                 ! index of the image with the highest energy
   !
-  REAL (DP) :: &
-       k_max,                    &!
-       k_min,                    &!
-       Emax,                     &!
-       Emin                       !
+!   REAL (DP) :: &
+!        k_max,                    &!
+!        k_min,                    &! !!!Remove it 
+     !   Emax,                     &! !!!Remove it 
+!        Emin                       ! !!!Remove it 
   !
   ! ... real space arrays
   !
-  REAL(DP), ALLOCATABLE :: &
-       mass(:),                  &! atomic masses
-       k(:)                       ! elastic constants
-  REAL(DP), ALLOCATABLE :: &
-       posold(:,:),              &! old positions (for the quick-min)
-       grad(:,:),                &!
-       lang(:,:)                  ! langevin random force
+!   REAL(DP), ALLOCATABLE :: &
+     !   mass(:),                  &! atomic masses
+!        k(:)                       ! elastic constants !!!Remove it 
+!   REAL(DP), ALLOCATABLE :: &
+!        posold(:,:),              &! old positions (for the quick-min) !!!Remove it 
+!        grad(:,:),                &! !!!Remove it 
+!        lang(:,:)                  ! langevin random force !!!Remove it 
   !
   CONTAINS
      !
@@ -111,20 +117,20 @@ MODULE path_variables
        !
        ALLOCATE( pos( dim1, num_of_images ) )
        !
-       ALLOCATE( posold(   dim1, num_of_images ) )
-       ALLOCATE( grad(     dim1, num_of_images ) )
+     !   ALLOCATE( posold(   dim1, num_of_images ) )
+     !   ALLOCATE( grad(     dim1, num_of_images ) )
        ALLOCATE( grad_pes( dim1, num_of_images ) )
        ALLOCATE( stress_pes( 6, num_of_images ) )
 
        !
        ALLOCATE( pes(      num_of_images ) )
-       ALLOCATE( k(        num_of_images ) )
-       ALLOCATE( error(    num_of_images ) )
-       ALLOCATE( frozen(   num_of_images ) )
+     !   ALLOCATE( k(        num_of_images ) )
+     !   ALLOCATE( error(    num_of_images ) )
+     !   ALLOCATE( frozen(   num_of_images ) )
        !
-       ALLOCATE( mass(         dim1 ) )
-       !
-       ALLOCATE( lang( dim1, num_of_images ) )
+     !   ALLOCATE( mass(         dim1 ) )
+       
+     !   ALLOCATE( lang( dim1, num_of_images ) )
        !
      END SUBROUTINE path_allocation
      !
@@ -136,16 +142,16 @@ MODULE path_variables
        IMPLICIT NONE
        !
        IF ( ALLOCATED( pos ) )          DEALLOCATE( pos )
-       IF ( ALLOCATED( posold ) )       DEALLOCATE( posold )
-       IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
+     !   IF ( ALLOCATED( posold ) )       DEALLOCATE( posold )
+     !   IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
        IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
        IF ( ALLOCATED( stress_pes ) )   DEALLOCATE( stress_pes )
-       IF ( ALLOCATED( k ) )            DEALLOCATE( k )
-       IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
-       IF ( ALLOCATED( error ) )        DEALLOCATE( error )
-       IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )
-       IF ( ALLOCATED( lang ) )         DEALLOCATE( lang )      
+     !   IF ( ALLOCATED( k ) )            DEALLOCATE( k )
+     !   IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
+     !   IF ( ALLOCATED( error ) )        DEALLOCATE( error )
+     !   IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )
+     !   IF ( ALLOCATED( lang ) )         DEALLOCATE( lang )      
        !
      END SUBROUTINE path_deallocation
      !

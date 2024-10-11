@@ -10,7 +10,7 @@ MODULE path_formats
   !----------------------------------------------------------------------------
   !
   ! ... this module contains the I/O formats used by all "path"-routines
-  !
+  ! 
   ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
   CHARACTER (LEN=*), PARAMETER :: &

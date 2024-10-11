@@ -18,7 +18,7 @@ MODULE fcp_opt_routines
    !
    USE kinds,          ONLY : DP
    USE constants,      ONLY : eps8, eps16, e2, rytoev, fpi
-   USE path_variables, ONLY : ds, pos, grad
+   USE path_variables, ONLY : pos
    USE io_global,      ONLY : meta_ionode, meta_ionode_id
    USE mp,             ONLY : mp_bcast
    USE mp_world,       ONLY : world_comm

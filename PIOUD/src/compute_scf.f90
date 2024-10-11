@@ -31,7 +31,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
-                               istep_path, frozen, num_of_images, &
+                               istep_path, num_of_images, &
                                first_last_opt, stress_pes ! <-- lp
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_images,        ONLY : inter_image_comm, intra_image_comm, &
@@ -249,7 +249,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... self-consistency ( for non-frozen images only )
       !
-      IF ( frozen(image) ) RETURN
       !
       CALL clean_pw( .FALSE. )
       !
