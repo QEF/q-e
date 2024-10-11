@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
-  USE FoX_wxml
-#else
-  USE wxml
-#endif
+#if defined (__fox) 
+  USE  FoX_wxml 
+#else 
+  USE wxml 
+#endif 
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -2799,6 +2799,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nsym')
         CALL xml_addCharacters(xp, obj%nsym)
      CALL xml_EndElement(xp, 'nsym')
+     IF (obj%colin_mag_ispresent) THEN
+        CALL xml_NewElement(xp, "colin_mag")
+           CALL xml_addCharacters(xp, obj%colin_mag)
+        CALL xml_EndElement(xp, "colin_mag")
+     END IF
      CALL xml_NewElement(xp, 'nrot')
         CALL xml_addCharacters(xp, obj%nrot)
      CALL xml_EndElement(xp, 'nrot')

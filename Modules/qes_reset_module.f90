@@ -1865,6 +1865,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%colin_mag_ispresent = .FALSE.
     IF (ALLOCATED(obj%symmetry)) THEN
       DO i=1, SIZE(obj%symmetry)
         CALL qes_reset_symmetry(obj%symmetry(i))

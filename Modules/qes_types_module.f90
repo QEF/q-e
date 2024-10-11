@@ -1749,6 +1749,8 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     INTEGER :: nsym
+    LOGICAL  :: colin_mag_ispresent = .FALSE.
+    INTEGER :: colin_mag
     INTEGER :: nrot
     INTEGER :: space_group
     TYPE(symmetry_type), DIMENSION(:), ALLOCATABLE :: symmetry

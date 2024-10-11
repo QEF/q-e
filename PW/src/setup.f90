@@ -81,7 +81,7 @@ SUBROUTINE setup()
                                  starting_magnetization
   USE noncollin_module,   ONLY : noncolin, domag, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
-                                 nspin_gga, nspin_mag, lspinorb
+                                 nspin_gga, nspin_mag, lspinorb, colin_mag
   USE qexsd_module,       ONLY : qexsd_readschema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
@@ -220,6 +220,15 @@ SUBROUTINE setup()
   !
   CALL set_spin_vars( lsda, noncolin, domag, &
          npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  ! set colin_mag.
+  ! NOTE: This should be done in set_spin_vars, but I temporarily put it here 
+  ! to avoid changing the interface of set_spin_vars until the setting
+  !  of colin_mag is finalized.
+  IF (nspin == 2 .AND. (ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6)) ) THEN
+     colin_mag = 1
+  ELSE
+     colin_mag = 0
+  END IF
   !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
@@ -256,7 +265,15 @@ SUBROUTINE setup()
         do na=1,nat
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
-     end if
+     !  set initial magnetization for collinear case
+     ELSE IF ( colin_mag == 1 ) THEN
+        DO na = 1, nat
+            m_loc(1,na) = 0.0_dp
+            m_loc(2,na) = 0.0_dp
+            m_loc(3,na) = starting_magnetization(ityp(na))
+        END DO
+     ENDIF     
+
      IF ( i_cons /= 0 .AND. nspin==1 ) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
      IF ( i_cons /= 0 .AND. i_cons /= 1 ) &

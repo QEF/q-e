@@ -40,6 +40,10 @@ MODULE noncollin_module
   !! TRUE if total magnetization is present, FALSE for nonmagnetic calculation
   LOGICAL :: lsign=.FALSE.
   !! if TRUE use the sign feature to calculate rhoup and rhodw
+  INTEGER :: colin_mag = -1
+  !! equal to 1 if the system has a collinear magnetism (nspin_mag = 2)
+  !! equal to 0 if the system does not have a collinear magnetism
+  !! equal to -1 if the collinearity is not checked.
   !
   REAL(DP) :: angle1(ntypx)
   !! define the polar coordinates of the starting magnetization

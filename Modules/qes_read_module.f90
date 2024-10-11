@@ -12,9 +12,9 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
+#if defined (__fox) 
   USE FoX_dom
-#else
+#else 
   USE dom
 #endif
   USE qes_types_module
@@ -11832,6 +11832,34 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:symmetriesType","error reading nsym",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "colin_mag")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:symmetriesType","colin_mag: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:symmetriesType","colin_mag: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%colin_mag_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%colin_mag , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:symmetriesType","error reading colin_mag")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:symmetriesType","error reading colin_mag",10)
+         END IF
+      END IF
+    ELSE
+       obj%colin_mag_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "nrot")

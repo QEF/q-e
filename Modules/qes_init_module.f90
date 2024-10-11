@@ -3882,13 +3882,14 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_algorithmic_info
   !
   !
-  SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, symmetry)
+  SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, symmetry, colin_mag)
     !
     IMPLICIT NONE
     !
     TYPE(symmetries_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     INTEGER,INTENT(IN) :: nsym
+    INTEGER,OPTIONAL,INTENT(IN) :: colin_mag
     INTEGER,INTENT(IN) :: nrot
     INTEGER,INTENT(IN) :: space_group
     TYPE(symmetry_type),DIMENSION(:),INTENT(IN) :: symmetry
@@ -3898,6 +3899,12 @@ MODULE qes_init_module
     obj%lread = .TRUE.
     !
     obj%nsym = nsym
+    IF ( PRESENT(colin_mag)) THEN
+      obj%colin_mag_ispresent = .TRUE. 
+      obj%colin_mag = colin_mag
+    ELSE
+      obj%colin_mag_ispresent = .FALSE.
+    END IF
     obj%nrot = nrot
     obj%space_group = space_group
     ALLOCATE(obj%symmetry(SIZE(symmetry)))

@@ -2528,6 +2528,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lread, ionode_id, comm)
     !
     CALL mp_bcast(obj%nsym, ionode_id, comm)
+    CALL mp_bcast(obj%colin_mag_ispresent, ionode_id, comm)
+    IF (obj%colin_mag_ispresent) &
+      CALL mp_bcast(obj%colin_mag, ionode_id, comm)
     CALL mp_bcast(obj%nrot, ionode_id, comm)
     CALL mp_bcast(obj%space_group, ionode_id, comm)
     CALL mp_bcast(obj%ndim_symmetry, ionode_id, comm)
