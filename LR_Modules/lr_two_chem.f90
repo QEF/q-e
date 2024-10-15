@@ -127,10 +127,10 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   !
   ! symmetrizes the Fermi energy shift
   !
-  IF (present(sym_def)) CALL sym_def(def_val, irr)
+  IF (present(sym_def)) CALL sym_def(def_val)
    WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift valence (Ry) =",2es15.4)')&
        (ipert, def_val (ipert) , ipert = 1, npert )
-  IF (present(sym_def)) CALL sym_def(def_cond, irr)
+  IF (present(sym_def)) CALL sym_def(def_cond)
    WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift conduction (Ry) =",2es15.4)')&
        (ipert, def_cond (ipert) , ipert = 1, npert )
   !
@@ -292,9 +292,6 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   USE wvfct,            ONLY : nbnd, npwx, et, nbnd_cond
   USE becmod,           ONLY : calbec, bec_type, allocate_bec_type_acc, deallocate_bec_type_acc
   USE wavefunctions,    ONLY : evc, psic, psic_nc
-#if defined(__CUDA)
-  USE wavefunctions_gpum,   ONLY : evc_d
-#endif
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : upf, nh, nhm
   USE qpoint,           ONLY : nksq, ikks
@@ -336,18 +333,11 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   !
   !  initialize ldos and dos_ef
   !
-  ! For device buffer
-#if defined(__CUDA)
-  INTEGER, POINTER, DEVICE :: nl_d(:)
-  !
-  nl_d  => dffts%nl_d
-  evc_d = evc
-#else
   INTEGER, ALLOCATABLE :: nl_d(:)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
-#endif
+  !$acc enter data copyin(evc, nl_d) 
   v_siz = dffts%nnr
 
   call start_clock ('localdos_cond')
@@ -375,13 +365,11 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
      !
      if (nksq > 1) then
              call get_buffer (evc, lrwfc, iuwfc, ikks(ik))
-#if defined(__CUDA)
-             evc_d = evc
-#endif
+             !$acc update device(evc) 
      endif
      call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb, .true.)
      !
-     !$acc data copyin(evc) present(vkb, becp)
+     !$acc data present(vkb, becp, evc)
      call calbec ( offload_type, npw, vkb, evc, becp)
      !$acc end data
      !
@@ -401,15 +389,10 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
            !$acc kernels
            psic_nc = (0.d0, 0.d0)
            !$acc end kernels
-           !$acc parallel loop present(igk_k, psic_nc)
+           !$acc parallel loop present(igk_k, psic_nc, nl_d, evc)
            do ig = 1, npw
-#if defined(__CUDA)
-              psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc_d (ig, ibnd)
-              psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc_d (ig+npwx, ibnd)
-#else
               psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc (ig, ibnd)
               psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc (ig+npwx, ibnd)
-#endif
            enddo
            !$acc end parallel loop
            !$acc host_data use_device(psic_nc)
@@ -446,13 +429,9 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
            !$acc kernels
            psic (:) = (0.d0, 0.d0)
            !$acc end kernels
-           !$acc parallel loop present(psic)
+           !$acc parallel loop present(psic,nl_d, evc)
            do ig = 1, npw
-#if defined(__CUDA)
-              psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc_d (ig, ibnd)
-#else
               psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc (ig, ibnd)
-#endif
            enddo
            !$acc end parallel loop
            !$acc host_data use_device(psic)
@@ -575,7 +554,7 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   !
   IF (noncolin) deallocate(becsum1_nc)
   call deallocate_bec_type_acc(becp)
-
+  !$acc exit data detach(evc) delete(nl_d) 
   call stop_clock ('localdos_cond')
   return
 end subroutine localdos_cond
@@ -602,9 +581,6 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
   USE fft_helper_subroutines
-#if defined(__CUDA)
-  USE wavefunctions_gpum,   ONLY : evc_d
-#endif
 
   IMPLICIT NONE
   !
@@ -634,17 +610,11 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   ! counters
 
   ! For device buffer 
-#if defined(__CUDA)
-  INTEGER, POINTER, DEVICE :: nl_d(:)
-  !
-  nl_d  => dffts%nl_d
-  evc_d = evc
-#else
   INTEGER, ALLOCATABLE :: nl_d(:)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
-#endif
+  !$acc enter data copyin(nl_d, evc) 
   
 
   CALL start_clock_gpu ('incdrhoscf_cond')
@@ -676,7 +646,8 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  !$acc data copyin(dpsi(1:npwx,1:nbnd)) copy(drhoscf(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz)) present(igk_k) deviceptr(evc_d, nl_d) 
+  !$acc data copyin(dpsi(1:npwx,1:nbnd)) copy(drhoscf(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz))& 
+  !$acc present(igk_k, evc, nl_d) 
   do ibnd = 1+(nbnd-nbnd_cond), nbnd_occ(ikk), incr
   !only conduction states
      !
@@ -735,11 +706,7 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
         !$acc parallel loop 
         do ig = 1, npw
            itmp = nl_d (igk_k(ig,ikk) )
-#if defined(__CUDA)
-           psi (itmp ) = evc_d (ig, ibnd)
-#else
            psi (itmp ) = evc (ig, ibnd)
-#endif
         enddo
         !$acc parallel loop
         do ig = 1, npwq
@@ -782,6 +749,7 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
      DEALLOCATE(tg_drho)
   ENDIF
   !
+  !$acc exit data detach(evc) delete(nl_d) 
   CALL stop_clock_gpu ('incdrhoscf_cond')
   !
   RETURN
@@ -815,9 +783,6 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
   USE fft_helper_subroutines
-#if defined(__CUDA)
-  USE wavefunctions_gpum,   ONLY : evc_d
-#endif
 
   IMPLICIT NONE
   !
@@ -850,17 +815,11 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   ! counters
   !
   ! For device buffer
-#if defined(__CUDA)
-  INTEGER, POINTER, DEVICE :: nl_d(:)
-  !
-  nl_d  => dffts%nl_d
-  evc_d = evc
-#else
   INTEGER, ALLOCATABLE :: nl_d(:)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
-#endif
+  !$acc enter data copyin(nl_d, evc) 
   !
   !
   CALL start_clock_gpu ('incdrhoscf_cond')
@@ -893,7 +852,8 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd)) copy(drhoscf(1:v_sizp,1:nspin_mag)) create(psi(1:v_siz,1:npol),dpsic(1:v_siz,1:npol)) present(igk_k) deviceptr(evc_d, nl_d)
+  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd)) copy(drhoscf(1:v_sizp,1:nspin_mag)) & 
+  !$acc create(psi(1:v_siz,1:npol),dpsic(1:v_siz,1:npol)) present(igk_k, evc, nl_d)
   do ibnd = 1+(nbnd-nbnd_cond), nbnd_occ(ikk), incr
   !only conduction states
 
@@ -970,13 +930,8 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
         !$acc parallel loop
         do ig = 1, npw
            itmp = nl_d ( igk_k(ig,ikk) )
-#if defined(__CUDA)
-           psi (itmp, 1) = evc_d (ig, ibnd)
-           psi (itmp, 2) = evc_d (ig+npwx, ibnd)
-#else
            psi (itmp, 1) = evc (ig, ibnd)
            psi (itmp, 2) = evc (ig+npwx, ibnd)
-#endif
         enddo
         !$acc parallel loop
         do ig = 1, npwq
@@ -1038,6 +993,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
      DEALLOCATE(tg_drho)
   END IF
   !
+  !$acc exit data detach(evc) delete(nl_d) 
   CALL stop_clock_gpu ('incdrhoscf_cond')
   !
   RETURN

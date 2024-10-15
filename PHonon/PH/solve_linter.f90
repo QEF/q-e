@@ -89,7 +89,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   USE two_chem,             ONLY : twochem
   !FIXME  make explicit mentions of lr_two_chem variable that are used
-  USE lr_two_chem,          !ONLY : def_val, def_cond, drhoscf_cond, drhoscfh_cond,&
+  USE lr_two_chem           !ONLY : def_val, def_cond, drhoscf_cond, drhoscfh_cond,&
                             !       dbecsum_cond,dbecsum_cond_nc,ldos_cond,ldoss_cond,&
                             !       dos_ef_cond,becsum1_cond
                             !twochem variables
