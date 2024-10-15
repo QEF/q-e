@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum ESPRESSO (version: 7.3.1)
+Program: cp.x / CP / Quantum ESPRESSO (version: 7.3.2)
 ------------------------------------------------------------------------
 
 
@@ -248,7 +248,7 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    The restart files are write in the folder
+   Description:    The restart files are written, if ndw > 0, in the folder
                      outdir/prefix_ndw.save/
                    where outdir, prefix and ndw are the input variables described
                    in this document
@@ -2536,4 +2536,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Fri Dec 15 09:53:08 CET 2023
+This file has been created by helpdoc utility on Tue Oct 15 15:29:01 CEST 2024
