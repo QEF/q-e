@@ -858,16 +858,18 @@ MODULE qexsd_input
       !--------------------------------------------------------------------------------------------
       !
       !-----------------------------------------------------------------------------------
-      SUBROUTINE qexsd_init_twochem(obj, twochem,nbnd_cond,degauss_cond,nelec_cond) 
+      SUBROUTINE qexsd_init_twochem(obj, tagname, twochem,nbnd_cond,degauss_cond,nelec_cond,ef_cond) 
       !--------------------------------------------------------------------------------
       !
       IMPLICIT NONE
       TYPE (two_chem_type),INTENT(INOUT)      :: obj;
+      CHARACTER(LEN=*),INTENT(IN)            :: tagname
       LOGICAL,INTENT(IN)                      :: twochem
       REAL(DP)                                :: degauss_cond,nelec_cond
       INTEGER,INTENT(IN)                      :: nbnd_cond
+      REAL(DP),OPTIONAL,INTENT(IN)            :: ef_cond
       ! 
-      call qes_init (obj,"twoch_", twochem, nbnd_cond, degauss_cond, nelec_cond)
+      call qes_init (obj, TRIM(tagname), twochem, nbnd_cond, degauss_cond, nelec_cond, ef_cond)
       END SUBROUTINE qexsd_init_twochem
 !
 END MODULE qexsd_input          

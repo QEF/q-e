@@ -81,7 +81,6 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_solvents
     MODULE PROCEDURE qes_bcast_ekin_functional
     MODULE PROCEDURE qes_bcast_spin_constraints
-    MODULE PROCEDURE qes_bcast_two_chem
     MODULE PROCEDURE qes_bcast_electric_field
     MODULE PROCEDURE qes_bcast_gate_settings
     MODULE PROCEDURE qes_bcast_atomic_constraints
@@ -366,9 +365,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%electric_field_ispresent, ionode_id, comm)
     IF (obj%electric_field_ispresent) &
       CALL qes_bcast_outputElectricField(obj%electric_field, ionode_id, comm)
-    CALL mp_bcast(obj%ef_cond_ispresent, ionode_id, comm)
-    IF (obj%ef_cond_ispresent) &
-      CALL mp_bcast(obj%ef_cond, ionode_id, comm)
     CALL mp_bcast(obj%fcp_force_ispresent, ionode_id, comm)
     IF (obj%fcp_force_ispresent) &
       CALL mp_bcast(obj%fcp_force, ionode_id, comm)
@@ -381,6 +377,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%rismlaue_ispresent, ionode_id, comm)
     IF (obj%rismlaue_ispresent) &
       CALL qes_bcast_rismlaue(obj%rismlaue, ionode_id, comm)
+    CALL mp_bcast(obj%two_chem_ispresent, ionode_id, comm)
+    IF (obj%two_chem_ispresent) &
+      CALL qes_bcast_two_chem(obj%two_chem, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_output
   !
@@ -2108,33 +2107,6 @@ MODULE qes_bcast_module
   END SUBROUTINE qes_bcast_spin_constraints
   !
   !
-  SUBROUTINE qes_bcast_two_chem(obj, ionode_id, comm )
-    !
-    IMPLICIT NONE
-    !
-    TYPE(two_chem_type), INTENT(INOUT) :: obj
-    INTEGER, INTENT(IN) :: ionode_id, comm
-    !
-    CALL mp_bcast(obj%tagname, ionode_id, comm)
-    CALL mp_bcast(obj%lwrite, ionode_id, comm)
-    CALL mp_bcast(obj%lread, ionode_id, comm)
-    !
-    CALL mp_bcast(obj%twochem_ispresent, ionode_id, comm)
-    IF (obj%twochem_ispresent) &
-      CALL mp_bcast(obj%twochem, ionode_id, comm)
-    CALL mp_bcast(obj%nbnd_cond_ispresent, ionode_id, comm)
-    IF (obj%nbnd_cond_ispresent) &
-      CALL mp_bcast(obj%nbnd_cond, ionode_id, comm)
-    CALL mp_bcast(obj%degauss_cond_ispresent, ionode_id, comm)
-    IF (obj%degauss_cond_ispresent) &
-      CALL mp_bcast(obj%degauss_cond, ionode_id, comm)
-    CALL mp_bcast(obj%nelec_cond_ispresent, ionode_id, comm)
-    IF (obj%nelec_cond_ispresent) &
-      CALL mp_bcast(obj%nelec_cond, ionode_id, comm)
-    !
-  END SUBROUTINE qes_bcast_two_chem
-  !
-  !
   SUBROUTINE qes_bcast_electric_field(obj, ionode_id, comm )
     !
     IMPLICIT NONE
@@ -2778,9 +2750,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lowestUnoccupiedLevel_ispresent, ionode_id, comm)
     IF (obj%lowestUnoccupiedLevel_ispresent) &
       CALL mp_bcast(obj%lowestUnoccupiedLevel, ionode_id, comm)
-    CALL mp_bcast(obj%twochem_ispresent, ionode_id, comm)
-    IF (obj%twochem_ispresent) &
-      CALL qes_bcast_two_chem(obj%twochem, ionode_id, comm)
     CALL mp_bcast(obj%two_fermi_energies_ispresent, ionode_id, comm)
     IF (obj%two_fermi_energies_ispresent) &
       CALL mp_bcast(obj%two_fermi_energies, ionode_id, comm)
@@ -3298,6 +3267,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%nbnd_cond, ionode_id, comm)
     CALL mp_bcast(obj%degauss_cond, ionode_id, comm)
     CALL mp_bcast(obj%nelec_cond, ionode_id, comm)
+    CALL mp_bcast(obj%ef_cond_ispresent, ionode_id, comm)
+    IF (obj%ef_cond_ispresent) &
+      CALL mp_bcast(obj%ef_cond, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_two_chem
   !

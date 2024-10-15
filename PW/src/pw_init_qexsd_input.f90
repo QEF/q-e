@@ -444,7 +444,7 @@
      END IF
   END IF  
   obj%twoch__ispresent=.TRUE.
-  CALL qexsd_init_twochem(obj%twoch_,twochem, nbnd_cond,degauss_cond,nelec_cond)
+  CALL qexsd_init_twochem(obj%twoch_,'twoch_', twochem, nbnd_cond,degauss_cond,nelec_cond)
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                    BASIS ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------

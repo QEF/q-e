@@ -84,7 +84,6 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_solvents
     MODULE PROCEDURE qes_write_ekin_functional
     MODULE PROCEDURE qes_write_spin_constraints
-    MODULE PROCEDURE qes_write_two_chem
     MODULE PROCEDURE qes_write_electric_field
     MODULE PROCEDURE qes_write_gate_settings
     MODULE PROCEDURE qes_write_atomic_constraints
@@ -378,11 +377,6 @@ MODULE qes_write_module
      IF (obj%electric_field_ispresent) THEN
         CALL qes_write_outputElectricField (xp, obj%electric_field)
      END IF
-     IF (obj%ef_cond_ispresent) THEN
-        CALL xml_NewElement(xp, "ef_cond")
-           CALL xml_addCharacters(xp, obj%ef_cond, fmt='s16')
-        CALL xml_EndElement(xp, "ef_cond")
-     END IF
      IF (obj%fcp_force_ispresent) THEN
         CALL xml_NewElement(xp, "fcp_force")
            CALL xml_addCharacters(xp, obj%fcp_force, fmt='s16')
@@ -398,6 +392,9 @@ MODULE qes_write_module
      END IF
      IF (obj%rismlaue_ispresent) THEN
         CALL qes_write_rismlaue (xp, obj%rismlaue)
+     END IF
+     IF (obj%two_chem_ispresent) THEN
+        CALL qes_write_two_chem (xp, obj%two_chem)
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_output
@@ -2321,40 +2318,6 @@ MODULE qes_write_module
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_spin_constraints
 
-   SUBROUTINE qes_write_two_chem(xp, obj)
-     !-----------------------------------------------------------------
-     IMPLICIT NONE
-     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
-     TYPE(two_chem_type),INTENT(IN)    :: obj
-     ! 
-     INTEGER                                          :: i 
-     ! 
-     IF ( .NOT. obj%lwrite ) RETURN 
-     ! 
-     CALL xml_NewElement(xp, TRIM(obj%tagname))
-     IF (obj%twochem_ispresent) THEN
-        CALL xml_NewElement(xp, "twochem")
-           CALL xml_addCharacters(xp, obj%twochem)
-        CALL xml_EndElement(xp, "twochem")
-     END IF
-     IF (obj%nbnd_cond_ispresent) THEN
-        CALL xml_NewElement(xp, "nbnd_cond")
-           CALL xml_addCharacters(xp, obj%nbnd_cond)
-        CALL xml_EndElement(xp, "nbnd_cond")
-     END IF
-     IF (obj%degauss_cond_ispresent) THEN
-        CALL xml_NewElement(xp, "degauss_cond")
-           CALL xml_addCharacters(xp, obj%degauss_cond, fmt='s16')
-        CALL xml_EndElement(xp, "degauss_cond")
-     END IF
-     IF (obj%nelec_cond_ispresent) THEN
-        CALL xml_NewElement(xp, "nelec_cond")
-           CALL xml_addCharacters(xp, obj%nelec_cond, fmt='s16')
-        CALL xml_EndElement(xp, "nelec_cond")
-     END IF
-     CALL xml_EndElement(xp, TRIM(obj%tagname))
-   END SUBROUTINE qes_write_two_chem
-
    SUBROUTINE qes_write_electric_field(xp, obj)
      !-----------------------------------------------------------------
      IMPLICIT NONE
@@ -3116,9 +3079,6 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%lowestUnoccupiedLevel, fmt='s16')
         CALL xml_EndElement(xp, "lowestUnoccupiedLevel")
      END IF
-     IF (obj%twochem_ispresent) THEN
-        CALL qes_write_two_chem (xp, obj%twochem)
-     END IF
      IF (obj%two_fermi_energies_ispresent) THEN
         CALL xml_NewElement(xp, "two_fermi_energies")
            CALL xml_addCharacters(xp, obj%two_fermi_energies, fmt='s16')
@@ -3668,8 +3628,13 @@ MODULE qes_write_module
         CALL xml_addCharacters(xp, obj%degauss_cond, fmt='s16')
      CALL xml_EndElement(xp, 'degauss_cond')
      CALL xml_NewElement(xp, 'nelec_cond')
-        CALL xml_addCharacters(xp, obj%nelec_cond)
+        CALL xml_addCharacters(xp, obj%nelec_cond, fmt='s16')
      CALL xml_EndElement(xp, 'nelec_cond')
+     IF (obj%ef_cond_ispresent) THEN
+        CALL xml_NewElement(xp, "ef_cond")
+           CALL xml_addCharacters(xp, obj%ef_cond, fmt='s16')
+        CALL xml_EndElement(xp, "ef_cond")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_two_chem
 

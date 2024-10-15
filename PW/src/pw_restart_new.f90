@@ -635,15 +635,13 @@ MODULE pw_restart_new
          IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
                smear_obj_opt = qexsd_input_obj%bands%smearing
+               IF (twochem) THEN 
+               END IF 
             ELSE
                smearing_loc = schema_smearing( smearing )
                CALL qexsd_init_smearing(smear_obj_opt, smearing_loc, degauss/e2)
+
             END IF  
-               IF (twochem) THEN
-                qexsd_input_obj%twoch__ispresent=.TRUE.
-                output_obj%ef_cond_ispresent=.TRUE.
-                output_obj%ef_cond = ef_cond
-               END IF
          ELSE 
             smear_obj_opt%lwrite=.false.  
          END IF 
@@ -658,6 +656,22 @@ MODULE pw_restart_new
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
          !
+!------------------------------------------------------------------------------------------
+!... TWO CHEM STUFF 
+!------------------------------------------------------------------------------------------
+        output_obj%two_chem_ispresent = twochem 
+        IF (twochem) THEN 
+          IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
+             output_obj%two_chem_ispresent = .TRUE. 
+             output_obj%two_chem = qexsd_input_obj%twoch_ 
+             output_obj%two_chem%ef_cond_ispresent=.TRUE. 
+             output_obj%two_chem%tagname="two_chem" 
+             output_obj%two_chem%ef_cond = ef_cond 
+          ELSE 
+             CALL qexsd_init_twochem(output_obj%two_chem,"two_chem", twochem, nbnd_cond, &
+                                                    nelec_cond, degauss_cond, ef_cond)             
+          END IF 
+        END IF 
 !-------------------------------------------------------------------------------------------
 ! ... TOTAL ENERGY
 !-------------------------------------------------------------------------------------------
@@ -1316,8 +1330,11 @@ MODULE pw_restart_new
       CALL set_occupations( occupations, smearing, degauss, &
            tfixed_occ, ltetra, tetra_type, lgauss, ngauss )
       !! Information for twochem case
-      CALL qexsd_copy_twochem(input_obj%twoch_, twochem, nbnd_cond, nelec_cond,degauss_cond)
-      if (twochem) ef_cond=output_obj%ef_cond
+      IF (output_obj%two_chem_ispresent) THEN 
+        CALL qexsd_copy_twochem(output_obj%two_chem, twochem, nbnd_cond, nelec_cond,degauss_cond,ef_cond)
+      ELSE 
+        twochem = .FALSE.
+      END IF 
       !
       IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
       IF ( lsda ) &

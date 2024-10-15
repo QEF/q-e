@@ -1022,23 +1022,6 @@ MODULE qes_types_module
     !
   END TYPE spin_constraints_type
   !
-  TYPE :: two_chem_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    LOGICAL  :: twochem_ispresent = .FALSE.
-    LOGICAL :: twochem
-    LOGICAL  :: nbnd_cond_ispresent = .FALSE.
-    INTEGER :: nbnd_cond
-    LOGICAL  :: degauss_cond_ispresent = .FALSE.
-    REAL(DP) :: degauss_cond
-    LOGICAL  :: nelec_cond_ispresent = .FALSE.
-    REAL(DP) :: nelec_cond
-    !
-  END TYPE two_chem_type
-  !
   TYPE :: gate_settings_type
     !
     CHARACTER(len=100) :: tagname
@@ -1413,7 +1396,9 @@ MODULE qes_types_module
     LOGICAL :: twochem
     INTEGER :: nbnd_cond
     REAL(DP) :: degauss_cond
-    INTEGER :: nelec_cond
+    REAL(DP) :: nelec_cond
+    LOGICAL  :: ef_cond_ispresent = .FALSE.
+    REAL(DP) :: ef_cond
     !
   END TYPE two_chem_type
   !
@@ -1832,8 +1817,6 @@ MODULE qes_types_module
     REAL(DP) :: highestOccupiedLevel
     LOGICAL  :: lowestUnoccupiedLevel_ispresent = .FALSE.
     REAL(DP) :: lowestUnoccupiedLevel
-    LOGICAL  :: twochem_ispresent = .FALSE.
-    TYPE(two_chem_type) :: twochem
     LOGICAL  :: two_fermi_energies_ispresent = .FALSE.
     REAL(DP), DIMENSION(2) :: two_fermi_energies
     TYPE(k_points_IBZ_type) :: starting_k_points
@@ -2019,8 +2002,6 @@ MODULE qes_types_module
     TYPE(matrix_type) :: stress
     LOGICAL  :: electric_field_ispresent = .FALSE.
     TYPE(outputElectricField_type) :: electric_field
-    LOGICAL  :: ef_cond_ispresent = .FALSE.
-    REAL(DP) :: ef_cond
     LOGICAL  :: fcp_force_ispresent = .FALSE.
     REAL(DP) :: fcp_force
     LOGICAL  :: fcp_tot_charge_ispresent = .FALSE.
@@ -2029,6 +2010,8 @@ MODULE qes_types_module
     TYPE(rism3d_type) :: rism3d
     LOGICAL  :: rismlaue_ispresent = .FALSE.
     TYPE(rismlaue_type) :: rismlaue
+    LOGICAL  :: two_chem_ispresent = .FALSE.
+    TYPE(two_chem_type) :: two_chem
     !
   END TYPE output_type
   !

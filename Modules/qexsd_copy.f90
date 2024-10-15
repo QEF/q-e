@@ -762,7 +762,7 @@ CONTAINS
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
     SUBROUTINE qexsd_copy_twochem ( two_chem_obj, &
-         twochem, nbnd_cond, nelec_cond, degauss_cond)
+         twochem, nbnd_cond, nelec_cond, degauss_cond, ef_cond)
       USE qes_types_module, ONLY: two_chem_type
       IMPLICIT NONE 
       TYPE(two_chem_type),INTENT(IN)     ::  two_chem_obj
@@ -770,11 +770,13 @@ CONTAINS
       REAL(DP), INTENT(OUT)             ::  degauss_cond
       REAL(DP), INTENT(OUT)             ::  nelec_cond
       INTEGER, INTENT(OUT)              ::  nbnd_cond
+      REAL(DP),OPTIONAL, INTENT(OUT)    :: ef_cond
       !
       twochem = two_chem_obj%twochem
       degauss_cond = two_chem_obj%degauss_cond
       nelec_cond = two_chem_obj%nelec_cond
       nbnd_cond = two_chem_obj%nbnd_cond
+      IF (PRESENT(ef_cond)) ef_cond = two_chem_obj%ef_cond 
       !
     END SUBROUTINE qexsd_copy_twochem
     !-----------------------------------------------------------------------
