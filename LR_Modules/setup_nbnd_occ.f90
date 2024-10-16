@@ -14,14 +14,16 @@ SUBROUTINE setup_nbnd_occ
   USE kinds,            ONLY : DP
   USE constants,        ONLY : degspin, pi
   USE klist,            ONLY : xk, ltetra, lgauss, degauss, ngauss, nks, &
-                               nelec, nelup, neldw, two_fermi_energies, wk
-  USE ener,             ONLY : ef
-  USE wvfct,            ONLY : nbnd, et
+                               nelec, nelup, neldw, two_fermi_energies, wk,&
+                               degauss_cond
+  USE ener,             ONLY : ef,ef_cond
+  USE wvfct,            ONLY : nbnd, et,nbnd_cond
   USE control_lr,       ONLY : nbnd_occ, nbnd_occx
   USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : noncolin
   USE lsda_mod,         ONLY : lsda, isk
   USE ktetra,           ONLY : tetra_type
+  USE two_chem,         ONLY : twochem
   !
   IMPLICIT NONE
   !
@@ -57,6 +59,7 @@ SUBROUTINE setup_nbnd_occ
      ENDIF
      !
      target = ef + xmax * degauss
+     IF (twochem) target = ef_cond + xmax * degauss_cond
      !
      DO ik = 1, nks
         DO ibnd = 1, nbnd

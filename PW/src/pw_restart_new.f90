@@ -25,7 +25,7 @@ MODULE pw_restart_new
   USE qexsd_module, ONLY: qexsd_xf, qexsd_openschema, qexsd_closeschema, &
        qexsd_readschema
   USE qexsd_input,  ONLY : qexsd_input_obj, qexsd_init_k_points_ibz, &
-       qexsd_init_occupations, qexsd_init_smearing
+       qexsd_init_occupations, qexsd_init_smearing,qexsd_init_twochem
   USE qexsd_init,   ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
@@ -42,7 +42,7 @@ MODULE pw_restart_new
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
        qexsd_copy_band_structure, qexsd_copy_magnetization, &
        qexsd_copy_kpoints, qexsd_copy_rism3d, qexsd_copy_rismlaue, &
-       qexsd_copy_esm
+       qexsd_copy_esm, qexsd_copy_twochem
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlfile
   !
@@ -84,7 +84,8 @@ MODULE pw_restart_new
       USE io_files,             ONLY : psfile, molfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
-                                       two_fermi_energies, nelup, neldw, tot_charge, ltetra 
+                                       two_fermi_energies, nelup, neldw, tot_charge, ltetra,&
+                                       degauss_cond,nelec_cond
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
       USE gvect,                ONLY : ngm, ngm_g, g
@@ -92,9 +93,10 @@ MODULE pw_restart_new
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
-      USE wvfct,                ONLY : npwx, et, wg, nbnd
+      USE wvfct,                ONLY : npwx, et, wg, nbnd,nbnd_cond
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
-                                       ehart, eband, demet, edftd3, elondon, exdm, esol, vsol
+                                       ehart, eband, demet, edftd3, elondon, exdm,&
+                                       esol, vsol,ef_cond
       USE tsvdw_module,         ONLY : EtsvdW
       USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
@@ -152,6 +154,7 @@ MODULE pw_restart_new
                                        starting_r, starting_l, buffer_r, buffer_ru, buffer_rv, &
                                        buffer_l, buffer_lu, buffer_lv, both_hands, &
                                        ireference, rism3d_is_laue
+      USE two_chem,             ONLY : twochem
       !
       IMPLICIT NONE
       !
@@ -629,19 +632,20 @@ MODULE pw_restart_new
             ef_pt => ef_tg
          END IF
 
-
          IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
                smear_obj_opt = qexsd_input_obj%bands%smearing
+               IF (twochem) THEN 
+               END IF 
             ELSE
                smearing_loc = schema_smearing( smearing )
                CALL qexsd_init_smearing(smear_obj_opt, smearing_loc, degauss/e2)
+
             END IF  
          ELSE 
             smear_obj_opt%lwrite=.false.  
          END IF 
-         !  
-            
+         !
          CALL qexsd_init_band_structure(  output_obj%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
                                  et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj_opt,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
@@ -652,6 +656,22 @@ MODULE pw_restart_new
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
          !
+!------------------------------------------------------------------------------------------
+!... TWO CHEM STUFF 
+!------------------------------------------------------------------------------------------
+        output_obj%two_chem_ispresent = twochem 
+        IF (twochem) THEN 
+          IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
+             output_obj%two_chem_ispresent = .TRUE. 
+             output_obj%two_chem = qexsd_input_obj%twoch_ 
+             output_obj%two_chem%ef_cond_ispresent=.TRUE. 
+             output_obj%two_chem%tagname="two_chem" 
+             output_obj%two_chem%ef_cond = ef_cond 
+          ELSE 
+             CALL qexsd_init_twochem(output_obj%two_chem,"two_chem", twochem, nbnd_cond, &
+                                                    nelec_cond, degauss_cond, ef_cond)             
+          END IF 
+        END IF 
 !-------------------------------------------------------------------------------------------
 ! ... TOTAL ENERGY
 !-------------------------------------------------------------------------------------------
@@ -1113,13 +1133,13 @@ MODULE pw_restart_new
       USE force_mod,       ONLY : force
       USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
            nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra,&
-           two_fermi_energies
+           two_fermi_energies,degauss_cond,nelec_cond
       USE ktetra,          ONLY : ntetra, tetra_type
       USE start_k,         ONLY : nks_start, xk_start, wk_start, &
            nk1, nk2, nk3, k1, k2, k3
-      USE ener,            ONLY : ef, ef_up, ef_dw
+      USE ener,            ONLY : ef, ef_up, ef_dw,ef_cond
       USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
-      USE wvfct,           ONLY : npwx, nbnd, et, wg
+      USE wvfct,           ONLY : npwx, nbnd, et, wg,nbnd_cond
       USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
            edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
            relaxz, block, block_1, block_2, block_height
@@ -1169,6 +1189,7 @@ MODULE pw_restart_new
       USE input_parameters,ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, k_points, assume_isolated, &  
                                        occupations, dftd3_threebody, dftd3_version
+      USE two_chem,        ONLY : twochem
       !
       IMPLICIT NONE
       LOGICAL, INTENT(OUT) :: wfc_is_collected
@@ -1308,6 +1329,13 @@ MODULE pw_restart_new
       !
       CALL set_occupations( occupations, smearing, degauss, &
            tfixed_occ, ltetra, tetra_type, lgauss, ngauss )
+      !! Information for twochem case
+      IF (output_obj%two_chem_ispresent) THEN 
+        CALL qexsd_copy_twochem(output_obj%two_chem, twochem, nbnd_cond, nelec_cond,degauss_cond,ef_cond)
+      ELSE 
+        twochem = .FALSE.
+      END IF 
+      !
       IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
       IF ( lsda ) &
            CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 

@@ -1643,6 +1643,26 @@ MODULE qes_read_module
        obj%rismlaue_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "two_chem")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputType","two_chem: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputType","two_chem: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%two_chem_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_two_chem(tmp_node, obj%two_chem, ierr )
+    ELSE
+       obj%two_chem_ispresent = .FALSE.
+    END IF
+    !
     !
     obj%lwrite = .TRUE.
     !
@@ -13098,26 +13118,6 @@ MODULE qes_read_module
        obj%lowestUnoccupiedLevel_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "twochem")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:band_structureType","twochem: too many occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:band_structureType","twochem: too many occurrences",10)
-        END IF
-    END IF
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%twochem_ispresent = .TRUE.
-      tmp_node => item(tmp_node_list, 0)
-      CALL qes_read_two_chem(tmp_node, obj%twochem, ierr )
-    ELSE
-       obj%twochem_ispresent = .FALSE.
-    END IF
-    !
     tmp_node_list => getElementsByTagname(xml_node, "two_fermi_energies")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -15300,6 +15300,34 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:two_chemType","error reading nelec_cond",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ef_cond")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:two_chemType","ef_cond: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:two_chemType","ef_cond: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%ef_cond_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%ef_cond , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:two_chemType","error reading ef_cond")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:two_chemType","error reading ef_cond",10)
+         END IF
+      END IF
+    ELSE
+       obj%ef_cond_ispresent = .FALSE.
     END IF
     !
     !

@@ -27,13 +27,18 @@ then
   fi
 elif [[ "$1" == "2" ]]
 then
-  echo "Running PW ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
-  if [[ -e CRASH ]]
-  then
-    cat $3
-  fi
+  if [[-e CRASH ]]
+  then 
+    cat CRASH > $3
+  else
+    echo "Running PW ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+    ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+    if [[ -e CRASH ]]
+    then
+      cat $3
+    fi
+  fi 
 elif [[ "$1" = "plugin-pw2casino_1.in" ]] || [[ "$1" = "plugin-pw2casino_2.in" ]]
 then
   export PARA_SUFFIX="$PARA_SUFFIX --pw2casino"

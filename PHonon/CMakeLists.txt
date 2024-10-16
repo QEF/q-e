@@ -8,6 +8,7 @@ set(src_ph
     PH/dynmat_nlcc.f90
     PH/addnlcc_zstar_eu_us.f90
     PH/addusddens.f90
+    PH/addusddens_cond.f90
     PH/addusddense.f90
     PH/addusdynmat.f90
     PH/allocate_part.f90
@@ -23,8 +24,10 @@ set(src_ph
     PH/clinear.f90
     PH/close_phq.f90
     PH/compute_alphasum.f90
+    PH/compute_alphasum_cond.f90
     PH/compute_becalp.f90
     PH/compute_becsum_ph.f90
+    PH/compute_becsum_ph_cond.f90
     PH/compute_drhous.f90
     PH/compute_drhous_nc.f90
     PH/compute_dvloc.f90
