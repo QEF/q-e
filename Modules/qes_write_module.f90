@@ -393,6 +393,9 @@ MODULE qes_write_module
      IF (obj%rismlaue_ispresent) THEN
         CALL qes_write_rismlaue (xp, obj%rismlaue)
      END IF
+     IF (obj%two_chem_ispresent) THEN
+        CALL qes_write_two_chem (xp, obj%two_chem)
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_output
 
@@ -3076,9 +3079,6 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%lowestUnoccupiedLevel, fmt='s16')
         CALL xml_EndElement(xp, "lowestUnoccupiedLevel")
      END IF
-     IF (obj%twochem_ispresent) THEN
-        CALL qes_write_two_chem (xp, obj%twochem)
-     END IF
      IF (obj%two_fermi_energies_ispresent) THEN
         CALL xml_NewElement(xp, "two_fermi_energies")
            CALL xml_addCharacters(xp, obj%two_fermi_energies, fmt='s16')
@@ -3628,8 +3628,13 @@ MODULE qes_write_module
         CALL xml_addCharacters(xp, obj%degauss_cond, fmt='s16')
      CALL xml_EndElement(xp, 'degauss_cond')
      CALL xml_NewElement(xp, 'nelec_cond')
-        CALL xml_addCharacters(xp, obj%nelec_cond)
+        CALL xml_addCharacters(xp, obj%nelec_cond, fmt='s16')
      CALL xml_EndElement(xp, 'nelec_cond')
+     IF (obj%ef_cond_ispresent) THEN
+        CALL xml_NewElement(xp, "ef_cond")
+           CALL xml_addCharacters(xp, obj%ef_cond, fmt='s16')
+        CALL xml_EndElement(xp, "ef_cond")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_two_chem
 

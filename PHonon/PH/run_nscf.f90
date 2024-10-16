@@ -46,6 +46,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp,              ONLY : mp_barrier
   USE rism_module,     ONLY : lrism, rism_set_restart
   USE two_chem,        ONLY : twochem
+  USE input_parameters, ONLY : occupations
 
   !
   IMPLICIT NONE
@@ -106,6 +107,7 @@ SUBROUTINE run_nscf(do_band, iq)
   CALL setup_nscf ( newgrid, xq, elph_mat .OR. elph_ahc )
   !
   !
+  if (twochem) occupations ='smearing' !this is needed to avoid init_twochem error check.
   CALL init_run()
   !
 !°°°°°°°°°°°°°°°°°°°° ACFDT TEST °°°°°°°°°°°°°°°°°°°°°°°°°

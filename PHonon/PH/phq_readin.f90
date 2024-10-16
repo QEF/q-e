@@ -80,6 +80,7 @@ SUBROUTINE phq_readin()
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE el_phon,       ONLY : kx, ky, kz, elph_print
+  USE two_chem,      ONLY : twochem
   !
   IMPLICIT NONE
   !
@@ -929,7 +930,8 @@ SUBROUTINE phq_readin()
   ! end of reading, close unit qestdin, remove temporary input file if existing
   ! FIXME: closing input file here breaks alpha2F.x that reads what follows
   !   IF (meta_ionode) ios = close_input_file ()
-
+  !
+  IF (twochem.AND.elph) CALL errore ('phq_readin', 'electron-phonon with twochem approach not yet implemented',1)
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
   IF (modenum > 0) THEN

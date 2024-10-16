@@ -1396,7 +1396,9 @@ MODULE qes_types_module
     LOGICAL :: twochem
     INTEGER :: nbnd_cond
     REAL(DP) :: degauss_cond
-    INTEGER :: nelec_cond
+    REAL(DP) :: nelec_cond
+    LOGICAL  :: ef_cond_ispresent = .FALSE.
+    REAL(DP) :: ef_cond
     !
   END TYPE two_chem_type
   !
@@ -1815,8 +1817,6 @@ MODULE qes_types_module
     REAL(DP) :: highestOccupiedLevel
     LOGICAL  :: lowestUnoccupiedLevel_ispresent = .FALSE.
     REAL(DP) :: lowestUnoccupiedLevel
-    LOGICAL  :: twochem_ispresent = .FALSE.
-    TYPE(two_chem_type) :: twochem
     LOGICAL  :: two_fermi_energies_ispresent = .FALSE.
     REAL(DP), DIMENSION(2) :: two_fermi_energies
     TYPE(k_points_IBZ_type) :: starting_k_points
@@ -2010,6 +2010,8 @@ MODULE qes_types_module
     TYPE(rism3d_type) :: rism3d
     LOGICAL  :: rismlaue_ispresent = .FALSE.
     TYPE(rismlaue_type) :: rismlaue
+    LOGICAL  :: two_chem_ispresent = .FALSE.
+    TYPE(two_chem_type) :: two_chem
     !
   END TYPE output_type
   !

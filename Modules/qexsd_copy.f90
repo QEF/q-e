@@ -23,8 +23,8 @@ MODULE qexsd_copy
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
        qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
-       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue, qexsd_copy_esm 
-  !
+       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue, qexsd_copy_esm, qexsd_copy_twochem 
+ !
 CONTAINS
   !-------------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version)
@@ -760,6 +760,27 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_algorithmic_info
     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_twochem ( two_chem_obj, &
+         twochem, nbnd_cond, nelec_cond, degauss_cond, ef_cond)
+      USE qes_types_module, ONLY: two_chem_type
+      IMPLICIT NONE 
+      TYPE(two_chem_type),INTENT(IN)     ::  two_chem_obj
+      LOGICAL,INTENT(OUT)               ::  twochem
+      REAL(DP), INTENT(OUT)             ::  degauss_cond
+      REAL(DP), INTENT(OUT)             ::  nelec_cond
+      INTEGER, INTENT(OUT)              ::  nbnd_cond
+      REAL(DP),OPTIONAL, INTENT(OUT)    :: ef_cond
+      !
+      twochem = two_chem_obj%twochem
+      degauss_cond = two_chem_obj%degauss_cond
+      nelec_cond = two_chem_obj%nelec_cond
+      nbnd_cond = two_chem_obj%nbnd_cond
+      IF (PRESENT(ef_cond)) ef_cond = two_chem_obj%ef_cond 
+      !
+    END SUBROUTINE qexsd_copy_twochem
+    !-----------------------------------------------------------------------
+
     !
     !---------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_efield ( efield_obj, tefield, dipfield, edir, &

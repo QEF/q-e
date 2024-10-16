@@ -345,6 +345,9 @@ MODULE qes_reset_module
     IF (obj%rismlaue_ispresent) &
       CALL qes_reset_rismlaue(obj%rismlaue)
     obj%rismlaue_ispresent = .FALSE.
+    IF (obj%two_chem_ispresent) &
+      CALL qes_reset_two_chem(obj%two_chem)
+    obj%two_chem_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_output
   !
@@ -2009,9 +2012,6 @@ MODULE qes_reset_module
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
     obj%lowestUnoccupiedLevel_ispresent = .FALSE.
-    IF (obj%twochem_ispresent) &
-      CALL qes_reset_two_chem(obj%twochem)
-    obj%twochem_ispresent = .FALSE.
     obj%two_fermi_energies_ispresent = .FALSE.
     CALL qes_reset_k_points_IBZ(obj%starting_k_points)
     CALL qes_reset_occupations(obj%occupations_kind)
@@ -2401,6 +2401,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%ef_cond_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_two_chem
   !

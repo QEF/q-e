@@ -377,6 +377,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%rismlaue_ispresent, ionode_id, comm)
     IF (obj%rismlaue_ispresent) &
       CALL qes_bcast_rismlaue(obj%rismlaue, ionode_id, comm)
+    CALL mp_bcast(obj%two_chem_ispresent, ionode_id, comm)
+    IF (obj%two_chem_ispresent) &
+      CALL qes_bcast_two_chem(obj%two_chem, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_output
   !
@@ -2747,9 +2750,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lowestUnoccupiedLevel_ispresent, ionode_id, comm)
     IF (obj%lowestUnoccupiedLevel_ispresent) &
       CALL mp_bcast(obj%lowestUnoccupiedLevel, ionode_id, comm)
-    CALL mp_bcast(obj%twochem_ispresent, ionode_id, comm)
-    IF (obj%twochem_ispresent) &
-      CALL qes_bcast_two_chem(obj%twochem, ionode_id, comm)
     CALL mp_bcast(obj%two_fermi_energies_ispresent, ionode_id, comm)
     IF (obj%two_fermi_energies_ispresent) &
       CALL mp_bcast(obj%two_fermi_energies, ionode_id, comm)
@@ -3267,6 +3267,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%nbnd_cond, ionode_id, comm)
     CALL mp_bcast(obj%degauss_cond, ionode_id, comm)
     CALL mp_bcast(obj%nelec_cond, ionode_id, comm)
+    CALL mp_bcast(obj%ef_cond_ispresent, ionode_id, comm)
+    IF (obj%ef_cond_ispresent) &
+      CALL mp_bcast(obj%ef_cond, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_two_chem
   !
