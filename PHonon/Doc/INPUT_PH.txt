@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ph.x / PHonon / Quantum ESPRESSO (version: 7.3.2)
+Program: ph.x / PHonon / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -997,4 +997,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Tue Oct 15 15:29:02 CEST 2024
+This file has been created by helpdoc utility on Wed Oct 16 18:16:39 CEST 2024

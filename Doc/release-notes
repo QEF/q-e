@@ -1,8 +1,8 @@
-Incompatible changes in 7.3.2 version:
+Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
 
-Fixed in 7.3.2 version:
+Fixed in 7.4 version:
   * Stress for USPP and conjugate-gradient algorithm of cp.x was wrong.
     Bug found and fixed by Jeremy Rabone
   * Phonon restart was not working properly in some cases with ultrasoft,

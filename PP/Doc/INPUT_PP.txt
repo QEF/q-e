@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pp.x / PWscf / Quantum ESPRESSO (version: 7.3.2)
+Program: pp.x / PWscf / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -628,4 +628,4 @@ NAMELIST: &PLOT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Tue Oct 15 15:29:05 CEST 2024
+This file has been created by helpdoc utility on Wed Oct 16 18:16:50 CEST 2024
