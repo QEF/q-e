@@ -1,13 +1,15 @@
-Incompatible changes in development version:
+Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
 
-Fixed in development version:
+Fixed in 7.4 version:
+  * Stress for USPP and conjugate-gradient algorithm of cp.x was wrong.
+    Bug found and fixed by Jeremy Rabone
   * Phonon restart was not working properly in some cases with ultrasoft,
     PPs, due to bad initialization of PP tables - affects v.7.3 and 7.3.1
   * Too small parameter "maxl" in upflib/ylmr2.f90 and upflib/ylmr2_gpu.f90
     for some PAW calculations - affects v.7.3.1 only
-  * Since v qe-7.2 phonon was not working for completely local pseudopotentials 
+  * Since v.7.2 phonon was not working for completely local pseudopotentials 
     such as the VBC pseudopotentials for H. 
 
 New in 7.3.1 version:
