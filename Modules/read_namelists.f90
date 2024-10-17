@@ -121,6 +121,8 @@ MODULE read_namelists_module
        gate     = .FALSE. !TB
        twochem  = .FALSE.
        lberry   = .FALSE.
+       symmetry_with_labels = .FALSE. 
+       use_spinflip = .FALSE. 
        gdir     = 0
        nppstr   = 0
        wf_collect = .TRUE.
