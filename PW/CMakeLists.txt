@@ -231,7 +231,8 @@ set(src_pw
    src/vcsmd.f90 
    src/vcsubs.f90 
    src/vhpsi.f90 
-   src/vloc_psi.f90 
+   src/vloc_psi_tg.f90 
+   src/vloc_psi_acc.f90 
    src/utils.f90 
    src/xdm_dispersion.f90 
    src/wfcinit.f90 
@@ -258,7 +259,6 @@ set(src_pw
    src/h_psi_gpu.f90
    src/utils_gpu.f90
    src/vhpsi_gpu.f90
-   src/vloc_psi_gpu.f90
    src/hs_psi_gpu.f90
    src/sic.f90
    src/scissor.f90)
