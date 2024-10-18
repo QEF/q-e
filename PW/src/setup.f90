@@ -65,7 +65,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, tstress, &
-                                 lbands, gamma_only, restart
+                                 lbands, gamma_only, restart, use_spinflip, symm_by_label 
   USE cellmd,             ONLY : calc
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
@@ -225,12 +225,13 @@ SUBROUTINE setup()
   CALL set_spin_vars( lsda, noncolin, domag, &
          npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
   ! set colin_mag.
-  ! NOTE: This should be done in set_spin_vars, but I temporarily put it here 
-  ! to avoid changing the interface of set_spin_vars until the setting
-  !  of colin_mag is finalized.
-  IF (nspin == 2 .AND. (ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6)) ) THEN
-     colin_mag = 2
-  ELSE
+  IF (symm_by_label .AND. nspin == 2 .AND. (ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6)) ) THEN 
+    IF (use_spinflip) THEN 
+       colin_mag = 2
+    ELSE 
+       colin_mag = 1 
+    END IF 
+  ELSE IF (symm_by_label) THEN 
      colin_mag = 0
   END IF
   IF ( xclib_dft_is('hybrid') ) THEN

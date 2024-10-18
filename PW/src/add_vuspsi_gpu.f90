@@ -68,7 +68,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !-----------------------------------------------------------------------
        !! See comments inside
        !
-       USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        USE device_fbuff_m, ONLY : dev_buf
        !
 #if defined(__CUDA)
@@ -77,10 +76,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
 #endif
        !
        IMPLICIT NONE
-       INTEGER, EXTERNAL :: ldim_block, gind_block
        REAL(DP), POINTER :: ps_d (:,:)
        INTEGER :: ierr
-       INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
        ! counters
        INTEGER :: jkb, ikb, ih, jh, na, nt, ibnd
        !
@@ -92,26 +89,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !
        IF ( nkb == 0 ) RETURN
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
-          nproc   = 1
-          mype    = 0
-          m_loc   = m
-          m_begin = 1
-          m_max   = m
-       ELSE
-          !
-          ! becp(l,i) = <beta_l|psi_i>, with vkb(n,l)=|beta_l>
-          ! in this case becp(l,i) are distributed (index i is)
-          !
-          nproc   = becp%nproc
-          mype    = becp%mype
-          m_loc   = becp%nbnd_loc
-          m_begin = becp%ibnd_begin
-          m_max   = SIZE( becp%r, 2 )
-          IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
-       END IF
+       ! becp(l,i) = <beta_l|psi_i>, with vkb(n,l)=|beta_l>
+       ! in this case becp(l,i) are distributed (index i is)
        !
-       CALL dev_buf%lock_buffer(ps_d, (/ nkb, m_max /), ierr ) !ALLOCATE (ps_d (nkb,m_max), STAT=ierr )
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr ) !ALLOCATE (ps_d (nkb,m), STAT=ierr )
        !
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps_d ', ABS(ierr) )
@@ -138,14 +119,12 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 ! Next operation computes ps(l',i) = \sum_m deeq(l,m) becp(m',i)
                 ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                 !
-                IF ( m_loc > 0 ) THEN
-                  !$acc host_data use_device(deeq,becp_r)
-                  CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
+                !$acc host_data use_device(deeq,becp_r)
+                CALL DGEMM('N', 'N', nh(nt), m, nh(nt), 1.0_dp, &
                            deeq(1,1,na,current_spin), nhm, &
                            becp_r(ofsbeta(na)+1,1), nkb, 0.0_dp, &
                                ps_d(ofsbeta(na)+1,1), nkb )
-                  !$acc end host_data
-                END IF
+                !$acc end host_data
                 !
              END IF
              !
@@ -153,44 +132,13 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           !
        END DO
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
-          !
-          ! Normal case: hpsi(n,i) = \sum_l beta(n,l) ps(l,i) 
-          ! (l runs from 1 to nkb)
-          !
-          !$acc host_data use_device(vkb)
-          CALL DGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
+       ! Normal case: hpsi(n,i) = \sum_l beta(n,l) ps(l,i) 
+       ! (l runs from 1 to nkb)
+       !
+       !$acc host_data use_device(vkb)
+       CALL DGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
                    ( 2 * lda ), ps_d, nkb, 1.D0, hpsi_d, ( 2 * lda ) )
-          !$acc end host_data
-       ELSE
-          !
-          ! parallel block multiplication of vkb and ps
-          !
-          icur_blk = mype
-          !
-          DO icyc = 0, nproc - 1
-
-             m_loc   = ldim_block( becp%nbnd , nproc, icur_blk )
-             m_begin = gind_block( 1,  becp%nbnd, nproc, icur_blk )
-
-             IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
-
-             IF( m_loc > 0 ) THEN
-                !$acc host_data use_device(vkb)
-                CALL DGEMM( 'N', 'N', ( 2 * n ), m_loc, nkb, 1.D0, vkb, &
-                   ( 2 * lda ), ps_d, nkb, 1.D0, hpsi_d( 1, m_begin ), ( 2 * lda ) )
-                !$acc end host_data
-             ENDIF
-
-             ! block rotation
-             !
-             CALL mp_circular_shift_left( ps_d, icyc, becp%comm )
-
-             icur_blk = icur_blk + 1
-             IF( icur_blk == nproc ) icur_blk = 0
-
-          ENDDO
-       ENDIF
+       !$acc end host_data
        !
        CALL dev_buf%release_buffer(ps_d, ierr) ! DEALLOCATE (ps_d)
        !

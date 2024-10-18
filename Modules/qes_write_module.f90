@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
-  USE FoX_wxml
-#else
-  USE wxml
-#endif
+#if defined (__fox) 
+  USE  FoX_wxml 
+#else 
+  USE wxml 
+#endif 
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -392,6 +392,9 @@ MODULE qes_write_module
      END IF
      IF (obj%rismlaue_ispresent) THEN
         CALL qes_write_rismlaue (xp, obj%rismlaue)
+     END IF
+     IF (obj%two_chem_ispresent) THEN
+        CALL qes_write_two_chem (xp, obj%two_chem)
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_output
@@ -2799,6 +2802,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nsym')
         CALL xml_addCharacters(xp, obj%nsym)
      CALL xml_EndElement(xp, 'nsym')
+     IF (obj%colin_mag_ispresent) THEN
+        CALL xml_NewElement(xp, "colin_mag")
+           CALL xml_addCharacters(xp, obj%colin_mag)
+        CALL xml_EndElement(xp, "colin_mag")
+     END IF
      CALL xml_NewElement(xp, 'nrot')
         CALL xml_addCharacters(xp, obj%nrot)
      CALL xml_EndElement(xp, 'nrot')
@@ -3070,9 +3078,6 @@ MODULE qes_write_module
         CALL xml_NewElement(xp, "lowestUnoccupiedLevel")
            CALL xml_addCharacters(xp, obj%lowestUnoccupiedLevel, fmt='s16')
         CALL xml_EndElement(xp, "lowestUnoccupiedLevel")
-     END IF
-     IF (obj%twochem_ispresent) THEN
-        CALL qes_write_two_chem (xp, obj%twochem)
      END IF
      IF (obj%two_fermi_energies_ispresent) THEN
         CALL xml_NewElement(xp, "two_fermi_energies")
@@ -3623,8 +3628,13 @@ MODULE qes_write_module
         CALL xml_addCharacters(xp, obj%degauss_cond, fmt='s16')
      CALL xml_EndElement(xp, 'degauss_cond')
      CALL xml_NewElement(xp, 'nelec_cond')
-        CALL xml_addCharacters(xp, obj%nelec_cond)
+        CALL xml_addCharacters(xp, obj%nelec_cond, fmt='s16')
      CALL xml_EndElement(xp, 'nelec_cond')
+     IF (obj%ef_cond_ispresent) THEN
+        CALL xml_NewElement(xp, "ef_cond")
+           CALL xml_addCharacters(xp, obj%ef_cond, fmt='s16')
+        CALL xml_EndElement(xp, "ef_cond")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_two_chem
 

@@ -15,7 +15,7 @@ default :
 	@echo ' '
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests-XX [NPROCS=N]        : run tests [optionally, on N processors]'
-	@echo ' for XX=pw, cp, ph, epw, hp, tddfpt, kcw, all_currents, pp, zg, xsd-pw'
+	@echo ' for XX=pw, cp, ph, pp, hp, tddfpt, kcw, all_currents, epw, zg, xsd-pw'
 	@echo ' run-tests [NPROCS=N]           : run all tests above (except the last four)'
 	@echo ' run-custom-test testdir=DIR [NPROCS=N]: run test in DIR only'
 	@echo ' compare                     : compare last output with reference'
@@ -40,7 +40,7 @@ pseudo :
 	@./check_pseudo.sh kcw_
 	@./check_pseudo.sh oscdft_
 
-run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-epw run-tests-hp run-tests-tddfpt run-tests-kcw
+run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-pp run-tests-hp run-tests-tddfpt run-tests-kcw
 
 run-tests-cp : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all

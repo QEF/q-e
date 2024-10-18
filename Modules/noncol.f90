@@ -44,8 +44,8 @@ MODULE noncollin_module
   !! equal to 0 if the system does not have a collinear magnetism
   !! equal to -1 if the collinearity is not checked.
   !! larger than 0 if the system has a collinear magnetism (nspin_mag = 2)
-  !!   equal to 1 if the symmetries with time-reversal is not detected
-  !!   equal to 2 if the symmetries with time-reversal is detected
+  !! equal to 1 if the symmetries with time-reversal is not detected
+  !! equal to 2 if the symmetries with time-reversal is detected
 
   !
   REAL(DP) :: angle1(ntypx)

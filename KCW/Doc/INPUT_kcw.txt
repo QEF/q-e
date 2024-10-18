@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: kcw.x / KCW / Quantum ESPRESSO (version: 7.3.1)
+Program: kcw.x / KCW / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -413,4 +413,4 @@ CARD: K_POINTS
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Feb 23 17:16:08 CET 2024
+This file has been created by helpdoc utility on Wed Oct 16 19:28:40 CEST 2024
