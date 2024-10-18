@@ -1,5 +1,5 @@
 
-     Program PIOUD v.7.0 starts on 11Oct2024 at 16:13: 5 
+     Program PIOUD v.7.0 starts on 18Oct2024 at 15:31: 4 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,7 +14,7 @@
 
      MPI processes distributed on     1 nodes
      path-images division:  nimage    =       4
-     2392 MiB available memory on the printing compute node when the environment starts
+     2311 MiB available memory on the printing compute node when the environment starts
  
 
      parsing_file_name: diamond.in
@@ -23,18 +23,18 @@
      cpu =  1   tcpu =      1.6    self-consistency for image   2
      cpu =  1   tcpu =      3.1    self-consistency for image   2
      cpu =  1   tcpu =      4.6    self-consistency for image   2
-     cpu =  1   tcpu =      6.0    self-consistency for image   2
-     cpu =  1   tcpu =      7.5    self-consistency for image   2
-     cpu =  1   tcpu =      9.0    self-consistency for image   2
-     cpu =  1   tcpu =     10.4    self-consistency for image   2
-     cpu =  1   tcpu =     11.9    self-consistency for image   2
-     cpu =  1   tcpu =     13.3    self-consistency for image   2
-     cpu =  1   tcpu =     14.8    self-consistency for image   2
-     cpu =  1   tcpu =     16.3    self-consistency for image   2
-     cpu =  1   tcpu =     17.7    self-consistency for image   2
-     cpu =  1   tcpu =     19.3    self-consistency for image   2
-     cpu =  1   tcpu =     20.7    self-consistency for image   2
-     cpu =  1   tcpu =     22.2    self-consistency for image   2
-     cpu =  1   tcpu =     23.7    self-consistency for image   2
-     PIOUD        :     22.30s CPU     25.28s WALL
+     cpu =  1   tcpu =      6.1    self-consistency for image   2
+     cpu =  1   tcpu =      7.7    self-consistency for image   2
+     cpu =  1   tcpu =      9.3    self-consistency for image   2
+     cpu =  1   tcpu =     10.8    self-consistency for image   2
+     cpu =  1   tcpu =     12.3    self-consistency for image   2
+     cpu =  1   tcpu =     13.7    self-consistency for image   2
+     cpu =  1   tcpu =     15.3    self-consistency for image   2
+     cpu =  1   tcpu =     16.8    self-consistency for image   2
+     cpu =  1   tcpu =     18.3    self-consistency for image   2
+     cpu =  1   tcpu =     19.8    self-consistency for image   2
+     cpu =  1   tcpu =     21.3    self-consistency for image   2
+     cpu =  1   tcpu =     22.7    self-consistency for image   2
+     cpu =  1   tcpu =     24.2    self-consistency for image   2
+     PIOUD        :     22.55s CPU     25.77s WALL
 

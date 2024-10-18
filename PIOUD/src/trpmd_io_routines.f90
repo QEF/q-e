@@ -38,11 +38,12 @@ MODULE trpmd_io_routines
        !
        USE path_io_units_module,  ONLY : iunpath
        USE path_variables, ONLY : num_of_images, path_length, &
-                                  pes, pos
+                                   pos !pes
        USE path_formats,   ONLY : run_info, run_output
        USE ions_base,             ONLY : zv, ityp, nat
        USE fcp_variables,         ONLY : lfcpopt, fcp_mu
        USE fcp_opt_routines, ONLY : fcp_neb_ef, fcp_neb_nelec
+       use pimd_variables, ONLY: pes
        !
        IMPLICIT NONE
        !

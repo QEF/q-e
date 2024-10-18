@@ -35,7 +35,7 @@ MODULE path_variables
        conv_path                  ! .TRUE. when "path" convergence has been
                                   !        achieved
   LOGICAL :: &
-       first_last_opt,           &! if .TRUE. the first and the last image
+      !  first_last_opt,           &! if .TRUE. the first and the last image
                                   !           are optimised too.
      !   use_masses,               &! if .TRUE. mass weighted coordinates are !Aadhityan - Done
                                   !           used
@@ -77,8 +77,8 @@ MODULE path_variables
      !   error(:)                   ! the error from the true MEP            !!!Remove it 
   REAL(DP), ALLOCATABLE :: &
        pos(:,:),                 &! reaction path
-       grad_pes(:,:),            &! gradients acting on the path
-       stress_pes(:,:)             !Stress
+       grad_pes(:,:)            ! gradients acting on the path
+      !  stress_pes(:,:)             !Stress
 
 !   LOGICAL, ALLOCATABLE :: &
 !        frozen(:)                  ! .TRUE. if the image or mode has not
@@ -86,8 +86,8 @@ MODULE path_variables
   !
   ! ... "neb specific" variables :
 
-  CHARACTER(LEN=20) :: &
-       CI_scheme                  ! Climbing Image scheme
+  ! CHARACTER(LEN=20) :: &
+  !      CI_scheme                  ! Climbing Image scheme !Remove
   ! INTEGER :: &
   !      Emax_index                 ! index of the image with the highest energy
   !
@@ -110,7 +110,7 @@ MODULE path_variables
   CONTAINS
      !
      !----------------------------------------------------------------------
-     SUBROUTINE path_allocation()
+       SUBROUTINE path_allocation()
        !----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -120,7 +120,7 @@ MODULE path_variables
      !   ALLOCATE( posold(   dim1, num_of_images ) )
      !   ALLOCATE( grad(     dim1, num_of_images ) )
        ALLOCATE( grad_pes( dim1, num_of_images ) )
-       ALLOCATE( stress_pes( 6, num_of_images ) )
+      !  ALLOCATE( stress_pes( 6, num_of_images ) )
 
        !
        ALLOCATE( pes(      num_of_images ) )
@@ -146,7 +146,7 @@ MODULE path_variables
      !   IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
        IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
-       IF ( ALLOCATED( stress_pes ) )   DEALLOCATE( stress_pes )
+      !  IF ( ALLOCATED( stress_pes ) )   DEALLOCATE( stress_pes )
      !   IF ( ALLOCATED( k ) )            DEALLOCATE( k )
      !   IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
      !   IF ( ALLOCATED( error ) )        DEALLOCATE( error )

@@ -30,9 +30,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
-                               istep_path, num_of_images, &
-                               first_last_opt, stress_pes ! <-- lp
+  USE path_variables,   ONLY : pos,  grad_pes, dim1, pending_image, &
+                               istep_path, num_of_images !pes
+                              !  stress_pes ! <-- lp
+  USE pimd_variables,   ONLY : forceMD, nbeadMD, stress_pes_md, pes
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_images,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
@@ -48,8 +49,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   use mp_world
 
 
-  
-  USE pimd_variables,   ONLY : nbeadMD
   !
   IMPLICIT NONE
   !
@@ -76,8 +75,12 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   pes        = 0.D0
   grad_pes = 0.D0
-  stress_pes = 0.D0  ! --> allocated/deallocated in path_variable (path_allocation, path_deallocation) and declared...
+  forceMD = 0.D0
+!   stress_pes = 0.D0  ! --> allocated/deallocated in path_variable (path_allocation, path_deallocation) and declared...
+  stress_pes_md = 0.D0
   fcp_neb_ef  = 0.d0 ! needed ?
+
+
 
      !--- lp
 
@@ -178,7 +181,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
 
       CALL mp_sum( pes,        inter_image_comm )  !!! <----my mod.
       CALL mp_sum( grad_pes,   inter_image_comm )  !!! <----my mod.
-      CALL mp_sum( stress_pes, inter_image_comm )  !!! <----my mod.
+      ! CALL mp_sum( stress_pes, inter_image_comm )  !!! <----my mod.
+      CALL mp_sum( stress_pes_md, inter_image_comm )
+      CALL mp_sum( forceMD, inter_image_comm ) 
       IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef, inter_image_comm )  !!! <----my mod.
       CALL mp_sum( istat,               inter_image_comm )  !!! <----my mod.
 
@@ -340,12 +345,23 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
+     
       grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
+      forceMD(:,:,image) = force /e2
+
+           
+          
+
+
 
       ! stress_pes(:,image) = RESHAPE( sigma,(/ 9 /) )
-      stress_pes(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
+      ! stress_pes(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
+      stress_pes_md(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
+      write(11000000+mpime,*)stress_pes_md
+      ! write(10000000+mpime,*)stress_pes
 
-      write(10000000+mpime,*)stress_pes
+
+      
       !
       ethr = diago_thr_init
       !

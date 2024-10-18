@@ -1712,7 +1712,7 @@ subroutine pimd_allocation
    implicit none
    integer :: i,j,ii,jj,ind
    
-!WRITE(9999,*) "Alloc dims", ndimMD, natMD, nbeadMD
+WRITE(9999,*) "Alloc dims", ndimMD, natMD, nbeadMD
 !FLUSH(9999)
 
    ! Allocation of variables
@@ -1728,6 +1728,9 @@ subroutine pimd_allocation
    allocate(rtilde(natMD,ndimMD))
    allocate(vcm(ndimMD,nbeadMD))
    allocate(rcm(ndimMD,nbeadMD))
+   ALLOCATE( pes(nbeadMD) )
+   ALLOCATE( stress_pes_md( 6, nbeadMD ) )
+   
    rpos=0.0
   
   if(sigmacov .ne. 0.d0) then 
@@ -1928,6 +1931,8 @@ subroutine pimd_deallocation
    deallocate(vcm)
    deallocate(rcm)
    deallocate(ion_name)
+   deallocate(pes)
+   deallocate(stress_pes_md)
  
   if (sigmacov .ne. 0.d0) then
      deallocate(dynmat,dynmat_eig,dynmatforce_eig)
@@ -2411,7 +2416,7 @@ subroutine checkpoint(ttk)
         
   use pimd_variables, only : nbeadMD,nunitcells,unit_dot_xyz,&
                              forceMD,vel,natMD,ion_name,rcentroid,&
-                             ndimMD,unit_dot_positions,&
+                             ndimMD,stress_pes_md,unit_dot_positions,&
                              unit_dot_velocities,unit_dot_forces,&
                              unit_dot_stress,&
                              unit_dot_localtemp,rpos,&
@@ -2419,7 +2424,7 @@ subroutine checkpoint(ttk)
                              unit_dot_forces_cen,&
                              unit_dot_velocities_cen,&
                              unit_dot_stress_cen
-  USE path_variables,   ONLY : stress_pes
+  ! USE path_variables,   ONLY : stress_pes
   USE constants,        ONLY : ry_kbar
   implicit none
 !    *******************************************************************
@@ -2439,9 +2444,9 @@ subroutine checkpoint(ttk)
       do k=1,nbeadMD
         fcentroid(:,:)=fcentroid(:,:)+forceMD(:,:,k)
         vcentroid(:,:)=vcentroid(:,:)+vel(:,:,k)
-        scentroid(:)=scentroid(:)+stress_pes(:,k)
+        scentroid(:)=scentroid(:)+stress_pes_md(:,k)
         write(90000,*)scentroid
-        write(90001,*)stress_pes
+        write(90001,*)stress_pes_md
       end do
       fcentroid=fcentroid/nbeadMD; vcentroid=vcentroid/nbeadMD; scentroid=scentroid/nbeadMD
 
@@ -2476,7 +2481,7 @@ subroutine checkpoint(ttk)
            flush(unit_dot_velocities)
            write(unit_dot_forces,'(400e15.5)') ((forceMD(l,i,k),l=1,ndimMD),i=1,natMD)
            flush(unit_dot_forces)
-           write(unit_dot_stress,'(400e15.5)') (stress_pes(l,k),l=1,6)
+           write(unit_dot_stress,'(400e15.5)') (stress_pes_md(l,k),l=1,6)
            flush(unit_dot_stress)
            if(k.eq.1) write(unit_dot_localtemp,'(e15.5)') ttk
            if(k.eq.1) flush(unit_dot_localtemp)
@@ -2497,7 +2502,7 @@ subroutine checkpoint(ttk)
      flush(unit_dot_velocities)
      write(unit_dot_forces,'(1500e15.5)') ((forceMD(l,i,1),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_forces)
-     write(unit_dot_stress,'(400e15.5)') (stress_pes(l,1),l=1,6)
+     write(unit_dot_stress,'(400e15.5)') (stress_pes_md(l,1),l=1,6)
      flush(unit_dot_stress)
      write(unit_dot_localtemp,'(e15.5)') ttk
      flush(unit_dot_localtemp)

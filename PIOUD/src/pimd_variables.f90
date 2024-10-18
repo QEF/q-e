@@ -54,6 +54,8 @@ MODULE pimd_variables
                                    ! irun = 3  - Classical/Quantum Langevin dyn. with Ceriotti integrator
                                    ! irun = 4  - Quantum Langevin dyn. with PIOUD integrator
 
+
+
   
   !
   ! ... "general" real space arrays
@@ -102,6 +104,13 @@ MODULE pimd_variables
   real(8), dimension (:,:), allocatable :: el,rtilde,rcentroid,forcedyn
   real(8), dimension (:,:,:), allocatable :: rpos,rpos_init,forceMD,vel,pimp,velocity
   real(8), dimension (:,:,:), allocatable :: rtilde_mode, ptilde,forceMD_old,rpos_old
+
+  REAL(dp), ALLOCATABLE :: &
+         pes(:),                   &! the potential enrgy along the path
+     !   pos(:,:),                 &! reaction path
+     !   grad_pes(:,:),            &! gradients acting on the path
+       stress_pes_md(:,:)             !Stress
+
    
   character(len=3), dimension(:), allocatable :: ion_name   
   ! Myreweight and former TurboRVB variables 

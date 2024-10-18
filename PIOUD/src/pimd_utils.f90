@@ -234,12 +234,15 @@ END SUBROUTINE pimd_get_amas_and_nat
 
 
 SUBROUTINE pimd_mp_bcast
-  use path_variables, only : nstep_path, num_of_images,&
-                                           first_last_opt
-  use pimd_variables, only : nbeadMD,nblocks,nstep_block
+  use path_variables, only : nstep_path, num_of_images
+                                           
+  use pimd_variables, only : nbeadMD,nblocks,nstep_block, forceMD,&
+                              ndimMD,natMD
+  use path_input_parameters_module, only : nat
   USE io_global, ONLY : meta_ionode,meta_ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm, mpime
+
 
   implicit none
 
@@ -248,20 +251,25 @@ SUBROUTINE pimd_mp_bcast
   ! logical :: first_last_opt
   
   nstep_path = nblocks*nstep_block
+  natMD=nat
   write(*,*) nstep_path
   write(10000,*) "nstep_path",nstep_path,num_of_images,"num_of_images", &
                   nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
   num_of_images = nbeadMD
   !if (nbeadMD.eq.1) num_of_images=2
-  first_last_opt=.true.
+  ! first_last_opt=.true.
   write(10001,*) "nstep_path",nstep_path,num_of_images,"num_of_images", &
                  nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
   CALL mp_bcast( nstep_path,  meta_ionode_id, world_comm )
   CALL mp_bcast( num_of_images,  meta_ionode_id, world_comm )
-  CALL mp_bcast( first_last_opt,  meta_ionode_id, world_comm )
+  ! CALL mp_bcast( first_last_opt,  meta_ionode_id, world_comm )
   CALL mp_bcast( nbeadMD,  meta_ionode_id, world_comm ) !Added Aadhityan #Do we need?
+  CALL mp_bcast( forceMD, meta_ionode_id, world_comm ) 
+  CALL mp_bcast( ndimMD, meta_ionode_id, world_comm ) 
+  CALL mp_bcast( natMD, meta_ionode_id, world_comm ) 
+  ! CALL mp_bcast( forceMD, meta_ionode_id, world_comm ) 
 
-  write(11000+mpime,*) nstep_path,num_of_images,nbeadMD,first_last_opt
+  write(11000+mpime,*) nstep_path,num_of_images,nbeadMD,natMD
 
   return
   

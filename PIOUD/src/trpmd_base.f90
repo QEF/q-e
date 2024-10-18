@@ -53,15 +53,15 @@ MODULE trpmd_base
       USE path_input_parameters_module, ONLY : restart_mode
       USE path_input_parameters_module, ONLY : nat
       USE path_variables,   ONLY : pos, istep_path, nstep_path,    &
-                                   dim1, num_of_images, pes, grad_pes, &
+                                   dim1, num_of_images,  grad_pes, & !pes
                                     path_length,  &
                                    deg_of_freedom,   &
                                    tune_load_balance,  & ! posold, 
-                                   pending_image, first_last_opt
+                                   pending_image
       USE path_variables,   ONLY : path_allocation
       USE fcp_variables,        ONLY : lfcpopt
       USE fcp_opt_routines,     ONLY : fcp_opt_allocation
-      use pimd_variables, ONLY : nbeadMD
+      use pimd_variables, ONLY : nbeadMD, pes
       use mp_world
       !
       IMPLICIT NONE
@@ -208,9 +208,8 @@ MODULE trpmd_base
       !------------------------------------------------------------------------
       !
       USE path_variables, ONLY : num_of_images, &
-                                 pending_image, istep_path, pes, &
-                                 first_last_opt
-      USE pimd_variables, ONLY : nbeadMD
+                                 pending_image, istep_path !pes
+      USE pimd_variables, ONLY : nbeadMD, pes
       !
       IMPLICIT NONE
       !
@@ -242,7 +241,7 @@ MODULE trpmd_base
       USE path_variables,    ONLY :  pos, nstep_path ! ,lneb, lsmd
       USE path_variables,   ONLY : conv_path, istep_path,   &
                                    pending_image, &
-                                   pes, CI_scheme
+                                   pes !CI_scheme
                                   !  Emax_index
       USE trpmd_io_routines, ONLY : write_output
       USE path_formats,     ONLY : scf_iter_fmt
@@ -276,10 +275,12 @@ MODULE trpmd_base
          !
       END IF
       write(13000+mpime,*)istep_path,nstep_path,pending_image
-      IF ( meta_ionode ) CALL pimd_allocation !!! <----my mod.
+      !IF ( meta_ionode ) 
+      CALL pimd_allocation !!! <----my mod.
       
       IF ( meta_ionode .and. restart_pimd) CALL pimd_restart_traj  !!! <----my mod.
       CALL mp_bcast( pos,  meta_ionode_id, world_comm )   !!! <----my mod.
+      
       write(13000+mpime,*)istep_path,nstep_path,pending_image
 
       if ( meta_ionode) then 
@@ -293,7 +294,7 @@ MODULE trpmd_base
       end if   
 
       IF (meta_ionode) CALL pimd_get_pot_from_pw(potenergy) !!! <----my mod.
-      IF (meta_ionode) CALL pimd_get_force_from_pw(forceMD) !!! <----my mod.
+      ! IF (meta_ionode) CALL pimd_get_force_from_pw(forceMD) !!! <----my mod.
       IF (meta_ionode) CALL pimd_pw_convert_pos('pw_to_md')    !!! <----my mod.
       IF (meta_ionode) CALL pimdnvt_init(potenergy)!,forceMD) !!! <----my mod.
       !
@@ -339,7 +340,7 @@ MODULE trpmd_base
          CALL born_oppenheimer_pes( stat )
          
          IF (meta_ionode) CALL pimd_get_pot_from_pw(potenergy) !!! <----my mod.
-         IF (meta_ionode) CALL pimd_get_force_from_pw(forceMD) !!! <----my mod.        
+        !  IF (meta_ionode) CALL pimd_get_force_from_pw(forceMD) !!! <----my mod.        
          
          !
          IF ( .NOT. stat ) THEN

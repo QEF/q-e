@@ -108,7 +108,9 @@ PROGRAM pioud
     !
   enddo
   
-  if (meta_ionode)  call pimd_get_amas_and_nat  !!! <----my mod.
+  ! if (meta_ionode)  
+  call pimd_get_amas_and_nat
+    !!! <----my mod.
   !
   ! CALL ioneb()
   CALL verify_pioud_tmpdir()
@@ -124,7 +126,8 @@ PROGRAM pioud
   !
   CALL laxlib_end()
   
-  if ( meta_ionode) call pimd_deallocation    !!! <----my mod.
+  ! if ( meta_ionode) 
+  call pimd_deallocation    !!! <----my mod.
   if ( meta_ionode) call pimd_close_files   !!! <----my mod.
   
   CALL stop_run_path( .true. )     !!! <----my mod.
