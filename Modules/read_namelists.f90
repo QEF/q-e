@@ -912,6 +912,8 @@ MODULE read_namelists_module
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
        CALL mp_bcast( twochem,       ionode_id, intra_image_comm )
        CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
+       CALL mp_bcast( symmetry_with_labels, ionode_id, intra_image_comm) 
+       CALL mp_bcast( use_spinflip, ionode_id, intra_image_comm) 
        !
        RETURN
        !
