@@ -1,30 +1,30 @@
-subroutine pimd_get_force_from_pw(forcetmp)
+! subroutine pimd_get_force_from_pw(forcetmp)
 
-   use pimd_variables, only : nbeadMD,natMD,ndimMD
-   use path_variables, only : grad_pes
-   implicit none
-   integer k,iat,i,cc
-   real(8) :: forcetmp(ndimMD,natMD,nbeadMD)
+!    use pimd_variables, only : nbeadMD,natMD,ndimMD
+!    use path_variables, only : grad_pes
+!    implicit none
+!    integer k,iat,i,cc
+!    real(8) :: forcetmp(ndimMD,natMD,nbeadMD)
    
-   forcetmp=0.d0
-   DO k=1,nbeadMD
-     cc=0
-     DO iat=1,natMD
-       DO i=1,ndimMD
-         cc=cc+1
-         forcetmp(i,iat,k)=-grad_pes(cc,k)
-       END DO
-     END DO
-   END DO
+!    forcetmp=0.d0
+!    DO k=1,nbeadMD
+!      cc=0
+!      DO iat=1,natMD
+!        DO i=1,ndimMD
+!          cc=cc+1
+!          forcetmp(i,iat,k)=-grad_pes(cc,k)
+!        END DO
+!      END DO
+!    END DO
    
-   return
+!    return
 
-end subroutine pimd_get_force_from_pw
+! end subroutine pimd_get_force_from_pw
 
 subroutine pimd_get_pot_from_pw(epMD)
    
-   use path_variables, only : pes  
-   use pimd_variables, only : nbeadMD
+  !  use path_variables, only : pes  
+   use pimd_variables, only : nbeadMD,pes
    implicit none
    real(8) :: epMD
      

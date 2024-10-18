@@ -1,5 +1,5 @@
 
-     Program PIOUD v.7.0 starts on 18Oct2024 at 15:31: 4 
+     Program PIOUD v.7.0 starts on 18Oct2024 at 17:15:28 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,27 +14,27 @@
 
      MPI processes distributed on     1 nodes
      path-images division:  nimage    =       4
-     2311 MiB available memory on the printing compute node when the environment starts
+     1152 MiB available memory on the printing compute node when the environment starts
  
 
      parsing_file_name: diamond.in
      Reading input from pw_1.in
      cpu =  3   tcpu =      0.1    self-consistency for image   4
      cpu =  3   tcpu =      1.6    self-consistency for image   4
-     cpu =  3   tcpu =      3.1    self-consistency for image   4
-     cpu =  3   tcpu =      4.6    self-consistency for image   4
-     cpu =  3   tcpu =      6.1    self-consistency for image   4
-     cpu =  3   tcpu =      7.7    self-consistency for image   4
-     cpu =  3   tcpu =      9.3    self-consistency for image   4
-     cpu =  3   tcpu =     10.8    self-consistency for image   4
-     cpu =  3   tcpu =     12.3    self-consistency for image   4
-     cpu =  3   tcpu =     13.7    self-consistency for image   4
-     cpu =  3   tcpu =     15.3    self-consistency for image   4
-     cpu =  3   tcpu =     16.8    self-consistency for image   4
-     cpu =  3   tcpu =     18.3    self-consistency for image   4
-     cpu =  3   tcpu =     19.8    self-consistency for image   4
-     cpu =  3   tcpu =     21.3    self-consistency for image   4
-     cpu =  3   tcpu =     22.7    self-consistency for image   4
-     cpu =  3   tcpu =     24.2    self-consistency for image   4
-     PIOUD        :     22.84s CPU     25.77s WALL
+     cpu =  3   tcpu =      3.0    self-consistency for image   4
+     cpu =  3   tcpu =      4.5    self-consistency for image   4
+     cpu =  3   tcpu =      5.9    self-consistency for image   4
+     cpu =  3   tcpu =      7.4    self-consistency for image   4
+     cpu =  3   tcpu =      8.8    self-consistency for image   4
+     cpu =  3   tcpu =     10.3    self-consistency for image   4
+     cpu =  3   tcpu =     11.9    self-consistency for image   4
+     cpu =  3   tcpu =     13.5    self-consistency for image   4
+     cpu =  3   tcpu =     14.9    self-consistency for image   4
+     cpu =  3   tcpu =     16.5    self-consistency for image   4
+     cpu =  3   tcpu =     18.1    self-consistency for image   4
+     cpu =  3   tcpu =     19.6    self-consistency for image   4
+     cpu =  3   tcpu =     21.2    self-consistency for image   4
+     cpu =  3   tcpu =     22.8    self-consistency for image   4
+     cpu =  3   tcpu =     24.3    self-consistency for image   4
+     PIOUD        :     23.10s CPU     25.77s WALL
 

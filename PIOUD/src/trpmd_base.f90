@@ -240,8 +240,8 @@ MODULE trpmd_base
       !
       USE path_variables,    ONLY :  pos, nstep_path ! ,lneb, lsmd
       USE path_variables,   ONLY : conv_path, istep_path,   &
-                                   pending_image, &
-                                   pes !CI_scheme
+                                   pending_image
+                                   !pes !CI_scheme
                                   !  Emax_index
       USE trpmd_io_routines, ONLY : write_output
       USE path_formats,     ONLY : scf_iter_fmt

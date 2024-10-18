@@ -72,8 +72,8 @@ MODULE path_variables
   !
   ! ... "general" real space arrays
   !
-  REAL(DP), ALLOCATABLE :: &
-       pes(:)                      ! the potential enrgy along the path
+  ! REAL(DP), ALLOCATABLE :: &
+  !      pes(:)                      ! the potential enrgy along the path
      !   error(:)                   ! the error from the true MEP            !!!Remove it 
   REAL(DP), ALLOCATABLE :: &
        pos(:,:),                 &! reaction path
@@ -123,7 +123,7 @@ MODULE path_variables
       !  ALLOCATE( stress_pes( 6, num_of_images ) )
 
        !
-       ALLOCATE( pes(      num_of_images ) )
+      !  ALLOCATE( pes(      num_of_images ) )
      !   ALLOCATE( k(        num_of_images ) )
      !   ALLOCATE( error(    num_of_images ) )
      !   ALLOCATE( frozen(   num_of_images ) )
@@ -144,7 +144,7 @@ MODULE path_variables
        IF ( ALLOCATED( pos ) )          DEALLOCATE( pos )
      !   IF ( ALLOCATED( posold ) )       DEALLOCATE( posold )
      !   IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
-       IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
+      !  IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
       !  IF ( ALLOCATED( stress_pes ) )   DEALLOCATE( stress_pes )
      !   IF ( ALLOCATED( k ) )            DEALLOCATE( k )
