@@ -16,7 +16,7 @@ MODULE fft_wave
   USE kinds,           ONLY: DP
   USE fft_interfaces,  ONLY: fwfft, invfft
   USE fft_types,       ONLY: fft_type_descriptor
-  USE control_flags,   ONLY: gamma_only, many_fft
+  USE control_flags,   ONLY: gamma_only
   !
   IMPLICIT NONE
   !
@@ -33,7 +33,6 @@ CONTAINS
     !! Wave function FFT from R to G-space.
     !
     USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma, fftx_psi2c_k
-    USE control_flags,           ONLY: many_fft
     !
     IMPLICIT NONE
     !

@@ -232,15 +232,9 @@ SUBROUTINE sum_band()
         !$acc update host(ebecsum)
      endif
      !
-     ! ... If the <beta|psi> are distributed, sum over bands
-     !
-     IF ( becp%comm /= mp_get_comm_null() .AND. nhm > 0 ) THEN
-        CALL mp_sum( becsum, becp%comm )
-        IF ( tqr ) CALL mp_sum( ebecsum, becp%comm )
-     ENDIF
      CALL deallocate_bec_type_acc ( becp )
      !
-     ! ... becsums must be also be summed over bands (with bgrp parallelization)
+     ! ... becsums must be summed over bands (with bgrp parallelization)
      ! ... and over k-points (unsymmetrized). Then the CPU and GPU copies are aligned.
      !
      CALL mp_sum(becsum, inter_bgrp_comm )

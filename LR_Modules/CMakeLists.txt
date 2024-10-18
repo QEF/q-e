@@ -34,6 +34,7 @@ set(sources
     smallgq.f90
     lr_sm1_psi.f90
     lr_addusddens.f90
+    lr_two_chem.f90
     localdos.f90
     setup_dgc.f90
     compute_vsgga.f90

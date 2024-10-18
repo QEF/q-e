@@ -481,7 +481,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_output(obj, tagname, algorithmic_info, atomic_species, atomic_structure,&
                             basis_set, dft, total_energy, band_structure, convergence_info, symmetries,&
                             boundary_conditions, magnetization, forces, stress, electric_field,&
-                            fcp_force, fcp_tot_charge, rism3d, rismlaue)
+                            fcp_force, fcp_tot_charge, rism3d, rismlaue, two_chem)
     !
     IMPLICIT NONE
     !
@@ -505,6 +505,7 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: fcp_tot_charge
     TYPE(rism3d_type),OPTIONAL,INTENT(IN) :: rism3d
     TYPE(rismlaue_type),OPTIONAL,INTENT(IN) :: rismlaue
+    TYPE(two_chem_type),OPTIONAL,INTENT(IN) :: two_chem
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -582,6 +583,12 @@ MODULE qes_init_module
       obj%rismlaue = rismlaue
     ELSE
       obj%rismlaue_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(two_chem)) THEN
+      obj%two_chem_ispresent = .TRUE. 
+      obj%two_chem = two_chem
+    ELSE
+      obj%two_chem_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_output
@@ -3882,13 +3889,14 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_algorithmic_info
   !
   !
-  SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, symmetry)
+  SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, symmetry, colin_mag)
     !
     IMPLICIT NONE
     !
     TYPE(symmetries_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     INTEGER,INTENT(IN) :: nsym
+    INTEGER,OPTIONAL,INTENT(IN) :: colin_mag
     INTEGER,INTENT(IN) :: nrot
     INTEGER,INTENT(IN) :: space_group
     TYPE(symmetry_type),DIMENSION(:),INTENT(IN) :: symmetry
@@ -3898,6 +3906,12 @@ MODULE qes_init_module
     obj%lread = .TRUE.
     !
     obj%nsym = nsym
+    IF ( PRESENT(colin_mag)) THEN
+      obj%colin_mag_ispresent = .TRUE. 
+      obj%colin_mag = colin_mag
+    ELSE
+      obj%colin_mag_ispresent = .FALSE.
+    END IF
     obj%nrot = nrot
     obj%space_group = space_group
     ALLOCATE(obj%symmetry(SIZE(symmetry)))
@@ -4194,7 +4208,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, starting_k_points,&
                                     nks, occupations_kind, ks_energies, nbnd, nbnd_up, nbnd_dw,&
                                     fermi_energy, highestOccupiedLevel, lowestUnoccupiedLevel,&
-                                    twochem, two_fermi_energies, smearing)
+                                    two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -4210,7 +4224,6 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
     REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
-    TYPE(two_chem_type),OPTIONAL,INTENT(IN) :: twochem
     REAL(DP), DIMENSION(2),OPTIONAL,INTENT(IN) :: two_fermi_energies
     TYPE(k_points_IBZ_type),INTENT(IN) :: starting_k_points
     INTEGER,INTENT(IN) :: nks
@@ -4261,12 +4274,6 @@ MODULE qes_init_module
       obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
     ELSE
       obj%lowestUnoccupiedLevel_ispresent = .FALSE.
-    END IF
-    IF ( PRESENT(twochem)) THEN
-      obj%twochem_ispresent = .TRUE. 
-      obj%twochem = twochem
-    ELSE
-      obj%twochem_ispresent = .FALSE.
     END IF
     IF ( PRESENT(two_fermi_energies)) THEN
       obj%two_fermi_energies_ispresent = .TRUE. 
@@ -5075,7 +5082,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_rismlaue
   !
   !
-  SUBROUTINE qes_init_two_chem(obj, tagname, twochem, nbnd_cond, degauss_cond, nelec_cond)
+  SUBROUTINE qes_init_two_chem(obj, tagname, twochem, nbnd_cond, degauss_cond, nelec_cond, ef_cond)
     !
     IMPLICIT NONE
     !
@@ -5084,7 +5091,8 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: twochem
     INTEGER,INTENT(IN) :: nbnd_cond
     REAL(DP),INTENT(IN) :: degauss_cond
-    INTEGER,INTENT(IN) :: nelec_cond
+    REAL(DP),INTENT(IN) :: nelec_cond
+    REAL(DP),OPTIONAL,INTENT(IN) :: ef_cond
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -5094,6 +5102,12 @@ MODULE qes_init_module
     obj%nbnd_cond = nbnd_cond
     obj%degauss_cond = degauss_cond
     obj%nelec_cond = nelec_cond
+    IF ( PRESENT(ef_cond)) THEN
+      obj%ef_cond_ispresent = .TRUE. 
+      obj%ef_cond = ef_cond
+    ELSE
+      obj%ef_cond_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_two_chem
   !

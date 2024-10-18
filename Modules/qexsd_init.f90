@@ -51,7 +51,7 @@ MODULE qexsd_init
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
             qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
             qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm
-  !
+ !
 CONTAINS
   !
     !
@@ -276,6 +276,7 @@ CONTAINS
       LOGICAL                      :: true_=.TRUE., false_ = .FALSE. 
       LOGICAL,POINTER              :: trev                       
       TARGET                       :: class_names, true_, false_  
+      INTEGER                      :: colin_mag_local
       ALLOCATE(symm(nrot))
       NULLIFY( classname, trev) 
       !
@@ -288,6 +289,7 @@ CONTAINS
       END IF
       
       IF ( noncolin .OR. (colin_mag == 2) ) time_reversal_ispresent = .TRUE.
+
       DO i = 1, nrot
           !
           IF  (class_ispresent ) classname => class_names(i)
@@ -328,7 +330,8 @@ CONTAINS
           !
       ENDDO
       !
-      CALL qes_init (obj,"symmetries",NSYM = nsym, NROT=nrot, SPACE_GROUP = space_group, SYMMETRY=symm )
+      CALL qes_init (obj,"symmetries",NSYM = nsym, NROT=nrot, SPACE_GROUP = space_group, & 
+        SYMMETRY=symm, COLIN_MAG=colin_mag_local )
       !
       DO i = 1, nsym
          CALL qes_reset (symm(i))

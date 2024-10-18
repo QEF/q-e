@@ -87,7 +87,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE uspp_init,            ONLY : init_us_2
   USE sym_def_module,       ONLY : sym_def
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
-  implicit none
+  USE two_chem,             ONLY : twochem
+  !FIXME  make explicit mentions of lr_two_chem variable that are used
+  USE lr_two_chem           !ONLY : def_val, def_cond, drhoscf_cond, drhoscfh_cond,&
+                            !       dbecsum_cond,dbecsum_cond_nc,ldos_cond,ldoss_cond,&
+                            !       dos_ef_cond,becsum1_cond
+                            !twochem variables
+   implicit none
 
   integer :: irr
   !! input: the irreducible representation
@@ -229,6 +235,19 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
      call localdos ( ldos , ldoss , becsum1, dos_ef )
      IF (.NOT.okpaw) deallocate(becsum1)
+     !
+     if (twochem) then
+         IF (noncolin) allocate (dbecsum_cond_nc (nhm,nhm, nat , nspin , npe, nsolv))
+         allocate (drhoscf_cond ( dfftp%nnr, nspin_mag , npe))
+         allocate (drhoscfh_cond ( dfftp%nnr, nspin_mag , npe))
+         allocate (dbecsum_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
+         allocate ( ldos_cond( dfftp%nnr  , nspin_mag) )
+         allocate ( ldoss_cond( dffts%nnr , nspin_mag) )
+         allocate (becsum1_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
+         call localdos_cond ( ldos_cond , ldoss_cond , becsum1_cond, dos_ef_cond )
+         IF (.NOT.okpaw) deallocate(becsum1_cond)
+     end if
+     !twochem allocations
   endif
   !
   !
@@ -311,6 +330,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      drhoscf = (0.d0, 0.d0)
      dbecsum = (0.d0, 0.d0)
      IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
+     IF (lmetq0.and.twochem) drhoscf_cond = (0.d0, 0.d0)
+     IF (lmetq0.and.twochem) dbecsum_cond = (0.d0, 0.d0)
+     IF (noncolin.and.lmetq0.and.twochem) dbecsum_cond_nc = (0.d0, 0.d0)
      !
      ! DFPT+U: at each ph iteration calculate dnsscf,
      ! i.e. the scf variation of the occupation matrix ns.
@@ -328,12 +350,21 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         ELSE
            thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
         ENDIF
+        if (.not.(twochem.and.lmetq0)) then
         !
         ! Compute drhoscf, the charge density response to the total potential
         !
         CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
             thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
             dbecsum_nc(:,:,:,:,:,isolv))
+        else
+        !
+        ! Compute drhoscf and drhoscf_cond for the twochem case
+        !
+        CALL sternheimer_kernel_twochem(first_iter, isolv==2, npe, lrbar, iubar, &
+            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
+            dbecsum_nc(:,:,:,:,:,isolv),drhoscf_cond,dbecsum_cond,dbecsum_cond_nc)
+        end if
         !
      END DO ! isolv
      !
@@ -341,25 +372,36 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         drhoscf = drhoscf / 2.0_DP
         dbecsum = dbecsum / 2.0_DP
         dbecsum_nc = dbecsum_nc / 2.0_DP
+        !twochem at gamma 
+        IF (lmetq0.AND.twochem) THEN
+                drhoscf = drhoscf / 2.0_DP
+                dbecsum = dbecsum / 2.0_DP
+                dbecsum_nc = dbecsum_nc / 2.0_DP
+        END IF
      ENDIF
+
      !
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
      !
      IF (noncolin) THEN
         call mp_sum ( dbecsum_nc, intra_bgrp_comm )
+        if(twochem.and.lmetq0) call mp_sum ( dbecsum_cond_nc, intra_bgrp_comm )
      ELSE
         call mp_sum ( dbecsum, intra_bgrp_comm )
+        if(twochem.and.lmetq0) call mp_sum ( dbecsum_cond, intra_bgrp_comm )
      ENDIF
 
      if (doublegrid) then
         do is = 1, nspin_mag
            do ipert = 1, npe
               call fft_interpolate (dffts, drhoscf(:,is,ipert), dfftp, drhoscfh(:,is,ipert))
+              if (twochem.and.lmetq0) call fft_interpolate (dffts, drhoscf_cond(:,is,ipert), dfftp, drhoscfh_cond(:,is,ipert))
            enddo
         enddo
      else
         call zcopy (npe*nspin_mag*dfftp%nnr, drhoscf, 1, drhoscfh, 1)
+        if (twochem.and.lmetq0) call zcopy (npe*nspin_mag*dfftp%nnr, drhoscf_cond, 1, drhoscfh_cond, 1)
      endif
      !
      !  In the noncolinear, spin-orbit case rotate dbecsum
@@ -373,16 +415,33 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            dbecsum(:,:,2:4,:)=dbecsum(:,:,2:4,:)-dbecsum_aux(:,:,2:4,:)
         ENDIF
      ENDIF
+     !rotate also dbecsum_cond in the twochem case
+     IF (noncolin.and.okvan.and.lmetq0.and.twochem) THEN
+        CALL set_dbecsum_nc(dbecsum_nc, dbecsum, npe)
+        IF (nsolv==2) THEN
+           dbecsum_aux=(0.0_DP,0.0_DP)
+           CALL set_dbecsum_nc(dbecsum_cond_nc(1,1,1,1,1,2), dbecsum_aux, npe)
+           dbecsum_cond(:,:,1,:)=dbecsum_cond(:,:,1,:)+dbecsum_aux(:,:,1,:)
+           dbecsum_cond(:,:,2:4,:)=dbecsum_cond(:,:,2:4,:)-dbecsum_aux(:,:,2:4,:)
+        ENDIF
+     ENDIF
+
      !
      !    Now we compute for all perturbations the total charge and potential
      !
      call addusddens (drhoscfh, dbecsum, imode0, npe, 0)
+     IF (twochem.and.lmetq0) call addusddens_cond (drhoscfh_cond, dbecsum_cond, imode0, npe, 0) !twochem case
      !
      !   Reduce the delta rho across pools
      !
      call mp_sum ( drhoscf, inter_pool_comm )
      call mp_sum ( drhoscfh, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
+     !twochem case
+     IF (twochem.and.lmetq0) call mp_sum ( drhoscf_cond, inter_pool_comm )
+     IF (twochem.and.lmetq0) call mp_sum ( drhoscfh_cond, inter_pool_comm )
+     IF (okpaw.and.twochem.and.lmetq0) call mp_sum ( dbecsum_cond, inter_pool_comm )
+
      !
      IF (okpaw) THEN
         DO ipert=1,npe
@@ -396,8 +455,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      IF (lmetq0) THEN
         IF (okpaw) THEN
            CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, sym_def)
+           if (twochem) CALL ef_shift_twochem(npe, dos_ef, dos_ef_cond, ldos, ldos_cond, drhoscfh,&
+                             drhoscfh_cond,dbecsum,dbecsum_cond, becsum1,becsum1_cond, irr, sym_def)
         ELSE
            CALL ef_shift(npe, dos_ef, ldos, drhoscfh, sym_def=sym_def)
+           if (twochem) CALL ef_shift_twochem(npe, dos_ef,dos_ef_cond, ldos,ldos_cond, drhoscfh,&
+                                           drhoscfh_cond, irr=irr, sym_def=sym_def)
         ENDIF
      ENDIF
      !
@@ -454,6 +517,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ENDIF
      !
      IF (lmetq0 .AND. convt) CALL ef_shift_wfc(npe, ldoss, drhoscf)
+     IF (twochem.and. lmetq0 .AND. convt) CALL ef_shift_wfc_twochem(npe, ldoss,ldoss_cond, drhoscf)
      !
      ! check that convergent have been reached on ALL processors in this image
      CALL check_all_convt(convt)
@@ -573,6 +637,18 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (noncolin) deallocate (dbecsum_nc)
   deallocate (dvscfout)
   deallocate (drhoscfh)
+  if (twochem.and.lmetq0) then
+        !deallocate for twochem calculation at gamma
+        if (allocated(ldoss_cond)) deallocate (ldoss_cond)
+        if (allocated(ldos_cond)) deallocate (ldos_cond)
+        deallocate (dbecsum_cond)
+        IF (okpaw) THEN
+                if (allocated(becsum1_cond)) deallocate (becsum1_cond)
+        ENDIF
+        IF (noncolin) deallocate (dbecsum_cond_nc)
+        deallocate (drhoscfh_cond)
+        deallocate (drhoscf_cond)
+  end if
   !$acc exit data delete(dvscfins)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)

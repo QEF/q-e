@@ -31,14 +31,14 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
   USE ldaU_ph,       ONLY : proj1, proj2, dnsorth
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf
-  USE klist,         ONLY : xk, wk, degauss, ngauss, ngk
-  USE wvfct,         ONLY : npwx, wg, nbnd, et 
+  USE klist,         ONLY : xk, wk, degauss, ngauss, ngk, degauss_cond
+  USE wvfct,         ONLY : npwx, wg, nbnd, et, nbnd_cond
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE control_lr,    ONLY : lgamma, nbnd_occ
   USE units_lr,      ONLY : iuatswfc
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions, ONLY : evc
-  USE ener,          ONLY : ef
+  USE ener,          ONLY : ef, ef_cond
   USE uspp,          ONLY : okvan 
   USE ldaU_ph,       ONLY : dnsscf_all_modes
   USE mp_pools,      ONLY : inter_pool_comm 
@@ -47,6 +47,8 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   USE io_global,     ONLY : stdout
   USE buffers,       ONLY : get_buffer
   USE efermi_shift,  ONLY : def
+  USE lr_two_chem,   ONLY : def_val,def_cond
+  USE two_chem,       ONLY : twochem
   USE control_flags, ONLY : iverbosity
   !
   IMPLICIT NONE
@@ -176,9 +178,25 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
                           weight = wk(ikk)  
                           w1 = weight * wdelta   
                           !
-                          dnsscf(m1,m2,current_spin,nah,ipert) = &
+                          IF (twochem) THEN
+                           !two chem case, valence and condcution must be treated separately for the two fermi shifts
+                             IF (ibnd.le.nbnd-nbnd_cond) then
+                                  dnsscf(m1,m2,current_spin,nah,ipert) = &
+                                  dnsscf(m1,m2,current_spin,nah,ipert) + w1 * def_val(ipert) * &
+                                         CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                             ELSE
+                                        wdelta = w0gauss ( (ef_cond-et(ibnd,ikk))/degauss_cond, ngauss) / degauss_cond
+                                        dnsscf(m1,m2,current_spin,nah,ipert) = &
+                                        dnsscf(m1,m2,current_spin,nah,ipert) + w1 * def_cond(ipert) * &
+                                         CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                             !  
+                             END IF
+                          !
+                          ELSE
+                                          dnsscf(m1,m2,current_spin,nah,ipert) = &
                                dnsscf(m1,m2,current_spin,nah,ipert) + w1 * def(ipert) * &
                                          CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                          END IF
                           !
                        ENDIF
                        !

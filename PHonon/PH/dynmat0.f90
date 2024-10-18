@@ -26,7 +26,6 @@ subroutine dynmat0_new
   USE modes,         ONLY : u, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
-  USE london_module, ONLY : init_london, dealloca_london
   USE lr_symm_base,  ONLY : minus_q, irotmq, nsymq, rtau
   USE ldaU,          ONLY : lda_plus_u
 

@@ -9,6 +9,10 @@
 SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - Gamma point.
+  !! - fft \psi to real space;
+  !! - product with the potential v on the smooth grid;
+  !! - back to reciprocal space;
+  !! - add to hpsi.
   !
   USE parallel_include
   USE kinds,          ONLY : DP
@@ -48,12 +52,6 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   ALLOCATE( psi(n,incr) )
   ALLOCATE( psic(dffts_nnr*incr) )
   !$acc data deviceptr(psi_d,hpsi_d) present(v) create(psi,psic)
-  !
-  !
-  ! ... The local potential V_Loc psi:
-  !    - fft to real space;
-  !    - product with the potential v on the smooth grid;
-  !    - back to reciprocal space.
   !
   IF (many_fft > 1) THEN
      !
@@ -150,11 +148,10 @@ END SUBROUTINE vloc_psi_gamma_gpu
 SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - k-points. GPU double.
-  !
-  !   fft to real space
-  !   product with the potential v on the smooth grid
-  !   back to reciprocal space
-  !   addition to the hpsi
+  !! - fft \psi to real space;
+  !! - product with the potential v on the smooth grid;
+  !! - back to reciprocal space;
+  !! - add to hpsi.
   !
   USE parallel_include
   USE kinds,         ONLY : DP
@@ -272,7 +269,10 @@ END SUBROUTINE vloc_psi_k_gpu
 SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - non-collinear - 
-  !! GPU version.
+  !! - fft \psi to real space;
+  !! - product with the potential v on the smooth grid;
+  !! - back to reciprocal space;
+  !! - add to hpsi.
   !
   USE parallel_include
   USE kinds,               ONLY : DP

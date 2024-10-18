@@ -856,10 +856,8 @@ input_dft = `gga_x_pbe gga_c_pbe'   ***OLD***
 The order must be the usual one, namely LDA exchange, LDA correlation, GGA exchange, GGA correlation, MGGA exchange, MGGA correlation. \libxc\ exchange+correlation functionals can be put in the exchange or in the correlation slot with no difference.\\
 The reason why the full-name notation has been disabled is to eliminate the risk of overlaps among different names (occurring especially when combinations of internal and \libxc\ DFTs are used).\\
 %
-The complete list of \libxc\ functionals (and their IDs) is available at:
-\begin{verbatim}
-https://www.tddft.org/programs/libxc/functionals/
-\end{verbatim}
+The complete list of \libxc\ functionals and IDs is available at:
+\verb|https://libxc.gitlab.io/|.
 %
 Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below).\\
 For example, the internal exchange term of PBE together with the correlation term of PBE in \libxc\ is obtained by:

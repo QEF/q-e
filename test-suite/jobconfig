@@ -55,7 +55,7 @@ inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,'
 
 [pw_twochem/]
 program = PW
-inputs_args = ('scf_twochem.in', ''), ('nscf_twochem.in',''), ('relax_twochem.in',''), ('vc-relax_twochem.in','')
+inputs_args = ('scf_twochem.in', ''), ('nscf_twochem.in','2'), ('relax_twochem.in',''), ('vc-relax_twochem.in','')
 
 [pw_uspp/]
 program = PW
@@ -136,6 +136,10 @@ inputs_args = ('ch4.scf.in','1'), ('ch4.ph.in', '2'), ('ch4.dynmat.in', '9')
 [ph_restart/]
 program = PH
 inputs_args = ('SiC.scf.in', '1'), ('SiC.phG.in', '2'), ('SiC.phG.restart1.in', '2'), ('SiC.phG.restart2.in', '2'), ('SiC.phG.restart3.in', '2'), ('SiC.phG.restart4.in', '2')
+
+[ph_twochem/]
+program = PH
+inputs_args = ('scf_twochem.in', '1'), ('phG_twochem.in','11') 
 
 [epw_base/]
 program = EPW
