@@ -716,7 +716,10 @@ SUBROUTINE control_iosys()
   CASE( 1 )
      !
      lsda = .false.
-     IF ( noncolin ) nspin = 4
+     IF ( noncolin ) THEN 
+       nspin = 4
+       symm_by_label = symmetry_with_labels
+     END IF 
      !
   CASE( 2 )
      !
