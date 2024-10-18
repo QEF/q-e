@@ -836,7 +836,18 @@ Alternatively, the link to \libxc\ can be activated after the configuration of  
 	\item add \texttt{-I/path/to/libxc/include/} to \texttt{IFLAGS}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
 \end{itemize}
-Then \qe\ can be compiled as usual.
+Then \qe\ can be compiled as usual.\\
+With \verb|CMake|: when executing \verb|cmake| in the build folder, add the following flags:
+\begin{verbatim}
+cmake [....] -DQE_ENABLE_LIBXC=ON -DLIBXC_INCLUDE_DIR=path/to/libxc/include ..
+\end{verbatim}
+If \verb|cmake| is not able to find the package you may need to do this: in \qe\ main folder open \texttt{CMakeLists.txt} and, inside the block \verb|if(QE\_ENABLE\_LIBXC)|, near line 583,  add this:
+\begin{verbatim}
+set(ENV{PKG_CONFIG_PATH} "$ENV{PKG\_CONFIG\_PATH}:/path/to/libxc/pkgconfig")
+\end{verbatim}
+then execute \verb|cmake| as above.
+
+\paragraph{Note for versions newer than 5.0.0:} \libxc\ enforces the Fermi hole curvature by default, which might lead to inexact results and convergence problems when using some MGGA functionals in \qe. This should be switched off by adding the \verb|--disable-fhc| flag when compiling \libxc.
 
 \paragraph{Note for version 5.0.0:} if the version of \libxc\ is 5.0.0, the last point must be replaced by:
 \begin{itemize}
