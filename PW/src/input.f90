@@ -727,7 +727,7 @@ SUBROUTINE control_iosys()
      IF ( noncolin ) CALL errore( 'iosys', &
                      'noncolin .and. nspin==2 are conflicting flags', 1 )
      symm_by_label = symmetry_with_labels 
-     use_spinflip = use_spinflip_ 
+     use_spinflip_ = use_spinflip
      !
   CASE( 4 )
      !
