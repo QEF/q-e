@@ -155,6 +155,8 @@ subroutine solve_e_new
   !
   CALL dfpt_kernel('PHONON', 3, iter0, lrebar, iuebar, dr2, drhos, drhop, dvscfins, dvscfin, dbecsum, 1, 0, 'efield')
   !
+  CALL dnsq_store(3, 0)
+  !
 155 continue
   !
   deallocate (dbecsum)

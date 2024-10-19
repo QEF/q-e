@@ -285,6 +285,8 @@ SUBROUTINE solve_linter_new (irr, imode0, npe, drhoscf)
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      ENDIF ! fildvscf
      !
+     CALL dnsq_store(npe, imode0)
+     !
   ENDIF ! convt
   !
   deallocate (drhoscfh)
