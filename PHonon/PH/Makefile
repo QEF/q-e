@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 PHOBJS = \
-sym_def.o \
 acfdtest.o \
 add_dkmds.o \
 add_for_charges.o \
@@ -117,7 +116,6 @@ print_clock_ph.o \
 prepare_q.o \
 prepare_sym_analysis.o \
 psidspsi.o \
-psymdvscf.o \
 psym_dmag.o \
 psym_dmage.o \
 punch_plot_e.o \
@@ -147,7 +145,6 @@ summarize.o \
 sym_and_write_zue.o \
 sym_dmag.o \
 sym_dmage.o \
-symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
 symm.o \

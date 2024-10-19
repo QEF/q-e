@@ -6,8 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-MODULE sym_def_module
-CONTAINS
 SUBROUTINE sym_def(def)
   !---------------------------------------------------------------------
   !! Symmetrizes the first order changes of the Fermi energies of an
@@ -71,4 +69,3 @@ SUBROUTINE sym_def(def)
   def = w_def / DBLE(nsymq)
   !
 END SUBROUTINE sym_def
-END MODULE sym_def_module

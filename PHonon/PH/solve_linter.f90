@@ -83,7 +83,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE response_kernels,     ONLY : sternheimer_kernel
   USE uspp_init,            ONLY : init_us_2
-  USE sym_def_module,       ONLY : sym_def
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   USE two_chem,             ONLY : twochem
   !FIXME  make explicit mentions of lr_two_chem variable that are used
@@ -452,11 +451,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (lmetq0) THEN
         IF (okpaw) THEN
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1)
            if (twochem) CALL ef_shift_twochem(npe, dos_ef, dos_ef_cond, ldos, ldos_cond, drhoscfh,&
                              drhoscfh_cond,dbecsum,dbecsum_cond, becsum1,becsum1_cond, irr, sym_def)
         ELSE
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, sym_def=sym_def)
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh)
            if (twochem) CALL ef_shift_twochem(npe, dos_ef,dos_ef_cond, ldos,ldos_cond, drhoscfh,&
                                            drhoscfh_cond, irr=irr, sym_def=sym_def)
         ENDIF
