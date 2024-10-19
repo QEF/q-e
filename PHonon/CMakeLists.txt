@@ -145,6 +145,7 @@ set(src_ph
     PH/transform_alphasum_so.f90
     PH/tra_write_matrix.f90
     PH/trntnsc.f90
+    PH/twochem_postproc_dfpt.f90
     PH/write_epsilon_and_zeu.f90
     PH/write_qplot_data.f90
     PH/write_matrix.f90

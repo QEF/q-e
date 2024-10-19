@@ -31,13 +31,12 @@ MODULE  lr_two_chem
 !
 !-----------------------------------------------------------------------
 subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
-           drhoscf,drhoscf_cond,dbecsum,dbecsum_cond,becsum1,becsum1_cond, irr, sym_def)
+           drhoscf,drhoscf_cond,dbecsum,dbecsum_cond,becsum1,becsum1_cond)
   !-----------------------------------------------------------------------
   !! This routine takes care of the effects of a shift of the two chemical potentials, due to the
   !! perturbation, that can take place in a metal at q=0, in the twochem case
   !! Optionally, update dbecsum using becsum1.
   !
-  USE efermi_shift,         ONLY : def_symmetrization
   USE kinds,                ONLY : DP
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -74,10 +73,6 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   REAL(DP), INTENT(IN), OPTIONAL :: becsum1_cond((nhm*(nhm+1))/2, nat, nspin_mag)
   !! becsum1_cond = wdelta_cond * <psi|beta> <beta|psi>
   !! (where wdelta is a Dirac-delta-like function)
-  INTEGER, INTENT(IN), OPTIONAL :: irr
-  !
-  PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
-  !! Symmetrization routine for the fermi energy change
   !
   ! local variables
   !
@@ -127,11 +122,11 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   !
   ! symmetrizes the Fermi energy shift
   !
-  IF (present(sym_def)) CALL sym_def(def_val)
-   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift valence (Ry) =",2es15.4)')&
+  CALL sym_def(def_val)
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift valence (Ry) =",2es15.4)')&
        (ipert, def_val (ipert) , ipert = 1, npert )
-  IF (present(sym_def)) CALL sym_def(def_cond)
-   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift conduction (Ry) =",2es15.4)')&
+  CALL sym_def(def_cond)
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift conduction (Ry) =",2es15.4)')&
        (ipert, def_cond (ipert) , ipert = 1, npert )
   !
   ! corrects the density response accordingly...
@@ -1495,5 +1490,46 @@ SUBROUTINE sternheimer_kernel_twochem(first_iter, time_reversed, npert, lrdvpsi,
    !
 !----------------------------------------------------------------------------
 END SUBROUTINE sternheimer_kernel_twochem
+!
+SUBROUTINE allocate_twochem(npe, nsolv)
+   USE fft_base,             ONLY : dfftp, dffts
+   USE ions_base,            ONLY : nat
+   USE uspp_param,           ONLY : nhm
+   USE lsda_mod,             ONLY : nspin
+   USE paw_variables,        ONLY : okpaw
+   USE noncollin_module,     ONLY : noncolin, nspin_mag
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: npe, nsolv
+   !
+   IF (noncolin) allocate (dbecsum_cond_nc (nhm,nhm, nat , nspin , npe, nsolv))
+   allocate (drhoscf_cond ( dfftp%nnr, nspin_mag , npe))
+   allocate (drhoscfh_cond ( dfftp%nnr, nspin_mag , npe))
+   allocate (dbecsum_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
+   allocate ( ldos_cond( dfftp%nnr  , nspin_mag) )
+   allocate ( ldoss_cond( dffts%nnr , nspin_mag) )
+   allocate (becsum1_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
+   call localdos_cond ( ldos_cond , ldoss_cond , becsum1_cond, dos_ef_cond )
+   IF (.NOT.okpaw) deallocate(becsum1_cond)
+END SUBROUTINE allocate_twochem
+!
+SUBROUTINE deallocate_twochem
+   USE paw_variables,        ONLY : okpaw
+   USE noncollin_module,     ONLY : noncolin
+   !
+   IMPLICIT NONE
+   !
+   !deallocate for twochem calculation at gamma
+   if (allocated(ldoss_cond)) deallocate (ldoss_cond)
+   if (allocated(ldos_cond)) deallocate (ldos_cond)
+   deallocate (dbecsum_cond)
+   IF (okpaw) THEN
+            if (allocated(becsum1_cond)) deallocate (becsum1_cond)
+   ENDIF
+   IF (noncolin) deallocate (dbecsum_cond_nc)
+   deallocate (drhoscfh_cond)
+   deallocate (drhoscf_cond)
+END SUBROUTINE deallocate_twochem
 !
 END MODULE lr_two_chem

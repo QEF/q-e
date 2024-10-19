@@ -155,6 +155,7 @@ transform_alphasum_nc.o \
 transform_alphasum_so.o \
 tra_write_matrix.o \
 trntnsc.o \
+twochem_postproc_dfpt.o \
 write_epsilon_and_zeu.o \
 write_qplot_data.o \
 write_matrix.o \

@@ -67,23 +67,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE qpoint_aux,           ONLY : ikmks, becpt, alphapt
   USE control_lr,           ONLY : convt, rec_code, rec_code_read, where_rec
   USE uspp_init,            ONLY : init_us_2
-<<<<<<< HEAD
-  USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
-  USE two_chem,             ONLY : twochem
-  !FIXME  make explicit mentions of lr_two_chem variable that are used
-  USE lr_two_chem           !ONLY : def_val, def_cond, drhoscf_cond, drhoscfh_cond,&
-                            !       dbecsum_cond,dbecsum_cond_nc,ldos_cond,ldoss_cond,&
-                            !       dos_ef_cond,becsum1_cond
-                            !twochem variables
-   implicit none
-
-=======
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save
   USE dfpt_kernels,         ONLY : dfpt_kernel
   !
   IMPLICIT NONE
   !
->>>>>>> 2d990b93a (Remove old solve_e and solve_linter, replace with new versions with dfpt_kernel)
   integer :: irr
   !! input: the irreducible representation
   integer :: npe
@@ -172,30 +160,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
     dr2 = 0.d0
   endif
   !
-  ! if q=0 for a metal: allocate and compute local DOS at Ef
-  !
-  lmetq0 = (lgauss .OR. ltetra) .AND. lgamma
-  if (lmetq0) then
-     allocate ( ldos ( dfftp%nnr  , nspin_mag) )
-     allocate ( ldoss( dffts%nnr , nspin_mag) )
-     allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
-     call localdos ( ldos , ldoss , becsum1, dos_ef )
-     IF (.NOT.okpaw) deallocate(becsum1)
-     !
-     if (twochem) then
-         IF (noncolin) allocate (dbecsum_cond_nc (nhm,nhm, nat , nspin , npe, nsolv))
-         allocate (drhoscf_cond ( dfftp%nnr, nspin_mag , npe))
-         allocate (drhoscfh_cond ( dfftp%nnr, nspin_mag , npe))
-         allocate (dbecsum_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
-         allocate ( ldos_cond( dfftp%nnr  , nspin_mag) )
-         allocate ( ldoss_cond( dffts%nnr , nspin_mag) )
-         allocate (becsum1_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
-         call localdos_cond ( ldos_cond , ldoss_cond , becsum1_cond, dos_ef_cond )
-         IF (.NOT.okpaw) deallocate(becsum1_cond)
-     end if
-     !twochem allocations
-  endif
-  !
   IF (convt) GOTO 155
   !
   !
@@ -263,291 +227,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ENDDO ! ik
   !
   ! Compute the change of core charge due to atomic displacement
-  !
-  do kter = 1, niter_ph
-     !
-     iter = kter + iter0
-     !
-     first_iter = .NOT. (where_rec == 'solve_lint' .OR. iter > 1)
-     !
-     drhoscf = (0.d0, 0.d0)
-     dbecsum = (0.d0, 0.d0)
-     IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
-     IF (lmetq0.and.twochem) drhoscf_cond = (0.d0, 0.d0)
-     IF (lmetq0.and.twochem) dbecsum_cond = (0.d0, 0.d0)
-     IF (noncolin.and.lmetq0.and.twochem) dbecsum_cond_nc = (0.d0, 0.d0)
-     !
-     ! DFPT+U: at each ph iteration calculate dnsscf,
-     ! i.e. the scf variation of the occupation matrix ns.
-     !
-     IF (lda_plus_u .AND. (iter /= 1)) CALL dnsq_scf(npe, lmetq0)
-     !
-     ! Start the loop on the two linear systems, one at B and one at -B
-     !
-     DO isolv = 1, nsolv
-        !
-        ! set threshold for iterative solution of the linear system
-        !
-        IF (first_iter) THEN
-           thresh = 1.0d-2
-        ELSE
-           thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
-        ENDIF
-        if (.not.(twochem.and.lmetq0)) then
-        !
-        ! Compute drhoscf, the charge density response to the total potential
-        !
-        CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
-            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
-            dbecsum_nc(:,:,:,:,:,isolv))
-        else
-        !
-        ! Compute drhoscf and drhoscf_cond for the twochem case
-        !
-        CALL sternheimer_kernel_twochem(first_iter, isolv==2, npe, lrbar, iubar, &
-            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
-            dbecsum_nc(:,:,:,:,:,isolv),drhoscf_cond,dbecsum_cond,dbecsum_cond_nc)
-        end if
-        !
-     END DO ! isolv
-     !
-     IF (nsolv==2) THEN
-        drhoscf = drhoscf / 2.0_DP
-        dbecsum = dbecsum / 2.0_DP
-        dbecsum_nc = dbecsum_nc / 2.0_DP
-        !twochem at gamma 
-        IF (lmetq0.AND.twochem) THEN
-                drhoscf = drhoscf / 2.0_DP
-                dbecsum = dbecsum / 2.0_DP
-                dbecsum_nc = dbecsum_nc / 2.0_DP
-        END IF
-     ENDIF
-
-     !
-     !  The calculation of dbecsum is distributed across processors (see addusdbec)
-     !  Sum over processors the contributions coming from each slice of bands
-     !
-     IF (noncolin) THEN
-        call mp_sum ( dbecsum_nc, intra_bgrp_comm )
-        if(twochem.and.lmetq0) call mp_sum ( dbecsum_cond_nc, intra_bgrp_comm )
-     ELSE
-        call mp_sum ( dbecsum, intra_bgrp_comm )
-        if(twochem.and.lmetq0) call mp_sum ( dbecsum_cond, intra_bgrp_comm )
-     ENDIF
-
-     if (doublegrid) then
-        do is = 1, nspin_mag
-           do ipert = 1, npe
-              call fft_interpolate (dffts, drhoscf(:,is,ipert), dfftp, drhoscfh(:,is,ipert))
-              if (twochem.and.lmetq0) call fft_interpolate (dffts, drhoscf_cond(:,is,ipert), dfftp, drhoscfh_cond(:,is,ipert))
-           enddo
-        enddo
-     else
-        call zcopy (npe*nspin_mag*dfftp%nnr, drhoscf, 1, drhoscfh, 1)
-        if (twochem.and.lmetq0) call zcopy (npe*nspin_mag*dfftp%nnr, drhoscf_cond, 1, drhoscfh_cond, 1)
-     endif
-     !
-     !  In the noncolinear, spin-orbit case rotate dbecsum
-     !
-     IF (noncolin.and.okvan) THEN
-        CALL set_dbecsum_nc(dbecsum_nc, dbecsum, npe)
-        IF (nsolv==2) THEN
-           dbecsum_aux=(0.0_DP,0.0_DP)
-           CALL set_dbecsum_nc(dbecsum_nc(1,1,1,1,1,2), dbecsum_aux, npe)
-           dbecsum(:,:,1,:)=dbecsum(:,:,1,:)+dbecsum_aux(:,:,1,:)
-           dbecsum(:,:,2:4,:)=dbecsum(:,:,2:4,:)-dbecsum_aux(:,:,2:4,:)
-        ENDIF
-     ENDIF
-     !rotate also dbecsum_cond in the twochem case
-     IF (noncolin.and.okvan.and.lmetq0.and.twochem) THEN
-        CALL set_dbecsum_nc(dbecsum_nc, dbecsum, npe)
-        IF (nsolv==2) THEN
-           dbecsum_aux=(0.0_DP,0.0_DP)
-           CALL set_dbecsum_nc(dbecsum_cond_nc(1,1,1,1,1,2), dbecsum_aux, npe)
-           dbecsum_cond(:,:,1,:)=dbecsum_cond(:,:,1,:)+dbecsum_aux(:,:,1,:)
-           dbecsum_cond(:,:,2:4,:)=dbecsum_cond(:,:,2:4,:)-dbecsum_aux(:,:,2:4,:)
-        ENDIF
-     ENDIF
-
-     !
-     !    Now we compute for all perturbations the total charge and potential
-     !
-     call addusddens (drhoscfh, dbecsum, imode0, npe, 0)
-     IF (twochem.and.lmetq0) call addusddens_cond (drhoscfh_cond, dbecsum_cond, imode0, npe, 0) !twochem case
-     !
-     !   Reduce the delta rho across pools
-     !
-     call mp_sum ( drhoscf, inter_pool_comm )
-     call mp_sum ( drhoscfh, inter_pool_comm )
-     IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
-     !twochem case
-     IF (twochem.and.lmetq0) call mp_sum ( drhoscf_cond, inter_pool_comm )
-     IF (twochem.and.lmetq0) call mp_sum ( drhoscfh_cond, inter_pool_comm )
-     IF (okpaw.and.twochem.and.lmetq0) call mp_sum ( dbecsum_cond, inter_pool_comm )
-
-     !
-     IF (okpaw) THEN
-        DO ipert=1,npe
-           dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
-                               +becsumort(:,:,:,imode0+ipert)
-        ENDDO
-     ENDIF
-     !
-     ! q=0 in metallic case deserve special care (e_Fermi can shift)
-     !
-     IF (lmetq0) THEN
-        IF (okpaw) THEN
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1)
-           if (twochem) CALL ef_shift_twochem(npe, dos_ef, dos_ef_cond, ldos, ldos_cond, drhoscfh,&
-                             drhoscfh_cond,dbecsum,dbecsum_cond, becsum1,becsum1_cond, irr, sym_def)
-        ELSE
-           CALL ef_shift(npe, dos_ef, ldos, drhoscfh)
-           if (twochem) CALL ef_shift_twochem(npe, dos_ef,dos_ef_cond, ldos,ldos_cond, drhoscfh,&
-                                           drhoscfh_cond, irr=irr, sym_def=sym_def)
-        ENDIF
-     ENDIF
-     !
-     !   After the loop over the perturbations we have the linear change
-     !   in the charge density for each mode of this representation.
-     !   Here we symmetrize them ...
-     !
-     IF (.not.lgamma_gamma) THEN
-        CALL psymdvscf(drhoscfh)
-        IF (okpaw) THEN
-           IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, npertx,irotmq,rtau,xq,tmq)
-           CALL PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)
-        END IF
-     ENDIF
-     !
-     !   ... save them on disk and
-     !   compute the corresponding change in scf potential
-     !
-     do ipert = 1, npe
-        if (fildrho.ne.' ') then
-           call davcio_drho (drhoscfh(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
-!           close(iudrho)
-        endif
-        !
-        call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
-        !
-        ! Compute the response of the core charge density
-        !
-        call addcore(u(1, imode0+ipert), drhoc)
-        !
-        ! Compute the response HXC potential
-        call dv_of_drho (dvscfout(1,1,ipert), drhoc = drhoc)
-        !
-     enddo
-     !
-     !   And we mix with the old potential
-     !
-     IF (okpaw) THEN
-        !
-        !  In this case we mix also dbecsum
-        !
-        call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
-                    mixout, dvscfout, dbecsum, ndim, -1 )
-        call mix_potential (2*npe*dfftp%nnr*nspin_mag+2*ndim, mixout, mixin, &
-                         alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
-                         nmix_ph, flmixdpot, convt)
-        call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
-                       mixin, dvscfin, dbecsum, ndim, 1 )
-     ELSE
-        call mix_potential (2*npe*dfftp%nnr*nspin_mag, dvscfout, dvscfin, &
-                         alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
-                         nmix_ph, flmixdpot, convt)
-     ENDIF
-     !
-     IF (lmetq0 .AND. convt) CALL ef_shift_wfc(npe, ldoss, drhoscf)
-     IF (twochem.and. lmetq0 .AND. convt) CALL ef_shift_wfc_twochem(npe, ldoss,ldoss_cond, drhoscf)
-     !
-     ! check that convergent have been reached on ALL processors in this image
-     CALL check_all_convt(convt)
-
-     if (doublegrid) then
-        do ipert = 1, npe
-           do is = 1, nspin_mag
-              call fft_interpolate (dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
-           enddo
-        enddo
-     endif
-!
-!   calculate here the change of the D1-~D1 coefficients due to the phonon
-!   perturbation
-!
-     IF (okvan) THEN
-        IF (okpaw) CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
-        !
-        !     with the new change of the potential we compute the integrals
-        !     of the change of potential and Q
-        !
-        call newdq (dvscfin, npe)
-        !
-        !  In the noncollinear magnetic case computes the int3 coefficients with
-        !  the opposite sign of the magnetic field. They are saved in int3_nc_save,
-        !  that must have been allocated by the calling routine
-        !
-        IF (noncolin.AND.domag) THEN
-           int3_nc_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
-           IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
-           DO ipert=1,npe
-              dvscfin(:,2:4,ipert)=-dvscfin(:,2:4,ipert)
-              IF (okpaw) dbecsum(:,:,2:4,ipert)=-dbecsum(:,:,2:4,ipert)
-           ENDDO
-           !
-           !   if needed recompute the paw coeffients with the opposite sign of
-           !   the magnetic field
-           !
-           IF (okpaw) CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
-           !
-           !   here compute the int3 integrals
-           !
-           CALL newdq (dvscfin, npe)
-           int3_nc_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
-           !
-           !  restore the correct sign of the magnetic field.
-           !
-           DO ipert=1,npe
-              dvscfin(:,2:4,ipert)=-dvscfin(:,2:4,ipert)
-              IF (okpaw) dbecsum(:,:,2:4,ipert)=-dbecsum(:,:,2:4,ipert)
-           ENDDO
-           IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
-           !
-           !  put into int3_nc the coefficient with +B
-           !
-           int3_nc(:,:,:,:,:)=int3_nc_save(:,:,:,:,:,1)
-        ENDIF
-     END IF
-     !
-     tcpu = get_clock ('PHONON')
-
-     WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
-          &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
-     dr2 = dr2 / npe
-     WRITE( stdout, '(5x," thresh=",es10.3, " alpha_mix = ",f6.3, &
-          &      " |ddv_scf|^2 = ",es10.3 )') thresh, alpha_mix (kter) , dr2
-     !
-     !    Here we save the information for recovering the run from this poin
-     !
-     FLUSH( stdout )
-     !
-     rec_code=10
-     IF (okpaw) THEN
-        CALL write_rec('solve_lint', irr, dr2, iter, convt, npe, &
-                                               dvscfin, drhoscfh, dbecsum)
-     ELSE
-        CALL write_rec('solve_lint', irr, dr2, iter, convt, npe, &
-                                               dvscfin, drhoscfh)
-     ENDIF
-
-     if (check_stop_now()) call stop_smoothly_ph (.false.)
-     if (convt) goto 155
-  enddo
-155 iter0=0
-  ! ------------------------------------------------------------------------------
-  ! TODO: Modularization of DFPT to dfpt_kernel.
-  ! The whole loop do kter = 1, niter_ph can be replaced by a call to dfpt_kernel.
-  ! Temporarily commented two_chem is not 
+  ! drhoc is computed only once, stored in drhoc, passed to dfpt_kernel.
   !
   DO ipert = 1, npe
      CALL addcore(u(1, imode0+ipert), drhoc(1, ipert))
@@ -563,7 +243,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   CALL dfpt_kernel('PHONON', npe, iter0, lrbar, iubar, dr2, drhoscf, drhoscfh, dvscfins, &
                    dvscfin, dbecsum, irr, imode0, 'phonon', drhoc = drhoc)
   !
-  ! ------------------------------------------------------------------------------
+155 CONTINUE
   !
   !    A part of the dynamical matrix requires the integral of
   !    the self consistent change of the potential and the variation of
@@ -605,18 +285,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ENDIF ! convt
   !
   deallocate (drhoscfh)
-  if (twochem.and.lmetq0) then
-        !deallocate for twochem calculation at gamma
-        if (allocated(ldoss_cond)) deallocate (ldoss_cond)
-        if (allocated(ldos_cond)) deallocate (ldos_cond)
-        deallocate (dbecsum_cond)
-        IF (okpaw) THEN
-                if (allocated(becsum1_cond)) deallocate (becsum1_cond)
-        ENDIF
-        IF (noncolin) deallocate (dbecsum_cond_nc)
-        deallocate (drhoscfh_cond)
-        deallocate (drhoscf_cond)
-  end if
   !$acc exit data delete(dvscfins)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)

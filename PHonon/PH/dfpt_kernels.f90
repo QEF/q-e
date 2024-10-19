@@ -127,6 +127,8 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    USE lr_nc_mag,            ONLY : int3_nc_save
    USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
    USE response_kernels,     ONLY : sternheimer_kernel
+   USE two_chem,             ONLY : twochem
+   USE lr_two_chem,          ONLY : allocate_twochem, deallocate_twochem
    !
    IMPLICIT NONE
    !
@@ -150,6 +152,8 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !! change of the scf potential (smooth part only, dffts)
    COMPLEX(DP), INTENT(INOUT) :: dvscfp(dfftp%nnr, nspin_mag, npert)
    !! change of the scf potential (smooth and hard parts, dfftp)
+   COMPLEX(DP), INTENT(INOUT) :: dbecsum((nhm * (nhm + 1))/2, nat, nspin_mag , npert)
+   !! change of becsum
    COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoc(dfftp%nnr, npert)
    !! Change in the core charge due to the perturbation.
    !
@@ -173,7 +177,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    COMPLEX(DP), ALLOCATABLE :: dvscftmp(:, :, :)
    !! change of scf potential (output before mixing)
    COMPLEX(DP), ALLOCATABLE :: ldos (:,:), ldoss (:,:), mixin(:), mixout(:), &
-      dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:,:), dbecsum_aux (:,:,:,:)
+      dbecsum_nc(:,:,:,:,:,:), dbecsum_aux (:,:,:,:)
    ! Misc work space
    ! ldos : local density of states af Ef
    ! ldoss: as above, without augmentation charges
@@ -245,6 +249,8 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       CALL localdos(ldos, ldoss, becsum1, dos_ef)
       IF (.NOT. okpaw) DEALLOCATE(becsum1)
    endif
+   !
+   IF (twochem) CALL allocate_twochem(npert, nsolv)
    !
    ! Loop over DFPT self-consistent iterations
    !
@@ -358,6 +364,11 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
             CALL ef_shift(npert, dos_ef, ldos, drhop)
          ENDIF
       ENDIF
+      !
+      ! Repeat the above for the case of two chemical potentials
+      !
+      IF (twochem) CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
+         convt, dos_ef, ldos, ldoss, drhop, dbecsum, becsum1)
       !
       !   After the loop over the perturbations we have the linear change
       !   in the charge density for each mode of this representation.
@@ -548,6 +559,8 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       DEALLOCATE(ldos)
       IF (okpaw) DEALLOCATE(becsum1)
    ENDIF
+   !
+   IF (twochem) CALL deallocate_twochem()
    !
    CALL stop_clock ('dfpt_kernel')
    !

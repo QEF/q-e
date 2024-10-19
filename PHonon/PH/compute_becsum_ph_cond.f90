@@ -27,8 +27,7 @@ subroutine compute_becsum_ph_cond
 
   USE lrus,       ONLY : becp1
   USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE control_ph, ONLY : rec_code_read
-  USE control_lr, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ, rec_code_read
   USE lr_two_chem, ONLY: becsum_cond,becsum_cond_nc
 
   implicit none
@@ -131,4 +130,3 @@ subroutine compute_becsum_ph_cond
   !      call stop_ph(.true.)
   return
 end subroutine compute_becsum_ph_cond
-

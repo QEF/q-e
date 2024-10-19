@@ -32,7 +32,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0)
   USE ldaU_ph,       ONLY : proj1, proj2
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf, lr_has_dnsorth, lr_dnsorth
   USE klist,         ONLY : wk, degauss, ngauss, ngk, degauss_cond
-  USE wvfct,         ONLY : npwx, nbnd, et, nbnd_cond, twochem
+  USE wvfct,         ONLY : npwx, nbnd, et, nbnd_cond
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE control_lr,    ONLY : lgamma, nbnd_occ
   USE units_lr,      ONLY : iuatswfc
@@ -47,7 +47,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0)
   USE buffers,       ONLY : get_buffer
   USE efermi_shift,  ONLY : def
   USE lr_two_chem,   ONLY : def_val,def_cond
-  USE two_chem,       ONLY : twochem
+  USE two_chem,      ONLY : twochem
   USE control_flags, ONLY : iverbosity
   !
   IMPLICIT NONE
