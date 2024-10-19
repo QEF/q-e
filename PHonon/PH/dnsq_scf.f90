@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dnsq_scf (npe, lmetq0, imode0, lflag)
+SUBROUTINE dnsq_scf (npe, lmetq0)
   !-----------------------------------------------------------------------
   !! DFPT+U: This routine calculates, for each SCF iteration, 
   !! the SCF variation of the occupation matrix ns, for npe perturbations.
@@ -29,10 +29,10 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, lflag)
   USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE ions_base,     ONLY : nat, ityp
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : proj1, proj2, dnsorth
-  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf
+  USE ldaU_ph,       ONLY : proj1, proj2
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf, lr_has_dnsorth, lr_dnsorth
   USE klist,         ONLY : wk, degauss, ngauss, ngk, degauss_cond
-  USE wvfct,         ONLY : npwx, nbnd, et, nbnd_cond
+  USE wvfct,         ONLY : npwx, nbnd, et, nbnd_cond, twochem
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE control_lr,    ONLY : lgamma, nbnd_occ
   USE units_lr,      ONLY : iuatswfc
@@ -56,10 +56,6 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, lflag)
   !! the number of perturbations
   LOGICAL,  INTENT(IN) :: lmetq0
   !! TRUE if \(xq=(0,0,0)\) in a metal
-  LOGICAL,  INTENT(IN) :: lflag  
-  !! TRUE for phonon calculation, FALSE for electric field calculation
-  INTEGER , INTENT(IN) :: imode0
-  !! the position of the modes
   !
   ! ... local variables
   !
@@ -228,27 +224,10 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, lflag)
   ! USPP case: add to the dnsscf calculated with the P_c^+dpsi 
   ! the non-scf part coming from the orthogonality contraints. 
   ! The orthogonality correction comes only for an atomic displacement. 
-  ! In the case of the electric field calculation (lflag=.false.), 
-  ! this contribution is zero.
+  ! In the case of the electric field calculation, lr_has_dnsorth is false.
   !
-  IF (okvan.AND.lflag) THEN
-     DO ipert = 1, npe
-        DO nah = 1, nat
-           nt = ityp(nah)
-           IF (is_hubbard(nt)) THEN
-              DO is = 1, nspin
-                 DO m1 = 1, 2*Hubbard_l(nt) + 1
-                    DO m2 = 1, 2*Hubbard_l(nt) + 1
-                       !
-                       dnsscf(m1,m2,is,nah,ipert) = dnsscf(m1,m2,is,nah,ipert) &
-                                           + dnsorth(m1,m2,is,nah,imode0+ipert)  
-                       !
-                    ENDDO
-                 ENDDO
-              ENDDO
-           ENDIF
-        ENDDO
-     ENDDO
+  IF (okvan .AND. lr_has_dnsorth) THEN
+     dnsscf = dnsscf + lr_dnsorth
   ENDIF
   !
   ! Symmetrize dnsscf

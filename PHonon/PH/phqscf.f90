@@ -73,7 +73,6 @@ SUBROUTINE phqscf
   DO irr = 1, nirr
      IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) THEN
         npe=npert(irr)
-        CALL ph_set_upert_phonon(irr)
         !
         ALLOCATE (drhoscfs( dfftp%nnr , nspin_mag, npe))
         imode0 = 0
@@ -87,6 +86,11 @@ SUBROUTINE phqscf
            WRITE( stdout, '(//,5x,"Representation #",i4," modes #",8i4)') &
                               irr, (imode0+irr1, irr1=1,npe)
         ENDIF
+        !
+        ! Initialize LR_Modules variables
+        !
+        CALL ph_set_upert_phonon(irr)
+        IF (okvan) CALL dnsq_orth_set_irr(irr, imode0)
         !
         !    then for this irreducible representation we solve the linear system
         !
@@ -148,6 +152,7 @@ SUBROUTINE phqscf
            IF (okpaw) DEALLOCATE (int3_paw)
            IF (noncolin) DEALLOCATE(int3_nc)
         ENDIF
+        CALL deallocate_dnsorth()
         CALL ph_deallocate_upert()
         !
         tcpu = get_clock ('PHONON')

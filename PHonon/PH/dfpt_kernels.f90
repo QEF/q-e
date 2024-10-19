@@ -84,10 +84,9 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !!
    !! Currently the code needs branches for phonon / e-field (using variable option)
    !! in the following places
-   !!    1. dnsq_scf : calculating response occupation matrix
-   !!    2. addusddens / addusddense : USPP contribution to drho
-   !!    3. becsumort : alphasum contribution to dbecsum
-   !!    4. PAW related stuff. symmetrization, factor of 2, ...
+   !!    1. addusddens / addusddense : USPP contribution to drho
+   !!    2. becsumort : alphasum contribution to dbecsum
+   !!    3. PAW related stuff. symmetrization, factor of 2, ...
    !! The plan is to get rid of all these branches by designing a generic subroutine, or
    !! if that is not feasible, by using callback arguments.
    !!
@@ -263,13 +262,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       ! DFPT+U: at each ph iteration calculate dnsscf,
       ! i.e. the scf variation of the occupation matrix ns.
       !
-      IF (option == 'phonon') THEN
-         IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0, imode0, .TRUE.)
-      ELSEIF (option == 'efield') THEN
-         IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0, 0, .FALSE.)
-      ELSE
-         CALL errore('dfpt_kernel', 'Unknown option' // TRIM(option), 1)
-      ENDIF
+      IF (lda_plus_u .AND. (.NOT. first_iter)) CALL dnsq_scf(npert, lmetq0)
       !
       ! Start the loop on the two linear systems, one at B and one at -B
       !

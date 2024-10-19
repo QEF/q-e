@@ -51,6 +51,7 @@ d2ionq_disp.o \
 d2nsq_bare.o \
 dnsq_bare.o \
 dnsq_orth.o \
+dnsq_orth_set_irr.o \
 dnsq_scf.o \
 davcio_drho.o \
 dfile_autoname.o \

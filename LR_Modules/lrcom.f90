@@ -259,4 +259,9 @@ MODULE ldaU_lr
   COMPLEX(DP), POINTER :: swfcatomkpq(:,:)
   !! S * atomic wfc at k+q
   !
+  LOGICAL :: lr_has_dnsorth = .FALSE.
+  !! If true, add lr_dnsorth to dnsscf.
+  COMPLEX(DP), ALLOCATABLE :: lr_dnsorth(:, :, :, :, :)
+  !! Fixed term to be added to dnsscf. Size (ldim, ldim, nspin, nat, 3*nat)
+  !
 END MODULE ldaU_lr

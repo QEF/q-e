@@ -40,6 +40,7 @@ set(src_ph
     PH/d2nsq_bare.f90
     PH/dnsq_bare.f90
     PH/dnsq_orth.f90
+    PH/dnsq_orth_set_irr.f90
     PH/dnsq_scf.f90
     PH/davcio_drho.f90
     PH/dfile_autoname.f90

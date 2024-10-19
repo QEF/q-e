@@ -334,7 +334,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ! DFPT+U: at each ph iteration calculate dnsscf,
      ! i.e. the scf variation of the occupation matrix ns.
      !
-     IF (lda_plus_u .AND. (iter /= 1)) CALL dnsq_scf(npe, lmetq0, imode0, .true.)
+     IF (lda_plus_u .AND. (iter /= 1)) CALL dnsq_scf(npe, lmetq0)
      !
      ! Start the loop on the two linear systems, one at B and one at -B
      !
