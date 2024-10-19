@@ -12,7 +12,7 @@ SUBROUTINE ph_set_upert_phonon(irr)
    !--------------------------------------------------------------------------------------
    !
    USE modes,        ONLY : npert, t, tmq
-   USE control_ph,   ONLY : lgamma_gamma
+   USE control_lr,   ONLY : lgamma_gamma
    USE lr_symm_base, ONLY : nsymq, minus_q, lr_npert, upert, upert_mq
    !
    IMPLICIT NONE

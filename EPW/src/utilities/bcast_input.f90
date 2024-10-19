@@ -18,8 +18,8 @@
   !! In this routine the first processor sends the input to all the other processors
   !!
 #if defined(__MPI)
-  USE phcom,         ONLY : zue, trans, tr2_ph, nmix_ph, niter_ph, lnscf,     &
-                            ldisp, fildvscf, fildrho, epsil, alpha_mix
+  USE phcom,         ONLY : zue, trans, lnscf, ldisp, fildvscf, fildrho, epsil
+  USE control_lr,    ONLY : tr2_ph, nmix_ph, niter_ph, alpha_mix
   USE input,         ONLY : epexst, epbwrite, ep_coupling,                    &
                             eliashberg, elecselfen, eig_read, plselfen,       &
                             efermi_read, dvscf_dir, delta_smear, ngaussw,     &

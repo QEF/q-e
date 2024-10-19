@@ -21,7 +21,7 @@ SUBROUTINE phqscf
   USE fft_base,         ONLY : dfftp
   USE uspp,             ONLY : okvan
   USE efield_mod,       ONLY : zstarue0, zstarue0_rec
-  USE control_ph,       ONLY : zue, convt, rec_code
+  USE control_ph,       ONLY : zue
   USE partial,          ONLY : done_irr, comp_irr
   USE modes,            ONLY : nirr, npert
   USE uspp_param,       ONLY : nhm
@@ -39,6 +39,7 @@ SUBROUTINE phqscf
   USE ldaU_ph,          ONLY : dnsscf_all_modes
   USE units_ph,         ONLY : iundnsscf
   USE control_flags,    ONLY : iverbosity
+  USE control_lr,       ONLY : convt, rec_code
   USE write_hub
 
   IMPLICIT NONE

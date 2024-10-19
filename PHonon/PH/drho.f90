@@ -27,13 +27,12 @@ subroutine drho
   USE uspp,       ONLY : okvan, nkb
   USE wvfct,      ONLY : nbnd
   USE paw_variables,    ONLY : okpaw
-  USE control_ph, ONLY : all_done, rec_code_read
-
+  USE control_ph, ONLY : all_done
   USE lrus,       ONLY : becp1
   USE klist,      ONLY : lgauss
   USE two_chem,   ONLY : twochem
   USE qpoint,     ONLY : nksq
-  USE control_lr, ONLY : lgamma
+  USE control_lr, ONLY : lgamma, rec_code_read
 
   USE dynmat,     ONLY : dyn00
   USE modes,      ONLY : npertx, npert, nirr, u

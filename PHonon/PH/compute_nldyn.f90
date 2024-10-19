@@ -26,12 +26,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE partial,          ONLY : nat_todo, nat_todo_input, atomo, set_local_atomo
   USE phus,             ONLY : alphap, int1, int2, &
                                int2_so, int1_nc
-  USE control_ph,       ONLY : rec_code_read
-
   USE lrus,             ONLY : becp1
   USE qpoint,           ONLY : nksq, ikks, ikqs
-  USE control_lr,       ONLY : nbnd_occ
-
+  USE control_lr,       ONLY : nbnd_occ, rec_code_read
   USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,               ONLY : mp_sum
   USE becmod,           ONLY : bec_type

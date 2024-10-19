@@ -52,10 +52,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE paw_onecenter,        ONLY : paw_dpotential
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
   USE buffers,              ONLY : save_buffer, get_buffer
-  USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, tr2_ph, &
-                                   lgamma_gamma, convt, &
-                                   alpha_mix, rec_code_read, &
-                                   where_rec, flmixdpot, ext_recover
+  USE control_ph,           ONLY : ext_recover
   USE el_phon,              ONLY : elph
   USE uspp,                 ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iubar, lrbar, &
@@ -78,7 +75,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : xq, nksq, ikks, ikqs
   USE qpoint_aux,           ONLY : ikmks, becpt, alphapt
-  USE control_lr,           ONLY : lgamma
+  USE control_lr,           ONLY : lgamma, niter_ph, nmix_ph, tr2_ph, lgamma_gamma, convt, &
+                                   alpha_mix, flmixdpot, rec_code, rec_code_read, where_rec
   USE dv_of_drho_lr,        ONLY : dv_of_drho
   USE fft_interfaces,       ONLY : fft_interpolate
   USE ldaU,                 ONLY : lda_plus_u

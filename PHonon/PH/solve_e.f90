@@ -46,18 +46,16 @@ subroutine solve_e
   USE paw_variables,         ONLY : okpaw
   USE paw_onecenter,         ONLY : paw_dpotential
   USE paw_symmetry,          ONLY : paw_desymmetrize
-
   USE units_ph,              ONLY : lrdrho, iudrho, lrebar, iuebar
   USE units_lr,              ONLY : iuwfc, lrwfc
   USE output,                ONLY : fildrho
-  USE control_ph,            ONLY : ext_recover, rec_code, &
-                                    lnoloc, convt, tr2_ph, nmix_ph, &
-                                    alpha_mix, lgamma_gamma, niter_ph, &
-                                    flmixdpot, rec_code_read
+  USE control_ph,            ONLY : ext_recover, lnoloc
   USE recover_mod,           ONLY : read_rec, write_rec
   USE lrus,                  ONLY : int3_paw
   USE qpoint,                ONLY : nksq, ikks
-  USE control_lr,            ONLY : lgamma
+  USE control_lr,            ONLY : lgamma, lgamma_gamma, convt, tr2_ph, nmix_ph, &
+                                    alpha_mix, niter_ph, rec_code_read, flmixdpot, &
+                                    rec_code
   USE dv_of_drho_lr,         ONLY : dv_of_drho
   USE fft_interfaces,        ONLY : fft_interpolate
   USE ldaU,                  ONLY : lda_plus_u

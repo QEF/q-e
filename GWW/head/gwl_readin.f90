@@ -33,14 +33,14 @@ SUBROUTINE phq_readin()
   USE fft_base,      ONLY : dffts
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
-  USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
-                            zue, zeu, xmldyn, newgrid,                      &
-                            trans, reduce_io, tr2_ph, niter_ph,       &
-                            nmix_ph, ldisp, recover, lnoloc, start_irr, &
+  USE control_lr,    ONLY : maxter, alpha_mix, lgamma_gamma, reduce_io, tr2_ph, niter_ph, &
+                            nmix_ph, rec_code_read
+  USE control_ph,    ONLY : epsil, zue, zeu, xmldyn, newgrid, &
+                            trans, ldisp, recover, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
-                            rec_code_read, qplot, only_init, only_wfc, &
+                            qplot, only_init, only_wfc, &
                             low_directory_check, nk1, nk2, nk3, k1, k2, k3
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr

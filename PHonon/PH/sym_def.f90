@@ -17,7 +17,7 @@ SUBROUTINE sym_def(def)
   !! Used in the q=0 metallic case only.
   !
   USE kinds,        ONLY : DP
-  USE control_ph,   ONLY : lgamma_gamma
+  USE control_lr,   ONLY : lgamma_gamma
   USE lr_symm_base, ONLY : minus_q, nsymq, lr_npert, upert, upert_mq
   !
   IMPLICIT NONE
