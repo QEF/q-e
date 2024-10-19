@@ -45,6 +45,7 @@ set(src_ph
     PH/davcio_drho.f90
     PH/dfile_autoname.f90
     PH/dfile_star.f90
+    PH/dfpt_kernels.f90
     PH/dielec.f90
     PH/do_phonon.f90
     PH/do_q2r.f90

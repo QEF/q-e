@@ -163,9 +163,7 @@ write_rec.o \
 write_hub.o \
 zstar_eu.o \
 zstar_eu_us.o \
-dfpt_kernels.o \
-solve_linter_new.o \
-solve_e_new.o
+dfpt_kernels.o
 
 RAMANOBJS =    \
 psyme2.o   \

@@ -33,24 +33,21 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !! Step b, c, d are done inside sternheimer_kernel.
   !
   USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat
-  USE io_global,            ONLY : stdout, ionode
+  USE io_global,            ONLY : ionode
   USE io_files,             ONLY : prefix, diropn
-  USE check_stop,           ONLY : check_stop_now
   USE wavefunctions,        ONLY : evc
   USE cell_base,            ONLY : at
-  USE klist,                ONLY : ltetra, lgauss, xk, ngk, igk_k
+  USE ions_base,            ONLY : nat
+  USE uspp_param,           ONLY : nhm
+  USE klist,                ONLY : xk, ngk, igk_k
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
-  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, npwx
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
-  USE uspp_param,           ONLY : nhm
-  USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
-  USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
   USE buffers,              ONLY : save_buffer, get_buffer
   USE control_ph,           ONLY : ext_recover
   USE el_phon,              ONLY : elph
@@ -59,30 +56,18 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                                    iudvscf, iuint3paw, lint3paw
   USE units_lr,             ONLY : iuwfc, lrwfc
   USE output,               ONLY : fildrho, fildvscf
-  USE phus,                 ONLY : becsumort, alphap, int1_nc
-  USE modes,                ONLY : npertx, u, t, tmq
-  USE recover_mod,          ONLY : read_rec, write_rec
-  ! used to write fildrho:
+  USE phus,                 ONLY : alphap, int1_nc
+  USE modes,                ONLY : u
+  USE recover_mod,          ONLY : read_rec
   USE dfile_autoname,       ONLY : dfile_name
   USE save_ph,              ONLY : tmp_dir_save
-  ! used oly to write the restart file
-  USE mp_pools,             ONLY : inter_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp
-  USE mp,                   ONLY : mp_sum
-  USE efermi_shift,         ONLY : ef_shift, ef_shift_wfc, def
-  USE lrus,                 ONLY : int3_paw, becp1, int3_nc
-  USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
+  USE lrus,                 ONLY : int3_paw, becp1
   USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : xq, nksq, ikks, ikqs
   USE qpoint_aux,           ONLY : ikmks, becpt, alphapt
-  USE control_lr,           ONLY : lgamma, niter_ph, nmix_ph, tr2_ph, lgamma_gamma, convt, &
-                                   alpha_mix, flmixdpot, rec_code, rec_code_read, where_rec
-  USE dv_of_drho_lr,        ONLY : dv_of_drho
-  USE fft_interfaces,       ONLY : fft_interpolate
-  USE ldaU,                 ONLY : lda_plus_u
-  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
-  USE response_kernels,     ONLY : sternheimer_kernel
+  USE control_lr,           ONLY : convt, rec_code, rec_code_read, where_rec
   USE uspp_init,            ONLY : init_us_2
+<<<<<<< HEAD
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   USE two_chem,             ONLY : twochem
   !FIXME  make explicit mentions of lr_two_chem variable that are used
@@ -92,6 +77,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                             !twochem variables
    implicit none
 
+=======
+  USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save
+  USE dfpt_kernels,         ONLY : dfpt_kernel
+  !
+  IMPLICIT NONE
+  !
+>>>>>>> 2d990b93a (Remove old solve_e and solve_linter, replace with new versions with dfpt_kernel)
   integer :: irr
   !! input: the irreducible representation
   integer :: npe
@@ -103,45 +95,27 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !
   ! ... local variables
   !
-  real(DP) :: thresh, averlt, dr2
-  ! thresh: convergence threshold
-  ! averlt: average number of iterations
+  real(DP) :: dr2
   ! dr2   : self-consistency error
-  real(DP) :: dos_ef
-  ! Misc variables for metals
-  ! dos_ef: density of states at Ef
-
+  !
   complex(DP), allocatable, target :: dvscfin(:,:,:)
   ! change of the scf potential
   complex(DP), pointer :: dvscfins (:,:,:)
   ! change of the scf potential (smooth part only)
-  complex(DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
+  complex(DP), allocatable :: drhoscfh (:,:,:)
   ! change of rho / scf potential (output)
-  ! change of scf potential (output)
-  complex(DP), allocatable :: ldos (:,:), ldoss (:,:), mixin(:), mixout(:), &
-       dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:,:), aux2(:,:), drhoc(:), &
-       dbecsum_aux (:,:,:,:)
-  ! Misc work space
-  ! ldos : local density of states af Ef
-  ! ldoss: as above, without augmentation charges
-  ! dbecsum: the derivative of becsum
-  ! drhoc: response core charge density
-  REAL(DP), allocatable :: becsum1(:,:,:)
+  complex(DP), allocatable :: dbecsum (:,:,:,:)
+  ! the derivative of becsum
+  COMPLEX(DP), allocatable :: drhoc(:, :)
+  !! Change in the core charge due to the perturbation.
 
-  LOGICAL :: all_conv
-  !! True if sternheimer_kernel is converged at all k points and perturbations
-  logical :: exst,       & ! used to open the recover file
-             lmetq0,     & ! true if xq=(0,0,0) in a metal
-             first_iter    ! true if first iteration where induced rho is not yet calculated
+  logical :: exst
+  !! used to open the recover file
 
-  integer :: kter,       & ! counter on iterations
-             iter0,      & ! starting iteration
+  integer :: iter0,      & ! starting iteration
              ipert,      & ! counter on perturbations
-             iter,       & ! counter on iterations
              ik, ikk,    & ! counter on k points
              ikq,        & ! counter on k+q points
-             ndim,       &
-             is,         & ! counter on spin polarizations
              nrec,       & ! the record number for dvpsi and dpsi
              mode,       & ! mode index
              isolv,      & ! counter on linear systems
@@ -150,7 +124,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   integer  :: npw, npwq
   integer  :: iq_dummy
-  real(DP) :: tcpu, get_clock ! timing variables
   character(len=256) :: filename
 
   integer :: nnr
@@ -169,29 +142,17 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins (dffts%nnr , nspin_mag , npe))
+     dvscfins = (0.d0, 0.d0)
      nnr = dffts%nnr
   else
      dvscfins => dvscfin
   endif
-  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1:npe))
   allocate (drhoscfh ( dfftp%nnr, nspin_mag , npe))
-  allocate (dvscfout ( dfftp%nnr, nspin_mag , npe))
-  allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
-  IF (okpaw) THEN
-     allocate (mixin(dfftp%nnr*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
-     allocate (mixout(dfftp%nnr*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
-     mixin=(0.0_DP,0.0_DP)
-  ELSE
-     ALLOCATE(mixin(1))
-  ENDIF
-  IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe, nsolv))
-  allocate (aux2(npwx*npol, nbnd))
-  allocate (drhoc(dfftp%nnr))
-  IF (noncolin.AND.domag.AND.okvan) THEN
-     ALLOCATE (int3_nc_save( nhm, nhm, nat, nspin_mag, npe, 2))
-     ALLOCATE (dbecsum_aux ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
-  ENDIF
-  CALL apply_dpot_allocate()
+  allocate (drhoc (dfftp%nnr, npe))
+  allocate (dbecsum((nhm * (nhm + 1))/2, nat, nspin_mag , npe))
+  dbecsum = (0.0_DP, 0.0_DP)
+  !
+  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1:npe))
   !
   if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
@@ -199,9 +160,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum)
         IF (convt) THEN
            CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
-        ELSE
-           CALL setmixout(npe*dfftp%nnr*nspin_mag,&
-           (nhm*(nhm+1)*nat*nspin_mag*npe)/2,mixin,dvscfin,dbecsum,ndim,-1)
         ENDIF
      ELSE
         CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh)
@@ -211,20 +169,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
     iter0 = 0
     convt =.FALSE.
     where_rec='no_recover'
+    dr2 = 0.d0
   endif
-
-  IF (ionode .AND. fildrho /= ' ') THEN
-     INQUIRE (UNIT = iudrho, OPENED = exst)
-     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     filename = dfile_name(xq, at, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true., index_q=iq_dummy)
-     CALL diropn (iudrho, filename, lrdrho, exst)
-  END IF
-
-  IF (convt) GOTO 155
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
-
   lmetq0 = (lgauss .OR. ltetra) .AND. lgamma
   if (lmetq0) then
      allocate ( ldos ( dfftp%nnr  , nspin_mag) )
@@ -246,6 +195,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      end if
      !twochem allocations
   endif
+  !
+  IF (convt) GOTO 155
   !
   !
   ! In this case it has recovered after computing the contribution
@@ -311,7 +262,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ENDDO ! isolv
   ENDDO ! ik
   !
-  !   The outside loop is over the iterations
+  ! Compute the change of core charge due to atomic displacement
   !
   do kter = 1, niter_ph
      !
@@ -593,40 +544,66 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      if (convt) goto 155
   enddo
 155 iter0=0
+  ! ------------------------------------------------------------------------------
+  ! TODO: Modularization of DFPT to dfpt_kernel.
+  ! The whole loop do kter = 1, niter_ph can be replaced by a call to dfpt_kernel.
+  ! Temporarily commented two_chem is not 
+  !
+  DO ipert = 1, npe
+     CALL addcore(u(1, imode0+ipert), drhoc(1, ipert))
+  ENDDO
+  !
+  ! Set records for restart
+  !
+  rec_code = 10
+  where_rec = 'solve_lint'
+  !
+  !    Solve DFPT fixed-point equation
+  !
+  CALL dfpt_kernel('PHONON', npe, iter0, lrbar, iubar, dr2, drhoscf, drhoscfh, dvscfins, &
+                   dvscfin, dbecsum, irr, imode0, 'phonon', drhoc = drhoc)
+  !
+  ! ------------------------------------------------------------------------------
   !
   !    A part of the dynamical matrix requires the integral of
   !    the self consistent change of the potential and the variation of
   !    the charge due to the displacement of the atoms.
   !    We compute it here.
   !
-  if (convt) then
-     call drhodvus (irr, imode0, dvscfin, npe)
+  IF (convt) THEN
+     CALL drhodvus (irr, imode0, dvscfin, npe)
+     IF (nlcc_any) CALL dynmat_nlcc (imode0, drhoscfh, npe)
+     !
+     ! Write charge density to file
+     !
+     IF (fildrho /= ' ') THEN
+        IF (ionode) THEN
+           INQUIRE(UNIT = iudrho, OPENED = exst)
+           IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+           filename = dfile_name(xq, at, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true., index_q=iq_dummy)
+           CALL diropn (iudrho, filename, lrdrho, exst)
+        ENDIF ! ionode
+        !
+        DO ipert = 1, npe
+           CALL davcio_drho(drhoscfh(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
+        ENDDO
+        CLOSE (UNIT = iudrho, STATUS='keep')
+        !
+     ENDIF ! fildrho
+     !
      if (fildvscf.ne.' ') then
         do ipert = 1, npe
-           if(lmetq0) then
-                dvscfin(:,:,ipert) = dvscfin(:,:,ipert)-def(ipert)
-                if (doublegrid) dvscfins(:,:,ipert) = dvscfins(:,:,ipert)-def(ipert)
-           endif
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
            IF (okpaw.AND.ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                               iuint3paw, imode0+ipert, + 1 )
         end do
         if (elph) call elphel (irr, npe, imode0, dvscfins)
-     end if
-  endif
-  if (convt.and.nlcc_any) call dynmat_nlcc (imode0, drhoscfh, npe)
+     ENDIF ! fildvscf
+     !
+     CALL dnsq_store(npe, imode0)
+     !
+  ENDIF ! convt
   !
-  CALL apply_dpot_deallocate()
-  if (allocated(ldoss)) deallocate (ldoss)
-  if (allocated(ldos)) deallocate (ldos)
-  deallocate (dbecsum)
-  IF (okpaw) THEN
-     if (allocated(becsum1)) deallocate (becsum1)
-     deallocate (mixin)
-     deallocate (mixout)
-  ENDIF
-  IF (noncolin) deallocate (dbecsum_nc)
-  deallocate (dvscfout)
   deallocate (drhoscfh)
   if (twochem.and.lmetq0) then
         !deallocate for twochem calculation at gamma
@@ -643,46 +620,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !$acc exit data delete(dvscfins)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
-  deallocate(aux2)
-  deallocate(drhoc)
-  IF (noncolin.AND.domag.AND.okvan) THEN
-     DEALLOCATE (int3_nc_save)
-     DEALLOCATE (dbecsum_aux)
-  ENDIF
+  deallocate (drhoc)
+  DEALLOCATE(dbecsum)
 
   call stop_clock ('solve_linter')
 
   RETURN
 
 END SUBROUTINE solve_linter
-
-!------------------------------------------------------------------
-SUBROUTINE check_all_convt( convt )
-  !---------------------------------------------------------------
-  !! Work out how many processes have converged.
-  !
-  USE mp,        ONLY : mp_sum
-  USE mp_images, ONLY : nproc_image, me_image, intra_image_comm
-  !
-  IMPLICIT NONE
-  !
-  LOGICAL,INTENT(in) :: convt
-  INTEGER            :: tot_conv
-  !
-  IF(nproc_image==1) RETURN
-  !
-  ! Work out how many processes have converged
-  !
-  tot_conv = 0
-  IF(convt) tot_conv = 1
-  CALL mp_sum(tot_conv, intra_image_comm)
-  !
-  IF ((tot_conv > 0) .and. (tot_conv < nproc_image)) THEN
-    CALL errore('check_all_convt', 'Only some processors converged: '&
-               &' either something is wrong with solve_linter, or a different'&
-               &' parallelism scheme should be used.', 1)
-  ENDIF
-  !
-  RETURN
-  !
-END SUBROUTINE

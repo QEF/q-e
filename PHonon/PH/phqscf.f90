@@ -110,8 +110,7 @@ SUBROUTINE phqscf
         ENDIF
         !
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
-      !   CALL solve_linter (irr, imode0, npe, drhoscfs)
-        CALL solve_linter_new (irr, imode0, npe, drhoscfs)
+        CALL solve_linter (irr, imode0, npe, drhoscfs)
         WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
         !
         !   Add the contribution of this mode to the dynamical matrix
