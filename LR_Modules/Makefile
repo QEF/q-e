@@ -69,6 +69,7 @@ lr_dot_magnons.o \
 lr_nc_mag.o \
 lr_two_chem.o\
 lanczos_nonhermitian.o \
+lanczos_pseudohermitian.o \
 lanczos_pseudohermitian_c.o \
 lanczos_nonhermitian_c.o \
 response_kernels.o \
