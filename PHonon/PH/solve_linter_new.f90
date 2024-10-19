@@ -66,7 +66,6 @@ SUBROUTINE solve_linter_new (irr, imode0, npe, drhoscf)
   USE qpoint,               ONLY : xq, nksq, ikks, ikqs
   USE qpoint_aux,           ONLY : ikmks, becpt, alphapt
   USE control_lr,           ONLY : convt, rec_code, rec_code_read, where_rec
-  USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save
   USE dfpt_kernels,         ONLY : dfpt_kernel
@@ -204,13 +203,8 @@ SUBROUTINE solve_linter_new (irr, imode0, npe, drhoscf)
            nrec = (isolv-1) * npe * nksq + (ipert - 1) * nksq + ik
            !
            IF (isolv==1) THEN
+              !
               CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becp1, alphap)
-              !
-              ! DFPT+U: At the first ph iteration the bare perturbed
-              ! Hubbard potential dvbare_hub_q * psi_kpoint
-              ! is calculated and added to dvpsi.
-              !
-              IF (lda_plus_u) CALL dvqhub_barepsi_us(ik, u(1,mode))
               !
            ELSE
               IF (okvan) THEN
