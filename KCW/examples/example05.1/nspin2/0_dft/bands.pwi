@@ -1,0 +1,33 @@
+&CONTROL
+   calculation      = 'bands'
+   verbosity        = 'high'
+   outdir           = './out'
+   pseudo_dir       = '../../pseudo/'
+   prefix           = 'si'
+/
+&SYSTEM
+   ibrav            = 2
+   celldm(1)        = 10.262200042863787
+   ecutwfc          = 20.0
+   ntyp             = 1
+   nat              = 2
+   nbnd             = 10
+/
+&ELECTRONS
+   conv_thr         = 1.6e-08
+/
+
+ATOMIC_SPECIES
+Si  28.085 Si.upf
+
+ATOMIC_POSITIONS crystal
+Si  -0.0000000000 0.0000000000 -0.0000000000
+Si  0.2500000000 0.2500000000 0.2500000000
+
+K_POINTS crystal_b
+5
+ 0.50000   0.50000   0.50000 15 ! L
+ 0.00000   0.00000   0.00000 15 ! G
+ 0.50000   0.00000   0.50000 15 ! X
+ 0.37500   0.37500   0.75000 15 ! K
+ 0.00000   0.00000   0.00000  1 !G

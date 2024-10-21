@@ -12,6 +12,7 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
   !!  Automatic generation of a uniform grid of k-points.
   !
   USE kinds, ONLY: DP
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -57,6 +58,7 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
   INTEGER, ALLOCATABLE :: equiv(:)
   LOGICAL :: in_the_list
   REAL(DP), PARAMETER :: eps=1.0d-5
+  ! 
   !
   nkr=nk1*nk2*nk3
   ALLOCATE (xkg( 3,nkr),wkk(nkr))
@@ -77,7 +79,6 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
 
   !  equiv(nk) =nk : k-point nk is not equivalent to any previous k-point
   !  equiv(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
-
   DO nk=1,nkr
      equiv(nk)=nk
   ENDDO
@@ -100,7 +101,7 @@ SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
                      + s(i,3,ns) * xkg(3,nk)
               xkr(i) = xkr(i) - nint( xkr(i) )
            ENDDO
-           IF(t_rev(ns)==1) xkr = -xkr
+           IF(t_rev(ns)==1 .AND. colin_mag < 2) xkr = -xkr
            xx = xkr(1)*nk1 - 0.5d0*k1
            yy = xkr(2)*nk2 - 0.5d0*k2
            zz = xkr(3)*nk3 - 0.5d0*k3

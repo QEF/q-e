@@ -20,7 +20,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, mill
   USE paw_gipaw,  ONLY : paw_nkb, paw_recon, paw_lmaxkb
-  USE uspp_data,  ONLY : nqx, dq
   USE splinelib
   !
   implicit none
@@ -36,7 +35,8 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   !     Local variables
   !
   integer :: i0,i1,i2,i3, ig, l, lm, na, nt, nb, ih, jkb
-
+  real(DP), parameter :: dq = 0.01_dp
+  ! dq is the interpolation step - must be the same as in init_gipaw_2
   real(DP) :: px, ux, vx, wx, arg
   real(DP), allocatable :: gk (:,:), qg (:), vq (:), ylm (:,:), vkb1(:,:)
 

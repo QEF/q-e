@@ -18,9 +18,11 @@ subroutine kcw_setup_ham
   USE io_files,          ONLY : tmp_dir
   USE scf,               ONLY : v, vrs, vltot,  kedtau
   USE fft_base,          ONLY : dfftp, dffts
-  USE gvecs,             ONLY : doublegrid
+  USE fft_interfaces,    ONLY : invfft
+  USE gvecs,             ONLY : doublegrid, ngms
+  USE gvect,             ONLY : ig_l2g
   USE uspp_init,         ONLY : init_us_2
-  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux!, nspin_mag, npol
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_mag, npol
   USE wvfct,             ONLY : nbnd
   USE uspp,              ONLY : nkb, vkb
   !USE funct,             ONLY : dft_is_gradient
@@ -28,27 +30,29 @@ subroutine kcw_setup_ham
   !
   USE units_lr,          ONLY : iuwfc
   USE wvfct,             ONLY : npwx, current_k, npw
-  USE control_flags,     ONLY : io_level
+  USE control_flags,     ONLY : io_level, gamma_only
   USE io_files,          ONLY : prefix
   USE buffers,           ONLY : open_buffer, save_buffer, close_buffer
   USE control_kcw,       ONLY : alpha_final, evc0, iuwfc_wann, iurho_wann, kcw_iverbosity, &
-                                read_unitary_matrix, hamlt, alpha_corr_done, &
+                                read_unitary_matrix, hamlt, alpha_corr_done, io_real_space, &
                                 num_wann, num_wann_occ, num_wann_emp, i_orb, iorb_start, iorb_end, &
                                 calculation, nqstot, occ_mat ,alpha_final_full, spin_component, &
-                                tmp_dir_kcw, tmp_dir_kcwq, x_q, lgamma_iq !, wq
+                                tmp_dir_kcw, tmp_dir_kcwq, x_q, lgamma_iq, io_sp, nrho, nkstot_eff !, wq
   USE io_global,         ONLY : stdout
-  USE klist,             ONLY : nkstot, xk, nks, ngk, igk_k
-  USE cell_base,         ONLY : at !, bg
+  USE klist,             ONLY : nkstot, xk, nks, ngk, igk_k, nelec, nelup, neldw
+  USE cell_base,         ONLY : at, omega !, bg
   USE fft_base,          ONLY : dffts
   !
   USE control_lr,        ONLY : nbnd_occ
   USE mp,                ONLY : mp_bcast
   USE eqv,               ONLY : dmuxc
   !
-  USE io_kcw,            ONLY : read_rhowann, read_mlwf
+  USE io_kcw,            ONLY : read_rhowann, read_mlwf, read_rhowann_g
   USE lsda_mod,          ONLY : lsda, isk, nspin, current_spin, starting_magnetization
   !
   USE coulomb,           ONLY : setup_coulomb
+  !
+  USE mp_bands,          ONLY : root_bgrp, intra_bgrp_comm
   !
   !
   !USE symm_base,       ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
@@ -58,14 +62,15 @@ subroutine kcw_setup_ham
   !
   implicit none
 
-  integer :: na, i
+  integer :: na, i, ip
   ! counters
   !
   INTEGER   :: lrwfc, lrrho, iun_qlist
   LOGICAL   :: exst, exst_mem
   INTEGER :: iq, nqs
   REAL(DP) :: xq(3)
-  COMPLEX(DP), ALLOCATABLE :: rhowann(:,:), rhowann_aux(:)
+  COMPLEX(DP), ALLOCATABLE :: rhowann(:,:,:), rhowann_aux(:)
+  COMPLEX(DP), ALLOCATABLE :: rhog(:)
   CHARACTER (LEN=256) :: file_base
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   !
@@ -82,7 +87,7 @@ subroutine kcw_setup_ham
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin_mag, doublegrid)
   !
   !  3) If necessary calculate the local magnetization. This information is
   !      needed in find_sym
@@ -105,11 +110,11 @@ subroutine kcw_setup_ham
   !
   ! 5) Computes the number of occupied bands for each k point
   !
-  call setup_nbnd_occ ( ) 
+  !call setup_nbnd_occ ( ) 
   !
   ALLOCATE ( alpha_final(nbnd) )
   alpha_final(:) = 1.D0
-  IF (nkstot/nspin == 1 ) THEN 
+  IF (nkstot/nspin == 1 .and. nspin.ne.4 ) THEN 
     ALLOCATE (alpha_final_full(nbnd))
     alpha_final_full(:) = 1.D0
   ENDIF
@@ -117,19 +122,21 @@ subroutine kcw_setup_ham
   ! 6) Computes the derivative of the XC potential
   !
   IF (calculation == 'ham') THEN 
-    allocate (dmuxc ( dfftp%nnr , nspin , nspin))
+    allocate (dmuxc ( dfftp%nnr , nspin_mag, nspin_mag))
     dmuxc = 0.d0
-    call setup_dmuxc()
+    CALL setup_dmuxc()
+    ! Setup all gradient correction stuff
+    CALL setup_dgc()
     CALL kcw_R_points ()
     CALL read_alpha ()
-    IF (nkstot/nspin == 1 ) alpha_final_full = alpha_final
+    IF (nkstot/nspin == 1 .and. nspin.ne.4 ) alpha_final_full = alpha_final
   ! CALL setup_dgc()
   ENDIF
   !
   ! Open buffers for the KS and eventualy the minimizing WFCs 
   ! 
   iuwfc = 20
-  lrwfc = nbnd * npwx
+  lrwfc = nbnd * npwx * npol
   io_level = 1
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
   IF (.NOT.exst.AND..NOT.exst_mem) THEN
@@ -144,8 +151,16 @@ subroutine kcw_setup_ham
                           ! as soon as a proper data-file will be written by wann2kcw: FIXME
     if (kcw_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Unitary matrix, READ from file")')
   ELSE
+    !
     num_wann = nbnd
-    num_wann_occ = nbnd_occ(1)
+    num_wann_occ = nint (nelec)/2 ! spin upolarized
+    IF (nspin_mag == 4) THEN
+      num_wann_occ = nint (nelec)
+    ELSE IF (nspin==2) THEN
+      num_wann_occ = nint (nelup) ! Assuming insulating
+      IF (spin_component == 2) num_wann_occ = nint (neldw) ! Assuming insulating
+    END IF
+    !
     num_wann_emp = num_wann-num_wann_occ
   ENDIF
   ! 
@@ -153,7 +168,7 @@ subroutine kcw_setup_ham
   !
   iuwfc_wann = 21
   io_level = 1
-  lrwfc = num_wann * npwx 
+  lrwfc = num_wann * npwx * npol
   CALL open_buffer ( iuwfc_wann, 'wfc_wann', lrwfc, io_level, exst )
   if (kcw_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WFs, OPENED")')
   !
@@ -162,12 +177,13 @@ subroutine kcw_setup_ham
   !
   iurho_wann = 22
   io_level = 1
-  lrrho=num_wann*dffts%nnr
+  lrrho=num_wann * dffts%nnr * nrho
   CALL open_buffer ( iurho_wann, 'rho_wann', lrrho, io_level, exst )
   if (kcw_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WF rho, OPENED")')
   !
-  ALLOCATE ( rhowann ( dffts%nnr, num_wann), rhowann_aux(dffts%nnr) )
-  ALLOCATE ( evc0(npwx, num_wann) )
+  ALLOCATE ( rhowann ( dffts%nnr, num_wann, nrho), rhowann_aux(dffts%nnr) )
+  ALLOCATE ( evc0(npwx*npol, num_wann) )
+  ALLOCATE ( rhog (ngms) )
   ALLOCATE ( hamlt(nkstot, num_wann, num_wann) )
   ALLOCATE ( alpha_corr_done (num_wann) ) 
   ALLOCATE ( occ_mat (num_wann, num_wann, nkstot) )
@@ -194,13 +210,13 @@ subroutine kcw_setup_ham
         npw = ngk(ik)
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
         CALL read_mlwf ( dirname, ik, evc0 )
-        ik_eff = ik-(spin_component-1)*nkstot/nspin
+        ik_eff = ik-(spin_component-1)*nkstot_eff
         CALL save_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
         CALL ks_hamiltonian(evc0, ik, num_wann) 
     END DO
   ENDIF
   !
-  DEALLOCATE ( nbnd_occ )  ! otherwise allocate_ph complains: FIXME
+  !DEALLOCATE ( nbnd_occ )  ! otherwise allocate_ph complains: FIXME
   !
   call setup_coulomb()
   !call setup_coulomb_exx()
@@ -236,14 +252,36 @@ subroutine kcw_setup_ham
                 & // TRIM(int_to_char(iq))//'/'
     !
     DO i = 1, num_wann
-      file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char(i))
-      CALL read_rhowann( file_base, dffts, rhowann_aux )
-      rhowann(:,i) = rhowann_aux(:)
+      !
+      IF ( .NOT. io_real_space) THEN
+        !
+        DO ip = 1, nrho
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_g_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          CALL read_rhowann_g( file_base, &
+               root_bgrp, intra_bgrp_comm, &
+               ig_l2g, 1, rhog(:), .FALSE., gamma_only )
+          rhowann_aux=(0.d0,0.d0)
+          rhowann_aux(dffts%nl(:)) = rhog(:)
+          CALL invfft ('Rho', rhowann_aux, dffts)
+          rhowann(:,i,ip) = rhowann_aux(:)*omega
+          !
+        ENDDO
+        !
+      ELSE 
+        !  
+        DO ip = 1, nrho    
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          CALL read_rhowann( file_base, dffts, rhowann_aux )
+          rhowann(:,i,ip) = rhowann_aux(:)
+        ENDDO
+        !
+      ENDIF
     ENDDO
+
     !
     ! ... Save the rho_q on file
     !
-    lrrho=num_wann*dffts%nnr
+    lrrho=num_wann * dffts%nnr * nrho
     CALL save_buffer (rhowann, lrrho, iurho_wann, iq)
     !
   ENDDO
@@ -295,6 +333,7 @@ subroutine kcw_setup_ham
   CALL stop_clock ('kcw_setup')
   !
   DEALLOCATE (rhowann, rhowann_aux)
+  DEALLOCATE (rhog)
   !
   RETURN
   !

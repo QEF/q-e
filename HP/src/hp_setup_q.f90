@@ -71,7 +71,7 @@ SUBROUTINE hp_setup_q()
   USE ldaU_hp,          ONLY : niter_max, alpha_mix, skip_equivalence_q
   ! USE funct,            ONLY : dft_is_gradient
   USE control_flags,    ONLY : modenum
-  USE hp_nc_mag_aux,    ONLY : deeq_nc_save
+  USE lr_nc_mag,        ONLY : deeq_nc_save
   USE dfunct,           ONLY : newd
   !
   IMPLICIT NONE

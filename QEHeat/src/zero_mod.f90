@@ -350,8 +350,8 @@ contains
    subroutine allocate_zero
       use ions_base, only: nsp
       use gvect, only: ngm
-      use uspp_data, ONLY: nqxq
-      USE uspp_param, ONLY: nbetam
+      !use uspp_data, ONLY: nqxq
+      !USE uspp_param, ONLY: nbetam
 !
       implicit none
 !

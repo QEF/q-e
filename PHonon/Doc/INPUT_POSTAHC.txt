@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: postahc.x / PHonon / Quantum ESPRESSO (version: 7.3.1)
+Program: postahc.x / PHonon / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -150,4 +150,4 @@ NAMELIST: &INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed Feb 21 14:33:44 CET 2024
+This file has been created by helpdoc utility on Wed Oct 16 19:27:30 CEST 2024

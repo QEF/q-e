@@ -24,9 +24,11 @@ subroutine kcw_allocate_q
   USE lrus,                 ONLY : becp1
   USE eqv,                  ONLY : dpsi, evq, dmuxc, dvpsi
   USE control_lr,           ONLY : lgamma
+  USE qpoint_aux,           ONLY : becpt, alphapt
+  USE noncollin_module,     ONLY : domag, noncolin
   !
   IMPLICIT NONE
-  INTEGER :: ik
+  INTEGER :: ik, ipol
   !
   IF (lgamma) THEN
      ! q=0 : evq is a pointer to evc
@@ -40,14 +42,22 @@ subroutine kcw_allocate_q
   ALLOCATE (dpsi(npwx*npol,nbnd))
   ALLOCATE (dmuxc(dfftp%nnr,nspin_mag,nspin_mag))
   !
-  CALL allocate_bec_type ( nkb, nbnd, becp )
-  IF (okvan) THEN
-     ALLOCATE (eigqts(nat))
-     ALLOCATE (becp1(nksq))
-     DO ik = 1,nksq
-        CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
+  IF (noncolin.AND.domag) THEN
+     ALLOCATE (becpt(nksq))
+     ALLOCATE (alphapt(3,nksq))
+     DO ik=1,nksq
+        CALL allocate_bec_type ( nkb, nbnd, becpt(ik) )
+        DO ipol=1,3
+           CALL allocate_bec_type ( nkb, nbnd, alphapt(ipol,ik) )
+        ENDDO
      ENDDO
   ENDIF
+  CALL allocate_bec_type ( nkb, nbnd, becp )
+  ALLOCATE (eigqts(nat))
+  ALLOCATE (becp1(nksq))
+  DO ik = 1,nksq
+     CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
+  ENDDO
   !
   RETURN
   !

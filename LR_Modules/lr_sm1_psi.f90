@@ -46,7 +46,9 @@ SUBROUTINE lr_sm1_psi (ik, lda, n, m, psi, spsi)
   CALL start_clock( 'lr_sm1_psi' )
   !
   IF ( gamma_only ) THEN
+     !$acc data present_or_copyin(psi) present_or_copyout(spsi)     
      CALL sm1_psi_gamma()
+     !$acc end data
   ELSEIF (noncolin) THEN
      CALL sm1_psi_nc()
   ELSE
@@ -74,6 +76,11 @@ CONTAINS
                          calbec_rs_gamma, add_vuspsir_gamma,        &
                          v_loc_psir, s_psir_gamma
     USE lrus,     ONLY : bbg
+    USE uspp,             ONLY : vkb
+#if defined(__CUDA)
+    USE cublas
+#endif
+
     !
     IMPLICIT NONE
     !
@@ -83,9 +90,15 @@ CONTAINS
     ! counters
     REAL(DP), ALLOCATABLE :: ps(:,:)
     !
+    !
     ! Initialize spsi : spsi = psi
     !
-    CALL ZCOPY( lda * npol * m, psi, 1, spsi, 1 )
+!    !$acc data present(psi,spsi)
+    !
+    !$acc kernels
+    spsi(:,:) = psi(:,:)
+    !$acc end kernels 
+    !!CALL ZCOPY( lda * npol * m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
@@ -97,7 +110,7 @@ CONTAINS
        ENDDO
        !
     ELSE
-    CALL calbec(n,vkb,psi,becp,m)
+       CALL calbec(n,vkb,psi,becp,m)
     ENDIF
     !
     ! Use the array ps as a workspace
@@ -114,8 +127,13 @@ CONTAINS
     !
     ! Step 2 : |spsi> = S^{-1} * |psi> = |psi> + ps * |beta>
     !
+    !$acc enter data copyin(ps)
+    !$acc host_data use_device(vkb, ps, spsi)
     call DGEMM('N','N',2*n,m,nkb,1.d0,vkb,2*lda,ps,nkb,1.d0,spsi,2*lda)
+    !$acc end host_data
     !
+    !$acc exit data delete(ps)
+!    !$acc end data
     DEALLOCATE(ps)
     !
     RETURN

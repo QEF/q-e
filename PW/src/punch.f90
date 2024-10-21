@@ -43,8 +43,6 @@ SUBROUTINE punch( what )
   USE rism3d_facade,        ONLY : lrism3d, rism3d_write_to_restart
   USE solvmol,              ONLY : nsolV
   !
-  USE wavefunctions_gpum,   ONLY : using_evc
-  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
@@ -163,7 +161,6 @@ SUBROUTINE punch( what )
      ! ... (if disk_io='low' no file is open, must be opened and closed here)
      !
      IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-     CALL using_evc(0)
      CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      WRITE( stdout, '(" distributed wavefunctions")', ADVANCE ='NO' )

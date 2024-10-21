@@ -124,6 +124,16 @@ The following features of the code are tested:
 - LSDA stress
 - non-scf calculation
 
+###########################
+# pw_libxc : O, Si and CH #
+###########################
+The following features of the code are tested:
+- Libxc initialization in PW
+- Libxc LDA (pz)
+- Libxc GGA (pbe)
+- Libxc hyb-GGA (hse)
+- Libxc metaGGA (tpss)
+
 ###############
 # pw_md : Si  #
 ###############
@@ -449,6 +459,10 @@ The following features of the code are tested:
 - Test anisotropic Eliashberg superconductivity (epw2.in)
 - Test anisotropic Eliashberg superconductivity restart from interrupted q-point while writing ephmat using 'restart.fmt' (epw3.in)
 - Test anisotropic Eliashberg superconductivity restart by reading ephmat files (after writing ephmat files) (epw4.in)
+- Test isotropic Eliashberg superconductivity with linearized Eliashberg equation (epw5.in)
+- Test anisotropic Eliashberg superconductivity (FBW) (epw6.in)
+- Test anisotropic Eliashberg superconductivity (FBW) using sparse-ir sampling (epw7.in)
+- Test anisotropic Eliashberg superconductivity (FBW) with outer bands using sparse-ir sampling (epw8.in)
 
 #################
 # epw_trev: SiC #
@@ -500,3 +514,10 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of screening coefficients for MLWF
 - Calculation of KI@Wann eigenvalues
+
+##################################
+# kcw-nc-wann-nc : Si FCC NC SOC #
+##################################
+The following features of the code are tested:
+- Calculation of non-collinear screening coefficients for MLWF
+- Calculation of non-collinear KI@Wann eigenvalues

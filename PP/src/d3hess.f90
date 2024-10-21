@@ -22,15 +22,6 @@ program d3hess
   CHARACTER(len=256) :: filhess, outdir
   LOGICAL :: needwf = .FALSE.
   !
-  INTEGER :: iat, jat, ixyz, jxyz, irep, jrep, krep, i,j
-  INTEGER :: nnat, nrep, nhess, nsize
-  INTEGER :: rep_cn(3), rep_vdw(3), rep_hes(3)
-  REAL(DP) :: latvecs(3,3)
-  CHARACTER(LEN=256):: dft_ , formt
-  INTEGER, ALLOCATABLE  :: atnum(:)
-  REAL(DP), ALLOCATABLE :: xyz(:,:), buffer(:)
-  REAL(DP), ALLOCATABLE :: force_d3(:,:), hess_d3(:,:,:,:,:,:,:)
-  !
   NAMELIST /input/ prefix, outdir, step, q_gamma, filhess, debug
   !
   ! Initialize environment

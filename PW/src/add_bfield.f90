@@ -109,7 +109,10 @@ SUBROUTINE add_bfield( v, rho )
         !
         DO ir = 1, dfftp%nnr
            IF (pointlist(ir) == 0 ) CYCLE
-           fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+           ! The omega/(n1*n2*n3) factor had no justification and has been
+           ! removed after v.7.3.1 - Noticed by Tae Yun Kim
+           ! fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+           fact = 2.D0*lambda*factlist(ir)
            DO ipol = 1,3
               v(ir,ipol+1) = v(ir,ipol+1) + fact*m2(ipol,pointlist(ir))
            ENDDO       ! ipol
@@ -119,7 +122,8 @@ SUBROUTINE add_bfield( v, rho )
         !
         DO ir = 1, dfftp%nnr
            IF (pointlist(ir) == 0 ) CYCLE
-           fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+           ! As above: factor omega/(n1*n2*n3) removed
+           fact = 2.D0*lambda*factlist(ir)
            v(ir,1) = v(ir,1) + fact*m2(1,pointlist(ir))
            v(ir,2) = v(ir,2) - fact*m2(1,pointlist(ir))
         ENDDO      ! points

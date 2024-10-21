@@ -1,0 +1,645 @@
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.5.9 starts on 20Aug2024 at 15:29: 0 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       8
+     181962 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from epw5.in
+
+     WARNING: The specified dis_win_min is ignored.
+              You should instead use bands_skipped = 'exclude_bands = ...'
+              to control the lower bound of band manifold.
+     WARNING: The use of etf_mem == 3 has been tested and validated for cubic and hexagonal materials.
+              For other materials, use with care and possibly use etf_mem == 1.
+
+     Reading supplied temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+ 
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+
+     -------------------------------------------------------------------
+     Using bn.ukk from disk
+     -------------------------------------------------------------------
+
+     
+     ------------------------------------ 
+     Quadrupole tensor is correctly read: 
+     ------------------------------------ 
+     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy
+       1        x       0.00000   0.00000   0.00000   3.00000   0.00000   0.00000
+       1        y       0.00000   0.00000   0.00000   0.00000   3.00000   0.00000
+       1        z       0.00000   0.00000   0.00000   0.00000   0.00000   3.00000
+       2        x       0.00000   0.00000   0.00000  -1.00000   0.00000   0.00000
+       2        y       0.00000   0.00000   0.00000   0.00000  -1.00000   0.00000
+       2        z       0.00000   0.00000   0.00000   0.00000   0.00000  -1.00000
+     
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          24
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Computes the analytic long-range interaction for polar materials [lpolar]
+      
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =       192Mb
+                   VmPeak =      3943Mb
+     ===================================================================
+     
+     Number of k-points inside fsthick * 1.2 in the full BZ:       712
+     Size of k point mesh for interpolation:        108
+     Max number of k points per pool:               14
+
+     Fermi energy coarse grid =  11.817695 eV
+
+     ===================================================================
+
+     Fermi energy is read from the input file: Ef =  11.246840 eV
+
+     ===================================================================
+
+     Skipping    1 occupied bands:
+
+     The Fermi level will be determined with   6.00000 electrons
+
+              ibndmin =     1  ebndmin =    10.847 eV
+              ibndmax =     3  ebndmax =    11.624 eV
+
+
+     Number of ep-matrix elements per pool :          378 ~=    2.95 Kb (@ 8 bytes/ DP)
+
+     File ./Fepmatkq1/bn.epmatkq1_0 deleted, as requested
+
+     File ./Fsparse/sparse_0 deleted, as requested
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     Number selected, total           1000           1615
+     Number selected, total           2000           6837
+     We only need to compute     2700 q-points
+      
+      
+     Low-frequency (static) dielectric tensor for ionized-impurity scattering
+             15.1699486370   -0.0000000000   -0.0000000000
+             -0.0000000000   15.1699486370    0.0000000000
+             -0.0000000000    0.0000000000   15.1699486370
+      
+     Valence band maximum    =  11.767174 eV
+
+     Temperature  300.000 K
+     Mobility VB Fermi level =  12.223613 eV
+     Calculation of thermal Thomas-Fermi screening: use with care
+     itemp=    1
+     q_tf (au^-1) =     0.0000359452690063
+
+     ===================================================================
+     Scattering rate for IBTE
+     ===================================================================
+
+
+     ===================================================================
+     Including ionized impurity scattering
+     Using an ionized impurity density of 0.10000000E+18
+     ===================================================================
+
+     Restart and restart_step inputs deactivated (restart point at every q-points).
+     No intermediate mobility will be shown.
+
+     Fermi Surface thickness =   0.400000 eV
+     This is computed with respect to the fine Fermi level  11.246840 eV
+     Only states between  10.846840 eV and  11.646840 eV will be included
+
+     Save matrix elements larger than threshold:   0.173611111111E-24
+      
+
+     ===================================================================
+     Including grain boundary scattering, grain size     100.00 nm
+     ===================================================================
+
+     Progression iq (fine) =       1000/      2700
+       Adaptative smearing el-ph = Min:    48.109905 meV
+                                   Max:   364.221414 meV
+       Adaptative smearing el-imp = Min:    42.841984 meV
+                                    Max:   368.047891 meV
+     Progression iq (fine) =       2000/      2700
+       Adaptative smearing el-ph = Min:    32.306802 meV
+                                   Max:   365.837643 meV
+       Adaptative smearing el-imp = Min:    32.753228 meV
+                                    Max:   372.243295 meV
+      300.000     12.2236       0.999995E+13
+      
+     epmatkqread automatically changed to .TRUE. as all scattering have been computed.
+      
+     ===================================================================
+     Memory usage:  VmHWM =       221Mb
+                   VmPeak =      4080Mb
+     ===================================================================
+
+     Number of elements per core       3379
+     Symmetry mapping finished
+      
+     =============================================================================================
+     BTE in the self-energy relaxation time approximation (SERTA)
+     =============================================================================================
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.39655E-22    0.160105E+03   -0.145338E-18    0.831950E-19
+                                       0.50088E-25    0.101794E-17    0.160105E+03   -0.709598E-16
+                                      -0.23934E-22    0.124647E-17   -0.721231E-16    0.160105E+03
+      
+     =============================================================================================
+     Start solving iterative Boltzmann Transport Equation
+     =============================================================================================
+
+     Iteration number:         1
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.26264E-22    0.188920E+03   -0.908801E-17   -0.369274E-18
+                                      -0.20517E-24   -0.101062E-16    0.188920E+03    0.212757E-15
+                                      -0.19710E-24   -0.364588E-19    0.213970E-15    0.188920E+03
+
+                                                      0.188920E+03    Max error
+     Iteration number:         2
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.79203E-22    0.198377E+03   -0.883411E-17    0.142693E-18
+                                      -0.52920E-22    0.872484E-17    0.198377E+03    0.177659E-15
+                                      -0.46120E-22    0.527250E-18   -0.325753E-15    0.198377E+03
+
+                                                      0.945746E+01    Max error
+     Iteration number:         3
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.20559E-24    0.200583E+03    0.908836E-17   -0.179415E-16
+                                       0.18578E-24   -0.836075E-17    0.200583E+03   -0.251702E-15
+                                      -0.14439E-23    0.527605E-18   -0.120545E-15    0.200583E+03
+
+                                                      0.220592E+01    Max error
+     Iteration number:         4
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.20963E-24    0.201243E+03    0.326958E-18   -0.138883E-16
+                                       0.14540E-25   -0.725626E-19    0.201243E+03    0.186375E-15
+                                       0.14395E-23   -0.140867E-16   -0.260682E-15    0.201243E+03
+
+                                                      0.660143E+00    Max error
+     Iteration number:         5
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.20439E-24    0.201408E+03    0.966979E-17   -0.136625E-16
+                                      -0.40875E-24    0.290676E-18    0.201408E+03    0.111694E-15
+                                      -0.18620E-23    0.528970E-17    0.325790E-15    0.201408E+03
+
+                                                      0.164784E+00    Max error
+     Iteration number:         6
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.26678E-22    0.201455E+03   -0.897916E-17    0.136946E-16
+                                       0.22650E-25    0.218256E-18    0.201455E+03    0.111520E-15
+                                      -0.11373E-22   -0.443514E-17    0.344293E-15    0.201455E+03
+
+                                                      0.470562E-01    Max error
+     Iteration number:         7
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.52889E-22    0.201467E+03    0.604939E-15    0.945103E-17
+                                       0.64617E-25   -0.916107E-17    0.201467E+03    0.102539E-15
+                                       0.43005E-22   -0.937881E-17   -0.307141E-15    0.201467E+03
+
+                                                      0.121766E-01    Max error
+     Iteration number:         8
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.79356E-22    0.201471E+03    0.181833E-18    0.318982E-16
+                                       0.52993E-22   -0.945444E-18    0.201471E+03    0.934721E-16
+                                       0.46325E-22   -0.521629E-17   -0.112220E-15    0.201471E+03
+
+                                                      0.338986E-02    Max error
+     Iteration number:         9
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.26678E-22    0.201472E+03    0.690907E-18    0.144881E-16
+                                      -0.12918E-25    0.130826E-17    0.201472E+03    0.924292E-16
+                                      -0.47547E-23   -0.232656E-16   -0.739049E-16    0.201472E+03
+
+                                                      0.894312E-03    Max error
+     Iteration number:        10
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.79667E-22    0.201472E+03    0.106511E-16    0.140984E-16
+                                      -0.74308E-25    0.101815E-17    0.201472E+03    0.927368E-16
+                                       0.43116E-22   -0.465306E-17    0.284638E-16    0.201472E+03
+
+                                                      0.245548E-03    Max error
+     Iteration number:        11
+     =============================================================================================
+     The iteration reached the maximum but did not converge.
+     =============================================================================================
+
+      
+     =============================================================================================
+     BTE in the SERTA with B-field
+     =============================================================================================
+     Number of contributing elements for the master core      81096
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.39733E-22    0.160105E+03    0.350869E-03    0.536098E-14
+                                       0.34422E-21   -0.350869E-03    0.160105E+03    0.523460E-15
+                                       0.67550E-22   -0.552417E-14    0.356881E-14    0.160105E+03
+
+                                                      0.413665E+02    Max error
+      
+     =============================================================================================
+     Start solving iterative Boltzmann Transport Equation with B-field
+     =============================================================================================
+
+     Iteration number:         1
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.52980E-22    0.188920E+03    0.410804E-03    0.774231E-14
+                                      -0.29123E-21   -0.410804E-03    0.188920E+03    0.371266E-15
+                                      -0.78534E-23    0.429466E-14    0.927064E-15    0.188920E+03
+
+                                                      0.288145E+02    Max error
+      
+     Iteration number:         2
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.10576E-21    0.198377E+03    0.572560E-03    0.594722E-14
+                                      -0.29136E-21   -0.572560E-03    0.198377E+03   -0.371786E-14
+                                      -0.59755E-22    0.193071E-14    0.600366E-15    0.198377E+03
+
+                                                      0.945746E+01    Max error
+      
+     Iteration number:         3
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.26321E-22    0.200583E+03    0.608676E-03    0.656101E-14
+                                      -0.37035E-21   -0.608676E-03    0.200583E+03    0.749076E-15
+                                      -0.35049E-22   -0.108488E-14    0.208395E-14    0.200583E+03
+
+                                                      0.220592E+01    Max error
+      
+     Iteration number:         4
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.26368E-22    0.201243E+03    0.625740E-03    0.119634E-14
+                                       0.35056E-24   -0.625740E-03    0.201243E+03    0.352236E-14
+                                      -0.12573E-21    0.744585E-15    0.159503E-14    0.201243E+03
+
+                                                      0.660143E+00    Max error
+      
+     Iteration number:         5
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.14015E-24    0.201408E+03    0.630510E-03    0.654536E-14
+                                      -0.79519E-22   -0.630510E-03    0.201408E+03   -0.479251E-14
+                                      -0.18409E-21   -0.479229E-15   -0.707505E-14    0.201408E+03
+
+                                                      0.164784E+00    Max error
+      
+     Iteration number:         6
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.17690E-24    0.201455E+03    0.632144E-03   -0.297774E-14
+                                       0.13261E-21   -0.632144E-03    0.201455E+03    0.123830E-14
+                                       0.69640E-22    0.371753E-14   -0.183841E-14    0.201455E+03
+
+                                                      0.470562E-01    Max error
+      
+     Iteration number:         7
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.26675E-22    0.201467E+03    0.632631E-03    0.297836E-14
+                                       0.53419E-22   -0.632631E-03    0.201467E+03    0.758382E-15
+                                      -0.32483E-21    0.492247E-14   -0.329050E-14    0.201467E+03
+
+                                                      0.121766E-01    Max error
+      
+     Iteration number:         8
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.26357E-22    0.201471E+03    0.632781E-03   -0.351225E-14
+                                       0.13238E-21   -0.632781E-03    0.201471E+03    0.417030E-14
+                                      -0.91777E-22    0.668633E-14    0.395945E-14    0.201471E+03
+
+                                                      0.338986E-02    Max error
+      
+     Iteration number:         9
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13  -0.13225E-21    0.201472E+03    0.632826E-03    0.237709E-14
+                                       0.26153E-22   -0.632826E-03    0.201472E+03    0.469854E-15
+                                       0.19219E-21    0.135923E-14    0.218114E-14    0.201472E+03
+
+                                                      0.894312E-03    Max error
+      
+     Iteration number:        10
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.2236   0.99999E+13   0.26461E-21    0.201472E+03    0.632840E-03   -0.360682E-14
+                                       0.31842E-21   -0.632840E-03    0.201472E+03   -0.409334E-14
+                                       0.25440E-22    0.254521E-14    0.218151E-14    0.201472E+03
+
+                                                      0.245548E-03    Max error
+      
+     Iteration number:        11
+     =============================================================================================
+     The iteration reached the maximum but did not converge.
+     =============================================================================================
+
+
+     =============================================================================================
+     Summary and Hall factor
+     =============================================================================================
+
+     =============================================================================================
+     BTE in the self-energy relaxation time approximation (SERTA)
+     =============================================================================================
+      
+     Temperature:   300.0000 K
+     Conductivity tensor without magnetic field | with magnetic field [Siemens/m]
+       0.25652E-01  -0.23286E-22   0.13329E-22  |   0.25652E-01   0.56215E-07   0.85892E-18
+       0.16309E-21   0.25652E-01  -0.11369E-19  |  -0.56215E-07   0.25652E-01   0.83867E-19
+       0.19971E-21  -0.11555E-19   0.25652E-01  |  -0.88507E-18   0.57178E-18   0.25652E-01
+     Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]
+       0.16011E+03  -0.14534E-18   0.83195E-19  |  -0.65993E-07   0.58192E+02   0.88911E-09
+       0.10179E-17   0.16011E+03  -0.70960E-16  |  -0.58192E+02  -0.70707E-07   0.98586E-10
+       0.12465E-17  -0.72123E-16   0.16011E+03  |  -0.91640E-09   0.60386E-09  -0.32997E-07
+     Hall factor
+      -0.412186E-09    0.363462E+00    0.555331E-11
+      -0.363462E+00   -0.441628E-09    0.615756E-12
+      -0.572374E-11    0.377162E-11   -0.206093E-09
+
+     =============================================================================================
+     BTE
+     =============================================================================================
+      
+     Temperature:   300.0000 K
+     Conductivity tensor without magnetic field | with magnetic field [Siemens/m]
+       0.32279E-01   0.17065E-20   0.22588E-20  |   0.32279E-01   0.10139E-06  -0.57787E-18
+       0.16312E-21   0.32279E-01   0.14858E-19  |  -0.10139E-06   0.32279E-01  -0.65582E-18
+      -0.74550E-21   0.45604E-20   0.32279E-01  |   0.40779E-18   0.34951E-18   0.32279E-01
+     Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]
+       0.20147E+03   0.10651E-16   0.14098E-16  |  -0.20690E-03   0.83408E+02  -0.47723E-09
+       0.10181E-17   0.20147E+03   0.92737E-16  |  -0.83408E+02  -0.20691E-03  -0.55172E-09
+      -0.46531E-17   0.28464E-16   0.20147E+03  |   0.33607E-09   0.28377E-09   0.78290E-06
+     Hall factor
+      -0.102694E-05    0.413991E+00   -0.236874E-11
+      -0.413991E+00   -0.102700E-05   -0.273845E-11
+       0.166807E-11    0.140848E-11    0.388592E-08
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.01s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ep-interp    :      2.36s CPU     11.54s WALL (    2700 calls)
+
+     wigner_seitz :      0.00s CPU      0.00s WALL (       1 calls)
+     DynW2B       :      0.10s CPU      0.27s WALL (    2701 calls)
+     HamW2B       :      0.14s CPU      0.29s WALL (   38875 calls)
+     ephW2Bp      :      0.17s CPU      0.47s WALL (    2700 calls)
+     ephW2B       :      0.13s CPU      0.21s WALL (    2920 calls)
+     vmeW2B       :      0.04s CPU      0.07s WALL (    5842 calls)
+     vmeW2Bp      :      0.09s CPU      0.20s WALL (    2700 calls)
+     rgd_blk_epw  :      0.12s CPU      0.19s WALL (    2920 calls)
+     print_ibte   :      1.60s CPU      9.88s WALL (    2700 calls)
+
+
+     Total program execution
+     EPW          :      2.59s CPU     11.79s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [lpolar] input,     please consider also citing                        
+       C. Verdi and F. Giustino, Phys. Rev. Lett. 115, 176401 (2015)                         
+     % Since you used the quadrupole.fmt file, please consider also citing                 
+       S. Ponc\'e et al, Phys. Rev. Res. 4, 143022 (2021)                                  
+       S. Ponc\'e et al. Phys. Rev. B 107, 155424 (2023)                                   
+                                                                                             
+     % Since you used the [scattering/iterative_bte] input,     please consider also citing      
+       S. Ponc\'e, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)             
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                             
+     % Since you used the [bfield] input,     please consider also citing                        
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+       S. Ponc\'e et al, Phys. Rev. Res. 4, 143022 (2021)                                    
+                                                                                             
+     % Since you used the [adapt_smearing] input,     please consider also citing            
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                             
+     % Since you used the [ii_scattering] input,     please consider also citing             
+       J. Leveillee et al, Phys. Rev. B 107, 125207 (2023)                                   
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

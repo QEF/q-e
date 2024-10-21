@@ -67,12 +67,11 @@ program all_currents
 
    use wvfct, only: nbnd, npw, npwx
    use wavefunctions, only: psic, evc
-   use gvect, only: g, ngm, gstart, gg, igtongl, gl, ngl
+   use gvect, only: ecutrho, g, ngm, gstart, gg, igtongl, gl, ngl
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at, bg
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
    use uspp_param, ONLY: upf, nh, nbetam
-   use uspp_data, only: dq, nqxq
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
@@ -81,7 +80,10 @@ program all_currents
    use test_h_psi, only: init_test
 
    implicit none
-
+   ! next two variables used for interpolation tables
+   real(dp), parameter :: dq = 0.01_dp
+   integer :: nqxq
+   !
    type J_all
       !holds all the result calculated by this program
       real(dp) :: i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
@@ -265,6 +267,8 @@ program all_currents
    call allocate_zero() ! only once per all trajectory
    ! current zero (pseudopotential part) quantities that do not depend on the positions/velocities but only on the cell and atomic types
    allocate (H_g(ngm, 3, 3, nsp))
+   ! FIXME: is the following the correct value?
+   nqxq = NINT( SQRT(ecutrho) / dq + 4) 
    allocate (tabr(nqxq, nbetam, nsp, 3))
    call init_zero(tabr, H_g, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                   ngm, gg, gstart, g, igtongl, gl, ngl, dq, &

@@ -10,14 +10,6 @@ MODULE kind_l
 !------------------------------------------------------------------------
 !! Double precision in xc_lib.
 !
-! #if defined(__MPI)
-! #if defined(__MPI_MODULE)
-!   USE mpi
-! #else
-!   INCLUDE 'mpif.h'
-  ! #endif
-  ! #endif
-  !
   IMPLICIT NONE
   SAVE
   INTEGER, PARAMETER :: DP = SELECTED_REAL_KIND(14,200)

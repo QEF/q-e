@@ -43,6 +43,13 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
 
     namelist INPUTPP {
 
+        var title -type CHARACTER {
+            default {' '}
+            info {
+                reprinted on output, CUB files and other places
+            }
+        }
+
         var prefix -type CHARACTER {
             info { 
                 prefix of files saved by program pw.x 

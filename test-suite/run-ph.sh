@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2001 Quantum ESPRESSO
+# Copyright (C) 2024 Quantum ESPRESSO
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,19 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "11" ]] 
+then 
+  if [[ -e CRASH ]] 
+  then
+    cat CRASH > $3 
+  else
+    echo "Running PH ..."
+    ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+    if [[ -e CRASH ]]
+    then 
+      cat $3 
+    fi 
+  fi 
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
@@ -90,5 +103,9 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "9" ]]
+then 
+   echo "Running DYNMAT ... " 
+   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dynmat.x < $2 > $3 2> $4  
 fi
 

@@ -47,7 +47,7 @@
   - set the correct value of nsp in uspp_param when allocate_uspp is called,
     use it ONLY inside upflib, remove link of nsp in ions_base to uspp_param
 
-  - nh(:) is allocated in init_uspp_dims, but maybe it should allocated
+  - nh(:) is allocated in init_uspp_dims, but maybe it should be allocated
     together with upf(:), when upf is read. Or even better (but annoying
     to do): nh should be part of upf, since it is an atomic quantity?
 
@@ -55,6 +55,9 @@
     and should be used to dimension arrays where l=0,...,L. 
     The dimension of spherical harmonics (lmaxq+1)^2 might be stored
     in another variable, something like ylmdim, or maxlm
+
+  - Interpolation tables: collect atomic wavefunction stuff from init_tab_atwfc
+    and interpolate_atwfc into module atwfc_mod.f90
 
   - Interpolation tables: rationalize names of variables and related routines
 ```

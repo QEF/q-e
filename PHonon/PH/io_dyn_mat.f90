@@ -200,9 +200,10 @@ MODULE io_dyn_mat
     END SUBROUTINE write_dyn_mat_tail
 
     !----------------------------------------------------------------------------
-    SUBROUTINE write_ifc(nr1, nr2, nr3, nat, phid, phid_lr)
+    SUBROUTINE write_ifc(alph, nr1, nr2, nr3, nat, phid, phid_lr)
     !----------------------------------------------------------------------------
     !
+    REAL(dp) , INTENT(IN) :: alph
     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
     COMPLEX(DP), INTENT(IN) :: phid(nr1*nr2*nr3,3,3,nat,nat)
     COMPLEX(DP), INTENT(IN), OPTIONAL :: phid_lr(nr1*nr2*nr3,3,3,nat,nat)
@@ -218,6 +219,7 @@ MODULE io_dyn_mat
     meshfft(3)=nr3
     CALL xmlw_opentag( "INTERATOMIC_FORCE_CONSTANTS" )
     CALL xmlw_writetag( "MESH_NQ1_NQ2_NQ3", meshfft )
+    CALL xmlw_writetag( "alpha_ewald", alph )
 
     DO na=1,nat
        DO nb=1,nat
@@ -274,6 +276,7 @@ MODULE io_dyn_mat
          CALL errore('read_dyn_mat_param', 'error opening the dyn mat file ',1)
     !
     IF (ionode) THEN
+      CALL xmlr_opentag( "Root")
       CALL xmlr_opentag( "GEOMETRY_INFO")
       CALL xmlr_readtag( "NUMBER_OF_TYPES", ntyp)
       CALL xmlr_readtag( "NUMBER_OF_ATOMS", nat)
@@ -530,6 +533,7 @@ MODULE io_dyn_mat
         END DO
         CALL xmlr_closetag() ! FREQUENCIES_THZ_CMM1
       ENDIF
+      CALL xmlr_closetag() ! Root
       CALL xml_closefile()
     ENDIF
     IF (PRESENT(omega)) CALL mp_bcast(omega, ionode_id, intra_image_comm)
@@ -574,7 +578,7 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     ! 
     !----------------------------------------------------------------------------
-    SUBROUTINE read_ifc(nr1, nr2, nr3, nat, phid, phid_lr)
+    SUBROUTINE read_ifc(alph, nr1, nr2, nr3, nat, phid, phid_lr)
     !----------------------------------------------------------------------------
     !! Read IFC in XML format.
     !
@@ -587,6 +591,8 @@ MODULE io_dyn_mat
     !! Grid size
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
+    REAL(KIND = DP), INTENT(out) :: alph
+    !! Ewald alpha used to subtract out the long-range term
     REAL(KIND = DP), INTENT(out) :: phid(nr1*nr2*nr3,3,3,nat,nat)
     !! Interatomic force constant in real-space
     REAL(KIND = DP), INTENT(out), OPTIONAL :: phid_lr(nr1 * nr2 * nr3, 3, 3, nat, nat)
@@ -603,6 +609,8 @@ MODULE io_dyn_mat
     ! 
     IF (ionode) THEN
       CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS", ierr)
+      CALL xmlr_readtag( "alpha_ewald", alph, ierr )
+      IF ( ierr /= 0 .or. alph < 1.0D-8 ) alph = 1.0_dp ! for back-compatibility
       DO na = 1, nat
         DO nb = 1, nat
           nn = 0
@@ -624,10 +632,10 @@ MODULE io_dyn_mat
           ENDDO ! m3
         ENDDO ! nb
       ENDDO ! na
-      CALL xmlr_closetag( )
       CALL xmlr_closetag( ) ! Root
       CALL xml_closefile( )
     ENDIF
+    CALL mp_bcast(alph, ionode_id, intra_image_comm)
     CALL mp_bcast(phid, ionode_id, intra_image_comm)
     IF ( PRESENT(phid_lr) ) CALL mp_bcast(phid_lr, ionode_id, intra_image_comm)
     RETURN

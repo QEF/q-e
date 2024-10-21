@@ -111,7 +111,7 @@ PROGRAM average
   REAL(DP) :: leng
   REAL(DP), ALLOCATABLE :: taus (:,:)
   INTEGER, ALLOCATABLE :: ityps (:)
-  CHARACTER (len=3) :: atms(ntypx)
+  CHARACTER (len=6) :: atms(ntypx)
 
   INTEGER :: nfft, nfftx, idir
 

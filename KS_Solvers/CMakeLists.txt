@@ -102,6 +102,7 @@ qe_add_library(qe_kssolver_cg ${src_cg})
 target_link_libraries(qe_kssolver_cg
     PRIVATE
         qe_lax
+        qe_openacc_fortran
         qe_utilx
         qe_mpi_fortran
         qe_devxlib)
@@ -110,6 +111,7 @@ qe_add_library(qe_kssolver_ppcg ${src_ppcg})
 target_link_libraries(qe_kssolver_ppcg
     PRIVATE
         qe_scalapack
+        qe_openacc_fortran
         qe_openmp_fortran
         qe_lax
         qe_utilx
@@ -147,6 +149,7 @@ qe_add_library(qe_kssolver_rmmdiis ${src_rmmdiis})
 target_link_libraries(qe_kssolver_rmmdiis
     PRIVATE
 	qe_lax
+        qe_openacc_fortran
         qe_utilx
 	qe_devxlib
         qe_mpi_fortran )  

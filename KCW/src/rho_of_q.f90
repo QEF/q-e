@@ -24,8 +24,8 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
   USE control_kcw,          ONLY : evc0, iuwfc_wann, iuwfc_wann_allk, spin_component, num_wann
   USE buffers,              ONLY : get_buffer, save_buffer
   USE wvfct,                ONLY : npwx !, wg
-  USE noncollin_module,     ONLY : npol
-  USE control_kcw,          ONLY : map_ikq, shift_1bz
+  USE noncollin_module,     ONLY : npol,nspin_mag
+  USE control_kcw,          ONLY : map_ikq, shift_1bz, nrho
   USE cell_base,            ONLY : at
   USE mp_pools,             ONLY : inter_pool_comm
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -40,10 +40,10 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
   INTEGER :: ik, ikq, npw_k, npw_kq
   !! Counter for the k/q points in the BZ, total number of q points and number of pw for a given k (k+q) point
   !
-  INTEGER :: iband, lrwfc 
+  INTEGER :: iband, lrwfc, nkstot_eff
   !! Band counter
   !
-  COMPLEX(DP), INTENT(OUT) :: rhowann(dffts%nnr, num_wann)
+  COMPLEX(DP), INTENT(OUT) :: rhowann(dffts%nnr, num_wann,nrho)
   !! The periodic part of the wannier orbital density
   !
   COMPLEX(DP) ::  evc0_kq(npwx*npol, num_wann)
@@ -52,16 +52,16 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
   REAL(DP) :: g_vect(3), xk_(3)
   !! G vector that shift the k+q inside the 1BZ
   !
-  COMPLEX(DP) :: evc_k_g (npwx*npol), evc_k_r (dffts%nnr), phase(dffts%nnr)
+  COMPLEX(DP) :: evc_k_g (npwx*npol), evc_k_r (dffts%nnr,npol), phase(dffts%nnr)
   !! Auxiliary wfc in reciprocal and real space, the phase associated to the hift k+q-> k'
   !
-  COMPLEX(DP) :: evc_kq_g (npwx*npol), evc_kq_r (dffts%nnr)
+  COMPLEX(DP) :: evc_kq_g (npwx*npol), evc_kq_r (dffts%nnr,npol)
   !! Auxiliary wfc in reciprocal and real space
   !
   INTEGER, EXTERNAL :: global_kpoint_index
   !! The global index of k-points
   !
-  INTEGER :: global_ik, ik_eff
+  INTEGER :: global_ik, ik_eff, ip, ipp
   !
   INTEGER, INTENT(IN) :: &
        igk_k_all(npwx,nkstot),&    ! index of G corresponding to a given index of k+G
@@ -74,6 +74,11 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
 #endif
   !  
   CALL start_clock ( 'rho_of_q' )
+  IF (nspin == 4) THEN
+    nkstot_eff = nkstot
+  ELSE
+    nkstot_eff = nkstot/nspin
+  ENDIF
   DO ik = 1, nks
     ! CHECK: Need to understand/think more about pool parallelization
     ! what happen if k+q is outside the pool??
@@ -91,10 +96,9 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
 #endif
     !
     global_ik = global_kpoint_index (nkstot,ik)
-    global_ik = global_ik - (spin_component -1)*nkstot/nspin
-    lrwfc = num_wann*npwx
-    ik_eff = ik-(spin_component-1)*nkstot/nspin
-    CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
+    global_ik = global_ik - (spin_component -1)*nkstot_eff
+    lrwfc = num_wann*npwx*npol
+    CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik )
     !! ... Retrive the ks function (in the Wannier Gauge)
     !
     ikq = map_ikq(global_ik)
@@ -130,7 +134,7 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
     CALL calculate_phase(g_vect, phase) 
     !! ... Calculate the phase associated to the k+q-> ikq map: exp[ -i(G_bar * r) ]
     !
-    lrwfc = num_wann * npwx 
+    lrwfc = num_wann * npwx * npol
     CALL get_buffer ( evc0_kq, lrwfc, iuwfc_wann_allk, ikq )
     !! ... Retrive the ks function (in the Wannier Gauge): 
     !
@@ -138,7 +142,7 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
        !
        npw_k = ngk(ik)
        evc_k_g(:) =  evc0(:,iband)
-       evc_k_r(:) = ZERO
+       evc_k_r(:,:) = ZERO
        CALL invfft_wave (npw_k, igk_k (1,ik), evc_k_g , evc_k_r )
        !! ... The wfc in R-space at k
        !
@@ -150,7 +154,17 @@ SUBROUTINE rho_of_q (rhowann, ngk_all, igk_k_all)
        ! ... evc_k+q(r) = sum_G exp[iG r] c_(k+q+G) = sum_G exp[iG r] c_k'+G_bar+G 
        !            = exp[-iG_bar r] sum_G' exp[iG'r] c_k'+G' = exp[-iG_bar r] *evc_k'(r)
        !
-       rhowann(:,iband) = rhowann(:,iband) + conjg(evc_k_r(:))*evc_kq_r(:)*phase(:)/(nkstot/nspin) !*wg(iband,ik)
+       DO ip = 1,npol  
+          rhowann(:,iband,1) = rhowann(:,iband,1) + conjg(evc_k_r(:,ip))*evc_kq_r(:,ip)*phase(:)/(nkstot_eff) !*wg(iband,ik)
+       END DO 
+       IF (nspin_mag==4) THEN
+        rhowann(:,iband,2) = rhowann(:,iband,2) + (conjg(evc_k_r(:,1))*evc_kq_r(:,2)+conjg(evc_k_r(:,2)) &
+                *evc_kq_r(:,1))*phase(:)/(nkstot_eff) !*wg(iband,ik)
+        rhowann(:,iband,3) = rhowann(:,iband,3) + CMPLX(0.D0,1.D0, kind=DP)*(conjg(evc_k_r(:,2))*evc_kq_r(:,1)-conjg(evc_k_r(:,1)) &
+                *evc_kq_r(:,2))*phase(:)/(nkstot_eff) !*wg(iband,ik)
+        rhowann(:,iband,4) = rhowann(:,iband,4) + (conjg(evc_k_r(:,1))*evc_kq_r(:,1)-conjg(evc_k_r(:,2)) &
+                *evc_kq_r(:,2))*phase(:)/(nkstot_eff) !*wg(iband,ik)
+       END IF
        ! ... The periodic part of the wannier-orbital density in real space
        ! ... rho_q(r) = sum_k [ evc_k,v(r)* evc_k+q,v(r)] = sum_k [ evc_k,v(r)* evc_k',v(r) exp[-iG_bar r]]
        ! 

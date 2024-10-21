@@ -51,6 +51,10 @@ SUBROUTINE phescf()
      IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, 3))
   ENDIF
   !
+  ! Set symmetry representation in lr_symm_base
+  !
+  CALL ph_set_upert_e()
+  !
   ! DFPT+U: dnsscf in the electric field calculation
   ! is the scf change of atomic occupations ns induced by the electric field.
   ! dnsscf_all_modes = dnsscf because nirr=1, number of perturbations = 3.
@@ -133,6 +137,8 @@ SUBROUTINE phescf()
      IF (okpaw) DEALLOCATE (int3_paw)
      IF (noncolin) DEALLOCATE(int3_nc)
   ENDIF
+  !
+  CALL ph_deallocate_upert()
   !
   ! DFPT+U
   !

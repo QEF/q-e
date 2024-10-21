@@ -5,9 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! TB
-! included deallocation of forcefield of gate 'forcegate'
-!
 !----------------------------------------------------------------------
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
@@ -38,8 +35,8 @@ SUBROUTINE clean_pw( lflag )
   USE symme,                ONLY : sym_rho_deallocate
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE uspp,                 ONLY : deallocate_uspp
-  USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
+  USE atwfc_mod,            ONLY : deallocate_tab_atwfc
   USE m_gth,                ONLY : deallocate_gth
   USE ldaU,                 ONLY : deallocate_hubbard
   USE extfield,             ONLY : forcefield, forcegate
@@ -62,14 +59,10 @@ SUBROUTINE clean_pw( lflag )
   USE exx,                  ONLY : deallocate_exx
   USE Coul_cut_2D,          ONLY : cutoff_2D, lr_Vloc 
   !
-  USE control_flags,        ONLY : ts_vdw, mbd_vdw
+  USE control_flags,        ONLY : ts_vdw, mbd_vdw, use_gpu
   USE tsvdw_module,         ONLY : tsvdw_finalize
   USE libmbd_interface,     ONLY : clean_mbd
   USE dftd3_qe,             ONLY : dftd3_clean
-  !
-  USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
-  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
-  USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
   USE control_flags,        ONLY : sic, scissor
   USE sic_mod,              ONLY : deallocate_sic
@@ -80,6 +73,9 @@ SUBROUTINE clean_pw( lflag )
   USE plugin_flags,         ONLY : use_environ
   USE environ_base_module,  ONLY : clean_environ
 #endif
+#if defined (__CUDA)
+  USE cudafor
+#endif
   !
   IMPLICIT NONE
   !
@@ -88,7 +84,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... local variables
   !
-  INTEGER :: nt, nr1, nr2, nr3
+  INTEGER :: nt, nr1, nr2, nr3, istat
   !
   IF ( lflag ) THEN
      !
@@ -144,8 +140,8 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
   IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
+  !$acc exit data delete(vrs)
   IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
-  CALL deallocate_scf_gpu()
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
@@ -154,9 +150,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( lr_Vloc )   )  DEALLOCATE( lr_Vloc   )
   IF ( ALLOCATED( strf )      )  DEALLOCATE( strf      )
   !
-  ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
-  !
-  CALL deallocate_uspp_data()
+  CALL deallocate_tab_atwfc()
   CALL deallocate_uspp() 
   !
   CALL deallocate_gth( lflag ) 
@@ -167,17 +161,21 @@ SUBROUTINE clean_pw( lflag )
   !
   !$acc exit data delete(g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  CALL deallocate_wvfct_gpu()
+  !$acc exit data delete(et)
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
+  IF ( ALLOCATED( evc ) ) THEN
+#if defined(__CUDA)
+    !$acc exit data delete(evc)
+    IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
+    DEALLOCATE( evc )
+  END IF
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  !
-  CALL deallocate_wavefunctions_gpu()
   !
   ! ... fft structures allocated in data_structure.f90  
   !

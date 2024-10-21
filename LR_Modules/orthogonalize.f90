@@ -29,10 +29,11 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   ! throughout the whole calculation (e.g., as in TDDFPT for k=0). 
   !
   USE kinds,            ONLY : DP
-  USE klist,            ONLY : lgauss, degauss, ngauss, ltetra, wk
+  USE klist,            ONLY : lgauss, degauss, ngauss, ltetra, wk, &
+                               degauss_cond, nelec_cond
   USE noncollin_module, ONLY : noncolin, npol
-  USE wvfct,            ONLY : npwx, nbnd, wg, et
-  USE ener,             ONLY : ef
+  USE wvfct,            ONLY : npwx, nbnd, wg, et, nbnd_cond
+  USE ener,             ONLY : ef, ef_cond
   USE becmod,           ONLY : bec_type, becp, calbec
   USE uspp,             ONLY : vkb, okvan
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
@@ -42,6 +43,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE gvect,            ONLY : gstart
   USE control_lr,       ONLY : alpha_pv, nbnd_occ
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_beta
+  USE two_chem,         ONLY : twochem
 #if defined(__CUDA)
   USE cublas
 #endif
@@ -69,7 +71,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   ALLOCATE(ps(nbnd,nbnd))
   !
-  !$acc data copyin(evq) copy(dvpsi,dpsi) create(ps(1:nbnd, 1:nbnd), ps_r(1:nbnd, 1:nbnd))
+  !$acc data present_or_copyin(evq) present_or_copy(dvpsi,dpsi) create(ps(1:nbnd, 1:nbnd), ps_r(1:nbnd, 1:nbnd))
   IF (gamma_only) THEN
      !$acc kernels
      ps_r(:,:) = 0.0d0
@@ -100,10 +102,34 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         !
         IF ( lgauss ) THEN
            !
-           wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
-           w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
+           IF ( twochem ) THEN
+                   ! 
+                   ! twochem case
+                   !
+                   IF (ibnd.LE.(nbnd-nbnd_cond)) THEN
+                        !
+                        w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
+                        wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
+                   ELSE
+                        w0g = w0gauss((ef_cond-et(ibnd,ikk)) / degauss_cond, ngauss)&
+                                / degauss_cond
+                        wg1 = wgauss ( (ef_cond - et (ibnd, ikk) ) / degauss_cond, ngauss)
+                   END IF
+           ELSE 
+                   wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
+                   w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
+           END IF
            DO jbnd = 1, nbnd
+              !
+              if (twochem) then
+                      if (jbnd.le.nbnd-nbnd_cond) then
+                        wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
+                      else
+                        wgp = wgauss ( (ef_cond - et (jbnd, ikq) ) / degauss_cond, ngauss)
+                      end if
+              else
               wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
+              end if
               deltae = et (jbnd, ikq) - et (ibnd, ikk)
               theta = wgauss (deltae / degauss, 0)
               wwg(jbnd) = wg1 * (1.d0 - theta) + wgp * theta
@@ -215,9 +241,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         end if
      end if
      !
-     !$acc host_data use_device(evq, dpsi)
      CALL s_psi_acc (npwx, npwq, nbnd_eff, evq, dpsi)
-     !$acc end host_data
      !
   ENDIF
   !

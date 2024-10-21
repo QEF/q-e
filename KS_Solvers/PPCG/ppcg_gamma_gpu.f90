@@ -52,6 +52,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE ::  hpsi(:,:), spsi(:,:), w(:,:)
+  COMPLEX(DP), ALLOCATABLE ::  ugly1(:,:), ugly2(:,:)
   COMPLEX(DP)              ::  buffer(npwx,nbnd), buffer1(npwx,nbnd)
   REAL(DP), ALLOCATABLE    ::  K(:,:), K_store(:,:), M(:,:), M_store(:,:), work(:)
   INTEGER,  ALLOCATABLE    ::  iwork(:)
@@ -162,8 +163,27 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   call start_clock('ppcg:hpsi')
   IF ( gstart == 2 ) psi(1,1:nbnd) = CMPLX( DBLE( psi(1,1:nbnd) ), 0.D0, kind=DP)
   psi_d = psi
-  CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )
-  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d)
+!civn: ugly hack (FIXME)
+  allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+  !$acc enter data create(ugly1, ugly2)
+  !$acc kernels
+  ugly1 = psi_d
+  ugly2 = C_ZERO
+  !$acc end kernels
+  CALL h_psi_ptr( npwx, npw, nbnd, ugly1, ugly2 )
+  !$acc kernels
+  hpsi_d(:,:) = ugly2(:,:)
+  ugly2 = C_ZERO
+  !$acc end kernels
+  if (overlap) THEN
+    CALL s_psi_ptr( npwx, npw, nbnd, ugly1, ugly2)
+    !$acc kernels
+    spsi_d = ugly2
+    !$acc end kernels
+  end if
+  !$acc exit data delete(ugly1, ugly2)
+  deallocate( ugly1, ugly2 )
+!civn: FIXME END
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')  
   !
@@ -172,8 +192,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   call gpu_threaded_memset( G_d, ZERO, nbnd*nbnd ) ! G = ZERO
   CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
   if (n_start .le. n_end) &
-  CALL gpu_DGEMM('T','N', nbnd, my_n, npw2, 2.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, 0.D0, G_d(1,n_start), nbnd)
-  IF ( gstart == 2 ) CALL gpu_DGER( nbnd, my_n, -1.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, G_d(1,n_start), nbnd )
+  CALL MYDGEMM('T','N', nbnd, my_n, npw2, 2.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, 0.D0, G_d(1,n_start), nbnd)
+  IF ( gstart == 2 ) CALL MYDGER( nbnd, my_n, -1.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, G_d(1,n_start), nbnd )
   CALL mp_sum( G_d, inter_bgrp_comm )
   CALL mp_sum( G_d, intra_bgrp_comm )
   call stop_clock('ppcg:dgemm')
@@ -184,10 +204,10 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
   CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
   if (overlap) then
      if (n_start .le. n_end) &
-     CALL gpu_DGEMM('N','N',npw2, nbnd, my_n, -ONE, spsi_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, w_d, npwx2)
+     CALL MYDGEMM('N','N',npw2, nbnd, my_n, -ONE, spsi_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, w_d, npwx2)
   else
      if (n_start .le. n_end) &
-     CALL gpu_DGEMM('N','N',npw2, nbnd, my_n, -ONE,  psi_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, w_d, npwx2)
+     CALL MYDGEMM('N','N',npw2, nbnd, my_n, -ONE,  psi_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, w_d, npwx2)
   end if
   CALL mp_sum( w_d, inter_bgrp_comm )
   call stop_clock('ppcg:dgemm')
@@ -241,12 +261,12 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
      CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
      if (overlap) then
         if (n_start .le. n_end) &
-        CALL gpu_DGEMM( 'T','N', my_n, nact, npw2, 2.D0, spsi_d(1,n_start), npwx2, buffer_d, npwx2, 0.D0, G_d(n_start,1), nbnd )
-        IF ( gstart == 2 ) CALL gpu_DGER( my_n, nact, -1.D0, spsi_d(1,n_start), npwx2, buffer_d, npwx2, G_d(n_start,1), nbnd )
+        CALL MYDGEMM( 'T','N', my_n, nact, npw2, 2.D0, spsi_d(1,n_start), npwx2, buffer_d, npwx2, 0.D0, G_d(n_start,1), nbnd )
+        IF ( gstart == 2 ) CALL MYDGER( my_n, nact, -1.D0, spsi_d(1,n_start), npwx2, buffer_d, npwx2, G_d(n_start,1), nbnd )
      else
         if (n_start .le. n_end) &
-        CALL gpu_DGEMM( 'T','N', my_n, nact, npw2, 2.D0, psi_d(1,n_start), npwx2, buffer_d, npwx2, 0.D0, G_d(n_start,1), nbnd )
-        IF ( gstart == 2 ) CALL gpu_DGER( my_n, nact, -1.D0, psi_d(1,n_start), npwx2, buffer_d, npwx2, G_d(n_start,1), nbnd )
+        CALL MYDGEMM( 'T','N', my_n, nact, npw2, 2.D0, psi_d(1,n_start), npwx2, buffer_d, npwx2, 0.D0, G_d(n_start,1), nbnd )
+        IF ( gstart == 2 ) CALL MYDGER( my_n, nact, -1.D0, psi_d(1,n_start), npwx2, buffer_d, npwx2, G_d(n_start,1), nbnd )
      end if
      G = G_d
      CALL mp_sum( G(1:nbnd,1:nact), inter_bgrp_comm )
@@ -258,7 +278,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
      call start_clock('ppcg:dgemm')
      call gpu_threaded_assign( buffer_d, w_d, npwx, nact, .true., act_idx_d, .true. )
      if (n_start .le. n_end) &
-     CALL gpu_DGEMM('N','N', npw2, nact, my_n, -ONE, psi_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
+     CALL MYDGEMM('N','N', npw2, nact, my_n, -ONE, psi_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
      buffer = buffer_d
      CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
      buffer_d = buffer
@@ -275,11 +295,39 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        END DO 
      END IF
      call gpu_threaded_assign( buffer1_d, w_d, npwx, nact, .true., act_idx_d, .false. )
-     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+!civn: ugly hack (FIXME)
+!     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+     allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc enter data create(ugly1, ugly2)
+     !$acc kernels
+     ugly1 = buffer1_d
+     ugly2 = C_ZERO
+     !$acc end kernels
+     CALL h_psi_ptr( npwx, npw, nbnd, ugly1, ugly2 )
+     !$acc kernels
+     buffer_d = ugly2 
+     !$acc end kernels
+     !$acc exit data delete(ugly1, ugly2)
+     deallocate( ugly1, ugly2 )
+!civn: FIXME END
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      call gpu_threaded_backassign( hw_d, act_idx_d, buffer_d, npwx, nact, .false., hw_d )
      if (overlap) then ! ... Compute s*w
-        CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+!civn: ugly hack (FIXME)
+     !CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
+     allocate( ugly1(npwx,nbnd), ugly2(npwx,nbnd) )
+     !$acc enter data create(ugly1, ugly2)
+     !$acc kernels
+     ugly1 = buffer1_d
+     ugly2 = C_ZERO
+     !$acc end kernels
+     CALL s_psi_ptr( npwx, npw, nact, ugly1, ugly2 )
+     !$acc kernels
+     buffer_d = ugly2 
+     !$acc end kernels
+     !$acc exit data delete(ugly1, ugly2)
+     deallocate( ugly1, ugly2 )
+!civn: FIXME END
 !        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
         call gpu_threaded_backassign( sw_d, act_idx_d, buffer_d, npwx, nact, .false., sw_d )
      end if
@@ -300,8 +348,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
         call gpu_threaded_assign( buffer1_d,  p_d, npwx, nact, .true., act_idx_d, .false. )
         CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
         if (n_start .le. n_end) &
-        CALL gpu_DGEMM('T','N', my_n, nact, npw2, 2.D0, buffer_d(1,n_start), npwx2, buffer1_d, npwx2, 0.D0, G_d(n_start,1), nbnd)
-        IF ( gstart == 2 ) CALL gpu_DGER( my_n, nact, -1.D0, buffer_d(1,n_start), npwx2, buffer1_d, npwx2, G_d(n_start,1), nbnd )
+        CALL MYDGEMM('T','N', my_n, nact, npw2, 2.D0, buffer_d(1,n_start), npwx2, buffer1_d, npwx2, 0.D0, G_d(n_start,1), nbnd)
+        IF ( gstart == 2 ) CALL MYDGER( my_n, nact, -1.D0, buffer_d(1,n_start), npwx2, buffer1_d, npwx2, G_d(n_start,1), nbnd )
         G = G_d
         CALL mp_sum( G(1:nact,1:nact), inter_bgrp_comm )
         CALL mp_sum( G(1:nact,1:nact), intra_bgrp_comm )
@@ -313,7 +361,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
         call gpu_threaded_assign( buffer_d,  p_d, npwx, nact, .true., act_idx_d, .true. )
         call gpu_threaded_assign( buffer1_d,  psi_d, npwx, nact, .true., act_idx_d, .false. )
         if (n_start .le. n_end) & ! could be done differently
-        CALL gpu_DGEMM('N','N', npw2, nact, my_n,-ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
+        CALL MYDGEMM('N','N', npw2, nact, my_n,-ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
         buffer = buffer_d
         CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
         buffer_d = buffer
@@ -325,7 +373,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
         call gpu_threaded_assign( buffer_d,  hp_d, npwx, nact, .true., act_idx_d, .true. )
         call gpu_threaded_assign( buffer1_d,  hpsi_d, npwx, nact, .true., act_idx_d, .false. )
         if (n_start .le. n_end) &
-        CALL gpu_DGEMM('N','N', npw2, nact, my_n,-ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
+        CALL MYDGEMM('N','N', npw2, nact, my_n,-ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
         buffer = buffer_d
         CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
         buffer_d = buffer
@@ -338,7 +386,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
            call gpu_threaded_assign( buffer_d,  sp_d, npwx, nact, .true., act_idx_d, .true. )
            call gpu_threaded_assign( buffer1_d,  spsi_d, npwx, nact, .true., act_idx_d, .false. )
            if (n_start .le. n_end) &
-           CALL gpu_DGEMM('N','N', npw2, nact, my_n,-ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
+           CALL MYDGEMM('N','N', npw2, nact, my_n,-ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
            buffer = buffer_d
            CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
            buffer_d = buffer
@@ -373,44 +421,44 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
         call start_clock('ppcg:dgemm')
         call gpu_threaded_assign( buffer_d,  psi_d, npwx, l, .true., col_idx_d, .false. )
         call gpu_threaded_assign( buffer1_d,  hpsi_d, npwx, l, .true., col_idx_d, .false. )
-        CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d, sbsize3)
-        IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d, sbsize3 )
+        CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d, sbsize3)
+        IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d, sbsize3 )
         !
         if (overlap) then
            call gpu_threaded_assign( buffer1_d,  spsi_d, npwx, l, .true., col_idx_d, .false.)
         else
            call gpu_threaded_assign( buffer1_d,  buffer_d, npwx, l, .false., col_idx_d, .false. )
         end if
-        CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d, sbsize3)
-        IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d, sbsize3 )
+        CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d, sbsize3)
+        IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d, sbsize3 )
         !
         ! ---
         call gpu_threaded_assign( buffer_d,  w_d, npwx, l, .true., col_idx_d, .false. )
         call gpu_threaded_assign( buffer1_d,  hw_d, npwx, l, .true., col_idx_d, .false. )
-        CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(l+1, l+1), sbsize3)
-        IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(l+1, l+1), sbsize3 )
+        CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(l+1, l+1), sbsize3)
+        IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(l+1, l+1), sbsize3 )
         !
         if (overlap) then
            call gpu_threaded_assign( buffer1_d,  sw_d, npwx, l, .true., col_idx_d, .false. )
         else
            call gpu_threaded_assign( buffer1_d,  buffer_d, npwx, l, .false., col_idx_d, .false. )
         end if
-        CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(l+1, l+1 ), sbsize3)
-        IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(l+1, l+1), sbsize3 )
+        CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(l+1, l+1 ), sbsize3)
+        IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(l+1, l+1), sbsize3 )
         !
         ! ---
         call gpu_threaded_assign( buffer_d,  psi_d, npwx, l, .true., col_idx_d, .false. )
         call gpu_threaded_assign( buffer1_d,  hw_d, npwx, l, .true., col_idx_d, .false. )
-        CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(1, l+1), sbsize3)
-        IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(1, l+1), sbsize3 )
+        CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(1, l+1), sbsize3)
+        IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(1, l+1), sbsize3 )
         !
         if (overlap) then
            call gpu_threaded_assign( buffer1_d,  sw_d, npwx, l, .true., col_idx_d, .false. )
         else
            call gpu_threaded_assign( buffer1_d,  w_d, npwx, l, .true., col_idx_d, .false. )
         end if
-        CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(1, l+1), sbsize3)
-        IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(1, l+1), sbsize3 )
+        CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(1, l+1), sbsize3)
+        IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(1, l+1), sbsize3 )
         call stop_clock('ppcg:dgemm')
         !
         ! ---
@@ -420,30 +468,30 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer_d,  p_d, npwx, l, .true., col_idx_d, .false. )
           call gpu_threaded_assign( buffer1_d,  hp_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(2*l + 1, 2*l+1), sbsize3)
-          IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(2*l + 1, 2*l+1 ), sbsize3 )
+          CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(2*l + 1, 2*l+1), sbsize3)
+          IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(2*l + 1, 2*l+1 ), sbsize3 )
           !
           if (overlap) then
              call gpu_threaded_assign( buffer1_d,  sp_d, npwx, l, .true., col_idx_d, .false. )
           else
              call gpu_threaded_assign( buffer1_d,  buffer_d, npwx, l, .false., col_idx_d, .false. )
           end if
-          CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(2*l + 1, 2*l+1), sbsize3)
-          IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(2*l + 1, 2*l+1 ), sbsize3)
+          CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(2*l + 1, 2*l+1), sbsize3)
+          IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(2*l + 1, 2*l+1 ), sbsize3)
           !
           ! ---
           call gpu_threaded_assign( buffer_d,  psi_d, npwx, l, .true., col_idx_d, .false. )
           call gpu_threaded_assign( buffer1_d,  hp_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(1, 2*l+1), sbsize3)
-          IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(1, 2*l+1), sbsize3)
+          CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(1, 2*l+1), sbsize3)
+          IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(1, 2*l+1), sbsize3)
           !
           if (overlap) then
              call gpu_threaded_assign( buffer1_d,  sp_d, npwx, l, .true., col_idx_d, .false. )
           else
              call gpu_threaded_assign( buffer1_d,  p_d, npwx, l, .true., col_idx_d, .false. )
           end if
-          CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(1, 2*l+1), sbsize3)
-          IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(1, 2*l+1), sbsize3)
+          CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(1, 2*l+1), sbsize3)
+          IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(1, 2*l+1), sbsize3)
           call stop_clock('ppcg:dgemm')
           !
           ! ---
@@ -451,16 +499,16 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer_d,  w_d, npwx, l, .true., col_idx_d, .false. )
           call gpu_threaded_assign( buffer1_d,  hp_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(l+1, 2*l+1), sbsize3)
-          IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(l+1, 2*l+1), sbsize3)
+          CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, K_d(l+1, 2*l+1), sbsize3)
+          IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, K_d(l+1, 2*l+1), sbsize3)
           !
           if (overlap) then
              call gpu_threaded_assign( buffer1_d,  sp_d, npwx, l, .true., col_idx_d, .false. )
           else
              call gpu_threaded_assign( buffer1_d,  p_d, npwx, l, .true., col_idx_d, .false. )
           end if
-          CALL gpu_DGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(l+1, 2*l+1), sbsize3)
-          IF ( gstart == 2 ) CALL gpu_DGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(l+1, 2*l+1), sbsize3)
+          CALL MYDGEMM('T','N', l, l, npw2, 2.D0, buffer_d, npwx2, buffer1_d, npwx2, 0.D0, M_d(l+1, 2*l+1), sbsize3)
+          IF ( gstart == 2 ) CALL MYDGER( l, l, -1.D0, buffer_d, npwx2, buffer1_d, npwx2, M_d(l+1, 2*l+1), sbsize3)
           call stop_clock('ppcg:dgemm')
           !
         END IF
@@ -551,18 +599,18 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
           !
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer1_d,  p_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_p_d, sbsize, ZERO, buffer_d, npwx2)
+          CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_p_d, sbsize, ZERO, buffer_d, npwx2)
           call gpu_threaded_assign( buffer1_d,  w_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N', npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ONE, buffer_d, npwx2)
+          CALL MYDGEMM('N','N', npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ONE, buffer_d, npwx2)
 !          p(:,col_idx(1:l))  = buffer(:,1:l)
           call gpu_threaded_backassign( p_d, col_idx_d, buffer_d, npwx, l, .false., p_d )
           call stop_clock('ppcg:dgemm')
           !
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer1_d,  hp_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_p_d, sbsize, ZERO, buffer_d, npwx2)
+          CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_p_d, sbsize, ZERO, buffer_d, npwx2)
           call gpu_threaded_assign( buffer1_d,  hw_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N', npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ONE, buffer_d, npwx2)
+          CALL MYDGEMM('N','N', npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ONE, buffer_d, npwx2)
 !          hp(:,col_idx(1:l))  = buffer(:,1:l)
           call gpu_threaded_backassign( hp_d, col_idx_d, buffer_d, npwx, l, .false., hp_d )
           call stop_clock('ppcg:dgemm')
@@ -570,9 +618,9 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
           if (overlap) then
              call start_clock('ppcg:dgemm')
              call gpu_threaded_assign( buffer1_d,  sp_d, npwx, l, .true., col_idx_d, .false. )
-             CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_p_d, sbsize, ZERO, buffer_d, npwx2)
+             CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_p_d, sbsize, ZERO, buffer_d, npwx2)
              call gpu_threaded_assign( buffer1_d,  sw_d, npwx, l, .true., col_idx_d, .false. )
-             CALL gpu_DGEMM('N','N', npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ONE, buffer_d, npwx2)
+             CALL MYDGEMM('N','N', npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ONE, buffer_d, npwx2)
 !             sp(:,col_idx(1:l))  = buffer(:,1:l)
              call gpu_threaded_backassign( sp_d, col_idx_d, buffer_d, npwx, l, .false., sp_d )
              call stop_clock('ppcg:dgemm')
@@ -581,14 +629,14 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
           !
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer1_d,  w_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ZERO, buffer_d, npwx2)
+          CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ZERO, buffer_d, npwx2)
 !          p(:,col_idx(1:l)) = buffer(:, 1:l)
           call gpu_threaded_backassign( p_d, col_idx_d, buffer_d, npwx, l, .false., p_d )
           call stop_clock('ppcg:dgemm')
           !
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer1_d,  hw_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ZERO, buffer_d, npwx2)
+          CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ZERO, buffer_d, npwx2)
 !          hp(:,col_idx(1:l)) = buffer(:, 1:l)
           call gpu_threaded_backassign( hp_d, col_idx_d, buffer_d, npwx, l, .false., hp_d )
           call stop_clock('ppcg:dgemm')
@@ -596,7 +644,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
           if (overlap) then
              call start_clock('ppcg:dgemm')
              call gpu_threaded_assign( buffer1_d,  sw_d, npwx, l, .true., col_idx_d, .false. )
-             CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ZERO, buffer_d, npwx2)
+             CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_w_d, sbsize, ZERO, buffer_d, npwx2)
 !             sp(:,col_idx(1:l)) = buffer(:, 1:l)
              call gpu_threaded_backassign( sp_d, col_idx_d, buffer_d, npwx, l, .false., sp_d )
              call stop_clock('ppcg:dgemm')
@@ -606,14 +654,14 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        ! Update the sub-blocks of psi and hpsi (and spsi)
        call start_clock('ppcg:dgemm')
        call gpu_threaded_assign( buffer1_d,  psi_d, npwx, l, .true., col_idx_d )
-       CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_psi_d, sbsize, ZERO, buffer_d, npwx2)
+       CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_psi_d, sbsize, ZERO, buffer_d, npwx2)
 !       psi(:,col_idx(1:l))  = buffer(:,1:l)  + p(:,col_idx(1:l))
        call gpu_threaded_backassign( psi_d, col_idx_d, buffer_d, npwx, l, .true., p_d )
        call stop_clock('ppcg:dgemm')
        !
        call start_clock('ppcg:dgemm')
        call gpu_threaded_assign( buffer1_d,  hpsi_d, npwx, l, .true., col_idx_d )
-       CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_psi_d, sbsize, ZERO, buffer_d, npwx2)
+       CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_psi_d, sbsize, ZERO, buffer_d, npwx2)
 !       hpsi(:,col_idx(1:l)) = buffer(:,1:l) + hp(:,col_idx(1:l))
        call gpu_threaded_backassign( hpsi_d, col_idx_d, buffer_d, npwx, l, .true., hp_d )
        call stop_clock('ppcg:dgemm')
@@ -621,7 +669,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        if (overlap) then
           call start_clock('ppcg:dgemm')
           call gpu_threaded_assign( buffer1_d,  spsi_d, npwx, l, .true., col_idx_d, .false. )
-          CALL gpu_DGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_psi_d, sbsize, ZERO, buffer_d, npwx2)
+          CALL MYDGEMM('N','N',npw2, l, l, ONE, buffer1_d, npwx2, coord_psi_d, sbsize, ZERO, buffer_d, npwx2)
 !          spsi(:,col_idx(1:l)) = buffer(:,1:l) + sp(:,col_idx(1:l))
           call gpu_threaded_backassign( spsi_d, col_idx_d, buffer_d, npwx, l, .true., sp_d )
           call stop_clock('ppcg:dgemm')
@@ -814,8 +862,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        call gpu_threaded_memset( G_d, ZERO, nbnd*nbnd ) ! G = ZERO
        CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
        if (n_start .le. n_end) &
-       CALL gpu_DGEMM('T','N', nact, my_n, npw2, 2.D0, buffer_d, npwx2, buffer1_d(1,n_start), npwx2, 0.D0, G_d(1,n_start), nbnd)
-       IF ( gstart == 2 ) CALL gpu_DGER( nact, my_n, -1.D0, buffer_d, npwx2, buffer1_d(1,n_start), npwx2, G_d(1,n_start), nbnd )
+       CALL MYDGEMM('T','N', nact, my_n, npw2, 2.D0, buffer_d, npwx2, buffer1_d(1,n_start), npwx2, 0.D0, G_d(1,n_start), nbnd)
+       IF ( gstart == 2 ) CALL MYDGER( nact, my_n, -1.D0, buffer_d, npwx2, buffer1_d(1,n_start), npwx2, G_d(1,n_start), nbnd )
        G = G_d
        CALL mp_sum(G(1:nact,1:nact), inter_bgrp_comm)
        !
@@ -832,7 +880,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
        end if
        call start_clock('ppcg:dgemm')
        if (n_start .le. n_end) &
-       CALL gpu_DGEMM('N','N',npw2, nact, my_n, -ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
+       CALL MYDGEMM('N','N',npw2, nact, my_n, -ONE, buffer1_d(1,n_start), npwx2, G_d(n_start,1), nbnd, ONE, buffer_d, npwx2)
        buffer = buffer_d
        CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
        buffer_d = buffer
@@ -1736,13 +1784,13 @@ CONTAINS
                  !  this proc sends his block
                  !
                  CALL mp_bcast( Gl(:,1:nc), root, ortho_parent_comm )
-                 CALL gpu_DGEMM( 'N','N', n2, nc, nr, ONE, X(1,ir), ld2, Gl, nx, gamm, Xtmp(1,ic), ld2 )
+                 CALL MYDGEMM( 'N','N', n2, nc, nr, ONE, X(1,ir), ld2, Gl, nx, gamm, Xtmp(1,ic), ld2 )
               ELSE
                  !
                  !  all other procs receive
                  !
                  CALL mp_bcast( Gltmp(:,1:nc), root, ortho_parent_comm )
-                 CALL gpu_DGEMM( 'N','N', n2, nc, nr, ONE, X(1,ir), ld2, Gltmp, nx, gamm, Xtmp(1,ic), ld2 )
+                 CALL MYDGEMM( 'N','N', n2, nc, nr, ONE, X(1,ir), ld2, Gltmp, nx, gamm, Xtmp(1,ic), ld2 )
               END IF
               !
               gamm = ONE

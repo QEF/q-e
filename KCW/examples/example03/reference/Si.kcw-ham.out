@@ -10,10 +10,20 @@
 
        Koopmans functional implementation based on DFPT; please cite this program as
 
-          N.Colonna, R. De Gannaro, E. Linscott, and N. Marzari, arXiv:2202.08155   
+        N.Colonna, R. De Gennaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+
+                                                                                    
+
+       If you use the non-collinear mode (with/without spin-orbit coupling) please cite
+
+        A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.1 starts on 31Aug2022 at  8:55:14 
+     Program KCW v.7.3.1 starts on 25Sep2024 at 15:49: 0 
+        Git branch: GGA_fix
+        Last git commit: 3fc5531ed12a50bf5b056d0a6fce3c36b32692e5-dirty
+        Last git commit date: Wed Sep 25 15:27:14 2024 +0200
+        Last git commit subject: Update exmaple02. Use LDA pseudos and functional
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -24,11 +34,10 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       4
-     700 MiB available memory on the printing compute node when the environment starts
+     204193 MiB available memory on the printing compute node when the environment starts
  
 
      KCW INPUT SUMMARY 
@@ -36,17 +45,20 @@
 
       CONTROL 
        # title               =            KI H2O
-       # out_dir             =/home/nicola/Scriv
+       # out_dir             =/home/colonna_n/CO
        # prefix              =                Si
        # calculation         =               ham
        # kcw_iverbosity      =                 1
        # kcw_at_ks           =                 F
+       # MP grid             =     2     2     2
        # spin_component      =                 1
        # homo_only           =                 F
        # read_unitary_matrix =                 T
        # check_ks            =                 T
        # l_vcut              =                 F
        # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
 
       WANNIER 
        # seedname            =                Si
@@ -71,20 +83,18 @@
 
      Reading xml data from directory:
 
-     /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si.save/
+     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation= PBE
-                           (   1   4   3   4   0   0   0)
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
  
-     Parallelization info
+     G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min          73      73     22                  821      821     152
-     Max          74      74     23                  823      823     153
      Sum         295     295     91                 3287     3287     609
  
      Using Slab Decomposition
@@ -96,56 +106,56 @@
      READING SCREENING PARAMETERS
 
      INFO: alphas read from:file_alpharef.txt                                                                                                                                                                                                                                               
-     iwann =     1   alpha =      0.30362277
-     iwann =     2   alpha =      0.30362281
-     iwann =     3   alpha =      0.30362287
-     iwann =     4   alpha =      0.30362285
-     iwann =     5   alpha =      0.20944575
-     iwann =     6   alpha =      0.20944554
-     iwann =     7   alpha =      0.20944570
-     iwann =     8   alpha =      0.20944565
+     iwann =     1   alpha =      0.30564463
+     iwann =     2   alpha =      0.30564460
+     iwann =     3   alpha =      0.30564455
+     iwann =     4   alpha =      0.30564462
+     iwann =     5   alpha =      0.23808869
+     iwann =     6   alpha =      0.23808935
+     iwann =     7   alpha =      0.23808821
+     iwann =     8   alpha =      0.23808891
 
      INFO: MLWF read from file: Reading collected, re-writing distributed wavefunctions
 
         KS Hamiltonian calculation at k=      0.0000      0.0000      0.0000   ...    DONE 
 
-        WANN      -5.4905     6.5463     6.5463     6.5463     8.9866     8.9866     8.9866     9.8775
-        PWSCF     -5.4905     6.5463     6.5463     6.5463     8.9866     8.9866     8.9866     9.8775
+        WANN      -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+        PWSCF     -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
 
         KS Hamiltonian calculation at k=     -0.5000      0.5000     -0.5000   ...    DONE 
 
-        WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-        PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
 
         KS Hamiltonian calculation at k=      0.5000      0.5000      0.5000   ...    DONE 
 
-        WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-        PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
 
         KS Hamiltonian calculation at k=      0.0000      1.0000      0.0000   ...    DONE 
 
-        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
 
         KS Hamiltonian calculation at k=     -0.5000     -0.5000      0.5000   ...    DONE 
 
-        WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-        PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
 
         KS Hamiltonian calculation at k=     -1.0000      0.0000      0.0000   ...    DONE 
 
-        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
 
         KS Hamiltonian calculation at k=      0.0000      0.0000      1.0000   ...    DONE 
 
-        WANN      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-        PWSCF     -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
 
         KS Hamiltonian calculation at k=     -0.5000      0.5000      0.5000   ...    DONE 
 
-        WANN      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-        PWSCF     -3.1401    -0.5116     5.3079     5.3079     8.0305     9.7641     9.7641    14.1717
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
 
      INFO: Coulomb q+G=0 treatment:
      INFO: Divergence            none    
@@ -225,79 +235,80 @@
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
-          KS      -5.4905     6.5463     6.5463     6.5463     8.9866     8.9866     8.9866     9.8775
-          KI      -6.3478     5.6891     5.6891     5.6891     9.1639     9.1639     9.1639    10.0548
+          KS      -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+          KI      -6.5782     5.4709     5.4709     5.4709     8.9472     8.9472     8.9472     9.7019
 
           k =-0.5000 0.5000-0.5000     band energies (ev):
 
-          KS      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-          KI      -3.9974    -1.3689     4.4506     4.4506     8.2078    12.4139    12.4139    15.8905
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
 
           k = 0.5000 0.5000 0.5000     band energies (ev):
 
-          KS      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-          KI      -3.9974    -1.3689     4.4506     4.4506     8.2078    12.4139    12.4139    15.8905
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
 
           k = 0.0000 1.0000 0.0000     band energies (ev):
 
-          KS      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-          KI      -2.1824    -2.1824     2.7579     2.7579     7.3195     7.3195    16.7803    16.7803
+          KS      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+          KI      -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
 
           k =-0.5000-0.5000 0.5000     band energies (ev):
 
-          KS      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-          KI      -3.9974    -1.3689     4.4506     4.4506     8.2078    12.4139    12.4139    15.8905
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
 
           k =-1.0000 0.0000 0.0000     band energies (ev):
 
-          KS      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-          KI      -2.1824    -2.1824     2.7579     2.7579     7.3195     7.3195    16.7803    16.7803
+          KS      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+          KI      -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
 
           k = 0.0000 0.0000 1.0000     band energies (ev):
 
-          KS      -1.3252    -1.3252     3.6152     3.6152     7.1423     7.1423    16.6030    16.6030
-          KI      -2.1824    -2.1824     2.7579     2.7579     7.3195     7.3195    16.7803    16.7803
+          KS      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+          KI      -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
 
           k =-0.5000 0.5000 0.5000     band energies (ev):
 
-          KS      -3.1401    -0.5116     5.3079     5.3079     8.0305    12.2366    12.2366    15.7132
-          KI      -3.9974    -1.3689     4.4506     4.4506     8.2078    12.4139    12.4139    15.8905
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
 
-        KS       highest occupied, lowest unoccupied level (ev):     6.5463    7.1423
-        KI[2nd]  highest occupied, lowest unoccupied level (ev):     5.6891    7.3195
+        KS       highest occupied, lowest unoccupied level (ev):     6.3432    6.7657
+        KI[2nd]  highest occupied, lowest unoccupied level (ev):     5.4709    6.9754
 
-     Writing all to output data dir /home/nicola/Scrivania/CODES/git/q-e-kcw/tempdir/Si_kcw.save/
+     Writing all to output data dir /home/colonna_n/CODES/q-e-kcw/tempdir/Si_kcw.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
  
-     KCW          :      0.09s CPU      0.14s WALL
+     KCW          :      0.32s CPU      0.34s WALL
 
      INITIALIZATION: 
  
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_vloc    :      0.04s CPU      0.04s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
  
  
  
  
  
-     h_psi        :      0.00s CPU      0.01s WALL (       8 calls)
+     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
  
-     h_psi        :      0.00s CPU      0.01s WALL (       8 calls)
+     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
  
  
  
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       8 calls)
-     fft          :      0.00s CPU      0.00s WALL (      18 calls)
-     ffts         :      0.02s CPU      0.02s WALL (     448 calls)
+     fft          :      0.00s CPU      0.00s WALL (       5 calls)
+     ffts         :      0.02s CPU      0.02s WALL (     512 calls)
      fftw         :      0.00s CPU      0.00s WALL (     128 calls)
      davcio       :      0.01s CPU      0.01s WALL (      72 calls)
  
  
-     KCW          :      0.09s CPU      0.14s WALL
+     KCW          :      0.32s CPU      0.34s WALL
 
  
-   This run was terminated on:   8:55:15  31Aug2022            
+   This run was terminated on:  15:49: 1  25Sep2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

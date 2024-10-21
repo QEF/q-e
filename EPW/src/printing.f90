@@ -27,16 +27,16 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub
-    USE elph2,         ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
+    USE input,         ONLY : nbndsub
+    USE global_var,    ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
                               nkf, epf17, xkf, nkqtotf, wf, nktotf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero
+    USE ep_constants,  ONLY : ryd2mev, ryd2ev, two, zero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE division,      ONLY : fkbounds
-    USE poolgathering, ONLY : poolgather2
+    USE parallelism,   ONLY : fkbounds
+    USE parallelism,  ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -262,9 +262,9 @@
     !!
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
-    USE elph2,         ONLY : nbndfst, gtemp, nktotf, nkqtotf
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE input,         ONLY : ncarrier, nstemp, assume_metal
+    USE global_var,    ONLY : nbndfst, gtemp, nktotf, evbm, ecbm
+    USE ep_constants,  ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE symm_base,     ONLY : nsym
@@ -335,12 +335,12 @@
           !  energy at k (relative to Ef)
           ekk = etf_all(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
-          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+          IF (etf_all(ibnd, ik) < (evbm + eps10) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma_sym(f_out(:, ibnd, ik, itemp), bztoibz_mat(:, ik), &
                                    vkk_all(:, ibnd, ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+          ELSE IF (etf_all(ibnd, ik) > (ecbm - eps10) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma_sym(f_out(:, ibnd, ik, itemp), bztoibz_mat(:, ik), &
                                    vkk_all(:, ibnd, ik), sigma_tmp, fi_check)
             carrier_density = carrier_density + wkf_all(ik) * fnk
@@ -379,8 +379,8 @@
     !----------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE cell_base,        ONLY : at, bg
-    USE epwcom,           ONLY : nkf1, nkf2, nkf3
-    USE elph2,            ONLY : s_bztoibz
+    USE input,            ONLY : nkf1, nkf2, nkf3
+    USE global_var,       ONLY : s_bztoibz
     USE symm_base,        ONLY : s, nsym
     USE noncollin_module, ONLY : noncolin
     !
@@ -467,9 +467,9 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
-    USE elph2,         ONLY : nbndfst, gtemp, nktotf
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE input,         ONLY : ncarrier, nstemp, assume_metal
+    USE global_var,    ONLY : nbndfst, gtemp, nktotf, evbm, ecbm
+    USE ep_constants,  ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE mp,            ONLY : mp_sum
@@ -530,11 +530,11 @@
           !  energy at k (relative to Ef)
           ekk = etf_all(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
-          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+          IF (etf_all(ibnd, ik) < (evbm + eps10) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out(:, ibnd, ik, itemp), vkk_all(:, ibnd, ik), wkf_all(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+          ELSE IF (etf_all(ibnd, ik) > (ecbm - eps10) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out(:, ibnd, ik, itemp), vkk_all(:, ibnd, ik), wkf_all(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * fnk
@@ -565,7 +565,7 @@
     !!
     !----------------------------------------------------------------------
     USE kinds,            ONLY : DP
-    USE epwcom,           ONLY : nkf1, nkf2, nkf3
+    USE input,            ONLY : nkf1, nkf2, nkf3
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
@@ -611,11 +611,11 @@
     !! nice format and in proper units.
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : assume_metal, system_2d
+    USE input,         ONLY : assume_metal, system_2d
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega, at, alat
-    USE elph2,         ONLY : dos
-    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, &
+    USE global_var,    ONLY : dos
+    USE ep_constants,  ONLY : zero, kelvin2eV, ryd2ev, eps80, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     !
@@ -685,15 +685,14 @@
     !! nice format and in proper units.
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : assume_metal, system_2d, ncarrier, nkf1, nkf2, nkf3, nstemp
-    USE io_global,     ONLY : stdout
+    USE input,         ONLY : system_2d, ncarrier, nkf1, nkf2, nkf3, nstemp
     USE cell_base,     ONLY : omega, at, alat, bg
-    USE elph2,         ONLY : dos, nkqtotf, s_bztoibz, nbndfst, nktotf
+    USE global_var,    ONLY : s_bztoibz, nbndfst, nktotf
     USE io_var,        ONLY : iufilmu_nk
     USE symm_base,     ONLY : s, nsym
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, eps10, &
+    USE ep_constants,  ONLY : zero, kelvin2eV, ryd2ev, eps80, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE noncollin_module, ONLY : noncolin
@@ -854,7 +853,7 @@
     !! This routine print a header for mobility calculation
     !!
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : assume_metal, ncarrier, system_2d
+    USE input,         ONLY : assume_metal, ncarrier, system_2d
     !
     IMPLICIT NONE
     !
@@ -894,11 +893,12 @@
     !! This routine print a header for superconductivity calculation
     !!
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, &
-                              fbw, broyden_beta
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsiw, nsw
-    USE constants_epw, ONLY : kelvin2eV, zero
+    USE input,         ONLY : liso, laniso, lreal, imag_read, wscut, &
+                              fbw, broyden_beta, gridsamp, icoulomb, &
+                              eps_cut_ir
+    USE global_var,    ONLY : gtemp
+    USE supercond_common,     ONLY : nsiw, nsw, wsi, nlambda, ndigit
+    USE ep_constants,  ONLY : kelvin2eV, zero
     USE constants,     ONLY : pi
     !
     IMPLICIT NONE
@@ -926,13 +926,31 @@
         WRITE(stdout, '(5x, a)') 'Read from file delta and znorm and shift on imaginary-axis'
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
-      WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
+      IF ((.NOT. fbw) .OR. ((gridsamp == 0) .OR. (gridsamp == 1) .OR. (gridsamp == 3))) THEN
+        ! uniform sampling
+        WRITE(stdout, '(5x, a, f10.4, a)') 'Cutoff frequency wscut = ', wscut, ' eV'
+        WRITE(stdout, '(5x, a, f14.4, a)') 'Maximum frequency = ', wsi(nsiw(itemp)), ' eV'
+      ELSEIF (fbw) THEN
+        IF ((gridsamp == 2)) THEN
+          WRITE(stdout, '(5x, a, ES12.2, a, ES12.2)') &
+                'Parameters for IR basis: Lambda = ', 1.0d1 ** nlambda, ', eps_IR = ', 1.0d-1 ** ndigit
+          IF (eps_cut_ir > zero) THEN
+            WRITE(stdout, '(5x, a, ES12.2)') 'The noise reduction will be performed using the threshold of ', eps_cut_ir
+          ELSE
+            WRITE(stdout, '(5x, a, ES12.2)') 'The noise reduction will not be performed.'
+          ENDIF
+        ENDIF
+        ! any other sampling (freqs read from a file, sparse sampling, sparse-ir sampling)
+        WRITE(stdout, '(5x, a, f14.4, a)') 'Maximum frequency = ', wsi(nsiw(itemp)), ' eV'
+      ENDIF
       IF (broyden_beta < zero ) THEN
         WRITE(stdout, '(5x, a, f12.5)') 'linear mixing factor = ', DABS(broyden_beta)
       ELSE
         WRITE(stdout, '(5x, a, f12.5)') 'broyden mixing factor = ', broyden_beta
       ENDIF
-      IF (broyden_beta  < -0.2d0) THEN
+      IF ((icoulomb == 1) .AND. (broyden_beta  < -0.2d0)) THEN
+        WRITE(stdout, '(5x, a)') 'mixing factor = 0.2 is used for the first five iterations.'
+      ELSEIF ((broyden_beta  < -0.2d0)) THEN
         WRITE(stdout, '(5x, a)') 'mixing factor = 0.2 is used for the first three iterations.'
       ENDIF
       WRITE(stdout, '(a)') '    '
@@ -1035,19 +1053,25 @@
     CALL print_clock('dg: step 2')
     CALL print_clock('sth: step 1')
     CALL print_clock('sth: step 2')
+    CALL print_clock('wigner_seitz')
     CALL print_clock('DynW2B')
     CALL print_clock('HamW2B')
     CALL print_clock('ephW2Bp')
+    CALL print_clock('ephW2Bp_opt')
+    CALL print_clock('ephW2Bp_s23')
+    CALL print_clock('ephW2Bp_s3')
+    CALL print_clock('ephW2Bp_g3')
     CALL print_clock('ephW2B')
     CALL print_clock('sthW2Bp')
     CALL print_clock('dgW2B')
     CALL print_clock('dwW2B')
+    CALL print_clock('vmeW2B')
+    CALL print_clock('vmeW2Bp')
+    CALL print_clock('rgd_blk_epw')
     CALL print_clock('print_ibte')
-    CALL print_clock('vmewan2bloch')
-    CALL print_clock('vmewan2blochp')
-    CALL print_clock('ephW2Bp1')
-    CALL print_clock('ephW2Bp2')
     CALL print_clock('kpoint_paral')
+    !
+    CALL print_clock('selfen_elec_q')
     !
     ! Eliashberg equations
     WRITE(stdout, '(5x)')
@@ -1073,15 +1097,15 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, filqf, filkf
-    USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, zero
+    USE input,         ONLY : nbndsub, filqf, filkf
+    USE global_var,    ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
+    USE ep_constants,  ONLY : ryd2mev, ryd2ev, zero
     USE io_var,        ONLY : iufilfreq, iufileig
-    USE elph2,         ONLY : nkqf
+    USE global_var,    ONLY : nkqf
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-    USE poolgathering, ONLY : poolgather2
+    USE parallelism,  ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -1230,17 +1254,16 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg
-    USE control_flags, ONLY : iverbosity
     USE pwcom,         ONLY : ef
-    USE epwcom,        ONLY : mp_mesh_k, nbndsub, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : bztoibz, etf, xkf, nkqtotf, nktotf
-    USE constants_epw, ONLY : ryd2ev, zero
+    USE input,         ONLY : mp_mesh_k, nbndsub, nkf1, nkf2, nkf3
+    USE global_var,    ONLY : bztoibz, etf, xkf, nkqtotf, nktotf
+    USE ep_constants,  ONLY : ryd2ev, zero
     USE io_var,        ONLY : iufilFS
-    USE elph2,         ONLY : nkqf, ibndmin, ibndmax
+    USE global_var,    ONLY : nkqf, ibndmin, ibndmax
     USE io_global,     ONLY : ionode_id, stdout
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-    USE poolgathering, ONLY : poolgather2
+    USE parallelism,  ONLY : poolgather2
     USE io_files,      ONLY : prefix
     !
     IMPLICIT NONE
@@ -1355,9 +1378,9 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
-    USE elph2,         ONLY : nbndfst, nkpt_bztau_max, gtemp
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE input,         ONLY : ncarrier, nstemp, assume_metal
+    USE global_var,    ONLY : nbndfst, nkpt_bztau_max, gtemp, evbm, ecbm
+    USE ep_constants,  ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE mp,            ONLY : mp_sum
@@ -1417,11 +1440,11 @@
           !  energy at k (relative to Ef)
           ekk = etf_all_b(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
-          IF (etf_all_b(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+          IF (etf_all_b(ibnd, ik) < (evbm + eps10) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * (1.0d0 - fnk)
-          ELSEIF (etf_all_b(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+          ELSEIF (etf_all_b(ibnd, ik) > (ecbm - eps10) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * fnk
@@ -1450,12 +1473,12 @@
     !! This routine print the final conductivity, mobility and Hall factor
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : system_2d, nstemp, bfieldx, bfieldy, bfieldz
+    USE input,         ONLY : system_2d, nstemp, bfieldx, bfieldy, bfieldz
     USE low_lvl,       ONLY : matinv3
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega, at, alat
-    USE elph2,         ONLY : gtemp
-    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, cm2m, &
+    USE global_var,    ONLY : gtemp
+    USE ep_constants,  ONLY : zero, kelvin2eV, ryd2ev, eps80, cm2m, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     !
@@ -1505,8 +1528,6 @@
     !! Hall factor
     REAL(KIND = DP) :: mob_hall(3, 3)
     !! Hall mobility
-    REAL(KIND = DP) :: sigma_inv(3, 3, nstemp)
-    !! Inverse conductivity tensor
     REAL(KIND = DP) :: mob_inv(3, 3, nstemp)
     !! Inverse mobility tensor
     !

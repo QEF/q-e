@@ -96,7 +96,7 @@ subroutine phq_setup
   USE mp,            ONLY : mp_max, mp_min
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
-  USE nc_mag_aux,    ONLY : deeq_nc_save
+  USE lr_nc_mag,     ONLY : deeq_nc_save
   USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
   USE ldaU_lr,       ONLY : effU
@@ -318,10 +318,8 @@ subroutine phq_setup
   !  9) set the variables needed for the partial computation:
   !     nat_todo, atomo, comp_irr
 
-  DO irr=0,nirr
-     comp_irr(irr)=comp_irr_iq(irr,current_iq)
-     IF (elph .AND. irr>0) comp_elph(irr)=comp_irr(irr)
-  ENDDO
+  comp_irr(0:nirr) = comp_irr_iq(0:nirr, current_iq)
+  IF (elph) comp_elph(1:nirr) = comp_irr_iq(1:nirr, current_iq)
   !
   !  The gamma_gamma case needs a different treatment
   !

@@ -31,6 +31,8 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
   USE wvfct,                ONLY : nbnd
   USE klist,                ONLY : nelup, neldw, nelec, lgauss, ltetra
   USE start_k,              ONLY : reset_grid
+  USE noncollin_module,     ONLY : domag, noncolin
+  USE lsda_mod,             ONLY : lsda
   !
   IMPLICIT NONE
   !
@@ -52,7 +54,7 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
   !
   ! ... each q /= gamma is saved on a different directory
   !
-  IF (.NOT.lgamma) &
+  IF (.NOT.lgamma .OR. (domag .AND. noncolin)) &
      tmp_dir_kcwq= TRIM (tmp_dir_kcw) // 'q' &
                    & // TRIM(int_to_char(iq))//'/'
   !
@@ -65,6 +67,8 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
   !modenum = 0
   setup_pw = (.NOT.lgamma)
   !
+  IF (noncolin.AND.domag) setup_pw=.true. !! NsC need to check this is needed (see comment in PH/prepare_q.f90)
+  !
   ! Only the occupied bands neeed to be computed. 
   ! In general we might have run PWSCF with a huge number of Empty states 
   ! needed for the Wannierization. Here we reset the number of bands to be 
@@ -74,6 +78,8 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
      !
      nbnd_old = nbnd 
      degspin = 2
+     !IF (noncolin .OR. .NOT. lsda) degspin = 1
+     IF (noncolin) degspin = 1
      !
      nbnd = MAX ( NINT( nelec / degspin ), NINT(nelup), NINT(neldw) ) + 3
      !

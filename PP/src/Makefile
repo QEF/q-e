@@ -14,7 +14,6 @@ addusdens1d.o \
 add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
-atomic_wfc_nc_proj.o \
 chdens_module.o \
 chdens_bspline.o \
 chdens_bspline_sphere.o \
@@ -83,8 +82,8 @@ libpp.a : $(PPOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) 
+pp_example.x: pp_example.o $(MODULES)
+	$(LD) $(LDFLAGS) -o $@ pp_example.o libpp.a $(MODULES) $(QELIBS) 
 
 open_grid.x : open_grid.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \

@@ -17,6 +17,7 @@
     mixing_mode = 'plain'
     mixing_beta = 0.7
     conv_thr =  1.0d-10
+    startingwfc = 'atomic'
  /
 ATOMIC_SPECIES
 C 1.0 C.pz-vbc.UPF

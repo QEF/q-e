@@ -23,8 +23,8 @@ MODULE qexsd_copy
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
        qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
-       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue
-  !
+       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue, qexsd_copy_esm, qexsd_copy_twochem 
+ !
 CONTAINS
   !-------------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version)
@@ -126,7 +126,7 @@ CONTAINS
 
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_atomic_structure (atomic_structure, nsp, atm, &
-       nat, tau, ityp, alat, a1, a2, a3, ibrav )
+       nat, tau, ityp, alat, a1, a2, a3, ibrav, natomwfc )
   !--------------------------------------------------------------------------
     
     USE qes_types_module, ONLY : atomic_structure_type
@@ -137,7 +137,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nsp 
     CHARACTER(LEN = 6), INTENT(in) :: atm(:)
     !
-    INTEGER, INTENT(out)  :: nat, ibrav
+    INTEGER, INTENT(out)  :: nat, ibrav, natomwfc
     REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:)
     INTEGER, INTENT(inout),  ALLOCATABLE :: ityp(:)
     REAL(dp), INTENT(inout), ALLOCATABLE :: tau(:,:)
@@ -146,6 +146,11 @@ CONTAINS
     INTEGER :: iat, idx, isp
     !
     nat = atomic_structure%nat 
+    IF ( atomic_structure%num_of_atomic_wfc_ispresent ) THEN 
+      natomwfc = atomic_structure%num_of_atomic_wfc
+    ELSE 
+      natomwfc = 0 
+    END IF   
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
@@ -207,7 +212,7 @@ CONTAINS
   !------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_symmetry ( symms_obj, spacegroup, &
        nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
-       noinv, nosym, no_t_rev, flags_obj )
+       noinv, nosym, no_t_rev, colin_mag, flags_obj)
     !------------------------------------------------------------------------
     ! 
     USE qes_types_module,ONLY : symmetries_type, symmetry_flags_type
@@ -224,6 +229,7 @@ CONTAINS
     REAL(dp), INTENT(OUT):: ft(:,:)
     INTEGER, INTENT(OUT) :: irt(:,:)
     INTEGER, INTENT(OUT) :: t_rev(:)
+    INTEGER, INTENT(OUT) :: colin_mag
     CHARACTER(len=45) ::  sname(:)
     !
     LOGICAL, INTENT(OUT) :: noinv, nosym, no_t_rev
@@ -243,6 +249,11 @@ CONTAINS
     spacegroup = symms_obj%space_group
     nrot = symms_obj%nrot 
     nsym = symms_obj%nsym
+    IF (symms_obj%colin_mag_ispresent) THEN 
+      colin_mag = symms_obj%colin_mag 
+    ELSE 
+      colin_mag = -1 
+    END IF 
     !  
     invsym = .FALSE. 
     DO isym = 1, nrot
@@ -301,7 +312,7 @@ CONTAINS
     npw_g     = basis_set%npwx
     !
     b1 =  basis_set%reciprocal_lattice%b1
-   !  b2 =  basis_set%reciprocal_lattice%b2
+    b2 =  basis_set%reciprocal_lattice%b2
     b3 =  basis_set%reciprocal_lattice%b3
     !
   END SUBROUTINE qexsd_copy_basis_set
@@ -584,7 +595,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
+         isk, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
          ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
@@ -595,7 +606,7 @@ CONTAINS
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
       LOGICAL, INTENT(out) :: lsda
-      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, nbnd_up, nbnd_dw, &
+      INTEGER, INTENT(out) :: nkstot, nbnd, nbnd_up, nbnd_dw, &
               isk(:)
       REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, xk(:,:), wk(:)
       REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
@@ -604,8 +615,7 @@ CONTAINS
       INTEGER :: ik
       ! 
       lsda = band_struct_obj%lsda
-      nkstot = band_struct_obj%nks 
-      natomwfc = band_struct_obj%num_of_atomic_wfc
+      nkstot = band_struct_obj%nks  
       !
       IF ( lsda) THEN
          !
@@ -654,6 +664,7 @@ CONTAINS
            nelec, ef, two_fermi_energies, ef_up, ef_dw )
       !
       IF ( .NOT. ALLOCATED(et) ) ALLOCATE( et(nbnd,nkstot) )
+      !$acc enter data create(et)
       IF ( .NOT. ALLOCATED(wg) ) ALLOCATE( wg(nbnd,nkstot) )
       !
       DO ik =1, band_struct_obj%ndim_ks_energies
@@ -677,6 +688,7 @@ CONTAINS
          END IF
          !
       END DO
+      !$acc update device(et)
       !
     END SUBROUTINE qexsd_copy_band_structure
     !
@@ -748,6 +760,27 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_algorithmic_info
     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_twochem ( two_chem_obj, &
+         twochem, nbnd_cond, nelec_cond, degauss_cond, ef_cond)
+      USE qes_types_module, ONLY: two_chem_type
+      IMPLICIT NONE 
+      TYPE(two_chem_type),INTENT(IN)     ::  two_chem_obj
+      LOGICAL,INTENT(OUT)               ::  twochem
+      REAL(DP), INTENT(OUT)             ::  degauss_cond
+      REAL(DP), INTENT(OUT)             ::  nelec_cond
+      INTEGER, INTENT(OUT)              ::  nbnd_cond
+      REAL(DP),OPTIONAL, INTENT(OUT)    :: ef_cond
+      !
+      twochem = two_chem_obj%twochem
+      degauss_cond = two_chem_obj%degauss_cond
+      nelec_cond = two_chem_obj%nelec_cond
+      nbnd_cond = two_chem_obj%nbnd_cond
+      IF (PRESENT(ef_cond)) ef_cond = two_chem_obj%ef_cond 
+      !
+    END SUBROUTINE qexsd_copy_twochem
+    !-----------------------------------------------------------------------
+
     !
     !---------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_efield ( efield_obj, tefield, dipfield, edir, &
@@ -906,7 +939,29 @@ CONTAINS
        ! 
      END SUBROUTINE qexsd_copy_kpoints
      !
-
+  !
+  !---------------------------------------------------------------
+  SUBROUTINE qexsd_copy_esm( pbc_obj, bc, nfit, w, efield, a) 
+    !------------------------------------------------------------
+    USE qes_types_module, ONLY: outputPBC_type 
+    IMPLICIT NONE 
+    TYPE(outputPBC_type),INTENT(IN) :: pbc_obj 
+    CHARACTER(LEN=3),INTENT(OUT)    :: bc 
+    INTEGER,INTENT(OUT)             :: nfit 
+    REAL(DP),INTENT(OUT)             :: w 
+    REAL(DP),INTENT(OUT)             :: efield
+    REAL(DP),INTENT(OUT)             :: a 
+    ! 
+    IF (pbc_obj%esm_ispresent) THEN 
+      bc = TRIM(pbc_obj%esm%bc) 
+      nfit = pbc_obj%esm%nfit 
+      w = pbc_obj%esm%w 
+      efield = pbc_obj%esm%efield
+      a = pbc_obj%esm%a 
+    ELSE 
+      CALL errore("qexsd_copy_esm","esm object not present in input", 1) 
+    END IF 
+  END SUBROUTINE qexsd_copy_esm 
   !
   !---------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_rism3d( rism3d_obj, pseudo_dir, nsolV, solVs, molfile, ecutsolv )

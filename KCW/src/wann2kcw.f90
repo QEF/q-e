@@ -26,6 +26,7 @@ SUBROUTINE wann2kcw
   ! 1) Set up for the KC calculation. 
   CALL kcw_setup( )
   ! 
+  !WRITE(*,*),'--SETUP DONE!!'
   ! 2) Save MLWF on file 
   CALL write_mlwf( ) 
   !

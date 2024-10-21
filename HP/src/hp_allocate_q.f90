@@ -28,7 +28,7 @@ subroutine hp_allocate_q
   USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,           ONLY : becpt
-  USE hp_nc_mag_aux,        ONLY : deeq_nc_save 
+  USE lr_nc_mag,            ONLY : deeq_nc_save
   USE uspp_param,           ONLY : nhm 
   !
   IMPLICIT NONE
@@ -40,6 +40,7 @@ subroutine hp_allocate_q
   ELSE
      ! q/=0 : evq is allocated and calculated at point k+q
      ALLOCATE (evq(npwx*npol,nbnd))
+     !$acc enter data create(evq)
   ENDIF
   !
   ALLOCATE (dvpsi(npwx*npol,nbnd))

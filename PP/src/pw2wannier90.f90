@@ -488,7 +488,7 @@ end module wannier
 module atproj
    ! module for atomic projectors
    USE kinds, ONLY: DP
-
+   !
    ! Atomic projectors for species
    TYPE atproj_type
       CHARACTER(len=3) :: atsym ! atomic symbol
@@ -518,6 +518,9 @@ module atproj
 
    REAL(DP), ALLOCATABLE :: tab_at(:, :, :)
    !! interpolation table for atomic projectors
+   REAL(dp), parameter :: dq = 0.01_dp
+   !! interpolation step, used for interpolation tables
+
 
 CONTAINS
 
@@ -778,7 +781,6 @@ CONTAINS
       !
       USE kinds, ONLY: dp
       USE ions_base, ONLY: nsp
-      USE uspp_data, ONLY: dq
       !
       IMPLICIT NONE
       !
@@ -824,16 +826,16 @@ CONTAINS
       !
       USE kinds, ONLY: DP
       USE upf_const, ONLY: fpi
-      USE uspp_data, ONLY: nqx, dq
       USE ions_base, ONLY: nsp
       USE cell_base, ONLY: omega
+      USE gvecw,     ONLY : ecutwfc
       USE mp, ONLY: mp_sum
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: intra_bgrp_comm
       !
-      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm, ierr
+      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm, nqx, ierr
       !
       REAL(DP), ALLOCATABLE :: aux(:), vchi(:), rab(:)
       REAL(DP) :: vqint, pref, q
@@ -851,9 +853,9 @@ CONTAINS
       !
       pref = fpi/SQRT(omega)
       ! needed to normalize atomic wfcs (not a bad idea in general)
-      CALL divide(intra_bgrp_comm, nqx, startq, lastq)
       !
-      ! nqx = INT( (SQRT(ecutwfc) / dq + 4) )
+      nqx = INT( (SQRT(ecutwfc) / dq + 4) )
+      CALL divide(intra_bgrp_comm, nqx, startq, lastq)
       ALLOCATE (tab_at(nqx, nwfcm, nsp), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating tab_at', 1)
       tab_at(:, :, :) = 0.0_DP

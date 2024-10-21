@@ -94,7 +94,7 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   !
   v_siz = dffts%nnr
   !
-  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd_occx,1:nksq,1:2), evc(1:npol*npwx,1:nbnd), Tevc(1:npol*npwx,1:nbnd)) copyout(drhoscfh(1:v_siz,1:nspin_mag)) create(dpsic(1:v_siz,1:npol), psi(1:v_siz,1:npol)) present(igk_k) deviceptr(nl_d)
+  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd_occx,1:nksq,1:2), Tevc(1:npol*npwx,1:nbnd)) copyout(drhoscfh(1:v_siz,1:nspin_mag)) create(dpsic(1:v_siz,1:npol), psi(1:v_siz,1:npol)) present(igk_k) deviceptr(nl_d)
   !
   !$acc kernels
   drhoscfh(:,:) = (0.0d0, 0.0d0)

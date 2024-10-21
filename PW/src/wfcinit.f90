@@ -14,19 +14,24 @@ SUBROUTINE wfcinit()
   ! ... It also open needed files or memory buffers
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE basis,                ONLY : natomwfc, starting_wfc
+  USE ions_base,            ONLY : nat, ityp
+  USE basis,                ONLY : natomwfc, swfcatom
+  USE upf_ions,             ONLY : n_atom_wfc
+  USE starting_scf,         ONLY : starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, &
+                                   nwfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, xmlfile, restart_dir
+  USE noncollin_module,     ONLY : npol, noncolin
+  USE io_files,             ONLY : nwordwfc, nwordwfcU, nwordatwfc, iunhub, &
+                                   iunwfc, iunsat, diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
-  USE wvfct,                ONLY : nbnd, current_k
+  USE wvfct,                ONLY : nbnd, npwx, current_k, et
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -34,7 +39,6 @@ SUBROUTINE wfcinit()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE uspp_init,            ONLY : init_us_2
   USE control_flags,        ONLY : use_gpu
   !
@@ -46,14 +50,28 @@ SUBROUTINE wfcinit()
   TYPE ( output_type ) :: output_obj
   !
   CALL start_clock( 'wfcinit' )
-  CALL using_evc(0) ! this may be removed
+  !
+  ! ... set number of atomic wavefunctions
+  !
+  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
-  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
-       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
-  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
+  IF ( use_wannier .OR. one_atom_occupations ) THEN
+     !
+     IF ( lda_plus_u ) CALL errore ( 'wfcinit', 'incompatible options', 1 )
+     nwordatwfc= npwx*natomwfc*npol
+     CALL open_buffer( iunsat, 'satwfc', nwordatwfc, io_level, exst )
+     ALLOCATE( swfcatom(npwx*npol,natomwfc) )
+     CALL orthoatwfc ( use_wannier )
+     !
+  ELSE IF ( lda_plus_u .AND. ( Hubbard_projectors.NE.'pseudo') ) THEN
+     !
+     ! nwfcU is computed in init_hubbard
+     ALLOCATE( wfcU(npwx*npol,nwfcU) )
+     CALL orthoUwfc(.FALSE.)
+     !
+  END IF
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer
@@ -73,9 +91,10 @@ SUBROUTINE wfcinit()
      dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-     IF ( ierr <= 0 ) THEN
+     IF ( ierr <= 0 .and.  (.not. ionode .or. &
+             output_obj%convergence_info%wf_collected_ispresent) ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
+        IF (ionode) twfcollect_file = output_obj%convergence_info%wf_collected 
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -88,6 +107,7 @@ SUBROUTINE wfcinit()
         DO ik = 1, nks
            CALL read_collected_wfc ( dirname, ik, evc, "wfc", ierr )
            IF ( ierr /= 0 ) GO TO 10
+           !$acc update device(evc)
            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         END DO
         !
@@ -118,8 +138,8 @@ SUBROUTINE wfcinit()
         IF ( nks == 1 ) THEN
            INQUIRE (unit = iunwfc, opened = opnd_file)
            IF ( .NOT.opnd_file ) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-           CALL using_evc(2)
            CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+           !$acc update device(evc)
            IF ( .NOT.opnd_file ) CLOSE ( UNIT=iunwfc, STATUS='keep' )
         END IF
      END IF
@@ -196,12 +216,13 @@ SUBROUTINE wfcinit()
      !
      ! ... write  starting wavefunctions to file
      !
-     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(0)
-     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
-         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) THEN
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     END IF
      !
   END DO
   !
+  !$acc update self(et)
   CALL stop_clock( 'wfcinit' )
   RETURN
   !
@@ -215,11 +236,11 @@ SUBROUTINE init_wfc ( ik )
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield
-  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
-                                   allocate_bec_type_acc, deallocate_bec_type_acc, &
+  USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
-  USE basis,                ONLY : natomwfc, starting_wfc
+  USE basis,                ONLY : natomwfc
+  USE starting_scf,         ONLY : starting_wfc
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk, ngk, igk_k
   USE wvfct,                ONLY : nbnd, npwx, et
@@ -239,8 +260,6 @@ SUBROUTINE init_wfc ( ik )
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
-  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
-  USE wvfct_gpum,           ONLY : using_et, using_et_d, et_d
   USE control_flags,        ONLY : lscf, use_gpu
   !
   IMPLICIT NONE
@@ -256,8 +275,6 @@ SUBROUTINE init_wfc ( ik )
   !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
-  ! should be declared "device_resident(wfcatom)" but gives problems inside
-  ! "atomic_wfc" for spin-orbit case and openmp compilation - not sure why
   !
 #if defined(__CUDA)
   REAL(DP),    ALLOCATABLE :: randy_vec(:) ! data for random
@@ -418,13 +435,12 @@ SUBROUTINE init_wfc ( ik )
   IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   IF(use_gpu) THEN
-    CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
-    !$acc host_data use_device(wfcatom,etatom)
-    CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc_d, etatom )
+    !$acc host_data use_device(etatom,evc)
+    CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
     !$acc end host_data
+    !$acc update self(evc)
   ELSE
     CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
-    CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
   END IF
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
@@ -433,17 +449,9 @@ SUBROUTINE init_wfc ( ik )
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
-  if(use_gpu) then 
-    CALL using_et_d(2)
-    !$acc kernels  
-    DO ibnd=1,nbnd
-       et_d(ibnd,ik) = etatom(ibnd)
-    END DO
-    !$acc end kernels
-  else
-    CALL using_et(1)
-    et(1:nbnd,ik) = etatom(1:nbnd)
-  end if 
+  !$acc kernels  
+  et(1:nbnd,ik) = etatom(1:nbnd)
+  !$acc end kernels
   !
   CALL deallocate_bec_type_acc ( becp )
   !

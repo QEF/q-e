@@ -30,7 +30,7 @@ subroutine solve_e
   USE io_files,              ONLY : diropn
   USE mp,                    ONLY : mp_sum
   USE mp_pools,              ONLY : inter_pool_comm
-  USE mp_bands,              ONLY : intra_bgrp_comm
+  USE mp_bands,              ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE klist,                 ONLY : ltetra, lgauss, xk, ngk, igk_k
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
@@ -163,6 +163,7 @@ subroutine solve_e
         !
         IF (nksq > 1) THEN
            CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+           !$acc update device(evc)
         ENDIF
         !
         CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb, .true.)
@@ -233,7 +234,7 @@ subroutine solve_e
      call mp_sum ( dvscfout, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
      if (.not.lgamma_gamma) then
-        call psyme (dvscfout)
+        call psymdvscf(dvscfout)
         IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
      endif
      !
@@ -246,7 +247,7 @@ subroutine solve_e
         IF (lnoloc) then
            dvscfout(:,:,ipol)=(0.d0,0.d0)
         ELSE
-           call dv_of_drho (dvscfout (1, 1, ipol), .false.)
+           call dv_of_drho (dvscfout (1, 1, ipol))
         ENDIF
      enddo
      !

@@ -30,13 +30,18 @@ SUBROUTINE write_hr_to_file()
   INTEGER :: iband, jband
   INTEGER :: iband_, jband_
   INTEGER :: nwann
-  INTEGER :: ifile, fileunit
+  INTEGER :: ifile, fileunit, nkstot_eff
   CHARACTER(LEN=256) :: filename
   !
+  IF (nspin == 4) THEN
+    nkstot_eff = nkstot
+  ELSE
+    nkstot_eff = nkstot/nspin
+  ENDIF
   !
   IF ( .NOT. do_bands ) THEN
     !
-    ALLOCATE( Hamlt_R(nkstot/nspin,num_wann,num_wann) )
+    ALLOCATE( Hamlt_R(nkstot_eff,num_wann,num_wann) )
     !
     CALL real_ham( Hamlt_R )
     !
@@ -74,17 +79,17 @@ SUBROUTINE write_hr_to_file()
       !
       IF ( fileunit == 100 ) THEN
         !
-        WRITE( fileunit, '(4x,"Rtot =",i5,6x,"num_wann =",i5)' ) nkstot/nspin, nwann
+        WRITE( fileunit, '(4x,"Rtot =",i5,6x,"num_wann =",i5)' ) nkstot_eff, nwann
         !
       ELSE
         !
         WRITE( fileunit, * ) nwann
-        WRITE( fileunit, * ) nkstot/nspin
-        WRITE( fileunit, '(15I5)' ) (1, i=1, nkstot/nspin)
+        WRITE( fileunit, * ) nkstot_eff
+        WRITE( fileunit, '(15I5)' ) (1, i=1, nkstot_eff)
         !
       ENDIF
       !
-      DO ir = 1, nkstot/nspin
+      DO ir = 1, nkstot_eff
         DO iband = 1, nwann
           DO jband = 1, nwann
             !

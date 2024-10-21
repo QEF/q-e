@@ -15,7 +15,7 @@ SUBROUTINE lr_run_nscf( )
   ! Created by Iurii Timrov (2013)
   !
   USE control_flags,   ONLY : conv_ions, restart
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
+  USE starting_scf,    ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE io_global,       ONLY : stdout
   USE lr_variables,    ONLY : tmp_dir_lr

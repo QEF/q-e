@@ -26,14 +26,19 @@
      SAVE
 
      !
-     COMPLEX(DP), ALLOCATABLE, TARGET :: &
-       evc(:,:)
+!civn
+!    COMPLEX(DP), ALLOCATABLE, TARGET :: &
+#if defined(__CUDA)
+     COMPLEX(DP), POINTER, CONTIGUOUS :: evc(:,:)
+#else
+     COMPLEX(DP), ALLOCATABLE, TARGET :: evc(:,:)
+#endif
        !! wavefunctions in the PW basis set.  
        !! noncolinear case: first index is a combined PW + spin index
        !
-#if defined(__CUDA)
-       attributes(PINNED) :: evc
-#endif
+!#if defined(__CUDA)
+!       attributes(PINNED) :: evc
+!#endif
      !
      COMPLEX(DP) , ALLOCATABLE, TARGET :: psic(:)
      !! additional memory for FFT
@@ -59,12 +64,18 @@
    CONTAINS
 
       SUBROUTINE deallocate_wavefunctions
+       USE control_flags,       ONLY : use_gpu
+       INTEGER :: istat
        IF( ALLOCATED( cv0) ) DEALLOCATE( cv0)   ! Lingzhu Kong
        IF( ALLOCATED( c0_bgrp ) ) DEALLOCATE( c0_bgrp )
        IF( ALLOCATED( cm_bgrp ) ) DEALLOCATE( cm_bgrp )
        IF( ALLOCATED( phi ) ) DEALLOCATE( phi )
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
+#if defined(__CUDA)
+       !$acc exit data delete(evc)
+       IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
 #if defined (__CUDA)
        IF( ALLOCATED( c0_d ) ) DEALLOCATE( c0_d )

@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
-  USE FoX_wxml
-#else
-  USE wxml
-#endif
+#if defined (__fox) 
+  USE  FoX_wxml 
+#else 
+  USE wxml 
+#endif 
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -130,6 +130,7 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_scalarQuantity
     MODULE PROCEDURE qes_write_rism3d
     MODULE PROCEDURE qes_write_rismlaue
+    MODULE PROCEDURE qes_write_two_chem
   END INTERFACE qes_write
   !
   CONTAINS
@@ -299,6 +300,9 @@ MODULE qes_write_module
      IF (obj%spin_constraints_ispresent) THEN
         CALL qes_write_spin_constraints (xp, obj%spin_constraints)
      END IF
+     IF (obj%twoch__ispresent) THEN
+        CALL qes_write_two_chem (xp, obj%twoch_)
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_input
 
@@ -388,6 +392,9 @@ MODULE qes_write_module
      END IF
      IF (obj%rismlaue_ispresent) THEN
         CALL qes_write_rismlaue (xp, obj%rismlaue)
+     END IF
+     IF (obj%two_chem_ispresent) THEN
+        CALL qes_write_two_chem (xp, obj%two_chem)
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_output
@@ -627,6 +634,7 @@ MODULE qes_write_module
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
      IF (obj%nat_ispresent) CALL xml_addAttribute(xp, 'nat', obj%nat )
+     IF (obj%num_of_atomic_wfc_ispresent) CALL xml_addAttribute(xp, 'num_of_atomic_wfc', obj%num_of_atomic_wfc )
      IF (obj%alat_ispresent) CALL xml_addAttribute(xp, 'alat', obj%alat )
      IF (obj%bravais_index_ispresent) CALL xml_addAttribute(xp, 'bravais_index', obj%bravais_index )
      IF (obj%alternative_axes_ispresent) CALL xml_addAttribute(xp, 'alternative_axes', TRIM(obj%alternative_axes) )
@@ -2698,6 +2706,11 @@ MODULE qes_write_module
      IF (obj%opt_conv_ispresent) THEN
         CALL qes_write_opt_conv (xp, obj%opt_conv)
      END IF
+     IF (obj%wf_collected_ispresent) THEN
+        CALL xml_NewElement(xp, "wf_collected")
+           CALL xml_addCharacters(xp, obj%wf_collected)
+        CALL xml_EndElement(xp, "wf_collected")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_convergence_info
 
@@ -2789,6 +2802,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nsym')
         CALL xml_addCharacters(xp, obj%nsym)
      CALL xml_EndElement(xp, 'nsym')
+     IF (obj%colin_mag_ispresent) THEN
+        CALL xml_NewElement(xp, "colin_mag")
+           CALL xml_addCharacters(xp, obj%colin_mag)
+        CALL xml_EndElement(xp, "colin_mag")
+     END IF
      CALL xml_NewElement(xp, 'nrot')
         CALL xml_addCharacters(xp, obj%nrot)
      CALL xml_EndElement(xp, 'nrot')
@@ -2878,6 +2896,9 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'assume_isolated')
         CALL xml_addCharacters(xp, TRIM(obj%assume_isolated))
      CALL xml_EndElement(xp, 'assume_isolated')
+     IF (obj%esm_ispresent) THEN
+        CALL qes_write_esm (xp, obj%esm)
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_outputPBC
 
@@ -3043,14 +3064,6 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nelec')
         CALL xml_addCharacters(xp, obj%nelec, fmt='s16')
      CALL xml_EndElement(xp, 'nelec')
-     IF (obj%num_of_atomic_wfc_ispresent) THEN
-        CALL xml_NewElement(xp, "num_of_atomic_wfc")
-           CALL xml_addCharacters(xp, obj%num_of_atomic_wfc)
-        CALL xml_EndElement(xp, "num_of_atomic_wfc")
-     END IF
-     CALL xml_NewElement(xp, 'wf_collected')
-        CALL xml_addCharacters(xp, obj%wf_collected)
-     CALL xml_EndElement(xp, 'wf_collected')
      IF (obj%fermi_energy_ispresent) THEN
         CALL xml_NewElement(xp, "fermi_energy")
            CALL xml_addCharacters(xp, obj%fermi_energy, fmt='s16')
@@ -3593,6 +3606,37 @@ MODULE qes_write_module
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_rismlaue
+
+   SUBROUTINE qes_write_two_chem(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(two_chem_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_NewElement(xp, 'twochem')
+        CALL xml_addCharacters(xp, obj%twochem)
+     CALL xml_EndElement(xp, 'twochem')
+     CALL xml_NewElement(xp, 'nbnd_cond')
+        CALL xml_addCharacters(xp, obj%nbnd_cond)
+     CALL xml_EndElement(xp, 'nbnd_cond')
+     CALL xml_NewElement(xp, 'degauss_cond')
+        CALL xml_addCharacters(xp, obj%degauss_cond, fmt='s16')
+     CALL xml_EndElement(xp, 'degauss_cond')
+     CALL xml_NewElement(xp, 'nelec_cond')
+        CALL xml_addCharacters(xp, obj%nelec_cond, fmt='s16')
+     CALL xml_EndElement(xp, 'nelec_cond')
+     IF (obj%ef_cond_ispresent) THEN
+        CALL xml_NewElement(xp, "ef_cond")
+           CALL xml_addCharacters(xp, obj%ef_cond, fmt='s16')
+        CALL xml_EndElement(xp, "ef_cond")
+     END IF
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_two_chem
 
   !
 END MODULE qes_write_module

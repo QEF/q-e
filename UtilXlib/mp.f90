@@ -12,7 +12,6 @@
 MODULE mp
 !------------------------------------------------------------------------------!
   USE util_param,     ONLY : DP, stdout, i8b
-  USE parallel_include
 #if defined(__CUDA)
   USE cudafor,        ONLY : cudamemcpy, cudamemcpy2d, &
                             & cudaMemcpyDeviceToDevice, &
@@ -178,6 +177,7 @@ MODULE mp
 !------------------------------------------------------------------------------!
 !..mp_gather_i1
       SUBROUTINE mp_gather_i1(mydata, alldata, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: mydata, root
         INTEGER, INTENT(IN) :: gid
@@ -200,6 +200,7 @@ MODULE mp
 !..mp_gather_iv
 !..Carlo Cavazzoni
       SUBROUTINE mp_gather_iv(mydata, alldata, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: mydata(:), root
         INTEGER, INTENT(IN) :: gid
@@ -228,6 +229,7 @@ MODULE mp
       SUBROUTINE mp_start(numtask, taskid, group)
 
 ! ...
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT (OUT) :: numtask, taskid
         INTEGER, INTENT (IN)  :: group
@@ -272,6 +274,7 @@ MODULE mp
 !..mp_end
 
       SUBROUTINE mp_end(groupid, cleanup)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: groupid
         LOGICAL, OPTIONAL, INTENT(IN) :: cleanup
@@ -299,6 +302,7 @@ MODULE mp
 !..mp_group
 
       SUBROUTINE mp_comm_group( comm, group )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, INTENT (IN) :: comm
          INTEGER, INTENT (OUT) :: group
@@ -313,6 +317,7 @@ MODULE mp
       END SUBROUTINE  mp_comm_group
 
       SUBROUTINE mp_comm_split( old_comm, color, key, new_comm )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, INTENT (IN) :: old_comm
          INTEGER, INTENT (IN) :: color, key
@@ -329,6 +334,7 @@ MODULE mp
 
 
       SUBROUTINE mp_group_create( group_list, group_size, old_grp, new_grp )
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: group_list(:), group_size, old_grp
         INTEGER, INTENT (OUT) :: new_grp
@@ -344,6 +350,7 @@ MODULE mp
 
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_comm_create( old_comm, new_grp, new_comm )
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: old_comm
         INTEGER, INTENT (IN) :: new_grp
@@ -361,6 +368,7 @@ MODULE mp
 !------------------------------------------------------------------------------!
 !..mp_group_free
       SUBROUTINE mp_group_free( group )
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: group
         INTEGER :: ierr
@@ -373,6 +381,7 @@ MODULE mp
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_comm_free( comm )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, INTENT (INOUT) :: comm
          INTEGER :: ierr
@@ -391,6 +400,7 @@ MODULE mp
 ! waits till all request are completed
       SUBROUTINE mp_waitall(requests)
 ! ...
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: requests(:)
         INTEGER :: ierr
@@ -408,6 +418,7 @@ MODULE mp
 !tests all requests
       SUBROUTINE mp_testall(requests, flag)
       ! ...
+         USE parallel_include
          IMPLICIT NONE
           INTEGER, INTENT (INOUT) :: requests(:)
           INTEGER :: ierr
@@ -830,6 +841,8 @@ MODULE mp
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_i1(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include 
+        IMPLICIT NONE
         INTEGER :: msg_dest
         INTEGER, INTENT(IN) :: msg_sour
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -883,6 +896,8 @@ MODULE mp
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_iv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         INTEGER :: msg_dest(:)
         INTEGER, INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -930,6 +945,8 @@ MODULE mp
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_get_r1(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP)             :: msg_dest
         REAL (DP), INTENT(IN) :: msg_sour
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -979,6 +996,8 @@ MODULE mp
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include 
+        IMPLICIT NONE
         REAL (DP)             :: msg_dest(:)
         REAL (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1028,6 +1047,8 @@ MODULE mp
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rm(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include 
+        IMPLICIT NONE
         REAL (DP) :: msg_dest(:,:)
         REAL (DP), INTENT(IN) :: msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1078,6 +1099,8 @@ MODULE mp
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_cv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         COMPLEX (DP)             :: msg_dest(:)
         COMPLEX (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1129,6 +1152,8 @@ MODULE mp
 ! Marco Govoni
 !
       SUBROUTINE mp_get_cm(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        USE parallel_include 
+        IMPLICIT NONE
         COMPLEX (DP)              :: msg_dest(:,:)
         COMPLEX (DP), INTENT(IN)  :: msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1179,6 +1204,8 @@ MODULE mp
 
 
       SUBROUTINE mp_put_i1(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
+        USE parallel_include 
+        IMPLICIT NONE
         INTEGER :: msg_dest
         INTEGER, INTENT(IN) :: msg_sour
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1227,6 +1254,8 @@ MODULE mp
 !
 !
       SUBROUTINE mp_put_iv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         INTEGER             :: msg_dest(:)
         INTEGER, INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1273,6 +1302,8 @@ MODULE mp
 !
 !
       SUBROUTINE mp_put_rv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP)             :: msg_dest(:)
         REAL (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1319,6 +1350,8 @@ MODULE mp
 !
 !
       SUBROUTINE mp_put_rm(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP)             :: msg_dest(:,:)
         REAL (DP), INTENT(IN) :: msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1366,6 +1399,8 @@ MODULE mp
 !
 !
       SUBROUTINE mp_put_cv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         COMPLEX (DP)             :: msg_dest(:)
         COMPLEX (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -1414,6 +1449,7 @@ MODULE mp
 !..mp_stop
 !
       SUBROUTINE mp_stop(code)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: code
         INTEGER :: ierr
@@ -1591,6 +1627,7 @@ MODULE mp
       END SUBROUTINE mp_sum_rm_nc
 
       SUBROUTINE mp_root_sum_rm( msg, res, root, gid )
+        USE parallel_include
         IMPLICIT NONE
         REAL (DP), INTENT (IN)  :: msg(:,:)
         REAL (DP), INTENT (OUT) :: res(:,:)
@@ -1620,6 +1657,7 @@ MODULE mp
 
 
       SUBROUTINE mp_root_sum_cm( msg, res, root, gid )
+        USE parallel_include
         IMPLICIT NONE
         COMPLEX (DP), INTENT (IN)  :: msg(:,:)
         COMPLEX (DP), INTENT (OUT) :: res(:,:)
@@ -1655,6 +1693,7 @@ MODULE mp
 !
 
       SUBROUTINE mp_sum_rmm( msg, res, root, gid )
+        USE parallel_include
         IMPLICIT NONE
         REAL (DP), INTENT (IN) :: msg(:,:)
         REAL (DP), INTENT (OUT) :: res(:,:)
@@ -1990,6 +2029,7 @@ MODULE mp
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_barrier(gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: gid
         INTEGER :: ierr
@@ -2003,6 +2043,7 @@ MODULE mp
 !.. Carlo Cavazzoni
 !..mp_rank
       FUNCTION mp_rank( comm )
+        USE parallel_include
         IMPLICIT NONE
         INTEGER :: mp_rank
         INTEGER, INTENT(IN) :: comm
@@ -2021,6 +2062,7 @@ MODULE mp
 !.. Carlo Cavazzoni
 !..mp_size
       FUNCTION mp_size( comm )
+        USE parallel_include
         IMPLICIT NONE
         INTEGER :: mp_size
         INTEGER, INTENT(IN) :: comm
@@ -2055,6 +2097,7 @@ MODULE mp
 !..Carlo Cavazzoni
 
       SUBROUTINE mp_gatherv_rv( mydata, alldata, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         REAL(DP) :: mydata(:)
         REAL(DP) :: alldata(:)
@@ -2093,6 +2136,7 @@ MODULE mp
 !..Carlo Cavazzoni
 
       SUBROUTINE mp_gatherv_cv( mydata, alldata, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         COMPLEX(DP) :: mydata(:)
         COMPLEX(DP) :: alldata(:)
@@ -2131,6 +2175,7 @@ MODULE mp
 !..Carlo Cavazzoni
 
       SUBROUTINE mp_gatherv_iv( mydata, alldata, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER :: mydata(:)
         INTEGER :: alldata(:)
@@ -2170,6 +2215,7 @@ MODULE mp
 !..Carlo Cavazzoni
 
       SUBROUTINE mp_gatherv_rm( mydata, alldata, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         REAL(DP) :: mydata(:,:)  ! Warning first dimension is supposed constant!
         REAL(DP) :: alldata(:,:)
@@ -2220,6 +2266,7 @@ MODULE mp
 !..Carlo Cavazzoni
 
       SUBROUTINE mp_gatherv_im( mydata, alldata, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER :: mydata(:,:)  ! Warning first dimension is supposed constant!
         INTEGER :: alldata(:,:)
@@ -2271,6 +2318,7 @@ MODULE mp
 !..Ye Luo
 
       SUBROUTINE mp_gatherv_inplace_cplx_array(alldata, my_column_type, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         COMPLEX(DP) :: alldata(:,:)
         INTEGER, INTENT(IN) :: my_column_type
@@ -2303,6 +2351,7 @@ MODULE mp
 !..Ye Luo
 
       SUBROUTINE mp_allgatherv_inplace_cplx_array(alldata, my_element_type, recvcount, displs, gid)
+        USE parallel_include
         IMPLICIT NONE
         COMPLEX(DP) :: alldata(:,:)
         INTEGER, INTENT(IN) :: my_element_type
@@ -2327,6 +2376,7 @@ MODULE mp
 
 !.. SdG added 16/08/19
       SUBROUTINE mp_allgatherv_inplace_real_array(alldata, my_element_type, recvcount, displs, gid)
+        USE parallel_include
         IMPLICIT NONE
         REAL(DP) :: alldata(:,:)
         INTEGER, INTENT(IN) :: my_element_type
@@ -2380,6 +2430,7 @@ MODULE mp
 
 
 SUBROUTINE mp_alltoall_c3d( sndbuf, rcvbuf, gid )
+   USE parallel_include
    IMPLICIT NONE
    COMPLEX(DP) :: sndbuf( :, :, : )
    COMPLEX(DP) :: rcvbuf( :, :, : )
@@ -2416,6 +2467,7 @@ END SUBROUTINE mp_alltoall_c3d
 !------------------------------------------------------------------------------!
 
 SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
+   USE parallel_include
    IMPLICIT NONE
    INTEGER :: sndbuf( :, :, : )
    INTEGER :: rcvbuf( :, :, : )
@@ -2449,6 +2501,7 @@ SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
 END SUBROUTINE mp_alltoall_i3d
 
 SUBROUTINE mp_circular_shift_left_i0( buf, itag, gid )
+   USE parallel_include
    IMPLICIT NONE
    INTEGER :: buf
    INTEGER, INTENT(IN) :: itag
@@ -2484,6 +2537,7 @@ END SUBROUTINE mp_circular_shift_left_i0
 
 
 SUBROUTINE mp_circular_shift_left_i1( buf, itag, gid )
+   USE parallel_include
    IMPLICIT NONE
    INTEGER :: buf(:)
    INTEGER, INTENT(IN) :: itag
@@ -2519,6 +2573,7 @@ END SUBROUTINE mp_circular_shift_left_i1
 
 
 SUBROUTINE mp_circular_shift_left_i2( buf, itag, gid )
+   USE parallel_include
    IMPLICIT NONE
    INTEGER :: buf(:,:)
    INTEGER, INTENT(IN) :: itag
@@ -2554,6 +2609,7 @@ END SUBROUTINE mp_circular_shift_left_i2
 
 
 SUBROUTINE mp_circular_shift_left_r2d( buf, itag, gid )
+   USE parallel_include
    IMPLICIT NONE
    REAL(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2588,6 +2644,7 @@ SUBROUTINE mp_circular_shift_left_r2d( buf, itag, gid )
 END SUBROUTINE mp_circular_shift_left_r2d
 
 SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
+   USE parallel_include
    IMPLICIT NONE
    COMPLEX(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2625,6 +2682,7 @@ END SUBROUTINE mp_circular_shift_left_c2d
 !------------------------------------------------------------------------------!
 !..mp_circular_shift_left_start
 SUBROUTINE mp_circular_shift_left_start_i0( sendbuf, recvbuf, itag, gid, requests)
+   USE parallel_include
    IMPLICIT NONE
    INTEGER  :: sendbuf, recvbuf
    INTEGER, INTENT(IN) :: itag
@@ -2668,6 +2726,7 @@ END SUBROUTINE mp_circular_shift_left_start_i0
 
 
 SUBROUTINE mp_circular_shift_left_start_i1( sendbuf, recvbuf, itag, gid, requests)
+   USE parallel_include
    IMPLICIT NONE
    INTEGER  :: sendbuf( : ), recvbuf( : )
    INTEGER, INTENT(IN) :: itag
@@ -2712,6 +2771,7 @@ END SUBROUTINE mp_circular_shift_left_start_i1
 
 
 SUBROUTINE mp_circular_shift_left_start_i2( sendbuf, recvbuf, itag, gid, requests)
+   USE parallel_include
    IMPLICIT NONE
    INTEGER  :: sendbuf( :, : ), recvbuf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2756,6 +2816,7 @@ END SUBROUTINE mp_circular_shift_left_start_i2
 
 
 SUBROUTINE mp_circular_shift_left_start_r2d( sendbuf, recvbuf, itag, gid, requests)
+   USE parallel_include
    IMPLICIT NONE
    REAL(DP) :: sendbuf( :, : ), recvbuf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2800,6 +2861,7 @@ END SUBROUTINE mp_circular_shift_left_start_r2d
 
 
 SUBROUTINE mp_circular_shift_left_start_c2d( sendbuf, recvbuf, itag, gid, requests)
+   USE parallel_include
    IMPLICIT NONE
    COMPLEX(DP) :: sendbuf( :, : ), recvbuf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2862,6 +2924,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   ! ...    color      Integer (positive), same for all processes residing on a node.
   ! ...    key        Integer, unique number identifying each process on the same node.
   ! ...
+  USE parallel_include
   IMPLICIT NONE
   INTEGER, INTENT (OUT) :: num_nodes
   INTEGER, INTENT (OUT) :: color
@@ -2958,18 +3021,21 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
 END SUBROUTINE mp_count_nodes
 !
 FUNCTION mp_get_comm_null( )
+  USE parallel_include
   IMPLICIT NONE
   INTEGER :: mp_get_comm_null
   mp_get_comm_null = MPI_COMM_NULL
 END FUNCTION mp_get_comm_null
 
 FUNCTION mp_get_comm_self( )
+  USE parallel_include
   IMPLICIT NONE
   INTEGER :: mp_get_comm_self
   mp_get_comm_self = MPI_COMM_SELF
 END FUNCTION mp_get_comm_self
 
 SUBROUTINE mp_type_create_cplx_column_section(dummy, start, length, stride, mytype)
+  USE parallel_include
   IMPLICIT NONE
   !
   COMPLEX (DP), INTENT(IN) :: dummy
@@ -2992,6 +3058,7 @@ SUBROUTINE mp_type_create_cplx_column_section(dummy, start, length, stride, myty
 END SUBROUTINE mp_type_create_cplx_column_section
 
 SUBROUTINE mp_type_create_real_column_section(dummy, start, length, stride, mytype)
+  USE parallel_include
   IMPLICIT NONE
   !
   REAL (DP), INTENT(IN) :: dummy
@@ -3014,6 +3081,7 @@ SUBROUTINE mp_type_create_real_column_section(dummy, start, length, stride, myty
 END SUBROUTINE mp_type_create_real_column_section
 
 SUBROUTINE mp_type_create_cplx_row_section(dummy, column_start, column_stride, row_length, mytype)
+  USE parallel_include
   IMPLICIT NONE
   !
   COMPLEX (DP), INTENT(IN) :: dummy
@@ -3047,6 +3115,7 @@ SUBROUTINE mp_type_create_cplx_row_section(dummy, column_start, column_stride, r
 END SUBROUTINE mp_type_create_cplx_row_section
 
 SUBROUTINE mp_type_create_real_row_section(dummy, column_start, column_stride, row_length, mytype)
+  USE parallel_include
   IMPLICIT NONE
   !
   REAL (DP), INTENT(IN) :: dummy
@@ -3080,6 +3149,7 @@ SUBROUTINE mp_type_create_real_row_section(dummy, column_start, column_stride, r
 END SUBROUTINE mp_type_create_real_row_section
 
 SUBROUTINE mp_type_free(mytype)
+  USE parallel_include
   IMPLICIT NONE
   INTEGER :: mytype, ierr
   !
@@ -3639,6 +3709,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_i1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include 
+        IMPLICIT NONE
         INTEGER, DEVICE             :: msg_dest_d
         INTEGER, INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -3701,6 +3773,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_iv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         INTEGER, DEVICE             :: msg_dest_d(:)
         INTEGER, INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -3762,6 +3836,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_r1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP), DEVICE             :: msg_dest_d
         REAL (DP), INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -3820,6 +3896,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_rv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP), DEVICE             :: msg_dest_d(:)
         REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -3881,6 +3959,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_rm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP), DEVICE             :: msg_dest_d(:,:)
         REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -3946,6 +4026,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_cv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         COMPLEX (DP), DEVICE             :: msg_dest_d(:)
         COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4007,6 +4089,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_cm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
         COMPLEX (DP), DEVICE             :: msg_dest_d(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4071,6 +4155,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_i1_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         INTEGER, DEVICE             :: msg_dest_d
         INTEGER, INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4130,6 +4216,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_iv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         INTEGER, DEVICE             :: msg_dest_d(:)
         INTEGER, INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4190,6 +4278,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_rv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP), DEVICE             :: msg_dest_d(:)
         REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4250,6 +4340,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_rm_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         REAL (DP), DEVICE             :: msg_dest_d(:,:)
         REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4313,6 +4405,8 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_cv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        USE parallel_include
+        IMPLICIT NONE
         COMPLEX (DP),             DEVICE :: msg_dest_d(:)
         COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
@@ -4636,6 +4730,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_root_sum_rm_gpu( msg_d, res_d, root, gid )
+        USE parallel_include
         IMPLICIT NONE
         REAL (DP), INTENT (IN) , DEVICE :: msg_d(:,:)
         REAL (DP), INTENT (OUT), DEVICE :: res_d(:,:)
@@ -4675,6 +4770,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_root_sum_cm_gpu( msg_d, res_d, root, gid )
+        USE parallel_include
         IMPLICIT NONE
         COMPLEX (DP), INTENT (IN) , DEVICE :: msg_d(:,:)
         COMPLEX (DP), INTENT (OUT), DEVICE :: res_d(:,:)
@@ -4713,6 +4809,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_sum_rmm_gpu( msg_d, res_d, root, gid )
+        USE parallel_include
         IMPLICIT NONE
         REAL (DP), INTENT (IN), DEVICE :: msg_d(:,:)
         REAL (DP), INTENT (OUT),DEVICE :: res_d(:,:)
@@ -5420,6 +5517,7 @@ END SUBROUTINE mp_type_free
 !..mp_gather
 
       SUBROUTINE mp_gather_i1_gpu(mydata_d, alldata_d, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d
         INTEGER, INTENT(IN) :: gid, root
@@ -5456,6 +5554,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_gather_iv_gpu(mydata_d, alldata_d, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d(:)
         INTEGER, INTENT(IN) :: gid, root
@@ -5497,6 +5596,7 @@ END SUBROUTINE mp_type_free
 !..mp_gatherv_rv
 !
       SUBROUTINE mp_gatherv_rv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         REAL(DP), DEVICE :: mydata_d(:)
         REAL(DP), DEVICE :: alldata_d(:)
@@ -5549,6 +5649,7 @@ END SUBROUTINE mp_type_free
 !..mp_gatherv_cv
 !
       SUBROUTINE mp_gatherv_cv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         COMPLEX(DP), DEVICE :: mydata_d(:)
         COMPLEX(DP), DEVICE :: alldata_d(:)
@@ -5601,6 +5702,7 @@ END SUBROUTINE mp_type_free
 !
 
       SUBROUTINE mp_gatherv_iv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d(:)
         INTEGER, DEVICE :: alldata_d(:)
@@ -5653,6 +5755,7 @@ END SUBROUTINE mp_type_free
 !
 
       SUBROUTINE mp_gatherv_rm_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         REAL(DP), DEVICE :: mydata_d(:,:)  ! Warning first dimension is supposed constant!
         REAL(DP), DEVICE :: alldata_d(:,:)
@@ -5722,6 +5825,7 @@ END SUBROUTINE mp_type_free
 !..mp_gatherv_im
 !
       SUBROUTINE mp_gatherv_im_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        USE parallel_include
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d(:,:)  ! Warning first dimension is supposed constant!
         INTEGER, DEVICE :: alldata_d(:,:)
@@ -5790,6 +5894,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
+         USE parallel_include
          IMPLICIT NONE
          COMPLEX(DP), DEVICE :: sndbuf_d( :, :, : )
          COMPLEX(DP), DEVICE :: rcvbuf_d( :, :, : )
@@ -5834,6 +5939,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, DEVICE :: sndbuf_d( :, :, : )
          INTEGER, DEVICE :: rcvbuf_d( :, :, : )
@@ -5880,6 +5986,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, DEVICE :: buf_d
          INTEGER, INTENT(IN) :: itag
@@ -5924,6 +6031,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, DEVICE :: buf_d(:)
          INTEGER, INTENT(IN) :: itag
@@ -5968,6 +6076,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
+         USE parallel_include
          IMPLICIT NONE
          INTEGER, DEVICE :: buf_d(:,:)
          INTEGER, INTENT(IN) :: itag
@@ -6012,6 +6121,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
+         USE parallel_include
          IMPLICIT NONE
          REAL(DP), DEVICE :: buf_d( :, : )
          INTEGER, INTENT(IN) :: itag
@@ -6056,6 +6166,7 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
+         USE parallel_include
          IMPLICIT NONE
          COMPLEX(DP), DEVICE :: buf_d( :, : )
          INTEGER, INTENT(IN) :: itag
@@ -6102,6 +6213,7 @@ END SUBROUTINE mp_type_free
 !
 
       SUBROUTINE mp_gatherv_inplace_cplx_array_gpu(alldata_d, my_column_type, recvcount, displs, root, gid)
+         USE parallel_include
          IMPLICIT NONE
          COMPLEX(DP), DEVICE :: alldata_d(:,:)
          INTEGER, INTENT(IN) :: my_column_type
@@ -6154,6 +6266,7 @@ END SUBROUTINE mp_type_free
 !
 
       SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu(alldata_d, my_element_type, recvcount, displs, gid)
+         USE parallel_include
          IMPLICIT NONE
          COMPLEX(DP), DEVICE :: alldata_d(:,:)
          INTEGER, INTENT(IN) :: my_element_type
@@ -6197,6 +6310,7 @@ END SUBROUTINE mp_type_free
 !
 
       SUBROUTINE mp_allgatherv_inplace_real_array_gpu(alldata_d, my_element_type, recvcount, displs, gid)
+         USE parallel_include
          IMPLICIT NONE
          REAL(DP), DEVICE :: alldata_d(:,:)
          INTEGER, INTENT(IN) :: my_element_type
@@ -6238,6 +6352,7 @@ END SUBROUTINE mp_type_free
       END SUBROUTINE mp_allgatherv_inplace_real_array_gpu
 
       SUBROUTINE mp_type_create_cplx_column_section_gpu(dummy, start, length, stride, mytype)
+         USE parallel_include
          IMPLICIT NONE
          !
          COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
@@ -6260,6 +6375,7 @@ END SUBROUTINE mp_type_free
       END SUBROUTINE mp_type_create_cplx_column_section_gpu
 
       SUBROUTINE mp_type_create_real_column_section_gpu(dummy, start, length, stride, mytype)
+         USE parallel_include
          IMPLICIT NONE
          !
          REAL (DP), DEVICE, INTENT(IN) :: dummy
@@ -6282,6 +6398,7 @@ END SUBROUTINE mp_type_free
       END SUBROUTINE mp_type_create_real_column_section_gpu
 
       SUBROUTINE mp_type_create_cplx_row_section_gpu(dummy, column_start, column_stride, row_length, mytype)
+         USE parallel_include
          IMPLICIT NONE
          !
          COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
@@ -6315,6 +6432,7 @@ END SUBROUTINE mp_type_free
       END SUBROUTINE mp_type_create_cplx_row_section_gpu
 
       SUBROUTINE mp_type_create_real_row_section_gpu(dummy, column_start, column_stride, row_length, mytype)
+         USE parallel_include
          IMPLICIT NONE
          !
          REAL (DP), DEVICE, INTENT(IN) :: dummy

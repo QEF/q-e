@@ -37,7 +37,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:), v2c_ud(:)
-  REAL(DP) :: sx(dfftp%nnr), sc(dfftp%nnr)
+  REAL(DP), ALLOCATABLE :: sx(:), sc(:)
   !
   REAL(DP) :: sgn_is, etxcgc, vtxcgc, fac, amag
   REAL(DP) :: grup, grdw
@@ -60,6 +60,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ALLOCATE( rhoaux(dfftp%nnr,nspin0) )
   ALLOCATE( v1x(dfftp%nnr,nspin0), v2x(dfftp%nnr,nspin0) )
   ALLOCATE( v1c(dfftp%nnr,nspin0), v2c(dfftp%nnr,nspin0) )
+  ALLOCATE( sx(dfftp%nnr), sc(dfftp%nnr) )
   !$acc data create( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, h )
   !
   ALLOCATE( rhogaux(ngm,nspin0) )
@@ -242,6 +243,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   !$acc end data
   !
+  DEALLOCATE( sc, sx )
   DEALLOCATE( rhoaux, grho )
   DEALLOCATE( v1x, v2x )
   DEALLOCATE( v1c, v2c )

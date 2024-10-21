@@ -53,7 +53,7 @@ PROGRAM phonon
   IMPLICIT NONE
   !
   INTEGER :: iq, ierr
-  LOGICAL :: do_band, do_iq, setup_pw
+  LOGICAL :: do_band, do_iq
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   !

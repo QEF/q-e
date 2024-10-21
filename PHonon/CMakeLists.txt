@@ -5,9 +5,10 @@ set(src_ph
     PH/add_zstar_ue.f90
     PH/add_zstar_ue_us.f90
     PH/addcore.f90
-    PH/addnlcc.f90
+    PH/dynmat_nlcc.f90
     PH/addnlcc_zstar_eu_us.f90
     PH/addusddens.f90
+    PH/addusddens_cond.f90
     PH/addusddense.f90
     PH/addusdynmat.f90
     PH/allocate_part.f90
@@ -23,8 +24,10 @@ set(src_ph
     PH/clinear.f90
     PH/close_phq.f90
     PH/compute_alphasum.f90
+    PH/compute_alphasum_cond.f90
     PH/compute_becalp.f90
     PH/compute_becsum_ph.f90
+    PH/compute_becsum_ph_cond.f90
     PH/compute_drhous.f90
     PH/compute_drhous_nc.f90
     PH/compute_dvloc.f90
@@ -89,6 +92,7 @@ set(src_ph
     PH/openfilq.f90
     PH/phcom.f90
     PH/ph_restart.f90
+    PH/ph_set_upert.f90
     PH/phescf.f90
     PH/phq_init.f90
     PH/phq_readin.f90
@@ -102,7 +106,6 @@ set(src_ph
     PH/prepare_sym_analysis.f90
     PH/psidspsi.f90
     PH/psymdvscf.f90
-    PH/psyme.f90
     PH/psym_dmag.f90
     PH/psym_dmage.f90
     PH/punch_plot_e.f90
@@ -136,7 +139,6 @@ set(src_ph
     PH/symdvscf.f90
     PH/symdyn_munu.f90
     PH/symdynph_gq.f90
-    PH/syme.f90
     PH/symm.f90
     PH/symmorphic_or_nzb.f90
     PH/swfc.f90

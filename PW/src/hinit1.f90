@@ -35,7 +35,6 @@ SUBROUTINE hinit1()
   USE dfunct_gpum,         ONLY : newd_gpu
   USE exx_base,            ONLY : coulomb_fac, coulomb_done
   !
-  USE scf_gpum,            ONLY : using_vrs
   USE ener,                ONLY : esol, vsol
   USE rism_module,         ONLY : lrism, rism_update_pos, rism_calc3d
   !
@@ -113,7 +112,6 @@ SUBROUTINE hinit1()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, &
                 doublegrid )
   !

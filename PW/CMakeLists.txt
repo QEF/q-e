@@ -12,7 +12,6 @@ set(src_pw
    src/addusstress.f90 
    src/allocate_fft.f90 
    src/allocate_locpot.f90 
-   src/allocate_nlpot.f90 
    src/allocate_wfc.f90 
    src/atomic_rho.f90 
    src/atomic_wfc.f90 
@@ -199,6 +198,7 @@ set(src_pw
    src/set_vrs.f90 
    src/setlocal.f90 
    src/setup.f90 
+   src/starting_scf_mod.f90
    src/stop_run.f90 
    src/stres_cc.f90 
    src/stres_ewa.f90 
@@ -245,11 +245,8 @@ set(src_pw
    src/wannier_occ.f90
    src/d3hess_mod.f90
    # GPU
-   src/pwcom_gpu.f90
-   src/scf_mod_gpu.f90
    src/g_psi_mod_gpu.f90
    src/newd_gpu.f90
-   src/sum_band_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90

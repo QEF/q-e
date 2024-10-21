@@ -18,7 +18,7 @@ $ECHO "to calculate the KI electronic structure of FCC Silicon. "
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x kcw.x"
-PSEUDO_LIST="Si_ONCV_PBE-1.0.upf"
+PSEUDO_LIST="Si.upf"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -55,7 +55,7 @@ done
 $ECHO " done"
 
 #Overwrite NETWORK_PSEUDO
-NETWORK_PSEUDO=http://www.quantum-simulation.org/potentials/sg15_oncv/upf/
+NETWORK_PSEUDO="https://raw.githubusercontent.com/epfl-theos/koopmans/master/src/koopmans/pseudopotentials/pseudo_dojo_standard_v0.4.1/lda"
 
 # check for pseudopotentials
 $ECHO "  checking that pseudopotentials files exist      ...\c"
@@ -119,7 +119,7 @@ cat > $PREFIX.scf.in << EOF
   conv_thr =  0.5d-12
 /
 ATOMIC_SPECIES
-Si 28.085 Si_ONCV_PBE-1.0.upf
+Si 28.085 Si.upf
 
 ATOMIC_POSITIONS crystal
 Si 0.00 0.00 0.00
