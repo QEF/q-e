@@ -30,8 +30,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos,  grad_pes, dim1, pending_image, &
-                               istep_path, num_of_images !pes
+  USE path_variables,   ONLY : pos,   dim1, pending_image, &
+                               istep_path, num_of_images !pes, grad_pes,
                               !  stress_pes ! <-- lp
   USE pimd_variables,   ONLY : forceMD, nbeadMD, stress_pes_md, pes
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
@@ -74,7 +74,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   tmp_dir_saved = tmp_dir
   !
   pes        = 0.D0
-  grad_pes = 0.D0
+!   grad_pes = 0.D0
   forceMD = 0.D0
 !   stress_pes = 0.D0  ! --> allocated/deallocated in path_variable (path_allocation, path_deallocation) and declared...
   stress_pes_md = 0.D0
@@ -180,7 +180,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
 
       CALL mp_sum( pes,        inter_image_comm )  !!! <----my mod.
-      CALL mp_sum( grad_pes,   inter_image_comm )  !!! <----my mod.
+      ! CALL mp_sum( grad_pes,   inter_image_comm )  !!! <----my mod.
       ! CALL mp_sum( stress_pes, inter_image_comm )  !!! <----my mod.
       CALL mp_sum( stress_pes_md, inter_image_comm )
       CALL mp_sum( forceMD, inter_image_comm ) 
@@ -346,7 +346,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
      
-      grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
+      ! grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
       forceMD(:,:,image) = force /e2
 
            

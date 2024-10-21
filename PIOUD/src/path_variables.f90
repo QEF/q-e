@@ -31,8 +31,8 @@ MODULE path_variables
   !
   LOGICAL :: restart
   !
-  LOGICAL :: &
-       conv_path                  ! .TRUE. when "path" convergence has been
+  ! LOGICAL :: &
+  !      conv_path                  ! .TRUE. when "path" convergence has been
                                   !        achieved
   LOGICAL :: &
       !  first_last_opt,           &! if .TRUE. the first and the last image
@@ -76,8 +76,8 @@ MODULE path_variables
   !      pes(:)                      ! the potential enrgy along the path
      !   error(:)                   ! the error from the true MEP            !!!Remove it 
   REAL(DP), ALLOCATABLE :: &
-       pos(:,:),                 &! reaction path
-       grad_pes(:,:)            ! gradients acting on the path
+       pos(:,:) !,                 &! reaction path
+      !  grad_pes(:,:)            ! gradients acting on the path
       !  stress_pes(:,:)             !Stress
 
 !   LOGICAL, ALLOCATABLE :: &
@@ -119,7 +119,7 @@ MODULE path_variables
        !
      !   ALLOCATE( posold(   dim1, num_of_images ) )
      !   ALLOCATE( grad(     dim1, num_of_images ) )
-       ALLOCATE( grad_pes( dim1, num_of_images ) )
+      !  ALLOCATE( grad_pes( dim1, num_of_images ) )
       !  ALLOCATE( stress_pes( 6, num_of_images ) )
 
        !
@@ -145,7 +145,7 @@ MODULE path_variables
      !   IF ( ALLOCATED( posold ) )       DEALLOCATE( posold )
      !   IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
       !  IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
-       IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
+      !  IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
       !  IF ( ALLOCATED( stress_pes ) )   DEALLOCATE( stress_pes )
      !   IF ( ALLOCATED( k ) )            DEALLOCATE( k )
      !   IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )

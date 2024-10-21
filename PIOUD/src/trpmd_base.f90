@@ -53,7 +53,7 @@ MODULE trpmd_base
       USE path_input_parameters_module, ONLY : restart_mode
       USE path_input_parameters_module, ONLY : nat
       USE path_variables,   ONLY : pos, istep_path, nstep_path,    &
-                                   dim1, num_of_images,  grad_pes, & !pes
+                                   dim1, num_of_images, & !,  grad_pes, & !pes
                                     path_length,  &
                                    deg_of_freedom,   &
                                    tune_load_balance,  & ! posold, 
@@ -147,7 +147,7 @@ MODULE trpmd_base
       pos(:,1) = pos_(:,1)
       !
       pes          = 0.0_DP
-      grad_pes     = 0.0_DP
+      ! grad_pes     = 0.0_DP
       ! grad         = 0.0_DP
       ! error        = 0.0_DP
       ! frozen       = .FALSE.
@@ -239,8 +239,8 @@ MODULE trpmd_base
       !-----------------------------------------------------------------------
       !
       USE path_variables,    ONLY :  pos, nstep_path ! ,lneb, lsmd
-      USE path_variables,   ONLY : conv_path, istep_path,   &
-                                   pending_image
+      USE path_variables,   ONLY :  istep_path,   &
+                                   pending_image !, conv_path &
                                    !pes !CI_scheme
                                   !  Emax_index
       USE trpmd_io_routines, ONLY : write_output
@@ -258,7 +258,7 @@ MODULE trpmd_base
       !
       REAL(DP), EXTERNAL :: get_clock
       !
-      conv_path = .FALSE.
+      ! conv_path = .FALSE.
       !
       CALL explore_phasespace_init()
       !
@@ -343,13 +343,13 @@ MODULE trpmd_base
         !  IF (meta_ionode) CALL pimd_get_force_from_pw(forceMD) !!! <----my mod.        
          
          !
-         IF ( .NOT. stat ) THEN
-            !
-            conv_path = .FALSE.
-            !
-            EXIT optimisation
-            !
-         END IF
+        !  IF ( .NOT. stat ) THEN
+        !     !
+        !     conv_path = .FALSE.
+        !     !
+        !     EXIT optimisation
+        !     !
+        !  END IF
          !
          ! ... istep_path is updated after a self-consistency step has been
          ! ... completed
