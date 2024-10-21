@@ -18,7 +18,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   USE wvfct,            ONLY: npwx
   USE lsda_mod,         ONLY: current_spin
   USE uspp,             ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, ofsbeta
-  USE uspp_param,       ONLY: upf, nh
+  USE uspp_param,       ONLY: upf, nh, nhm
   USE noncollin_module, ONLY: noncolin, npol, lspinorb
   !
   IMPLICIT NONE
@@ -30,92 +30,69 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   REAL(dp), INTENT(out)   :: s_diag (npwx,npol)
   ! the diagonal part of the S matrix
   !
-  INTEGER :: ikb, jkb, ih, jh, na, nt, ig, ipol
-  COMPLEX(DP) :: ps1(2), ps2(2), ar
-  ! cache blocking parameters
-  INTEGER, PARAMETER :: blocksize = 256
-  INTEGER :: iblock, numblock
+  INTEGER :: ikb, jkb, ih, jh, na, nt, ig, ipol, nhnt, offset
+  COMPLEX(DP), ALLOCATABLE :: ps1(:,:,:), ps2(:,:,:)
+  !$acc declare device_resident(ps1, ps2)
+  COMPLEX(DP) :: ar
   !
-  ! setting cache blocking size
-  numblock  = (npw+blocksize-1)/blocksize
+  !$acc data present ( h_diag, s_diag, vkb, deeq, deeq_nc, qq_so, qq_at ) 
   !
   ! initialise s_diag
   !
-!$omp parallel do private(ikb, jkb, ps1, ps2, ar)
-  DO iblock = 1, numblock
-     !
-     ! initialise s_diag
-     !
-     DO ipol =1, npol
-        DO ig = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-           s_diag(ig, ipol) = 1.d0
-        ENDDO
-     ENDDO
-     !
-     !    multiply on projectors
-     !
-     DO nt = 1, ntyp
-        DO na = 1, nat
-           IF (ityp (na) == nt) THEN
-              DO ih = 1, nh(nt)
-                 ikb = ofsbeta(na) + ih
+  !$acc kernels
+  s_diag(:,:) = 1.d0
+  !$acc end kernels
+  !
+  !    multiply on projectors
+  !
+  ALLOCATE( ps1(nhm,nhm,npol), ps2(nhm,nhm,npol) )
+  DO nt = 1, ntyp
+     nhnt = nh(nt)
+     DO na = 1, nat
+        IF (ityp (na) == nt) THEN
+           offset = ofsbeta(na)
+           !$acc parallel loop collapse(2)
+           DO ih = 1, nhnt
+              DO jh = 1, nhnt
+                 ikb = offset + ih
+                 jkb = offset + jh
                  IF (lspinorb) THEN
-                    ps1(1) = deeq_nc (ih, ih, na, 1)
-                    ps1(2) = deeq_nc (ih, ih, na, 4)
-                    ps2(1) = qq_so(ih, ih, 1, nt)
-                    ps2(2) = qq_so(ih, ih, 4, nt)
+                    ps1(ih,jh,1) = deeq_nc (ih, jh, na, 1)
+                    ps1(ih,jh,2) = deeq_nc (ih, jh, na, 4)
+                    ps2(ih,jh,1) = qq_so(ih, jh, 1, nt)
+                    ps2(ih,jh,2) = qq_so(ih, jh, 4, nt)
                  ELSEIF (noncolin) THEN
-                    ps1(1) = deeq_nc (ih, ih, na, 1)
-                    ps1(2) = deeq_nc (ih, ih, na, 4)
-                    ps2(1) = qq_at (ih, ih, na)
-                    ps2(2) = qq_at (ih, ih, na)
+                    ps1(ih,jh,1) = deeq_nc (ih, jh, na, 1)
+                    ps1(ih,jh,2) = deeq_nc (ih, jh, na, 4)
+                    ps2(ih,jh,1) = qq_at (ih, jh, na)
+                    ps2(ih,jh,2) = qq_at (ih, jh, na)
                  ELSE
-                    ps1(1) = deeq (ih, ih, na, current_spin)
-                    ps2(1) = qq_at (ih, ih, na)
-                 ENDIF
-                 DO ipol =1, npol
-                    DO ig = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-                       ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
-                       h_diag (ig,ipol) = h_diag (ig,ipol) + ps1(ipol) * ar
-                       s_diag (ig,ipol) = s_diag (ig,ipol) + ps2(ipol) * ar
-                    ENDDO
-                 ENDDO
-                 IF ( upf(nt)%tvanp .or.upf(nt)%is_multiproj ) THEN
-                    DO jh = 1, nh (nt)
-                       IF (jh/=ih) THEN
-                          jkb = ofsbeta(na) + jh
-                          IF (lspinorb) THEN
-                             ps1(1) = deeq_nc (ih, jh, na, 1)
-                             ps1(2) = deeq_nc (ih, jh, na, 4)
-                             ps2(1) = qq_so(ih, jh, 1, nt)
-                             ps2(2) = qq_so(ih, jh, 4, nt)
-                          ELSEIF (noncolin) THEN
-                             ps1(1) = deeq_nc (ih, jh, na, 1)
-                             ps1(2) = deeq_nc (ih, jh, na, 4)
-                             ps2(1) = qq_at (ih, jh, na)
-                             ps2(2) = qq_at (ih, jh, na)
-                          ELSE
-                             ps1(1) = deeq (ih, jh, na, current_spin)
-                             ps2(1) = qq_at (ih, jh, na)
-                          ENDIF
-                          DO ipol = 1, npol
-                             DO ig = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-                                ar = vkb (ig, ikb) *conjg( vkb (ig, jkb))
-                                h_diag (ig,ipol) = h_diag (ig,ipol) + &
-                                     ps1(ipol) * ar
-                                s_diag (ig,ipol) = s_diag (ig,ipol) + &
-                                     ps2(ipol) * ar
-                             ENDDO
-                          ENDDO
-                       ENDIF
-                    ENDDO
+                    ps1(ih,jh,1) = deeq (ih, jh, na, current_spin)
+                    ps2(ih,jh,1) = qq_at (ih, jh, na)
                  ENDIF
               ENDDO
-           ENDIF
-        ENDDO
+           ENDDO
+           ! not sure why collapsing more do loops doesn't seem to work
+           !$acc parallel loop collapse(2)
+           DO ig = 1, npw
+              DO ipol = 1, npol
+                 !$acc loop seq collapse(2)
+                 DO ih = 1, nhnt
+                    DO jh = 1, nhnt
+                       ikb = offset + ih
+                       jkb = offset + jh
+                       ar = vkb (ig, ikb) *conjg( vkb (ig, jkb))
+                       h_diag (ig,ipol) = h_diag (ig,ipol) + ps1(ih,jh,ipol) * ar
+                       s_diag (ig,ipol) = s_diag (ig,ipol) + ps2(ih,jh,ipol) * ar
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDIF
      ENDDO
   ENDDO
-!$omp end parallel do
+  DEALLOCATE( ps2, ps1 )
+  !$acc end data
 
   RETURN
 END SUBROUTINE usnldiag
