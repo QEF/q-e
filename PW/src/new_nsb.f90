@@ -27,7 +27,7 @@ SUBROUTINE new_nsb( ns )
                                    is_hubbard_back, nwfcU, offsetU_back, ldmx_b, &
                                    ldim_back, Hubbard_l2, Hubbard_l3,   &
                                    offsetU_back1
-  USE symm_base,            ONLY : d1, d2, d3
+  USE symm_base,            ONLY : d1, d2, d3, t_rev
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
   USE wvfct,                ONLY : nbnd, npw, npwx, wg
@@ -39,14 +39,15 @@ SUBROUTINE new_nsb( ns )
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-
+  USE noncollin_module,     ONLY : colin_mag
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: ns(ldmx_b,ldmx_b,nspin,nat)
   !
   TYPE (bec_type) :: proj     
   ! proj(nwfcU,nbnd)
-  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, ldim
+  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, ldim, is2
   INTEGER :: off, off1, off2, off3, m11, m22, ldim_std
   INTEGER, ALLOCATABLE :: lhub(:)
   ! counter on k points
@@ -187,84 +188,91 @@ SUBROUTINE new_nsb( ns )
                  !
                  DO isym = 1, nsym  
                     nb = irt (isym, na)  
+                    ! flip spin for time-reversal in collinear case
+                    IF ( (colin_mag == 2) .AND. (t_rev(isym) == 1) ) THEN
+                       is2 = 3 - is
+                    ELSE
+                       is2 = is
+                    ENDIF
+                    ! 
                     DO m0 = 1, 2*lhub(m1)+1     
                        DO m00 = 1, 2*lhub(m2)+1 
                           !
                           if (lhub(m1).eq.0.and.lhub(m2).eq.0) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                  nr(m0+off,m00+off1,is,nb) / nsym
+                                  nr(m0+off,m00+off1,is2,nb) / nsym
                           else if (lhub(m1).eq.0.and.lhub(m2).eq.1) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                  nr(m0+off,m00+off1,is,nb) * &
+                                  nr(m0+off,m00+off1,is2,nb) * &
                                   d1(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.0.and.lhub(m2).eq.2) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                  nr(m0+off,m00+off1,is,nb) * &
+                                  nr(m0+off,m00+off1,is2,nb) * &
                                   d2(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.0.and.lhub(m2).eq.3) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                  nr(m0+off,m00+off1,is,nb) * &
+                                  nr(m0+off,m00+off1,is2,nb) * &
                                   d3(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.1.and.lhub(m2).eq.0) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                             d1(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) / nsym
+                             d1(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) / nsym
                           else if (lhub(m1).eq.1.and.lhub(m2).eq.1) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d1(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d1(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d1(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.1.and.lhub(m2).eq.2) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d1(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d1(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d2(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.1.and.lhub(m2).eq.3) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d1(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d1(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d3(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.2.and.lhub(m2).eq.0) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                             d2(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) / nsym
+                             d2(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) / nsym
                           else if (lhub(m1).eq.2.and.lhub(m2).eq.1) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d2(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d2(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d1(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.2.and.lhub(m2).eq.2) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d2(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d2(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d2(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.2.and.lhub(m2).eq.3) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d2(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d2(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d3(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.3.and.lhub(m2).eq.0) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                             d3(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) / nsym
+                             d3(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) / nsym
                           else if (lhub(m1).eq.3.and.lhub(m2).eq.1) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d3(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d3(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d1(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.3.and.lhub(m2).eq.2) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d3(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d3(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d2(m00,m22,isym) / nsym
                           else if (lhub(m1).eq.3.and.lhub(m2).eq.3) then
                              ns(m1,m2,is,na) = &
                                   ns(m1,m2,is,na) +  &
-                                d3(m0,m11,isym)*nr(m0+off,m00+off1,is,nb) * &
+                                d3(m0,m11,isym)*nr(m0+off,m00+off1,is2,nb) * &
                                   d3(m00,m22,isym) / nsym
                           else
                              CALL errore ('new_ns', &

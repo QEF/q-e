@@ -98,6 +98,7 @@ SUBROUTINE irrek( at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   !! its subgroups.
   !
   USE kinds,   ONLY: DP
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -167,7 +168,7 @@ SUBROUTINE irrek( at, bg, nrot, invs, nsym, irg, minus_q, npk, &
                             invs(kpol,2,jrot) * xkg(2) + &
                             invs(kpol,3,jrot) * xkg(3)
         ENDDO
-        IF (t_rev(jrot) == 1)  xks(:,irot) = -xks(:,irot)
+        IF (t_rev(jrot) == 1 .and. colin_mag < 2)  xks(:,irot) = -xks(:,irot)
      ENDDO
      !
      !    For each coset one point is tested with all the preceding

@@ -140,6 +140,7 @@ MODULE pw_restart_new
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
+      USE rap_point_group_is,   ONLY : sname_is
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE fcp_module,           ONLY : lfcp, fcp_mu
       USE control_flags,        ONLY : ldftd3, do_makov_payne 
@@ -375,9 +376,18 @@ MODULE pw_restart_new
                symmetries_loop:DO isym = 1, nrot
                   classes_loop:DO iclass = 1, 12
                      elements_loop:DO ielem=1, nelem (iclass)
-                        IF ( elem(ielem,iclass) == isym) THEN
-                           symop_2_class(isym) = name_class(iclass)
-                           EXIT classes_loop
+                        ! if the time-reversal in collinear systems is not detected
+                        IF (colin_mag <= 1) THEN 
+                           IF ( elem(ielem,iclass) == isym) THEN
+                              symop_2_class(isym) = name_class(iclass)
+                              EXIT classes_loop
+                           END IF
+                        ! if the time-reversal in non-collinear systems is detected
+                        ELSE ! IF (colin_mag == 2)
+                           IF( sname_is(elem(ielem,iclass)) == sname(isym) ) THEN
+                              symop_2_class(isym) = name_class(iclass)
+                              EXIT classes_loop
+                           END IF
                         END IF
                      END DO elements_loop
                   END DO classes_loop
@@ -386,7 +396,7 @@ MODULE pw_restart_new
          END IF
          CALL qexsd_init_symmetries(output_obj%symmetries, spacegroup, &
               nsym, nrot, s, ft, sname, t_rev, nat, irt, &
-              symop_2_class(1:nrot), verbosity, noncolin,colin_mag)
+              symop_2_class(1:nrot), verbosity, noncolin, colin_mag)
          output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------

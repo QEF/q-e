@@ -48,7 +48,6 @@ SUBROUTINE kp_strings( nppstr, gdir, nrot, s, bg, npk, &
    IF (gdir == 1) THEN
       CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
                         npk, k1,k2,k3, 1,nk2,nk3, nks, xk0, wk0 ) 
-
    ELSE IF (gdir == 2) THEN
       CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
                         npk, k1,k2,k3, nk1,1,nk3, nks, xk0, wk0 ) 

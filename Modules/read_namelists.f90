@@ -121,6 +121,8 @@ MODULE read_namelists_module
        gate     = .FALSE. !TB
        twochem  = .FALSE.
        lberry   = .FALSE.
+       symmetry_with_labels = .FALSE. 
+       use_spinflip = .FALSE. 
        gdir     = 0
        nppstr   = 0
        wf_collect = .TRUE.
@@ -910,6 +912,8 @@ MODULE read_namelists_module
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
        CALL mp_bcast( twochem,       ionode_id, intra_image_comm )
        CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
+       CALL mp_bcast( symmetry_with_labels, ionode_id, intra_image_comm) 
+       CALL mp_bcast( use_spinflip, ionode_id, intra_image_comm) 
        !
        RETURN
        !
