@@ -32,11 +32,11 @@ MODULE klist
   REAL(DP) :: degauss
   !! smearing parameter
   REAL(DP) :: degauss_cond
-  !! smeraing parameter for the conduction band in the case of two chemical potentials
+  !! smearing parameter for conduction bands in the case of two chemical potentials
   REAL(DP) :: nelec
   !! number of electrons
   REAL(DP) :: nelec_cond
-  !! number of electrons in the conudction bad in the case of two chemical potentials 
+  !! number of electrons in the conduction bands in the case of two chemical potentials 
   REAL(DP) :: nelup=0.0_dp
   !! number of spin-up electrons (if two_fermi_energies=t)
   REAL(DP) :: neldw=0.0_dp
@@ -46,7 +46,7 @@ MODULE klist
   REAL(DP) :: tot_charge
   !! total charge
   REAL(DP) :: qnorm= 0.0_dp
-  !! |q|, used in phonon+US calculations only
+  !! |q|, used in EXX+US and phonon+US calculations only
   INTEGER, ALLOCATABLE :: igk_k(:,:)
   !! index of G corresponding to a given index of k+G
   INTEGER, ALLOCATABLE :: ngk(:)
@@ -66,7 +66,7 @@ MODULE klist
   LOGICAL :: ltetra
   !! if .TRUE.: use tetrahedra
   LOGICAL :: lxkcry=.FALSE.
-  !! if .TRUE.:k-pnts in cryst. basis accepted in input
+  !! if .TRUE.:k-points in cryst. basis accepted in input
   LOGICAL :: two_fermi_energies
   !! if .TRUE.: nelup and neldw set ef_up and ef_dw separately
   !
@@ -261,8 +261,6 @@ MODULE vlocal
   !! the structure factor
   REAL(DP), ALLOCATABLE :: vloc(:,:)
   !! the local potential for each atom type
-  REAL(DP) :: starting_charge(ntypx)
-  !! the atomic charge used to start with
   !
 END MODULE vlocal
 !
@@ -323,8 +321,6 @@ MODULE ener
   REAL(DP) :: etxc
   !! the exchange and correlation energy
   REAL(DP) :: vtxc
-  !! another exchange-correlation energy
-  REAL(DP) :: etxcc
   !! the nlcc exchange and correlation
   REAL(DP) :: ewld
   !! the ewald energy
@@ -356,6 +352,8 @@ MODULE ener
   !! another solvation energy, from 3D-RISM
   REAL(DP) :: ef_cond
   !! the conduction band chemical potential for a two chemical potential simulation
+  REAL(DP) :: etxcc = 0.0
+  !! obsolete exchange-correlation energy term for core correction - unused
   !
 END MODULE ener
 !

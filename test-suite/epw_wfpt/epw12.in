@@ -8,29 +8,34 @@
 
   iverbosity  = 0
   etf_mem     = 0
+  epw_memdist = .true.
+
   use_ws = .false.
   lpolar = .true.
+  vme    = 'dipole'
 
   degaussw = 0.02 ! eV
-  temps = 0.01  600.0
+  temps = 0.0  600.0
 
   filkf = 'kpath.GammaX.txt'
-  nqf1 = 2
-  nqf2 = 2
-  nqf3 = 2
+  nqf1 = 3
+  nqf2 = 3
+  nqf3 = 3
 
   nbndsub     =  4
 
-  wfpt = .true.
-  elecselfen_ahc = .true.
+  lwfpt = .true.
+  elecselfen = .true.
   ahc_nbnd = 4
   ahc_win_max = 100.0
   ahc_win_min = -100.0
 
-  lifc        = .true.
+  lifc        = .false.
 
   efermi_read = .true.
   fermi_energy = 8.70
+
+  elecselfen_type = 'adiabatic'
 
   wannierize  = .false.
   epbread = .false.
@@ -44,4 +49,3 @@
   nq2         = 2
   nq3         = 2
  /
-

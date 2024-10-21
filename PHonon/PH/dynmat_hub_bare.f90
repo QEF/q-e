@@ -53,7 +53,8 @@ SUBROUTINE dynmat_hub_bare
   USE d2nsq_bare_module
   USE scf,           ONLY : rho
   USE mp,            ONLY : mp_sum, mp_bcast
-  USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm       
+  USE mp_pools,      ONLY : inter_pool_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : seqopn
   USE buffers,       ONLY : get_buffer
@@ -130,10 +131,10 @@ SUBROUTINE dynmat_hub_bare
         !
      ENDIF
      !
-     CALL mp_bcast(exst, ionode_id, world_comm)       
-     CALL mp_bcast(ios, ionode_id, world_comm)   
+     CALL mp_bcast(exst, ionode_id, world_comm)
+     CALL mp_bcast(ios, ionode_id, world_comm)
      !
-     IF (exst .AND. ios==0) CALL mp_bcast(d2ns_bare, ionode_id, world_comm)     
+     IF (exst .AND. ios==0) CALL mp_bcast(d2ns_bare, ionode_id, world_comm)
      !           
   ENDIF
   !
@@ -217,10 +218,8 @@ SUBROUTINE dynmat_hub_bare
            ENDDO
         ENDDO
         !
-#if defined(__MPI)
-        CALL mp_sum(proj1, intra_pool_comm) 
-        CALL mp_sum(projpb, intra_pool_comm)
-#endif
+        CALL mp_sum(proj1, intra_bgrp_comm)
+        CALL mp_sum(projpb, intra_bgrp_comm)
         !
         ! Calculate the m1 m2 upper triangular part (UPT) of the UPT matrices
         !
@@ -287,9 +286,7 @@ SUBROUTINE dynmat_hub_bare
                           !
                        ENDDO ! icar
                        !
-#if defined(__MPI)
-     CALL mp_sum(projpdb, intra_pool_comm) 
-#endif
+                       CALL mp_sum(projpdb, intra_bgrp_comm)
                        !
                        DO nah = 1, nat ! the Hubbard atom
                           !
@@ -348,9 +345,7 @@ SUBROUTINE dynmat_hub_bare
         !
      ENDDO ! ik
      !
-#ifdef __MPI
-     CALL mp_sum(d2ns_bare, inter_pool_comm) 
-#endif
+     CALL mp_sum(d2ns_bare, inter_pool_comm)
      !
      ! If nspin=1, k point weight is normalized to 2 el/band 
      !

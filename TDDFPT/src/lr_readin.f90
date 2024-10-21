@@ -55,7 +55,6 @@ SUBROUTINE lr_readin
   USE constants,           ONLY : eps4, rytoev
   USE control_lr,          ONLY : lrpa, alpha_mix, ethr_nscf
   USE mp_world,            ONLY : world_comm
-  USE scf_gpum,            ONLY: vrs_d
 #if defined (__ENVIRON)
   USE plugin_flags,          ONLY : use_environ
   USE environ_base_module,   ONLY : read_environ_input, init_environ_setup, &
@@ -355,6 +354,21 @@ SUBROUTINE lr_readin
         !
      ENDIF
      !
+     IF (davidson) THEN
+        !
+        ! check and set num_init and num_basis_max
+        !
+        IF (num_init < num_eign ) THEN
+           WRITE(stdout,'(5X,"num_init is too small, set to num_init = 2*num_eign")')
+           num_init = 2 * num_eign
+        ENDIF
+        IF (num_basis_max < 2*num_init ) THEN
+           WRITE(stdout,'(5X,"num_basis_max is too small, set to num_basis_max = 4*num_init")')     
+           num_basis_max = 4 * num_init
+        ENDIF   
+        !
+     ENDIF
+     !
 #if defined(__MPI)
   ENDIF
   !
@@ -489,9 +503,6 @@ SUBROUTINE lr_readin
   ! vrs = vltot + v%of_r
   !
   CALL set_vrs ( vrs, vltot, v%of_r, 0, 0, dfftp%nnr, nspin, doublegrid )
-#if defined(__CUDA)  
-  vrs_d = vrs     
-#endif
   !
   DEALLOCATE( vltot )
   CALL destroy_scf_type(v)
@@ -662,6 +673,9 @@ CONTAINS
           call errore('lr_readin', 'Magnons linear response calculation ' // &
                      & 'is not implemented with symmetry', 1 )
        ENDIF
+       IF (.not. domag) &
+          CALL errore ('lr_readin', ' Magnons linear response calculation ' // &
+                      & 'non-magnetic system', 1 )
     ENDIF
     !
     RETURN

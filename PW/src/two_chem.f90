@@ -34,6 +34,7 @@ SUBROUTINE init_twochem()
   USE noncollin_module,     ONLY : noncolin
   USE io_files,             ONLY : restart_dir
   USE io_global,            ONLY : ionode
+  USE control_flags,        ONLY : use_gpu
  !
  !
   IMPLICIT NONE
@@ -71,6 +72,7 @@ SUBROUTINE init_twochem()
   !
   ! message for two-chemical potential calculation 
   !
+  IF (use_gpu) CALL errore('init_twochem', 'twochem with GPU not present in this version',1)  
   IF (trim(occupations) /= 'smearing') CALL errore( 'init_twochem', &
              & 'two chemical potential calculation requires smearing', 1 )
   !

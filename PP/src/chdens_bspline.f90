@@ -197,7 +197,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
   implicit none
   integer, intent(in) :: nx, ny, nat, ityp (nat), output_format, ounit
   real(dp), intent(in) :: e1(3), e2(3), x0(3), m1, m2, alat, tau(3,nat), at(3,3)
-  character(len=3), intent(in) :: atm(*)
+  character(len=6), intent(in) :: atm(*)
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
   logical, intent(in) :: laue
   !---------------------------------------------------------------------
@@ -285,7 +285,7 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
   integer, intent(in) :: nx, ny, nz, nat, ityp(nat), output_format, ounit
   real(dp), intent(in) :: e1(3), e2(3), e3(3), x0(3), m1, m2, m3
   real(dp), intent(in) :: alat, tau(3,nat), at(3,3)
-  character(len=3), intent(in) :: atm(*)
+  character(len=6), intent(in) :: atm(*)
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
   logical, intent(in) :: laue
   !---------------------------------------------------------------------

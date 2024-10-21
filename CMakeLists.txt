@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 7.3.1
+    VERSION 7.4
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -86,8 +86,6 @@ option(QE_ENABLE_PROFILE_NVTX
         "enable execution of NVIDIA NVTX profiler plugin" OFF)
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
-option(QE_ENABLE_MPI_MODULE
-    "use MPI via Fortran module instead of mpif.h header inclusion" OFF)
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
 option(QE_LAPACK_INTERNAL
@@ -170,9 +168,6 @@ endif()
 if(QE_ENABLE_MPI_INPLACE)
     qe_add_global_compile_definitions(__USE_INPLACE_MPI)
 endif()
-if(QE_ENABLE_MPI_MODULE)
-    qe_add_global_compile_definitions(__MPI_MODULE)
-endif()
 if(QE_ENABLE_BARRIER)
     qe_add_global_compile_definitions(__USE_BARRIER)
 endif()
@@ -197,12 +192,6 @@ if(QE_ENABLE_ENVIRON)
 endif()
 if(QE_CLOCK_SECONDS)
    qe_add_global_compile_definitions(__CLOCK_SECONDS)
-endif()
-
-# Feature checks
-check_function_exists(mallinfo HAVE_MALLINFO)
-if(HAVE_MALLINFO)
-    qe_add_global_compile_definitions(HAVE_MALLINFO)
 endif()
 
 # OSCDFT
@@ -301,13 +290,11 @@ endif()
 # OpenMP
 # The following targets will be defined:
 add_library(qe_openmp_fortran INTERFACE)
-add_library(qe_openmp_c INTERFACE)
-qe_install_targets(qe_openmp_fortran qe_openmp_c)
+qe_install_targets(qe_openmp_fortran)
 ###########################################################
 if(QE_ENABLE_OPENMP)
-    find_package(OpenMP REQUIRED Fortran C)
+    find_package(OpenMP REQUIRED Fortran)
     target_link_libraries(qe_openmp_fortran INTERFACE OpenMP::OpenMP_Fortran)
-    target_link_libraries(qe_openmp_c INTERFACE OpenMP::OpenMP_C)
 endif(QE_ENABLE_OPENMP)
 if(QE_ENABLE_OFFLOAD)
     target_compile_definitions(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:__OPENMP_GPU>")
@@ -382,6 +369,31 @@ qe_install_targets(qe_mpi_fortran)
 ###########################################################
 if(QE_ENABLE_MPI)
     find_package(MPI REQUIRED Fortran)
+
+    # choose using mpi module or header file.
+    if(MPI_Fortran_HAVE_F90_MODULE)
+        set(QE_ENABLE_MPI_MODULE_DEFAULT ON)
+    elseif(MPI_Fortran_HAVE_F77_HEADER)
+        set(QE_ENABLE_MPI_MODULE_DEFAULT OFF)
+    else()
+        message(FATAL_ERROR "MPI library doesn't provide a Fortran 'mpi' module nor a 'mpif.h' header file.")
+    endif()
+
+    option(QE_ENABLE_MPI_MODULE
+        "use MPI via Fortran module instead of mpif.h header inclusion" ${QE_ENABLE_MPI_MODULE_DEFAULT})
+    if(QE_ENABLE_MPI_MODULE)
+        message(STATUS "Selected the Fortran 'mpi' module. QE_ENABLE_MPI_MODULE=ON")
+        if(NOT MPI_Fortran_HAVE_F90_MODULE)
+            message(FATAL_ERROR "MPI library doesn't provide a Fortran 'mpi' module.")
+        endif()
+        qe_add_global_compile_definitions(__MPI_MODULE)
+    else()
+        message(STATUS "Selected the Fortran 'mpif.h' header file. QE_ENABLE_MPI_MODULE=OFF")
+        if(NOT MPI_Fortran_HAVE_F77_HEADER)
+            message(FATAL_ERROR "MPI library doesn't provide a Fortran 'mpif.h' header file.")
+        endif()
+    endif()
+
     target_link_libraries(qe_mpi_fortran
         INTERFACE MPI::MPI_Fortran)
     message(STATUS "MPI settings used by CTest")

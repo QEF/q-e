@@ -184,6 +184,8 @@ MODULE london_module
       REAL ( DP ) :: R_0, C_0, e_cut , sls
       ! local : buffers
       !
+      IF ( ALLOCATED ( C6_ij ) ) RETURN
+      !
       ! here we allocate parameters
       !
       ALLOCATE ( C6_ij ( ntyp , ntyp ) , &
@@ -366,7 +368,7 @@ MODULE london_module
              !
              CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
              !
- !$omp parallel do private(nr,dist,dist6,f_damp) default(shared), reduction(-:energy_london)
+ !$omp parallel do private(nr,dist,dist6,f_damp) default(shared), reduction(+:energy_london)
              DO nr = 1 , nrm
                 !
                 dist  = alat * sqrt ( dist2 ( nr ) )

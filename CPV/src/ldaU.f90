@@ -728,6 +728,8 @@
                natwfc = natwfc + 1
                DO ia = 1, nat
                   IF( ityp(ia) == is ) THEN
+                      IF (natwfc+offset(ia) > nwfcU ) &
+                        CALL errore('atomic_wfc_hub','unexpected error',natwfc)
                      wfcU(:,natwfc+offset(ia)) = (0.d0,1.d0)**l * eigr(:,ia) * ylm(:,lm)*chiq(:)
                   END IF
                ENDDO
@@ -735,8 +737,6 @@
   10        CONTINUE
          ENDDO
       ENDDO
-!
-      IF (natwfc+offset(nat) .NE. nwfcU )  CALL errore('atomic_wfc','unexpected error',natwfc)
 !
       do i = 1,nwfcU
         call dscal(2*ngw,fpi/sqrt(omega),wfcU(1,i),1)

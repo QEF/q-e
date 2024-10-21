@@ -22,6 +22,7 @@ ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print 
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # PH
+qpoint=`grep '  Calculation of q ' $fname | awk '{print $5; print $6; print $7 }'`
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
 # phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
@@ -82,7 +83,8 @@ qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
 
 # MATDYN
 born_diff=`grep "Norm of the difference between" $fname | awk '{print $NF}'`
-
+# DYNMAT 
+dynmat_freqs=`awk -e '/# mode/ {found++}; found && NF {print $0}' $fname | grep ^[[:space:]]*[1-9] | awk -e '{print $2}'`
 # LAMBDA
 lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12; print $15}'`
 
@@ -140,6 +142,11 @@ if test "$tf1" != ""; then
         for x in $tf1; do echo $x; done
 fi
 
+if test "$qpoint" != ""; then
+        echo qpoint
+        for x in $qpoint; do echo $x; done
+fi
+
 if test "$diel" != ""; then
         echo diel
         for x in $diel; do echo $x; done
@@ -153,6 +160,11 @@ fi
 if test "$phfreq" != ""; then
         echo phfreq
         for x in $phfreq; do echo $x; done
+fi
+
+if test "$dynmat_freqs" != ""; then
+        echo dynmat_freqs 
+        for x in $dynmat_freqs; do echo $x; done
 fi
 
 if test "$dos" != ""; then

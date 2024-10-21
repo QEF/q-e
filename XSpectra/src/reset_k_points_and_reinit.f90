@@ -15,8 +15,8 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
        xk,                & ! k-points coordinates
        wk                 ! k-points weight
 
-  USE lsda_mod,    ONLY : nspin,lsda,isk
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
+  USE lsda_mod,           ONLY : nspin,lsda,isk
+  USE starting_scf,       ONLY : starting_wfc, starting_pot, startingconfig
   USE uspp_param,         ONLY : upf
   USE ions_base,          ONLY : ntyp => nsp
   USE ldaU,               ONLY : lda_plus_u, init_hubbard, deallocate_hubbard, &

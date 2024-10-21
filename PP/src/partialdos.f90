@@ -145,7 +145,10 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         ENDDO
      ENDDO
   ENDDO
-
+  !
+  ! Only IO-node outputs to a file
+  IF (.NOT. ionode) GO TO 20 
+  !
   DO nwfc = 1, nproj
      IF (nlmchi(nwfc)%m == 1) THEN
         filextension='.pdos_atm#'
@@ -185,19 +188,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         END IF
         fileout = trim(filpdos)//trim(filextension)
         !
-        ! Only IO-node outputs to a file
-        ! Other processes's output-units are connected to NULL
-        !
-        IF(ionode) THEN
-           OPEN (4,file=fileout,form='formatted', status='unknown')
-        ELSE
-#if defined(_WIN32)
-           OPEN (4,file='NUL:', status='unknown')
-#else
-           OPEN (4,file='/dev/null', status='unknown')
-#endif
-        ENDIF
-
+        OPEN (4,file=fileout,form='formatted', status='unknown')
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
         ELSE
@@ -237,9 +228,9 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
               ENDIF
               etev = Emin + ie * DeltaE
               WRITE (4,'(f8.3,2e11.3,14e11.3)') etev*rytoev,  &
-                   (ldos(ie,is,ik), is=1,nspin), &
-                   ((pdos(ie,nwfc+m-1,is,ik), is=1,nspin), &
-                   m=1,2*nlmchi(nwfc)%l+1)
+                (ldos(ie,is,ik), is=1,nspin), &
+                ((pdos(ie,nwfc+m-1,is,ik), is=1,nspin), &
+                m=1,2*nlmchi(nwfc)%l+1)
            ENDDO
            IF (kresolveddos) WRITE (4,*)
         ENDDO
@@ -248,18 +239,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   ENDDO
   fileout = trim(filpdos)//".pdos_tot"
   !
-  ! Only IO-node outputs to a file
-  ! Other processes's output-units are connected to NULL
-  !
-  IF(ionode) THEN
-     OPEN (4,file=fileout,form='formatted', status='unknown')
-  ELSE
-#if defined(_WIN32)
-     OPEN (4,file='NUL:', status='unknown')
-#else
-     OPEN (4,file='/dev/null', status='unknown')
-#endif
-  ENDIF
+  OPEN (4,file=fileout,form='formatted', status='unknown')
   IF (kresolveddos) THEN
      WRITE (4,'("# ik   ")', advance="NO")
   ELSE
@@ -277,11 +257,12 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         ENDIF
         etev = Emin + ie * DeltaE
         WRITE (4,'(f8.3,4e11.3)') etev*rytoev, (dostot(ie,is,ik), is=1,nspin), &
-             (pdostot(ie,is,ik), is=1,nspin)
-     ENDDO
-     IF (kresolveddos) WRITE (4,*)
+          (pdostot(ie,is,ik), is=1,nspin)
+      ENDDO
+      IF (kresolveddos) WRITE (4,*)
   ENDDO
   CLOSE (4)
+20 CONTINUE
   DEALLOCATE (ldos, dostot, pdostot)
   DEALLOCATE (pdos)
   !
@@ -493,18 +474,10 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
         fileout = trim(filpdos)//trim(filextension)
         !
         ! Only IO-node outputs to a file
-        ! Other processes's output-units are connected to NULL
         !
         IF(ionode) THEN
-           OPEN (4,file=fileout,form='formatted', status='unknown')
-        ELSE
-#if defined(_WIN32)
-           OPEN (4,file='NUL:', status='unknown')
-#else
-           OPEN (4,file='/dev/null', status='unknown')
-#endif
-        ENDIF
-
+        !
+        OPEN (4,file=fileout,form='formatted', status='unknown')
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
         ELSE
@@ -591,22 +564,18 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            ENDDO
         ENDIF
         CLOSE (4)
+        !
+        END IF ! ionode
+        !
      ENDIF
   ENDDO
   fileout = trim(filpdos)//".pdos_tot"
   !
   ! Only IO-node outputs to a file
-  ! Other processes's output-units are connected to NULL
   !
   IF(ionode) THEN
-     OPEN (4,file=fileout,form='formatted', status='unknown')
-  ELSE
-#if defined(_WIN32)
-     OPEN (4,file='NUL:', status='unknown')
-#else
-     OPEN (4,file='/dev/null', status='unknown')
-#endif
-  ENDIF
+  !
+  OPEN (4,file=fileout,form='formatted', status='unknown')
   IF (kresolveddos) THEN
      WRITE (4,'("# ik   ")', advance="NO")
   ELSE
@@ -629,6 +598,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
      IF (kresolveddos) WRITE (4,*)
   ENDDO
   CLOSE (4)
+  !
+  END IF ! ionode
+  !
   DEALLOCATE (ldos, dostot, pdostot)
   DEALLOCATE (pdos)
   !

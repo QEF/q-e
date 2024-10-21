@@ -15,9 +15,10 @@ add_for_charges.o \
 add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
-addnlcc.o \
+dynmat_nlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
+addusddens_cond.o \
 addusddense.o \
 addusdynmat.o \
 allocate_part.o \
@@ -35,8 +36,10 @@ clean_pw_ph.o \
 clinear.o \
 close_phq.o \
 compute_alphasum.o \
+compute_alphasum_cond.o \
 compute_becalp.o \
 compute_becsum_ph.o \
+compute_becsum_ph_cond.o \
 compute_drhous.o \
 compute_drhous_nc.o \
 compute_dvloc.o \
@@ -108,13 +111,13 @@ phq_recover.o \
 phq_setup.o \
 phq_summary.o \
 phqscf.o \
+ph_set_upert.o \
 polariz.o \
 print_clock_ph.o \
 prepare_q.o \
 prepare_sym_analysis.o \
 psidspsi.o \
 psymdvscf.o \
-psyme.o \
 psym_dmag.o \
 psym_dmage.o \
 punch_plot_e.o \
@@ -147,7 +150,6 @@ sym_dmage.o \
 symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
-syme.o \
 symm.o \
 symmorphic_or_nzb.o \
 swfc.o \

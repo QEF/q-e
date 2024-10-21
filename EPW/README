@@ -22,7 +22,7 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                     
- EPW v5.8 is an open-source community code for ab initio calculations of electron-phonon 
+ EPW v5.9 is an open-source community code for ab initio calculations of electron-phonon 
  interactions using Density-Functional Perturbation Theory and Maximally Localized Wannier 
  Functions.
  EPW is distributed as part of the Quantum ESPRESSO suite, therefore please cite
@@ -40,7 +40,7 @@
       X. Zhang, N. Bonini, E. Kioupakis, E. R. Margine, and F. Giustino, 
       npj Comput.  Mater. 9, 156 (2023).
     
- The software tree of EPW v5.8 is composed of
+ The software tree of EPW v5.9 is composed of
  /bin ==> Contains the epw.x soft link to the EPW executable.
  /examples  ==> Contains a lists of examples that are connected to the tutorials. The 
           tutorials can be found at http://epw.org.uk/Documentation/Tutorial

@@ -38,6 +38,7 @@ SUBROUTINE extract (plot_files,plot_num)
   USE constants, ONLY : rytoev
   USE parameters, ONLY : npk
   USE io_global, ONLY : stdout
+  USE run_info, ONLY: title
   !
   IMPLICIT NONE
   !
@@ -62,12 +63,13 @@ SUBROUTINE extract (plot_files,plot_num)
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
 
-  NAMELIST / inputpp / outdir, prefix, plot_num, sample_bias, &
+  NAMELIST / inputpp / title, outdir, prefix, plot_num, sample_bias, &
       spin_component, z, dz, emin, emax, delta_e, degauss_ldos, kpoint, kband, &
       filplot, lsign, use_gauss_ldos
   !
   !   set default values for variables in namelist
   !
+  title = ' '
   prefix = 'pwscf'
   CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
@@ -104,6 +106,7 @@ SUBROUTINE extract (plot_files,plot_num)
   !
   ! ... Broadcast variables
   !
+  CALL mp_bcast( title, ionode_id, intra_image_comm )
   CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
   CALL mp_bcast( prefix, ionode_id, intra_image_comm )
   CALL mp_bcast( plot_num, ionode_id, intra_image_comm )

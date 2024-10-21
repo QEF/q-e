@@ -217,7 +217,8 @@ SUBROUTINE control_iosys()
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, atm, nat, nsp, &
                             amass
   !
-  USE basis,         ONLY : startingconfig, starting_wfc, starting_pot
+  USE starting_scf,  ONLY : startingconfig, starting_wfc, starting_pot
+  USE starting_scf,  ONLY : starting_charge_ => starting_charge
   !
   USE run_info,      ONLY : title_ => title
   !
@@ -311,7 +312,9 @@ SUBROUTINE control_iosys()
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
                             treinit_gvecs_    => treinit_gvecs, &  
-                            max_xml_steps_    => max_xml_steps 
+                            max_xml_steps_    => max_xml_steps, & 
+                            use_spinflip_    => use_spinflip, & 
+                            symm_by_label 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
@@ -349,9 +352,6 @@ SUBROUTINE control_iosys()
   USE realus,                ONLY : real_space_ => real_space
 
   USE qmmm,                  ONLY : qmmm_config
-
-
-  USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
   !
@@ -363,7 +363,8 @@ SUBROUTINE control_iosys()
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, max_xml_steps,       &
-                               trism, twochem
+                               trism, twochem, symmetry_with_labels,           & 
+                               use_spinflip 
 
   !
   ! ... SYSTEM namelist
@@ -715,18 +716,24 @@ SUBROUTINE control_iosys()
   CASE( 1 )
      !
      lsda = .false.
-     IF ( noncolin ) nspin = 4
+     IF ( noncolin ) THEN 
+       nspin = 4
+       symm_by_label = symmetry_with_labels
+     END IF 
      !
   CASE( 2 )
      !
      lsda = .true.
      IF ( noncolin ) CALL errore( 'iosys', &
                      'noncolin .and. nspin==2 are conflicting flags', 1 )
+     symm_by_label = symmetry_with_labels 
+     use_spinflip_ = use_spinflip
      !
   CASE( 4 )
      !
      lsda = .false.
      noncolin = .true.
+     symm_by_label = symmetry_with_labels 
      !
   CASE DEFAULT
      !
@@ -1606,7 +1613,7 @@ SUBROUTINE structure_iosys ( )
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                                trd_ht, rd_ht, cell_units
   USE cell_base,        ONLY : cell_base_init, at, alat, omega, bg
-  USE basis,            ONLY : startingconfig
+  USE starting_scf,     ONLY : startingconfig
   USE control_flags,    ONLY : restart, lscf
   USE ions_base,        ONLY : nat, nsp, tau
   !

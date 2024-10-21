@@ -289,6 +289,7 @@ USE cp_main_variables,        ONLY : eigr_d
      IF ( tfor .OR. thdyn ) THEN
         !
         CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, dfftp%nr1,dfftp%nr2,dfftp%nr3, nat )
+        !$acc update device(eigts1,eigts2,eigts3)
         !
         ! ... strucf calculates the structure factor sfac
         !
@@ -558,6 +559,7 @@ USE cp_main_variables,        ONLY : eigr_d
         ! ... phfac calculates eigr
         !
         CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, tausp, dfftp%nr1,dfftp%nr2,dfftp%nr3, nat ) 
+        !$acc update device(eigts1,eigts2,eigts3)
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
@@ -879,6 +881,7 @@ USE cp_main_variables,        ONLY : eigr_d
            END IF
            CALL r_to_s( tau0, taus, nat, ainv )
            CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, dfftp%nr1,dfftp%nr2,dfftp%nr3, nat )
+           !$acc update device(eigts1,eigts2,eigts3)
            CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
            !
            IF ( thdyn )    CALL formf( tfirst, eself )

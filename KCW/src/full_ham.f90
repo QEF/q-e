@@ -38,6 +38,7 @@ SUBROUTINE full_ham (ik)
   !
   USE exx,                   ONLY : vexx, exxinit, exxenergy2
   USE input_parameters,      ONLY : exxdiv_treatment
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   !
   IMPLICIT NONE
   !
@@ -51,10 +52,10 @@ SUBROUTINE full_ham (ik)
   REAL(DP) :: n_r(dfftp%nnr), num1, num2, sh, aux_r(dfftp%nnr) 
   ! ... orbital density in rela space
   !
-  COMPLEX(DP) n_g(ngm), n_g_aux(ngm,nspin), aux_g(ngm)
+  COMPLEX(DP) n_g(ngm), n_g_aux(ngm,nspin_mag), aux_g(ngm)
   ! ... orbital density in G space
   !
-  REAL(DP) :: ehart, v(dfftp%nnr,nspin), vxc_minus1(dfftp%nnr,2), vxc(dfftp%nnr,nspin), charge, w1
+  REAL(DP) :: ehart, v(dfftp%nnr,nspin_mag), vxc_minus1(dfftp%nnr,2), vxc(dfftp%nnr,nspin_mag), charge, w1
   !  
   TYPE (scf_type) :: rho_minus1
   !
@@ -79,14 +80,15 @@ SUBROUTINE full_ham (ik)
   !
   ! ... Loop over k_point: actually it's a loop over the spin ik=1 ==> spin_up; ik=2 ==> spin_dw ...
   !
+  current_spin = spin_component
   w1 = 1.D0 / omega
   !
   !alpha_final_full(:,:)=1.0  ! Just for debug
   !
-  nspin_aux=nspin
-  nspin=2
+  nspin_aux=nspin_mag
+  nspin_mag=2
   CALL create_scf_type (rho_minus1)
-  nspin=nspin_aux
+  nspin_mag=nspin_aux
   !
   lrwfc = num_wann*npwx
   CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik )
@@ -105,7 +107,7 @@ SUBROUTINE full_ham (ik)
   ham_dw (:,:) = (0.D0,0.D0)
   !
   ! ... KS Hamiltonian ....
-  ik_eff = ik + (spin_component -1)*nkstot/nspin
+  ik_eff = ik + (spin_component -1)*nkstot/nspin_mag
   CALL ks_hamiltonian (evc0, ik_eff, dim_ham)
   !
   v_ki(:,:) = (0.D0,0.D0)
@@ -181,7 +183,7 @@ SUBROUTINE full_ham (ik)
      etmp = etmp/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
      CALL mp_sum (etmp, intra_bgrp_comm) 
      !
-     IF (nspin == 1 ) THEN
+     IF (nspin_mag == 1 ) THEN
         rho_minus1%of_r(:,1) = rho%of_r(:,1)
         rho_minus1%of_r(:,2) = 0.D0
         rho_minus1%of_g(:,1) = rho%of_g(:,1)
@@ -197,14 +199,17 @@ SUBROUTINE full_ham (ik)
      IF ( ibnd .LE. num_wann_occ ) THEN
         !
         rho_minus1%of_r(:,1) = rho_minus1%of_r(:,1) - n_r(:)  ! denisty rho-rho_i in real space
-        rho_minus1%of_r(:,2) = rho_minus1%of_r(:,2) - n_r(:)  ! denisty rho-rho_i in real space
         rho_minus1%of_g(:,1) = rho_minus1%of_g(:,1) - n_g(:)  ! denisty rho-rho_i in reciprocal scape
-        rho_minus1%of_g(:,2) = rho_minus1%of_g(:,2) - n_g(:)  ! denisty rho-rho_i in reciprocal scape
+        ! The magnetization depends on which channel we remove the orbital from
+        ! we reduce by n_i(r) if current_spin=1, we increase by n_i(r) if current_spin=2
+        ! This is taken care by the factor (3-2*current_spin)
+        rho_minus1%of_r(:,2) = rho_minus1%of_r(:,2) - (3-2*current_spin)*n_r(:)  ! denisty rho-rho_i in real space
+        rho_minus1%of_g(:,2) = rho_minus1%of_g(:,2) - (3-2*current_spin)*n_g(:)  ! denisty rho-rho_i in reciprocal scape
         ! 
         etxc_minus1 = 0.D0; vtxc_minus1 = 0.D0; vxc_minus1(:,:) = 0.D0
-        nspin_aux=nspin; nspin=2
+        nspin_aux=nspin_mag; nspin_mag=2
         CALL v_xc( rho_minus1, rho_core, rhog_core, etxc_minus1, vtxc_minus1, vxc_minus1 )
-        nspin=nspin_aux
+        nspin_mag=nspin_aux
         ! 
         !
         delta_eig(ibnd) = (-sh+(etxc-etxc_minus1-etmp)) 
@@ -226,14 +231,14 @@ SUBROUTINE full_ham (ik)
      ELSE
         !
         rho_minus1%of_r(:,1) = rho_minus1%of_r(:,1) + n_r(:)  ! denisty rho+rho_i in real space
-        rho_minus1%of_r(:,2) = rho_minus1%of_r(:,2) + n_r(:)  ! denisty rho+rho_i in real space
         rho_minus1%of_g(:,1) = rho_minus1%of_g(:,1) + n_g(:)  ! denisty rho+rho_i in reciprocal scape
-        rho_minus1%of_g(:,2) = rho_minus1%of_g(:,2) + n_g(:)  ! denisty rho+rho_i in reciprocal scape
+        rho_minus1%of_r(:,2) = rho_minus1%of_r(:,2) + (3-2*current_spin)*n_r(:)  ! denisty rho+rho_i in real space
+        rho_minus1%of_g(:,2) = rho_minus1%of_g(:,2) + (3-2*current_spin)*n_g(:)  ! denisty rho+rho_i in reciprocal scape
         ! 
         etxc_minus1 = 0.D0; vtxc_minus1 = 0.D0; vxc_minus1(:,:) = 0.D0
-        nspin_aux=nspin; nspin=2
+        nspin_aux=nspin_mag; nspin_mag=2
         CALL v_xc( rho_minus1, rho_core, rhog_core, etxc_minus1, vtxc_minus1, vxc_minus1 )
-        nspin=nspin_aux
+        nspin_mag=nspin_aux
         ! 
         etmp1 = sum ( vxc_minus1(1:dfftp%nnr,current_spin) * n_r(1:dfftp%nnr) )
         etmp1= etmp1/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
@@ -286,10 +291,10 @@ SUBROUTINE full_ham (ik)
         rho_minus1%of_g(:,2) = n_g(:)  ! orbital denisty rho_i in reciprocal scape
         !
         etxc_minus1 = 0.D0; vtxc_minus1 = 0.D0; vxc_minus1(:,:) = 0.D0
-        nspin_aux=nspin; nspin=2
+        nspin_aux=nspin_mag; nspin_mag=2
         aux_r =0.D0 ; aux_g = (0.D0, 0.D0)
         CALL v_xc( rho_minus1, aux_r, aux_g, etxc_minus1, vtxc_minus1, vxc_minus1 )
-        nspin=nspin_aux
+        nspin_mag=nspin_aux
         !
         ! The constant term 
         etmp1 =0.D0

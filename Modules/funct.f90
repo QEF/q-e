@@ -354,7 +354,7 @@ CONTAINS
     CHARACTER(LEN=4) :: lda_exch, lda_corr, gga_exch, gga_corr
     !
     INTEGER :: save_inlc, lnt, ln_nlc
-    INTEGER :: iexch, icorr, igcx, igcc, imeta
+    INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac
     !
     ! Exit if set to discard further input dft
     !
@@ -550,13 +550,14 @@ CONTAINS
     igcx  = xclib_get_id('GGA','EXCH')
     igcc  = xclib_get_id('GGA','CORR')
     imeta = xclib_get_id('MGGA','EXCH')
+    imetac = xclib_get_id('MGGA','CORR')
     !
     IF (igcx == 6 .AND. .NOT.xclib_dft_is_libxc('GGA','EXCH') ) &
                 CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
     !
     ! check for unrecognized labels
     !
-    IF ( iexch<=0 .AND. icorr<=0 .AND. igcx<=0 .AND. igcc<=0 .AND. imeta<=0 ) THEN
+    IF ( iexch<=0 .AND. icorr<=0 .AND. igcx<=0 .AND. igcc<=0 .AND. imeta<=0 .AND. imetac<=0) THEN
        IF ( inlc <= 0 .AND. TRIM(dftout) /= 'NOX-NOC') THEN
           CALL errore( 'set_dft_from_name', TRIM(dftout)//': unrecognized dft', 1 )
        ELSE

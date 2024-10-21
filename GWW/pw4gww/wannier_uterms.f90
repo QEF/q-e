@@ -19,7 +19,6 @@
   use mp_world,            ONLY : world_comm
   USE kinds,    ONLY : DP
   USE gvect
-  USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
   USE wvfct,     ONLY : npwx, npw, nbnd

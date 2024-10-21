@@ -92,18 +92,15 @@ subroutine hp_dvpsi_pert (ik, nrec)
         nt = ityp(na)
         ldim = (2 * Hubbard_l(nt) + 1) * npol 
         IF (noncolin) then
-           ihubst = offsetU(na) + 1
+           ihubst = offsetU(na) + 1  ! I m index
            CALL ZGEMM('C','N', ldim, nbnd, npwx*npol, (1.d0,0.d0), &
                     swfcatomk(1,ihubst), npwx*npol, evc, npwx*npol,&
                     (0.d0,0.d0), proj(ihubst,1), nwfcU)
         ELSE
-           DO m = 1, ldim
-              ihubst = offsetU(na) + m   ! I m index
-              DO ibnd = 1, nbnd
-                 ! FIXME: use ZGEMM instead of dot_product
-                 proj(ihubst, ibnd) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst ), evc(1:npwx*npol,ibnd) )
-              ENDDO
-           ENDDO
+           ihubst = offsetU(na) + 1   ! I m index
+           CALL ZGEMM('C','N', ldim, nbnd, npwx*npol, (1.d0, 0.0d0), &
+                    swfcatomk(1,ihubst), npwx*npol, evc, npwx*npol,&
+                    (0.d0, 0.0d0), proj(ihubst, 1), nwfcU)
         ENDIF
      ENDIF
   ENDDO
@@ -116,20 +113,16 @@ subroutine hp_dvpsi_pert (ik, nrec)
      IF ( perturbed_atom(na) ) THEN
         nt = ityp(na)
         ldim = (2 * Hubbard_l(nt) + 1) * npol
-        DO m = 1, ldim
-           ihubst = offsetU(na) + m
-           DO ibnd = 1, nbnd
-              DO ig = 1, npwx
-                 dvpsi(ig, ibnd) = dvpsi(ig, ibnd) + &
-                        & swfcatomkpq(ig,ihubst) * proj(ihubst,ibnd)
-                 IF (noncolin) &
-                    dvpsi(ig+npwx, ibnd) = dvpsi(ig+npwx, ibnd) + &
-                        & swfcatomkpq(ig+npwx,ihubst) * proj(ihubst,ibnd)
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDIF
-  ENDDO
+        ihubst = offsetU(na) + 1
+        IF (noncolin) THEN
+            CALL ZGEMM('N', 'N', 2*npwx, nbnd, ldim, (1.0d0, 0.0d0), swfcatomkpq(1, ihubst), npwx*npol, &
+                                         proj(ihubst, 1), nwfcU, (1.0d0, 0.0d0), dvpsi, npwx*npol)
+        ELSE
+            CALL ZGEMM('N', 'N', npwx, nbnd, ldim, (1.0d0, 0.0d0), swfcatomkpq(1, ihubst), npwx*npol, &
+                                         proj(ihubst, 1), nwfcU, (1.0d0, 0.0d0), dvpsi, npwx*npol)
+        END IF
+     END IF
+  END DO   
   !
   ! Write dvpsi on file.
   !

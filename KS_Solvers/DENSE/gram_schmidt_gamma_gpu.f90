@@ -127,7 +127,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   ! ... Set initial : |phi_j> = |psi_j>
   !
-  CALL DCOPY_gpu( npwx2 * nbnd, psi_d(1,1), 1, phi_d(1,1), 1 )
+  CALL MYDCOPY( npwx2 * nbnd, psi_d(1,1), 1, phi_d(1,1), 1 )
   !
   ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
   !
@@ -141,7 +141,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   IF ( eigen_ ) THEN
      !
-     CALL DCOPY_gpu( npwx2 * nbnd, hpsi_d(1,1), 1, hphi_d(1,1), 1 )
+     CALL MYDCOPY( npwx2 * nbnd, hpsi_d(1,1), 1, hphi_d(1,1), 1 )
      !
      ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
      IF ( gstart == 2 ) THEN
@@ -155,7 +155,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   IF ( uspp ) THEN
      !
-     CALL DCOPY_gpu( npwx2 * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
+     CALL MYDCOPY( npwx2 * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
      !
      ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
      IF ( gstart == 2 ) THEN 
@@ -217,14 +217,14 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   ! ... Copy psi <- phi
   !
   !CALL DCOPY( npwx2 * nbnd, phi(1,1), 1, psi(1,1), 1 )
-  CALL DCOPY_gpu( npwx2 * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
+  CALL MYDCOPY( npwx2 * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL DCOPY_gpu( npwx2 * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
+  CALL MYDCOPY( npwx2 * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
   !CALL DCOPY( npwx2 * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL DCOPY_gpu( npwx2 * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
+  CALL MYDCOPY( npwx2 * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
   !CALL DCOPY( npwx2 * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
   !
   ! ... Calculate energy eigenvalues
@@ -259,7 +259,7 @@ CONTAINS
     INTEGER               :: ibnd
     REAL(DP)              :: norm
     REAL(DP)              :: psi_ibnd
-    REAL(DP), EXTERNAL    :: gpu_DDOT 
+    REAL(DP), EXTERNAL    :: MYDDOT 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -269,24 +269,24 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             CALL DGEMV_gpu( 'T', npw2, ibnd - ibnd_start, 2._DP, phi_d(1,ibnd_start), npwx2, &
+             CALL MYDGEMV( 'T', npw2, ibnd - ibnd_start, 2._DP, phi_d(1,ibnd_start), npwx2, &
                          spsi_d(1,ibnd), 1, 0._DP, sr_d(1), 1 )
              !
              IF ( gstart == 2 ) THEN
                 psi_ibnd = -spsi_d(1,ibnd)
-                CALL DAXPY_gpu( ibnd - ibnd_start, psi_ibnd , phi_d(1,ibnd_start), npwx2, &
+                CALL MYDAXPY( ibnd - ibnd_start, psi_ibnd , phi_d(1,ibnd_start), npwx2, &
                          sr_d(1), 1 )
              END IF
              !
           ELSE
              !
-             CALL DGEMV_gpu( 'T', npw2, ibnd - ibnd_start, 2._DP, phi_d(1,ibnd_start), npwx2, &
+             CALL MYDGEMV( 'T', npw2, ibnd - ibnd_start, 2._DP, phi_d(1,ibnd_start), npwx2, &
                          psi_d(1,ibnd), 1, 0._DP, sr_d(1), 1 )
              !
              IF ( gstart == 2 ) THEN
 
                 psi_ibnd = -psi_d(1,ibnd)
-                CALL DAXPY_gpu( ibnd - ibnd_start, psi_ibnd, phi_d(1,ibnd_start), npwx2, &
+                CALL MYDAXPY( ibnd - ibnd_start, psi_ibnd, phi_d(1,ibnd_start), npwx2, &
                             sr_d(1), 1 )
              END IF
              !
@@ -296,7 +296,7 @@ CONTAINS
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
-          CALL DGEMV_gpu( 'N', npw2, ibnd - ibnd_start, -1._DP, phi_d(1,ibnd_start), npwx2, &
+          CALL MYDGEMV( 'N', npw2, ibnd - ibnd_start, -1._DP, phi_d(1,ibnd_start), npwx2, &
                       sr_d(1), 1, 1._DP, phi_d(1,ibnd), 1 )
           !
           ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
@@ -309,7 +309,7 @@ CONTAINS
           !
           IF ( eigen_ ) THEN
              !
-             CALL DGEMV_gpu( 'N', npw2, ibnd - ibnd_start, -1._DP, hphi_d(1,ibnd_start), npwx2, &
+             CALL MYDGEMV( 'N', npw2, ibnd - ibnd_start, -1._DP, hphi_d(1,ibnd_start), npwx2, &
                          sr_d(1), 1, 1._DP, hphi_d(1,ibnd), 1 )
              !
              ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
@@ -324,7 +324,7 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             CALL DGEMV_gpu( 'N', npw2, ibnd - ibnd_start, -1._DP, sphi_d(1,ibnd_start), npwx2, &
+             CALL MYDGEMV( 'N', npw2, ibnd - ibnd_start, -1._DP, sphi_d(1,ibnd_start), npwx2, &
                          sr_d(1), 1, 1._DP, sphi_d(1,ibnd), 1 )
              !
              ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
@@ -343,7 +343,7 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          norm = 2._DP * gpu_DDOT( npw2, phi_d(1,ibnd), 1, sphi_d(1,ibnd), 1 )
+          norm = 2._DP * MYDDOT( npw2, phi_d(1,ibnd), 1, sphi_d(1,ibnd), 1 )
           !
           IF ( gstart == 2 ) THEN
 !$cuf kernel do(1)
@@ -354,7 +354,7 @@ CONTAINS
           !
        ELSE
           !
-          norm = 2._DP * gpu_DDOT( npw2, phi_d(1,ibnd), 1, phi_d(1,ibnd), 1 )
+          norm = 2._DP * MYDDOT( npw2, phi_d(1,ibnd), 1, phi_d(1,ibnd), 1 )
           !
           IF ( gstart == 2 ) THEN
 !$cuf kernel do(1)
@@ -372,7 +372,7 @@ CONTAINS
        IF ( norm < eps16 ) &
        CALL errore( ' gram_schmidt_gamma ', ' vectors are linear dependent ', 1 )
        !
-       CALL DSCAL_gpu( npw2, 1._DP / norm, phi_d(1,ibnd), 1 )
+       CALL MYDSCAL( npw2, 1._DP / norm, phi_d(1,ibnd), 1 )
        !
        ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN
@@ -384,7 +384,7 @@ CONTAINS
        !
        IF ( eigen_ ) THEN
           !
-          CALL DSCAL_gpu( npw2, 1._DP / norm, hphi_d(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, hphi_d(1,ibnd), 1 )
           !
           ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
           IF ( gstart == 2 ) THEN
@@ -398,7 +398,7 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          CALL DSCAL_gpu( npw2, 1._DP / norm, sphi_d(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, sphi_d(1,ibnd), 1 )
           !
           ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
           IF ( gstart == 2 ) THEN
@@ -435,20 +435,20 @@ CONTAINS
     !
     IF ( uspp ) THEN
        !
-       CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
+       CALL MYDGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
                    spsi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), nbsize )
        !
        IF ( gstart == 2 ) &
-       CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
+       CALL MYDGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
                   spsi_d(1,jbnd_start), npwx2, sr2_d(1,1), nbsize )
        !
     ELSE
        !
-       CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
+       CALL MYDGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
                    psi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), nbsize )
        !
        IF ( gstart == 2 ) &
-       CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
+       CALL MYDGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
                   psi_d(1,jbnd_start), npwx2, sr2_d(1,1), nbsize )
        !
     END IF
@@ -457,7 +457,7 @@ CONTAINS
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
-    CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi_d(1,ibnd_start), npwx2, &
+    CALL MYDGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi_d(1,ibnd_start), npwx2, &
                 sr2_d(1,1), nbsize, 1._DP, phi_d(1,jbnd_start), npwx2 )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
@@ -471,7 +471,7 @@ CONTAINS
     !
     IF ( eigen_ ) THEN
        !
-       CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi_d(1,ibnd_start), npwx2, &
+       CALL MYDGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi_d(1,ibnd_start), npwx2, &
                    sr2_d(1,1), nbsize, 1._DP, hphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
@@ -487,7 +487,7 @@ CONTAINS
     !
     IF ( uspp ) THEN
        !
-       CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi_d(1,ibnd_start), npwx2, &
+       CALL MYDGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi_d(1,ibnd_start), npwx2, &
                    sr2_d(1,1), nbsize, 1._DP, sphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
@@ -513,7 +513,7 @@ CONTAINS
     INTEGER :: ibnd, ibnd_start, ibnd_end
     REAL(DP) :: e_ibnd
     !
-    REAL(DP), EXTERNAL :: gpu_DDOT
+    REAL(DP), EXTERNAL :: MYDDOT
     !
     ! ... <psi_i| H |psi_i>
     !
@@ -523,7 +523,7 @@ CONTAINS
     !
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = 2._DP * gpu_DDOT( npw2, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 )
+       e(ibnd) = 2._DP * MYDDOT( npw2, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 )
        !
        IF ( gstart == 2 ) THEN
 !$cuf kernel do(1)
@@ -563,13 +563,13 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL DSWAP_gpu( npw2, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
+          CALL MYDSWAP( npw2, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
           !
           IF ( eigen_ ) &
-          CALL DSWAP_gpu( npw2, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
+          CALL MYDSWAP( npw2, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
           !
           IF ( uspp ) &
-          CALL DSWAP_gpu( npw2, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
+          CALL MYDSWAP( npw2, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
           !
        END IF
        !

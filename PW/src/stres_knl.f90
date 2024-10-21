@@ -9,11 +9,11 @@
 !-----------------------------------------------------------------------
 SUBROUTINE stres_knl( sigmanlc, sigmakin )
   !-----------------------------------------------------------------------
-  !! Computes the kinetic + nonlocal contribuition to the stress.
+  !! Computes the kinetic + nonlocal contribution to the stress
   !
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi, e2
-  USE cell_base,            ONLY: omega, tpiba
+  USE cell_base,            ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: g
   USE gvecw,                ONLY: qcutz, ecfixed, q2sigma
   USE klist,                ONLY: nks, xk, ngk, igk_k
@@ -27,9 +27,6 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   USE mp_pools,             ONLY: inter_pool_comm
   USE mp_bands,             ONLY: intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
-#if defined(__CUDA) 
-  USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d
-#endif   
   !
   IMPLICIT NONE
   !
@@ -41,100 +38,73 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: gk(:,:), kfac(:)
-  REAL(DP) :: twobysqrtpi, gk2, arg, s11, s21, s31, s22, s32, s33, &
-              xk1, xk2, xk3, tmpf, wg_nk 
-  INTEGER  :: npw, ik, l, m, i, ibnd
+  REAL(DP) :: sigma, gk2, arg
+  INTEGER  :: npw, ik, l, m, i, ibnd, is
   !
-#if defined(__CUDA)
-  CALL using_evc(0)
-  CALL using_evc_d(0)
-#endif
   !
-  !$acc enter data create( evc ) 
+  sigmanlc(:,:) = 0.0_dp
+  sigmakin(:,:) = 0.0_dp
   !
-  ALLOCATE( gk(npwx,3), kfac(npwx) )
-  !$acc data create( gk, kfac )
-  !$acc data copyin( wg )
-  !
-  sigmanlc(:,:) = 0._DP
-  sigmakin(:,:) = 0._DP
-  twobysqrtpi   = 2._DP/SQRT(pi)
-  !
-  !$acc kernels
-  kfac(:) = 1._DP
-  !$acc end kernels
-  !
-  s11 = 0._DP ;  s22 = 0._DP
-  s21 = 0._DP ;  s32 = 0._DP
-  s31 = 0._DP ;  s33 = 0._DP
+  ALLOCATE( gk(npwx,3) )
+  ALLOCATE( kfac(npwx) )
+  !$acc data present(g,igk_k) copyin(xk,wg) create(gk, kfac) 
   !
   DO ik = 1, nks
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-#if defined(__CUDA)
-        CALL using_evc(2)
-        CALL using_evc_d(0)
-#endif
-     ENDIF 
-     !
+        !$acc update device(evc)
+     ENDIF
      npw = ngk(ik)
-     !
-     xk1 = xk(1,ik)
-     xk2 = xk(2,ik)
-     xk3 = xk(3,ik)
-     !
      !$acc parallel loop
      DO i = 1, npw
-        gk(i,1) = ( xk1 + g(1,igk_k(i,ik)) ) * tpiba
-        gk(i,2) = ( xk2 + g(2,igk_k(i,ik)) ) * tpiba
-        gk(i,3) = ( xk3 + g(3,igk_k(i,ik)) ) * tpiba
-        IF (qcutz > 0._DP) THEN
+        gk(i,1) = ( xk(1,ik) + g(1,igk_k(i,ik)) ) * tpiba
+        gk(i,2) = ( xk(2,ik) + g(2,igk_k(i,ik)) ) * tpiba
+        gk(i,3) = ( xk(3,ik) + g(3,igk_k(i,ik)) ) * tpiba
+        IF (qcutz > 0.0_dp) THEN
            gk2 = gk(i,1)**2 + gk(i,2)**2 + gk(i,3)**2
            arg = ( (gk2-ecfixed)/q2sigma )**2
-           kfac(i) = 1._DP + qcutz / q2sigma * twobysqrtpi * EXP(-arg)
+           kfac(i) = 1.0_dp + qcutz / q2sigma * 2.0_dp / SQRT(pi) * EXP(-arg)
+        ELSE
+           kfac(i) = 1.0_dp
         ENDIF
      ENDDO
      !
      ! ... kinetic contribution
      !
-     !$acc update device(evc)
-     !
-     !$acc parallel loop collapse(2) reduction(+:s11,s21,s31,s22,s32,s33)
-     DO ibnd = 1, nbnd
-        DO i = 1, npw
-           wg_nk = wg(ibnd,ik)
-           IF (noncolin) THEN
-              tmpf = wg_nk * kfac(i) * &
-               ( DBLE(CONJG(evc(   i  ,ibnd))*evc(   i  ,ibnd)) + &
-                 DBLE(CONJG(evc(i+npwx,ibnd))*evc(i+npwx,ibnd)) )
-           ELSE
-              tmpf = wg_nk * kfac(i) * &
-                    DBLE( CONJG(evc(i,ibnd) ) * evc(i,ibnd) )
-           ENDIF
-           s11 = s11 + tmpf * gk(i,1)*gk(i,1)
-           s21 = s21 + tmpf * gk(i,2)*gk(i,1)
-           s31 = s31 + tmpf * gk(i,3)*gk(i,1)
-           s22 = s22 + tmpf * gk(i,2)*gk(i,2)
-           s32 = s32 + tmpf * gk(i,3)*gk(i,2)
-           s33 = s33 + tmpf * gk(i,3)*gk(i,3)
+     DO l = 1, 3
+        DO m = 1, l
+           ! Stupid workaround for NVidia HPC-SDK v. < 22
+           ! that cannot make a reduction on a matrix
+           sigma = 0.0_dp
+           !$acc parallel loop collapse(2) reduction(+:sigma)
+           DO ibnd = 1, nbnd
+              DO i = 1, npw
+                 IF (noncolin) THEN
+                    sigma = sigma + wg(ibnd,ik) * &
+                     gk(i,l) * gk(i, m) * kfac(i) * &
+                     ( DBLE (CONJG(evc(   i  ,ibnd))*evc(   i  ,ibnd)) + &
+                       DBLE (CONJG(evc(i+npwx,ibnd))*evc(i+npwx,ibnd)))
+                 ELSE
+                    sigma = sigma + wg(ibnd,ik) * &
+                        gk(i,l) * gk(i, m) * kfac(i) * &
+                          DBLE (CONJG(evc(i, ibnd) ) * evc(i, ibnd) )
+                 ENDIF
+              ENDDO
+           ENDDO
+           sigmakin(l,m) = sigmakin(l,m) + sigma
         ENDDO
+        !
      ENDDO
      !
-     !  ... contribution from the nonlocal part
+     !  ... contribution from the  nonlocal part
      !
      CALL stres_us( ik, gk, sigmanlc )
      !
   ENDDO
   !
-  sigmakin(:,1) = [s11,  s21,  s31]
-  sigmakin(:,2) = [0._DP,s22,  s32]
-  sigmakin(:,3) = [0._DP,0._DP,s33]
-  !
-  !$acc end data
-  !$acc end data
-  DEALLOCATE( gk, kfac )
-  !
-  !$acc exit data delete(evc)
+  !$acc end data 
+  DEALLOCATE( kfac )
+  DEALLOCATE(  gk  )
   !
   ! ... the kinetic term must be summed over PW's and over k-points
   !
@@ -159,11 +129,11 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   ENDDO
   !
   IF ( gamma_only ) THEN
-     sigmakin(:,:) = 2._DP * e2 / omega * sigmakin(:,:)
+     sigmakin(:,:) = 2.0_dp * e2 / omega * sigmakin(:,:)
   ELSE
      sigmakin(:,:) = e2 / omega * sigmakin(:,:)
   ENDIF
-  sigmanlc(:,:) = -1._DP / omega * sigmanlc(:,:)
+  sigmanlc(:,:) = -sigmanlc(:,:) / omega 
   !
   ! ... symmetrize stress
   !

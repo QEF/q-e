@@ -202,9 +202,7 @@ set(src_modules
     w1gauss.f90
     deviatoric.f90
     # GPU
-    wavefunctions_gpu.f90
-    random_numbers_gpu.f90
-    cuda_subroutines.f90)
+    random_numbers_gpu.f90)
 qe_enable_cuda_fortran("${src_modules}")
 qe_add_library(qe_modules ${src_modules})
 
@@ -212,9 +210,8 @@ qe_add_library(qe_modules ${src_modules})
 set(src_modules_c
     customize_signals.c
     qmmm_aux.c
-    sockets.c
-    stack.c)
-qe_add_library(qe_modules_c ${src_modules_c})
+    sockets.c)
+add_library(qe_modules_c ${src_modules_c})
 
 if(TARGET gitrev)
    add_dependencies(qe_modules gitrev)

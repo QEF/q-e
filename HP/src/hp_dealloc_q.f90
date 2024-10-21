@@ -24,7 +24,7 @@ SUBROUTINE hp_dealloc_q()
   USE control_lr,          ONLY : lgamma, nbnd_occ
   USE ldaU_lr,             ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,          ONLY : ikmks, ikmkmqs, becpt
-  USE hp_nc_mag_aux,       ONLY : deeq_nc_save 
+  USE lr_nc_mag,           ONLY : deeq_nc_save
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -32,6 +32,7 @@ SUBROUTINE hp_dealloc_q()
   IF (lgamma) THEN
      if (associated(evq))  nullify(evq)
   ELSE
+     !$acc exit data delete(evq)
      if (associated(evq))  deallocate(evq)
   ENDIF
   !

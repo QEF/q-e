@@ -22,7 +22,6 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
   USE wvfct,    ONLY : nbnd
   USE wavefunctions, ONLY : evc
   USE gvect
-  USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
   USE io_files, ONLY: nwordwfc

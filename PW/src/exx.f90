@@ -420,6 +420,7 @@ MODULE exx
     IF ( use_ace ) &
         WRITE(stdout,'(/,5X,"Using ACE for calculation of exact exchange")') 
     !
+    !$acc update device(evc)
     CALL transform_evc_to_exx( 2 )
     !
     ! ... prepare the symmetry matrices for the spin part
@@ -712,18 +713,10 @@ MODULE exx
                    ENDDO
                    !
                    IF ( me_egrp == 0 ) THEN
-!$omp parallel do default(shared) private(ir) firstprivate(npol,nxxs)
-                      DO ir = 1, nxxs
-                         !DIR$ UNROLL_AND_JAM (2)
-                         DO ipol = 1, npol
+!$omp parallel do collapse(2)
+                      DO ipol = 1, npol
+                         DO ir = 1, nxxs
                             psic_all_nc(ir,ipol) = (0.0_DP, 0.0_DP)
-                         ENDDO
-                      ENDDO
-!$omp end parallel do
-!$omp parallel do default(shared) private(ir) firstprivate(npol,isym,nxxs) reduction(+:psic_all_nc)
-                      DO ir = 1, nxxs
-                         !DIR$ UNROLL_AND_JAM (4)
-                         DO ipol = 1, npol
                             DO jpol = 1, npol
                                psic_all_nc(ir,ipol) = psic_all_nc(ir,ipol) + &
                                              CONJG(d_spin(jpol,ipol,isym)) * &
@@ -738,18 +731,10 @@ MODULE exx
                       CALL scatter_grid( dfftt, psic_all_nc(:,ipol), psic_nc(:,ipol) )
                    ENDDO
 #else
-!$omp parallel do default(shared) private(ir) firstprivate(npol,nxxs)
-                   DO ir = 1, nxxs
-                      !DIR$ UNROLL_AND_JAM (2)
-                      DO ipol = 1, npol
+!$omp parallel do collapse(2)
+                   DO ipol = 1, npol
+                      DO ir = 1, nxxs
                          psic_nc(ir,ipol) = (0._DP,0._DP)
-                      ENDDO
-                   ENDDO
-!$omp end parallel do
-!$omp parallel do default(shared) private(ipol,jpol,ir) firstprivate(npol,isym,nxxs) reduction(+:psic_nc)
-                   DO ir = 1, nxxs
-                      !DIR$ UNROLL_AND_JAM (4)
-                      DO ipol = 1, npol
                          DO jpol = 1, npol
                             psic_nc(ir,ipol) = psic_nc(ir,ipol) + CONJG(d_spin(jpol,ipol,isym))* &
                                                temppsic_nc(rir(ir,isym),jpol)
@@ -2707,7 +2692,6 @@ end associate
                                        deallocate_bec_type, calbec
     USE uspp,                   ONLY : okvan,nkb,vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
-    USE wavefunctions_gpum,     ONLY : using_evc
     USE uspp_init,              ONLY : init_us_2
     IMPLICIT NONE
     !
@@ -2722,8 +2706,6 @@ end associate
     !
     IF (okvan) CALL allocate_bec_type( nkb, nbnd, becpsi )
     energy = 0._dp
-    !
-    CALL using_evc(0)
     !
     DO ik = 1, nks
        npw = ngk(ik)
@@ -3846,7 +3828,6 @@ end associate
     USE mp_bands,           ONLY : intra_bgrp_comm
     USE mp,                 ONLY : mp_sum
     USE wavefunctions,      ONLY : evc
-    USE wavefunctions_gpum, ONLY : using_evc
     USE uspp_init,          ONLY : init_us_2
     !
     IMPLICIT NONE
@@ -3868,8 +3849,6 @@ end associate
        CALL errore( 'aceinit', 'n_proj must be between occ and tot.', 1 )
     ENDIF
     !
-    CALL using_evc(0)
-    !
     IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
 #if defined (__CUDA)
     IF (.NOT. ALLOCATED(xi_d)) ALLOCATE( xi_d(npwx*npol,nbndproj) )
@@ -3884,7 +3863,6 @@ end associate
        current_k = ik
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-       IF ( nks > 1 ) CALL using_evc(2)
        IF ( okvan ) THEN
           CALL init_us_2( npw, igk_k(1,ik), xk(:,ik), vkb )
           CALL calbec( npw, vkb, evc, becpsi, nbnd )

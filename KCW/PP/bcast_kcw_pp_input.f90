@@ -31,12 +31,14 @@ subroutine bcast_kcw_pp_input ( )
   !
   call mp_bcast ( seedname,            ionode_id, intra_image_comm )
   call mp_bcast ( num_wann,            ionode_id, intra_image_comm )
-  call mp_bcast ( kcw_iverbosity,       ionode_id, intra_image_comm )
+  call mp_bcast ( kcw_iverbosity,      ionode_id, intra_image_comm )
   call mp_bcast ( mp1,                 ionode_id, intra_image_comm )
   call mp_bcast ( mp2,                 ionode_id, intra_image_comm )
   call mp_bcast ( mp3,                 ionode_id, intra_image_comm )
   call mp_bcast ( use_ws_distance,     ionode_id, intra_image_comm )
-  call mp_bcast ( have_empty     ,     ionode_id, intra_image_comm )
+  call mp_bcast ( have_empty,          ionode_id, intra_image_comm )
+  call mp_bcast ( io_sp,               ionode_id, intra_image_comm )
+  call mp_bcast ( io_real_space,       ionode_id, intra_image_comm )
    !
 #endif
   !

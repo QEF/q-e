@@ -19,34 +19,38 @@ subroutine kcw_setup_screen
   USE lsda_mod,          ONLY : nspin, starting_magnetization
   USE scf,               ONLY : v, vrs, vltot,  kedtau
   USE fft_base,          ONLY : dfftp, dffts
-  USE gvecs,             ONLY : doublegrid
-  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux!, nspin_mag, npol
+  USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_mag, npol
+  USE fft_interfaces,    ONLY : invfft
+  USE gvecs,             ONLY : doublegrid, ngms
+  USE gvect,             ONLY : ig_l2g
   USE wvfct,             ONLY : nbnd
   USE xc_lib,            ONLY : xclib_dft_is
   !
   USE units_lr,          ONLY : iuwfc
   USE wvfct,             ONLY : npwx
-  USE control_flags,     ONLY : io_level
+  USE control_flags,     ONLY : io_level, gamma_only
   USE io_files,          ONLY : prefix
   USE buffers,           ONLY : open_buffer, save_buffer, close_buffer
-  USE control_kcw,       ONLY : alpha_final, iurho_wann, kcw_iverbosity, &
+  USE control_kcw,       ONLY : alpha_final, iurho_wann, kcw_iverbosity, io_real_space, &
                                 read_unitary_matrix, num_wann, num_wann_occ, i_orb, iorb_start, &
                                 iorb_end, nqstot, occ_mat, l_do_alpha, group_alpha, &
-                                tmp_dir_kcw, tmp_dir_kcwq, x_q, lgamma_iq!, wq
+                                tmp_dir_kcw, tmp_dir_kcwq, x_q, lgamma_iq, io_sp,nrho, spin_component
   USE io_global,         ONLY : stdout
-  USE klist,             ONLY : xk, nkstot
-  USE cell_base,         ONLY : at !, bg
+  USE klist,             ONLY : xk, nkstot, nelec, nelup, neldw
+  USE cell_base,         ONLY : at, omega !, bg
   USE fft_base,          ONLY : dffts
   !
   USE control_lr,        ONLY : nbnd_occ
   USE mp,                ONLY : mp_bcast
-  USE io_kcw,            ONLY : read_rhowann
+  USE io_kcw,            ONLY : read_rhowann, read_rhowann_g
   !
   USE coulomb,           ONLY : setup_coulomb
   !
+  USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
+  !
   IMPLICIT NONE
   !
-  INTEGER :: na, i
+  INTEGER :: na, i, ip
   ! counters
   !
   INTEGER   :: lrwfc, lrrho, iun_qlist
@@ -61,7 +65,8 @@ subroutine kcw_setup_screen
   REAL(DP) :: xq(3)
   ! the q-point coordinatew
   !
-  COMPLEX(DP), ALLOCATABLE :: rhowann(:,:), rhowann_aux(:)
+  COMPLEX(DP), ALLOCATABLE :: rhowann(:,:,:), rhowann_aux(:)
+  COMPLEX(DP), ALLOCATABLE :: rhog(:)
   ! the periodic part of the wannier orbital density
   !
   CHARACTER (LEN=256) :: file_base
@@ -72,7 +77,7 @@ subroutine kcw_setup_screen
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin_mag, doublegrid)
   !
   !  3) If necessary calculate the local magnetization. This information is
   !      needed in find_sym
@@ -95,7 +100,7 @@ subroutine kcw_setup_screen
   !
   ! 5) Computes the number of occupied bands for each k point
   !
-  call setup_nbnd_occ ( ) 
+  !call setup_nbnd_occ ( ) 
   !
   ALLOCATE ( alpha_final(nbnd) )
   alpha_final(:) = 1.D0
@@ -103,7 +108,7 @@ subroutine kcw_setup_screen
   ! ... Open buffers for the KS and eventualy the minimizing WFCs 
   !
   iuwfc = 20
-  lrwfc = nbnd * npwx
+  lrwfc = nbnd * npwx * npol
   io_level = 1
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
   IF (.NOT.exst.AND..NOT.exst_mem) THEN
@@ -117,8 +122,16 @@ subroutine kcw_setup_screen
     CALL read_wannier ( )
     if (kcw_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Unitary matrix, READ from file")')
   ELSE
+    !
     num_wann = nbnd
-    num_wann_occ = nbnd_occ(1)
+    num_wann_occ = nint (nelec)/2 ! spin upolarized
+    IF (nspin_mag == 4) THEN
+      num_wann_occ = nint (nelec)
+    ELSE IF (nspin==2) THEN
+      num_wann_occ = nint (nelup) ! Assuming insulating
+      IF (spin_component == 2) num_wann_occ = nint (neldw) ! Assuming insulating
+    END IF
+    !
   ENDIF
   ! 
   ! ... Open a buffer for the wannier orbital densities. Those have been written by wann2kcw
@@ -126,12 +139,13 @@ subroutine kcw_setup_screen
   !
   iurho_wann = 22
   io_level = 1
-  lrrho=num_wann*dffts%nnr
+  lrrho=num_wann*dffts%nnr*nrho
   CALL open_buffer ( iurho_wann, 'rho_wann', lrrho, io_level, exst )
   if (kcw_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WF rho, OPENED")')
   !
-  ALLOCATE (rhowann ( dffts%nnr, num_wann), rhowann_aux(dffts%nnr) )
-  ALLOCATE ( occ_mat (num_wann, num_wann, nkstot) )
+  ALLOCATE (rhowann ( dffts%nnr, num_wann, nrho), rhowann_aux(dffts%nnr) )
+  ALLOCATE ( occ_mat (num_wann, num_wann, nkstot) )  !<--- nkstot_eff??
+  ALLOCATE ( rhog (ngms) )
   ALLOCATE (l_do_alpha(num_wann), group_alpha(num_wann) ) 
   !
   l_do_alpha = .TRUE.
@@ -145,7 +159,7 @@ subroutine kcw_setup_screen
   ! OLD implementation (only isotropic eps) for reference
   !call setup_coulomb_exx()
   !
-  DEALLOCATE ( nbnd_occ )  ! otherwise allocate_ph complains: FIXME
+  !DEALLOCATE ( nbnd_occ )  ! otherwise allocate_ph complains: FIXME
   !
   ! ... Read the q-point grid written by wann2kcw
   !
@@ -179,14 +193,35 @@ subroutine kcw_setup_screen
                 & // TRIM(int_to_char(iq))//'/'
     !
     DO i = 1, num_wann
-      file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char(i))
-      CALL read_rhowann( file_base, dffts, rhowann_aux )
-      rhowann(:,i) = rhowann_aux(:)
+      !
+      IF ( .NOT. io_real_space ) THEN 
+        !
+        DO ip = 1, nrho
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_g_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          CALL read_rhowann_g( file_base, &
+               root_bgrp, intra_bgrp_comm, &
+               ig_l2g, 1, rhog(:), .FALSE., gamma_only )
+          rhowann_aux=(0.d0,0.d0)
+          rhowann_aux(dffts%nl(:)) = rhog(:)
+          CALL invfft ('Rho', rhowann_aux, dffts)
+          rhowann(:,i,ip) = rhowann_aux(:)*omega
+        ENDDO
+        !
+      ELSE 
+        !
+        DO ip = 1, nrho
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          CALL read_rhowann( file_base, dffts, rhowann_aux )
+          rhowann(:,i,ip) = rhowann_aux(:)
+        ENDDO
+        !
+      ENDIF
+      !
     ENDDO
     !
     ! ... Save the rho_q on a direct access file
     !
-    lrrho=num_wann*dffts%nnr
+    lrrho=num_wann*dffts%nnr*nrho
     CALL save_buffer (rhowann, lrrho, iurho_wann, iq)
     !
   ENDDO
@@ -228,6 +263,7 @@ subroutine kcw_setup_screen
   CALL stop_clock ('kcw_setup')
   !
   DEALLOCATE (rhowann, rhowann_aux)
+  DEALLOCATE (rhog) 
   !
   RETURN
   !

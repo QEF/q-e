@@ -633,7 +633,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
   USE mp_bands,             ONLY : use_bgrp_in_hpsi
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
@@ -666,8 +665,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
-  CALL using_evc(0)
-  !
   IF ( wfc_extr == 1 ) THEN
      !
      CALL diropn( iunoldwfc, 'oldwfc', 2*nwordwfc, exst )
@@ -677,7 +674,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... "now"  -> "old"
         !
         IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        IF ( nks > 1 ) CALL using_evc(2)
         CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
      END DO
@@ -732,7 +728,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, -1 )
         IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        IF ( nks > 1 ) CALL using_evc(2)
         CALL davcio(    evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
         npw = ngk (ik)
@@ -793,7 +788,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... alpha0 and beta0 are calculated in "update_pot"
         ! ... for first-order interpolation, alpha0=1, beta0=0
         !
-        CALL using_evc(1)
         IF ( wfc_extr == 3 ) THEN
            evc = ( 1.0_dp + alpha0 ) * evc + ( beta0 - alpha0 ) * aux
         ELSE
@@ -825,10 +819,12 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... save interpolated wavefunctions to file iunwfc
         !
-        ! CALL using_evc(0) aldready done above
         IF ( nks > 1 ) CALL save_buffer( evc, nwordwfc, iunwfc, ik )
         !
      END DO
+     !
+     ! update current evc on device (expecially for gamma_only case)
+     !$acc update device(evc)
      !
      IF ( zero_ew > 0 ) &
         WRITE( stdout, '( 5X,"Message from extrapolate_wfcs: ",/,  &

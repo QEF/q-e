@@ -203,9 +203,12 @@ SUBROUTINE ahc_do_upperfan(ik)
   !
   IF (lgamma) THEN
     CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+    !$acc update device(evc)
   ELSE
     CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+    !$acc update device(evc)
     CALL get_buffer(evq, lrwfc, iuwfc, ikq)
+    !$acc update device(evq)
   ENDIF
   !
   ! Setup for Sternheimer solver
@@ -796,10 +799,11 @@ SUBROUTINE compute_psi_gauge(ik)
         ibnd = ibnd + ndegen
         !
       ENDDO
+      !
+      IF (ibnd /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
+      'ibnd /= ahc_nbnd + 1 after loop over degenerate groups at first iq', 1)
+      !
     ENDIF
-    !
-    IF (ibnd /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
-    'ibnd /= ahc_nbnd + 1 after loop over degenreate groups at first iq', 1)
     !
     ! 6) Set psi_gauge to identity and return.
     !
@@ -934,9 +938,9 @@ SUBROUTINE compute_psi_gauge(ik)
   ENDDO ! igroup
   !
   IF (ibnd_ref /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
-    'ibnd_ref /= ahc_nbnd + 1 after loop over degenreate groups', 1)
+    'ibnd_ref /= ahc_nbnd + 1 after loop over degenerate groups', 1)
   IF (ibnd /= ahc_nbnd_gauge + 1) CALL errore('compute_psi_gauge', &
-    'ibnd /= ahc_nbnd_gauge + 1 after loop over degenreate groups', 1)
+    'ibnd /= ahc_nbnd_gauge + 1 after loop over degenerate groups', 1)
   !
   DEALLOCATE(gauge_mill)
   DEALLOCATE(ndegen_list)

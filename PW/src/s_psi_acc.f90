@@ -47,18 +47,20 @@ SUBROUTINE s_psi_acc( lda, n, m, psi, spsi )
   !
   CALL start_clock( 's_psi_bgrp' )
   !
-  !$acc data deviceptr( psi, spsi )
-  !
   IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
      ! use band parallelization here
      ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
      CALL divide_all( inter_bgrp_comm,m,m_start,m_end, recv_counts,displs )
+     !$acc host_data use_device(spsi)
      CALL mp_type_create_column_section( spsi(1,1), 0, lda*npol, lda*npol, column_type )
+     !$acc end host_data
      !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL s_psi__acc( lda, n, m_end-m_start+1, psi(1,m_start), spsi(1,m_start) )
+     !$acc host_data use_device(spsi)
      CALL mp_allgather( spsi, column_type, recv_counts, displs, inter_bgrp_comm )
+     !$acc end host_data
      !
      CALL mp_type_free( column_type )
      DEALLOCATE( recv_counts )
@@ -67,8 +69,6 @@ SUBROUTINE s_psi_acc( lda, n, m, psi, spsi )
      ! don't use band parallelization here
      CALL s_psi__acc( lda, n, m, psi, spsi )
   ENDIF
-  !
-  !$acc end data 
   !
   CALL stop_clock( 's_psi_bgrp' )
   !
@@ -126,19 +126,17 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   !
   ! ... initialize  spsi
   !
-  !$acc data deviceptr( psi, spsi )
-  !
 #if defined(__CUDA)  
+  !$acc host_data use_device(psi, spsi)
   CALL dev_memcpy( spsi , psi )
+  !$acc end host_data
 #else
+  !$acc host_data use_device(psi, spsi)
   CALL threaded_memcpy( spsi, psi, lda*npol*m*2 )
+  !$acc end host_data
 #endif
   !
-  !$acc end data
-  !
   IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
-  !
-  !$acc data deviceptr( psi, spsi )
   !
   CALL start_clock( 's_psi' )  
   !
@@ -170,7 +168,9 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
 #if defined(__CUDA)
            CALL fwfft_orbital_gamma( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
 #else
+           !$acc host_data use_device(spsi)
            CALL fwfft_orbital_gamma( spsi, ibnd, m, add_to_orbital=.TRUE. )
+           !$acc end host_data
 #endif
         ENDDO
         !
@@ -205,7 +205,9 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
 #if defined(__CUDA)
            CALL fwfft_orbital_k( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
 #else
+           !$acc host_data use_device(spsi)
            CALL fwfft_orbital_k( spsi, ibnd, m, add_to_orbital=.TRUE. )
+           !$acc end host_data
 #endif
         ENDDO
         !
@@ -222,8 +224,6 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
      ENDIF    
      !
   ENDIF    
-  !
-  !$acc end data
   !
   CALL stop_clock( 's_psi' )
   !
@@ -244,41 +244,20 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ierr
        ! counters
-       INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
-       ! data distribution indexes
-       INTEGER, EXTERNAL :: ldim_block, gind_block
-       ! data distribution functions
        REAL(DP), ALLOCATABLE :: ps(:,:), becpr(:,:)
        !$acc declare device_resident(ps, becpr)
        ! the product vkb and psi
        !
-       !$acc data deviceptr( psi, spsi ) present( becp%r, vkb )
+       !$acc data present( becp%r, vkb )
        !
        ALLOCATE( becpr( size(becp%r,1), size(becp%r,2)) )
        !$acc kernels 
        becpr(:,:) = becp%r(:,:)
        !$acc end  kernels
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
-          nproc   = 1
-          mype    = 0
-          m_loc   = m
-          m_begin = 1
-          m_max   = m
-       ELSE
-          !
-          ! becp(l,i) = <beta_l|psi_i>, with vkb(n,l)=|beta_l>
-          ! in this case becp(l,i) are distributed (index i is)
-          !
-          nproc   = becp%nproc
-          mype    = becp%mype
-          m_loc   = becp%nbnd_loc
-          m_begin = becp%ibnd_begin
-          m_max   = SIZE( becp%r, 2 )
-          IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
-       ENDIF
+       ! becp(l,i) = <beta_l|psi_i>, with vkb(n,l)=|beta_l>
        !
-       ALLOCATE( ps( nkb, m_max ), STAT=ierr )
+       ALLOCATE( ps( nkb, m ), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !    
@@ -297,61 +276,26 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
                    ! Next operation computes ps(l',i)=\sum_m qq(l,m) becp(m',i)
                    ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                    !
-                   IF ( m_loc > 0 ) THEN
-                      !$acc host_data use_device(qq_at, becpr, ps)
-                      CALL MYDGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
+                   !$acc host_data use_device(qq_at, becpr, ps)
+                   CALL MYDGEMM('N', 'N', nh(nt), m, nh(nt), 1.0_dp, &
                                   qq_at(1,1,na), nhm, becpr(ofsbeta(na)+1,1),&
                                   nkb, 0.0_dp, ps(ofsbeta(na)+1,1), nkb )
-                      !$acc end host_data
-                   ENDIF
+                   !$acc end host_data
                 ENDIF
              ENDDO
           ENDIF
        ENDDO
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
-          IF ( m == 1 ) THEN
-             !$acc host_data use_device(vkb, ps)
-             CALL MYDGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
-                  2 * lda, ps, 1, 1.D0, spsi, 1 )
-             !$acc end host_data
-          ELSE
-             !$acc host_data use_device(vkb, ps)
-             CALL MYDGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
-                  2 * lda, ps, nkb, 1.D0, spsi, 2*lda )
-             !$acc end host_data
-          ENDIF
+       IF ( m == 1 ) THEN
+          !$acc host_data use_device(vkb, ps, spsi)
+          CALL MYDGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
+               2 * lda, ps, 1, 1.D0, spsi, 1 )
+          !$acc end host_data
        ELSE
-          !
-          ! parallel block multiplication of vkb and ps
-          !
-          icur_blk = mype
-          !
-          DO icyc = 0, nproc-1
-
-             m_loc   = ldim_block( becp%nbnd , nproc, icur_blk )
-             m_begin = gind_block( 1,  becp%nbnd, nproc, icur_blk )
-
-             IF( (m_begin + m_loc-1) > m ) m_loc = m - m_begin + 1
-
-             IF( m_loc > 0 ) THEN
-                !$acc host_data use_device(vkb, ps)
-                CALL MYDGEMM( 'N', 'N', 2*n, m_loc, nkb, 1.D0, vkb, &
-                            2*lda, ps, nkb, 1.D0, spsi(1,m_begin), 2*lda )
-                !$acc end host_data
-             ENDIF
-             !
-             ! block rotation
-             !
-             !$acc host_data use_device(ps)
-             CALL mp_circular_shift_left( ps, icyc, becp%comm )
-             !$acc end host_data
-             !
-             icur_blk = icur_blk + 1
-             IF( icur_blk == nproc ) icur_blk = 0
-             !
-          ENDDO
-          !
+          !$acc host_data use_device(vkb, ps, spsi)
+          CALL MYDGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
+               2 * lda, ps, nkb, 1.D0, spsi, 2*lda )
+          !$acc end host_data
        ENDIF
        !
        DEALLOCATE( ps, becpr ) 
@@ -377,7 +321,7 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
        !$acc declare device_resident(ps, qqc, becpk)
        ! ps = product vkb and psi ; qqc = complex version of qq
        !
-       !$acc data deviceptr( psi, spsi ) present( becp%k, vkb )
+       !$acc data present( becp%k, vkb )
        !
        ALLOCATE( becpk( size(becp%k,1), size(becp%k,2)) )
        !$acc kernels 
@@ -427,14 +371,14 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
        !
        IF ( m == 1 ) THEN
           !
-          !$acc host_data use_device(vkb, ps)
+          !$acc host_data use_device(vkb, ps, spsi)
           CALL MYZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb, &
                       lda, ps, 1, ( 1.D0, 0.D0 ), spsi, 1 )
           !$acc end host_data
           !
        ELSE
           !
-          !$acc host_data use_device(vkb, ps)
+          !$acc host_data use_device(vkb, ps, spsi)
           CALL MYZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ), vkb, &
                       lda, ps, nkb, ( 1.D0, 0.D0 ), spsi, lda )
           !$acc end host_data
@@ -465,7 +409,7 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
        !$acc declare device_resident(ps, becpnc)
        ! the product vkb and psi
        !
-       !$acc data deviceptr(psi, spsi) present(vkb, becp%nc)
+       !$acc data present(vkb, becp%nc)
        !
        ALLOCATE( becpnc(size(becp%nc,1),size(becp%nc,2),size(becp%nc,3)) )
        !$acc kernels
@@ -523,7 +467,7 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
           !
        ENDDO
        !
-       !$acc host_data use_device(vkb, ps)
+       !$acc host_data use_device(vkb, ps, spsi)
        CALL MYZGEMM ( 'N', 'N', n, m*npol, nkb, (1.d0,0.d0) , vkb, &
                     lda, ps, nkb, (1.d0,0.d0) , spsi(1,1), lda )
        !$acc end host_data

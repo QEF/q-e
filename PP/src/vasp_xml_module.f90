@@ -83,7 +83,7 @@ PUBLIC        :: readxmlfile_vasp
     INTEGER                        :: nsp          ! number of species
     INTEGER,ALLOCATABLE            :: ityp(:)      ! number of atoms per type
     REAL(DP),ALLOCATABLE           :: zv(:)
-    CHARACTER(LEN=3),ALLOCATABLE   :: atm(:)
+    CHARACTER(LEN=6),ALLOCATABLE   :: atm(:)
     CHARACTER(LEN=10)              :: pseudo
     !
   END TYPE vasp_atominfo_type

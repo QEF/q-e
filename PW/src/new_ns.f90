@@ -27,7 +27,7 @@ SUBROUTINE new_ns( ns )
                                    Hubbard_projectors, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE symm_base,            ONLY : nsym, irt
+  USE symm_base,            ONLY : nsym, irt, t_rev
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : evc
@@ -37,7 +37,7 @@ SUBROUTINE new_ns( ns )
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  USE wavefunctions_gpum,   ONLY : using_evc
+  USE noncollin_module,     ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -48,14 +48,12 @@ SUBROUTINE new_ns( ns )
   !
   TYPE(bec_type) :: proj
   ! proj(nwfcU,nbnd)
-  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, npw
+  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, npw, is2
   ! counter on k points
   !    "    "  bands
   !    "    "  spins
   REAL(DP), ALLOCATABLE :: nr(:,:,:,:)
   REAL(DP) :: psum
-  !
-  CALL using_evc(0)
   !
   CALL start_clock( 'new_ns' )
   !
@@ -78,7 +76,6 @@ SUBROUTINE new_ns( ns )
      npw = ngk(ik)
      !
      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(1)
      !
      ! make the projection
      !
@@ -152,24 +149,30 @@ SUBROUTINE new_ns( ns )
                  !
                  DO isym = 1, nsym
                     nb = irt (isym, na)  
+                    ! flip spin for time-reversal in collinear systems
+                    IF ( (colin_mag==2) .AND. (t_rev(isym) == 1) ) THEN
+                       is2 = 3-is
+                    ELSE
+                       is2 = is
+                    END IF     
                     !
                     DO m0 = 1, 2*Hubbard_l(nt)+1  
                        DO m00 = 1, 2*Hubbard_l(nt)+1  
                           !
                           IF (Hubbard_l(nt) == 0) THEN
                              ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
-                                               nr(m0,m00,is,nb) / nsym
+                                               nr(m0,m00,is2,nb) / nsym
                           ELSEIF (Hubbard_l(nt) == 1) THEN
                              ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
-                                               d1(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
+                                               d1(m0 ,m1,isym) * nr(m0,m00,is2,nb) * &
                                                d1(m00,m2,isym) / nsym
                           ELSEIF (Hubbard_l(nt) == 2) THEN
                              ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
-                                               d2(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
+                                               d2(m0 ,m1,isym) * nr(m0,m00,is2,nb) * &
                                                d2(m00,m2,isym) / nsym
                           ELSEIF (Hubbard_l(nt) == 3) THEN
                              ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
-                                               d3(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
+                                               d3(m0 ,m1,isym) * nr(m0,m00,is2,nb) * &
                                                d3(m00,m2,isym) / nsym
                           ELSE
                              CALL errore( 'new_ns', &
@@ -239,7 +242,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ldaU,                 ONLY : is_hubbard, nwfcU
     USE becmod,               ONLY : bec_type, calbec, &
                                      allocate_bec_type, deallocate_bec_type
-    USE wavefunctions_gpum,   ONLY : using_evc
     USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
@@ -265,7 +267,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-    CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
     ! does not need mp_sum intra-pool, since it is already done in calbec 
     !
@@ -326,7 +327,6 @@ SUBROUTINE new_ns_nc( ns )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
-  USE wavefunctions_gpum,   ONLY : using_evc
   IMPLICIT NONE
   !
   COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
@@ -353,13 +353,11 @@ SUBROUTINE new_ns_nc( ns )
   !
   !--
   !  loop on k points
-  CALL using_evc(0)
   DO ik = 1, nks
      !
      npw = ngk (ik)
      IF (nks > 1) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        CALL using_evc(1)
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      ENDIF
      !

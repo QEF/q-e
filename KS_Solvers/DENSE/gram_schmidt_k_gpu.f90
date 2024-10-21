@@ -142,13 +142,13 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Set initial : |phi_j> = |psi_j>
   !
-  CALL ZCOPY_gpu( kdmx * nbnd, psi_d(1,1), 1, phi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, psi_d(1,1), 1, phi_d(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL ZCOPY_gpu( kdmx * nbnd, hpsi_d(1,1), 1, hphi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, hpsi_d(1,1), 1, hphi_d(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL ZCOPY_gpu( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
   !
   !
   ! ... Allocate buffers 
@@ -204,13 +204,13 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Copy psi <- phi
   !
-  CALL ZCOPY_gpu( kdmx * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL ZCOPY_gpu( kdmx * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL ZCOPY_gpu( kdmx * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
   !
   ! ... Calculate energy eigenvalues
   !
@@ -240,7 +240,7 @@ CONTAINS
     !
     INTEGER                  :: ibnd
     REAL(DP)                 :: norm
-    COMPLEX(DP), EXTERNAL    :: ZDOTC_gpu
+    COMPLEX(DP), EXTERNAL    :: MYZDOTC
     !
     !
     DO ibnd = ibnd_start, ibnd_end
@@ -251,12 +251,12 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
+             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
                          spsi_d(1,ibnd), 1, ZERO, sc_d(1), 1 )
              !
           ELSE
              !
-             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
+             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
                          psi_d(1,ibnd), 1, ZERO, sc_d(1), 1 )
              !
           END IF
@@ -266,16 +266,16 @@ CONTAINS
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
-          CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, phi_d(1,ibnd_start), kdmx, &
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi_d(1,ibnd_start), kdmx, &
                       sc_d(1), 1, ONE, phi_d(1,ibnd), 1 )
           !
           !
           IF ( eigen_ ) &
-          CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, hphi_d(1,ibnd_start), kdmx, &
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi_d(1,ibnd_start), kdmx, &
                       sc_d(1), 1, ONE, hphi_d(1,ibnd), 1 )
           !
           IF ( uspp ) &
-          CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, sphi_d(1,ibnd_start), kdmx, &
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi_d(1,ibnd_start), kdmx, &
                       sc_d(1), 1, ONE, sphi_d(1,ibnd), 1 )
           !
        END IF
@@ -284,11 +284,11 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          norm = DBLE( ZDOTC_gpu( kdim, phi_d(1,ibnd), 1, sphi_d(1,ibnd), 1 ) )
+          norm = DBLE( MYZDOTC( kdim, phi_d(1,ibnd), 1, sphi_d(1,ibnd), 1 ) )
           !
        ELSE
           !
-          norm = DBLE( ZDOTC_gpu( kdim, phi_d(1,ibnd), 1, phi_d(1,ibnd), 1 ) )
+          norm = DBLE( MYZDOTC( kdim, phi_d(1,ibnd), 1, phi_d(1,ibnd), 1 ) )
           !
        END IF
        !
@@ -299,13 +299,13 @@ CONTAINS
        IF ( norm < eps16 ) &
        CALL errore( ' gram_schmidt_k ', ' vectors are linear dependent ', 1 )
        !
-       CALL ZDSCAL_gpu( kdim, 1._DP / norm, phi_d(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, phi_d(1,ibnd), 1 )
        !
        IF ( eigen_ ) &
-       CALL ZDSCAL_gpu( kdim, 1._DP / norm, hphi_d(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, hphi_d(1,ibnd), 1 )
        !
        IF ( uspp ) &
-       CALL ZDSCAL_gpu( kdim, 1._DP / norm, sphi_d(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, sphi_d(1,ibnd), 1 )
        !
     END DO
     !
@@ -332,12 +332,12 @@ CONTAINS
     !
     IF ( uspp ) THEN
        !
-       CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
+       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
                    spsi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
        !
     ELSE
        !
-       CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
+       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
                    psi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
        !
     END IF
@@ -346,15 +346,15 @@ CONTAINS
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
-    CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi_d(1,ibnd_start), kdmx, &
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi_d(1,ibnd_start), kdmx, &
                 sc2_d(1,1), nbsize, ONE, phi_d(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
-    CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi_d(1,ibnd_start), kdmx, &
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi_d(1,ibnd_start), kdmx, &
                 sc2_d(1,1), nbsize, ONE, hphi_d(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
-    CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi_d(1,ibnd_start), kdmx, &
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi_d(1,ibnd_start), kdmx, &
                 sc2_d(1,1), nbsize, ONE, sphi_d(1,jbnd_start), kdmx )
     !
     RETURN
@@ -368,7 +368,7 @@ CONTAINS
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC_gpu
+    COMPLEX(DP), EXTERNAL :: MYZDOTC
     !
     ! ... <psi_i| H |psi_i>
     !
@@ -378,7 +378,7 @@ CONTAINS
     !
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = DBLE( ZDOTC_gpu( kdim, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 ) )
+       e(ibnd) = DBLE( MYZDOTC( kdim, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 ) )
        !
     END DO
     !
@@ -410,13 +410,13 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL ZSWAP_gpu( kdim, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
+          CALL MYZSWAP( kdim, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
           !
           IF ( eigen_ ) &
-          CALL ZSWAP_gpu( kdim, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
+          CALL MYZSWAP( kdim, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
           !
           IF ( uspp ) &
-          CALL ZSWAP_gpu( kdim, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
+          CALL MYZSWAP( kdim, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
           !
        END IF
        !

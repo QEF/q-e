@@ -39,7 +39,6 @@ SUBROUTINE lr_setup_nscf ()
   USE noncollin_module,   ONLY : noncolin, domag
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE upf_ions,           ONLY : n_atom_wfc
   USE lr_symm_base,       ONLY : nsymq, minus_q
   USE qpoint,             ONLY : xq
   !
@@ -64,7 +63,6 @@ SUBROUTINE lr_setup_nscf ()
   david  = 4
   nbndx  = david*nbnd
   max_cg_iter = 20
-  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
   CALL set_para_diag( nbnd, use_para_diag )
   !
@@ -161,8 +159,8 @@ SUBROUTINE lr_setup_nscf ()
   !
   IF ( nkstot > npk ) CALL errore( 'lr_setup_nscf', 'too many k points', nkstot )
   !
-  ! ...notice: qnorm is used by allocate_nlpot to determine
-  ! the correct size of the interpolation table "qrad"
+  ! ...notice: qnorm is used to determine the correct size
+  ! ...of the interpolation tables (tab_beta, tab_qrad, etc.)
   !
   qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba
   !

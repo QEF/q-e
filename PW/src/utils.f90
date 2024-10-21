@@ -10,6 +10,44 @@
 ! linear-algebra operators for exact-exchange and localization
 !
 !----------------------------------------------------------------------
+SUBROUTINE wrapmatcalc( label, ninner, n, m, U, V )
+  !------------------------------------------------------------------
+  !! Compute the (n,n) matrix representation \(\langle U|V\rangle\)
+  !! and its weighted trace (energy) from \(V(m,n)\) and \(U(m,n)\).
+  !! This is a wrapper of matcalc_k and only print the results without returning mat and ee
+  !
+  USE kinds,       ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(len=*), INTENT(IN) :: label
+  !! it specifies the meaning of the output
+  INTEGER, INTENT(IN) :: ninner
+  !! inner dimension in the matrix product
+  INTEGER, INTENT(IN) :: n
+  !! second dimension of U
+  INTEGER, INTENT(IN) :: m
+  !! second dimension of V
+  COMPLEX(DP), INTENT(IN) :: U(ninner,n)
+  !! input - U matrix
+  COMPLEX(DP), INTENT(IN) :: V(ninner,m)
+  !! input - V matrix
+  !
+  ! local arrays
+  !
+  COMPLEX(DP), ALLOCATABLE :: mat(:,:)
+  REAL(DP) :: ee
+
+  ALLOCATE( mat(n,m) )
+  mat = (0.0_dp, 0.0_dp)
+  CALL matcalc_k( label, .true., 2, 0, ninner, n, m, U, V, mat, ee )
+  DEALLOCATE( mat )
+
+  RETURN
+  
+END SUBROUTINE wrapmatcalc
+!
+!----------------------------------------------------------------------
 SUBROUTINE matcalc( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
   !------------------------------------------------------------------
   !! Compute the (n,n) matrix representation \(\langle U|V\rangle\)

@@ -46,7 +46,6 @@ PROGRAM lr_dav_main
   LOGICAL, EXTERNAL  :: check_gpu_support
 
   use_gpu = check_gpu_support()
-  if(use_gpu) Call errore('lr_dav_main', 'turbo_davidson with GPU NYI', 1)
 
 #if defined(__MPI)
   CALL mp_startup ( )
@@ -97,6 +96,7 @@ PROGRAM lr_dav_main
   CALL lr_dv_setup()
 
   !   Davidson loop
+  !$acc data copyin(revc0(:,:,:))
   if (precondition) write(stdout,'(/5x,"Precondition is used in the algorithm,")')
   do while (.not. dav_conv .and. dav_iter .lt. max_iter)
     dav_iter=dav_iter+1
@@ -111,13 +111,15 @@ PROGRAM lr_dav_main
       ! Check to see if the wall time limit has been exceeded.
       if ( check_stop_now() ) then
          call lr_write_restart_dav() 
-         goto 100
+!!         goto 100
+         exit
       endif
       !
   enddo
+  !$acc end data
   ! call check_hermitian()
   ! Extract physical meaning from the solution
-  
+  if ( check_stop_now() ) goto 100
   call interpret_eign('END')
   ! The check_orth at the end may take quite a lot of time in the case of 
   ! USPP because we didn't store the S* vector basis. Turn this step on only

@@ -36,7 +36,7 @@ else
                MKLROOT=/opt/intel/mkl
             fi
 	    case "$f90" in
-	       ifort* )
+	       ifort* | ifx* )
       		    mkl_lib="mkl_intel_lp64"
       		    mkl_omp="mkl_intel_thread"
 		    if test "$arch" == "mac686"; then

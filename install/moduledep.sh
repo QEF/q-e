@@ -6,7 +6,7 @@ LC_ALL=C
 export LC_ALL
 
 # files whose dependencies must be computed
-sources=`echo *.f90 |
+sources=`echo *.f90 io/*.f90 utilities/*.f90 -s |
 sed 's/\*\.f90//g'`   # remove the "*.f90" that remains
 #                     # when there are no such files
 if test "$sources" = "" ; then exit ; fi

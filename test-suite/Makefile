@@ -15,7 +15,7 @@ default :
 	@echo ' '
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests-XX [NPROCS=N]        : run tests [optionally, on N processors]'
-	@echo ' for XX=pw, cp, ph, epw, hp, tddfpt, kcw, all_currents, pp, zg, xsd-pw'
+	@echo ' for XX=pw, cp, ph, pp, hp, tddfpt, kcw, all_currents, epw, zg, xsd-pw'
 	@echo ' run-tests [NPROCS=N]           : run all tests above (except the last four)'
 	@echo ' run-custom-test testdir=DIR [NPROCS=N]: run test in DIR only'
 	@echo ' compare                     : compare last output with reference'
@@ -40,7 +40,7 @@ pseudo :
 	@./check_pseudo.sh kcw_
 	@./check_pseudo.sh oscdft_
 
-run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-epw run-tests-hp run-tests-tddfpt run-tests-kcw
+run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-pp run-tests-hp run-tests-tddfpt run-tests-kcw
 
 run-tests-cp : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
@@ -136,6 +136,8 @@ clean:
 	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test* tddfpt_*/test* kcw_*/test*
 # error files
 	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH tddfpt_*/CRASH kcw_*/CRASH
+# temporary input files
+	@rm -rf pw_*/input_tmp.in ph_*/input_tmp.in cp_*/input_tmp.in hp_*/input_tmp.in pp_*/input_tmp.in epw_*/input_tmp.in zg_*/input_tmp.in tddfpt_*/input_tmp.in kcw_*/input_tmp.in
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
@@ -154,6 +156,8 @@ clean:
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.* \
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
 	@rm -rf ph_*/*.wfc* ph_*/*.hub*
+	@rm -rf ph_1d/dynmat.axsf ph_1d/dynmat.mold
+	@rm -rf ph_2d/bn.frc ph_2d/bn.frq ph_2d/bn.frq.gp
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.dyn.freq
 # Special case for PH ahc
@@ -185,13 +189,14 @@ clean:
 		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup.fmt \
 		epw_*/inv_taucb.fmt epw_*/inv_tau.fmt epw_*/restart.fmt epw_*/vmedata.fmt \
 		epw_*/selecq.fmt epw_*/dmedata.fmt epw_*/band.eig epw_*/ksdata.fmt \
-        epw_*/inv_tau_freq.fmt epw_*/inv_taucb_freq.fmt epw_*/inv_taucb_mode.fmt \
-        epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau_mode.fmt \
-        epw_*/*.dos epw_*/*.dmat* epw_*/*.qmap epw_*/*.dwmatwe* epw_*/*.symk \
-        epw_*/*.sthmatwe* epw_*/*.xqc* epw_*/*.dgmatwe* epw_*/*.cpmew*
+		epw_*/inv_tau_freq.fmt epw_*/inv_taucb_freq.fmt epw_*/inv_taucb_mode.fmt \
+		epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau_mode.fmt \
+		epw_*/wigner.fmt epw_*/*.dos epw_*/*.dmat* epw_*/*.qmap epw_*/*.dwmatwe* \
+		epw_*/*.symk epw_*/*.sthmatwe* epw_*/*.xqc* epw_*/*.dgmatwe* epw_*/*.cpmew* \
+		epw_*/elself_wfpt_sup.* epw_*/*.bak
 
 # Special cases for EPW
-	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
+	@rm -rf epw_base/save epw_super/save epw_super/*.bands.*.dat epw_pl/save/ epw_polar/save/ \
 		epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save \
 		epw_qdpt/save epw_2D/save epw_hall/save epw_qdpt/*.dat epw_wfpt/save \

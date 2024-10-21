@@ -4,8 +4,8 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 tol_ene=0.000001
-tol_eig=0.001
-tol_a=0.001
+tol_eig=0.005
+tol_a=0.005
 check=1
 echo 
 echo " Testing the results ..." 

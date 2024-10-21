@@ -1,15 +1,14 @@
 set(src_upflib
     atom.f90
     atomic_number.f90
+    atwfc_mod.f90
     dqvan2.f90
     gen_us_dj.f90
     gen_us_dy.f90
     init_us_0.f90
     init_us_b0.f90
     init_us_1.f90
-    init_tab_atwfc.f90
     beta_mod.f90
-    interp_atwfc.f90
     init_us_2_acc.f90
     gth.f90
     paw_variables.f90
@@ -42,7 +41,6 @@ set(src_upflib
     upf_to_internal.f90
     upf_utils.f90
     uspp.f90
-    uspp_data.f90
     uspp_param.f90
     vloc_mod.f90
     rhoc_mod.f90
