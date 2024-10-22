@@ -276,7 +276,6 @@ CONTAINS
       LOGICAL                      :: true_=.TRUE., false_ = .FALSE. 
       LOGICAL,POINTER              :: trev                       
       TARGET                       :: class_names, true_, false_  
-      INTEGER                      :: colin_mag_local
       ALLOCATE(symm(nrot))
       NULLIFY( classname, trev) 
       !
@@ -331,7 +330,7 @@ CONTAINS
       ENDDO
       !
       CALL qes_init (obj,"symmetries",NSYM = nsym, NROT=nrot, SPACE_GROUP = space_group, & 
-        SYMMETRY=symm, COLIN_MAG=colin_mag_local )
+        SYMMETRY=symm, COLIN_MAG=colin_mag)
       !
       DO i = 1, nsym
          CALL qes_reset (symm(i))
