@@ -273,7 +273,6 @@ d3hess_mod.o
 
 # GPU versions of routines
 PWLIBS += \
-  g_psi_mod_gpu.o \
   g_psi_gpu.o \
   h_psi_gpu.o \
   vhpsi_gpu.o \
