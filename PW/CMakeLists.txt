@@ -249,7 +249,6 @@ set(src_pw
    src/newd_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/rotate_wfc_gpu.f90
-   src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90
    src/hs_1psi_gpu.f90
    src/g_psi_gpu.f90
