@@ -72,30 +72,30 @@ MODULE path_input_parameters_module
   !
   INTEGER :: nstep_path
   !
-  CHARACTER(len=80) :: string_method = 'neb' 
+  ! CHARACTER(len=80) :: string_method = 'neb' 
   ! 'neb' traditional neb as described by Jonsson
   !  'sm' strings method
-  CHARACTER(len=80) :: string_method_scheme_allowed(2)
-  DATA string_method_scheme_allowed / 'neb', 'sm' /
+  ! CHARACTER(len=80) :: string_method_scheme_allowed(2)
+  ! DATA string_method_scheme_allowed / 'neb', 'sm' /
   !
   INTEGER :: input_images = 1
   !
   INTEGER :: num_of_images = 0
   !
-  CHARACTER(len=80) :: CI_scheme = 'no-CI'
+  ! CHARACTER(len=80) :: CI_scheme = 'no-CI'
   ! CI_scheme = 'no-CI' | 'auto' | 'manual'
   ! 'no-CI'       Climbing Image is not used
   ! 'auto'        Standard Climbing Image
   ! 'manual'      the image is selected by hand
   !
-  CHARACTER(len=80) :: CI_scheme_allowed(3)
-  DATA CI_scheme_allowed / 'no-CI', 'auto', 'manual' /
+  ! CHARACTER(len=80) :: CI_scheme_allowed(3)
+  ! DATA CI_scheme_allowed / 'no-CI', 'auto', 'manual' /
   !
-  LOGICAL :: first_last_opt = .false.
+  ! LOGICAL :: first_last_opt = .false.
   LOGICAL :: minimum_image  = .false.
-  LOGICAL :: use_masses     = .false.
-  LOGICAL :: use_freezing   = .false.
-  LOGICAL :: fixed_tan      = .false.
+  ! LOGICAL :: use_masses     = .false.
+  ! LOGICAL :: use_freezing   = .false.
+  ! LOGICAL :: fixed_tan      = .false.
   !
   CHARACTER(len=80) :: opt_scheme = 'quick-min'
   ! minimization_scheme = 'quick-min' | 'damped-dyn' |
@@ -110,38 +110,38 @@ MODULE path_input_parameters_module
   CHARACTER(len=80) :: opt_scheme_allowed(5)
   DATA opt_scheme_allowed / 'quick-min', 'broyden', 'broyden2', 'sd', 'langevin' /
   !
-  REAL (DP)  :: temp_req = 0.0_DP
+  ! REAL (DP)  :: temp_req = 0.0_DP
   ! meaningful only when minimization_scheme = 'sim-annealing'
-  REAL (DP)  :: ds = 1.0_DP
+  ! REAL (DP)  :: ds = 1.0_DP
+  ! !
+  ! REAL (DP)  :: k_max = 0.1_DP, k_min = 0.1_DP
+  ! !
+  ! REAL (DP)  :: path_thr = 0.05_DP
   !
-  REAL (DP)  :: k_max = 0.1_DP, k_min = 0.1_DP
-  !
-  REAL (DP)  :: path_thr = 0.05_DP
-  !
-  LOGICAL      :: lfcpopt              = .FALSE.
-  REAL(DP)     :: fcp_mu               = 0.0_DP
-  CHARACTER(8) :: fcp_relax            = 'lm'
+  ! LOGICAL      :: lfcpopt              = .FALSE.
+  ! REAL(DP)     :: fcp_mu               = 0.0_DP
+  ! CHARACTER(8) :: fcp_relax            = 'lm'
   ! 'lm':    line minimisation
   ! 'mdiis': MDIIS algorithm
-  CHARACTER(len=8) :: fcp_relax_allowed(2)
-  DATA fcp_relax_allowed / 'lm', 'mdiis' /
-  REAL(DP)     :: fcp_relax_step       = 0.1_DP
-  REAL(DP)     :: fcp_relax_crit       = 0.001_DP
-  INTEGER      :: fcp_mdiis_size       = 4
-  REAL(DP)     :: fcp_mdiis_step       = 0.2_DP
-  REAL(DP)     :: fcp_tot_charge_first = 0.0_DP
-  REAL(DP)     :: fcp_tot_charge_last  = 0.0_DP
+  ! CHARACTER(len=8) :: fcp_relax_allowed(2)
+  ! DATA fcp_relax_allowed / 'lm', 'mdiis' /
+  ! REAL(DP)     :: fcp_relax_step       = 0.1_DP
+  ! REAL(DP)     :: fcp_relax_crit       = 0.001_DP
+  ! INTEGER      :: fcp_mdiis_size       = 4
+  ! REAL(DP)     :: fcp_mdiis_step       = 0.2_DP
+  ! REAL(DP)     :: fcp_tot_charge_first = 0.0_DP
+  ! REAL(DP)     :: fcp_tot_charge_last  = 0.0_DP
   !
   !
   NAMELIST / PATH / &
                     restart_mode, &
-                    string_method, nstep_path, num_of_images, & 
-                    CI_scheme, opt_scheme, use_masses,    &
-                    first_last_opt, ds, k_max, k_min, temp_req,          &
-                    path_thr, fixed_tan, use_freezing, minimum_image, &
-                    lfcpopt, fcp_mu, fcp_relax, fcp_relax_step, fcp_relax_crit, &
-                    fcp_mdiis_size, fcp_mdiis_step, &
-                    fcp_tot_charge_first, fcp_tot_charge_last
+                     nstep_path, num_of_images, & 
+                     opt_scheme,     & !CI_scheme, use_masses,
+                    ! first_last_opt, ds, k_max, k_min, temp_req, string_method,  &
+                     minimum_image !path_thr, fixed_tan, use_freezing,
+                    ! lfcpopt, fcp_mu, fcp_relax, fcp_relax_step, fcp_relax_crit, &
+                    ! fcp_mdiis_size, fcp_mdiis_step, &
+                    ! fcp_tot_charge_first, fcp_tot_charge_last
 !
 !    ATOMIC_POSITIONS
 !

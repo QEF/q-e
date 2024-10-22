@@ -53,9 +53,9 @@ MODULE trpmd_base
       USE path_input_parameters_module, ONLY : restart_mode
       USE path_input_parameters_module, ONLY : nat
       USE path_variables,   ONLY : pos, istep_path, nstep_path,    &
-                                   dim1, num_of_images, & !,  grad_pes, & !pes
+                                   dim1, & !,  grad_pes, num_of_images,  & !pes
                                     path_length,  &
-                                   deg_of_freedom,   &
+                                  !  deg_of_freedom,   &
                                    tune_load_balance,  & ! posold, 
                                    pending_image
       USE path_variables,   ONLY : path_allocation
@@ -109,12 +109,12 @@ MODULE trpmd_base
       !    !
       ! END IF
       ! num_of_images=nbeadMD
-      write(12000+mpime,*) num_of_images,nbeadMD,nimage
-      if( nimage > num_of_images ) &
+      write(12000+mpime,*) nbeadMD,nimage
+      if( nimage > nbeadMD ) &
              CALL errore( 'initialize_polymer', 'nimage is ' // &
                         & 'more computing images than polymer images', 1 )
       fii = 1
-      lii = num_of_images      
+      lii = nbeadMD      
       !
       ! ... dynamical allocation of arrays
       !
@@ -160,13 +160,13 @@ MODULE trpmd_base
       !
       ! ... the actual number of degrees of freedom is computed
       !
-      deg_of_freedom = 0
-      !
-      DO i = 1, nat
-         !
-         deg_of_freedom = deg_of_freedom + 3
-         !
-      END DO
+      ! deg_of_freedom = 0
+      ! !
+      ! DO i = 1, nat
+      !    !
+      !    deg_of_freedom = deg_of_freedom + 3
+      !    !
+      ! END DO
       !
       RETURN
       !
@@ -177,8 +177,9 @@ MODULE trpmd_base
       !--------------------------------------------------------------------
 
       USE path_input_parameters_module, ONLY : input_images
-      USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
+      USE path_variables,   ONLY : pos, dim1, path_length ! num_of_images, 
       USE path_io_units_module,         ONLY : iunpath
+      USE pimd_variables, ONLY : nbeadMD
       !
       IMPLICIT NONE
       !
@@ -189,8 +190,8 @@ MODULE trpmd_base
       !
       !
       CALL mp_bcast( pos(:,1),         meta_ionode_id, world_comm )
-      if( num_of_images > 1) then  !!! <----my mod.
-          do i=2,num_of_images    !!! <----my mod.
+      if( nbeadMD > 1) then  !!! <----my mod.
+          do i=2,nbeadMD    !!! <----my mod.
         
             pos(:,i) = pos(:,1)   !!! <----my mod.
         
@@ -207,8 +208,7 @@ MODULE trpmd_base
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, &
-                                 pending_image, istep_path !pes
+      USE path_variables, ONLY : pending_image, istep_path !pes, num_of_images
       USE pimd_variables, ONLY : nbeadMD, pes
       !
       IMPLICIT NONE
@@ -218,7 +218,7 @@ MODULE trpmd_base
       INTEGER  :: fii, lii
       !
       fii = 1
-      lii = num_of_images
+      lii = nbeadMD
       !
       IF ( pending_image /= 0 ) fii = pending_image
       !

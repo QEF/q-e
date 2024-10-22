@@ -30,8 +30,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos,   dim1, pending_image, &
-                               istep_path, num_of_images !pes, grad_pes,
+  USE path_variables,   ONLY : pos,    pending_image, &
+                               istep_path, num_of_images !pes, grad_pes,dim1,
                               !  stress_pes ! <-- lp
   USE pimd_variables,   ONLY : forceMD, nbeadMD, stress_pes_md, pes
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode

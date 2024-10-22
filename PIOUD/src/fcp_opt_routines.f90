@@ -26,7 +26,8 @@ MODULE fcp_opt_routines
                               fcp_mdiis_size, fcp_mdiis_step, &
                               fcp_tot_charge_first, fcp_tot_charge_last
    USE mdiis,          ONLY : mdiis_type, allocate_mdiis, deallocate_mdiis, update_by_mdiis
-   USE path_variables, ONLY : num_of_images
+   ! USE path_variables, ONLY : num_of_images
+   USE pimd_variables, ONLY : nbeadMD
    !
    IMPLICIT NONE
    !
@@ -67,14 +68,14 @@ CONTAINS
       !
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
-      ALLOCATE( fcp_neb_nelec( num_of_images ) )
-      ALLOCATE( fcp_neb_ef   ( num_of_images ) )
+      ALLOCATE( fcp_neb_nelec( nbeadMD ) )
+      ALLOCATE( fcp_neb_ef   ( nbeadMD ) )
       !
       IF ( TRIM(fcp_relax) == 'lm' ) THEN
          !
-         ALLOCATE( force0    ( num_of_images ) )
-         ALLOCATE( nelec0    ( num_of_images ) )
-         ALLOCATE( firstcall ( num_of_images ) )
+         ALLOCATE( force0    ( nbeadMD ) )
+         ALLOCATE( nelec0    ( nbeadMD ) )
+         ALLOCATE( firstcall ( nbeadMD ) )
          !
          force0    (:) = 0.0_DP
          nelec0    (:) = 0.0_DP
@@ -83,7 +84,7 @@ CONTAINS
       ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
          !
          init_mdiis = .TRUE.
-         CALL allocate_mdiis(mdiist, fcp_mdiis_size, num_of_images, fcp_mdiis_step, 1)
+         CALL allocate_mdiis(mdiist, fcp_mdiis_size, nbeadMD, fcp_mdiis_step, 1)
          !
       END IF
       !
@@ -91,7 +92,7 @@ CONTAINS
          !
          tmp_dir_saved = tmp_dir
          !
-         DO i = 1, num_of_images
+         DO i = 1, nbeadMD
             !
             tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                  TRIM( int_to_char( i ) ) // "/"
@@ -110,7 +111,7 @@ CONTAINS
          ionic_charge = SUM(zv(ityp(1:nat)))
          nelec_ = ionic_charge - tot_charge
          !
-         n = num_of_images
+         n = nbeadMD
          first = fcp_tot_charge_first
          last  = fcp_tot_charge_last
          DO i = 1, n

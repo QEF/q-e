@@ -37,13 +37,13 @@ MODULE trpmd_io_routines
        !-----------------------------------------------------------------------
        !
        USE path_io_units_module,  ONLY : iunpath
-       USE path_variables, ONLY : num_of_images, path_length, &
+       USE path_variables, ONLY :  path_length, & !num_of_images,
                                    pos !pes
        USE path_formats,   ONLY : run_info, run_output
        USE ions_base,             ONLY : zv, ityp, nat
        USE fcp_variables,         ONLY : lfcpopt, fcp_mu
        USE fcp_opt_routines, ONLY : fcp_neb_ef, fcp_neb_nelec
-       use pimd_variables, ONLY: pes
+       use pimd_variables, ONLY: pes, nbeadMD
        !
        IMPLICIT NONE
        !
@@ -66,7 +66,7 @@ MODULE trpmd_io_routines
        !
        path_length = 0.0_DP
        !
-       DO image = 1, num_of_images
+       DO image = 1, nbeadMD
           !
           IF ( image > 1 ) &
              path_length = path_length + &
@@ -80,7 +80,7 @@ MODULE trpmd_io_routines
        IF ( lfcpopt ) THEN
           WRITE(iunpath,'(/,5X,"image",2X,"Fermi energy (eV)",11X, &
                         & "error (V)",4X,"tot_charge",/)')
-          DO image = 1, num_of_images
+          DO image = 1, nbeadMD
           !
              WRITE(iunpath,'(5X,I5,9X,F10.6,10X,F10.6,4X,F10.6)') &
                  image, fcp_neb_ef(image)*rytoev, &
@@ -90,7 +90,7 @@ MODULE trpmd_io_routines
           END DO
        END IF
        !
-       inter_image_distance = path_length / DBLE( num_of_images - 1 )
+       inter_image_distance = path_length / DBLE( nbeadMD - 1 )
        !
      END SUBROUTINE write_output
      !

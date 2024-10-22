@@ -40,6 +40,7 @@ fcp_opt_routines.o : ../../PW/src/pwcom.o
 fcp_opt_routines.o : ../../UtilXlib/mp.o
 fcp_opt_routines.o : ./fcp_variables.o
 fcp_opt_routines.o : ./path_variables.o
+fcp_opt_routines.o : ./pimd_variables.o
 fcp_variables.o : ../../Modules/kind.o
 path_input_parameters_module.o : ../../Modules/kind.o
 path_read_namelists_module.o : ../../Modules/io_global.o

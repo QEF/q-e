@@ -23,8 +23,8 @@ pw_gen_inputs.o \
 path_input_parameters_module.o \
 trpmd_io_routines.o \
 path_io_units_module.o \
-path_variables.o \
 pimd_variables.o \
+path_variables.o \
 pimd_subrout.o \
 pimd_utils.o \
 set_defaults.o \

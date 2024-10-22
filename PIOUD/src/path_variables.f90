@@ -49,7 +49,7 @@ MODULE path_variables
   INTEGER :: &
        dim1,                      &! dimension of the configuration space
        num_of_images,            &! number of images
-       deg_of_freedom,           &! number of degrees of freedom
+      !  deg_of_freedom,           &! number of degrees of freedom
                                   ! ( dim1 - #( of fixed coordinates ) )
        pending_image              ! last image for which scf has not been
                                   ! achieved
