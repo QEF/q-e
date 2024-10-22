@@ -576,28 +576,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       IF ( .not. use_gpu ) THEN
-          !
-          DO j=1, npw
-             h_diag(j, 1) = g2kin(j) + v_of_0
-          END DO
-          !
+       !$acc parallel loop present(g2kin, h_diag) 
+       DO j=1, npw
+          h_diag(j, 1) = g2kin(j) + v_of_0
+       END DO
 #if defined (__OSCDFT)
-          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+       IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
 #endif
-          CALL usnldiag( npw, h_diag, s_diag )
-       ELSE
-          !
-          !$acc parallel loop present(g2kin, h_diag) 
-          DO j=1, npw
-             h_diag(j, 1) = g2kin(j) + v_of_0
-          END DO
-          !
-#if defined (__OSCDFT)
-          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
-#endif
-          CALL usnldiag( npw, h_diag, s_diag )
-       END IF
+       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
@@ -933,34 +919,16 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       IF ( .not. use_gpu ) THEN
-          !
-          DO ipol = 1, npol
-             !
-             h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
-             !
+       DO ipol = 1, npol
+          !$acc parallel loop present(g2kin,h_diag) 
+          DO j = 1, npw
+             h_diag(j, ipol) = g2kin(j) + v_of_0
           END DO
+       END DO
 #if defined (__OSCDFT)
-          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+       IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
 #endif
-          !
-          CALL usnldiag( npw, h_diag, s_diag )
-       ELSE
-          !
-          DO ipol = 1, npol
-             !
-             !$acc parallel loop present(g2kin,h_diag) 
-             DO j = 1, npw
-                h_diag(j, ipol) = g2kin(j) + v_of_0
-             END DO
-             !
-          END DO
-          !
-#if defined (__OSCDFT)
-          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
-#endif
-          CALL usnldiag( npw, h_diag, s_diag )
-       END IF
+       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
