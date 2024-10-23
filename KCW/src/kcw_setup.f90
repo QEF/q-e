@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #define ZERO (0.D0,0.D0)
+!#define DEBUG
 !-----------------------------------------------------------------------
 subroutine kcw_setup
   !-----------------------------------------------------------------------
@@ -107,7 +108,7 @@ subroutine kcw_setup
   COMPLEX(DP), ALLOCATABLE :: rho_c(:,:,:),wann_c(:,:,:)
   COMPLEX(DP) :: phase(dffts%nnr)
   INTEGER :: iwann
-  REAL (DP) :: sh_q
+  COMPLEX (DP) :: sh_q
   !
   ALLOCATE ( delta_vg(ngms,nspin_mag), vh_rhog(ngms), delta_vg_(ngms,nspin_mag) )
   !WRITE(*,*), 'NGMS', ngms
@@ -145,6 +146,8 @@ subroutine kcw_setup
      IF ( xclib_dft_is('gradient') ) CALL compute_ux(m_loc,ux,nat)
      !if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
   ENDIF
+  !
+  CALL kcw_R_points ()
   !
   ! ... Computes the number of occupied bands for each k point
   !
@@ -352,11 +355,11 @@ subroutine kcw_setup
       ! 
       sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega
 #ifdef DEBUG
-      sh_q  =sum (0.5D0*CONJG(rhog (:,1)) * vh_rhog(:) )*omega
+      sh_q  = sum (0.5D0*CONJG(rhog (:,1)) * vh_rhog(:) )*omega
       CALL mp_sum (sh_q,    intra_bgrp_comm)
       WRITE(1005,*) "iwann=", i, "q=", iq, "weight=", weight(iq), &
                     "nq eq=", INT(weight(iq)/weight(iq)), &
-                    "SH="   , REAL(sh_q)
+                    "SH="   , REAL(sh_q), AIMAG(sh_q)
 #endif
       !
     ENDDO
@@ -515,7 +518,7 @@ subroutine kcw_setup
         CALL mp_sum (sh_q,    intra_bgrp_comm)
         WRITE(2005,*) "iwann=", i, "q=", iq, "weight=", wq_ibz(iq_ibz, i), &
                       "nq eq=", INT(wq_ibz(iq_ibz, i)/weight(iq)), &
-                      "SH="   , REAL(sh_q)
+                      "SH="   , REAL(sh_q), AIMAG(sh_q)
 #endif
       END DO!iwann
     END DO!iq

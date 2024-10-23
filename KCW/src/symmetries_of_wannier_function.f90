@@ -12,7 +12,7 @@ SUBROUTINE symmetries_of_wannier_function()
   USE constants,             ONLY : tpi
   USE control_kcw,           ONLY : io_real_space, r
   USE control_kcw,           ONLY : tmp_dir_kcwq, tmp_dir_kcw
-  USE control_kcw,           ONLY : ir_end, num_wann
+  USE control_kcw,           ONLY : ir_end, num_wann, Rvect, x_q
   USE control_kcw,           ONLY : spin_component, nqstot, kcw_iverbosity
   USE mp_bands,              ONLY : root_bgrp, intra_bgrp_comm
   USE gvect,                 ONLY : ig_l2g, mill, g
@@ -27,7 +27,7 @@ SUBROUTINE symmetries_of_wannier_function()
   USE klist,                 ONLY : nkstot
   USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
   USE cell_base,             ONLY : bg, at
-  USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers, shift_centers
+  USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers, shift_centers, check_rvect
   USE interpolation,         ONLY : read_wannier_centers
   USE io_global,             ONLY : stdout
   USE mp,                    ONLY : mp_sum  
@@ -50,8 +50,10 @@ SUBROUTINE symmetries_of_wannier_function()
   REAL(DP)                 :: x_q_cryst(3)
   REAL(DP)                 :: ft_cart(3)
   LOGICAL                  :: is_satisfied
-  REAL(DP)                 :: delta_rho
+  COMPLEX(DP)                 :: delta_rho
+  COMPLEX(DP)                 :: delta_rho_R
   COMPLEX(DP) :: sh
+  COMPLEX (DP) :: int_rho_Rq, eiRqR
   !
   !
   CALL start_clock ( 'check_symm' )
@@ -217,17 +219,46 @@ SUBROUTINE symmetries_of_wannier_function()
         !
         CALL calculate_phase(Gvector, phase)
         !
+        !
         rhowann_aux(:) = rho_rotated(:) - phase(:)*rhowann_(:,iRq,iwann) 
         rhowann_aux(:) = rhowann_aux(:)
         !
         ! integrate difference and normalize with respect to number of r points in the grid
-        delta_rho = SUM( ABS(rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
+        !delta_rho = SUM( ABS(rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
+        delta_rho = SUM( (rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
         CALL mp_sum (delta_rho, intra_bgrp_comm)
-        IF (kcw_iverbosity .gt. 2 ) & 
-           WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", F20.12)')&
-              iq, isym, iwann, delta_rho
         !
-        IF ( delta_rho .gt. 1.D-02 )  THEN 
+        int_rho_Rq = SUM( phase(:)*rhowann_(:,iRq,iwann)  ) / (dffts%nr1*dffts%nr2*dffts%nr3)
+        CALL mp_sum (int_rho_Rq, intra_bgrp_comm)
+        !
+        IF (check_rvect .AND. ABS(delta_rho) .gt. 1D-02) THEN 
+          ! Try with the same Wannier in different cells 
+          !
+           DO ir = 1, nkstot/nspin
+             eiRqR=EXP( -IMAG*tpi*DOT_PRODUCT(x_q(:,iRq),Rvect(:,ir)) )
+             delta_rho_R = delta_rho + (CMPLX(1.D0,0.D0, kind=DP) - eiRqR)*int_rho_Rq
+             !WRITE (stdout, *) "          ir  =", ir,  "Rvect  =", Rvect(1:3,ir)
+             !WRITE (stdout, *) "          iRq =", iRq, "x(iRq) =", x_q(1:3,iRq)
+             !WRITE (stdout, *) "          \int rho_Rq(r) dr = ", int_rho_Rq, "exp(-iRq*Rvec) =", eiRqR
+             !WRITE (stdout,'(10X, "ir=", I5, 3X, "SUM =", 2F20.12)')&
+             !    ir, delta_rho 
+             !WRITE (stdout,'(10X, "ir=", I5, 3X, "SUM =", 2F20.12)')&
+             !    ir, delta_rho_R
+             !WRITE (stdout,*)
+             IF (ABS(delta_rho_R) .lt. 1D-02) THEN 
+                delta_rho = delta_rho_R
+                EXIT 
+             ENDIF 
+           ENDDO
+        ENDIF
+        ! 
+        IF (kcw_iverbosity .gt. 2 ) & 
+           !WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", F20.12)')&
+           !   iq, isym, iwann, delta_rho
+           WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", 2F20.12)')&
+              iq, isym, iwann, REAL(delta_rho), AIMAG(delta_rho)
+        !
+        IF ( ABS(REAL(delta_rho)) .gt. 1.D-02 .OR. ABS(AIMAG(delta_rho)) .gt. 1D-02)  THEN 
            IF (kcw_iverbosity .gt. 2) WRITE(stdout, '(13X, "isym =", I5, 3X, "NOT RESPECTED, skipping")') isym
            EXIT
         ENDIF

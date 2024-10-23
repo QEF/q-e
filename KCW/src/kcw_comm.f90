@@ -134,5 +134,7 @@ MODULE control_kcw
   LOGICAL                  :: setup_pw
   LOGICAL                  :: shift_centers
   !variable to decide wether we want to move the wannier centers in the origin when checking symmetries
+  LOGICAL                  :: check_rvect
+  !variable to decide wether we want to verify if symmetries move a Wannier in an other unitcell in the supercell
 END MODULE control_kcw
 
