@@ -1,4 +1,5 @@
 SUBROUTINE read_qlist_ibz()
+  USE constants,           ONLY : DP
   USE control_kcw,         ONLY : tmp_dir_kcw
   USE control_kcw,         ONLY : num_wann, spin_component
   USE io_global,           ONLY : ionode
@@ -13,7 +14,8 @@ SUBROUTINE read_qlist_ibz()
   !
   INTEGER             :: iq, iwann, iq_ibz
   INTEGER             :: iun_qlist_ibz,i,j
-  character(len=1024) :: filename  
+  character(len=1024) :: filename
+  REAL(DP) :: wq
   !
   ALLOCATE( nqstot_ibz( num_wann ) )
   ALLOCATE( xq_ibz( 3, mp1*mp2*mp3, num_wann ) )
@@ -29,11 +31,13 @@ SUBROUTINE read_qlist_ibz()
     READ(iun_qlist_ibz,*)  nqstot_ibz( iwann )
     DO iq = 1, nqstot
       !
-      READ(iun_qlist_ibz,*) iq_ibz, &
-                          wq_ibz(iq_ibz, iwann)
+      !READ(iun_qlist_ibz,*) iq_ibz, &
+      !                    wq_ibz(iq_ibz, iwann)
+      READ(iun_qlist_ibz,*) iq_ibz, wq
       !
       fbz2ibz(iq, iwann) = iq_ibz
       IF( fbz2ibz(iq, iwann) .ne. -1 ) THEN 
+        wq_ibz(iq_ibz, iwann) = wq
         ibz2fbz(iq_ibz, iwann) = iq
         xq_ibz(:, iq_ibz, iwann) = xk(:, iq)
       END IF
