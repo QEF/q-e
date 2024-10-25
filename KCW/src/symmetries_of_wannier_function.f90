@@ -241,7 +241,20 @@ SUBROUTINE symmetries_of_wannier_function()
         !
         !
         IF (check_rvect .AND. ABS(delta_rho) .gt. 1D-02) THEN 
-          ! Try with the same Wannier in different cells 
+          ! Try with the same Wannier in different cells:
+          ! Each q contribution to the self-Hxc or to the screened self-Hxc (i.e. the alpha coeff)
+          ! does not depend on the center of the Wannier density contribution at q. 
+          ! This means we can use also the symmetries that send 
+          ! \rho_q^{0n}(R^-1r -f) in \rho_Rq^{Ln}(r) = e^{-i(Rq).L}\rho_Rq^{0n}(r)
+          ! with L any lattice vector in the SC to reduce the number of q points. 
+          !
+          ! delta_rho_R = int [\rho_q^{0n}(R^-1r -f) - e^{-i(Rq).L}\rho_Rq^{0n}(r)] =
+          !             = int [\rho_q^{0n}(R^-1r -f) - \rho_Rq^{0n}(r)] + (1- e^{-i(Rq).L}) * \int [\rho_Rq^{0n}(r)]
+          ! 
+          ! NB: this is not true for the density response at q. For the symmetrization of the density response we must
+          ! use only the "real" symmetry of the wannier density.
+          ! sym_only_for_q store information of wheter the symmetry is a real one (FALSE) or if its an "extra" one to 
+          ! be used only for the reduction of the q points (TRUE)
           !
            DO ir = 1, nkstot/nspin
              eiRqR=EXP( -IMAG*tpi*DOT_PRODUCT(x_q(:,iRq),Rvect(:,ir)) )
