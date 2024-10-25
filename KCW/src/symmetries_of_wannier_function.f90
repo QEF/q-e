@@ -27,7 +27,9 @@ SUBROUTINE symmetries_of_wannier_function()
   USE klist,                 ONLY : nkstot
   USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
   USE cell_base,             ONLY : bg, at
-  USE control_kcw,           ONLY : nsym_w, s_w, ft_w, centers, shift_centers, check_rvect
+  USE control_kcw,           ONLY : nsym_w_k, nsym_w_q, s_w, ft_w, & 
+                                    centers, shift_centers, check_rvect, &
+                                    sym_only_for_q
   USE interpolation,         ONLY : read_wannier_centers
   USE io_global,             ONLY : stdout
   USE mp,                    ONLY : mp_sum  
@@ -65,7 +67,9 @@ SUBROUTINE symmetries_of_wannier_function()
   ALLOCATE ( rhowann_(dffts%nnr,nqstot,num_wann) )
   ALLOCATE ( rho_rotated(dffts%nnr) )
   ALLOCATE( phase (dffts%nnr) )
-  ALLOCATE ( nsym_w(num_wann) )
+  ALLOCATE ( nsym_w_k(num_wann) )
+  ALLOCATE ( nsym_w_q(num_wann) )
+  ALLOCATE ( sym_only_for_q(48, num_wann) )
   ALLOCATE (s_w(3,3,48,num_wann))
   ALLOCATE (ft_w(3,48,num_wann))
   ALLOCATE( centers(3,num_wann) )
@@ -105,7 +109,8 @@ SUBROUTINE symmetries_of_wannier_function()
   !
   CALL kcw_set_symm( dffts%nr1,  dffts%nr2,  dffts%nr3, &
   dffts%nr1x, dffts%nr2x, dffts%nr3x )  
-  nsym_w = 0
+  nsym_w_k = 0
+  nsym_w_q = 0
   !
   ! read all the wannier densities for all the q. store it in rhowann
   DO iq = 1, nqstot
@@ -194,6 +199,8 @@ SUBROUTINE symmetries_of_wannier_function()
     !
     DO isym=1, nsym
       !
+      sym_only_for_q(nsym_w_q(iwann) + 1, iwann) = .FALSE.
+      !
       DO iq = 1, nqstot
         rhowann_aux = 0.D0
         !WRITE(*,*) "isym", isym, "ft", ft(:, isym)
@@ -231,6 +238,7 @@ SUBROUTINE symmetries_of_wannier_function()
         int_rho_Rq = SUM( phase(:)*rhowann_(:,iRq,iwann)  ) / (dffts%nr1*dffts%nr2*dffts%nr3)
         CALL mp_sum (int_rho_Rq, intra_bgrp_comm)
         !
+        !
         IF (check_rvect .AND. ABS(delta_rho) .gt. 1D-02) THEN 
           ! Try with the same Wannier in different cells 
           !
@@ -247,6 +255,7 @@ SUBROUTINE symmetries_of_wannier_function()
              !WRITE (stdout,*)
              IF (ABS(delta_rho_R) .lt. 1D-02) THEN 
                 delta_rho = delta_rho_R
+                sym_only_for_q(nsym_w_q(iwann) + 1, iwann) = .TRUE.
                 EXIT 
              ENDIF 
            ENDDO
@@ -264,14 +273,18 @@ SUBROUTINE symmetries_of_wannier_function()
         ENDIF
         !
         IF( iq .eq. nqstot ) THEN
-           nsym_w(iwann) = nsym_w(iwann) + 1
-           s_w(:,:,nsym_w(iwann),iwann) = s(:,:,isym)
-           ft_w(:, nsym_w(iwann), iwann) = ft(:, isym)
+           IF(.NOT. sym_only_for_q(nsym_w_q(iwann) + 1, iwann) ) THEN
+             nsym_w_k(iwann) = nsym_w_k(iwann) + 1
+           END IF 
+           nsym_w_q(iwann) = nsym_w_q(iwann) + 1
+           s_w(:,:,nsym_w_q(iwann),iwann) = s(:,:,isym)
+           ft_w(:, nsym_w_q(iwann), iwann) = ft(:, isym)
            IF (kcw_iverbosity .gt. 1 ) WRITE(stdout, '(13X, "isym =", I5, 3X,"    RESPECTED")') isym
         ENDIF
       END DO!isym
     END DO!iq
-    WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES = ", I5)') nsym_w(iwann)
+    WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (only R=0)= ", I5)') nsym_w_k(iwann)
+    WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (all    R)= ", I5)') nsym_w_q(iwann)
   END DO !iwann 
   !
   DEALLOCATE(rhowann_)

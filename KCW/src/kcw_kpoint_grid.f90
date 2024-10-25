@@ -5,7 +5,7 @@ SUBROUTINE kcw_kpoint_grid()
 !
   USE kinds,              ONLY : DP  
   USE io_global,          ONLY : stdout
-  USE control_kcw,        ONLY : num_wann,nsym_w, s_w
+  USE control_kcw,        ONLY : num_wann,nsym_w_q, s_w
   USE control_kcw,        ONLY : nqstot_ibz, xq_ibz, wq_ibz
   USE control_kcw,        ONLY : mp1, mp2, mp3
   USE control_kcw,        ONLY : kcw_iverbosity
@@ -40,7 +40,7 @@ SUBROUTINE kcw_kpoint_grid()
   !WRITE(stdout,*) "Finding symmetries of wannier functions......"
   WRITE(stdout,'(/, 5X, "SYM : Finding the IBZ")') 
   DO iwann = 1, num_wann
-    nsym_w_iwann = nsym_w(iwann)
+    nsym_w_iwann = nsym_w_q(iwann)
     s_w_iwann(:,:,:) = s_w(:,:,:,iwann)
     CALL kpoint_grid ( nsym_w_iwann, time_reversal, .false., s_w_iwann, 0, bg, &
                        mp1*mp2*mp3, 0,0,0, mp1,mp2,mp3, &
