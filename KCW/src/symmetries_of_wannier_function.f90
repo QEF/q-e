@@ -193,6 +193,7 @@ SUBROUTINE symmetries_of_wannier_function()
   !
   ! check which symmetries are satisfied by rhowann(:,:, iwann)
   !
+  ir = 1
   DO iwann=1, num_wann
     !
     WRITE(stdout, '(/, 7X, "SYM : Checking WF #", I5)') iwann
@@ -264,8 +265,8 @@ SUBROUTINE symmetries_of_wannier_function()
         IF (kcw_iverbosity .gt. 2 ) & 
            !WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", F20.12)')&
            !   iq, isym, iwann, delta_rho
-           WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", 2F20.12)')&
-              iq, isym, iwann, REAL(delta_rho), AIMAG(delta_rho)
+           WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", 2F20.12, 3X, "(ir =", I5 " )")')&
+                 iq, isym, iwann, REAL(delta_rho), AIMAG(delta_rho), ir
         !
         IF ( ABS(REAL(delta_rho)) .gt. 1.D-02 .OR. ABS(AIMAG(delta_rho)) .gt. 1D-02)  THEN 
            IF (kcw_iverbosity .gt. 2) WRITE(stdout, '(13X, "isym =", I5, 3X, "NOT RESPECTED, skipping")') isym
@@ -279,12 +280,18 @@ SUBROUTINE symmetries_of_wannier_function()
            nsym_w_q(iwann) = nsym_w_q(iwann) + 1
            s_w(:,:,nsym_w_q(iwann),iwann) = s(:,:,isym)
            ft_w(:, nsym_w_q(iwann), iwann) = ft(:, isym)
-           IF (kcw_iverbosity .gt. 1 ) WRITE(stdout, '(13X, "isym =", I5, 3X,"    RESPECTED")') isym
+           IF (kcw_iverbosity .gt. 1 ) THEN 
+              IF (ir /= 1) THEN 
+                 WRITE(stdout, '(13X, "isym =", I5, 3X,"    RESPECTED - only q")') isym
+              ELSE
+                 WRITE(stdout, '(13X, "isym =", I5, 3X,"    RESPECTED")') isym
+              ENDIF
+           ENDIF
         ENDIF
       END DO!isym
     END DO!iq
     WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (only R=0)= ", I5)') nsym_w_k(iwann)
-    WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (all    R)= ", I5)') nsym_w_q(iwann)
+    IF (check_rvect) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (all    R)= ", I5)') nsym_w_q(iwann)
   END DO !iwann 
   !
   DEALLOCATE(rhowann_)
