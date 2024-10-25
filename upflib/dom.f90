@@ -8,9 +8,9 @@
 #undef __debug
   !! define __debug to print information on opened and closed tags
 module dom
-  !
-  ! Poor-man FoX_dom replacement - Paolo Giannozzi, 2022
-  !
+  !!
+  !! Poor-man FoX_dom replacement - Paolo Giannozzi, 2022-2024
+  !!
   implicit none
   !
   integer, parameter :: dp = selected_real_kind(14,200)
@@ -322,7 +322,9 @@ CONTAINS
                       is_found = .true.
                       in_data  = .true.
                       in_attribute = .false.
-                   else if ( line(m:m) == ' ' .or. m == nl ) then
+                   else if ( line(m:m) == ' ' .or. line(m:m) == '/' &
+                                              .or. m == nl ) then
+                      ! case '/' may occur for empty tags like "<tag/>"
                       if ( m == n+1 ) then
                          if ( .not.present(ex) ) &
                               print *, 'error: space after <'
