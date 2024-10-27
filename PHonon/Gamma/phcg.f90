@@ -30,6 +30,9 @@ PROGRAM phcg
   !
   CALL mp_startup ( )
   CALL environment_start ( code )
+#if defined __CUDA
+  call errore('phcg','GPU execution not implemented',1)
+#endif
   !
   CALL cg_readin
   !
