@@ -54,8 +54,6 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
            !$acc parallel loop collapse(2)
            DO ih = 1, nhnt
               DO jh = 1, nhnt
-                 ikb = offset + ih
-                 jkb = offset + jh
                  IF (lspinorb) THEN
                     ps1(ih,jh,1) = deeq_nc (ih, jh, na, 1)
                     ps1(ih,jh,2) = deeq_nc (ih, jh, na, 4)
@@ -72,7 +70,6 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
                  ENDIF
               ENDDO
            ENDDO
-           ! not sure why collapsing more do loops doesn't seem to work
            !$acc parallel loop collapse(2)
            DO ig = 1, npw
               DO ipol = 1, npol
