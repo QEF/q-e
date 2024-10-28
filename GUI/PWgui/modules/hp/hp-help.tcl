@@ -484,6 +484,26 @@ solution of the linear-response Kohn-Sham equations.
 
 
 # ------------------------------------------------------------------------
+help alpha_mix -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>alpha_mix(i)</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> alpha_mix(1)=0.3
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Mixing parameter (for the i-th iteration) for updating
+the response SCF potential using the modified Broyden
+method. See: D.D. Johnson, "PRB 38, 12807 (1988)".
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help nmix -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>nmix</b></big>

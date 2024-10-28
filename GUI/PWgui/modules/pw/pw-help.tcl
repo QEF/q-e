@@ -2938,6 +2938,7 @@ Tkatchenko-Scheffler dispersion corrections with first-principle derived
 C6 coefficients.
 Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
 See A. Tkatchenko and M. Scheffler, "PRL 102, 073005 (2009)".
+J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), "doi:10.1063/5.0170972"
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -2947,6 +2948,7 @@ Many-body dipersion (MBD) correction to long-range interactions.
 Optional variables: "ts_vdw_isolated"
 A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
 18A508 (2014).
+J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), "doi:10.1063/5.0170972"
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -3203,7 +3205,8 @@ help xdm_a1 -helpfmt helpdoc -helptext {
 Damping function parameter a1 (adimensional). It is NOT necessary to give
 a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
 in this list, the coefficients are given in:
-   "http://schooner.chem.dal.ca/wiki/XDM"
+   "https://github.com/aoterodelaroza/postg/blob/master/xdm.param"
+   or "https://erin-r-johnson.github.io/software/"
    A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
    "doi:10.1063/1.4705760"
          </pre></blockquote>
@@ -3226,7 +3229,8 @@ help xdm_a2 -helpfmt helpdoc -helptext {
 Damping function parameter a2 (angstrom). It is NOT necessary to give
 a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
 in this list, the coefficients are given in:
-   "http://schooner.chem.dal.ca/wiki/XDM"
+   "https://github.com/aoterodelaroza/postg/blob/master/xdm.param"
+   or "https://erin-r-johnson.github.io/software/"
    A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
    "doi:10.1063/1.4705760"
          </pre></blockquote>
