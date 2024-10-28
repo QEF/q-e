@@ -1617,7 +1617,7 @@ CONTAINS
           !                 - EXP(-gp*(zb - za))*qe_gauss(gp/2.d0/salp - salp*(zb - za))/2.d0/salp
           ! dexperfcp_dgp = +(zb - za)*exp_erfc(+gp*(zb - za), gp/2.d0/salp + salp*(zb - za)) &
           !                 - EXP(+gp*(zb - za))*qe_gauss(gp/2.d0/salp + salp*(zb - za))/2.d0/salp
-          ! expm = EXP(-gp*(-zb + 2*z1 - za))
+          expm = EXP(-gp*(-zb + 2*z1 - za))
           !
           !! BC1 terms
           dE_deps(:, :) = dE_deps(:, :) &
@@ -1629,7 +1629,6 @@ CONTAINS
                           + pi/gp*Qb*Qa/S*cosgpr*dgp_deps(:, :)*dexperfcp_dgp
 
           !! BC3 terms
-          call errore('esm_stress_ewg_bc2','FIXME: expm used but not defined',1)
           dE_deps(:, :) = dE_deps(:, :) &
                           - gp*dinvgp_deps(:, :)*tpi/gp*Qb*Qa/S*cosgpr*expm &
                           + tpi/gp*delta(:, :)*Qb*Qa/S*cosgpr*expm &
