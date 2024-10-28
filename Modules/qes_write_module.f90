@@ -91,6 +91,7 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_inputOccupations
     MODULE PROCEDURE qes_write_outputElectricField
     MODULE PROCEDURE qes_write_BerryPhaseOutput
+    MODULE PROCEDURE qes_write_sawtoothEnergy
     MODULE PROCEDURE qes_write_dipoleOutput
     MODULE PROCEDURE qes_write_finiteFieldOut
     MODULE PROCEDURE qes_write_polarization
@@ -2512,6 +2513,9 @@ MODULE qes_write_module
      IF (obj%finiteElectricFieldInfo_ispresent) THEN
         CALL qes_write_finiteFieldOut (xp, obj%finiteElectricFieldInfo)
      END IF
+     IF (obj%sawtoothEnergy_ispresent) THEN
+        CALL qes_write_sawtoothEnergy (xp, obj%sawtoothEnergy)
+     END IF
      IF (obj%dipoleInfo_ispresent) THEN
         CALL qes_write_dipoleOutput (xp, obj%dipoleInfo)
      END IF
@@ -2542,6 +2546,25 @@ MODULE qes_write_module
      END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_BerryPhaseOutput
+
+   SUBROUTINE qes_write_sawtoothEnergy(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(sawtoothEnergy_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%eamp_ispresent) CALL xml_addAttribute(xp, 'eamp', obj%eamp )
+     IF (obj%eopreg_ispresent) CALL xml_addAttribute(xp, 'eopreg', obj%eopreg )
+     IF (obj%emaxpos_ispresent) CALL xml_addAttribute(xp, 'emaxpos', obj%emaxpos )
+     IF (obj%edir_ispresent) CALL xml_addAttribute(xp, 'edir', obj%edir )
+        CALL xml_AddCharacters(xp, obj%sawtoothEnergy, fmt='s16')
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_sawtoothEnergy
 
    SUBROUTINE qes_write_dipoleOutput(xp, obj)
      !-----------------------------------------------------------------
