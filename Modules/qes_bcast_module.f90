@@ -88,6 +88,7 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_inputOccupations
     MODULE PROCEDURE qes_bcast_outputElectricField
     MODULE PROCEDURE qes_bcast_BerryPhaseOutput
+    MODULE PROCEDURE qes_bcast_sawtoothEnergy
     MODULE PROCEDURE qes_bcast_dipoleOutput
     MODULE PROCEDURE qes_bcast_finiteFieldOut
     MODULE PROCEDURE qes_bcast_polarization
@@ -2262,6 +2263,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%finiteElectricFieldInfo_ispresent, ionode_id, comm)
     IF (obj%finiteElectricFieldInfo_ispresent) &
       CALL qes_bcast_finiteFieldOut(obj%finiteElectricFieldInfo, ionode_id, comm)
+    CALL mp_bcast(obj%sawtoothEnergy_ispresent, ionode_id, comm)
+    IF (obj%sawtoothEnergy_ispresent) &
+      CALL qes_bcast_sawtoothEnergy(obj%sawtoothEnergy, ionode_id, comm)
     CALL mp_bcast(obj%dipoleInfo_ispresent, ionode_id, comm)
     IF (obj%dipoleInfo_ispresent) &
       CALL qes_bcast_dipoleOutput(obj%dipoleInfo, ionode_id, comm)
@@ -2298,6 +2302,34 @@ MODULE qes_bcast_module
     ENDDO
     !
   END SUBROUTINE qes_bcast_BerryPhaseOutput
+  !
+  !
+  SUBROUTINE qes_bcast_sawtoothEnergy(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(sawtoothEnergy_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%eamp_ispresent, ionode_id, comm)
+    IF (obj%eamp_ispresent) &
+      CALL mp_bcast(obj%eamp, ionode_id, comm)
+    CALL mp_bcast(obj%eopreg_ispresent, ionode_id, comm)
+    IF (obj%eopreg_ispresent) &
+      CALL mp_bcast(obj%eopreg, ionode_id, comm)
+    CALL mp_bcast(obj%emaxpos_ispresent, ionode_id, comm)
+    IF (obj%emaxpos_ispresent) &
+      CALL mp_bcast(obj%emaxpos, ionode_id, comm)
+    CALL mp_bcast(obj%edir_ispresent, ionode_id, comm)
+    IF (obj%edir_ispresent) &
+      CALL mp_bcast(obj%edir, ionode_id, comm)
+    CALL mp_bcast(obj%sawtoothEnergy, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_sawtoothEnergy
   !
   !
   SUBROUTINE qes_bcast_dipoleOutput(obj, ionode_id, comm )
