@@ -10,8 +10,13 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 
     page extract -name "Specify property to calculate" {
 	namelist inputpp -name "INPUTPP" {
-	    
-	    var prefix \
+
+            var title {
+                -label "Title (title):"
+                -validate string
+            }
+
+            var prefix \
 		-label    "Prefix of punch file saved by program PW.X (prefix):" \
 		-widget   [list entrybutton "Prefix ..." [list ::pwscf::selectFileRoot $this prefix]] \
 		-fmt      %S -validate string \

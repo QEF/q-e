@@ -7,6 +7,24 @@
 	
 
 # ------------------------------------------------------------------------
+help title -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>title</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> ' '
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+reprinted on output, CUB files and other places
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help prefix -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>prefix</b></big>

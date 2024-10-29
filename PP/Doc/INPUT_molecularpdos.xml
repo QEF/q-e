@@ -67,7 +67,7 @@ considered for the projection
          <default> 0, i.e., all atomic wavefunctions
          </default>
          <info>
-first atomic wavefunction of the molecular part
+last atomic wavefunction of the molecular part
 considered for the projection
          </info>
       </var>
