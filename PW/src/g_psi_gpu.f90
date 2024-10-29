@@ -13,7 +13,7 @@ subroutine g_psi_gpu (lda, n, m, npol, psi_d, e_d)
 #if defined(__CUDA)
   USE cudafor
 #endif
-  USE g_psi_mod_gpum, ONLY : h_diag_d, s_diag_d, using_h_diag_d, using_s_diag_d
+  USE g_psi_mod, ONLY : h_diag, s_diag
   !
   implicit none
   integer :: lda, n, m, npol, ipol
@@ -39,30 +39,27 @@ subroutine g_psi_gpu (lda, n, m, npol, psi_d, e_d)
   ! counter on psi functions
   ! counter on G vectors
   !
-  call using_h_diag_d(0)
-  call using_s_diag_d(0)
-  !
   call start_clock_gpu ('g_psi')
   !
 #ifdef TEST_NEW_PRECONDITIONING
   scala = 1.d0
 
-!$cuf kernel do(3) <<<*,*>>>
+!$acc parallel loop collapse(3) present(h_diag, s_diag)
   do ipol=1,npol
      do k = 1, m
         do i = 1, n
-           x = (h_diag_d(i,ipol) - e_d(k)*s_diag_d(i,ipol))*scala
+           x = (h_diag(i,ipol) - e_d(k)*s_diag(i,ipol))*scala
            denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
            psi_d (i, ipol, k) = psi_d (i, ipol, k) / denm
         enddo
      enddo
   enddo
 #else
-!$cuf kernel do(3) <<<*,*>>>
+!$acc parallel loop collapse(3) present(h_diag, s_diag)
   do ipol=1,npol
      do k = 1, m
         do i = 1, n
-           denm = h_diag_d (i,ipol) - e_d (k) * s_diag_d (i,ipol)
+           denm = h_diag (i,ipol) - e_d (k) * s_diag (i,ipol)
         !
         ! denm = g2+v(g=0) - e(k)
         !

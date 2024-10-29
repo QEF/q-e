@@ -3785,7 +3785,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   USE scf, ONLY : rho, vrs, vltot, v_of_0, v, kedtau, rho_core, rhog_core  !FZ: for vhartree 
   USE wavefunctions, ONLY : evc, psic, psic_nc !FZ: added psic_nc for spinors
   USE wvfct, ONLY : npwx, nbnd, g2kin, et  !FZ: added g2kin
-  USE g_psi_mod,            ONLY : h_diag, s_diag 
   USE noncollin_module, ONLY: noncolin, npol  
   !USE uspp,                 ONLY : vkb, nkb, okvan, deeq, qq_at, qq_so, deeq_nc, indv_ijkb0 !FZ: 
   USE uspp,                 ONLY : vkb, nkb, okvan, deeq, qq_at, qq_so, deeq_nc, ofsbeta !FZ: 
@@ -3925,14 +3924,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   ENDIF
 
   CALL v_h (rho%of_g(:,1), ehart, charge, v_har)   
-  ALLOCATE( h_diag( npwx, npol ), STAT=ierr )    
-  IF( ierr /= 0 ) &    
-     CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )   
-  ALLOCATE( s_diag( npwx, npol ), STAT=ierr )   
-  IF( ierr /= 0 ) &     
-     CALL errore( ' diag_bands ', ' cannot allocate s_diag ', ABS(ierr) )    
-  h_diag (:,:) = 0.0D0  
-  s_diag (:,:) = 0.0D0  
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &    
                          nspin, doublegrid )    
   
@@ -3946,10 +3937,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
     CALL threaded_memcpy(psinl, evc, nbnd*npol*npwx*2)
     vkb (:,:) = 0.0D0  
     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb ) 
-    h_diag (:,:) = 0.0D0  
-    s_diag (:,:) = 0.0D0  
     hpsinl (:,:) = 0.0D0  
-    CALL usnldiag( npw, h_diag, s_diag )   
     g2kin(:) = 0.0D0  
     call g2_kin( ik )  
     CALL calbec ( npw, vkb, psinl, becp, nbnd )   
@@ -4196,8 +4184,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   DEALLOCATE (hpsi)
   DEALLOCATE (hpsinl) 
   DEALLOCATE (psinl)  
-  DEALLOCATE (h_diag) 
-  DEALLOCATE (s_diag) 
   IF (noffdiag .GT. 0) DEALLOCATE (psic2)
   CALL deallocate_bec_type ( becp )   
   DEALLOCATE (hpsi_temp)
