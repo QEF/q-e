@@ -244,7 +244,8 @@ v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
-vloc_psi.o \
+vloc_psi_tg.o \
+vloc_psi_acc.o \
 utils.o \
 xdm_dispersion.o \
 wfcinit.o \
@@ -276,7 +277,6 @@ PWLIBS += \
   g_psi_gpu.o \
   h_psi_gpu.o \
   vhpsi_gpu.o \
-  vloc_psi_gpu.o \
   add_vuspsi_gpu.o \
   newd_gpu.o \
   add_paw_to_deeq_gpu.o \

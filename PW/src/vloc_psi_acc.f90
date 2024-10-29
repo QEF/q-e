@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
+SUBROUTINE vloc_psi_gamma_acc( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - Gamma point.
   !! - fft \psi to real space;
@@ -42,7 +42,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(3)
   REAL(DP):: fac
   !
-  IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_gpu','no task groups!',1)
+  IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_acc','no task groups!',1)
   !
   CALL start_clock_gpu( 'vloc_psi' )
   !
@@ -142,10 +142,10 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v, hpsi_d )
   CALL stop_clock_gpu ('vloc_psi')
   !
   RETURN
-END SUBROUTINE vloc_psi_gamma_gpu
+END SUBROUTINE vloc_psi_gamma_acc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
+SUBROUTINE vloc_psi_k_acc( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - k-points. GPU double.
   !! - fft \psi to real space;
@@ -181,7 +181,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   INTEGER :: dffts_nnr, idx, group_size, hm_vec(3)
   INTEGER :: ierr, brange
   !
-  IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_gpu','no task groups!',2)
+  IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_acc','no task groups!',2)
   !
   CALL start_clock_gpu ('vloc_psi')
   !
@@ -263,10 +263,10 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   RETURN
   !
-END SUBROUTINE vloc_psi_k_gpu
+END SUBROUTINE vloc_psi_k_acc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
+SUBROUTINE vloc_psi_nc_acc( lda, n, m, psi_d, v, hpsi_d )
   !-----------------------------------------------------------------------
   !! Calculation of Vloc*psi using dual-space technique - non-collinear - 
   !! - fft \psi to real space;
@@ -301,7 +301,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   INTEGER :: dffts_nnr, idx, ioff, ii, ie, brange
   INTEGER :: right_nnr, right_nr3, right_inc
   !
-  IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_gpu','no task groups!',3)
+  IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_acc','no task groups!',3)
   !
   CALL start_clock_gpu ('vloc_psi')
   !
@@ -366,5 +366,5 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v, hpsi_d )
   !
   RETURN
   !
-END SUBROUTINE vloc_psi_nc_gpu
+END SUBROUTINE vloc_psi_nc_acc
 
