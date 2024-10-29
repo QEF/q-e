@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2024 QUantum ESPRESSO Foundation
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,16 +10,17 @@
 SUBROUTINE usnldiag (npw, npol, h_diag, s_diag)
   !-----------------------------------------------------------------------
   !!
-  !!    Compute the diagonal part of the H and S matrices. On input:
+  !!    Compute the diagonal part of the H and S matrices.
+  !!    Needed on input:
   !!    - kinetic energy (g2kin)
   !!    - Vloc(G=0) (v_of_0)
   !!    - nonlocal pseudopotential terms
-  !!    GPU: except v_of_0, variables must be present on device
+  !!    With OpenACC, g2kin and PP terms must be present on device
   !!    On output:
   !!    - Hamiltonian    diagonal (h_diag)
   !!    - Overlap matrix diagonal (s_diag)
-  !!    GPUs: h_diag and s_diag are on device if ACC variables;
-  !!          are icomputed on device and copied to host if not
+  !!    With OpenACC, h_diag and s_diag are on device if ACC variables;
+  !!    otherwise, they are computed on device and copied to host
   !!
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
