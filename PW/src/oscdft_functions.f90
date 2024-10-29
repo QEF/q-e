@@ -648,17 +648,17 @@ MODULE oscdft_functions
          100 FORMAT(A)
       END SUBROUTINE oscdft_close_files
 
-      SUBROUTINE oscdft_h_diag(ctx)
+      SUBROUTINE oscdft_h_diag(ctx, h_diag)
          USE lsda_mod,         ONLY : isk, current_spin
          USE klist,            ONLY : ngk
          USE klist,            ONLY : nks
          USE buffers,          ONLY : get_buffer
          USE wvfct,            ONLY : current_k, npwx
          USE noncollin_module, ONLY : npol
-         USE g_psi_mod,        ONLY : h_diag
 
          IMPLICIT NONE
 
+         COMPLEX(dp), INTENT(INOUT) :: h_diag(npwx,npol)
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
          TYPE(oscdft_input_type),           POINTER       :: inp
          TYPE(oscdft_indices_type),         POINTER       :: idx

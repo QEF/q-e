@@ -1181,7 +1181,6 @@ contains
     use klist,       only : ngk
     use lr_dav_variables, only : reference, diag_of_h, tr_energy,eign_value_order,&
                      &turn2planb
-    use g_psi_mod
     
     implicit none
     complex(dp)  :: vect(npwx,nbnd)

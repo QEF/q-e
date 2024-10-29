@@ -572,7 +572,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        CALL usnldiag( npw, npol, h_diag, s_diag )
 #if defined (__OSCDFT)
-       IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+       IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx, h_diag)
 #endif
        !
        ntry = 0
@@ -902,7 +902,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        CALL usnldiag( npw, npol, h_diag, s_diag )
 #if defined (__OSCDFT)
-       IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+       IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx, h_diag)
 #endif
        !
        ntry = 0
