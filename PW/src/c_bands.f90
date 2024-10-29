@@ -201,7 +201,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
-  USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel, &
                                    gdir, l3dstring, efield, efield_cry
   USE becmod,               ONLY : bec_type, becp, calbec, &
@@ -355,12 +354,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           END DO
        ELSE
-          !$acc parallel loop present(g2kin)
-          DO ig = 1, npw
-             h_diag(ig, 1) = g2kin(ig) + v_of_0
-          END DO
-          !
-          CALL usnldiag( npw, h_diag, s_diag )
+          CALL usnldiag( npw, npol, h_diag, s_diag )
        END IF
        !
        ntry = 0
@@ -576,14 +570,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       !$acc parallel loop present(g2kin, h_diag) 
-       DO j=1, npw
-          h_diag(j, 1) = g2kin(j) + v_of_0
-       END DO
+       CALL usnldiag( npw, npol, h_diag, s_diag )
 #if defined (__OSCDFT)
        IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
 #endif
-       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
@@ -701,12 +691,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           END DO
        ELSE
-          !$acc parallel loop present(g2kin)
-          DO ig = 1, npwx
-             h_diag(ig, :) = g2kin(ig) + v_of_0
-          END DO
-          !
-          CALL usnldiag( npw, h_diag, s_diag )
+          CALL usnldiag( npw, npol, h_diag, s_diag )
        ENDIF
        !
        ntry = 0
@@ -816,11 +801,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !edp
 !          IF ( .NOT. lrot ) THEN
           IF (lrot .AND. .NOT. lscf ) THEN
-              !$acc parallel loop present(g2kin)
-              DO ig = 1, npwx
-                 h_diag(ig,:) = g2kin(ig) + v_of_0
-              END DO
-              CALL usnldiag(npw, h_diag, s_diag )
+              CALL usnldiag(npw, npol, h_diag, s_diag )
               !
               IF ( .not. use_gpu ) THEN
                 CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
@@ -919,16 +900,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       DO ipol = 1, npol
-          !$acc parallel loop present(g2kin,h_diag) 
-          DO j = 1, npw
-             h_diag(j, ipol) = g2kin(j) + v_of_0
-          END DO
-       END DO
+       CALL usnldiag( npw, npol, h_diag, s_diag )
 #if defined (__OSCDFT)
        IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
 #endif
-       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
