@@ -213,17 +213,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !
      ELSE
         ! ... usual reciprocal-space algorithm
-        !$acc host_data use_device(psi, hpsi)
         CALL vloc_psi_gamma_acc ( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$acc end host_data
         !
      ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
-     !$acc host_data use_device(psi, hpsi)
      CALL vloc_psi_nc_acc ( lda, n, m, psi, vrs, hpsi )
-     !$acc end host_data
      !
   ELSE  
      ! 
@@ -259,9 +255,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !
      ELSE
         !
-        !$acc host_data use_device(psi, hpsi)
         CALL vloc_psi_k_acc ( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$acc end host_data
         !
      ENDIF
      !
