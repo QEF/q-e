@@ -13,6 +13,7 @@
  /
  &electrons
     conv_thr = 1.0d-10
+    startingwfc = 'atomic'
  /
 ATOMIC_SPECIES
   B  10.81    B.pz-vbc.UPF
@@ -22,4 +23,3 @@ ATOMIC_POSITIONS crystal
  As -0.125  -0.125  -0.125
 K_POINTS automatic
  3 3 3 0 0 0
-
