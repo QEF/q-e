@@ -76,7 +76,7 @@ SUBROUTINE phq_readin()
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
   USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-      skip_upperfan
+      skip_upper
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE el_phon,       ONLY : kx, ky, kz, elph_print
@@ -128,7 +128,7 @@ SUBROUTINE phq_readin()
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upperfan, dftd3_hess, kx, ky, kz
+                       skip_upper, dftd3_hess, kx, ky, kz
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -210,7 +210,7 @@ SUBROUTINE phq_readin()
   ! ahc_dir: Directory where the output binary files for AHC e-ph coupling are written
   ! ahc_nbnd: Number of bands where the electron self-energy is to be computed.
   ! ahc_nbndskip: Number of bands to exclude when computing the self-energy.
-  ! skip_upperfan: If .true., skip the calculation of upper Fan self-energy.
+  ! skip_upper: If .true., skip the calculation of upper Fan self-energy.
   !
   ! dftd3_hess: file from where the dftd3 hessian is read
   !
@@ -325,7 +325,7 @@ SUBROUTINE phq_readin()
   ahc_dir = ' '
   ahc_nbnd = 0
   ahc_nbndskip = 0
-  skip_upperfan = .FALSE.
+  skip_upper = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -415,7 +415,7 @@ SUBROUTINE phq_readin()
      IF (alpha_mix (iter) .LT.0.D0.OR.alpha_mix (iter) .GT.1.D0) CALL &
           errore ('phq_readin', ' Wrong alpha_mix ', iter)
   ENDDO
-  IF (niter_ph.LT.1.OR.niter_ph.GT.maxter) CALL errore ('phq_readin', &
+  IF (niter_ph < 0 .OR. niter_ph > maxter) CALL errore ('phq_readin', &
        ' Wrong niter_ph ', 1)
   IF (iverbosity.NE.0.AND.iverbosity.NE.1) CALL errore ('phq_readin', &
        &' Wrong  iverbosity ', 1)
@@ -825,8 +825,8 @@ SUBROUTINE phq_readin()
       'el-ph with wannier : specify bands range with elph_nbnd_min,elph_nbnd_max',1)
   END IF
 
-  IF(elph.and.nimage>1) call errore('phq_readin',&
-       'el-ph with images not implemented',1)
+  IF((elph .AND. .NOT. elph_ahc) .AND. nimage > 1) CALL errore('phq_readin',&
+       'el-ph with images not implemented', 1)
 
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 

@@ -257,9 +257,9 @@ fqha.x : fqha.o $(PWOBJS) $(QEMODS)
                  $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-postahc.x : postahc.o $(PWOBJS) $(QEMODS)
+postahc.x : postahc.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ postahc.o \
-                 $(PWOBJS) $(QEMODS) $(QELIBS)
+                 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 tldeps :

@@ -1,0 +1,109 @@
+
+     Program POSTAHC v.7.2 starts on 12Mar2024 at 19:17:28 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     4700 MiB available memory on the printing compute node when the environment starts
+
+     Waiting for input...
+     Reading input from standard input
+      Title line not specified: using 'default'.
+
+     Reading xml data from directory:
+
+     ./BAs.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         451     451    139                 6423     6423    1067
+
+     Using Slab Decomposition
+
+ 
+     List of irreducible k points
+     ik      xk(1:3) (cart. coord. in units 2pi/alat)
+       1  0.00000000  0.00000000  0.00000000
+       2 -0.50000000  0.50000000 -0.50000000
+ 
+     There are          4 q points in total.
+     Calculating        4 q points in the root core.
+     Check whether the sum of the weight is equal to the number of q points in the full q-point grid.
+     SUM(wtq) =         27.0000
+     Total number of bands :       14
+     Bands to calculate the self-energy :       1 to        9
+
+     Calculating electron self-energy. Loop over        4 q points
+
+
+
+     Diagonal electron self-energy in eV
+     Self-energy of degenerate states are averaged.
+     The DW and Upper_Fan terms are real-valued by construction.
+     For states with energy outside the AHC window, all output are zero.
+     Total = Upper_DW + Lower_DW + Upper_Fan + Lower_Fan
+
+     Begin postahc output
+         ik  ibnd    Re[Total]     Upper_DW      Lower_DW   Upper_Fan Re[Lower_Fan]   Im[Total]
+          1     1  -4.2337E-02   1.0085E-01   1.8414E-02  -1.0227E-01  -5.9328E-02   2.9142E-04
+          1     2   4.3481E-02   6.9839E-01   4.5613E-02  -7.0464E-01   4.1168E-03   1.0483E-03
+          1     3   4.3481E-02   6.9839E-01   4.5613E-02  -7.0464E-01   4.1168E-03   1.0483E-03
+          1     4   4.3481E-02   6.9839E-01   4.5613E-02  -7.0464E-01   4.1168E-03   1.0483E-03
+          1     5   3.2331E-01   5.8857E-01  -2.9081E-02  -5.9097E-01   3.5479E-01  -9.7312E-02
+          1     6   3.2331E-01   5.8857E-01  -2.9081E-02  -5.9097E-01   3.5479E-01  -9.7312E-02
+          1     7   3.2331E-01   5.8857E-01  -2.9081E-02  -5.9097E-01   3.5479E-01  -9.7312E-02
+          1     8  -6.4412E-02   3.9429E-01  -6.8010E-02  -4.5144E-01   6.0744E-02  -1.8191E-01
+          1     9   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+          2     1  -9.3826E-03   1.5740E-01   2.2919E-02  -1.6154E-01  -2.8165E-02   3.5462E-03
+          2     2  -2.2867E-02   2.1038E-01  -4.4149E-03  -2.1215E-01  -1.6683E-02   8.0779E-04
+          2     3   1.4092E-01   5.6277E-01   6.5600E-02  -6.0040E-01   1.1295E-01   2.0238E-02
+          2     4   1.4092E-01   5.6277E-01   6.5600E-02  -6.0040E-01   1.1295E-01   2.0238E-02
+          2     5  -1.2594E-01   3.0255E-01  -5.4297E-02  -3.3922E-01  -3.4973E-02  -3.1147E-02
+          2     6   1.1448E-02   5.2683E-01  -4.7704E-02  -6.0677E-01   1.3909E-01  -3.8969E-03
+          2     7   1.1448E-02   5.2683E-01  -4.7704E-02  -6.0677E-01   1.3909E-01  -3.8969E-03
+          2     8   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+          2     9   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+          3     1  -1.0981E-01   2.1284E-01   2.1262E-02  -2.1666E-01  -1.2725E-01   8.1357E-02
+          3     2  -8.3036E-02   1.5583E-01   9.2472E-03  -1.6135E-01  -8.6768E-02   7.7243E-03
+          3     3  -2.2522E-02   4.5023E-01   3.8528E-02  -4.7473E-01  -3.6554E-02   3.2040E-03
+          3     4  -2.2522E-02   4.5023E-01   3.8528E-02  -4.7473E-01  -3.6554E-02   3.2040E-03
+          3     5  -5.5868E-02   1.5044E-01  -5.3753E-02  -1.7924E-01   2.6682E-02  -2.0346E-03
+          3     6  -7.7605E-02   3.1045E-01  -5.3812E-02  -3.4120E-01   6.9611E-03  -5.4847E-03
+          3     7   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+          3     8   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+          3     9   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+     End postahc output
+
+     Using q points in the irreducible Brillouin zone.
+     The off-diagonal self-energy matrix is not computed.
+
+
+     debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
+     lower_fan    :      0.00s CPU      0.00s WALL (       4 calls)
+     upper_fan    :      0.01s CPU      0.01s WALL (       4 calls)
+
+     POSTAHC      :      0.07s CPU      0.07s WALL
+
+
+   This run was terminated on:  19:17:29  12Mar2024            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

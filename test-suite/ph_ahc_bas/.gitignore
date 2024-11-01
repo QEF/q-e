@@ -1,0 +1,14 @@
+BAs_ahc*.dyn*
+ahc_dir*/
+_ph0/
+BAs.dyn*
+BAs.fc
+BAs.modes*
+BAs.save/
+BAs.wfc*
+BAs.wfcgauge
+BAs.xml
+selfen_imag.dat
+selfen_real.dat
+input_tmp.in
+wpot/
