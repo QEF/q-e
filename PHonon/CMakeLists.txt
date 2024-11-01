@@ -400,6 +400,7 @@ target_link_libraries(qe_phonon_postahc_exe
     PRIVATE
         qe_modules
         qe_pw
+        qe_lr_modules
         qe_phonon_ph)
 
 ###########################################################
