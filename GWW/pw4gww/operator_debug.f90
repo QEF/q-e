@@ -7,7 +7,6 @@ SUBROUTINE operator_debug(npw, e, x, u)
    USE constants,            ONLY : e2, pi, tpi, fpi
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE g_psi_mod,            ONLY : h_diag, s_diag
    USE gvecs,                ONLY : doublegrid
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,                ONLY : DP 
