@@ -15,7 +15,7 @@ SUBROUTINE non_scf( )
   USE bp,                   ONLY : lelfield, lberry, lorbm
   USE check_stop,           ONLY : stopped_by_user
   USE control_flags,        ONLY : io_level, conv_elec, lbands, ethr, use_gpu
-  USE ener,                 ONLY : ef, ef_up, ef_dw
+  USE ener,                 ONLY : ef, ef_up, ef_dw, eband
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : save_buffer
@@ -43,7 +43,7 @@ SUBROUTINE non_scf( )
   !
   INTEGER :: iter, i, dr2 = 0.0_dp
   REAL(dp):: ef_scf, ef_scf_up, ef_scf_dw
-  REAL(DP), EXTERNAL :: get_clock
+  REAL(DP), EXTERNAL :: e_band, get_clock
   REAL(DP) :: charge
   REAL(DP) :: etot_cmp_paw(nat,2,2)
   !
@@ -99,6 +99,7 @@ SUBROUTINE non_scf( )
      CALL weights_only( )
   ELSE
      CALL weights( )
+     eband =  e_band( )
   ENDIF
   !
   ! ... Note that if you want to use more k-points for the phonon
@@ -186,4 +187,39 @@ SUBROUTINE non_scf( )
 9102 FORMAT(/'     End of band structure calculation' )
   !
 END SUBROUTINE non_scf
-
+!
+!----------------------------------------------------------------------------
+FUNCTION e_band ( )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Calculation of band energy sum - Paolo Giannozzi Oct. 2024
+  ! ... To be called in non_scf, after the call to "weights"
+  !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_pools,             ONLY : inter_pool_comm
+  USE klist,                ONLY : nks, wk
+  USE wvfct,                ONLY : et, wg, nbnd
+  !
+  IMPLICIT NONE
+  !
+  REAL(dp) :: e_band
+  INTEGER  :: ik, ibnd
+  !
+  e_band = 0.0_dp
+  !
+  k_loop: DO ik = 1, nks
+     !
+     band_loop: DO ibnd = 1, nbnd
+        !
+        e_band = e_band + wg(ibnd,ik) * et(ibnd,ik)
+        !
+     END DO band_loop
+     !
+  END DO k_loop
+  !
+  CALL mp_sum (e_band, intra_bgrp_comm)
+  CALL mp_sum (e_band, inter_pool_comm)
+  !
+END FUNCTION e_band
