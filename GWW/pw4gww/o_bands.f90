@@ -20,7 +20,6 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
   USE gvect,                ONLY : g, gstart
   USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
-  USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -369,7 +368,6 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   USE gvect,                ONLY : g, gstart
   USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
-  USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE klist,                ONLY : xk
   USE mp_world,             ONLY : mpime, nproc, world_comm
@@ -453,7 +451,6 @@ subroutine  update_numwp(numwp, cutoff)
   USE gvect,                ONLY : g, gstart
   USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
-  USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE klist,                ONLY : xk
   USE mp_world,             ONLY : mpime, nproc, world_comm

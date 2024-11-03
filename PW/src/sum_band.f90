@@ -63,6 +63,7 @@ SUBROUTINE sum_band()
              nt,   &! counter on atomic types
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
+  REAL(dp), EXTERNAL :: e_band
   !
   !
   CALL start_clock( 'sum_band' )
@@ -171,9 +172,6 @@ SUBROUTINE sum_band()
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
-  ! ... The band energy contribution eband is computed together with the charge
-  !
-  eband = 0.D0
   !
   CALL start_clock( 'sum_band:loop' )
   !
@@ -203,8 +201,10 @@ SUBROUTINE sum_band()
   END IF
   !
   CALL stop_clock( 'sum_band:loop' )
-  CALL mp_sum( eband, inter_pool_comm )
-  CALL mp_sum( eband, inter_bgrp_comm )
+  !
+  ! ... Compute here the sum of band eigenvalues "eband"
+  !
+  eband =  e_band( )
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -363,18 +363,6 @@ SUBROUTINE sum_band()
           IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
           !
           CALL stop_clock( 'sum_band:init_us_2' )
-          !
-          ! ... here we compute the band energy: the sum of the eigenvalues
-          !
-          DO ibnd = ibnd_start, ibnd_end
-             !
-             ! ... the sum of eband and demet is the integral for
-             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
-             ! ... the eigenvalues.
-             !
-             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
-             !
-          ENDDO
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
@@ -555,17 +543,6 @@ SUBROUTINE sum_band()
           ENDIF
           !
           DO ibnd = ibnd_start, ibnd_end, incr
-             !
-             ! ... here we compute the band energy: the sum of the eigenvalues
-             !
-             DO idx = 1, incr
-                IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
-                     wg(idx+ibnd-1,ik)
-             ENDDO
-             !
-             ! ... the sum of eband and demet is the integral for e < ef of
-             ! ... e n(e) which reduces for degauss=0 to the sum of the
-             ! ... eigenvalues
              !
              w1 = wg(ibnd,ik) / omega
              !
@@ -797,18 +774,6 @@ SUBROUTINE sum_band()
           !
           CALL stop_clock( 'sum_band:init_us_2' )
           !
-          ! ... here we compute the band energy: the sum of the eigenvalues
-          !
-          DO ibnd = ibnd_start, ibnd_end
-             !
-             ! ... the sum of eband and demet is the integral for
-             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
-             ! ... the eigenvalues.
-             !
-             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
-             !
-          ENDDO
-          !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
              CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw )
@@ -934,17 +899,6 @@ SUBROUTINE sum_band()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             ! ... here we compute the band energy: the sum of the eigenvalues
-             !
-             DO idx = 1, incr
-                IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
-                     wg(idx+ibnd-1,ik)
-             ENDDO
-             !
-             ! ... the sum of eband and demet is the integral for e < ef of
-             ! ... e n(e) which reduces for degauss=0 to the sum of the
-             ! ... eigenvalues
-             !
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
@@ -1043,4 +997,39 @@ SUBROUTINE sum_band()
      END SUBROUTINE sum_band_k_tg
      !
 END SUBROUTINE sum_band
-
+!
+!----------------------------------------------------------------------------
+FUNCTION e_band ( )
+  !----------------------------------------------------------------------------
+  !
+  !! Calculation of band energy sum - Paolo Giannozzi Oct. 2024
+  !! To be called after "weights" 
+  !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_pools,             ONLY : inter_pool_comm
+  USE klist,                ONLY : nks
+  USE wvfct,                ONLY : et, wg, nbnd
+  !
+  IMPLICIT NONE
+  !
+  REAL(dp) :: e_band
+  INTEGER  :: ik, ibnd
+  !
+  e_band = 0.0_dp
+  !
+  k_loop: DO ik = 1, nks
+     !
+     band_loop: DO ibnd = 1, nbnd
+        !
+        e_band = e_band + wg(ibnd,ik) * et(ibnd,ik)
+        !
+     END DO band_loop
+     !
+  END DO k_loop
+  !
+  CALL mp_sum (e_band, intra_bgrp_comm)
+  CALL mp_sum (e_band, inter_pool_comm)
+  !
+END FUNCTION e_band
