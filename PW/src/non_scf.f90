@@ -187,39 +187,3 @@ SUBROUTINE non_scf( )
 9102 FORMAT(/'     End of band structure calculation' )
   !
 END SUBROUTINE non_scf
-!
-!----------------------------------------------------------------------------
-FUNCTION e_band ( )
-  !----------------------------------------------------------------------------
-  !
-  ! ... Calculation of band energy sum - Paolo Giannozzi Oct. 2024
-  ! ... To be called in non_scf, after the call to "weights"
-  !
-  USE kinds,                ONLY : DP
-  USE mp,                   ONLY : mp_sum
-  USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp_pools,             ONLY : inter_pool_comm
-  USE klist,                ONLY : nks, wk
-  USE wvfct,                ONLY : et, wg, nbnd
-  !
-  IMPLICIT NONE
-  !
-  REAL(dp) :: e_band
-  INTEGER  :: ik, ibnd
-  !
-  e_band = 0.0_dp
-  !
-  k_loop: DO ik = 1, nks
-     !
-     band_loop: DO ibnd = 1, nbnd
-        !
-        e_band = e_band + wg(ibnd,ik) * et(ibnd,ik)
-        !
-     END DO band_loop
-     !
-  END DO k_loop
-  !
-  CALL mp_sum (e_band, intra_bgrp_comm)
-  CALL mp_sum (e_band, inter_pool_comm)
-  !
-END FUNCTION e_band
