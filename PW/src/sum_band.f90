@@ -1007,7 +1007,7 @@ FUNCTION e_band ( )
   !
   USE kinds,                ONLY : DP
   USE mp,                   ONLY : mp_sum
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE klist,                ONLY : nks
   USE wvfct,                ONLY : et, wg, nbnd
@@ -1029,7 +1029,7 @@ FUNCTION e_band ( )
      !
   END DO k_loop
   !
-  CALL mp_sum (e_band, intra_bgrp_comm)
   CALL mp_sum (e_band, inter_pool_comm)
+  CALL mp_sum (e_band, inter_bgrp_comm)
   !
 END FUNCTION e_band
