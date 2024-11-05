@@ -70,6 +70,8 @@ CONTAINS
     COMPLEX(DP) :: ac
     INTEGER :: ikb, jkb, ih, jh, na, nt, ipol, nhnt, offset
     !
+    IF ( nhm == 0 ) RETURN
+    !
     !$acc data present ( vkb, deeq_nc, qq_so, qq_at )
     ALLOCATE( pc1(nhm,nhm,npol), pc2(nhm,nhm,npol) )
     DO nt = 1, ntyp
@@ -126,8 +128,9 @@ CONTAINS
     REAL(DP)    :: ar
     INTEGER :: ikb, jkb, ih, jh, na, nt, nhnt, offset
     !
-    !$acc data present ( vkb, deeq, qq_at )
+    IF ( nhm == 0 ) RETURN
     !
+    !$acc data present ( vkb, deeq, qq_at )
     ALLOCATE( pr1(nhm,nhm), pr2(nhm,nhm) )
     DO nt = 1, ntyp
        nhnt = nh(nt)
