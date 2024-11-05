@@ -10,6 +10,9 @@ MODULE dft_setting_routines
   !--------------------------------------------------------------------------
   !! Routines to set and/or recover DFT names, parameters and flags.
   !
+#if defined(__LIBXC)
+#include "xc_version.h"
+#endif
   USE xclib_utils_and_para,  ONLY: stdout
   !
   SAVE
@@ -509,7 +512,7 @@ CONTAINS
 #if defined(__LIBXC)
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, libxc_flag(16)
+    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, nflags, libxc_flag(17)
     REAL(DP) :: omega, alpha, beta
 #endif
     LOGICAL :: is_libxc13, is_libxc12
@@ -577,7 +580,12 @@ CONTAINS
         fkind = xc_f03_func_info_get_kind( xc_info )
         family = xc_f03_func_info_get_family( xc_info )
         flags_tot = xc_f03_func_info_get_flags( xc_info )
-        DO iflag = 15, 0, -1
+        !
+        nflags = 15
+#if (XC_MAJOR_VERSION > 6)
+        nflags = 16
+#endif
+        DO iflag = nflags, 0, -1
           libxc_flag(iflag+1) = 0
           IF ( flags_tot-2**iflag < 0 ) CYCLE
           libxc_flag(iflag+1) = 1
@@ -1086,7 +1094,7 @@ CONTAINS
     LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
     INTEGER :: i, ii, iid, iexx, iscr, ip, nspin0, iflag, family
-    INTEGER :: id_vec(6), flags_tot
+    INTEGER :: id_vec(6), flags_tot, nflags
     !
 #if defined(__LIBXC)
     CHARACTER(LEN=100) :: pdesc
@@ -1114,7 +1122,11 @@ CONTAINS
         family = xc_f03_func_info_get_family( xc_info(iid) )
         !
         flags_tot = xc_f03_func_info_get_flags( xc_info(iid) )
-        DO iflag = 15, 0, -1
+        nflags = 15
+#if (XC_MAJOR_VERSION > 6)
+        nflags = 16
+#endif
+        DO iflag = nflags, 0, -1
           libxc_flags(iid,iflag) = 0
           IF ( flags_tot-2**iflag < 0 ) CYCLE
           libxc_flags(iid,iflag) = 1
@@ -1169,7 +1181,7 @@ CONTAINS
                           &/5X,"long range exx is not available yet (if needed).")' )&
                           id_vec(iid)
           IF ( libxc_flags(iid,14) == 1 ) &
-            WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," is still ", &
+            WRITE(stdout,'(4X,"WARNING: libxc functional with ID ",I4," is still ", &
                       &/4X,"in development.")' ) id_vec(iid)
           IF ( libxc_flags(iid,15) == 1 ) &
             WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends on",  &
