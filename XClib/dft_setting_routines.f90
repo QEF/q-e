@@ -10,6 +10,9 @@ MODULE dft_setting_routines
   !--------------------------------------------------------------------------
   !! Routines to set and/or recover DFT names, parameters and flags.
   !
+#if defined(__LIBXC)
+#include "xc_version.h"
+#endif
   USE xclib_utils_and_para,  ONLY: stdout
   !
   SAVE
@@ -1087,7 +1090,7 @@ CONTAINS
     LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
     INTEGER :: i, ii, iid, iexx, iscr, ip, nspin0, iflag, family
-    INTEGER :: id_vec(6), flags_tot
+    INTEGER :: id_vec(6), flags_tot, nflags
     !
 #if defined(__LIBXC)
     CHARACTER(LEN=100) :: pdesc
@@ -1175,7 +1178,7 @@ CONTAINS
                           &/5X,"long range exx is not available yet (if needed).")' )&
                           id_vec(iid)
           IF ( libxc_flags(iid,14) == 1 ) &
-            WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," is still ", &
+            WRITE(stdout,'(4X,"WARNING: libxc functional with ID ",I4," is still ", &
                       &/4X,"in development.")' ) id_vec(iid)
           IF ( libxc_flags(iid,15) == 1 ) &
             WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends on",  &

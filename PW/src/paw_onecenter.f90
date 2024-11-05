@@ -762,7 +762,7 @@ MODULE paw_onecenter
     CALL PAW_gradient( i, rhoout_lm, rho_rad, rho_core, grad )
     !
 #if defined(_OPENACC)
-    !$acc parallel loop collapse(2) present(g(i%t:i%t))
+    !$acc parallel loop collapse(2) present(g(i%t:i%t)) private(co2)
 #else
     !$omp parallel do collapse(2) default(private), &
     !$omp shared(i,g,nspin_gga,nspin_mag,rho_rad,gradx,grad, &
