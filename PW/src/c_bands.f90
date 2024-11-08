@@ -586,19 +586,19 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !                ! make sure that all processors have the same wfc
                 CALL pregterg( h_psi, s_psi, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, evc, ethr, &
-                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              ELSE
                 CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
-                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
              ! 
           ELSE
              IF ( use_para_diag ) THEN
-                !$acc host_data use_device(evc,et)
+                !$acc host_data use_device(et)
                 CALL pregterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                             npw, npwx, nbnd, nbndx, evc, ethr, &
-                            et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call 
+                            et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !$acc end host_data
                 !
              ELSE
@@ -606,7 +606,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !$acc host_data use_device(et)
                 CALL regterg (  h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
-                         et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+                         et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !$acc end host_data
              END IF
              !$acc update self(et)
@@ -927,7 +927,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE
              IF ( use_para_diag ) then
                 !
-                !$acc host_data use_device(evc, et)
+                !$acc host_data use_device(et)
                 CALL pcegterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                                et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
