@@ -81,7 +81,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! ... LOCAL variables
   !
-  COMPLEX(DP), ALLOCATABLE :: evc(:,:)
   REAL(DP), ALLOCATABLE :: e(:)
   
   INTEGER, PARAMETER :: maxter = 20
@@ -164,10 +163,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! compute the number of chuncks
   numblock  = (npw+blocksize-1)/blocksize
-
-  ALLOCATE(  evc( npwx*npol, nvec ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' pcegterg ',' cannot allocate evc (host) ', ABS(ierr) )
   !
   ALLOCATE(  e( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -260,7 +255,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !$acc enter data create(psi, hpsi)
   CALL buffer%lock_buffer(ew_d, nvecx, ierr)
   !$acc update host( evc_d)
-  evc(:,1:nvec) = evc_d(:,1:nvec)
   !$acc kernels
   psi(:,1:nvec) = evc_d(:,1:nvec)
   !$acc end kernels
@@ -505,7 +499,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         CALL start_clock( 'cegterg:last' )
         !
         CALL refresh_evc()
-        evc_d = evc
         !$acc update device(evc_d)
         !
         IF ( notcnv == 0 ) THEN
@@ -531,7 +524,7 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
+        CALL threaded_memcpy(psi, evc_d, nvec*npol*npwx*2)
         !$acc update device(psi)
         !
         IF ( uspp ) THEN
@@ -586,7 +579,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
-  DEALLOCATE( evc )
   DEALLOCATE( e )
   
   CALL buffer%release_buffer(ew_d, ierr)
@@ -803,14 +795,14 @@ CONTAINS
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
-                          psi(1,ir), kdmx, vl, nx, beta, evc(1,ic), kdmx )
+                          psi(1,ir), kdmx, vl, nx, beta, evc_d(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
-                          psi(1,ir), kdmx, vtmp, nx, beta, evc(1,ic), kdmx )
+                          psi(1,ir), kdmx, vtmp, nx, beta, evc_d(1,ic), kdmx )
               END IF
               ! 
 

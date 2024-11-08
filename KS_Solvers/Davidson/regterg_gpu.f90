@@ -77,7 +77,7 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! ... LOCAL variables
   !
-  COMPLEX(DP), ALLOCATABLE :: evc(:,:)
+  !COMPLEX(DP), ALLOCATABLE :: evc(:,:)
   REAL(DP), ALLOCATABLE :: e(:)
   
   INTEGER, PARAMETER :: maxter = 20
@@ -151,15 +151,10 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ALLOCATE(  evc( npwx, nvec ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' pregterg ',' cannot allocate evc (host) ', ABS(ierr) )
-  !
   ALLOCATE(  e( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' pregterg ',' cannot allocate e (host) ', ABS(ierr) )
   !
-
   ALLOCATE( psi(  npwx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate psi ', ABS(ierr) )
@@ -249,7 +244,6 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !$acc enter data create(psi, hpsi)
   CALL buffer%lock_buffer(ew_d, nvecx, info)
   !$acc update host( evc_d)
-  evc(:,1:nvec) = evc_d(:,1:nvec)
   !$acc kernels
   psi(:,1:nvec) = evc_d(:,1:nvec)
   !$acc end kernels
@@ -483,7 +477,6 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         CALL start_clock( 'regterg:last' )
         !
         CALL refresh_evc()
-        evc_d = evc
         !$acc update device(evc_d)
         !
         IF ( notcnv == 0 ) THEN
@@ -509,7 +502,7 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        psi(:,1:nvec) = evc(:,1:nvec)
+        psi(:,1:nvec) = evc_d(:,1:nvec)
         !$acc update device(psi)
         !
         IF ( uspp ) THEN
@@ -564,7 +557,6 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
-  DEALLOCATE( evc )
   DEALLOCATE( e )
   
   CALL buffer%release_buffer(ew_d, info)  
@@ -769,14 +761,14 @@ CONTAINS
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
-                          psi(1,ir), npwx2, vl, nx, beta, evc(1,ic), npwx2 )
+                          psi(1,ir), npwx2, vl, nx, beta, evc_d(1,ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
-                          psi(1,ir), npwx2, vtmp, nx, beta, evc(1,ic), npwx2 )
+                          psi(1,ir), npwx2, vtmp, nx, beta, evc_d(1,ic), npwx2 )
               END IF
               ! 
 
