@@ -23,8 +23,7 @@ subroutine sym_dmag (dmagtosym)
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, ft, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
-  USE control_lr, ONLY : lgamma
-  USE lr_symm_base, ONLY : minus_q, irotmq, nsymq, gi, gimq, upert, upert_mq, lr_npert
+  USE lr_symm_base, ONLY : minus_q, nsymq, gi, upert, lr_npert
 
   implicit none
 
@@ -34,8 +33,7 @@ subroutine sym_dmag (dmagtosym)
   ! ... local variables
   !
   integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
-  integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
-       irot, kpol
+  integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, kpol
   !  counter on spin polarizations
   !
   !  the rotated points
@@ -49,13 +47,13 @@ subroutine sym_dmag (dmagtosym)
   ! counter on symmetries
   ! the rotation
 
-  real(DP) :: g1 (48), g2 (48), g3 (48), in1, in2, in3
+  real(DP) :: g1 (nsymq), g2 (nsymq), g3 (nsymq), in1, in2, in3
   ! used to construct the phases
   ! auxiliary variables
 
   complex(DP), allocatable :: dmagsym (:,:,:,:,:), dmags(:,:)
   ! the symmetrized potential
-  complex(DP) ::  aux2(3), term (3, 48), phase (48), mag(3), magrot(3)
+  complex(DP) ::  term (3, nsymq), phase (nsymq), mag(3), magrot(3)
   ! auxiliary space
   ! the multiplication factor
   ! the phase factor
@@ -78,8 +76,6 @@ subroutine sym_dmag (dmagtosym)
   !
   allocate (dmagsym(  dfftp%nr1x , dfftp%nr2x , dfftp%nr3x , 3, lr_npert))
   allocate (dmags( 3, lr_npert))
-  !
-  ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !
   in1 = tpi / DBLE (dfftp%nr1)
   in2 = tpi / DBLE (dfftp%nr2)
@@ -115,16 +111,15 @@ subroutine sym_dmag (dmagtosym)
      do j = 1, dfftp%nr2
         do i = 1, dfftp%nr1
            do isym = 1, nsymq
-              irot = isym
               ! rotate_grid_point finds the rotated of i,j,k with S^-1
-              CALL rotate_grid_point(s_scaled(1,1,irot), ftau(1,irot), &
+              CALL rotate_grid_point(s_scaled(1,1,isym), ftau(1,isym), &
                    i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               dmags=(0.d0,0.d0)
               do ipert = 1, lr_npert
                  do jpert = 1, lr_npert
                     do is=2,4
                        dmags(is-1,ipert)=dmags(is-1,ipert) + &
-                            upert(jpert, ipert, irot) * &
+                            upert(jpert, ipert, isym) * &
                             dmagtosym (ri, rj, rk, is, jpert) * phase (isym)
                     enddo
                  enddo
@@ -135,12 +130,12 @@ subroutine sym_dmag (dmagtosym)
                  enddo
                  ! rotate the magnetic moment
                  do kpol = 1, 3
-                    magrot(kpol) = s(1,kpol,invs(irot))*mag(1) + &
-                                   s(2,kpol,invs(irot))*mag(2) + &
-                                   s(3,kpol,invs(irot))*mag(3)
+                    magrot(kpol) = s(1,kpol,invs(isym))*mag(1) + &
+                                   s(2,kpol,invs(isym))*mag(2) + &
+                                   s(3,kpol,invs(isym))*mag(3)
                  enddo
-                 if (sname(irot)(1:3)=='inv') magrot=-magrot
-                 if(t_rev(irot).eq.1) magrot=-magrot
+                 if (sname(isym)(1:3)=='inv') magrot=-magrot
+                 if(t_rev(isym).eq.1) magrot=-magrot
                  ! go back to cartesian coordinates
                  do kpol = 1, 3
                     mag(kpol)=at(kpol,1)*magrot(1) + &

@@ -61,7 +61,6 @@ set(sources
     lr_sym_mod.f90
     sym_def.f90
     psymdvscf.f90
-    psym_dmag.f90
     symdvscf.f90
     sym_dmag.f90
     ccg_psi.f90

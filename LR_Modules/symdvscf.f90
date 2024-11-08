@@ -33,14 +33,13 @@ subroutine symdvscf (dvtosym)
   ! ... local variables
   !
   integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
-  integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
-       irot
+  integer :: is, ri, rj, rk, i, j, k, ipert, jpert, isym
   !  counters
   real(DP) :: gf(3), n(3)
   !  temp variables
   complex(DP), allocatable :: dvsym (:,:,:,:), add_dvsym(:)
   ! the symmetrized potential
-  complex(DP) ::  aux2, term (3, 48), phase (48)
+  complex(DP) ::  aux2, term (3, nsymq), phase (nsymq)
   ! auxiliary space
   ! the multiplication factor
   ! the phase factor
@@ -131,13 +130,12 @@ subroutine symdvscf (dvtosym)
         do j = 1, dfftp%nr2
            do i = 1, dfftp%nr1
               do isym = 1, nsymq
-                 irot = isym
-                 CALL rotate_grid_point(s_scaled(1,1,irot), ftau(1,irot), &
+                 CALL rotate_grid_point(s_scaled(1,1,isym), ftau(1,isym), &
                    i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
                  add_dvsym(:) = (0.d0, 0.d0)
                  do ipert = 1, lr_npert
                     do jpert = 1, lr_npert
-                       add_dvsym(ipert) = add_dvsym(ipert) + upert(jpert, ipert, irot) * &
+                       add_dvsym(ipert) = add_dvsym(ipert) + upert(jpert, ipert, isym) * &
                                  dvtosym (ri, rj, rk, is, jpert) * phase (isym)
                     enddo
                  enddo
