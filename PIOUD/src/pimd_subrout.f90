@@ -329,6 +329,7 @@ subroutine normal_modes_fw(coord_mode,coord,first)
   use pimd_variables, only : sigmacov,yesglobal,natMD,ndimMD,nbeadMD,&
                              indx,amas,cov,cmatrix,cost1,friction_mode,&
                              gamma_eigen,gammaMD,delt,cost2,tfakeMD,pi
+  USE random_numbers, ONLY: randy
   
   implicit none
   integer :: i,k,l,kk,ind
@@ -337,6 +338,8 @@ subroutine normal_modes_fw(coord_mode,coord,first)
   real(8), dimension(:,:), allocatable :: sov5,sov6
   real(8), dimension(:), allocatable :: pimpion,sov4
   logical :: first
+
+
    
   coord_mode=0.d0
        
@@ -385,9 +388,12 @@ subroutine normal_modes_fw(coord_mode,coord,first)
        do i=1,natMD*ndimMD
    !!! gamma_eigen(i) non viene mai ricalcolato e rimane sempre uguale a gamma.....    
          cost1(k)=exp(-(friction_mode(k)+gamma_eigen(i)-gammaMD)*delt/2.d0) 
-         cost2(k)=sqrt(1.d0-cost1(k)**2)   
-         call random_number(drand1)
-         call random_number(drand2)
+         cost2(k)=sqrt(1.d0-cost1(k)**2) 
+         drand1 = randy()  
+         drand2 = randy()
+
+        !  call random_number(drand1)
+        !  call random_number(drand2)
          xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
          sov4(i) = cost1(k)*sov4(i) + sqrt(tfakeMD)*cost2(k)*xi
        enddo
@@ -412,8 +418,10 @@ subroutine normal_modes_fw(coord_mode,coord,first)
            enddo
            if (first) then
              if (.not. yesglobal .or. k .gt. 1) then ! PILE_L + PILE_G for modes > 0
-                call random_number(drand1)
-                call random_number(drand2)
+                drand1 = randy()  
+                drand2 = randy()
+                ! call random_number(drand1)
+                ! call random_number(drand2)
                 xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
                 coord_mode(l,i,k) = cost1(k)*coord_mode(l,i,k) + sqrt(amas(ind)*tfakeMD)*cost2(k)*xi
              endif
@@ -428,8 +436,10 @@ subroutine normal_modes_fw(coord_mode,coord,first)
             ind=indx(i)
             do l=1,ndimMD
               kin=kin+coord_mode(l,i,1)**2/amas(ind)
-              call random_number(drand1)
-              call random_number(drand2)
+              drand1 = randy()  
+              drand2 = randy()
+              ! call random_number(drand1)
+              ! call random_number(drand2)
               xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
               sumxi2=sumxi2+xi**2
               if (i .eq. 1) xi1=xi1+xi
@@ -560,6 +570,9 @@ subroutine propGamma
                              cov,alphaqmc_eig,delt,tempMD,&
                              gamma_eigen,cost1,cost2,pi
 
+  USE random_numbers, ONLY: randy
+
+
   implicit none
    
   integer :: i,l,ind
@@ -585,8 +598,10 @@ subroutine propGamma
        cost0=exp(-alphaqmc_eig(i)*delt/(8.d0*tempMD))
        cost1(1)=exp(-(gamma_eigen(i)-alphaqmc_eig(i)/(2.d0*tempMD))*delt/2.d0)
        cost2(1)=sqrt(1.d0-cost1(1)**2)
-       call random_number(drand1)
-       call random_number(drand2)
+       drand1 = randy()  
+       drand2 = randy()
+      !  call random_number(drand1)
+      !  call random_number(drand2)
        xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
        !xi=xi*sqrt(correct_noise)
        sov4(i) = cost0*sov4(i)
@@ -611,8 +626,10 @@ subroutine propGamma
      do i=1,natMD
        ind=indx(i)
        do l=1,ndimMD
-         call random_number(drand1)
-         call random_number(drand2)
+         drand1 = randy()  
+         drand2 = randy()
+        !  call random_number(drand1)
+        !  call random_number(drand2)
          xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
          pimp(l,i,1) = cost1(1)*pimp(l,i,1) + sqrt(amas(ind)*tempMD)*cost2(1)*xi
        enddo
@@ -809,6 +826,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
  use pimd_variables, only: kdyn_eig,yessecond &
                          ,write_cov,kdyn,nbead,ndimMD
  USE path_io_units_module,         ONLY : iunpath
+ USE random_numbers, ONLY: randy
 ! three vectors as fundamental input (bead dependent)
 ! rion, velion, forza
 ! forza(ieskin,*),velocity(3,ieskin,*),rion(3,nion,*)
@@ -1003,8 +1021,10 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
      if(yessecond) then
 ! Compute the temperature at half time intervals.
         do i=1,ieskin 
-           call random_number(drand1)
-           call random_number(drand2)
+           drand1 = randy()  
+           drand2 = randy()
+          !  call random_number(drand1)
+          !  call random_number(drand2)
            zeta=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
            sov4(i,1)=sov4(i,1)*dexp(-psip(i)*dth)                    &
                      +psip(n5+i-1)*(velion(2,i)+psip(n4+i-1)*zeta)                     
@@ -1012,16 +1032,20 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
         tmes(ibead)=dnrm2(ieskin,sov4,1)**2/ieskin 
 ! Second half time interval.
         do i=1,ieskin 
-           call random_number(drand1)
-           call random_number(drand2)
+           drand1 = randy()  
+           drand2 = randy()
+          !  call random_number(drand1)
+          !  call random_number(drand2)
            zeta=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
            velion(2,i)=sov4(i,1)*dexp(-psip(i)*dth)                    &
                        +psip(n5+i-1)*(velion(2,i)+psip(n4+i-1)*zeta)                     
         enddo
      else
         do i=1,ieskin
-           call random_number(drand1)
-           call random_number(drand2)
+           drand1 = randy()  
+           drand2 = randy()
+          !  call random_number(drand1)
+          !  call random_number(drand2)
            zeta=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
            velion(2,i)=sov4(i,1)*dexp(-psip(i)*dth)                    &
                        +psip(n5+i-1)*(velion(2,i)+psip(n4+i-1)*zeta)                     
@@ -1073,13 +1097,17 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
 !!!! START equations of motion integration 
 
      do i=1,ieskin 
+        drand1 = randy()  
+        drand2 = randy()
 
-        call random_number(drand1)
-        call random_number(drand2)
+        ! call random_number(drand1)
+        ! call random_number(drand2)
         zetan(1)=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
 
-        call random_number(drand1)
-        call random_number(drand2)
+        drand1 = randy()  
+        drand2 = randy()
+        ! call random_number(drand1)
+        ! call random_number(drand2)
         zetan(2)=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
  
 ! TEST: freezing the random number generator         
@@ -1452,7 +1480,7 @@ SUBROUTINE pimdnvt_init(epot)!,forcetmp)!(qui devo mettere forze e potenziale)
       USE path_io_units_module,         ONLY : iunpath
       IMPLICIT NONE
       
-      integer :: i,nseed, clock
+      integer :: i,nseed
       integer, allocatable :: seed(:)
       integer :: ii,ind,jj,k,l,kk
       real(8) :: tt,enh,h,en,vs,ep,elr,enk,ttk
@@ -1461,9 +1489,9 @@ SUBROUTINE pimdnvt_init(epot)!,forcetmp)!(qui devo mettere forze e potenziale)
       
       call random_seed(size=nseed)
       allocate(seed(nseed))
-      call system_clock(count=clock)
+      ! call system_clock(count=clock)
       do i=1,nseed
-         seed(i) = clock + 17*i
+         seed(i) = 3 ! clock + 17*i
       end do
       call random_seed(put=seed)
       
@@ -2054,11 +2082,13 @@ subroutine pimd_read_input(unit)
   character(len=20) :: dummy1,varname1,format_string1
   INTEGER, EXTERNAL :: myfind_free_unit
   INTEGER :: ios
+  character(len=64) :: run
+  logical, external :: imatches
    
 
 ! Namelists for input file
   namelist /dynamics/ restart_pimd,nbeadMD,nunitcells,nblocks,nstep_block  &
-                     ,iprint,irun   &
+                     ,iprint,run   &
                      ,delt,tempMD,gammaMD,sigmacov     &
                      ,delta_force,delta_harm     &
                      ,delta0,delta0k,delta0q,yessecond         &
@@ -2108,6 +2138,10 @@ subroutine pimd_read_input(unit)
           !
 !  END IF
 !  CALL mp_bcast( ios, ionode_id, world_comm )
+
+  if(imatches("verlet",run)) irun = verlet
+  if(imatches("ceriotti",run)) irun = ceriotti
+  if(imatches("pioud",run)) irun = pioud
 
 
   if(irun .eq. 0) then   
@@ -2250,6 +2284,9 @@ subroutine pimd_setvel(iff)
   use pimd_variables, only : vcm,nbeadMD,natMD,ndimMD,vel,velocity,&
                              amas,mtot,pimp,indx,fixcm,gMD,tfakeMD
 
+  USE random_numbers, ONLY: randy
+
+
   implicit none
   integer :: i,k,l,iff,ind
   real(8), dimension(:), allocatable :: v2,f
@@ -2267,7 +2304,7 @@ subroutine pimd_setvel(iff)
     do i=1,natMD
       if (iff==0) then
         do l=1,ndimMD
-          call random_number(dummy)
+          dummy = randy()  
           vel(l,i,k)=dummy-0.5d0
         enddo
       endif

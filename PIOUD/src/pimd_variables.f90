@@ -54,7 +54,7 @@ MODULE pimd_variables
                                    ! irun = 3  - Classical/Quantum Langevin dyn. with Ceriotti integrator
                                    ! irun = 4  - Quantum Langevin dyn. with PIOUD integrator
 
-
+  INTEGER,PARAMETER :: verlet=0, ceriotti=3, pioud=4
 
   
   !
