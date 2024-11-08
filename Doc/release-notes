@@ -1,3 +1,6 @@
+New in 7.5 version:
+  * Modularization of DFPT routines into dfpt_kernel by Jae-Mo Lihm
+
 Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
