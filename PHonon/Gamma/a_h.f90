@@ -150,7 +150,7 @@ SUBROUTINE A_h(npw,e,h,ah)
      dv(j) = - dv(j) - dble(drhoc(j))
   ENDDO
   !
-  CALL vloc_psi_gamma(npwx, npw, nbnd, evc, dv, ah)
+  CALL vloc_psi_gamma_acc(npwx, npw, nbnd, evc, dv, ah)
   !
   NULLIFY(drhoc)
   DEALLOCATE (dv)

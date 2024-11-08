@@ -24,7 +24,7 @@ SUBROUTINE elphon()
   USE paw_variables, ONLY : okpaw
   USE el_phon,  ONLY : done_elph
   USE dynmat, ONLY : dyn, w2
-  USE modes,  ONLY : npert, nirr, u
+  USE modes,  ONLY : npert, nirr, u, nmodes
   USE uspp_param, ONLY : nhm
   USE control_ph, ONLY : trans, xmldyn
   USE output,     ONLY : fildyn,fildvscf
@@ -73,6 +73,10 @@ SUBROUTINE elphon()
     WRITE (6, '(5x,a)') "Fourier interpolating dVscf"
     ALLOCATE(dvscfin_all(dfftp%nnr, nspin_mag, 3 * nat))
     CALL dvscf_r2q(xq, u, dvscfin_all)
+    ! To save the interpolated dVscf potential to file, uncomment below.
+    ! DO imode0 = 1, nmodes
+    !    CALL davcio_drho(dvscfin_all(1, 1, imode0), lrdrho, iudvscf, imode0, +1)
+    ! ENDDO
     !
   ELSE
     WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)

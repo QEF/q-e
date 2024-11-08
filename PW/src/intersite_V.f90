@@ -531,13 +531,15 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !  Finally, we store in rat2 the position, in the full list of atoms in
   !  the supercell, the rotated and translated second atom corresponds to.
   !     
-  USE symm_base,       ONLY : s,ft,nsym,irt
+  USE symm_base,       ONLY : s,ft,nsym,irt,chem_symb
   USE ions_base,       ONLY : nat,ityp
   USE cell_base,       ONLY : bg
   USE fft_base,        ONLY : dfftp
   USE ldaU,            ONLY : atom_pos, at_sc, sc_at, num_uc
   USE kinds
   USE io_global,       ONLY : stdout
+  USE ions_base,       ONLY : atm
+  USE noncollin_module, ONLY : colin_mag
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN)  :: at1, at2, p_sym
@@ -601,7 +603,9 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !
   DO WHILE ( at.LE.nat .AND. diff > eps )
      !
-     IF ( ityp(at).EQ.ityp(equiv_2) ) THEN
+     IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(at)) ) == chem_symb( atm(ityp(equiv_2)) ) ) & 
+           .OR. (colin_mag < 0 .AND. ityp(at) == ityp(equiv_2) ) )THEN
+     ! IF ( ityp(at).EQ.ityp(equiv_2) ) THEN
         diff = 0.d0
         DO i = 1, 3
            dx(i) = r2(i) - atom_pos(at,i)
@@ -629,7 +633,9 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !
   DO WHILE ( at.LE.nat .AND. diff > eps )
      !
-     IF ( ityp(at).EQ.ityp(at1) ) THEN
+     IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(at)) ) == chem_symb( atm(ityp(at1)) ) ) & 
+          .OR. (colin_mag < 0 .AND. ityp(at) == ityp(at1) ) )THEN
+     ! IF ( ityp(at).EQ.ityp(at1) ) THEN
         diff = 0.d0
         DO i = 1, 3
            dx(i) = r1(i) - atom_pos(at,i)

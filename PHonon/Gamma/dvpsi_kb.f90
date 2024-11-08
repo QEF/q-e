@@ -97,7 +97,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
   npw = ngk(ik)
   !
   dvpsi(:,:) = (0.d0, 0.d0)
-  CALL vloc_psi_gamma(npwx, npw, nbnd, evc, dv, dvpsi)
+  CALL vloc_psi_gamma_acc(npwx, npw, nbnd, evc, dv, dvpsi)
   !
   !   nonlocal (Kleinman-Bylander) contribution.
   !

@@ -110,6 +110,13 @@ namespace eval ::helpdoc::gui_help {
 		}
 	    }
 
+            hp {
+                if { [string match alpha_mix(*) $name] } {
+		    # in module file we have alpha_mix(1)
+		    set name alpha_mix(1)
+		}
+            }
+        
 	    ph {
 		if { $name eq "alpha_mix(niter)" } {
 		    # in module file we have alpha_mix(1)

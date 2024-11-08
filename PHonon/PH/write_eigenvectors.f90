@@ -88,7 +88,7 @@ subroutine writemodes (nat,q,w2,z,iout)
   !  write frequencies and normalised displacements
   !
   write(iout,'(5x,''diagonalizing the dynamical matrix ...''/)')
-  write(iout,'(1x,''q = '',3f12.4)') q
+  write(iout,'(1x,''q = '',3f15.8)') q
   write(iout,'(1x,74(''*''))')
   do i = 1,nat3
      !

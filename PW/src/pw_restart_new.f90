@@ -18,7 +18,7 @@ MODULE pw_restart_new
   USE kinds, ONLY: dp
   USE qes_types_module, ONLY : output_type, parallel_info_type, &
        general_info_type, input_type, gateInfo_type, dipoleOutput_type, &
-       BerryPhaseOutput_type, hybrid_type, vdw_type, dftU_type, smearing_type
+       BerryPhaseOutput_type, hybrid_type, vdw_type, dftU_type, smearing_type, sawtoothEnergy_type
   USE qes_write_module, ONLY: qes_write
   USE qes_reset_module, ONLY: qes_reset 
   USE qes_bcast_module,ONLY : qes_bcast
@@ -35,7 +35,8 @@ MODULE pw_restart_new
                           qexsd_init_outputElectricField, qexsd_init_outputPBC,        &
                           qexsd_init_gate_info, qexsd_init_hybrid,  qexsd_init_dftU,   &
                           qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm,      &
-                          qexsd_occ_obj, qexsd_bp_obj, qexsd_start_k_obj
+                          qexsd_init_sawtooth_info, qexsd_occ_obj, qexsd_bp_obj,       & 
+                          qexsd_start_k_obj
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
        qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
@@ -140,6 +141,7 @@ MODULE pw_restart_new
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
+      USE rap_point_group_is,   ONLY : sname_is
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE fcp_module,           ONLY : lfcp, fcp_mu
       USE control_flags,        ONLY : ldftd3, do_makov_payne 
@@ -206,6 +208,7 @@ MODULE pw_restart_new
       TYPE(vdW_type)               :: vdw_obj_opt
       TYPE(dftU_type)              :: dftU_obj_opt
       TYPE(smearing_type)          :: smear_obj_opt 
+      TYPE(sawtoothEnergy_type)    :: sawtooth_obj
       !
       ! Copies of optional variables (*_tg) and pointers to them (*_pt)
       ! Pointers are nullified to signal that there is no such variable
@@ -375,9 +378,18 @@ MODULE pw_restart_new
                symmetries_loop:DO isym = 1, nrot
                   classes_loop:DO iclass = 1, 12
                      elements_loop:DO ielem=1, nelem (iclass)
-                        IF ( elem(ielem,iclass) == isym) THEN
-                           symop_2_class(isym) = name_class(iclass)
-                           EXIT classes_loop
+                        ! if the time-reversal in collinear systems is not detected
+                        IF (colin_mag <= 1) THEN 
+                           IF ( elem(ielem,iclass) == isym) THEN
+                              symop_2_class(isym) = name_class(iclass)
+                              EXIT classes_loop
+                           END IF
+                        ! if the time-reversal in non-collinear systems is detected
+                        ELSE ! IF (colin_mag == 2)
+                           IF( sname_is(elem(ielem,iclass)) == sname(isym) ) THEN
+                              symop_2_class(isym) = name_class(iclass)
+                              EXIT classes_loop
+                           END IF
                         END IF
                      END DO elements_loop
                   END DO classes_loop
@@ -386,7 +398,7 @@ MODULE pw_restart_new
          END IF
          CALL qexsd_init_symmetries(output_obj%symmetries, spacegroup, &
               nsym, nrot, s, ft, sname, t_rev, nat, irt, &
-              symop_2_class(1:nrot), verbosity, noncolin,colin_mag)
+              symop_2_class(1:nrot), verbosity, noncolin, colin_mag)
          output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
@@ -750,20 +762,26 @@ MODULE pw_restart_new
             bp_el_pol = el_pol 
             bp_ion_pol(1:3) = ion_pol(1:3)
          END IF
-         IF ( tefield .AND. dipfield) THEN 
-            CALL qexsd_init_dipole_info(dipol_opt, el_dipole, ion_dipole, edir, eamp, &
+         IF (tefield) THEN 
+           CALL qexsd_init_sawtooth_info(sawtooth_obj, efield_corr_tg, edir, eamp, emaxpos, eopreg)  
+           IF (dipfield) THEN 
+              CALL qexsd_init_dipole_info(dipol_opt, el_dipole, ion_dipole, edir, eamp, &
                                   emaxpos, eopreg )  
+           ELSE 
+             dipol_opt%lwrite=.false. 
+           END IF
          ELSE 
-           dipol_opt%lwrite=.false. 
-         END IF
+           sawtooth_obj%lwrite = .false.
+         END IF 
          qexsd_bp_obj%lwrite= lberry 
          IF (output_obj%electric_field_ispresent) &
             CALL qexsd_init_outputElectricField(output_obj%electric_field, lelfield, tefield, dipfield, &
                  lberry, BP_OBJ = qexsd_bp_obj, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
-                 GATEINFO = gate_info_opt, DIPOLE_OBJ =  dipol_opt)
+                 GATEINFO = gate_info_opt, SAWTOOTH_OBJ=sawtooth_obj, DIPOLE_OBJ =  dipol_opt)
          !
          CALL qes_reset (gate_info_opt)
          CALL qes_reset (dipol_opt)
+         CALL qes_reset( sawtooth_obj) 
 
 
 !------------------------------------------------------------------------------------------------
