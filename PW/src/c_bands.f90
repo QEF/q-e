@@ -255,7 +255,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! Davidson and RMM-DIIS diagonalization uses these external routines on groups of nvec bands
   EXTERNAL h_psi, s_psi, g_psi
-  EXTERNAL h_psi_gpu, s_psi_acc, g_psi_gpu
+  EXTERNAL h_psi_gpu, s_psi_acc
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
   ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
   ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
@@ -596,7 +596,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE
              IF ( use_para_diag ) THEN
                 !$acc host_data use_device(et)
-                CALL pregterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
+                CALL pregterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, evc, ethr, &
                             et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !$acc end host_data
@@ -604,7 +604,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              ELSE
                 !
                 !$acc host_data use_device(et)
-                CALL regterg (  h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
+                CALL regterg (  h_psi_gpu, s_psi_acc, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !$acc end host_data
@@ -732,7 +732,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
           ELSE IF ( isolve == 2) then
              IF ( .not. use_gpu ) THEN
-               ! BEWARE npol should be added to the arguments
                CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
                            npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
@@ -740,7 +739,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                avg_iter = avg_iter + ppcg_iter
                !
              ELSE
-               ! BEWARE npol should be added to the arguments
                !$acc host_data use_device(evc, et, h_diag)
                CALL ppcg_k_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag, &
                            npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
@@ -928,7 +926,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              IF ( use_para_diag ) then
                 !
                 !$acc host_data use_device(et)
-                CALL pcegterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
+                CALL pcegterg_gpu( h_psi_gpu, s_psi_acc, okvan, g_psi, &
                                npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                                et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !$acc end host_data
@@ -936,7 +934,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              ELSE
                 !
                 !$acc host_data use_device(et)
-                CALL cegterg ( h_psi_gpu, s_psi_acc, okvan, g_psi_gpu, &
+                CALL cegterg ( h_psi_gpu, s_psi_acc, okvan, g_psi, &
                                npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                                et(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !$acc end host_data 

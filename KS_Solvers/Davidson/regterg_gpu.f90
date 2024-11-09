@@ -90,10 +90,6 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
     ! do-loop counters
   INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: ew(:)
-  REAL(DP), POINTER :: ew_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: ew_d
-#endif
   REAL(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
@@ -230,6 +226,7 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate ew ', ABS(ierr) )
+  !$acc enter data create(ew)
   !
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -242,7 +239,6 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   conv   = .FALSE.
   !
   !$acc enter data create(psi, hpsi)
-  CALL buffer%lock_buffer(ew_d, nvecx, info)
   !$acc update host( evc_d)
   !$acc kernels
   psi(:,1:nvec) = evc_d(:,1:nvec)
@@ -333,11 +329,8 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... approximate inverse iteration
      !
-     ew_d = ew
-     !$acc update device(psi)
-     !$acc host_data use_device(psi)
-     CALL g_psi_ptr( npwx, npw, notcnv, 1, psi(1,nb1), ew_d(nb1) )
-     !$acc end host_data
+     !$acc update device(ew,psi)
+     CALL g_psi_ptr( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
      !$acc update host(psi)
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
@@ -556,10 +549,9 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( nrc_ip )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
-  DEALLOCATE( ew )
   DEALLOCATE( e )
-  
-  CALL buffer%release_buffer(ew_d, info)  
+  !$acc exit data delete(ew)
+  DEALLOCATE( ew )
   !
   IF ( uspp ) THEN
      !$acc exit data delete(spsi)
