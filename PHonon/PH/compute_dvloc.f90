@@ -22,7 +22,8 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g
   USE gvecs,            ONLY : ngms
-  USE lsda_mod,         ONLY : nspin, lsda, current_spin
+  USE lsda_mod,         ONLY : lsda, current_spin
+  USE noncollin_module, ONLY : nspin_mag
   USE uspp,             ONLY : nlcc_any
   USE eqv,              ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
@@ -109,9 +110,9 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   if (nlcc_any.and.addnlcc) then
      allocate (drhoc( dfftp%nnr))
-     allocate (aux( dfftp%nnr,nspin))
+     allocate (aux( dfftp%nnr,nspin_mag))
      nnp=dfftp%nnr
-     !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin))
+     !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin_mag))
      !
      CALL addcore (uact, drhoc)
      !
