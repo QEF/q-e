@@ -93,10 +93,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
     ! do-loop counters
   INTEGER :: i, j, k, ierr
   REAL(DP), ALLOCATABLE :: ew(:)
-  REAL(DP), POINTER :: ew_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: ew_d
-#endif
   COMPLEX(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
@@ -252,8 +248,7 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  !$acc enter data create(psi, hpsi)
-  CALL buffer%lock_buffer(ew_d, nvecx, ierr)
+  !$acc enter data create(psi, hpsi, ew)
   !$acc update host( evc_d)
   !$acc kernels
   psi(:,1:nvec) = evc_d(:,1:nvec)
@@ -340,11 +335,8 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... approximate inverse iteration
      !
-     ew_d = ew
-     !$acc update device(psi)
-     !$acc host_data use_device(psi)
-     CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew_d(nb1) )
-     !$acc end host_data
+     !$acc update device(psi, ew)
+     CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
      !$acc update host(psi)
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
@@ -578,11 +570,9 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( nrc_ip )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
-  DEALLOCATE( ew )
   DEALLOCATE( e )
-  
-  CALL buffer%release_buffer(ew_d, ierr)
-  !
+  !$acc exit data delete(ew)
+  DEALLOCATE( ew )  
   IF ( uspp ) THEN
      !$acc exit data delete(spsi)
      DEALLOCATE( spsi )

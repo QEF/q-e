@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2024 Quantum ESPRESO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,92 +8,59 @@
 #define TEST_NEW_PRECONDITIONING
 !
 !-----------------------------------------------------------------------
-SUBROUTINE g_psi( lda, n, m, npol, psi, e )
-  !-----------------------------------------------------------------------
-  !! This routine computes an estimate of the inverse Hamiltonian
-  !! and applies it to m wavefunctions.
-  !
+subroutine g_psi (lda, n, m, npol, psi, e)
+  !---------------------------------------------------------------------
   USE kinds
-  USE g_psi_mod
+  USE g_psi_mod, ONLY : h_diag, s_diag
   !
-  IMPLICIT NONE
+  implicit none
+  integer :: lda, n, m, npol, ipol
+  ! input: the leading dimension of psi
+  ! input: the real dimension of psi
+  ! input: the number of bands
+  ! input: the number of coordinates of psi
+  ! local variable: counter of coordinates of psi
+  real(DP) :: e (m)
+  ! input: the eigenvectors
+  complex(DP) :: psi (lda, npol, m)
+  ! inp/out: the psi vector
   !
-  INTEGER, intent(in) :: lda
-  !! input: the leading dimension of psi
-  INTEGER,intent(in) :: n
-  !! input: the real dimension of psi
-  INTEGER,intent(in) :: m
-  !! input: the number of coordinates of psi
-  INTEGER, intent(in) :: npol
-  !! input: the number of bands
-  COMPLEX(DP) :: psi(lda, npol, m)
-  !! inp/out: the psi vector
-  REAL(DP), intent(in) :: e(m)
-  !! input: the eigenvectors
+  !    Local variables
   !
-  !  ... local variables
-  !
-  INTEGER :: ipol
-  ! counter of coordinates of psi
-  REAL(DP), PARAMETER :: eps = 1.0d-4
+  real(DP), parameter :: eps = 1.0d-4
   ! a small number
-  REAL(DP) :: x, scala, denm
-  !
-  INTEGER :: k, i
+  real(DP) :: x, scala, denm
+  integer :: k, i
   ! counter on psi functions
   ! counter on G vectors
-  INTEGER, PARAMETER :: blocksize = 256
-  INTEGER :: iblock, numblock
-  ! chunking parameters
   !
-  CALL start_clock( 'g_psi' )
+  call start_clock_gpu ('g_psi')
   !
-  ! compute the number of chuncks
-  numblock  = (n+blocksize-1)/blocksize
-  !
-#ifdef TEST_NEW_PRECONDITIONING
+  !$acc data present(h_diag, s_diag, psi, e)
   scala = 1.d0
-  !$omp parallel do collapse(3) private(x, denm)
-  DO k = 1, m
-     DO ipol=1, npol
-        DO iblock = 1, numblock
-           DO i = (iblock-1)*blocksize+1, MIN( iblock*blocksize, n )
-              x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
-              denm = 0.5_dp*(1.d0+x+SQRT(1.d0+(x-1)*(x-1.d0)))/scala
-              psi (i, ipol, k) = psi (i, ipol, k) / denm
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
-  !$omp end parallel do
+  !$acc parallel loop collapse(3)
+  do ipol=1,npol
+     do k = 1, m
+        do i = 1, n
+#ifdef TEST_NEW_PRECONDITIONING
+           x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
+           denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
+           psi (i, ipol, k) = psi (i, ipol, k) / denm
 #else
-  !$omp parallel do collapse(3) private(denm)
-  DO ipol=1,npol
-     DO k = 1, m
-        DO iblock = 1, numblock
-           DO i = (iblock-1)*blocksize+1, MIN( iblock*blocksize, n )
-              denm = h_diag(i,ipol) - e(k) * s_diag(i,ipol)
-              !
-              ! denm = g2+v(g=0) - e(k)
-              !
-                 IF (ABS(denm) < eps) denm = SIGN( eps, denm )
-              !
-              ! denm = sign( max( abs(denm),eps ), denm )
-              !
-              psi(i, ipol, k) = psi(i, ipol, k) / denm
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
-  !$omp end parallel do
+           !
+           ! denm = g2+v(g=0)-e(k)*s  with  |denm| >= eps
+           !
+           denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
+           if (abs (denm) < eps) denm = sign (eps, denm)
+           psi (i, ipol, k) = psi (i, ipol, k) / denm
 #endif
-  !
-  CALL stop_clock( 'g_psi' )
-  !
-  RETURN
-  !
-END SUBROUTINE g_psi
-
+        enddo
+     enddo
+  enddo
+  !$acc end data
+  call stop_clock ('g_psi')
+  return
+end subroutine g_psi
 !-----------------------------------------------------------------------
 subroutine g_1psi (lda, n, psi, e)
   !-----------------------------------------------------------------------
@@ -110,13 +77,8 @@ subroutine g_1psi (lda, n, psi, e)
   complex(DP) :: psi (lda, npol) ! inp/out: the psi vector
   real(DP), intent(in) :: e     ! input: the eigenvector
   !
-  call start_clock ('g_1psi')
-
   ! convert scalar e to size-1 vector [e] to exactly match g_psi argument type
   CALL g_psi (lda, n, 1, npol, psi, [e])
 
-  call stop_clock ('g_1psi')
-
   return
-
-end subroutine g_1psi
+  end
