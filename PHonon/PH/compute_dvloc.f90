@@ -139,19 +139,20 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      !$acc kernels present(auxs)
      auxs(:) = (0.d0, 0.d0)
      !$acc end kernels
-     !$acc parallel loop present(auxs,aux)
      IF (lsda) THEN
+       !$acc parallel loop present(auxs,aux)
        do ig=1,ngms
           itmp = nl_d(ig)
           itmpp = nlp_d(ig)
           auxs(itmp) = aux(itmpp,current_spin)
        enddo
      ELSE
-      do ig=1,ngms
-         itmp = nl_d(ig)
-         itmpp = nlp_d(ig)
-         auxs(itmp) = aux(itmpp,1)
-      enddo
+       !$acc parallel loop present(auxs,aux)
+       do ig=1,ngms
+          itmp = nl_d(ig)
+          itmpp = nlp_d(ig)
+          auxs(itmp) = aux(itmpp,1)
+       enddo
      ENDIF
      !$acc kernels present(dvlocin,auxs)
      dvlocin(:) = dvlocin(:) + auxs(:)
