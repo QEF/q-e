@@ -22,7 +22,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g
   USE gvecs,            ONLY : ngms
-  USE lsda_mod,         ONLY : nspin
+  USE lsda_mod,         ONLY : nspin, lsda, current_spin
   USE uspp,             ONLY : nlcc_any
   USE eqv,              ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
@@ -123,7 +123,11 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      deallocate (drhoc)
      !
      !$acc host_data use_device(aux)
-     CALL fwfft ('Rho', aux(:,1), dfftp)
+     IF (lsda) THEN
+        CALL fwfft ('Rho', aux(:,current_spin), dfftp)
+     ELSE
+        CALL fwfft ('Rho', aux(:,1), dfftp)
+     ENDIF
      !$acc end host_data
 !
 !  This is needed also when the smooth and the thick grids coincide to
@@ -135,11 +139,19 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      auxs(:) = (0.d0, 0.d0)
      !$acc end kernels
      !$acc parallel loop present(auxs,aux)
-     do ig=1,ngms
-        itmp = nl_d(ig)
-        itmpp = nlp_d(ig)
-        auxs(itmp) = aux(itmpp,1)
-     enddo
+     IF (lsda) THEN
+       do ig=1,ngms
+          itmp = nl_d(ig)
+          itmpp = nlp_d(ig)
+          auxs(itmp) = aux(itmpp,current_spin)
+       enddo
+     ELSE
+      do ig=1,ngms
+         itmp = nl_d(ig)
+         itmpp = nlp_d(ig)
+         auxs(itmp) = aux(itmpp,1)
+      enddo
+     ENDIF
      !$acc kernels present(dvlocin,auxs)
      dvlocin(:) = dvlocin(:) + auxs(:)
      !$acc end kernels
