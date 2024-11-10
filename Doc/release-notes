@@ -1,3 +1,6 @@
+New in 7.4.1 version:
+  * Modularization of DFPT routines into dfpt_kernel by Jae-Mo Lihm
+
 Fixed in 7.4.1 version:
   * Error in qexml_init might cause EPW to fail in some cases
   * Case tefield=.true.: bad xml tag written

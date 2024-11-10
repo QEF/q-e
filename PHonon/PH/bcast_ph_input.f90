@@ -16,10 +16,9 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE control_lr, ONLY : lgamma, lrpa
-  USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
-                         niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
-                         ldisp, reduce_io, zue, zeu, epsil, trans, &
+  USE control_lr, ONLY : lgamma, lrpa, nmix_ph, niter_ph, alpha_mix, tr2_ph, reduce_io
+  USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, &
+                         lnoloc, recover, ldisp, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
                          qplot, only_init, only_wfc, low_directory_check,&
                          nk1, nk2, nk3, k1, k2, k3

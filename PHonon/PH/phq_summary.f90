@@ -29,8 +29,7 @@ subroutine phq_summary
   USE funct,         ONLY : write_dft_name
   USE run_info,      ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr
-  USE control_ph,    ONLY : lgamma_gamma, lnoloc, zue, epsil, ldisp, &
-                            nmix_ph, alpha_mix, tr2_ph, zeu, search_sym
+  USE control_ph,    ONLY : lnoloc, zue, epsil, ldisp, zeu, search_sym
   USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
   USE modes,         ONLY : u, npert, nirr, name_rap_mode
@@ -44,7 +43,8 @@ subroutine phq_summary
   USE ldaU_lr,       ONLY : effU
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0, &
                             lda_plus_u_kind, is_hubbard
- 
+  USE control_lr,    ONLY : lgamma_gamma, nmix_ph, alpha_mix, tr2_ph
+
   implicit none
 
   integer :: i, mu, nu, ipol, apol, na, nt, isymq, isym, nsymtot, &

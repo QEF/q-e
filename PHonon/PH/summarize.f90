@@ -16,8 +16,8 @@ SUBROUTINE summarize_epsilon()
   USE cell_base, ONLY: omega
   USE noncollin_module, ONLY : npol
   USE efield_mod, ONLY : epsilon
-  USE control_ph, ONLY : lgamma_gamma, lnoloc, done_epsil
-  USE control_lr, ONLY : lrpa
+  USE control_ph, ONLY : lnoloc, done_epsil
+  USE control_lr, ONLY : lgamma_gamma, lrpa
 
   IMPLICIT NONE
 

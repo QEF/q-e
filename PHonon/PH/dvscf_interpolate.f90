@@ -874,7 +874,7 @@ MODULE dvscf_interpolate
   !!
   !! 2D Coulomb cutoff is not implemented.
   !!
-  !! Adapted from PHonon/PH/dvqpsi_us.f90 by Jae-Mo Lihm
+  !! Adapted from PHonon/PH/compute_dvloc.f90 by Jae-Mo Lihm
   !!
   !----------------------------------------------------------------------------
     !
@@ -925,7 +925,7 @@ MODULE dvscf_interpolate
     ! ! by the routine below and stored
     ! IF (do_cutoff_2D) call cutoff_lr_Vlocq()
     !
-    ! Below are adapted from PH/dvqpsi_us.f90
+    ! Below are adapted from PH/compute_dvloc.f90
     ! Here, we consider all Cartesian perterbation
     ! uact(jmode) = delta_{imode, jmode}
     !

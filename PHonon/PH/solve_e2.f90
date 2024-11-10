@@ -27,8 +27,6 @@ subroutine solve_e2
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY : nhm
   USE wavefunctions,  ONLY: evc
-  USE control_ph, ONLY : convt, nmix_ph, alpha_mix, tr2_ph, &
-                         niter_ph, rec_code, flmixdpot, rec_code_read
   USE units_lr,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE recover_mod, ONLY : read_rec, write_rec
@@ -40,7 +38,8 @@ subroutine solve_e2
 
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : nksq, ikks, ikqs
-  USE control_lr, ONLY : nbnd_occ, lgamma
+  USE control_lr, ONLY : nbnd_occ, lgamma, convt, nmix_ph, alpha_mix, tr2_ph, niter_ph, &
+                         rec_code, rec_code_read, flmixdpot
   USE dv_of_drho_lr
   USE uspp_init,        ONLY : init_us_2
 

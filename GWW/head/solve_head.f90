@@ -28,7 +28,7 @@ subroutine solve_head
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
                                    l_scissor,scissor,len_head_block_freq, &
                                    len_head_block_wfc, l_easy
-  USE control_ph,           ONLY : tr2_ph
+  USE control_lr,           ONLY : tr2_ph
   USE gvect,                ONLY : ngm, ngm_g, ig_l2g, gstart, g
   USE gvecs,                ONLY : doublegrid
   USE mp,                   ONLY : mp_sum, mp_barrier, mp_bcast

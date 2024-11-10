@@ -948,7 +948,8 @@ subroutine dynmat0
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
-  USE control_ph,    ONLY : rec_code_read, current_iq
+  USE control_ph,    ONLY : current_iq
+  USE control_lr,    ONLY : rec_code_read
   USE modes,         ONLY : u, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
@@ -1321,10 +1322,9 @@ subroutine dynmatrix(iq_)
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
-  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
-                            start_irr, last_irr, done_zue, where_rec, &
-                            rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
-                            current_iq
+  USE control_ph,    ONLY : epsil, zue, search_sym, ldisp, &
+                            start_irr, last_irr, done_zue, &
+                            ldiag, done_epsil, done_zeu, xmldyn, current_iq
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
@@ -1337,7 +1337,7 @@ subroutine dynmatrix(iq_)
 
   USE lr_symm_base, ONLY : minus_q, irotmq, nsymq, irgq, rtau
   USE qpoint,       ONLY : xq
-  USE control_lr,   ONLY : lgamma
+  USE control_lr,   ONLY : lgamma, lgamma_gamma, where_rec, rec_code
 
   implicit none
   INTEGER, INTENT(IN) :: iq_

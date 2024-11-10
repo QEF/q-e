@@ -18,8 +18,7 @@
   !! In this routine the first processor sends the input to all the other processors
   !!
 #if defined(__MPI)
-  USE phcom,         ONLY : zue, trans, tr2_ph, nmix_ph, niter_ph, lnscf,     &
-                            ldisp, fildvscf, fildrho, epsil, alpha_mix
+  USE output,        ONLY : fildvscf, fildrho
   USE input,         ONLY : epexst, epbwrite, ep_coupling,                    &
                             eliashberg, elecselfen, eig_read, plselfen,       &
                             efermi_read, dvscf_dir, delta_smear, ngaussw,     &
@@ -98,12 +97,7 @@
   !
   ! logicals
   !
-  CALL mp_bcast(epsil           , meta_ionode_id, world_comm)
-  CALL mp_bcast(trans           , meta_ionode_id, world_comm)
-  CALL mp_bcast(zue             , meta_ionode_id, world_comm)
   CALL mp_bcast(elph            , meta_ionode_id, world_comm)
-  CALL mp_bcast(lnscf           , meta_ionode_id, world_comm)
-  CALL mp_bcast(ldisp           , meta_ionode_id, world_comm)
   CALL mp_bcast(elecselfen      , meta_ionode_id, world_comm)
   CALL mp_bcast(phonselfen      , meta_ionode_id, world_comm)
   CALL mp_bcast(plselfen        , meta_ionode_id, world_comm)
@@ -202,8 +196,6 @@
   !
   ! integers
   !
-  CALL mp_bcast(niter_ph    , meta_ionode_id, world_comm)
-  CALL mp_bcast(nmix_ph     , meta_ionode_id, world_comm)
   CALL mp_bcast(iverbosity  , meta_ionode_id, world_comm)
   CALL mp_bcast(ngaussw     , meta_ionode_id, world_comm)
   CALL mp_bcast(nw          , meta_ionode_id, world_comm)
@@ -245,9 +237,7 @@
   !
   ! REAL*8
   !
-  CALL mp_bcast(tr2_ph        , meta_ionode_id, world_comm)
   CALL mp_bcast(amass         , meta_ionode_id, world_comm)
-  CALL mp_bcast(alpha_mix     , meta_ionode_id, world_comm)
   CALL mp_bcast(xq            , meta_ionode_id, world_comm)
   CALL mp_bcast(degaussw      , meta_ionode_id, world_comm)
   CALL mp_bcast(delta_smear   , meta_ionode_id, world_comm)

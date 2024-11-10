@@ -40,10 +40,12 @@ set(src_ph
     PH/d2nsq_bare.f90
     PH/dnsq_bare.f90
     PH/dnsq_orth.f90
+    PH/dnsq_orth_set_irr.f90
     PH/dnsq_scf.f90
     PH/davcio_drho.f90
     PH/dfile_autoname.f90
     PH/dfile_star.f90
+    PH/dfpt_kernels.f90
     PH/dielec.f90
     PH/do_phonon.f90
     PH/do_q2r.f90
@@ -105,9 +107,6 @@ set(src_ph
     PH/prepare_q.f90
     PH/prepare_sym_analysis.f90
     PH/psidspsi.f90
-    PH/psymdvscf.f90
-    PH/psym_dmag.f90
-    PH/psym_dmage.f90
     PH/punch_plot_e.f90
     PH/q_points.f90
     PH/q_points_wannier.f90
@@ -133,16 +132,11 @@ set(src_ph
     PH/stop_ph.f90
     PH/summarize.f90
     PH/sym_and_write_zue.f90
-    PH/sym_def.f90
-    PH/sym_dmag.f90
-    PH/sym_dmage.f90
-    PH/symdvscf.f90
     PH/symdyn_munu.f90
     PH/symdynph_gq.f90
     PH/symm.f90
     PH/symmorphic_or_nzb.f90
     PH/swfc.f90
-    PH/syme_dns.f90
     PH/sym_dns.f90
     PH/sym_dns_wrapper.f90
     PH/transform_int_so.f90
@@ -151,6 +145,7 @@ set(src_ph
     PH/transform_alphasum_so.f90
     PH/tra_write_matrix.f90
     PH/trntnsc.f90
+    PH/twochem_postproc_dfpt.f90
     PH/write_epsilon_and_zeu.f90
     PH/write_qplot_data.f90
     PH/write_matrix.f90

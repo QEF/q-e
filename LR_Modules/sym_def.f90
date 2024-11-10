@@ -6,8 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-MODULE sym_def_module
-CONTAINS
 SUBROUTINE sym_def(def)
   !---------------------------------------------------------------------
   !! Symmetrizes the first order changes of the Fermi energies of an
@@ -17,7 +15,7 @@ SUBROUTINE sym_def(def)
   !! Used in the q=0 metallic case only.
   !
   USE kinds,        ONLY : DP
-  USE control_ph,   ONLY : lgamma_gamma
+  USE control_lr,   ONLY : lgamma_gamma
   USE lr_symm_base, ONLY : minus_q, nsymq, lr_npert, upert, upert_mq
   !
   IMPLICIT NONE
@@ -71,4 +69,3 @@ SUBROUTINE sym_def(def)
   def = w_def / DBLE(nsymq)
   !
 END SUBROUTINE sym_def
-END MODULE sym_def_module

@@ -51,8 +51,7 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE eqv,           ONLY : dpsi
   USE wvfct,         ONLY : npwx, nbnd
-  USE control_lr,    ONLY : lgamma
-  USE control_ph,    ONLY : rec_code_read
+  USE control_lr,    ONLY : lgamma, rec_code_read
   USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE wavefunctions, ONLY : evc
   USE klist,         ONLY : wk, lgauss, ltetra, ngk, igk_k
@@ -120,7 +119,7 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   !
   IF (rec_code_read==10) THEN
      !WRITE(stdout,*) 'rec_code_read', rec_code_read
-     CALL dnsq_scf (nper, lmetq0, nu_i0, irr, .true.)  
+     CALL dnsq_scf (nper, lmetq0)
   ENDIF
   !
   ! We need a sum over all k points 

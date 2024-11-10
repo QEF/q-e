@@ -21,7 +21,8 @@ subroutine dynmat0_new
   USE symm_base,     ONLY : irt, s, invs
   USE control_flags, ONLY : modenum, llondon, lxdm, ldftd3
   USE ph_restart,    ONLY : ph_writefile
-  USE control_ph,    ONLY : rec_code_read, current_iq
+  USE control_ph,    ONLY : current_iq
+  USE control_lr,    ONLY : rec_code_read
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : u, nmodes
   USE partial,       ONLY : done_irr, comp_irr

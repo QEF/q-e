@@ -88,8 +88,7 @@ subroutine phq_recover
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE ph_restart,    ONLY : ph_readfile
-  USE control_ph,    ONLY : epsil, rec_code_read, all_done, where_rec,&
-                            zeu, done_epsil, done_zeu, ext_recover, recover, &
+  USE control_ph,    ONLY : epsil, all_done, zeu, done_epsil, done_zeu, ext_recover, recover, &
                             zue, trans, current_iq, low_directory_check
   USE wvfct,         ONLY : nbnd
   USE el_phon,       ONLY : el_ph_mat, el_ph_mat_rec, done_elph, elph
@@ -102,7 +101,7 @@ subroutine phq_recover
   USE dynmat,        ONLY : dyn, dyn_rec
 
   USE qpoint,        ONLY : nksq
-  USE control_lr,    ONLY : lgamma
+  USE control_lr,    ONLY : lgamma, rec_code_read, where_rec
   !
   implicit none
   !

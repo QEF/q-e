@@ -38,14 +38,13 @@ subroutine dvanqq
   USE mp,        ONLY: mp_sum
 
   USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
-  USE control_ph, ONLY : rec_code_read
   USE partial, ONLY :  nat_todo, nat_todo_input, atomo, set_local_atomo
   USE lr_symm_base, ONLY  :  nsymq 
   USE symm_base,    ONLY  :  irt    
 
   USE eqv,        ONLY : vlocq
   USE qpoint,     ONLY : eigqts, xq
-  USE control_lr, ONLY : lgamma
+  USE control_lr, ONLY : lgamma, rec_code_read
 
   implicit none
   !

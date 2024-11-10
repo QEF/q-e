@@ -490,10 +490,6 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
                  ! FIXME: .false. or .true. ???
                  CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
                  !
-                 ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
-                 !
-                 IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(1,mode)) 
-                 !
               ELSE
                  IF (okvan) THEN
                     deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)

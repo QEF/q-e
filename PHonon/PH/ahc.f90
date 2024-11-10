@@ -160,8 +160,7 @@ SUBROUTINE ahc_do_upperfan(ik)
   USE modes,            ONLY : nmodes
   USE eqv,              ONLY : dvpsi, dpsi, evq
   USE units_lr,         ONLY : lrwfc, iuwfc
-  USE control_ph,       ONLY : tr2_ph
-  USE control_lr,       ONLY : lgamma
+  USE control_lr,       ONLY : lgamma, tr2_ph
   USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE

@@ -36,7 +36,8 @@ CONTAINS
     USE fft_base, ONLY : dfftp
     USE uspp, ONLY : okvan, nlcc_any
     USE phus, ONLY : int1, int2
-    USE control_ph, ONLY : where_rec, rec_code, reduce_io, current_iq
+    USE control_lr, ONLY : where_rec, rec_code, reduce_io
+    USE control_ph, ONLY : current_iq
     USE ph_restart, ONLY : ph_writefile
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE io_files, ONLY : seqopn
@@ -111,7 +112,8 @@ CONTAINS
     USE lsda_mod, ONLY : nspin
     USE noncollin_module, ONLY : noncolin, nspin_mag
     USE units_ph, ONLY : this_pcxpsi_is_on_file
-    USE control_ph, ONLY : ext_recover, convt
+    USE control_lr, ONLY : convt
+    USE control_ph, ONLY : ext_recover
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE phus, ONLY : int1, int2
     USE io_files, ONLY : seqopn
