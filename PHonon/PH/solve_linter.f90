@@ -49,6 +49,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
   USE buffers,              ONLY : save_buffer, get_buffer
+  USE ldaU,                 ONLY : lda_plus_u
   USE control_ph,           ONLY : ext_recover
   USE el_phon,              ONLY : elph
   USE uspp,                 ONLY : nlcc_any
@@ -280,7 +281,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      ENDIF ! fildvscf
      !
-     CALL dnsq_store(npe, imode0)
+     IF (lda_plus_u) CALL dnsq_store(npe, imode0)
      !
   ENDIF ! convt
   !

@@ -40,6 +40,7 @@ subroutine solve_e
   USE uspp_param,            ONLY : nhm
   USE noncollin_module,      ONLY : nspin_mag
   USE paw_variables,         ONLY : okpaw
+  USE ldaU,                  ONLY : lda_plus_u
   USE units_ph,              ONLY : lrdrho, iudrho, lrebar, iuebar
   USE units_lr,              ONLY : iuwfc, lrwfc
   USE output,                ONLY : fildrho
@@ -155,7 +156,7 @@ subroutine solve_e
   !
   CALL dfpt_kernel('PHONON', 3, iter0, lrebar, iuebar, dr2, drhos, drhop, dvscfins, dvscfin, dbecsum, 1, 0, 'efield')
   !
-  CALL dnsq_store(3, 0)
+  IF (lda_plus_u) CALL dnsq_store(3, 0)
   !
 155 continue
   !
