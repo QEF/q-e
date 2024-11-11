@@ -956,7 +956,7 @@ SUBROUTINE control_iosys()
      isolve = 2
      max_ppcg_iter = diago_ppcg_maxiter
      !
-  CASE ( 'paro' )
+  CASE ( 'paro', 'ParO' )
      !
      isolve = 3
      !
