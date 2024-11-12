@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
+SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
   !-----------------------------------------------------------------------
   !! Driver routine for the solution of the linear system that
   !! defines the change of the wavefunction due to a lattice distorsion.
@@ -79,20 +79,20 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !! input: the number of perturbation
   integer :: imode0
   !! input: the position of the modes
-  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe)
+  complex(DP) :: drhos(dffts%nnr,nspin_mag,npe)
   !! output: the change of the scf charge
+  complex(DP) :: drhop(dfftp%nnr,nspin_mag,npe)
+  !! output: the change of the scf charge, including augmentation
   !
   ! ... local variables
   !
   real(DP) :: dr2
   ! dr2   : self-consistency error
   !
-  complex(DP), allocatable, target :: dvscfin(:,:,:)
+  complex(DP), allocatable, target :: dvscfp(:,:,:)
   ! change of the scf potential
-  complex(DP), pointer :: dvscfins (:,:,:)
+  complex(DP), pointer :: dvscfs (:,:,:)
   ! change of the scf potential (smooth part only)
-  complex(DP), allocatable :: drhoscfh (:,:,:)
-  ! change of rho / scf potential (output)
   complex(DP), allocatable :: dbecsum (:,:,:,:)
   ! the derivative of becsum
   COMPLEX(DP), allocatable :: drhoc(:, :)
@@ -126,32 +126,31 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   nsolv=1
   IF (noncolin.AND.domag) nsolv=2
 
-  allocate (dvscfin ( dfftp%nnr , nspin_mag , npe))
+  allocate (dvscfp ( dfftp%nnr , nspin_mag , npe))
   nnr = dfftp%nnr
-  dvscfin=(0.0_DP,0.0_DP)
+  dvscfp=(0.0_DP,0.0_DP)
   if (doublegrid) then
-     allocate (dvscfins (dffts%nnr , nspin_mag , npe))
-     dvscfins = (0.d0, 0.d0)
+     allocate (dvscfs (dffts%nnr , nspin_mag , npe))
+     dvscfs = (0.d0, 0.d0)
      nnr = dffts%nnr
   else
-     dvscfins => dvscfin
+     dvscfs => dvscfp
   endif
-  allocate (drhoscfh ( dfftp%nnr, nspin_mag , npe))
   allocate (drhoc (dfftp%nnr, npe))
   allocate (dbecsum((nhm * (nhm + 1))/2, nat, nspin_mag , npe))
   dbecsum = (0.0_DP, 0.0_DP)
   !
-  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1:npe))
+  !$acc enter data create(dvscfs(1:nnr, 1:nspin_mag, 1:npe))
   !
   if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
      IF (okpaw) THEN
-        CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum)
+        CALL read_rec(dr2, iter0, npe, dvscfp, dvscfs, drhop, dbecsum)
         IF (convt) THEN
            CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
         ENDIF
      ELSE
-        CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh)
+        CALL read_rec(dr2, iter0, npe, dvscfp, dvscfs, drhop)
      ENDIF
      rec_code=0
   else
@@ -241,8 +240,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !
   !    Solve DFPT fixed-point equation
   !
-  CALL dfpt_kernel('PHONON', npe, iter0, lrbar, iubar, dr2, drhoscf, drhoscfh, dvscfins, &
-                   dvscfin, dbecsum, irr, imode0, 'phonon', drhoc = drhoc)
+  CALL dfpt_kernel('PHONON', npe, iter0, lrbar, iubar, dr2, drhos, drhop, dvscfs, &
+                   dvscfp, dbecsum, irr, imode0, 'phonon', drhoc = drhoc)
   !
 155 CONTINUE
   !
@@ -252,8 +251,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !    We compute it here.
   !
   IF (convt) THEN
-     CALL drhodvus (irr, imode0, dvscfin, npe)
-     IF (nlcc_any) CALL dynmat_nlcc (imode0, drhoscfh, npe)
+     CALL drhodvus (irr, imode0, dvscfp, npe)
+     IF (nlcc_any) CALL dynmat_nlcc (imode0, drhop, npe)
      !
      ! Write charge density to file
      !
@@ -266,7 +265,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         ENDIF ! ionode
         !
         DO ipert = 1, npe
-           CALL davcio_drho(drhoscfh(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
+           CALL davcio_drho(drhop(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
         ENDDO
         CLOSE (UNIT = iudrho, STATUS='keep')
         !
@@ -274,21 +273,20 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      if (fildvscf.ne.' ') then
         do ipert = 1, npe
-           call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
+           call davcio_drho ( dvscfp(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
            IF (okpaw.AND.ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                               iuint3paw, imode0+ipert, + 1 )
         end do
-        if (elph) call elphel (irr, npe, imode0, dvscfins)
+        if (elph) call elphel (irr, npe, imode0, dvscfs)
      ENDIF ! fildvscf
      !
      IF (lda_plus_u) CALL dnsq_store(npe, imode0)
      !
   ENDIF ! convt
   !
-  deallocate (drhoscfh)
-  !$acc exit data delete(dvscfins)
-  if (doublegrid) deallocate (dvscfins)
-  deallocate (dvscfin)
+  !$acc exit data delete(dvscfs)
+  if (doublegrid) deallocate (dvscfs)
+  deallocate (dvscfp)
   deallocate (drhoc)
   DEALLOCATE(dbecsum)
 
