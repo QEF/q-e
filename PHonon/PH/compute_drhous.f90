@@ -21,7 +21,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE uspp_param, ONLY : nhm
   USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
   USE klist,      ONLY : xk, wk, ngk, igk_k
-  USE fft_base,   ONLY: dffts, dfftp
+  USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: invfft
   USE wvfct,      ONLY : nbnd
   !
@@ -44,7 +44,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
 
   complex(DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat)
   !! output:the derivative of becsum
-  complex(DP) :: drhous (dfftp%nnr, nspin, 3 * nat)
+  complex(DP) :: drhous (dffts%nnr, nspin, 3 * nat)
   !! output: add the orthogonality term
   type (bec_type) :: becq(nksq)  ! (nkb, nbnd)
   !! input: the becp with \(\text{psi}_{k+q}\)

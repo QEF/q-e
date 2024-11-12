@@ -49,7 +49,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !!
    !! Output:
    !!    - avg_iter: average number of iterations for the linear equation solver
-   !!    - drhoout: induced charge density
+   !!    - drhoout: induced charge density (dffts, without augmentation term)
    !!    - dbecsum: becsum with dpsi
    !!    - dbecsum_nc: becsum with dpsi. Optional, used if noncolin is true.
    !!

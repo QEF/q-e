@@ -114,9 +114,11 @@ MODULE eqv
   !
   COMPLEX (DP), POINTER :: evq(:,:)
   ! the wavefunctions at point k+q
-  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
+  COMPLEX (DP), ALLOCATABLE :: drhos(:,:,:)
+  !! the change of the density (smooth part only, dffts)
   REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin)
   ! the derivative of the xc potential
   REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)

@@ -16,7 +16,7 @@ subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
-  USE fft_base,  ONLY : dffts, dfftp
+  USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : npol, domag, nspin_mag, lspinorb
@@ -50,7 +50,7 @@ subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
 
   complex(DP) :: evcr(dffts%nnr,npol,nbnd)
   !! input: the wavefunctions at k in real
-  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag)
+  complex(DP) :: drhoscf(dffts%nnr,nspin_mag)
   !! output: the change of the charge densi
   complex(DP) :: dbecsum(nhm, nhm, nat, nspin)
   !! inp/out: the accumulated dbec
