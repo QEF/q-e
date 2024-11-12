@@ -130,7 +130,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
-     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
+     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the search
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
         !$acc parallel  
@@ -150,11 +150,10 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
         !$acc end parallel
 
         ! initial preconditioned gradient 
-        !$acc host_data use_device(z, e)
         do l=nactive+1,nactive+nnew; i=l+done
-           call g_1psi_ptr(npwx,npw,z(:,l),e(i))     
+           ee = e(i)
+           call g_1psi_ptr(npwx,npw,z(:,l),ee)
         end do
-        !$acc end host_data
 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
@@ -264,11 +263,10 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
         END DO 
      end do
 
-     !$acc host_data use_device(z, e)
      do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-        call g_1psi_ptr(npwx,npw,z(:,l),e(i))
+        ee = e(i)
+        call g_1psi_ptr(npwx,npw,z(:,l),ee)
      end do
-     !$acc end host_data
 
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
