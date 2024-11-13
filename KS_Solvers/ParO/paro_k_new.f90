@@ -192,12 +192,6 @@ SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
         !$acc end kernels
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
-     !$acc kernels 
-     psi (:,nbase+1:nbase+how_many) = psi (:,nbase+ibnd_start:nbase+ibnd_end)
-     hpsi(:,nbase+1:nbase+how_many) = hpsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     spsi(:,nbase+1:nbase+how_many) = spsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     ew(1:how_many) = ew(ibnd_start:ibnd_end)
-     !$acc end kernels
      CALL stop_clock( 'paro:pack' ); 
    
 !     write (6,*) ' check nactive = ', lbnd, nactive
@@ -210,11 +204,6 @@ SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
      CALL mp_barrier(inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_bar' ); 
      CALL start_clock( 'paro:mp_sum' ); 
-     !$acc kernels 
-     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
-     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
-     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
-     !$acc end kernels
 
      !$acc host_data use_device(psi, hpsi, spsi)
      CALL mp_allgather(psi (:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
