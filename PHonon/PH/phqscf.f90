@@ -76,8 +76,8 @@ SUBROUTINE phqscf
      IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) THEN
         npe=npert(irr)
         !
-        ALLOCATE (drhos( dffts%nnr , nspin_mag, npe))
-        ALLOCATE (drhop( dfftp%nnr, nspin_mag , npe))
+        ALLOCATE (drhos( dffts%nnr, nspin_mag, npe))
+        ALLOCATE (drhop( dfftp%nnr, nspin_mag, npe))
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)

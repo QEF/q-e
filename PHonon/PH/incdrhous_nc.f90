@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
+subroutine incdrhous_nc( drhos, weight, ik, dbecsum, evcr, wgg, becq, &
                          alpq, mode )
   !-----------------------------------------------------------------------
   !! This routine computes the change of the charge density and of the
@@ -50,7 +50,7 @@ subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
 
   complex(DP) :: evcr(dffts%nnr,npol,nbnd)
   !! input: the wavefunctions at k in real
-  complex(DP) :: drhoscf(dffts%nnr,nspin_mag)
+  complex(DP) :: drhos(dffts%nnr,nspin_mag)
   !! output: the change of the charge densi
   complex(DP) :: dbecsum(nhm, nhm, nat, nspin)
   !! inp/out: the accumulated dbec
@@ -153,17 +153,17 @@ subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      CALL invfft ('Wave', dpsir(:,1), dffts)
      CALL invfft ('Wave', dpsir(:,2), dffts)
      do ir = 1, dffts%nnr
-        drhoscf(ir,1)=drhoscf(ir,1)+wgt* &
+        drhos(ir,1)=drhos(ir,1)+wgt* &
                                    (dpsir(ir,1)*CONJG(evcr(ir,1,ibnd))+ &
                                     dpsir(ir,2)*CONJG(evcr(ir,2,ibnd)) )
         IF (domag) THEN
-           drhoscf(ir,2)=drhoscf(ir,2)+ &
+           drhos(ir,2)=drhos(ir,2)+ &
                                 wgt*(dpsir(ir,1)*CONJG(evcr(ir,2,ibnd))+ &
                                      dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)))
-           drhoscf(ir,3)=drhoscf(ir,3)+ &
+           drhos(ir,3)=drhos(ir,3)+ &
                        wgt*(dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)) - &
                        dpsir(ir,1)*CONJG(evcr(ir,2,ibnd)) ) *(0.d0,-1.d0)
-           drhoscf(ir,4)=drhoscf(ir,4)+wgt* &
+           drhos(ir,4)=drhos(ir,4)+wgt* &
                                     (dpsir(ir,1)*CONJG(evcr(ir,1,ibnd)) - &
                                      dpsir(ir,2)*CONJG(evcr(ir,2,ibnd)) )
         END IF
