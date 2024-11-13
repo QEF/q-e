@@ -366,8 +366,15 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       !
       ! Repeat the above for the case of two chemical potentials
       !
-      IF (twochem) CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
-         convt, dos_ef, ldos, ldoss, drhop, dbecsum, becsum1)
+      IF (twochem) THEN
+         IF (okpaw) THEN
+            CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
+                  convt, dos_ef, ldos, ldoss, drhop, dbecsum, becsum1)
+         ELSE
+            CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
+                  convt, dos_ef, ldos, ldoss, drhop, dbecsum)
+         ENDIF
+      ENDIF
       !
       !   After the loop over the perturbations we have the linear change
       !   in the charge density for each mode of this representation.

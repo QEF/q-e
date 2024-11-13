@@ -142,6 +142,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
+   h_diag = (0.d0, 0.d0)
+   aux2 = (0.d0, 0.d0)
    !
    !$acc enter data create(aux2(1:npwx*npol, 1:nbnd))
    !

@@ -36,7 +36,7 @@ SUBROUTINE twochem_postproc_dfpt(npe, nsolv, imode0, lmetq0, convt, dos_ef, ldos
    COMPLEX(DP), INTENT(in) :: ldoss(dffts%nnr, nspin_mag)
    COMPLEX(DP), INTENT(inout) :: drhop(dfftp%nnr, nspin_mag, npe)
    COMPLEX(DP), INTENT(inout) :: dbecsum((nhm * (nhm + 1))/2, nat, nspin_mag , npe)
-   REAL(DP), INTENT(in) :: becsum1((nhm * (nhm + 1))/2 , nat , nspin_mag)
+   REAL(DP), INTENT(in), OPTIONAL :: becsum1((nhm * (nhm + 1))/2 , nat , nspin_mag)
    !
    INTEGER :: is, ipert
    !
