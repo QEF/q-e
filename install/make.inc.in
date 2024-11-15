@@ -32,13 +32,14 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
-# To use libxc (v>=4.3.0), add -D__LIBXC to DFLAGS
 # See include/defs.h.README for a list of options and their meaning
+# To use libxc (v>=4.3.0), add -D__LIBXC to DFLAGS
+# FDFLAGS = precompilation options used by the Fortran compiler
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas
 
-# MANUAL_DFLAGS  = additional precompilation option(s), if desired
-#                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
+# MANUAL_DFLAGS  = additional Fortran precompilation option(s), if desired
+#                  BEWARE: does not work for IBM xlf, manually edit FDFLAGS
 MANUAL_DFLAGS  =
 DFLAGS         = @dflags@
 FDFLAGS        = @fdflags@

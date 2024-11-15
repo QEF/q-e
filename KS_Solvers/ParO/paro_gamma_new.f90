@@ -46,7 +46,7 @@
 !   If you want to see the previous code checkout to commit: 55c4e48ba650745f74bad43175f65f5449fd1273 (on Fri May 13 10:57:23 2022 +0000)
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
+SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_psi_ptr, overlap, &
                  npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
@@ -73,12 +73,11 @@ SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr
+  EXTERNAL h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_psi_ptr
   ! subroutine h_psi_ptr (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
   ! subroutine s_psi_ptr (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
   ! subroutine hs_psi_ptr(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
-  ! subroutine g_1psi_ptr (npwx,npw,psi,eig)       computes g*psi  for a single band
-
+  ! subroutine g_psi_ptr (npwx,npw,npol,m,psi,eig) computes g*psi  for m bands
   !
   ! ... local variables
   !
@@ -194,29 +193,18 @@ SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap
         !$acc end kernels
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
-     !$acc kernels 
-     psi (:,nbase+1:nbase+how_many) = psi (:,nbase+ibnd_start:nbase+ibnd_end)
-     hpsi(:,nbase+1:nbase+how_many) = hpsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     spsi(:,nbase+1:nbase+how_many) = spsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     ew(1:how_many) = ew(ibnd_start:ibnd_end)
-     !$acc end kernels
      CALL stop_clock( 'paro:pack' ); 
    
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-     CALL bpcg_gamma(hs_psi_ptr, g_1psi_ptr, psi, spsi, npw, npwx, nbnd, how_many, &
+     CALL bpcg_gamma(hs_psi_ptr, g_psi_ptr, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_bar' ); 
      CALL start_clock( 'paro:mp_sum' ); 
-     !$acc kernels 
-     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
-     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
-     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
-     !$acc end kernels
 
      !$acc host_data use_device(psi, hpsi, spsi)
      CALL mp_allgather(psi (:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)

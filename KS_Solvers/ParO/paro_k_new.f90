@@ -46,7 +46,7 @@
 !   If you want to see the previous code checkout to commit: 55c4e48ba650745f74bad43175f65f5449fd1273 (on Fri May 13 10:57:23 2022 +0000)
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
+SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_psi_ptr, overlap, &
                    npwx, npw, nbnd, npol, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
@@ -73,12 +73,11 @@ SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr
+  EXTERNAL h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_psi_ptr
   ! subroutine h_psi_ptr (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
   ! subroutine s_psi_ptr (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
   ! subroutine hs_psi_ptr(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
-  ! subroutine g_1psi_ptr(npwx,npw,psi,eig)       computes g*psi  for a single band
-
+  ! subroutine g_psi_ptr(npwx,npw,m,npol,psi,eig)  computes g*psi  for m bands
   !
   ! ... local variables
   !
@@ -203,7 +202,7 @@ SUBROUTINE paro_k_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_1psi_ptr, overlap, &
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-     CALL bpcg_k(hs_psi_ptr, g_1psi_ptr, psi, spsi, npw, npwx, nbnd, npol, how_many, &
+     CALL bpcg_k(hs_psi_ptr, g_psi_ptr, psi, spsi, npw, npwx, nbnd, npol, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 
      CALL start_clock( 'paro:mp_bar' ); 
