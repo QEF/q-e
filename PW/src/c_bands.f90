@@ -275,9 +275,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !------------------------------------------------------------------------
   ! ParO diagonalization uses these external routines on a single band
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
-  ! subroutine g_1psi(npwx,npw,psi,eig)         computes G*psi -> psi
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
-  external g_1psi
   !
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -415,7 +413,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE
              !
              IF (.not. use_gpu ) THEN
-               CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+               CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_psi, okvan, &
                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -423,7 +421,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                !
              ELSE
                !$acc host_data use_device(et)
-               CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi, okvan, &
+               CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_psi, okvan, &
                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !$acc end host_data
                !
@@ -472,7 +470,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
               END DO
               !
               IF (.not. use_gpu ) THEN
-                CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_psi, okvan, &
                            npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
                 avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -480,7 +478,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
               ELSE
                 !$acc host_data use_device(et)
-                CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi, okvan, &
+                CALL paro_gamma_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_psi, okvan, &
                            npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !$acc end host_data
                 !$acc update self(et)
@@ -750,14 +748,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE 
              !
              IF ( .not. use_gpu ) THEN
-               CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+               CALL paro_k_new( h_psi, s_psi, hs_psi, g_psi, okvan, &
                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
                ! write (6,*) ntry, avg_iter, nhpsi
              ELSE
                !$acc host_data use_device(et)
-               CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi, okvan, &
+               CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_psi, okvan, &
                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !$acc end host_data
                !
@@ -801,14 +799,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
               CALL usnldiag(npw, npol, h_diag, s_diag )
               !
               IF ( .not. use_gpu ) THEN
-                CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                CALL paro_k_new( h_psi, s_psi, hs_psi, g_psi, okvan, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
                 avg_iter = avg_iter + nhpsi/float(nbnd) 
                 ! write (6,*) ntry, avg_iter, nhpsi
               ELSE
                 !$acc host_data use_device(et)
-                CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_1psi, okvan, &
+                CALL paro_k_new( h_psi_gpu, s_psi_acc, hs_psi_gpu, g_psi, okvan, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !$acc end host_data
                 !$acc update self(et)
