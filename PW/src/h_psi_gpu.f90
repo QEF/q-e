@@ -141,7 +141,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
-                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo") .OR. &
                     (exx_is_active() .AND. .NOT. use_ace) .OR. lelfield
 
   IF (need_host_copy) THEN
@@ -284,22 +283,20 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !
   IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi )    ! hpsi_host = hpsi
-     !$acc end host_data
      IF ( noncolin ) THEN
-        CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi, hpsi_host)  ! hpsi = hpsi_host
-        !$acc end host_data
+        !FIXME: vhpsi_nc must be ported to GPU
+        !$acc update host(psi, hpsi)
+        CALL vhpsi_nc( lda, n, m, psi, hpsi )
+        !$acc update device(psi, hpsi)
      ELSE
         IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
+          ! DFT + U
           CALL vhpsi_gpu( lda, n, m, psi, hpsi )  ! DFT+U
-        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN          ! DFT+U+V
-          CALL vhpsi( lda, n, m, psi_host, hpsi_host )
-          !$acc host_data use_device(hpsi)
-          CALL dev_memcpy(hpsi, hpsi_host)
-          !$acc end host_data
+        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
+          ! DFT+U+V  FIXME: must be ported to GPU
+          !$acc update host(psi, hpsi)
+          CALL vhpsi( lda, n, m, psi, hpsi )
+          !$acc update device(psi, hpsi)
         ENDIF
      ENDIF
      !
