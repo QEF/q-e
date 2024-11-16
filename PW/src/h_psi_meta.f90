@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007 Quantum ESPRESSO group
+! Copyright (C) 2007-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,8 +36,6 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   !! the wavefunction
   COMPLEX(DP) :: hpsi(ldap,mp)
   !! Hamiltonian dot psip
-  !FIXME! this variable should be mapped with openACC 
-  !$acc declare deviceptr(hpsi,psip) 
   !
   ! ... local variables
   !
@@ -55,6 +53,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   !
   ALLOCATE( psi_g(psdim,dim_g) )
   !$acc enter data create(psi_g, psic) copyin(kedtau) 
+  !$acc data present_or_copyin(psip) present_or_copyout(hpsi) 
   !
   IF (gamma_only) THEN
      !
@@ -128,6 +127,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
      !
   ENDIF
   !
+  !$acc end data
   !$acc exit data delete(psi_g,psic,kedtau)
   DEALLOCATE( psi_g )
   !
