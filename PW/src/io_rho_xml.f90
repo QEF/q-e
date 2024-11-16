@@ -72,7 +72,6 @@ MODULE io_rho_xml
               root_bgrp, intra_bgrp_comm, &
               bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
               gamma_only, mill, ig_l2g, rho%kin_g(:,1:nspin_) )
-         WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
       ENDIF
 
       ! Then write the other terms to separate files
