@@ -131,8 +131,10 @@ MODULE io_rho_xml
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
                                    lda_plus_u_kind, nsg
+      use lsda_mod,         ONLY : magtot
       USE noncollin_module, ONLY : noncolin, domag
-      USE gvect,            ONLY : ig_l2g
+      USE cell_base,        ONLY : omega
+      USE gvect,            ONLY : ig_l2g, gstart
       USE xc_lib,           ONLY : xclib_dft_is
       USE io_files,         ONLY : restart_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
@@ -162,6 +164,13 @@ MODULE io_rho_xml
            root_bgrp, intra_bgrp_comm, &
            ig_l2g, nspin_, rho%of_g, gamma_only )
       IF ( nspin > nspin_) rho%of_g(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
+      !
+      ! update magtot
+      IF ( .not. noncolin ) THEN
+         magtot = 0.0_dp
+         IF ( gstart == 2 ) magtot = rho%of_g(1, 2) * omega
+         CALL mp_sum(magtot, intra_image_comm)
+      END IF
       !
       ! read kinetic energy density
       IF ( xclib_dft_is('meta') ) THEN
