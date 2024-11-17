@@ -91,7 +91,7 @@ SUBROUTINE punch( what )
         CALL write_scf( rho, nspin )
         WRITE( stdout, '(", charge density")', ADVANCE ='NO' )
         IF ( xclib_dft_is('meta') ) &
-           WRITE( stdout, '(" with meta-GGA kinetic term)', ADVANCE ='NO' )
+           WRITE( stdout, '(" with meta-GGA kinetic term")', ADVANCE ='NO' )
      END IF 
      !
      ! ... correlation functions of 3D-RISM.
