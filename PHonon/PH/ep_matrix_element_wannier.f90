@@ -219,7 +219,7 @@ SUBROUTINE ep_matrix_element_wannier()
       dvscfins = (0.0_DP,0.0_DP)
 
       do ipol = 1, 3
-        CALL davcio_drho ( dvscfins(:,:,ipol),  lrdrho, iudrho,  ipol,  -1 )
+        CALL davcio_drho ( dvscfins(1,1,ipol),  lrdrho, iudrho,  ipol,  -1 )
         call dv_of_drho ( dvscfins(:,:,ipol))
       end do
 

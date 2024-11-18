@@ -125,7 +125,7 @@ subroutine drho
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
   !
-  allocate (drhous ( dfftp%nnr, nspin_mag , 3 * nat))
+  allocate (drhous ( dffts%nnr, nspin_mag , 3 * nat))
   allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))
   dbecsum=(0.d0,0.d0)
   call start_clock('drhous')

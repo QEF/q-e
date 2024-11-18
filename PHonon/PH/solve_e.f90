@@ -65,7 +65,7 @@ subroutine solve_e
   COMPLEX(DP), POINTER :: dvscfins (:,:,:)
   !! change of the scf potential (smooth)
   COMPLEX(DP), ALLOCATABLE :: drhos(:, :, :)
-  !! change of the charge density (smooth part only, but allocated with dfftp)
+  !! change of the charge density (smooth part only, dffts)
   COMPLEX(DP), ALLOCATABLE :: drhop(:, :, :)
   !! change of the charge density (smooth and hard parts, dfftp)
   COMPLEX(DP), ALLOCATABLE :: dbecsum(:,:,:,:)
@@ -86,7 +86,7 @@ subroutine solve_e
      dvscfins => dvscfin
   endif
   !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1:3))
-  ALLOCATE(drhos(dfftp%nnr, nspin_mag, 3))
+  ALLOCATE(drhos(dffts%nnr, nspin_mag, 3))
   ALLOCATE(drhop(dfftp%nnr, nspin_mag, 3))
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))
   dbecsum = (0.d0, 0.d0)

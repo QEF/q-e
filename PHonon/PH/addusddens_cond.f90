@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine addusddens_cond (drhoscf, dbecsum, mode0, npe, iflag)
+subroutine addusddens_cond (drhop, dbecsum, mode0, npe, iflag)
         !----------------------------------------------------------------------
   ! This routines implements eq B31 of ref [1], only for the conduction band 
   !! manifold in the two chemical potential implementation
@@ -41,7 +41,7 @@ subroutine addusddens_cond (drhoscf, dbecsum, mode0, npe, iflag)
   !! input: if zero does not compute drho
   integer :: npe
   !! input: the number of perturbations
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  complex(DP) :: drhop (dfftp%nnr, nspin_mag, npe)
   !! inp/out: change of the charge density
   complex(DP) :: dbecsum (nhm*(nhm+1)/2, nat, nspin_mag, npe)
   !! input: sum over kv of bec
@@ -178,7 +178,7 @@ subroutine addusddens_cond (drhoscf, dbecsum, mode0, npe, iflag)
            psic (dfftp%nl (ig) ) = aux (ig, is, ipert)
         enddo
         CALL invfft ('Rho', psic, dfftp)
-        call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
+        call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhop(1,is,ipert), 1)
      enddo
   enddo
   if (.not.lgamma) deallocate (qpg)
@@ -193,7 +193,7 @@ subroutine addusddens_cond (drhoscf, dbecsum, mode0, npe, iflag)
      do ipert = 1, npe
         mu = mode0 + ipert
         call get_buffer (drhous, lrdrhous, iudrhous, mu)
-        call daxpy (2*dfftp%nnr*nspin_mag, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
+        call daxpy (2*dfftp%nnr*nspin_mag, 1.d0, drhous, 1, drhop(1,1,ipert), 1)
      end do
      deallocate (drhous)
   end if
@@ -202,4 +202,3 @@ subroutine addusddens_cond (drhoscf, dbecsum, mode0, npe, iflag)
   return
 end subroutine addusddens_cond
 !
-

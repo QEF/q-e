@@ -36,7 +36,7 @@ SUBROUTINE twochem_postproc_dfpt(npe, nsolv, imode0, lmetq0, convt, dos_ef, ldos
    COMPLEX(DP), INTENT(in) :: ldoss(dffts%nnr, nspin_mag)
    COMPLEX(DP), INTENT(inout) :: drhop(dfftp%nnr, nspin_mag, npe)
    COMPLEX(DP), INTENT(inout) :: dbecsum((nhm * (nhm + 1))/2, nat, nspin_mag , npe)
-   REAL(DP), INTENT(in) :: becsum1((nhm * (nhm + 1))/2 , nat , nspin_mag)
+   REAL(DP), INTENT(in), OPTIONAL :: becsum1((nhm * (nhm + 1))/2 , nat , nspin_mag)
    !
    INTEGER :: is, ipert
    !
@@ -50,7 +50,7 @@ SUBROUTINE twochem_postproc_dfpt(npe, nsolv, imode0, lmetq0, convt, dos_ef, ldos
    ENDIF
    !
    IF (nsolv==2) THEN
-      drhoscf_cond = drhoscf_cond / 2.0_DP
+      drhos_cond = drhos_cond / 2.0_DP
       dbecsum_cond = dbecsum_cond / 2.0_DP
       dbecsum_cond_nc = dbecsum_cond_nc / 2.0_DP
    ENDIF
@@ -64,11 +64,11 @@ SUBROUTINE twochem_postproc_dfpt(npe, nsolv, imode0, lmetq0, convt, dos_ef, ldos
    if (doublegrid) then
       do is = 1, nspin_mag
          do ipert = 1, npe
-            call fft_interpolate (dffts, drhoscf_cond(:,is,ipert), dfftp, drhoscfh_cond(:,is,ipert))
+            call fft_interpolate (dffts, drhos_cond(:,is,ipert), dfftp, drhop_cond(:,is,ipert))
          enddo
       enddo
    else
-      call zcopy (npe*nspin_mag*dfftp%nnr, drhoscf_cond, 1, drhoscfh_cond, 1)
+      call zcopy (npe*nspin_mag*dfftp%nnr, drhos_cond, 1, drhop_cond, 1)
    endif
    !
    !rotate also dbecsum_cond in the twochem case
@@ -82,10 +82,10 @@ SUBROUTINE twochem_postproc_dfpt(npe, nsolv, imode0, lmetq0, convt, dos_ef, ldos
       ENDIF
    ENDIF
    !
-   call addusddens_cond(drhoscfh_cond, dbecsum_cond, imode0, npe, 0)
+   call addusddens_cond(drhop_cond, dbecsum_cond, imode0, npe, 0)
    !
-   CALL mp_sum ( drhoscf_cond, inter_pool_comm )
-   CALL mp_sum ( drhoscfh_cond, inter_pool_comm )
+   CALL mp_sum ( drhos_cond, inter_pool_comm )
+   CALL mp_sum ( drhop_cond, inter_pool_comm )
    IF (okpaw) call mp_sum ( dbecsum_cond, inter_pool_comm )
    !
    ! q=0 in metallic case deserve special care (e_Fermi can shift)
@@ -93,10 +93,10 @@ SUBROUTINE twochem_postproc_dfpt(npe, nsolv, imode0, lmetq0, convt, dos_ef, ldos
    IF (lmetq0) THEN
       IF (okpaw) THEN
          CALL ef_shift_twochem(npe, dos_ef, dos_ef_cond, ldos, ldos_cond, drhop,&
-                           drhoscfh_cond,dbecsum,dbecsum_cond, becsum1,becsum1_cond)
+                           drhop_cond,dbecsum,dbecsum_cond, becsum1,becsum1_cond)
       ELSE
          CALL ef_shift_twochem(npe, dos_ef,dos_ef_cond, ldos,ldos_cond, drhop,&
-                                         drhoscfh_cond)
+                                         drhop_cond)
       ENDIF
    ENDIF
    !

@@ -146,8 +146,8 @@ SUBROUTINE ef_shift_wfc(npert, ldoss, drhoscf)
   !! the number of perturbation
   COMPLEX(DP), INTENT(IN) :: ldoss(dffts%nnr, nspin_mag)
   !! local DOS at Ef without augmentation
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin_mag, npert)
-  !! the change of the charge (with augmentation)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dffts%nnr, nspin_mag, npert)
+  !! the change of the charge (without augmentation)
   !
   ! local variables
   !

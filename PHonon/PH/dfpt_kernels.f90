@@ -54,7 +54,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !!    - option : Option that tells the type of perturbation. phonon / efield / ...
    !!
    !! Input/Output:
-   !!    - drhos : change of the charge density (smooth part only, but allocated with dfftp)
+   !!    - drhos : change of the charge density (smooth part only, dffts)
    !!    - drhop : change of the charge density (smooth and hard parts, dfftp)
    !!    - dvscfs : change of the scf potential (smooth part only, dffts)
    !!    - dvscfp : change of the scf potential (smooth and hard parts, dfftp)
@@ -68,7 +68,6 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !! variable "*s" : real-space quantity defined on the soft grid (dffts)
    !! variable "*h" : real-space quantity defined on the hard grid (dfftp)
    !! (If doublegrid == false, the two quantities are identical.)
-   !! (drhos is a "soft" quantity but allocated with size 1:dfftp%nnr) (for no good reason).
    !!
    !! A short summary of the workflow:
    !!    dvscfs, dvscfp    -> (sternheimer_kernel)
@@ -144,7 +143,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    !! unit for the buffer storing dV_bare * psi
    REAL(DP), INTENT(INOUT) :: dr2
    ! self-consistency error. Input is used for restart.
-   COMPLEX(DP), INTENT(INOUT) :: drhos(dfftp%nnr, nspin_mag, npert)
+   COMPLEX(DP), INTENT(INOUT) :: drhos(dffts%nnr, nspin_mag, npert)
    !! change of the charge density (smooth part only, but allocated with dfftp)
    COMPLEX(DP), INTENT(INOUT) :: drhop(dfftp%nnr, nspin_mag, npert)
    !! change of the charge density (smooth and hard parts, dfftp)
@@ -367,8 +366,15 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       !
       ! Repeat the above for the case of two chemical potentials
       !
-      IF (twochem) CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
-         convt, dos_ef, ldos, ldoss, drhop, dbecsum, becsum1)
+      IF (twochem) THEN
+         IF (okpaw) THEN
+            CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
+                  convt, dos_ef, ldos, ldoss, drhop, dbecsum, becsum1)
+         ELSE
+            CALL twochem_postproc_dfpt(npert, nsolv, imode0, lmetq0, &
+                  convt, dos_ef, ldos, ldoss, drhop, dbecsum)
+         ENDIF
+      ENDIF
       !
       !   After the loop over the perturbations we have the linear change
       !   in the charge density for each mode of this representation.

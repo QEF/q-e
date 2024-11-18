@@ -18,7 +18,7 @@ SUBROUTINE phqscf
   USE ions_base,        ONLY : nat
   USE lsda_mod,         ONLY : nspin
   USE io_global,        ONLY : stdout, ionode
-  USE fft_base,         ONLY : dfftp
+  USE fft_base,         ONLY : dffts, dfftp
   USE uspp,             ONLY : okvan
   USE efield_mod,       ONLY : zstarue0, zstarue0_rec
   USE control_ph,       ONLY : zue
@@ -32,7 +32,7 @@ SUBROUTINE phqscf
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE lrus,             ONLY : int3, int3_nc, int3_paw
-  USE eqv,              ONLY : drhoscfs
+  USE eqv,              ONLY : drhos
   USE dynmat,           ONLY : dyn_hub_scf
   USE ldaU,             ONLY : lda_plus_u, Hubbard_lmax
   USE ldaU_lr,          ONLY : dnsscf
@@ -52,6 +52,8 @@ SUBROUTINE phqscf
 
   REAL(DP) :: tcpu, get_clock
   ! timing variables
+  complex(DP), allocatable :: drhop (:,:,:)
+  ! change of rho including augmentation (dfftp)
 
   EXTERNAL get_clock
   ! the change of density due to perturbations
@@ -74,7 +76,8 @@ SUBROUTINE phqscf
      IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) THEN
         npe=npert(irr)
         !
-        ALLOCATE (drhoscfs( dfftp%nnr , nspin_mag, npe))
+        ALLOCATE (drhos( dffts%nnr, nspin_mag, npe))
+        ALLOCATE (drhop( dfftp%nnr, nspin_mag, npe))
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
@@ -110,13 +113,13 @@ SUBROUTINE phqscf
         ENDIF
         !
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
-        CALL solve_linter (irr, imode0, npe, drhoscfs)
+        CALL solve_linter (irr, imode0, npe, drhos, drhop)
         WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
         !
         !   Add the contribution of this mode to the dynamical matrix
         !
         IF (convt) THEN
-           CALL drhodv (imode0, npe, drhoscfs)
+           CALL drhodv (imode0, npe, drhos)
            !
            !   add the contribution of the modes imode0+1 -> imode+npe
            !   to the effective charges Z(Us,E) (Us=scf,E=bare)
@@ -143,8 +146,7 @@ SUBROUTINE phqscf
            CALL stop_smoothly_ph (.FALSE.)
         ENDIF
         rec_code=20
-        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,npe,&
-                        drhoscfs)
+        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,npe,drhop)
         !
         IF (okvan) THEN
            DEALLOCATE (int3)
@@ -156,7 +158,9 @@ SUBROUTINE phqscf
         !
         tcpu = get_clock ('PHONON')
         !
-        DEALLOCATE (drhoscfs)
+        DEALLOCATE (drhos)
+        DEALLOCATE (drhop)
+        !
      ENDIF
 
   ENDDO

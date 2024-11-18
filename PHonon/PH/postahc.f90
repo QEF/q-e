@@ -1163,11 +1163,13 @@ SUBROUTINE calc_upper_fan(iq, selfen_upfan)
             ! Skip active states inside the ahc window
             IF (etq(ibq, ik) >= ahc_win_min .AND. etq(ibq, ik) <= ahc_win_max) CYCLE
             !
-            ahc_upfan_mode(ibnd, jbnd, imode, ik) &
-            = ahc_upfan_mode(ibnd, jbnd, imode, ik) &
-            + CONJG(ahc_gkk_mode(ibq, ibnd, imode, ik)) &
-            * ahc_gkk_mode(ibq, jbnd, imode, ik) &
-            / (etk(ibnd, ik) - etq(ibq, ik))
+            IF (ABS(etk(ibnd, ik) - etq(ibq, ik)) > 1.d-8) THEN
+              ahc_upfan_mode(ibnd, jbnd, imode, ik) &
+              = ahc_upfan_mode(ibnd, jbnd, imode, ik) &
+              + CONJG(ahc_gkk_mode(ibq, ibnd, imode, ik)) &
+              * ahc_gkk_mode(ibq, jbnd, imode, ik) &
+              / (etk(ibnd, ik) - etq(ibq, ik))
+            ENDIF
             !
           ENDDO ! ibq
           !
