@@ -164,8 +164,8 @@ MODULE io_rho_xml
            ig_l2g, nspin_, rho%of_g, gamma_only )
       IF ( nspin > nspin_) rho%of_g(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
-      ! update magtot
-      IF ( .not. noncolin ) THEN
+      ! update total magnetization
+      IF ( nspin == 2 ) THEN
          magtot = 0.0_dp
          IF ( gstart == 2 ) magtot = rho%of_g(1, 2) * omega
          CALL mp_sum(magtot, intra_image_comm)
