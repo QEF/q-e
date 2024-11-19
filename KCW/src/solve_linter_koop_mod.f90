@@ -488,7 +488,7 @@ SUBROUTINE sternheimer_kernel_old(first_iter, npert, i_ref, lrdvpsi, iudvpsi, &
   COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
   LOGICAL, INTENT(OUT) :: all_conv
   REAL(DP), INTENT(OUT) :: averlt
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin, npert)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dffts%nnr, nspin, npert)
   COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2, nat, nspin, npert)
   INTEGER, INTENT(IN) :: lrdvpsi
   INTEGER, INTENT(IN) :: iudvpsi
