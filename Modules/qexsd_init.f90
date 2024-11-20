@@ -818,6 +818,7 @@ CONTAINS
             CHARACTER   :: hubbard_shell(4) = ['s','p','d','f']
             n2_ispresent  = PRESENT(n2) .AND. PRESENT(l2)
             n3_ispresent  = PRESENT(n3) .AND. PRESENT(l3) 
+            allocate(idx(COUNT(labels_(1:nsp) /= "no Hubbard")))
             idx = PACK( [(i,i=1, nsp)] , [(INDEX(labels_(i),"no")==0,i=1,nsp)])
             ndim = SIZE(idx)
             ALLOCATE (objs(ndim))
