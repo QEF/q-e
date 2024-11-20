@@ -541,7 +541,7 @@ SUBROUTINE phq_readin()
                 CALL errore ('phq_readin', 'gamma is needed for elec.field', 1)
   ENDIF
 
-  IF (mangetic_sym.AND.(epsil.OR.zue.or.lraman.or.elop)) &
+  IF (magnetic_sym.AND.(epsil.OR.zue.or.lraman.or.elop)) &
           CALL errore ('phq_readin', ' The phonon code with noncollinear magnetism &
             & and electric field is not implemented', 1)
 
