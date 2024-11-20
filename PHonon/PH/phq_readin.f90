@@ -540,6 +540,11 @@ SUBROUTINE phq_readin()
      IF ( (epsil.OR.zue.or.lraman.or.elop) .AND..NOT.lgamma) &
                 CALL errore ('phq_readin', 'gamma is needed for elec.field', 1)
   ENDIF
+
+  IF (magnetic_sym.AND.(epsil.OR.zue.or.lraman.or.elop)) &
+          CALL errore ('phq_readin', ' The phonon code with noncollinear magnetism &
+            & and electric field is not implemented', 1)
+
   IF (zue.AND..NOT.trans) CALL errore ('phq_readin', 'trans must be &
        &.t. for Zue calc.', 1)
 
