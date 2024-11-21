@@ -2507,12 +2507,11 @@ MODULE realus
     INTEGER :: idx, ik_ , incr, ig, brange
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
-!-------------------TEMPORARY-----------
-    INTEGER :: ngk1
-    LOGICAL :: is_present, acc_is_present
-!---------------------------------------    
+    !$acc declare device_resident(psio)
     !
     CALL start_clock( 'fwfft_orbital' )
+    !
+    !$acc data present_or_copyin(psic) present_or_copy(orbital)
     !
     add_to_orbital_=.FALSE. ; IF( PRESENT(add_to_orbital)) add_to_orbital_ = add_to_orbital
     !
@@ -2556,26 +2555,16 @@ MODULE realus
        !
        CALL wave_r2g( psic(1:dffts%nnr), psio, dffts, igk=igk_k(:,ik_) )
        !
-       !-------------TEMPORARY---------------------
-       ngk1 = SIZE(psic)
-#if defined(_OPENACC)
-       is_present = acc_is_present(psic,ngk1)
-       !$acc update self(psic) if (is_present)
-#endif
-!-------------------------------------------   
-       !
        IF( add_to_orbital_ ) THEN
-          !$omp parallel do default(shared) private(ig)
+          !$acc parallel loop
           DO ig = 1, ngk(ik_)
              orbital(ig,ibnd) = orbital(ig,ibnd) + psio(ig,1)
           ENDDO
-          !$omp end parallel do
        ELSE
-          !$omp parallel do default(shared) private(ig)
+          !$acc parallel loop
           DO ig = 1, ngk(ik_)
              orbital(ig,ibnd) = psio(ig,1)
           ENDDO
-          !$omp end parallel do
        ENDIF
        !
        DEALLOCATE( psio )
@@ -2586,6 +2575,8 @@ MODULE realus
           ENDIF
        ENDIF
     ENDIF
+    !
+    !$acc end data
     !
     CALL stop_clock( 'fwfft_orbital' )
     !

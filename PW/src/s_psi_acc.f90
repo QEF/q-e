@@ -190,20 +190,8 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
 !SdG: ... before computing the us-only contribution ...
            CALL s_psir_k( ibnd, m )
 !SdG: ... and add it to spsi (already containing psi).
-#if defined(__CUDA)
-           CALL fwfft_orbital_k( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
-#else
-           !$acc host_data use_device(spsi)
            CALL fwfft_orbital_k( spsi, ibnd, m, add_to_orbital=.TRUE. )
-           !$acc end host_data
-#endif
         ENDDO
-        !
-#if defined(__CUDA)
-        !$acc kernels copyin(spsi_host)
-        spsi = spsi_host
-        !$acc end kernels
-#endif
         !
      ELSE
         !

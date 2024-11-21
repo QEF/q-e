@@ -237,14 +237,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
            ! ... psic (hpsi) -> psic + vusp
            CALL add_vuspsir_k( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
-           CALL fwfft_orbital_k( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
+           CALL fwfft_orbital_k( hpsi, ibnd, m, add_to_orbital=.TRUE. )
            !
         ENDDO
-        IF (need_host_copy) THEN
-          !$acc host_data use_device(hpsi)
-          CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-          !$acc end host_data
-        END IF
         !
      ELSE
         !
