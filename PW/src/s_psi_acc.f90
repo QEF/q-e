@@ -139,7 +139,7 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
         !
         DO ibnd = 1, m, 2
 !SdG: the becp are already computed ! no need to invfft psi to real space.
-!           CALL invfft_orbital_gamma( psi_host, ibnd, m ) 
+!           CALL invfft_orbital_gamma( psi, ibnd, m ) 
 !SdG: we just need to clean psic in real space ...
            CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
 !SdG: ... before computing the us-only contribution ...
