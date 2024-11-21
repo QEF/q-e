@@ -2293,6 +2293,7 @@ MODULE realus
     INTEGER :: j, idx, incr, ebnd, brange
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
+    !$acc declare device_resident(psio)
     !
     ! ... Task groups
     !print *, "->Fourier space"

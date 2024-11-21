@@ -201,11 +201,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
            ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_gamma( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
-           CALL fwfft_orbital_gamma( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
+           CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-        !$acc end host_data
         !
      ELSE
         ! ... usual reciprocal-space algorithm
