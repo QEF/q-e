@@ -92,10 +92,8 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   USE ions_base,        ONLY: nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
   USE noncollin_module, ONLY: npol, noncolin, lspinorb
-  USE realus,           ONLY: real_space, invfft_orbital_gamma,     &
-                              fwfft_orbital_gamma, calbec_rs_gamma, &
-                              s_psir_gamma, invfft_orbital_k,       &
-                              fwfft_orbital_k, calbec_rs_k, s_psir_k
+  USE realus,           ONLY: real_space, fwfft_orbital_gamma, s_psir_gamma, &
+                              fwfft_orbital_k, s_psir_k
   USE wavefunctions,    ONLY: psic
   USE fft_base,         ONLY: dffts
 #if defined (__CUDA)
@@ -118,11 +116,6 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   ! ... local variables
   !
   INTEGER :: ibnd
-#if defined(__CUDA)
-  COMPLEX(DP), PINNED, ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), PINNED, ALLOCATABLE ::spsi_host(:,:)
-  LOGICAL :: need_host_copy
-#endif
   !
   ! ... initialize  spsi
   !
@@ -131,25 +124,12 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   CALL dev_memcpy( spsi , psi )
   !$acc end host_data
 #else
-  !$acc host_data use_device(psi, spsi)
   CALL threaded_memcpy( spsi, psi, lda*npol*m*2 )
-  !$acc end host_data
 #endif
   !
   IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
   !
   CALL start_clock( 's_psi' )  
-  !
-#if defined(__CUDA)  
-  need_host_copy = real_space
-  IF (need_host_copy) THEN
-      ALLOCATE(psi_host(lda*npol,m), spsi_host(lda*npol,m))
-      !$acc kernels copyout(psi_host,spsi_host)
-      psi_host  = psi
-      spsi_host = spsi
-      !$acc end kernels
-  END IF
-#endif
   !
   ! ... The product with the beta functions
   !
