@@ -190,7 +190,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
         DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
-           CALL invfft_orbital_gamma(psi_host, ibnd, m )
+           CALL invfft_orbital_gamma(psi, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
            CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_gamma( ibnd, m, becp%r )
@@ -229,7 +229,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !
         DO ibnd = 1, m
            ! ... transform psi to real space -> psic 
-           CALL invfft_orbital_k(psi_host, ibnd, m )
+           CALL invfft_orbital_k(psi, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
            CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_k( ibnd, m )

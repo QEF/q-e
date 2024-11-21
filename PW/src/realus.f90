@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2015 Quantum ESPRESSO group
+! Copyright (C) 2004-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -2210,16 +2210,14 @@ MODULE realus
     !
     INTEGER :: ebnd
     !
-    !Task groups
-    !
-    !The new task group version based on vloc_psi
     !print *, "->Real space"
-    !
-    !$acc data present_or_copyin(orbital) present_or_copyout(psic)
     !
     CALL start_clock( 'invfft_orbital' )
     !
+    !$acc data present_or_copyin(orbital) present_or_copyout(psic)
     IF( dffts%has_task_groups ) THEN
+        !
+        ! Task groups - based on vloc_psi
         !
         CALL tgwave_g2r( orbital(1:ngk(1),ibnd:last), tg_psic, dffts, ngk(1) )
         !
@@ -2230,7 +2228,9 @@ MODULE realus
           ENDIF
         ENDIF
         !
-    ELSE !Task groups not used
+     ELSE
+        !
+        ! No Task groups
         !
         ebnd = ibnd
         IF ( ibnd < last ) ebnd = ebnd + 1
@@ -2239,16 +2239,16 @@ MODULE realus
         !
         IF (PRESENT(conserved)) THEN
           IF (conserved) THEN
+             call errore('invfft_orbital_gamma','unverified case',1)
             IF (.NOT. ALLOCATED(psic_temp) ) ALLOCATE( psic_temp(SIZE(psic)) )
             CALL zcopy( SIZE(psic), psic, 1, psic_temp, 1 )
           ENDIF
         ENDIF
         !
     ENDIF
+    !$acc end data
     !
     CALL stop_clock( 'invfft_orbital' )
-    !
-    !$acc end data
     !
   END SUBROUTINE invfft_orbital_gamma
   !
@@ -2427,13 +2427,10 @@ MODULE realus
     !! if this flag is true, the orbital is stored in temporary memory
     !
     INTEGER :: ik_
-!-------------------TEMPORARY-----------
-    INTEGER :: ngk1
-    LOGICAL :: is_present, acc_is_present
-!---------------------------------------    
     !
     CALL start_clock( 'invfft_orbital' )
     !
+    !$acc data present_or_copyin(orbital) present_or_copyout(psic)
     ! ... current_k  variable  must contain the index of the desired kpoint
     ik_ = current_k ; IF (PRESENT(ik)) ik_ = ik
     !
@@ -2452,22 +2449,16 @@ MODULE realus
        !
        CALL wave_g2r( orbital(:,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik_) )
        !
-!-------------TEMPORARY---------------------
-       ngk1 = SIZE(psic)
-#if defined(_OPENACC)
-       is_present = acc_is_present(psic,ngk1)
-       !$acc update self(psic) if (is_present)
-#endif
-!-------------------------------------------       
-       !
        IF (PRESENT(conserved)) THEN
           IF (conserved) THEN
+             call errore('invfft_orbital_k','unverified case',1)
              IF (.NOT. ALLOCATED(psic_temp) ) ALLOCATE( psic_temp(SIZE(psic)) )
              psic_temp = psic
           ENDIF
        ENDIF
        !
     ENDIF
+    !$acc end data
     !
     CALL stop_clock( 'invfft_orbital' )
     !

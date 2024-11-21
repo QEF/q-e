@@ -200,7 +200,7 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
         IF ( first ) THEN
            first = .FALSE.
            test = MAXVAL( 1.d0 - power_r(1:upf(nt)%nbeta)/power_q(1:upf(nt)%nbeta) )
-           if (test>eps) WRITE (stdout,'(5X,"WARNING: R and Q norms disagree by",6X,1pe12.4," > eps !")') test
+           if (test>eps) WRITE (stdout,'(5X,"WARNING: R and Q norms disagree by",1pe12.4," > eps (",1pe10.4,")")') test,eps
            power_q = power_r
         END IF
         test = MAXVAL( 1.d0 - power_r(1:upf(nt)%nbeta)/power_q(1:upf(nt)%nbeta) )
