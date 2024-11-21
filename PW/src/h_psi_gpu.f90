@@ -125,32 +125,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m)
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)
   !
-  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
-#if defined(__CUDA)
-  attributes(PINNED) :: psi_host, hpsi_host
-#endif
-  !
   INTEGER     :: ipol, ibnd, i
   REAL(dp)    :: ee
-  !
-  LOGICAL     :: need_host_copy
   !
   CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
-  need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
-                    (exx_is_active() .AND. .NOT. use_ace) .OR. lelfield
-
-  IF (need_host_copy) THEN
-      ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
-      !$acc host_data use_device(psi)
-      CALL dev_memcpy(psi_host, psi)    ! psi_host = psi
-      !$acc end host_data
-  ENDIF
-
-
   !$acc parallel loop collapse(2) present(g2kin, hpsi, psi)
   DO ibnd = 1, m
      DO i=1, lda
@@ -167,13 +148,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         END IF
      END DO
   END DO
-
-
-  IF (need_host_copy) THEN
-    !$acc host_data use_device(hpsi)
-    CALL dev_memcpy(hpsi_host, hpsi)    ! hpsi_host = hpsi
-    !$acc end host_data
-  END IF
 
   CALL start_clock_gpu( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
@@ -308,11 +282,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
            !$acc end host_data
         END IF
      ELSE
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi_host, hpsi ) ! hpsi_host = hpsi
-        CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
-        CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-        !$acc end host_data
+        !$acc update host (psi,hpsi)
+        CALL vexx( lda, n, m, psi, hpsi, becp )
+        !$acc update device(hpsi)
      END IF
   END IF
   !
@@ -320,19 +292,15 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !
   IF ( lelfield ) THEN
      !
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi ) ! hpsi_host = hpsi
-     !$acc end host_data
+     !$acc update host (psi,hpsi)
      IF ( .NOT.l3dstring ) THEN
-        CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,gdir, efield )
+        CALL h_epsi_her_apply( lda, n, m, psi, hpsi, gdir, efield )
      ELSE
         DO ipol=1,3
-           CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,ipol,efield_cry(ipol) )
+           CALL h_epsi_her_apply( lda, n, m, psi, hpsi, ipol, efield_cry(ipol) )
         END DO
      END IF
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-     !$acc end host_data
+     !$acc update device(hpsi)
      !
   END IF
 #if defined(__OSCDFT)
@@ -352,9 +320,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
       !$acc end kernels
   end if
   !
-  if (need_host_copy) then
-      DEALLOCATE(psi_host , hpsi_host )
-  end if
   CALL stop_clock_gpu( 'h_psi' )
   !
   RETURN
