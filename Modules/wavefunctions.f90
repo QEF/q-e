@@ -63,25 +63,18 @@
 
    CONTAINS
 
-      SUBROUTINE deallocate_wavefunctions
+      SUBROUTINE deallocate_cp_wavefunctions
        USE control_flags,       ONLY : use_gpu
        INTEGER :: istat
        IF( ALLOCATED( cv0) ) DEALLOCATE( cv0)   ! Lingzhu Kong
        IF( ALLOCATED( c0_bgrp ) ) DEALLOCATE( c0_bgrp )
        IF( ALLOCATED( cm_bgrp ) ) DEALLOCATE( cm_bgrp )
        IF( ALLOCATED( phi ) ) DEALLOCATE( phi )
-       IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
-       IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
-#if defined(__CUDA)
-       !$acc exit data delete(evc)
-       IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
-#endif
-       IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
 #if defined (__CUDA)
        IF( ALLOCATED( c0_d ) ) DEALLOCATE( c0_d )
        IF( ALLOCATED( cm_d ) ) DEALLOCATE( cm_d )
 #endif
-     END SUBROUTINE deallocate_wavefunctions
+     END SUBROUTINE deallocate_cp_wavefunctions
 
      SUBROUTINE allocate_cp_wavefunctions( ngw, nbspx, vnbsp, lwfpbe0nscf )
        INTEGER, INTENT(IN) :: ngw, nbspx, vnbsp
