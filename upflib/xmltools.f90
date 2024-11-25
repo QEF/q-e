@@ -49,7 +49,7 @@ MODULE xmltools
   !
   ! internal variables for reading and writing
   !
-  INTEGER :: xmlunit
+  INTEGER :: xmlunit = -1
   INTEGER, PARAMETER :: maxline=1024, maxdim=maxline+16
   CHARACTER(LEN=maxdim) :: line
   INTEGER :: xmlsave = -1, nopen = 0
@@ -287,27 +287,36 @@ CONTAINS
     END IF
     OPEN ( NEWUNIT=iun, FILE=filexml, FORM='formatted', STATUS='unknown', &
          IOSTAT=ios)
-    IF ( ios /= 0 ) iun = -1
-    nopen = nopen + 1
-    IF ( nopen > 1 ) then
+    IF ( ios /= 0 ) THEN
+       CLOSE ( UNIT=iun, STATUS='keep')
+       iun = -1
+#if defined ( __debug )
+       print "('file ',a,' not opened, ios = ',i5)",trim(filexml),ios
+#endif
+    ELSE
+       nopen = nopen + 1
+       IF ( nopen > 1 ) THEN
        ! a second file is opened: keep track of the status of the previous file
-       xmlsave = xmlunit
-       level0  = nlevel
-    else
-       nlevel = 0
-       open_tags(nlevel) = 'root'
-    end if
+          xmlsave = xmlunit
+          level0  = nlevel
+       ELSE
+          nlevel = 0
+          open_tags(nlevel) = 'root'
+       END IF
+#if defined ( __debug )
+       print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
+#endif
+    END IF
     xmlunit = iun
     if ( allocated(attrlist) ) DEALLOCATE ( attrlist)
-#if defined ( __debug )
-    print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
-#endif
     !
   END FUNCTION xml_open_file
   !
   SUBROUTINE xml_closefile ( )
     !
     integer :: ios
+    !
+    IF ( xmlunit == -1 ) RETURN
     CLOSE ( UNIT=xmlunit, STATUS='keep' )
 #if defined ( __debug )
     print "('unit ',i5,': file closed')", xmlunit
