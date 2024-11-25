@@ -85,9 +85,9 @@ SUBROUTINE read_ps_new ( psfile, upf, printout, ierr )
         IF ( ierr == 0 ) ierr = -6
      END IF
      !
+     CLOSE (iunps)
 10   IF ( ierr > 0 ) THEN
         WRITE (stdout, '("readpp: file ",A," could not be read")') trim(psfile)
-        CLOSE (iunps)
         RETURN
      END IF
   END IF
