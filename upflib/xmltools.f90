@@ -316,7 +316,7 @@ CONTAINS
     !
     integer :: ios
     !
-    IF ( xmlunit /= -1 ) RETURN
+    IF ( xmlunit == -1 ) RETURN
     CLOSE ( UNIT=xmlunit, STATUS='keep' )
 #if defined ( __debug )
     print "('unit ',i5,': file closed')", xmlunit
