@@ -26,7 +26,7 @@ else
   unset PARA_SUFFIX
 fi
 
-echo ' RUNNING ',${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_SUFFIX} "$@"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_SUFFIX} "$@"
+echo ' RUNNING ',${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/cp.x ${PARA_SUFFIX} "$@"
+${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/cp.x ${PARA_SUFFIX} "$@"
 
 rm -f input_tmp.in

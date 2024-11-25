@@ -20,8 +20,8 @@ echo $0" "$@
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -29,8 +29,8 @@ then
 elif [[ "$1" == "2" ]]
 then
   echo "Running TURBO LANCZOS ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_lanczos.x < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_lanczos.x < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_lanczos.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_lanczos.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -38,8 +38,8 @@ then
 elif [[ "$1" == "3" ]]
 then
   echo "Running TURBO SPECTRUM CHI ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
   cp $3 turbo_spectrum.out
   cp *.plot_chi.dat $3
   if [[ -e CRASH ]]
@@ -49,8 +49,8 @@ then
 elif [[ "$1" == "4" ]]
 then
   echo "Running TURBO SPECTRUM EELS ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
   cp $3 turbo_spectrum.out
   cp *.plot_eps.dat $3
   if [[ -e CRASH ]]
@@ -60,8 +60,8 @@ then
 elif [[ "$1" == "5" ]]
 then
   echo "Running TURBO EELS ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_eels.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_eels.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_eels.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_eels.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -69,8 +69,8 @@ then
 elif [[ "$1" == "6" ]]
 then
   echo "Running TURBO MAGNON ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -78,8 +78,8 @@ then
 elif [[ "$1" == "7" ]]
 then
   echo "Running TURBO SPECTRUM MAGNON ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
   cp $3 turbo_spectrum.out
   cp *.plot_chi.dat $3
   if [[ -e CRASH ]]
