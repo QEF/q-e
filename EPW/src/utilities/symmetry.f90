@@ -1024,6 +1024,7 @@
     USE io_files,      ONLY : diropn, prefix
     USE wavefunctions, ONLY : evc
     USE fft_base,      ONLY : dffts
+    USE fft_wave,      ONLY : invfft_wave, fwfft_wave
     USE pwcom,         ONLY : nbnd, nks, nkstot
     USE cell_base,     ONLY : at, bg
     USE wvfct,         ONLY : npwx
@@ -1337,7 +1338,7 @@
             aux1 = czero
             aux2 = czero
             jbnd = ibndkept(ibnd)
-            CALL invfft_wave(npw, igk, aux5(:, jbnd), aux1)
+            CALL invfft_wave(npwx, npw, igk, aux5(:, jbnd), aux1)
             !
             IF (itrev == 1) THEN
               aux2 = aux1
@@ -1345,7 +1346,7 @@
               aux2 = CONJG(aux1)
             ENDIF
             !
-            CALL fwfft_wave(npwsk, igsk, aux3(:, ibnd), aux2)
+            CALL fwfft_wave(npwx, npwsk, igsk, aux3(:, ibnd), aux2)
           ENDDO
           !
           ! Calculate overlap between aux4 (psi(Sk)) and aux3 (S * psi(k))

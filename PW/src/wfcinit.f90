@@ -69,7 +69,11 @@ SUBROUTINE wfcinit()
      !
      ! nwfcU is computed in init_hubbard
      ALLOCATE( wfcU(npwx*npol,nwfcU) )
-     CALL orthoUwfc(.FALSE.)
+     IF (io_level>=1) THEN
+        CALL orthoUwfc(.TRUE.)
+     ELSE
+        CALL orthoUwfc(.FALSE.)
+     ENDIF
      !
   END IF
   !

@@ -18,7 +18,8 @@ HTMLS = INPUT_BAND_INTERPOLATION.html \
 	INPUT_PROJWFC.html \
 	INPUT_pw2bgw.html \
 	INPUT_pw2gw.html \
-	INPUT_pw2wannier90.html
+	INPUT_pw2wannier90.html \
+	INPUT_wannier2pw.html
 
 PDFS = eps_man.pdf user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)

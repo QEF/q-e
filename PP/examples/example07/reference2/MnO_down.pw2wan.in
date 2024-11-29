@@ -1,0 +1,8 @@
+ &INPUTPP
+   prefix = 'MnO'
+   outdir = '/home/timrov_i/WORKSPACE/PSI/Gitlab/tmp1/q-e/tempdir/',
+   seedname = 'MnO_down',
+   spin_component = 'down'
+   write_mmn  = .true.
+   write_amn  = .true.
+ /
