@@ -1,4 +1,7 @@
 New in 7.4.1 version:
+  * Interface between Wannier90 and DFT+U to use Wannier functions as
+    Hubbard projectors (I. Timrov, A. Carta, C. Ederer et al., arXiv:2411.03937)
+  * Extension of pp.x to visualize Hubbard projectors of DFT+U (I. Timrov)
   * Modularization of DFPT routines into dfpt_kernel by Jae-Mo Lihm
 
 Fixed in 7.4.1 version:

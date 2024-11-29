@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,8 +12,8 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   !
   ! This routine saves to buffer "iunhub" atomic wavefunctions having an
   ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
-  ! "iunhub_noS" but without S (this is then used to compute Hubbard forces
-  ! and stresses). Atomic wavefunctions
+  ! "iunhub_noS" but without S (this is then used for plotting Hubbard projector 
+  ! functions or other post-processing operations). Atomic wavefunctions
   ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
   ! "swfcatom" must NOT be allocated on input.
   !
@@ -49,18 +49,13 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
   !
   IF ( Hubbard_projectors == "pseudo" ) THEN
-     WRITE( stdout,*) 'Beta functions used for Hubbard projectors'
+     WRITE( stdout,'(/5x,a,/)') 'Beta functions used for Hubbard projectors'
      RETURN
   ELSE IF (Hubbard_projectors=="wf") THEN
-     !
-     ! Read Wannier functions from file (produced by pmw.x).
-     !
-     WRITE( stdout,*) 'Hubbard projectors are read from file produced by pmw.x'
-     DO ik = 1, nks
-        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
-     END DO
+     ! Read Wannier functions from file (produced by Wannier90 or pmw.x).
+     WRITE( stdout,'(/5x,a,/)') 'Wannier functions used for Hubbard projectors'
+     CALL read_wf_projectors (save_wfcatom)
      RETURN
-     !
   ELSE IF (Hubbard_projectors=="atomic") THEN
      orthogonalize_wfc = .FALSE.
      normalize_only = .FALSE.
@@ -116,8 +111,11 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! to unit iunhub_noS
      !
      IF (save_wfcatom.and..not.use_gpu) THEN
+        ! Calculate swfcatom = S * \phi
+        CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
         CALL copy_U_wfc (wfcatom, noncolin)
+        ! Write wfcU = O^{-1/2} \phi (no ultrasoft S)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
      !
@@ -428,11 +426,21 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
      ! Save quantities which are needed for 
      ! calculations of Hubbard forces and stress
-     !$acc kernels copyout(overlap_inv)
-     eigenval(:) = e(:)
-     eigenvect(:,:) = work(:,:)
-     overlap_inv(:,:) = overlap(:,:)
-     !$acc end kernels
+     IF (allocated(eigenval)) THEN
+        !$acc kernels
+        eigenval(:) = e(:)
+        !$acc end kernels
+     ENDIF
+     IF (allocated(eigenvect)) THEN
+        !$acc kernels
+        eigenvect(:,:) = work(:,:)
+        !$acc end kernels
+     ENDIF
+     IF (allocated (overlap_inv)) THEN
+        !$acc kernels copyout(overlap_inv)
+        overlap_inv(:,:) = overlap(:,:)
+        !$acc end kernels
+     ENDIF
      !
   END IF 
   !
@@ -589,3 +597,69 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   RETURN
   !
 END SUBROUTINE calculate_doverlap_inv
+
+SUBROUTINE read_wf_projectors (save_wfcatom)
+  !--------------------------------------------------------------------------
+  !
+  !! This routine reads Hubbard projectors (Wannier functions)
+  !! from file produced by Wannier90 or pmw.x.
+  !! The routine reads collected wfcU (no S), and it writes 
+  !! S*wfcU in a distributed format
+  !!
+  !! Written by I. Timrov (October 2024)
+  !
+  USE kinds,            ONLY : DP
+  USE io_global,        ONLY : stdout
+  USE klist,            ONLY : nkstot, nks, xk, ngk, igk_k
+  USE io_files,         ONLY : nwordwfcU, iunhub, iunhub_noS
+  USE wvfct,            ONLY : npwx
+  USE buffers,          ONLY : get_buffer, save_buffer
+  USE ldaU,             ONLY : wfcU, nwfcU
+  USE uspp,             ONLY : nkb, vkb, okvan
+  USE uspp_init,        ONLY : init_us_2
+  USE becmod,           ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type
+  USE noncollin_module, ONLY : npol
+  !
+  IMPLICIT NONE
+  INTEGER :: ik,  & ! dummy index to number k points
+             npw, & ! number of plane waves
+             ierr
+  LOGICAL, INTENT(IN) :: save_wfcatom
+  COMPLEX(DP), ALLOCATABLE :: swfcU(:,:)
+  !
+  WRITE(stdout, '(5x,A)') 'Reading WFs to construct the Hubbard projectors...'
+  !
+  IF (okvan) THEN
+     ! Allocate the array containing <beta|wfcU>
+     CALL allocate_bec_type (nkb, nwfcU, becp)
+     ALLOCATE (swfcU(npwx*npol,nwfcU))
+  ENDIF
+  !
+  DO ik = 1, nks
+     !
+     ! Read wfcU (no S) from iunhub
+     CALL get_buffer (wfcU, nwordwfcU, iunhub, ik) 
+     !
+     ! Write wfcU (no S) to iunhub_noS for further post-processing
+     IF (save_wfcatom) CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
+     !
+     IF (okvan) THEN
+        npw = ngk(ik)
+        ! USPP: Compute swfcU = S*wfcU
+        CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
+        CALL calbec (npw, vkb, wfcU, becp)
+        CALL s_psi (npwx, npw, nwfcU, wfcU, swfcU)
+        ! Write swfcU
+        CALL save_buffer (swfcU, nwordwfcU, iunhub, ik)
+     ENDIF
+     !
+  ENDDO
+  !
+  IF (okvan) THEN
+     CALL deallocate_bec_type (becp)
+     DEALLOCATE (swfcU)
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE read_wf_projectors

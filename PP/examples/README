@@ -31,6 +31,16 @@ example06:
     This example calculates the band structure of ferromagnetic bcc-Fe
     in the noncollinear spin-orbit case.
 
+example07:
+    This example shows how to use pw2wannier90.x to generate 
+    Hubbard projectors for DFT+U using (maximally localized) Wannier 
+    functions generated using Wannier90 for TiO2 and MnO. 
+    Read file README for more details.
+
+example08:
+    This examples shows how to use pp.x to plot the squared modulus
+    of the Hubbard projector functions of DFT+U
+
 projected_bands_example:
     This example shows how to produce projected ("fat") band plots
 

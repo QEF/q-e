@@ -134,8 +134,14 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
 
                    22 = kinetic energy density (for meta-GGA and XDM only)
 
+                   23 = the charge density of states between emin & emax
+
                   123 = DORI: density overlap regions indicator
 		        (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
+
+                   24 = Reconstructed all-electron charge
+
+                   25 = Squared modulus of the Hubbard projector function of DFT+U 
             }
         }
 
@@ -366,6 +372,34 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                         0 = total density (default value),
                         1 = spin up density,
                         2 = spin down density.
+                    }
+                }
+            }
+
+            elsewhen -test "plot_num=25" {
+                label {
+                    Options for kinetic energy density (plot_num=22),
+                    LSDA case only:
+                }
+
+                var nc -type INTEGER {
+                    default 1
+                    info {
+                        nc(1), nc(2), and nc(3) indicate the size of the 
+                        supercell for the visualization of the squared modulus of
+                        the Hubbard projector functions. 
+                        Note, this supercell must match the k-points grid size
+                        otherwise the resulting WFs are wrong.
+                    }
+                }
+
+                var n0 -type INTEGER {
+                    default 0
+                    info {
+                        n0(1), n0(2), and n0(3) indicate the shift
+                        of the coordinate frame in units of the 
+                        lattice vectors for a better visualization 
+                        of the Hubbard projector functions
                     }
                 }
             }

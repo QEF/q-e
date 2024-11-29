@@ -19,7 +19,8 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE ldaU,             ONLY : lda_plus_U, Hubbard_projectors, nwfcU
   USE io_files,         ONLY : prefix, iunpun, iunhub, nwordwfcU, nwordwfc, &
-                               iunefield, iunefieldm, iunefieldp, seqopn
+                               iunefield, iunefieldm, iunefieldp, seqopn, &
+                               iunhub_noS
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
 #if defined(__HDF5) && defined(__MPI) 
@@ -43,6 +44,7 @@ SUBROUTINE openfil()
   !
   IF ( lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
      CALL open_buffer( iunhub,  'hub',  nwordwfcU, io_level, exst )
+     IF (io_level>=1) CALL open_buffer( iunhub_noS,  'hubnoS',  nwordwfcU, io_level, exst )
   ENDIF
   !
   ! ... open units for electric field calculations

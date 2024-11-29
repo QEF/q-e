@@ -19,6 +19,7 @@ SUBROUTINE ham_koopmans_k (ik)
   USE kinds,                ONLY : DP
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_wave,             ONLY : invfft_wave
   USE klist,                ONLY : nkstot, igk_k, ngk, xk
   USE mp,                   ONLY : mp_sum
   USE control_kcw,          ONLY : kcw_iverbosity, spin_component, num_wann, x_q, &
@@ -217,7 +218,7 @@ SUBROUTINE ham_koopmans_k (ik)
        npw_k = ngk(ik)
        evc_k_g(:) =  evc0(:,iwann)
        evc_k_r(:) = ZERO
-       CALL invfft_wave (npw_k, igk_k (1,ik), evc_k_g , evc_k_r )
+       CALL invfft_wave (npwx, npw_k, igk_k (1,ik), evc_k_g , evc_k_r )
        !! The wfc R=0 n=iwann in R-space at k
        !
        ! Off-diagonal terms
@@ -238,7 +239,7 @@ SUBROUTINE ham_koopmans_k (ik)
           npw_kq = ngk(ikq)
           evc_kq_g = evc0_kq(:,jwann)
           evc_kq_r = ZERO
-          CALL invfft_wave (npw_kq, igk_k (1,ikq), evc_kq_g , evc_kq_r )
+          CALL invfft_wave (npwx, npw_kq, igk_k (1,ikq), evc_kq_g , evc_kq_r )
           ! The wfc in R-space at k' <-- k+q where k' = (k+q)-G_bar
           ! evc_k+q(r) = sum_G exp[iG r] c_(k+q+G) = sum_G exp[iG r] c_k'+G_bar+G 
           !            = exp[-iG_bar r] sum_G' exp[iG'r] c_k'+G' = exp[-iG_bar r] *evc_k'(r)
