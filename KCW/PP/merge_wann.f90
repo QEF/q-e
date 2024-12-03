@@ -32,7 +32,7 @@ PROGRAM merge
     l_merge_centres  = .true.
  CASE DEFAULT
     WRITE (*,*) "what = ", trim( what ), " not implemented"
-    WRITE (*,*) "Avaliable options: U, centres"
+    WRITE (*,*) "Available options: U, centres"
     STOP
  END SELECT
  !

@@ -33,7 +33,7 @@ SUBROUTINE clean_pw( lflag )
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
-  USE wavefunctions,        ONLY : psic, psic_nc
+  USE wavefunctions,        ONLY : deallocate_wfc, psic, psic_nc
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
   USE atwfc_mod,            ONLY : deallocate_tab_atwfc
