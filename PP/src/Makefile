@@ -69,7 +69,7 @@ QEMODS = $(BASEMODS)
 
 MODULES = $(PWOBJS) $(QEMODS)
 
-TLDEPS= pwlibs lrmods
+TLDEPS= pwlibs
 
 all : tldeps open_grid.x average.x bands.x band_interpolation.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \

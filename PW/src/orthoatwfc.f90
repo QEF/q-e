@@ -46,7 +46,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   ! ik: the k point under consideration
   ! ibnd: counter on bands
   LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
+  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), wfcUaux (:,:)
   !
   IF ( Hubbard_projectors == "pseudo" ) THEN
      WRITE( stdout,'(/5x,a,/)') 'Beta functions used for Hubbard projectors'
@@ -114,9 +114,19 @@ SUBROUTINE orthoUwfc(save_wfcatom)
         ! Calculate swfcatom = S * \phi
         CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
+        ! If nks=1, wfcU is kept in memory, while we want to use wfcU as a 
+        ! workspace. Hence we store it temporarily in the auxiliary array wfcUaux
+        IF (nks==1) THEN
+           ALLOCATE (wfcUaux(npwx*npol,nwfcU))
+           wfcUaux = wfcU
+        ENDIF
         CALL copy_U_wfc (wfcatom, noncolin)
         ! Write wfcU = O^{-1/2} \phi (no ultrasoft S)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
+        IF (nks==1) THEN
+           wfcU = wfcUaux
+           DEALLOCATE (wfcUaux)
+        ENDIF
      ENDIF
      !
   ENDDO
