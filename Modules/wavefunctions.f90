@@ -1,16 +1,10 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-#if defined(__CUDA)
-#define PINMEM ,PINNED 
-#else
-#define PINMEM
-#endif
 
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions
@@ -50,7 +44,6 @@ SUBROUTINE allocate_wfc(npwx, npol, nbnd)
   !
 #if defined (__CUDA)
   use, intrinsic :: iso_c_binding
-  use cudafor
 #endif
   INTEGER, INTENT(IN) :: npwx, npol, nbnd
   !
@@ -71,7 +64,6 @@ SUBROUTINE deallocate_wfc()
   !----------------------------------------------------------------------------
 #if defined (__CUDA)
   use, intrinsic :: iso_c_binding
-  use cudafor
 #endif
   !
   IMPLICIT NONE
