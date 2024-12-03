@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -102,7 +102,6 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   USE fft_interfaces, ONLY: fwfft, invfft
   USE noncollin_module, ONLY : noncolin, npol
   USE fft_helper_subroutines
-  USE fft_wave,         ONLY : fwfft_wave, invfft_wave
 
   IMPLICIT NONE
 
