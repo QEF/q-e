@@ -45,3 +45,7 @@ md_analyzer.sh :
   Reads the pw.x output of a MD run and prints, for each step,
   total, kinetic and potential energies, and temperature
 
+README_MINpuT.txt :
+  Description of MINpuT, Structure generation for MINT calculations,
+  by Drake Niedzielski, Eli Gerber, Yanjun Liu, Eun-Ah Kim, Tomás Arias
+
