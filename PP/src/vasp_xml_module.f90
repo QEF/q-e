@@ -110,7 +110,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE funct,                ONLY : set_dft_from_indices
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, nbndx, et, wg
+  USE wvfct,                ONLY : npwx, nbnd, nbndx, et, wg
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
@@ -121,7 +121,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, gcutms
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE wavefunctions,        ONLY : psic
+  USE wavefunctions,        ONLY : allocate_wfc
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE io_global,            ONLY : stdout
@@ -136,6 +136,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE vdW_DF,               ONLY : generate_kernel
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE vasp_read_chgcar,     ONLY : vaspread_rho
+  USE noncollin_module,     ONLY : npol
   !
   IMPLICIT NONE
 
@@ -212,7 +213,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
 
   CALL gshells ( .False. ) 
 
-  CALL allocate_wfc()
+  CALL allocate_wfc( npwx, npol, nbnd )
      
   CALL vaspread_rho(ierr)
   !

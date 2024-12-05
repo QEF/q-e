@@ -28,7 +28,7 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
+  USE cp_wavefunctions,         ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx
@@ -73,7 +73,7 @@ SUBROUTINE init_run()
   USE clib_wrappers
   USE ldaU_cp
   USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
-  USE wavefunctions,     ONLY : cv0                 ! exx_wf related
+  USE cp_wavefunctions,         ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
   !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
   USE input_parameters,         ONLY : ref_cell, nextffield

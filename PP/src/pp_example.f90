@@ -93,7 +93,7 @@ SUBROUTINE re_diagonalize ( )
   USE uspp_init,  ONLY : init_us_2
   USE wvfct,      ONLY : npwx, nbnd, current_k
   USE mp_bands,   ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
-  USE wavefunctions,  ONLY : evc, psic
+  USE wavefunctions,  ONLY : evc
   USE pw_restart_new, ONLY : read_collected_wfc
   !
   IMPLICIT NONE

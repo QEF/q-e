@@ -9,6 +9,7 @@ set(src_cpv
     src/cp_emass.f90
     src/cp_interfaces.f90
     src/cp_restart_new.f90
+    src/cp_wavefunctions.f90
     src/cplib.f90
     src/cpr_mod.f90
     src/cpr.f90
