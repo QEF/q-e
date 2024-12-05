@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@
 !=----------------------------------------------------------------------------=!
      !
      !! electronic wave functions, CPV code
-     !! distributed over gvector and bands
+     !! distributed over G-vectors and bands
      !
      USE kinds, ONLY :  DP
      IMPLICIT NONE
@@ -36,9 +36,8 @@
      COMPLEX(DP), ALLOCATABLE :: cv0(:,:) ! Lingzhu Kong
      !
    CONTAINS
+      !
       SUBROUTINE deallocate_cp_wavefunctions
-       USE control_flags,       ONLY : use_gpu
-       INTEGER :: istat
        IF( ALLOCATED( cv0) ) DEALLOCATE( cv0)   ! Lingzhu Kong
        IF( ALLOCATED( c0_bgrp ) ) DEALLOCATE( c0_bgrp )
        IF( ALLOCATED( cm_bgrp ) ) DEALLOCATE( cm_bgrp )
@@ -48,7 +47,7 @@
        IF( ALLOCATED( cm_d ) ) DEALLOCATE( cm_d )
 #endif
      END SUBROUTINE deallocate_cp_wavefunctions
-
+     !
      SUBROUTINE allocate_cp_wavefunctions( ngw, nbspx, vnbsp, lwfpbe0nscf )
        INTEGER, INTENT(IN) :: ngw, nbspx, vnbsp
        LOGICAL, INTENT(IN) :: lwfpbe0nscf
