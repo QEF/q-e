@@ -1,4 +1,4 @@
-New in 7.4.1 version:
+New in development version:
   * Interface between Wannier90 and DFT+U to use Wannier functions as
     Hubbard projectors (I. Timrov, A. Carta, C. Ederer et al., arXiv:2411.03937)
   * Extension of pp.x to visualize Hubbard projectors of DFT+U (I. Timrov)
@@ -9,6 +9,7 @@ Fixed in 7.4.1 version:
   * Case tefield=.true.: bad xml tag written
   * Bad weights occasionally written by matdyn.x
   * ESM stress for 'bc3' case now works
+  * Glitches reading some specific  pseudopotentials (pw.x, neb.x)
 
 Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
