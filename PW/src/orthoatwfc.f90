@@ -110,7 +110,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! If save_wfcatom=.TRUE. copy the orthonormalized wfcatom to wfcU and save
      ! to unit iunhub_noS
      !
-     IF (save_wfcatom.and..not.use_gpu) THEN
+     IF (save_wfcatom) THEN
         ! Calculate swfcatom = S * \phi
         CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
@@ -120,6 +120,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
            ALLOCATE (wfcUaux(npwx*npol,nwfcU))
            wfcUaux = wfcU
         ENDIF
+        !$acc update host(wfcatom)
         CALL copy_U_wfc (wfcatom, noncolin)
         ! Write wfcU = O^{-1/2} \phi (no ultrasoft S)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
@@ -163,7 +164,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   USE uspp,             ONLY : nkb, vkb
   USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, offload_type
   USE noncollin_module, ONLY : noncolin, npol
   IMPLICIT NONE
   !
@@ -210,12 +211,13 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ! Number of plane waves at this k point
   npw = ngk(ik)
   !
+  !$acc data copy(wfcatom, swfcatom)
   IF (orthogonalize_wfc .OR. .NOT.lflag) THEN
      ! Allocate the array becp = <beta|wfcatom>
      CALL allocate_bec_type_acc (nkb,natomwfc, becp)
-     CALL calbec (npw, vkb, wfcatom, becp)
+     CALL calbec (offload_type, npw, vkb, wfcatom, becp)
      ! Calculate swfcatom = S * phi
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
      CALL deallocate_bec_type_acc (becp)
   ENDIF
   !
@@ -223,10 +225,9 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ! lflag=.FALSE. : On the output wfcatom are unchanged, swfcatom = O^{-1/2} S\phi.
   ! lflag=.TRUE.  : On the output wfcatom = O^{-1/2} \phi (no ultrasoft S), swfcatom are unchanged.
   IF (orthogonalize_wfc) THEN
-     !$acc data copy(wfcatom, swfcatom)
      CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag )
-     !$acc end data
   END IF
+  !$acc end data
   !
   IF (lflag) THEN
      ! Copy (ortho-)atomic wavefunctions with Hubbard U term only
