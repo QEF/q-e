@@ -137,6 +137,7 @@ set(src_pw
    src/offset_atom_wfc.f90 
    src/openfil.f90 
    src/orthoatwfc.f90 
+   src/orthoUwfc.f90 
    src/output_tau.f90 
    src/para.f90 
    src/paw_exx.f90 

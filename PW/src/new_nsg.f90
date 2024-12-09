@@ -30,7 +30,7 @@ SUBROUTINE new_nsg()
   USE wvfct,                ONLY : nbnd, npw, npwx, wg
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : evc
-  USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunsat, iunhub
+  USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -494,7 +494,7 @@ SUBROUTINE new_nsg_nc()
    USE wvfct,                ONLY : nbnd, npw, npwx, wg
    USE control_flags,        ONLY : gamma_only
    USE wavefunctions,        ONLY : evc
-   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunsat, iunhub
+   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
    USE buffers,              ONLY : get_buffer
    USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum

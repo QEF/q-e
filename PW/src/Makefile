@@ -148,6 +148,7 @@ non_scf.o \
 offset_atom_wfc.o \
 openfil.o \
 orthoatwfc.o \
+orthoUwfc.o \
 output_tau.o \
 para.o \
 paw_exx.o \
