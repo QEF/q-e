@@ -1820,6 +1820,7 @@ MODULE input_parameters
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .false.
         REAL(DP), ALLOCATABLE :: xk(:,:), wk(:)
+        CHARACTER(len=50), ALLOCATABLE :: labelk(:)
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(len=80) :: k_points = 'gamma'
         !! select the k points mesh. Available options:  
@@ -2018,6 +2019,7 @@ SUBROUTINE reset_input_checks()
     !
     IF ( allocated( xk ) ) DEALLOCATE( xk )
     IF ( allocated( wk ) ) DEALLOCATE( wk )
+    IF ( allocated( labelk ) ) DEALLOCATE( labelk )
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
     IF ( allocated( rd_if_pos ) ) DEALLOCATE( rd_if_pos )

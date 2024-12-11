@@ -259,7 +259,7 @@ MODULE qexsd_input
    !
    !
    !-------------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,alat,a1, ibrav_lattice,xk,wk)
+   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,alat,a1, ibrav_lattice,xk,wk,labelk)
    ! 
    IMPLICIT NONE
    ! 
@@ -267,6 +267,7 @@ MODULE qexsd_input
    CHARACTER(LEN=*),INTENT(IN)          :: k_points,calculation
    INTEGER,INTENT(IN)                   :: nk1,nk2,nk3,s1,s2,s3,nk
    REAL(DP),INTENT(IN), OPTIONAL        :: xk(:,:),wk(:)
+   CHARACTER(LEN=*),INTENT(IN), OPTIONAL:: labelk(:)
    REAL(DP),INTENT(IN)                  :: alat,a1(3)
    LOGICAL,INTENT(IN)                   :: ibrav_lattice
    !
@@ -281,6 +282,7 @@ MODULE qexsd_input
    REAL(DP)                             :: scale_factor
    INTEGER, POINTER                     :: kdim_opt => NULL()
    INTEGER, TARGET                      :: kdim 
+   LOGICAL                              :: has_kpt_label
    !
   
    IF (TRIM(k_points).EQ."automatic") THEN 
@@ -320,7 +322,19 @@ MODULE qexsd_input
           ALLOCATE  (kp_obj(kdim))      
           DO ik=1,kdim
              my_xk=xk(:,ik)*scale_factor
-             CALL qes_init (kp_obj(ik),"k_point", WEIGHT = wk(ik),K_POINT=my_xk)
+             !
+             has_kpt_label = .FALSE.
+             IF ( PRESENT(labelk) ) THEN
+                   IF (TRIM(labelk(ik)) /= '') THEN
+                      has_kpt_label = .TRUE.
+                      ! Create with custom K point label, if present
+                      CALL qes_init (kp_obj(ik),"k_point",WEIGHT = wk(ik), LABEL=TRIM(labelk(ik)),K_POINT=my_xk)
+                   END IF
+             END IF
+             !
+             IF (.NOT. has_kpt_label) &
+                CALL qes_init (kp_obj(ik),"k_point",WEIGHT = wk(ik),K_POINT=my_xk)
+             !
           END DO
       END IF
    END IF    
