@@ -39,7 +39,6 @@ set(src_cpv
     src/init_run.f90
     src/inner_loop_cold.f90
     src/input.f90
-    src/ions_nose.f90
     src/ions_positions.f90
     src/ksstates.f90
     src/ldaU_cp.f90

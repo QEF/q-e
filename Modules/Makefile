@@ -11,6 +11,7 @@ MODULES = \
 additional_kpoints.o \
 atomic_wfc_mod.o \
 autopilot.o \
+ions_nose.o \
 basic_algebra_routines.o \
 becmod.o \
 bfgs_module.o \

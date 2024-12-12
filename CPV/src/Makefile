@@ -46,7 +46,6 @@ init.o \
 init_run.o \
 inner_loop_cold.o \
 input.o \
-ions_nose.o \
 ions_positions.o \
 ksstates.o \
 ldaU_cp.o \
