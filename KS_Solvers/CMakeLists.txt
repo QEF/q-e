@@ -32,15 +32,6 @@ set(src_cg
     CG/ccgdiagg_gpu.f90)
 qe_enable_cuda_fortran("${src_cg}")
 
-set(src_ppcg
-    PPCG/ppcg_gamma.f90
-    PPCG/ppcg_k.f90
-    # GPU
-    PPCG/ppcg_gamma_gpu.f90
-    PPCG/ppcg_k_gpu.f90
-    PPCG/generic_cublas.f90)
-qe_enable_cuda_fortran("${src_ppcg}")
-
 set(src_dense
     DENSE/rotate_HSpsi_gamma.f90
     DENSE/rotate_HSpsi_k.f90
@@ -107,16 +98,6 @@ target_link_libraries(qe_kssolver_cg
         qe_mpi_fortran
         qe_devxlib)
 
-qe_add_library(qe_kssolver_ppcg ${src_ppcg})
-target_link_libraries(qe_kssolver_ppcg
-    PRIVATE
-        qe_scalapack
-        qe_openacc_fortran
-        qe_openmp_fortran
-        qe_lax
-        qe_utilx
-        qe_mpi_fortran)
-
 qe_add_library(qe_kssolver_dense ${src_dense})
 target_link_libraries(qe_kssolver_dense
     PRIVATE
@@ -160,7 +141,6 @@ qe_install_targets(
     qe_kssolver_davidson
     qe_kssolver_davidsonrci
     qe_kssolver_cg
-    qe_kssolver_ppcg
     qe_kssolver_paro
     qe_kssolver_dense
     qe_kssolver_rmmdiis)

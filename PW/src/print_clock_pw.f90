@@ -110,9 +110,6 @@ SUBROUTINE print_clock_pw()
    ELSE  IF (isolve == 1) THEN
       CALL print_clock( 'rcgdiagg' )   ; CALL print_clock( 'ccgdiagg' )
       CALL print_clock( 'wfcrot' )
-   ELSE  IF (isolve == 2) THEN
-      CALL print_clock( 'ppcg_gamma' ) ; CALL print_clock( 'ppcg_k' )
-      CALL print_clock( 'wfcrot' )
    ELSE  IF (isolve == 3) THEN
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
    ELSE IF ( isolve == 4 ) THEN
@@ -160,16 +157,6 @@ SUBROUTINE print_clock_pw()
       END IF
    ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
-   ELSE IF ( isolve == 2 ) THEN
-      WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
-      IF ( iverbosity > 0 )  THEN
-         CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
-         CALL print_clock( 'ppcg:hpsi' )
-         CALL print_clock( 'ppcg:cholQR' )
-         CALL print_clock( 'ppcg:RR' )
-         CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
-         CALL print_clock( 'ppcg:lock' )
-      END IF
    ELSE IF ( isolve == 3 ) THEN
       WRITE( stdout, '(/5x,"Called by paro_*:")' )
       IF ( iverbosity > 0 )  THEN

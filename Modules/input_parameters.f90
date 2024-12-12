@@ -907,7 +907,7 @@ MODULE input_parameters
         !! dimension of mixing subspace. Used in PWscf only.
 
         CHARACTER(len=80) :: diagonalization = 'david'
-        !! diagonalization = 'david', 'cg', 'ppcg', 'paro' or 'rmm'
+        !! diagonalization = 'david', 'cg', 'paro' or 'rmm'
         !! algorithm used by PWscf for iterative diagonalization
 
         REAL(DP) :: diago_thr_init = 0.0_DP
@@ -917,11 +917,6 @@ MODULE input_parameters
         INTEGER :: diago_cg_maxiter = 100
         !! max number of iterations for the first iterative diagonalization.
         !! Using conjugate-gradient algorithm - used in PWscf only.
-
-        INTEGER :: diago_ppcg_maxiter = 100
-        !! max number of iterations for the first iterative diagonalization
-        !! using projected preconditioned conjugate-gradient algorithm - 
-        !! used in PWscf only.
 
         INTEGER :: diago_david_ndim = 4
         !! dimension of the subspace used in Davidson diagonalization

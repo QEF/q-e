@@ -3,6 +3,7 @@ New in development version:
     Hubbard projectors (I. Timrov, A. Carta, C. Ederer et al., arXiv:2411.03937)
   * Extension of pp.x to visualize Hubbard projectors of DFT+U (I. Timrov)
   * Modularization of DFPT routines into dfpt_kernel by Jae-Mo Lihm
+  * End support for PPCG diagonalization (I.C.)
 
 Fixed in 7.4.1 version:
   * Error in qexml_init might cause EPW to fail in some cases

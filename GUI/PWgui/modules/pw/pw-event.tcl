@@ -452,30 +452,20 @@ tracevar diagonalization w {
 	'david*' {
 	    widget diago_david_ndim enable
 	    widget diago_cg_maxiter disable
-	    widget diago_ppcg_maxiter disable
             widget diago_rmm_ndim disable
             widget diago_rmm_conv disable
 	}
 	'cg' {
 	    widget diago_cg_maxiter enable
-	    widget diago_ppcg_maxiter disable
 	    widget diago_david_ndim disable
             widget diago_rmm_ndim disable
             widget diago_rmm_conv disable
 	}
-        'ppcg' {
-            widget diago_ppcg_maxiter enable
-            widget diago_cg_maxiter disable
-	    widget diago_david_ndim disable
-            widget diago_rmm_ndim disable
-            widget diago_rmm_conv disable
-        }
         'rmm*' {
             widget diago_david_ndim enable
             widget diago_rmm_ndim enable
             widget diago_rmm_conv enable
             widget diago_cg_maxiter disable
-            widget diago_ppcg_maxiter disable
         }
 	default {
             # 'paro'

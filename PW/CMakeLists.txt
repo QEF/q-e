@@ -290,7 +290,6 @@ target_link_libraries(qe_pw
         qe_lax
         qe_kssolver_davidson
         qe_kssolver_cg
-        qe_kssolver_ppcg
         qe_kssolver_paro
         qe_kssolver_rmmdiis
         qe_kssolver_dense
