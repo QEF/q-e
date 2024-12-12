@@ -47,4 +47,5 @@ tempdir
 tags
 EPW/src/tmp
 LAXlib/*.fh
-KS_Solvers/*.fh
+**/CRASH
+**/pwscf.xml
