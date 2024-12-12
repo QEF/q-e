@@ -951,6 +951,11 @@ SUBROUTINE control_iosys()
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
+  CASE ( 'ppcg', 'PPCG' )
+     !
+     isolve = 2
+     CALL errore( 'iosys', 'PPCG diagonalization not supported anymore (Dec. 2024)', 1 )
+     !
   CASE ( 'paro', 'ParO' )
      !
      isolve = 3
