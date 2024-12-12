@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: band_interpolation.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
+Program: band_interpolation.x / PWscf / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -292,4 +292,4 @@ CARD: K_POINTS { tpiba_b }
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Dec 15 09:55:19 CET 2023
+This file has been created by helpdoc utility on Sat Oct 26 10:20:45 CEST 2024

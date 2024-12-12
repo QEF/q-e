@@ -648,17 +648,17 @@ MODULE oscdft_functions
          100 FORMAT(A)
       END SUBROUTINE oscdft_close_files
 
-      SUBROUTINE oscdft_h_diag(ctx)
+      SUBROUTINE oscdft_h_diag(ctx, h_diag)
          USE lsda_mod,         ONLY : isk, current_spin
          USE klist,            ONLY : ngk
          USE klist,            ONLY : nks
          USE buffers,          ONLY : get_buffer
          USE wvfct,            ONLY : current_k, npwx
          USE noncollin_module, ONLY : npol
-         USE g_psi_mod,        ONLY : h_diag
-         USE g_psi_mod_gpum,   ONLY : using_h_diag
+
          IMPLICIT NONE
 
+         COMPLEX(dp), INTENT(INOUT) :: h_diag(npwx,npol)
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
          TYPE(oscdft_input_type),           POINTER       :: inp
          TYPE(oscdft_indices_type),         POINTER       :: idx
@@ -670,6 +670,7 @@ MODULE oscdft_functions
                                                              iconstr, ioscdft, oidx,&
                                                              isum, osum, h_off, k_off,&
                                                              npw
+         COMPLEX(DP), POINTER :: wfcO_wfc(:,:)
 
          inp => ctx%inp
          idx => ctx%idx
@@ -684,10 +685,18 @@ MODULE oscdft_functions
          CALL start_clock("oscdft_hdiag")
          npw = ngk(current_k)
 
-         ik = current_k 
-         CALL using_h_diag(1)
+         IF (.NOT.ctx%wfc_allocated) THEN
+            CALL errore("oscdft_h_psi", "wfc not allocated", 1)
+         END IF
+
+         ik = current_k
          IF (isk(ik) == current_spin) THEN
-            IF (nks > 1) CALL oscdft_get_buffer(wfcO, ik)
+            IF (nks > 1) THEN
+               CALL oscdft_get_buffer(wfcO, ik)
+            END IF
+            wfcO_wfc => wfcO%wfc
+            !$acc data copyin(wfcO_wfc)
+
             DO iconstr=1,idx%nconstr
                ioscdft = idx%iconstr2ioscdft(iconstr)
                oidx = inp%occup_index(ioscdft)
@@ -710,16 +719,20 @@ MODULE oscdft_functions
                                    ctx%nst%occup_eigvects(h,oidx,iconstr)*&
                                    ctx%nst%occup_eigvects(k,oidx,iconstr)
                         END IF
-!$omp parallel do
+                        !$acc data present(h_diag)
+                        !$acc data present(wfcO_wfc)
+                        !$acc parallel loop
                         DO i=1,npw
                            h_diag(i,1) = h_diag(i,1)+&
-                                         alpha*DBLE(wfcO%wfc(i,k_off)*CONJG(wfcO%wfc(i,h_off)))
+                                         alpha*DBLE(wfcO_wfc(i,k_off)*CONJG(wfcO_wfc(i,h_off)))
                         END DO
-!$omp end parallel do
+                        !$acc end data
+                        !$acc end data
                      END DO
                   END DO
                END IF
             END DO
+            !$acc end data
          END IF
          CALL stop_clock("oscdft_hdiag")
       END SUBROUTINE oscdft_h_diag

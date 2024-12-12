@@ -17,7 +17,7 @@ SUBROUTINE psymdvscf (dvtosym)
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
-  USE noncollin_module, ONLY : nspin_mag
+  USE noncollin_module, ONLY : nspin_mag, noncolin, domag
   USE scatter_mod,      ONLY : cgather_sym
   USE lr_symm_base,     ONLY : nsymq, minus_q, lr_npert
   !
@@ -49,7 +49,16 @@ SUBROUTINE psymdvscf (dvtosym)
   !
   ! Symmetrize
   !
+  ! Nonmagnetic : nspin_mag = 1, nspin_lsda = 1.
+  !               symdvscf symmetrizes this component.
+  ! Collinear magnet (LSDA) : nspin_mag = 2, nspin_lsda = 2.
+  !                           symdvscf symmetrizes both components (spin up and down potentials).
+  ! Noncollinear magnet : nspin_mag = 4, nspin_lsda = 1.
+  !                       symdvscf symmetrizes the first component (potential),
+  !                       and sym_dmag symmetrizes the other three components (magnetic field).
+  !
   CALL symdvscf (ddvtosym)
+  IF (noncolin .AND. domag) CALL sym_dmag(ddvtosym)
   !
   ! Scatter back the real-space points
   !
@@ -69,7 +78,9 @@ SUBROUTINE psymdvscf (dvtosym)
 #else
   !
   CALL symdvscf(dvtosym)
+  IF (noncolin .AND. domag) CALL sym_dmag(dvtosym)
   !
 #endif
+  !
   !
 END SUBROUTINE psymdvscf

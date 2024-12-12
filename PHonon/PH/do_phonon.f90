@@ -30,8 +30,8 @@ SUBROUTINE do_phonon(auxdyn)
 
   USE disp,            ONLY : nqs
   USE control_flags,   ONLY : use_gpu
-  USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
-                              only_wfc, rec_code, where_rec, reduce_io
+  USE control_lr,      ONLY : rec_code, where_rec, reduce_io
+  USE control_ph,      ONLY : epsil, trans, qplot, only_init, only_wfc
   USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa, elph_print
   !
   ! YAMBO >

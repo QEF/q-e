@@ -34,7 +34,7 @@ SUBROUTINE PAW_symmetrize( becsum )
     !
     USE lsda_mod,          ONLY : nspin
     USE cell_base,         ONLY : at, bg
-    USE noncollin_module,  ONLY : nspin_lsda, domag
+    USE noncollin_module,  ONLY : nspin_lsda, domag, colin_mag
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
     USE symm_base,         ONLY : nsym, irt, d1, d2, d3, t_rev, sname, s, &
@@ -54,7 +54,7 @@ SUBROUTINE PAW_symmetrize( becsum )
     !
     INTEGER :: ia,mykey,ia_s,ia_e 
     !                       ! atoms counters and indexes
-    INTEGER :: is, nt       ! counters on spin, atom-type
+    INTEGER :: is, is2, nt  ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na
     INTEGER :: ih,jh, ijh   ! counters for augmentation channels
     INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
@@ -126,6 +126,13 @@ SUBROUTINE PAW_symmetrize( becsum )
              m_j   = lm_j - l_j**2  
              !  
              DO isym = 1,nsym  
+                ! spin-flip in collinar case
+                IF ( (colin_mag==2) .AND. (t_rev(isym) == 1) ) THEN
+                   is2 = 3-is
+                ELSE
+                   is2 = is
+                END IF 
+        
                 ma = irt(isym,ia)  
                 DO m_o = 1, 2*l_i +1  
                 DO m_u = 1, 2*l_j +1  
@@ -142,7 +149,7 @@ SUBROUTINE PAW_symmetrize( becsum )
                    !  
                    becsym(ijh, ia, is) = becsym(ijh, ia, is) &  
                        + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &  
-                         * pref * becsum(ouh, ma, is)  
+                         * pref * becsum(ouh, ma, is2)  
                 ENDDO ! m_o  
                 ENDDO ! m_u  
              ENDDO ! isym  
@@ -296,7 +303,7 @@ SUBROUTINE PAW_symmetrize_ddd( ddd )
     !
     USE lsda_mod,          ONLY : nspin
     USE cell_base,         ONLY : at, bg
-    USE noncollin_module,  ONLY : nspin_lsda, domag
+    USE noncollin_module,  ONLY : nspin_lsda, domag, colin_mag
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
     USE symm_base,         ONLY : nsym, irt, d1, d2, d3, t_rev, sname, s, &
@@ -317,7 +324,7 @@ SUBROUTINE PAW_symmetrize_ddd( ddd )
     !
     INTEGER :: ia, mykey, ia_s, ia_e 
     !                       ! atoms counters and indexes
-    INTEGER :: is, nt       ! counters on spin, atom-type
+    INTEGER :: is, is2, nt  ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na
     INTEGER :: ih,jh, ijh   ! counters for augmentation channels
     INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
@@ -388,6 +395,13 @@ SUBROUTINE PAW_symmetrize_ddd( ddd )
              m_j   = lm_j - l_j**2
              !
              DO isym = 1,nsym
+                ! spin-flip in collinar case
+                IF ( (colin_mag==2) .AND. (t_rev(isym) == 1) ) THEN
+                   is2 = 3-is
+                ELSE
+                   is2 = is
+                END IF 
+        
                 ma = irt(isym,ia)
                 DO m_o = 1, 2*l_i +1
                 DO m_u = 1, 2*l_j +1
@@ -397,7 +411,7 @@ SUBROUTINE PAW_symmetrize_ddd( ddd )
                     !
                     dddsym(ijh, ia, is) = dddsym(ijh, ia, is) &
                         + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
-                          * usym * ddd(ouh, ma, is)
+                          * usym * ddd(ouh, ma, is2)
                 ENDDO ! m_o
                 ENDDO ! m_u
              ENDDO ! isym

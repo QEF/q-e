@@ -67,18 +67,40 @@ MODULE control_lr
   REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
                              ! NSCF calculation
   ! Sternheimer case 
-  LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
-             convt,       &! if .TRUE. the phonon has converged
-             ext_recover, &! if .TRUE. there is a recover file
+  LOGICAL :: lgamma_gamma
+  !! if TRUE this is a q=0 computation with k=0 only
+  LOGICAL :: ext_recover, &! if .TRUE. there is a recover file
              lnoloc        ! if .TRUE. calculates the dielectric constant
                            ! neglecting local field effects
-  INTEGER :: rec_code=-1000,    & ! code for recover
-             rec_code_read=-1000  ! code for recover. Not changed during the run
-  CHARACTER(LEN=256) :: flmixdpot
-  REAL(DP) :: tr2_ph  ! threshold for phonon calculation
-  REAL(DP) :: alpha_mix(100)  ! the mixing parameter
-  INTEGER :: niter_ph         ! maximum number of iterations (read from input)
+  !
+  ! Variables for recover
+  !
+  CHARACTER(LEN=10) :: where_rec = 'no_recover'
+  !! where the ph run recovered
+  INTEGER :: rec_code = -1000
+  !! code for recover
+  INTEGER :: rec_code_read = -1000  ! code for recover. Not changed during the run
+  !
   INTEGER :: nbnd_occx        ! maximun value of nbnd_occ(:)
+  LOGICAL :: reduce_io
+  !! if TRUE reduces needed I/O
+  !
+  ! Parameters controlling DFPT self-consistent iteration
+  !
+  INTEGER, PARAMETER :: maxter = 150
+  !! maximum number of iterations
+  LOGICAL :: convt
+  !! if TRUE the DFPT has converged
+  CHARACTER(LEN=256) :: flmixdpot
+  !! File for writing history for potential mixing
+  INTEGER :: niter_ph
+  !! maximum number of iterations (read from input)
+  INTEGER :: nmix_ph
+  !! mixing type
+  REAL(DP) :: tr2_ph
+  !! threshold for DFPT calculation
+  REAL(DP) :: alpha_mix(maxter)
+  !! the mixing parameter
   !
 END MODULE control_lr
 !
@@ -92,9 +114,11 @@ MODULE eqv
   !
   COMPLEX (DP), POINTER :: evq(:,:)
   ! the wavefunctions at point k+q
-  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
+  COMPLEX (DP), ALLOCATABLE :: drhos(:,:,:)
+  !! the change of the density (smooth part only, dffts)
   REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin)
   ! the derivative of the xc potential
   REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
@@ -236,5 +260,10 @@ MODULE ldaU_lr
   !! S * atomic wfc at k
   COMPLEX(DP), POINTER :: swfcatomkpq(:,:)
   !! S * atomic wfc at k+q
+  !
+  LOGICAL :: lr_has_dnsorth = .FALSE.
+  !! If true, add lr_dnsorth to dnsscf.
+  COMPLEX(DP), ALLOCATABLE :: lr_dnsorth(:, :, :, :, :)
+  !! Fixed term to be added to dnsscf. Size (ldim, ldim, nspin, nat, 3*nat)
   !
 END MODULE ldaU_lr

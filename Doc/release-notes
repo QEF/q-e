@@ -1,13 +1,35 @@
-Incompatible changes in development version:
+New in 7.4.1 version:
+  * Modularization of DFPT routines into dfpt_kernel by Jae-Mo Lihm
+
+Fixed in 7.4.1 version:
+  * Error in qexml_init might cause EPW to fail in some cases
+  * Case tefield=.true.: bad xml tag written
+  * Bad weights occasionally written by matdyn.x
+  * ESM stress for 'bc3' case now works
+
+Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
 
-Fixed in development version:
+New in 7.4 version:
+  * Linear response phonon calculations with a two-chemical potential approach
+    by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
+  * Enabling detection of symmetries by comparison of species labels for example 
+      Hf1 is equivalent with Hf2 , O1 is equivalent to O2 etc 
+     (available with control variable symmetries_with_labels) 
+      by:  M. Park, R. Masuki 
+  * Enabling detection and optional usage of spin flip symmetries, for now excluding the 
+    spin translation case ( Identity + fractional translation + spin_flip) 
+     by: R. Masuki  
+
+Fixed in 7.4 version:
+  * Stress for USPP and conjugate-gradient algorithm of cp.x was wrong.
+    Bug found and fixed by Jeremy Rabone
   * Phonon restart was not working properly in some cases with ultrasoft,
     PPs, due to bad initialization of PP tables - affects v.7.3 and 7.3.1
   * Too small parameter "maxl" in upflib/ylmr2.f90 and upflib/ylmr2_gpu.f90
     for some PAW calculations - affects v.7.3.1 only
-  * Since v qe-7.2 phonon was not working for completely local pseudopotentials 
+  * Since v.7.2 phonon was not working for completely local pseudopotentials 
     such as the VBC pseudopotentials for H. 
 
 New in 7.3.1 version:

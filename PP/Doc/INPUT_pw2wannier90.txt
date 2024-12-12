@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw2wannier90.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
+Program: pw2wannier90.x / PWscf / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -348,4 +348,4 @@ NAMELIST: &INPUTPP
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed Feb 21 13:53:11 CET 2024
+This file has been created by helpdoc utility on Sat Oct 26 10:20:47 CEST 2024

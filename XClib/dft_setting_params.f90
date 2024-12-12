@@ -36,7 +36,7 @@ MODULE dft_setting_params
     !! pointers to libxc functional structs
     TYPE(xc_f03_func_info_t) :: xc_info(6)
     !! pointers to libxc info structs
-    INTEGER :: libxc_flags(6,0:15) = notset
+    INTEGER :: libxc_flags(6,0:16) = notset
     !! flags related to specific features of libxc functionals 
     !! (see Libxc doc)
     INTEGER :: n_ext_params(6) = 0

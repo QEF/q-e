@@ -95,7 +95,7 @@ contains
       complex(dp) :: c0_d(:, :)
       complex(dp) :: cm(ngw, nbspx)
       complex(dp) :: phi(ngw, nbspx)
-      real(dp) :: dbec(nkb, nbspx, 3, 3)
+      real(dp) :: dbec(:,:,:,:)
 !
       include 'laxlib.fh'
 !

@@ -16,7 +16,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat
   USE cell_base,            ONLY : omega
-  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : npol, domag, nspin_mag
@@ -43,7 +43,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   ! the sign in front of the response of the magnetization density
   COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
   ! input: the perturbed wfcs at the given k point
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf (dfftp%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf (dffts%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
   ! input/output: the accumulated change of the charge density and dbecsum
   !
   !   here the local variable
@@ -58,7 +58,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   COMPLEX(DP), ALLOCATABLE :: tg_psi (:,:), tg_dpsi (:,:), tg_drho(:,:)
   !
   INTEGER :: npw, npwq, ikk, ikq, itmp
-  INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, v_sizp, idx, ioff, ioff_tg, nxyp
+  INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
   INTEGER :: ntgrp, right_inc
   ! counters
   !
@@ -100,13 +100,12 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
      !
   ELSE
      v_siz = dffts%nnr
-     v_sizp = dfftp%nnr
   ENDIF
   !
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd)) copy(drhoscf(1:v_sizp,1:nspin_mag)) create(psi(1:v_siz,1:npol),dpsic(1:v_siz,1:npol)) present(igk_k) deviceptr(nl_d)
+  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd)) copy(drhoscf(1:v_siz,1:nspin_mag)) create(psi(1:v_siz,1:npol),dpsic(1:v_siz,1:npol)) present(igk_k) deviceptr(nl_d)
   do ibnd = 1, nbnd_occ(ikk), incr
 
      IF (dffts%has_task_groups) THEN

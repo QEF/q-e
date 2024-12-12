@@ -836,13 +836,24 @@ Alternatively, the link to \libxc\ can be activated after the configuration of  
 	\item add \texttt{-I/path/to/libxc/include/} to \texttt{IFLAGS}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
 \end{itemize}
-Then \qe\ can be compiled as usual.
-
-\paragraph{Note for version 5.0.0:} if the version of \libxc\ is 5.0.0, the last point must be replaced by:
+Then \qe\ can be compiled as usual.\\
+Note: if the version of \libxc\ is 5.0.0, the last point must be replaced by:
 \begin{itemize}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc}
 \end{itemize}
 since the \texttt{f03} interfaces are no longer available. They have been restored in following releases. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be replaced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
+
+\paragraph{With CMake:} when executing \verb|cmake| in the build folder, add the following flags:
+\begin{verbatim}
+cmake [....] -DQE_ENABLE_LIBXC=ON -DLIBXC_INCLUDE_DIR=path/to/libxc/include ..
+\end{verbatim}
+If \verb|cmake| is not able to find the package you may need to do this: in \qe\ main folder open \texttt{CMakeLists.txt} and, inside the block \verb|if(QE\_ENABLE\_LIBXC)|, near line 583,  add this:
+\begin{verbatim}
+set(ENV{PKG_CONFIG_PATH} "$ENV{PKG\_CONFIG\_PATH}:/path/to/libxc/pkgconfig")
+\end{verbatim}
+then execute \verb|cmake| as above and compile.
+
+\paragraph{Note for versions newer than 5.0.0:} \libxc\ enforces the Fermi hole curvature by default, which might lead to inexact results and convergence problems when using some MGGA functionals in \qe. This should be switched off by adding the \verb|--disable-fhc| flag when compiling \libxc.
 
 \subsubsection{Usage}
 In order to use \libxc\ functionals, you can enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. Starting from v7.0 of \qe\ the only allowed notation for DFTs that include Libxc terms is the index one. For example, to use the \libxc\ version of the PBE functional (both exchange and correlation):
@@ -856,10 +867,8 @@ input_dft = `gga_x_pbe gga_c_pbe'   ***OLD***
 The order must be the usual one, namely LDA exchange, LDA correlation, GGA exchange, GGA correlation, MGGA exchange, MGGA correlation. \libxc\ exchange+correlation functionals can be put in the exchange or in the correlation slot with no difference.\\
 The reason why the full-name notation has been disabled is to eliminate the risk of overlaps among different names (occurring especially when combinations of internal and \libxc\ DFTs are used).\\
 %
-The complete list of \libxc\ functionals (and their IDs) is available at:
-\begin{verbatim}
-https://www.tddft.org/programs/libxc/functionals/
-\end{verbatim}
+The complete list of \libxc\ functionals and IDs is available at:
+\verb|https://libxc.gitlab.io/|.
 %
 Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below).\\
 For example, the internal exchange term of PBE together with the correlation term of PBE in \libxc\ is obtained by:

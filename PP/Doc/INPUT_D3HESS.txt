@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: d3hess.x / PWscf / Quantum ESPRESSO (version: 7.3.1)
+Program: d3hess.x / PWscf / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -23,6 +23,8 @@ Purpose of d3hess.x:
         (3) run phonon
 
   Please note that filhess in d3hess input and dftd3_hess in phonon input, if given, should match.
+  Please also note that second derivatives of the three-body term of d3 dispersion are not implemented,
+  and phonon calculations with d3 should be run with dftd3_threebody=.false. in the SCF.
 
 Structure of the input data:
 ============================
@@ -74,4 +76,4 @@ NAMELIST: &INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Dec 15 09:55:20 CET 2023
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

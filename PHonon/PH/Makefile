@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 PHOBJS = \
-sym_def.o \
 acfdtest.o \
 add_dkmds.o \
 add_for_charges.o \
@@ -18,6 +17,7 @@ addcore.o \
 dynmat_nlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
+addusddens_cond.o \
 addusddense.o \
 addusdynmat.o \
 allocate_part.o \
@@ -35,8 +35,10 @@ clean_pw_ph.o \
 clinear.o \
 close_phq.o \
 compute_alphasum.o \
+compute_alphasum_cond.o \
 compute_becalp.o \
 compute_becsum_ph.o \
+compute_becsum_ph_cond.o \
 compute_drhous.o \
 compute_drhous_nc.o \
 compute_dvloc.o \
@@ -49,6 +51,7 @@ d2ionq_disp.o \
 d2nsq_bare.o \
 dnsq_bare.o \
 dnsq_orth.o \
+dnsq_orth_set_irr.o \
 dnsq_scf.o \
 davcio_drho.o \
 dfile_autoname.o \
@@ -114,9 +117,6 @@ print_clock_ph.o \
 prepare_q.o \
 prepare_sym_analysis.o \
 psidspsi.o \
-psymdvscf.o \
-psym_dmag.o \
-psym_dmage.o \
 punch_plot_e.o \
 q_points.o \
 q_points_wannier.o \
@@ -142,15 +142,11 @@ solve_linter.o \
 stop_ph.o \
 summarize.o \
 sym_and_write_zue.o \
-sym_dmag.o \
-sym_dmage.o \
-symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
 symm.o \
 symmorphic_or_nzb.o \
 swfc.o \
-syme_dns.o \
 sym_dns.o \
 sym_dns_wrapper.o \
 transform_int_so.o \
@@ -159,6 +155,7 @@ transform_alphasum_nc.o \
 transform_alphasum_so.o \
 tra_write_matrix.o \
 trntnsc.o \
+twochem_postproc_dfpt.o \
 write_epsilon_and_zeu.o \
 write_qplot_data.o \
 write_matrix.o \
@@ -166,7 +163,8 @@ write_modes.o \
 write_rec.o \
 write_hub.o \
 zstar_eu.o \
-zstar_eu_us.o 
+zstar_eu_us.o \
+dfpt_kernels.o
 
 RAMANOBJS =    \
 psyme2.o   \
@@ -254,9 +252,9 @@ fqha.x : fqha.o $(PWOBJS) $(QEMODS)
                  $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-postahc.x : postahc.o $(PWOBJS) $(QEMODS)
+postahc.x : postahc.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ postahc.o \
-                 $(PWOBJS) $(QEMODS) $(QELIBS)
+                 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 tldeps :

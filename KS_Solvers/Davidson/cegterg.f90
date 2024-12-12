@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -51,9 +51,8 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx*npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
-    ! energy threshold for convergence :
-    !   root improvement is stopped, when two consecutive estimates of the root
-    !   differ by less than ethr.
+    ! energy threshold for convergence: root improvement is stopped,
+    ! when two consecutive estimates of the root differ by less than ethr.
   LOGICAL, INTENT(IN) :: uspp
     ! if .FALSE. : do not calculate S|psi>
   INTEGER, INTENT(IN) :: btype(nvec)
@@ -89,8 +88,7 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
   REAL(DP), ALLOCATABLE :: ew(:)
-  !$acc declare device_resident(ew)
-    ! eigenvalues of the reduced hamiltonian
+    ! eigenvalues of the reduced hamiltonian (work space)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
     ! work space, contains psi
     ! the product of H and psi
@@ -173,7 +171,8 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      CALL errore( ' cegterg ',' cannot allocate vc ', ABS(ierr) )
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+       CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+  !$acc enter data create(ew)
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
@@ -400,12 +399,12 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      IF (npw < npwx) CALL dev_memset(psi, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
      IF (npol == 2)  CALL dev_memset(psi, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
      !
+     !$acc end host_data
      CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
      !
      CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
-     !$acc end host_data
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -672,6 +671,7 @@ SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( recv_counts )
   DEALLOCATE( displs )
   DEALLOCATE( conv )
+  !$acc exit data delete(ew)
   DEALLOCATE( ew )
   DEALLOCATE( vc )
   DEALLOCATE( hc )

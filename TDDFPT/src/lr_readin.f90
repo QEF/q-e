@@ -673,6 +673,9 @@ CONTAINS
           call errore('lr_readin', 'Magnons linear response calculation ' // &
                      & 'is not implemented with symmetry', 1 )
        ENDIF
+       IF (.not. domag) &
+          CALL errore ('lr_readin', ' Magnons linear response calculation ' // &
+                      & 'non-magnetic system', 1 )
     ENDIF
     !
     RETURN

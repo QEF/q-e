@@ -50,8 +50,8 @@ MODULE qexsd_init
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
             qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
-            qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm
-  !
+            qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm, qexsd_init_sawtooth_info
+ !
 CONTAINS
   !
     !
@@ -248,7 +248,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_symmetries(obj, space_group, nsym, nrot, s, ft, &
-         sname, t_rev, nat, irt, class_names, verbosity, noncolin)
+         sname, t_rev, nat, irt, class_names, verbosity, noncolin, colin_mag_)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -261,7 +261,9 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN) :: sname(:), verbosity
       CHARACTER(LEN=15),INTENT(IN) :: class_names(:)
       LOGICAL,INTENT(IN)           :: noncolin
+      INTEGER, OPTIONAL, INTENT(IN) :: colin_mag_
       !
+      INTEGER                      :: colin_mag
       TYPE(symmetry_type), ALLOCATABLE  :: symm(:)
       TYPE(equivalent_atoms_type)  :: equiv_atm
       TYPE(info_type)              :: info
@@ -278,7 +280,15 @@ CONTAINS
       NULLIFY( classname, trev) 
       !
       IF ( TRIM(verbosity) .EQ. 'high' .OR. TRIM(verbosity) .EQ. 'medium')  class_ispresent= .TRUE.
-      IF ( noncolin  ) time_reversal_ispresent = .TRUE.
+
+      IF ( PRESENT(colin_mag_) ) THEN
+         colin_mag = colin_mag_
+      ELSE
+         colin_mag = -1
+      END IF
+      
+      IF ( noncolin .OR. (colin_mag == 2) ) time_reversal_ispresent = .TRUE.
+
       DO i = 1, nrot
           !
           IF  (class_ispresent ) classname => class_names(i)
@@ -319,7 +329,8 @@ CONTAINS
           !
       ENDDO
       !
-      CALL qes_init (obj,"symmetries",NSYM = nsym, NROT=nrot, SPACE_GROUP = space_group, SYMMETRY=symm )
+      CALL qes_init (obj,"symmetries",NSYM = nsym, NROT=nrot, SPACE_GROUP = space_group, & 
+        SYMMETRY=symm, COLIN_MAG=colin_mag)
       !
       DO i = 1, nsym
          CALL qes_reset (symm(i))
@@ -1255,6 +1266,17 @@ CONTAINS
     END SUBROUTINE qexsd_init_stress
     !
     !
+    !-----------------------------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_sawtooth_info(sawtooth_energy, efield_corr, edir, eamp, emaxpos, eopreg) 
+    !------------------------------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      TYPE(sawtoothEnergy_type), INTENT(OUT)  :: sawtooth_energy 
+      REAL(DP),INTENT(IN)                     :: efield_corr, eamp, emaxpos, eopreg 
+      INTEGER                                 :: edir 
+      call qes_init(sawtooth_energy,TAGNAME="sawtoothEnergy", EDIR=edir, EAMP=eamp, EMAXPOS=emaxpos, & 
+                    EOPREG=eopreg, sawtoothEnergy=efield_corr) 
+    END SUBROUTINE qexsd_init_sawtooth_info 
     !------------------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_dipole_info (dipole_info, el_dipole, ion_dipole, edir, eamp, emaxpos, eopreg) 
        !------------------------------------------------------------------------------------------------
@@ -1298,7 +1320,7 @@ CONTAINS
     END SUBROUTINE qexsd_init_dipole_info
     !---------------------------------------------------------------------------------------------
     SUBROUTINE  qexsd_init_outputElectricField(obj, lelfield, tefield, ldipole, lberry, bp_obj, el_pol, &
-                                               ion_pol, dipole_obj , gateInfo)
+                                               ion_pol, sawtooth_obj, dipole_obj , gateInfo)
     !---------------------------------------------------------------------------------------------
     !
     IMPLICIT NONE
@@ -1307,7 +1329,8 @@ CONTAINS
     ! 
     LOGICAL,INTENT(IN)                                :: lberry, lelfield, tefield, ldipole
     REAL(DP),OPTIONAL,INTENT(IN)                      :: el_pol(:), ion_pol(:)
-    TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj
+    TYPE ( berryPhaseOutput_type),OPTIONAL,INTENT(IN) :: bp_obj
+    TYPE ( sawtoothEnergy_type),OPTIONAL,INTENT(IN)   :: sawtooth_obj 
     TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj 
     TYPE ( gateInfo_type),OPTIONAL,INTENT(IN)         :: gateInfo
     ! 
@@ -1333,6 +1356,7 @@ CONTAINS
     END IF 
     CALL  qes_init (obj, TAGNAME,   BerryPhase = bp_obj, &
                                     finiteElectricFieldInfo  = finiteField_obj, &
+                                    sawtoothEnergy = sawtooth_obj, & 
                                     dipoleInfo = dipole_obj, &
                                     GATEINFO =  gateInfo   )
     IF ( finfield_is) CALL qes_reset ( finiteField_obj) 

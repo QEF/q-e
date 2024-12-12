@@ -77,6 +77,8 @@ lambda=$(awk '
   }
   ifreq = (ifreq + 1) % num_freq
 }' $fname)
+dnsscf_e=`grep -A 5 "DNS_SCF SYMMETRIZED IN ELECTRIC FIELD IN CARTESIAN COORDINATES" $fname  | tail -3`
+dnsscf_ph=`grep -A 5 "DNS_SCF SYMMETRIZED IN CARTESIAN COORDINATES" $fname  | tail -3`
 
 # Q2R
 qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
@@ -175,6 +177,16 @@ fi
 if test "$lambda" != ""; then
         echo lambda
         for x in $lambda; do echo $x; done
+fi
+
+if test "$dnsscf_e" != ""; then
+        echo dnsscf_e
+        for x in $dnsscf_e; do echo $x; done
+fi
+
+if test "$dnsscf_ph" != ""; then
+        echo dnsscf_ph
+        for x in $dnsscf_ph; do echo $x; done
 fi
 
 if test "$qpt" != ""; then

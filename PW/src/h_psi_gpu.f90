@@ -86,7 +86,6 @@ END SUBROUTINE h_psi_gpu
 !----------------------------------------------------------------------------
 SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !----------------------------------------------------------------------------
-  !----------------------------------------------------------------------------
   !! This routine computes the product of the Hamiltonian matrix with m 
   !! wavefunctions contained in psi.
   !
@@ -142,10 +141,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
-                     xclib_dft_is('meta') .OR. &
-                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo") .OR. &
                     (exx_is_active() .AND. .NOT. use_ace) .OR. lelfield
-
 
   IF (need_host_copy) THEN
       ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
@@ -213,17 +209,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !
      ELSE
         ! ... usual reciprocal-space algorithm
-        !$acc host_data use_device(psi, hpsi)
-        CALL vloc_psi_gamma_gpu ( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$acc end host_data
+        CALL vloc_psi_gamma_acc ( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !
      ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
-     !$acc host_data use_device(psi, hpsi)
-     CALL vloc_psi_nc_gpu ( lda, n, m, psi, vrs, hpsi )
-     !$acc end host_data
+     CALL vloc_psi_nc_acc ( lda, n, m, psi, vrs, hpsi )
      !
   ELSE  
      ! 
@@ -259,9 +251,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !
      ELSE
         !
-        !$acc host_data use_device(psi, hpsi)
-        CALL vloc_psi_k_gpu ( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$acc end host_data
+        CALL vloc_psi_k_acc ( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !
      ENDIF
      !
@@ -286,33 +276,27 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   CALL stop_clock_gpu( 'h_psi:pot' )
   !
   IF (xclib_dft_is('meta')) THEN
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi) ! hpsi_host = hpsi
-     call h_psi_meta (lda, n, m, psi_host, hpsi_host)
-     CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-     !$acc end host_data
+     call h_psi_meta (lda, n, m, psi, hpsi)
   end if
   !
   ! ... Here we add the Hubbard potential times psi
   !
   IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi )    ! hpsi_host = hpsi
-     !$acc end host_data
      IF ( noncolin ) THEN
-        CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi, hpsi_host)  ! hpsi = hpsi_host
-        !$acc end host_data
+        !FIXME: vhpsi_nc must be ported to GPU
+        !$acc update host(psi, hpsi)
+        CALL vhpsi_nc( lda, n, m, psi, hpsi )
+        !$acc update device(psi, hpsi)
      ELSE
         IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
+          ! DFT + U
           CALL vhpsi_gpu( lda, n, m, psi, hpsi )  ! DFT+U
-        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN          ! DFT+U+V
-          CALL vhpsi( lda, n, m, psi_host, hpsi_host )
-          !$acc host_data use_device(hpsi)
-          CALL dev_memcpy(hpsi, hpsi_host)
-          !$acc end host_data
+        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
+          ! DFT+U+V  FIXME: must be ported to GPU
+          !$acc update host(psi, hpsi)
+          CALL vhpsi( lda, n, m, psi, hpsi )
+          !$acc update device(psi, hpsi)
         ENDIF
      ENDIF
      !

@@ -26,6 +26,19 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "11" ]] 
+then 
+  if [[ -e CRASH ]] 
+  then
+    cat CRASH > $3 
+  else
+    echo "Running PH ..."
+    ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+    if [[ -e CRASH ]]
+    then 
+      cat $3 
+    fi 
+  fi 
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."

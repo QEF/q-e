@@ -41,6 +41,10 @@ newdq.o \
 non_scf_ph.o \
 set_intq_nc.o \
 lr_sym_mod.o \
+sym_def.o \
+psymdvscf.o \
+symdvscf.o \
+sym_dmag.o \
 orthogonalize.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
@@ -67,8 +71,9 @@ lrcom.o \
 lr_dot.o \
 lr_dot_magnons.o \
 lr_nc_mag.o \
-lanczos_pseudohermitian.o \
+lr_two_chem.o\
 lanczos_nonhermitian.o \
+lanczos_pseudohermitian.o \
 lanczos_pseudohermitian_c.o \
 lanczos_nonhermitian_c.o \
 response_kernels.o \

@@ -134,7 +134,7 @@
     !
     USE units_lr,  ONLY : iuwfc, iudwf
     USE units_ph,  ONLY : iudrho
-    USE phcom,     ONLY : fildrho
+    USE output,    ONLY : fildrho
     USE mp_global, ONLY : me_pool,root_pool
     !
     IMPLICIT NONE

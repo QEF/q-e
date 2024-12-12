@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum ESPRESSO (version: 7.3.1)
+Program: cp.x / CP / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -248,7 +248,7 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    The restart files are write in the folder
+   Description:    The restart files are written, if ndw > 0, in the folder
                      outdir/prefix_ndw.save/
                    where outdir, prefix and ndw are the input variables described
                    in this document
@@ -763,6 +763,7 @@ NAMELIST: &SYSTEM
                         dispersion corrections with first-principle derived C6 coefficients
                         Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                         See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
+                        J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
                    
                        'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
                         (implemented in PW only)
@@ -2536,4 +2537,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Fri Dec 15 09:53:08 CET 2023
+This file has been created by helpdoc utility on Wed Oct 16 21:49:46 CEST 2024

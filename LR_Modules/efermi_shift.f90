@@ -12,18 +12,10 @@ MODULE efermi_shift
   ! NB: def(3) should be def (npertx), but it is used only at Gamma
   !     where the dimension of irreps never exceeds 3
   !
-  ! Define an abstract interface to use a callback
-  ABSTRACT INTERFACE
-     SUBROUTINE def_symmetrization(def)
-        USE kinds, ONLY : DP
-        COMPLEX(DP), INTENT(inout) :: def(3)
-     END SUBROUTINE
-  END INTERFACE
-  !
 CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, sym_def)
+SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1)
   !-----------------------------------------------------------------------
   !! This routine takes care of the effects of a shift of Ef, due to the
   !! perturbation, that can take place in a metal at q=0
@@ -60,8 +52,6 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, sym_def)
   REAL(DP), INTENT(IN), OPTIONAL :: becsum1((nhm*(nhm+1))/2, nat, nspin_mag)
   !! becsum1 = wdelta * <psi|beta> <beta|psi>
   !! (where wdelta is a Dirac-delta-like function)
-  PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
-  !! Symmetrization routine for the fermi energy change
   !
   ! local variables
   !
@@ -101,7 +91,8 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, sym_def)
   !
   ! symmetrizes the Fermi energy shift
   !
-  IF (present(sym_def)) CALL sym_def(def)
+  CALL sym_def(def)
+  !
   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
        (ipert, def (ipert) , ipert = 1, npert )
   !
@@ -155,8 +146,8 @@ SUBROUTINE ef_shift_wfc(npert, ldoss, drhoscf)
   !! the number of perturbation
   COMPLEX(DP), INTENT(IN) :: ldoss(dffts%nnr, nspin_mag)
   !! local DOS at Ef without augmentation
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin_mag, npert)
-  !! the change of the charge (with augmentation)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dffts%nnr, nspin_mag, npert)
+  !! the change of the charge (without augmentation)
   !
   ! local variables
   !

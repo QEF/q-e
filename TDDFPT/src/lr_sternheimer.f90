@@ -257,32 +257,26 @@ SUBROUTINE one_sternheimer_step(iu, flag)
           IF (ldpsi1) THEN
              h_diag=(0.0_DP,0.0_DP)
              h_diag1=(0.0_DP,0.0_DP)
-             h_dia=0.0_DP
-             s_dia=0.0_DP
-             CALL usnldiag( npwq, h_dia, s_dia )
+             CALL usnldiag( npwq, npol, h_dia, s_dia )
              !
 
              DO ibnd = 1, nbnd_occ (ikk)
                 !
                 DO ig = 1, npwq
-                   aa=g2kin(ig)+v_of_0+h_dia(ig,1)- &
-                      (et(ibnd,ikk)+w)*s_dia(ig,1)
+                   aa=h_dia(ig,1)- (et(ibnd,ikk)+w)*s_dia(ig,1)
                    IF (ABS(aa)<1.0_DP) aa=1.0_DP
                    h_diag(ig,ibnd)=CMPLX(1.0d0, 0.d0,kind=DP) / aa
-                   aa=g2kin(ig)+v_of_0+h_dia(ig,1)- &
-                      (et(ibnd,ikk)-w)*s_dia(ig,1)
+                   aa=h_dia(ig,1)- (et(ibnd,ikk)-w)*s_dia(ig,1)
                    IF (ABS(aa)<1.0_DP) aa=1.0_DP
                    h_diag1(ig,ibnd)=CMPLX(1.0d0, 0.d0,kind=DP) / aa
                 ENDDO
                 !
                 IF (noncolin) THEN
                    DO ig = 1, npwq
-                      aa=g2kin(ig)+v_of_0+h_dia(ig,2)- &
-                         (et(ibnd,ikk)+w)*s_dia(ig,2)
+                      aa=h_dia(ig,2)- (et(ibnd,ikk)+w)*s_dia(ig,2)
                       IF (ABS(aa)<1.0_DP) aa=1.0_DP
                       h_diag(ig+npwx,ibnd)=CMPLX(1.d0, 0.d0,kind=DP) / aa
-                      aa=g2kin(ig)+v_of_0+h_dia(ig,2)- &
-                         (et(ibnd,ikk)-w)*s_dia(ig,2)
+                      aa=h_dia(ig,2)- (et(ibnd,ikk)-w)*s_dia(ig,2)
                       IF (ABS(aa)<1.0_DP) aa=1.0_DP
                       h_diag1(ig+npwx,ibnd)=CMPLX(1.d0, 0.d0,kind=DP) / aa
                    ENDDO

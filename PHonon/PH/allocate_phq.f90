@@ -14,7 +14,7 @@ subroutine allocate_phq
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp
-  USE klist,         ONLY : nks, nkstot
+  USE klist,         ONLY : nks, nkstot, lgauss
   USE wvfct,         ONLY : nbnd, npwx
   USE gvect,         ONLY : ngm
   USE lsda_mod,      ONLY : nspin
@@ -47,7 +47,9 @@ subroutine allocate_phq
                             sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
-
+  USE two_chem,      ONLY : twochem
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc,&
+                            becsumort_cond,becsum_cond
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
   !
@@ -118,15 +120,19 @@ subroutine allocate_phq
      allocate (int2 ( nhm , nhm , 3 , nat , nat))
      if (okpaw) then
         allocate (becsumort ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
-     endif
+  if (twochem.and.lgauss.and.lgamma)  allocate (becsumort_cond ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
+    endif
      allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin_mag))
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))
      allocate (dpqq( nhm, nhm, 3, ntyp))
+        if (twochem.and.lgauss.and.lgamma) allocate(becsum_cond( nhm*(nhm+1)/2, nat, nspin))
      IF (noncolin) THEN
         ALLOCATE(int1_nc( nhm, nhm, 3, nat, nspin))
         ALLOCATE(int4_nc( nhm, nhm, 3, 3, nat, nspin))
         ALLOCATE(becsum_nc( nhm*(nhm+1)/2, nat, npol, npol))
+        if (twochem.and.lgauss.and.lgamma) ALLOCATE(becsum_cond_nc( nhm*(nhm+1)/2, nat, npol, npol))
         ALLOCATE(alphasum_nc( nhm*(nhm+1)/2, 3, nat, npol, npol))
+        if (twochem.and.lgauss.and.lgamma) ALLOCATE(alphasum_nc( nhm*(nhm+1)/2, 3, nat, npol, npol))
         IF (lspinorb) THEN
            ALLOCATE(int2_so( nhm, nhm, 3, nat , nat, nspin))
            ALLOCATE(int5_so( nhm, nhm, 3, 3, nat , nat, nspin))
@@ -136,6 +142,7 @@ subroutine allocate_phq
 
 
      allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin_mag))
+     if (twochem.and.lgauss.and.lgamma) allocate (alphasum_cond ( nhm * (nhm + 1)/2 , 3 , nat , nspin_mag))
      allocate (this_dvkb3_is_on_file(nksq))
      this_dvkb3_is_on_file(:)=.false.
   endif

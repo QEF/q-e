@@ -471,6 +471,7 @@ PROGRAM matdyn
         ALLOCATE ( q(3,nq) )
         IF (.NOT.q_in_band_form) THEN
            ALLOCATE(wq(nq))
+           wq(:) = 0.0_dp
            DO n = 1,nq
               IF (ionode) READ (5,*) (q(i,n),i=1,3)
            END DO

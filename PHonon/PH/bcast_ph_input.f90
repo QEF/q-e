@@ -16,10 +16,9 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE control_lr, ONLY : lgamma, lrpa
-  USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
-                         niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
-                         ldisp, reduce_io, zue, zeu, epsil, trans, &
+  USE control_lr, ONLY : lgamma, lrpa, nmix_ph, niter_ph, alpha_mix, tr2_ph, reduce_io
+  USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, &
+                         lnoloc, recover, ldisp, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
                          qplot, only_init, only_wfc, low_directory_check,&
                          nk1, nk2, nk3, k1, k2, k3
@@ -45,7 +44,7 @@ subroutine bcast_ph_input ( )
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
   USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-      skip_upperfan
+      skip_upper
 
   implicit none
   !
@@ -81,7 +80,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (do_charge_neutral, meta_ionode_id, world_comm)
   call mp_bcast (do_long_range, meta_ionode_id, world_comm)
   call mp_bcast (elph_ahc, meta_ionode_id, world_comm)
-  call mp_bcast (skip_upperfan, meta_ionode_id, world_comm)
+  call mp_bcast (skip_upper, meta_ionode_id, world_comm)
   !
   ! integers
   !

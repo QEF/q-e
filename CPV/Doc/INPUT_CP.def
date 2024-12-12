@@ -732,6 +732,7 @@ input_description -distribution {Quantum ESPRESSO} -package CP -program cp.x {
                     dispersion corrections with first-principle derived C6 coefficients
                     Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                     See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
+                    J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
 
                    'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
                     (implemented in PW only)

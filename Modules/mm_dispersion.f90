@@ -184,6 +184,8 @@ MODULE london_module
       REAL ( DP ) :: R_0, C_0, e_cut , sls
       ! local : buffers
       !
+      IF ( ALLOCATED ( C6_ij ) ) RETURN
+      !
       ! here we allocate parameters
       !
       ALLOCATE ( C6_ij ( ntyp , ntyp ) , &

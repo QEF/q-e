@@ -44,7 +44,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
+SUBROUTINE bpcg_k( hs_psi_ptr, g_psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -102,7 +102,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
   !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
 
-  EXTERNAL  hs_psi_ptr, g_1psi_ptr
+  EXTERNAL  hs_psi_ptr, g_psi_ptr
   ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
   ! hs_psi_ptr( npwx, npw, nvec, psi, hpsi, spsi )
   !
@@ -130,7 +130,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
-     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
+     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the search
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
         !$acc parallel  
@@ -150,11 +150,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
         !$acc end parallel
 
         ! initial preconditioned gradient 
-        !$acc host_data use_device(z, e)
-        do l=nactive+1,nactive+nnew; i=l+done
-           call g_1psi_ptr(npwx,npw,z(:,l),e(i))     
-        end do
-        !$acc end host_data
+        CALL g_psi_ptr( npwx, npw, nnew, npol, z(:,nactive+1), e(nactive+done+1) )
 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
@@ -264,11 +260,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
         END DO 
      end do
 
-     !$acc host_data use_device(z, e)
-     do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-        call g_1psi_ptr(npwx,npw,z(:,l),e(i))
-     end do
-     !$acc end host_data
+     CALL g_psi_ptr( npwx, npw, nactive, npol, z, e(done+1) )
 
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )

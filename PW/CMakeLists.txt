@@ -231,7 +231,8 @@ set(src_pw
    src/vcsmd.f90 
    src/vcsubs.f90 
    src/vhpsi.f90 
-   src/vloc_psi.f90 
+   src/vloc_psi_tg.f90 
+   src/vloc_psi_acc.f90 
    src/utils.f90 
    src/xdm_dispersion.f90 
    src/wfcinit.f90 
@@ -245,20 +246,16 @@ set(src_pw
    src/wannier_occ.f90
    src/d3hess_mod.f90
    # GPU
-   src/g_psi_mod_gpu.f90
    src/newd_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/rotate_wfc_gpu.f90
-   src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90
    src/hs_1psi_gpu.f90
-   src/g_psi_gpu.f90
    src/add_vhub_to_deeq_gpu.f90
    src/s_1psi_gpu.f90
    src/h_psi_gpu.f90
    src/utils_gpu.f90
    src/vhpsi_gpu.f90
-   src/vloc_psi_gpu.f90
    src/hs_psi_gpu.f90
    src/sic.f90
    src/scissor.f90)

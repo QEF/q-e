@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
-  USE FoX_wxml
-#else
-  USE wxml
-#endif
+#if defined (__fox) 
+  USE  FoX_wxml 
+#else 
+  USE wxml 
+#endif 
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -91,6 +91,7 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_inputOccupations
     MODULE PROCEDURE qes_write_outputElectricField
     MODULE PROCEDURE qes_write_BerryPhaseOutput
+    MODULE PROCEDURE qes_write_sawtoothEnergy
     MODULE PROCEDURE qes_write_dipoleOutput
     MODULE PROCEDURE qes_write_finiteFieldOut
     MODULE PROCEDURE qes_write_polarization
@@ -392,6 +393,9 @@ MODULE qes_write_module
      END IF
      IF (obj%rismlaue_ispresent) THEN
         CALL qes_write_rismlaue (xp, obj%rismlaue)
+     END IF
+     IF (obj%two_chem_ispresent) THEN
+        CALL qes_write_two_chem (xp, obj%two_chem)
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_output
@@ -2509,6 +2513,9 @@ MODULE qes_write_module
      IF (obj%finiteElectricFieldInfo_ispresent) THEN
         CALL qes_write_finiteFieldOut (xp, obj%finiteElectricFieldInfo)
      END IF
+     IF (obj%sawtoothEnergy_ispresent) THEN
+        CALL qes_write_sawtoothEnergy (xp, obj%sawtoothEnergy)
+     END IF
      IF (obj%dipoleInfo_ispresent) THEN
         CALL qes_write_dipoleOutput (xp, obj%dipoleInfo)
      END IF
@@ -2539,6 +2546,25 @@ MODULE qes_write_module
      END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_BerryPhaseOutput
+
+   SUBROUTINE qes_write_sawtoothEnergy(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(sawtoothEnergy_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%eamp_ispresent) CALL xml_addAttribute(xp, 'eamp', obj%eamp )
+     IF (obj%eopreg_ispresent) CALL xml_addAttribute(xp, 'eopreg', obj%eopreg )
+     IF (obj%emaxpos_ispresent) CALL xml_addAttribute(xp, 'emaxpos', obj%emaxpos )
+     IF (obj%edir_ispresent) CALL xml_addAttribute(xp, 'edir', obj%edir )
+        CALL xml_AddCharacters(xp, obj%sawtoothEnergy, fmt='s16')
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_sawtoothEnergy
 
    SUBROUTINE qes_write_dipoleOutput(xp, obj)
      !-----------------------------------------------------------------
@@ -2799,6 +2825,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'nsym')
         CALL xml_addCharacters(xp, obj%nsym)
      CALL xml_EndElement(xp, 'nsym')
+     IF (obj%colin_mag_ispresent) THEN
+        CALL xml_NewElement(xp, "colin_mag")
+           CALL xml_addCharacters(xp, obj%colin_mag)
+        CALL xml_EndElement(xp, "colin_mag")
+     END IF
      CALL xml_NewElement(xp, 'nrot')
         CALL xml_addCharacters(xp, obj%nrot)
      CALL xml_EndElement(xp, 'nrot')
@@ -3070,9 +3101,6 @@ MODULE qes_write_module
         CALL xml_NewElement(xp, "lowestUnoccupiedLevel")
            CALL xml_addCharacters(xp, obj%lowestUnoccupiedLevel, fmt='s16')
         CALL xml_EndElement(xp, "lowestUnoccupiedLevel")
-     END IF
-     IF (obj%twochem_ispresent) THEN
-        CALL qes_write_two_chem (xp, obj%twochem)
      END IF
      IF (obj%two_fermi_energies_ispresent) THEN
         CALL xml_NewElement(xp, "two_fermi_energies")
@@ -3623,8 +3651,13 @@ MODULE qes_write_module
         CALL xml_addCharacters(xp, obj%degauss_cond, fmt='s16')
      CALL xml_EndElement(xp, 'degauss_cond')
      CALL xml_NewElement(xp, 'nelec_cond')
-        CALL xml_addCharacters(xp, obj%nelec_cond)
+        CALL xml_addCharacters(xp, obj%nelec_cond, fmt='s16')
      CALL xml_EndElement(xp, 'nelec_cond')
+     IF (obj%ef_cond_ispresent) THEN
+        CALL xml_NewElement(xp, "ef_cond")
+           CALL xml_addCharacters(xp, obj%ef_cond, fmt='s16')
+        CALL xml_EndElement(xp, "ef_cond")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_two_chem
 

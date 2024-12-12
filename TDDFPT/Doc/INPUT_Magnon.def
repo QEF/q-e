@@ -117,12 +117,12 @@ input_description -distribution {Quantum ESPRESSO} -package turboMAGNON -program
         var ipol -type INTEGER {
             default {1}
             info {
-                An integer variable that determines which element of the
+                An integer variable that determines which column of the
                 dynamical magnetic susceptibility will be computed:
-                1 -> chi_xx(omega), 2 -> chi_yy(omega), and
-                3 -> chi_zz(omega). When set to 4, three Lanczos chains
-                are sequentially performed and the full susceptibility
-                tensor is computed.
+                1 -> chi_ax(omega), 2 -> chi_ay(omega), and
+                3 -> chi_az(omega), with a=(x,y,z). When set to 4,
+                three Lanczos chains are sequentially performed and the
+                full susceptibility tensor is computed.
                 }
         }
 

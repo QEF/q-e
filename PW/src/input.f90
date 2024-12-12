@@ -312,7 +312,9 @@ SUBROUTINE control_iosys()
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
                             treinit_gvecs_    => treinit_gvecs, &  
-                            max_xml_steps_    => max_xml_steps 
+                            max_xml_steps_    => max_xml_steps, & 
+                            use_spinflip_    => use_spinflip, & 
+                            symm_by_label 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
@@ -361,7 +363,8 @@ SUBROUTINE control_iosys()
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, max_xml_steps,       &
-                               trism, twochem
+                               trism, twochem, symmetry_with_labels,           & 
+                               use_spinflip 
 
   !
   ! ... SYSTEM namelist
@@ -713,18 +716,24 @@ SUBROUTINE control_iosys()
   CASE( 1 )
      !
      lsda = .false.
-     IF ( noncolin ) nspin = 4
+     IF ( noncolin ) THEN 
+       nspin = 4
+       symm_by_label = symmetry_with_labels
+     END IF 
      !
   CASE( 2 )
      !
      lsda = .true.
      IF ( noncolin ) CALL errore( 'iosys', &
                      'noncolin .and. nspin==2 are conflicting flags', 1 )
+     symm_by_label = symmetry_with_labels 
+     use_spinflip_ = use_spinflip
      !
   CASE( 4 )
      !
      lsda = .false.
      noncolin = .true.
+     symm_by_label = symmetry_with_labels 
      !
   CASE DEFAULT
      !
@@ -947,7 +956,7 @@ SUBROUTINE control_iosys()
      isolve = 2
      max_ppcg_iter = diago_ppcg_maxiter
      !
-  CASE ( 'paro' )
+  CASE ( 'paro', 'ParO' )
      !
      isolve = 3
      !

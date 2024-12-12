@@ -38,7 +38,7 @@ MODULE control_flags
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
             tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub,       &
-            dt_xml_old
+            dt_xml_old, symm_by_label, use_spinflip
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -79,6 +79,8 @@ MODULE control_flags
                                      ! and let PW rotuines to know about this
   LOGICAL :: tddfpt        = .FALSE. ! use TDDFPT specific tweaks when using the Environ plugin
   LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
+  LOGICAL :: symm_by_label = .FALSE. ! use atomic labels to detect symmetry 
+  LOGICAL :: use_spinflip = .FALSE.      ! in collinear case add allow rotations + spinflip 
   !
   TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence

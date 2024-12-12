@@ -818,6 +818,8 @@ gloop:    DO jg=iig,ngm_
     !
     USE kinds
     USE constants,   ONLY : tpi
+    USE noncollin_module, ONLY : colin_mag
+    USE io_global,       ONLY : stdout 
     !
     IMPLICIT NONE
     !
@@ -927,15 +929,29 @@ gloop:    DO jg=iig,ngm_
                                  g_(2,isg) * ft_(2,ns) + &
                                  g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), -SIN(arg), KIND=dp )
-                   DO is=1,nspin_lsda
-                      rhosum(is) = rhosum(is) + rhog_(isg, is) * fact
-                   END DO
+                   ! time-reversal for collinear case
+                   IF ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1) ) THEN
+                      rhosum(1) = rhosum(1) + rhog_(isg, 2) * fact
+                      rhosum(2) = rhosum(2) + rhog_(isg, 1) * fact
+                   ! other cases
+                   ELSE
+                      DO is=1,nspin_lsda
+                         rhosum(is) = rhosum(is) + rhog_(isg, is) * fact
+                      END DO
+                   END IF
                    IF ( nspin_ == 4 ) &
                         magsum(:) = magsum(:) + magrot(:) * fact
                 ELSE
-                   DO is=1,nspin_lsda
-                      rhosum(is) = rhosum(is) + rhog_(isg, is)
-                   END DO
+                   ! time-reversal for collinear case
+                   IF ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1)) THEN
+                      rhosum(1) = rhosum(1) + rhog_(isg, 2)
+                      rhosum(2) = rhosum(2) + rhog_(isg, 1)
+                   ! other cases
+                   ELSE
+                      DO is=1,nspin_lsda
+                         rhosum(is) = rhosum(is) + rhog_(isg, is)
+                      END DO
+                   END IF
                    IF ( nspin_ == 4 ) &
                         magsum(:) = magsum(:) + magrot(:)
                 END IF
@@ -967,18 +983,28 @@ gloop:    DO jg=iig,ngm_
                                  g_(2,isg) * ft_(2,ns) + &
                                  g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), SIN(arg), KIND=dp )
-                   DO is=1,nspin_lsda
-                      rhog_(isg,is) = rhosum(is) * fact
-                   END DO
+                   if ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1) ) THEN
+                      rhog_(isg, 1) = rhosum(2) * fact
+                      rhog_(isg, 2) = rhosum(1) * fact
+                   ELSE
+                      DO is=1,nspin_lsda
+                         rhog_(isg,is) = rhosum(is) * fact
+                      END DO
+                   END IF
                    IF ( nspin_ == 4 ) THEN
                       DO is=2,nspin_
                          rhog_(isg, is) = mag(is-1)*fact
                       END DO
                    END IF
                 ELSE
-                   DO is=1,nspin_lsda
-                      rhog_(isg,is) = rhosum(is)
-                   END DO
+                   IF ( (colin_mag == 2) .AND. (t_rev(invs(ns)) == 1) ) THEN
+                      rhog_(isg, 1) = rhosum(2)
+                      rhog_(isg, 2) = rhosum(1)
+                   ELSE
+                      DO is=1,nspin_lsda
+                         rhog_(isg,is) = rhosum(is)
+                      END DO
+                   END IF
                    IF ( nspin_ == 4 ) THEN
                       DO is=2,nspin_
                          rhog_(isg, is) = mag(is-1)

@@ -6,6 +6,7 @@
     ndr=50, ndw=51,
     prefix='sio2_cg-pbe'
     verbosity='medium'
+    tstress=.true., tprnfor=.true.
  /
  &system
     ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,

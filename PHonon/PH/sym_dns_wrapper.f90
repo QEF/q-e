@@ -59,7 +59,7 @@ SUBROUTINE sym_dns_wrapper (ldim, dns_cart, dns_pattern)
      ! pack
      dns_aux(:,:,:,:,1:npe) = dns_pattern(:,:,:,:,imode0:imode0-1+npe)
      ! symmetrize
-     CALL sym_dns (ldim, npe, irr, dns_aux)
+     CALL sym_dns (ldim, npe, dns_aux)
      ! unpack
      dns_pattern(:,:,:,:,imode0:imode0-1+npe) = dns_aux(:,:,:,:,1:npe)
      ! deallocate

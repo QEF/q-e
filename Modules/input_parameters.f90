@@ -201,6 +201,14 @@ MODULE input_parameters
         !!if TRUE, the system is simulated using two chemical potentials,
         !!one for the electrons and one for the holes (photoexcited system)
 
+        LOGICAL :: symmetry_with_labels = .FALSE. 
+        !! if .TRUE. the  symmetries are checked comparing the first two letters of the 
+        !! atomic species labels and the collinear or vector magnetization  
+
+        LOGICAL :: use_spinflip = .FALSE. 
+        !! if .TRUE. symmetries in the collinear magnetic case
+        !! can  include the spinflip operation. 
+
         LOGICAL :: tefield  = .false.
         !! if TRUE a sawtooth potential simulating a finite electric field
         !! is added to the local potential - only used in PW
@@ -292,7 +300,8 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, use_wannier, lecrpa,                  &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
-          input_xml_schema_file, gate, trism, twochem
+          input_xml_schema_file, gate, trism, twochem, use_spinflip,      &
+          symmetry_with_labels 
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters

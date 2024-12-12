@@ -230,12 +230,6 @@ MODULE control_ph
   !
   SAVE
   !
-  INTEGER, PARAMETER :: maxter = 150
-  !! maximum number of iterations
-  INTEGER :: niter_ph
-  !! maximum number of iterations (read from input)
-  INTEGER :: nmix_ph
-  !! mixing type
   INTEGER :: start_irr
   !! initial representation
   INTEGER :: last_irr
@@ -247,22 +241,8 @@ MODULE control_ph
   INTEGER :: last_q
   !! last_q in the list
   !
-  REAL(DP) :: tr2_ph
-  !! threshold for phonon calculation
-  REAL(DP) :: alpha_mix(maxter)
-  !! the mixing parameter
-  CHARACTER(LEN=10) :: where_rec='no_recover'
-  !! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
-  CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  INTEGER :: rec_code=-1000
-  !! code for recover
-  INTEGER :: rec_code_read=-1000
-  !! code for recover. Not changed during the run
-  LOGICAL :: lgamma_gamma
-  !! if TRUE this is a q=0 computation with k=0 only
-  LOGICAL :: convt
-  !! if TRUE the phonon has converged
+  CHARACTER(LEN=256) :: tmp_dir_ph, tmp_dir_phq
   LOGICAL :: epsil
   !! if TRUE computes dielec. const and eff. charges
   LOGICAL :: done_epsil=.FALSE.
@@ -307,8 +287,6 @@ MODULE control_ph
   !! if TRUE the run makes first a nscf calculation
   LOGICAL :: ldisp
   !! if TRUE the run calculates full phonon dispersion
-  LOGICAL :: reduce_io
-  !! if TRUE reduces needed I/O
   LOGICAL :: done_bands
   !! if TRUE the bands have been calculated
   LOGICAL :: bands_computed=.FALSE.

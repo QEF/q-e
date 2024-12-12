@@ -46,7 +46,12 @@ subroutine deallocate_phq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
   USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save
   USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
-
+  USE two_chem,      ONLY : twochem
+  USE klist,         ONLY : lgauss
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc, becsumort_cond,becsum_cond
+ 
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc, becsumort_cond,becsum_cond
+ 
   IMPLICIT NONE
   INTEGER :: ik, ipol
 
@@ -100,14 +105,19 @@ subroutine deallocate_phq
   if(allocated(int3_nc)) deallocate(int3_nc)
   if(allocated(int4_nc)) deallocate(int4_nc)
   if(allocated(becsum_nc)) deallocate(becsum_nc)
+  if(allocated(becsum_cond)) deallocate(becsum_cond)
+  if(allocated(becsum_cond_nc)) deallocate(becsum_cond_nc)
   if(allocated(becsumort)) deallocate(becsumort)
+  if(allocated(becsumort_cond)) deallocate(becsumort_cond)
   if(allocated(alphasum_nc)) deallocate(alphasum_nc)
+  if(allocated(alphasum_cond_nc)) deallocate(alphasum_cond_nc)
   if(allocated(int2_so)) deallocate(int2_so)
   if(allocated(int5_so)) deallocate(int5_so)
   if(allocated(dpqq_so)) deallocate(dpqq_so)
   IF (ALLOCATED(int1_nc_save)) DEALLOCATE (int1_nc_save)
   IF (ALLOCATED(deeq_nc_save)) DEALLOCATE (deeq_nc_save)
   if(allocated(alphasum)) deallocate (alphasum)
+  if(allocated(alphasum_cond)) deallocate (alphasum_cond)
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)

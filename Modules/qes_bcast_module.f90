@@ -88,6 +88,7 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_inputOccupations
     MODULE PROCEDURE qes_bcast_outputElectricField
     MODULE PROCEDURE qes_bcast_BerryPhaseOutput
+    MODULE PROCEDURE qes_bcast_sawtoothEnergy
     MODULE PROCEDURE qes_bcast_dipoleOutput
     MODULE PROCEDURE qes_bcast_finiteFieldOut
     MODULE PROCEDURE qes_bcast_polarization
@@ -377,6 +378,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%rismlaue_ispresent, ionode_id, comm)
     IF (obj%rismlaue_ispresent) &
       CALL qes_bcast_rismlaue(obj%rismlaue, ionode_id, comm)
+    CALL mp_bcast(obj%two_chem_ispresent, ionode_id, comm)
+    IF (obj%two_chem_ispresent) &
+      CALL qes_bcast_two_chem(obj%two_chem, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_output
   !
@@ -2259,6 +2263,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%finiteElectricFieldInfo_ispresent, ionode_id, comm)
     IF (obj%finiteElectricFieldInfo_ispresent) &
       CALL qes_bcast_finiteFieldOut(obj%finiteElectricFieldInfo, ionode_id, comm)
+    CALL mp_bcast(obj%sawtoothEnergy_ispresent, ionode_id, comm)
+    IF (obj%sawtoothEnergy_ispresent) &
+      CALL qes_bcast_sawtoothEnergy(obj%sawtoothEnergy, ionode_id, comm)
     CALL mp_bcast(obj%dipoleInfo_ispresent, ionode_id, comm)
     IF (obj%dipoleInfo_ispresent) &
       CALL qes_bcast_dipoleOutput(obj%dipoleInfo, ionode_id, comm)
@@ -2295,6 +2302,34 @@ MODULE qes_bcast_module
     ENDDO
     !
   END SUBROUTINE qes_bcast_BerryPhaseOutput
+  !
+  !
+  SUBROUTINE qes_bcast_sawtoothEnergy(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(sawtoothEnergy_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%eamp_ispresent, ionode_id, comm)
+    IF (obj%eamp_ispresent) &
+      CALL mp_bcast(obj%eamp, ionode_id, comm)
+    CALL mp_bcast(obj%eopreg_ispresent, ionode_id, comm)
+    IF (obj%eopreg_ispresent) &
+      CALL mp_bcast(obj%eopreg, ionode_id, comm)
+    CALL mp_bcast(obj%emaxpos_ispresent, ionode_id, comm)
+    IF (obj%emaxpos_ispresent) &
+      CALL mp_bcast(obj%emaxpos, ionode_id, comm)
+    CALL mp_bcast(obj%edir_ispresent, ionode_id, comm)
+    IF (obj%edir_ispresent) &
+      CALL mp_bcast(obj%edir, ionode_id, comm)
+    CALL mp_bcast(obj%sawtoothEnergy, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_sawtoothEnergy
   !
   !
   SUBROUTINE qes_bcast_dipoleOutput(obj, ionode_id, comm )
@@ -2528,6 +2563,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lread, ionode_id, comm)
     !
     CALL mp_bcast(obj%nsym, ionode_id, comm)
+    CALL mp_bcast(obj%colin_mag_ispresent, ionode_id, comm)
+    IF (obj%colin_mag_ispresent) &
+      CALL mp_bcast(obj%colin_mag, ionode_id, comm)
     CALL mp_bcast(obj%nrot, ionode_id, comm)
     CALL mp_bcast(obj%space_group, ionode_id, comm)
     CALL mp_bcast(obj%ndim_symmetry, ionode_id, comm)
@@ -2744,9 +2782,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lowestUnoccupiedLevel_ispresent, ionode_id, comm)
     IF (obj%lowestUnoccupiedLevel_ispresent) &
       CALL mp_bcast(obj%lowestUnoccupiedLevel, ionode_id, comm)
-    CALL mp_bcast(obj%twochem_ispresent, ionode_id, comm)
-    IF (obj%twochem_ispresent) &
-      CALL qes_bcast_two_chem(obj%twochem, ionode_id, comm)
     CALL mp_bcast(obj%two_fermi_energies_ispresent, ionode_id, comm)
     IF (obj%two_fermi_energies_ispresent) &
       CALL mp_bcast(obj%two_fermi_energies, ionode_id, comm)
@@ -3264,6 +3299,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%nbnd_cond, ionode_id, comm)
     CALL mp_bcast(obj%degauss_cond, ionode_id, comm)
     CALL mp_bcast(obj%nelec_cond, ionode_id, comm)
+    CALL mp_bcast(obj%ef_cond_ispresent, ionode_id, comm)
+    IF (obj%ef_cond_ispresent) &
+      CALL mp_bcast(obj%ef_cond, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_two_chem
   !

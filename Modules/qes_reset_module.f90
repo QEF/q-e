@@ -89,6 +89,7 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_inputOccupations
     MODULE PROCEDURE qes_reset_outputElectricField
     MODULE PROCEDURE qes_reset_BerryPhaseOutput
+    MODULE PROCEDURE qes_reset_sawtoothEnergy
     MODULE PROCEDURE qes_reset_dipoleOutput
     MODULE PROCEDURE qes_reset_finiteFieldOut
     MODULE PROCEDURE qes_reset_polarization
@@ -345,6 +346,9 @@ MODULE qes_reset_module
     IF (obj%rismlaue_ispresent) &
       CALL qes_reset_rismlaue(obj%rismlaue)
     obj%rismlaue_ispresent = .FALSE.
+    IF (obj%two_chem_ispresent) &
+      CALL qes_reset_two_chem(obj%two_chem)
+    obj%two_chem_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_output
   !
@@ -1651,6 +1655,9 @@ MODULE qes_reset_module
     IF (obj%finiteElectricFieldInfo_ispresent) &
       CALL qes_reset_finiteFieldOut(obj%finiteElectricFieldInfo)
     obj%finiteElectricFieldInfo_ispresent = .FALSE.
+    IF (obj%sawtoothEnergy_ispresent) &
+      CALL qes_reset_sawtoothEnergy(obj%sawtoothEnergy)
+    obj%sawtoothEnergy_ispresent = .FALSE.
     IF (obj%dipoleInfo_ispresent) &
       CALL qes_reset_dipoleOutput(obj%dipoleInfo)
     obj%dipoleInfo_ispresent = .FALSE.
@@ -1689,6 +1696,23 @@ MODULE qes_reset_module
     obj%ndim_electronicPolarization = 0
     !
   END SUBROUTINE qes_reset_BerryPhaseOutput
+  !
+  !
+  SUBROUTINE qes_reset_sawtoothEnergy(obj)
+    !
+    IMPLICIT NONE
+    TYPE(sawtoothEnergy_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%eamp_ispresent = .FALSE.
+    obj%eopreg_ispresent = .FALSE.
+    obj%emaxpos_ispresent = .FALSE.
+    obj%edir_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_sawtoothEnergy
   !
   !
   SUBROUTINE qes_reset_dipoleOutput(obj)
@@ -1865,6 +1889,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%colin_mag_ispresent = .FALSE.
     IF (ALLOCATED(obj%symmetry)) THEN
       DO i=1, SIZE(obj%symmetry)
         CALL qes_reset_symmetry(obj%symmetry(i))
@@ -2008,9 +2033,6 @@ MODULE qes_reset_module
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
     obj%lowestUnoccupiedLevel_ispresent = .FALSE.
-    IF (obj%twochem_ispresent) &
-      CALL qes_reset_two_chem(obj%twochem)
-    obj%twochem_ispresent = .FALSE.
     obj%two_fermi_energies_ispresent = .FALSE.
     CALL qes_reset_k_points_IBZ(obj%starting_k_points)
     CALL qes_reset_occupations(obj%occupations_kind)
@@ -2400,6 +2422,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%ef_cond_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_two_chem
   !

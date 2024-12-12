@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 7.3.1
+    VERSION 7.4
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -290,13 +290,11 @@ endif()
 # OpenMP
 # The following targets will be defined:
 add_library(qe_openmp_fortran INTERFACE)
-add_library(qe_openmp_c INTERFACE)
-qe_install_targets(qe_openmp_fortran qe_openmp_c)
+qe_install_targets(qe_openmp_fortran)
 ###########################################################
 if(QE_ENABLE_OPENMP)
-    find_package(OpenMP REQUIRED Fortran C)
+    find_package(OpenMP REQUIRED Fortran)
     target_link_libraries(qe_openmp_fortran INTERFACE OpenMP::OpenMP_Fortran)
-    target_link_libraries(qe_openmp_c INTERFACE OpenMP::OpenMP_C)
 endif(QE_ENABLE_OPENMP)
 if(QE_ENABLE_OFFLOAD)
     target_compile_definitions(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:__OPENMP_GPU>")

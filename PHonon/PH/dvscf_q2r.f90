@@ -13,7 +13,7 @@ PROGRAM dvscf_q2r
 !!    Fourier transform the dvscf computed at coarse q points to real space.
 !!    Originally proposed by [1]. For charge neutrality correction see [2].
 !!    Dipole long-range part described in [3].
-!!    Quadrupole long-range part described in [4] (not implemented here).
+!!    Quadrupole long-range part described in [4].
 !!    Author: Jae-Mo Lihm
 !!
 !! Input data: Namelist "input"
@@ -52,7 +52,7 @@ PROGRAM dvscf_q2r
 !! [1] A. Eiguren and C. Ambrosch-Draxl, PRB 78, 045124 (2008)
 !! [2] S. Ponce et al, J. Chem. Phys. 143, 102813 (2015)
 !! [3] Xavier Gonze et al, Comput. Phys. Commun. 248 107042 (2020)
-!! [4] Guillaume Brunin et al, arXiv:2002.00628 (2020)
+!! [4] Guillaume Brunin et al, Phys. Rev. Lett. 125, 136601 (2020)
 !!
 !! Not implemented for the following cases:
 !!    - PAW
@@ -97,8 +97,8 @@ PROGRAM dvscf_q2r
 !! Later, dvtot at fine q points can be computed as
 !! dvscf(r,q) = exp(-iqr) (dvlong(r,q) + sum_R exp(iqR) w_pot(r,R))
 !!
-!! Only the dipole (Frohlich) potential is considered. The quadrupole
-!! potential [4] is not implemented.
+!! The dipole (Frohlich) potential is considered if zeu is nonzero.
+!! The quadrupole potential [4] is considered if quadrupole.fmt file is present.
 !!
 !! * Parallelization
 !! We use PW and pool parallelization.
@@ -132,7 +132,9 @@ PROGRAM dvscf_q2r
   USE ph_restart,  ONLY : ph_readfile
   USE efield_mod,  ONLY : zstareu, zstarue, zstarue0, zstareu0, epsilon
   USE dvscf_interpolate, ONLY : dvscf_shift_center, dvscf_bare_calc, &
-                                dvscf_long_range, multiply_iqr
+                                dvscf_long_range, multiply_iqr, read_quadrupole_fmt, &
+                                write_quadrupole_fmt
+  USE mp_images,   ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -153,6 +155,8 @@ PROGRAM dvscf_q2r
   ! --------------------------------------------------------------------
   CHARACTER(LEN=256) :: wpot_file
   !! filename of the w_pot binary file
+  CHARACTER(LEN = 256) :: dummy
+  !! Dummy character reading
   LOGICAL :: verbose
   !! if verbosity == 'high', set to .true.
   LOGICAL :: exst
@@ -161,6 +165,8 @@ PROGRAM dvscf_q2r
   !! do not need to read wavefunction data
   LOGICAL :: xmldyn
   !! is fildyn xml format
+  LOGICAL :: qrpl
+  !! If true use quadrupole during interpolation
   INTEGER :: iq, iq1, iq2, iq3, irc, irc1, irc2, irc3, imode, lrwpot, rest, &
              ierr, iat, idir, nt, is
   !! indices
@@ -191,10 +197,16 @@ PROGRAM dvscf_q2r
   !! Unit for writing rlatt.txt file
   INTEGER :: iunwpot
   !! Unit for writing w_pot binary file
+  INTEGER :: na
+  !! Atom index
+  INTEGER :: i, j
+  !! Index for directions
   REAL(DP) :: epsil(3,3)
   !! dynamical matrix, read from fildyn
   REAL(DP) :: arg, xq_cart(3), w_pot_sum(3), coeff, epsil_q, zeu_avg(3, 3)
   !!
+  REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+  !! Specific quadrupole values read from file.
   COMPLEX(DP) :: phase
   !!
   REAL(DP), ALLOCATABLE :: xqirr(:, :)
@@ -203,6 +215,8 @@ PROGRAM dvscf_q2r
   !! Born effective charge tensor, read from fildyn
   REAL(DP), ALLOCATABLE :: xqs_cry_global(:, :)
   !! (3, nqtot) coarse grid for phonon calculations, in crystal coordinate
+  REAL(DP), ALLOCATABLE :: Qmat(:, :, :, :)
+  !! Quadrupole tensor
   COMPLEX(DP), ALLOCATABLE :: aux(:)
   ! (dfftp%nnr) auxiliary variable for multiplying exp(iqr)
   COMPLEX(DP), ALLOCATABLE :: dvscf(:, :, :, :)
@@ -304,9 +318,7 @@ PROGRAM dvscf_q2r
     !
     WRITE(stdout,'(/,4x," Reading grid info from file ",a)') TRIM(fildyn)//'0'
     !
-    iun = find_free_unit()
-    !
-    OPEN(UNIT=iun, FILE=TRIM(fildyn)//'0', STATUS='old', FORM='formatted', &
+    OPEN(NEWUNIT=iun, FILE=TRIM(fildyn)//'0', STATUS='old', FORM='formatted', &
          IOSTAT=ios)
     IF (ios /= 0) CALL errore('dvscf_q2r', 'problem opening fildyn0', ios)
     !
@@ -365,14 +377,19 @@ PROGRAM dvscf_q2r
     ! Write zeu and epsil to file. To be read in dvscf_r2q
     !
     IF (ionode) THEN
-      iun = find_free_unit()
-      OPEN(iun, FILE=TRIM(wpot_dir)//'tensors.dat', FORM='formatted', &
+      OPEN(NEWUNIT=iun, FILE=TRIM(wpot_dir)//'tensors.dat', FORM='formatted', &
           ACTION='write', IOSTAT=ios)
       IF (ios /= 0) CALL errore('dvscf_q2r', &
           'problem opening tensors.dat file for writing zeu and epsil', ios)
-      WRITE(iun, *) '# dielectric constant epsil and Born effective charge zeu'
-      WRITE(iun, *) epsil
-      WRITE(iun, *) zeu
+      WRITE(iun,'(a)') '# dielectric constant epsil and Born effective charge zeu'
+      DO i = 1, 3
+        WRITE(iun, '(3e25.13)') epsil(:, i)
+      ENDDO
+      DO iat = 1, nat
+        DO i = 1, 3
+          WRITE(iun, '(3e25.13)') zeu(:, i, iat)
+        ENDDO
+      ENDDO
       CLOSE(iun, STATUS='KEEP')
     ENDIF
     !
@@ -515,12 +532,23 @@ PROGRAM dvscf_q2r
   CALL stop_clock('dvscf_bare')
   !
   ! ---------------------------------------------------------------------------
+  !
   ! Subtract long-range part (dipole potential) from
-  ! When charge neutrality renormalization is done, zeu must be modified
+  !
   IF (do_long_range) THEN
+    !
+    ! If quadrupole file exist, read it
+    !
+    CALL read_quadrupole_fmt('quadrupole.fmt', nat, qrpl, Qmat, .TRUE.)
+    !
+    IF (qrpl) THEN
+      CALL write_quadrupole_fmt(TRIM(wpot_dir)//'quadrupole.fmt', nat, Qmat)
+    ENDIF
     !
     WRITE(stdout, *)
     WRITE(stdout, '(5x,a)') "Computing and subtracting long-range part of dvscf"
+    !
+    ! When charge neutrality renormalization is done, zeu must be modified
     !
     IF (do_charge_neutral) THEN
       DO iat = 1, nat
@@ -533,12 +561,18 @@ PROGRAM dvscf_q2r
     DO iq = 1, nqlocal
       xq_cart = xqs_cry_global(:, iq_l2g(iq))
       CALL cryst_to_cart(1, xq_cart, bg, +1)
-      CALL dvscf_long_range(xq_cart, zeu, epsil, dvscf_long)
+      IF (qrpl) THEN
+        CALL dvscf_long_range(xq_cart, zeu, epsil, dvscf_long, Qmat)
+      ELSE
+        CALL dvscf_long_range(xq_cart, zeu, epsil, dvscf_long)
+      ENDIF
       !
       dvscf(:,:,:,iq) = dvscf(:,:,:,iq) - dvscf_long(:,:,:)
     ENDDO
     !
     DEALLOCATE(dvscf_long)
+    DEALLOCATE(Qmat, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvscf_q2r', 'Error deallocating Qmat', 1)
     !
     WRITE(stdout, '(5x,a)') "Long-range part done"
     !
@@ -591,8 +625,7 @@ PROGRAM dvscf_q2r
   WRITE(stdout, '(5x,a)') "Fourier transforming dvscf to w_pot, writing to file"
   !
   IF (ionode) THEN
-    iunrlatt = find_free_unit()
-    OPEN(iunrlatt, FILE=TRIM(wpot_dir)//'rlatt.txt', FORM='formatted', &
+    OPEN(NEWUNIT=iunrlatt, FILE=TRIM(wpot_dir)//'rlatt.txt', FORM='formatted', &
       ACTION='write')
     WRITE(iunrlatt, '(a)') "# Real space unit cell index for w_pot"
     WRITE(iunrlatt, '(a)') "#     ir     ir1     ir2     ir3"

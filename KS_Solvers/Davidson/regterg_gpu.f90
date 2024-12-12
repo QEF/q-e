@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -54,9 +54,6 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
   COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,nvec)
-#if defined(__CUDA)
-  attributes(DEVICE) :: evc_d
-#endif
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -80,7 +77,7 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! ... LOCAL variables
   !
-  COMPLEX(DP), ALLOCATABLE :: evc(:,:)
+  !COMPLEX(DP), ALLOCATABLE :: evc(:,:)
   REAL(DP), ALLOCATABLE :: e(:)
   
   INTEGER, PARAMETER :: maxter = 20
@@ -93,20 +90,12 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
     ! do-loop counters
   INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: ew(:)
-  REAL(DP), POINTER :: ew_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: ew_d
-#endif
   REAL(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
-  COMPLEX(DP), POINTER :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d, spsi_d
-#endif
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -158,15 +147,10 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ALLOCATE(  evc( npwx, nvec ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' pregterg ',' cannot allocate evc (host) ', ABS(ierr) )
-  !
   ALLOCATE(  e( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' pregterg ',' cannot allocate e (host) ', ABS(ierr) )
   !
-
   ALLOCATE( psi(  npwx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate psi ', ABS(ierr) )
@@ -178,7 +162,8 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
-        CALL errore( 'pregterg ',' cannot allocate spsi ', ABS(ierr) )
+          CALL errore( 'pregterg ',' cannot allocate spsi ', ABS(ierr) )
+     !$acc enter data create(spsi)
   END IF
   !
   ! ... Initialize the matrix descriptor
@@ -241,6 +226,7 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate ew ', ABS(ierr) )
+  !$acc enter data create(ew)
   !
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -252,37 +238,26 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  IF ( uspp ) spsi = ZERO
-  !
-  hpsi = ZERO
-  psi  = ZERO
-  CALL buffer%lock_buffer(psi_d, (/npwx, nvecx/), info)  
-  CALL buffer%lock_buffer(hpsi_d, (/npwx, nvecx/), info)  
-  CALL buffer%lock_buffer(spsi_d, (/npwx, nvecx/), info)  
-  CALL buffer%lock_buffer(ew_d, nvecx, info)
-
-  
-  evc(:,1:nvec) = evc_d(:,1:nvec)
-  psi(:,1:nvec) = evc(:,1:nvec)
+  !$acc enter data create(psi, hpsi)
+  !$acc update host( evc_d)
+  !$acc kernels
+  psi(:,1:nvec) = evc_d(:,1:nvec)
+  !$acc end kernels
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+  !$acc kernels
   IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 ,kind=DP)
-
-  !$cuf kernel do(2) <<<*,*>>>
-  do k=1,nvec
-     do i=1,npwx
-        psi_d(i,k) = evc_d(i,k)
-        ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-        IF ( (gstart == 2) .and. (i == 1) ) psi_d(1,k) = CMPLX( DBLE( psi_d(1,k) ), 0.D0 ,kind=DP)
-     end do
-  end do
+  !$acc end kernels
+  !$acc update host( psi)
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi_ptr( npwx, npw, nvec, psi_d, hpsi_d )  ; nhpsi = nvec
-  hpsi = hpsi_d
+  CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
+  !$acc update host(hpsi)
   !
-  IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi_d, spsi_d )
-  IF ( uspp ) spsi = spsi_d
+  IF ( uspp ) THEN
+     CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
+     !$acc update host(spsi)
+  END IF
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -354,10 +329,9 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... approximate inverse iteration
      !
-     ew_d = ew
-     psi_d = psi
-     CALL g_psi_ptr( npwx, npw, notcnv, 1, psi_d(1,nb1), ew_d(nb1) )
-     psi = psi_d
+     !$acc update device(ew,psi)
+     CALL g_psi_ptr( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
+     !$acc update host(psi)
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -385,12 +359,14 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     psi_d = psi
-     CALL h_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
-     hpsi = hpsi_d
+     !$acc update device(psi)
+     CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
+     !$acc update host(hpsi)
      !
-     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
-     IF ( uspp ) spsi = spsi_d
+     IF ( uspp ) THEN
+        CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+        !$acc update host(spsi)
+     END IF
      !
      ! ... update the reduced hamiltonian
      !
@@ -494,7 +470,7 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         CALL start_clock( 'regterg:last' )
         !
         CALL refresh_evc()
-        evc_d = evc
+        !$acc update device(evc_d)
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -519,15 +495,16 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        psi(:,1:nvec) = evc(:,1:nvec)
+        psi(:,1:nvec) = evc_d(:,1:nvec)
+        !$acc update device(psi)
         !
         IF ( uspp ) THEN
-           !
            CALL refresh_spsi()
-           ! 
+           !$acc update device(spsi)
         END IF
         !
         CALL refresh_hpsi()
+        !$acc update device(hpsi)
         !
         ! ... refresh the reduced hamiltonian
         !
@@ -572,17 +549,15 @@ SUBROUTINE pregterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( nrc_ip )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
-  DEALLOCATE( ew )
-  DEALLOCATE( evc )
   DEALLOCATE( e )
-  
-  CALL buffer%release_buffer(psi_d, info)  
-  CALL buffer%release_buffer(hpsi_d, info)  
-  CALL buffer%release_buffer(spsi_d, info)  
-  CALL buffer%release_buffer(ew_d, info)  
+  !$acc exit data delete(ew)
+  DEALLOCATE( ew )
   !
-  IF ( uspp ) DEALLOCATE( spsi )
-  !
+  IF ( uspp ) THEN
+     !$acc exit data delete(spsi)
+     DEALLOCATE( spsi )
+  END IF
+  !$acc exit data delete (psi, hpsi)
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )  
   !
@@ -778,14 +753,14 @@ CONTAINS
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
-                          psi(1,ir), npwx2, vl, nx, beta, evc(1,ic), npwx2 )
+                          psi(1,ir), npwx2, vl, nx, beta, evc_d(1,ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
-                          psi(1,ir), npwx2, vtmp, nx, beta, evc(1,ic), npwx2 )
+                          psi(1,ir), npwx2, vtmp, nx, beta, evc_d(1,ic), npwx2 )
               END IF
               ! 
 

@@ -359,7 +359,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                 exceed nbnd of the preceding SCF or NSCF calculation.
             }
         }
-        var skip_upperfan  -type LOGICAL {
+        var skip_upper  -type LOGICAL {
             default { .false. }
             info {
                 If .true., skip calculation of the upper Fan self-energy, which

@@ -37,6 +37,7 @@
                                 ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                     &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
                                 nbnd, smearing, degauss, ip_occupations=>occupations, tot_charge, tot_magnetization,  &
+                                degauss_cond,nbnd_cond,nelec_cond,                                                    &
                                 ip_k_points => k_points, ecutwfc, ip_ecutrho => ecutrho, ip_nr1 => nr1, ip_nr2=>nr2,  &
                                 ip_nr3 => nr3, ip_nr1s => nr1s, ip_nr2s => nr2s,ip_nr3s => nr3s, ip_nr1b=>nr1b,       &
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
@@ -79,6 +80,7 @@
   USE fixed_occ,         ONLY:  f_inp               
 !
   USE kinds,             ONLY:   DP
+  USE two_chem,          ONLY:   twochem
   USE parameters,        ONLY:   ntypx, sc_size
   USE constants,         ONLY:   e2,bohr_radius_angs, RYTOEV
   USE ions_base,         ONLY:   iob_tau=>tau, nat, nsp, ityp
@@ -164,7 +166,7 @@
                                     restart_mode=restart_mode,prefix=prefix,pseudo_dir=pseudo_dir,outdir=outdir,       &
                                     stress=tstress,forces=tprnfor, wf_collect=wf_collect,disk_io=disk_io,              &
                                     max_seconds=max_seconds,etot_conv_thr=etot_conv_thr/e2,forc_conv_thr=forc_conv_thr/e2,   &
-                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, fcp=lfcp, rism=trism, &
+                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, fcp=lfcp, rism=trism,&
                                     NSTEP = cf_nstep)
   !------------------------------------------------------------------------------------------------------------------------
   !                                                 ATOMIC SPECIES                                                      
@@ -440,7 +442,9 @@
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin, &
                               TOT_MAG  = tot_magnetization)
      END IF
-  END IF 
+  END IF  
+  obj%twoch__ispresent=.TRUE.
+  CALL qexsd_init_twochem(obj%twoch_,'twoch_', twochem, nbnd_cond,degauss_cond,nelec_cond)
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                    BASIS ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------

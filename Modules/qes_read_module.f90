@@ -12,9 +12,9 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox)
+#if defined (__fox) 
   USE FoX_dom
-#else
+#else 
   USE dom
 #endif
   USE qes_types_module
@@ -92,6 +92,7 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_inputOccupations
     MODULE PROCEDURE qes_read_outputElectricField
     MODULE PROCEDURE qes_read_BerryPhaseOutput
+    MODULE PROCEDURE qes_read_sawtoothEnergy
     MODULE PROCEDURE qes_read_dipoleOutput
     MODULE PROCEDURE qes_read_finiteFieldOut
     MODULE PROCEDURE qes_read_polarization
@@ -1641,6 +1642,26 @@ MODULE qes_read_module
       CALL qes_read_rismlaue(tmp_node, obj%rismlaue, ierr )
     ELSE
        obj%rismlaue_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "two_chem")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputType","two_chem: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputType","two_chem: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%two_chem_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_two_chem(tmp_node, obj%two_chem, ierr )
+    ELSE
+       obj%two_chem_ispresent = .FALSE.
     END IF
     !
     !
@@ -10652,6 +10673,26 @@ MODULE qes_read_module
        obj%finiteElectricFieldInfo_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "sawtoothEnergy")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputElectricFieldType","sawtoothEnergy: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputElectricFieldType","sawtoothEnergy: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%sawtoothEnergy_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_sawtoothEnergy(tmp_node, obj%sawtoothEnergy, ierr )
+    ELSE
+       obj%sawtoothEnergy_ispresent = .FALSE.
+    END IF
+    !
     tmp_node_list => getElementsByTagname(xml_node, "dipoleInfo")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -10787,6 +10828,57 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_BerryPhaseOutput
+  !
+  !
+  SUBROUTINE qes_read_sawtoothEnergy(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(sawtoothEnergy_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "eamp")) THEN
+      CALL extractDataAttribute(xml_node, "eamp", obj%eamp)
+      obj%eamp_ispresent = .TRUE.
+    ELSE
+      obj%eamp_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "eopreg")) THEN
+      CALL extractDataAttribute(xml_node, "eopreg", obj%eopreg)
+      obj%eopreg_ispresent = .TRUE.
+    ELSE
+      obj%eopreg_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "emaxpos")) THEN
+      CALL extractDataAttribute(xml_node, "emaxpos", obj%emaxpos)
+      obj%emaxpos_ispresent = .TRUE.
+    ELSE
+      obj%emaxpos_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "edir")) THEN
+      CALL extractDataAttribute(xml_node, "edir", obj%edir)
+      obj%edir_ispresent = .TRUE.
+    ELSE
+      obj%edir_ispresent = .FALSE.
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%sawtoothEnergy )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_sawtoothEnergy
   !
   !
   SUBROUTINE qes_read_dipoleOutput(xml_node, obj, ierr )
@@ -11832,6 +11924,34 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:symmetriesType","error reading nsym",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "colin_mag")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:symmetriesType","colin_mag: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:symmetriesType","colin_mag: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%colin_mag_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%colin_mag , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:symmetriesType","error reading colin_mag")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:symmetriesType","error reading colin_mag",10)
+         END IF
+      END IF
+    ELSE
+       obj%colin_mag_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "nrot")
@@ -13068,26 +13188,6 @@ MODULE qes_read_module
       END IF
     ELSE
        obj%lowestUnoccupiedLevel_ispresent = .FALSE.
-    END IF
-    !
-    tmp_node_list => getElementsByTagname(xml_node, "twochem")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:band_structureType","twochem: too many occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:band_structureType","twochem: too many occurrences",10)
-        END IF
-    END IF
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%twochem_ispresent = .TRUE.
-      tmp_node => item(tmp_node_list, 0)
-      CALL qes_read_two_chem(tmp_node, obj%twochem, ierr )
-    ELSE
-       obj%twochem_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "two_fermi_energies")
@@ -15272,6 +15372,34 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:two_chemType","error reading nelec_cond",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ef_cond")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:two_chemType","ef_cond: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:two_chemType","ef_cond: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%ef_cond_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%ef_cond , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:two_chemType","error reading ef_cond")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:two_chemType","error reading ef_cond",10)
+         END IF
+      END IF
+    ELSE
+       obj%ef_cond_ispresent = .FALSE.
     END IF
     !
     !
