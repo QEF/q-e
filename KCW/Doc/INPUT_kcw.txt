@@ -212,6 +212,31 @@ NAMELIST: &CONTROL
                    effects both in the kernel and in the response function (RPA).
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       io_sp
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .true. write wannier orbital densities in single-precision.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       io_real_space
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .true. write Wannier orbital densities and Wannier functions in real space.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       irr_bz
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .true. compute and use the symmetries of the Wannier orbital densities
+                   to reduce the number of k and q points for the BZ sampling.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
@@ -280,6 +305,17 @@ NAMELIST: &WANNIER
    Default:        FALSE
    Description:    Specify if a diagonalization of the KS matrix build using the wannier
                    function in input has to be performed. This is mainly for debugging purpose.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       alpha_mix(niter)
+   
+   Type:           REAL
+   Default:        alpha_mix(1)=0.7
+   Description:    Mixing factor (for each iteration) for updating
+                   the scf potential:
+                   
+                   vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -413,4 +449,4 @@ CARD: K_POINTS
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Wed Oct 16 19:28:40 CEST 2024
+This file has been created by helpdoc utility on Fri Dec 13 13:39:56 CET 2024
