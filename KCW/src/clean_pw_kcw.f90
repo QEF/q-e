@@ -26,9 +26,9 @@ SUBROUTINE clean_pw_kcw( )
   !
   ! ... Close the files
   !
-  CALL close_buffer(iuwfc, 'keep')!,'delete')
-  CALL close_buffer(iudwf, 'keep')!,'delete')
-  CALL close_buffer(iudvwfc,'keep')!,'delete')
+  CALL close_buffer(iuwfc, 'delete')
+  CALL close_buffer(iudwf, 'delete')
+  CALL close_buffer(iudvwfc,'delete')
   !
 RETURN
 END SUBROUTINE clean_pw_kcw
