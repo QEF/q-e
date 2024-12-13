@@ -35,7 +35,6 @@ subroutine kcw_setup
   USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   USE gvect,             ONLY : ig_l2g, mill
   USE wvfct,             ONLY : nbnd
-  !USE funct,             ONLY : dft_is_gradient
   USE xc_lib,            ONLY : xclib_dft_is
   !
   USE units_lr,          ONLY : iuwfc
@@ -52,28 +51,28 @@ subroutine kcw_setup
   USE cell_base,         ONLY : at, omega, bg, tpiba
   USE fft_base,          ONLY : dffts
   !
-  USE control_lr,       ONLY : nbnd_occ, lgamma
-  USE scf,              ONLY : rho
-  USE io_global,        ONLY : ionode, ionode_id
-  USE mp_images,        ONLY : intra_image_comm
-  USE mp,               ONLY : mp_bcast
-  USE io_files,         ONLY : create_directory
-  USE io_rho_xml,       ONLY : write_scf
+  USE control_lr,        ONLY : nbnd_occ, lgamma
+  USE scf,               ONLY : rho
+  USE io_global,         ONLY : ionode, ionode_id
+  USE mp_images,         ONLY : intra_image_comm
+  USE mp,                ONLY : mp_bcast
+  USE io_files,          ONLY : create_directory
+  USE io_rho_xml,        ONLY : write_scf
   !
-  USE io_kcw,           ONLY : write_rhowann, write_rhowann_g
+  USE io_kcw,            ONLY : write_rhowann, write_rhowann_g
   !
-  USE mp,               ONLY : mp_sum
-  USE control_lr,       ONLY : lrpa
-  USE coulomb,          ONLY : setup_coulomb
+  USE mp,                ONLY : mp_sum
+  USE control_lr,        ONLY : lrpa
+  USE coulomb,           ONLY : setup_coulomb
   !
-  USE mp_pools,         ONLY : my_pool_id
-  USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
-                               root_bgrp, intra_bgrp_comm, &
-                               inter_bgrp_comm
-  USE symm_base,        ONLY : s, time_reversal, sr, ft
-  USE control_kcw,      ONLY : fbz2ibz, wq_ibz, irr_bz
-  USE io_kcw,                ONLY : read_rhowann, read_rhowann_g
-  USE fft_interfaces,        ONLY : invfft, fwfft
+  USE mp_pools,          ONLY : my_pool_id
+  USE mp_bands,          ONLY : my_bgrp_id, root_bgrp_id, &
+                                root_bgrp, intra_bgrp_comm, &
+                                inter_bgrp_comm
+  USE symm_base,         ONLY : s, time_reversal, sr, ft
+  USE control_kcw,       ONLY : fbz2ibz, wq_ibz, irr_bz
+  USE io_kcw,            ONLY : read_rhowann, read_rhowann_g
+  USE fft_interfaces,    ONLY : invfft, fwfft
 
   !
   implicit none

@@ -23,7 +23,6 @@ SUBROUTINE kcw_deallocate_q()
   USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
   USE qpoint_aux,          ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE control_kcw
   !
   IMPLICIT NONE
   INTEGER :: ik, ipol

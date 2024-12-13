@@ -1,4 +1,4 @@
-SUBROUTINE WRITE_QLIST_IBZ()
+SUBROUTINE write_qlist_ibz()
   USE control_kcw,         ONLY : tmp_dir_kcw
   USE control_kcw,         ONLY : num_wann, spin_component
   USE io_global,           ONLY : ionode
