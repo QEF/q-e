@@ -92,19 +92,6 @@ SUBROUTINE symmetries_of_wannier_function()
            iwann, centers(1:3, iwann) 
   END DO
   !
-  DO iwann = 1, num_wann
-     IF (ANY( centers(:, iwann) .lt. (-0.5 -1.D-03) ) .OR. &
-     ANY( centers(:, iwann) .gt. (0.5 -1.D-03) )) THEN
-       WRITE(stdout,'(5X, "WARNING: the wannier center of iwann =", I5," is not in what we expect to be the &
-       central unit cell with crystal coordinates in [-0.5, 0.5).")') iwann 
-       WRITE(stdout,'(5X, "         To exploit all the symmetries, rerun the wannierization with the flag")')
-       WRITE(stdout,'(5X, "         translate_home_cell = .true.")')
-     END IF
-  ENDDO 
-!
-  !add loop over wf to rerun wannierization with translate_home_cell
-  !
-  !
   ! construct rir
   !
   CALL kcw_set_symm( dffts%nr1,  dffts%nr2,  dffts%nr3, &
@@ -113,6 +100,7 @@ SUBROUTINE symmetries_of_wannier_function()
   nsym_w_q = 0
   !
   ! read all the wannier densities for all the q. store it in rhowann
+  ! This is not ported yet to noncollinear case (only one component for now)
   DO iq = 1, nqstot
     !IF ( lsda .AND. isk(iq_) /= spin_component) CYCLE
     !iq = iq_-(spin_component-1)*nkstot/nspin
@@ -155,41 +143,38 @@ SUBROUTINE symmetries_of_wannier_function()
   !
   !density we will use to check symmetries
   !
-  IF (shift_centers) THEN
-    DO iwann = 1, num_wann
-      DO iq = 1, nqstot
-        x_q_cryst(:) = xk(:,iq)
-        CALL cryst_to_cart(1, x_q_cryst, at, -1)
-        !
-        !go to G space
-        !
-        rhowann_(:,iq,iwann) = rhowann_(:,iq,iwann)!/omega
-        CALL fwfft ('Rho', rhowann_(:,iq,iwann), dffts)  
-        rhog(:) = rhowann_(dffts%nl(:),iq,iwann)
-        !
-        !apply shift
-        !
-        DO ig = 1, ngms
-          x_qG_cryst(:) = g(:,ig)
-          CALL cryst_to_cart(1, x_qG_cryst, at, -1)
-          x_qG_cryst(:) = x_qG_cryst(:) + x_q_cryst(:)
-          rhog(ig) = rhog(ig)*EXP( -IMAG*tpi*DOT_PRODUCT(x_qG_cryst(:),centers(:,iwann)) )
-        END DO
-        !
-        !back to r space
-        !
-        rhowann_(:,iq,iwann) = 0.D0
-        rhowann_(dffts%nl(:),iq,iwann) = rhog(:)
-        CALL invfft ('Rho', rhowann_(:,iq,iwann), dffts)
-      END DO!iq
-    END DO!iwann
-  ENDIF!shift_centers
-
-  !DO iwann = 1, num_wann
-  !  sh = 0.D0
-  !  CALL self_hartree(rhowann_,iwann,sh)
-  !  WRITE(*,*) "iwann = ", iwann, "SH = ", sh
-  !END DO
+!  ! Shift center to detect more symmetries. NOT WORKING PROPERLY 
+!  ! Kept here for reference 
+!  !
+!  IF (shift_centers) THEN
+!    DO iwann = 1, num_wann
+!      DO iq = 1, nqstot
+!        x_q_cryst(:) = xk(:,iq)
+!        CALL cryst_to_cart(1, x_q_cryst, at, -1)
+!        !
+!        !go to G space
+!        !
+!        rhowann_(:,iq,iwann) = rhowann_(:,iq,iwann)!/omega
+!        CALL fwfft ('Rho', rhowann_(:,iq,iwann), dffts)  
+!        rhog(:) = rhowann_(dffts%nl(:),iq,iwann)
+!        !
+!        !apply shift
+!        !
+!        DO ig = 1, ngms
+!          x_qG_cryst(:) = g(:,ig)
+!          CALL cryst_to_cart(1, x_qG_cryst, at, -1)
+!          x_qG_cryst(:) = x_qG_cryst(:) + x_q_cryst(:)
+!          rhog(ig) = rhog(ig)*EXP( -IMAG*tpi*DOT_PRODUCT(x_qG_cryst(:),centers(:,iwann)) )
+!        END DO
+!        !
+!        !back to r space
+!        !
+!        rhowann_(:,iq,iwann) = 0.D0
+!        rhowann_(dffts%nl(:),iq,iwann) = rhog(:)
+!        CALL invfft ('Rho', rhowann_(:,iq,iwann), dffts)
+!      END DO!iq
+!    END DO!iwann
+!  ENDIF!shift_centers
   !
   ! check which symmetries are satisfied by rhowann(:,:, iwann)
   !
