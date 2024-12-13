@@ -28,8 +28,8 @@ SUBROUTINE symmetries_of_wannier_function()
   USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
   USE cell_base,             ONLY : bg, at
   USE control_kcw,           ONLY : nsym_w_k, nsym_w_q, s_w, ft_w, & 
-                                    centers, shift_centers, check_rvect, &
-                                    sym_only_for_q
+                                    centers, check_rvect, &
+                                    sym_only_for_q !, shift_centers
   USE interpolation,         ONLY : read_wannier_centers
   USE io_global,             ONLY : stdout
   USE mp,                    ONLY : mp_sum  
