@@ -193,7 +193,6 @@ SUBROUTINE symmetries_of_wannier_function()
   !
   ! check which symmetries are satisfied by rhowann(:,:, iwann)
   !
-  ir = 1
   DO iwann=1, num_wann
     !
     WRITE(stdout, '(/, 7X, "SYM : Checking WF #", I5)') iwann
@@ -203,6 +202,7 @@ SUBROUTINE symmetries_of_wannier_function()
       sym_only_for_q(nsym_w_q(iwann) + 1, iwann) = .FALSE.
       !
       DO iq = 1, nqstot
+        ir = 1
         rhowann_aux = 0.D0
         !WRITE(*,*) "isym", isym, "ft", ft(:, isym)
         !
@@ -303,8 +303,8 @@ SUBROUTINE symmetries_of_wannier_function()
         ENDIF
       END DO!isym
     END DO!iq
-    WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (only R=0)= ", I5)') nsym_w_k(iwann)
-    IF (check_rvect) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (all    R)= ", I5)') nsym_w_q(iwann)
+    WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (k and q)= ", I5)') nsym_w_k(iwann)
+    IF (check_rvect) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES ( only q)= ", I5)') nsym_w_q(iwann)
   END DO !iwann 
   !
   DEALLOCATE(rhowann_)
