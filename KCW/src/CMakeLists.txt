@@ -47,19 +47,17 @@ set(src_kcw
     kcw_deallocate_q.f90
     setup_coulomb_exx.f90
     coulomb.f90
-    kcw_set_symm.f90#Giovanni Cistaro
-    #compute_dmn.f90 #Giovanni Cistaro
-    rotate_evc.f90 #Giovanni Cistaro
-    #compute_w0n_unitcell.f90 #Giovanni Cistaro
-    symmetries_of_wannier_function.f90 #Giovanni Cistaro
-    kcw_kpoint_grid.f90 #Giovanni Cistaro
-    kcw_deallocate_symmetry_arrays.f90 #Giovanni Cistaro
-    write_qlist_ibz.f90 #Giovanni Cistaro
-    read_qlist_ibz.f90 #Giovanni Cistaro
-    kcw_psymdvscf.f90 #Giovanni Cistaro
-    kcw_symdvscf.f90 #Giovanni Cistaro
-    kcw_read_sym.f90 #Giovanni Cistaro
-    kcw_write_sym.f90 #Giovanni Cistaro
+    kcw_set_symm.f90
+    rotate_evc.f90 
+    symmetries_of_wannier_function.f90 
+    kcw_kpoint_grid.f90 
+    kcw_deallocate_symmetry_arrays.f90 
+    write_qlist_ibz.f90 
+    read_qlist_ibz.f90 
+    kcw_psymdvscf.f90 
+    kcw_symdvscf.f90 
+    kcw_read_sym.f90 
+    kcw_write_sym.f90 
     )
 
 qe_add_library(qe_kcw ${src_kcw})
