@@ -392,6 +392,7 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
   USE fft_base,              ONLY : dffts
   USE klist,                 ONLY : igk_k, ngk
   USE fft_interfaces,        ONLY : fwfft, invfft
+  USE fft_wave,              ONLY : invfft_wave, fwfft_wave
   USE qpoint,                ONLY : npwq, ikks, ikqs
   USE lsda_mod,              ONLY : nspin, current_spin
   USE wavefunctions,         ONLY : evc
@@ -420,7 +421,7 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
   !          aux (dffts%nl(igk_k(ig,ikk)),1)=evc(ig,ibnd)
   !       ENDDO
   !       CALL invfft ('Wave', aux, dffts)
-         CALL invfft_wave (npw, igk_k (1,ikk), evc(:,ibnd), aux )
+         CALL invfft_wave (npwx, npw, igk_k (1,ikk), evc(:,ibnd), aux )
 
          DO ir = 1, dffts%nnr
              aux(ir,1)=aux(ir,1)*delta_vr(ir,current_spin) 
@@ -430,10 +431,10 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
  !        DO ig = 1, npwq
  !           dvpsi(ig,ibnd)=aux(dffts%nl(igk_k(ig,ikq)),1)
  !        ENDDO
-         CALL fwfft_wave (npwq, igk_k (1,ikq), dvpsi(:,ibnd) , aux)
+         CALL fwfft_wave (npwx, npwq, igk_k (1,ikq), dvpsi(:,ibnd) , aux)
 
       ELSEIF (nspin==4) THEN
-         CALL invfft_wave (npw, igk_k (1,ikk), evc(:,ibnd), aux )
+         CALL invfft_wave (npwx, npw, igk_k (1,ikk), evc(:,ibnd), aux )
          IF (domag) then
             DO ir = 1, dffts%nnr
                sup=aux(ir,1)*(delta_vr(ir,1)+delta_vr(ir,4))+ &
@@ -449,7 +450,7 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
                aux(ir,2)=aux(ir,2)*delta_vr(ir,1)
             ENDDO
          END IF
-         CALL fwfft_wave (npwq, igk_k (1,ikq),dvpsi(:,ibnd) , aux)
+         CALL fwfft_wave (npwx, npwq, igk_k (1,ikq),dvpsi(:,ibnd) , aux)
       ENDIF
      !
   ENDDO
@@ -494,7 +495,7 @@ SUBROUTINE sternheimer_kernel_old(first_iter, npert, i_ref, lrdvpsi, iudvpsi, &
   COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
   LOGICAL, INTENT(OUT) :: all_conv
   REAL(DP), INTENT(OUT) :: averlt
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin, npert)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dffts%nnr, nspin, npert)
   COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2, nat, nspin, npert)
   INTEGER, INTENT(IN) :: lrdvpsi
   INTEGER, INTENT(IN) :: iudvpsi

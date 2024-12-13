@@ -1,0 +1,382 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use Wannier90 to generate WFs as Hubbard projectors for
+$ECHO  DFT+U calculation on TiO2. Read file README for more details"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw2wannier90.x wannier2pw.x wannier90.x"
+PSEUDO_LIST="Ti.pbesol-spn-rrkjus_psl.1.0.0.UPF O.pbesol-n-rrkjus_psl.1.0.0.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PW2WANNIER90="$PARA_PREFIX $BIN_DIR/pw2wannier90.x $PARA_POSTFIX"
+WANNIER2PW="$PARA_PREFIX $BIN_DIR/wannier2pw.x $PARA_POSTFIX"
+WANNIER90="$BIN_DIR/wannier90.x"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running pw2wannier90.x as: $PW2WANNIER90"
+$ECHO "  running wannier2pw.x as: $WANNIER2PW"
+$ECHO "  running wannier90.x as: $WANNIER90"
+$ECHO
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+
+# 1) self-consistent calculation with standard PBEsol
+cat > TiO2.scf.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='TiO2',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 0,
+    nat = 6,
+    ntyp = 2,
+    ecutwfc = 50,
+    ecutrho = 500,
+    occupations = 'fixed',
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.3
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Ti 47.867  Ti.pbesol-spn-rrkjus_psl.1.0.0.UPF
+ O  15.999  O.pbesol-n-rrkjus_psl.1.0.0.UPF 
+ATOMIC_POSITIONS {crystal}
+Ti  0.000000000   0.000000000   0.000000000
+Ti  0.500000000   0.500000000   0.500000000
+O   0.305700016   0.305700016   0.000000000
+O   0.805699990   0.194299997   0.500000000
+O   0.194299997   0.805699990   0.500000000
+O   0.694300010   0.694300010   0.000000000
+CELL_PARAMETERS {angstrom}
+   4.5940999985    0.0000000000     0.0000000000
+   0.0000000000    4.5940999985     0.0000000000
+   0.0000000000    0.0000000000     2.9588999748
+K_POINTS {automatic}
+ 2 2 4 0 0 0
+HUBBARD {ortho-atomic}
+U Ti-3d 1.d-10
+EOF
+$ECHO "  Running scf for TiO2 using PBEsol...\c"
+$PW_COMMAND < TiO2.scf.in > TiO2.scf.out
+$ECHO " done"
+
+
+# 2) non-self-consistent calculation with standard PBEsol
+cat > TiO2.nscf.in << EOF
+ &control
+    calculation = 'nscf'
+    restart_mode='from_scratch',
+    prefix='TiO2',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 0,
+    nat = 6,
+    ntyp = 2,
+    ecutwfc = 50,
+    ecutrho = 500,
+    occupations = 'fixed',
+    nosym = .true.
+    noinv = .true.
+    nbnd  = 38
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.3
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Ti 47.867  Ti.pbesol-spn-rrkjus_psl.1.0.0.UPF
+ O  15.999  O.pbesol-n-rrkjus_psl.1.0.0.UPF 
+ATOMIC_POSITIONS {crystal}
+Ti  0.000000000   0.000000000   0.000000000
+Ti  0.500000000   0.500000000   0.500000000
+O   0.305700016   0.305700016   0.000000000
+O   0.805699990   0.194299997   0.500000000
+O   0.194299997   0.805699990   0.500000000
+O   0.694300010   0.694300010   0.000000000
+CELL_PARAMETERS {angstrom}
+   4.5940999985    0.0000000000     0.0000000000
+   0.0000000000    4.5940999985     0.0000000000
+   0.0000000000    0.0000000000     2.9588999748
+K_POINTS {crystal}
+ 16
+  0.00000000  0.00000000  0.00000000  6.250000e-02
+  0.00000000  0.00000000  0.25000000  6.250000e-02
+  0.00000000  0.00000000  0.50000000  6.250000e-02
+  0.00000000  0.00000000  0.75000000  6.250000e-02
+  0.00000000  0.50000000  0.00000000  6.250000e-02
+  0.00000000  0.50000000  0.25000000  6.250000e-02
+  0.00000000  0.50000000  0.50000000  6.250000e-02
+  0.00000000  0.50000000  0.75000000  6.250000e-02
+  0.50000000  0.00000000  0.00000000  6.250000e-02
+  0.50000000  0.00000000  0.25000000  6.250000e-02
+  0.50000000  0.00000000  0.50000000  6.250000e-02
+  0.50000000  0.00000000  0.75000000  6.250000e-02
+  0.50000000  0.50000000  0.00000000  6.250000e-02
+  0.50000000  0.50000000  0.25000000  6.250000e-02
+  0.50000000  0.50000000  0.50000000  6.250000e-02
+  0.50000000  0.50000000  0.75000000  6.250000e-02
+HUBBARD {ortho-atomic}
+U Ti-3d 1.d-10
+EOF
+$ECHO "  Running nscf for TiO2 using PBEsol...\c"
+$PW_COMMAND < TiO2.nscf.in > TiO2.nscf.out
+$ECHO " done"
+
+
+# 3) Wannierization using Wannier90 (pre-processing)
+cat > TiO2.win << EOF
+ conv_tol = 1d-13 
+ conv_window = 5 
+ num_iter = 1000 
+ iprint = 2 
+
+Begin Projections
+ Ti:d
+  O:p
+End Projections
+
+ dis_conv_tol = 1d-13
+ dis_conv_window = 9 
+ dis_num_iter = 1500 
+
+ num_wann  = 22
+ num_bands = 22
+ exclude_bands : 1-12,35-38
+
+ write_u_matrices = .true.
+
+Begin Unit_Cell_Cart
+Ang
+   4.5940999985    0.0000000000     0.0000000000
+   0.0000000000    4.5940999985     0.0000000000
+   0.0000000000    0.0000000000     2.9588999748
+End Unit_Cell_Cart
+
+Begin Atoms_Cart
+Ang
+Ti      0.0000000    0.0000000    0.0000000
+Ti      2.2970525    2.2970525    1.4794516
+O       1.4044179    1.4044179    0.0000000
+O       3.7014704    0.8926346    1.4794516
+O       0.8926346    3.7014704    1.4794516
+O       3.1896871    3.1896871    0.0000000
+End Atoms_Cart
+
+mp_grid = 2 2 4
+
+Begin Kpoints
+  0.00000000  0.00000000  0.00000000
+  0.00000000  0.00000000  0.25000000
+  0.00000000  0.00000000  0.50000000
+  0.00000000  0.00000000  0.75000000
+  0.00000000  0.50000000  0.00000000
+  0.00000000  0.50000000  0.25000000
+  0.00000000  0.50000000  0.50000000
+  0.00000000  0.50000000  0.75000000
+  0.50000000  0.00000000  0.00000000
+  0.50000000  0.00000000  0.25000000
+  0.50000000  0.00000000  0.50000000
+  0.50000000  0.00000000  0.75000000
+  0.50000000  0.50000000  0.00000000
+  0.50000000  0.50000000  0.25000000
+  0.50000000  0.50000000  0.50000000
+  0.50000000  0.50000000  0.75000000
+End Kpoints
+
+ write_hr = false 
+ bands_plot= true
+ bands_num_points = 50 
+ begin kpoint_path
+G       0.00000  0.00000  0.00000  X       0.50000  0.00000  0.00000
+X       0.50000  0.00000  0.00000  M       0.50000 -0.50000  0.00000
+M       0.50000 -0.50000  0.00000  X       0.00000 -0.50000  0.00000
+X       0.00000 -0.50000  0.00000  R       0.00000 -0.50000  0.50000
+R       0.00000 -0.50000  0.50000  Z       0.00000  0.00000  0.50000
+Z       0.00000  0.00000  0.50000  R       0.50000  0.00000  0.50000
+R       0.50000  0.00000  0.50000  A       0.50000 -0.50000  0.50000
+A       0.50000 -0.50000  0.50000  G       0.00000  0.00000  0.00000
+G       0.00000  0.00000  0.00000  R      -0.50000  0.00000  0.50000
+R      -0.50000  0.00000  0.50000  X       0.00000  0.50000  0.00000
+end kpoint_path
+EOF
+$ECHO "  Running the Wannierization for TiO2...\c"
+$WANNIER90 -pp TiO2
+$ECHO " done"
+
+# 4) pw2wannier90 to compute Mmn and Amn matrices
+cat > TiO2.pw2wan.in << EOF
+ &INPUTPP
+   prefix = 'TiO2'
+   outdir = '$TMP_DIR/',
+   seedname = 'TiO2',
+   write_mmn  = .true.
+   write_amn  = .true.
+ /
+EOF
+$ECHO "  Running pw2wannier90 for TiO2...\c"
+$PW2WANNIER90 < TiO2.pw2wan.in > TiO2.pw2wan.out
+$ECHO " done"
+
+# 5) Wannierization using Wannier90
+$WANNIER90 TiO2
+
+# 6) Using wannier2pw to build the Hubbard projectors for DFT+U
+cat > TiO2.wan2pw.in << EOF
+ &INPUTPP
+   prefix = 'TiO2'
+   outdir = '$TMP_DIR/',
+   seedname = 'TiO2',
+   hubbard = .true.
+   exclude_ks_bands = 12
+   wan2hub(1)  = .true.
+   wan2hub(2)  = .true.
+   wan2hub(3)  = .true.
+   wan2hub(4)  = .true.
+   wan2hub(5)  = .true.
+   wan2hub(6)  = .true.
+   wan2hub(7)  = .true.
+   wan2hub(8)  = .true.
+   wan2hub(9)  = .true.
+   wan2hub(10) = .true.
+ /
+EOF
+$ECHO "  Running wannier2pw for TiO2...\c"
+$WANNIER2PW < TiO2.wan2pw.in > TiO2.wan2pw.out
+$ECHO " done"
+
+# 7) Self-consistent calculation using PBEsol+U with WFs
+cat > TiO2.scf-wan.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='TiO2',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 0,
+    nat = 6,
+    ntyp = 2,
+    ecutwfc = 50,
+    ecutrho = 500,
+    occupations = 'fixed',
+    nosym = .true.
+    noinv = .true.
+    nbnd  = 38
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.3
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Ti 47.867  Ti.pbesol-spn-rrkjus_psl.1.0.0.UPF
+ O  15.999  O.pbesol-n-rrkjus_psl.1.0.0.UPF 
+ATOMIC_POSITIONS {crystal}
+Ti  0.000000000   0.000000000   0.000000000
+Ti  0.500000000   0.500000000   0.500000000
+O   0.305700016   0.305700016   0.000000000
+O   0.805699990   0.194299997   0.500000000
+O   0.194299997   0.805699990   0.500000000
+O   0.694300010   0.694300010   0.000000000
+CELL_PARAMETERS {angstrom}
+   4.5940999985    0.0000000000     0.0000000000
+   0.0000000000    4.5940999985     0.0000000000
+   0.0000000000    0.0000000000     2.9588999748
+K_POINTS {crystal}
+ 16
+  0.00000000  0.00000000  0.00000000  6.250000e-02
+  0.00000000  0.00000000  0.25000000  6.250000e-02
+  0.00000000  0.00000000  0.50000000  6.250000e-02
+  0.00000000  0.00000000  0.75000000  6.250000e-02
+  0.00000000  0.50000000  0.00000000  6.250000e-02
+  0.00000000  0.50000000  0.25000000  6.250000e-02
+  0.00000000  0.50000000  0.50000000  6.250000e-02
+  0.00000000  0.50000000  0.75000000  6.250000e-02
+  0.50000000  0.00000000  0.00000000  6.250000e-02
+  0.50000000  0.00000000  0.25000000  6.250000e-02
+  0.50000000  0.00000000  0.50000000  6.250000e-02
+  0.50000000  0.00000000  0.75000000  6.250000e-02
+  0.50000000  0.50000000  0.00000000  6.250000e-02
+  0.50000000  0.50000000  0.25000000  6.250000e-02
+  0.50000000  0.50000000  0.50000000  6.250000e-02
+  0.50000000  0.50000000  0.75000000  6.250000e-02
+HUBBARD {wf}
+U Ti-3d 4.0
+EOF
+$ECHO "  Running scf for TiO2 using PBEsol+U with WFs...\c"
+$PW_COMMAND < TiO2.scf-wan.in > TiO2.scf-wan.out
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

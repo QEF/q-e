@@ -362,8 +362,7 @@ SUBROUTINE summary()
   ENDIF
 
   IF ( real_space ) WRITE( stdout, &
-       & '(5x,"Real space treatment of Beta functions,", &
-       &      " V.1 (BE SURE TO CHECK MANUAL!)")' )
+       & '(5x,"Real space treatment of Beta functions (CHECK MANUAL) ")' )
   IF ( tbeta_smoothing ) WRITE( stdout, '(5x,"Beta functions are smoothed ")' )
   IF ( tqr ) WRITE( stdout, '(5x,"Real space treatment of Q(r)")' )
   IF ( tq_smoothing ) WRITE( stdout, '(5x,"Augmentation charges are smoothed ")' )

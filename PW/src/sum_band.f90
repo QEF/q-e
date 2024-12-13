@@ -64,9 +64,14 @@ SUBROUTINE sum_band()
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL(dp), EXTERNAL :: e_band
+  COMPLEX(DP), ALLOCATABLE :: psic(:,:)
+  !! Work space used for FFTs in this routine
   !
   !
   CALL start_clock( 'sum_band' )
+  !
+  ALLOCATE( psic(dfftp%nnr,npol) )
+  !$acc enter data create(psic)
   !
   IF ( nhm > 0 ) THEN
      ! Note: becsum and ebecsum are computed on GPU and copied to CPU
@@ -202,6 +207,9 @@ SUBROUTINE sum_band()
   !
   CALL stop_clock( 'sum_band:loop' )
   !
+  !$acc exit data delete(psic)
+  DEALLOCATE(psic)
+  !
   ! ... Compute here the sum of band eigenvalues "eband"
   !
   eband =  e_band( )
@@ -321,8 +329,6 @@ SUBROUTINE sum_band()
        !! \(\texttt{sum_band}\) - part for gamma version.
        !
        USE uspp_init,      ONLY : init_us_2
-       USE wavefunctions,  ONLY : psic
-       !! psic is allocated work space
        !
        IMPLICIT NONE
        !
@@ -339,7 +345,6 @@ SUBROUTINE sum_band()
        ! ... of the wavefunctions to the charge
        !
        incr = 2
-       !$acc enter data create(psic)
        IF (xclib_dft_is('meta') .OR. lxdm) THEN
           ALLOCATE( grad_psic(npwx,2) )
           !$acc enter data create(grad_psic)
@@ -369,7 +374,7 @@ SUBROUTINE sum_band()
              ebnd = ibnd
              IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
              !
-             CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts )
+             CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic(:,1), dffts )
              !
              w1 = wg(ibnd,ik) / omega
              !
@@ -405,7 +410,7 @@ SUBROUTINE sum_band()
                    IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                    brange = ebnd-ibnd+1
                    !
-                   CALL wave_g2r( grad_psic(1:npw,1:brange), psic, dffts )
+                   CALL wave_g2r( grad_psic(1:npw,1:brange), psic(:,1), dffts )
                    !
                    ! ... increment the kinetic energy density ...
                    !  
@@ -428,7 +433,6 @@ SUBROUTINE sum_band()
           DEALLOCATE( grad_psic )
           !$acc update host(rho%kin_r)
        END IF
-       !$acc exit data delete(psic)
        RETURN
        !
      END SUBROUTINE sum_band_gamma

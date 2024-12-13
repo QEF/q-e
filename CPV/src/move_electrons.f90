@@ -42,7 +42,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
-  USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
+  USE cp_wavefunctions,     ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
   USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   USE device_memcpy_m,        ONLY : dev_memcpy
   !

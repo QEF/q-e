@@ -127,7 +127,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   ! Allocate arrays for the SCF density/potential
   !
-  ALLOCATE (drhoscf (dfftp%nnr, nspin_mag)) 
+  ALLOCATE (drhoscf (dffts%nnr, nspin_mag))
   ALLOCATE (drhoscfh(dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfin (dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfout(dfftp%nnr, nspin_mag))

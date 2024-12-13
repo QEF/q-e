@@ -15,7 +15,7 @@ SUBROUTINE close_files( lflag )
   USE fixed_occ,     ONLY: one_atom_occupations
   USE io_files,      ONLY: prefix, iunwfc, iunsat, &
                            iunhub, iunefield, iunefieldm, iunefieldp, &
-                           iunwfc_exx
+                           iunwfc_exx, iunhub_noS
   USE buffers,       ONLY: close_buffer
   USE mp_images,     ONLY: intra_image_comm
   USE mp,            ONLY: mp_barrier
@@ -57,7 +57,9 @@ SUBROUTINE close_files( lflag )
   ! ... iunhub  as above, only for wfcs * S having an associated Hubbard U
   !
   IF ( lda_plus_u .AND. (Hubbard_projectors /= 'pseudo') ) THEN
-     CALL close_buffer( iunhub, close_option )
+     CALL close_buffer( iunhub, 'DELETE' )
+     INQUIRE( UNIT = iunhub_noS, OPENED = opnd )
+     IF ( opnd ) CALL close_buffer( iunhub_noS, close_option )
   END IF
   !
   IF ( use_wannier .OR. one_atom_occupations ) THEN

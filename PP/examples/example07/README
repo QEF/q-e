@@ -1,0 +1,88 @@
+This example shows how to use DFT+U with Hubbard projectors built
+using (maximally localized) Wannier functions (WFs) from Wannier90.
+
+To do this, we use the interface between Wannier90 and PW, which is 
+implemented in wannier2pw.x.
+This interface writes the selected WFs in files *.hub in the temporary directory.
+The PW code then reads these *.hub files to perform DFT+U(WFs) calculations.
+In order to activate this interface, the user must specify hubbard = .true. in the input file
+of the wannier2pw.x program. 
+For more details about the interface, please see the Appendix C in this paper:
+A. Carta, I. Timrov, P. Mlkvik, A. Hampel, C. Ederer, arXiv:2411.03937.
+Please cite this paper in publications and presentations arising from 
+the use of this interface.
+
+IMPORTANT NOTES:
+
+- The interface supports k-points pools parallelization. This is to be consistent    
+  with the other steps above if they use k-points pools parallelization. 
+  Importantly, for ALL steps below (except steps 3 and 5 below), use CONSISTENTLY EXACTLY 
+  THE SAME number of cores and k-points pools. If you do not do that, the results will be wrong.
+- In order to run these examples, please compile the Wannier90 code and copy the
+  wannier90.x executable to QE/bin
+
+********************************************************************
+
+TiO2 (spin-unpolarized insulator): run_example1 and reference1/
+
+Steps:
+1. Run the SCF ground-state calculation:
+   pw.x < TiO2.scf.in > TiO2.scf.out
+
+2. Run the NSCF ground-state calculation (disable symmetry!):
+   pw.x < TiO2.nscf.in > TiO2.nscf.out
+
+3. Run the pre-processing calculation using Wannier90:
+   wannier90.x -pp TiO2
+
+4. Run PW2WANNIER90 to generate the matrices Mmn and Amn which
+   are needed in the next step for Wannier90:
+   pw2wannier90.x < TiO2.pw2wan.in > TiO2.pw2wan.out
+
+5. Run Wannier90 to generate the WFs:
+   wannier90.x TiO2
+
+6. Use the interface implemented in WANNIER2PW to use selected WFs 
+   as Hubbard projectors and write them to files *.hub:
+   wannier2pw.x < TiO2.wan2pw.in > TiO2.wan2pw.out
+
+7. Run the SCF ground-state calculation using DFT+U(WFs):
+   pw.x < TiO2.scf-wan.in > TiO2.scf-wan.out
+
+**********************************************************************
+
+MnO (spin-polarized insulator): run_example2 and reference2/
+
+Steps:
+1. Run the SCF ground-state calculation:
+   pw.x < MnO.scf.in > MnO.scf.out
+
+2. Run the NSCF ground-state calculation (disable symmetry!):
+   pw.x < MnO.nscf.in > MnO.nscf.out
+
+3. Run the pre-processing calculation using Wannier90 
+   separately for the spin up and spin down components:
+   wannier90.x -pp MnO_up
+   wannier90.x -pp MnO_down
+
+4. Run PW2WANNIER90 to generate the matrices Mmn and Amn which
+   are needed in the next step for Wannier90 (separately for 
+   the spin up and spin down components):
+   pw2wannier90.x < MnO_up.pw2wan.in > MnO_up.pw2wan.out
+   pw2wannier90.x < MnO_down.pw2wan.in > MnO_down.pw2wan.out
+
+5. Run Wannier90 to generate the WFs separately for the spin up 
+   and spin down components:
+   wannier90.x MnO_up
+   wannier90.x MnO_down
+
+6. Use the interface implemented in WANNIER2PW to use selected WFs 
+   as Hubbard projectors and write them to files *.hub (separately 
+   for the spin up and spin down components):
+   wannier2pw.x < MnO_up.wan2pw.in > MnO_up.wan2pw.out
+   wannier2pw.x < MnO_down.wan2pw.in > MnO_down.wan2pw.out
+
+7. Run the SCF ground-state calculation using DFT+U(WFs):
+   pw.x < MnO.scf-wan.in > MnO.scf-wan.out
+
+**********************************************************************

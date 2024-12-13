@@ -4,6 +4,7 @@ set(src_pp
     src/add_shift_cc.f90
     src/add_shift_lc.f90
     src/add_shift_us.f90
+    src/wannier_mod.f90
     src/chdens_module.f90
     src/chdens_bspline.f90
     src/chdens_bspline_sphere.f90
@@ -43,6 +44,7 @@ set(src_pp
     src/write_p_avg.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
+    src/hubbard_projectors.f90
     src/xc_vdW_scale_mod.f90
     src/fft_interpolation_mod.f90)
 # OSCDFT
@@ -236,6 +238,24 @@ qe_enable_cuda_fortran("${src_pw2wannier90_x}")
 qe_add_executable(qe_pp_pw2wannier90_exe ${src_pw2wannier90_x})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
+    PRIVATE
+        qe_pw
+        qe_modules
+        qe_pp
+        qe_lax
+        qe_fftx
+        qe_upflib
+        qe_xclib
+        qe_lapack)
+
+###########################################################
+# wannier2pw.x
+###########################################################
+set(src_wannier2pw_x src/wannier2pw.f90)
+qe_enable_cuda_fortran("${src_wannier2pw_x}")
+qe_add_executable(qe_pp_wannier2pw_exe ${src_wannier2pw_x})
+set_target_properties(qe_pp_wannier2pw_exe PROPERTIES OUTPUT_NAME wannier2pw.x)
+target_link_libraries(qe_pp_wannier2pw_exe
     PRIVATE
         qe_pw
         qe_modules

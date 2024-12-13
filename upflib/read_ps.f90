@@ -77,17 +77,16 @@ SUBROUTINE read_ps_new ( psfile, upf, printout, ierr )
         CALL readrrkj (iunps, upf, ierr)
         IF ( ierr == 0 ) ierr = -5
      ELSE IF (psfile (lm3:l) =='.gth' .OR. psfile(lm3:l) == '.GTH' ) THEN
-        !! FIXME: should be done in the same way as for the other cases
-        CLOSE (iunps)
+        !! FIXME: should follow the same logic of the other cases
         ierr = -7
      ELSE
         CALL read_ncpp (iunps, upf, ierr)
         IF ( ierr == 0 ) ierr = -6
      END IF
      !
+     CLOSE (iunps)
 10   IF ( ierr > 0 ) THEN
         WRITE (stdout, '("readpp: file ",A," could not be read")') trim(psfile)
-        CLOSE (iunps)
         RETURN
      END IF
   END IF

@@ -759,12 +759,12 @@ CONTAINS
          ( rdum, nb=1,upf%nwfc )
     !
     ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%nchi(upf%nwfc) )
-    ALLOCATE ( upf%lll(upf%nwfc) ) 
+    ALLOCATE ( upf%lll(upf%nbeta) ) 
     !
     do nb=1,upf%nwfc
        read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios) &
             adum, ndum, upf%lchi(nb), upf%oc(nb)
-       upf%lll(nb)=upf%lchi(nb)
+       if ( nb <= upf%nbeta) upf%lll(nb)=upf%lchi(nb)
        upf%nchi(nb)=ndum
        !
        ! oc < 0 distinguishes between bound states from unbound states
@@ -877,6 +877,8 @@ CONTAINS
     allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
     upf%rcut(:) = 0._dp
     upf%rcutus(:) = 0._dp
+    allocate(upf%qfcoef(1,1,1,1))
+    upf%qfcoef(1,1,1,1) = 0._dp
     !
     ierr = 0
     !

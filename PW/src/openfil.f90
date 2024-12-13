@@ -18,8 +18,8 @@ SUBROUTINE openfil()
   USE basis,            ONLY : natomwfc
   USE wvfct,            ONLY : nbnd, npwx
   USE ldaU,             ONLY : lda_plus_U, Hubbard_projectors, nwfcU
-  USE io_files,         ONLY : prefix, iunpun, iunhub, nwordwfcU, nwordwfc, &
-                               iunefield, iunefieldm, iunefieldp, seqopn
+  USE io_files,         ONLY : nwordwfc, iunhub, iunhub_noS, nwordwfcU, &
+                               iunefield, iunefieldm, iunefieldp
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
 #if defined(__HDF5) && defined(__MPI) 
@@ -31,18 +31,20 @@ SUBROUTINE openfil()
   LOGICAL :: exst
   !
   ! ... Files needed for DFT+U(+V)
-  ! ... iunsat contains the (orthogonalized) atomic wfcs * S
-  ! ... iunhub  as above, only wfcs * S with a U correction
+  ! ... iunhub contains S times the (orthogonalized) atomic wfcs
+  ! ...        (only atomic wfcs with a U correction, in variable wfcU)
+  ! ... iunhub_nos as above, without S
   !
-  ! ... nwordwfc is the record length (IN COMPLEX WORDS)
-  ! ... for the direct-access file containing wavefunctions
-  ! ... nwordatwfc/nwordwfcU as above for atomic/U-manifold wavefunctions
+  ! ... nwordwfc  is the record length (IN COMPLEX WORDS)
+  ! ...           for the direct-access file containing wavefunctions
+  ! ... nwordwfcU as above for atomic/U-manifold wavefunctions
   !
   nwordwfc  = nbnd*npwx*npol
   nwordwfcU = npwx*nwfcU*npol
   !
   IF ( lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
      CALL open_buffer( iunhub,  'hub',  nwordwfcU, io_level, exst )
+     IF (io_level>=1) CALL open_buffer( iunhub_noS,  'hubnoS',  nwordwfcU, io_level, exst )
   ENDIF
   !
   ! ... open units for electric field calculations

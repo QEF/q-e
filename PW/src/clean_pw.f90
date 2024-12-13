@@ -33,7 +33,7 @@ SUBROUTINE clean_pw( lflag )
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
-  USE wavefunctions,        ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : deallocate_wfc, psic, psic_nc
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
   USE atwfc_mod,            ONLY : deallocate_tab_atwfc
@@ -168,13 +168,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( evc ) ) THEN
-#if defined(__CUDA)
-    !$acc exit data delete(evc)
-    IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
-#endif
-    DEALLOCATE( evc )
-  END IF
+  CALL deallocate_wfc ( )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
   ! ... fft structures allocated in data_structure.f90  

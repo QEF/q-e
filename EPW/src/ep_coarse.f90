@@ -217,6 +217,7 @@
                                  upper_band, ibndkept, nbndep, ngxx, ngxxf, &
                                  ng0vec, shift, gmap, g0vec_all_r
     USE fft_base,         ONLY : dffts
+    USE fft_wave,         ONLY : invfft_wave, fwfft_wave 
     USE ep_constants,     ONLY : czero, cone, ci, zero, eps8
     USE klist,            ONLY : nkstot
     USE parallelism,      ONLY : kpointdivision, fkbounds, fkbounds_bnd
@@ -599,13 +600,13 @@
         aux3 = czero
         DO ibnd = lower_band, upper_band
           jbnd = ibndkept(ibnd)
-          CALL invfft_wave(npw, igk, aux5(:, jbnd), aux1)
+          CALL invfft_wave(npwx, npw, igk, aux5(:, jbnd), aux1)
           IF (timerev) THEN
             CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:, :, ipert)), current_spin)
           ELSE
             CALL apply_dpot(dffts%nnr, aux1, dvscfins(:, :, ipert), current_spin)
           ENDIF
-          CALL fwfft_wave(npwq, igkq, aux3(:, ibnd), aux1)
+          CALL fwfft_wave(npwx, npwq, igkq, aux3(:, ibnd), aux1)
         ENDDO
         dvpsi = dvpsi + aux3
         !

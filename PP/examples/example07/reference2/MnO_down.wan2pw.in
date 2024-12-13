@@ -1,0 +1,18 @@
+ &INPUTPP
+   prefix = 'MnO'
+   outdir = '/home/timrov_i/WORKSPACE/PSI/Gitlab/tmp1/q-e/tempdir/',
+   seedname = 'MnO_down',
+   hubbard = .true.
+   spin_component = 'down'
+   exclude_ks_bands = 10
+   wan2hub(2)  = .true.
+   wan2hub(3)  = .true.
+   wan2hub(4)  = .true.
+   wan2hub(5)  = .true.
+   wan2hub(6)  = .true.
+   wan2hub(8)  = .true.
+   wan2hub(9)  = .true.
+   wan2hub(10) = .true.
+   wan2hub(11) = .true.
+   wan2hub(12) = .true.
+ /

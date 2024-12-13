@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,6 +36,8 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
   USE klist,    ONLY : ngk, igk_k
   USE fft_base, ONLY : dffts
   USE noncollin_module, ONLY : npol
+  USE fft_wave,         ONLY : fwfft_wave, invfft_wave
+
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: ik, isw
@@ -51,11 +53,11 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
   IF (isw == 1) THEN
      ikk = ikks(ik) ! points to k+G indices
      npw = ngk(ikk) 
-     CALL invfft_wave (npw, igk_k (1,ikk), evc_g, evc_r )
+     CALL invfft_wave (npwx, npw, igk_k (1,ikk), evc_g, evc_r )
   ELSE IF (isw == -1) then
      ikq = ikqs(ik) ! points to k+q+G indices
      npwq= ngk(ikq)
-     CALL fwfft_wave (npwq, igk_k (1,ikq), evc_g, evc_r )
+     CALL fwfft_wave (npwx, npwq, igk_k (1,ikq), evc_g, evc_r )
   ELSE
      CALL  errore ('cft_wave',' Wrong value for isw',1)
   ENDIF
@@ -68,102 +70,6 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
 
 END SUBROUTINE cft_wave
 
-SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
-  USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : npwx
-  USE fft_base, ONLY : dffts
-  USE fft_interfaces,   ONLY: fwfft
-  USE noncollin_module, ONLY : noncolin, npol
-
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: npwq, igkq(npwq)
-  COMPLEX(DP), INTENT(INOUT) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
-  !
-  INTEGER :: ig, ik
-
-#if defined(__CUDA) && defined(_OPENACC)
-  INTEGER, POINTER, DEVICE :: nl(:)
-  nl => dffts%nl_d
-#else
-  INTEGER, ALLOCATABLE :: nl(:)
-  ALLOCATE( nl(dffts%ngm) )
-  nl = dffts%nl
-#endif
-
-  !$acc host_data use_device(evc_r)
-  CALL fwfft ('Wave', evc_r(:,1), dffts)
-  !$acc end host_data
-  !$acc parallel loop private(ik)
-  DO ig = 1, npwq
-     ik = nl(igkq(ig))
-     evc_g (ig) = evc_g (ig) + evc_r (ik,1)
-  ENDDO
-  IF (noncolin) THEN
-     !$acc host_data use_device(evc_r)
-     CALL fwfft ('Wave', evc_r(:,2), dffts)
-     !$acc end host_data
-     !$acc parallel loop private(ik) 
-     DO ig = 1, npwq
-        ik = nl(igkq(ig))
-        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (ik,2)
-     ENDDO
-  ENDIF
-
-#if !defined(__CUDA) || !defined(_OPENACC)
-  DEALLOCATE(nl)
-#endif
-END SUBROUTINE fwfft_wave
-
-SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
-  USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : npwx
-  USE fft_base, ONLY : dffts
-  USE fft_interfaces,   ONLY: invfft
-  USE noncollin_module, ONLY : noncolin, npol
-
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: npw, igk(npw)
-  COMPLEX(DP), INTENT(IN) :: evc_g (npwx*npol)
-  COMPLEX(DP), INTENT(OUT):: evc_r (dffts%nnr,npol)
-  !
-  INTEGER :: ig, ik
-
-#if defined(__CUDA) && defined(_OPENACC)
-  INTEGER, POINTER, DEVICE :: nl(:)
-  nl => dffts%nl_d
-#else
-  INTEGER, ALLOCATABLE :: nl(:)
-  ALLOCATE( nl(dffts%ngm) )
-  nl = dffts%nl
-#endif
-
-  !$acc kernels
-  evc_r(:,:) = (0.0_dp, 0.0_dp)
-  !$acc end kernels
-  !$acc parallel loop private(ik)
-  DO ig = 1, npw
-     ik = nl(igk(ig))
-     evc_r (ik, 1) = evc_g (ig)
-  ENDDO
-  !$acc host_data use_device(evc_r)
-  CALL invfft ('Wave', evc_r(:,1), dffts)
-  !$acc end host_data
-  IF (noncolin) THEN
-     !$acc parallel loop private(ik)
-     DO ig = 1, npw
-        ik = nl(igk(ig))
-        evc_r (ik, 2) = evc_g (ig+npwx)
-     ENDDO
-     !$acc host_data use_device(evc_r)
-     CALL invfft ('Wave', evc_r(:,2), dffts)
-     !$acc end host_data
-  ENDIF
-
-#if !defined(__CUDA) || !defined(_OPENACC)
-  DEALLOCATE(nl)
-#endif
-END SUBROUTINE invfft_wave
-!
 !-----------------------------------------------------------------------
 SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   !-----------------------------------------------------------------------
