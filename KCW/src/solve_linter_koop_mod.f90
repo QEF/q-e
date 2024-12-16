@@ -29,6 +29,7 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   USE control_kcw
   USE dv_of_drho_lr
   USE kinds,                 ONLY : DP
+  USE constants,             ONLY : tpi
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout
   USE wavefunctions,         ONLY : evc, psic
@@ -56,6 +57,10 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   USE response_kernels,      ONLY : sternheimer_kernel
   USE scf,                   ONLY : vrs
   USE qpoint_aux,            ONLY : ikmks
+  USE lr_symm_base,          ONLY : lr_npert, upert, upert_mq, minus_q, nsymq
+  USE qpoint,                ONLY : xq
+  USE symm_base,             ONLY : ft
+  USE cell_base,             ONLY : at
   !
   !USE cell_base,            ONLY : omega
   !
@@ -111,6 +116,10 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   !!## DEBUG 
   !
   LOGICAL :: new
+  COMPLEX(DP)    ::   imag
+  REAL(DP)       ::   xq_cryst(3)
+  INTEGER        ::   isym
+
   ! Set to false to revert to the previous implementation of the Linear solver (consistent with QE7.1)
   new = .true.
   !
@@ -133,6 +142,22 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   ALLOCATE (drhoscfh (dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfout (dfftp%nnr, nspin_mag))    
   ALLOCATE (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , 1)) 
+  !
+  ! Set symmetry representation in lr_symm_base
+  !
+  lr_npert = 1
+  ALLOCATE(upert(lr_npert, lr_npert, nsymq))
+  xq_cryst = xq
+  imag = (0.D0, 1.D0)
+  CALL cryst_to_cart(1,xq_cryst,at,-1)
+  DO isym = 1, nsymq
+     upert(1, 1, isym) = EXP(- imag * tpi * dot_product( xq_cryst(:), ft(:, isym) ) ) 
+  ENDDO
+  IF (minus_q) THEN
+     ALLOCATE(upert_mq(lr_npert, lr_npert))
+     upert_mq(1, 1) = (1.d0, 0.d0)
+  ENDIF ! minus_q
+  ! 
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , 1, nsolv))
   ALLOCATE (aux ( dffts%nnr ))    
   ALLOCATE (drhoc(dfftp%nnr))
@@ -341,7 +366,9 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   DEALLOCATE (drhoscfh)
   IF (doublegrid) DEALLOCATE (dvscfins)
   DEALLOCATE (dvscfin)
-  !
+  DEALLOCATE (upert)
+  IF (minus_q) DEALLOCATE(upert_mq) 
+  ! 
   CALL stop_clock ('solve_linter')
   !
   RETURN

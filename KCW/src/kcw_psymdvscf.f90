@@ -32,7 +32,7 @@ SUBROUTINE kcw_psymdvscf (dvtosym)
   !
   IF (nsymq == 1 .AND. (.NOT.minus_q) ) RETURN
   !
-  CALL start_clock ('hp_psymdvscf')
+  CALL start_clock ('kcw_psymdvscf')
   !
   ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag))
   !
@@ -40,7 +40,7 @@ SUBROUTINE kcw_psymdvscf (dvtosym)
      CALL cgather_sym (dfftp, dvtosym(:,is), ddvtosym(:,is))
   ENDDO
   !
-  CALL kcw_symdvscf (ddvtosym) !(nper, irr, ddvtosym)
+  CALL symdvscf (ddvtosym) !(nper, irr, ddvtosym)
   !
   nxyp = dfftp%nr1x * dfftp%my_nr2p
   DO is = 1, nspin_mag
@@ -53,11 +53,11 @@ SUBROUTINE kcw_psymdvscf (dvtosym)
   !
   DEALLOCATE (ddvtosym)
   !
-  CALL stop_clock ('psymdvscf')
+  CALL stop_clock ('kcw_psymdvscf')
   !
 #else
   if ( .not. irr_bz ) RETURN
-  CALL kcw_symdvscf (dvtosym)
+  CALL symdvscf (dvtosym)
 #endif
   !
   RETURN
