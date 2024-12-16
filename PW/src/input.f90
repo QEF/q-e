@@ -289,7 +289,7 @@ SUBROUTINE control_iosys()
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
-                            tr2, imix, gamma_only, &
+                            tr2, imix, gamma_only, tnosep, &
                             nmix, iverbosity, smallmem, nexxiter, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
@@ -414,6 +414,11 @@ SUBROUTINE control_iosys()
                                trust_radius_ini, bfgs_ndim, &
                                fire_nmin, fire_f_inc, fire_f_dec, &
                                fire_alpha_init, fire_falpha, fire_dtmax
+!
+! ... IONS NOSE HOOVER THERMOSTAT
+
+  USE input_parameters, ONLY: fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl  
+                           
   !
   ! ... CELL namelist
   !
@@ -1119,6 +1124,12 @@ SUBROUTINE control_iosys()
      temperature  = tempw
      nraise_      = nraise
      !
+  CASE ('nose')
+     thermostat = trim(ion_temperature)
+     temperature = tempw 
+     tnosep = .true. 
+
+
   CASE DEFAULT
      !
      CALL errore( 'iosys', &
@@ -1848,13 +1859,16 @@ SUBROUTINE pos_iosys ( )
   USE input_parameters,   ONLY : taspc, tapos, rd_pos, atomic_positions,  &
                                  rd_if_pos, ibrav, nat_ => nat, ntyp,     &
                                  sp_pos, rd_for, tavel, sp_vel, rd_vel,   &
-                                 atom_mass, atom_label, lsg
+                                 atom_mass, atom_label, lsg, tempw,&
+                                 fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl
   USE kinds,              ONLY : DP
   USE dynamics_module,    ONLY : vel
   USE force_mod,          ONLY : force
   USE ions_base,          ONLY : nat, nsp, ityp, tau, atm, &
-                                 extfor, if_pos, amass, fixatom, tau_format
-  USE control_flags,      ONLY : textfor, tv0rd
+                                 extfor, if_pos, amass, fixatom, tau_format, &
+                                 tions_base_init
+  USE ions_nose,          ONLY:  ions_nose_init 
+  USE control_flags,      ONLY : textfor, tv0rd, tnosep
   USE wyckoff,            ONLY : nattot, tautot, ityptot, extfortot, &
                                  if_postot, clean_spacegroup
   !
@@ -1944,6 +1958,10 @@ SUBROUTINE pos_iosys ( )
   !
   tau_format = trim( atomic_positions )
   CALL convert_tau ( tau_format, nat, tau )
+  IF (tnosep) THEN 
+     tions_base_init = .TRUE. 
+     call ions_nose_init(tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
+  END IF 
   !
 END SUBROUTINE pos_iosys
 !
