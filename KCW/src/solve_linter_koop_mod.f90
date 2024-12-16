@@ -287,7 +287,8 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
      !
      ! Symmetrization of the response charge density.
      !
-     CALL kcw_psymdvscf (drhoscfh)
+     !CALL kcw_psymdvscf (drhoscfh)
+     IF (irr_bz) CALL psymdvscf (drhoscfh)
      !
 
      !

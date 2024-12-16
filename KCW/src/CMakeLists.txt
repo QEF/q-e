@@ -54,7 +54,6 @@ set(src_kcw
     kcw_deallocate_symmetry_arrays.f90 
     write_qlist_ibz.f90 
     read_qlist_ibz.f90 
-    kcw_psymdvscf.f90 
     kcw_read_sym.f90 
     kcw_write_sym.f90 
     )
