@@ -48,7 +48,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! ... local variables
   !
   INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
-  REAL(DP),    ALLOCATABLE :: lagrange_d(:)
   REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
                               scg(:), ppsi(:), g0_d(:), psi_aux(:)
@@ -61,7 +60,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER                  :: npw2, npwx2
   REAL(DP)                 :: empty_ethr, ethr_m
 #if defined(__CUDA)
-  attributes(DEVICE) :: lagrange_d, g0_d
+  attributes(DEVICE) :: g0_d
 #endif
   !
   ! ... external functions
@@ -90,7 +89,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( g0_d(   npwx ) )
   ALLOCATE( ppsi( npwx ) )
   !
-  ALLOCATE( lagrange_d( nbnd ) )
   ALLOCATE( lagrange  ( nbnd ) )
   !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange)
   ALLOCATE( e         ( nbnd ) )
@@ -151,13 +149,12 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !
      !$acc update self(lagrange)
      psi_norm = lagrange(m)
-     lagrange_d(1:m) = lagrange(1:m)
      !
      DO j = 1, m - 1
         !
         !$acc kernels 
         DO i = 1, npwx
-           psi(i,m)  = psi(i,m) - lagrange_d(j) * psi(i,j)
+           psi(i,m)  = psi(i,m) - lagrange(j) * psi(i,j)
         END DO
         !$acc end kernels
         !
@@ -255,12 +252,15 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         lagrange(1:m-1) = 0.d0
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         if(m_start.le.m_end) then
-          !$acc host_data use_device(psi, scg)
-          CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange_d(m_start), 1 )
+          !$acc host_data use_device(psi, scg, lagrange)
+          CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange(m_start), 1 )
           !$acc end host_data
         endif
-        if(m_start.le.m_end) lagrange( m_start:m_end ) = lagrange_d( m_start:m_end )
-        CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
+        !$acc host_data use_device(lagrange)
+        CALL mp_sum( lagrange, 1, m-1 , inter_bgrp_comm )
+        !$acc end host_data
+!civn to remove
+        !$acc update self(lagrange)
         IF ( gstart == 2 ) THEN
            !$acc update self(psi, scg)
            psi_aux(1:m-1) = psi(1,1:m-1)
@@ -553,9 +553,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   avg_iter = avg_iter / DBLE( nbnd )
   eig(1:nbnd) = e(1:nbnd)
   !
-  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi)
+  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi, lagrange)
   DEALLOCATE( lagrange )
-  DEALLOCATE( lagrange_d )
   DEALLOCATE( e )
   DEALLOCATE( psi_aux )
   DEALLOCATE( ppsi )
