@@ -89,10 +89,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( cg(   npwx ) )
   ALLOCATE( g0_d(   npwx ) )
   ALLOCATE( ppsi( npwx ) )
-  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi)
   !
   ALLOCATE( lagrange_d( nbnd ) )
   ALLOCATE( lagrange  ( nbnd ) )
+  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange)
   ALLOCATE( e         ( nbnd ) )
   ALLOCATE( psi_aux   ( nbnd ) )
   !
@@ -125,25 +125,31 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
+     !$acc kernels
      lagrange = 0.d0
+     !$acc end kernels
      if(m_start.le.m_end) then
-       !$acc host_data use_device(psi, spsi)
-       CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange_d(m_start), 1 )
+       !$acc host_data use_device(psi, spsi, lagrange)
+       CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
        !$acc end host_data
      endif 
-     if(m_start.le.m_end) lagrange( m_start:m_end ) = lagrange_d( m_start:m_end )
      !print *, 'lagrange ', lagrange(1:m)
 
-     CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
+     !$acc host_data use_device(lagrange)
+     CALL mp_sum( lagrange, 1, m , inter_bgrp_comm )
+     !$acc end host_data
+
      IF ( gstart == 2 ) THEN 
-        !$acc update self(psi, spsi)
-        psi_aux(1:m) = psi(1,1:m)
-        spsi1 = spsi(1)
-        lagrange(1:m) = lagrange(1:m) - psi_aux(1:m) * spsi1
+        !$acc kernels
+        lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
+        !$acc end kernels
      END IF
      !
-     CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
+     !$acc host_data use_device(lagrange)
+     CALL mp_sum( lagrange, 1, m , intra_bgrp_comm )
+     !$acc end host_data
      !
+     !$acc update self(lagrange)
      psi_norm = lagrange(m)
      lagrange_d(1:m) = lagrange(1:m)
      !
