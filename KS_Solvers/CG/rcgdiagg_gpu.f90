@@ -249,7 +249,9 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
         !
+        !$acc kernels
         lagrange(1:m-1) = 0.d0
+        !$acc end kernels
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         if(m_start.le.m_end) then
           !$acc host_data use_device(psi, scg, lagrange)
@@ -259,16 +261,16 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !$acc host_data use_device(lagrange)
         CALL mp_sum( lagrange, 1, m-1 , inter_bgrp_comm )
         !$acc end host_data
-!civn to remove
-        !$acc update self(lagrange)
         IF ( gstart == 2 ) THEN
-           !$acc update self(psi, scg)
-           psi_aux(1:m-1) = psi(1,1:m-1)
-           scg1 = scg(1)
-           lagrange(1:m-1) = lagrange(1:m-1) - psi_aux(1:m-1) * scg1
+           !$acc kernels
+           lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
+           !$acc end kernels
         END IF
         !
-        CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
+        !$acc host_data use_device(lagrange)
+        CALL mp_sum( lagrange, 1, m-1, intra_bgrp_comm )
+        !$acc end host_data
+        !$acc update self(lagrange)
         !
         DO j = 1, ( m - 1 )
            !
