@@ -189,9 +189,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !$acc end host_data
      !print *, 'e(m)', e(m)
      IF ( gstart == 2 ) THEN
-        !$acc update self(psi, hpsi)
+        !$acc kernels copyout(psi1, hpsi1) copyin(m)
         psi1  = psi(1,m)
         hpsi1 = hpsi(1)
+        !$acc end kernels
         e(m) = e(m) - psi1 * hpsi1
      END IF
      !
@@ -221,8 +222,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         IF ( gstart == 2 ) THEN
            !
-           !$acc update self(g, ppsi, spsi)
-           g1 = g(1); ppsi1 = ppsi(1); spsi1 = spsi(1)
+           !$acc kernels copyout(g1, ppsi1, spsi1)
+           g1 = g(1)
+           ppsi1 = ppsi(1)
+           spsi1 = spsi(1)
+           !$acc end kernels
            !
            es(1) = es(1) - spsi1 * g1
            es(2) = es(2) - spsi1 * ppsi1
@@ -381,8 +385,9 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         cg0 = 2.D0 * MYDDOT( npw2, cg(1), 1, scg(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           !$acc update self(cg, scg)
+           !$acc kernels copyout(cg1, scg1)
            cg1 = cg(1) ; scg1 = scg(1)
+           !$acc end kernels
            cg0 = cg0 - cg1*scg1
         END IF
         !
@@ -402,9 +407,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         a0 = 4.D0 * MYDDOT( npw2, psi(1,m), 1, ppsi(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           !$acc update self(psi, ppsi)
+           !$acc kernels copyout(psi1, ppsi1) copyin(m)
            psi1 = psi(1,m)
            ppsi1 = ppsi(1)
+           !$acc end kernels
            a0 = a0 - 2.D0 * psi1 * ppsi1
         END IF
         !
@@ -416,9 +422,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         b0 = 2.D0 * MYDDOT( npw2, cg(1), 1, ppsi(1), 1 )
         !$acc end host_data 
         IF ( gstart == 2 ) THEN 
-           !$acc update self(cg, ppsi)
+           !$acc kernels copyout(cg1, ppsi1)
            cg1 = cg(1)
            ppsi1 = ppsi(1)
+           !$acc end kernels
            b0 = b0 - cg1 * ppsi1
         END IF
         !
