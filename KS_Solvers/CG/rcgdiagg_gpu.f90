@@ -47,7 +47,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   ! ... local variables
   !
-  INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
+  INTEGER                  :: i, j, m, m_start, m_end, iter, moved
   REAL(DP),    ALLOCATABLE :: lagrange(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
                               scg(:), ppsi(:), g0(:), lagrange_c(:)
@@ -95,7 +95,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! ... every eigenfunction is calculated separately
   !
   DO m = 1, nbnd
-
+        !
      IF ( btype(m) == 1 ) THEN
         !
         ethr_m = ethr
@@ -121,12 +121,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
        CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
        !$acc end host_data
      endif 
-     !print *, 'lagrange ', lagrange(1:m)
-
+     !
      !$acc host_data use_device(lagrange)
      CALL mp_sum( lagrange, 1, m , inter_bgrp_comm )
      !$acc end host_data
-
+     !
      IF ( gstart == 2 ) THEN 
         !$acc kernels
         lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
@@ -140,12 +139,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !$acc kernels copyin(m) 
      psi_norm = lagrange(m)
      DO j = 1, m - 1
-        !print *, 'psi_norm ', j, psi_norm
         psi_norm = psi_norm - lagrange(j)**2
      END DO
      psi_norm = SQRT( psi_norm )
      !$acc end kernels
-     !print *, 'psi_norm 178', psi_norm
      !
      !$acc parallel
      !$acc loop gang 
@@ -190,10 +187,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... ( P = preconditioning matrix, assumed diagonal )
         !
         !$acc kernels 
-        DO i = 1, npw
-           g(i)  = hpsi(i) / precondition(i)
-           ppsi(i) = spsi(i) / precondition(i)
-        END DO
+        g(1:npw)    = hpsi(1:npw) / precondition(1:npw)
+        ppsi(1:npw) = spsi(1:npw) / precondition(1:npw)
         !$acc end kernels
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
@@ -213,9 +208,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         es1 = es(1)
         !$acc kernels   
-        DO i=1, npwx
-           g(i) = g(i) - es1 * ppsi(i)
-        END DO
+        g(:) = g(:) - es1 * ppsi(:)
         !$acc end kernels
         !
         ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y>  ensures that  
@@ -274,15 +267,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... gg is <g(n+1)|S|g(n+1)>
         !
         !$acc kernels   
-        do i=1, npwx
-           g0(i) = scg(i)
-        end do
-        !$acc end kernels
-        !
-        !$acc kernels 
-        do i=1, npw
-          g0(i) = g0(i) * precondition(i)
-        end do
+        g0(:) = scg(:)
+        g0(1:npw) = g0(1:npw) * precondition(1:npw)
         !$acc end kernels
         !
         !$acc host_data use_device(g, g0)
@@ -317,9 +303,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            gg0   = gg
            !
            !$acc kernels   
-           do i=1, npwx
-              cg(i) = g(i) + cg(i) * gamma
-           end do
+           cg(:) = g(:) + cg(:) * gamma
            !$acc end kernels
            !
            ! ... The following is needed because <y(n+1)| S P^2 |cg(n+1)> 
@@ -409,9 +393,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... upgrade |psi>
         !
         !$acc kernels  
-        do i=1, npwx
-           psi(i,m) = cost * psi(i,m) + sint / cg0 * cg(i)
-        end do
+        psi(:,m) = cost * psi(:,m) + sint / cg0 * cg(:)
         !$acc end kernels
         !
         ! ... here one could test convergence on the energy
@@ -421,11 +403,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... upgrade H|psi> and S|psi>
         !
         !$acc kernels  
-        do i=1, npwx
-           spsi(i) = cost * spsi(i) + sint / cg0 * scg(i)
-           !
-           hpsi(i) = cost * hpsi(i) + sint / cg0 * ppsi(i)
-        end do
+        spsi(:) = cost * spsi(:) + sint / cg0 * scg(:)
+        hpsi(:) = cost * hpsi(:) + sint / cg0 * ppsi(:)
         !$acc end kernels
         !
      END DO iterate
@@ -469,9 +448,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            e0 = e(m)
            !
            !$acc kernels  
-           do l=1, npwx
-              ppsi(l) = psi(l,m)
-           end do
+           ppsi(:) = psi(:,m)
            !$acc end kernels
            !
            DO j = m, i + 1, - 1
@@ -479,9 +456,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
               e(j) = e(j-1)
               !
               !$acc kernels  
-              do l=1, npwx
-                 psi(l,j) = psi(l,j-1)
-              end do
+              psi(:,j) = psi(:,j-1)
               !$acc end kernels
               !
            END DO
@@ -489,9 +464,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            e(i) = e0
            !
            !$acc kernels  
-           do l=1, npwx
-              psi(l,i) = ppsi(l)
-           end do
+           psi(:,i) = ppsi(:)
            !$acc end kernels
            !
            ! ... this procedure should be good if only a few inversions occur,
