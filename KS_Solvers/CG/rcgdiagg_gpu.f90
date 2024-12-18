@@ -70,7 +70,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   !
   CALL start_clock( 'rcgdiagg' )
-  !$acc data deviceptr(precondition)
   !
   IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   !
@@ -564,8 +563,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   DEALLOCATE( hpsi )
   DEALLOCATE( scg )
   DEALLOCATE( spsi )
-  !
-  !$acc end data
   !
   CALL stop_clock( 'rcgdiagg' )
   !
