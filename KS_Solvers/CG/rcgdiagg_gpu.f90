@@ -288,8 +288,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            gg1 = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
            !$acc end host_data
            IF ( gstart == 2 ) THEN 
-              !$acc update self(g, g0)
-              g1 = g(1) ; g01 = g0(1)
+              !$acc kernels copyout(g1, g01)
+              g1 = g(1)
+              g01 = g0(1)
+              !$acc end kernels
               gg1 = gg1 - g1 * g01
            END IF
            !
@@ -315,8 +317,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         gg = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           !$acc update self(g, g0)
-           g1 = g(1) ; g01 = g0(1)
+           !$acc kernels copyout(g1, g01)
+           g1 = g(1)
+           g01 = g0(1)
+           !$acc end kernels
            gg = gg - g1*g01
         END IF
         !
