@@ -50,7 +50,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
   REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
-                              scg(:), ppsi(:), g0(:), psi_aux(:), lagrange_c(:)
+                              scg(:), ppsi(:), g0(:), lagrange_c(:)
   COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                               cg0, e0, es(2), aux
@@ -91,7 +91,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( lagrange_c( nbnd ) )
   !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   ALLOCATE( e         ( nbnd ) )
-  ALLOCATE( psi_aux   ( nbnd ) )
   !
   ! Sync eigenvalues that will remain on the Host
   e(1:nbnd) = eig(1:nbnd)
@@ -565,7 +564,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   DEALLOCATE( lagrange, lagrange_c )
   DEALLOCATE( e )
-  DEALLOCATE( psi_aux )
   DEALLOCATE( ppsi )
   DEALLOCATE( g0 )
   DEALLOCATE( cg )
