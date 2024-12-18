@@ -50,7 +50,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
   REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
-                              scg(:), ppsi(:), g0_d(:), psi_aux(:), lagrange_c(:)
+                              scg(:), ppsi(:), g0(:), psi_aux(:), lagrange_c(:)
   COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                               cg0, e0, es(2), aux
@@ -60,9 +60,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   LOGICAL                  :: reorder
   INTEGER                  :: npw2, npwx2
   REAL(DP)                 :: empty_ethr, ethr_m
-#if defined(__CUDA)
-  attributes(DEVICE) :: g0_d
-#endif
   !
   ! ... external functions
   !
@@ -87,12 +84,12 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( hpsi( npwx ) )
   ALLOCATE( g(    npwx ) )
   ALLOCATE( cg(   npwx ) )
-  ALLOCATE( g0_d(   npwx ) )
+  ALLOCATE( g0(   npwx ) )
   ALLOCATE( ppsi( npwx ) )
   !
   ALLOCATE( lagrange  ( nbnd ) )
   ALLOCATE( lagrange_c( nbnd ) )
-  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange, lagrange_c)
+  !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   ALLOCATE( e         ( nbnd ) )
   ALLOCATE( psi_aux   ( nbnd ) )
   !
@@ -287,12 +284,12 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           !$acc host_data use_device(g)
-           gg1 = 2.D0 * MYDDOT( npw2, g(1), 1, g0_d(1), 1 )
+           !$acc host_data use_device(g, g0)
+           gg1 = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
            !$acc end host_data
            IF ( gstart == 2 ) THEN 
-              !$acc update self(g)
-              g1 = g(1) ; g01 = g0_d(1)
+              !$acc update self(g, g0)
+              g1 = g(1) ; g01 = g0(1)
               gg1 = gg1 - g1 * g01
            END IF
            !
@@ -304,22 +301,22 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc kernels   
         do i=1, npwx
-           g0_d(i) = scg(i)
+           g0(i) = scg(i)
         end do
         !$acc end kernels
         !
         !$acc kernels 
         do i=1, npw
-          g0_d(i) = g0_d(i) * precondition(i)
+          g0(i) = g0(i) * precondition(i)
         end do
         !$acc end kernels
         !
-        !$acc host_data use_device(g)
-        gg = 2.D0 * MYDDOT( npw2, g(1), 1, g0_d(1), 1 )
+        !$acc host_data use_device(g, g0)
+        gg = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
         !$acc end host_data
         IF ( gstart == 2 ) THEN 
-           !$acc update self(g)
-           g1 = g(1) ; g01 = g0_d(1)
+           !$acc update self(g, g0)
+           g1 = g(1) ; g01 = g0(1)
            gg = gg - g1*g01
         END IF
         !
@@ -554,12 +551,12 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   avg_iter = avg_iter / DBLE( nbnd )
   eig(1:nbnd) = e(1:nbnd)
   !
-  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi, lagrange, lagrange_c)
+  !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   DEALLOCATE( lagrange, lagrange_c )
   DEALLOCATE( e )
   DEALLOCATE( psi_aux )
   DEALLOCATE( ppsi )
-  DEALLOCATE( g0_d )
+  DEALLOCATE( g0 )
   DEALLOCATE( cg )
   DEALLOCATE( g )
   DEALLOCATE( hpsi )
