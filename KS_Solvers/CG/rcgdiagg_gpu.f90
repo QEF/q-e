@@ -69,7 +69,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   CALL start_clock( 'rcgdiagg' )
   !
-print *, '@gstart', gstart
   IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
@@ -113,6 +112,7 @@ print *, '@gstart', gstart
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
+     CALL start_clock( 'cg:ortho' )
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
      !$acc kernels
      lagrange = 0.d0
@@ -122,17 +122,14 @@ print *, '@gstart', gstart
        CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
        !$acc end host_data
      endif 
-     !
      !$acc host_data use_device(lagrange)
      CALL mp_sum( lagrange, 1, m , inter_bgrp_comm )
      !$acc end host_data
-     !
      IF ( gstart == 2 ) THEN 
         !$acc kernels
         lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
         !$acc end kernels
      END IF
-     !
      !$acc host_data use_device(lagrange)
      CALL mp_sum( lagrange, 1, m , intra_bgrp_comm )
      !$acc end host_data
@@ -160,6 +157,7 @@ print *, '@gstart', gstart
      ! ... set Im[ psi(G=0) ] -  needed for numerical stability
      IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
      !$acc end kernels
+     CALL stop_clock( 'cg:ortho' )
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
@@ -217,6 +215,7 @@ print *, '@gstart', gstart
         !
         CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
         !
+        CALL start_clock( 'cg:ortho' )
         !$acc kernels
         lagrange(1:m-1) = 0.d0
         !$acc end kernels
@@ -234,19 +233,17 @@ print *, '@gstart', gstart
            lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
            !$acc end kernels
         END IF
-        !
         !$acc host_data use_device(lagrange)
         CALL mp_sum( lagrange, 1, m-1, intra_bgrp_comm )
         !$acc end host_data
-        !
         !$acc kernels
         lagrange_c(:) = cmplx(lagrange(:), 0.0_dp)
         !$acc end kernels
-        !
         !$acc host_data use_device(psi, g, scg, lagrange_c)
         Call MYZGEMV('N', npwx, (m-1), -(1.0d0, 0.0d0), psi, npwx, lagrange_c, 1, (1.0d0, 0.0d0), g,   1)
         Call MYZGEMV('N', npwx, (m-1), -(1.0d0, 0.0d0), psi, npwx, lagrange_c, 1, (1.0d0, 0.0d0), scg, 1)
         !$acc end host_data
+        CALL stop_clock( 'cg:ortho' )
         !
         IF ( iter /= 1 ) THEN
            !
@@ -281,11 +278,8 @@ print *, '@gstart', gstart
            !
            gg0 = gg
            !
-           ! ... |cg> contains now the conjugate gradient
            !$acc kernels   
            cg(:) = g(:)
-           ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-           IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
            !$acc end kernels
            !
         ELSE
@@ -307,14 +301,17 @@ print *, '@gstart', gstart
            !
            psi_norm = gamma * cg0 * sint
            !
-           ! ... |cg> contains now the conjugate gradient
            !$acc kernels   
            cg(:) = cg(:) - psi_norm * psi(:,m)
-           ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-           IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
            !$acc end kernels
            !
         END IF
+        !
+        ! ... |cg> contains now the conjugate gradient
+        ! ... set Im[ cg(G=0) ] -  needed for numerical stability
+        !$acc kernels
+        IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
+        !$acc end kernels
         !
         ! ... |scg> is S|cg>
         !
@@ -397,6 +394,7 @@ print *, '@gstart', gstart
         !
         !$acc kernels  
         spsi(:) = cost * spsi(:) + sint / cg0 * scg(:)
+        !
         hpsi(:) = cost * hpsi(:) + sint / cg0 * ppsi(:)
         !$acc end kernels
         !
@@ -435,7 +433,7 @@ print *, '@gstart', gstart
            !
            moved = moved + 1
            !
-           ! ... last calculated eigenvalue should be in the
+           ! ... last calculated eigenvalue should be in the 
            ! ... i-th position: reorder
            !
            e0 = e(m)
