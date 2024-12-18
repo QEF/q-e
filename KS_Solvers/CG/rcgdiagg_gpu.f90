@@ -51,10 +51,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   REAL(DP),    ALLOCATABLE :: lagrange(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
                               scg(:), ppsi(:), g0(:), lagrange_c(:)
-  COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
-                              cg0, e0, es(2), aux
-  COMPLEX(DP)              :: aux_c
+                              cg0, e0, es(2)
   REAL(DP)                 :: es1
   REAL(DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                  :: reorder
@@ -179,18 +177,10 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !
      !$acc host_data use_device(psi, hpsi)
      e(m) = 2.D0 * MYDDOT( npw2, psi(1,m), 1, hpsi, 1 )
+     IF ( gstart == 2 ) e(m) = e(m) - MYDDOT( 1, psi(1,m), 1, hpsi(1), 1 )  
      !$acc end host_data
-     !print *, 'e(m)', e(m)
-     IF ( gstart == 2 ) THEN
-        !$acc kernels copyout(psi1, hpsi1) copyin(m)
-        psi1  = psi(1,m)
-        hpsi1 = hpsi(1)
-        !$acc end kernels
-        e(m) = e(m) - psi1 * hpsi1
-     END IF
      !
      CALL mp_sum( e(m), intra_bgrp_comm )
-     !print *, 'before iterate', psi1, hpsi1, spsi1, e(1:nbnd)
      !
      ! ... start iteration for this band
      !
@@ -211,20 +201,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !$acc host_data use_device(spsi, g, ppsi)
         es(1) = 2.D0 * MYDDOT( npw2, spsi(1), 1, g(1), 1 )
         es(2) = 2.D0 * MYDDOT( npw2, spsi(1), 1, ppsi(1), 1 )
-        !$acc end host_data
-        !
         IF ( gstart == 2 ) THEN
-           !
-           !$acc kernels copyout(g1, ppsi1, spsi1)
-           g1 = g(1)
-           ppsi1 = ppsi(1)
-           spsi1 = spsi(1)
-           !$acc end kernels
-           !
-           es(1) = es(1) - spsi1 * g1
-           es(2) = es(2) - spsi1 * ppsi1
-           !
+           es(1) = es(1) - MYDDOT( 1, spsi(1), 1, g(1), 1 )  
+           es(2) = es(2) - MYDDOT( 1, spsi(1), 1, ppsi(1), 1 ) 
         END IF
+        !$acc end host_data
         !
         CALL mp_sum( es , intra_bgrp_comm )
         !
@@ -283,14 +264,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            !$acc host_data use_device(g, g0)
            gg1 = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
+           IF ( gstart == 2 ) gg1 = gg1 - MYDDOT( 1, g(1), 1, g0(1), 1 )  
            !$acc end host_data
-           IF ( gstart == 2 ) THEN 
-              !$acc kernels copyout(g1, g01)
-              g1 = g(1)
-              g01 = g0(1)
-              !$acc end kernels
-              gg1 = gg1 - g1 * g01
-           END IF
            !
            CALL mp_sum(  gg1 , intra_bgrp_comm )
            !
@@ -312,14 +287,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc host_data use_device(g, g0)
         gg = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
+        IF ( gstart == 2 ) gg = gg - MYDDOT( 1, g(1), 1, g0(1), 1 ) 
         !$acc end host_data
-        IF ( gstart == 2 ) THEN 
-           !$acc kernels copyout(g1, g01)
-           g1 = g(1)
-           g01 = g0(1)
-           !$acc end kernels
-           gg = gg - g1*g01
-        END IF
         !
         CALL mp_sum(  gg , intra_bgrp_comm )
         !
@@ -376,13 +345,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc host_data use_device(cg, scg)
         cg0 = 2.D0 * MYDDOT( npw2, cg(1), 1, scg(1), 1 )
+        IF ( gstart == 2 ) cg0 = cg0 - MYDDOT( 1, cg(1), 1, scg(1), 1 ) 
         !$acc end host_data
-        IF ( gstart == 2 ) THEN 
-           !$acc kernels copyout(cg1, scg1)
-           cg1 = cg(1) ; scg1 = scg(1)
-           !$acc end kernels
-           cg0 = cg0 - cg1*scg1
-        END IF
         !
         CALL mp_sum(  cg0 , intra_bgrp_comm )
         !
@@ -398,14 +362,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc host_data use_device(psi, ppsi)
         a0 = 4.D0 * MYDDOT( npw2, psi(1,m), 1, ppsi(1), 1 )
+        IF ( gstart == 2 ) a0 = a0 - 2.D0 * MYDDOT( 1, psi(1,m), 1, ppsi(1), 1 ) 
         !$acc end host_data
-        IF ( gstart == 2 ) THEN 
-           !$acc kernels copyout(psi1, ppsi1) copyin(m)
-           psi1 = psi(1,m)
-           ppsi1 = ppsi(1)
-           !$acc end kernels
-           a0 = a0 - 2.D0 * psi1 * ppsi1
-        END IF
         !
         a0 = a0 / cg0
         !
@@ -413,14 +371,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc host_data use_device(cg, ppsi)
         b0 = 2.D0 * MYDDOT( npw2, cg(1), 1, ppsi(1), 1 )
+        IF ( gstart == 2 ) b0 = b0 - MYDDOT( 1, cg(1), 1, ppsi(1), 1 ) 
         !$acc end host_data 
-        IF ( gstart == 2 ) THEN 
-           !$acc kernels copyout(cg1, ppsi1)
-           cg1 = cg(1)
-           ppsi1 = ppsi(1)
-           !$acc end kernels
-           b0 = b0 - cg1 * ppsi1
-        END IF
         !
         b0 = b0 / cg0**2
         !
