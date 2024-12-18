@@ -62,13 +62,14 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: MYDDOT
-  EXTERNAL  hs_1psi_ptr,    s_1psi_ptr 
-  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
-  ! s_1psi( npwx, npw, psi, spsi )
+  EXTERNAL  hs_1psi_ptr,    s_1psi_ptr
+  ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
+  ! s_1psi_ptr( npwx, npw, psi, spsi )
   !
   !
   CALL start_clock( 'rcgdiagg' )
   !
+print *, '@gstart', gstart
   IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
@@ -83,8 +84,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( cg(   npwx ) )
   ALLOCATE( g0(   npwx ) )
   ALLOCATE( ppsi( npwx ) )
-  !
-  ALLOCATE( lagrange  ( nbnd ) )
+  !    
+  ALLOCATE( lagrange( nbnd ) )
   ALLOCATE( lagrange_c( nbnd ) )
   !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   !
@@ -155,13 +156,9 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !$acc end parallel 
      !
      !$acc kernels
-     DO i = 1, npwx
-        psi(i,m) = psi(i,m) / psi_norm
-        ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-        IF (i == 1) THEN
-          IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
-        END IF
-     END DO
+     psi(:,m) = psi(:,m) / psi_norm
+     ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+     IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
      !$acc end kernels
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
@@ -284,13 +281,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            gg0 = gg
            !
+           ! ... |cg> contains now the conjugate gradient
            !$acc kernels   
-           DO i=1, npwx
-              cg(i) = g(i)
-              ! ... |cg> contains now the conjugate gradient
-              ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-              IF ( gstart == 2 .and. i == 1 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
-           END DO
+           cg(:) = g(:)
+           ! ... set Im[ cg(G=0) ] -  needed for numerical stability
+           IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
            !$acc end kernels
            !
         ELSE
@@ -312,13 +307,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            psi_norm = gamma * cg0 * sint
            !
+           ! ... |cg> contains now the conjugate gradient
            !$acc kernels   
-           do i=1, npwx
-              cg(i) = cg(i) - psi_norm * psi(i,m)
-              ! ... |cg> contains now the conjugate gradient
-              ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-              IF ( gstart == 2 .and. i == 1 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
-           end do
+           cg(:) = cg(:) - psi_norm * psi(:,m)
+           ! ... set Im[ cg(G=0) ] -  needed for numerical stability
+           IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
            !$acc end kernels
            !
         END IF
