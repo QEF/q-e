@@ -8,7 +8,7 @@
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
 SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
-                     npwx, npw, nbnd, psi, eig, btype, &
+                     npwx, npw, nbnd, psi, e, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -41,14 +41,14 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: precondition(npw), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx,nbnd)
-  REAL(DP),    INTENT(INOUT) :: eig(nbnd)
+  REAL(DP),    INTENT(INOUT) :: e(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
   !
   ! ... local variables
   !
   INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
-  REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
+  REAL(DP),    ALLOCATABLE :: lagrange(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
                               scg(:), ppsi(:), g0(:), lagrange_c(:)
   COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
@@ -90,11 +90,6 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( lagrange  ( nbnd ) )
   ALLOCATE( lagrange_c( nbnd ) )
   !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
-  ALLOCATE( e         ( nbnd ) )
-  !
-  ! Sync eigenvalues that will remain on the Host
-  e(1:nbnd) = eig(1:nbnd)
-  !print *, 'init ', e(1:nbnd)
   !
   avg_iter = 0.D0
   notconv  = 0
@@ -559,11 +554,9 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   END DO
   !
   avg_iter = avg_iter / DBLE( nbnd )
-  eig(1:nbnd) = e(1:nbnd)
   !
   !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   DEALLOCATE( lagrange, lagrange_c )
-  DEALLOCATE( e )
   DEALLOCATE( ppsi )
   DEALLOCATE( g0 )
   DEALLOCATE( cg )
