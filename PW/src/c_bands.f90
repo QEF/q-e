@@ -371,11 +371,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           !
           IF ( isolve == 1 ) THEN
              IF (.not. use_gpu) THEN
-                CALL rcgdiagg_gpu( hs_1psi, s_1psi, h_diag, &
+                CALL rcgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
-                CALL rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag, &
+                CALL rcgdiagg( hs_1psi_gpu, s_1psi_gpu, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
                 !

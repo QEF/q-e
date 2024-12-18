@@ -52,8 +52,7 @@ Davidson/regterg_gpu.o \
 DENSE/rotate_wfc_k_gpu.o \
 DENSE/rotate_wfc_gamma_gpu.o \
 DENSE/rotate_driver_cuf.o \
-CG/rcgdiagg_gpu.o \
-CG/ccgdiagg_gpu.o
+PPCG/generic_cublas.o
 
 # add here other objects, e.g. ParO/*.o NewSolver/*.o
 
