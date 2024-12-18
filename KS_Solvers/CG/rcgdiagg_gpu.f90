@@ -50,10 +50,11 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER                  :: i, j, l, m, m_start, m_end, iter, moved
   REAL(DP),    ALLOCATABLE :: lagrange(:), e(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
-                              scg(:), ppsi(:), g0_d(:), psi_aux(:)
+                              scg(:), ppsi(:), g0_d(:), psi_aux(:), lagrange_c(:)
   COMPLEX(DP)              :: psi1, hpsi1, spsi1, ppsi1, scg1, cg1, g1, g01
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                               cg0, e0, es(2), aux
+  COMPLEX(DP)              :: aux_c
   REAL(DP)                 :: es1
   REAL(DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                  :: reorder
@@ -90,7 +91,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( ppsi( npwx ) )
   !
   ALLOCATE( lagrange  ( nbnd ) )
-  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange)
+  ALLOCATE( lagrange_c( nbnd ) )
+  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange, lagrange_c)
   ALLOCATE( e         ( nbnd ) )
   ALLOCATE( psi_aux   ( nbnd ) )
   !
@@ -270,19 +272,15 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !$acc host_data use_device(lagrange)
         CALL mp_sum( lagrange, 1, m-1, intra_bgrp_comm )
         !$acc end host_data
-        !$acc update self(lagrange)
         !
-        DO j = 1, ( m - 1 )
-           !
-           aux = lagrange(j)
-           !$acc kernels 
-           DO i = 1, npwx
-              g(i)   = g(i)   - aux * psi(i,j)
-              scg(i) = scg(i) - aux * psi(i,j)
-           END DO
-           !$acc end kernels
-           !
-        END DO
+        !$acc kernels
+        lagrange_c(:) = cmplx(lagrange(:), 0.0_dp)
+        !$acc end kernels
+        !
+        !$acc host_data use_device(psi, g, scg, lagrange_c)
+        Call MYZGEMV('N', npwx, (m-1), -(1.0d0, 0.0d0), psi, npwx, lagrange_c, 1, (1.0d0, 0.0d0), g,   1)
+        Call MYZGEMV('N', npwx, (m-1), -(1.0d0, 0.0d0), psi, npwx, lagrange_c, 1, (1.0d0, 0.0d0), scg, 1)
+        !$acc end host_data
         !
         IF ( iter /= 1 ) THEN
            !
@@ -555,8 +553,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   avg_iter = avg_iter / DBLE( nbnd )
   eig(1:nbnd) = e(1:nbnd)
   !
-  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi, lagrange)
-  DEALLOCATE( lagrange )
+  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi, lagrange, lagrange_c)
+  DEALLOCATE( lagrange, lagrange_c )
   DEALLOCATE( e )
   DEALLOCATE( psi_aux )
   DEALLOCATE( ppsi )
