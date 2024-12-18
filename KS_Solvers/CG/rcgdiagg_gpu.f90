@@ -149,24 +149,25 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      CALL mp_sum( lagrange, 1, m , intra_bgrp_comm )
      !$acc end host_data
      !
-     !$acc update self(lagrange)
+     !$acc kernels copyin(m) 
      psi_norm = lagrange(m)
-     !
      DO j = 1, m - 1
-        !
-        !$acc kernels 
-        DO i = 1, npwx
-           psi(i,m)  = psi(i,m) - lagrange(j) * psi(i,j)
-        END DO
-        !$acc end kernels
-        !
         !print *, 'psi_norm ', j, psi_norm
         psi_norm = psi_norm - lagrange(j)**2
-        !
      END DO
-     !
      psi_norm = SQRT( psi_norm )
+     !$acc end kernels
      !print *, 'psi_norm 178', psi_norm
+     !
+     !$acc parallel
+     !$acc loop gang 
+     DO i = 1, npwx
+       !$acc loop seq 
+       DO j = 1, m - 1
+           psi(i,m)  = psi(i,m) - lagrange(j) * psi(i,j)
+        END DO
+     END DO
+     !$acc end parallel 
      !
      !$acc kernels
      DO i = 1, npwx
