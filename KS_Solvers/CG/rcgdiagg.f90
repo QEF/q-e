@@ -25,10 +25,6 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-#if defined(__CUDA)
-  USE cudafor
-  USE cublas
-#endif
   USE util_param,     ONLY : DP
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm, gstart
   USE mp,             ONLY : mp_sum

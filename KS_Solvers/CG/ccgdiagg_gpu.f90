@@ -22,10 +22,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-#if defined(__CUDA)
-  USE cudafor
-  USE cublas
-#endif
   USE util_param,     ONLY : DP
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE mp,             ONLY : mp_sum
@@ -151,7 +147,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
      !$acc host_data use_device(psi, spsi, lagrange)
      IF(m_start.le.m_end) THEN
-       CALL ZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), &
+       CALL MYZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), &
                    kdmx, spsi, 1, ZERO, lagrange(m_start), 1 )
      END IF
      CALL mp_sum( lagrange, 1, m, inter_bgrp_comm )
@@ -236,7 +232,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         !$acc host_data use_device(psi, scg, lagrange)
         IF(m_start.le.m_end) THEN
-          CALL ZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), &
+          CALL MYZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), &
                       kdmx, scg, 1, ZERO, lagrange(m_start), 1 )
         END IF
         CALL mp_sum( lagrange, 1, m-1, inter_bgrp_comm )
