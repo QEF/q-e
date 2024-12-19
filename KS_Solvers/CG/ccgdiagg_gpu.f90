@@ -32,7 +32,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
 #if defined(__VERBOSE)
   USE util_param,     ONLY : stdout
 #endif
-  USE device_memcpy_m,  ONLY : dev_memset
   !
   IMPLICIT NONE
   !
@@ -67,8 +66,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   REAL (DP), EXTERNAL :: MYDDOT
   EXTERNAL  hs_1psi_ptr, s_1psi_ptr
-  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
-  ! s_1psi( npwx, npw, psi, spsi )
+  ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
+  ! s_1psi_ptr( npwx, npw, psi, spsi )
   !
   CALL start_clock( 'ccgdiagg' )
   !
@@ -132,30 +131,16 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
      END IF
      !
-     !$acc host_data use_device(spsi)
-     CALL dev_memset( spsi     , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(hpsi)
-     CALL dev_memset( hpsi     , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(scg)
-     CALL dev_memset( scg      , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(g)
-     CALL dev_memset( g        , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(cg)
-     CALL dev_memset( cg       , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(g0)
-     CALL dev_memset( g0       , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(ppsi)
-     CALL dev_memset( ppsi     , ZERO )
-     !$acc end host_data
-     !$acc host_data use_device(lagrange)
-     CALL dev_memset( lagrange, ZERO )
-     !$acc end host_data
+     !$acc kernels
+     spsi     = ZERO
+     scg      = ZERO
+     hpsi     = ZERO
+     g        = ZERO
+     cg       = ZERO
+     g0       = ZERO
+     ppsi     = ZERO
+     lagrange = ZERO
+     !$acc end kernels
      !
      ! ... calculate S|psi>
      !
@@ -192,9 +177,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !$acc end parallel 
      !
      !$acc kernels
-     DO i = 1, kdmx
-        psi(i,m) = psi(i,m) / psi_norm
-     END DO
+     psi(:,m) = psi(:,m) / psi_norm
      !$acc end kernels
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
@@ -219,10 +202,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... ( P = preconditioning matrix, assumed diagonal )
         !
         !$acc kernels
-        DO i = 1, kdmx
-           g(i)    = hpsi(i) / precondition(i)
-           ppsi(i) = spsi(i) / precondition(i)
-        END DO
+        g(:)    = hpsi(:) / precondition(:)
+        ppsi(:) = spsi(:) / precondition(:)
         !$acc end kernels
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
@@ -238,9 +219,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         es_1 = es(1)
         !
         !$acc kernels
-        DO i = 1, kdmx
-           g(i) = g(i) - es_1 * ppsi(i)
-        END DO
+        g(:) = g(:) - es_1 * ppsi(:)
         !$acc end kernels
         !
         ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y>  ensures that 
@@ -284,9 +263,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... gg is <g(n+1)|S|g(n+1)>
         !
         !$acc kernels
-        DO i = 1, kdmx
-           g0(i) = scg(i) * precondition(i)
-        END DO
+        g0(:) = scg(:) * precondition(:)
         !$acc end kernels
         !
         !$acc host_data use_device(g, g0)
@@ -302,9 +279,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            gg0 = gg
            !
            !$acc kernels 
-           DO i = 1, kdmx
-              cg(i) = g(i)
-           END DO
+           cg(:) = g(:)
            !$acc end kernels
            !
         ELSE
@@ -329,11 +304,9 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            psi_norm = gamma * cg0 * sint
            !
+           ! v== this breaks the logic, done here for performance
            !$acc kernels
-           DO i = 1, kdmx
-              !          v== this breaks the logic, done here for performance
-              cg(i) = (g(i) + cg(i) * gamma) - psi_norm * psi(i,m)
-           END DO
+           cg(:) = (g(:) + cg(:) * gamma) - psi_norm * psi(:,m)
            !$acc end kernels
            !
         END IF
@@ -402,9 +375,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... upgrade |psi>
         !
         !$acc kernels
-        DO i = 1, kdmx
-           psi(i,m) = cost * psi(i,m) + sint / cg0 * cg(i)
-        END DO
+        psi(:,m) = cost * psi(:,m) + sint / cg0 * cg(:)
         !$acc end kernels
         !
         ! ... here one could test convergence on the energy
@@ -414,11 +385,9 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... upgrade H|psi> and S|psi>
         !
         !$acc kernels
-        DO i = 1, kdmx
-           spsi(i) = cost * spsi(i) + sint / cg0 * scg(i)
+        spsi(:) = cost * spsi(:) + sint / cg0 * scg(:)
            !
-           hpsi(i) = cost * hpsi(i) + sint / cg0 * ppsi(i)
-        END DO
+        hpsi(:) = cost * hpsi(:) + sint / cg0 * ppsi(:)
         !$acc end kernels
         !
      END DO iterate
@@ -426,10 +395,10 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
 #if defined(__VERBOSE)
      IF ( iter >= maxter ) THEN
         WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (not converged after ",i3,&
-             & " iterations)")') m, e(m)*13.6058, iter
+                     & " iterations)")') m, e(m)*13.6058, iter
      ELSE
         WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
-             m, e(m)*13.6058, iter
+         m, e(m)*13.6058, iter
      END IF
      FLUSH (stdout)
 #endif
@@ -461,9 +430,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            e0 = e(m)
            !
            !$acc kernels
-           DO k = 1, kdmx
-              ppsi(k) = psi(k,m)
-           END DO
+           ppsi(:) = psi(:,m)
            !$acc end kernels
            !
            DO j = m, i + 1, - 1
@@ -471,9 +438,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
               e(j) = e(j-1)
               !
               !$acc kernels 
-              DO k = 1, kdmx
-                 psi(k,j) = psi(k,j-1)
-              END DO
+              psi(:,j) = psi(:,j-1)
               !$acc end kernels
               !
            END DO
@@ -481,9 +446,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            e(i) = e0
            !
            !$acc kernels 
-           DO k = 1, kdmx
-              psi(k,i) = ppsi(k)
-           END DO
+           psi(:,i) = ppsi(:)
            !$acc end kernels
            !
            ! ... this procedure should be good if only a few inversions occur,
@@ -501,6 +464,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange)
   DEALLOCATE( lagrange )
   DEALLOCATE( ppsi )
+  DEALLOCATE( g0 )
   DEALLOCATE( cg )
   DEALLOCATE( g )
   DEALLOCATE( hpsi )
