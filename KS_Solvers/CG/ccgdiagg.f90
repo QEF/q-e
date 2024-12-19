@@ -13,7 +13,7 @@
 !civn: Dec, 19th 2024
 !      merging rcgdiagg_gpu with rcgdiagg in a unique source file 
 !      with OpenACC directives. 
-!      go back to commit fd5d5fd3c729ff0368a43a73440a4708bf8d674d 
+!      go back to commit 751be151c67f2edea352f9a34107fe87706258cb 
 !      if you need to see the old two separate files
 !
 !----------------------------------------------------------------------------
