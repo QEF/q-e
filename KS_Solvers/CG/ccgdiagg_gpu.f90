@@ -72,7 +72,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! s_1psi( npwx, npw, psi, spsi )
   !
   CALL start_clock( 'ccgdiagg' )
-  !$acc data deviceptr(precondition)
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
@@ -513,8 +512,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   DEALLOCATE( hpsi )
   DEALLOCATE( scg )
   DEALLOCATE( spsi )
-  !
-  !$acc end data
   !
   CALL stop_clock( 'ccgdiagg' )
   !

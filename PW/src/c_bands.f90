@@ -691,11 +691,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              ELSE
-                !$acc host_data use_device(h_diag) 
                 CALL ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-                 !$acc end host_data 
              END IF
              !
              avg_iter = avg_iter + cg_iter
