@@ -10,16 +10,17 @@
 SUBROUTINE new_evc()
   !-----------------------------------------------------------------------
   !! This routine is used only for isolated atoms in combination with
-  !! the flag one_atom_occupations.  
+  !!    the flag one_atom_occupations.  
   !! It makes linear combinations of the degenerate bands so 
-  !! that they have maximum overlap with the atomic states, and order 
-  !! the bands in the same order as the atomic states.  
-  !! Weights "wg" must have been set to fixed values (as read in input).
+  !!    that they have maximum overlap with the atomic states,
+  !!    and order the bands in the same order as the atomic states.  
+  !! On input: S\psi orthogonalized atomic wavefunctions in buffer "iunsat";
+  !!    weights "wg" must have been set to fixed values (as read in input).
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
-  USE basis,                ONLY : natomwfc, swfcatom
+  USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE wvfct,                ONLY : nbnd, npwx, wg, et
@@ -41,7 +42,7 @@ SUBROUTINE new_evc()
   !
   REAL(DP), EXTERNAL :: ddot
   COMPLEX(DP), ALLOCATABLE :: proj(:,:), aux(:,:), aux_proj(:,:), a(:,:), v(:,:)
-  !
+  COMPLEX(DP), ALLOCATABLE :: swfcatom(:,:)
   REAL(DP) :: max_value, save_value, aux_et, maxproj
   INTEGER :: select_ibnd, iatwfc, first_available_band, info, nsize, &
              current_band, ngroups 
@@ -53,6 +54,7 @@ SUBROUTINE new_evc()
      CALL errore( 'new_evc', 'increase nbnd', 1 )
   ENDIF
   !
+  ALLOCATE( swfcatom(npwx*npol,natomwfc) )
   ALLOCATE( proj(natomwfc,nbnd) )
   ALLOCATE( wband(nbnd) )
   ALLOCATE( group_size(nbnd) )
@@ -273,6 +275,7 @@ SUBROUTINE new_evc()
   ! update current evc on device (expecially for gamma_only case)
   !$acc update device(evc)
   !
+  DEALLOCATE( swfcatom )
   DEALLOCATE( group_size )
   DEALLOCATE( start_band )
   DEALLOCATE( ind )

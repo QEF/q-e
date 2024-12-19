@@ -1539,7 +1539,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : okvan, nkb
    USE uspp_param,           ONLY : nh
-   USE basis,                ONLY : natomwfc, wfcatom, swfcatom
+   USE basis,                ONLY : natomwfc, wfcatom
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv

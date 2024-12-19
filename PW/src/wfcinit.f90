@@ -15,7 +15,7 @@ SUBROUTINE wfcinit()
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE ions_base,            ONLY : nat, ityp
-  USE basis,                ONLY : natomwfc, swfcatom
+  USE basis,                ONLY : natomwfc
   USE upf_ions,             ONLY : n_atom_wfc
   USE starting_scf,         ONLY : starting_wfc
   USE bp,                   ONLY : lelfield
@@ -62,7 +62,6 @@ SUBROUTINE wfcinit()
      IF ( lda_plus_u ) CALL errore ( 'wfcinit', 'incompatible options', 1 )
      nwordatwfc= npwx*natomwfc*npol
      CALL open_buffer( iunsat, 'satwfc', nwordatwfc, io_level, exst )
-     ALLOCATE( swfcatom(npwx*npol,natomwfc) )
      CALL orthoatwfc ( use_wannier )
      !
   ELSE IF ( lda_plus_u .AND. ( Hubbard_projectors.NE.'pseudo') ) THEN

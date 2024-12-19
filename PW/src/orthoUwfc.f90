@@ -15,8 +15,6 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   ! "iunhub_noS" but without S (this is then used for plotting Hubbard projector 
   ! functions or other post-processing operations). Atomic wavefunctions
   ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
-  ! "swfcatom" must NOT be allocated on input.
-  !
   ! If save_wfcatom == .TRUE., also write atomic wavefunctions before
   ! applying S to buffer.
   !
@@ -25,7 +23,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunhub, iunhub_noS, nwordwfcU
   USE ions_base,  ONLY : nat
-  USE basis,      ONLY : natomwfc, swfcatom
+  USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : Hubbard_projectors, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
@@ -46,7 +44,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   ! ik: the k point under consideration
   ! ibnd: counter on bands
   LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), wfcUaux (:,:)
+  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), swfcatom(:,:), wfcUaux (:,:)
   !
   IF ( Hubbard_projectors == "pseudo" ) THEN
      WRITE( stdout,'(/5x,a,/)') 'Beta functions used for Hubbard projectors'
