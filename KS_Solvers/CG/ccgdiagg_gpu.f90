@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
-     npwx, npw, nbnd, npol, psi, eig, btype, &
+     npwx, npw, nbnd, npol, psi, e, btype, &
      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -46,7 +46,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: precondition(npwx*npol), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
-  REAL(DP),    INTENT(INOUT) :: eig(nbnd)
+  REAL(DP),    INTENT(INOUT) :: e(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
   !
@@ -57,7 +57,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0(:)
   COMPLEX(DP), ALLOCATABLE :: lagrange(:)
   REAL(DP)                 :: gamma, ddot_temp, es_1, es(2)
-  REAL(DP), ALLOCATABLE    :: e(:)
   REAL(DP)                 :: a0, b0, gg0, gg, gg1, cg0, e0, psi_norm, sint, cost
   REAL(DP)                 :: theta, cos2t, sin2t
   LOGICAL                  :: reorder
@@ -113,7 +112,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE(  lagrange(nbnd), STAT=ierr  )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate lagrange ', ABS(ierr) )
-  ALLOCATE(  e(nbnd) )
   !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange)
   !
   avg_iter = 0.D0
@@ -500,12 +498,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   avg_iter = avg_iter / DBLE( nbnd )
   !
-  ! STORING e in eig since eigenvalues are always on the host
-  eig = e
-  !
   !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange)
   DEALLOCATE( lagrange )
-  DEALLOCATE( e )
   DEALLOCATE( ppsi )
   DEALLOCATE( cg )
   DEALLOCATE( g )
