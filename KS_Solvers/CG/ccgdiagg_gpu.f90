@@ -54,9 +54,9 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   INTEGER                  :: i, j, k, m, m_start, m_end, iter, moved
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:)
-  COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0_d(:), lagrange_d(:)
+  COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0_d(:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: g0_d, lagrange_d
+  attributes(DEVICE) :: g0_d
 #endif
   COMPLEX(DP), ALLOCATABLE :: lagrange(:)
   REAL(DP)                 :: gamma, ddot_temp, es_1, es(2)
@@ -111,20 +111,14 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE(  ppsi(kdmx), STAT=ierr )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate ppsi ', ABS(ierr) )
-  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi)
-
   ALLOCATE(  g0_d(kdmx), STAT=ierr )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate g0_d ', ABS(ierr) )
-  !
-  ALLOCATE(  lagrange_d(nbnd), STAT=ierr )
-  IF( ierr /= 0 ) &
-       CALL errore( ' ccgdiagg ',' cannot allocate lagrange_d ', ABS(ierr) )
-  !
   ALLOCATE(  lagrange(nbnd), STAT=ierr  )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate lagrange ', ABS(ierr) )
   ALLOCATE(  e(nbnd) )
+  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange)
   !
   avg_iter = 0.D0
   notconv  = 0
@@ -163,7 +157,9 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !$acc host_data use_device(ppsi)
      CALL dev_memset( ppsi     , ZERO )
      !$acc end host_data
-     CALL dev_memset( lagrange_d , ZERO )
+     !$acc host_data use_device(lagrange)
+     CALL dev_memset( lagrange, ZERO )
+     !$acc end host_data
      !
      ! ... calculate S|psi>
      !
@@ -172,36 +168,32 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
-     lagrange = ZERO
+     !$acc host_data use_device(psi, spsi, lagrange)
      IF(m_start.le.m_end) THEN
-       !$acc host_data use_device(psi, spsi)
        CALL ZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), &
-                   kdmx, spsi, 1, ZERO, lagrange_d(m_start), 1 )
-       !$acc end host_data
+                   kdmx, spsi, 1, ZERO, lagrange(m_start), 1 )
      END IF
-     if(m_start.le.m_end) lagrange(m_start:m_end) = lagrange_d(m_start:m_end)
-
-     CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
+     CALL mp_sum( lagrange, 1, m, inter_bgrp_comm )
+     CALL mp_sum( lagrange, 1, m, intra_bgrp_comm )
+     !$acc end host_data
      !
-     CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
-     !
+     !$acc kernels copyin(m)
      psi_norm = DBLE( lagrange(m) )
-     lagrange_d(1:m) = lagrange(1:m)
-     !
      DO j = 1, m - 1
-        !$acc kernels
-        DO i = 1, kdmx
-           !
-           psi(i,m)  = psi(i,m) - lagrange_d(j) * psi(i,j)
-           !
-        END DO
-        !$acc end kernels
-        !
         psi_norm = psi_norm - ( DBLE( lagrange(j) )**2 + AIMAG( lagrange(j) )**2 )
-        !
      END DO
-     !
      psi_norm = SQRT( psi_norm )
+     !$acc end kernels
+     !
+     !$acc parallel
+     !$acc loop gang
+     DO i = 1, kdmx
+        !$acc loop seq 
+        DO j = 1, m - 1
+           psi(i,m)  = psi(i,m) - lagrange(j) * psi(i,j)
+        END DO
+     END DO
+     !$acc end parallel 
      !
      !$acc kernels
      DO i = 1, kdmx
@@ -263,31 +255,23 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
         !
+        !$acc kernels
         lagrange(1:m-1) = ZERO
+        !$acc end kernels
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
+        !$acc host_data use_device(psi, scg, lagrange)
         IF(m_start.le.m_end) THEN
-          !$acc host_data use_device(psi, scg)
           CALL ZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), &
-                      kdmx, scg, 1, ZERO, lagrange_d(m_start), 1 )
-          !$acc end host_data
+                      kdmx, scg, 1, ZERO, lagrange(m_start), 1 )
         END IF
-        if(m_start.le.m_end) lagrange(m_start:m_end) = lagrange_d(m_start:m_end)
-        CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
+        CALL mp_sum( lagrange, 1, m-1, inter_bgrp_comm )
+        CALL mp_sum( lagrange, 1, m-1, intra_bgrp_comm )
+        !$acc end host_data
         !
-        CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
-        !
-        lagrange_d(1:m) = lagrange(1:m)
-        !
-        DO j = 1, ( m - 1 )
-           !
-           !$acc kernels
-           DO i = 1, kdmx
-              g(i)   = g(i)   - lagrange_d(j) * psi(i,j)
-              scg(i) = scg(i) - lagrange_d(j) * psi(i,j)
-           END DO
-           !$acc end kernels
-           !
-        END DO
+        !$acc host_data use_device(psi, lagrange, g, scg)
+        Call MYZGEMV('N', kdmx, (m-1), -(1.0d0, 0.0d0), psi, kdmx, lagrange, 1, (1.0d0, 0.0d0), g,   1)
+        Call MYZGEMV('N', kdmx, (m-1), -(1.0d0, 0.0d0), psi, kdmx, lagrange, 1, (1.0d0, 0.0d0), scg, 1)
+        !$acc end host_data
         !
         IF ( iter /= 1 ) THEN
            !
@@ -521,10 +505,9 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! STORING e in eig since eigenvalues are always on the host
   eig = e
   !
-  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi)
+  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi, lagrange)
   DEALLOCATE( lagrange )
   DEALLOCATE( e )
-  DEALLOCATE( lagrange_d )
   DEALLOCATE( ppsi )
   DEALLOCATE( g0_d )
   DEALLOCATE( cg )
