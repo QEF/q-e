@@ -54,10 +54,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   INTEGER                  :: i, j, k, m, m_start, m_end, iter, moved
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:)
-  COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: g0_d
-#endif
+  COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0(:)
   COMPLEX(DP), ALLOCATABLE :: lagrange(:)
   REAL(DP)                 :: gamma, ddot_temp, es_1, es(2)
   REAL(DP), ALLOCATABLE    :: e(:)
@@ -111,14 +108,14 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE(  ppsi(kdmx), STAT=ierr )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate ppsi ', ABS(ierr) )
-  ALLOCATE(  g0_d(kdmx), STAT=ierr )
+  ALLOCATE(  g0(kdmx), STAT=ierr )
   IF( ierr /= 0 ) &
-       CALL errore( ' ccgdiagg ',' cannot allocate g0_d ', ABS(ierr) )
+       CALL errore( ' ccgdiagg ',' cannot allocate g0 ', ABS(ierr) )
   ALLOCATE(  lagrange(nbnd), STAT=ierr  )
   IF( ierr /= 0 ) &
        CALL errore( ' ccgdiagg ',' cannot allocate lagrange ', ABS(ierr) )
   ALLOCATE(  e(nbnd) )
-  !$acc enter data create(hpsi, spsi, g, cg, scg, ppsi, lagrange)
+  !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange)
   !
   avg_iter = 0.D0
   notconv  = 0
@@ -153,7 +150,9 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !$acc host_data use_device(cg)
      CALL dev_memset( cg       , ZERO )
      !$acc end host_data
-     CALL dev_memset( g0_d       , ZERO )
+     !$acc host_data use_device(g0)
+     CALL dev_memset( g0       , ZERO )
+     !$acc end host_data
      !$acc host_data use_device(ppsi)
      CALL dev_memset( ppsi     , ZERO )
      !$acc end host_data
@@ -277,8 +276,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           !$acc host_data use_device(g)
-           gg1 = MYDDOT( kdim2, g(1), 1, g0_d(1), 1 )
+           !$acc host_data use_device(g, g0)
+           gg1 = MYDDOT( kdim2, g(1), 1, g0(1), 1 )
            !$acc end host_data
            !
            CALL mp_sum( gg1, intra_bgrp_comm )
@@ -289,12 +288,12 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc kernels
         DO i = 1, kdmx
-           g0_d(i) = scg(i) * precondition(i)
+           g0(i) = scg(i) * precondition(i)
         END DO
         !$acc end kernels
         !
-        !$acc host_data use_device(g)
-        gg = MYDDOT( kdim2, g(1), 1, g0_d(1), 1 )
+        !$acc host_data use_device(g, g0)
+        gg = MYDDOT( kdim2, g(1), 1, g0(1), 1 )
         !$acc end host_data
         !
         CALL mp_sum( gg, intra_bgrp_comm )
@@ -505,11 +504,10 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! STORING e in eig since eigenvalues are always on the host
   eig = e
   !
-  !$acc exit data delete(hpsi, spsi, g, cg, scg, ppsi, lagrange)
+  !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange)
   DEALLOCATE( lagrange )
   DEALLOCATE( e )
   DEALLOCATE( ppsi )
-  DEALLOCATE( g0_d )
   DEALLOCATE( cg )
   DEALLOCATE( g )
   DEALLOCATE( hpsi )
