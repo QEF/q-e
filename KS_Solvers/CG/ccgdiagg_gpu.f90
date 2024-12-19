@@ -47,13 +47,13 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   ! ... local variables
   !
-  INTEGER                  :: i, j, k, m, m_start, m_end, iter, moved
-  COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:)
-  COMPLEX(DP), ALLOCATABLE :: scg(:), ppsi(:), g0(:)
+  INTEGER                  :: i, j, m, m_start, m_end, iter, moved
   COMPLEX(DP), ALLOCATABLE :: lagrange(:)
-  REAL(DP)                 :: gamma, ddot_temp, es_1, es(2)
-  REAL(DP)                 :: a0, b0, gg0, gg, gg1, cg0, e0, psi_norm, sint, cost
-  REAL(DP)                 :: theta, cos2t, sin2t
+  COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
+                              scg(:), ppsi(:), g0(:)  
+  REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
+                              cg0, e0, es(2), es_1
+  REAL(DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                  :: reorder
   INTEGER                  :: kdim, kdmx, kdim2, ierr, istat
   REAL(DP)                 :: empty_ethr, ethr_m
@@ -287,8 +287,6 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
            gamma = ( gg - gg1 ) / gg0
            gg0   = gg
            !
-           ! 
-           !
            ! See comment below
            !!DO i = 1, kdmx
            !!   cg(i) = g(i) + cg(i) * gamma
@@ -382,7 +380,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         !$acc kernels
         spsi(:) = cost * spsi(:) + sint / cg0 * scg(:)
-           !
+        !
         hpsi(:) = cost * hpsi(:) + sint / cg0 * ppsi(:)
         !$acc end kernels
         !
