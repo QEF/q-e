@@ -2206,7 +2206,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                 }
 
                 opt -val {'ppcg'} {
-                    PPCG iterative diagonalization
+                    PPCG iterative diagonalization (end support on Dec 2024)
                 }
 
                 opt -val {'paro', 'ParO'} {
@@ -2242,12 +2242,6 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
         var diago_cg_maxiter -type INTEGER {
             info {
                 For conjugate gradient diagonalization:  max number of iterations
-            }
-        }
-
-        var diago_ppcg_maxiter -type INTEGER {
-            info {
-                For @b ppcg diagonalization:  max number of iterations
             }
         }
 

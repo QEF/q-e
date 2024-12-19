@@ -74,8 +74,6 @@ SUBROUTINE c_bands( iter )
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSEIF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
-  ELSEIF ( isolve == 2 ) THEN
-     WRITE( stdout, '(5X,"PPCG style diagonalization")')
   ELSEIF ( isolve == 3 ) THEN
      WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSEIF ( isolve == 4 ) THEN
@@ -195,7 +193,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
-  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
+  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
                                    rmm_ndim, rmm_conv, gs_nblock, &
                                    gamma_only, use_para_diag, use_gpu
   USE noncollin_module,     ONLY : npol
@@ -236,8 +234,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: cg_iter, ppcg_iter, rmm_iter
-  ! (weighted) number of iterations in Conjugate-Gradient
+  REAL(KIND=DP) :: cg_iter, rmm_iter
   ! (weighted) number of iterations in RMM-DIIS
   INTEGER :: npw, ig, dav_iter, ntry, notconv, nhpsi
   ! number of iterations in Davidson
@@ -247,9 +244,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   LOGICAL :: lrot
   ! .TRUE. if the wfc have already be rotated
-  !
-  INTEGER, PARAMETER :: sbsize = 5, rrstep = 7
-  ! block dimensions used in PPCG 
   !
   COMPLEX (DP), POINTER :: hevc(:,:), sevc(:,:)
   !
@@ -269,7 +263,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   !------------------------------------------------------------------------
-  ! PPCG diagonalization uses these external routines on groups of bands
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
   ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
   !------------------------------------------------------------------------
@@ -392,24 +385,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + cg_iter
              !
-          ELSE IF ( isolve == 2 ) THEN
-             IF (.not. use_gpu) THEN
-               CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
-                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-               !
-               avg_iter = avg_iter + ppcg_iter
-               !
-             ELSE
-               !$acc host_data use_device(evc, et, h_diag)
-               CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag, &
-                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-               !$acc end host_data
-               !
-               avg_iter = avg_iter + ppcg_iter
-               !
-             END IF 
           ELSE
              !
              IF (.not. use_gpu ) THEN
@@ -673,7 +648,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     IF (scissor) evcc = evc
     !
-    !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG, 3 PARO, 4 RMM)', isolve; FLUSH(6)
+    !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 3 PARO, 4 RMM)', isolve; FLUSH(6)
     IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .or. rmm_use_paro(iter)) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
@@ -727,24 +702,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + cg_iter
              !
-          ELSE IF ( isolve == 2) then
-             IF ( .not. use_gpu ) THEN
-               CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
-                           npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
-                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-               !
-               avg_iter = avg_iter + ppcg_iter
-               !
-             ELSE
-               !$acc host_data use_device(evc, et, h_diag)
-               CALL ppcg_k_gpu( h_psi_gpu, s_psi_acc, okvan, h_diag, &
-                           npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
-                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-               !$acc end host_data
-               !
-               avg_iter = avg_iter + ppcg_iter
-               !
-             END IF
           ELSE 
              !
              IF ( .not. use_gpu ) THEN
@@ -1107,8 +1064,6 @@ SUBROUTINE c_bands_nscf( )
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSEIF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")' )
-  ELSEIF ( isolve == 2 ) THEN
-     WRITE( stdout, '(5X,"PPCG style diagonalization")' )
   ELSEIF ( isolve == 3 ) THEN
      WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSEIF ( isolve == 4 ) THEN

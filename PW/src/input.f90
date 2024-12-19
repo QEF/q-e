@@ -287,7 +287,7 @@ SUBROUTINE control_iosys()
  
   !
   USE extrapolation, ONLY : pot_order, wfc_order
-  USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
+  USE control_flags, ONLY : isolve, max_cg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
                             tr2, imix, gamma_only, &
                             nmix, iverbosity, smallmem, nexxiter, niter, &
@@ -396,7 +396,7 @@ SUBROUTINE control_iosys()
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, tq_smoothing, tbeta_smoothing,         &
                                diago_thr_init,                             &
-                               diago_cg_maxiter, diago_ppcg_maxiter,       &
+                               diago_cg_maxiter,                           &
                                diago_david_ndim, diago_rmm_ndim,           &
                                diago_rmm_conv, diago_gs_nblock,            &
                                diagonalization, diago_full_acc,            &
@@ -951,10 +951,10 @@ SUBROUTINE control_iosys()
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
-  CASE ( 'ppcg' )
+  CASE ( 'ppcg', 'PPCG' )
      !
      isolve = 2
-     max_ppcg_iter = diago_ppcg_maxiter
+     CALL errore( 'iosys', 'PPCG diagonalization not supported anymore (Dec. 2024)', 1 )
      !
   CASE ( 'paro', 'ParO' )
      !
