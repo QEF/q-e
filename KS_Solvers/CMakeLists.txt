@@ -26,10 +26,7 @@ set(src_davidson_rci
 
 set(src_cg
     CG/ccgdiagg.f90
-    CG/rcgdiagg.f90
-    # GPU
-    CG/rcgdiagg_gpu.f90
-    CG/ccgdiagg_gpu.f90)
+    CG/rcgdiagg.f90)
 qe_enable_cuda_fortran("${src_cg}")
 
 set(src_dense
