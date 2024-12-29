@@ -65,7 +65,7 @@ SUBROUTINE stres_hub ( sigmah )
    REAL(DP), ALLOCATABLE :: projrd(:,:)
    COMPLEX(DP), ALLOCATABLE :: projkd(:,:)
    !
-   CALL start_clock_gpu( 'stres_hub' )
+   CALL start_clock( 'stres_hub' )
    !
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
@@ -82,6 +82,7 @@ SUBROUTINE stres_hub ( sigmah )
    !
    ALLOCATE (spsi(npwx*npol,nbnd))
    ALLOCATE (wfcatom(npwx*npol,natomwfc))
+   !$acc enter data create(spsi,wfcatom)
    ALLOCATE (at_dy(npwx*npol,natomwfc), at_dj(npwx*npol,natomwfc))
    IF (okvan) THEN
       ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
@@ -89,12 +90,13 @@ SUBROUTINE stres_hub ( sigmah )
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
+      !$acc enter data create(swfcatom)
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
    ENDIF
    !
-   !$acc data create(spsi) copyin(wfcU)
+   !$acc data copyin(wfcU)
    !
    IF (gamma_only) THEN
       ALLOCATE( projrd(nwfcU,nbnd))
@@ -417,6 +419,7 @@ SUBROUTINE stres_hub ( sigmah )
    !$acc end data
    !
    DEALLOCATE (spsi)
+   !$acc exit data delete(spsi,wfcatom)
    DEALLOCATE (wfcatom)
    DEALLOCATE (at_dy, at_dj)
    IF (okvan) THEN
@@ -424,6 +427,7 @@ SUBROUTINE stres_hub ( sigmah )
       DEALLOCATE (us_dy, us_dj)
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete(swfcatom)
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)
@@ -432,7 +436,12 @@ SUBROUTINE stres_hub ( sigmah )
    !
    use_bgrp_in_hpsi = save_flag
    !
-   CALL stop_clock_gpu( 'stres_hub' )
+   CALL stop_clock( 'stres_hub' )
+   CALL print_clock('stres_hub')
+   CALL print_clock('dprojdepsilon')
+   CALL print_clock('dprojdeps1')
+   CALL print_clock('dprojdeps2')
+   CALL print_clock('dprojdeps3')
    !
    RETURN
    !
@@ -1382,9 +1391,10 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    a1_temp(:), a2_temp(:) 
    COMPLEX (DP) :: temp, temp2
    !
-   CALL start_clock_gpu('dprojdepsilon')
+   CALL start_clock('dprojdepsilon')
+   CALL start_clock('dprojdeps1')
    ! 
-   !$acc data present_or_copyin(spsi) present_or_copyout(dproj)
+   !$acc data present(spsi) present_or_copyout(dproj)
    !
    ! Number of plane waves at the k point with the index ik
    npw = ngk(ik)
@@ -1492,6 +1502,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       IF (noncolin) dwfc(1+npwx:npwx+npw,:) = dwfc(1+npwx:npwx+npw,:) - wfcU(1+npwx:npwx+npw,:)*0.5d0
       !$acc end kernels
    ENDIF   
+   CALL stop_clock('dprojdeps1')
+   CALL start_clock('dprojdeps2')
    !
    ! 2. Contribution due to the derivative of (O^{-1/2})_JI which
    !    is multiplied by atomic wavefunctions (only for ortho-atomic case)
@@ -1502,7 +1514,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       !
       ALLOCATE (doverlap(natomwfc,natomwfc))
       ALLOCATE (doverlap_inv(natomwfc,natomwfc))
-      !$acc data create(doverlap_inv) copyin(swfcatom, wfcatom)
+      !$acc data create(doverlap_inv) present(wfcatom,swfcatom)
       doverlap(:,:) = (0.0d0, 0.0d0)
       !$acc kernels
       doverlap_inv(:,:) = (0.0d0, 0.0d0)
@@ -1559,7 +1571,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       IF (okvan) THEN
          ! Calculate doverlap_us = < phi_I | dS/d\epsilon(ipol,jpol) | phi_J >
          ALLOCATE (doverlap_us(natomwfc,natomwfc))
-         !$acc data create(doverlap_us) ! copyin(wfcatom)
+         !$acc data create(doverlap_us) 
          CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
               natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0, .false.)
          ! Sum up the "normal" and ultrasoft terms
@@ -1628,6 +1640,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! Now the derivatives of the beta functions: we compute the term
    ! <\phi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
    !
+   CALL stop_clock('dprojdeps2')
+   CALL start_clock('dprojdeps3')
    IF (okvan) THEN
       ALLOCATE(dproj_us(nwfcU,nb_s:nb_e))
       !$acc data create(dproj_us) 
@@ -1644,7 +1658,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    !$acc end data
    !
-   CALL stop_clock_gpu('dprojdepsilon')
+   CALL stop_clock('dprojdeps3')
+   CALL stop_clock('dprojdepsilon')
    !
    RETURN
    !
@@ -2081,13 +2096,13 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !       qm1(npwx)
    REAL (DP) :: temp
    !
-   CALL start_clock_gpu('dprojdepsilon')
+   CALL start_clock('dprojdepsilon')
    !
    ! See the implementation in dprojdepsilon_k
    IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
                     " Forces with gamma-only and ortho-atomic are not supported",1)
    !
-   !$acc data present_or_copyin(spsi) present_or_copyout(dproj)
+   !$acc data present(spsi) present_or_copyout(dproj)
 
    ! Number of plane waves at the k point with the index ik
    npw = ngk(ik)
@@ -2276,7 +2291,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    DEALLOCATE ( a1_temp, a2_temp )
    !
    !$acc end data
-   CALL stop_clock_gpu('dprojdepsilon')
+   CALL stop_clock('dprojdepsilon')
    !
    RETURN
    !

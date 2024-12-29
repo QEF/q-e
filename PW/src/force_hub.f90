@@ -70,7 +70,7 @@ SUBROUTINE force_hub( forceh )
    INTEGER, EXTERNAL :: find_viz
    !
    !
-   CALL start_clock_gpu( 'force_hub' )
+   CALL start_clock( 'force_hub' )
    !
    !$acc data  present(vkb) copyin(wfcU) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
@@ -107,10 +107,11 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    ALLOCATE( spsi(npwx*npol,nbnd) ) 
-   !$acc enter data create(spsi)
    ALLOCATE( wfcatom(npwx*npol,natomwfc) )
+   !$acc enter data create(spsi,wfcatom)
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE( swfcatom(npwx*npol,natomwfc) )
+      !$acc enter data create(swfcatom)
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
@@ -148,8 +149,6 @@ SUBROUTINE force_hub( forceh )
       !$acc update device(evc) 
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
-      ! ... FIXME this update is needed for ortho-atomic case
-      !$acc update self(vkb)
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type_acc( nkb, nbnd, becp )
       Call calbec(offload_type, npw, vkb, evc, becp ) 
@@ -181,7 +180,7 @@ SUBROUTINE force_hub( forceh )
          !$acc update self(proj%k)
       ENDIF
       !
-      !$acc data copyin(wfcatom,overlap_inv)
+      !$acc data copyin(overlap_inv)
       !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -354,11 +353,12 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    !$acc end data
-   !$acc exit data delete(spsi) finalize
    !
+   !$acc exit data delete(spsi,wfcatom) 
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete(swfcatom)
       DEALLOCATE( swfcatom )
       DEALLOCATE( eigenval )
       DEALLOCATE( eigenvect )
@@ -378,7 +378,12 @@ SUBROUTINE force_hub( forceh )
 #endif
    use_bgrp_in_hpsi = save_flag
    !
-   CALL stop_clock_gpu( 'force_hub' )
+   CALL stop_clock( 'force_hub' )
+   CALL print_clock( 'force_hub' )
+   CALL print_clock( 'dndtau' )
+   CALL print_clock( 'dndgtau' )
+   CALL print_clock( 'calc1_doverlap' )
+   CALL print_clock( 'calc2_doverlap' )
    !
    RETURN
    !
@@ -638,7 +643,6 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
    !
    CALL start_clock( 'dndtau' )
-   !
    !
    ! Compute the derivative of occupation matrices (the quantities dns_nc(m1,m2,i))
    ! of the atomic orbitals. They are complex quantities as well as dns_nc(m1,m2,i).
@@ -1401,7 +1405,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    REAL(DP), ALLOCATABLE :: dproj(:,:)
    INTEGER, EXTERNAL :: find_viz
    !
-   CALL start_clock_gpu( 'dngdtau' )
+   CALL start_clock( 'dngdtau' )
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
@@ -1509,7 +1513,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ENDIF
    ENDDO
    !
-   CALL stop_clock_gpu( 'dngdtau' )
+   CALL stop_clock( 'dngdtau' )
    !
    RETURN
    !
@@ -1581,7 +1585,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    COMPLEX(DP), ALLOCATABLE :: dwfc(:,:), &
                                dproj0(:,:) !derivative of the projector
    !
-   CALL start_clock_gpu( 'dprojdtau' )
+   CALL start_clock( 'dprojdtau' )
    !
    !$acc data present_or_copyin(dproj)
    !
@@ -1778,7 +1782,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    !$acc end data
    !
-   CALL stop_clock_gpu( 'dprojdtau' )
+   CALL stop_clock( 'dprojdtau' )
    !
    RETURN
    !
@@ -1848,8 +1852,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !! This routine computes the derivative of \(O^{-1/2}\) transposed.
    !
    USE kinds,            ONLY : DP
-   USE wvfct,             ONLY : npwx
-   USE noncollin_module,  ONLY : noncolin
+   USE wvfct,            ONLY : npwx
+   USE noncollin_module, ONLY : noncolin, npol
    USE cell_base,        ONLY : tpiba
    USE gvect,            ONLY : g
    USE uspp,             ONLY : okvan
@@ -1876,10 +1880,12 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    INTEGER :: ig, m1, m2, npw, m_start, m_end
    REAL(DP) :: gvec, xki
    COMPLEX(DP) :: temp
+   COMPLEX(DP), ALLOCATABLE :: dwfcatom(:,:)
+   !$acc declare device_resident(dwfcatom)
    COMPLEX(DP), ALLOCATABLE :: doverlap(:,:), doverlap_us(:,:)
    ! derivative of the overlap matrix  
    !
-   CALL start_clock( 'calc_doverlap_inv' )
+   CALL start_clock( 'calc1_doverlap' )
    !
    IF (Hubbard_projectors.NE."ortho-atomic") RETURN
    !
@@ -1887,12 +1893,12 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    !
-   !$acc data present_or_copyin(wfcatom,swfcatom) 
+   !$acc data create(doverlap) present(wfcatom,swfcatom) 
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
-   !$acc end kernels
    doverlap(:,:) = (0.0d0,0.0d0)
+   !$acc end kernels
    !
    npw = ngk(ik)
    !
@@ -1903,46 +1909,44 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ! ... Compute the derivative dO_IJ/d\tau(alpha,ipol)
    ! ... Calculate < dphi_I/d\tau(alpha,ipol) | S | phi_J >
+   ALLOCATE ( dwfcatom(npwx, m_start:m_end) )
+   !$acc parallel loop collapse(2)
    DO m1 = m_start, m_end
-      DO m2 = 1, natomwfc
-         temp = (0.d0,0.d0)
-         !$acc parallel loop reduction(+:temp)
-         DO ig = 1, npw
-            ! ... (k+G) * 2pi/a
-            gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
-            temp = temp + (0.d0,1.d0) * gvec * CONJG(wfcatom(ig,m1)) *&
-                          swfcatom(ig,m2)
-            IF (noncolin) temp = temp + (0.d0,1.d0) * gvec &
-                     * CONJG(wfcatom(ig+npwx,m1))  * swfcatom(ig+npwx,m2)
-         ENDDO
-         doverlap(m1,m2) = temp
-      ENDDO
-   ENDDO
+      DO ig = 1, npol*npwx
+         IF ( ig <= npw ) THEN
+            gvec =  (g(ipol,igk_k(ig,ik)) + xki) * tpiba
+         ELSE IF ( ig > npwx .AND. ig <= npwx+npw ) THEN
+            gvec =  (g(ipol,igk_k(ig-npwx,ik)) + xki) * tpiba
+         ELSE
+            gvec =  0.0_dp
+         END IF
+         dwfcatom(ig,m1) = (0.0_dp,-1.0_dp) * gvec * wfcatom(ig,m1)
+      END DO
+   END DO
+   !$acc host_data use_device(dwfcatom, swfcatom, doverlap)
+   CALL MYZGEMM &
+        ( 'C', 'N', m_end-m_start+1, natomwfc, npwx*npol, (1.0_dp, 0.0_dp), &
+        dwfcatom(1,m_start), npwx*npol, swfcatom, npwx*npol, (0.0_dp,0.0_dp),&
+        doverlap(m_start,1), natomwfc )
+   !
    ! ... Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
-   DO m1 = 1, natomwfc
-      DO m2 = m_start, m_end
-         temp = (0.d0,0.d0)
-         !$acc parallel loop reduction(+:temp)
-         DO ig = 1, npw
-            ! ... (k+G) * 2pi/a
-            gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
-            temp = temp + (0.d0,-1.d0) * gvec * CONJG(swfcatom(ig,m1)) *&
-                          wfcatom(ig,m2)
-            IF (noncolin) temp = temp + (0.d0,-1.d0) * gvec &
-                            * CONJG(swfcatom(ig+npwx,m1))  * wfcatom(ig+npwx,m2)  
-         ENDDO
-         doverlap(m1,m2) = doverlap(m1,m2) + temp
-      ENDDO
-   ENDDO
    !
+   CALL MYZGEMM &
+        ( 'C', 'N', natomwfc, m_end-m_start+1, npwx*npol, (-1.0_dp, 0.0_dp),&
+        swfcatom, npwx*npol, dwfcatom(1,m_start), npwx*npol, (1.0_dp,0.0_dp),&
+        doverlap(1,m_start), natomwfc )
+   !$acc end host_data 
+   DEALLOCATE (dwfcatom)
    ! ... Sum over G vectors
+   !$acc host_data use_device(doverlap)
    CALL mp_sum( doverlap, intra_bgrp_comm )
-   !
-   !$acc data copyin(doverlap)
+   !$acc end host_data 
    !
    ! ... Add the USPP term in dO_IJ/d\tau(alpha,ipol):
    ! ... < phi_I | dS/d\tau(alpha,ipol) | phi_J >
    !
+   CALL stop_clock( 'calc1_doverlap' )
+   CALL start_clock( 'calc2_doverlap' )
    IF (okvan) THEN
       ! ... Calculate doverlap_us = < phi_I | dS/d\tau(alpha,ipol) | phi_J >
       ALLOCATE( doverlap_us(natomwfc,natomwfc) )
@@ -1962,10 +1966,9 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
-   !
-   !$acc end data
    !$acc end data
    DEALLOCATE( doverlap )
+   CALL stop_clock( 'calc2_doverlap' )
    !
 END SUBROUTINE calc_doverlap_inv
 !
@@ -2363,7 +2366,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore( "dprojdtau_gamma", &
                 " Forces with gamma-only and ortho-atomic are not supported", 1 )
    !
-   CALL start_clock_gpu( 'dprojdtau' )
+   CALL start_clock( 'dprojdtau' )
    !
    !$acc data present_or_copyin(dproj,wfcU)
    !
@@ -2538,7 +2541,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    !$acc end data
    !
-   CALL stop_clock_gpu( 'dprojdtau' )
+   CALL stop_clock( 'dprojdtau' )
    !
    RETURN
    !

@@ -173,6 +173,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
              l, lm, ltot, ntot, ipol, npw
   LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  !$acc declare device_resident(aux)
 
   IF ( Hubbard_projectors == "pseudo" ) THEN
      CALL errore ("orthoUwfc_k","Hubbard_projectors=pseudo is not supported",1)
@@ -193,6 +194,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
      CALL errore ("orthoUwfc_k"," this Hubbard_projectors type is not valid",1)
   END IF
   !
+  !$acc data present(wfcatom, swfcatom)
   ! Compute atomic wfc at this k (phi)
   IF (noncolin) THEN
      CALL atomic_wfc_nc_updown (ik, wfcatom)
@@ -209,7 +211,6 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ! Number of plane waves at this k point
   npw = ngk(ik)
   !
-  !$acc data copy(wfcatom, swfcatom)
   IF (orthogonalize_wfc .OR. .NOT.lflag) THEN
      ! Allocate the array becp = <beta|wfcatom>
      CALL allocate_bec_type_acc (nkb,natomwfc, becp)
@@ -225,15 +226,16 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   IF (orthogonalize_wfc) THEN
      CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag )
   END IF
-  !$acc end data
   !
   IF (lflag) THEN
      ! Copy (ortho-)atomic wavefunctions with Hubbard U term only
      ! in wfcU (no ultrasoft S): wfcatom = O^{-1/2} \phi.
+     !$acc update host(wfcatom)
      CALL copy_U_wfc (wfcatom, noncolin)
   ELSE
      ! Copy (ortho-)atomic wavefunctions with Hubbard U term only
      ! in wfcU (with ultrasoft S): swfcatom = O^{-1/2} S\phi.
+     !$acc update host(swfcatom)
      CALL copy_U_wfc (swfcatom, noncolin)
   ENDIF
   !
@@ -242,6 +244,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
      wfcatom(:,:) = aux(:,:)
      DEALLOCATE(aux)
   ENDIF
+  !$acc end data
   !
   RETURN
   !   
@@ -417,8 +420,6 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
          END DO 
        END DO
      END IF
-    
-     !
      !
   ELSE
      !
