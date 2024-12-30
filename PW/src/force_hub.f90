@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2023 Quantum ESPRESSO group
+! Copyright (C) 2002-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1881,9 +1881,12 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    REAL(DP) :: gvec, xki
    COMPLEX(DP) :: temp
    COMPLEX(DP), ALLOCATABLE :: dwfcatom(:,:)
+   ! auxiliary array for fast calculation
    !$acc declare device_resident(dwfcatom)
-   COMPLEX(DP), ALLOCATABLE :: doverlap(:,:), doverlap_us(:,:)
+   COMPLEX(DP), ALLOCATABLE :: doverlap(:,:)
    ! derivative of the overlap matrix  
+   COMPLEX(DP), ALLOCATABLE :: doverlap_us(:,:)
+   ! derivative of the overlap matrix, auxiliary array
    !
    CALL start_clock( 'calc1_doverlap' )
    !
@@ -1892,12 +1895,13 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    xki = xk(ipol,ik)
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
+   ALLOCATE( doverlap_us(natomwfc,natomwfc) )
    !
-   !$acc data create(doverlap) present(wfcatom,swfcatom) 
+   !$acc data create(doverlap,doverlap_us) present(wfcatom,swfcatom) 
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
-   doverlap(:,:) = (0.0d0,0.0d0)
+   doverlap_us(:,:) = (0.0d0,0.0d0)
    !$acc end kernels
    !
    npw = ngk(ik)
@@ -1923,20 +1927,25 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
          dwfcatom(ig,m1) = (0.0_dp,-1.0_dp) * gvec * wfcatom(ig,m1)
       END DO
    END DO
-   !$acc host_data use_device(dwfcatom, swfcatom, doverlap)
+   !$acc host_data use_device(dwfcatom, swfcatom, doverlap_us)
    CALL MYZGEMM &
         ( 'C', 'N', m_end-m_start+1, natomwfc, npwx*npol, (1.0_dp, 0.0_dp), &
         dwfcatom(1,m_start), npwx*npol, swfcatom, npwx*npol, (0.0_dp,0.0_dp),&
-        doverlap(m_start,1), natomwfc )
+        doverlap_us(m_start,1), natomwfc )
+   !$acc end host_data
+   DEALLOCATE (dwfcatom)
    !
    ! ... Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
-   !
-   CALL MYZGEMM &
-        ( 'C', 'N', natomwfc, m_end-m_start+1, npwx*npol, (-1.0_dp, 0.0_dp),&
-        swfcatom, npwx*npol, dwfcatom(1,m_start), npwx*npol, (1.0_dp,0.0_dp),&
-        doverlap(1,m_start), natomwfc )
-   !$acc end host_data 
-   DEALLOCATE (dwfcatom)
+   ! ... (use hermitian conjugate of previously computed matrix)
+   !$acc kernels
+   doverlap(:,:) = doverlap_us(:,:)
+   !$acc end kernels
+   !$acc parallel loop collapse(2)
+   DO m1 = 1, natomwfc
+      DO m2 = m_start, m_end
+         doverlap(m1,m2) = doverlap(m1,m2) + CONJG(doverlap_us(m2,m1))
+      END DO
+   END DO
    ! ... Sum over G vectors
    !$acc host_data use_device(doverlap)
    CALL mp_sum( doverlap, intra_bgrp_comm )
@@ -1949,16 +1958,12 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    CALL start_clock( 'calc2_doverlap' )
    IF (okvan) THEN
       ! ... Calculate doverlap_us = < phi_I | dS/d\tau(alpha,ipol) | phi_J >
-      ALLOCATE( doverlap_us(natomwfc,natomwfc) )
-      !$acc data create(doverlap_us)
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, natomwfc, &
                                      wfcatom, natomwfc, wfcatom,       &
                                      doverlap_us, 1, natomwfc, 0, .true. )
       !$acc kernels
       doverlap(:,:) = doverlap(:,:) + doverlap_us(:,:)
       !$acc end kernels
-      !$acc end data 
-      DEALLOCATE( doverlap_us )
    ENDIF
    !
    ! ... Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
@@ -1967,6 +1972,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
    !$acc end data
+   DEALLOCATE( doverlap_us )
    DEALLOCATE( doverlap )
    CALL stop_clock( 'calc2_doverlap' )
    !
