@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2024 Quantum ESPRESSO Foundation
+! Copyright (C) 2002-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -107,11 +107,10 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    ALLOCATE( spsi(npwx*npol,nbnd) ) 
+   !$acc enter data create(spsi)
    ALLOCATE( wfcatom(npwx*npol,natomwfc) )
-   !$acc enter data create(spsi,wfcatom)
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE( swfcatom(npwx*npol,natomwfc) )
-      !$acc enter data create(swfcatom)
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
@@ -180,7 +179,7 @@ SUBROUTINE force_hub( forceh )
          !$acc update self(proj%k)
       ENDIF
       !
-      !$acc data copyin(overlap_inv)
+      !$acc data copyin(wfcatom,overlap_inv)
       !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -353,12 +352,11 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    !$acc end data
+   !$acc exit data delete(spsi) finalize
    !
-   !$acc exit data delete(spsi,wfcatom) 
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      !$acc exit data delete(swfcatom)
       DEALLOCATE( swfcatom )
       DEALLOCATE( eigenval )
       DEALLOCATE( eigenvect )
@@ -643,6 +641,7 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
    !
    CALL start_clock( 'dndtau' )
+   !
    !
    ! Compute the derivative of occupation matrices (the quantities dns_nc(m1,m2,i))
    ! of the atomic orbitals. They are complex quantities as well as dns_nc(m1,m2,i).
@@ -1879,7 +1878,6 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    INTEGER :: ig, m1, m2, npw, m_start, m_end
    REAL(DP) :: gvec, xki
-   COMPLEX(DP) :: temp
    COMPLEX(DP), ALLOCATABLE :: dwfcatom(:,:)
    ! auxiliary array for fast calculation
    !$acc declare device_resident(dwfcatom)
@@ -1897,7 +1895,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    ALLOCATE( doverlap_us(natomwfc,natomwfc) )
    !
-   !$acc data create(doverlap,doverlap_us) present(wfcatom,swfcatom) 
+   !$acc data create(doverlap,doverlap_us) present_or_copyin(wfcatom,swfcatom) 
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
@@ -1909,6 +1907,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ! ... Determine how many atomic wafefunctions there are for atom 'alpha'
    ! ... and determine their position in the list of all atomic 
    ! ... wavefunctions of all atoms
+   !
    CALL natomwfc_per_atom( alpha, m_start, m_end )
    !
    ! ... Compute the derivative dO_IJ/d\tau(alpha,ipol)
@@ -1933,8 +1932,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
         dwfcatom(1,m_start), npwx*npol, swfcatom, npwx*npol, (0.0_dp,0.0_dp),&
         doverlap_us(m_start,1), natomwfc )
    !$acc end host_data
-   DEALLOCATE (dwfcatom)
-   !
+   DEALLOCATE ( dwfcatom )
    ! ... Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
    ! ... (use hermitian conjugate of previously computed matrix)
    !$acc kernels
@@ -1946,7 +1944,9 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
          doverlap(m1,m2) = doverlap(m1,m2) + CONJG(doverlap_us(m2,m1))
       END DO
    END DO
+   !
    ! ... Sum over G vectors
+   !
    !$acc host_data use_device(doverlap)
    CALL mp_sum( doverlap, intra_bgrp_comm )
    !$acc end host_data 
@@ -1966,11 +1966,13 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
       !$acc end kernels
    ENDIF
    !
+   !
    ! ... Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
    ! ... Note the transposition!
    !
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
+   !
    !$acc end data
    DEALLOCATE( doverlap_us )
    DEALLOCATE( doverlap )
