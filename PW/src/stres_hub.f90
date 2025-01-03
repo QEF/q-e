@@ -1522,7 +1522,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       ! Calculate:
       ! doverlap = < dphi_I/d\epsilon(ipol,jpol) | S | phi_J > 
       !            + < phi_I | S | dphi_J/d\epsilon(ipol,jpol) >
-      !
+      ! Note that the second term is the hermitian conjugate of the first
       !$acc parallel loop collapse(2)
       DO m1 = 1, natomwfc
          DO ig = 1, npw
@@ -1549,12 +1549,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       CALL MYZGEMM('C','N', natomwfc, natomwfc, npwx*npol, (1.0_dp,0.0_dp), &
            dwfca, npwx*npol, swfcatom, npwx*npol, (0.0_dp,0.0_dp), &
            doverlap, natomwfc) 
-      CALL MYZGEMM('C','N', natomwfc, natomwfc, npwx*npol, (1.0_dp,0.0_dp), &
-           swfcatom, npwx*npol, dwfca, npwx*npol, (1.0_dp,0.0_dp), &
-           doverlap, natomwfc) 
       ! Sum over G vectors
       CALL mp_sum( doverlap, intra_bgrp_comm )
       !$acc end host_data
+      !$acc kernels
+      doverlap = doverlap + CONJG(TRANSPOSE(doverlap))
+      !$acc end kernels
       !
       ! USPP term in dO_IJ/d\epsilon(ipol,jpol)
       !
