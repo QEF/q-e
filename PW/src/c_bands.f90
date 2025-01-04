@@ -223,7 +223,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   IMPLICIT NONE
   !
   ! please do not capitalize (FORD rules)
-  include 'ks_solver_interfaces.fh'
   !  
   INTEGER, INTENT(IN) :: iter
   !! iteration index
@@ -464,15 +463,12 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE IF ( .NOT. lrot ) THEN
              !
              IF (.not. use_gpu) THEN
-                CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                               evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE. )
+                CALL rotate_xpsi_driver( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                               evc, hevc, sevc, et(:,ik), use_para_diag, .TRUE. )
 #if defined(__CUDA)
              ELSE
-                !$acc host_data use_device(et)
-                CALL rotate_xpsi( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                               evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE.)
-                !$acc end host_data
-                !$acc update self(et)
+                CALL rotate_xpsi_driver_cuf( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                               evc, hevc, sevc, et(:,ik), use_para_diag, .TRUE.)
 #endif
              END IF
              !
@@ -772,17 +768,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE IF ( .NOT. lrot ) THEN
              !
              IF ( .not. use_gpu ) THEN
-                CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi_driver( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), & 
-                                  USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
+                                  use_para_diag, gamma_only )
 #if defined(__CUDA)
              ELSE
-                !$acc host_data use_device(et)
-                CALL rotate_xpsi( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi_driver_cuf( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), &
-                                  USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
-                !$acc end host_data
-                !$acc update self(et)
+                                  use_para_diag, gamma_only )
 #endif
              END IF
              !

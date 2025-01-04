@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
-                              npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e_d )
+                              npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_xpsi for Gamma-only calculations
@@ -46,11 +46,8 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
     ! input and output eigenvectors (may overlap)
   COMPLEX(DP), INTENT(OUT) :: hevc(npwx,nbnd), sevc(npwx,nbnd)
     ! H|psi> and S|psi>
-  REAL(DP), INTENT(OUT) :: e_d(nbnd)
+  REAL(DP), INTENT(OUT) :: e(nbnd)
     ! eigenvalues
-#if defined(__CUDA)
-  attributes(DEVICE) :: e_d
-#endif
   !
   ! ... local variables:
   !
@@ -182,10 +179,11 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsig:evc')
   !
-  !$cuf kernel do(1) <<<*,*>>>
+  !$acc kernels
   DO i=1, nbnd
-     e_d(i) = en_d(i)
+     e(i) = en_d(i)
   END DO
+  !$acc end kernels
   !
   ! ... update the basis set
   !

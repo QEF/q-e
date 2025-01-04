@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dptr, &
-              npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e_d, use_para_diag, gamma_only )
+              npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e, use_para_diag, gamma_only )
   !----------------------------------------------------------------------------
   !
   !! Driver routine for Hamiltonian diagonalization in the subspace 
@@ -37,16 +37,12 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
   !! input and output eigenvectors (may overlap)
   COMPLEX(DP), INTENT(OUT)   :: hevc(npwx*npol,nbnd), sevc(npwx*npol,nbnd)
   !! H|psi> and S|psi>
-  REAL(DP),  INTENT(OUT) :: e_d(nbnd)
+  REAL(DP),  INTENT(OUT) :: e(nbnd)
   !! eigenvalues
   LOGICAL, INTENT(IN) :: use_para_diag 
   !! if true, use parallel diagonalization 
   LOGICAL, INTENT(IN) :: gamma_only 
   !! set to true if H matrix is real 
-#if defined(__CUDA)
-  attributes(DEVICE)       :: e_d
-#endif
-
   COMPLEX(DP), ALLOCATABLE         :: psi_h(:,:)
   COMPLEX(DP), ALLOCATABLE, TARGET :: evc_h(:,:)
   COMPLEX(DP), ALLOCATABLE         :: hevc_h(:,:) 
@@ -107,7 +103,9 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
      !$acc kernels copyin(hevc_h)
      hevc(1:npwx*npol,1:nbnd)  = hevc_h(1:npwx*npol,1:nbnd)
      !$acc end kernels
-     e_d(1:nbnd)                 = e_h(1:nbnd)
+     !$acc kernels copyin(e_h) 
+     e(1:nbnd)                 = e_h(1:nbnd)
+     !$acc end kernels
      !
      DEALLOCATE(psi_h, evc_h, hevc_h, e_h)
      IF(overlap) THEN 
@@ -127,13 +125,13 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
   !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
         CALL rotate_xpsi_gamma_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
-                                 npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e_d )
+                                 npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e )
         !
      ELSE
   !write (*,*) 'inside serial k'; FLUSH(6)
         !
         CALL rotate_xpsi_k_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
-                             npwx, npw, nstart, nbnd, npol, psi, evc, hevc, sevc, e_d )
+                             npwx, npw, nstart, nbnd, npol, psi, evc, hevc, sevc, e )
         !
      END IF
      !
