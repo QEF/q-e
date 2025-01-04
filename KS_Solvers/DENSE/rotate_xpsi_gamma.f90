@@ -218,7 +218,7 @@ SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
      !$acc exit data delete(spsi)
      DEALLOCATE( spsi )
   ENDIF
-  !$acc exit data delete(hpsi, vr, sr, hr, hpsi, tpsi, en )
+  !$acc exit data delete(hpsi, vr, sr, hr, tpsi, en )
   DEALLOCATE( vr, sr, hr, hpsi, tpsi, en )
   !
   CALL stop_clock('rotxpsig')

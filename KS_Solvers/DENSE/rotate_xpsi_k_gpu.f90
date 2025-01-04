@@ -13,10 +13,6 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   ! ... Serial version of rotate_xpsi for colinear, k-point calculations
   !
-#if defined(__CUDA)
-  USE cudafor
-  USE cublas
-#endif
   USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, nbgrp, my_bgrp_id, &
                             me_bgrp, root_bgrp
@@ -48,12 +44,9 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   INTEGER                  :: kdim, kdmx
   INTEGER                  :: n_start, n_end, my_n, i, j
-  COMPLEX(DP), ALLOCATABLE :: hc_d(:,:), sc_d(:,:), vc_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: tpsi_d(:,:), hpsi(:,:), spsi(:,:)
-  REAL(DP),    ALLOCATABLE :: en_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: hc_d, sc_d, vc_d, tpsi_d, en_d
-#endif
+  COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: tpsi(:,:), hpsi(:,:), spsi(:,:)
+  REAL(DP),    ALLOCATABLE :: en(:)
   !
   EXTERNAL :: h_psi_ptr, s_psi_ptr
   ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
@@ -75,17 +68,17 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   END IF
   !
   !
-  ALLOCATE( tpsi_d( kdmx, nstart ) )
+  ALLOCATE( tpsi( kdmx, nstart ) )
   ALLOCATE( hpsi( kdmx, nstart ) )
-  !$acc enter data create(hpsi)
+  ALLOCATE( hc( nstart, nstart) )    
+  ALLOCATE( sc( nstart, nstart) )    
+  ALLOCATE( vc( nstart, nstart) )    
+  ALLOCATE( en( nstart ) )
+  !$acc enter data create(hpsi, hc, sc, vc, tpsi, en )
   IF ( overlap ) THEN
     ALLOCATE( spsi(kdmx, nstart ) )
     !$acc enter data create(spsi)
   ENDIF
-  ALLOCATE( hc_d( nstart, nstart) )    
-  ALLOCATE( sc_d( nstart, nstart) )    
-  ALLOCATE( vc_d( nstart, nstart) )    
-  ALLOCATE( en_d( nstart ) )
   !
   CALL start_clock('rotxpsik')
   !
@@ -114,45 +107,51 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsik:hc')
   !
-  hc_d = (0.D0, 0.D0)
+  !$acc kernels
+  hc = (0.D0, 0.D0)
+  !$acc end kernels
   !
-  !$acc host_data use_device(psi, hpsi)
+  !$acc host_data use_device(psi, hpsi, hc)
   IF ( n_start .le. n_end ) &
-        CALL ZGEMM( 'C', 'N', nstart, my_n, kdim, (1.D0, 0.D0), psi, &
-                    kdmx, hpsi(1,n_start), kdmx, (0.D0, 0.D0), hc_d(1,n_start), nstart )
+        CALL MYZGEMM( 'C', 'N', nstart, my_n, kdim, (1.D0, 0.D0), psi, &
+                    kdmx, hpsi(1,n_start), kdmx, (0.D0, 0.D0), hc(1,n_start), nstart )
+  !
+  CALL mp_sum( hc, inter_bgrp_comm )
+  !
+  CALL mp_sum( hc, intra_bgrp_comm )
   !$acc end host_data
-  !
-  CALL mp_sum( hc_d, inter_bgrp_comm )
-  !
-  CALL mp_sum( hc_d, intra_bgrp_comm )
   !
   CALL stop_clock('rotxpsik:hc')
   !
   CALL start_clock('rotxpsik:sc')
   !
-  sc_d = (0.D0, 0.D0)
+  !$acc kernels
+  sc = (0.D0, 0.D0)
+  !$acc end kernels
   !
   IF ( overlap ) THEN
      !
-     !$acc host_data use_device(psi, spsi)
+     !$acc host_data use_device(psi, spsi, sc)
      IF ( n_start .le. n_end ) &
-     CALL ZGEMM( 'C', 'N', nstart, my_n, kdim, (1.D0, 0.D0), psi, &
-                 kdmx, spsi(1,n_start), kdmx, (0.D0, 0.D0), sc_d(1,n_start), nstart )
+     CALL MYZGEMM( 'C', 'N', nstart, my_n, kdim, (1.D0, 0.D0), psi, &
+                 kdmx, spsi(1,n_start), kdmx, (0.D0, 0.D0), sc(1,n_start), nstart )
      !$acc end host_data
      !
   ELSE
      !
-     !$acc host_data use_device(psi)
+     !$acc host_data use_device(psi, sc)
      IF ( n_start .le. n_end ) &
-     CALL ZGEMM( 'C', 'N', nstart, my_n, kdim, (1.D0, 0.D0), psi, &
-                 kdmx, psi(1,n_start), kdmx, (0.D0, 0.D0), sc_d(1,n_start), nstart )
+     CALL MYZGEMM( 'C', 'N', nstart, my_n, kdim, (1.D0, 0.D0), psi, &
+                 kdmx, psi(1,n_start), kdmx, (0.D0, 0.D0), sc(1,n_start), nstart )
      !$acc end host_data
      !
   END IF
   !
-  CALL mp_sum( sc_d, inter_bgrp_comm )
+  !$acc host_data use_device(sc)
+  CALL mp_sum( sc, inter_bgrp_comm )
   !
-  CALL mp_sum( sc_d, intra_bgrp_comm )
+  CALL mp_sum( sc, intra_bgrp_comm )
+  !$acc end host_data
   !
   CALL stop_clock('rotxpsik:sc')
   !
@@ -160,45 +159,38 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsik:diag')
   !
-  CALL diaghg( nstart, nbnd, hc_d, sc_d, nstart, en_d, vc_d, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc host_data use_device(hc, sc, en, vc)
+  CALL diaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc end host_data
   !
   CALL stop_clock('rotxpsik:diag')
   CALL start_clock('rotxpsik:evc')
   !
   !$acc kernels
-  DO i=1,nbnd
-        e(i) = en_d(i)
-  END DO
+  e(1:nbnd) = en(1:nbnd)
   !$acc end kernels
   !
   ! ... update the basis set
   !
-  !$acc parallel loop collapse(2)
-  DO i=1, nbnd
-     DO j=1, kdmx
-        tpsi_d(j,i) = psi(j,i)
-     END DO
-  END DO
-  !
   !$acc kernels
+  tpsi(1:kdmx,1:nbnd) = psi(1:kdmx,1:nbnd)
   evc  = (0.D0, 0.D0)
   hevc = (0.D0, 0.D0)
-  !
   IF ( overlap ) sevc = (0.D0, 0.D0)
   !$acc end kernels
   !
   IF ( n_start .le. n_end ) THEN
      !
-     !$acc host_data use_device(evc, hpsi, spsi, hevc, sevc)
-     CALL ZGEMM( 'N', 'N', kdim, nbnd, my_n, (1.D0, 0.D0), &
-                 tpsi_d(1,n_start), kdmx, vc_d(n_start,1), nstart, (0.D0, 0.D0), evc,  kdmx )
+     !$acc host_data use_device(evc, hpsi, spsi, hevc, sevc, tpsi, vc)
+     CALL MYZGEMM( 'N', 'N', kdim, nbnd, my_n, (1.D0, 0.D0), &
+                 tpsi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0, 0.D0), evc,  kdmx )
      !
-     CALL ZGEMM( 'N', 'N', kdim, nbnd, my_n, (1.D0, 0.D0), &
-                 hpsi(1,n_start), kdmx, vc_d(n_start,1), nstart, (0.D0, 0.D0), hevc, kdmx )
+     CALL MYZGEMM( 'N', 'N', kdim, nbnd, my_n, (1.D0, 0.D0), &
+                 hpsi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0, 0.D0), hevc, kdmx )
      !
      IF ( overlap ) &
-     CALL ZGEMM( 'N', 'N', kdim, nbnd, my_n, (1.D0, 0.D0), &
-                 spsi(1,n_start), kdmx, vc_d(n_start,1), nstart, (0.D0, 0.D0), sevc, kdmx )
+     CALL MYZGEMM( 'N', 'N', kdim, nbnd, my_n, (1.D0, 0.D0), &
+                 spsi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0, 0.D0), sevc, kdmx )
      !$acc end host_data
      !
   END IF
@@ -212,17 +204,12 @@ SUBROUTINE rotate_xpsi_k_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL stop_clock('rotxpsik:evc')
   !
-  DEALLOCATE( en_d )
-  DEALLOCATE( vc_d )
-  DEALLOCATE( sc_d )
-  DEALLOCATE( hc_d )
   IF ( overlap ) THEN
     !$acc exit data delete(spsi)
     DEALLOCATE( spsi )
   ENDIF
-  !$acc exit data delete(hpsi)
-  DEALLOCATE( hpsi )
-  DEALLOCATE( tpsi_d )
+  !$acc exit data delete(hpsi, en, vc, sc, hc, tpsi )
+  DEALLOCATE( en, vc, sc, hc, hpsi, tpsi )
   !
   CALL stop_clock('rotxpsik')
   !
