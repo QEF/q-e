@@ -89,12 +89,13 @@ SUBROUTINE stres_hub ( sigmah )
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
+      !$acc enter data create(swfcatom)
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
    ENDIF
    !
-   !$acc data create(spsi) copyin(wfcU)
+   !$acc data create(spsi,wfcatom) copyin(wfcU)
    !
    IF (gamma_only) THEN
       ALLOCATE( projrd(nwfcU,nbnd))
@@ -184,10 +185,14 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! proj=<wfcU|S|evc>
       IF (noncolin) THEN
-         !$acc update self(spsi)
-         CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
+         !$acc data create(projkd)
+         !$acc host_data use_device(spsi,wfcU,projkd)
+         CALL MYZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  projkd, nwfcU)
          CALL mp_sum( projkd( :, 1:nbnd ), intra_bgrp_comm )
+         !$acc end host_data
+         !$acc update self(projkd)
+         !$acc end data
       ELSE
          IF (gamma_only) THEN
             !$acc data create(projrd)
@@ -415,7 +420,6 @@ SUBROUTINE stres_hub ( sigmah )
    IF (ALLOCATED(dnsg)) DEALLOCATE (dnsg)
    !
    !$acc end data
-   !
    DEALLOCATE (spsi)
    DEALLOCATE (wfcatom)
    DEALLOCATE (at_dy, at_dj)
@@ -424,6 +428,7 @@ SUBROUTINE stres_hub ( sigmah )
       DEALLOCATE (us_dy, us_dj)
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete (swfcatom)
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)

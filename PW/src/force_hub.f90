@@ -107,10 +107,11 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    ALLOCATE( spsi(npwx*npol,nbnd) ) 
-   !$acc enter data create(spsi)
    ALLOCATE( wfcatom(npwx*npol,natomwfc) )
+   !$acc enter data create(spsi,wfcatom)
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE( swfcatom(npwx*npol,natomwfc) )
+      !$acc enter data create(swfcatom)
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
@@ -179,7 +180,7 @@ SUBROUTINE force_hub( forceh )
          !$acc update self(proj%k)
       ENDIF
       !
-      !$acc data copyin(wfcatom,overlap_inv)
+      !$acc data copyin(overlap_inv)
       !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -352,11 +353,11 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    !$acc end data
-   !$acc exit data delete(spsi) finalize
-   !
+   !$acc exit data delete(spsi,wfcatom) 
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete(swfcatom) 
       DEALLOCATE( swfcatom )
       DEALLOCATE( eigenval )
       DEALLOCATE( eigenvect )
@@ -1611,7 +1612,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... Note: parallelization here is over plane waves, not over bands!
       !
       ALLOCATE ( dwfc(npwx*npol,ldim*npol) )
-      dwfc(:,:) = (0.d0, 0.d0)
       !$acc data create(dwfc)
       !
       !$acc kernels
