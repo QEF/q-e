@@ -130,7 +130,7 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
      ELSE
   !write (*,*) 'inside serial k'; FLUSH(6)
         !
-        CALL rotate_xpsi_k_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
+        CALL rotate_xpsi_k ( h_psi_dptr, s_psi_dptr, overlap, &
                              npwx, npw, nstart, nbnd, npol, psi, evc, hevc, sevc, e )
         !
      END IF
