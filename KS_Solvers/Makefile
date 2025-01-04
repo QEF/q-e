@@ -36,7 +36,6 @@ DENSE/gram_schmidt_k.o \
 DENSE/gram_schmidt_k_gpu.o \
 DENSE/gram_schmidt_gamma_gpu.o \
 DENSE/rotate_xpsi_gamma.o \
-DENSE/rotate_xpsi_gamma_gpu.o \
 DENSE/rotate_xpsi_k_gpu.o \
 DENSE/rotate_xpsi_k.o \
 RMM/crmmdiagg.o \

@@ -124,7 +124,7 @@ SUBROUTINE rotate_xpsi_driver_cuf ( h_psi_hptr, s_psi_hptr, h_psi_dptr, s_psi_dp
      IF ( gamma_only ) THEN
   !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
-        CALL rotate_xpsi_gamma_gpu ( h_psi_dptr, s_psi_dptr, overlap, &
+        CALL rotate_xpsi_gamma ( h_psi_dptr, s_psi_dptr, overlap, &
                                  npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e )
         !
      ELSE

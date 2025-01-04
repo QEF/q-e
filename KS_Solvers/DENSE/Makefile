@@ -17,7 +17,6 @@ rotate_driver_cuf.o \
 rotate_xpsi_k.o \
 rotate_xpsi_k_gpu.o \
 rotate_xpsi_gamma.o \
-rotate_xpsi_gamma_gpu.o \
 gram_schmidt_gamma.o \
 gram_schmidt_k.o \
 gram_schmidt_gamma_gpu.o \

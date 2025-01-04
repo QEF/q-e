@@ -67,12 +67,15 @@ SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   !
   ALLOCATE( tpsi( npwx, nstart ) )
   ALLOCATE( hpsi( npwx, nstart ) )
-  IF ( overlap ) &
-  ALLOCATE( spsi( npwx, nstart ) )
   ALLOCATE( hr( nstart, nstart ) )    
   ALLOCATE( sr( nstart, nstart ) )    
   ALLOCATE( vr( nstart, nstart ) )    
   ALLOCATE( en( nstart ) )
+  !$acc enter data create(hpsi, hr, sr, vr, tpsi, en )
+  IF ( overlap ) THEN
+     ALLOCATE( spsi( npwx, nstart ) )
+     !$acc enter data create(spsi)
+  ENDIF
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
@@ -80,8 +83,11 @@ SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   !
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
-  IF ( gstart == 2 ) &
-     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
+  IF ( gstart == 2 ) THEN
+     !$acc kernels      
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0, kind=DP)
+     !$acc end kernels
+  END IF
   !
   CALL start_clock('rotxpsig:hpsi')
   !
@@ -104,48 +110,56 @@ SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsig:hc')
   !
+  !$acc kernels
   hr = 0.D0
+  !$acc end kernels
   !
+  !$acc host_data use_device(psi, hpsi, hr)
   IF ( n_start <= n_end ) &
-  CALL DGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, &
+  CALL MYDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, &
               psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
   !
   IF ( gstart == 2 ) &
-  CALL DGER( nstart, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nstart )
+  CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nstart )
   !
   CALL mp_sum( hr , inter_bgrp_comm )
   !
   CALL mp_sum( hr , intra_bgrp_comm )
+  !$acc end host_data
   !
   CALL stop_clock('rotxpsig:hc')
   !     
   CALL start_clock('rotxpsig:sc')
   !
+  !$acc kernels
   sr = 0.D0
+  !$acc end kernels
   !
+  !$acc host_data use_device(psi, spsi, hpsi, sr)
   IF ( overlap ) THEN 
      !
      IF ( n_start <= n_end ) &
-     CALL DGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, &
+     CALL MYDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, &
                  psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
      !
      IF ( gstart == 2 ) &
-     CALL DGER( nstart, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nstart )
+     CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nstart )
      !              
   ELSE
      !
      IF ( n_start <= n_end ) &
-     CALL DGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, &
+     CALL MYDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, &
                  psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
      !
      IF ( gstart == 2 ) &
-     CALL DGER( nstart, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
+     CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
      !
   END IF
   !
   CALL mp_sum( sr , inter_bgrp_comm )
   !
   CALL mp_sum( sr , intra_bgrp_comm )
+  !$acc end host_data
   !
   CALL stop_clock('rotxpsig:sc')
   !
@@ -153,9 +167,13 @@ SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsig:diag')
   !
+  !$acc host_data use_device(hr, sr, vr, en)
   CALL diaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc end host_data
   !
+  !$acc kernels
   e(:) = en(1:nbnd)
+  !$acc end kernels
   !
   CALL stop_clock('rotxpsig:diag')
   !
@@ -163,42 +181,45 @@ SUBROUTINE rotate_xpsi_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsig:evc')
   !
+  !$acc kernels
   tpsi = psi
-  !
   evc  = (0.D0, 0.D0)
   hevc = (0.D0, 0.D0)
   IF ( overlap ) &
   sevc = (0.D0, 0.D0)
+  !$acc end kernels
   !
   IF ( n_start <= n_end ) THEN
      !
-     CALL DGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
+     !$acc host_data use_device(hevc, sevc, hpsi, spsi, evc, tpsi, vr)
+     CALL MYDGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
                  tpsi(1,n_start), npwx2,  vr(n_start,1), nstart, 0.D0, evc,  npwx2 )
      !
-     CALL DGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
+     CALL MYDGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
                  hpsi(1,n_start), npwx2,  vr(n_start,1), nstart, 0.D0, hevc, npwx2 )
      !
      IF ( overlap ) &
-     CALL DGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
+     CALL MYDGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
                  spsi(1,n_start), npwx2,  vr(n_start,1), nstart, 0.D0, sevc, npwx2 )
+     !$acc end host_data
      !
   END IF
   !
+  !$acc host_data use_device(hevc, sevc, evc)
   CALL mp_sum( evc,  inter_bgrp_comm )
   CALL mp_sum( hevc, inter_bgrp_comm )
   IF ( overlap ) &
   CALL mp_sum( sevc, inter_bgrp_comm )
+  !$acc end host_data
   !
   CALL stop_clock('rotxpsig:evc')
   !
-  DEALLOCATE( en )
-  DEALLOCATE( vr )
-  DEALLOCATE( sr )
-  DEALLOCATE( hr )
-  IF ( overlap ) &
-  DEALLOCATE( spsi )
-  DEALLOCATE( hpsi )
-  DEALLOCATE( tpsi )
+  IF ( overlap ) THEN
+     !$acc exit data delete(spsi)
+     DEALLOCATE( spsi )
+  ENDIF
+  !$acc exit data delete(hpsi, vr, sr, hr, hpsi, tpsi, en )
+  DEALLOCATE( vr, sr, hr, hpsi, tpsi, en )
   !
   CALL stop_clock('rotxpsig')
   !

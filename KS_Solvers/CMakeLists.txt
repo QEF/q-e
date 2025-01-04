@@ -42,7 +42,6 @@ set(src_dense
     # GPU
     DENSE/rotate_wfc_gamma_gpu.f90
     DENSE/rotate_xpsi_k_gpu.f90
-    DENSE/rotate_xpsi_gamma_gpu.f90
     DENSE/gram_schmidt_k_gpu.f90
     DENSE/gram_schmidt_gamma_gpu.f90
     DENSE/rotate_wfc_k_gpu.f90
