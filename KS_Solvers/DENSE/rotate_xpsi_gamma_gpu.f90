@@ -46,7 +46,7 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   ! ... local variables:
   !
   INTEGER                  :: npw2, npwx2
-  INTEGER                  :: n_start, n_end, my_n, i
+  INTEGER                  :: n_start, n_end, my_n
   REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
   COMPLEX(DP), ALLOCATABLE :: tpsi(:,:), hpsi(:,:), spsi(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
@@ -85,15 +85,13 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   IF ( gstart == 2 ) THEN
      !$acc kernels      
-     DO i=1,nstart
-        psi(1,i) = CMPLX( DBLE( psi(1,i) ), 0.D0, kind=DP)
-     END DO
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0, kind=DP)
      !$acc end kernels
   END IF
   !
   CALL start_clock('rotxpsig:hpsi')
   !
-  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi)
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi )
   !
   CALL stop_clock('rotxpsig:hpsi')
   !
@@ -167,19 +165,17 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
   !
   CALL start_clock('rotxpsig:diag')
   !
-  !$acc host_data use_device(hr, sr, en, vr)
+  !$acc host_data use_device(hr, sr, vr, en)
   CALL diaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
   !$acc end host_data
+  !
+  !$acc kernels
+  e(:) = en(1:nbnd)
+  !$acc end kernels
   !
   CALL stop_clock('rotxpsig:diag')
   !
   CALL start_clock('rotxpsig:evc')
-  !
-  !$acc kernels
-  DO i=1, nbnd
-     e(i) = en(i)
-  END DO
-  !$acc end kernels
   !
   ! ... update the basis set
   !
@@ -220,8 +216,8 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
      !$acc exit data delete(spsi)
      DEALLOCATE( spsi )
   ENDIF
-  !$acc exit data delete(hpsi, en, vr, sr, hr, hpsi, tpsi )
-  DEALLOCATE( en, vr, sr, hr, hpsi, tpsi )
+  !$acc exit data delete(hpsi, vr, sr, hr, hpsi, tpsi, en )
+  DEALLOCATE( vr, sr, hr, hpsi, tpsi, en )
   !
   CALL stop_clock('rotxpsig')
   !
