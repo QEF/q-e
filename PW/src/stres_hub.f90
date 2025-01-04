@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2023 Quantum ESPRESSO group
+! Copyright (C) 2002-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -65,7 +65,7 @@ SUBROUTINE stres_hub ( sigmah )
    REAL(DP), ALLOCATABLE :: projrd(:,:)
    COMPLEX(DP), ALLOCATABLE :: projkd(:,:)
    !
-   CALL start_clock_gpu( 'stres_hub' )
+   CALL start_clock( 'stres_hub' )
    !
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
@@ -89,12 +89,13 @@ SUBROUTINE stres_hub ( sigmah )
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
+      !$acc enter data create(swfcatom)
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
    ENDIF
    !
-   !$acc data create(spsi) copyin(wfcU)
+   !$acc data create(spsi,wfcatom) copyin(wfcU)
    !
    IF (gamma_only) THEN
       ALLOCATE( projrd(nwfcU,nbnd))
@@ -184,10 +185,14 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! proj=<wfcU|S|evc>
       IF (noncolin) THEN
-         !$acc update self(spsi)
-         CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
+         !$acc data create(projkd)
+         !$acc host_data use_device(spsi,wfcU,projkd)
+         CALL MYZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
                     npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  projkd, nwfcU)
          CALL mp_sum( projkd( :, 1:nbnd ), intra_bgrp_comm )
+         !$acc end host_data
+         !$acc update self(projkd)
+         !$acc end data
       ELSE
          IF (gamma_only) THEN
             !$acc data create(projrd)
@@ -415,7 +420,6 @@ SUBROUTINE stres_hub ( sigmah )
    IF (ALLOCATED(dnsg)) DEALLOCATE (dnsg)
    !
    !$acc end data
-   !
    DEALLOCATE (spsi)
    DEALLOCATE (wfcatom)
    DEALLOCATE (at_dy, at_dj)
@@ -424,6 +428,7 @@ SUBROUTINE stres_hub ( sigmah )
       DEALLOCATE (us_dy, us_dj)
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete (swfcatom)
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)
@@ -432,7 +437,12 @@ SUBROUTINE stres_hub ( sigmah )
    !
    use_bgrp_in_hpsi = save_flag
    !
-   CALL stop_clock_gpu( 'stres_hub' )
+   CALL stop_clock( 'stres_hub' )
+   CALL print_clock('stres_hub')
+   CALL print_clock('dprojdepsilon')
+   CALL print_clock('dprojdeps1')
+   CALL print_clock('dprojdeps2')
+   CALL print_clock('dprojdeps3')
    !
    RETURN
    !
@@ -1372,7 +1382,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    COMPLEX (DP), ALLOCATABLE :: &
    dproj0(:,:),       & ! derivative of the projector
    dproj_us(:,:),     & ! USPP contribution to dproj0
-   dwfc(:,:),         & ! the derivative of the (ortho-atomic) wavefunction
+   dwfcU(:,:),        & ! the derivative of the (ortho-atomic) wavefunctions
+   dwfca(:,:),        & ! the derivative of the atomic wavefunctions
    doverlap(:,:),     & ! derivative of the overlap matrix  
    doverlap_us(:,:),  & ! USPP contribution to doverlap
    doverlap_inv(:,:)    ! derivative of (O^{-1/2})_JI (note the transposition)   
@@ -1382,7 +1393,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    a1_temp(:), a2_temp(:) 
    COMPLEX (DP) :: temp, temp2
    !
-   CALL start_clock_gpu('dprojdepsilon')
+   CALL start_clock('dprojdepsilon')
+   CALL start_clock('dprojdeps1')
    ! 
    !$acc data present_or_copyin(spsi) present_or_copyout(dproj)
    !
@@ -1397,11 +1409,11 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>
    !
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
-   ALLOCATE ( dwfc(npwx*npol,nwfcU) )
+   ALLOCATE ( dwfcU(npwx*npol,nwfcU) )
    ALLOCATE (a1_temp(npw), a2_temp(npw))
-   !$acc data create(dwfc) copyin(overlap_inv, wfcU)
+   !$acc data create(dwfcU) copyin(overlap_inv, wfcU)
    !$acc kernels
-   dwfc(:,:) = (0.d0, 0.d0)
+   dwfcU(:,:) = (0.d0, 0.d0)
    !$acc end kernels
    !
    ! 1. Derivative of the atomic wavefunctions
@@ -1451,10 +1463,10 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                              " Stress with background and noncollinear is not supported",1)
                !$acc parallel loop
                DO ig = 1, npw
-                  dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1_temp(ig) &
+                  dwfcU(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1_temp(ig) &
                              + at_dj(ig,offpm+m1) * a2_temp(ig)
                   IF (noncolin) THEN  
-                     dwfc(ig+npwx,offpmU+m1+ldim_std) = &
+                     dwfcU(ig+npwx,offpmU+m1+ldim_std) = &
                                         at_dy(ig+npwx,offpm+m1+ldim_std)*a1_temp(ig) & 
                                       + at_dj(ig+npwx,offpm+m1+ldim_std)*a2_temp(ig)
                   ENDIF
@@ -1476,9 +1488,9 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                               ( at_dy(ig+npwx,m2) * a1_temp(ig) &
                               + at_dj(ig+npwx,m2) * a2_temp(ig) )   
                   ENDDO   
-                  dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + temp
-                  IF (noncolin) dwfc(ig+npwx,offpmU+m1) = &
-                           dwfc(ig+npwx,offpmU+m1) + temp2 
+                  dwfcU(ig,offpmU+m1) = dwfcU(ig,offpmU+m1) + temp
+                  IF (noncolin) dwfcU(ig+npwx,offpmU+m1) = &
+                           dwfcU(ig+npwx,offpmU+m1) + temp2 
                ENDDO
             ENDDO
          ENDIF
@@ -1488,10 +1500,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! The diagonal term
    IF (ipol.EQ.jpol) THEN
       !$acc kernels 
-      dwfc(1:npw,:) = dwfc(1:npw,:) - wfcU(1:npw,:)*0.5d0
-      IF (noncolin) dwfc(1+npwx:npwx+npw,:) = dwfc(1+npwx:npwx+npw,:) - wfcU(1+npwx:npwx+npw,:)*0.5d0
+      dwfcU(1:npw,:) = dwfcU(1:npw,:) - wfcU(1:npw,:)*0.5d0
+      IF (noncolin) dwfcU(1+npwx:npwx+npw,:) = dwfcU(1+npwx:npwx+npw,:) - wfcU(1+npwx:npwx+npw,:)*0.5d0
       !$acc end kernels
    ENDIF   
+   CALL stop_clock('dprojdeps1')
+   CALL start_clock('dprojdeps2')
    !
    ! 2. Contribution due to the derivative of (O^{-1/2})_JI which
    !    is multiplied by atomic wavefunctions (only for ortho-atomic case)
@@ -1500,60 +1514,53 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       !
       ! Compute the derivative dO_IJ/d\epsilon(ipol,jpol)
       !
+      ALLOCATE (dwfca(npwx*npol,natomwfc))
       ALLOCATE (doverlap(natomwfc,natomwfc))
       ALLOCATE (doverlap_inv(natomwfc,natomwfc))
-      !$acc data create(doverlap_inv) copyin(swfcatom, wfcatom)
-      doverlap(:,:) = (0.0d0, 0.0d0)
+      !$acc data create(dwfca,doverlap,doverlap_inv) present_or_copyin(swfcatom, wfcatom)
       !$acc kernels
+      dwfca(:,:) = (0.d0, 0.d0)
+      doverlap(:,:) = (0.0d0, 0.0d0)
       doverlap_inv(:,:) = (0.0d0, 0.0d0)
       !$acc end kernels
       !
       ! Calculate:
       ! doverlap = < dphi_I/d\epsilon(ipol,jpol) | S | phi_J > 
       !            + < phi_I | S | dphi_J/d\epsilon(ipol,jpol) >
-      !
-      DO m2 = 1, natomwfc
-         DO m1 = 1, natomwfc
-            temp = (0.0d0,0.0d0)
-            temp2 = (0.0d0,0.0d0)
-            !$acc parallel loop reduction(+:temp,temp2)
-            DO ig = 1, npw
-               temp = temp + CONJG((at_dy(ig,m1)*a1_temp(ig) + at_dj(ig,m1)*a2_temp(ig))) * swfcatom(ig,m2) &
-                           + CONJG(swfcatom(ig,m1)) * (at_dy(ig,m2)*a1_temp(ig) + at_dj(ig,m2)*a2_temp(ig))
-               IF (noncolin) THEN
-                  temp2 = temp2 + CONJG((at_dy(ig+npwx,m1)*a1_temp(ig) + at_dj(ig+npwx,m1)*a2_temp(ig))) * swfcatom(ig+npwx,m2) &
-                                + CONJG(swfcatom(ig+npwx,m1)) * (at_dy(ig+npwx,m2)*a1_temp(ig) + at_dj(ig+npwx,m2)*a2_temp(ig))
-               ENDIF
-            ENDDO
-            doverlap(m1,m2) = doverlap(m1,m2) + temp
-            IF (noncolin) doverlap(m1,m2) = doverlap(m1,m2) + temp2
+      ! Note that the second term is the hermitian conjugate of the first
+      !$acc parallel loop collapse(2)
+      DO m1 = 1, natomwfc
+         DO ig = 1, npw
+            dwfca(ig,m1) = at_dy(ig,m1)*a1_temp(ig) + at_dj(ig,m1)*a2_temp(ig)
+            IF (noncolin) THEN
+               dwfca(ig+npwx,m1) = at_dy(ig+npwx,m1)*a1_temp(ig) + at_dj(ig+npwx,m1)*a2_temp(ig)
+            ENDIF
          ENDDO
       ENDDO
       !
       IF (ipol.EQ.jpol) THEN
-         DO m2 = 1, natomwfc
-            DO m1 = 1, natomwfc
-               temp = (0.0d0,0.0d0)
-               temp2 = (0.0d0,0.0d0)
-               !$acc parallel loop reduction(+:temp)
-               DO ig = 1, npw
-                  temp = temp + CONJG((-wfcatom(ig,m1)*0.5d0)) * swfcatom(ig,m2) &
-                              + CONJG(swfcatom(ig,m1)) * (-wfcatom(ig,m2)*0.5d0)
-                  IF (noncolin) THEN
-                     temp2 = temp2 + CONJG((-wfcatom(ig+npwx,m1)*0.5d0)) * swfcatom(ig+npwx,m2) &
-                              + CONJG(swfcatom(ig+npwx,m1)) * (-wfcatom(ig+npwx,m2)*0.5d0)
-                  ENDIF
-               ENDDO
-               doverlap(m1,m2) = doverlap(m1,m2) + temp
-               IF (noncolin) doverlap(m1,m2) = doverlap(m1,m2) + temp2
+         !$acc parallel loop collapse(2)
+         DO m1 = 1, natomwfc
+            DO ig = 1, npw
+               dwfca(ig,m1) = dwfca(ig,m1) - 0.5_dp*wfcatom(ig,m1)
+               IF (noncolin) THEN
+                  dwfca(ig+npwx,m1) = dwfca(ig+npwx,m1)  - 0.5_dp*wfcatom(ig+npwx,m1)
+               ENDIF
             ENDDO
          ENDDO
-      ENDIF        
+      END IF
       !
+      !$acc host_data use_device(dwfca, swfcatom, doverlap)
+      CALL MYZGEMM('C','N', natomwfc, natomwfc, npwx*npol, (1.0_dp,0.0_dp), &
+           dwfca, npwx*npol, swfcatom, npwx*npol, (0.0_dp,0.0_dp), &
+           doverlap, natomwfc) 
       ! Sum over G vectors
       CALL mp_sum( doverlap, intra_bgrp_comm )
+      !$acc end host_data
+      !$acc kernels
+      doverlap = doverlap + CONJG(TRANSPOSE(doverlap))
+      !$acc end kernels
       !
-      !$acc data copyin(doverlap)
       ! USPP term in dO_IJ/d\epsilon(ipol,jpol)
       !
       IF (okvan) THEN
@@ -1592,38 +1599,39 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
             offpmU = offsetU(na)
             offpm  = oatwfc(na)
-            !$acc host_data use_device(wfcatom, doverlap_inv, dwfc)
+            !$acc host_data use_device(wfcatom, doverlap_inv, dwfcU)
             CALL MYZGEMM('N','N', npwx*npol, ldim_u(nt)*npol, natomwfc, (1.d0,0.d0), &
                   wfcatom, npwx*npol, doverlap_inv(:,offpm+1:offpm+ldim_u(nt)*npol), &
-                  natomwfc, (1.d0,0.d0), dwfc(:,offpmU+1:offpmU+ldim_u(nt)*npol), npwx*npol)
+                  natomwfc, (1.d0,0.d0), dwfcU(:,offpmU+1:offpmU+ldim_u(nt)*npol), npwx*npol)
             !$acc end host_data
          ENDIF
       ENDDO
       !
       !$acc end data
-      !$acc end data
-      !
-      DEALLOCATE (doverlap)
       DEALLOCATE (doverlap_inv)
+      DEALLOCATE (doverlap)
+      DEALLOCATE (dwfca)
       !
    ENDIF
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
    IF (noncolin) THEN
-      !$acc host_data use_device(dwfc,spsi,dproj)
+      !$acc host_data use_device(dwfcU,spsi,dproj)
       CALL MYZGEMM('C','N', nwfcU, nbnd, npwx*npol, (1.d0,0.d0), &
-            dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
+            dwfcU, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
             dproj, nwfcU)   
       CALL mp_sum( dproj, intra_bgrp_comm )
       !$acc end host_data
    ELSE   
-      CALL calbec( offload_type, npw, dwfc, spsi, dproj )
+      CALL calbec( offload_type, npw, dwfcU, spsi, dproj )
    ENDIF
    !
    !$acc end data
    !$acc end data
-   DEALLOCATE ( dwfc, qm1, gk)
+   DEALLOCATE ( dwfcU, qm1, gk)
    DEALLOCATE(a1_temp, a2_temp)
+   CALL stop_clock('dprojdeps2')
+   CALL start_clock('dprojdeps3')
    !
    ! Now the derivatives of the beta functions: we compute the term
    ! <\phi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
@@ -1644,7 +1652,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    !$acc end data
    !
-   CALL stop_clock_gpu('dprojdepsilon')
+   CALL stop_clock('dprojdeps3')
+   CALL stop_clock('dprojdepsilon')
    !
    RETURN
    !
@@ -2081,7 +2090,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !       qm1(npwx)
    REAL (DP) :: temp
    !
-   CALL start_clock_gpu('dprojdepsilon')
+   CALL start_clock('dprojdepsilon')
    !
    ! See the implementation in dprojdepsilon_k
    IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
@@ -2276,7 +2285,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    DEALLOCATE ( a1_temp, a2_temp )
    !
    !$acc end data
-   CALL stop_clock_gpu('dprojdepsilon')
+   CALL stop_clock('dprojdepsilon')
    !
    RETURN
    !
