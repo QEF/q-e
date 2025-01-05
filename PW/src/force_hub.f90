@@ -1912,7 +1912,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ! ... Compute the derivative dO_IJ/d\tau(alpha,ipol)
    ! ... Calculate < dphi_I/d\tau(alpha,ipol) | S | phi_J >
-   ALLOCATE ( dwfcatom(npwx, m_start:m_end) )
+   ALLOCATE ( dwfcatom(npwx*npol, m_start:m_end) )
    !$acc parallel loop collapse(2)
    DO m1 = m_start, m_end
       DO ig = 1, npol*npwx
