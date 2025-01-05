@@ -381,8 +381,9 @@ SUBROUTINE force_hub( forceh )
    CALL print_clock( 'force_hub' )
    CALL print_clock( 'dndtau' )
    CALL print_clock( 'dndgtau' )
-   CALL print_clock( 'calc1_doverlap' )
-   CALL print_clock( 'calc2_doverlap' )
+   CALL print_clock( 'dprojdtau' )
+   CALL print_clock( 'calc_doverlap' )
+   CALL print_clock( 'matel_dSdtau' )
    !
    RETURN
    !
@@ -1886,7 +1887,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    COMPLEX(DP), ALLOCATABLE :: doverlap_us(:,:)
    ! derivative of the overlap matrix, auxiliary array
    !
-   CALL start_clock( 'calc1_doverlap' )
+   CALL start_clock( 'calc_doverlap' )
    !
    IF (Hubbard_projectors.NE."ortho-atomic") RETURN
    !
@@ -1954,8 +1955,6 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ! ... Add the USPP term in dO_IJ/d\tau(alpha,ipol):
    ! ... < phi_I | dS/d\tau(alpha,ipol) | phi_J >
    !
-   CALL stop_clock( 'calc1_doverlap' )
-   CALL start_clock( 'calc2_doverlap' )
    IF (okvan) THEN
       ! ... Calculate doverlap_us = < phi_I | dS/d\tau(alpha,ipol) | phi_J >
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, natomwfc, &
@@ -1976,7 +1975,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !$acc end data
    DEALLOCATE( doverlap_us )
    DEALLOCATE( doverlap )
-   CALL stop_clock( 'calc2_doverlap' )
+   CALL stop_clock( 'calc_doverlap' )
    !
 END SUBROUTINE calc_doverlap_inv
 !
@@ -2037,6 +2036,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    COMPLEX(DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), dbetaB(:,:), &
                                betaB(:,:), aux(:,:), qq(:,:)
    !
+   CALL start_clock( 'matel_dSdtau' )
    A_dS_B(:,:) = (0.0d0, 0.0d0)
    !
    IF (.NOT.okvan) RETURN
@@ -2292,6 +2292,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    DEALLOCATE( qq     )
    !
    !$acc end data
+   CALL stop_clock( 'matel_dSdtau' )
    !
    RETURN
    !
