@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,12 +7,12 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
+SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
   !----------------------------------------------------------------------------
-  !! This routine applies the Ultra-Soft Hamiltonian to a
-  !! vector psi and puts the result in hpsi. 
-  !! It requires the products of psi with all beta functions
-  !! in array becp(nkb,m) (calculated by calbec).
+  !! This routine applies the nonlocal potential V=sum_lm |beta_l>D_lm<beta_m|
+  !! to a set of vectors |psi_i> and puts the result in |hpsi_i>. 
+  !! It requires on input the products becp(m,i) = <beta_m|psi_i> between psi
+  !! and the beta functions (in array becp(nkb,m), calculated by calbec).
   !
   USE kinds,           ONLY: DP
   USE ions_base,       ONLY: nat, ntyp => nsp, ityp
@@ -32,16 +32,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   !! true dimension of psi, spsi
   INTEGER, INTENT(IN) :: m
   !! number of states psi
-  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda*npol,m)
   !! V_US|psi> is added to hpsi
   !
-  ! ... here the local variables
-  !
-#if defined(__CUDA)
-  attributes(DEVICE) :: hpsi_d
-  !
-  !
-  CALL start_clock_gpu( 'add_vuspsi' )  
+  CALL start_clock( 'add_vuspsi' )  
   !
   IF ( gamma_only ) THEN
      !
@@ -57,7 +51,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !
   END IF
   !
-  CALL stop_clock_gpu( 'add_vuspsi' )  
+  CALL stop_clock( 'add_vuspsi' )  
   !
   RETURN
   !
@@ -66,38 +60,25 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_gamma_gpu()
        !-----------------------------------------------------------------------
-       !! See comments inside
-       !
-       USE device_fbuff_m, ONLY : dev_buf
-       !
-#if defined(__CUDA)
-       USE cudafor
-       USE cublas
-#endif
+       !! Gamma-only version
        !
        IMPLICIT NONE
-       REAL(DP), POINTER :: ps_d (:,:)
+       REAL(DP), ALLOCATABLE :: ps (:,:)
        INTEGER :: ierr
        ! counters
        INTEGER :: jkb, ikb, ih, jh, na, nt, ibnd
        !
-#if defined(__CUDA)
-       attributes(device) :: ps_d
-#endif
        REAL(DP), ALLOCATABLE :: becp_r(:,:)
-       !$acc declare device_resident(becp_r)
+       !$acc declare device_resident(ps,becp_r)
        !
        IF ( nkb == 0 ) RETURN
        !
        ! becp(l,i) = <beta_l|psi_i>, with vkb(n,l)=|beta_l>
-       ! in this case becp(l,i) are distributed (index i is)
        !
-       CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr ) !ALLOCATE (ps_d (nkb,m), STAT=ierr )
+       ALLOCATE (ps (nkb,m), STAT=ierr )
        !
        IF( ierr /= 0 ) &
-          CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps_d ', ABS(ierr) )
-       !
-       ps_d(:,:) = 0.D0
+          CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps ', ABS(ierr) )
        !
        ALLOCATE( becp_r(size(becp%r,1),size(becp%r,2)), stat=ierr )
        IF( ierr /= 0 ) &
@@ -119,11 +100,11 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 ! Next operation computes ps(l',i) = \sum_m deeq(l,m) becp(m',i)
                 ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                 !
-                !$acc host_data use_device(deeq,becp_r)
-                CALL DGEMM('N', 'N', nh(nt), m, nh(nt), 1.0_dp, &
+                !$acc host_data use_device(deeq,becp_r,ps)
+                CALL MYDGEMM('N', 'N', nh(nt), m, nh(nt), 1.0_dp, &
                            deeq(1,1,na,current_spin), nhm, &
                            becp_r(ofsbeta(na)+1,1), nkb, 0.0_dp, &
-                               ps_d(ofsbeta(na)+1,1), nkb )
+                               ps(ofsbeta(na)+1,1), nkb )
                 !$acc end host_data
                 !
              END IF
@@ -132,16 +113,15 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           !
        END DO
        !
-       ! Normal case: hpsi(n,i) = \sum_l beta(n,l) ps(l,i) 
+       ! hpsi(n,i) = hpis(n,i) + \sum_l beta(n,l) ps(l,i) 
        ! (l runs from 1 to nkb)
        !
-       !$acc host_data use_device(vkb)
-       CALL DGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
-                   ( 2 * lda ), ps_d, nkb, 1.D0, hpsi_d, ( 2 * lda ) )
+       !$acc host_data use_device(vkb,ps,hpsi)
+       CALL MYDGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
+                   ( 2 * lda ), ps, nkb, 1.D0, hpsi, ( 2 * lda ) )
        !$acc end host_data
        !
-       CALL dev_buf%release_buffer(ps_d, ierr) ! DEALLOCATE (ps_d)
-       !
+       DEALLOCATE (ps)
        DEALLOCATE( becp_r )
        !
        RETURN
@@ -151,33 +131,24 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_k_gpu()
        !-----------------------------------------------------------------------
-       !! See add_vuspsi_gamma for comments
-       !
-#if defined(__CUDA)
-       USE cudafor
-       USE cublas
-#endif
-       USE device_fbuff_m, ONLY : dev_buf
+       !! k-point version, see add_vuspsi_gamma for comments
        !
        IMPLICIT NONE
-       COMPLEX(DP), POINTER :: ps_d (:,:), deeaux_d (:,:)
+       COMPLEX(DP), ALLOCATABLE :: ps (:,:), deeaux (:,:)
        INTEGER :: ierr
        ! counters
        INTEGER :: i, j, k, jkb, ikb, ih, jh, na, nt, ibnd, nhnt
 
-#if defined(__CUDA)
-       ATTRIBUTES( DEVICE ) :: ps_d, deeaux_d
-#endif
        COMPLEX(DP), ALLOCATABLE :: becp_k(:,:)
-       !$acc declare device_resident(becp_k)
+       !$acc declare device_resident(ps, deeaux,becp_k)
        !
        IF ( nkb == 0 ) RETURN
        !
-       CALL dev_buf%lock_buffer(ps_d, (/ nkb,m /), ierr ) ! ALLOCATE (ps_d (nkb,m), STAT=ierr )
+       ALLOCATE (ps (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' add_vuspsi_k ', ' cannot allocate ps_d ', ABS( ierr ) )
+          CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
        !
-       CALL dev_buf%lock_buffer(deeaux_d, (/ nhm, nhm /), ierr ) !ALLOCATE ( deeaux_d(nhm, nhm) )
+       ALLOCATE ( deeaux(nhm, nhm) )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate deeaux_d ', ABS( ierr ) )
        !
@@ -188,7 +159,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        becp_k = becp%k
        !$acc end kernels
        !
-       !$acc data present(deeq) deviceptr(deeaux_d)
+       !$acc data present(deeq)
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
@@ -207,14 +178,14 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 !$acc parallel loop collapse(2)
                 DO j = 1, nhnt
                    DO k = 1, nhnt
-                      deeaux_d(k,j) = CMPLX(deeq(k,j,na,current_spin), 0.0_dp, KIND=DP )
+                      deeaux(k,j) = CMPLX(deeq(k,j,na,current_spin), 0.0_dp, KIND=DP )
                    END DO
                 END DO
                 !
-                !$acc host_data use_device(becp_k)
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeaux_d, nhm, becp_k(ofsbeta(na)+1,1), nkb, &
-                          (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1), nkb )
+                !$acc host_data use_device(deeaux,becp_k,ps)
+                CALL MYZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           deeaux, nhm, becp_k(ofsbeta(na)+1,1), nkb, &
+                          (0.0_dp, 0.0_dp), ps(ofsbeta(na)+1,1), nkb )
                 !$acc end host_data
                 !
              END IF
@@ -223,15 +194,14 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           !
        END DO
        !$acc end data
-       CALL dev_buf%release_buffer(deeaux_d, ierr) ! DEALLOCATE (deeaux_d)
        !
-       !$acc host_data use_device(vkb)
-       CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
-                   lda, ps_d, nkb, ( 1.D0, 0.D0 ) , hpsi_d, lda )
+       !$acc host_data use_device(vkb,ps,hpsi)
+       CALL MYZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
+                   lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
        !$acc end host_data
        !
-       CALL dev_buf%release_buffer(ps_d, ierr) !DEALLOCATE (ps_d)
-       !
+       DEALLOCATE (ps)
+       DEALLOCATE (deeaux)
        DEALLOCATE( becp_k )
        !
        RETURN
@@ -241,32 +211,21 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_nc_gpu()
        !-----------------------------------------------------------------------
-       !! See add_vuspsi_k for comments
+       !! NOn-colinear/spinorbit case, see add_vuspsi_gamma for comments
        !
-#if defined(__CUDA)
-       USE cudafor
-       USE cublas
-#endif
-       USE device_fbuff_m,      ONLY : dev_buf
        IMPLICIT NONE
-       COMPLEX(DP), POINTER :: ps_d (:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: ps (:,:,:)
        INTEGER :: ierr
        ! counters
        INTEGER :: na, nt, ibnd
-
-#if defined(__CUDA)
-       ATTRIBUTES( DEVICE ) :: ps_d
-#endif
        COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:)
-       !$acc declare device_resident(becp_nc)
+       !$acc declare device_resident(ps,becp_nc)
        !
        IF ( nkb == 0 ) RETURN
        !
-       ! ALLOCATE (ps_d( nkb, npol, m), STAT=ierr )
-       CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr )
-       !
+       ALLOCATE (ps( nkb, npol, m), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' add_vuspsi_nc ', ' error allocating ps_d ', ABS( ierr ) )
+          CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
        !
        ALLOCATE( becp_nc(size(becp%nc,1),size(becp%nc,2),size(becp%nc,3)), stat=ierr )
        IF( ierr /= 0 ) &
@@ -275,8 +234,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        becp_nc = becp%nc
        !$acc end kernels
        !
-       !  OPTIMIZE HERE: possibly streamline
-       !
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
@@ -284,24 +241,24 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              !
              IF ( ityp(na) == nt ) THEN
                 !
-                !$acc host_data use_device(deeq_nc,becp_nc)
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                !$acc host_data use_device(deeq_nc,becp_nc,ps)
+                CALL MYZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc(1,1,na,1), nhm, becp_nc(ofsbeta(na)+1,1,1), 2*nkb, &
-                          (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1,1), 2*nkb )
+                          (0.0_dp, 0.0_dp), ps(ofsbeta(na)+1,1,1), 2*nkb )
 
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                CALL MYZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc(1,1,na,2), nhm, becp_nc(ofsbeta(na)+1,2,1), 2*nkb, &
-                          (1.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1,1), 2*nkb )
+                          (1.0_dp, 0.0_dp), ps(ofsbeta(na)+1,1,1), 2*nkb )
 
 
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                CALL MYZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc(1,1,na,3), nhm, becp_nc(ofsbeta(na)+1,1,1), 2*nkb, &
-                          (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,2,1), 2*nkb )
+                          (0.0_dp, 0.0_dp), ps(ofsbeta(na)+1,2,1), 2*nkb )
 
 
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                CALL MYZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc(1,1,na,4), nhm, becp_nc(ofsbeta(na)+1,2,1), 2*nkb, &
-                          (1.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,2,1), 2*nkb )
+                          (1.0_dp, 0.0_dp), ps(ofsbeta(na)+1,2,1), 2*nkb )
                 !$acc end host_data
                 !
 !                DO ibnd = 1, m
@@ -335,18 +292,16 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           !
        END DO
        !
-       !$acc host_data use_device(vkb)
-       call ZGEMM ('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb, &
-                   lda, ps_d, nkb, ( 1.D0, 0.D0 ) , hpsi_d, lda )
+       !$acc host_data use_device(vkb,ps,hpsi)
+       call MYZGEMM ('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb, &
+                   lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
        !$acc end host_data
        !
-       CALL dev_buf%release_buffer(ps_d, ierr ) ! DEALLOCATE (ps_d)
-       !
+       DEALLOCATE (ps)
        DEALLOCATE( becp_nc )
        !
        RETURN
        !
      END SUBROUTINE add_vuspsi_nc_gpu
-#endif
      !
 END SUBROUTINE add_vuspsi_gpu
