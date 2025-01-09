@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
+SUBROUTINE add_vuspsi_acc( lda, n, m, hpsi )
   !----------------------------------------------------------------------------
   !! This routine applies the nonlocal potential V=sum_lm |beta_l>D_lm<beta_m|
   !! to a set of vectors |psi_i> and puts the result in |hpsi_i>. 
@@ -39,15 +39,15 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
   !
   IF ( gamma_only ) THEN
      !
-     CALL add_vuspsi_gamma_gpu()
+     CALL add_vuspsi_gamma_acc()
      !
   ELSE IF ( noncolin) THEN
      !
-     CALL add_vuspsi_nc_gpu ()
+     CALL add_vuspsi_nc_acc ()
      !
   ELSE
      !
-     CALL add_vuspsi_k_gpu()
+     CALL add_vuspsi_k_acc()
      !
   END IF
   !
@@ -58,7 +58,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
   CONTAINS
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE add_vuspsi_gamma_gpu()
+     SUBROUTINE add_vuspsi_gamma_acc()
        !-----------------------------------------------------------------------
        !! Gamma-only version
        !
@@ -126,10 +126,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
        !
        RETURN
        !
-     END SUBROUTINE add_vuspsi_gamma_gpu
+     END SUBROUTINE add_vuspsi_gamma_acc
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE add_vuspsi_k_gpu()
+     SUBROUTINE add_vuspsi_k_acc()
        !-----------------------------------------------------------------------
        !! k-point version, see add_vuspsi_gamma for comments
        !
@@ -206,10 +206,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
        !
        RETURN
        !
-     END SUBROUTINE add_vuspsi_k_gpu
+     END SUBROUTINE add_vuspsi_k_acc
      !  
      !-----------------------------------------------------------------------
-     SUBROUTINE add_vuspsi_nc_gpu()
+     SUBROUTINE add_vuspsi_nc_acc()
        !-----------------------------------------------------------------------
        !! NOn-colinear/spinorbit case, see add_vuspsi_gamma for comments
        !
@@ -302,6 +302,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi )
        !
        RETURN
        !
-     END SUBROUTINE add_vuspsi_nc_gpu
+     END SUBROUTINE add_vuspsi_nc_acc
      !
-END SUBROUTINE add_vuspsi_gpu
+END SUBROUTINE add_vuspsi_acc

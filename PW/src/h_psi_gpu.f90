@@ -230,7 +230,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
      CALL start_clock( 'h_psi:calbec' )
      Call calbec(offload_type, n, vkb, psi, becp, m )
      CALL stop_clock( 'h_psi:calbec' )
-     CALL add_vuspsi_gpu( lda, n, m, hpsi )
+     CALL add_vuspsi_acc( lda, n, m, hpsi )
      !
   END IF
   !  
