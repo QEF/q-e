@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 Quantum ESPRESSO group
+! Copyright (C) 2003-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -77,7 +77,7 @@ MODULE basic_algebra_routines
        !
        !
        external_product_(1) = + vec1(2)*vec2(3) - vec1(3)*vec2(2)
-       external_product_(2) = - vec1(1)*vec2(3) - vec1(3)*vec2(1)
+       external_product_(2) = - vec1(1)*vec2(3) + vec1(3)*vec2(1)
        external_product_(3) = + vec1(1)*vec2(2) - vec1(2)*vec2(1)
        !
      END FUNCTION external_product_
