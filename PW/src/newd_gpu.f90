@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,15 +11,11 @@ MODULE dfunct_gpum
 CONTAINS
 !
 !-------------------------------------------------------------------------
-SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
+SUBROUTINE newq_acc(vr,deeq,skip_vltot)
   !----------------------------------------------------------------------
   !! This routine computes the integral of the perturbed potential with
   !! the Q function
   !
-#if defined(__CUDA)
-  USE cudafor
-  USE cublas
-#endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega, tpiba
@@ -34,15 +30,12 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
-#if defined(__CUDA)
-  USE device_fbuff_m,       ONLY : buffer=>dev_buf
-  IMPLICIT NONE
-#endif
   !
+  IMPLICIT NONE
   !
   ! Input: potential , output: contribution to integral
   REAL(kind=dp), intent(in)  :: vr(dfftp%nnr,nspin)
-  REAL(kind=dp), intent(out) :: deeq_d( nhm, nhm, nat, nspin )
+  REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
   LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
   ! INTERNAL
   INTEGER :: ngm_s, ngm_e, ngm_l
@@ -50,23 +43,14 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt, ierr
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux_d(:,:), qgm(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux(:,:), qgm(:,:)
     ! work space
-  REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux_d(:,:)
+  REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux(:,:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact
   !
-#if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d, aux_d, deeaux_d
-#endif
   ! variable to map index of atoms of the same type
-  INTEGER, ALLOCATABLE :: na_to_nab_h(:)
-  INTEGER, POINTER     :: na_to_nab_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: na_to_nab_d
-  !
-  ALLOCATE(na_to_nab_h(nat))
-  CALL buffer%lock_buffer(na_to_nab_d, nat, ierr)
+  INTEGER, ALLOCATABLE :: na_to_nab(:)
   !
   IF ( gamma_only ) THEN
      fact = 2.0_dp
@@ -75,7 +59,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ENDIF
   !
   !$acc kernels
-  deeq_d(:,:,:,:) = 0.D0
+  deeq(:,:,:,:) = 0.D0
   !$acc end kernels
   !
   ! With k-point parallelization, distribute G-vectors across processors
@@ -85,12 +69,11 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   !
   CALL divide (inter_pool_comm, ngm, ngm_s, ngm_e)
   ngm_l = ngm_e-ngm_s+1
-  ! for the extraordinary unlikely case of more processors than G-vectors
+  IF ( ngm_l < 1 ) CALL errore('newq_acc','no G-vectors?!?',1)
   !
-  IF ( ngm_l <= 0 ) GO TO 10
-  !
+  ALLOCATE(na_to_nab(nat))
   ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0( ngm_l, lmaxq*lmaxq ) )
-  !$acc data create( vaux, qmod, ylmk0 )
+  !$acc data create( na_to_nab, vaux, qmod, ylmk0 )
   !
   CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !
@@ -118,21 +101,22 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
            IF ( ityp(na) == nt ) THEN
-              na_to_nab_h(na) = nab
+              na_to_nab(na) = nab
            ELSE
-              na_to_nab_h(na) = -1
+              na_to_nab(na) = -1
            END IF
         END DO
         IF ( nab == 0 ) CYCLE ! No atoms for this type (?!?)
-        !
-        na_to_nab_d(1:nat) = na_to_nab_h(1:nat)
+        !$acc update device(na_to_nab)
         !
         ! nij = max number of (ih,jh) pairs per atom type nt
         !
         nhnt = nh(nt)
         nij = nh(nt)*(nh(nt)+1)/2
         ALLOCATE ( qgm(ngm_l,nij) )
-        !$acc data create( qgm ) present(eigts1, eigts2, eigts3, mill)
+        ALLOCATE ( aux (ngm_l, nab ), deeaux(nij, nab) )
+        !
+        !$acc data create( qgm, aux, deeaux ) present(eigts1, eigts2, eigts3, mill)
         !
         ! ... Compute and store Q(G) for this atomic species 
         ! ... (without structure factor)
@@ -145,18 +129,15 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
            END DO
         END DO
         !
-        ALLOCATE ( aux_d (ngm_l, nab ), deeaux_d(nij, nab) )
-        !$acc host_data use_device(qgm)
-        !
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
         DO is = 1, nspin_mag
            !$acc parallel loop collapse(2)
            DO na = 1, nat
               DO ig = 1, ngm_l
-                 nb = na_to_nab_d(na)
+                 nb = na_to_nab(na)
                  IF (nb > 0) &
-                    aux_d(ig,nb) = vaux(ig,is) * CONJG ( &
+                    aux(ig,nb) = vaux(ig,is) * CONJG ( &
                       eigts1(mill(1,ngm_s+ig-1),na) * &
                       eigts2(mill(2,ngm_s+ig-1),na) * &
                       eigts3(mill(3,ngm_s+ig-1),na) )
@@ -165,48 +146,47 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
            !
            ! ... here we compute the integral Q*V for all atoms of this kind
            !
-           CALL MYDGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, aux_d, &
-                    2*ngm_l, 0.0_dp, deeaux_d, nij )
+           !$acc host_data use_device(qgm,aux,deeaux)
+           CALL MYDGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, aux, &
+                    2*ngm_l, 0.0_dp, deeaux, nij )
            IF ( gamma_only .AND. gstart == 2 ) &
-                CALL MYDGER(nij, nab,-1.0_dp, qgm, 2*ngm_l,aux_d,2*ngm_l,deeaux_d,nij)
+                CALL MYDGER(nij, nab,-1.0_dp, qgm, 2*ngm_l,aux,2*ngm_l,deeaux,nij)
+           !$acc end host_data
            !
            nhnt = nh(nt)
-           !$cuf kernel do(3)
+           !$acc parallel loop collapse(3)
            DO na = 1, nat
               DO ih = 1, nhnt
                  DO jh = 1, nhnt
-                    nb = na_to_nab_d(na)
+                    nb = na_to_nab(na)
                     IF (nb > 0) THEN
                        ijh = jh + ((ih-1)*(2*nhnt-ih))/2
-                       IF (jh >= ih) deeq_d(ih,jh,na,is) = omega * deeaux_d(ijh,nb)
-                       IF (jh > ih) deeq_d(jh,ih,na,is) = deeq_d(ih,jh,na,is)
+                       IF (jh >= ih) deeq(ih,jh,na,is) = omega * deeaux(ijh,nb)
+                       IF (jh > ih) deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
                     END IF
                  END DO
               END DO
            END DO
            !
         END DO
-        !$acc end host_data
-        !
-        DEALLOCATE ( deeaux_d, aux_d )
         !$acc end data
+        !
+        DEALLOCATE ( deeaux, aux )
         DEALLOCATE ( qgm )
         !
      END IF
      !
   END DO
   !
+  !$acc host_data use_device(deeq)
+  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), inter_pool_comm )
+  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
+  !$acc end host_data
   !$acc end data
   DEALLOCATE( qmod, ylmk0, vaux )
+  DEALLOCATE(na_to_nab)
   !
-  10 CONTINUE
-  DEALLOCATE(na_to_nab_h); CALL buffer%release_buffer(na_to_nab_d, ierr)
-  ! REPLACE THIS WITH THE NEW allgather with type or use CPU variable! OPTIMIZE HERE
-  CALL mp_sum( deeq_d( :, :, :, 1:nspin_mag ), inter_pool_comm )
-  CALL mp_sum( deeq_d( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
-#endif
-  !
-END SUBROUTINE newq_gpu
+END SUBROUTINE newq_acc
   !
 !----------------------------------------------------------------------------
 SUBROUTINE newd_gpu( ) 
@@ -226,27 +206,20 @@ SUBROUTINE newd_gpu( )
   USE realus,               ONLY : newq_r
   USE control_flags,        ONLY : tqr
   USE ldaU,                 ONLY : lda_plus_U, Hubbard_projectors
-#if defined(__CUDA)
-  use cudafor
-  use cublas
-  USE device_fbuff_m,       ONLY : buffer=>dev_buf
-#endif
   !
   IMPLICIT NONE
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb, ierr
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-  INTEGER, POINTER :: ityp_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: ityp_d
   !
+  !$acc enter data create(ityp)
+  !$acc update device(ityp)
   IF ( .NOT. okvan ) THEN
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors
      !
-     CALL buffer%lock_buffer(ityp_d, nat, ierr)
-     ityp_d(1:nat)=ityp(1:nat)
+     !$acc data present (deeq, deeq_nc, dvan, dvan_so)
      DO nt = 1, ntyp
         !
         nht = nh(nt)
@@ -258,7 +231,7 @@ SUBROUTINE newd_gpu( )
               DO na = 1, nat
                  DO jh = 1, nht
                     DO ih = 1, nht
-                       IF ( ityp_d(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so(ih,jh,is,nt)
+                       IF ( ityp(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so(ih,jh,is,nt)
                     END DO
                  END DO
               END DO
@@ -270,7 +243,7 @@ SUBROUTINE newd_gpu( )
            DO na = 1, nat
               DO jh = 1, nht
                  DO ih = 1, nht
-                    IF ( ityp_d(na) == nt ) THEN
+                    IF ( ityp(na) == nt ) THEN
                        deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt)
                        deeq_nc(ih,jh,na,2) = ( 0.D0, 0.D0 )
                        deeq_nc(ih,jh,na,3) = ( 0.D0, 0.D0 )
@@ -289,7 +262,7 @@ SUBROUTINE newd_gpu( )
                     DO jh = 1, nht
                        DO ih = 1, nht
                           !
-                          IF ( ityp_d(na) == nt ) deeq(ih,jh,na,is) = dvan(ih,jh,nt)
+                          IF ( ityp(na) == nt ) deeq(ih,jh,na,is) = dvan(ih,jh,nt)
                           !
                        END DO
                     END DO
@@ -302,34 +275,25 @@ SUBROUTINE newd_gpu( )
         !
      END DO
      !
-     ! ... early return
-     !
-     CALL buffer%release_buffer(ityp_d, ierr)
-     !
-     ! ... sync with CPU
+     ! ... sync with CPU (not sure this is needed)
      if (noncolin) then
         !$acc update self(deeq_nc)
      else
         !$acc update self(deeq)
      endif
+     !$acc end data
      !
      RETURN
      !
   END IF
   !
-  CALL start_clock_gpu( 'newd' )
-  !
-  ! move atom type info to GPU
-  CALL buffer%lock_buffer(ityp_d, nat, ierr)
-  ityp_d(1:nat)=ityp(1:nat)
+  CALL start_clock( 'newd' )
   !
   IF (tqr) THEN
      CALL newq_r(v%of_r,deeq,.false.)
      !$acc update device(deeq)
   ELSE
-     !$acc host_data use_device(deeq)
-     CALL newq_gpu(v%of_r,deeq,.false.)
-     !$acc end host_data
+     CALL newq_acc(v%of_r,deeq,.false.)
   END IF
   !
   IF (noncolin) THEN
@@ -346,11 +310,11 @@ SUBROUTINE newd_gpu( )
         !
         IF (upf(nt)%has_so) THEN
            !
-           CALL newd_so_gpu(nt)
+           CALL newd_so_acc(nt)
            !
         ELSE
            !
-           CALL newd_nc_gpu(nt)
+           CALL newd_nc_acc(nt)
            !
         END IF
         !
@@ -362,7 +326,7 @@ SUBROUTINE newd_gpu( )
            DO na = 1, nat
               DO ih = 1, nht
                  DO jh = 1, nht
-                    IF ( ityp_d(na) == nt ) THEN
+                    IF ( ityp(na) == nt ) THEN
                        deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan(ih,jh,nt)
                     END IF
                  END DO
@@ -386,21 +350,22 @@ SUBROUTINE newd_gpu( )
     !$acc end host_data
   ENDIF
   !
-  CALL buffer%release_buffer(ityp_d, ierr)
-  CALL stop_clock_gpu( 'newd' )
+  CALL stop_clock( 'newd' )
   !
+  ! ... sync with CPU (not sure this is needed)
   if (noncolin) then
      !$acc update self(deeq_nc)
   else
      !$acc update self(deeq)
   endif
   !
+  !$acc exit data delete(ityp)
   RETURN
   !
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE newd_so_gpu(nt)
+    SUBROUTINE newd_so_acc(nt)
       !------------------------------------------------------------------------
       !
       USE upf_spinorb,    ONLY : fcoef
@@ -422,14 +387,14 @@ SUBROUTINE newd_gpu( )
             ijs = ijs + 1
             !
             IF (domag) THEN
-               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef,ityp)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
                      !
                      DO jh = 1, nhnt
                         !
-                        IF ( ityp_d(na) == nt ) THEN
+                        IF ( ityp(na) == nt ) THEN
                            !
                            deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
                            !
@@ -464,14 +429,14 @@ SUBROUTINE newd_gpu( )
                !
             ELSE
                !
-               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq,fcoef,ityp)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
                      !
                      DO jh = 1, nhnt
                         !
-                        IF ( ityp_d(na) == nt ) THEN
+                        IF ( ityp(na) == nt ) THEN
                            !
                            deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
                            !
@@ -504,10 +469,10 @@ SUBROUTINE newd_gpu( )
       !
     RETURN
       !
-    END SUBROUTINE newd_so_gpu
+    END SUBROUTINE newd_so_acc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE newd_nc_gpu(nt)
+    SUBROUTINE newd_nc_acc(nt)
       !------------------------------------------------------------------------
       !
       USE ions_base,     ONLY : nat
@@ -519,12 +484,12 @@ SUBROUTINE newd_gpu( )
       !
       nhnt = nh(nt)
       !
-      !$acc parallel loop collapse(3) present(deeq_nc,deeq)
+      !$acc parallel loop collapse(3) present(deeq_nc,deeq,ityp)
       DO na = 1, nat
          DO ih = 1, nhnt
             DO jh = 1, nhnt
                !
-               IF ( ityp_d(na) == nt ) THEN
+               IF ( ityp(na) == nt ) THEN
                   !
                   IF (lspinorb) THEN
                      deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
@@ -554,8 +519,7 @@ SUBROUTINE newd_gpu( )
       END DO
       !
     RETURN
-    END SUBROUTINE newd_nc_gpu
-#endif
+    END SUBROUTINE newd_nc_acc
     !
 END SUBROUTINE newd_gpu
 
