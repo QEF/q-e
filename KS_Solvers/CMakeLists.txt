@@ -43,8 +43,7 @@ set(src_dense
     DENSE/rotate_wfc_gamma_gpu.f90
     DENSE/gram_schmidt_k_gpu.f90
     DENSE/gram_schmidt_gamma_gpu.f90
-    DENSE/rotate_wfc_k_gpu.f90
-    DENSE/rotate_driver_cuf.f90)
+    DENSE/rotate_wfc_k_gpu.f90)
 qe_enable_cuda_fortran("${src_dense}")
 
 set(src_paro

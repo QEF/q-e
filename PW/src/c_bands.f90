@@ -463,11 +463,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE IF ( .NOT. lrot ) THEN
              !
              IF (.not. use_gpu) THEN
-                CALL rotate_xpsi_driver( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi_driver( h_psi, s_psi, h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(:,ik), use_para_diag, .TRUE. )
 #if defined(__CUDA)
              ELSE
-                CALL rotate_xpsi_driver_cuf( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi_driver( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(:,ik), use_para_diag, .TRUE.)
 #endif
              END IF
@@ -768,12 +768,12 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           ELSE IF ( .NOT. lrot ) THEN
              !
              IF ( .not. use_gpu ) THEN
-                CALL rotate_xpsi_driver( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi_driver( h_psi, s_psi, h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), & 
                                   use_para_diag, gamma_only )
 #if defined(__CUDA)
              ELSE
-                CALL rotate_xpsi_driver_cuf( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi_driver( h_psi, s_psi, h_psi_gpu, s_psi_acc, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), &
                                   use_para_diag, gamma_only )
 #endif
