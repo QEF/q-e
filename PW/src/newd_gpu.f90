@@ -296,10 +296,7 @@ SUBROUTINE newd_gpu( )
      CALL newq_acc(v%of_r,deeq,.false.)
   END IF
   !
-  ! FIXME: WHY IS NONCOLINEAR CASE DIFFERENT?
-  IF (noncolin) THEN
-    call add_paw_to_deeq_acc(deeq)
-  ENDIF
+  call add_paw_to_deeq_acc(deeq)
   !
   types : &
   DO nt = 1, ntyp
@@ -336,11 +333,6 @@ SUBROUTINE newd_gpu( )
      END IF if_noncolin
      !
   END DO types
-  !
-  ! FIXME: WHY IS NONCOLINEAR CASE DIFFERENT?
-  IF (.NOT.noncolin) THEN
-    CALL add_paw_to_deeq_acc(deeq)
-  ENDIF
   !
   IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) THEN
     CALL add_vhub_to_deeq_acc(deeq)
