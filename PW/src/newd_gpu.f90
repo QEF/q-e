@@ -296,11 +296,7 @@ SUBROUTINE newd_gpu( )
      CALL newq_acc(v%of_r,deeq,.false.)
   END IF
   !
-  IF (noncolin) THEN
-    !$acc host_data use_device(deeq)
-    call add_paw_to_deeq_gpu(deeq)
-    !$acc end host_data
-  ENDIF
+  call add_paw_to_deeq_acc(deeq)
   !
   types : &
   DO nt = 1, ntyp
@@ -338,16 +334,8 @@ SUBROUTINE newd_gpu( )
      !
   END DO types
   !
-  IF (.NOT.noncolin) THEN
-    !$acc host_data use_device(deeq)
-    CALL add_paw_to_deeq_gpu(deeq)
-    !$acc end host_data
-  ENDIF
-  !
   IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) THEN
-    !$acc host_data use_device(deeq)
-    CALL add_vhub_to_deeq_gpu(deeq)
-    !$acc end host_data
+    CALL add_vhub_to_deeq_acc(deeq)
   ENDIF
   !
   CALL stop_clock( 'newd' )
