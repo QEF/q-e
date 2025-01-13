@@ -25,6 +25,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   !! no longer computed here but in update_pot.
   !
   USE constants,              ONLY : e2, eps4, eps6, ry_kbar
+  USE control_flags,          ONLY : tnosep
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, prefix
   USE kinds,                  ONLY : DP
@@ -37,13 +38,15 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
-                                     lconstrain, lmd, tr2, iprint
+                                     lconstrain, lmd, tr2, iprint, tnosep
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
+  USE ions_nose,              ONLY : ions_nosevel, ions_noseupd, vnhp, xnhp0, xnhpp, xnhpm, nhpcl, nhpdim,&
+                                     kbt, nhpbeg, nhpend, ekin2nhp, qnp, gkbt2nhp
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
   USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel, elapsed_time
@@ -341,7 +344,10 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
            !
            IF ( ANY( if_pos(:,:) == 1 ) ) THEN
               !
+              IF (tnosep) CALL ions_nosevel(vnhp, xnhp0, xnhpm, dt, nhpcl, nhpdim) 
               CALL verlet()
+              IF (tnosep) CALL ions_noseupd(xnhpp, xnhp0, xnhpm, dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
+                               nhpcl, nhpdim, nhpbeg, nhpend)
               !
            END IF
            !

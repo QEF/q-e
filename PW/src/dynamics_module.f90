@@ -180,10 +180,11 @@ CONTAINS
       !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
+      USE ions_nose,          ONLY : vnhp, atm2nhp
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
-      USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
+      USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress, tnosep
       ! istep counts all MD steps, including those of previous runs
       USE constraints_module, ONLY : check_constraint, remove_constr_force, &
          remove_constr_vec, check_wall_constraint
@@ -286,6 +287,11 @@ CONTAINS
          ! ... remove the component of the velocity along the
          ! ... constraint gradient
          !
+         IF (tnosep) THEN 
+           DO na = 1, nat
+             acc(:, na) = acc(:,na) - vnhp(atm2nhp(na)) * vel(:,na)
+           END DO
+         END IF
          IF ( lconstrain ) &
             CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
          !
@@ -811,14 +817,21 @@ CONTAINS
      !------------------------------------------------------------------------
      USE cell_base,      ONLY : alat
      USE ions_base,      ONLY : nat
+     USE ions_nose,      ONLY : ekin2nhp, atm2nhp
+     USE control_flags,  ONLY : tnosep
      IMPLICIT NONE
      REAL (dp), INTENT (out) :: ekin, temp_new
      INTEGER :: na
+     REAL(dp) :: ekin_at 
      !
      ekin = 0.0_dp
+     ekin_at = 0.0_dp 
+     ekin2nhp = 0.0_dp 
      DO na = 1, nat
-        ekin  = ekin + 0.5_dp * mass(na) * &
+        ekin_at  =  0.5_dp * mass(na) * &
              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+        ekin = ekin + ekin_at
+        IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + ekin_at 
      ENDDO
      ekin = ekin*alat**2
      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
