@@ -139,7 +139,7 @@ CONTAINS
       !
       IF( tend ) GOTO 120
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
-                                 input_line(1:1) == '!' ) GOTO 100
+          input_line == '/' .OR. input_line(1:1) == '!' ) GOTO 100
       !
       DO i = 1, len_trim( input_line )
          input_line( i : i ) = capital( input_line( i : i ) )
