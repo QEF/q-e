@@ -7,7 +7,9 @@ set(src_pw
    src/add_vuspsi_acc.f90
    src/add_gatefield.f90 
    src/add_paw_to_deeq.f90 
+   src/add_paw_to_deeq_acc.f90 
    src/add_vhub_to_deeq.f90 
+   src/add_vhub_to_deeq_acc.f90 
    src/addusdens.f90 
    src/addusforce.f90 
    src/addusstress.f90 
@@ -20,6 +22,7 @@ set(src_pw
    src/average_pp.f90 
    src/acfdt_in_pw.f90 
    src/newd.f90 
+   src/newd_acc.f90 
    src/beef.f90 
    src/bp_mod.f90 
    src/bp_c_phase.f90 
@@ -192,6 +195,7 @@ set(src_pw
    src/loc_scdm.f90 
    src/loc_scdm_k.f90 
    src/scf_mod.f90 
+   src/scissor.f90
    src/set_kplusq.f90 
    src/set_kup_and_kdw.f90 
    src/set_occupations.f90 
@@ -200,6 +204,7 @@ set(src_pw
    src/set_vrs.f90 
    src/setlocal.f90 
    src/setup.f90 
+   src/sic.f90
    src/starting_scf_mod.f90
    src/stop_run.f90 
    src/stres_cc.f90 
@@ -247,19 +252,14 @@ set(src_pw
    src/wannier_clean.f90 
    src/wannier_occ.f90
    src/d3hess_mod.f90
-   # GPU
-   src/newd_gpu.f90
-   src/add_paw_to_deeq_gpu.f90
+   # CUDA Fortran
    src/rotate_wfc_gpu.f90
    src/hs_1psi_gpu.f90
-   src/add_vhub_to_deeq_gpu.f90
    src/s_1psi_gpu.f90
    src/h_psi_gpu.f90
    src/utils_gpu.f90
    src/vhpsi_gpu.f90
-   src/hs_psi_gpu.f90
-   src/sic.f90
-   src/scissor.f90)
+   src/hs_psi_gpu.f90)
 # OSCDFT
 if (QE_ENABLE_OSCDFT)
     list(APPEND src_pw
