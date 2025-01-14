@@ -358,9 +358,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 IF (.not. use_gpu) THEN
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
-                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-                   !$acc end host_data
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
@@ -672,9 +670,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 IF ( .not. use_gpu ) THEN
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
-                   !$acc host_data use_device(et)
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-                   !$acc end host_data
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
