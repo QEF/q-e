@@ -64,7 +64,7 @@ write_upf_new.o \
 xmltools.o \
 ylmr2.o
 
-# GPU versions of routines
+# CUDA Fortran routines
 OBJS_GPU= \
   ylmr2_gpu.o
 
