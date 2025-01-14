@@ -221,12 +221,10 @@ CONTAINS
          !
          ! ... the file is read :  simulation is continuing
          !
-         print *, 'qui'
          READ( UNIT = 4, FMT = * ) restart_id
          !
          IF ( restart_id .EQ. restart_verlet ) THEN
             ! Restarting...
-            print *, 'qua'
             vel_defined = .FALSE.
             !
             ! tau_tmp is read here but not used. It is used for restart in

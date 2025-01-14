@@ -55,6 +55,10 @@ SUBROUTINE summary()
   USE environment,     ONLY : print_cuda_info
   USE london_module,   ONLY : print_london
   USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
+  USE dynamics_module, ONLY : dt 
+  USE control_flags,   ONLY : tnosep
+  USE ions_nose,       ONLY : ions_nose_info 
+
   !
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
@@ -165,6 +169,7 @@ SUBROUTINE summary()
 #if defined (__ENVIRON)
   IF (use_environ) CALL print_environ_summary()
 #endif
+call ions_nose_info(dt)
   !
   ! ... CUDA
   !
