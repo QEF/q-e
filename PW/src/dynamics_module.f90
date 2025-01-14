@@ -221,10 +221,12 @@ CONTAINS
          !
          ! ... the file is read :  simulation is continuing
          !
+         print *, 'qui'
          READ( UNIT = 4, FMT = * ) restart_id
          !
          IF ( restart_id .EQ. restart_verlet ) THEN
             ! Restarting...
+            print *, 'qua'
             vel_defined = .FALSE.
             !
             ! tau_tmp is read here but not used. It is used for restart in
@@ -282,16 +284,19 @@ CONTAINS
       !
       ! ... Verlet integration scheme
       !
+      IF (tnosep) THEN 
+         DO na = 1, nat
+           print *, 'acc is ', acc(:,:)
+           print *, 'acc Nose term is' , - 0.5_dp * vnhp(atm2nhp(na)) * vel(:,na)
+           acc(:, na) = acc(:,na) - 0.5_dp * vnhp(atm2nhp(na)) * vel(:,na)
+         END DO
+      END IF
+
       IF (vel_defined) THEN
          !
          ! ... remove the component of the velocity along the
          ! ... constraint gradient
          !
-         IF (tnosep) THEN 
-           DO na = 1, nat
-             acc(:, na) = acc(:,na) - vnhp(atm2nhp(na)) * vel(:,na)
-           END DO
-         END IF
          IF ( lconstrain ) &
             CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
          !
@@ -831,7 +836,7 @@ CONTAINS
         ekin_at  =  0.5_dp * mass(na) * &
              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
         ekin = ekin + ekin_at
-        IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + ekin_at 
+        IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + 0.5_dp * ekin_at*alat**2 
      ENDDO
      ekin = ekin*alat**2
      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
