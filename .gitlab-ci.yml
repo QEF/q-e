@@ -8,7 +8,7 @@ build:cmake-gnu:
     - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
     - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
     - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-    - apt-get install -qq build-essential git cmake libopenblas-dev libfftw3-dev libopenmpi-dev
+    - apt-get install -qq build-essential git gfortran cmake libopenblas-dev libfftw3-dev libopenmpi-dev
     - cmake --version
     - mkdir build
     - cd build
