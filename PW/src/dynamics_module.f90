@@ -35,7 +35,8 @@ MODULE dynamics_module
    SAVE
    PRIVATE
    PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
-             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
+             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars,& 
+             get_ndof
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, elapsed_time
    ! FIRE parameters
@@ -284,8 +285,6 @@ CONTAINS
       !
       IF (tnosep) THEN 
          DO na = 1, nat
-           print *, 'acc is ', acc(:,:)
-           print *, 'acc Nose term is' , - 0.5_dp * vnhp(atm2nhp(na)) * vel(:,na)
            acc(:, na) = acc(:,na) - 0.5_dp * vnhp(atm2nhp(na)) * vel(:,na)
          END DO
       END IF
@@ -726,20 +725,20 @@ CONTAINS
          !
          IMPLICIT NONE
          !
-         INTEGER  :: na, nb
-         REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
+         INTEGER  :: na_, nb
+         REAL(DP) :: total_mass_, kt, sigma, ek, ml_(3), system_temp
          !
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
          !
-         DO na = 1, nat
+         DO na_ = 1, nat
             !
             sigma = SQRT( kt / mass(na) )
             !
             ! ... N.B. velocities must in a.u. units of alat
             !
-            vel(:,na) = gauss_dist( 0.D0, sigma, 3 ) / alat
+            vel(:,na_) = gauss_dist( 0.D0, sigma, 3 ) / alat
             !
          ENDDO
          !
@@ -761,15 +760,15 @@ CONTAINS
             ! ... if there is inversion symmetry, equivalent atoms have
             ! ... opposite velocities
             !
-            DO na = 1, nat
+            DO na_ = 1, nat
                !
-               nb = irt( ( nsym / 2 + 1 ), na )
+               nb = irt( ( nsym / 2 + 1 ), na_ )
                !
-               IF ( nb > na ) vel(:,nb) = - vel(:,na)
+               IF ( nb > na_ ) vel(:,nb) = - vel(:,na_)
                !
                ! ... the atom on the inversion center is kept fixed
                !
-               IF ( na == nb ) vel(:,na) = 0.D0
+               IF ( na_ == nb ) vel(:,na_) = 0.D0
                !
             ENDDO
             !
@@ -778,15 +777,15 @@ CONTAINS
             ! ... put total linear momentum equal zero if all atoms
             ! ... are free to move
             !
-            ml(:) = 0.D0
+            ml_(:) = 0.D0
             !
             IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
                !
-               total_mass = SUM( mass(1:nat) )
+               total_mass_ = SUM( mass(1:nat) )
                DO na = 1, nat
-                  ml(:) = ml(:) + mass(na)*vel(:,na)
+                  ml_(:) = ml_(:) + mass(na)*vel(:,na)
                ENDDO
-               ml(:) = ml(:) / total_mass
+               ml_(:) = ml_(:) / total_mass_
                !
             ENDIF
             !
@@ -794,12 +793,12 @@ CONTAINS
          !
          ek = 0.D0
          !
-         DO na = 1, nat
+         DO na_ = 1, nat
             !
-            vel(:,na) = vel(:,na) - ml(:)
+            vel(:,na_) = vel(:,na_) - ml_(:)
             !
-            ek = ek + 0.5D0 * mass(na) * &
-                     ( ( vel(1,na) )**2 + ( vel(2,na) )**2 + ( vel(3,na) )**2 )
+            ek = ek + 0.5D0 * mass(na_) * &
+                     ( ( vel(1,na_) )**2 + ( vel(2,na_) )**2 + ( vel(3,na_) )**2 )
             !
          ENDDO
          !
@@ -835,7 +834,7 @@ CONTAINS
              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
         ekin = ekin + ekin_at
         IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + 0.5_dp * ekin_at*alat**2 
-     ENDDO
+     END DO
      ekin = ekin*alat**2
      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
      !
@@ -1868,7 +1867,7 @@ CONTAINS
    END SUBROUTINE project_velocity
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE thermalize( nraise, system_temp, required_temp )
+   SUBROUTINE thermalize( nraise_, system_temp, required_temp )
       !-----------------------------------------------------------------------
       !! * Berendsen rescaling (Eq. 7.59 of Allen & Tildesley);
       !! * rescale the velocities by a factor 3 / 2KT / Ek.
@@ -1876,11 +1875,11 @@ CONTAINS
       IMPLICIT NONE
       !
       REAL(DP), INTENT(IN) :: system_temp, required_temp
-      INTEGER, INTENT(IN) :: nraise
+      INTEGER, INTENT(IN) :: nraise_
       !
       REAL(DP) :: aux
       !
-      IF ( nraise > 0 ) THEN
+      IF ( nraise_ > 0 ) THEN
          !
          ! ... Berendsen rescaling (Eq. 7.59 of Allen & Tildesley)
          ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
@@ -2012,7 +2011,7 @@ CONTAINS
    END SUBROUTINE smart_MC
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE thermalize_resamp_vscaling( nraise, system_temp, required_temp )
+   SUBROUTINE thermalize_resamp_vscaling( nraise_, system_temp, required_temp )
       !-----------------------------------------------------------------------
       !! Sample velocities using stochastic velocity rescaling, based on:
       !! Bussi, Donadio, Parrinello, J. Chem. Phys. 126, 014101 (2007),
@@ -2028,9 +2027,9 @@ CONTAINS
       IMPLICIT NONE
       !
       REAL(DP), INTENT(in) :: system_temp, required_temp
-      INTEGER,  INTENT(in) :: nraise
+      INTEGER,  INTENT(in) :: nraise_
       !
-      INTEGER  :: i, ndof
+      INTEGER  :: i
       REAL(DP) :: factor, rr
       REAL(DP) :: aux, aux2
       real(DP), external :: gasdev, sumnoises
@@ -2038,12 +2037,12 @@ CONTAINS
       !
       ndof = get_ndof()
       !
-      IF ( nraise > 0 ) THEN
+      IF ( nraise_ > 0 ) THEN
          !
          ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
          ! ... Equivalent to traditional rescaling if nraise=1
          !
-         factor = exp(-1.0/nraise)
+         factor = exp(-1.0/nraise_)
       ELSE
          !
          factor = 0.0
@@ -2055,9 +2054,9 @@ CONTAINS
          ! Applying Eq. (A7) from J. Chem. Phys. 126, 014101 (2007)
          !
          rr = gauss_dist(0.0D0, 1.0D0)
-         aux2 = factor + (1.0D0-factor)*( sum_of_gaussians2(ndof-1) +rr**2) &
-                * required_temp/(ndof*system_temp) &
-                + 2*rr*sqrt((factor*(1.0D0-factor)*required_temp)/(ndof*system_temp))
+         aux2 = factor + (1.0D0-factor)*( sum_of_gaussians2(ndof - 1) +rr**2) &
+                * required_temp/(ndof * system_temp) &
+                + 2*rr*sqrt((factor*(1.0D0-factor)*required_temp)/(ndof * system_temp))
          !
          aux  = sqrt(aux2)
 

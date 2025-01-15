@@ -45,7 +45,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
-  USE ions_nose,              ONLY : ions_nosevel, ions_noseupd, vnhp, xnhp0, xnhpp, xnhpm, nhpcl, nhpdim,&
+  USE ions_nose,              ONLY : ions_nosevel, ions_noseupd, ions_nose_shiftvar, vnhp, xnhp0, xnhpp, xnhpm, nhpcl, nhpdim,&
                                      kbt, nhpbeg, nhpend, ekin2nhp, qnp, gkbt2nhp
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
@@ -346,8 +346,11 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               !
               IF (tnosep) CALL ions_nosevel(vnhp, xnhp0, xnhpm, dt, nhpcl, nhpdim) 
               CALL verlet()
-              IF (tnosep) CALL ions_noseupd(xnhpp, xnhp0, xnhpm, dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
+              IF (tnosep) THEN 
+                CALL ions_noseupd(xnhpp, xnhp0, xnhpm, dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
                                nhpcl, nhpdim, nhpbeg, nhpend)
+                CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm)
+              END IF         
               !
            END IF
            !

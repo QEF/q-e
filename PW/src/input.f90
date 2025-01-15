@@ -1862,7 +1862,7 @@ SUBROUTINE pos_iosys ( )
                                  atom_mass, atom_label, lsg, tempw,&
                                  fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl
   USE kinds,              ONLY : DP
-  USE dynamics_module,    ONLY : vel
+  USE dynamics_module,    ONLY : vel, get_ndof
   USE force_mod,          ONLY : force
   USE ions_base,          ONLY : nat, nsp, ityp, tau, atm, &
                                  extfor, if_pos, amass, fixatom, tau_format, &
@@ -1960,6 +1960,7 @@ SUBROUTINE pos_iosys ( )
   CALL convert_tau ( tau_format, nat, tau )
   IF (tnosep) THEN 
      tions_base_init = .TRUE. 
+     IF (ndega == 0) ndega = get_ndof() 
      call ions_nose_init(tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
   END IF 
   !
