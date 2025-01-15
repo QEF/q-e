@@ -236,6 +236,8 @@ implicit none
 #if defined(__CUDA)
   attributes(device) :: a, b 
   call cublasDTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  
+#else
+  call DTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  
 #endif
   return
 end subroutine MYDTRSM
@@ -251,6 +253,7 @@ implicit none
   attributes(device) :: zx, zy 
   MYZDOTC = cublasZDOTC(n, zx, incx, zy, incy)  
 #else
+  DOUBLE COMPLEX, EXTERNAL :: ZDOTC
   MYZDOTC = ZDOTC(n, zx, incx, zy, incy)  
 #endif
   return
@@ -279,6 +282,7 @@ implicit none
   END DO
   MYZDOTC_VECTOR_GPU = ztemp
 #else
+  DOUBLE COMPLEX, EXTERNAL :: ZDOTC
   MYZDOTC_VECTOR_GPU = ZDOTC(n, zx, 1, zy, 1)  
 #endif
   return
@@ -294,6 +298,8 @@ implicit none
 #if defined(__CUDA)
   attributes(device) :: zx, zy 
   CALL cublasZSWAP(n, zx, incx, zy, incy)  
+#else
+  CALL ZSWAP(n, zx, incx, zy, incy)  
 #endif
   return
 END SUBROUTINE MYZSWAP
@@ -332,6 +338,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: zx, zy 
   CALL cublasZCOPY(n, zx, incx, zy, incy)  
+#else
+  CALL ZCOPY(n, zx, incx, zy, incy)  
 #endif
   RETURN
 END SUBROUTINE MYZCOPY
@@ -347,6 +355,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: zx, zy 
   CALL cublasZAXPY(n, za, zx, incx, zy, incy)  
+#else
+  CALL ZAXPY(n, za, zx, incx, zy, incy)  
 #endif
   RETURN
 END SUBROUTINE MYZAXPY
@@ -379,6 +389,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: zx
   CALL cublasZSCAL(n, za, zx, incx)
+#else
+  CALL ZSCAL(n, za, zx, incx)
 #endif
   RETURN
 END SUBROUTINE MYZSCAL
@@ -394,6 +406,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: x, y
   call cublasDCOPY(n, x, incx, y, incy)
+#else
+  call DCOPY(n, x, incx, y, incy)
 #endif
   RETURN
 END SUBROUTINE MYDCOPY
@@ -410,6 +424,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: x, y
   call cublasDAXPY( n, a, x, incx, y, incy)
+#else
+  call DAXPY( n, a, x, incx, y, incy)
 #endif
   RETURN
 END SUBROUTINE MYDAXPY
@@ -425,6 +441,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: x
   call cublasDSCAL(n, a, x, incx)
+#else
+  call DSCAL(n, a, x, incx)
 #endif
   RETURN
 END SUBROUTINE MYDSCAL
@@ -439,6 +457,8 @@ implicit none
 #if defined(__CUDA)
   attributes(device) :: dx, dy 
   CALL cublasDSWAP(n, dx, incx, dy, incy)  
+#else
+  CALL DSWAP(n, dx, incx, dy, incy)  
 #endif
   return
 END SUBROUTINE MYDSWAP
