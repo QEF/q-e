@@ -47,6 +47,7 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   INTEGER                  :: jbnd_start, jbnd_end
   COMPLEX(DP), ALLOCATABLE :: phi(:,:), hphi(:,:), sphi(:,:)
   INTEGER,     ALLOCATABLE :: owner_bgrp_id(:)
+  COMPLEX(DP), ALLOCATABLE :: sc(:), sc2(:,:)
   !
   IF ( npol == 1 ) THEN
      !
@@ -83,13 +84,16 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ALLOCATE( phi ( kdmx, nbnd ) )
   IF ( eigen_ ) ALLOCATE( hphi( kdmx, nbnd ) )
   IF ( uspp )   ALLOCATE( sphi( kdmx, nbnd ) )
+  !$acc enter data create( phi, sphi, hphi )
   ALLOCATE( owner_bgrp_id( nblock ) )
   !
+  !$acc kernels
   phi = ZERO
   !
   IF ( eigen_ ) hphi = ZERO
   !
   IF ( uspp )   sphi = ZERO
+  !$acc end kernels
   !
   ! ... Set owers of blocks
   !
@@ -106,13 +110,22 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   ! ... Set initial : |phi_j> = |psi_j>
   !
-  CALL ZCOPY( kdmx * nbnd, psi(1,1), 1, phi(1,1), 1 )
+  !$acc host_data use_device( psi, hpsi, spsi, phi, hphi, sphi )
+  CALL MYZCOPY( kdmx * nbnd, psi(1,1), 1, phi(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL ZCOPY( kdmx * nbnd, hpsi(1,1), 1, hphi(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, hpsi(1,1), 1, hphi(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL ZCOPY( kdmx * nbnd, spsi(1,1), 1, sphi(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, spsi(1,1), 1, sphi(1,1), 1 )
+  !$acc end host_data
+  !
+  ! ... Allocate buffers 
+  !
+  ALLOCATE (sc(nbsize)) 
+  IF ( nbnd .GT. nbsize)  ALLOCATE (sc2(nbsize, nbnd - nbsize)) 
+  !$acc enter data create( sc, sc2 )
+  !
   !
   ! ... Blocking loop
   !
@@ -124,10 +137,11 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      ibnd_end   = MIN( iblock * nbsize, nbnd )
      !
      IF ( owner_bgrp_id(iblock) == my_bgrp_id ) &
-     CALL gram_schmidt_diag( ibnd_start, ibnd_end )
+         CALL gram_schmidt_diag( ibnd_start, ibnd_end )
      !
      ! ... Bcast diagonal block
      !
+     !$acc host_data use_device( phi, hphi, sphi )
      CALL mp_bcast( phi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( eigen_ ) &
@@ -135,6 +149,7 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      !
      IF ( uspp ) &
      CALL mp_bcast( sphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     !$acc end host_data
      !
      ! ... Project off-diagonal block outside of diagonal block
      !
@@ -145,19 +160,27 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      jbnd_end   = MIN( jblock_end * nbsize, nbnd )
      !
      IF ( jblock_start <= jblock_end .AND. jbnd_start <= jbnd_end ) &
-     CALL project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
+         CALL project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
      !
   END DO
   !
+  ! ... Buffer Realese
+  !
+  !$acc exit data delete( sc, sc2 )
+  DEALLOCATE (sc) 
+  IF (nbnd .GT. nbsize) DEALLOCATE (sc2) 
+  !
   ! ... Copy psi <- phi
   !
-  CALL ZCOPY( kdmx * nbnd, phi(1,1), 1, psi(1,1), 1 )
+  !$acc host_data use_device( psi, hpsi, spsi, phi, hphi, sphi )
+  CALL MYZCOPY( kdmx * nbnd, phi(1,1), 1, psi(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL ZCOPY( kdmx * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL ZCOPY( kdmx * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
+  !$acc end host_data
   !
   ! ... Calculate energy eigenvalues
   !
@@ -167,9 +190,11 @@ SUBROUTINE gram_schmidt_k( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   IF ( reorder ) CALL sort_vectors( )
   !
+  !$acc exit data delete( phi, hphi, sphi)
   DEALLOCATE( phi )
   IF ( eigen_ ) DEALLOCATE( hphi )
   IF ( uspp )   DEALLOCATE( sphi )
+  !
   DEALLOCATE( owner_bgrp_id )
   !
   RETURN
@@ -185,11 +210,8 @@ CONTAINS
     INTEGER, INTENT(IN)  :: ibnd_start, ibnd_end
     !
     INTEGER                  :: ibnd
-    COMPLEX(DP), ALLOCATABLE :: sc(:)
     REAL(DP)                 :: norm
-    REAL(DP), EXTERNAL       :: DDOT
-    !
-    ALLOCATE( sc( ibnd_start:ibnd_end ) )
+    REAL(DP), EXTERNAL       :: MYDDOT
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -197,46 +219,54 @@ CONTAINS
           !
           ! ... <phi_j| S |psi_i>
           !
+          !$acc host_data use_device( phi, psi, spsi, sc )
           IF ( uspp ) THEN
              !
-             CALL ZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
-                         spsi(1,ibnd), 1, ZERO, sc(ibnd_start), 1 )
+             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
+                         spsi(1,ibnd), 1, ZERO, sc(1), 1 )
              !
           ELSE
              !
-             CALL ZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
-                         psi(1,ibnd), 1, ZERO, sc(ibnd_start), 1 )
+             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
+                         psi(1,ibnd), 1, ZERO, sc(1), 1 )
              !
           END IF
+          !$acc end host_data
           !
+          !$acc host_data use_device( sc )
           CALL mp_sum( sc, intra_bgrp_comm )
+          !$acc end host_data
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
-          CALL ZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi(1,ibnd_start), kdmx, &
-                      sc(ibnd_start), 1, ONE, phi(1,ibnd), 1 )
+          !$acc host_data use_device( phi, hphi, sphi, sc )
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi(1,ibnd_start), kdmx, &
+                      sc(1), 1, ONE, phi(1,ibnd), 1 )
           !
           IF ( eigen_ ) &
-          CALL ZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi(1,ibnd_start), kdmx, &
-                      sc(ibnd_start), 1, ONE, hphi(1,ibnd), 1 )
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi(1,ibnd_start), kdmx, &
+                      sc(1), 1, ONE, hphi(1,ibnd), 1 )
           !
           IF ( uspp ) &
-          CALL ZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi(1,ibnd_start), kdmx, &
-                      sc(ibnd_start), 1, ONE, sphi(1,ibnd), 1 )
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi(1,ibnd_start), kdmx, &
+                      sc(1), 1, ONE, sphi(1,ibnd), 1 )
+          !$acc end host_data 
           !
        END IF
        !
        ! ... Normalize : phi_i = phi_i / SQRT(<phi_i| S |phi_i>)
        !
+       !$acc host_data use_device( phi, sphi )
        IF ( uspp ) THEN
           !
-          norm = DDOT( 2*kdim, phi(1,ibnd), 1, sphi(1,ibnd), 1 )
+          norm = MYDDOT( 2*kdim, phi(1,ibnd), 1, sphi(1,ibnd), 1 )
           !
        ELSE
           !
-          norm = DDOT ( 2*kdim, phi(1,ibnd), 1, phi(1,ibnd), 1 ) 
+          norm = MYDDOT( 2*kdim, phi(1,ibnd), 1, phi(1,ibnd), 1 )
           !
        END IF
+       !$acc end host_data
        !
        CALL mp_sum( norm, intra_bgrp_comm )
        !
@@ -245,17 +275,17 @@ CONTAINS
        IF ( norm < eps16 ) &
        CALL errore( ' gram_schmidt_k ', ' vectors are linear dependent ', 1 )
        !
-       CALL ZDSCAL( kdim, 1._DP / norm, phi(1,ibnd), 1 )
+       !$acc host_data use_device( phi, hphi, sphi )
+       CALL MYZDSCAL( kdim, 1._DP / norm, phi(1,ibnd), 1 )
        !
        IF ( eigen_ ) &
-       CALL ZDSCAL( kdim, 1._DP / norm, hphi(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, hphi(1,ibnd), 1 )
        !
        IF ( uspp ) &
-       CALL ZDSCAL( kdim, 1._DP / norm, sphi(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, sphi(1,ibnd), 1 )
+       !$acc end host_data
        !
     END DO
-    !
-    DEALLOCATE( sc )
     !
     RETURN
     !
@@ -276,38 +306,38 @@ CONTAINS
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1
     !
-    ALLOCATE( sc( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
+    !$acc host_data use_device( psi, spsi, hpsi, phi, sphi, hphi, sc2 )
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
-       CALL ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
-                   spsi(1,jbnd_start), kdmx, ZERO, sc(ibnd_start,jbnd_start), ibnd_size )
+       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
+                   spsi(1,jbnd_start), kdmx, ZERO, sc2(1,1), nbsize )
        !
     ELSE
        !
-       CALL ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
-                   psi(1,jbnd_start), kdmx, ZERO, sc(ibnd_start,jbnd_start), ibnd_size )
+       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
+                   psi(1,jbnd_start), kdmx, ZERO, sc2(1,1), nbsize )
        !
     END IF
     !
-    CALL mp_sum( sc, intra_bgrp_comm )
+    CALL mp_sum( sc2, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
-    CALL ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi(1,ibnd_start), kdmx, &
-                sc(ibnd_start,jbnd_start), ibnd_size, ONE, phi(1,jbnd_start), kdmx )
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi(1,ibnd_start), kdmx, &
+                sc2(1,1), nbsize, ONE, phi(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
-    CALL ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi(1,ibnd_start), kdmx, &
-                sc(ibnd_start,jbnd_start), ibnd_size, ONE, hphi(1,jbnd_start), kdmx )
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi(1,ibnd_start), kdmx, &
+                sc2(1,1), nbsize, ONE, hphi(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
-    CALL ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi(1,ibnd_start), kdmx, &
-                sc(ibnd_start,jbnd_start), ibnd_size, ONE, sphi(1,jbnd_start), kdmx )
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi(1,ibnd_start), kdmx, &
+                sc2(1,1), nbsize, ONE, sphi(1,jbnd_start), kdmx )
     !
-    DEALLOCATE( sc )
+    !$acc end host_data
     !
     RETURN
     !
@@ -320,22 +350,30 @@ CONTAINS
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
     !
-    REAL(DP), EXTERNAL :: DDOT
+    REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
+    !$acc routine(MYDDOT_VECTOR_GPU) vector
     !
     ! ... <psi_i| H |psi_i>
     !
+    !$acc kernels
     e(:) = 0._DP
+    !$acc end kernels
     !
     CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
     !
+    !$acc parallel copyin(kdim, ibnd_start, ibnd_end) 
+    !$acc loop gang 
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = DDOT( 2*kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) 
+       e(ibnd) = MYDDOT_VECTOR_GPU( 2*kdim, psi(1,ibnd), hpsi(1,ibnd) ) 
        !
     END DO
+    !$acc end parallel 
     !
+    !$acc host_data use_device(e)
     CALL mp_sum( e(ibnd_start:ibnd_end), intra_bgrp_comm )
     CALL mp_sum( e, inter_bgrp_comm )
+    !$acc end host_data
     !
     RETURN
     !
@@ -349,9 +387,13 @@ CONTAINS
     INTEGER  :: ibnd
     INTEGER  :: nswap
     REAL(DP) :: e0
+    EXTERNAL :: MYZSWAP_VECTOR_GPU
+    !$acc routine(MYZSWAP_VECTOR_GPU) vector
     !
 10  nswap = 0
     !
+    !$acc parallel
+    !$acc loop gang reduction(+:nswap) private(e0)
     DO ibnd = 2, nbnd
        !
        IF ( e(ibnd) < e(ibnd-1) ) THEN
@@ -362,17 +404,18 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL ZSWAP( kdim, psi(1,ibnd), 1, psi(1,ibnd-1), 1 )
+          CALL MYZSWAP_VECTOR_GPU( kdim, psi(1,ibnd), psi(1,ibnd-1) )
           !
           IF ( eigen_ ) &
-          CALL ZSWAP( kdim, hpsi(1,ibnd), 1, hpsi(1,ibnd-1), 1 )
+          CALL MYZSWAP_VECTOR_GPU( kdim, hpsi(1,ibnd), hpsi(1,ibnd-1) )
           !
           IF ( uspp ) &
-          CALL ZSWAP( kdim, spsi(1,ibnd), 1, spsi(1,ibnd-1), 1 )
+          CALL MYZSWAP_VECTOR_GPU( kdim, spsi(1,ibnd), spsi(1,ibnd-1) )
           !
        END IF
        !
     END DO
+    !$acc end parallel
     !
     IF ( nswap > 0 ) GOTO 10
     !
