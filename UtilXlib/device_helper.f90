@@ -140,7 +140,7 @@ END FUNCTION MYDDOT
 ! this is analogus to MYDDOT, but the result is on device
 DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
 #if defined(__CUDA)
-!$acc routine(MYDDOT_VECTOR_GPU) vector
+!$acc routine( MYDDOT_VECTOR_GPU ) vector
 #endif
     INTEGER, INTENT(IN) :: N
     DOUBLE PRECISION, INTENT(IN) :: DX(*),DY(*)
@@ -250,9 +250,39 @@ implicit none
 #if defined(__CUDA)
   attributes(device) :: zx, zy 
   MYZDOTC = cublasZDOTC(n, zx, incx, zy, incy)  
+#else
+  MYZDOTC = ZDOTC(n, zx, incx, zy, incy)  
 #endif
   return
 end function MYZDOTC
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DOUBLE COMPLEX function MYZDOTC_VECTOR_GPU(n, zx, zy) 
+#if defined(__CUDA)
+!$acc routine(MYZDOTC_VECTOR_GPU) vector
+#endif
+implicit none
+  integer :: n
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  !civn: from here lapack source code. code for unequal increments 
+  !      or equal increments not equal to 1 NOT implemented
+  COMPLEX*16 ztemp
+  INTEGER i,ix,iy
+  INTRINSIC dconjg
+  ztemp = (0.0d0,0.0d0)
+  MYZDOTC_VECTOR_GPU = (0.0d0,0.0d0)
+  IF (n.LE.0) RETURN
+  !$acc loop vector reduction(+:ztemp) 
+  DO i = 1,n
+     ztemp = ztemp + dconjg(zx(i))*zy(i)
+  END DO
+  MYZDOTC_VECTOR_GPU = ztemp
+#else
+  MYZDOTC_VECTOR_GPU = ZDOTC(n, zx, 1, zy, 1)  
+#endif
+  return
+end function MYZDOTC_VECTOR_GPU 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE MYZSWAP(n, zx, incx, zy, incy) 
 #if defined(__CUDA)
@@ -267,6 +297,30 @@ implicit none
 #endif
   return
 END SUBROUTINE MYZSWAP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYZSWAP_VECTOR_GPU(n, zx, zy) 
+#if defined(__CUDA)
+!$acc routine(MYZSWAP_VECTOR_GPU) vector
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  COMPLEX*16 ZTEMP
+  INTEGER I,IX,IY
+  IF (n.LE.0) RETURN
+  !$acc loop vector private(ztemp)
+  DO i = 1,n
+     ztemp = zx(i)
+     zx(i) = zy(i)
+     zy(i) = ztemp
+  END DO 
+#else
+  CALL ZSWAP(n, zx, 1, zy, 1)  
+#endif
+  return
+END SUBROUTINE MYZSWAP_VECTOR_GPU
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE MYZCOPY(n, zx, incx, zy, incy)
 #if defined(__CUDA)
@@ -308,6 +362,8 @@ IMPLICIT NONE
 #if defined(__CUDA)
   attributes(device) :: zx
   CALL cublasZDSCAL(n, da, zx, incx)
+#else
+  CALL ZDSCAL(n, da, zx, incx)
 #endif
   RETURN
 END SUBROUTINE MYZDSCAL

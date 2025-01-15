@@ -368,22 +368,30 @@ CONTAINS
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
     !
-    COMPLEX(DP), EXTERNAL :: MYZDOTC
+    COMPLEX(DP), EXTERNAL :: MYZDOTC_VECTOR_GPU
+    !$acc routine(MYZDOTC_VECTOR_GPU) vector
     !
     ! ... <psi_i| H |psi_i>
     !
+    !$acc kernels
     e(:) = 0._DP
+    !$acc end kernels
     !
     CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
     !
+    !$acc parallel copyin(kdim, ibnd_start, ibnd_end) 
+    !$acc loop gang 
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = DBLE( MYZDOTC( kdim, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 ) )
+       e(ibnd) = DBLE( MYZDOTC_VECTOR_GPU( kdim, psi_d(1,ibnd), hpsi_d(1,ibnd) ) )
        !
     END DO
+    !$acc end parallel 
     !
+    !$acc host_data use_device(e)
     CALL mp_sum( e(ibnd_start:ibnd_end), intra_bgrp_comm )
     CALL mp_sum( e, inter_bgrp_comm )
+    !$acc end host_data
     !
     RETURN
     !
@@ -397,9 +405,13 @@ CONTAINS
     INTEGER  :: ibnd
     INTEGER  :: nswap
     REAL(DP) :: e0
+    EXTERNAL :: MYZSWAP_VECTOR_GPU
+    !$acc routine(MYZSWAP_VECTOR_GPU) vector
     !
 10  nswap = 0
     !
+    !$acc parallel
+    !$acc loop gang reduction(+:nswap) private(e0)
     DO ibnd = 2, nbnd
        !
        IF ( e(ibnd) < e(ibnd-1) ) THEN
@@ -410,17 +422,18 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL MYZSWAP( kdim, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
+          CALL MYZSWAP_VECTOR_GPU( kdim, psi_d(1,ibnd), psi_d(1,ibnd-1) )
           !
           IF ( eigen_ ) &
-          CALL MYZSWAP( kdim, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
+          CALL MYZSWAP_VECTOR_GPU( kdim, hpsi_d(1,ibnd), hpsi_d(1,ibnd-1) )
           !
           IF ( uspp ) &
-          CALL MYZSWAP( kdim, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
+          CALL MYZSWAP_VECTOR_GPU( kdim, spsi_d(1,ibnd), spsi_d(1,ibnd-1) )
           !
        END IF
        !
     END DO
+    !$acc end parallel
     !
     IF ( nswap > 0 ) GOTO 10
     !
