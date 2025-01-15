@@ -55,10 +55,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   INTEGER :: ii, jj, kk, info
   COMPLEX(DP), ALLOCATABLE :: phi(:,:), hphi(:,:), sphi(:,:)
   !
-  COMPLEX(DP), ALLOCATABLE :: sc_d(:), sc2_d(:,:)
-#if defined (__CUDA)
-  attributes(device) :: sc_d, sc2_d
-#endif 
+  COMPLEX(DP), ALLOCATABLE :: sc(:), sc2(:,:)
   !
   IF ( npol == 1 ) THEN
      !
@@ -133,8 +130,9 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   ! ... Allocate buffers 
   !
-  ALLOCATE (sc_d(nbsize)) 
-  IF ( nbnd .GT. nbsize)  ALLOCATE (sc2_d(nbsize, nbnd - nbsize)) 
+  ALLOCATE (sc(nbsize)) 
+  IF ( nbnd .GT. nbsize)  ALLOCATE (sc2(nbsize, nbnd - nbsize)) 
+  !$acc enter data create( sc, sc2 )
   !
   !
   ! ... Blocking loop
@@ -180,8 +178,9 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   ! ... Buffer Realese
   !
-  DEALLOCATE (sc_d) 
-  IF (nbnd .GT. nbsize) DEALLOCATE (sc2_d) 
+  !$acc exit data delete( sc, sc2 )
+  DEALLOCATE (sc) 
+  IF (nbnd .GT. nbsize) DEALLOCATE (sc2) 
   !
   !
   ! ... Copy psi <- phi
@@ -228,7 +227,7 @@ CONTAINS
     COMPLEX(DP), EXTERNAL    :: MYZDOTC
     !
     !
-    !$acc host_data use_device( psi, spsi, hpsi, phi, hphi, sphi )
+    !$acc host_data use_device( psi, spsi, hpsi, phi, hphi, sphi, sc )
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -239,31 +238,31 @@ CONTAINS
           IF ( uspp ) THEN
              !
              CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
-                         spsi(1,ibnd), 1, ZERO, sc_d(1), 1 )
+                         spsi(1,ibnd), 1, ZERO, sc(1), 1 )
              !
           ELSE
              !
              CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
-                         psi(1,ibnd), 1, ZERO, sc_d(1), 1 )
+                         psi(1,ibnd), 1, ZERO, sc(1), 1 )
              !
           END IF
           !
           !
-          CALL mp_sum( sc_d, intra_bgrp_comm )
+          CALL mp_sum( sc, intra_bgrp_comm )
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
           CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi(1,ibnd_start), kdmx, &
-                      sc_d(1), 1, ONE, phi(1,ibnd), 1 )
+                      sc(1), 1, ONE, phi(1,ibnd), 1 )
           !
           !
           IF ( eigen_ ) &
           CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi(1,ibnd_start), kdmx, &
-                      sc_d(1), 1, ONE, hphi(1,ibnd), 1 )
+                      sc(1), 1, ONE, hphi(1,ibnd), 1 )
           !
           IF ( uspp ) &
           CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi(1,ibnd_start), kdmx, &
-                      sc_d(1), 1, ONE, sphi(1,ibnd), 1 )
+                      sc(1), 1, ONE, sphi(1,ibnd), 1 )
           !
        END IF
        !
@@ -316,36 +315,36 @@ CONTAINS
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1  
     !
-    !$acc host_data use_device( psi, spsi, hpsi, phi, sphi, hphi )
+    !$acc host_data use_device( psi, spsi, hpsi, phi, sphi, hphi, sc2 )
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
        CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
-                   spsi(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
+                   spsi(1,jbnd_start), kdmx, ZERO, sc2(1,1), nbsize )
        !
     ELSE
        !
        CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
-                   psi(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
+                   psi(1,jbnd_start), kdmx, ZERO, sc2(1,1), nbsize )
        !
     END IF
     !
-    CALL mp_sum( sc2_d, intra_bgrp_comm )
+    CALL mp_sum( sc2, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
     CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi(1,ibnd_start), kdmx, &
-                sc2_d(1,1), nbsize, ONE, phi(1,jbnd_start), kdmx )
+                sc2(1,1), nbsize, ONE, phi(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
     CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi(1,ibnd_start), kdmx, &
-                sc2_d(1,1), nbsize, ONE, hphi(1,jbnd_start), kdmx )
+                sc2(1,1), nbsize, ONE, hphi(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
     CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi(1,ibnd_start), kdmx, &
-                sc2_d(1,1), nbsize, ONE, sphi(1,jbnd_start), kdmx )
+                sc2(1,1), nbsize, ONE, sphi(1,jbnd_start), kdmx )
     !
     !$acc end host_data
     !
