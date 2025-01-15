@@ -11,7 +11,7 @@
 #define MONE (-1._DP, 0._DP )
 !
 !--------------------------------------------------------------------------
-SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, &
+SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
                            uspp, eigen, reorder, nbsize )
   !--------------------------------------------------------------------------
   !
@@ -29,9 +29,9 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npw, npwx, nbnd, npol
-  COMPLEX(DP), INTENT(INOUT) :: psi_d (npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: spsi_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi (npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
   LOGICAL,     INTENT(IN)    :: uspp
   LOGICAL,     INTENT(IN)    :: eigen
@@ -53,11 +53,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   ! ... device variables 
   !
   INTEGER :: ii, jj, kk, info
-  COMPLEX(DP), ALLOCATABLE :: phi_d(:,:), hphi_d(:,:), sphi_d(:,:)
-#if defined (__CUDA)
-  attributes(device) :: psi_d, hpsi_d, spsi_d
-  attributes(device) :: phi_d, hphi_d, sphi_d
-#endif
+  COMPLEX(DP), ALLOCATABLE :: phi(:,:), hphi(:,:), sphi(:,:)
   !
   COMPLEX(DP), ALLOCATABLE :: sc_d(:), sc2_d(:,:)
 #if defined (__CUDA)
@@ -96,36 +92,18 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
      !
   END IF
   !
-  ALLOCATE( phi_d ( kdmx, nbnd ) )
-  IF ( eigen_ ) ALLOCATE( hphi_d( kdmx, nbnd ) )
-  IF ( uspp )   ALLOCATE( sphi_d( kdmx, nbnd ) )
+  ALLOCATE( phi ( kdmx, nbnd ) )
+  IF ( eigen_ ) ALLOCATE( hphi( kdmx, nbnd ) )
+  IF ( uspp )   ALLOCATE( sphi( kdmx, nbnd ) )
+  !$acc enter data create( phi, sphi, hphi )
   !
   ALLOCATE( owner_bgrp_id( nblock ) )
   !
-!$cuf kernel do(2)
-  DO ii = 1, kdmx  
-    DO jj = 1, nbnd
-      phi_d(ii, jj) = ZERO 
-    END DO 
-  END DO   
-  !
-  IF ( eigen_ ) THEN 
-!$cuf kernel do(2)
-    DO ii = 1, kdmx  
-      DO jj = 1, nbnd
-        hphi_d(ii, jj) = ZERO 
-      END DO 
-    END DO   
-  END IF  
-  !
-  IF ( uspp )   THEN 
-!$cuf kernel do(2)
-    DO ii = 1, kdmx  
-      DO jj = 1, nbnd
-        sphi_d(ii, jj) = ZERO 
-      END DO 
-    END DO   
-  END IF  
+  !$acc kernels
+  phi = ZERO
+  IF ( eigen_ ) hphi = ZERO
+  IF ( uspp )   sphi = ZERO
+  !$acc end kernels
   !
   ! ... Set owers of blocks
   !
@@ -142,13 +120,15 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Set initial : |phi_j> = |psi_j>
   !
-  CALL MYZCOPY( kdmx * nbnd, psi_d(1,1), 1, phi_d(1,1), 1 )
+  !$acc host_data use_device( psi, hpsi, spsi, phi, hphi, sphi )
+  CALL MYZCOPY( kdmx * nbnd, psi(1,1), 1, phi(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL MYZCOPY( kdmx * nbnd, hpsi_d(1,1), 1, hphi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, hpsi(1,1), 1, hphi(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL MYZCOPY( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, spsi(1,1), 1, sphi(1,1), 1 )
+  !$acc end host_data
   !
   !
   ! ... Allocate buffers 
@@ -172,13 +152,15 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
      !
      ! ... Bcast diagonal block
      !
-     CALL mp_bcast( phi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     !$acc host_data use_device( phi, hphi, sphi )
+     CALL mp_bcast( phi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( eigen_ ) &
-     CALL mp_bcast( hphi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( hphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( uspp ) &
-     CALL mp_bcast( sphi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( sphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     !$acc end host_data
      !
      ! ... Project off-diagonal block outside of diagonal block
      !
@@ -204,13 +186,15 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Copy psi <- phi
   !
-  CALL MYZCOPY( kdmx * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
+  !$acc host_data use_device( psi, hpsi, spsi, phi, hphi, sphi )
+  CALL MYZCOPY( kdmx * nbnd, phi(1,1), 1, psi(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL MYZCOPY( kdmx * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL MYZCOPY( kdmx * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
+  CALL MYZCOPY( kdmx * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
+  !$acc end host_data
   !
   ! ... Calculate energy eigenvalues
   !
@@ -220,9 +204,10 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   IF ( reorder ) CALL sort_vectors_gpu( )
   !
-  DEALLOCATE( phi_d )
-  IF ( eigen_ ) DEALLOCATE( hphi_d )
-  IF ( uspp )   DEALLOCATE( sphi_d )
+  !$acc exit data delete( phi, hphi, sphi)
+  DEALLOCATE( phi )
+  IF ( eigen_ ) DEALLOCATE( hphi )
+  IF ( uspp )   DEALLOCATE( sphi )
   !
   DEALLOCATE( owner_bgrp_id )
   !
@@ -243,6 +228,8 @@ CONTAINS
     COMPLEX(DP), EXTERNAL    :: MYZDOTC
     !
     !
+    !$acc host_data use_device( psi, spsi, hpsi, phi, hphi, sphi )
+    !
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( ibnd > ibnd_start ) THEN
@@ -251,13 +238,13 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-                         spsi_d(1,ibnd), 1, ZERO, sc_d(1), 1 )
+             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
+                         spsi(1,ibnd), 1, ZERO, sc_d(1), 1 )
              !
           ELSE
              !
-             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-                         psi_d(1,ibnd), 1, ZERO, sc_d(1), 1 )
+             CALL MYZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
+                         psi(1,ibnd), 1, ZERO, sc_d(1), 1 )
              !
           END IF
           !
@@ -266,17 +253,17 @@ CONTAINS
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
-          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi_d(1,ibnd_start), kdmx, &
-                      sc_d(1), 1, ONE, phi_d(1,ibnd), 1 )
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi(1,ibnd_start), kdmx, &
+                      sc_d(1), 1, ONE, phi(1,ibnd), 1 )
           !
           !
           IF ( eigen_ ) &
-          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi_d(1,ibnd_start), kdmx, &
-                      sc_d(1), 1, ONE, hphi_d(1,ibnd), 1 )
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi(1,ibnd_start), kdmx, &
+                      sc_d(1), 1, ONE, hphi(1,ibnd), 1 )
           !
           IF ( uspp ) &
-          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi_d(1,ibnd_start), kdmx, &
-                      sc_d(1), 1, ONE, sphi_d(1,ibnd), 1 )
+          CALL MYZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi(1,ibnd_start), kdmx, &
+                      sc_d(1), 1, ONE, sphi(1,ibnd), 1 )
           !
        END IF
        !
@@ -284,11 +271,11 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          norm = DBLE( MYZDOTC( kdim, phi_d(1,ibnd), 1, sphi_d(1,ibnd), 1 ) )
+          norm = DBLE( MYZDOTC( kdim, phi(1,ibnd), 1, sphi(1,ibnd), 1 ) )
           !
        ELSE
           !
-          norm = DBLE( MYZDOTC( kdim, phi_d(1,ibnd), 1, phi_d(1,ibnd), 1 ) )
+          norm = DBLE( MYZDOTC( kdim, phi(1,ibnd), 1, phi(1,ibnd), 1 ) )
           !
        END IF
        !
@@ -299,16 +286,17 @@ CONTAINS
        IF ( norm < eps16 ) &
        CALL errore( ' gram_schmidt_k ', ' vectors are linear dependent ', 1 )
        !
-       CALL MYZDSCAL( kdim, 1._DP / norm, phi_d(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, phi(1,ibnd), 1 )
        !
        IF ( eigen_ ) &
-       CALL MYZDSCAL( kdim, 1._DP / norm, hphi_d(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, hphi(1,ibnd), 1 )
        !
        IF ( uspp ) &
-       CALL MYZDSCAL( kdim, 1._DP / norm, sphi_d(1,ibnd), 1 )
+       CALL MYZDSCAL( kdim, 1._DP / norm, sphi(1,ibnd), 1 )
        !
     END DO
     !
+    !$acc end host_data
     !
     RETURN
     !
@@ -328,17 +316,19 @@ CONTAINS
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1  
     !
+    !$acc host_data use_device( psi, spsi, hpsi, phi, sphi, hphi )
+    !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
-       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
-                   spsi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
+       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
+                   spsi(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
        !
     ELSE
        !
-       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
-                   psi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
+       CALL MYZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
+                   psi(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
        !
     END IF
     !
@@ -346,16 +336,18 @@ CONTAINS
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
-    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi_d(1,ibnd_start), kdmx, &
-                sc2_d(1,1), nbsize, ONE, phi_d(1,jbnd_start), kdmx )
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi(1,ibnd_start), kdmx, &
+                sc2_d(1,1), nbsize, ONE, phi(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
-    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi_d(1,ibnd_start), kdmx, &
-                sc2_d(1,1), nbsize, ONE, hphi_d(1,jbnd_start), kdmx )
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi(1,ibnd_start), kdmx, &
+                sc2_d(1,1), nbsize, ONE, hphi(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
-    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi_d(1,ibnd_start), kdmx, &
-                sc2_d(1,1), nbsize, ONE, sphi_d(1,jbnd_start), kdmx )
+    CALL MYZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi(1,ibnd_start), kdmx, &
+                sc2_d(1,1), nbsize, ONE, sphi(1,jbnd_start), kdmx )
+    !
+    !$acc end host_data
     !
     RETURN
     !
@@ -383,7 +375,7 @@ CONTAINS
     !$acc loop gang 
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = DBLE( MYZDOTC_VECTOR_GPU( kdim, psi_d(1,ibnd), hpsi_d(1,ibnd) ) )
+       e(ibnd) = DBLE( MYZDOTC_VECTOR_GPU( kdim, psi(1,ibnd), hpsi(1,ibnd) ) )
        !
     END DO
     !$acc end parallel 
@@ -422,13 +414,13 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL MYZSWAP_VECTOR_GPU( kdim, psi_d(1,ibnd), psi_d(1,ibnd-1) )
+          CALL MYZSWAP_VECTOR_GPU( kdim, psi(1,ibnd), psi(1,ibnd-1) )
           !
           IF ( eigen_ ) &
-          CALL MYZSWAP_VECTOR_GPU( kdim, hpsi_d(1,ibnd), hpsi_d(1,ibnd-1) )
+          CALL MYZSWAP_VECTOR_GPU( kdim, hpsi(1,ibnd), hpsi(1,ibnd-1) )
           !
           IF ( uspp ) &
-          CALL MYZSWAP_VECTOR_GPU( kdim, spsi_d(1,ibnd), spsi_d(1,ibnd-1) )
+          CALL MYZSWAP_VECTOR_GPU( kdim, spsi(1,ibnd), spsi(1,ibnd-1) )
           !
        END IF
        !

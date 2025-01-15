@@ -508,10 +508,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
         CALL gram_schmidt_gamma( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
                         okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
-          !$acc host_data use_device(evc, hevc, sevc)
           CALL gram_schmidt_gamma_gpu( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
                           okvan, .TRUE., .TRUE., gs_nblock )
-          !$acc end host_data
           !$acc update device(et)
        END IF
        !
@@ -811,10 +809,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           CALL gram_schmidt_k( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
-          !$acc host_data use_device(evc, hevc, sevc)
           CALL gram_schmidt_k_gpu( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
-          !$acc end host_data
           !$acc update device(et)
        END IF
        !
