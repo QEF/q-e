@@ -50,6 +50,8 @@
       !! the chain masses
       REAL(DP), ALLOCATABLE :: qnp_(:)
       !! a temporary array
+      REAL(DP)   :: ions_nose_energy = 0.0_dp 
+      !! last calculated value of the Ions Nose system energy computed with ions_nose_nrg 
       !
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
        scal2nhp(:), fnosep(:)

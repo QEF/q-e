@@ -181,7 +181,7 @@ CONTAINS
       !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
-      USE ions_nose,          ONLY : vnhp, atm2nhp
+      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
@@ -434,6 +434,11 @@ CONTAINS
                      & 5X,"temperature           = ",F20.8," K ",/,  &
                      & 5X,"Ekin + Etot (const)   = ",F20.8," Ry")' ) &
              ekin, temp_new, ( ekin  + etot )
+      IF (tnosep) THEN  
+        WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
+                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
+                     & ions_nose_energy, (ekin + etot + ions_nose_energy)
+      END IF  
       !
       IF (tstress) WRITE ( stdout, &
       '(5X,"Ions kinetic stress = ",F15.2," (kbar)",/3(27X,3F15.2/)/)') &
