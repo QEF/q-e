@@ -1,7 +1,6 @@
 set(src_cpv
     src/berryion.f90
     src/bforceion.f90
-    src/cell_nose.f90
     src/cg.f90
     src/cg_sub.f90
     src/chargedensity.f90

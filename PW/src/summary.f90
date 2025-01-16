@@ -58,6 +58,7 @@ SUBROUTINE summary()
   USE dynamics_module, ONLY : dt 
   USE control_flags,   ONLY : tnosep
   USE ions_nose,       ONLY : ions_nose_info 
+  USE cell_nose,       ONLY : cell_nose_info 
 
   !
 #if defined (__ENVIRON)
@@ -169,7 +170,8 @@ SUBROUTINE summary()
 #if defined (__ENVIRON)
   IF (use_environ) CALL print_environ_summary()
 #endif
-call ions_nose_info(dt)
+CALL ions_nose_info(dt)
+CALL cell_nose_info(dt) 
   !
   ! ... CUDA
   !

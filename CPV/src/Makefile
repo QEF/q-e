@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS)
 FOBJS = \
 berryion.o \
 bforceion.o \
-cell_nose.o \
 cg.o \
 cg_sub.o \
 chargedensity.o \

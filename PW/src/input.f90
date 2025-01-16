@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
-  !! Copy data read from input file (subroutine \(\texttt{read_input_file}\)
+  !! Copy data read from input file (subroutine \(\tex/temttt{read_input_file}\)
   !! and stored in modules input_parameters into internal modules.  
   !! Wrapper routine: the original "iosys" was too long and was split into
   !! more *iosys* routines, containing input_parameters module
@@ -289,7 +289,7 @@ SUBROUTINE control_iosys()
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
-                            tr2, imix, gamma_only, tnosep, &
+                            tr2, imix, gamma_only, tnosep, tnoseh, &
                             nmix, iverbosity, smallmem, nexxiter, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
@@ -425,6 +425,10 @@ SUBROUTINE control_iosys()
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass,  &
                                cell_temperature, cell_factor, press_conv_thr, &
                                cell_dofree, treinit_gvecs 
+  !
+  ! ... CELL NOSE HOOVER THERMOSTAT
+  ! 
+  USE input_parameters, ONLY: fnoseh, temph                                      
   !
   ! ... WANNIER_NEW namelist
   !
@@ -1136,6 +1140,18 @@ SUBROUTINE control_iosys()
                 & 'unknown ion_temperature ' // trim( ion_temperature ), 1 )
      !
   END SELECT
+  !
+  ! CELL TEMPERATURE
+  ! 
+  SELECT CASE (trim(cell_temperature))
+    CASE ('nose')
+      IF (.not. (control_temp .or. tnosep)) temperature = temph 
+      tnoseh = .true.
+    CASE ('not_controlled', 'not-controlled', 'not controlled') 
+      tnoseh = .false. 
+    CASE DEFAULT 
+      CALL errore('iosys', 'unsupported cell_temperature',1)
+  END SELECT 
   !
   ! SELF-CONSISTENCY
   !
@@ -2152,7 +2168,10 @@ SUBROUTINE set_wmass ( )
   USE constants,     ONLY : pi
   USE cell_base,     ONLY : wmass, omega
   USE ions_base,     ONLY : ityp, nat, amass
+  USE cell_nose,     ONLY : cell_nose_init
+  USE input_parameters, ONLY: fnoseh, temph
   USE cellmd,        ONLY : calc, lmovecell
+  USE control_flags, ONLY : tnoseh
   !
   IMPLICIT NONE
   INTEGER :: ia
@@ -2176,5 +2195,7 @@ SUBROUTINE set_wmass ( )
   ENDIF
   IF ( wmass <= 0.D0 ) CALL errore( 'set_wmass', &
             & 'vcsmd: a positive value for cell mass is required', 1 )
+  print *, 'check tnoseh fnoseh', tnoseh, fnoseh
+  IF (tnoseh) CALL cell_nose_init(temph, fnoseh)
   !
 END SUBROUTINE set_wmass
