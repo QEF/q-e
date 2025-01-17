@@ -145,6 +145,10 @@ inputs_args = ('SiC.scf.in', '1'), ('SiC.phG.in', '2'), ('SiC.phG.restart1.in', 
 program = PH
 inputs_args = ('scf_twochem.in', '1'), ('phG_twochem.in','11') 
 
+[ph_multipole/]
+program = PH
+inputs_args = ('scf.in', '12'), ('ph.in.01','2'), ('ph.in.02', '2'), ('ph.in.03', '2'),  ('ph.in.04', '2'),  ('ph.in.05', '2'),  ('ph.in.06', '2'),  ('ph.in.07', '2'), ('ph.in.08', '13')  
+
 [epw_base/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw12.in', '3'), ('epw13.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')

@@ -59,7 +59,10 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (1.0e-3, 1.0e-5, 'rlatt_cart'),
               (1.0e-3, 1.0e-5, 'rlatt_crys'),
               (5.0e-1,   None, 'sum_w_pot'),
-              (5.0e-4, 1.0e-2, 'postahc_selfen'))
+              (5.0e-4, 1.0e-2, 'postahc_selfen'),
+              (1.0e-4, 1.0e-4, 'quad'),
+              (1.0e-2, 1.0e-4, 'epsil'))
+
 skip_program = grep
 skip_args = 'not present in this version'
 

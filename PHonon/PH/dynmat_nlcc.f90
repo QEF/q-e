@@ -22,6 +22,7 @@ subroutine dynmat_nlcc (imode0, drhop, npe)
   USE modes,  ONLY : nirr, npert, u
   USE uspp,   ONLY : nlcc_any
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
+  USE control_lr, ONLY: lmultipole
 
   implicit none
 
@@ -67,7 +68,11 @@ subroutine dynmat_nlcc (imode0, drhop, npe)
      call addcore(u(1, mode), drhoc)
      !
      dvaux(:, :) = (0.d0, 0.d0)
-     CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipert), drhoc = drhoc)
+     IF (.NOT. lmultipole) THEN
+       CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipert), drhoc = drhoc)
+     ELSE
+       CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipert))
+     ENDIF
      !
      mode1 = 0
      do irr = 1, nirr
