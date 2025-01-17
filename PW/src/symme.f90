@@ -812,7 +812,7 @@ gloop:    DO jg=iig,ngm_
   END SUBROUTINE sym_rho
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE sym_rho_serial ( ngm_, g_, nspin_, rhog_ )
+  SUBROUTINE sym_rho_serial ( ngm_, g_, nspin_, rhog_, isym_ )
     !-----------------------------------------------------------------------
     !! Symmetrize the charge density rho in reciprocal space.    
     !
@@ -832,6 +832,7 @@ gloop:    DO jg=iig,ngm_
     COMPLEX(DP), INTENT(INOUT) :: rhog_( ngm_, nspin_ )
     !! rho in reciprocal space: rhog_(ig) = rho(G(:,ig)). 
     !! Unsymmetrized on input, symmetrized on output
+    INTEGER, INTENT(IN), OPTIONAL :: isym_
     !
     ! ... local variables
     !
@@ -841,10 +842,18 @@ gloop:    DO jg=iig,ngm_
     INTEGER :: irot(48), ig, isg, igl, ng, ns, nspin_lsda, is
     LOGICAL, ALLOCATABLE :: done(:)
     LOGICAL :: non_symmorphic(48)
+    INTEGER :: ns_start, ns_end
     !
     ! convert fractional translations to cartesian, in a0 units
     !
-    DO ns=1,nsym
+    ns_start=1
+    ns_end=nsym
+    IF (PRESENT (isym_)) THEN 
+       ns_start=isym_
+       ns_end=isym_
+    ENDIF
+    !
+    DO ns=ns_start,ns_end
        non_symmorphic(ns) = ( ft(1,ns) /= 0.0_dp .OR. &
                               ft(2,ns) /= 0.0_dp .OR. &
                               ft(3,ns) /= 0.0_dp )
@@ -887,7 +896,7 @@ gloop:    DO jg=iig,ngm_
              rhosum(:) = (0.0_dp, 0.0_dp)
              magsum(:) = (0.0_dp, 0.0_dp)
              ! S^{-1} are needed here
-             DO ns=1,nsym
+             DO ns=ns_start,ns_end
 
                 sg(:) = s(:,1,invs(ns)) * g0(1,ig) + &
                         s(:,2,invs(ns)) * g0(2,ig) + &
@@ -958,13 +967,13 @@ gloop:    DO jg=iig,ngm_
              END DO
              !
              DO is=1,nspin_lsda
-                rhosum(is) = rhosum(is) / nsym
+                rhosum(is) = rhosum(is) / (ns_end-ns_start+1)
              END DO
-             IF ( nspin_ == 4 ) magsum(:) = magsum(:) / nsym
+             IF ( nspin_ == 4 ) magsum(:) = magsum(:) / (ns_end-ns_start+1)
              !
              !  now fill the shell of G-vectors with the symmetrized value
              !
-             DO ns=1,nsym
+             DO ns=ns_start, ns_end
                 isg = shell(igl)%vect(irot(ns))
                 IF ( nspin_ == 4 ) THEN
                    ! rotate magnetization
