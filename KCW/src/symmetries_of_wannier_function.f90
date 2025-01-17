@@ -193,7 +193,7 @@ SUBROUTINE symmetries_of_wannier_function()
         !
         ! calculate rho_rotated = rho_q(R^{-1}.r-f)*EXP(-i k.f)
         !
-        CALL rotate_evc(isym, rhowann_(:,iq,iwann), rho_rotated)
+        CALL rotate_rhowann_r(isym, rhowann_(:,iq,iwann), rho_rotated)
         x_q_cryst(:)=xk(:,iq)
         CALL cryst_to_cart(1,x_q_cryst,at,-1)
         rho_rotated(:) = rho_rotated(:)*EXP(-IMAG*tpi*dot_product(x_q_cryst(:),ft(:,isym)))

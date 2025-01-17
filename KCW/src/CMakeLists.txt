@@ -48,7 +48,7 @@ set(src_kcw
     setup_coulomb_exx.f90
     coulomb.f90
     kcw_set_symm.f90
-    rotate_evc.f90 
+    rotate_rhowann_r.f90 
     symmetries_of_wannier_function.f90 
     kcw_kpoint_grid.f90 
     kcw_deallocate_symmetry_arrays.f90 

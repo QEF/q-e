@@ -3,7 +3,7 @@
 !
 !Based on the function from pw2wannier. WARNING! the rotated wfs is only the periodic part,
 ! not the full wf as it may seem from the header.
-   SUBROUTINE rotate_evc(isym, psi, gpsi)
+   SUBROUTINE rotate_rhowann_r(isym, psi, gpsi)
       !-----------------------------------------------------------------------
       ! g u_k = u_k(rS) WARNING it might need a factor with fractional translation 
       !-----------------------------------------------------------------------
@@ -114,7 +114,7 @@
       !
       !DEALLOCATE( phase, psic_all, temppsic_all, gpsi_tmp )
       DEALLOCATE( psi_all, temppsi_all )
-   END SUBROUTINE rotate_evc
+   END SUBROUTINE rotate_rhowann_r
 
 
 
