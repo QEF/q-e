@@ -41,7 +41,7 @@ SUBROUTINE vcsmd( conv_ions )
                                   xnhh0, xnhhm, xnhhp, cell_nose_energy, temph, qnh
   USE cellmd,              ONLY : nzero, ntimes, calc, at_old, omega_old, &
                                   ntcheck, lmovecell
-  USE dynamics_module,     ONLY : dt, temperature
+  USE dynamics_module,     ONLY : dt, temperature, RyDt_to_HaDt, HaddT_to_RyddT, Ha_to_Ry 
   USE ions_base,           ONLY : amass, if_pos 
   USE relax,               ONLY : epse, epsf, epsp
   USE force_mod,           ONLY : force, sigma
@@ -307,8 +307,8 @@ SUBROUTINE vcsmd( conv_ions )
      !
      enew = etot - e_start
      !
-     IF(tnosep) CALL ions_nosevel(vnhp, xnhp0, xnhpm, dt, nhpcl, nhpdim)  
-     IF(tnoseh) CALL cell_nosevel(vnhh, xnhh0, xnhhm, dt)
+     IF(tnosep) CALL ions_nosevel(vnhp, xnhp0, xnhpm, RyDt_to_HaDt * dt, nhpcl, nhpdim)  
+     IF(tnoseh) CALL cell_nosevel(vnhh, xnhh0, xnhhm, RyDt_to_HaDt * dt)
      !
      CALL vcmove( ntyp, nat, ntyp, ityp, rat, avec, vcell, force, if_pos,      &
                 sigma, calc, avmod, theta, amass_,cmass, press, p, dt, avecd,  &
@@ -319,13 +319,13 @@ SUBROUTINE vcsmd( conv_ions )
                 vnhp, ekin2nhp, atm2nhp, nhpdim, nhpcl, tnoseh, vnhh, temphh) 
      !
      IF (tnosep) THEN 
-      CALL ions_noseupd(xnhpp, xnhp0, xnhpm,dt, qnp, ekin2nhp, gkbt2nhp, vnhp, &
+      CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, &
                         kbt, nhpcl, nhpdim, nhpbeg, nhpend) 
       CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm) 
-      ions_nose_energy = ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim)
+      ions_nose_energy =  ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim)
      END IF 
      IF(tnoseh) THEN 
-       CALL cell_noseupd(xnhhp, xnhh0, xnhhm, dt, qnh, temphh, temph, vnhh) 
+       CALL cell_noseupd(xnhhp, xnhh0, xnhhm, RyDt_to_HaDt * dt, qnh, temphh, temph, vnhh) 
        CALL cell_nose_shiftvar(xnhhp, xnhh0, xnhhm)
        cell_nose_energy = cell_nose_nrg(qnh, xnhh0, vnhh, temph, iforceh) 
      END IF 

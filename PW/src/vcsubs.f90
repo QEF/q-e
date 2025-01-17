@@ -474,6 +474,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
   USE kinds,         ONLY : DP
   USE constants,     ONLY : pi, eps16, k_boltzmann_ry
   USE io_global,     ONLY : stdout
+  USE dynamics_module, ONLY: HaddT_to_RyddT, Ha_to_Ry 
   !
   IMPLICIT NONE
   !
@@ -631,7 +632,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
     do na = 1, natot
      nt = ityp (na)
      do i = 1, 3
-       rat2d (i, na) = if_pos(i,na) * (rat2d(i, na) - 0.5_dp * vnhp(1, atm2nhp(na)) * ratd(i, na)) 
+       rat2d (i, na) = if_pos(i,na) * (rat2d(i, na) - HaddT_to_RyddT * vnhp(1, atm2nhp(na)) * ratd(i, na)) 
      enddo
     enddo
   end if 
@@ -728,7 +729,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
                  avec2d (i, j) = avec2d (i, j) + pim (i, k) * sigma (k, j)
               enddo
               avec2d (i, j) = avec2d (i, j) / cmass
-              if (tnoseh) avec2d(i,j) = avec2d(i,j) - 0.5 * vnhh(i,j) * avecd(i,j)
+              if (tnoseh) avec2d(i,j) = avec2d(i,j) - HaddT_to_RyddT * vnhh(i,j) * avecd(i,j)
            enddo
         enddo
         !
@@ -834,8 +835,9 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
            ekk = ekk + ratd (i, na) * g (i, j) * ratd (j, na)
         enddo
         eka = eka + ekk * atmass (nt) / dois
+        ! ekin2nhp will be  passed to ion_nose routines that expects Hartree 
         if (tnosep) ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + &
-                                            0.5 * ekk * atmass(nt) / dois 
+                                            ekk * atmass(nt) / dois / Ha_to_Ry
      enddo
   enddo
   !
@@ -870,6 +872,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
      !
 
      if (calc (1:1) .eq.'c') then
+        ! temphh will be passed to cell_nose routines, converted in Kelvin few lines below.  
         temphh = zero
         !
         ! cell dynamics or cell minimization cases

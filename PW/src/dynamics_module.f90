@@ -24,7 +24,7 @@ MODULE dynamics_module
    USE io_files,        ONLY : prefix, tmp_dir, seqopn
    USE constants,       ONLY : tpi, fpi
    USE constants,       ONLY : amu_ry, ry_to_kelvin, au_ps, bohr_radius_cm, &
-                               ry_kbar
+                               ry_kbar, HARTREE_SI, RYDBERG_SI  
    USE constants,       ONLY : eps8
    USE control_flags,   ONLY : tolp
    !
@@ -108,6 +108,9 @@ MODULE dynamics_module
    !
    REAL(DP)  :: elapsed_time
    !! elapsed time in ps (picoseconds)
+   REAL(DP), PARAMETER, PUBLIC  :: RyDt_to_HaDt = RYDBERG_SI/HARTREE_SI, HaddT_to_RyddT = HARTREE_SI/RYDBERG_SI,& 
+                           Ha_to_Ry = HARTREE_SI/RYDBERG_SI 
+   !! 1/2  and 2 factors used to convert dt from Ry to Ha,  and  velocities from Ha to Ry 
    INTEGER, PARAMETER :: hist_len = 1000
    !
    ! Restart type
@@ -285,7 +288,7 @@ CONTAINS
       !
       IF (tnosep) THEN 
          DO na = 1, nat
-           acc(:, na) = acc(:,na) - 0.5_dp * vnhp(atm2nhp(na)) * vel(:,na)
+           acc(:, na) = acc(:,na) - HaddT_to_RyddT * vnhp(atm2nhp(na)) * vel(:,na)
          END DO
       END IF
 
@@ -437,7 +440,7 @@ CONTAINS
       IF (tnosep) THEN  
         WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
                      &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
-                     & ions_nose_energy, (ekin + etot + ions_nose_energy)
+                     & Ha_to_Ry *ions_nose_energy, (ekin + etot + Ha_to_Ry * ions_nose_energy)
       END IF  
       !
       IF (tstress) WRITE ( stdout, &
@@ -826,9 +829,10 @@ CONTAINS
      USE ions_base,      ONLY : nat
      USE ions_nose,      ONLY : ekin2nhp, atm2nhp
      USE control_flags,  ONLY : tnosep
-     IMPLICIT NONE
+     IMPLICIT NONE  
      REAL (dp), INTENT (out) :: ekin, temp_new
      INTEGER :: na
+     REAL(DP), parameter :: Ry_to_Ha = 1._dp/Ha_to_Ry 
      REAL(dp) :: ekin_at 
      !
      ekin = 0.0_dp
@@ -838,7 +842,7 @@ CONTAINS
         ekin_at  =  0.5_dp * mass(na) * &
              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
         ekin = ekin + ekin_at
-        IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + 0.5_dp * ekin_at*alat**2 
+        IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + Ry_to_Ha * ekin_at*alat**2 
      END DO
      ekin = ekin*alat**2
      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin

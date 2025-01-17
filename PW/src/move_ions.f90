@@ -51,7 +51,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
   USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel, elapsed_time
   USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
-                                     fire_alpha_init, fire_falpha, fire_dtmax
+                                     fire_alpha_init, fire_falpha, fire_dtmax, RyDt_to_HaDt
   USE klist,                  ONLY : nelec, tot_charge
   USE dfunct,                 only : newd
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
@@ -345,12 +345,12 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
            IF ( ANY( if_pos(:,:) == 1 ) ) THEN
               !
               IF (tnosep) THEN 
-                CALL ions_nosevel(vnhp, xnhp0, xnhpm, dt, nhpcl, nhpdim) 
-                ions_nose_energy = 0.5_dp * ions_nose_nrg(xnhp0,vnhp,qnp,gkbt2nhp,kbt,nhpcl, nhpdim)
+                CALL ions_nosevel(vnhp, xnhp0, xnhpm, RyDt_to_HaDt * dt, nhpcl, nhpdim) 
+                ions_nose_energy = ions_nose_nrg(xnhp0,vnhp,qnp,gkbt2nhp,kbt,nhpcl, nhpdim)
               END IF  
               CALL verlet()
               IF (tnosep) THEN 
-                CALL ions_noseupd(xnhpp, xnhp0, xnhpm, dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
+                CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
                                nhpcl, nhpdim, nhpbeg, nhpend)
                 CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm)
               END IF         
