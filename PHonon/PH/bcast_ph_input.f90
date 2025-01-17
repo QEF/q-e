@@ -16,7 +16,7 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE control_lr, ONLY : lgamma, lrpa, nmix_ph, niter_ph, alpha_mix, tr2_ph, reduce_io
+  USE control_lr, ONLY : lgamma, lrpa, nmix_ph, niter_ph, alpha_mix, tr2_ph, reduce_io, lmultipole
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, &
                          lnoloc, recover, ldisp, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
@@ -71,6 +71,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (only_init, meta_ionode_id, world_comm )
   call mp_bcast (search_sym, meta_ionode_id, world_comm)
   call mp_bcast (read_dns_bare, meta_ionode_id, world_comm)
+  call mp_bcast (lmultipole, meta_ionode_id, world_comm )
   ! YAMBO >
   call mp_bcast (elph_yambo, meta_ionode_id, world_comm)
   call mp_bcast (dvscf_yambo, meta_ionode_id, world_comm)
