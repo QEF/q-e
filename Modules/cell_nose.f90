@@ -25,6 +25,8 @@
       !! Thermostat frequency (from input)
       REAL(DP) :: qnh = 0.0_DP
       !! Thermostat mass (computed)
+      REAL(DP) :: cell_nose_energy
+      !! variable to hold the last computed thermostat's energy 
 
 CONTAINS
 

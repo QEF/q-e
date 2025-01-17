@@ -34,13 +34,18 @@ SUBROUTINE vcsmd( conv_ions )
   USE cell_base,           ONLY : wmass, omega, alat, at, bg, iforceh, &
        press, fix_volume, fix_area
   USE ions_base,           ONLY : tau, nat, ntyp => nsp, ityp, atm, if_pos
+  USE ions_nose,           ONLY : ions_nosevel, ions_noseupd, ions_nose_shiftvar, ions_nose_nrg, ions_nose_energy,&
+                                  vnhp, xnhp0, xnhpm, xnhpp, nhpdim, nhpcl, gkbt, gkbt2nhp, ekin2nhp, nhpbeg, nhpend,&
+                                  kbt, qnp, atm2nhp
+  USE cell_nose,           ONLY : cell_nosevel, cell_noseupd, cell_nose_shiftvar, cell_nose_nrg, vnhh, &
+                                  xnhh0, xnhhm, xnhhp, cell_nose_energy, temph, qnh
   USE cellmd,              ONLY : nzero, ntimes, calc, at_old, omega_old, &
                                   ntcheck, lmovecell
   USE dynamics_module,     ONLY : dt, temperature
   USE ions_base,           ONLY : amass, if_pos 
   USE relax,               ONLY : epse, epsf, epsp
   USE force_mod,           ONLY : force, sigma
-  USE control_flags,       ONLY : nstep, istep, tolp, lconstrain
+  USE control_flags,       ONLY : nstep, istep, tolp, lconstrain, tnosep, tnoseh
   USE parameters,          ONLY : ntypx
   USE ener,                ONLY : etot
   USE io_files,            ONLY : prefix, delete_if_present, seqopn
@@ -93,6 +98,7 @@ SUBROUTINE vcsmd( conv_ions )
                    tauold(:,:,:)   ! additional  history variables
   REAL(DP) :: &
            avmod(3), theta(3,3), & ! used to monitor cell dynamics
+           temphh(3,3),          & ! _temperature_ of each h component  
            enew, e_start,        & ! DFT energy at current and first step
            eold,                 & ! DFT energy at previous step
            uta, eka, eta, ekla, utl, etl, ut, ekint, edyn,  & ! other energies
@@ -301,13 +307,28 @@ SUBROUTINE vcsmd( conv_ions )
      !
      enew = etot - e_start
      !
+     IF(tnosep) CALL ions_nosevel(vnhp, xnhp0, xnhpm, dt, nhpcl, nhpdim)  
+     IF(tnoseh) CALL cell_nosevel(vnhh, xnhh0, xnhhm, dt)
+     !
      CALL vcmove( ntyp, nat, ntyp, ityp, rat, avec, vcell, force, if_pos,      &
                 sigma, calc, avmod, theta, amass_,cmass, press, p, dt, avecd,  &
                 avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d,&
                 rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint,  &
                 edyn, temperature, tolp, ntcheck, ntimes, istep, tnew, nzero,  &
-                nat, acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh)
+                nat, acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh, tnosep,&
+                vnhp, ekin2nhp, atm2nhp, nhpdim, nhpcl, tnoseh, vnhh, temphh) 
      !
+     IF (tnosep) THEN 
+      CALL ions_noseupd(xnhpp, xnhp0, xnhpm,dt, qnp, ekin2nhp, gkbt2nhp, vnhp, &
+                        kbt, nhpcl, nhpdim, nhpbeg, nhpend) 
+      CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm) 
+      ions_nose_energy = ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim)
+     END IF 
+     IF(tnoseh) THEN 
+       CALL cell_noseupd(xnhhp, xnhh0, xnhhm, dt, qnh, temphh, temph, vnhh) 
+       CALL cell_nose_shiftvar(xnhhp, xnhh0, xnhhm)
+       cell_nose_energy = cell_nose_nrg(qnh, xnhh0, vnhh, temph, iforceh) 
+     END IF 
   END IF
   !
   pv = p * omega

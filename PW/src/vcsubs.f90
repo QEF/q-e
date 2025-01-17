@@ -450,7 +450,8 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
                    aveci, avec2di, sigma, sig0, avec0, v0, ratd, rat2d, rati, rat2di,   &
                    enew, uta, eka, eta, ekla, utl, etl, ut, ekint, etot, temp, tolp,    &
                    ntcheck, ntimes, nst, tnew, nzero, natot, acu, ack, acp, acpv, avu,  &
-                   avk, avp, avpv, iforceh )
+                   avk, avp, avpv, iforceh, tnosep, vnhp, ekin2nhp, atm2nhp, nhpdim,    &
+                   nhpcl, tnoseh, vnhh, temphh )
   !------------------------------------------------------------------------------------------
   !! Perform one step of variable-cell shape molecular dynamics.
   !
@@ -569,6 +570,12 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
   REAL(DP) :: etl, utl, uta, eka, ekla, eta
   REAL(DP) :: avpv, tnew, tolp, avk, avu, avp, &
               ack, acu, acpv, acp
+  LOGICAL :: tnosep, tnoseh 
+  !! if true the terms for for the interaction with the Nose thermostats are added
+  INTEGER, INTENT(IN)  :: atm2nhp(natot), nhpdim, nhpcl
+  REAL(DP), INTENT(IN)   :: vnhp(nhpcl, nhpdim), vnhh(3,3)
+  REAL(DP), INTENT(OUT)  :: ekin2nhp(nhpdim)
+  REAL(DP), INTENT(OUT)  :: temphh(3,3)
   !
   ! ... local variables
   !
@@ -610,13 +617,26 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
   !
   ! calculate (uncorrected) rat2d
   !
+  !
+  
+  ! 
   
   do na = 1, natot
+    nt = ityp (na)
+    do i = 1, 3
+      rat2d (i, na) = if_pos(i,na) * force (i, na) / atmass (nt)
+    enddo
+  enddo
+  if (tnosep) then 
+    do na = 1, natot
      nt = ityp (na)
      do i = 1, 3
-        rat2d (i, na) = if_pos(i,na) * force (i, na) / atmass (nt)
+       rat2d (i, na) = if_pos(i,na) * (rat2d(i, na) - 0.5_dp * vnhp(1, atm2nhp(na)) * ratd(i, na)) 
      enddo
-  enddo
+    enddo
+  end if 
+  
+  
   !
   ! if variable cell, estimate velocities and set the number of update to
   ! be performed in order to have them accurate. This is needed only for
@@ -708,6 +728,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
                  avec2d (i, j) = avec2d (i, j) + pim (i, k) * sigma (k, j)
               enddo
               avec2d (i, j) = avec2d (i, j) / cmass
+              if (tnoseh) avec2d(i,j) = avec2d(i,j) - 0.5 * vnhh(i,j) * avecd(i,j)
            enddo
         enddo
         !
@@ -804,6 +825,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
   !
   !     compute atomic energies
   !
+  if (tnosep) ekin2nhp = zero 
   do na = 1, natot
      nt = ityp (na)
      do i = 1, 3
@@ -812,6 +834,8 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
            ekk = ekk + ratd (i, na) * g (i, j) * ratd (j, na)
         enddo
         eka = eka + ekk * atmass (nt) / dois
+        if (tnosep) ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + &
+                                            0.5 * ekk * atmass(nt) / dois 
      enddo
   enddo
   !
@@ -844,14 +868,17 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
         enddo
      endif
      !
+
      if (calc (1:1) .eq.'c') then
+        temphh = zero
         !
         ! cell dynamics or cell minimization cases
         !
         do k = 1, 3
            tr = zero
            do m = 1, 3
-              tr = tr + avecd (m, k) * avecd (m, k)
+              temphh(m,k) = avecd(m,k) * avecd(m,k)
+              tr = tr + temphh(m,k) 
            enddo
            ekla = ekla + tr
         enddo
@@ -859,6 +886,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
   endif
   !
   ekla = ekla * cmass / dois
+  temphh = cmass * temphh/K_BOLTZMANN_RY 
   utl = + press * vcell
   etl = utl + ekla
   !
