@@ -35,6 +35,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   USE klist,            ONLY : ngk, igk_k
   USE qpoint,           ONLY : nksq
   USE becmod,           ONLY : bec_type
+  USE gvect,            ONLY : gg
+  USE control_lr,       ONLY : lmultipole
   !
   IMPLICIT NONE
   !
@@ -101,8 +103,17 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !
   ! Compute dV_loc/dtau in real space
   !
-  CALL compute_dvloc (uact, addnlcc, dvlocin)
-  !
+  IF (.NOT. lmultipole) THEN
+    CALL compute_dvloc (uact, addnlcc, dvlocin)
+  ELSE
+    ! Bring potential in reciprocal space
+    CALL fwfft ('Rho', dvlocin, dffts)
+    IF (gg(1) < 1d-8) THEN
+      dvlocin(dffts%nl(1)) = 1d0
+    ENDIF
+    ! Bring potential in real space
+    CALL invfft ('Rho', dvlocin, dffts)
+  ENDIF
   ! Now we compute dV_loc/dtau * psi in real space
   !
   !$acc update device(evc)
@@ -165,7 +176,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !   First a term similar to the KB case.
   !   Then a term due to the change of the D coefficients.
   !
-  call dvqpsi_us_only (ik, uact, becp1, alphap)
+  IF (.NOT. lmultipole) call dvqpsi_us_only (ik, uact, becp1, alphap)
   !
   ! DFPT+U: add the bare variation of the Hubbard potential
   !
