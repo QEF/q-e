@@ -120,6 +120,8 @@ then
   echo " "
   pip install numpy
   pip3 install numpy
+  pip install scipy
+  pip3 install scipy
   pip install spglib
   pip3 install spglib
   echo " "
