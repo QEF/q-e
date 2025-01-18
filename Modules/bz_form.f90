@@ -2143,7 +2143,7 @@ SUBROUTINE transform_label_coord(ibrav, celldm, xk, letter, label_list, &
 !! This routine transforms the labels in the array letter into k points
 !! coordinates that are put in the array \(\text{xk}\) in the position
 !! indicated by label_list. If \(\text{k_point}='\text{crystal}'\) the 
-!! coordinates are tranformed in the basis of the crystal.  
+!! coordinates are transformed in the basis of the crystal.  
 !! \(\text{point_label_type}\) selects the type of labels.  
 !! \(\text{npk_label}\) is the size of the array letter and label\_list, while
 !! \(\text{nks}\) is the size of the array \(\text{xk}\).

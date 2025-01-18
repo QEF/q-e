@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -97,7 +97,7 @@ cat > $PREFIX.scf.in << EOF
  /
  &system
     ibrav = 0,
-    nat = 3, 
+    nat = 3,
     ntyp = 2,
     ecutwfc = 60.0
     ecutrho = 480.0
@@ -106,18 +106,14 @@ cat > $PREFIX.scf.in << EOF
     occupations = "smearing",
     smearing = "mv",
     degauss = 0.01,
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
-Co   58.933195   Co.pbe-spn-kjpaw_psl.0.3.1.UPF 
-O    15.9994     O.pbe-n-kjpaw_psl.0.1.UPF 
+Co   58.933195   Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+O    15.9994     O.pbe-n-kjpaw_psl.0.1.UPF
 ATOMIC_POSITIONS {angstrom}
 Co   0.0000000000     0.0000000000     0.0000000000
 O    1.4062895053     0.8119216244    -0.9358761640
@@ -128,6 +124,8 @@ CELL_PARAMETERS {angstrom}
   0.0000000000     0.0000000000    15.7312126250
 K_POINTS {automatic}
  6 6 1 0 0 0
+HUBBARD {ortho-atomic}
+U Co-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out

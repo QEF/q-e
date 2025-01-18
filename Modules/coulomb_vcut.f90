@@ -78,7 +78,7 @@ CONTAINS
      abs(sum(vcut%a(:,2)*vcut%a(:,3)))/(mod2a(2)*mod2a(3))<eps6 .and. &
      abs(sum(vcut%a(:,3)*vcut%a(:,1)))/(mod2a(3)*mod2a(1))<eps6) vcut%orthorombic=.true.
   !
-  if (.not.vcut%orthorombic) call errore(subname,"non-orthorombic case untested",1)
+  if (.not.vcut%orthorombic) call errore(subname,"'vcut' Coulomb cutoff with non-orthogonal axis untested",1)
 
   n1=ceiling(vcut%cutoff*sqrt(sum(vcut%a(1,:)**2))/(2.0*pi))
   n2=ceiling(vcut%cutoff*sqrt(sum(vcut%a(2,:)**2))/(2.0*pi))

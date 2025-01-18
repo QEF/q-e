@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -153,7 +153,7 @@ Electron-phonon coefficients for Al
   nk2=16,
   nk3=16,
  /
-  0.500 0.500 0.500 
+  0.500 0.500 0.500
 EOF
 $ECHO "  running the elph calculation...\c"
 $PH_COMMAND < al.elph.in > al.elph.out

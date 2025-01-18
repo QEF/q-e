@@ -1,0 +1,51 @@
+num_bands         =   8       
+num_wann          =   8
+use_ws_distance   = .true.
+spinors = .true.
+
+write_hr = .true.
+write_xyz = .true.
+write_u_matrices = .true.
+
+bands_plot              = .true.
+bands_num_points        = 40
+begin kpoint_path
+G 0.000 0.000 0.000  X 0.500 0.000 0.500 
+X 0.500 0.000 0.500  U 0.625 0.250 0.625 
+K 0.375 0.375 0.750  G 0.000 0.000 0.000 
+G 0.000 0.000 0.000  L 0.500 0.500 0.500 
+L 0.500 0.500 0.500  W 0.500 0.250 0.750 
+W 0.500 0.250 0.750  U 0.500 0.000 0.500
+end kpoint_path
+
+num_iter          = 100
+num_print_cycles  = 10
+
+Begin Atoms_Frac
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+End Atoms_Frac
+    
+Begin Projections     
+f = 0.0, 0.0, 0.0 : sp3 
+End Projections       
+    
+begin unit_cell_cart
+bohr
+-5.1315510  0.00000 5.1315510
+ 0.00000  5.1315510 5.1315510
+-5.1315510  5.1315510 0.00000
+end unit_cell_cart
+
+mp_grid      = 2 2 2  
+
+begin kpoints
+  0.00000000  0.00000000  0.00000000
+  0.00000000  0.00000000  0.50000000
+  0.00000000  0.50000000  0.00000000
+  0.00000000  0.50000000  0.50000000
+  0.50000000  0.00000000  0.00000000
+  0.50000000  0.00000000  0.50000000
+  0.50000000  0.50000000  0.00000000
+  0.50000000  0.50000000  0.50000000
+end kpoints

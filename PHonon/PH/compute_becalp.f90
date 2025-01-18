@@ -26,8 +26,7 @@ subroutine compute_becalp (becq, alpq)
   USE paw_variables, ONLY : okpaw
 
   USE units_lr, ONLY : lrwfc, iuwfc
-  USE control_ph, ONLY : rec_code_read
-  USE control_lr, ONLY : lgamma
+  USE control_lr, ONLY : lgamma, rec_code_read
   USE eqv, ONLY : evq
   USE qpoint, ONLY : nksq, ikqs
   USE uspp_init,        ONLY : init_us_2

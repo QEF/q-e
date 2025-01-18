@@ -1,42 +1,9 @@
 !
-! Copyright (C) 2001-2008 PWSCF group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
-!----------------------------------------------------------------------------
-SUBROUTINE allocate_wfc()
-  !----------------------------------------------------------------------------
-  !! Dynamical allocation of arrays: wavefunctions.  
-  !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\), 
-  !! \(\text{natomwfc}\), \(\text{nwfcU}\).
-  !
-  USE io_global,           ONLY : stdout
-  USE wvfct,               ONLY : npwx, nbnd
-  USE basis,               ONLY : natomwfc, swfcatom
-  USE fixed_occ,           ONLY : one_atom_occupations
-  USE ldaU,                ONLY : wfcU, nwfcU, lda_plus_u, U_projection
-  USE noncollin_module,    ONLY : npol
-  USE wavefunctions,       ONLY : evc
-  USE wannier_new,         ONLY : use_wannier
-  USE wavefunctions_gpum,  ONLY : using_evc
-  !
-  IMPLICIT NONE
-  !
-  !
-  ALLOCATE( evc(npwx*npol,nbnd) )
-  CALL using_evc(2)
-  !
-  IF ( one_atom_occupations .OR. use_wannier ) &
-     ALLOCATE( swfcatom(npwx*npol,natomwfc) )
-  IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
-       ALLOCATE( wfcU(npwx*npol,nwfcU) )
-  !
-  RETURN
-  !
-END SUBROUTINE allocate_wfc
 !
 !
 !----------------------------------------------------------------------------
@@ -49,12 +16,13 @@ SUBROUTINE allocate_wfc_k()
   !! \(\text{nwfcU}\).  
   !! Requires that k-points are set up and distributed (if parallelized).
   !
-  USE wvfct,            ONLY : npwx, g2kin
+  USE wavefunctions,    ONLY : allocate_wfc
+  USE wvfct,            ONLY : npwx, g2kin, nbnd
   USE uspp,             ONLY : vkb, nkb
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
   USE klist,            ONLY : xk, nks, init_igk
-  USE wvfct_gpum,       ONLY : using_g2kin
+  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
@@ -69,19 +37,18 @@ SUBROUTINE allocate_wfc_k()
   !
   CALL init_igk( npwx, ngm, g, gcutw )
   !
-  CALL allocate_wfc()
+  CALL allocate_wfc( npwx, npol, nbnd )
   !
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
-#if defined __CUDA
-!$acc enter data create(vkb(1:npwx,1:nkb) ) 
-#endif
+  !$acc enter data create(vkb) 
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE( g2kin(npwx) )
-  CALL using_g2kin(2)
+  !$acc enter data create(g2kin) 
+  !
   !
   RETURN
   !

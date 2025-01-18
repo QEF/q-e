@@ -20,10 +20,6 @@
     degauss     = 0.02,
     ecutwfc     = 30.0
     ecutrho     = 240.0
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'atomic',
-    Hubbard_U(1) = 2.0
  /
  &electrons
     conv_thr    = 1.0d-14
@@ -35,3 +31,5 @@ ATOMIC_POSITIONS {alat}
  Ni 0.00 0.00 0.00
 K_POINTS {automatic}
 4 4 4 1 1 1
+HUBBARD {atomic}
+U Ni-3d 2.0

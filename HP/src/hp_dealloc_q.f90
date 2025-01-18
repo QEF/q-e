@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,6 +23,8 @@ SUBROUTINE hp_dealloc_q()
   USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
   USE ldaU_lr,             ONLY : swfcatomk, swfcatomkpq
+  USE qpoint_aux,          ONLY : ikmks, ikmkmqs, becpt
+  USE lr_nc_mag,           ONLY : deeq_nc_save
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -30,6 +32,7 @@ SUBROUTINE hp_dealloc_q()
   IF (lgamma) THEN
      if (associated(evq))  nullify(evq)
   ELSE
+     !$acc exit data delete(evq)
      if (associated(evq))  deallocate(evq)
   ENDIF
   !
@@ -39,17 +42,25 @@ SUBROUTINE hp_dealloc_q()
   if (allocated(nbnd_occ))  deallocate (nbnd_occ)
   if (allocated(ikks))      deallocate (ikks)
   if (allocated(ikqs))      deallocate (ikqs)
+  if (allocated(ikmks))     deallocate (ikmks)
+  if (allocated(ikmkmqs))   deallocate (ikmkmqs)
   if (allocated(m_loc))     deallocate (m_loc)
   !
-  IF (okvan) THEN 
-     if (allocated(eigqts)) deallocate (eigqts)
-     if (allocated(becp1))  then
-        do ik=1,size(becp1)
-           call deallocate_bec_type ( becp1(ik) )
-        enddo
-        deallocate(becp1)
-     endif
-  ENDIF
+  if (allocated(eigqts)) deallocate (eigqts)
+  !
+  if (allocated(becp1))  then
+     do ik=1,size(becp1)
+        call deallocate_bec_type ( becp1(ik) )
+     enddo
+     deallocate(becp1)
+  endif
+  if (allocated(becpt)) then  
+      do ik=1,size(becpt)
+         call deallocate_bec_type ( becpt(ik) )
+      enddo
+      deallocate(becpt)
+  endif
+  if (allocated(deeq_nc_save)) deallocate(deeq_nc_save)
   !
   ! GGA-specific arrays
   !

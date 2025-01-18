@@ -12,7 +12,8 @@ subroutine deallocate_phq
   !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
   !
   USE noncollin_module, ONLY : m_loc
-  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
+  USE becmod,           ONLY: becp, deallocate_bec_type_acc, &
+                              deallocate_bec_type
   USE wavefunctions,    ONLY: evc
   USE ramanm,       ONLY: ramtns
   USE modes,        ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
@@ -43,9 +44,14 @@ subroutine deallocate_phq
                            dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE becmod,       ONLY : deallocate_bec_type
-  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
-
+  USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save
+  USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
+  USE two_chem,      ONLY : twochem
+  USE klist,         ONLY : lgauss
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc, becsumort_cond,becsum_cond
+ 
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc, becsumort_cond,becsum_cond
+ 
   IMPLICIT NONE
   INTEGER :: ik, ipol
 
@@ -53,7 +59,8 @@ subroutine deallocate_phq
   if (lgamma) then
      if(associated(evq)) nullify(evq)
   else
-     if(associated(evq)) deallocate(evq)
+     !$acc exit data delete(evq)
+     if(associated(evq)) deallocate(evq)   !why not if allocated? 
   end if
 
   if(allocated(dvpsi)) deallocate (dvpsi)
@@ -98,14 +105,19 @@ subroutine deallocate_phq
   if(allocated(int3_nc)) deallocate(int3_nc)
   if(allocated(int4_nc)) deallocate(int4_nc)
   if(allocated(becsum_nc)) deallocate(becsum_nc)
+  if(allocated(becsum_cond)) deallocate(becsum_cond)
+  if(allocated(becsum_cond_nc)) deallocate(becsum_cond_nc)
   if(allocated(becsumort)) deallocate(becsumort)
+  if(allocated(becsumort_cond)) deallocate(becsumort_cond)
   if(allocated(alphasum_nc)) deallocate(alphasum_nc)
+  if(allocated(alphasum_cond_nc)) deallocate(alphasum_cond_nc)
   if(allocated(int2_so)) deallocate(int2_so)
   if(allocated(int5_so)) deallocate(int5_so)
   if(allocated(dpqq_so)) deallocate(dpqq_so)
   IF (ALLOCATED(int1_nc_save)) DEALLOCATE (int1_nc_save)
   IF (ALLOCATED(deeq_nc_save)) DEALLOCATE (deeq_nc_save)
   if(allocated(alphasum)) deallocate (alphasum)
+  if(allocated(alphasum_cond)) deallocate (alphasum_cond)
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
@@ -138,7 +150,7 @@ subroutine deallocate_phq
      ENDDO
      DEALLOCATE(becpt)
   ENDIF
-  call deallocate_bec_type ( becp )
+  call deallocate_bec_type_acc ( becp )
 
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)
   if(allocated(el_ph_mat_nc_mag)) deallocate (el_ph_mat_nc_mag)
@@ -194,6 +206,6 @@ subroutine deallocate_phq
      !
   ENDIF
 
-  RETURN
-
+  call deallocate_2d_arrays ()
+ 
 end subroutine deallocate_phq

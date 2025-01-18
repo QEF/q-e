@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{7.0}
+\def\version{7.4}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -93,6 +93,7 @@ Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi
       magnetisation support with USPP and PAW pseudopotentials in 
       code \texttt{pw2wannier.f90}.
 \item Leopold Talirz (U.York) for extensions and fixes to \texttt{pp.x}.
+\item Iurii Timrov (PSI) for the implementation of \texttt{wannier2pw.f90}.
 \end{itemize}
 
 \PostProc\ is free software, released under the 
@@ -329,6 +330,8 @@ quantity "opt\_SHCryoo". In Wannier90, add "berry\_task = shc" and
 activate the calculation of SHC using .sHu and .sIu.''
 \item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
 in Wannier functions basis: see \texttt{PP/examples/WannierHam\_example/}.
+\item The interface with Wannier90 code, \texttt{wannier2pw.x}:
+it builds Wannier functions as Hubbard projectors for DFT+U
 \end{enumerate}
 Note that the \texttt{wfdd.x} code has been moved to \CP.
 

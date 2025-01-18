@@ -15,6 +15,8 @@ MODULE symm_base
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg
+  USE ions_base,  ONLY : atm
+  USE noncollin_module, ONLY : colin_mag
   !
   ! ... these are acceptance criteria
   !
@@ -28,7 +30,8 @@ MODULE symm_base
   !
   PUBLIC :: s, sr, sname, ft, nrot, nsym, nsym_ns, nsym_na, t_rev,  &
             no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
-            allfrac, nofrac, nosym, nosym_evc, fft_fact, spacegroup
+            allfrac, nofrac, nosym, nosym_evc, fft_fact, spacegroup,&
+            chem_symb
   !
   INTEGER :: s(3,3,48)
   !! symmetry matrices, in crystal axis
@@ -392,9 +395,17 @@ CONTAINS
        ENDIF
        !
        ! ... Here we check for magnetic symmetries
-       IF ( magnetic_sym ) CALL sgam_at_mag( nat, m_loc, sym )
-       !
+       IF ( magnetic_sym ) THEN
+          CALL sgam_at_mag( nat, m_loc, sym )
+       ! ... Here we check for time reversal symmetries for collinear systems
+       ! NOTE: This check should be performed in the consistent way as in setup.f90
+       ! However, we temporarily use this way not to change the interface
+       ! until the structure of the code is fixed.
+       ELSE IF (colin_mag >= 1) THEN
+          CALL sgam_at_collin( nat, m_loc, sym )
        ! ... If nosym_evc is true from now on we do not use the symmetry any more
+       ENDIF
+       !
        IF (nosym_evc) THEN
           sym = .FALSE.
           sym(1) = .TRUE.
@@ -492,8 +503,10 @@ CONTAINS
      !
      IF ( fractional_translations ) THEN
         DO na = 2, nat
-           IF (ityp(nb) == ityp(na)) THEN
-              !
+            IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                 .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
+            !IF ( ityp(nb) == ityp(na) ) THEN
+               !
               ft_(:) = xau(:,na) - xau(:,nb) - NINT( xau(:,na) - xau(:,nb) )
               sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft_ )
               IF (sym(irot)) THEN
@@ -531,13 +544,15 @@ CONTAINS
         IF (.NOT.sym(irot) .AND. fractional_translations) THEN
            nb = 1
            DO na = 1, nat
-              IF (ityp(nb) == ityp(na)) THEN
-                 !
+               IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                    .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
+               !IF ( ityp(nb) == ityp(na) ) THEN
+                  !
                  ! ... second attempt: check all possible fractional translations
                  ft_(:) = rau(:,na) - xau(:,nb) - NINT( rau(:,na) - xau(:,nb) )
                  !
                  ! ... ft_ is in crystal axis and is a valid fractional translation
-                 ! only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,
+                 ! only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,6
                  !
                  DO i = 1, 3
                     IF ( ABS (ft_(i)) > eps2 ) THEN
@@ -694,6 +709,85 @@ CONTAINS
      RETURN
      !
    END SUBROUTINE sgam_at_mag
+   !
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE sgam_at_collin( nat, m_loc, sym )
+      !-----------------------------------------------------------------------
+      !! Find spin-space-group symmetries of the collinear system, i.e.
+      !! the pair of the point-group symmetries and the spin operations
+      !! that are symmetries of the atomic configurations and the local magnetization.
+      !! The spin operations include the identity and the time reversal.
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nat
+      !! numbero of atoms of all species
+      REAL(DP), INTENT(IN) :: m_loc(3,nat)
+      !! local magnetization, must be invariant under the sym.op.
+      LOGICAL, INTENT(INOUT) :: sym(48)
+      !! .TRUE. if rotation isym is a sym.op. of the crystal
+      !! (i.e. not of the bravais lattice only)
+      !
+      ! ... local variables
+      !
+      INTEGER :: na, nb, irot
+      LOGICAL :: t1, t2
+      REAL(DP) , ALLOCATABLE ::  m_org(:), m_op(:)
+      ! magnetization and rotated magnetization in crystal axis
+      !
+      ALLOCATE( m_org(nat), m_op(nat) )
+      !
+      ! Set original magnetization
+      DO na = 1, nat
+         m_org(na) = m_loc(3,na)
+      ENDDO
+
+      ! Check for time reversal
+      DO irot = 1, nrot
+         !
+         t_rev(irot) = 0
+         !
+         IF ( sym(irot) ) THEN
+            DO na = 1, nat
+               nb = irt(irot,na)
+               IF ( nb < 1 .OR. nb > nat ) CALL errore( 'check_mag_sym', &
+                   'internal error: out-of-bound atomic index', na )
+
+               m_op(nb) = m_org(na)
+
+            ENDDO
+
+            IF (ALL( ABS(m_op - m_org) < 1.0D-6)) THEN
+               ! the operation is a symmetry without time-reversal
+               t_rev(irot) = 0
+            ELSE IF (ALL( ABS(m_op + m_org) < 1.0D-6)) THEN
+               IF ( colin_mag == 1) THEN 
+                  ! discard symmteries with time-reversal
+                  sym(irot) = .FALSE. 
+               ELSE ! IF ( colin_mag == 2) THEN
+                  ! the operation is a symmetry with time-reversal
+                  t_rev(irot) = 1
+               ENDIF
+            ELSE
+               ! the operation is not a symmetry
+               sym(irot) = .FALSE.
+            ENDIF
+
+
+            IF ( (.NOT. sym(irot) ) .AND. &
+               ( ABS(ft(1,irot)) > eps2 .OR. &
+                 ABS(ft(2,irot)) > eps2 .OR. &
+                 ABS(ft(3,irot)) > eps2 ) ) nsym_ns = nsym_ns-1
+
+         ENDIF
+      ENDDO
+      ! ... deallocate work space
+      DEALLOCATE( m_op, m_org )
+      !
+      RETURN
+      !
+   END SUBROUTINE sgam_at_collin
    !
    !
    !-------------------------------------------------------------------------
@@ -885,8 +979,10 @@ CONTAINS
      DO na = 1, nat
         DO nb = 1, nat
            !
-           IF( ityp (nb) == ityp (na) ) THEN
-              checksym =  eqvect( rau(1,na), xau(1,nb), ft_ , accep )
+            IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                 .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
+            !IF ( ityp(nb) == ityp(na) ) THEN
+               checksym =  eqvect( rau(1,na), xau(1,nb), ft_ , accep )
               IF ( checksym ) THEN
                  !
                  ! ... the rotated atom does coincide with one of the like atoms
@@ -1122,7 +1218,10 @@ CONTAINS
       !
       DO na = 2, nat
          IF ( fractional_translations ) THEN
-            IF (ityp(nb) == ityp(na) ) THEN
+            IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                 .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
+
+            !IF ( ityp(nb) == ityp(na) ) THEN
                ft_(:) = xau(:,na) - xau(:,nb) - NINT( xau(:,na) - xau(:,nb) )
                !
                sym(irot) = checksym( irot, nat, ityp, xau, xau, ft_ )
@@ -1154,7 +1253,9 @@ CONTAINS
             nb = 1
             !
             DO na = 1, nat
-               IF (ityp(nb) == ityp(na) ) THEN
+               IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(nb)) ) == chem_symb( atm(ityp(na)) ) ) & 
+                    .OR. (colin_mag < 0 .AND. ityp(nb) == ityp(na) ) )THEN
+               !IF ( ityp(nb) == ityp(na) ) THEN
                   !
                   !      second attempt: check all possible fractional translations
                   !
@@ -1315,4 +1416,23 @@ CONTAINS
     END FUNCTION mcm
     !
     !
+    !--------------------------------------------------------------------------
+    CHARACTER FUNCTION chem_symb( symbol )
+      !------------------------------------------------------------------------
+      !! Returns the chemical symbol used to identify the symmetry
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: symbol
+      !
+      IF ( SCAN( symbol ,"0123456789") == 0 ) THEN
+         chem_symb = symbol
+      ELSE
+         chem_symb = symbol( 1:SCAN( symbol , "0123456789_-" ) -1 )
+      ENDIF
+      !
+    END FUNCTION chem_symb
+    !
+    !
+
 END MODULE symm_base

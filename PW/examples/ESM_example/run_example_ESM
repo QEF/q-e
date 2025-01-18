@@ -99,6 +99,7 @@ cat > H2O_pbc.in << EOF
     assume_isolated = 'esm', esm_bc='pbc'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -182,6 +183,7 @@ cat > Al001_pbc.in << EOF
     assume_isolated='esm', esm_bc='pbc'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -222,6 +224,7 @@ cat > Al001_bc1.in << EOF
     assume_isolated='esm', esm_bc='bc1'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -262,6 +265,7 @@ cat > Al001_bc2.in << EOF
     assume_isolated='esm', esm_bc='bc2'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -303,6 +307,7 @@ cat > Al001_bc2_efield.in << EOF
     assume_isolated='esm', esm_bc='bc2', esm_efield=0.00192148511256006
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -344,6 +349,7 @@ cat > Al001_bc3.in << EOF
     assume_isolated='esm', esm_bc='bc3'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -386,6 +392,7 @@ cat > Al001_bc3_m002.in << EOF
     tot_charge = -0.02,
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
@@ -428,6 +435,7 @@ cat > Al001_bc3_p002.in << EOF
     tot_charge = 0.02,
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES

@@ -46,7 +46,7 @@
 #
 #   interleave  -- used to mark that the order of enclosed elements is not important
 #   optional    -- used to mark anything enclosed as optional
-#   choice      -- used to mark alternatice choices
+#   choice      -- used to mark alternative choices
 #   ?           -- zero or one repetition of instances of anything enclosed is allowed (synonymous with "optional")
 #   *           -- zero or more repetitions of instances of anything enclosed is allowed
 #   +           -- one  or more repetitions of instances of anything enclosed is allowed
@@ -113,6 +113,8 @@ element label   { text }
 element message { text }
 element see     { clist }
 element keyword { ident }
+element constant { word }
+element etc     { empty }
 
 #
 # define what elements are used within var, dimension, ...
@@ -175,6 +177,9 @@ element vargroup {
 
     interleave {
 	+ { ref var }
+        * { ref constant }
+        * { ref etc }
+        * { ref keyword }
 	ref varTags
     }
 }
@@ -379,10 +384,12 @@ element card {
     }
 }
 
-element linecard {    
+element linecard {
     interleave {
 	+ {
 	    optional {
+                ref constant
+                ref etc
 		ref keyword
 		ref var
 		ref vargroup
@@ -423,6 +430,8 @@ element line {
 	interleave {
 	    optional {
 		ref group
+                ref constant
+                ref etc
 		ref keyword
 		ref var
 		ref vargroup

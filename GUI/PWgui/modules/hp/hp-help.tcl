@@ -155,6 +155,29 @@ determines the indices of inter-site couples.
 
 
 # ------------------------------------------------------------------------
+help determine_q_mesh_only -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>determine_q_mesh_only</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>See: </em> perturb_only_atom
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. determines the number of q points
+for a given perturbed atom and exits smoothly.
+This keyword can be used only if perturb_only_atom
+is set to .true.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help find_atpert -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>find_atpert</b></big>
@@ -178,6 +201,7 @@ Method for searching of atoms which must be perturbed.
     there are using symmetry. Atoms which have the
     same type but are not equivalent by symmetry will
     be distinguished in this case.
+4 = Perturb all Hubbard atoms (the most expensive option)
          </pre></blockquote>
 </ul>      
       
@@ -460,6 +484,26 @@ solution of the linear-response Kohn-Sham equations.
 
 
 # ------------------------------------------------------------------------
+help alpha_mix -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>alpha_mix(i)</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> alpha_mix(1)=0.3
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Mixing parameter (for the i-th iteration) for updating
+the response SCF potential using the modified Broyden
+method. See: D.D. Johnson, "PRB 38, 12807 (1988)".
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help nmix -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>nmix</b></big>
@@ -494,7 +538,7 @@ Number of nearest neighbors of every Hubbard atom which
 will be considered when writting Hubbard V parameters to
 the file parameters.out, which can be used in the
 subsequent DFT+U+V calculation. This keyword is used only
-when lda_plus_u_kind = 2 (post-processing stage).
+for DFT+U+V (post-processing stage).
          </pre></blockquote>
 </ul>      
       
@@ -517,7 +561,7 @@ atoms starting from which (and up to the maximum l in the
 system) Hubbard V will be written to the file parameters.out.
 "lmin" refers to the orbital quantum number of the atom
 corresponding to the first site-index in Hubbard_V(:,:,:).
-This keyword is used only when lda_plus_u_kind = 2 and only
+This keyword is used only for DFT+U+V and only
 in the post-processing stage. Example: "lmin"=1 corresponds to
 writing to file V between e.g. oxygen (with p states) and its
 neighbors, and including V between transition metals (with d
@@ -541,8 +585,8 @@ help rmax -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Maximum distance (in Bohr) between two atoms to search
-neighbors (used only at the postprocessing step when
-lda_plus_u_kind = 2). This keyword is useful when there
+neighbors (used only at the postprocessing step for
+DFT+U+V). This keyword is useful when there
 are e.g. defects in the system.
          </pre></blockquote>
 </ul>      

@@ -296,7 +296,7 @@
       SUBROUTINE readfile_x                                         &
       &     ( flag, h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
       &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-      &       xnhh0,xnhhm,vnhh,velh,fion, tps, mat_z, occ_f )
+      &       xnhh0,xnhhm,vnhh,velh,fion, tps, mat_z, occ_f, dt )
          USE kinds,          ONLY : DP
          IMPLICIT NONE
          INTEGER, INTENT(in) :: flag
@@ -311,7 +311,7 @@
          integer, INTENT(inout) :: nhpcl,nhpdim
          REAL(DP) :: ekincm
          REAL(DP) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-         REAL(DP), INTENT(OUT) :: tps
+         REAL(DP), INTENT(OUT) :: tps, dt
          REAL(DP), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       END SUBROUTINE readfile_x
    END INTERFACE
@@ -321,7 +321,7 @@
       SUBROUTINE writefile_x &
       &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
       &       lambda,lambdam,idesc,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
+      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho, dt )
          USE kinds,            ONLY: DP
          implicit none
          integer, INTENT(IN) :: nfi
@@ -335,7 +335,7 @@
          REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
          integer,      INTENT(in) :: nhpcl, nhpdim
          REAL(DP), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-         REAL(DP), INTENT(in) :: tps
+         REAL(DP), INTENT(in) :: tps, dt
          REAL(DP), INTENT(in) :: rho(:,:)
          REAL(DP), INTENT(in) :: occ_f(:)
          REAL(DP), INTENT(in) :: mat_z(:,:,:)

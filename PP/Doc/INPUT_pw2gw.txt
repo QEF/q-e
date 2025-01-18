@@ -1,0 +1,113 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pw2gw.x / PWscf / Quantum ESPRESSO (version: 7.4)
+------------------------------------------------------------------------
+
+
+Purpose of pw2gw.x:
+   Optical properties in single-particle approach (Fermi Golden Rule).
+   Interface with GW and excitonic codes.
+
+   The code computes and writes ("matrixelements" file) the optical matrix elemenents in the
+   dipole approximation.
+
+   The code computes the imaginary part of the dielectric tensor xx, yy and zz ("epsX.dat", "epsY.dat",
+   "epsZ.dat") and the average ("epsTOT.dat")
+
+Structure of the input data:
+============================
+
+   &INPUTPP
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           STRING
+   Status:         MANDATORY
+   Description:    the first part of the name of all the file written by the code
+                   should be equal to the value given in the main calculations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           STRING
+   Default:        "./"
+   Description:    the scratch directory where the massive data-files are written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       what
+   
+   Type:           STRING
+   Default:        "gw"
+   Description:    "gw" : Calculate dipole optical matrix elements (use for norm-conserving pseudopotentials)
+                   and imaginary part of the dielectric function.
+                   
+                   "gmaps": write g-maps for each processor in a file "fort.'100 + processor number'"
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       qplda
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    if .TRUE. write the interface file "QPLDA" to GW and BSE codes (chisig, dpforexc).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxcdiag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    if .TRUE. calculates the expectation value of the exchange and correlation potential
+                   on all the Kohn-Sham states and write it into the "vxcdiag.dat" file.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vkb
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    if .TRUE. use Kleyman-Bylander projectors to write additional informatio into fort.15 file
+                   (Still in development)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       Emin
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Starting photon energy for which the dielectric function is calculated (in eV)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       Emax
+   
+   Type:           REAL
+   Default:        30.0
+   Description:    Highest photon energy for which the dielectric function is calculated (in eV)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       DeltaE
+   
+   Type:           REAL
+   Default:        0.05
+   Description:    Energy step with which the dielectric function is calculated (in eV)
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Sat Oct 26 10:20:47 CEST 2024

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -81,7 +81,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/silicon*
 rm -rf $TMP_DIR/_ph0/silicon*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 # self-consistent calculation
 cat > si.scf.in << EOF
@@ -165,7 +165,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/nickel*
 rm -rf $TMP_DIR/_ph0/nickel*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 # self-consistent calculation for Ni with US-PP
 cat > ni.scf.in << EOF
@@ -247,7 +247,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/copper*
 rm -rf $TMP_DIR/_ph0/copper*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 # self-consistent calculation for PAW Cu PBE with PAW-PP
 cat > Cu.scf_pbe.in << EOF
@@ -320,7 +320,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/gold*
 rm -rf $TMP_DIR/_ph0/gold*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 # self-consistent calculation for PAW Au with spin-orbit
 cat > Au.scf_rel.in << EOF
@@ -393,7 +393,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/copper*
 rm -rf $TMP_DIR/_ph0/copper*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 # self-consistent calculation for PAW Cu PBE with PAW-PP
 cat > Cu.scf_pbe.in << EOF

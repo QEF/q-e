@@ -234,6 +234,7 @@ CONTAINS
       INTEGER  :: n, i, j, k, nat
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
+      REAL(DP), ALLOCATABLE :: step_tmp(:)
       ! ... for scaled coordinates
       REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3), omega
       !
@@ -326,7 +327,25 @@ CONTAINS
       !
       ! ... convergence is checked here
       !
-      energy_error = ABS( energy_p - energy )
+      IF (scf_iter .EQ. 1) THEN
+          ! Compute predicted energy change for the initial iteration, since
+          ! there is no previous energy.
+          ! See section 6.2 of Nocedal and Wright "Numerical Optimization",
+          ! there it is called "predicted reduction".
+          ! Note that since it is first iteration, hessian is metric.
+          ALLOCATE (step_tmp( n ) )
+          !
+          step_tmp(:) = inv_metric(:,:) .times. grad(:)
+          if (lmovecell) FORALL( i=1:3, j=1:3) step_tmp( n-NADD+j+3*(i-1) ) = &
+              step_tmp( n-NADD+j+3*(i-1) )*iforceh(i,j)
+          !
+          energy_error = abs(grad(:) .dot. step_tmp(:) + &
+              0.5_DP * (step_tmp(:) .dot. (metric(:, :) .times. step_tmp(:))))
+          !
+          DEALLOCATE( step_tmp )
+      ELSE
+          energy_error = ABS( energy_p - energy )
+      END IF
       !
       ! ... obscure PGI bug as of v.17.4
       !
@@ -376,6 +395,8 @@ CONTAINS
       IF( lmovecell ) WRITE(stdout, &
           '(5X,"Cell gradient error",T30,"= ",1PE12.1," kbar")') &
           cell_error * ry_kbar
+      IF( lfcp ) WRITE(stdout, &
+         '(5X,"FCP gradient error",T30,"= ",1PE12.1,/)') fcp_error
       !
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -696,7 +717,7 @@ CONTAINS
       !! \(\text{inv_hess}\) in re-initialized to the initial guess 
       !! defined as the inverse metric.
       !
-      INTEGER, INTENT(IN) :: n
+      INTEGER,  INTENT(IN) :: n
       LOGICAL,  INTENT(IN) :: lfcp
       REAL(DP), INTENT(IN) :: fcp_hess
       !

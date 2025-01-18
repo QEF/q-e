@@ -4,7 +4,6 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
 !----------------------------------------------------------------------------
 MODULE esm
   !--------------------------------------------------------------------------
@@ -47,32 +46,6 @@ MODULE esm
             esm_stres_har, esm_stres_ewa, esm_stres_loclong, &
             esm_printpot, esm_summary
   !
-  LOGICAL :: do_comp_esm = .FALSE.
-  !
 CONTAINS
-  !
-  ! Checks inversion symmetry along z-axis
-  !
-  LOGICAL FUNCTION esm_z_inv()
-    !
-    USE constants, ONLY : eps14
-    !
-    IMPLICIT NONE
-    !
-    esm_z_inv = .TRUE.
-    !
-    IF (do_comp_esm) THEN
-      IF (TRIM(esm_bc) == 'bc1') THEN
-        esm_z_inv = .TRUE.
-      ELSE IF (TRIM(esm_bc) == 'bc2') THEN
-        esm_z_inv = (ABS(esm_efield) < eps14)
-      ELSE IF (TRIM(esm_bc) == 'bc3') THEN
-        esm_z_inv = .FALSE.
-      ELSE IF (TRIM(esm_bc) == 'bc4') THEN
-        esm_z_inv = .FALSE.
-      END IF
-    END IF
-    !
-  END FUNCTION esm_z_inv
   !
 END MODULE esm

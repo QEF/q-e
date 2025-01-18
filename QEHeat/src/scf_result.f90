@@ -104,7 +104,6 @@ contains
       use klist, only: xk, igk_k
       use cell_base, only: omega
       use mp_bands, only: intra_bgrp_comm
-      use gvect, only: ngm, gg, g
       USE uspp_init,            ONLY : init_us_2
 
       !use becmod, only : becp
@@ -116,7 +115,6 @@ contains
       npw = npwx
       call update_pot()
       call hinit1()
-      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
 
       evc = t%evc

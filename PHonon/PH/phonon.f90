@@ -53,13 +53,13 @@ PROGRAM phonon
   IMPLICIT NONE
   !
   INTEGER :: iq, ierr
-  LOGICAL :: do_band, do_iq, setup_pw
+  LOGICAL :: do_band, do_iq
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   !
   ! Initialize MPI, clocks, print initial messages
   !
-  CALL mp_startup ( start_images=.true. )
+  CALL mp_startup ( start_images=.true., images_only=.true. )
   CALL environment_start ( code )
   !
   ! ... and begin with the initialization part

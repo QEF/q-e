@@ -41,7 +41,9 @@ subroutine h_prec (ik, evq, h_diag)
   ikq = ikqs(ik)
   npwq = ngk(ikq)
   nbnd_=nbnd_occ(ikk)
-  
+
+  CALL start_clock('h_prec')
+
   ALLOCATE ( eprec(nbnd_) )
   ALLOCATE ( aux(npol*npwx) )
   DO ibnd = 1, nbnd_
@@ -84,6 +86,9 @@ subroutine h_prec (ik, evq, h_diag)
         END DO
      END IF
   END DO
+
+  CALL stop_clock( 'h_prec')
+
   DEALLOCATE (eprec)
-  
+
 END SUBROUTINE h_prec

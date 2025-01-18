@@ -254,7 +254,7 @@ subroutine vloc (mesh,nloc,rloc,zion,rr,gpot,pot_loc)
  pot_loc=0.d0
  do i=1,mesh
    a=rr(i)/rloc
-   pot_loc(i)=-zion*derf(a/dsqrt(2.d0))/rr(i)
+   pot_loc(i)=-zion*erf(a/dsqrt(2.d0))/rr(i)
    factor=0.d0
    do j=1,nloc
      factor=factor+gpot(j)*a**(2.d0*j-2.d0)

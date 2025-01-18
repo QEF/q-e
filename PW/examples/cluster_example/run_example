@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -70,7 +70,7 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -222,29 +222,29 @@ grep -e bands --after=3 h2o.out-$a| grep -e " -"| tail -1| awk -v a=$a '{print a
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/H2O*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 done
 
 $ECHO " eigenvalues of N atom"
 cat n.eigenvalues
-$ECHO 
+$ECHO
 $ECHO " to be compared with the reference values"
 cat ../reference/n.eigenvalues
-$ECHO 
-$ECHO 
+$ECHO
+$ECHO
 $ECHO " eigenvalues of NH4+ ions"
 cat nh4+.eigenvalues
-$ECHO 
+$ECHO
 $ECHO " to be compared with the reference values"
 cat ../reference/nh4+.eigenvalues
-$ECHO 
-$ECHO 
+$ECHO
+$ECHO
 $ECHO " eigenvalues of H2O molecule"
 cat h2o.eigenvalues
-$ECHO 
+$ECHO
 $ECHO " to be compared with the reference values"
 cat ../reference/h2o.eigenvalues
-$ECHO 
-$ECHO 
+$ECHO
+$ECHO
 $ECHO "$EXAMPLE_DIR: done"

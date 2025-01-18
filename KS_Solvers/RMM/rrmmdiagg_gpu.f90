@@ -9,7 +9,7 @@
 #define ZERO ( 0._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
+SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi, e, &
                       g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
@@ -59,20 +59,20 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
   ! ... device variables
   !
   INTEGER :: ii, jj, kk
-  COMPLEX(DP), INTENT(INOUT)  :: psi_d (npwx,nbnd)
-  COMPLEX(DP), INTENT(INOUT)  :: hpsi_d(npwx,nbnd)
-  COMPLEX(DP), INTENT(INOUT)  :: spsi_d(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT)  :: psi (npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT)  :: hpsi(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT)  :: spsi(npwx,nbnd)
   REAL(DP), INTENT(IN)        :: g2kin_d(npwx)
   COMPLEX(DP), ALLOCATABLE    :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: kpsi_d(:,:), hkpsi_d(:,:), skpsi_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
 #if defined(__CUDA)
-  attributes(device) :: psi_d, hpsi_d, spsi_d, g2kin_d
-  attributes(device) :: phi_d, hphi_d, sphi_d, kpsi_d, hkpsi_d, skpsi_d
+  attributes(device) :: g2kin_d
+  attributes(device) :: phi_d, hphi_d, sphi_d
 #endif
-  EXTERNAL :: h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
   !
@@ -104,16 +104,18 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
      !
   END IF
   !
-  ALLOCATE( kpsi_d( npwx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate kpsi_d ', ABS(ierr) )
+  ALLOCATE( kpsi( npwx, nbnd ), STAT=ierr )
+  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
   !
-  ALLOCATE( hkpsi_d( npwx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hkpsi_d ', ABS(ierr) )
+  ALLOCATE( hkpsi( npwx, nbnd ), STAT=ierr )
+  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hkpsi ', ABS(ierr) )
+  !$acc enter data create(kpsi, hkpsi)
   !
   IF ( uspp ) THEN
      !
-     ALLOCATE( skpsi_d( npwx, nbnd ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate skpsi_d ', ABS(ierr) )
+     ALLOCATE( skpsi( npwx, nbnd ), STAT=ierr )
+     IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate skpsi ', ABS(ierr) )
+     !$acc enter data create(skpsi)
      !
   END IF
   !
@@ -158,21 +160,11 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
     END DO 
   END IF
   !
-!$cuf kernel do(2)
-  DO ii = 1, npwx 
-    DO jj = 1, nbnd  
-      kpsi_d(ii,jj) = ZERO
-      hkpsi_d(ii,jj) = ZERO
-    END DO 
-  END DO 
-  IF ( uspp ) THEN  
-!$cuf kernel do(2)
-    DO ii = 1, npwx 
-      DO jj = 1, nbnd  
-        skpsi_d(ii,jj) = ZERO
-      END DO 
-    END DO 
-  END IF
+  !$acc kernels
+  kpsi = ZERO
+  hkpsi = ZERO
+  IF ( uspp ) skpsi = ZERO 
+  !$acc end kernels 
   !
   hr = 0._DP
   sr = 0._DP
@@ -199,7 +191,7 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
   !
   IF ( do_hpsi ) THEN
      !
-     CALL calc_hpsi_gpu( )
+     CALL calc_hpsi_gamma_gpu( )
      !
   END IF
   !
@@ -207,17 +199,17 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
   !
   IF ( gstart == 2 ) THEN
      !
-!$cuf kernel do(1)
+     !$acc kernels
      DO jj  = 1, nbnd 
-       psi_d (1,jj) = CMPLX( DBLE( psi_d (1,jj) ), 0._DP, kind=DP )
-       hpsi_d(1,jj) = CMPLX( DBLE( hpsi_d(1,jj) ), 0._DP, kind=DP )
+       psi (1,jj) = CMPLX( DBLE( psi (1,jj) ), 0._DP, kind=DP )
+       hpsi(1,jj) = CMPLX( DBLE( hpsi(1,jj) ), 0._DP, kind=DP )
      END DO 
      IF ( uspp ) THEN 
-!$cuf kernel do(1)
        DO jj  = 1, nbnd 
-         spsi_d(1,jj) = CMPLX( DBLE( spsi_d(1,jj) ), 0._DP, kind=DP )
+         spsi(1,jj) = CMPLX( DBLE( spsi(1,jj) ), 0._DP, kind=DP )
        END DO 
      END IF 
+     !$acc end kernels
      !
   END IF
   !
@@ -249,61 +241,42 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
   !
   IF ( ibnd_start > 1 ) THEN
      !
-!$cuf kernel do(2)
-     DO ii = 1, npwx 
-       DO jj = 1,ibnd_start-1  
-           psi_d(ii,jj)  = ZERO
-           hpsi_d(ii,jj) = ZERO
-       END DO
-     END DO
-     !
-     IF ( uspp ) THEN
-     !
-!$cuf kernel do(2)
-        DO ii = 1, npwx 
-          DO jj = 1,ibnd_start-1  
-            spsi_d(ii,jj) = ZERO
-          END DO
-        END DO
-     !
-     END IF
+     !$acc kernels
+     psi(:,1:ibnd_start-1) = ZERO
+     hpsi(:,1:ibnd_start-1) = ZERO
+     IF ( uspp ) spsi(:,1:ibnd_start-1) = ZERO
+     !$acc end kernels
      !
   END IF
   !
   IF ( ibnd_end < nbnd ) THEN
      !
-!$cuf kernel do(2)
-     DO ii = 1, npwx 
-       DO jj = ibnd_end+1,nbnd  
-           psi_d (ii,jj) = ZERO
-           hpsi_d(ii,jj) = ZERO
-       END DO
-     END DO
-     !
-     IF ( uspp ) THEN
-!$cuf kernel do(2)
-        DO ii = 1, npwx 
-          DO jj = ibnd_end+1,nbnd
-              spsi_d(ii,jj) = ZERO
-          END DO
-        END DO
-        !
-     END IF
+     !$acc kernels
+     psi(:,ibnd_end+1:nbnd) = ZERO
+     hpsi(:,ibnd_end+1:nbnd) = ZERO
+     IF ( uspp ) spsi(:,ibnd_end+1:nbnd) = ZERO
+     !$acc end kernels
      !
   END IF
   !
-  CALL mp_sum( psi_d,  inter_bgrp_comm )
-  CALL mp_sum( hpsi_d, inter_bgrp_comm )
+  !$acc host_data use_device(psi, hpsi, spsi)
+  CALL mp_sum( psi,  inter_bgrp_comm )
+  CALL mp_sum( hpsi, inter_bgrp_comm )
   IF ( uspp ) &
-  CALL mp_sum( spsi_d, inter_bgrp_comm )
+  CALL mp_sum( spsi, inter_bgrp_comm )
+  !$acc end host_data
   !
   DEALLOCATE( phi_d )
   DEALLOCATE( hphi_d )
   IF ( uspp ) DEALLOCATE( sphi_d )
-  DEALLOCATE( kpsi_d )
-  DEALLOCATE( hkpsi_d )
-  IF ( uspp ) DEALLOCATE( skpsi_d )
-!
+  !$acc exit data delete(kpsi, hkpsi)
+  DEALLOCATE( kpsi )
+  DEALLOCATE( hkpsi )
+  IF ( uspp ) THEN
+     !$acc exit data delete(kpsi, hkpsi)
+     DEALLOCATE( skpsi )
+  ENDIF
+  !
   DEALLOCATE( hr )
   DEALLOCATE( sr )
   DEALLOCATE( php )
@@ -323,74 +296,72 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
 CONTAINS
   !
   !
-  SUBROUTINE calc_hpsi_gpu( )
+  SUBROUTINE calc_hpsi_gamma_gpu( )
     !
     IMPLICIT NONE
     !
     INTEGER :: ibnd
     !
-    REAL(DP), EXTERNAL :: gpu_DDOT
+    REAL(DP), EXTERNAL :: MYDDOT
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
-!$cuf kernel do(2)
-    DO ii = 1, npwx
-      DO jj = 1, nbnd 
-        hpsi_d(ii,jj) = ZERO 
-      END DO 
-    END DO 
+    !$acc kernels
+    hpsi = ZERO 
+    !$acc end kernels
     !
-    CALL h_psi_gpu( npwx, npw, nbnd, psi_d, hpsi_d )
+    CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
     !
     ! ... Operate the Overlap : S |psi>
     !
     IF ( uspp ) THEN
        !
-!$cuf kernel do(2)
-       DO ii = 1, npwx
-         DO jj = 1, nbnd 
-           spsi_d(ii,jj) = ZERO 
-         END DO 
-       END DO 
+       !$acc kernels
+       spsi = ZERO
+       !$acc end kernels
        !
-       CALL s_psi_gpu( npwx, npw, nbnd, psi_d, spsi_d )
+       CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi )
        !
     END IF
     !
     ! ... Matrix element : <psi| H |psi>
     !
+    !$acc host_data use_device(psi, hpsi)
     DO ibnd = ibnd_start, ibnd_end
        !
-       hw(ibnd) = 2._DP * gpu_DDOT( npw2, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 )
+       hw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( gstart == 2 ) &
-          hw(ibnd)= hw(ibnd) - gpu_DDOT( 1, psi_d(1,ibnd), 1, hpsi_d(1,ibnd),1)
+          hw(ibnd)= hw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, hpsi(1,ibnd),1)
        !
     END DO
+    !$acc end host_data
     !
     CALL mp_sum( hw(ibnd_start:ibnd_end), intra_bgrp_comm )
     !
     ! ... Matrix element : <psi| S |psi>
     !
+    !$acc host_data use_device(psi, spsi)
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( uspp ) THEN
           !
-          sw(ibnd) = 2._DP * gpu_DDOT( npw2, psi_d(1,ibnd), 1, spsi_d(1,ibnd), 1 )
+          sw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
           !
           IF ( gstart == 2 ) &
-             sw(ibnd)= sw(ibnd) - gpu_DDOT( 1, psi_d(1,ibnd), 1, spsi_d(1,ibnd),1)
+             sw(ibnd)= sw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, spsi(1,ibnd),1)
           !
        ELSE
           !
-          sw(ibnd) = 2._DP * gpu_DDOT( npw2, psi_d(1,ibnd), 1, psi_d(1,ibnd), 1 )
+          sw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, psi(1,ibnd), 1 )
           !
           IF ( gstart == 2 ) &
-             sw(ibnd )= sw(ibnd) - gpu_DDOT( 1, psi_d(1,ibnd), 1, psi_d(1,ibnd),1)
+             sw(ibnd )= sw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, psi(1,ibnd),1)
           !
        END IF
        !
     END DO
+    !$acc end host_data
     !
     CALL mp_sum( sw(ibnd_start:ibnd_end), intra_bgrp_comm )
     !
@@ -408,7 +379,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE calc_hpsi_gpu
+  END SUBROUTINE calc_hpsi_gamma_gpu
   !
   SUBROUTINE do_diis_gpu( idiis )
     !
@@ -446,10 +417,12 @@ CONTAINS
        !
        IF ( conv(ibnd) ) CYCLE
        !
-       CALL DCOPY_gpu( npw2, psi_d (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
-       CALL DCOPY_gpu( npw2, hpsi_d(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
+       !$acc host_data use_device(psi, hpsi, spsi)
+       CALL MYDCOPY( npw2, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL DCOPY_gpu( npw2, spsi_d(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
        psp(ibnd,idiis) = sw(ibnd)
@@ -470,15 +443,15 @@ CONTAINS
           !
           er = php(ibnd,kdiis)
           !
-          CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           END IF
           !
@@ -486,19 +459,19 @@ CONTAINS
        !
        er = php(ibnd,idiis)
        !
-       CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       CALL MYDCOPY( npw2, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL DGEMV_gpu( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
                    vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
        !
        IF ( gstart == 2 ) THEN  
@@ -539,21 +512,21 @@ CONTAINS
        !
        DO kdiis = 1, idiis
           !
-          CALL DCOPY_gpu( npw2, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL DCOPY_gpu( npw2, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL DCOPY_gpu( npw2, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL DGEMV_gpu( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
                    vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
        !
        IF ( gstart == 2 ) THEN 
@@ -599,46 +572,44 @@ CONTAINS
           IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vr(:) )
           CALL mp_bcast( vr, root_bgrp, intra_bgrp_comm )
           !
-!$cuf kernel do(1)
-          DO ii = 1, npwx
-            psi_d (ii,ibnd) = ZERO
-            hpsi_d(ii,ibnd) = ZERO
-            kpsi_d(ii,kbnd) = ZERO
-          END DO 
-          IF ( uspp ) THEN
-!$cuf kernel do(1)
-            DO ii = 1, npwx
-              spsi_d(ii,ibnd) = ZERO
-            END DO 
-          END IF 
+          !$acc kernels
+          psi(:,ibnd) = ZERO
+          hpsi(:,ibnd) = ZERO
+          kpsi(:,kbnd) = ZERO
+          IF ( uspp ) spsi(:,ibnd) = ZERO
+          !$acc end kernels
           !
           DO kdiis = 1, idiis
              !
              ! ... Wave functions
              !
              kvr = vr(kdiis) 
-             CALL DAXPY_gpu( npw2, kvr, phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
-             CALL DAXPY_gpu( npw2, kvr, hphi_d(1,ibnd,kdiis), 1, hpsi_d(1,ibnd), 1 )
+             !$acc host_data use_device(psi, hpsi, spsi)
+             CALL MYDAXPY( npw2, kvr, phi_d (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, hphi_d(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
              IF ( uspp ) &
-             CALL DAXPY_gpu( npw2, kvr, sphi_d(1,ibnd,kdiis), 1, spsi_d(1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, sphi_d(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+             !$acc end host_data
              !
              ! ... Residual vectors
              !
              er = php(ibnd,kdiis)
              !
-             CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             CALL MYDCOPY( npw2, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              ELSE
                 !
-                CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              END IF
              !
-             CALL DAXPY_gpu( npw2, kvr, vec1_d(1), 1, kpsi_d(1,kbnd), 1 )
+             !$acc host_data use_device(kpsi)
+             CALL MYDAXPY( npw2, kvr, vec1_d(1), 1, kpsi(1,kbnd), 1 )
+             !$acc end host_data
              !
           END DO
           !
@@ -647,26 +618,34 @@ CONTAINS
           ! ... Wave functions
           !
           norm = SQRT( sw(ibnd) )
-          CALL DSCAL_gpu( npw2, 1._DP / norm, psi_d (1,ibnd), 1 )
-          CALL DSCAL_gpu( npw2, 1._DP / norm, hpsi_d(1,ibnd), 1 )
+          !$acc host_data use_device(psi, hpsi, spsi)
+          CALL MYDSCAL( npw2, 1._DP / norm, psi (1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, hpsi(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL DSCAL_gpu( npw2, 1._DP / norm, spsi_d(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, spsi(1,ibnd), 1 )
+          !$acc end host_data
           !
           ! ... Residual vectors
           !
           er = hw(ibnd)
           !
-          CALL DCOPY_gpu( npw2, hpsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+          !$acc host_data use_device(hpsi, kpsi)
+          CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          !$acc end host_data
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY_gpu( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             !$acc host_data use_device(spsi, kpsi)
+             CALL MYDAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             !$acc end host_data
              !
           ELSE
              !
 !civn: here changed spsi --> psi due to a possible typo in the original version 
-             !CALL DAXPY_gpu( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
-             CALL DAXPY_gpu( npw2, -er, psi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             !CALL MYDAXPY( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             !$acc host_data use_device(psi, kpsi)
+             CALL MYDAXPY( npw2, -er, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             !$acc end host_data
              !
           END IF
           !
@@ -675,18 +654,18 @@ CONTAINS
        ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN
           !
-!$cuf kernel do(1)
+          !$acc kernels
           DO ii = 1, 1
-            psi_d (1,ibnd) = CMPLX( DBLE( psi_d (1,ibnd) ), 0._DP, kind=DP )
-            hpsi_d(1,ibnd) = CMPLX( DBLE( hpsi_d(1,ibnd) ), 0._DP, kind=DP )
-            kpsi_d(1,kbnd) = CMPLX( DBLE( kpsi_d(1,kbnd) ), 0._DP, kind=DP )
+            psi (1,ibnd) = CMPLX( DBLE( psi (1,ibnd) ), 0._DP, kind=DP )
+            hpsi(1,ibnd) = CMPLX( DBLE( hpsi(1,ibnd) ), 0._DP, kind=DP )
+            kpsi(1,kbnd) = CMPLX( DBLE( kpsi(1,kbnd) ), 0._DP, kind=DP )
           END DO 
           IF ( uspp ) THEN 
-!$cuf kernel do(1)
             DO ii = 1, 1
-              spsi_d(1,ibnd) = CMPLX( DBLE( spsi_d(1,ibnd) ), 0._DP, kind=DP )
+              spsi(1,ibnd) = CMPLX( DBLE( spsi(1,ibnd) ), 0._DP, kind=DP )
             END DO 
           END IF 
+          !$acc end kernels
           !
        END IF
        !
@@ -845,7 +824,7 @@ CONTAINS
     REAL(DP)              :: c1, c2
     REAL(DP), ALLOCATABLE :: coef(:,:)
     !
-    REAL(DP), EXTERNAL    :: gpu_DDOT
+    REAL(DP), EXTERNAL    :: MYDDOT
 !civn 
     INTEGER :: idx
     REAL(DP) :: ekinj
@@ -873,18 +852,20 @@ CONTAINS
        !
        ekinj = 0._DP 
        !
-!$cuf kernel do(1)
+       !$acc kernels
        DO ig = gstart, npw
           ekinj = ekinj + 2._DP * g2kin_d(ig) * & 
-              (DBLE ( psi_d(ig,ibnd) ) * DBLE ( psi_d(ig,ibnd) ) + AIMAG( psi_d(ig,ibnd) ) * AIMAG( psi_d(ig,ibnd) ))
+              (DBLE ( psi(ig,ibnd) ) * DBLE ( psi(ig,ibnd) ) + AIMAG( psi(ig,ibnd) ) * AIMAG( psi(ig,ibnd) ))
        END DO
+       !$acc end kernels
        !
        IF ( gstart == 2 ) THEN
           !
-!$cuf kernel do(1)
+          !$acc kernels
           DO ii = 1, 1
-            ekinj = ekinj + g2kin_d(1) * DBLE ( psi_d(1,ibnd) ) * DBLE ( psi_d(1,ibnd) ) 
+            ekinj = ekinj + g2kin_d(1) * DBLE ( psi(1,ibnd) ) * DBLE ( psi(1,ibnd) ) 
           END DO 
+          !$acc end kernels
           !
        END IF
        !
@@ -911,7 +892,7 @@ CONTAINS
        !
        kbnd = ibnd_index(ibnd)
        !
-!$cuf kernel do(1)
+       !$acc kernels
        DO ig = 1, npw
           x  = g2kin_d(ig) / ( 1.5_DP * ekinj )
           x2 = x * x
@@ -920,8 +901,9 @@ CONTAINS
           k1 = 27._DP + 18._DP * x + 12._DP * x2 + 8._DP * x3
           k2 = k1 + 16._DP * x4
           kdiag = ( -4._DP / 3._DP / ekinj ) * k1 / k2
-          kpsi_d(ig,kbnd) = kdiag * kpsi_d(ig,kbnd)
+          kpsi(ig,kbnd) = kdiag * kpsi(ig,kbnd)
        END DO
+       !$acc end kernels
        !
     END DO
     !
@@ -944,10 +926,9 @@ CONTAINS
           idx = ibnd_index(ibnd)
           !
           IF ( .NOT. conv(ibnd) ) THEN 
-!$cuf kernel do(1)
-            DO ii = 1, npwx 
-              kpsi_d(ii,idx) = ZERO
-            END DO 
+            !$acc kernels
+            kpsi(:,idx) = ZERO
+            !$acc end kernels
           END IF 
           !
        END DO
@@ -957,47 +938,49 @@ CONTAINS
           idx = ibnd_index(ibnd)
           !
           IF ( .NOT. conv(ibnd) ) THEN 
-!$cuf kernel do(1)
-            DO ii = 1, npwx 
-              kpsi_d(ii,idx) = ZERO
-            END DO 
+            !$acc kernels
+            kpsi(:,idx) = ZERO
+            !$acc end kernels
           END IF 
           !
        END DO
        !
-       CALL mp_sum( kpsi_d(:,1:notconv), inter_bgrp_comm )
+       !$acc host_data use_device(kpsi)
+       CALL mp_sum( kpsi(:,1:notconv), inter_bgrp_comm )
+       !$acc end host_data
        !
     END IF
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
     IF ( gstart == 2 ) THEN 
-!$cuf kernel do(1)
+      !$acc kernels
       DO ii = 1, notconv 
-        kpsi_d (1,ii) = CMPLX( DBLE( kpsi_d (1,ii) ), 0._DP, kind=DP )
+        kpsi (1,ii) = CMPLX( DBLE( kpsi (1,ii) ), 0._DP, kind=DP )
       END DO 
+      !$acc end kernels
     END IF 
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
-    CALL h_psi_gpu( npwx, npw, notconv, kpsi_d, hkpsi_d )
+    CALL h_psi_ptr( npwx, npw, notconv, kpsi, hkpsi )
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
-    IF ( uspp ) CALL s_psi_gpu( npwx, npw, notconv, kpsi_d, skpsi_d )
+    IF ( uspp ) CALL s_psi_ptr( npwx, npw, notconv, kpsi, skpsi )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
     IF ( gstart == 2 ) THEN
        !
-!$cuf kernel do(1)
+       !$acc kernels
        DO ii = 1, nbnd
-         hkpsi_d(1,ii) = CMPLX( DBLE( hkpsi_d(1,ii) ), 0._DP, kind=DP )
+         hkpsi(1,ii) = CMPLX( DBLE( hkpsi(1,ii) ), 0._DP, kind=DP )
        END DO 
        IF ( uspp ) THEN 
-!$cuf kernel do(1)
          DO ii = 1, nbnd
-           skpsi_d(1,ii) = CMPLX( DBLE( skpsi_d(1,ii) ), 0._DP, kind=DP )
+           skpsi(1,ii) = CMPLX( DBLE( skpsi(1,ii) ), 0._DP, kind=DP )
          END DO 
        END IF 
+       !$acc end kernels
        !
     END IF
     !
@@ -1010,78 +993,93 @@ CONTAINS
        jbnd = jbnd_index(ibnd)
        kbnd = ibnd_index(ibnd)
        !
-       php = 2._DP * gpu_DDOT( npw2, psi_d (1,ibnd), 1, hpsi_d (1,ibnd), 1 )
-       khp = 2._DP * gpu_DDOT( npw2, kpsi_d(1,kbnd), 1, hpsi_d (1,ibnd), 1 )
-       khk = 2._DP * gpu_DDOT( npw2, kpsi_d(1,kbnd), 1, hkpsi_d(1,kbnd), 1 )
+       !$acc host_data use_device(psi, hpsi, kpsi, hkpsi)
+       php = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, hpsi (1,ibnd), 1 )
+       khp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 )
+       khk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 )
+       !$acc end host_data
        !
        IF ( gstart == 2 ) THEN
           !
-!$cuf kernel do(1)
+          !$acc kernels copyout(rtmp)
           DO ii = 1, 1 
-            rtmp = DBLE( psi_d (1,ibnd) ) * DBLE ( hpsi_d (1,ibnd) )
+            rtmp = DBLE( psi (1,ibnd) ) * DBLE ( hpsi (1,ibnd) )
           END DO 
+          !$acc end kernels
           php = php - rtmp  
-!$cuf kernel do(1)
+          !$acc kernels copyout(rtmp)
           DO ii = 1, 1 
-            rtmp = DBLE( kpsi_d(1,kbnd) ) * DBLE ( hpsi_d (1,ibnd) ) 
+            rtmp = DBLE( kpsi(1,kbnd) ) * DBLE ( hpsi (1,ibnd) ) 
           END DO 
+          !$acc end kernels
           khp = khp - rtmp 
-!$cuf kernel do(1)
+          !$acc kernels copyout(rtmp)
           DO ii = 1, 1 
-            rtmp = DBLE( kpsi_d(1,kbnd) ) * DBLE ( hkpsi_d(1,kbnd) ) 
+            rtmp = DBLE( kpsi(1,kbnd) ) * DBLE ( hkpsi(1,kbnd) ) 
           END DO 
+          !$acc end kernels
           khk = khk - rtmp  
           !
        END IF
        !
        IF ( uspp ) THEN
           !
-          psp = 2._DP * gpu_DDOT( npw2, psi_d (1,ibnd), 1, spsi_d (1,ibnd), 1 )
-          ksp = 2._DP * gpu_DDOT( npw2, kpsi_d(1,kbnd), 1, spsi_d (1,ibnd), 1 )
-          ksk = 2._DP * gpu_DDOT( npw2, kpsi_d(1,kbnd), 1, skpsi_d(1,kbnd), 1 )
+          !$acc host_data use_device(psi, spsi, kpsi, skpsi)
+          psp = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, spsi (1,ibnd), 1 )
+          ksp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 )
+          ksk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 )
+          !$acc end host_data
           !
           IF ( gstart == 2 ) THEN
              !
-!$cuf kernel do(1)
+             !$acc kernels copyout(rtmp)
              DO ii = 1, 1 
-               rtmp = DBLE( psi_d (1,ibnd) ) * DBLE ( spsi_d (1,ibnd) )
+               rtmp = DBLE( psi (1,ibnd) ) * DBLE ( spsi (1,ibnd) )
              END DO 
+             !$acc end kernels
              psp = psp - rtmp 
-!$cuf kernel do(1)
+             !$acc kernels copyout(rtmp)
              DO ii = 1, 1 
-               rtmp = DBLE( kpsi_d(1,kbnd) ) * DBLE ( spsi_d (1,ibnd) )
+               rtmp = DBLE( kpsi(1,kbnd) ) * DBLE ( spsi (1,ibnd) )
              END DO 
+             !$acc end kernels
              ksp = ksp - rtmp 
-!$cuf kernel do(1)
+             !$acc kernels copyout(rtmp)
              DO ii = 1, 1 
-               rtmp = DBLE( kpsi_d(1,kbnd) ) * DBLE ( skpsi_d(1,kbnd) ) 
+               rtmp = DBLE( kpsi(1,kbnd) ) * DBLE ( skpsi(1,kbnd) ) 
              END DO 
+             !$acc end kernels
              ksk = ksk - rtmp 
              !
           END IF
           !
        ELSE
           !
-          psp = 2._DP * gpu_DDOT( npw2, psi_d (1,ibnd), 1, psi_d (1,ibnd), 1 )
-          ksp = 2._DP * gpu_DDOT( npw2, kpsi_d(1,kbnd), 1, psi_d (1,ibnd), 1 )
-          ksk = 2._DP * gpu_DDOT( npw2, kpsi_d(1,kbnd), 1, kpsi_d(1,kbnd), 1 )
+          !$acc host_data use_device(psi, kpsi)
+          psp = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, psi (1,ibnd), 1 )
+          ksp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, psi (1,ibnd), 1 )
+          ksk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 )
+          !$acc end host_data
           !
           IF ( gstart == 2 ) THEN
              !
-!$cuf kernel do(1)
+             !$acc kernels copyout(rtmp)
              DO ii = 1, 1
-               rtmp =DBLE( psi_d (1,ibnd) ) * DBLE ( psi_d (1,ibnd) ) 
+               rtmp =DBLE( psi (1,ibnd) ) * DBLE ( psi (1,ibnd) ) 
              END DO 
+             !$acc end kernels
              psp = psp - rtmp
-!$cuf kernel do(1)
+             !$acc kernels copyout(rtmp)
              DO ii = 1, 1
-               rtmp =DBLE( kpsi_d(1,kbnd) ) * DBLE ( psi_d (1,ibnd) ) 
+               rtmp =DBLE( kpsi(1,kbnd) ) * DBLE ( psi (1,ibnd) ) 
              END DO 
+             !$acc end kernels
              ksp = ksp - rtmp 
-!$cuf kernel do(1)
+             !$acc kernels copyout(rtmp)
              DO ii = 1, 1
-               rtmp =DBLE( kpsi_d(1,kbnd) ) * DBLE ( kpsi_d(1,kbnd) ) 
+               rtmp =DBLE( kpsi(1,kbnd) ) * DBLE ( kpsi(1,kbnd) ) 
              END DO 
+             !$acc end kernels
              ksk = ksk -rtmp 
              !
           END IF
@@ -1196,33 +1194,35 @@ CONTAINS
        c1 = coef(1,jbnd)
        c2 = coef(2,jbnd)
        !
-       CALL DSCAL_gpu( npw2, c1, psi_d (1,ibnd), 1 )
-       CALL DAXPY_gpu( npw2, c2, kpsi_d(1,kbnd), 1, psi_d(1,ibnd), 1 )
+       !$acc host_data use_device(psi, hpsi, spsi, kpsi, hkpsi, skpsi)
+       CALL MYDSCAL( npw2, c1, psi (1,ibnd), 1 )
+       CALL MYDAXPY( npw2, c2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
        !
-       CALL DSCAL_gpu( npw2, c1, hpsi_d (1,ibnd), 1 )
-       CALL DAXPY_gpu( npw2, c2, hkpsi_d(1,kbnd), 1, hpsi_d(1,ibnd), 1 )
+       CALL MYDSCAL( npw2, c1, hpsi (1,ibnd), 1 )
+       CALL MYDAXPY( npw2, c2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DSCAL_gpu( npw2, c1, spsi_d (1,ibnd), 1 )
-          CALL DAXPY_gpu( npw2, c2, skpsi_d(1,kbnd), 1, spsi_d(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, c1, spsi (1,ibnd), 1 )
+          CALL MYDAXPY( npw2, c2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
           !
        END IF
+       !$acc end host_data
        !
        ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN
           !
-!$cuf kernel do(1)
+          !$acc kernels
           DO ii = 1, 1
-             psi_d (1,ibnd) = CMPLX( DBLE( psi_d (1,ibnd) ), 0._DP, kind=DP )
-             hpsi_d(1,ibnd) = CMPLX( DBLE( hpsi_d(1,ibnd) ), 0._DP, kind=DP )
+             psi (1,ibnd) = CMPLX( DBLE( psi (1,ibnd) ), 0._DP, kind=DP )
+             hpsi(1,ibnd) = CMPLX( DBLE( hpsi(1,ibnd) ), 0._DP, kind=DP )
           END DO 
           IF ( uspp ) THEN  
-!$cuf kernel do(1)
             DO ii = 1, 1
-              spsi_d(1,ibnd) = CMPLX( DBLE( spsi_d(1,ibnd) ), 0._DP, kind=DP )
+              spsi(1,ibnd) = CMPLX( DBLE( spsi(1,ibnd) ), 0._DP, kind=DP )
             END DO 
           END IF 
+          !$acc end kernels
           !
        END IF
        !

@@ -307,6 +307,7 @@ SUBROUTINE start_clock_gpu( label )
 #endif
      t0cpu(nclock)       = f_tcpu()
      t0wall(nclock)      = f_wall()
+     call nvtxStartRange(label_, n)
      !
   ENDIF
   !

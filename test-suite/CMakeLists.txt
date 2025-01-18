@@ -1,9 +1,12 @@
-set(qe_test_categories "pw" "cp" "ph" "epw" "tddfpt" "hp")
+set(qe_test_categories "pw" "cp") # "ph" "epw" "tddfpt" "hp" tests are not ready
+if(QE_ENABLE_OSCDFT)
+  list(APPEND qe_test_categories "oscdft")
+endif()
 
 set(ESPRESSO_PSEUDO "${qe_SOURCE_DIR}/pseudo" CACHE STRING "Pseudopotential files")
-set(NETWORK_PSEUDO "http://www.quantum-espresso.org/wp-content/uploads/upf_files" CACHE STRING "URL to remote pseudopotential folder")
+set(NETWORK_PSEUDO "https://pseudopotentials.quantum-espresso.org/upf_files" CACHE STRING "URL to remote pseudopotential folder")
 set(TESTCODE_NPROCS 4 CACHE STRING "Number of MPI processes for each test")
-set(TESTCODE_NTHREADS 1 CACHE STRING "Number of OpenMP threads for each test")
+set(TESTCODE_NTHREADS 3 CACHE STRING "Number of OpenMP threads for each test")
 
 message("\n"
         "Only pw and cp results from ctest are reliable, we are working on making the rest tests work reliably with ctest. "
@@ -58,7 +61,8 @@ if (QE_ENABLE_CUDA)
 endif()
 # prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
-                 ${CMAKE_CURRENT_BINARY_DIR}/jobconfig SYMBOLIC)
+                 ${CMAKE_CURRENT_BINARY_DIR}/jobconfig
+                 SYMBOLIC COPY_ON_ERROR)
 string(REPLACE "/" "\\/" qe_SOURCE_DIR_FOR_SED ${qe_SOURCE_DIR})
 execute_process(COMMAND sed "s/XXXXXX/${qe_SOURCE_DIR_FOR_SED}/" ${CMAKE_CURRENT_SOURCE_DIR}/userconfig.tmp
                 OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
@@ -99,15 +103,22 @@ foreach(test_category IN LISTS qe_test_categories)
                          ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${matdyn_input} SYMBOLIC)
     endforeach()
 
+    # handle additional test customization
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/CMakeLists.txt)
+      add_subdirectory(${subfolder_name})
+    endif()
+
     foreach(test_input_file IN LISTS test_input_file_names)
       # skip reference and test run output files which also has filename extension .in
       if (NOT test_input_file MATCHES "^benchmark" AND NOT test_input_file MATCHES "^test")
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${test_input_file}
-                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${test_input_file} SYMBOLIC)
+                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${test_input_file}
+                         SYMBOLIC COPY_ON_ERROR)
         set(TESTSUITE_ARGS 0)
         if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file})
           file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
-                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file} SYMBOLIC)
+                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
+                           SYMBOLIC COPY_ON_ERROR)
         else()
           while (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} AND TESTSUITE_ARGS LESS 10)
             math(EXPR TESTSUITE_ARGS "${TESTSUITE_ARGS} + 1")
@@ -117,7 +128,8 @@ foreach(test_category IN LISTS qe_test_categories)
             continue()
           endif()
           file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS}
-                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} SYMBOLIC)
+                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS}
+                           SYMBOLIC COPY_ON_ERROR)
         endif()
         string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
         if (TESTSUITE_ARGS EQUAL 0)
@@ -189,6 +201,11 @@ foreach(test_category IN LISTS qe_test_categories)
         # add dependency between workflow steps
         if(in_test_series)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS "${base_test_name};${last_test_name}")
+        endif()
+
+        # add dependency on test preparation
+        if(${test_name_prefix}--preparation-CREATED)
+          set_property(TEST ${test_name} APPEND PROPERTY DEPENDS ${test_name_prefix}--preparation)
         endif()
 
         # make correctness check depend on the test run

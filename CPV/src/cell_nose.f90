@@ -8,7 +8,8 @@
 !------------------------------------------------------------------------------!
   MODULE cell_nose
 !------------------------------------------------------------------------------!
-
+      !! Thermostat (Nose) variables and routines.
+      
       USE kinds, ONLY : DP
 !
       IMPLICIT NONE
@@ -18,16 +19,19 @@
       REAL(DP) :: xnhhm(3,3) = 0.0_DP
       REAL(DP) :: xnhhp(3,3) = 0.0_DP
       REAL(DP) :: vnhh(3,3)  = 0.0_DP
-      REAL(DP) :: temph      = 0.0_DP  !  Thermostat temperature (from input)
-      REAL(DP) :: fnoseh     = 0.0_DP  !  Thermostat frequency (from input)
-      REAL(DP) :: qnh        = 0.0_DP  !  Thermostat mass (computed)
+      REAL(DP) :: temph = 0.0_DP
+      !! Thermostat temperature (from input)
+      REAL(DP) :: fnoseh = 0.0_DP
+      !! Thermostat frequency (from input)
+      REAL(DP) :: qnh = 0.0_DP
+      !! Thermostat mass (computed)
 
 CONTAINS
 
   subroutine cell_nose_init( temph_init, fnoseh_init )
+     !! Set thermostat parameter for cell.
      USE constants, ONLY: pi, au_terahertz, k_boltzmann_au
      REAL(DP), INTENT(IN) :: temph_init, fnoseh_init
-     ! set thermostat parameter for cell
      qnh    = 0.0_DP
      temph  = temph_init
      fnoseh = fnoseh_init
@@ -37,6 +41,7 @@ CONTAINS
   end subroutine cell_nose_init
 
   subroutine cell_nosezero( vnhh, xnhh0, xnhhm )
+    !! Set to zero Nose variables
     real(DP), intent(out) :: vnhh(3,3), xnhh0(3,3), xnhhm(3,3)
     xnhh0=0.0_DP
     xnhhm=0.0_DP
@@ -45,6 +50,7 @@ CONTAINS
   end subroutine cell_nosezero
 
   subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt )
+    !! Calculates Nose velocities.
     implicit none
     REAL(DP), intent(inout) :: vnhh(3,3)
     REAL(DP), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
@@ -53,6 +59,7 @@ CONTAINS
   end subroutine cell_nosevel
 
   subroutine cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
+    !! Update Nose variables.
     use constants, only: k_boltzmann_au
     implicit none
     REAL(DP), intent(out) :: xnhhp(3,3), vnhh(3,3)
@@ -70,6 +77,7 @@ CONTAINS
 
   
   REAL(DP) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
+    !! Calculate Nose energy.
     use constants, only: k_boltzmann_au
     implicit none
     REAL(DP) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
@@ -87,7 +95,7 @@ CONTAINS
   end function cell_nose_nrg
 
   subroutine cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
-    !  shift values of nose variables to start a new step
+    !! Shift values of Nose variables to start a new step.
     implicit none
     REAL(DP), intent(out) :: xnhhm(3,3)
     REAL(DP), intent(inout) :: xnhh0(3,3)
@@ -99,7 +107,7 @@ CONTAINS
 
 
   SUBROUTINE cell_nose_info ( delt )
-
+      !! Print Nose thermostat infos (mass, frequency, time steps).
       use constants,     only: au_terahertz, pi
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnoseh
@@ -125,9 +133,9 @@ CONTAINS
       END IF
 
  563  format( //, &
-     &       3X,'cell dynamics with nose` temperature control:', /, &
+     &       3X,'cell dynamics with Nose` temperature control:', /, &
      &       3X,'Kinetic energy required   = ', f10.5, ' (Kelvin) ', /, &
-     &       3X,'time steps per nose osc.  = ', i5, /, &
+     &       3X,'time steps per Nose osc.  = ', i5, /, &
      &       3X,'nose` frequency           = ', f10.3, ' (THz) ', /, &
      &       3X,'nose` mass(es)            = ', 20(1X,f10.3),//)
 

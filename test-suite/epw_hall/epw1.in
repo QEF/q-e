@@ -1,8 +1,6 @@
 --
 &inputepw
   prefix      = 'bn'
-  amass(1)    = 10.811,
-  amass(2)    = 14.0067,
   outdir      = './'
 
   elph        = .true.

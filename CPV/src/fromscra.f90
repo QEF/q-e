@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,6 +13,7 @@ SUBROUTINE from_scratch( )
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, force_pairing, tcap
+    USE input_parameters,     ONLY : startingwfc
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm, &
                                      taum 
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp, &
@@ -29,12 +30,11 @@ SUBROUTINE from_scratch( )
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE dener,                ONLY : denl, denl6, dekin6, detot
-    USE pseudo_base,          ONLY : vkb_d
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan, nlcc_any
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : rhoc
     USE gvecw,                ONLY : ngw
-    USE gvect,                ONLY : gg
+    USE gvect,                ONLY : gg, g
     USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
@@ -49,7 +49,7 @@ SUBROUTINE from_scratch( )
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
+    USE cp_wavefunctions,     ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, iabox, nabox, &
@@ -61,6 +61,11 @@ SUBROUTINE from_scratch( )
     USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
     USE device_memcpy_m,        ONLY : dev_memcpy
+
+#if defined (__ENVIRON)
+    USE plugin_flags,         ONLY : use_environ
+    USE environ_base_module,  ONLY : update_environ_ions
+#endif
 
     !
     IMPLICIT NONE
@@ -82,7 +87,7 @@ SUBROUTINE from_scratch( )
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
-    INTEGER                  :: i1, i2 
+    INTEGER                  :: i1, i2
     !
     ! ... Subroutine body
     !
@@ -115,6 +120,7 @@ SUBROUTINE from_scratch( )
     END IF
     !
     CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
+    !$acc update device(eigts1,eigts2,eigts3)
     !
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
     !     
@@ -125,7 +131,12 @@ SUBROUTINE from_scratch( )
     !
     !     pass ions informations to plugins
     !
-    CALL plugin_init_ions( tau0 )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif
+#if defined (__ENVIRON)
+    IF (use_environ) CALL update_environ_ions(tau0)
+#endif
     !
     !     wfc initialization with random numbers
     !     
@@ -133,13 +144,22 @@ SUBROUTINE from_scratch( )
     !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+
+    ! if asked, use as many atomic wavefunctions as possible
+    if ( trim(startingwfc) == 'atomic') then
+       if ( ionode ) &
+         WRITE (stdout, '("Using also atomic wavefunctions as much as possible")') 
+       CALL atomic_wfc_cp(omega, nat, nsp, ityp, tau0, nupdwn, iupdwn, nspin, &
+               ngw, nbspx, cm_bgrp )
+    endif
+
+
     !
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-    CALL dev_memcpy( vkb_d, vkb )
-#endif
+    !
+    !$acc update device(vkb)
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
@@ -263,7 +283,11 @@ SUBROUTINE from_scratch( )
       !
       IF( ttforce ) THEN
 #if defined (__CUDA)
-         CALL nlfq_bgrp( cm_d, vkb_d, bec_bgrp, becdr_bgrp, fion )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL nlfq_bgrp( cm_d, vkb, bec_bgrp, becdr_bgrp, fion )
+         !$acc end host_data 
+         !$acc end data 
 #else
          CALL nlfq_bgrp( cm_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
 #endif
@@ -273,7 +297,11 @@ SUBROUTINE from_scratch( )
       !     the electron mass rises with g**2
       !
 #if defined (__CUDA)
-      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb_d, phi, nbspx_bgrp, ema0bg )
+      !$acc data present(vkb)
+      !$acc host_data use_device(vkb)
+      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      !$acc end host_data 
+      !$acc end data 
 #else
       CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
 #endif
@@ -285,7 +313,11 @@ SUBROUTINE from_scratch( )
       !
       if( tortho ) then
 #if defined (__CUDA)
-         CALL ortho( vkb_d, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL ortho( vkb, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc end host_data 
+         !$acc end data 
 #else
          CALL ortho( vkb, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
@@ -368,3 +400,68 @@ subroutine hangup
     call mp_barrier(world_comm)
     CALL stop_cp_run()
 end subroutine
+
+SUBROUTINE atomic_wfc_cp(omega, nat, nsp, ityp, tau, nupdwn, iupdwn, nspin, &
+                         npw, nbspx, evc )
+   
+         USE kinds,        ONLY : DP
+         USE uspp_param,   ONLY : nwfcm
+         USE mp_global,    ONLY : intra_bgrp_comm
+         USE gvecw,        ONLY : ecutwfc
+         USE upf_ions,     ONLY : n_atom_wfc
+         USE atwfc_mod,    ONLY : init_tab_atwfc, deallocate_tab_atwfc
+         USE atomic_wfc_mod,   ONLY : atomic_wfc_acc
+
+         IMPLICIT NONE
+         !
+         INTEGER, INTENT(IN) :: nat, nsp, ityp(nat), nupdwn(2), iupdwn(2), nspin, npw, nbspx
+         REAL(DP), INTENT(IN) :: omega, tau(3,nat)
+         COMPLEX(DP), INTENT(inout) :: evc (npw,nbspx)
+         !
+         INTEGER :: natomwfc
+         COMPLEX(DP), ALLOCATABLE  :: wfcatom(:,:,:)
+         !! Superposition of atomic wavefunctions - only nospin / LSDA
+   
+         ! cp specific settings (gamma only)
+         ! xk is 0,0,0, igk is the identical permutation
+         ! wfcs have 2 dimensions (npw, nbnd)
+         ! The layout of the wfc is different:
+         ! in cp it is the equivalent of (npw, nbnd, nspin ), 
+         ! while in pw is (npwx, nspin, nbnd)
+         real(dp) :: xk(3), angle1(nsp), angle2(nsp), qmax
+         integer  :: i, ipol, sh(2), ierr
+         integer, allocatable :: igk(:)
+   
+         ! gamma point only
+         xk=0.d0
+         qmax = SQRT(ecutwfc)
+         call init_tab_atwfc(qmax, omega, intra_bgrp_comm, ierr)
+         natomwfc = n_atom_wfc ( nat, ityp )
+         allocate ( wfcatom(npw, 1, natomwfc) )
+         allocate (igk (npw) )
+         !$acc data create(wfcatom, igk)
+         !
+         !$acc parallel loop
+         do i=1,npw
+            igk(i)=i
+         end do
+         
+         call atomic_wfc_acc( xk, npw, igk, nat, nsp, ityp, tau, &
+              .false., .false., .false.,  angle1, angle2, .false., &
+              npw, 1, natomwfc, wfcatom )
+         !$acc update host (wfcatom)
+   
+         sh = shape(evc)
+   
+         !write the result in the correct order in evc
+         do ipol = 1, nspin
+            do i=1,nupdwn(ipol)
+               evc(:,i + iupdwn(ipol)-1) = wfcatom(:,1,i)
+            enddo
+         enddo
+         !$acc end data
+         deallocate (igk)
+         deallocate (wfcatom)
+         call deallocate_tab_atwfc()
+         
+      end subroutine atomic_wfc_cp

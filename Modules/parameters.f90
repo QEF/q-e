@@ -14,7 +14,7 @@ MODULE parameters
   SAVE
 
   INTEGER, PARAMETER :: npk = 40000
-  !! max number of k-points               
+  !! max number of k-points
   INTEGER, PARAMETER :: ntypx = 10
   !! max number of different types of atom
   INTEGER, PARAMETER :: nsx = ntypx
@@ -25,5 +25,7 @@ MODULE parameters
   !! Defines the supercell in DFT+U+V as composed by the unit cells located
   !! by (n1,n2,n3) in primitive vectors base with \(-\text{sc_size} \leq ni
   !! \leq \text{sc_size}\) and \((2\text{sc_size}+1)^3\) is the number of cells.
+  INTEGER, PARAMETER :: nsolx  = 10
+  !! max number of solvents (RISM)
 
 END MODULE parameters

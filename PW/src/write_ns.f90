@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,9 +16,7 @@ SUBROUTINE write_ns
   USE lsda_mod,   ONLY : nspin
   USE io_global,  ONLY : stdout
   USE scf,        ONLY : rho
-  USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, ldim_u,  &
-                         Hubbard_alpha, lda_plus_u_kind, Hubbard_J0, is_hubbard, &
-                         Hubbard_beta, Hubbard_U_back, Hubbard_alpha_back, &
+  USE ldaU,       ONLY : Hubbard_l, ldim_u, lda_plus_u_kind, is_hubbard, &
                          is_hubbard_back, ldim_back, reserv, reserv_back
   !
   IMPLICIT NONE
@@ -31,56 +29,7 @@ SUBROUTINE write_ns
   REAL(DP), ALLOCATABLE :: lambda(:)
   REAL(DP) :: nsum, nsuma(2), rsrv
   !
-  ! Print Hubbard parameters
-  !
-  WRITE (stdout,'(/5x,"Hubbard parameters (eV):")')
-  !
-  IF (lda_plus_u_kind == 0) THEN
-     !
-     DO nt = 1, ntyp
-        IF (is_hubbard(nt)) THEN
-          IF (Hubbard_U(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')          & 
-                       'U(',nt,') =', Hubbard_U(nt)*rytoev
-          IF (Hubbard_J0(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')         &
-                       'J0(',nt,') =', Hubbard_J0(nt)*rytoev 
-          IF (Hubbard_alpha(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')      &
-                       'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
-          IF (Hubbard_beta(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')       &
-                       'beta(',nt,') =', Hubbard_beta(nt)*rytoev
-        ENDIF
-        IF (is_hubbard_back(nt)) THEN
-          IF (Hubbard_U_back(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')     &
-                       'U_back(',nt,') =', Hubbard_U_back(nt)*rytoev
-          IF (Hubbard_alpha_back(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)') &
-                       'alpha_back(',nt,') =', Hubbard_alpha_back(nt)*rytoev
-      ENDIF
-     ENDDO
-     !
-  ELSEIF (lda_plus_u_kind == 1) THEN
-     !
-     DO nt = 1, ntyp
-        IF (Hubbard_U(nt) /= 0.d0) THEN
-           IF (Hubbard_l(nt) == 0) THEN
-              WRITE(stdout,'(5x,a,i3,a,f12.8)') 'U(',nt,') =', Hubbard_U(nt) * rytoev
-           ELSEIF (Hubbard_l(nt) == 1) THEN
-              WRITE(stdout,'(5x,2(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,    &
-                                                  'J(',nt,') =', Hubbard_J(1,nt)*rytoev
-           ELSEIF (Hubbard_l(nt) == 2) THEN
-              WRITE(stdout,'(5x,3(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,    &
-                                                     'J(',nt,') =', Hubbard_J(1,nt)*rytoev,  &
-                                                     'B(',nt,') =', Hubbard_J(2,nt)*rytoev
-           ELSEIF (Hubbard_l(nt) == 3) THEN
-              WRITE(stdout,'(5x,4(a,i3,a,f9.4,3x))') 'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                     'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                     'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
-                                                     'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
-           ENDIF
-        ENDIF
-     ENDDO
-     !
-  ENDIF
-  ! 
-  WRITE (stdout,'(/5x,17("="), " HUBBARD OCCUPATIONS ",16("="))')
+  WRITE (stdout,'(/5x,19("="), " HUBBARD OCCUPATIONS ",19("="))')
   !
   nsum = 0.d0
   rsrv = 0.d0
@@ -97,7 +46,7 @@ SUBROUTINE write_ns
         !
         ! Compute the trace of the occupation matrix and the magnetization
         !
-        WRITE( stdout,'(5x,21("-")," ATOM ",i4,1x,22("-"))') na
+        WRITE( stdout,'(5x,24("-")," ATOM ",i4,1x,24("-"))') na
         !
         nsuma = 0.d0
         DO is = 1, nspin
@@ -111,11 +60,12 @@ SUBROUTINE write_ns
         ! Write to the output file
         !
         IF (nspin==1) THEN
-           WRITE( stdout,'(5x,"Tr[ns] = ",f9.5)') 2.d0*nsuma(1)
+           WRITE( stdout,'(5x,"Tr[ns(",i3,")] = ",f9.5)') na, 2.d0*nsuma(1)
         ELSE
-           WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
-                              nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
-           WRITE( stdout,'(5x,"Atomic magnetic moment = ",f9.5)') nsuma(1) - nsuma(2)
+           WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
+                              na, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
+           WRITE( stdout,'(5x,"Atomic magnetic moment for atom ",i3, " = ",f9.5)') &
+                              na, nsuma(1) - nsuma(2)
         ENDIF 
         !
         ALLOCATE (f(ldim,ldim), vet(ldim,ldim), lambda(ldim))
@@ -154,7 +104,7 @@ SUBROUTINE write_ns
      !
      IF (is_hubbard_back(nt)) THEN
         !
-        ldim = ldim_back(nt) !2 * Hubbard_l_back(nt) + 1
+        ldim = ldim_back(nt) 
         !
         WRITE( stdout,'(5x," Background part ")')
         !
@@ -169,12 +119,13 @@ SUBROUTINE write_ns
         !
         ! Write to the output file
         !
-        IF (nspin.EQ.1) THEN
-           WRITE( stdout,'(5x,"Tr[ns] = ",f9.5)') 2.d0*nsuma(1)
+        IF (nspin==1) THEN
+           WRITE( stdout,'(5x,"Tr[ns(",i3,")] = ",f9.5)') na, 2.d0*nsuma(1)
         ELSE
-           WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
-                              nsuma(1), nsuma(2), nsuma(1) + nsuma(2)
-           WRITE(stdout,'(5x,"Atomic magnetic moment = ",f9.5)') nsuma(1) - nsuma(2)
+           WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
+                              na, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
+           WRITE( stdout,'(5x,"Atomic magnetic moment for atom ",i3, " = ",f9.5)') &
+                              na, nsuma(1) - nsuma(2)
         ENDIF
         !
         ALLOCATE (f(ldim,ldim), vet(ldim,ldim), lambda(ldim))
@@ -236,8 +187,8 @@ SUBROUTINE write_ns_nc
   USE noncollin_module,  ONLY : npol
   USE io_global,         ONLY : stdout
   USE scf,               ONLY : rho
-  USE ldaU,              ONLY : Hubbard_lmax, Hubbard_l, Hubbard_alpha, &
-                                Hubbard_U, Hubbard_J
+  USE ldaU,              ONLY : Hubbard_l, Hubbard_alpha, &
+                                Hubbard_U
   !
   IMPLICIT NONE
   !
@@ -245,30 +196,6 @@ SUBROUTINE write_ns_nc
   COMPLEX(DP), ALLOCATABLE :: f(:,:) , vet(:,:)
   REAL(DP), ALLOCATABLE :: lambda(:)
   REAL(DP) :: nsum,nsuma(2), ns, mx, my, mz
-  !
-  ! Print Hubbard parameters
-  !
-  WRITE (stdout,'(/5x,"Hubbard parameters (eV):")')
-  !
-  DO nt = 1, ntyp
-     IF (Hubbard_U(nt) /= 0.d0) THEN
-        IF (Hubbard_l(nt)==0) THEN
-           WRITE(stdout,'(5x,a,i3,a,f12.8)') 'U(',nt,') =', Hubbard_U(nt) * rytoev
-        ELSEIF (Hubbard_l(nt)==1) THEN
-           WRITE(stdout,'(5x,2(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev, &
-                                                  'J(',nt,') =', Hubbard_J(1,nt)*rytoev
-        ELSEIF (Hubbard_l(nt)==2) THEN
-           WRITE(stdout,'(5x,3(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                  'J(',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                  'B(',nt,') =', Hubbard_J(2,nt)*rytoev
-        ELSEIF (Hubbard_l(nt)==3) THEN
-           WRITE(stdout,'(5x,4(a,i3,a,f9.4,3x))') 'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                  'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                  'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
-                                                  'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
-        ENDIF
-     ENDIF
-  ENDDO
   !
   WRITE (stdout,'(/5x,17("="), " HUBBARD OCCUPATIONS ",16("="))')
   !
@@ -285,7 +212,7 @@ SUBROUTINE write_ns_nc
         !
         ! Compute the trace of the occupation matrix and the magnetization
         !
-        WRITE( stdout,'(5x,21("-")," ATOM ",i4,1x,22("-"))') na
+        WRITE( stdout,'(5x,24("-")," ATOM ",i4,1x,24("-"))') na
         !
         nsuma = 0.d0
         DO is = 1, npol
@@ -296,8 +223,8 @@ SUBROUTINE write_ns_nc
         ENDDO
         nsum = nsum + nsuma(1) + nsuma(2) 
         !
-        WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
-                              nsuma(1), nsuma(2), nsuma(1) + nsuma(2)  
+        WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
+                              na, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
         !
         ALLOCATE (f(2*ldim,2*ldim), vet(2*ldim,2*ldim), lambda(2*ldim))
         !
@@ -364,12 +291,10 @@ SUBROUTINE write_nsg
   USE lsda_mod,   ONLY : nspin
   USE io_global,  ONLY : stdout
   USE scf,        ONLY : rho
-  USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
-                         Hubbard_alpha, lda_plus_u_kind, Hubbard_J0, &
-                         Hubbard_beta, iso_sys, is_hubbard, is_hubbard_back, &
-                         ldim_u, reserv, reserv_back, Hubbard_V, &
-                         at_sc, neighood, Hubbard_U_back,Hubbard_alpha_back, &
-                         nsgnew, backall, ldim_back
+  USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, lda_plus_u_kind, &
+                         iso_sys, is_hubbard, is_hubbard_back,     &
+                         ldim_u, reserv, reserv_back, Hubbard_V,   &
+                         at_sc, neighood, nsgnew, backall, ldim_back
   !
   IMPLICIT NONE
   INTEGER :: is, na, nt, m1, m2, ldim
@@ -398,17 +323,7 @@ SUBROUTINE write_nsg
      ALLOCATE (f(ldmx,ldmx), vet(ldmx,ldmx), lambda(ldmx))
   ENDIF
   !
-  DO nt = 1, ntyp
-     IF (Hubbard_alpha(nt) /= 0.d0 .OR. Hubbard_alpha_back(nt) /= 0.d0 .OR. &
-         Hubbard_J0(nt) /= 0.d0) THEN
-        WRITE (stdout,'(/5x,"Hubbard parameters (eV):")')
-        WRITE (stdout,'(5x,a,i3,a,f12.8)') 'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
-        WRITE (stdout,'(5x,a,i3,a,f12.8)') 'alpha_back(',nt,') =', Hubbard_alpha_back(nt)*rytoev
-        WRITE (stdout,'(5x,a,i3,a,f12.8)') 'J0(',nt,') =', Hubbard_J0(nt)*rytoev
-     ENDIF
-  ENDDO
-  !
-  WRITE (stdout,'(/5x,17("="), " HUBBARD OCCUPATIONS ",16("="))')
+  WRITE (stdout,'(/5x,19("="), " HUBBARD OCCUPATIONS ",19("="))')
   !
   ! Construct the occupation matrix to be diagonalized
   !
@@ -531,7 +446,7 @@ SUBROUTINE write_nsg
            !
            ! Compute the trace of the occupation matrix and the magnetization
            !
-           WRITE( stdout,'(5x,21("-")," ATOM ",i4,1x,22("-"))') na1
+           WRITE( stdout,'(5x,24("-")," ATOM ",i4,1x,24("-"))') na1
            !
            DO viz = 1, neighood(na1)%num_neigh
               !
@@ -548,12 +463,13 @@ SUBROUTINE write_nsg
                     nsum = nsum + nsuma(is)
                  ENDDO
                  !
-                 IF (nspin.EQ.1) THEN
-                    WRITE( stdout,'(5x,"Tr[ns] = ",f9.5)') 2.d0*nsuma(1)
+                 IF (nspin==1) THEN
+                    WRITE( stdout,'(5x,"Tr[ns(",i3,")] = ",f9.5)') na1, 2.d0*nsuma(1)
                  ELSE
-                    WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
-                                  nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
-                    WRITE( stdout,'(5x,"Atomic magnetic moment = ",f9.5)') nsuma(1) - nsuma(2)
+                    WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
+                              na1, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
+                 WRITE( stdout,'(5x,"Atomic magnetic moment for atom ",i3, " = ",f9.5)') &
+                              na1, nsuma(1) - nsuma(2)
                  ENDIF
                  !
               ENDIF ! na1 = na2
@@ -638,12 +554,13 @@ SUBROUTINE write_nsg
                     nsum = nsum + nsuma(is)
                  ENDDO
                  !
-                 IF (nspin.EQ.1) THEN
-                    WRITE( stdout,'(5x,"Tr[ns] = ",f9.5)') 2.d0*nsuma(1)
+                 IF (nspin==1) THEN
+                    WRITE( stdout,'(5x,"Tr[ns(",i3,")] = ",f9.5)') na1, 2.d0*nsuma(1)
                  ELSE
-                    WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
-                                   nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
-                    WRITE( stdout,'(5x,"Atomic magnetic moment = ",f9.5)') nsuma(1) - nsuma(2)
+                    WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
+                              na1, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
+                    WRITE( stdout,'(5x,"Atomic magnetic moment for atom ",i3, " = ",f9.5)') &
+                              na1, nsuma(1) - nsuma(2)
                  ENDIF
                  !
               ENDIF ! na1 = na2
@@ -681,12 +598,13 @@ SUBROUTINE write_nsg
                  nsum = nsum + nsuma(is)
               ENDDO
               !
-              IF (nspin.EQ.1) THEN
-                 WRITE( stdout,'(5x,"Tr[ns] back = ",f9.5)') 2.d0*nsuma(1)
+              IF (nspin==1) THEN
+                 WRITE( stdout,'(5x,"Tr[ns(",i3,")] back = ",f9.5)') na1, 2.d0*nsuma(1)
               ELSE
-                 WRITE( stdout,'(5x,"Tr[ns] back (up, down, total) = ",3f9.5)') &
-                                nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
-                 WRITE( stdout,'(5x,"Atomic magnetic moment (back) = ",f9.5)') nsuma(1) - nsuma(2)
+                 WRITE( stdout,'(5x,"Tr[ns(",i3,")] back (up, down, total) = ",3f9.5)') &
+                              na1, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
+                 WRITE( stdout,'(5x,"Atomic magnetic moment (back) for atom ",i3, " = ",f9.5)') &
+                              na1, nsuma(1) - nsuma(2)
               ENDIF
               !  
            ENDIF !na1=na2
@@ -709,7 +627,154 @@ SUBROUTINE write_nsg
   RETURN
   !
 END SUBROUTINE write_nsg 
-
+!
+SUBROUTINE write_nsg_nc
+   !-----------------------------------------------------------------------
+   !
+   ! Generalized noncollinear ns (i.e. nsg) for DFT+U+V
+   !
+   USE kinds,      ONLY : DP
+   USE constants,  ONLY : rytoev
+   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+   USE lsda_mod,   ONLY : nspin
+   USE io_global,  ONLY : stdout
+   USE scf,        ONLY : rho
+   USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, lda_plus_u_kind, &
+                          iso_sys, is_hubbard, is_hubbard_back,     &
+                          ldim_u, reserv, reserv_back, Hubbard_V,   &
+                          at_sc, neighood, nsgnew, backall, ldim_back
+   USE noncollin_module,   ONLY : npol
+   !
+   IMPLICIT NONE
+   INTEGER :: is, is1, na, nt, m1, m2
+   ! counter on spin component
+   ! counters on atoms and their type
+   ! counters on d components
+   INTEGER :: na1, na2, ldm1, ldm2, ldim1,ldim2, viz, nt1, nr, nt2, ldmx
+   !counter on atom, 
+   !keeping track of hubbard space dimension
+   !number of the neighbor atom
+   !type
+   !number of reservoir states
+   COMPLEX(DP), ALLOCATABLE :: f(:,:) , vet(:,:)
+   REAL(DP), ALLOCATABLE :: lambda(:)
+   REAL(DP) :: nsum, nsum_iso, nsuma(2), rsrv, norm, mx, my, mz
+   ! 
+   ! Construct the occupation matrix to be diagonalized
+   !
+   ! This is the case for solids
+   ! Note: this case is adapted to print the same information and in the same format
+   ! as in the DFT+U case (see write_ns)
+   !
+   nsum = 0.d0
+   rsrv = 0.d0
+   !
+   DO na1 = 1, nat
+      !
+      nt1 = ityp(na1)
+      !
+      IF ( is_hubbard(nt1) ) THEN
+         !
+         ldim1 = 2*Hubbard_l(nt1)+1
+         !
+         ! Compute the trace of the occupation matrix and the magnetization
+         !
+         WRITE( stdout,'(5x,24("-")," ATOM ",i4,1x,24("-"))') na1
+         !
+         DO viz = 1, neighood(na1)%num_neigh
+            !
+            na2 = neighood(na1)%neigh(viz)
+            !
+            IF (na2.EQ.na1) THEN
+               !
+               nsuma = 0.d0
+               DO is = 1, npol
+                  is1 = is**2
+                  DO m1 = 1, ldim1
+                     nsuma(is) = nsuma(is) + DBLE(nsgnew(m1,m1,viz,na1,is1))
+                     IF (reserv(nt1)) rsrv = rsrv + DBLE(nsgnew(m1,m1,viz,na1,is))
+                  ENDDO
+               ENDDO
+               nsum = nsum + nsuma(1) + nsuma(2)
+               !
+               WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
+                              na1, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
+               !
+            ENDIF ! na1 = na2
+            !
+         ENDDO ! viz
+         !
+         ALLOCATE (f(2*ldim1,2*ldim1), vet(2*ldim1,2*ldim1), lambda(2*ldim1))
+         !
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            IF (na2.EQ.na1) THEN
+               DO m1 = 1, ldim1
+                  DO m2 = 1, ldim1
+                     f(m1,m2)              = nsgnew(m1,m2,viz,na1,1)
+                     f(m1, ldim1+m2)       = nsgnew(m1,m2,viz,na1,2)
+                     f(ldim1+m1, m2)       = nsgnew(m1,m2,viz,na1,3)
+                     f(ldim1+m1, ldim1+m2) = nsgnew(m1,m2,viz,na1,4)
+                  ENDDO
+               ENDDO
+               GO TO 4
+            ENDIF
+         ENDDO
+         !
+4        CONTINUE
+         !
+         ! This will only print the on-site blocks of the matrix. 
+         ! The diagonalization will not give components on states of other atoms. 
+         ! To be improved for periodic systems.
+         !
+         CALL cdiagh(2*ldim1, f, 2*ldim1, lambda, vet)
+         !
+         WRITE( stdout,'(5x,"eigenvalues:")')
+         WRITE( stdout,'(5x,14f7.3)') (lambda(m1), m1=1, 2*ldim1)
+         !
+         WRITE( stdout,'(5x,"eigenvectors (columns):")')
+         DO m1 = 1, 2*ldim1
+            WRITE( stdout,'(5x,14f7.3)') ( DBLE(vet(m1,m2)), m2=1, 2*ldim1 )
+         ENDDO
+         !
+         WRITE( stdout,'(5x,"occupations, | n_(i1, i2)^(sigma1, sigma2) |:")')
+         DO m1 = 1, 2*ldim1
+            WRITE( stdout,'(5x,14f7.3)') ( DSQRT(DBLE(f(m1,m2))**2 + &
+                                           AIMAG(f(m1,m2))**2), m2=1, 2*ldim1)               
+         ENDDO
+         !
+         DEALLOCATE (f, vet, lambda)
+         !
+         ! ... calculate the spin moment on +U atom 
+         !
+         mx = 0.d0
+         my = 0.d0
+         mz = 0.d0
+         DO m1 = 1, ldim1
+           mx = mx + DBLE( nsgnew(m1,m1,viz,na1,2) + nsgnew(m1,m1,viz,na1,3) )
+           my = my + 2.d0 * AIMAG( nsgnew(m1,m1,viz,na1,2) )
+           mz = mz + DBLE( nsgnew(m1,m1,viz,na1,1) - nsgnew(m1,m1,viz,na1,4) )
+         ENDDO
+         WRITE(stdout,'(5x,"Atomic magnetic moment mx, my, mz = ",3f12.6)') mx, my, mz
+         !
+      ENDIF
+      !
+   ENDDO !na1
+   !
+   !
+   IF (nspin==1) nsum = 2.d0 * nsum
+   !
+   WRITE( stdout, '(/5x,a,1x,f9.4)') 'Number of occupied Hubbard levels =', nsum
+   !
+   IF (rsrv.GT.0.d0) &
+      WRITE(stdout,'(5x,"Total occupation of reservoir states = ",x,f11.6)') rsrv
+   !
+   IF (iso_sys) DEALLOCATE (f, vet, lambda) 
+   !
+   RETURN
+   !
+ END SUBROUTINE write_nsg_nc 
+!
 !-----------------------------------------------------------------------
 SUBROUTINE read_ns()
   !---------------------------------------------------------------------
@@ -761,8 +826,12 @@ SUBROUTINE read_ns()
   ELSE
      !
      IF (lda_plus_u_kind.EQ.0) THEN
-        rho%ns(:,:,:,:) = 0.D0
-        IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
+        IF (noncolin) THEN
+           rho%ns_nc(:,:,:,:) = 0.D0
+        ELSE
+           rho%ns(:,:,:,:) = 0.D0
+           IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
+        ENDIF
      ELSEIF (lda_plus_u_kind.EQ.1) THEN
         IF (noncolin) THEN
            rho%ns_nc(:,:,:,:) = 0.D0
@@ -778,8 +847,13 @@ SUBROUTINE read_ns()
   CALL mp_bcast( ierr, ionode_id, intra_image_comm )
   !
   IF (lda_plus_u_kind.EQ.0) THEN
-     CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
-     CALL v_hubbard (rho%ns, v%ns, eth)
+     IF (noncolin) THEN
+        CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
+        CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth) 
+     ELSE
+        CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
+        CALL v_hubbard (rho%ns, v%ns, eth)
+     ENDIF
      IF (hub_back) THEN
         CALL mp_bcast(rho%nsb, ionode_id, intra_image_comm)
         CALL v_hubbard_b (rho%nsb, v%nsb, eth1)
@@ -795,7 +869,11 @@ SUBROUTINE read_ns()
      ENDIF
   ELSEIF (lda_plus_u_kind.EQ.2) THEN
      CALL mp_bcast(nsg, ionode_id, intra_image_comm)
-     CALL v_hubbard_extended (nsg, v_nsg, eth)
+     IF (noncolin) THEN
+        CALL v_hubbard_extended_nc (nsg, v_nsg, eth)
+     ELSE
+        CALL v_hubbard_extended (nsg, v_nsg, eth)
+     ENDIF
   ENDIF
   !
   RETURN

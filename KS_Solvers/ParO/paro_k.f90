@@ -39,7 +39,7 @@
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_k( h_psi, s_psi, hs_1psi, g_1psi, overlap, &
+SUBROUTINE paro_k( h_psi_ptr, s_psi_ptr, hs_1psi_ptr, g_1psi_ptr, overlap, &
                    npwx, npw, nbnd, npol, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
@@ -65,11 +65,11 @@ SUBROUTINE paro_k( h_psi, s_psi, hs_1psi, g_1psi, overlap, &
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi, s_psi, hs_1psi, g_1psi
-  ! subroutine h_psi  (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
-  ! subroutine s_psi  (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
-  ! subroutine hs_1psi(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
-  ! subroutine g_1psi  (npwx,npw,psi,eig)       computes g*psi  for a single band
+  EXTERNAL h_psi_ptr, s_psi_ptr, hs_1psi_ptr, g_1psi_ptr
+  ! subroutine h_psi_ptr  (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
+  ! subroutine s_psi_ptr  (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
+  ! subroutine hs_1psi_ptr(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
+  ! subroutine g_1psi_ptr (npwx,npw,psi,eig)       computes g*psi  for a single band
 
   !
   ! ... local variables
@@ -110,7 +110,7 @@ SUBROUTINE paro_k( h_psi, s_psi, hs_1psi, g_1psi, overlap, &
      !write (*,*) itry, notconv, conv
      !write (6,*) ' nbnd, nconv, notconv, nextra, nactive, nbase, ndiag  =', nbnd, nconv, notconv, nextra, nactive, nbase, ndiag
      
-     call s_psi  (npwx,npw,nbnd,psi2,evc) ! computes S*psi needed to ortogonalize to nbase
+     call s_psi_ptr  (npwx,npw,nbnd,psi2,evc) ! computes S*psi needed to ortogonalize to nbase
      lbnd = nbase
      DO ibnd = 1, nbnd ! pack unconverged roots
         IF (.NOT.conv(ibnd) ) THEN
@@ -132,7 +132,7 @@ SUBROUTINE paro_k( h_psi, s_psi, hs_1psi, g_1psi, overlap, &
      IF ( ibnd_start > 1  ) psi2(:, nbase+1:nbase+ibnd_start-1 ) = (0.0_dp,0.0_dp)
      DO ibnd=ibnd_start,ibnd_end
         ! write (*,*) ' calling pcg for ibnd = ', ibnd, eig(ibnd)
-        CALL pcg_k(hs_1psi, g_1psi, psi2, evc, npw, npwx, nbnd, npol, psi2(:,nbase+ibnd), ethr, iter, eig(ibnd), nhpsi)
+        CALL pcg_k(hs_1psi_ptr, g_1psi_ptr, psi2, evc, npw, npwx, nbnd, npol, psi2(:,nbase+ibnd), ethr, iter, eig(ibnd), nhpsi)
      END DO
      IF ( ibnd_end < nactive ) psi2(:, nbase+ibnd_end+1:nbase+nactive) = (0.0_dp,0.0_dp)
      CALL mp_sum(psi2(:,nbase+1:nbase+nactive),inter_bgrp_comm)
@@ -141,10 +141,10 @@ SUBROUTINE paro_k( h_psi, s_psi, hs_1psi, g_1psi, overlap, &
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
-        CALL rotate_wfc_k ( h_psi, s_psi, overlap, npwx, npw, ndiag, ndiag, npol, psi2, psi2, ew )
+        CALL rotate_wfc_k ( h_psi_ptr, s_psi_ptr, overlap, npwx, npw, ndiag, ndiag, npol, psi2, psi2, ew )
 #if defined(__MPI)
      ELSE
-        CALL protate_wfc_k( h_psi, s_psi, overlap, npwx, npw, ndiag, ndiag, npol, psi2, psi2, ew )
+        CALL protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, npwx, npw, ndiag, ndiag, npol, psi2, psi2, ew )
      END IF
 #endif
      IF (my_bgrp_id==0) nhpsi = nhpsi + ndiag

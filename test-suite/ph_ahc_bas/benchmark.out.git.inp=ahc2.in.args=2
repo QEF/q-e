@@ -1,0 +1,1268 @@
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+
+     Program PHONON v.7.2 starts on  7Dec2023 at 18:39:58 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     38380 MiB available memory on the printing compute node when the environment starts
+ 
+     Waiting for input...
+     Reading input from standard input
+
+     Reading xml data from directory:
+
+     ./BAs.save/
+ 
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         112     112     34                 1604     1604     266
+     Max         113     113     35                 1607     1607     267
+     Sum         451     451    139                 6423     6423    1067
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions in ./
+
+
+     Dynamical matrices for ( 3, 3, 3)  uniform grid of q-points
+     (   4 q-points):
+       N         xq(1)         xq(2)         xq(3) 
+       1   0.000000000   0.000000000   0.000000000
+       2  -0.333333333   0.333333333  -0.333333333
+       3   0.000000000   0.666666667   0.000000000
+       4   0.666666667  -0.000000000   0.666666667
+
+     Number and degeneracy of irreps per q-point
+       N         xq(1)         xq(2)         xq(3)   N irreps
+       1   0.000000000   0.000000000   0.000000000       2
+        3   3
+       2  -0.333333333   0.333333333  -0.333333333       4
+        1   1   2   2
+       3   0.000000000   0.666666667   0.000000000       6
+     No degeneracy
+       4   0.666666667  -0.000000000   0.666666667       6
+     No degeneracy
+
+     Saving dvscf to file. Distribute only q points, not irreducible representations.
+
+     Calculation of q =    0.0000000   0.0000000   0.0000000
+  Dielectric matrix epsilon
+  20.35452   0.00000   0.00000
+   0.00000  20.35452  -0.00000
+   0.00000  -0.00000  20.35452
+  Born effective charge zeu
+  na=            1
+  -1.91919   0.00000  -0.00000
+  -0.00000  -1.91919  -0.00000
+  -0.00000  -0.00000  -1.91919
+  na=            2
+  -1.62078  -0.00000   0.00000
+  -0.00000  -1.62078  -0.00000
+   0.00000   0.00000  -1.62078
+  Born effective charge after charge neutrality correction
+  na=            1
+  -0.14920   0.00000  -0.00000
+   0.00000  -0.14920  -0.00000
+  -0.00000  -0.00000  -0.14920
+  na=            2
+   0.14920  -0.00000   0.00000
+  -0.00000   0.14920   0.00000
+   0.00000   0.00000   0.14920
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      40.0000  Ry
+     charge density cut-off    =     160.0000  Ry
+     convergence threshold     =      1.0E-12
+     beta                      =       0.7000
+     number of iterations used =            4
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+
+     celldm(1)=    9.11000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+     Cartesian axes
+
+     site n.  atom      mass           positions (alat units)
+        1  B      10.8100   tau(    1) = (   -0.12500    0.12500    0.12500  )
+        2  As     74.9220   tau(    2) = (    0.12500   -0.12500   -0.12500  )
+
+     Computing dynamical matrix for 
+                    q = (   0.0000000   0.0000000   0.0000000 )
+ 
+     25 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  336.3543  (   1607 G-vectors)     FFT grid: ( 30, 30, 30)
+     number of k points=     8
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     Mode symmetry, T_d (-43m)  point group:
+
+
+     Atomic displacements:
+     There are    2 irreducible representations
+
+     Representation     1      3 modes -  To be done
+
+     Representation     2      3 modes -  To be done
+
+
+     PHONON       :      0.07s CPU      0.10s WALL
+
+     Fourier interpolating dVscf
+ 
+     Begin electron-phonon calculation for AHC theory
+     Computing ahc_gkk for ik =        1
+     Computing ahc_upperfan for ik =        1
+     Computing ahc_dw for ik =        1
+     Computing ahc_gkk for ik =        2
+     Computing ahc_upperfan for ik =        2
+     Computing ahc_dw for ik =        2
+     Computing ahc_gkk for ik =        3
+     Computing ahc_upperfan for ik =        3
+     Computing ahc_dw for ik =        3
+     Computing ahc_gkk for ik =        4
+     Computing ahc_upperfan for ik =        4
+     Computing ahc_dw for ik =        4
+     Computing ahc_gkk for ik =        5
+     Computing ahc_upperfan for ik =        5
+     Computing ahc_dw for ik =        5
+     Computing ahc_gkk for ik =        6
+     Computing ahc_upperfan for ik =        6
+     Computing ahc_dw for ik =        6
+     Computing ahc_gkk for ik =        7
+     Computing ahc_upperfan for ik =        7
+     Computing ahc_dw for ik =        7
+     Computing ahc_gkk for ik =        8
+     Computing ahc_upperfan for ik =        8
+     Computing ahc_dw for ik =        8
+     AHC e-ph calculation done
+
+     Calculation of q =   -0.3333333   0.3333333  -0.3333333
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         112     112     37                 1604     1604     309
+     Max         113     113     38                 1607     1607     312
+     Sum         451     451    151                 6423     6423    1243
+ 
+     Using Slab Decomposition
+ 
+
+     Title: 
+     --                                                                         
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     number of electrons       =         8.00
+     number of Kohn-Sham states=           12
+     kinetic-energy cutoff     =      40.0000  Ry
+     charge density cutoff     =     160.0000  Ry
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+     celldm(1)=   9.110000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     atomic species   valence    mass     pseudopotential
+     B                 3.00    10.81000     B ( 1.00)
+     As                5.00    74.92200     As( 1.00)
+
+     24 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1        B      tau(   1) = (  -0.1250000   0.1250000   0.1250000  )
+         2        As     tau(   2) = (   0.1250000  -0.1250000  -0.1250000  )
+
+     number of k points=    16
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(    2) = (  -0.3333333   0.3333333  -0.3333333), wk =   0.0000000
+        k(    3) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.2500000
+        k(    4) = (  -0.8333333   0.8333333  -0.8333333), wk =   0.0000000
+        k(    5) = (   0.5000000   0.5000000   0.5000000), wk =   0.2500000
+        k(    6) = (   0.1666667   0.8333333   0.1666667), wk =   0.0000000
+        k(    7) = (   0.0000000   1.0000000   0.0000000), wk =   0.2500000
+        k(    8) = (  -0.3333333   1.3333333  -0.3333333), wk =   0.0000000
+        k(    9) = (  -0.5000000  -0.5000000   0.5000000), wk =   0.2500000
+        k(   10) = (  -0.8333333  -0.1666667   0.1666667), wk =   0.0000000
+        k(   11) = (  -1.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(   12) = (  -1.3333333   0.3333333  -0.3333333), wk =   0.0000000
+        k(   13) = (   0.0000000   0.0000000   1.0000000), wk =   0.2500000
+        k(   14) = (  -0.3333333   0.3333333   0.6666667), wk =   0.0000000
+        k(   15) = (  -0.5000000   0.5000000   0.5000000), wk =   0.2500000
+        k(   16) = (  -0.8333333   0.8333333   0.1666667), wk =   0.0000000
+
+     Dense  grid:     6423 G-vectors     FFT dimensions: (  30,  30,  30)
+
+     Estimated max dynamical RAM per process >       1.96 MB
+
+     Estimated total dynamical RAM >       7.85 MB
+
+     The potential is recalculated from file :
+     ./_ph0/BAs.q_2/BAs.save/charge-density
+
+     Starting wfcs are    8 atomic +    4 random wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  1.25E-10,  avg # of iterations = 18.6
+
+     total cpu time spent up to now is        0.5 secs
+
+     End of band structure calculation
+
+          k = 0.0000 0.0000 0.0000 (   869 PWs)   bands (ev):
+
+    -7.0116   8.0718   8.0718   8.0718  11.2812  11.2812  11.2812  12.8583
+    17.6635  21.0031  21.0031  22.4610
+
+          k =-0.3333 0.3333-0.3333 (   823 PWs)   bands (ev):
+
+    -5.3803   1.4557   6.6205   6.6205  10.9273  12.7863  12.7863  16.6943
+    19.4574  20.0036  20.0036  23.3586
+
+          k =-0.5000 0.5000-0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k =-0.8333 0.8333-0.8333 (   818 PWs)   bands (ev):
+
+    -6.5817   5.1764   7.4229   7.4229  11.3637  12.1419  12.1419  14.7018
+    18.9658  19.3258  19.3258  21.6263
+
+          k = 0.5000 0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k = 0.1667 0.8333 0.1667 (   802 PWs)   bands (ev):
+
+    -3.5861   0.5404   3.1860   4.5294   9.8596  11.8978  17.1924  17.3224
+    20.2206  23.2663  23.4479  26.6663
+
+          k = 0.0000 1.0000 0.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k =-0.3333 1.3333-0.3333 (   810 PWs)   bands (ev):
+
+    -4.1316   0.0355   4.5061   5.5756  11.0703  13.5678  14.2901  16.1953
+    19.5681  22.4154  22.5582  23.5276
+
+          k =-0.5000-0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k =-0.8333-0.1667 0.1667 (   802 PWs)   bands (ev):
+
+    -3.5861   0.5404   3.1860   4.5294   9.8596  11.8978  17.1924  17.3224
+    20.2206  23.2663  23.4479  26.6663
+
+          k =-1.0000 0.0000 0.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k =-1.3333 0.3333-0.3333 (   810 PWs)   bands (ev):
+
+    -4.1316   0.0355   4.5061   5.5756  11.0703  13.5678  14.2901  16.1953
+    19.5681  22.4154  22.5582  23.5276
+
+          k = 0.0000 0.0000 1.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k =-0.3333 0.3333 0.6667 (   810 PWs)   bands (ev):
+
+    -4.1316   0.0355   4.5061   5.5756  11.0703  13.5678  14.2901  16.1953
+    19.5681  22.4154  22.5582  23.5276
+
+          k =-0.5000 0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k =-0.8333 0.8333 0.1667 (   802 PWs)   bands (ev):
+
+    -3.5861   0.5404   3.1860   4.5294   9.8596  11.8978  17.1924  17.3224
+    20.2206  23.2663  23.4479  26.6663
+
+     highest occupied, lowest unoccupied level (ev):     8.0718    9.4420
+  Dielectric matrix epsilon
+  20.35452   0.00000   0.00000
+   0.00000  20.35452  -0.00000
+   0.00000  -0.00000  20.35452
+  Born effective charge zeu
+  na=            1
+  -1.91919   0.00000  -0.00000
+  -0.00000  -1.91919  -0.00000
+  -0.00000  -0.00000  -1.91919
+  na=            2
+  -1.62078  -0.00000   0.00000
+  -0.00000  -1.62078  -0.00000
+   0.00000   0.00000  -1.62078
+  Born effective charge after charge neutrality correction
+  na=            1
+  -0.14920   0.00000  -0.00000
+   0.00000  -0.14920  -0.00000
+  -0.00000  -0.00000  -0.14920
+  na=            2
+   0.14920  -0.00000   0.00000
+  -0.00000   0.14920   0.00000
+   0.00000   0.00000   0.14920
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      40.0000  Ry
+     charge density cut-off    =     160.0000  Ry
+     convergence threshold     =      1.0E-12
+     beta                      =       0.7000
+     number of iterations used =            4
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+
+     celldm(1)=    9.11000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+     Cartesian axes
+
+     site n.  atom      mass           positions (alat units)
+        1  B      10.8100   tau(    1) = (   -0.12500    0.12500    0.12500  )
+        2  As     74.9220   tau(    2) = (    0.12500   -0.12500   -0.12500  )
+
+     Computing dynamical matrix for 
+                    q = (  -0.3333333   0.3333333  -0.3333333 )
+ 
+      6 Sym.Ops. (no q -> -q+G )
+
+
+     G cutoff =  336.3543  (   1607 G-vectors)     FFT grid: ( 30, 30, 30)
+     number of k points=    16
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     Mode symmetry, C_3v (3m)   point group:
+
+
+     Atomic displacements:
+     There are    4 irreducible representations
+
+     Representation     1      1 modes -  To be done
+
+     Representation     2      1 modes -  To be done
+
+     Representation     3      2 modes -  To be done
+
+     Representation     4      2 modes -  To be done
+
+
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
+     PHONON       :      1.86s CPU      1.99s WALL
+
+     Fourier interpolating dVscf
+ 
+     Begin electron-phonon calculation for AHC theory
+     Computing ahc_gkk for ik =        1
+     Computing ahc_upperfan for ik =        1
+     Computing ahc_gkk for ik =        2
+     Computing ahc_upperfan for ik =        2
+     Computing ahc_gkk for ik =        3
+     Computing ahc_upperfan for ik =        3
+     Computing ahc_gkk for ik =        4
+     Computing ahc_upperfan for ik =        4
+     Computing ahc_gkk for ik =        5
+     Computing ahc_upperfan for ik =        5
+     Computing ahc_gkk for ik =        6
+     Computing ahc_upperfan for ik =        6
+     Computing ahc_gkk for ik =        7
+     Computing ahc_upperfan for ik =        7
+     Computing ahc_gkk for ik =        8
+     Computing ahc_upperfan for ik =        8
+     AHC e-ph calculation done
+
+     Calculation of q =    0.0000000   0.6666667   0.0000000
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         112     112     40                 1604     1604     340
+     Max         113     113     41                 1607     1607     342
+     Sum         451     451    163                 6423     6423    1363
+ 
+     Using Slab Decomposition
+ 
+
+     Title: 
+     --                                                                         
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     number of electrons       =         8.00
+     number of Kohn-Sham states=           12
+     kinetic-energy cutoff     =      40.0000  Ry
+     charge density cutoff     =     160.0000  Ry
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+     celldm(1)=   9.110000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     atomic species   valence    mass     pseudopotential
+     B                 3.00    10.81000     B ( 1.00)
+     As                5.00    74.92200     As( 1.00)
+
+     24 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1        B      tau(   1) = (  -0.1250000   0.1250000   0.1250000  )
+         2        As     tau(   2) = (   0.1250000  -0.1250000  -0.1250000  )
+
+     number of k points=    16
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(    2) = (   0.0000000   0.6666667   0.0000000), wk =   0.0000000
+        k(    3) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.2500000
+        k(    4) = (  -0.5000000   1.1666667  -0.5000000), wk =   0.0000000
+        k(    5) = (   0.5000000   0.5000000   0.5000000), wk =   0.2500000
+        k(    6) = (   0.5000000   1.1666667   0.5000000), wk =   0.0000000
+        k(    7) = (   0.0000000   1.0000000   0.0000000), wk =   0.2500000
+        k(    8) = (   0.0000000   1.6666667   0.0000000), wk =   0.0000000
+        k(    9) = (  -0.5000000  -0.5000000   0.5000000), wk =   0.2500000
+        k(   10) = (  -0.5000000   0.1666667   0.5000000), wk =   0.0000000
+        k(   11) = (  -1.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(   12) = (  -1.0000000   0.6666667   0.0000000), wk =   0.0000000
+        k(   13) = (   0.0000000   0.0000000   1.0000000), wk =   0.2500000
+        k(   14) = (   0.0000000   0.6666667   1.0000000), wk =   0.0000000
+        k(   15) = (  -0.5000000   0.5000000   0.5000000), wk =   0.2500000
+        k(   16) = (  -0.5000000   1.1666667   0.5000000), wk =   0.0000000
+
+     Dense  grid:     6423 G-vectors     FFT dimensions: (  30,  30,  30)
+
+     Estimated max dynamical RAM per process >       1.96 MB
+
+     Estimated total dynamical RAM >       7.86 MB
+
+     The potential is recalculated from file :
+     ./_ph0/BAs.q_3/BAs.save/charge-density
+
+     Starting wfcs are    8 atomic +    4 random wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  1.25E-10,  avg # of iterations = 16.3
+
+     total cpu time spent up to now is        0.9 secs
+
+     End of band structure calculation
+
+          k = 0.0000 0.0000 0.0000 (   869 PWs)   bands (ev):
+
+    -7.0116   8.0718   8.0718   8.0718  11.2812  11.2812  11.2812  12.8583
+    17.6635  21.0031  21.0031  22.4610
+
+          k = 0.0000 0.6667 0.0000 (   805 PWs)   bands (ev):
+
+    -4.7908   2.2337   4.7267   4.7267   9.3173  11.1528  16.9139  16.9139
+    19.5318  22.9190  23.7947  27.2999
+
+          k =-0.5000 0.5000-0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k =-0.5000 1.1667-0.5000 (   807 PWs)   bands (ev):
+
+    -4.5480   0.7425   4.1218   6.2162  11.5747  13.6281  13.6350  16.6044
+    19.1584  19.7522  22.7702  24.2360
+
+          k = 0.5000 0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k = 0.5000 1.1667 0.5000 (   807 PWs)   bands (ev):
+
+    -4.5480   0.7425   4.1218   6.2162  11.5747  13.6281  13.6350  16.6044
+    19.1584  19.7522  22.7702  24.2360
+
+          k = 0.0000 1.0000 0.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k = 0.0000 1.6667 0.0000 (   813 PWs)   bands (ev):
+
+    -6.4370   5.8277   6.4207   6.4207  10.3003  13.5580  13.5580  13.7271
+    17.7152  19.6633  21.7056  23.7699
+
+          k =-0.5000-0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k =-0.5000 0.1667 0.5000 (   807 PWs)   bands (ev):
+
+    -4.5480   0.7425   4.1218   6.2162  11.5747  13.6281  13.6350  16.6044
+    19.1584  19.7522  22.7702  24.2360
+
+          k =-1.0000 0.0000 0.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k =-1.0000 0.6667 0.0000 (   798 PWs)   bands (ev):
+
+    -2.9569   0.0883   3.0445   3.2330  11.7768  12.0358  16.4639  16.7802
+    20.1473  22.6733  23.8746  26.1283
+
+          k = 0.0000 0.0000 1.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k = 0.0000 0.6667 1.0000 (   798 PWs)   bands (ev):
+
+    -2.9569   0.0883   3.0445   3.2330  11.7768  12.0358  16.4639  16.7802
+    20.1473  22.6733  23.8746  26.1283
+
+          k =-0.5000 0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k =-0.5000 1.1667 0.5000 (   807 PWs)   bands (ev):
+
+    -4.5480   0.7425   4.1218   6.2162  11.5747  13.6281  13.6350  16.6044
+    19.1584  19.7522  22.7702  24.2360
+
+     highest occupied, lowest unoccupied level (ev):     8.0718    9.4420
+  Dielectric matrix epsilon
+  20.35452   0.00000   0.00000
+   0.00000  20.35452  -0.00000
+   0.00000  -0.00000  20.35452
+  Born effective charge zeu
+  na=            1
+  -1.91919   0.00000  -0.00000
+  -0.00000  -1.91919  -0.00000
+  -0.00000  -0.00000  -1.91919
+  na=            2
+  -1.62078  -0.00000   0.00000
+  -0.00000  -1.62078  -0.00000
+   0.00000   0.00000  -1.62078
+  Born effective charge after charge neutrality correction
+  na=            1
+  -0.14920   0.00000  -0.00000
+   0.00000  -0.14920  -0.00000
+  -0.00000  -0.00000  -0.14920
+  na=            2
+   0.14920  -0.00000   0.00000
+  -0.00000   0.14920   0.00000
+   0.00000   0.00000   0.14920
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      40.0000  Ry
+     charge density cut-off    =     160.0000  Ry
+     convergence threshold     =      1.0E-12
+     beta                      =       0.7000
+     number of iterations used =            4
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+
+     celldm(1)=    9.11000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+     Cartesian axes
+
+     site n.  atom      mass           positions (alat units)
+        1  B      10.8100   tau(    1) = (   -0.12500    0.12500    0.12500  )
+        2  As     74.9220   tau(    2) = (    0.12500   -0.12500   -0.12500  )
+
+     Computing dynamical matrix for 
+                    q = (   0.0000000   0.6666667   0.0000000 )
+ 
+      4 Sym.Ops. (no q -> -q+G )
+
+
+     G cutoff =  336.3543  (   1607 G-vectors)     FFT grid: ( 30, 30, 30)
+     number of k points=    16
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     Mode symmetry, C_2v (mm2)  point group:
+
+
+     Atomic displacements:
+     There are    6 irreducible representations
+
+     Representation     1      1 modes -  To be done
+
+     Representation     2      1 modes -  To be done
+
+     Representation     3      1 modes -  To be done
+
+     Representation     4      1 modes -  To be done
+
+     Representation     5      1 modes -  To be done
+
+     Representation     6      1 modes -  To be done
+
+
+     PHONON       :      3.84s CPU      4.07s WALL
+
+     Fourier interpolating dVscf
+ 
+     Begin electron-phonon calculation for AHC theory
+     Computing ahc_gkk for ik =        1
+     Computing ahc_upperfan for ik =        1
+     Computing ahc_gkk for ik =        2
+     Computing ahc_upperfan for ik =        2
+     Computing ahc_gkk for ik =        3
+     Computing ahc_upperfan for ik =        3
+     Computing ahc_gkk for ik =        4
+     Computing ahc_upperfan for ik =        4
+     Computing ahc_gkk for ik =        5
+     Computing ahc_upperfan for ik =        5
+     Computing ahc_gkk for ik =        6
+     Computing ahc_upperfan for ik =        6
+     Computing ahc_gkk for ik =        7
+     Computing ahc_upperfan for ik =        7
+     Computing ahc_gkk for ik =        8
+     Computing ahc_upperfan for ik =        8
+     AHC e-ph calculation done
+
+     Calculation of q =    0.6666667  -0.0000000   0.6666667
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         112     112     40                 1604     1604     351
+     Max         113     113     41                 1607     1607     354
+     Sum         451     451    163                 6423     6423    1411
+ 
+     Using Slab Decomposition
+ 
+
+     Title: 
+     --                                                                         
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     number of electrons       =         8.00
+     number of Kohn-Sham states=           12
+     kinetic-energy cutoff     =      40.0000  Ry
+     charge density cutoff     =     160.0000  Ry
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+     celldm(1)=   9.110000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     atomic species   valence    mass     pseudopotential
+     B                 3.00    10.81000     B ( 1.00)
+     As                5.00    74.92200     As( 1.00)
+
+     24 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1        B      tau(   1) = (  -0.1250000   0.1250000   0.1250000  )
+         2        As     tau(   2) = (   0.1250000  -0.1250000  -0.1250000  )
+
+     number of k points=    16
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(    2) = (   0.6666667  -0.0000000   0.6666667), wk =   0.0000000
+        k(    3) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.2500000
+        k(    4) = (   0.1666667   0.5000000   0.1666667), wk =   0.0000000
+        k(    5) = (   0.5000000   0.5000000   0.5000000), wk =   0.2500000
+        k(    6) = (   1.1666667   0.5000000   1.1666667), wk =   0.0000000
+        k(    7) = (   0.0000000   1.0000000   0.0000000), wk =   0.2500000
+        k(    8) = (   0.6666667   1.0000000   0.6666667), wk =   0.0000000
+        k(    9) = (  -0.5000000  -0.5000000   0.5000000), wk =   0.2500000
+        k(   10) = (   0.1666667  -0.5000000   1.1666667), wk =   0.0000000
+        k(   11) = (  -1.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(   12) = (  -0.3333333  -0.0000000   0.6666667), wk =   0.0000000
+        k(   13) = (   0.0000000   0.0000000   1.0000000), wk =   0.2500000
+        k(   14) = (   0.6666667  -0.0000000   1.6666667), wk =   0.0000000
+        k(   15) = (  -0.5000000   0.5000000   0.5000000), wk =   0.2500000
+        k(   16) = (   0.1666667   0.5000000   1.1666667), wk =   0.0000000
+
+     Dense  grid:     6423 G-vectors     FFT dimensions: (  30,  30,  30)
+
+     Estimated max dynamical RAM per process >       1.97 MB
+
+     Estimated total dynamical RAM >       7.87 MB
+
+     The potential is recalculated from file :
+     ./_ph0/BAs.q_4/BAs.save/charge-density
+
+     Starting wfcs are    8 atomic +    4 random wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  1.25E-10,  avg # of iterations = 16.1
+
+     total cpu time spent up to now is        1.3 secs
+
+     End of band structure calculation
+
+          k = 0.0000 0.0000 0.0000 (   869 PWs)   bands (ev):
+
+    -7.0116   8.0718   8.0718   8.0718  11.2812  11.2812  11.2812  12.8583
+    17.6635  21.0031  21.0031  22.4610
+
+          k = 0.6667-0.0000 0.6667 (   816 PWs)   bands (ev):
+
+    -3.4028   0.3978   2.1237   5.1231  10.5082  15.4061  15.9903  16.9707
+    17.3404  20.0901  24.0058  26.4293
+
+          k =-0.5000 0.5000-0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k = 0.1667 0.5000 0.1667 (   812 PWs)   bands (ev):
+
+    -5.4768   2.6970   5.5123   5.6432  10.7717  13.3575  14.3498  14.6206
+    19.1118  21.1003  21.9186  23.8026
+
+          k = 0.5000 0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k = 1.1667 0.5000 1.1667 (   812 PWs)   bands (ev):
+
+    -5.4768   2.6970   5.5123   5.6432  10.7717  13.3575  14.3498  14.6206
+    19.1118  21.1003  21.9186  23.8026
+
+          k = 0.0000 1.0000 0.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k = 0.6667 1.0000 0.6667 (   813 PWs)   bands (ev):
+
+    -5.8855   3.6091   4.8707   7.2260  12.0692  12.5425  13.3196  15.0243
+    17.8636  20.0571  20.9605  24.2404
+
+          k =-0.5000-0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k = 0.1667-0.5000 1.1667 (   804 PWs)   bands (ev):
+
+    -3.3954   0.2157   2.7780   4.3143  12.3814  13.1976  15.5537  16.5723
+    18.0931  22.2963  23.5330  24.9762
+
+          k =-1.0000 0.0000 0.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k =-0.3333-0.0000 0.6667 (   799 PWs)   bands (ev):
+
+    -4.3549   1.4482   3.3175   4.9511  11.8180  13.2377  13.7904  16.8184
+    19.4833  21.2492  23.5945  25.8287
+
+          k = 0.0000 0.0000 1.0000 (   790 PWs)   bands (ev):
+
+    -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
+    20.9720  23.8233  25.5661  25.5661
+
+          k = 0.6667-0.0000 1.6667 (   799 PWs)   bands (ev):
+
+    -4.3549   1.4482   3.3175   4.9511  11.8180  13.2377  13.7904  16.8184
+    19.4833  21.2492  23.5945  25.8287
+
+          k =-0.5000 0.5000 0.5000 (   796 PWs)   bands (ev):
+
+    -4.2921  -0.5321   6.3302   6.3302  10.7519  12.7414  12.7414  16.8964
+    20.7487  22.4033  22.4033  23.0660
+
+          k = 0.1667 0.5000 1.1667 (   804 PWs)   bands (ev):
+
+    -3.3954   0.2157   2.7780   4.3143  12.3814  13.1976  15.5537  16.5723
+    18.0931  22.2963  23.5330  24.9762
+
+     highest occupied, lowest unoccupied level (ev):     8.0718    9.4420
+  Dielectric matrix epsilon
+  20.35452   0.00000   0.00000
+   0.00000  20.35452  -0.00000
+   0.00000  -0.00000  20.35452
+  Born effective charge zeu
+  na=            1
+  -1.91919   0.00000  -0.00000
+  -0.00000  -1.91919  -0.00000
+  -0.00000  -0.00000  -1.91919
+  na=            2
+  -1.62078  -0.00000   0.00000
+  -0.00000  -1.62078  -0.00000
+   0.00000   0.00000  -1.62078
+  Born effective charge after charge neutrality correction
+  na=            1
+  -0.14920   0.00000  -0.00000
+   0.00000  -0.14920  -0.00000
+  -0.00000  -0.00000  -0.14920
+  na=            2
+   0.14920  -0.00000   0.00000
+  -0.00000   0.14920   0.00000
+   0.00000   0.00000   0.14920
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       9.1100  a.u.
+     unit-cell volume          =     189.0145 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      40.0000  Ry
+     charge density cut-off    =     160.0000  Ry
+     convergence threshold     =      1.0E-12
+     beta                      =       0.7000
+     number of iterations used =            4
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+
+     celldm(1)=    9.11000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+     Cartesian axes
+
+     site n.  atom      mass           positions (alat units)
+        1  B      10.8100   tau(    1) = (   -0.12500    0.12500    0.12500  )
+        2  As     74.9220   tau(    2) = (    0.12500   -0.12500   -0.12500  )
+
+     Computing dynamical matrix for 
+                    q = (   0.6666667  -0.0000000   0.6666667 )
+ 
+      2 Sym.Ops. (no q -> -q+G )
+
+
+     G cutoff =  336.3543  (   1607 G-vectors)     FFT grid: ( 30, 30, 30)
+     number of k points=    16
+
+     PseudoPot. # 1 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for As read from file:
+     ../../pseudo/As.pz-bhs.UPF
+     MD5 check sum: 2c53d8691f3db84e0fbdf898b12bc293
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     Mode symmetry, C_s (m)     point group:
+
+
+     Atomic displacements:
+     There are    6 irreducible representations
+
+     Representation     1      1 modes -  To be done
+
+     Representation     2      1 modes -  To be done
+
+     Representation     3      1 modes -  To be done
+
+     Representation     4      1 modes -  To be done
+
+     Representation     5      1 modes -  To be done
+
+     Representation     6      1 modes -  To be done
+
+
+     PHONON       :      5.69s CPU      6.02s WALL
+
+     Fourier interpolating dVscf
+ 
+     Begin electron-phonon calculation for AHC theory
+     Computing ahc_gkk for ik =        1
+     Computing ahc_upperfan for ik =        1
+     Computing ahc_gkk for ik =        2
+     Computing ahc_upperfan for ik =        2
+     Computing ahc_gkk for ik =        3
+     Computing ahc_upperfan for ik =        3
+     Computing ahc_gkk for ik =        4
+     Computing ahc_upperfan for ik =        4
+     Computing ahc_gkk for ik =        5
+     Computing ahc_upperfan for ik =        5
+     Computing ahc_gkk for ik =        6
+     Computing ahc_upperfan for ik =        6
+     Computing ahc_gkk for ik =        7
+     Computing ahc_upperfan for ik =        7
+     Computing ahc_gkk for ik =        8
+     Computing ahc_upperfan for ik =        8
+     AHC e-ph calculation done
+ 
+     init_run     :      0.03s CPU      0.03s WALL (       3 calls)
+     electrons    :      1.25s CPU      1.31s WALL (       3 calls)
+
+     Called by init_run:
+     wfcinit      :      0.00s CPU      0.00s WALL (       3 calls)
+     potinit      :      0.00s CPU      0.00s WALL (       3 calls)
+     hinit0       :      0.02s CPU      0.02s WALL (       3 calls)
+
+     Called by electrons:
+     c_bands      :      1.25s CPU      1.31s WALL (       3 calls)
+     v_of_rho     :      0.00s CPU      0.00s WALL (       4 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.01s CPU      0.01s WALL (     256 calls)
+     init_us_2:cp :      0.01s CPU      0.01s WALL (     256 calls)
+     cegterg      :      1.17s CPU      1.22s WALL (      53 calls)
+
+     Called by *egterg:
+     cdiaghg      :      0.24s CPU      0.25s WALL (     863 calls)
+     h_psi        :      5.56s CPU      5.84s WALL (    5502 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     815 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.09s CPU      0.10s WALL (    5502 calls)
+     vloc_psi     :      5.37s CPU      5.64s WALL (    5502 calls)
+     add_vuspsi   :      0.05s CPU      0.05s WALL (    5502 calls)
+
+     General routines
+     calbec       :      0.14s CPU      0.14s WALL (   10184 calls)
+     fft          :      0.02s CPU      0.03s WALL (     108 calls)
+     ffts         :      0.02s CPU      0.02s WALL (     192 calls)
+     fftw         :      5.26s CPU      5.51s WALL (   91408 calls)
+     davcio       :      0.02s CPU      0.03s WALL (     192 calls)
+ 
+     Parallel routines
+ 
+     PHONON       :      7.16s CPU      7.57s WALL
+
+     INITIALIZATION: 
+     phq_setup    :      0.00s CPU      0.01s WALL (       4 calls)
+     phq_init     :      0.01s CPU      0.01s WALL (       4 calls)
+ 
+     phq_init     :      0.01s CPU      0.01s WALL (       4 calls)
+     init_vloc    :      0.01s CPU      0.01s WALL (       4 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       4 calls)
+     init_us_2    :      0.01s CPU      0.01s WALL (     256 calls)
+ 
+     dvqpsi_us    :      0.35s CPU      0.36s WALL (     192 calls)
+                                        0.00s GPU  (     192 calls)
+     dvqpsi_us_on :      0.01s CPU      0.01s WALL (     192 calls)
+ 
+     add_vuspsi   :      0.05s CPU      0.05s WALL (    5502 calls)
+ 
+ 
+      Fourier interpolation of dVscf
+     dvscf_r2q    :      0.05s CPU      0.08s WALL (       4 calls)
+     dvscf_davcio :      0.02s CPU      0.04s WALL (     192 calls)
+     dvscf_scatgr :      0.01s CPU      0.02s WALL (     192 calls)
+     dvscf_bare   :      0.00s CPU      0.00s WALL (       4 calls)
+ 
+      Electron-phonon coupling
+     elphon       :      0.65s CPU      0.71s WALL (       4 calls)
+     elphel       :      0.60s CPU      0.63s WALL (      18 calls)
+ 
+      El-ph coupling for electron self-energy
+     ahc_elph     :      5.15s CPU      5.41s WALL (       4 calls)
+     ahc_upfan    :      5.12s CPU      5.38s WALL (      32 calls)
+     ahc_dw       :      0.00s CPU      0.00s WALL (       8 calls)
+     ahc_gkk      :      0.00s CPU      0.00s WALL (      32 calls)
+     ahc_gauge    :      0.02s CPU      0.02s WALL (      32 calls)
+ 
+      General routines
+     calbec       :      0.14s CPU      0.14s WALL (   10184 calls)
+     fft          :      0.02s CPU      0.03s WALL (     108 calls)
+     ffts         :      0.02s CPU      0.02s WALL (     192 calls)
+     fftw         :      5.26s CPU      5.51s WALL (   91408 calls)
+     davcio       :      0.02s CPU      0.03s WALL (     192 calls)
+ 
+      Additional routines
+     ch_psi       :      4.95s CPU      5.20s WALL (    4554 calls)
+     last         :      0.26s CPU      0.27s WALL (    4554 calls)
+     Hesh         :      0.01s CPU      0.02s WALL (    4554 calls)
+     ch_psi_all_k :      0.23s CPU      0.24s WALL (    4554 calls)
+                                        0.00s GPU  (    4554 calls)
+     ch_psi_calbe :      0.06s CPU      0.07s WALL (    4554 calls)
+                                        0.00s GPU  (    4554 calls)
+     h_psi_bgrp   :      5.57s CPU      5.85s WALL (    5502 calls)
+     h_psi        :      5.56s CPU      5.84s WALL (    5502 calls)
+     h_psi:pot    :      5.53s CPU      5.81s WALL (    5502 calls)
+     h_psi:calbec :      0.09s CPU      0.10s WALL (    5502 calls)
+     s_psi_bgrp   :      0.02s CPU      0.02s WALL (    9332 calls)
+ 
+ 
+     PHONON       :      7.16s CPU      7.58s WALL
+
+ 
+   This run was terminated on:  18:40: 6   7Dec2023            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

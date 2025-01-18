@@ -7,6 +7,24 @@
 	
 
 # ------------------------------------------------------------------------
+help title -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>title</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> ' '
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+reprinted on output, CUB files and other places
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help prefix -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>prefix</b></big>
@@ -367,6 +385,29 @@ broadening of energy levels for LDOS (in eV).
 
 Defaults to broadening degauss specified for electronic smearing
 in pw.x calculation.
+               </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help use_gauss_ldos -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>use_gauss_ldos</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+               </li>
+<br><li> <em>Status: </em> OPTIONAL
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
+
+Defaults .false., in which case the broadening scheme
+of the pw.x calculation will be used.
                </pre></blockquote>
 </ul>      
       

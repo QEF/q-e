@@ -1325,14 +1325,14 @@ PRIVATE :: GetVdWParam
   ! Local variables
   !
   INTEGER :: ia,iq,off1
-  REAL(DP) :: normr
+  REAL(DP) :: normr, veff_ia
   !
   CALL start_clock('tsvdw_veff')
   !
   ! Initialization of effective volume...
   !
   ALLOCATE(veff(nat)); veff=0.0_DP
-  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff=0.0_DP
+  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff_pub=0.0_DP
   !
   ! Normalization factor for veff integral...
   !
@@ -1345,10 +1345,11 @@ PRIVATE :: GetVdWParam
     ! Connect processor number with atom...
     !
     ia=me+nproc_image*(iproc-1)
+    veff_ia=0.0_DP
     !
     ! Loop over points in the (pre-screened) spherical atomic integration domain...
     !
-!$omp parallel do private(off1),reduction(+:veff)
+!$omp parallel do private(off1),reduction(+:veff_ia)
     DO iq=1,NsomegaA(ia)
       !
       ! Compute veff integrand and complete dispersion potential (functional derivative of veff(A) wrt charge density)...
@@ -1364,7 +1365,7 @@ PRIVATE :: GetVdWParam
       !
       IF ((MOD(somegaA(iq,1,iproc),2).EQ.1).AND.(MOD(somegaA(iq,2,iproc),2).EQ.1).AND.(MOD(somegaA(iq,3,iproc),2).EQ.1))  THEN
         !
-        veff(ia)=veff(ia)+(dveffAdn(iq,iproc)*rhotot(off1))
+        veff_ia=veff_ia+(dveffAdn(iq,iproc)*rhotot(off1))
         !
       END IF
       !
@@ -1373,7 +1374,7 @@ PRIVATE :: GetVdWParam
     !
     ! Apply final normalization to veff integral...
     !
-    veff(ia)=normr*veff(ia)
+    veff(ia)=normr*veff_ia
     !
   END DO !iproc
   !
@@ -1450,7 +1451,7 @@ PRIVATE :: GetVdWParam
     !
 !$omp parallel do private(dq,dqA,dqAs,dqAmic,ir,dk1,rhoA,drhoA, &
 !$omp off1,dptmp1,dptmp2,dptmp3,dptmp4,dVAdRA,dptmp5,i,j), &
-!$omp reduction(-:dveffdh),reduction(+:dveffdR) 
+!$omp reduction(+:dveffdh),reduction(+:dveffdR)
     DO iq=1,NsomegaAr(ia)
       !
       ! Compute global/cell reference frame Cartesian coordinates of given real-space grid point...
@@ -1575,7 +1576,7 @@ PRIVATE :: GetVdWParam
     !
 !$omp parallel do private(dqB,dqBs,dqBmic,ir,dk1,rhoB,drhoB,dVAdRB,dVBdRA, &
 !$omp i,j,ib,ibs,spcutB,spdB,ioff,boff), &
-!$omp reduction(+:dveffdR),reduction(-:dveffdh) 
+!$omp reduction(+:dveffdR),reduction(+:dveffdh)
     DO ipair=1,npair(ia)
       !
       ! Connect pair number with atom...
@@ -1832,7 +1833,8 @@ PRIVATE :: GetVdWParam
   REAL(DP) :: FDV0,FDR0,FCV0,FRR0,FDV1,FCVA1,FCVB1,FDVA2,FDVB2,FDR2,FRR2,FCVA2,FCVB2,FDVi,FDRi(3),FDRii(3,3),FCVi,FRRi(3),FRRii(3,3)
   REAL(DP) :: EtsvdW_period,RAB0,edamp,fdamp,fdamp2,D1A,D1B,D2A,D2B,D12A,D12B,dptmp1,dptmp2,vtmp1(3),vtmp2(3)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: predveffAdn_period
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: FtsvdW_period,HtsvdW_period
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: FtsvdW_period
+  REAL(DP) :: HtsvdW_period(3,3)
   !
   CALL start_clock('tsvdw_energy')
   !
@@ -1847,7 +1849,7 @@ PRIVATE :: GetVdWParam
   ! Allocate and initialize periodic contributions to TS-vdW ionic forces, cell forces, and dispersion potential prefactor...
   !
   ALLOCATE(FtsvdW_period(3,nat)); FtsvdW_period=0.0_DP
-  ALLOCATE(HtsvdW_period(3,3)); HtsvdW_period=0.0_DP
+  HtsvdW_period=0.0_DP
   ALLOCATE(predveffAdn_period(nat)); predveffAdn_period=0.0_DP
   !
   ! Precompute quantities outside all loops...
@@ -1889,14 +1891,13 @@ PRIVATE :: GetVdWParam
       !
       ! Inner loop over atoms B...
       !
-      
-!$omp parallel private(ibs,RAB0,FRR2,FDR2,FDVA2,FDVB2,FCVB2,FCVA2, &
+
+!$omp parallel do private(ibs,RAB0,FRR2,FDR2,FDVA2,FDVB2,FCVB2,FCVA2, &
 !$omp dAB,dAB2,FDVi,FDRi,FDRii,FCVi,FRRi,FRRii,n1,n2,n3,dsAB,dABimg2, &
 !$omp dABimg,dABimgn1,dABimgn2,dABimgn5,dABimgn6,edamp,fdamp,fdamp2,dptmp1, &
 !$omp dptmp2,i,j,vtmp1,vtmp2,D1A,D2A,D1B,D2B,D12A,D12B,ic), &
-!$omp reduction(-:EtsvdW_period),reduction(+:FtsvdW_period), &
-!$omp reduction(+:HtsvdW_period),reduction(-:predveffAdn_period)
-!$omp do      
+!$omp reduction(+:EtsvdW_period, FtsvdW_period, HtsvdW_period), &
+!$omp reduction(+:predveffAdn_period)
       DO ib=1,nat
         !
         ! Connect atom type with species-dependent quantities...
@@ -2123,8 +2124,7 @@ PRIVATE :: GetVdWParam
         END IF
         !
       END DO !ib
-!$omp end do 
-!$omp end parallel
+!$omp end parallel do
       !
     END DO !iproc
     !
@@ -2157,7 +2157,6 @@ PRIVATE :: GetVdWParam
   ! Deallocate temporary arrays...
   !
   IF (ALLOCATED(FtsvdW_period))      DEALLOCATE(FtsvdW_period)
-  IF (ALLOCATED(HtsvdW_period))      DEALLOCATE(HtsvdW_period)
   IF (ALLOCATED(predveffAdn_period)) DEALLOCATE(predveffAdn_period)
   !
   CALL stop_clock('tsvdw_energy')

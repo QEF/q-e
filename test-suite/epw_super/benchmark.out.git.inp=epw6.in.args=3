@@ -1,0 +1,334 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.5.9 starts on 26Aug2024 at 17: 9: 8 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     184573 MiB available memory on the printing compute node when the environment starts
+ 
+     Waiting for input...
+     Reading input from standard input
+
+     Reading supplied temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+ 
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+
+     ===================================================================
+     Solve full-bandwidth anisotropic Eliashberg equations
+     ===================================================================
+
+
+     Finish reading freq file
+
+                  Fermi level (eV) =     7.6644747171E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308568537E-01
+            Electron smearing (eV) =     1.0000000000E-01
+                 Fermi window (eV) =     2.0000000000E+01
+     Nr irreducible k-points within the Fermi shell =        28 out of        28
+
+           5 bands within the Fermi window
+
+
+     Finish reading egnv file 
+
+
+     Max nr of q-points =       216
+
+
+     Finish reading ikmap files
+
+
+     Start reading .ephmat files
+
+
+     Finish reading .ephmat files
+
+     a2f file is found and will be used to estimate initial gap
+ 
+
+     Finish reading a2f file
+
+     Electron-phonon coupling strength =    0.8714949
+ 
+     Estimated Allen-Dynes Tc =    26.408181 K for muc =    0.16000
+  
+     Estimated w_log in Allen-Dynes Tc =    61.470416 meV
+  
+     Estimated BCS superconducting gap =     4.005199 meV
+  
+     Estimated Tc from machine learning model =    31.501523 K
+  
+  
+     WARNING WARNING WARNING 
+  
+     The code may crash since tempsmax =   30.000 K is larger than Allen-Dynes Tc =    26.408 K
+     Actual number of frequency points (     1) =     54 for uniform       sampling
+    
+     temp(  1) =     17.00000 K
+    
+     Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis
+    
+     Total number of frequency points nsiw(     1) =     54
+     Cutoff frequency wscut =     0.5000 eV
+     Maximum frequency =         0.4924 eV
+     broyden mixing factor =      0.70000
+    
+
+     Size of allocated memory per pool: ~=    0.0339 Gb
+        iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]
+          1   3.838805E+00   1.683324E+00   3.173686E+00   1.067740E+00   7.664475E+00
+          2   3.556358E-01   1.800657E+00   5.289304E+00   7.330154E+00   7.664475E+00
+          3   2.951307E-01   1.767662E+00   7.945535E+00   6.597040E+00   7.664475E+00
+          4   4.482168E+00   1.772320E+00   1.581853E+00   8.618266E+00   7.664475E+00
+          5   1.116784E-01   1.777563E+00   1.587855E+00   7.277915E+00   7.664475E+00
+          6   1.209339E+00   1.658103E+00  -4.983599E+00   2.561129E+01   7.664475E+00
+          7   1.793906E+00   1.768105E+00   8.138864E+00   7.857055E+00   7.664475E+00
+          8   2.745604E-01   1.741290E+00   1.107447E+01   1.272068E+01   7.664475E+00
+          9   9.374648E-02   1.752167E+00   1.019717E+01   1.199495E+01   7.664475E+00
+         10   1.057814E-02   1.754121E+00   1.008443E+01   1.287091E+01   7.664475E+00
+         11   2.142836E-01   1.768774E+00   8.110020E+00   1.261420E+01   7.664475E+00
+         12   2.078735E-01   1.769203E+00   6.195766E+00   1.280981E+01   7.664475E+00
+         13   1.053059E-01   1.767746E+00   7.051950E+00   1.324447E+01   7.664475E+00
+         14   4.216634E-01   1.744690E+00   4.573829E+00   1.263835E+01   7.664475E+00
+         15   8.903284E-02   1.752430E+00   4.224154E+00   1.209771E+01   7.664475E+00
+         16   8.556342E-02   1.744822E+00   4.578491E+00   1.300966E+01   7.664475E+00
+         17   5.754230E-02   1.749503E+00   5.049648E+00   1.319773E+01   7.664475E+00
+         18   3.573294E-01   1.740468E+00   8.562994E+00   1.437706E+01   7.664475E+00
+         19   5.047449E-02   1.737166E+00   8.830301E+00   1.590834E+01   7.664475E+00
+         20   1.542291E-01   1.733104E+00   1.069317E+01   1.600615E+01   7.664475E+00
+         21   6.164589E-03   1.720065E+00   1.070920E+01   1.734512E+01   7.664475E+00
+     Convergence was reached in nsiter =     21
+ 
+     Chemical potential (itemp =   1) =     7.6644747171E+00 eV
+ 
+     Temp (itemp =   1) =   17.000 K  Free energy =    -0.079912 meV
+ 
+     Min. / Max. values of superconducting gap =     3.687867   15.743482 meV
+     iaxis_imag   :      8.83s CPU      9.03s WALL (       1 calls)
+ 
+    
+     Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis
+     Cutoff frequency wscut =     0.5000
+    
+        pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]
+         48   1.575896E+00   9.974450E+00   1.733068E+01
+ 
+     Convergence was reached for N =     48 Pade approximants
+ 
+     Min. / Max. values of superconducting gap =     3.721439   16.288288 meV
+     raxis_pade   :      0.04s CPU      0.06s WALL (       1 calls)
+ 
+     itemp =   1   total cpu time :              9.09 secs
+ 
+     Actual number of frequency points (     2) =     46 for uniform       sampling
+    
+     temp(  2) =     20.00000 K
+    
+     Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis
+    
+     Total number of frequency points nsiw(     2) =     46
+     Cutoff frequency wscut =     0.5000 eV
+     Maximum frequency =         0.4927 eV
+     broyden mixing factor =      0.70000
+    
+
+     Size of allocated memory per pool: ~=    0.0293 Gb
+        iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]
+          1   4.048004E+00   1.667442E+00   8.016718E+00   3.653539E+00   7.664475E+00
+          2   2.390427E-01   1.757557E+00   1.122881E+01   1.032921E+01   7.664475E+00
+          3   7.536827E-02   1.704096E+00   1.243899E+01   9.630415E+00   7.664475E+00
+          4   1.216928E-01   1.668211E+00   1.376719E+01   9.686467E+00   7.664475E+00
+          5   2.062332E-02   1.657620E+00   1.389619E+01   8.524158E+00   7.664475E+00
+          6   4.983493E-02   1.672785E+00   1.344830E+01   9.244102E+00   7.664475E+00
+          7   2.816478E-03   1.677046E+00   1.344978E+01   9.470448E+00   7.664475E+00
+     Convergence was reached in nsiter =      7
+ 
+     Chemical potential (itemp =   2) =     7.6644747171E+00 eV
+ 
+     Temp (itemp =   2) =   20.000 K  Free energy =    -0.124167 meV
+ 
+     Min. / Max. values of superconducting gap =     2.082551   27.080631 meV
+     iaxis_imag   :     11.09s CPU     11.34s WALL (       2 calls)
+ 
+    
+     Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis
+     Cutoff frequency wscut =     0.5000
+    
+        pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]
+         42   1.532863E+00   1.245641E+01   9.395281E+00
+ 
+     Convergence was reached for N =     42 Pade approximants
+ 
+     Min. / Max. values of superconducting gap =     2.112769   30.297335 meV
+     raxis_pade   :      0.08s CPU      0.12s WALL (       2 calls)
+ 
+     itemp =   2   total cpu time :             11.47 secs
+ 
+     Actual number of frequency points (     3) =     31 for uniform       sampling
+    
+     temp(  3) =     30.00000 K
+    
+     Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis
+    
+     Total number of frequency points nsiw(     3) =     31
+     Cutoff frequency wscut =     0.5000 eV
+     Maximum frequency =         0.4954 eV
+     broyden mixing factor =      0.70000
+    
+
+     Size of allocated memory per pool: ~=    0.0206 Gb
+        iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]
+          1   4.193849E+00   1.656208E+00   9.690434E+00   5.269180E+00   7.664475E+00
+          2   1.819202E-01   1.736132E+00   1.255560E+01   1.138465E+01   7.664475E+00
+          3   2.589656E-02   1.684618E+00   1.306587E+01   1.038208E+01   7.664475E+00
+          4   4.252745E-02   1.669015E+00   1.348341E+01   1.036771E+01   7.664475E+00
+          5   2.948504E-02   1.660783E+00   1.376199E+01   9.598172E+00   7.664475E+00
+          6   3.124599E-02   1.667965E+00   1.341890E+01   9.737974E+00   7.664475E+00
+          7   3.654985E-02   1.662447E+00   1.388478E+01   1.146392E+01   7.664475E+00
+          8   1.487817E-02   1.665492E+00   1.369838E+01   1.051272E+01   7.664475E+00
+          9   3.927047E-03   1.665559E+00   1.375233E+01   1.055946E+01   7.664475E+00
+     Convergence was reached in nsiter =      9
+ 
+     Chemical potential (itemp =   3) =     7.6644747171E+00 eV
+ 
+     Temp (itemp =   3) =   30.000 K  Free energy =    -0.113421 meV
+ 
+     Min. / Max. values of superconducting gap =     2.214327   27.131686 meV
+     iaxis_imag   :     12.39s CPU     12.66s WALL (       3 calls)
+ 
+    
+     Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis
+     Cutoff frequency wscut =     0.5000
+    
+        pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]
+         28   1.525206E+00   1.279604E+01   1.040918E+01
+ 
+     Convergence was reached for N =     28 Pade approximants
+ 
+     Min. / Max. values of superconducting gap =     2.274271   30.711877 meV
+     raxis_pade   :      0.10s CPU      0.16s WALL (       3 calls)
+ 
+     itemp =   3   total cpu time :             12.82 secs
+ 
+
+     Unfolding on the coarse grid
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+
+
+     ELIASHBERG   :     12.55s CPU     12.92s WALL (       1 calls)
+
+     Total program execution
+     EPW          :     12.56s CPU     12.94s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [eliashberg] input,     please consider also citing                    
+       E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)                         
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

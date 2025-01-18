@@ -58,7 +58,6 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
   INTEGER :: iter, dest, sorc
-  INTEGER :: istatus(MPI_STATUS_SIZE)
 
 
   p_ismap_d => dfft%ismap_d
@@ -381,7 +380,6 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
   INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
   INTEGER :: iter, dest, sorc
-  INTEGER :: istatus(MPI_STATUS_SIZE)
   !
   !
   p_ismap_d => dfft%ismap_d
@@ -728,7 +726,6 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store ( dfft, f_in_d, f_in, nr3x, 
    !
    INTEGER, ALLOCATABLE, DIMENSION(:) :: offset_proc
    INTEGER :: iter, dest, sorc
-   INTEGER :: istatus(MPI_STATUS_SIZE)
    !
    p_ismap_d => dfft%ismap_d
    me     = dfft%mype + 1
@@ -830,7 +827,6 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send ( dfft, f_in_d, f_in, nr3x, n
    INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
    !
    INTEGER :: iter, dest, sorc, req_cnt
-   INTEGER :: istatus(MPI_STATUS_SIZE)
    !
    p_ismap_d => dfft%ismap_d
    !
@@ -1036,7 +1032,6 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store ( dfft, f_in_d, f_in, nr3x, 
    !
    LOGICAL :: use_tg
    INTEGER :: iter, dest, sorc
-   INTEGER :: istatus(MPI_STATUS_SIZE)
 
    p_ismap_d => dfft%ismap_d
    me     = dfft%mype + 1
@@ -1181,7 +1176,6 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send ( dfft, f_in_d, f_in, nr3x, n
    INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
 
    INTEGER :: iter, dest, sorc, req_cnt
-   INTEGER :: istatus(MPI_STATUS_SIZE)
 
    p_ismap_d => dfft%ismap_d
 

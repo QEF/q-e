@@ -33,6 +33,7 @@ default :
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with Wannier functions'
+	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
 	@echo '  gui          Graphical User Interface'
 	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
 	@echo ' '
@@ -124,7 +125,7 @@ couple : pw cp
 	if test -d COUPLE ; then \
 	( cd COUPLE ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-epw: phlibs
+epw: phlibs w90lib pp
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
@@ -136,6 +137,10 @@ all_currents:
 travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
+
+kcw : pwlibs lrmods pp w90lib
+	if test -d KCW ; then \
+	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
 
 gui : bindir
 	@if test -d GUI/PWgui ; then \
@@ -158,7 +163,7 @@ gui : bindir
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl 
+all   : pwall cp ld1 tddfpt hp xspectra gwl kcw
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -185,13 +190,13 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libla libfft libupf libmbd librxc
+mods : $(FOX) libutil libla libfft libupf libmbd librxc
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libutil libla
 	( cd KS_Solvers ; $(MAKE) TLDEPS= all || exit 1 )
 
-libla : liblapack libutil libcuda
+libla : $(LAPACK) libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : 
@@ -235,13 +240,16 @@ libmbd:
 # plugins
 #########################################################
 
-w90: bindir liblapack
+w90: w90lib
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want: liblapack
+w90lib: bindir $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: liblapack
+want: $(LAPACK)
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
+yambo: $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -262,7 +270,6 @@ links : bindir
 	[ -f ../WANT/wannier/bands.x ] && \
 		ln -fs ../WANT/wannier/bands.x ../bin/bands_want.x ; \
 	[ -f ../PP/src/dos.x ] &&  ln -fs ../PP/src/bands.x ../bin/bands.x ; \
-	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ;\
 	)
 
 #############################################################
@@ -288,7 +295,7 @@ clean :
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic LR_Modules upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
-		QEHeat \
+		QEHeat KCW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -313,7 +320,8 @@ veryclean : clean
 # remove everything not in the original distribution
 distclean : veryclean
 	- cd pseudo; ./clean_ps ; cd -
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	- (cd install ; $(MAKE) -f plugins_makefile $@)
+	- git submodule deinit --all --force # place deinit at the very end such that makefiles clean up as much as possible.
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi

@@ -15,8 +15,10 @@ MODULE wxml
   ! A second workaround: use variable "sameline" to keep track of tags
   ! to be written on a single line
   !
-  USE upf_kinds, ONLY : dp
   use xmltools
+#if !defined(__XML_STANDALONE)
+  USE upf_kinds, ONLY : DP_XML => dp
+#endif
   !
   implicit none
   type :: xmlf_t
@@ -35,12 +37,13 @@ MODULE wxml
      MODULE PROCEDURE xml_addcharacters_c, xml_addcharacters_l, &
                       xml_addcharacters_r, xml_addcharacters_rv,&
                       xml_addcharacters_i, xml_addcharacters_iv,&
-                      xml_addcharacters_rm
+                      xml_addcharacters_rm, xml_addcharacters_lv
   END INTERFACE xml_addcharacters
   !
   INTERFACE xml_addattribute
-     MODULE PROCEDURE xml_addattribute_c, xml_addattribute_r, &
-             xml_addattribute_i, xml_addattribute_l, xml_addattribute_iv
+     MODULE PROCEDURE xml_addattribute_c,  xml_addattribute_r, &
+                      xml_addattribute_i,  xml_addattribute_l, &
+                      xml_addattribute_iv, xml_addattribute_rv
   END INTERFACE xml_addattribute
   !
 CONTAINS
@@ -50,31 +53,39 @@ CONTAINS
     !
     character(len=*), intent(in) :: filename
     type(xmlf_t), intent(out) :: xf
-    ! ignored
-    integer, intent(in) :: unit
+    integer, intent(in), optional :: unit
     integer, intent(out) :: iostat
-    ! ignored
     logical, intent(in)  :: pretty_print, replace, namespace 
+    ! unit, pretty_print, namespace are ignored 
+    character(len=7) :: writable
     integer :: iun
     !
     iun = xml_open_file ( filename )
     if ( iun == -1 ) then
        iostat = 1
     else
-       iostat = 0
-       ! dirty  trick to have the same format with no changes to qexsd.f90
-       if ( replace) then
-          call add_attr('version','1.0')
-          call add_attr('encoding','UTF-8')
-          call xmlw_writetag ( 'xml', '?' )
+       inquire (unit=iun, write=writable)
+       if ( writable /= 'YES' ) then
+          iostat = 1
+          iun = -1
+       else
+          iostat = 0
+          ! dirty trick to have the same format with no changes to qexsd.f90
+          if ( replace ) then
+             call add_attr('version','1.0')
+             call add_attr('encoding','UTF-8')
+             call xmlw_writetag ( 'xml', '?' )
+          end if
        end if
     end if
     xf%unit = iun
     !
   end subroutine xml_openfile
   !
-  subroutine xml_close ( xf )
+  subroutine xml_close ( xf, empty )
     type(xmlf_t), intent(inout) :: xf
+    ! ignored
+    logical, optional :: empty
     !
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
@@ -117,7 +128,7 @@ CONTAINS
     !
     type(xmlf_t), intent(in) :: xf
     character(len=*), intent(in) :: name
-    real(dp), intent(in) :: value
+    real(DP_XML), intent(in) :: value
     !
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
@@ -126,6 +137,22 @@ CONTAINS
     end if
     !
   end subroutine xml_addattribute_r
+  !
+  subroutine xml_addattribute_rv( xf, name, value )
+    !
+    type(xmlf_t), intent(in) :: xf
+    character(len=*), intent(in) :: name
+    real(DP_XML), intent(in) :: value(:)
+    character(len=80) :: cvalue
+    !
+    if ( xf%unit == -1 ) then
+       print *, 'xml file not opened'
+    else
+       write(cvalue,*) value
+       call add_attr(name, cvalue)
+    end if
+    !
+  end subroutine xml_addattribute_rv
   !
   subroutine xml_addattribute_iv ( xf, name, value )
     !
@@ -166,12 +193,7 @@ CONTAINS
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
     else
-       ! FoX compatibility
-       if ( value ) then
-          call add_attr(name, 'true')
-       else
-          call add_attr(name, 'false')
-       end if
+       call add_attr(name, l2c(value) )
     end if
     !
   end subroutine xml_addattribute_l
@@ -253,20 +275,41 @@ CONTAINS
           if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
           opentag = ''
        end if
-       ! FoX compatibility
-       if ( field ) then
-          write( xf%unit, '("true")', advance='no' )
-       else
-          write( xf%unit, '("false")', advance='no' )
-       end if
+       write( xf%unit, '(A)', advance='no' ) l2c(field)
     end if
     !
   end subroutine xml_addcharacters_l
   !
+  subroutine xml_addcharacters_lv( xf, field, fmt )
+    !
+    type(xmlf_t), intent(in) :: xf
+    logical, intent(in) :: field(:)
+    character(len=*), intent(in), optional :: fmt
+    !
+    integer :: ierr, n
+    !
+    if ( xf%unit == -1 ) then
+       print *, 'xml file not opened'
+    else
+       ! workaround: write previous tag when contents is added
+       ! (FoX adds attributes after tag, xmltools expects them before tag)
+       if ( opentag /= '') then
+          call xmlw_opentag ( opentag, ierr )
+          if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
+          opentag = ''
+       end if
+       write( xf%unit, '(A)', advance='no' ) l2c(field(1))
+       do n = 2, size(field)
+          write( xf%unit, '(" ",A)', advance='no' ) l2c(field(n))
+       end do
+    end if
+    !
+  end subroutine xml_addcharacters_lv
+  !
   subroutine xml_addcharacters_r ( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field
+    real(DP_XML), intent(in) :: field
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr
@@ -282,7 +325,7 @@ CONTAINS
           if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
           opentag = ''
        end if
-       write( cfield, '(1pes24.15)' ) field
+       write( cfield, '(1pes24.15e3)' ) field
        write( xf%unit, '(A)', advance='no' ) trim(adjustl(cfield))
     end if
     !
@@ -291,7 +334,7 @@ CONTAINS
   subroutine xml_addcharacters_rv( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field(:)
+    real(DP_XML), intent(in) :: field(:)
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr, nf
@@ -309,10 +352,10 @@ CONTAINS
           newline = .false.
        end if
        if ( sameline) then
-          write( cfield, '(1p3es24.15)' ) field
+          write( cfield, '(1p3es24.15e3)' ) field
           write( xf%unit, '(A)', advance='no' ) trim(adjustl(cfield))
        else
-          write( xf%unit, '(1p3es24.15)' ) field
+          write( xf%unit, '(1p3es24.15e3)' ) field
        endif
     end if
     !
@@ -321,7 +364,7 @@ CONTAINS
   subroutine xml_addcharacters_rm( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field(:,:)
+    real(DP_XML), intent(in) :: field(:,:)
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr
@@ -335,7 +378,7 @@ CONTAINS
           if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
           opentag = ''
        end if
-       write( xf%unit, '(1p3es24.15)' ) field
+       write( xf%unit, '(1p3es24.15e3)' ) field
     end if
     !
   end subroutine xml_addcharacters_rm

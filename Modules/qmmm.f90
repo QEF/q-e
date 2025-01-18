@@ -433,7 +433,7 @@ END SUBROUTINE qmmm_minimum_image
 
         CALL mpi_send(tmp_buf,3*nat_qm,MPI_DOUBLE_PRECISION, 0,QMMM_TAG_FORCE,qmmm_comm,ierr)
         !
-        !!!! Note, not used if ec_alg is false. Optimize excluding this send as well
+        ! Note, not used if ec_alg is false. Optimize excluding this send as well
         force_mm = force_mm * QMMM_FORCE_CONV
         CALL mpi_send(force_mm,3*nat_mm,MPI_DOUBLE_PRECISION, 0,QMMM_TAG_FORCE2,qmmm_comm,ierr)
     END IF

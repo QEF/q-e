@@ -80,6 +80,9 @@ CONTAINS
     !
     CALL mp_world_start( my_comm )
     CALL get_command_line ( )
+#if defined (__CUDA)
+    IF ( ntg_ > 1 ) CALL errore('mp_startup','No task groups for GPUs',ntg_)
+#endif
     !
     do_images = .FALSE.
     IF ( PRESENT(start_images) ) do_images = start_images

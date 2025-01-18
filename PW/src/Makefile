@@ -15,15 +15,17 @@ add_bfield.o \
 add_efield.o \
 add_dmft_occ.o \
 add_vuspsi.o \
+add_vuspsi_acc.o \
 add_gatefield.o \
 add_paw_to_deeq.o \
+add_paw_to_deeq_acc.o \
 add_vhub_to_deeq.o \
+add_vhub_to_deeq_acc.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \
 allocate_fft.o \
 allocate_locpot.o \
-allocate_nlpot.o \
 allocate_wfc.o \
 atomic_rho.o \
 atomic_wfc.o \
@@ -31,6 +33,7 @@ atomic_wfc_mod.o \
 average_pp.o \
 acfdt_in_pw.o \
 newd.o \
+newd_acc.o \
 beef.o \
 bp_mod.o \
 bp_c_phase.o \
@@ -55,18 +58,16 @@ coset.o \
 Coul_cut_2D.o \
 d_matrix.o \
 data_structure.o \
-deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-drhoc.o \
 rotate_wfc.o \
 run_driver.o \
-dvloc_of_g.o \
 dynamics_module.o \
 efermig.o \
 efermit.o \
 electrons.o \
+environ_pw_module.o \
 eqvect.o \
 esm.o \
 esm_common_mod.o \
@@ -117,6 +118,7 @@ h_psi.o \
 h_psi_meta.o \
 hinit0.o \
 hinit1.o \
+hubbard.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
@@ -134,7 +136,6 @@ kpoint_grid.o \
 lchk_tauxk.o \
 ldaU.o \
 make_pointlists.o \
-makov_payne.o \
 manypw.o \
 martyna_tuckerman.o \
 memory_report.o \
@@ -151,6 +152,7 @@ non_scf.o \
 offset_atom_wfc.o \
 openfil.o \
 orthoatwfc.o \
+orthoUwfc.o \
 output_tau.o \
 para.o \
 paw_exx.o \
@@ -192,10 +194,12 @@ remove_atomic_rho.o \
 report_mag.o \
 restart_in_electrons.o \
 rho2zeta.o \
+rism_module.o \
 ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
 s_psi.o \
+s_psi_acc.o \
 save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \
@@ -210,6 +214,9 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
+scissor.o \
+sic.o \
+starting_scf_mod.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
@@ -230,12 +237,11 @@ summary.o \
 symme.o \
 symm_base.o \
 symmetrize_at.o \
-tabd.o \
 tetra.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
-transform_qq_so.o \
 trnvecc.o \
+two_chem.o\
 update_pot.o \
 us_exx.o \
 usnldiag.o \
@@ -243,8 +249,8 @@ v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
-vloc_of_g.o \
-vloc_psi.o \
+vloc_psi_tg.o \
+vloc_psi_acc.o \
 utils.o \
 xdm_dispersion.o \
 wfcinit.o \
@@ -256,51 +262,33 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
+oscdft_input.o \
+oscdft_context.o \
+oscdft_base.o \
+oscdft_enums.o \
+oscdft_indices.o \
+oscdft_wavefunction.o \
+oscdft_wavefunction_subs.o \
+oscdft_functions.o \
+oscdft_occupations.o \
+oscdft_wfcO.o \
+oscdft_forces.o \
+oscdft_forces_subs.o \
+d3hess_mod.o
 
 
-# GPU versions of routines
+# CUDA Fortran versions of routines
 PWLIBS += \
-  g_psi_mod_gpu.o \
-  g_psi_gpu.o \
   h_psi_gpu.o \
   vhpsi_gpu.o \
-  s_psi_gpu.o \
-  vloc_psi_gpu.o \
-  pwcom_gpu.o \
-  g2_kin_gpu.o \
-  scf_mod_gpu.o \
-  usnldiag_gpu.o \
-  add_vuspsi_gpu.o \
-  addusdens_gpu.o \
-  sum_band_gpu.o \
-  newd_gpu.o \
-  add_paw_to_deeq_gpu.o \
-  add_vhub_to_deeq_gpu.o \
-  wfcinit_gpu.o \
   rotate_wfc_gpu.o \
   hs_1psi_gpu.o \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_lc_gpu.o \
-  force_us_gpu.o \
-  force_cc_gpu.o \
-  force_hub_gpu.o \
-  drhoc_gpu.o \
-  addusforce_gpu.o \
-  force_corr_gpu.o \
-  stres_loc_gpu.o \
-  dvloc_of_g_gpu.o \
-  stres_har_gpu.o \
-  stres_mgga_gpu.o \
-  stres_cc_gpu.o \
-  deriv_drhoc_gpu.o \
-  stres_ewa_gpu.o \
-  stres_knl_gpu.o \
-  stres_us_gpu.o \
-  compute_deff_gpu.o \
-  orthoatwfc_gpu.o \
-  atomic_wfc_gpu.o
+  oscdft_functions_gpu.o
+
+
 
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 

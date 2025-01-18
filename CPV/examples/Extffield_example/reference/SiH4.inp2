@@ -1,0 +1,44 @@
+ &control
+    title = 'SiH4' ,
+    calculation = 'cp' ,
+    restart_mode = 'restart' ,
+    iprint = 10,
+    isave  = 100,
+    dt    = 3.0d0,
+    nstep  = 3000,
+    prefix = 'SiH4',
+    pseudo_dir='/home/pizza/codes/QEdev/q-e/pseudo/',
+    outdir='/home/pizza/codes/QEdev/q-e/tempdir/',
+ /
+ &system
+    ibrav = 0 ,
+    celldm(1) = 15 ,
+    nat = 5  ,
+    ntyp = 2 ,
+    ecutwfc = 20 ,
+    ecutrho = 80 ,
+    nextffield = 2,
+ /
+ &electrons
+    emass = 10.d0,
+    emass_cutoff = 2.5d0,
+    electron_dynamics = 'verlet',
+ /
+ &ions
+    ion_dynamics = 'verlet',
+    ion_temperature = 'nose',
+    fnosep = 5 ,
+ /
+CELL_PARAMETERS  alat
+    1.00000000    0.000000000    0.000000000 
+     0.000000000   1.00000000    0.000000000 
+     0.000000000    0.000000000   1.00000000 
+ATOMIC_SPECIES
+   Si   28.08600  Si.pbe-hgh.UPF
+    H    1.00000  H.pbe-hgh.UPF
+ATOMIC_POSITIONS bohr
+Si      0.94486306644282E+01     0.94486306644282E+01     0.94486306644282E+01
+H      0.11193736563321E+02     0.11193736698874E+02     0.11073795138710E+02
+H       0.94486306644282E+01     0.94486306644282E+01     0.66094450422239E+01
+H      0.70648871385200E+01     0.10088581790695E+02     0.11073795138710E+02
+H       0.10088581849053E+02     0.70648872790557E+01     0.11073795138710E+02

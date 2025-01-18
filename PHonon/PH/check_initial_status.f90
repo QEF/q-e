@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2012-2013 Quantum ESPRESSO group
+! Copyright (C) 2012-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -71,10 +71,9 @@ SUBROUTINE check_initial_status(auxdyn)
   USE disp,            ONLY : nqs, x_q, wq, comp_iq, nq1, nq2, nq3, &
                               done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
-  USE control_lr,      ONLY : lgamma
+  USE control_lr,      ONLY : lgamma, where_rec, rec_code
   USE output,          ONLY : fildyn, fildvscf
-  USE control_ph,      ONLY : ldisp, recover, where_rec, rec_code, &
-                              start_q, last_q, current_iq, tmp_dir_ph, &
+  USE control_ph,      ONLY : ldisp, start_q, last_q, current_iq, tmp_dir_ph, recover, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
                               done_zeu, done_start_zstar, done_epsil, &
@@ -91,7 +90,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_files,        ONLY : prefix , create_directory
   USE mp,              ONLY : mp_bcast
   USE mp_global,       ONLY : mp_global_end
-  USE el_phon,         ONLY : elph_mat
+  USE el_phon,         ONLY : elph_mat, elph
   USE noncollin_module, ONLY : noncolin, domag
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
@@ -106,7 +105,7 @@ SUBROUTINE check_initial_status(auxdyn)
   CHARACTER (LEN=256), EXTERNAL :: trimcheck
   CHARACTER (LEN=6  ), EXTERNAL :: int_to_char
   LOGICAL :: exst
-  LOGICAL :: distribute_irrep
+  LOGICAL :: distribute_irrep, assume_equal_load
   INTEGER :: iq, iq_start, ierr
   !
   tmp_dir=tmp_dir_ph
@@ -152,7 +151,7 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      !   Initialize the representations and write them on file.
      !
-     IF (trans .OR. epsil .OR. ldvscf_interpolate) THEN
+     IF (trans .OR. epsil .OR. ldvscf_interpolate.or.elph_mat) THEN
         CALL init_representations()
      ELSE
         u_from_file = .TRUE.
@@ -196,11 +195,21 @@ SUBROUTINE check_initial_status(auxdyn)
   IF (fildvscf /= ' ') THEN
     WRITE(stdout, '(5x,a)')
     WRITE(stdout, '(5x,a)') 'Saving dvscf to file. Distribute only q points, &
-                            &not irreducible represetations.'
+                            &not irreducible representations.'
     distribute_irrep = .FALSE.
   ENDIF
 !
-  IF (nimage > 1 .AND. .NOT. with_ext_images) CALL image_q_irr(distribute_irrep)
+  assume_equal_load = .FALSE.
+  IF ((.NOT. trans) .AND. elph) THEN
+     ! When doing electron-phonon calculations without DFPT, workload for each q point
+     ! is almost identical. Hence, distribute q points equally.
+     distribute_irrep = .FALSE.
+     assume_equal_load = .TRUE.
+  ENDIF
+   !
+  IF (nimage > 1 .AND. .NOT. with_ext_images) THEN
+     CALL image_q_irr(distribute_irrep, assume_equal_load)
+  ENDIF
 !
   IF (recover) THEN
 !
@@ -346,7 +355,7 @@ SUBROUTINE check_initial_status(auxdyn)
   RETURN
   END SUBROUTINE check_initial_status
 
-  SUBROUTINE image_q_irr(distribute_irrep)
+  SUBROUTINE image_q_irr(distribute_irrep, assume_equal_load)
    !
    !! This routine is an example of the load balancing among images.
    !! It decides which image makes which q and which irreducible representation.
@@ -374,16 +383,22 @@ SUBROUTINE check_initial_status(auxdyn)
    LOGICAL, INTENT(IN) :: distribute_irrep
    !! If TRUE, distribute both irreps and q-points (default behavior).  
    !! If FALSE, distribute only q-points. Used when writing dvscf file.
+   LOGICAL, INTENT(IN) :: assume_equal_load
+   !! If TRUE, assume load is equal for all q points. Requires distribute_irrep = .FALSE.
+   !! If FALSE, assume load is different for each q point (default behavior).
    !
    INTEGER :: total_work,  &  ! total amount of work to do
               total_nrapp, &  ! total number of representations
               total_nq,    &  ! total number of q points
               work_per_image  ! approximate minimum work per image
 
-   INTEGER, ALLOCATABLE :: image_iq(:,:), work(:)
+   INTEGER, ALLOCATABLE :: image_iq(:,:), work(:), work_iq(:)
    INTEGER :: iq, irr, image, work_so_far, actual_diff, diff_for_next
    CHARACTER(LEN=256) :: string
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+
+   IF (assume_equal_load .AND. distribute_irrep) CALL errore("image_q_irr", &
+      "If assume_equal_load is true, distribute_irrep must be false", 1)
 
    ALLOCATE (image_iq(0:3*nat,nqs))
    ALLOCATE (work(0:nimage-1))
@@ -461,16 +476,20 @@ SUBROUTINE check_initial_status(auxdyn)
    ELSE ! .NOT. distribute_irrep
      !
      ! We distribute only q-points.
-     ! The work for each q-point is (nmodes + 1) * nsym / nsymq_iq(iq).
+     ! The work for each q-point is (nmodes + 1) * nsym / nsymq_iq(iq) if
+     ! assume_equal_load is false, and 1 if assume_equal_load is true.
      !
-     total_work = 0
-     total_nq = 0
+     ALLOCATE(work_iq(start_q:last_q))
      DO iq = start_q, last_q
-        total_work = total_work + (nmodes + 1) * nsym / nsymq_iq(iq)
-        total_nq = total_nq + 1
+        IF (assume_equal_load) THEN
+           work_iq(iq) = 1
+        ELSE
+           work_iq(iq) = (nmodes + 1) * nsym / nsymq_iq(iq)
+        ENDIF
      ENDDO
-     IF (nimage > total_nq) &
-        CALL errore('image_q_irr','some images have no rapp', 1)
+     total_work = SUM(work_iq)
+     total_nq = last_q - start_q + 1
+     IF (nimage > total_nq) CALL errore('image_q_irr','some images have no rapp', 1)
 
      work_per_image = total_work / nimage
   !
@@ -487,8 +506,8 @@ SUBROUTINE check_initial_status(auxdyn)
      DO iq = start_q, last_q
         !
         ! Assign iq to this image
-        work(image) = work(image) + (nmodes + 1) * nsym / nsymq_iq(iq)
-        work_so_far = work_so_far + (nmodes + 1) * nsym / nsymq_iq(iq)
+        work(image) = work(image) + work_iq(iq)
+        work_so_far = work_so_far + work_iq(iq)
         !
         ! Assign all irrs of iq to this image
         DO irr = 1, irr_iq(iq)
@@ -503,8 +522,7 @@ SUBROUTINE check_initial_status(auxdyn)
         actual_diff = work_per_image - work(image)
 
         IF (iq < last_q) THEN
-           diff_for_next = work(image) + (nmodes + 1) * nsym / nsymq_iq(iq + 1) &
-                         - work_per_image
+           diff_for_next = work(image) + work_iq(iq + 1) - work_per_image
         ELSE
            diff_for_next = 0
         ENDIF
@@ -515,6 +533,8 @@ SUBROUTINE check_initial_status(auxdyn)
            image = image + 1
         ENDIF
      ENDDO ! iq
+     !
+     DEALLOCATE(work_iq)
      !
    ENDIF ! distribute_irrep
 !
@@ -538,17 +558,25 @@ SUBROUTINE check_initial_status(auxdyn)
       ENDDO
    ENDDO
 
-   WRITE(stdout, &
-            '(/,5x," Image parallelization. There are", i3,&
-               & " images", " and ", i5, " representations")') nimage, &
-               total_nrapp
-   WRITE(stdout, &
-            '(5x," The estimated total work is ", i5,&
-               & " self-consistent (scf) runs")') total_work
+   IF (distribute_irrep) THEN
+      WRITE(stdout, '(/,5x," Image parallelization. There are", i3,&
+                  & " images", " and ", i5, " representations")') nimage, total_nrapp
+   ELSE
+      WRITE(stdout, '(/,5x," Image parallelization. There are", i3,&
+                  & " images", " and ", i5, " q points")') nimage, total_nq
+   ENDIF
 
-   WRITE(stdout, '(5x," I am image number ",i5," and my work is about",i5, &
-                      &  " scf runs. I calculate: ")') &
-                        my_image_id, work(my_image_id)
+   IF (assume_equal_load) THEN
+      WRITE(stdout, '(5x," Assume equal load for all q points.")')
+   ELSE
+      WRITE(stdout, &
+               '(5x," The estimated total work is ", i5,&
+                  & " self-consistent (scf) runs")') total_work
+
+      WRITE(stdout, '(5x," I am image number ",i5," and my work is about",i5, &
+                         &  " scf runs. I calculate: ")') &
+                           my_image_id, work(my_image_id)
+   ENDIF
 
    DO iq = 1, nqs
       IF (comp_iq(iq)) THEN

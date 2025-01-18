@@ -81,16 +81,16 @@ fi
 # No lapack library found: use internal lapack
 
 if test "$have_lapack" -eq 0  ; then
-    lapack_libs="\$(TOPDIR)/LAPACK/liblapack.a"
+    lapack_libs="\$(TOPDIR)/external/lapack/liblapack.a"
     echo setting LAPACK to internal library ...  $lapack_libs
-    lapack_libs_switch="internal"
+    lapack_target="liblapack"
 else
-    lapack_libs_switch="external"
+    lapack_target=""
 fi
 lapack_line="LAPACK_LIBS=$lapack_libs"
 
 AC_SUBST(lapack_libs)
-AC_SUBST(lapack_libs_switch)  
+AC_SUBST(lapack_target)  
 AC_SUBST(lapack_line)
 
 AC_CONFIG_FILES(install/make_lapack.inc)

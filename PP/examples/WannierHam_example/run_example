@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -85,9 +85,9 @@ cat > NiO.scf.in << EOF
      outdir='$TMP_DIR/',
     /
     &system
-     ibrav=0, celldm(1)=7.92664836, 
+     ibrav=0, celldm(1)=7.92664836,
      nat=2, ntyp=2,
-     ecutwfc = 45.0, 
+     ecutwfc = 45.0,
      occupations='smearing',
      degauss = 0.01
      nbnd=11
@@ -112,7 +112,7 @@ $ECHO "  running the scf calculation for NiO...\c"
 $PW_COMMAND < NiO.scf.in > NiO.scf.out
 check_failure $?
 $ECHO " done"
-    
+
 # nscf calculation
 cat > NiO.nscf.in << EOF
     &control
@@ -122,9 +122,9 @@ cat > NiO.nscf.in << EOF
      outdir='$TMP_DIR/',
     /
     &system
-     ibrav=0, celldm(1)=7.92664836, 
+     ibrav=0, celldm(1)=7.92664836,
      nat=2, ntyp=2,
-     ecutwfc = 45.0, 
+     ecutwfc = 45.0,
      occupations='smearing',
      degauss = 0.01
      nosym = .true.

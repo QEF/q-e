@@ -31,8 +31,7 @@ install/configure.msg
 install/make-*
 install/configure-*
 install/uncompress-*
-*/make.depend
-*/*/make.depend
+make.depend
 test-suite/*/test.err.*
 test-suite/*/test.out.*
 test-suite/*/pwscf*

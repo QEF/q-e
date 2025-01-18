@@ -1,0 +1,50 @@
+--
+&inputepw
+  prefix      = 'BAs'
+  amass(1)    = 10.81
+  amass(2)    = 74.922
+  dvscf_dir   = './save/'
+  elph        = .true.
+
+  iverbosity  = 0
+  etf_mem     = 0
+  epw_memdist = .true.
+
+  use_ws = .true.
+  lpolar = .true.
+  vme    = 'wannier'
+
+  nbndsub     =  8
+
+  lwfpt = .true.
+  ahc_nbnd = 9
+  ahc_win_max = 13.0
+  ahc_win_min = -100.0
+
+  wannierize  = .true.
+  epbwrite = .true.
+  epwwrite = .true.
+
+  lifc        = .true.
+
+  num_iter    = 200
+  bands_skipped = 'exclude_bands = 10:12'
+  proj(1)     = 'B:sp3'
+  proj(2)     = 'As:sp3'
+  wdata(1)    = 'conv_tol = 1.d-10'
+  wdata(2)    = 'conv_window = 5'
+  dis_win_max = 20.0
+  dis_froz_max= 15.0
+
+  nk1         = 2
+  nk2         = 2
+  nk3         = 2
+
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+
+  nkf1 = 1, nkf2 = 1, nkf3 = 1
+  nqf1 = 1, nqf2 = 1, nqf3 = 1
+ /
+

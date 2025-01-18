@@ -105,6 +105,17 @@ set to <b>.true.</b> to activate two-dimensional treatment
 of LO-TO splitting.
          </info>
       </var>
+      <var name="write_lr" type="LOGICAL" >
+         <default> <tt>.false.</tt>
+         </default>
+         <info>
+set to <b>.true.</b> to write long-range IFC into q2r IFC file.
+This is required when enforcing asr=&apos;all&apos; for infrared-
+active solids in matdyn. An additional column will be written
+for long-range part of IFC for text format, while a tag named
+IFC_LR will be created for xml format.
+         </info>
+      </var>
    </namelist>
    <choose>
       <when test="file {fildyn}0 does not exist" >

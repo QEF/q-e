@@ -54,8 +54,6 @@
 
    call startup
 
-   !CALL remove_stack_limit ( )
-
 #if defined(_OPENMP)
      ntids=omp_get_max_threads()
      ! call omp_set_num_threads(1)

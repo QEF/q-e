@@ -8,10 +8,14 @@
 
 #define nmax 30
 
-#pragma acc routine (dgemv_) seq
+#ifdef _WIN32
+#define random rand
+#endif
+
 extern void dgemv_(const char *, const int *, const int *, const double *,
     double *, const int *, double *, const int *, const double *, double *,
     const int *);
+#pragma acc routine (dgemv_) seq
 
 #pragma acc routine seq
 double ddot1(double v[], double u[], int n)
@@ -26,7 +30,6 @@ double ddot1(double v[], double u[], int n)
 extern double ddot_(const int *, double *, const int *, double *, const int *);
 
 //beef exchange enhancement factor legendre polynomial coefficients
-#pragma acc declare copyin (mi[0:nmax-1])
 static double mi[nmax] = {
  1.516501714304992365356,
  0.441353209874497942611,
@@ -59,6 +62,7 @@ static double mi[nmax] = {
 -0.000190491156503997170,
  0.000073843624209823442
 };
+#pragma acc declare copyin (mi)
 
 //LDA & PBE correlation fractions used in beef-vdw xc
 #define beefldacfrac 0.600166476948828631066

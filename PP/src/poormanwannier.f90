@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -115,6 +115,14 @@ END PROGRAM pmw
 SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iopp)
   !-----------------------------------------------------------------------
   !
+  ! Initially, the Hubbard manifold of the DFT+U scheme is defined
+  ! using the (ortho-)atomic orbitals (read from PP) as a basis set.
+  ! This subroutine replaces the (ortho-)atomic orbitals by the
+  ! Wannier functions (WFs) that are computed here.
+  ! Note, the ultrasoft/PAW S operator is not applied here to the 
+  ! final WFs which are written on disk.
+  ! See the Appendix B in Ref. [1] arXiv:2411.03937 
+  !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout, ionode
   USE uspp_param, ONLY : upf
@@ -124,18 +132,17 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE gvect
   USE klist,      ONLY:  nks, nkstot, ngk, igk_k, xk 
   USE wvfct,      ONLY : nbnd, npwx, et
-  USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
+  USE ldaU,       ONLY : is_hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
   USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, irt, s, sname, sr, ft
   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
   USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files,   ONLY: prefix, restart_dir, &
-                        iunhub, nwordwfcU, nwordatwfc, diropn
+  USE io_files,   ONLY: prefix, restart_dir, iunhub, nwordwfcU, nwordatwfc, diropn
   USE wavefunctions, ONLY: evc
   USE pw_restart_new,ONLY: read_collected_wfc
-  USE uspp_init,            ONLY : init_us_2
+  USE uspp_init,     ONLY : init_us_2
 
   IMPLICIT NONE
   !
@@ -164,7 +171,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   ! left unitary matrix in the SVD of sp_m
   ! right unitary matrix in the SVD of sp_m
   ! workspace for ZGESVD
-  REAL(DP), ALLOCATABLE :: ew(:), rwork(:), gk(:)
+  REAL(DP), ALLOCATABLE :: ew(:), rwork(:)
   ! the eigenvalues of pp
   ! workspace for ZGESVD
   REAL (DP) :: capel
@@ -173,12 +180,12 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   INTEGER :: iun_pp, nks1, nks1tot, nks2, nks2tot, nbase, rest
   CHARACTER(len=9) :: kptstr
   INTEGER, ALLOCATABLE :: kstatus(:)
-  !!
   !
-  
   WRITE( stdout, '(/5x,"Calling projection to compute Wannier projectors ... ")')
   !
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
+  !
+  nwordwfcU = npwx * nwfcU !*npol
   !
   ! Set dimensions of the problem:
   ! ldim1 = number of atomic-projectors
@@ -220,7 +227,6 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
   !
   ! Delete .hub files (if present) to prevent size mismatch or other problems
-  nwordwfcU=npwx*nwfcU !*npol
   INQUIRE( UNIT=iunhub, OPENED=exst )
   IF ( .NOT. exst ) CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
   IF ( ionode .AND. exst ) WRITE( stdout, '(5x,A)' ) '.hub files will be overwritten'
@@ -236,29 +242,31 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   pp   = 0.d0
   ALLOCATE(wfcatom (npwx, natomwfc) )
   ALLOCATE(swfcatom (npwx , ldim1 ) )
+  ALLOCATE(wfcU (npwx, ldim1) )
   ! Allocate the array containing <beta|wfcatom>
   CALL allocate_bec_type ( nkb, ldim1, becp)
   !
   ! Main loop (on k-points)
   !
-  ALLOCATE (gk(npwx))
   DO ik = 1, nks
      !
      npw = ngk(ik)
-
+     !
+     ! Read Kohn-Sham (KS) wavefunctions at k point ik
      CALL read_collected_wfc ( restart_dir(), ik, evc )
-
+     !
+     ! Compute the Bloch sums of atomic orbitals at each ik
      CALL atomic_wfc (ik, wfcatom)
-
+     !
      ! select Hubbard wavefunctions and copy then into wfcU (ldaU module)
      ! (in order to avoid computing S|phi> for non-Hubbard atomic wfcs)
      CALL copy_U_wfc (wfcatom)
      !CALL copy_U_wfc (swfcatom, noncolin) ! not yet implemented/tested
-
+     !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-
+     !
      CALL calbec ( npw, vkb, wfcU, becp )
-
+     !
      CALL s_psi (npwx, npw, ldim1, wfcU, swfcatom)
      !
      ! wfcU = |phi_i> , swfcatom = \hat S |phi_i>
@@ -276,9 +284,9 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
         pp(:,:) = proj0(:,first_band:last_band)
         DEALLOCATE (proj0)
      ENDIF
-!
-! add a damping factor if we want to select an energy window
-!
+     !
+     ! add a damping factor if we want to select an energy window
+     !
      if (sigma > 0.d0) then 
         do i=1,ldim2
            ibnd = i + first_band -1
@@ -287,21 +295,12 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
                                wgauss((max_energy-e)/sigma,0)
         end do
      end if
-
      !
      ! Use S.V.D. to make the orthonormalization of projectors
      !
      CALL ZGESVD( 'A', 'A', ldim1, ldim2, pp, ldim1, ew, u_m, ldim1, &
                   w_m, ldim2, work, lwork, rwork, info )
      IF ( abs(info) .ne. 0 ) kstatus(ik) = -2
-     !CALL errore ('projection','Singular Value Decomposition failed', abs(info))
-     !!DEBUG
-!      WRITE ( * , * ) (ew(i),i=1,ldim1)
-     !DO i = 1, ldim1
-     !   WRITE ( * , * ) ew(i)
-     !   WRITE ( * , '(8(2f5.2,2x))') u_m(:,i)
-     !   WRITE ( * , '(8(2f5.2,2x))') w_m(i,:)
-     !ENDDO
      !
      ! ... use sp_m to store u_m * w_m
      !
@@ -310,6 +309,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      ! ... check orthogonality
      CALL zgemm( 'N', 'C', ldim1, ldim1, ldim2, ONE, pp, ldim1, pp, &
                     ldim1, ZERO, u_m, ldim1 )
+     !
      capel = 0.d0
      DO i=1,ldim1
         u_m(i,i) = u_m(i,i) -1.d0
@@ -318,32 +318,22 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
         ENDDO
         u_m(i,i) = u_m(i,i) +1.d0
      ENDDO
-
+     !
      IF ( kstatus(ik) == -1 ) THEN 
         IF ( capel > 1.d-10 ) THEN
            kstatus(ik) = -3
-           !!DEBUG
-           !WRITE (*,*) " ORTHOGONALITY CHECK FAILED"
-           !WRITE (*,*) " CAPEL = ", capel
-           !DO i=1,ldim1
-           !   WRITE (*, '(8(2f5.2,2x))') u_m(:,i)
-           !ENDDO
         ELSE
            kstatus(ik) = 0
         ENDIF
      ENDIF
-
+     !
      ! ... compute wave functions |ophi_j> for the orthonormalized projectors
      CALL zgemm( 'N', 'C', npw, ldim1, ldim2, ONE, evc(1,first_band), npwx, &
                   pp(1,1), ldim1, ZERO, wfcU, npwx )
-
-     CALL calbec ( npw, vkb, wfcU, becp )
-
-     CALL s_psi (npwx, npw, ldim1, wfcU, swfcatom)
-
-     ! write \hat S |ophi_j> into iunhub unit
-     CALL davcio (swfcatom, 2*nwordwfcU, iunhub, ik, 1)
-
+     !
+     ! write |ophi_j> (no S) into iunhub unit
+     CALL davcio (wfcU, 2*nwordwfcU, iunhub, ik, 1)
+     !
      ! ... write U matrices to disk, if required
      ! (each k-point into a separate file named <prefix.pp?>)
      IF ( me_pool == root_pool .AND. iopp ) THEN
@@ -355,31 +345,26 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
            WRITE(iun_pp,'(2f22.15)') ( pp(i,j), j=1,ldim2 )
            WRITE(iun_pp,'(/)')
         ENDDO
-
         CLOSE(iun_pp)
      ENDIF
      !
      ! on k-points
   ENDDO
-  DEALLOCATE (gk)
   !
   ! Check if everything went OK (on all k-points)
   !
   CALL ipoolrecover( kstatus, 1, nkstot, nks)
   IF ( ionode ) WRITE(stdout, '(/,5x,A)') 'Orthogonality check'
   DO ik = 1,nkstot
-     IF ( ionode ) WRITE(stdout, '(7x,A,I8,A)', advance='no') &
-        'k-point', ik, ' : '
      SELECT CASE ( kstatus(ik) )
-        CASE (  0 )
-           IF ( ionode ) WRITE( stdout, '(A)' ) 'ok'
         CASE ( -1 )
+           WRITE(stdout,*) 'ik=', ik
            CALL errore ('projection','kstatus not set?', -1)
         CASE ( -2 )
-           !IF ( ionode ) WRITE( stdout, '(A)' ) 'Singular Value Dec. *FAILED*'
+           WRITE(stdout,*) 'ik=', ik
            CALL errore ('projection','Singular Value Decomposition failed', -2)
         CASE ( -3 )
-           !IF ( ionode ) WRITE( stdout, '(A)' ) '*FAILED*'
+           WRITE(stdout,*) 'ik=', ik
            CALL errore ('projection','orthogonality check failed', ik)
         CASE DEFAULT
            CALL errore ('projection','invalid kstatus code', kstatus(ik))
@@ -398,13 +383,15 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      ENDDO
      CLOSE(iun_pp)
   ENDIF
-
   !
   CALL deallocate_bec_type (becp)
   !
+  CLOSE ( UNIT=iunhub, STATUS='KEEP' )
   DEALLOCATE (pp, u_m, w_m, work, ew, rwork)
   DEALLOCATE (swfcatom)
   DEALLOCATE (wfcatom)
-
+  DEALLOCATE (wfcU)
+  !
   RETURN
+  !
 END SUBROUTINE projection

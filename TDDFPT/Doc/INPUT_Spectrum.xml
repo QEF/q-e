@@ -91,7 +91,8 @@ no extrapolation.
          <default> 0.02
          </default>
          <info>
-The broadening/damping term (in Rydberg units).
+The broadening/damping term. In Rydberg units if magnons=.false.,
+    in meV if magnons = .true.
          </info>
       </var>
       <var name="units" type="INTEGER" >
@@ -99,9 +100,10 @@ The broadening/damping term (in Rydberg units).
          </default>
          <info>
     The unit system used for the output and the start, end and increment
-input parameters.
+input parameters. (only meV used in that case).
 
-0 = Rydbergs, 1 = Electron volts and 2 = Nanometres per electron volts.
+0 = Rydbergs, 1 = Electron volts, 2 = Nanometres per electron volts,
+3 = milli Electron volts (only for magnons=.true.)
          </info>
       </var>
       <var name="start" type="REAL" >
@@ -109,7 +111,7 @@ input parameters.
          </default>
          <info>
   The polarizability and the absorption coefficient are computed
-starting from this value. In units set by the units variable.
+starting from this value. In units set.
          </info>
       </var>
       <var name="end" type="REAL" >
@@ -117,7 +119,7 @@ starting from this value. In units set by the units variable.
          </default>
          <info>
   The polarizability and the absorption coefficient are computed
-up to this value. In units set by the units variable.
+up to this value. In units set.
          </info>
       </var>
       <var name="increment" type="REAL" >
@@ -125,7 +127,7 @@ up to this value. In units set by the units variable.
          </default>
          <info>
   Incremental step used to define the mesh between start and end.
-In units set by the units variable.
+In units set.
          </info>
       </var>
       <var name="ipol" type="INTEGER" >
@@ -146,6 +148,13 @@ tensor and the absorption coefficient are computed.
          <info>
 Must be set to .true. for EELS. EELS-specific operations
 will be performed.
+         </info>
+      </var>
+      <var name="magnons" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+Must be set to .true. for magnon-calculation post-processing.
          </info>
       </var>
       <var name="td" type="CHARACTER" >

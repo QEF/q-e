@@ -1,0 +1,543 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.5.8 starts on  9Jan2024 at 13:49:19 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     34164 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from epw2.in
+
+     Reading supplied temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+ 
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+
+     -------------------------------------------------------------------
+     Using si.ukk from disk
+     -------------------------------------------------------------------
+
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Band disentanglement is used: nbndsub =    8
+     Construct the Wigner-Seitz cell using Wannier centers and atomic positions 
+     Number of WS vectors for electrons      123
+     Number of WS vectors for phonons       25
+     Number of WS vectors for electron-phonon       25
+     Maximum number of cores for efficient parallelization       50
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        53Mb
+                   VmPeak =      3741Mb
+     ===================================================================
+     
+     Using uniform q-mesh:     4    4    4
+     Size of q point mesh for interpolation:         64
+     Using uniform MP k-mesh:     8    8    8
+     Size of k point mesh for interpolation:         58
+     Max number of k points per pool:               16
+
+     Fermi energy coarse grid =   6.339030 eV
+
+     ===================================================================
+
+     Fermi energy is read from the input file: Ef =   6.500000 eV
+
+     ===================================================================
+
+              ibndmin =     2  ebndmin =     1.088 eV
+              ibndmax =     8  ebndmax =    11.802 eV
+
+
+     Number of ep-matrix elements per pool :         2352 ~=   18.38 Kb (@ 8 bytes/ DP)
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     We only need to compute       64 q-points
+      
+
+     ===================================================================
+     Phonon-assisted absorption with quasidegenerate perturbation
+     ===================================================================
+
+
+     Fermi Surface thickness =   5.500000 eV
+
+     The following temperatures are calculated:
+
+     Temperature T =   0.025852 eV
+
+     size for cell = 270.169326 per A
+
+     nqtotf =         64
+
+     nktotf =         29
+
+     ************************************************************************ 
+
+                           ELPA Library not found                             
+
+        Please install EPW with ELPA for faster and denser calculations       
+
+               Visit: https://elpa.mpcdf.mpg.de for installing ELPA           
+
+     ************************************************************************ 
+
+     **************************************************** 
+
+     *****  Automatic generation of QDPT meshgrids  ***** 
+
+      Number of QDPT meshgrids to be performed:          9
+
+     **************************************************** 
+     Size of QD bins    244.93meV
+     Finished building matrix
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =          0
+
+     Performing mesh =         4
+
+     Size of H_temp        64      1031      1031
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =       1045
+
+     QD array rank =       1045
+
+     matrix rank =       449
+
+     Size of Eigenvec:       435       449
+
+     Building Hamiltonian calculation with r_tot:      1635
+
+     tot, totf,totcv,size_tot       449       425        24       435
+
+     Allocated Eigenvec_pool
+
+     Entered diag_quasi_Hamiltonian
+
+      Allocated Eigenvec
+
+     OMP diagonalization done
+
+     Finished Eigenvec calculation OMP with total  interactions:       1635
+
+     Doing OMP
+
+     Time for QD bin calculation:   0.44424900000000E+00S
+
+     Finished distributing Eigenvec:
+     found degenerte states, tot_calc,tot,tot_calc_DW       465       449       439       435
+     Normal behavior for mp_mesh_k .EQ. .True.
+
+     tot_pool_sum =       449
+
+     Performing mesh =         5
+
+     Size of H_temp        64       615       615
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =        615
+
+     QD array rank =        615
+
+     matrix rank =       249
+
+     Size of Eigenvec:       249       249
+
+     Building Hamiltonian calculation with r_tot:      1239
+
+     tot, totf,totcv,size_tot       249       224        25       249
+
+     Allocated Eigenvec_pool
+
+     Entered diag_quasi_Hamiltonian
+
+      Allocated Eigenvec
+
+     OMP diagonalization done
+
+     Finished Eigenvec calculation OMP with total  interactions:       1239
+
+     Doing OMP
+
+     Time for QD bin calculation:   0.74123000000000E-01S
+
+     Finished distributing Eigenvec:
+     found degenerte states, tot_calc,tot,tot_calc_DW       229       249       229       249
+     Normal behavior for mp_mesh_k .EQ. .True.
+
+     tot_pool_sum =       249
+
+     Performing mesh =         6
+
+     Size of H_temp        64       234       221
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =        455
+
+     QD array rank =        455
+
+     matrix rank =       187
+
+     Size of Eigenvec:        97       187
+
+     Building Hamiltonian calculation with r_tot:       855
+
+     tot, totf,totcv,size_tot       187       173        14        97
+
+     Allocated Eigenvec_pool
+
+     Entered diag_quasi_Hamiltonian
+
+      Allocated Eigenvec
+
+     OMP diagonalization done
+
+     Finished Eigenvec calculation OMP with total  interactions:        855
+
+     Doing OMP
+
+     Time for QD bin calculation:   0.27922000000000E-01S
+
+     Finished distributing Eigenvec:
+     found degenerte states, tot_calc,tot,tot_calc_DW       176       187       176        97
+     Normal behavior for mp_mesh_k .EQ. .True.
+
+     tot_pool_sum =       187
+
+     Performing mesh =         7
+
+     Size of H_temp        64       500       411
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =       1268
+
+     QD array rank =       1268
+
+     matrix rank =       376
+
+     Size of Eigenvec:       156       376
+
+     Building Hamiltonian calculation with r_tot:      1864
+
+     tot, totf,totcv,size_tot       376       348        28       156
+
+     Allocated Eigenvec_pool
+
+     Entered diag_quasi_Hamiltonian
+
+      Allocated Eigenvec
+
+     OMP diagonalization done
+
+     Finished Eigenvec calculation OMP with total  interactions:       1864
+
+     Doing OMP
+
+     Time for QD bin calculation:   0.15131000000000E+00S
+
+     Finished distributing Eigenvec:
+     found degenerte states, tot_calc,tot,tot_calc_DW       367       376       356       156
+     Normal behavior for mp_mesh_k .EQ. .True.
+
+     tot_pool_sum =       376
+
+     Performing mesh =         8
+
+     Size of H_temp        64       702       174
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =       1503
+
+     QD array rank =       1503
+
+     matrix rank =       510
+
+     Size of Eigenvec:       237       510
+
+     Building Hamiltonian calculation with r_tot:      2140
+
+     tot, totf,totcv,size_tot       510       448        62       237
+
+     Allocated Eigenvec_pool
+
+     Entered diag_quasi_Hamiltonian
+
+      Allocated Eigenvec
+
+     OMP diagonalization done
+
+     Finished Eigenvec calculation OMP with total  interactions:       2140
+
+     Doing OMP
+
+     Time for QD bin calculation:   0.30772800000000E+00S
+
+     Finished distributing Eigenvec:
+     found degenerte states, tot_calc,tot,tot_calc_DW       474       510       458        73
+     Normal behavior for mp_mesh_k .EQ. .True.
+
+     tot_pool_sum =       510
+
+     Performing mesh =         9
+
+     Size of H_temp        64       650       224
+     Finished sorting, Entering eigenvalue calculation
+     Number of states in mesh =       1094
+
+     QD array rank =       1094
+
+     matrix rank =       542
+
+     Size of Eigenvec:       352       542
+
+     Building Hamiltonian calculation with r_tot:      1966
+
+     tot, totf,totcv,size_tot       542       497        45       352
+
+     Allocated Eigenvec_pool
+
+     Entered diag_quasi_Hamiltonian
+
+      Allocated Eigenvec
+
+     OMP diagonalization done
+
+     Finished Eigenvec calculation OMP with total  interactions:       1966
+
+     Doing OMP
+
+     Time for QD bin calculation:   0.47528100000000E+00S
+
+     Finished distributing Eigenvec:
+     found degenerte states, tot_calc,tot,tot_calc_DW       504       542       494        72
+     Normal behavior for mp_mesh_k .EQ. .True.
+
+     tot_pool_sum =       542
+
+     Optical-absorption versus energy
+
+     Photon energy (eV), Imaginary dielectric function along x,y,z
+            0.050000  0.20892562116334E-15  0.46005185397980E-15  0.51000297307791E-15
+            0.100000  0.16941844586971E-13  0.37252828364097E-13  0.41291794895177E-13
+            0.150000  0.14920530955043E-11  0.32719556308953E-11  0.36258325005447E-11
+            0.200000  0.10196447396383E-09  0.22246594276799E-09  0.24642522998983E-09
+            0.250000  0.48877455796534E-08  0.10564722753104E-07  0.11694254069819E-07
+            0.300000  0.15804897128381E-06  0.33595421949305E-06  0.37142492790217E-06
+            0.350000  0.34018622346390E-05  0.70274895877133E-05  0.77538914161691E-05
+            0.400000  0.48761829474527E-04  0.96227358240073E-04  0.10583431991504E-03
+            0.450000  0.46877174880327E-03  0.86515504947863E-03  0.94697519455385E-03
+            0.500000  0.30416424864630E-02  0.51435105133379E-02  0.55931300349623E-02
+            0.550000  0.13302611964157E-01  0.20352027498752E-01  0.21954799817625E-01
+            0.600000  0.38769405584264E-01  0.53655195802264E-01  0.57388201549927E-01
+            0.650000  0.73952066141140E-01  0.93616893716293E-01  0.99335390502853E-01
+            0.700000  0.90603507890542E-01  0.10670322571381E+00  0.11248318043170E+00
+            0.750000  0.70183997807646E-01  0.78233293042376E-01  0.82080293954157E-01
+            0.800000  0.34041693512343E-01  0.36399657370642E-01  0.38103842842863E-01
+            0.850000  0.11047974372265E-01  0.10998079471014E-01  0.11842554078759E-01
+            0.900000  0.84623718834322E-02  0.55565754921090E-02  0.81851611962509E-02
+            0.950000  0.33287345969074E-01  0.21837741123818E-01  0.32498820834095E-01
+            1.000000  0.11149007360460E+00  0.84200095277341E-01  0.11247345976487E+00
+            1.050000  0.26029247041377E+00  0.21680996496453E+00  0.26814580285802E+00
+            1.100000  0.43761909812040E+00  0.37563688706134E+00  0.45141535924372E+00
+            1.150000  0.55007890874028E+00  0.44787135014763E+00  0.55699051678635E+00
+            1.200000  0.53786570202596E+00  0.37659916643096E+00  0.52980687040647E+00
+            1.250000  0.44330764721069E+00  0.23355953625378E+00  0.42849856682542E+00
+            1.300000  0.35789145088318E+00  0.13479494750333E+00  0.34635039954569E+00
+            1.350000  0.32809311716046E+00  0.14427464817455E+00  0.32033239145976E+00
+            1.400000  0.38243398783413E+00  0.26952882592275E+00  0.37532305039415E+00
+            1.450000  0.51699092858394E+00  0.44919709219045E+00  0.51257439541164E+00
+            1.500000  0.62353029415389E+00  0.54980057365702E+00  0.62430995347792E+00
+            1.550000  0.63106429561992E+00  0.50364473396317E+00  0.62611863746307E+00
+            1.600000  0.61705350500430E+00  0.38768470785869E+00  0.59552723044931E+00
+            1.650000  0.61338976463308E+00  0.28700799349928E+00  0.59299606870804E+00
+            1.700000  0.54315084003402E+00  0.22851768470337E+00  0.54631588261843E+00
+            1.750000  0.47408636641165E+00  0.28598067956879E+00  0.49442450530423E+00
+            1.800000  0.61525535037044E+00  0.56384221137966E+00  0.64724883147723E+00
+            1.850000  0.97913812979436E+00  0.99960009129707E+00  0.10418346094506E+01
+            1.900000  0.13386581947212E+01  0.13404584068816E+01  0.14414099582871E+01
+            1.950000  0.15536634396013E+01  0.14283044765961E+01  0.16644371008117E+01
+            2.000000  0.16700101947847E+01  0.13175707980135E+01  0.17344979893849E+01
+            2.050000  0.16970718309271E+01  0.10829024135240E+01  0.16900349644113E+01
+            2.100000  0.15705223207501E+01  0.80343784197001E+00  0.15231293850778E+01
+            2.150000  0.14273801361139E+01  0.73347727644959E+00  0.13850009945317E+01
+            2.200000  0.17060616524875E+01  0.12190359925438E+01  0.16805054336202E+01
+            2.250000  0.26773685398776E+01  0.22707348783567E+01  0.26640722417834E+01
+            2.300000  0.42878423444046E+01  0.35517289373467E+01  0.42857488258294E+01
+            2.350000  0.70983625395098E+01  0.54786115619018E+01  0.70807042626548E+01
+            2.400000  0.11947629389527E+02  0.91783078936547E+01  0.11843006327284E+02
+            2.450000  0.17232917695578E+02  0.13613187198907E+02  0.16933488170704E+02
+            2.500000  0.20117693895064E+02  0.16106871157220E+02  0.19433123169189E+02
+            2.550000  0.22591313399379E+02  0.17951257532375E+02  0.21144655038395E+02
+            2.600000  0.31761990024284E+02  0.24820129321920E+02  0.29228971723828E+02
+            2.650000  0.52778483860340E+02  0.41378358316249E+02  0.50058208064079E+02
+            2.700000  0.78583141284759E+02  0.63518769479501E+02  0.78448043531490E+02
+            2.750000  0.88941881070281E+02  0.74564664698282E+02  0.92962980831574E+02
+            2.800000  0.74410083181231E+02  0.63141529200016E+02  0.79901604801088E+02
+            2.850000  0.50425144921379E+02  0.39803255264481E+02  0.53995367924741E+02
+            2.900000  0.35052930001219E+02  0.20966244171783E+02  0.36496739629111E+02
+            2.950000  0.29940226786763E+02  0.11294654573735E+02  0.30679427056810E+02
+            3.000000  0.26997586057263E+02  0.80136789831714E+01  0.28165893577060E+02
+            3.050000  0.22495488577120E+02  0.85776876882364E+01  0.24904956755328E+02
+            3.100000  0.19473193059568E+02  0.11423694807795E+02  0.23353980421463E+02
+            3.150000  0.22006388886797E+02  0.14987287911679E+02  0.26712463094677E+02
+            3.200000  0.32390161245917E+02  0.17693448350818E+02  0.37016650434563E+02
+            3.250000  0.49352464296000E+02  0.18704402245227E+02  0.52694885920786E+02
+            3.300000  0.67535123591446E+02  0.18652416855873E+02  0.67444222412298E+02
+            3.350000  0.85065760881693E+02  0.18919111710306E+02  0.80166015663999E+02
+            3.400000  0.10753452341583E+03  0.20520069433760E+02  0.99419807868532E+02
+            3.450000  0.13124638293307E+03  0.22256149804348E+02  0.12360971751018E+03
+            3.500000  0.14023535088676E+03  0.20583696285945E+02  0.13589958848904E+03
+            3.550000  0.13594702978988E+03  0.15303835974048E+02  0.13515280068796E+03
+            3.600000  0.14031872101651E+03  0.11168035158531E+02  0.14176990776427E+03
+            3.650000  0.15812621016266E+03  0.11265852539677E+02  0.16035212826009E+03
+            3.700000  0.16619220551542E+03  0.13638586337868E+02  0.16817068476729E+03
+            3.750000  0.14505773578797E+03  0.14182881131037E+02  0.14651890491640E+03
+            3.800000  0.10442610016463E+03  0.11172881203562E+02  0.10549435420857E+03
+            3.850000  0.68882545303018E+02  0.66437379403219E+01  0.69574245007745E+02
+            3.900000  0.47018963032313E+02  0.31639725161202E+01  0.47311227284178E+02
+            3.950000  0.31476912607007E+02  0.12953923515143E+01  0.31508796262455E+02
+            4.000000  0.17545950243760E+02  0.45477243853251E+00  0.17505669486381E+02
+
+     directionally averaged imaginary dielectric constant for  temperature X are  reported in the files                epsilon2_indabs_X_finalmesh.dat
+
+
+     Stopping EPW because stop_qdabs encountered on mesh         9
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.01s CPU      0.01s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ephwann      :     12.98s CPU     13.69s WALL (       1 calls)
+     ep-interp    :     11.01s CPU     11.72s WALL (     896 calls)
+
+     DynW2B       :      0.02s CPU      0.03s WALL (     897 calls)
+     HamW2B       :      0.72s CPU      0.73s WALL (   14360 calls)
+     ephW2Bp      :      4.04s CPU      4.62s WALL (     896 calls)
+     ephW2B       :      0.78s CPU      0.79s WALL (    7168 calls)
+     vmewan2bloch :      1.88s CPU      1.92s WALL (   14336 calls)
+     vmewan2bloch :      1.88s CPU      1.92s WALL (   14336 calls)
+
+
+     Total program execution
+     EPW          :     12.99s CPU     13.70s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [loptabs] input, please consider also citing                       
+       S. Tiwari et al, unpublished (2023)                                                   
+       S. Tiwari and F. Giustino, unpublished (2023)                                         
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

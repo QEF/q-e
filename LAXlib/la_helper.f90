@@ -574,13 +574,7 @@ END SUBROUTINE laxlib_multi_init_desc_x
    SUBROUTINE diagonalize_serial_gpu( m, rhos, rhod, s, info )
 #if defined(__CUDA)
       use cudafor
-#if defined ( __USE_CUSOLVER )
       USE cusolverDn
-#else
-      use eigsolve_vars
-      use nvtx_inters
-      use dsyevd_gpu
-#endif
       IMPLICIT NONE
       include 'laxlib_kinds.fh'
       INTEGER, INTENT(IN) :: m
@@ -592,28 +586,13 @@ END SUBROUTINE laxlib_multi_init_desc_x
       INTEGER :: lwork_d
       INTEGER :: i, j, lda
       !
-#if defined (__USE_CUSOLVER)
       !
       INTEGER, DEVICE        :: devInfo
       TYPE(cusolverDnHandle) :: cuSolverHandle
       REAL(DP), ALLOCATABLE, DEVICE :: work_d(:)
       !
-#else
-      !
-      REAL(DP), ALLOCATABLE :: work_d(:), a(:,:)
-      ATTRIBUTES( DEVICE ) :: work_d, a
-      REAL(DP), ALLOCATABLE :: b(:,:)
-      REAL(DP), ALLOCATABLE :: work_h(:), w_h(:), z_h(:,:)
-      ATTRIBUTES( PINNED ) :: work_h, w_h, z_h
-      INTEGER, ALLOCATABLE :: iwork_h(:)
-      ATTRIBUTES( PINNED ) :: iwork_h
-      !
-      INTEGER :: lwork_h, liwork_h
-      !
-#endif
       ! .... Subroutine Body
       !
-#if defined (__USE_CUSOLVER)
       !
       s = rhos
       lda = SIZE( rhos, 1 )
@@ -641,49 +620,6 @@ END SUBROUTINE laxlib_multi_init_desc_x
       DEALLOCATE( work_d )
 
       !
-#else
-      !
-      info = 0
-      lwork_d  = 2*64*64 + 66*SIZE(rhos,1)
-      lwork_h = 1 + 6*SIZE(rhos,1) + 2*SIZE(rhos,1)*SIZE(rhos,1)
-      liwork_h = 3 + 5*SIZE(rhos,1)
-      ALLOCATE(work_d(lwork_d),STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate work_d ', ABS( info ) )
-      ALLOCATE(a(SIZE(rhos,1),SIZE(rhos,2)),STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate a ', ABS( info ) )
-      ALLOCATE(work_h(lwork_h),STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate work_h ', ABS( info ) )
-      ALLOCATE(iwork_h(liwork_h),STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate iwork_h ', ABS( info ) )
-      !
-      ALLOCATE(w_h(SIZE(rhod)),STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate w_h ', ABS( info ) )
-      ALLOCATE(z_h(SIZE(s,1),SIZE(s,2)),STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate z_h ', ABS( info ) )
-
-      if(initialized == 0) call init_eigsolve_gpu
-      
-      info = cudaMemcpy(a, rhos, SIZE(rhos,1)*SIZE(rhos,2), cudaMemcpyDeviceToDevice)
-      lda = SIZE(rhos,1)
-      !$cuf kernel do(2) <<<*,*>>>
-      do j = 1,m
-        do i = 1,m
-          if (i > j) then
-            s(i,j) = a(i,j)
-          endif
-        end do
-      end do
-      
-      call dsyevd_gpu('V', 'U', 1, m, m, a, lda, s, lda, rhod, work_d, lwork_d, &
-                      work_h, lwork_h, iwork_h, liwork_h, z_h, lda, w_h, info)
-
-      DEALLOCATE(z_h)
-      DEALLOCATE(w_h)
-      DEALLOCATE(iwork_h)
-      DEALLOCATE(work_h)
-      DEALLOCATE(a)
-      DEALLOCATE(work_d)
-#endif
 #else
       IMPLICIT NONE
       include 'laxlib_kinds.fh'

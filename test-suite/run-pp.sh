@@ -8,8 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
   export PARA_SUFFIX=" "
 else
   unset PARA_PREFIX

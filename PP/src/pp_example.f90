@@ -9,13 +9,10 @@
 PROGRAM post_processing_example
   !-----------------------------------------------------------------------
   !
-  ! Sample code, showing how to read QE data and re-use QE variables.
-  ! This simple code
+  ! Sample code, showing how to read QE data and re-use QE variables:
   ! 1. reads the data directory of QE, then
   ! 2. fills the hamiltonian matrix and diagonalizes it for each k-point
   !    (conventional, not iterative diagonalization)
-  ! BEWARE: don't try this for large systems! the hamiltonian matrix is
-  ! large, having Npw^2 elements, and diagonalization is slow, O(Npw^3)
   !
   ! Input: namelist &inputpp [outdir=...] [prefix=...] / as in QE input
   ! (default values as in QE).
@@ -96,7 +93,7 @@ SUBROUTINE re_diagonalize ( )
   USE uspp_init,  ONLY : init_us_2
   USE wvfct,      ONLY : npwx, nbnd, current_k
   USE mp_bands,   ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
-  USE wavefunctions,  ONLY : evc, psic
+  USE wavefunctions,  ONLY : evc
   USE pw_restart_new, ONLY : read_collected_wfc
   !
   IMPLICIT NONE

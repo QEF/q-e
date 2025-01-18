@@ -15,11 +15,6 @@
     ntyp      = 3,
     ecutwfc   = 25.0
     ecutrho   = 200.0
-    lda_plus_u        = .true.,
-    lda_plus_u_kind   = 2,
-    U_projection_type = 'atomic',
-    Hubbard_V(1,1,1)  = 7.75
-    Hubbard_V(1,19,1) = 0.75
  /
  &electrons
     conv_thr    =  1.d-10
@@ -36,3 +31,6 @@ ATOMIC_POSITIONS {crystal}
  Li  0.5000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {atomic}
+U Co-3d 7.75
+V Co-3d O-2p 1 19 0.75

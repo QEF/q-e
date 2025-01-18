@@ -1,0 +1,21 @@
+This example shows how to use the KCW code to compute the band structure
+of FCC Silicon. This requires few steps:
+
+1) run a standard scf calculation at PBE level on a regular 2x2x2 mesh. 
+   The regular mesh is needed by Wannier90. Ideally you can run scf with 
+   symmetry and then a nscf calculation on a regular grid. 
+   input=Si.scf.in, output=Si.scf.out
+
+2) perform a separate wannierization for the occupied and empty manifold 
+   results in ./wann_occ and ./wann_emp, respectively
+
+3) prepare the KCW calculation 
+   input=Si.kcw-wann2kcw.in, output=Si.kcw-wann2kcw.out
+
+4) calculate the screening coefficients 
+   input=Si.kcw-screen.in, output=Si.kcw-screen.out
+
+5) calculate, interpolate and diagonalize the KI Hamiltonian 
+   input=Si.kcw-ham.in, output=Si.kcw-ham.out
+
+The Si band structure is in Si.kcw_bands.dat.

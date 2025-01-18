@@ -1,0 +1,116 @@
+\documentclass[a4paper,12pt,notitlepage]{article}
+
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[dvips]{graphicx}
+
+\newcommand{\Rb}{\mathbf R}
+\newcommand{\nb}{\boldsymbol \nabla}
+
+\author{Laurent Pizzagalli}
+
+\begin{document}
+
+\title{External force fields in Quantum Espresso}
+%
+\maketitle
+
+This document is a short documentation concerning the implementation of external ionic force fields in Quantum Espresso. For a reference, see (and eventually cite) \textit{L. Pizzagalli, Phys. Rev B \textbf{102}, 094102 (2020)}. 
+
+\section{External force fields activation}
+
+The activation of external force fields (acting on ions) is obtained by  
+setting the input integer \texttt{nextffield} (integer) in the Namelist \&SYSTEM. \texttt{nextffield} is the number of activated external force fields (default = 0, max = 4). 
+
+\medskip 
+\noindent If $\mathtt{nextffield} > 0$, the file \texttt{extffield.dat} is read. It must be written according to the following rules: 
+\begin{itemize}
+\item For each force field, two lines are required,
+\item The first one is generic to all kinds of force field, with the format \\ \textbf{NTYP  FLAGS},
+\item \textbf{NTYP} is an integer defining the type of force fields (see next section for possible values),
+\item \textbf{FLAGS} is an integer composed of 1 or 0, as many as ionic species. It can be used to restrict the application of force fields to certain species only. For instance, FLAGS = 101 means that ionic species 1 and 3 are subject to the force field, but not ionic specie 2,
+\item The second line defines various parameters depending on the force field type.
+\end{itemize}
+
+\section{Implemented force fields}
+
+There are currently three kinds of force fields coded in cp.x, and two in pw.x
+
+\subsection{$\mathbf{NTYP} = 1$: Planar quadratic repulsive force field}
+
+This force field mimics the command \texttt{FIX INDENT PLANE...} from the LAMMPS code, which is often used in MD studies to model a flat punch indenter. The force expression is 
+
+$$F = \pm K(z-z_p)^2$$
+
+\noindent The second line in \texttt{extffield.dat} for this potential includes 5 parameters: \\ \textbf{AXIS  DIR  POS INC STRENGTH} 
+
+\begin{itemize}
+\item \textbf{AXIS} is an integer defining the axis for the plane (1 = X, 2 = Y, 3 = Z)
+\item \textbf{DIR} is an integer defining the direction of the force (0 is positive, and 1 negative), and the selection of ions.
+\item \textbf{POS} is a real defining the position of the plane relative to AXIS ($z_p$ in the formula above). Selected ions (on which an external force is applied) are those with a position below POS (DIR = 0) or above POS (DIR = 1)
+\item \textbf{INC} is a real, added to POS at each ionic iteration (to mimic a dynamic compression)
+\item \textbf{STRENGTH} is a real defining the strength of the repulsion ($K$ in the formula above)
+\end{itemize}
+
+\noindent Note that Rydberg atomic units are used for pw.x, whereas Hartree atomic units are used for cp.x. 
+\medskip
+
+\noindent For instance, with the following two lines
+\begin{verbatim}
+ 1   10
+ 3   0   2.50   0.01   10
+\end{verbatim}
+one defines a planar repulsive potential acting on the first atomic specie (but not on the second one). The potential is applied for a plane normal to Z and of initial position 2.50 bohrs along the Z axis, with a positive direction. All ions of specie 1, with an initial z-coordinate below 2.50 will be subjected to a positive force along this axis. The potential strength is 10 a.u.  and the potential threshold is moved up by 0.01 bohr at each ionic iteration
+
+\subsection{$\mathbf{NTYP} = 2$: Viscous drag force field perpendicular to a plane}
+
+This force field adds a viscous friction for selected atoms, by adding velocity dependent forces in the two directions perpendicular to the defined axis. It can be used in combination with the previous force field, to prevent an excessive rotation of the system during the dynamics. The force expression is
+
+$$F = -Kmv$$
+
+\noindent The force is proportional and opposed to the ion velocity, and is also proportional to the ion mass 
+and the constant $K$. As in the previous case, selected ions are those with a position below POS (DIR = 0) or above POS (DIR = 1). 
+
+\noindent The second line in \texttt{extffield.dat} for this potential looks like \\
+\textbf{AXIS  DIR  POS INC STRENGTH}
+
+\medskip
+
+\noindent These parameters have the same meaning than for $\mathbf{NTYP}=1$ 
+
+\noindent NOTE: $\mathbf{NTYP}=2$ is only available when using cp.x 
+
+
+\subsection{$\mathbf{NTYP} = 3$: Planar Lennard-Jones potential}
+
+This force field allows to impose an interaction of the system of interest with a semi-infinite slab. The forces are derived from the well known standard LJ energy formula
+
+$$V(r) = 4\varepsilon\left[\left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^6\right]$$
+
+\noindent The second line in \texttt{extffield.dat} includes the following seven parameters: \\
+\textbf{AXIS  DIR  POS INC $\mathbf{\varepsilon}$ $\mathbf{\sigma}$ cutoff}
+
+\medskip
+
+\noindent The first 4 have the same meaning than for $\mathbf{NTYP}=1$. $\mathbf{\varepsilon}$ and $\mathbf{\sigma}$ are the LJ potential parameters (with coherent units for cp.x or pw.x). \textbf{cutoff} defines the range of the potential. For instance, with $\mathbf{cutoff} = 5.0$, $\mathbf{DIR} = 0$ and $\mathbf{AXIS} = 3$, an ion will feel the potential only if its z-coordinate is lower than $\mathbf{POS} + \mathbf{cutoff}$. 
+
+\section{Ouput information}
+
+The information about the activated force fields is written in the standard output file. In addition, a file with the name \texttt{prefix.extffield} is created, including data per ionic iteration for all defined force fields. For each force field, the position of the plane and the sum of added forces for each axis are written at each step. For instance, in the case of a planar compression, it corresponds to the compression load. 
+
+\section{Examples}
+
+One example for cp.x and pw.x is included in both 'CPV/examples/Extffield\_example/' and 'PW/examples/Extffield\_example/', respectively. 
+
+\section{Current limitations}
+
+\begin{itemize}
+\item No automatic 'restart'. For a follow up calculation, the parameters in \texttt{extffield.dat} have to be set accordingly
+\item 4 maximum force fields
+\item In 'cp.x' and 'pw.x', the center of mass motion is (by default) subtracted from the ions motion (if no fixed ions). It is deactivated when an external force field is set (nextffield $>$ 0).
+\item Minimal testing done, so use at your own risk
+\end{itemize}
+
+\end{document}

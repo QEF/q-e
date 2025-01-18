@@ -21,22 +21,25 @@ SUBROUTINE lr_alloc_init()
   USE klist,                ONLY : nks
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npwx, nbnd
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, use_gpu
   USE io_global,            ONLY : stdout
   USE charg_resp,           ONLY : w_T, w_T_beta_store, w_T_gamma_store, &
                                  & w_T_zeta_store, w_T_npol,chi
   USE realus,               ONLY : tg_psic
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
   USE wavefunctions,        ONLY : evc
-  USE becmod,               ONLY : allocate_bec_type, bec_type, becp
+  USE becmod,               ONLY : allocate_bec_type_acc, becp
   USE lrus,                 ONLY : int3, int3_nc, becp1
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
   USE qpoint,               ONLY : nksq, eigqts
   USE control_lr,           ONLY : nbnd_occ, nbnd_occx
+#if defined (__CUDA)
+  USE cudafor
+#endif
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik
+  INTEGER :: ik, istat
   !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_alloc_init>")')
@@ -73,8 +76,20 @@ SUBROUTINE lr_alloc_init()
   !
   IF (.NOT. magnons) THEN
      IF (allocated(evc)) THEN
+#if defined(__CUDA)
+        !$acc exit data delete(evc)
+        IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
         DEALLOCATE(evc)
         ALLOCATE(evc(npwx*npol,nbnd))
+#if defined(__CUDA)
+        IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
+        !$acc enter data create(evc)
+#endif
+        !$acc kernels
+        evc(:,:) = (0.0d0, 0.0d0)
+        !$acc end kernels
+        !$acc update self(evc)
      ENDIF 
   ENDIF
   !
@@ -126,6 +141,7 @@ SUBROUTINE lr_alloc_init()
      !
      ALLOCATE (evq(npwx*npol,nbnd))
      evq(:,:) = (0.0d0, 0.0d0)  
+     !$acc enter data copyin(evq)
      ! 
   ELSEIF (magnons) THEN
      !
@@ -269,7 +285,7 @@ CONTAINS
     !
     IF (nkb > 0) THEN
        !
-       IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
+       IF (.not. allocated(becp%r)) CALL allocate_bec_type_acc(nkb,nbnd,becp)
        !
        ALLOCATE(becp_1(nkb,nbnd))
        becp_1(:,:) = 0.0d0
@@ -289,7 +305,7 @@ CONTAINS
     !
     IF (nkb > 0) THEN
        !
-       IF(.not. allocated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
+       IF(.not. allocated(becp%k)) CALL allocate_bec_type_acc(nkb,nbnd,becp)
        !
        IF (.NOT.eels) THEN
           ALLOCATE(becp1_c(nkb,nbnd,nks))

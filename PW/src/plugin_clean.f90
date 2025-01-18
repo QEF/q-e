@@ -11,19 +11,13 @@ SUBROUTINE plugin_clean( prog, lflag )
 !
 USE plugin_flags
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 IMPLICIT NONE
 !
 CHARACTER(LEN=*), INTENT(IN) :: prog
 LOGICAL, INTENT(IN) :: lflag
 !
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
 !
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 END SUBROUTINE plugin_clean
 

@@ -1,5 +1,6 @@
 set(src_modules
     additional_kpoints.f90 
+    atomic_wfc_mod.f90
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 
@@ -16,10 +17,13 @@ set(src_modules
     coulomb_vcut.f90  
     dist.f90 
     electrons_base.f90 
+    environ_base_module.f90
     environment.f90 
+    extffield.f90
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
+    fft_wave.f90 
     fsockets.f90 
     funct.f90 
     generate_function.f90 
@@ -32,6 +36,7 @@ set(src_modules
     ions_base.f90 
     kind.f90 
     lmdif.f90
+    makov_payne.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -48,6 +53,7 @@ set(src_modules
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
+    printout_base.f90
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 
@@ -93,6 +99,81 @@ set(src_modules
     wypos.f90 
     zvscal.f90 
     wave_gauge.f90
+    # list of RISM's modules
+    allocate_fft_3drism.f90
+    chempot.f90
+    chempot_lauerism.f90
+    closure.f90
+    corrdipole_laue.f90
+    correctat0_vv.f90
+    corrgxy0_laue.f90
+    cryst_to_car_2d.f90
+    data_structure_3drism.f90
+    do_1drism.f90
+    do_3drism.f90
+    do_lauerism.f90
+    eqn_1drism.f90
+    eqn_3drism.f90
+    eqn_lauedipole.f90
+    eqn_lauegxy0.f90
+    eqn_lauelong.f90
+    eqn_lauerism.f90
+    eqn_laueshort.f90
+    eqn_lauevoid.f90
+    err_rism.f90
+    guess_3drism.f90
+    init_1drism.f90
+    init_3drism.f90
+    input_1drism.f90
+    input_3drism.f90
+    io_rism_xml.f90
+    lauefft.f90
+    lauefft_subs.f90
+    lj_forcefield.f90
+    lj_solute.f90
+    molecorr_vv.f90
+    molebridge_vv.f90
+    molecule_const.f90
+    molecule_types.f90
+    mp_rism.f90
+    mp_swap_ax_rism.f90
+    normalize_lauerism.f90
+    plot_rism.f90
+    potential_3drism.f90
+    potential_esm.f90
+    potential_vv.f90
+    print_chempot_3drism.f90
+    print_chempot_lauerism.f90
+    print_chempot_vv.f90
+    print_corr_vv.f90
+    print_solvavg.f90
+    radfft.f90
+    read_mol.f90
+    read_solv.f90
+    recvec_3drism.f90
+    rism.f90
+    rism1d_facade.f90
+    rism3d_facade.f90
+    rms_residual.f90
+    scale_fft_3drism.f90
+    scale_fft_lauerism.f90
+    solute.f90
+    solvation_3drism.f90
+    solvation_esm.f90
+    solvation_force.f90
+    solvation_lauerism.f90
+    solvation_pbc.f90
+    solvation_stress.f90
+    solvavg.f90
+    solvmol.f90
+    summary_1drism.f90
+    summary_3drism.f90
+    suscept_g0.f90
+    suscept_laue.f90
+    suscept_laueint.f90
+    suscept_vv.f90
+    write_rism_type.f90
+    xml_io_rism.f90
     # subroutines and functions (not modules) previously found in flib
     atom_weight.f90 
     capital.f90 
@@ -111,8 +192,6 @@ set(src_modules
     rgen.f90 
     recips.f90 
     remove_tot_torque.f90
-    set_hubbard_l.f90 
-    set_hubbard_n.f90 
     sort.f90 
     trimcheck.f90 
     test_input_file.f90 
@@ -123,11 +202,7 @@ set(src_modules
     w1gauss.f90
     deviatoric.f90
     # GPU
-    wavefunctions_gpu.f90
-    becmod_gpu.f90
-    becmod_subs_gpu.f90
-    random_numbers_gpu.f90
-    cuda_subroutines.f90)
+    random_numbers_gpu.f90)
 qe_enable_cuda_fortran("${src_modules}")
 qe_add_library(qe_modules ${src_modules})
 
@@ -135,9 +210,8 @@ qe_add_library(qe_modules ${src_modules})
 set(src_modules_c
     customize_signals.c
     qmmm_aux.c
-    sockets.c
-    stack.c)
-qe_add_library(qe_modules_c ${src_modules_c})
+    sockets.c)
+add_library(qe_modules_c ${src_modules_c})
 
 if(TARGET gitrev)
    add_dependencies(qe_modules gitrev)
@@ -147,6 +221,7 @@ endif()
 
 target_link_libraries(qe_modules
     PRIVATE
+        qe_device_lapack  
         qe_modules_c
         qe_openmp_fortran
         qe_fftx
@@ -166,6 +241,12 @@ if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
             CUDA::curand)
+endif()
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_modules
+    PUBLIC
+        qe_environ)
 endif()
 
 ###########################################################

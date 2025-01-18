@@ -301,7 +301,7 @@ SUBROUTINE one_lanczos_step()
        !
     ENDIF
     !
-    ! X. Ge: To increase the stability, apply lr_ortho.
+    ! X. Ge: To increase the stability, apply orthogonalize.
     ! I.Timrov: Actually, without this trick, it turns out that 
     ! the Lanczos chain is not stable when pseudo_hermitian=.false., 
     ! because there is a warning from lr_calc_dens that the integral of 
@@ -311,9 +311,11 @@ SUBROUTINE one_lanczos_step()
     IF (.not.eels .and. .not. magnons) THEN
        !
        DO ik=1, nks
+!          CALL orthogonalize(evc1(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),npwx,.true.)
           CALL lr_ortho(evc1(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
           IF (.not. pseudo_hermitian) &
-          CALL lr_ortho(evc1(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+          CALL lr_ortho(evc1(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)        
+!          CALL orthogonalize(evc1(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),npwx,.true.)
        ENDDO
        !
     ENDIF

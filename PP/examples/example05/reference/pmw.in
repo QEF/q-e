@@ -1,0 +1,5 @@
+ &inputpp
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/tempdir/',
+    prefix='feo_af',
+    first_band=9, last_band=20,
+ /

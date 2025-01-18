@@ -19,14 +19,14 @@ subroutine dynmat0_new
   USE cell_base,     ONLY : alat, omega, at, bg
   USE gvect,         ONLY : g, gg, ngm, gcutm
   USE symm_base,     ONLY : irt, s, invs
-  USE control_flags, ONLY : modenum, llondon, lxdm
+  USE control_flags, ONLY : modenum, llondon, lxdm, ldftd3
   USE ph_restart,    ONLY : ph_writefile
-  USE control_ph,    ONLY : rec_code_read, current_iq
+  USE control_ph,    ONLY : current_iq
+  USE control_lr,    ONLY : rec_code_read
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : u, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
-  USE london_module, ONLY : init_london, dealloca_london
   USE lr_symm_base,  ONLY : minus_q, irotmq, nsymq, rtau
   USE ldaU,          ONLY : lda_plus_u
 
@@ -56,6 +56,9 @@ subroutine dynmat0_new
   ! Contribution from the dispersion correction
   IF (llondon .OR. lxdm) THEN
      CALL d2ionq_disp(alat,nat,ityp,at,bg,tau,xq,dynwrk)
+     CALL rotate_pattern_add (nat,u,dyn,dynwrk)
+  ELSEIF(ldftd3) THEN
+     CALL d2ionq_dispd3(alat,nat,at,xq,dynwrk)
      CALL rotate_pattern_add (nat,u,dyn,dynwrk)
   ENDIF
   !

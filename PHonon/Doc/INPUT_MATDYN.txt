@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: matdyn.x / PHonon / Quantum ESPRESSO (version: 7.0)
+Program: matdyn.x / PHonon / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -74,6 +74,14 @@ NAMELIST: &INPUT
                         3 translational asr imposed by optimized
                         correction of the force constants (projection)
     
+                   'all' :
+                        3 translational asr + 3 rotational asr + 15 Huang
+                        conditions for vanishing stress tensor, imposed by
+                        optimized correction of the force constants (projection).
+                        Remember to set write_lr = .true. to write long-range
+                        force constants into file when running q2r and set "read_lr" = .true. when running matdyn in the case of
+                        infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+    
                    'one-dim' :
                         3 translational asr + 1 rotational asr imposed
                         by optimized correction of the dyn. mat. (the
@@ -93,6 +101,15 @@ NAMELIST: &INPUT
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       huang
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    if .true. 15 Huang conditions for vanishing stress
+                   tensor are included in "asr" = 'all'.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       dos
    
    Type:           LOGICAL
@@ -109,7 +126,7 @@ NAMELIST: &INPUT
    
    Type:           INTEGER
    Description:    uniform q-point grid for DOS calculation (includes q=0)
-                   (must be specified if @ref dos = .true., ignored otherwise)
+                   (must be specified if "dos" = .true., ignored otherwise)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -193,7 +210,7 @@ NAMELIST: &INPUT
    
    Type:           INTEGER
    Description:    supercell lattice vectors are original cell vectors times
-                   l1, l2, l3 respectively (default: 1, ignored if @ref at specified)
+                   l1, l2, l3 respectively (default: 1, ignored if "at" specified)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -299,6 +316,26 @@ NAMELIST: &INPUT
    Type:           LOGICAL
    Description:    if .true. do not apply LO-TO splitting for q=0
                    (default: .false.)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       read_lr
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    if .true. read also long-range force constants when they exist in
+                   force constant file. This is required when enforcing "asr" = 'all'
+                   for infrared-active solids.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       write_frc
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    if .true. write force constants with "asr" imposed into file.
+                   The filename would be "flfrc"+".matdyn". The long-range part of
+                   force constants will be not written.
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -441,7 +478,7 @@ ________________________________________________________________________
          Variables:      q_x, q_y, q_z
          
          Type:           REAL
-         Description:    q-points in cartesian coordinates, 2pi/@i a units (@i a = lattice parameters)
+         Description:    q-points in cartesian coordinates, 2pi/a units (a = lattice parameters)
          +--------------------------------------------------------------------
          
    ===END OF CARD==========================================================
@@ -465,4 +502,4 @@ ________________________________________________________________________
    if you want to have q = 0 results for two different directions
    
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:41 CET 2021
+This file has been created by helpdoc utility on Wed Oct 16 19:27:29 CEST 2024

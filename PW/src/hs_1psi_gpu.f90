@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
+SUBROUTINE hs_1psi_gpu( lda, n, psi, hpsi, spsi )
   !----------------------------------------------------------------------------
   !! This routine applies the Hamiltonian and the S matrix
   !! to a vector psi and puts the result in hpsi and spsi.  
@@ -21,14 +21,12 @@ SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
   USE realus,           ONLY : real_space, &
                                invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
                                invfft_orbital_k,     fwfft_orbital_k,     s_psir_k
+  USE becmod,           ONLY : becp
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n
-  COMPLEX (DP) :: psi_d(lda*npol,1), hpsi_d(n), spsi_d(n,1)
-#if defined (__CUDA)
-  attributes(DEVICE) :: psi_d, hpsi_d, spsi_d
-#endif
+  COMPLEX (DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
   COMPLEX (DP), ALLOCATABLE :: psi_h(:,:), spsi_h(:,:)
   !
   !
@@ -38,8 +36,9 @@ SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
            ALLOCATE(psi_h(lda*npol,1), spsi_h(n,1))
-           psi_h(1:lda*npol,1) = psi_d(1:lda*npol,1)
-           CALL h_psi_gpu( lda, n, 1, psi_d, hpsi_d )
+           !$acc update self(psi)
+           psi_h(1:lda*npol,1) = psi(1:lda*npol,1)
+           CALL h_psi_gpu( lda, n, 1, psi, hpsi )
            if (gamma_only) then
              call invfft_orbital_gamma(psi_h,1,1) !transform the orbital to real space
              call s_psir_gamma(1,1)
@@ -49,11 +48,12 @@ SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
              call s_psir_k(1,1)
              call fwfft_orbital_k(spsi_h,1,1)
            end if
-           spsi_d(1:n,1) = spsi_h(1:n,1)
+           spsi(1:n,1) = spsi_h(1:n,1)
+           !$acc update device(psi)
            DEALLOCATE(psi_h, spsi_h)
         else   
-  CALL h_psi_gpu( lda, n, 1, psi_d, hpsi_d ) ! apply H to a single wfc (no bgrp parallelization here)
-  CALL s_psi_gpu( lda, n, 1, psi_d, spsi_d ) ! apply S to a single wfc (no bgrp parallelization here)
+  CALL h_psi_gpu( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
+  CALL s_psi_acc( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !
   CALL stop_clock_gpu( 'hs_1psi' )

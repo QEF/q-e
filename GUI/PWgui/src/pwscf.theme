@@ -52,5 +52,7 @@
 *Dialogshell.Frame.width:                          800
 *Shell.width:                                      800
 
+*Texthelp.height:                                  200
+
 !!*font: fixed
 !!*labelFont: fixed

@@ -1,0 +1,441 @@
+
+     =--------------------------------------------------------------------------------=
+                      :::    :::           ::::::::         :::       ::: 
+                     :+:   :+:           :+:    :+:        :+:       :+:  
+                    +:+  +:+            +:+               +:+       +:+   
+                   +#++:++             +#+               +#+  +:+  +#+    
+                  +#+  +#+            +#+               +#+ +#+#+ +#+     
+                 #+#   #+#           #+#    #+#         #+#+# #+#+#       
+                ###    ###           ########           ###   ###         
+
+       Koopmans functional implementation based on DFPT; please cite this program as
+
+        N.Colonna, R. De Gennaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+
+                                                                                    
+
+       If you use the non-collinear mode (with/without spin-orbit coupling) please cite
+
+        A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
+     =--------------------------------------------------------------------------------=
+
+     Program KCW v.7.3.1 starts on 26Sep2024 at 13:25:20 
+        Git branch: Bugfix_KCW_GGA
+        Last git commit: 75ec5c1ab7190a1d47d8f63bd021011583b45e86-dirty
+        Last git commit date: Wed Sep 25 16:48:17 2024 +0200
+        Last git commit subject: Update exmaple02. Use LDA pseudos and functional. 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     3193 MiB available memory on the printing compute node when the environment starts
+
+
+     KCW INPUT SUMMARY 
+     ============================================
+
+      CONTROL 
+       # title               =    KCW h2o screen
+       # out_dir             =/home/nicola/CODES
+       # prefix              =               h2o
+       # calculation         =            screen
+       # kcw_iverbosity      =                 2
+       # kcw_at_ks           =                 T
+       # MP grid             =     1     1     1
+       # spin_component      =                 1
+       # homo_only           =                 F
+       # read_unitary_matrix =                 F
+       # check_ks            =                 F
+       # l_vcut              =                 F
+       # assume_isolated     =                mt
+       # io_sp               =                 F
+       # io_real_space       =                 F
+
+      SCREEN 
+       # lrpa                =                 F
+       # fix_orb             =                 F
+       # tr2                 =        0.1000E-17
+       # niter               =                33
+       # nmix                =                 4
+       # eps_inf             =        0.1000E+01
+       # check_spread        =                 F
+     ============================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     /home/nicola/CODES/q-e-kcw/tempdir/h2o.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         975     975    244                44983    44983    5620
+     Max         977     977    245                44984    44984    5623
+     Sum        3905    3905    979               179933   179933   22489
+
+     Using Slab Decomposition
+
+
+     Check: negative core charge=   -0.000035
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Buffer for WF rho, OPENED
+
+     INFO: Coulomb kernel treated according to MT scheme
+
+     INFO: READING Wannier-orbital Densities ...
+
+        ==============================================================================
+        iq =     1
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+     INFO: total number of wannier to compute    8 from     1 to     8
+
+     INFO: PREPARING THE KCW CALCULATION ... DONE
+
+
+
+
+     INFO: LR CALCULATION ...
+
+
+     ==============================================================================
+     Calculation of q =    0.0000000   0.0000000   0.0000000  [Cart ]
+     Calculation of q =    0.0000000   0.0000000   0.0000000  [Cryst]
+     ==============================================================================
+
+        INFO: prepare_q DONE
+
+        INFO: rhowan_q(r) RETRIEVED
+
+        INFO: kcw_q initialization DONE
+
+        DEBUG: \int dr [rho - rho_PWSCF] =       0.851553E-18
+
+weight =    1  1.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  1    spin =  1
+
+      iter #   1 total cpu time :     1.1 secs   av.it.:  16.5
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.016E-09
+
+      iter #   2 total cpu time :     1.5 secs   av.it.:  17.0
+      thresh= 9.495E-07 alpha_mix =  0.700 |ddv_scf|^2 =  5.666E-09
+
+      iter #   3 total cpu time :     1.9 secs   av.it.:  16.0
+      thresh= 7.528E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.886E-10
+
+      iter #   4 total cpu time :     2.3 secs   av.it.:  16.0
+      thresh= 1.373E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.462E-12
+
+      iter #   5 total cpu time :     2.7 secs   av.it.:  16.0
+      thresh= 1.861E-08 alpha_mix =  0.700 |ddv_scf|^2 =  4.666E-15
+
+      iter #   6 total cpu time :     3.1 secs   av.it.:  16.5
+      thresh= 6.831E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.064E-16
+
+      iter #   7 total cpu time :     3.6 secs   av.it.:  17.5
+      thresh= 1.032E-10 alpha_mix =  0.700 |ddv_scf|^2 =  8.511E-18
+
+      iter #   8 total cpu time :     4.1 secs   av.it.:  18.0
+      thresh= 2.917E-11 alpha_mix =  0.700 |ddv_scf|^2 =  3.690E-19
+
+        iq =   1   iwann =   1   rPi_q =     0.89871400    -0.00000000   rPi_q_RS =     0.89871402    -0.00000000   uPi_q =     1.41382071     0.00000000   Self Hartree =     0.76908199     0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  2    spin =  1
+
+      iter #   1 total cpu time :     4.6 secs   av.it.:  16.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  6.205E-09
+
+      iter #   2 total cpu time :     5.0 secs   av.it.:  17.0
+      thresh= 7.877E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.485E-09
+
+      iter #   3 total cpu time :     5.5 secs   av.it.:  16.0
+      thresh= 5.903E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.738E-10
+
+      iter #   4 total cpu time :     5.9 secs   av.it.:  16.0
+      thresh= 1.318E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.842E-12
+
+      iter #   5 total cpu time :     6.4 secs   av.it.:  16.0
+      thresh= 1.357E-08 alpha_mix =  0.700 |ddv_scf|^2 =  3.121E-15
+
+      iter #   6 total cpu time :     6.9 secs   av.it.:  16.0
+      thresh= 5.587E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.039E-17
+
+      iter #   7 total cpu time :     7.3 secs   av.it.:  16.5
+      thresh= 7.099E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.479E-18
+
+      iter #   8 total cpu time :     7.8 secs   av.it.:  18.0
+      thresh= 1.216E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.426E-19
+
+        iq =   1   iwann =   2   rPi_q =     0.84068141    -0.00000000   rPi_q_RS =     0.84068142    -0.00000000   uPi_q =     1.18624721    -0.00000000   Self Hartree =     0.66823848     0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  3    spin =  1
+
+      iter #   1 total cpu time :     8.3 secs   av.it.:  16.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  8.032E-09
+
+      iter #   2 total cpu time :     8.7 secs   av.it.:  17.0
+      thresh= 8.962E-07 alpha_mix =  0.700 |ddv_scf|^2 =  5.381E-09
+
+      iter #   3 total cpu time :     9.2 secs   av.it.:  16.0
+      thresh= 7.336E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.499E-10
+
+      iter #   4 total cpu time :     9.6 secs   av.it.:  16.0
+      thresh= 1.225E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.880E-14
+
+      iter #   5 total cpu time :    10.1 secs   av.it.:  16.0
+      thresh= 1.371E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.027E-15
+
+      iter #   6 total cpu time :    10.6 secs   av.it.:  17.0
+      thresh= 3.204E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.920E-16
+
+      iter #   7 total cpu time :    11.1 secs   av.it.:  16.5
+      thresh= 1.386E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.371E-18
+
+      iter #   8 total cpu time :    11.6 secs   av.it.:  18.0
+      thresh= 2.318E-11 alpha_mix =  0.700 |ddv_scf|^2 =  3.825E-19
+
+        iq =   1   iwann =   3   rPi_q =     0.81568847    -0.00000000   rPi_q_RS =     0.81568849    -0.00000000   uPi_q =     1.26465795     0.00000000   Self Hartree =     0.71631750    -0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  4    spin =  1
+
+      iter #   1 total cpu time :    12.0 secs   av.it.:  16.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  8.694E-09
+
+      iter #   2 total cpu time :    12.5 secs   av.it.:  17.0
+      thresh= 9.324E-07 alpha_mix =  0.700 |ddv_scf|^2 =  5.506E-09
+
+      iter #   3 total cpu time :    13.0 secs   av.it.:  16.0
+      thresh= 7.420E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.878E-10
+
+      iter #   4 total cpu time :    13.4 secs   av.it.:  16.0
+      thresh= 1.370E-07 alpha_mix =  0.700 |ddv_scf|^2 =  8.510E-13
+
+      iter #   5 total cpu time :    13.9 secs   av.it.:  16.0
+      thresh= 9.225E-09 alpha_mix =  0.700 |ddv_scf|^2 =  4.944E-15
+
+      iter #   6 total cpu time :    14.3 secs   av.it.:  16.0
+      thresh= 7.031E-10 alpha_mix =  0.700 |ddv_scf|^2 =  6.554E-17
+
+      iter #   7 total cpu time :    14.8 secs   av.it.:  17.5
+      thresh= 8.095E-11 alpha_mix =  0.700 |ddv_scf|^2 =  6.489E-18
+
+      iter #   8 total cpu time :    15.3 secs   av.it.:  18.0
+      thresh= 2.547E-11 alpha_mix =  0.700 |ddv_scf|^2 =  3.970E-19
+
+        iq =   1   iwann =   4   rPi_q =     0.79976569    -0.00000000   rPi_q_RS =     0.79976570    -0.00000000   uPi_q =     1.26033794     0.00000000   Self Hartree =     0.71295394    -0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  5    spin =  1
+
+      iter #   1 total cpu time :    15.7 secs   av.it.:  14.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.202E-10
+
+      iter #   2 total cpu time :    16.1 secs   av.it.:  16.0
+      thresh= 1.789E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.617E-11
+
+      iter #   3 total cpu time :    16.6 secs   av.it.:  17.0
+      thresh= 4.021E-08 alpha_mix =  0.700 |ddv_scf|^2 =  3.396E-11
+
+      iter #   4 total cpu time :    17.1 secs   av.it.:  16.0
+      thresh= 5.827E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.609E-14
+
+      iter #   5 total cpu time :    17.5 secs   av.it.:  15.5
+      thresh= 1.615E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.102E-15
+
+      iter #   6 total cpu time :    18.0 secs   av.it.:  16.0
+      thresh= 3.319E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.554E-18
+
+      iter #   7 total cpu time :    18.4 secs   av.it.:  16.5
+      thresh= 2.134E-11 alpha_mix =  0.700 |ddv_scf|^2 =  8.086E-19
+
+        iq =   1   iwann =   5   rPi_q =     0.16447622     0.00000000   rPi_q_RS =     0.16447622     0.00000000   uPi_q =     0.17374277     0.00000000   Self Hartree =     0.16383639    -0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  6    spin =  1
+
+      iter #   1 total cpu time :    18.9 secs   av.it.:  14.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.250E-10
+
+      iter #   2 total cpu time :    19.3 secs   av.it.:  16.0
+      thresh= 1.118E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.323E-11
+
+      iter #   3 total cpu time :    19.8 secs   av.it.:  17.0
+      thresh= 4.819E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.091E-11
+
+      iter #   4 total cpu time :    20.3 secs   av.it.:  16.0
+      thresh= 3.303E-08 alpha_mix =  0.700 |ddv_scf|^2 =  5.090E-14
+
+      iter #   5 total cpu time :    20.7 secs   av.it.:  16.0
+      thresh= 2.256E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.490E-15
+
+      iter #   6 total cpu time :    21.2 secs   av.it.:  16.0
+      thresh= 3.860E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.556E-18
+
+      iter #   7 total cpu time :    21.7 secs   av.it.:  17.0
+      thresh= 1.248E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.635E-19
+
+        iq =   1   iwann =   6   rPi_q =     0.06227790     0.00000000   rPi_q_RS =     0.06227791     0.00000000   uPi_q =     0.07048240    -0.00000000   Self Hartree =     0.16194873     0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  7    spin =  1
+
+      iter #   1 total cpu time :    22.1 secs   av.it.:  14.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.900E-10
+
+      iter #   2 total cpu time :    22.6 secs   av.it.:  16.0
+      thresh= 1.379E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.218E-11
+
+      iter #   3 total cpu time :    23.1 secs   av.it.:  17.0
+      thresh= 3.490E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.076E-11
+
+      iter #   4 total cpu time :    23.5 secs   av.it.:  16.0
+      thresh= 4.556E-08 alpha_mix =  0.700 |ddv_scf|^2 =  6.835E-15
+
+      iter #   5 total cpu time :    24.0 secs   av.it.:  16.0
+      thresh= 8.267E-10 alpha_mix =  0.700 |ddv_scf|^2 =  9.474E-16
+
+      iter #   6 total cpu time :    24.5 secs   av.it.:  16.0
+      thresh= 3.078E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.541E-18
+
+      iter #   7 total cpu time :    25.0 secs   av.it.:  16.0
+      thresh= 2.131E-11 alpha_mix =  0.700 |ddv_scf|^2 =  5.212E-19
+
+        iq =   1   iwann =   7   rPi_q =     0.06187230    -0.00000000   rPi_q_RS =     0.06187230    -0.00000000   uPi_q =     0.06830406     0.00000000   Self Hartree =     0.15949731    -0.00000000
+      ADDING Martyna-Tuckerman correction
+
+
+        Start linear response calculation for the wannier #  8    spin =  1
+
+      iter #   1 total cpu time :    25.5 secs   av.it.:  13.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.398E-11
+
+      iter #   2 total cpu time :    26.0 secs   av.it.:  15.0
+      thresh= 3.739E-08 alpha_mix =  0.700 |ddv_scf|^2 =  6.274E-13
+
+      iter #   3 total cpu time :    26.6 secs   av.it.:  17.0
+      thresh= 7.921E-09 alpha_mix =  0.700 |ddv_scf|^2 =  7.870E-13
+
+      iter #   4 total cpu time :    27.2 secs   av.it.:  16.0
+      thresh= 8.872E-09 alpha_mix =  0.700 |ddv_scf|^2 =  8.570E-16
+
+      iter #   5 total cpu time :    27.7 secs   av.it.:  16.5
+      thresh= 2.927E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.625E-17
+
+      iter #   6 total cpu time :    28.3 secs   av.it.:  16.5
+      thresh= 6.021E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.383E-18
+
+      iter #   7 total cpu time :    28.9 secs   av.it.:  16.5
+      thresh= 1.176E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.219E-19
+
+        iq =   1   iwann =   8   rPi_q =    -0.05850815    -0.00000000   rPi_q_RS =    -0.05850815    -0.00000000   uPi_q =    -0.05761057     0.00000000   Self Hartree =     0.15737641    -0.00000000
+
+
+     INFO: LR CALCULATION ... DONE
+
+
+
+
+
+        iwann  =     1   relaxed =      0.89871400   unrelaxed =      1.41382071   alpha =  0.63566335   self Hartree =  0.76908199
+
+        iwann  =     2   relaxed =      0.84068141   unrelaxed =      1.18624721   alpha =  0.70868989   self Hartree =  0.66823848
+
+        iwann  =     3   relaxed =      0.81568847   unrelaxed =      1.26465795   alpha =  0.64498743   self Hartree =  0.71631750
+
+        iwann  =     4   relaxed =      0.79976569   unrelaxed =      1.26033794   alpha =  0.63456448   self Hartree =  0.71295394
+
+        iwann  =     5   relaxed =      0.16447622   unrelaxed =      0.17374277   alpha =  0.94666509   self Hartree =  0.16383639
+
+        iwann  =     6   relaxed =      0.06227790   unrelaxed =      0.07048240   alpha =  0.88359511   self Hartree =  0.16194873
+
+        iwann  =     7   relaxed =      0.06187230   unrelaxed =      0.06830406   alpha =  0.90583633   self Hartree =  0.15949731
+
+        iwann  =     8   relaxed =     -0.05850815   unrelaxed =     -0.05761057   alpha =  1.01558009   self Hartree =  0.15737641
+
+
+
+
+
+     KCW          :     27.36s CPU     28.88s WALL
+
+     INITIALIZATION: 
+
+     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+
+     solve_linter :     26.51s CPU     27.98s WALL (       8 calls)
+
+     solve_linter :     26.51s CPU     27.98s WALL (       8 calls)
+     ortho        :      0.04s CPU      0.04s WALL (     120 calls)
+     cgsolve      :     22.40s CPU     23.01s WALL (     120 calls)
+     incdrhoscf   :      1.03s CPU      1.11s WALL (     120 calls)
+                                        0.00s GPU  (     120 calls)
+     dv_of_drho   :      0.72s CPU      0.82s WALL (      60 calls)
+     mix_pot      :      0.60s CPU      1.19s WALL (      60 calls)
+
+
+     cgsolve      :     22.40s CPU     23.01s WALL (     120 calls)
+     ch_psi       :     21.61s CPU     22.21s WALL (    2341 calls)
+
+     ch_psi       :     21.61s CPU     22.21s WALL (    2341 calls)
+     h_psi        :     20.34s CPU     20.91s WALL (    2341 calls)
+     last         :      1.04s CPU      1.06s WALL (    2341 calls)
+
+     h_psi        :     20.34s CPU     20.91s WALL (    2341 calls)
+     add_vuspsi   :      1.13s CPU      1.16s WALL (    2341 calls)
+
+     incdrhoscf   :      1.03s CPU      1.11s WALL (     120 calls)
+                                        0.00s GPU  (     120 calls)
+
+
+      General routines
+     calbec       :      1.45s CPU      1.49s WALL (    2341 calls)
+     fft          :      0.66s CPU      0.69s WALL (     186 calls)
+     ffts         :      0.13s CPU      0.13s WALL (      80 calls)
+     fftw         :     15.12s CPU     15.60s WALL (   17760 calls)
+     davcio       :      0.22s CPU      0.63s WALL (     950 calls)
+
+
+     KCW          :     27.36s CPU     28.92s WALL
+
+
+   This run was terminated on:  13:25:49  26Sep2024            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

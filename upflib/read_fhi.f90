@@ -57,7 +57,8 @@ CONTAINS
     !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: iunps
-  TYPE(pseudo_upf), INTENT(out) :: upf
+  TYPE(pseudo_upf), INTENT(inout) :: upf
+  ! INOUT because many variables are reset to default values in input
   !
   CALL read_fhi(iunps)
   CALL convert_fhi(upf)
@@ -176,10 +177,12 @@ SUBROUTINE convert_fhi (upf)
   !     ----------------------------------------------------------
   !
   USE upf_const,    ONLY : fpi
+  USE upf_utils,    ONLY : spdf_to_l
   !
   IMPLICIT NONE
   !
-  TYPE(pseudo_upf), INTeNT(out) :: upf
+  TYPE(pseudo_upf), INTENT(inout) :: upf
+  ! INOUT because many variables are reset to default values in input
   !
   REAL(dp), ALLOCATABLE :: aux(:)
   REAL(dp) :: vll
@@ -271,17 +274,7 @@ SUBROUTINE convert_fhi (upf)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
      upf%nchi(i)  = l
-     IF ( label(2:2) == 's' .or. label(2:2) == 'S') THEN
-        l=0
-     ELSEIF ( label(2:2) == 'p' .or. label(2:2) == 'P') THEN
-        l=1
-     ELSEIF ( label(2:2) == 'd' .or. label(2:2) == 'D') THEN
-        l=2
-     ELSEIF ( label(2:2) == 'f' .or. label(2:2) == 'F') THEN
-        l=3
-     ELSE
-        l=i-1
-     ENDIF
+     l = spdf_to_l(label(2:2))
      upf%lchi(i)  = l
      upf%rcut_chi(i)  = 0.0d0
      upf%rcutus_chi(i)= 0.0d0

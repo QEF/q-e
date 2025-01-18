@@ -84,15 +84,15 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
         IF ( (MOD(nbsp, 2) .NE. 0) .AND. (i .EQ. nbsp ) ) THEN     
 #ifdef __CUDA
-          CALL c2psi_gamma( dffts, psis_d, c_d(:,i), ca_d)
+          CALL fftx_c2psi_gamma_gpu( dffts, psis_d, c_d(:,i), ca_d)
 #else
-          CALL c2psi_gamma( dffts, psis, c(:,i), ca)
+          CALL fftx_c2psi_gamma( dffts, psis, c(:,i:i), ca)
 #endif
         ELSE
 #ifdef __CUDA
-          CALL c2psi_gamma( dffts, psis_d, c_d(:,i), c_d(:, i+1))
+          CALL fftx_c2psi_gamma_gpu( dffts, psis_d, c_d(:,i), c_d(:, i+1))
 #else
-          CALL c2psi_gamma( dffts, psis, c(:,i), c(:, i+1))
+          CALL fftx_c2psi_gamma( dffts, psis, c(:,i:i), c(:,i+1))
 #endif
         END IF 
         !
@@ -163,7 +163,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         rdispls1(proc) = rdispls1(proc-1) + recvcount1(proc-1)
       END DO
       !
-      ALLOCATE ( psis(dffts%nnr*nogrp) ); psis=0.0_DP 
+      ALLOCATE ( psis(dffts%nnr*nogrp) ); psis=0.0_DP
       ALLOCATE ( psis1(dffts%nnr*nogrp) ); psis1=0.0_DP
       ALLOCATE ( psis2(dffts%nnr,nproc_image/nogrp)); psis2=0.0_DP
       !
@@ -176,7 +176,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !
       DO i = 1, nbsp, 2*nogrp
         !
-        CALL c2psi_gamma_tg( dffts, psis, c, i, nbsp )
+        CALL fftx_c2psi_gamma_tg( dffts, psis, c(:,i:nbsp), ngw, nbsp-i+1 )
         !
         CALL invfft( 'tgWave', psis, dffts )
         !
@@ -212,8 +212,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
       END DO !loop over state i
       !
-      ! the wavefunction is duplicated over number of processors that is integer multiple of bands
-      ! (this part can be improved to distribute wavefunction over any number of processors)
+      ! ... the wavefunction is duplicated over number of processors that is integer multiple of bands
+      ! ... (this part can be improved to distribute wavefunction over any number of processors)
       !
       DO jj=1,nbsp/nogrp
         DO i=1,sc_fac-1
@@ -226,7 +226,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         END DO
       END DO
       !
-      !!!!!!!!!!!!!!!!!!!!
+      !******************
       !
       ALLOCATE ( psitot(nnrtot*my_nbsp(me)) ); psitot=0.0_DP
       !

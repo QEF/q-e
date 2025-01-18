@@ -23,16 +23,19 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.3.0 starts on  1Sep2020 at  9:11: 5 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:53:51 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -41,6 +44,8 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
+     33652 MiB available memory on the printing compute node when the environment starts
+ 
      Reading input from epw3.in
 
      Reading supplied temperature list.
@@ -120,13 +125,13 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        29Mb
-                   VmPeak =       586Mb
+     Memory usage:  VmHWM =        51Mb
+                   VmPeak =      3739Mb
      ===================================================================
      
-     Using uniform q-mesh:    6   6   6
+     Using uniform q-mesh:     6    6    6
      Size of q point mesh for interpolation:        216
-     Using uniform MP k-mesh:    6   6   6
+     Using uniform MP k-mesh:     6    6    6
      Size of k point mesh for interpolation:         56
      Max number of k points per pool:               14
 
@@ -151,9 +156,15 @@
       
      All q-points are done, no need to restart !!
      ===================================================================
-     Memory usage:  VmHWM =        30Mb
-                   VmPeak =       613Mb
+     Memory usage:  VmHWM =        53Mb
+                   VmPeak =      3757Mb
      ===================================================================
+
+
+     Finish writing dos file MgB2.dos
+
+
+     Finish writing phdos files MgB2.phdos and MgB2.phdos_proj
 
 
      ===================================================================
@@ -163,8 +174,8 @@
 
      Finish reading freq file
 
-                  Fermi level (eV) =     7.6644747151E+00
-     DOS(states/spin/eV/Unit Cell) =     9.1308569318E-01
+                  Fermi level (eV) =     7.6644747168E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308568651E-01
             Electron smearing (eV) =     1.0000000000E-01
                  Fermi window (eV) =     2.0000000000E+01
      Nr irreducible k-points within the Fermi shell =        28 out of        28
@@ -186,13 +197,20 @@
 
      Finish reading .ephmat files
 
-     Electron-phonon coupling strength =    0.8715331
+     a2f file is found and will be used to estimate initial gap
  
-     Estimated Allen-Dynes Tc =    26.410306 K for muc =    0.16000
+
+     Finish reading a2f file
+
+     Electron-phonon coupling strength =    0.8714948
+ 
+     Estimated Allen-Dynes Tc =    26.408172 K for muc =    0.16000
   
-     Estimated w_log in Allen-Dynes Tc =    61.468732 meV
+     Estimated w_log in Allen-Dynes Tc =    61.470420 meV
   
-     Estimated BCS superconducting gap =     4.005521 meV
+     Estimated BCS superconducting gap =     4.005197 meV
+  
+     Estimated Tc from machine learning model =    31.501506 K
   
     
      temp(  1) =     16.00000 K
@@ -201,34 +219,46 @@
     
      Total number of frequency points nsiw(     1) =     58
      Cutoff frequency wscut =     0.5068
+     broyden mixing factor =      0.70000
     
+     Actual number of frequency points (     1) =     58 for uniform sampling
 
-     Size of allocated memory per pool: ~=    0.0357 Gb
+     Size of allocated memory per pool: ~=    0.0356 Gb
         iter      ethr          znormi      deltai [meV]
-          1   2.324585E+00   1.842446E+00   5.071399E+00
-          2   1.050021E-01   1.838424E+00   5.747029E+00
-          3   1.139816E-01   1.832860E+00   6.561656E+00
-          4   8.845982E-02   1.828464E+00   7.170240E+00
-          5   1.774059E-01   1.817191E+00   8.498220E+00
-          6   9.894108E-02   1.823272E+00   7.840916E+00
-          7   1.447665E-02   1.822481E+00   7.932339E+00
-          8   2.983689E-03   1.822322E+00   7.955349E+00
-     Convergence was reached in nsiter =      8
+          1   2.728502E+00   1.843017E+00   4.824677E+00
+          2   1.220476E-01   1.839527E+00   5.482060E+00
+          3   1.461604E-01   1.833965E+00   6.380024E+00
+          4   2.074541E-01   1.822694E+00   7.889006E+00
+          5   1.284397E-02   1.822378E+00   7.917523E+00
+          6   3.908284E-01   1.836706E+00   5.879560E+00
+          7   2.826109E-01   1.820993E+00   7.803932E+00
+          8   7.576384E-02   1.826424E+00   7.398757E+00
+          9   5.891144E-02   1.823228E+00   7.830479E+00
+         10   3.685461E-02   1.821150E+00   8.086240E+00
+         11   2.299020E-02   1.822541E+00   7.920122E+00
+         12   7.441892E-03   1.822127E+00   7.974819E+00
+     Convergence was reached in nsiter =     12
  
-     iaxis_imag   :     20.74s CPU     20.76s WALL (       1 calls)
+     Chemical potential (itemp =   1) =     7.6644747168E+00 eV
+ 
+     Temp (itemp =   1) =   16.000 K  Free energy =    -0.022731 meV
+ 
+     Min. / Max. values of superconducting gap =     2.461121   14.139494 meV
+     iaxis_imag   :     21.51s CPU     21.55s WALL (       1 calls)
  
     
      Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
         pade    Re[znorm]   Re[delta] [meV]
-         52   1.678216E+00   7.358505E+00
+         52   1.678173E+00   7.378233E+00
  
      Convergence was reached for N =     52 Pade approximants
  
-     raxis_pade   :      0.09s CPU      0.11s WALL (       1 calls)
+     Min. / Max. values of superconducting gap =     2.478052   14.741282 meV
+     raxis_pade   :      0.05s CPU      0.05s WALL (       1 calls)
  
-     itemp =   1   total cpu time :             20.87 secs
+     itemp =   1   total cpu time :             21.60 secs
  
 
      Unfolding on the coarse grid
@@ -240,17 +270,34 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.06s CPU      0.08s WALL (       1 calls)
+     ephwann      :      0.55s CPU      0.57s WALL (       1 calls)
 
+     DynW2B       :      0.00s CPU      0.01s WALL (     216 calls)
      HamW2B       :      0.00s CPU      0.00s WALL (      21 calls)
 
-     ELIASHBERG   :     68.13s CPU     68.17s WALL (       1 calls)
+     ELIASHBERG   :     21.63s CPU     21.68s WALL (       1 calls)
 
      Total program execution
-     EPW          :   1m 8.19s CPU   1m 8.27s WALL
+     EPW          :     22.19s CPU     22.26s WALL
 
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [eliashberg] input, please consider also citing                    
+       E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)                         
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
      ===============================================================================
                                                                                     

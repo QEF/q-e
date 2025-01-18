@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -134,7 +134,7 @@ $PW_COMMAND < ch4.scf.in > ch4.scf.out
 check_failure $?
 $ECHO " done"
 
-# normal mode calculation for CH4 
+# normal mode calculation for CH4
 cat > ch4.phG.in << EOF
 vibrations of ch4
  &inputph
@@ -184,7 +184,7 @@ $ECHO " done"
 
 # normal mode calculation for CH4 (only E symmetry)
 cat > ch4.phE.in1 << EOF
-vibrations of ch4, only modes of E symmetry 
+vibrations of ch4, only modes of E symmetry
  &inputph
   tr2_ph=4.0d-17,
   prefix='ch4',
@@ -204,7 +204,7 @@ $ECHO " done"
 
 # normal mode calculation for CH4 (only E symmetry)
 cat > ch4.phE.in2 << EOF
-vibrations of ch4, only modes of E symmetry 
+vibrations of ch4, only modes of E symmetry
  &inputph
   tr2_ph=4.0d-17,
   prefix='ch4',

@@ -86,12 +86,12 @@ subroutine commutator_Hx_psi (ik, nbnd_calc, vpol, becp1, becp2, dpsi)
         end do
      END IF
   enddo
-!
-! Uncomment this goto and the continue below to calculate 
-! the matrix elements of p without the commutator with the
-! nonlocal potential.
-!
-!  goto 111
+  !
+  ! Uncomment this goto and the continue below to calculate
+  ! the matrix elements of p without the commutator with the
+  ! nonlocal potential.
+  !
+  ! goto 111
   !
   ! and this is the contribution from nonlocal pseudopotentials
   !

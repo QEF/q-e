@@ -14,15 +14,15 @@ subroutine allocate_phq
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp
-  USE klist,         ONLY : nks, nkstot
+  USE klist,         ONLY : nks, nkstot, lgauss
   USE wvfct,         ONLY : nbnd, npwx
   USE gvect,         ONLY : ngm
   USE lsda_mod,      ONLY : nspin
   USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag, lspinorb
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
-  USE becmod,        ONLY : bec_type, becp, allocate_bec_type
+  USE lr_nc_mag,     ONLY : int1_nc_save, deeq_nc_save
+  USE becmod,        ONLY : becp, allocate_bec_type, allocate_bec_type_acc
   USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw
   USE uspp_param,    ONLY : nhm
@@ -47,7 +47,9 @@ subroutine allocate_phq
                             sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
-
+  USE two_chem,      ONLY : twochem
+  USE lr_two_chem,   ONLY : alphasum_cond, alphasum_cond_nc, becsum_cond_nc,&
+                            becsumort_cond,becsum_cond
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
   !
@@ -63,6 +65,7 @@ subroutine allocate_phq
      !  q!=0 : evq is allocated and calculated at point k+q
      !
      allocate (evq ( npwx*npol , nbnd))
+     !$acc enter data create(evq)
   endif
   !
   allocate (dvpsi ( npwx*npol , nbnd))
@@ -117,15 +120,19 @@ subroutine allocate_phq
      allocate (int2 ( nhm , nhm , 3 , nat , nat))
      if (okpaw) then
         allocate (becsumort ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
-     endif
+  if (twochem.and.lgauss.and.lgamma)  allocate (becsumort_cond ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
+    endif
      allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin_mag))
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))
      allocate (dpqq( nhm, nhm, 3, ntyp))
+        if (twochem.and.lgauss.and.lgamma) allocate(becsum_cond( nhm*(nhm+1)/2, nat, nspin))
      IF (noncolin) THEN
         ALLOCATE(int1_nc( nhm, nhm, 3, nat, nspin))
         ALLOCATE(int4_nc( nhm, nhm, 3, 3, nat, nspin))
         ALLOCATE(becsum_nc( nhm*(nhm+1)/2, nat, npol, npol))
+        if (twochem.and.lgauss.and.lgamma) ALLOCATE(becsum_cond_nc( nhm*(nhm+1)/2, nat, npol, npol))
         ALLOCATE(alphasum_nc( nhm*(nhm+1)/2, 3, nat, npol, npol))
+        if (twochem.and.lgauss.and.lgamma) ALLOCATE(alphasum_nc( nhm*(nhm+1)/2, 3, nat, npol, npol))
         IF (lspinorb) THEN
            ALLOCATE(int2_so( nhm, nhm, 3, nat , nat, nspin))
            ALLOCATE(int5_so( nhm, nhm, 3, 3, nat , nat, nspin))
@@ -135,12 +142,12 @@ subroutine allocate_phq
 
 
      allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin_mag))
+     if (twochem.and.lgauss.and.lgamma) allocate (alphasum_cond ( nhm * (nhm + 1)/2 , 3 , nat , nspin_mag))
      allocate (this_dvkb3_is_on_file(nksq))
      this_dvkb3_is_on_file(:)=.false.
   endif
   allocate (this_pcxpsi_is_on_file(nksq,3))
   this_pcxpsi_is_on_file(:,:)=.false.
-
   ALLOCATE (becp1(nksq))
   ALLOCATE (alphap(3,nksq))
   DO ik=1,nksq
@@ -149,7 +156,7 @@ subroutine allocate_phq
         call allocate_bec_type ( nkb, nbnd, alphap(ipol,ik) )
      ENDDO
   END DO
-  CALL allocate_bec_type ( nkb, nbnd, becp )
+  CALL allocate_bec_type_acc ( nkb, nbnd, becp )
 
   if (elph) then
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))

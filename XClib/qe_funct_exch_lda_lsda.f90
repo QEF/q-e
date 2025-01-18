@@ -14,14 +14,15 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slater( rs, ex, vx )
-!$acc routine (slater) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3
   !
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
-  !!
+  !
+  !$acc routine seq
+  !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ex
@@ -43,7 +44,6 @@ END SUBROUTINE slater
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slater1( rs, ex, vx )
-!$acc routine (slater1) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=1, corresponding to -1.374/r_s Ry.
   !! Used to recover old results.
@@ -51,6 +51,8 @@ SUBROUTINE slater1( rs, ex, vx )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -73,7 +75,6 @@ END SUBROUTINE slater1
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slater_rxc( rs, ex, vx )
-!$acc routine (slater_rxc) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3 and Relativistic exchange.
   !
@@ -81,6 +82,8 @@ SUBROUTINE slater_rxc( rs, ex, vx )
   USE constants_l,  ONLY: pi, c_au
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -127,7 +130,6 @@ END SUBROUTINE slater_rxc
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slaterKZK( rs, ex, vx, vol )
-!$acc routine (slaterKZK) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
   !! correction.
@@ -135,6 +137,8 @@ SUBROUTINE slaterKZK( rs, ex, vx, vol )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -182,13 +186,14 @@ END SUBROUTINE slaterKZK
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slater_spin( rho, zeta, ex, vx_up, vx_dw )
-!$acc routine (slater_spin) seq
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case.
   !
   USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! total charge density
@@ -224,7 +229,6 @@ END SUBROUTINE slater_spin
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )
-!$acc routine (slater_rxc_spin) seq
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, relativistic exchange case.
   !! Spin-polarized case.
@@ -232,6 +236,8 @@ SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )
   USE kind_l,       ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! total charge density
@@ -291,13 +297,14 @@ END SUBROUTINE slater_rxc_spin
 !
 !-----------------------------------------------------------------------
 SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )
-!$acc routine (slater1_spin) seq
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case
   !
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! total charge density

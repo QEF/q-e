@@ -1,0 +1,21 @@
+&input
+  prefix = 'BAs'
+  outdir = './'
+  use_irr_q = .true.
+
+  ahc_dir = './save/ahc_dir/'
+  flvec = 'matdyn.modes'
+  ahc_nbnd = 4
+  ahc_nbndskip = 0
+
+  eta_eV = 0.02d0
+  efermi_eV = 8.7d0
+  temp_kelvin = 600.0
+
+  amass_amu(1)    = 10.81
+  amass_amu(2)    = 74.922
+
+  ahc_win_max_eV = 100.0
+  ahc_win_min_eV = -100.0
+/
+

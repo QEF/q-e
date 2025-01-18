@@ -28,9 +28,9 @@ qe_add_library(qe_xclib ${sources_xclib})
 target_link_libraries(qe_xclib
     PUBLIC
         qe_openacc_fortran
+        qe_mpi_fortran
     PRIVATE
         qe_openmp_fortran
-        qe_mpi_fortran
         qe_external_libxc
         qe_libbeef)
 
@@ -42,7 +42,7 @@ target_link_libraries(qe_xclib
 set(sources_libbeef
     pbecor.c
     beefun.c)
-qe_add_library(qe_libbeef ${sources_libbeef})
+add_library(qe_libbeef ${sources_libbeef})
 target_link_libraries(qe_libbeef 
     PUBLIC
         qe_openacc_c
@@ -103,9 +103,11 @@ if(QE_ENABLE_TEST)
         set(test_input_file_names_no_extension exe_test gen_test test_all_terms test_all_shorts)
 
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_terms.xml
-             ${CMAKE_CURRENT_BINARY_DIR}/all_terms.xml SYMBOLIC)
+             ${CMAKE_CURRENT_BINARY_DIR}/all_terms.xml
+             SYMBOLIC COPY_ON_ERROR)
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_shorts.xml
-             ${CMAKE_CURRENT_BINARY_DIR}/all_shorts.xml SYMBOLIC)
+             ${CMAKE_CURRENT_BINARY_DIR}/all_shorts.xml
+             SYMBOLIC COPY_ON_ERROR)
         
         foreach(file_name_no_extension IN LISTS test_input_file_names_no_extension)
             add_unit_test(test_qe_xclib_${file_name_no_extension} 1 1 ${BASH_PROGRAM} -c

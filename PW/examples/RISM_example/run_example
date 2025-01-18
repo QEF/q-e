@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo
+echo "run all RISM examples: starting"
+
+# run all examples
+for example in run_example_3D-RISM run_example_ESM-RISM;
+do
+    if test -f $example
+    then
+        sh $example
+    fi
+done
+
+echo
+echo "run all RISM examples: done"

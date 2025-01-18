@@ -7,9 +7,12 @@
 !
       subroutine dforce_meta (c,ca,df,da, psi,iss1,iss2,fi,fip)
 !-----------------------------------------------------------------------
-!computes: the generalized force df=cmplx(dfr,dfi) acting on the i-th
-!          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=cmplx(cr,ci)
+      !! This subroutine computes the generalized force \(\text{df}=
+      !! \text{cmplx}(\text{dfr},\text{dfi})\) acting on the i-th electron
+      !! state at the gamma point of the Brillouin zone represented by the
+      !! vector c=cmplx(cr,ci)\(c=\text{cmplx}(\text{cr},\text{ci})\).
+      !! Contribution from metaGGA.
+      !
 !
 !          contribution from metaGGA
       use kinds, only: dp
@@ -19,12 +22,12 @@
       USE metagga_cp,             ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
       USE fft_base,               ONLY : dffts
-      USE fft_helper_subroutines, ONLY : c2psi_gamma, fftx_psi2c_gamma
+      USE fft_helper_subroutines, ONLY : fftx_c2psi_gamma, fftx_psi2c_gamma
 !
       implicit none
 !
       complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(dffts%nnr)
-      complex(dp), allocatable ::  dc(:), dca(:)
+      complex(dp), allocatable ::  dc(:,:), dca(:)
       integer iss1, iss2
       real(dp) fi, fip
 ! local variables
@@ -33,14 +36,14 @@
 !
 !
       ci=(0.0d0,1.0d0)
-      allocate( dc( ngw ) )
+      allocate( dc( ngw,1 ) )
       allocate( dca( ngw ) )
 !
          do ipol = 1, 3
             
-            dc(:)  = ci*g(ipol,1:ngw)*c(:)
+            dc(:,1)  = ci*g(ipol,1:ngw)*c(:)
             dca(:) = ci*g(ipol,1:ngw)*ca(:)
-            CALL c2psi_gamma( dffts, psi, dc, dca )
+            CALL fftx_c2psi_gamma( dffts, psi, dc, dca )
             CALL invfft( 'Wave', psi, dffts )
 
 !           on smooth grids--> grids for charge density
@@ -50,9 +53,9 @@
                                 kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
             call fwfft('Wave',psi, dffts )
-            CALL fftx_psi2c_gamma( dffts, psi, dc, dca )
+            CALL fftx_psi2c_gamma( dffts, psi, dc(:,1:1), vout2=dca )
             do ig=1,ngw
-               df(ig)= df(ig) - ci*fi *tpiba2*g(ipol,ig) * dc(ig)
+               df(ig)= df(ig) - ci*fi *tpiba2*g(ipol,ig) * dc(ig,1)
                da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig) * dca(ig) 
             end do
          end do
@@ -67,7 +70,8 @@
 !-----------------------------------------------------------------------
       subroutine kedtauofr_meta (c)
 !-----------------------------------------------------------------------
-!
+      !! Calculates the kinetic energy density (metaGGA case).
+      !
       use kinds, only: dp
       use control_flags, only: tpre
       use gvecw, only: ngw
@@ -81,14 +85,14 @@
                              dkedtaus
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dffts, dfftp
-      USE fft_helper_subroutines, ONLY : c2psi_gamma
+      USE fft_helper_subroutines, ONLY : fftx_c2psi_gamma
       USE fft_rho
       
       implicit none
 
       complex(dp) :: c(ngw,nx)
       complex(dp), allocatable :: psis( : )
-      complex(dp), allocatable :: dc( : ), dca( : )
+      complex(dp), allocatable :: dc( :, : ), dca( : )
 
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
@@ -97,7 +101,7 @@
       complex(dp) ci,fp,fm
 !
       ALLOCATE( psis( dffts%nnr ) )
-      ALLOCATE( dc( ngw ) )
+      ALLOCATE( dc( ngw, 1 ) )
       ALLOCATE( dca( ngw ) )
 !
       ci=(0.0d0,1.0d0)
@@ -131,10 +135,10 @@
             psis( : ) = (0.d0,0.d0)
             ! gradient of wfc in real space
             do ig=1,ngw
-               dc( ig )  = ci * tpiba * g(ipol,ig) * c(ig,i)
+               dc( ig, 1 )  = ci * tpiba * g(ipol,ig) * c(ig,i)
                dca( ig ) = ci * tpiba * g(ipol,ig) * c(ig,i+1)
             end do
-            CALL c2psi_gamma( dffts, psis, dc, dca )
+            CALL fftx_c2psi_gamma( dffts, psis, dc, dca )
             call invfft('Wave',psis, dffts )
             ! on smooth grids--> grids for charge density
             do ir=1, dffts%nnr
@@ -201,17 +205,17 @@
 !-----------------------------------------------------------------------
       subroutine vofrho_meta ( )
 !-----------------------------------------------------------------------
-!     computes: the one-particle potential v in real space,
-!               the total energy etot,
-!               the forces fion acting on the ions,
-!               the derivative of total energy to cell parameters h
-!     rhor input : electronic charge on dense real space grid
-!                  (plus core charge if present)
-!     rhog input : electronic charge in g space (up to density cutoff)
-!     rhos input : electronic charge on smooth real space grid
-!     rhor output: total potential on dense real space grid
-!     rhos output: total potential on smooth real space grid
-!
+      !! This subroutine computes the one-particle potential v in real space,
+      !! the total energy etot, the forces fion acting on the ions, the
+      !! derivative of total energy to cell parameters h.
+      !
+      !! rhor input : electronic charge on dense real space grid
+      !! (plus core charge if present);  
+      !! rhog input : electronic charge in g space (up to density cutoff);  
+      !! rhos input : electronic charge on smooth real space grid;  
+      !! rhor output: total potential on dense real space grid;  
+      !! rhos output: total potential on smooth real space grid.
+      !
       use kinds, only: dp
       use control_flags, only: thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout

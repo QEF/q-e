@@ -44,7 +44,7 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   USE io_files,      ONLY : nwordwfcU
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
-  USE ldaU,          ONLY : U_projection, Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
+  USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
   USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq, &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2, dnsbare
@@ -59,8 +59,8 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   USE wavefunctions, ONLY : evc
   USE eqv,           ONLY : dvpsi
   USE scf,           ONLY : rho
-  USE mp_bands,      ONLY : intra_bgrp_comm       
-  USE mp,            ONLY : mp_sum 
+  USE mp_bands,      ONLY : intra_bgrp_comm, use_bgrp_in_hpsi
+  USE mp,            ONLY : mp_sum
   USE buffers,       ONLY : get_buffer
   USE uspp_init,        ONLY : init_us_2
   !
@@ -73,6 +73,7 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   !
   ! ... local variables
   !
+  LOGICAL :: save_flag
   INTEGER :: i, j, k, icart, counter, na, nt, l, ih, n, mu, ig, &
              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, op_spin, &
              ikk, ikq, npw, npwq, ibeta
@@ -94,6 +95,8 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   ALLOCATE (dvqhbar(npwx,nbnd,3,nat))
   ALLOCATE (vkb_(npwx,nkb))
   ALLOCATE (dwfcatom_(npwx))
+  !
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
   proj1 = (0.d0, 0.d0)
   proj2 = (0.d0, 0.d0)
@@ -365,7 +368,9 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
         dvpsi(ig,ibnd) = dvpsi(ig,ibnd) + aux1(ig)
      ENDDO
      !
-  ENDDO 
+  ENDDO
+  !
+  use_bgrp_in_hpsi = save_flag
   !
   DEALLOCATE (proj1)
   DEALLOCATE (proj2)  

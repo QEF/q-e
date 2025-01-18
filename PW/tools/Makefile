@@ -4,13 +4,14 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../src
-QEMODS = $(BASEMODS)
+          $(MOD_FLAG)../src \
+          $(MOD_FLAG)../../dft-d3/
+QEMODS = ../../dft-d3/libdftd3qe.a $(BASEMODS)
 PWOBJS = ../src/libpw.a ../../KS_Solvers/libks_solvers.a
 
 TLDEPS= pwlibs
 
-all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x
+all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x rism1d.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
@@ -38,6 +39,11 @@ kpoints.x : kpoints.o $(PWOBJS) $(QEMODS)
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
 		pwi2xsf.o $(PWOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
+
+rism1d.x : rism1d.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		rism1d.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 tldeps:

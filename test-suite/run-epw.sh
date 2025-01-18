@@ -9,15 +9,16 @@
 # of the present distribution.
 
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
-  export PARA_SUFFIX="-npool ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
+  export PARA_SUFFIX="-npool $QE_USE_MPI"
 else
   unset PARA_PREFIX
   unset PARA_SUFFIX
 fi
 
 echo $0" "$@
+echo $1
 if [[ "$1" == "0" ]]
 then
   echo "Running PW ..."
@@ -75,6 +76,47 @@ then
   rm restart.fmt
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "6" ]]
+then
+  echo "Running MATDYN ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4
+  cp matdyn.modes $3
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "7" ]]
+then
+  # ph.x, electron_phonon = 'ahc'
+  rm -rf save/ahc_dir/
+  echo "Running PH ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "8" ]]
+then
+  echo "Running POSTAHC ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "9" ]]
+then
+  # nscf2supercond.x
+  echo "Running NSCF2SUPERCOND ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4
+  cat *.bands.*.dat >> $3
   if [[ -e CRASH ]]
   then
     cat $3

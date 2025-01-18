@@ -33,7 +33,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE control_ph,      ONLY : ldisp, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, newgrid, &
                               tmp_dir_ph, tmp_dir_phq, lqdir, qplot, &
-                              always_run, where_rec, rec_code
+                              always_run
   USE ph_restart,      ONLY : ph_writefile
   USE io_files,        ONLY : prefix
   USE ramanm,          ONLY : lraman, elop
@@ -41,9 +41,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE output,          ONLY : fildyn, fildvscf
   USE el_phon,         ONLY : elph_mat, wan_index_dyn, auxdvscf
   USE dfpt_tetra_mod,  ONLY : dfpt_tetra_linit
-
-  USE qpoint,          ONLY : xq
-  USE control_lr,      ONLY : lgamma
+  USE control_lr,      ONLY : lgamma, where_rec, rec_code
   USE noncollin_module, ONLY : noncolin, domag
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,yambo_elph_file_name,dvscf_yambo
@@ -102,7 +100,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   ! YAMBO>
   !
-  IF ( ldisp .OR. dvscf_yambo .OR. elph_yambo ) THEN
+  IF ( ldisp .OR. qplot .OR. dvscf_yambo .OR. elph_yambo ) THEN
      !
      ! ... set the q point
      !
@@ -136,7 +134,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   IF ( ldisp ) THEN
      !
-     IF ( lgamma ) THEN
+     IF ( lgamma .and. .not. elph_mat ) THEN
         !
         IF ( .NOT. (lgauss .OR. ltetra)) THEN
            !

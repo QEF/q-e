@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,6 +21,7 @@ SUBROUTINE hp_ns_trace
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, lda_plus_u_kind, & 
                             ldim_u, nsg, neighood
   USE ldaU_hp,       ONLY : ns, magn
+  USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE
   INTEGER :: is, na, na1, na2, nt, nt1, nt2, m1, m2, ldim, viz
@@ -46,17 +47,23 @@ SUBROUTINE hp_ns_trace
            !
            ldim = ldim_u(nt)
            !
-           DO is = 1, nspin
+           DO is = 1, nspin/npol
               DO m1 = 1, ldim
-                 nsaux(na,is) = nsaux(na,is) + rho%ns(m1,m1,is,na)
+                 IF (noncolin) then
+                     nsaux(na,is) = nsaux(na,is) + rho%ns_nc(m1,m1,is**npol,na)
+                 ELSE
+                     nsaux(na,is) = nsaux(na,is) + rho%ns(m1,m1,is,na)
+                 ENDIF
               ENDDO
            ENDDO
            !
            IF (nspin==1) THEN
               ns(na) = 2.0d0 * nsaux(na,1) 
-           ELSE
+           ELSEIF(nspin==2) THEN
               ns(na)   = nsaux(na,1) + nsaux(na,2)
               magn(na) = nsaux(na,1) - nsaux(na,2)
+           ELSE
+              ns(na)   = nsaux(na,1) + nsaux(na,4)
            ENDIF
            !
         ENDIF
@@ -79,9 +86,11 @@ SUBROUTINE hp_ns_trace
                  ENDDO
                  IF (nspin==1) THEN
                     ns(na1) = 2.0d0 * nsaux(na1,1)
-                 ELSE
+                 ELSEIF (nspin==2) THEN
                     ns(na1)   = nsaux(na1,1) + nsaux(na1,2)
                     magn(na1) = nsaux(na1,1) - nsaux(na1,2)
+                 ELSE
+                    ns(na1)   = nsaux(na1,1) + nsaux(na1,4)
                  ENDIF
                  GO TO 10
               ENDIF

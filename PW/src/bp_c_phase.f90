@@ -144,9 +144,10 @@
 !#                                                                            #!
 !##############################################################################!
 !#     Updated by Ronald Cohen, Carnegie Institution, 2019
-!#     To make sure average over strings is done so that each straing is 
+!#     To make sure average over strings is done so that each string is 
 !#     on the same branch cut. Also computations are kept as phases as long 
 !#     as possible before converting to polarization lattice
+!#     modulus corrected 5/2022
 
 
 !======================================================================!
@@ -163,11 +164,12 @@ SUBROUTINE c_phase
    USE buffers,              ONLY : get_buffer
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega
-   USE constants,            ONLY : pi, tpi
+   USE constants,            ONLY : pi, tpi, electron_si, bohr_radius_si
    USE gvect,                ONLY : ngm, g, gcutm, ngm_g, ig_l2g
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY : transform_qq_so
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
    USE wvfct,                ONLY : npwx, nbnd, wg
@@ -180,7 +182,6 @@ SUBROUTINE c_phase
    USE mp,                   ONLY : mp_sum
    USE qes_libs_module,      ONLY : qes_reset
    USE qexsd_init,           ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
-   USE wavefunctions_gpum,   ONLY : using_evc
    USE uspp_init,            ONLY : init_us_2 
 
 !  --- Avoid implicit definitions ---
@@ -235,7 +236,6 @@ SUBROUTINE c_phase
    INTEGER :: npw1
    INTEGER :: npw0
    INTEGER :: nstring
-   INTEGER :: nbnd_occ
    INTEGER :: nt
    INTEGER, ALLOCATABLE :: map_g(:)
    LOGICAL :: lodd
@@ -265,7 +265,6 @@ SUBROUTINE c_phase
    REAL(DP) :: phiup
    REAL(DP) :: rmod
    REAL(DP), ALLOCATABLE :: wstring(:)
-   REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    REAL(DP) :: zeta_mod
    COMPLEX(DP), ALLOCATABLE :: aux(:)
    COMPLEX(DP), ALLOCATABLE :: aux_g(:)
@@ -288,7 +287,6 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
-   CALL using_evc(0)           ! Syncronize from gpu data
    ALLOCATE (psi(npwx*npol,nbnd))
    ALLOCATE (aux(ngm*npol))
    ALLOCATE (aux0(ngm*npol))
@@ -418,25 +416,9 @@ SUBROUTINE c_phase
 !                     electronic polarization: form factor                     !
 !  -------------------------------------------------------------------------   !
    if(okvan) then
-!  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] is in array qrad---
+!  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)]
       ! CALL calc_btq(dkmod,qrad_dk,0) is no longer needed
-!  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dk2=dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2(lmaxq*lmaxq, 1, dk, dk2, ylm_dk)
-!  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-      q_dk = (0.d0, 0.d0)
-      DO np =1, ntyp
-         if( upf(np)%tvanp ) then
-            DO iv = 1, nh(np)
-               DO jv = iv, nh(np)
-                  ! call to qvan3 no longer needed
-                  CALL qvan2(1,iv,jv,np,dkmod,pref,ylm_dk)
-                  q_dk(iv,jv,np) = omega*pref
-                  q_dk(jv,iv,np) = omega*pref
-               ENDDO
-            ENDDO
-         endif
-      ENDDO
+      CALL compute_qqc ( tpiba, dk, omega, q_dk )
       IF (lspinorb) CALL transform_qq_so(q_dk,q_dk_so)
    endif
 
@@ -453,10 +435,8 @@ SUBROUTINE c_phase
    DO is=1,nspin_lsda
 
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
-      nbnd_occ=0
       DO nb = 1, nbnd
          l_cal(nb) = (wg(nb,1+nks*(is-1)/2) > eps)
-         IF (l_cal(nb)) nbnd_occ = nbnd_occ + 1
       END DO
 
 !     --- Start loop over orthogonal k-points ---
@@ -491,7 +471,6 @@ SUBROUTINE c_phase
                   npw1 = ngk(kpoint)
                   igk1(:) = igk_k(:,kpoint)
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
-                  CALL using_evc(1)
                   if (okvan) then
                      CALL init_us_2(npw1,igk1,xk(1,kpoint),vkb)
                      CALL calbec(npw1, vkb, evc, becp_bp)
@@ -501,7 +480,6 @@ SUBROUTINE c_phase
                   npw1 = ngk(kstart)
                   igk1(:) = igk_k(:,kstart)
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
-                  CALL using_evc(1)
                   if (okvan) then
                      CALL init_us_2(npw1,igk1,xk(1,kstart),vkb)
                      CALL calbec(npw1, vkb, evc, becp_bp)
@@ -564,12 +542,9 @@ SUBROUTINE c_phase
 
 !              --- Matrix elements calculation ---
 
-               CALL using_evc(0)
                mat(:,:) = (0.d0, 0.d0)
                DO mb=1,nbnd
-                  IF ( .NOT. l_cal(mb) ) THEN
-                      mat(mb,mb)=(1.d0, 0.d0)
-                  ELSE
+                  IF ( l_cal(mb) ) THEN
                      aux(:) = (0.d0, 0.d0)
                      IF (kpar /= nppstr) THEN
                         DO ig=1,npw1
@@ -634,7 +609,6 @@ SUBROUTINE c_phase
                !
                call mp_sum( mat, intra_bgrp_comm )
                !
-
                DO nb=1,nbnd
 !$omp parallel &
 !$omp   shared ( nbnd, l_cal, nb, okvan, nkb,  nkbtonh, ityp, nh, nkbtona  ) &
@@ -691,7 +665,9 @@ SUBROUTINE c_phase
 !$omp end do
 !$omp end parallel   
                ENDDO
-
+               do nb=1,nbnd
+                  if ( .not. l_cal(nb) ) mat(nb,nb)=(1.d0, 0.d0)
+               end do
 !              --- Calculate matrix determinant ---
                CALL ZGETRF (nbnd,nbnd,mat,nbnd,ivpt,info)
                CALL errore('c_phase','error in factorization',abs(info))
@@ -718,8 +694,8 @@ SUBROUTINE c_phase
          zeta_mod= DBLE(CONJG(zeta)*zeta)
 !REC if zeta_mod=0 then angle is zero!
          if(zeta_mod.le.eps)then
-            phik(istring)=0d0
-            cphik(istring)=cmplx(1d0,0d0)
+            phik(istring)=0._DP
+            cphik(istring)=CMPLX(1._DP,0._DP,KIND=DP)
          endif
 
 !     --- End loop over orthogonal k-points ---
@@ -761,14 +737,12 @@ SUBROUTINE c_phase
         dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
         phik(istring)=theta0+dtheta
      end do
-!REC First you need to multiply phase by two if only summed over 1 set of bands for non-spin-polarized case NO--summed below
-!     if(nspin_lsda.eq.1)phik(1:istring)=2d0*phik(1:istring)        
-!REC Second you need to take mod so phase is -Pi to Pi
+!REC you need to take mod so phase is -Pi to Pi
       DO kort=1,nkort
         istring=kort+(is-1)*nkort
         phik(istring)=phik(istring)-tpi*nint(phik(istring)/tpi)
      enddo
-!REC Third you need to fix jumps before you take average
+!REC  you need to fix jumps before you take average
      t1=phik(1)/tpi
       DO kort=1,nkort
         istring=kort+(is-1)*nkort
@@ -800,11 +774,12 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
    pdl_elec_up=phiup/tpi
    pdl_elec_dw=phidw/tpi
-   pdl_elec_tot=pdl_elec_up+pdl_elec_dw
-!  you need to do mod again!
-   pdl_elec_tot=pdl_elec_tot-nint(pdl_elec_tot)
+!  you need to do mod again! Mod depends on spin
+! nspin=1 -2Pi to 2Pi
+! nspin>1 -Pi to Pi
    pdl_elec_up=pdl_elec_up-nint(pdl_elec_up)
    pdl_elec_dw=pdl_elec_dw-nint(pdl_elec_dw)
+   pdl_elec_tot=pdl_elec_up+pdl_elec_dw
   
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
@@ -834,8 +809,6 @@ SUBROUTINE c_phase
    ENDDO
 !  --- Add up the phases modulo 2 iff the ionic charges are even numbers ---
 
-   !REC You don't need a correction for jumps for the ionic part
-   ! This doesn't do anything since there is not an average but a sum
    pdl_ion_tot=SUM(pdl_ion(1:nat))
    IF (lodd) THEN
       pdl_ion_tot=pdl_ion_tot-1.0d0*nint(pdl_ion_tot/1.0d0)
@@ -976,7 +949,7 @@ SUBROUTINE c_phase
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
         fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
-   fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
+   fac=(rmod/omega)*(electron_si/bohr_radius_si**2)
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
         fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Write polarization direction ---

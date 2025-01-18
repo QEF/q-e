@@ -1,0 +1,48 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: oscdft_pp.x / PWscf / Quantum ESPRESSO (version: 7.4)
+------------------------------------------------------------------------
+
+
+Input data format: { } = optional, [ ] = it depends, | = or
+
+Purpose of oscdft_pp.x:
+This calculates the occupation numbers, eigenvectors, and matrices as a post-processing
+program. REQUIRES the oscdft.in file in the same working directory as where the
+oscdft_pp.x command is ran.
+
+Structure of the input data:
+===============================================================================
+
+    &OSCDFT_PP_NAMELIST
+      ...
+    /
+
+
+
+========================================================================
+NAMELIST: &OSCDFT_PP_NAMELIST
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    prefix of the pw.x calculation.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    directory containing the input data, i.e. the same as in pw.x
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

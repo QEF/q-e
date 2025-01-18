@@ -1,0 +1,9 @@
+  &inputhp
+   prefix = 'bn',
+   nq1 = 2 
+   nq2 = 1 
+   nq3 = 1 
+   conv_thr_chi = 1.d-7,
+   alpha_mix(1) = 0.1
+ /
+

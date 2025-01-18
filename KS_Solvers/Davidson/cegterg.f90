@@ -1,15 +1,21 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! NOTE (Ivan Carnimeo, May, 05th, 2022): 
+!   cegterg and regterg have been ported to GPU with OpenACC, 
+!   the previous CUF versions (cegterg_gpu and regterg_gpu) have been removed, 
+!   and now cegterg and regterg are used for both CPU and GPU execution.
+!   If you want to see the previous code checkout to commit: df3080b231c5daf52295c23501fbcaa9bfc4bfcc (on Thu Apr 21 06:18:02 2022 +0000)
+!
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
+SUBROUTINE cegterg( h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
                     npw, npwx, nvec, nvecx, npol, evc, ethr, &
                     e, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
@@ -21,11 +27,15 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an overlap matrix, evc is a complex vector
   !
+#if defined(__CUDA)
+  use cublas
+#endif
   USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
                             nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum, mp_gather, mp_bcast, mp_size,&
                             mp_type_create_column_section, mp_type_free
+  USE device_memcpy_m, ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -38,15 +48,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! umber of spin polarizations
-  INTEGER, PARAMETER :: blocksize = 256
-  INTEGER :: numblock
-    ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx*npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
-    ! energy threshold for convergence :
-    !   root improvement is stopped, when two consecutive estimates of the root
-    !   differ by less than ethr.
+    ! energy threshold for convergence: root improvement is stopped,
+    ! when two consecutive estimates of the root differ by less than ethr.
   LOGICAL, INTENT(IN) :: uspp
     ! if .FALSE. : do not calculate S|psi>
   INTEGER, INTENT(IN) :: btype(nvec)
@@ -77,11 +83,12 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! defines a column section for communication
   INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
+  !$acc declare device_resident(hc, sc, vc)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
   REAL(DP), ALLOCATABLE :: ew(:)
-    ! eigenvalues of the reduced hamiltonian
+    ! eigenvalues of the reduced hamiltonian (work space)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
     ! work space, contains psi
     ! the product of H and psi
@@ -92,21 +99,28 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! threshold for empty bands
   INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
     ! receive counts and memory offsets
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
+    ! chunking parameters
+  INTEGER :: i,j,k
   !
-  REAL(DP), EXTERNAL :: ddot
+  REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
+  !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
-  EXTERNAL  h_psi,    s_psi,    g_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr,    g_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx*npol,nvec)
-    ! g_psi(npwx,npw,notcnv,psi,e)
+    ! g_psi_ptr(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
   nhpsi = 0
   CALL start_clock( 'cegterg' ); !write(*,*) 'start cegterg' ; FLUSH(6)
+  !
+  !$acc data deviceptr(e)
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'cegterg', 'nvecx is too small', 1 )
   !
@@ -126,8 +140,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
+#if ! defined(__CUDA)
   ! compute the number of chuncks
   numblock  = (npw+blocksize-1)/blocksize
+#endif
   !
   ALLOCATE(  psi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -135,11 +151,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( hpsi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
+  !$acc enter data create(psi, hpsi)
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
+     !$acc enter data create(spsi)
   END IF
   !
   ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
@@ -153,7 +171,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL errore( ' cegterg ',' cannot allocate vc ', ABS(ierr) )
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+       CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+  !$acc enter data create(ew)
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
@@ -163,21 +182,25 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
+  !$acc host_data use_device(evc, psi)
+  CALL dev_memcpy(psi, evc, (/ 1 , npwx*npol /), 1, &
+                            (/ 1 , nvec /), 1)
+  !$acc end host_data
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
+  CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
   ! ... spsi contains s times the basis vectors
   !
-  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
+  IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced 
   ! ... space vc contains the eigenvectors of hc
   !
   CALL start_clock( 'cegterg:init' )
   !
+  !$acc host_data use_device(evc, psi, hpsi, spsi, hc, sc)
   CALL divide_all(inter_bgrp_comm,nbase,n_start,n_end,recv_counts,displs)
   CALL mp_type_create_column_section(sc(1,1), 0, nbase, nvecx, column_section_type)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
@@ -185,7 +208,12 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   !
-  if (n_start .le. n_end) CALL mp_sum( hc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+  if (n_start .le. n_end) & 
+#if defined(__CUDA)
+        CALL mp_sum( hc, 1, nbase, n_start, n_end , intra_bgrp_comm )
+#else
+        CALL mp_sum( hc(1:nbase, n_start:n_end), intra_bgrp_comm )
+#endif
   CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
@@ -193,7 +221,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      if (n_start .le. n_end) &
      CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
-     !     
+     !
   ELSE
      !
      if (n_start .le. n_end) &
@@ -202,11 +230,19 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
-  if (n_start .le. n_end) CALL mp_sum( sc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+  if (n_start .le. n_end) & 
+#if defined(__CUDA)
+         CALL mp_sum( sc, 1, nbase, n_start, n_end , intra_bgrp_comm )
+#else
+         CALL mp_sum( sc(1:nbase, n_start:n_end), intra_bgrp_comm )
+#endif
   CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+  !$acc end host_data
   !
   CALL mp_type_free( column_section_type )
   !
+  !$acc parallel vector_length(64) 
+  !$acc loop gang 
   DO n = 1, nbase
      !
      ! ... the diagonal of hc and sc must be strictly real
@@ -214,6 +250,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
      sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
      !
+     !$acc loop vector 
      DO m = n + 1, nbase
         !
         hc(n,m) = CONJG( hc(m,n) )
@@ -222,13 +259,17 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END DO
      !
   END DO
+  !$acc end parallel
   !
   CALL stop_clock( 'cegterg:init' )
   !
   IF ( lrot ) THEN
      !
-     vc(1:nbase,1:nbase) = ZERO
+     !$acc host_data use_device(vc)
+     CALL dev_memset(vc, ZERO, (/1, nbase/), 1, (/1, nbase/), 1)
+     !$acc end host_data
      !
+     !$acc parallel loop 
      DO n = 1, nbase
         !
         e(n) = REAL( hc(n,n) )
@@ -243,6 +284,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
+     !$acc host_data use_device(hc, sc, vc, ew)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL diaghg( nbase, nvec, hc, sc, nvecx, ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
@@ -253,7 +295,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !
-     e(1:nvec) = ew(1:nvec)
+     CALL dev_memcpy (e, ew, (/ 1, nvec /), 1 )
+     !$acc end host_data
      !
   END IF
   !
@@ -279,11 +322,18 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            ! ... roots come first. This allows to use quick matrix-matrix 
            ! ... multiplications to set a new basis vector (see below)
            !
-           IF ( np /= n ) vc(:,np) = vc(:,n)
+           IF ( np /= n ) THEN
+             !$acc parallel loop 
+             DO i = 1, nvecx
+               vc(i,np) = vc(i,n)
+             END DO 
+           END IF 
            !
-           ! ... for use in g_psi
+           ! ... for use in g_psi_ptr
            !
+           !$acc kernels 
            ew(nbase+np) = e(n)
+           !$acc end kernels 
            !
         END IF
         !
@@ -295,6 +345,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+     !
+     !$acc host_data use_device(psi, spsi, vc)
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
@@ -308,8 +360,20 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                     ZERO, psi(1,nb1), kdmx )
         !
      END IF
+     !$acc end host_data
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
+#if defined(__CUDA)
+     !$acc parallel loop collapse(3) 
+     DO np=1,notcnv
+        DO ipol = 1, npol
+           DO k=1,npwx
+             psi(k + (ipol-1)*npwx,nbase+np) = - ew(nbase+np)*psi(k + (ipol-1)*npwx,nbase+np)
+           END DO
+        END DO
+     END DO
+     !$acc end parallel 
+#else
      !$omp parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
@@ -323,21 +387,24 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         END DO
      END DO
      !$omp end parallel do
+#endif
      !
+     !$acc host_data use_device(psi, hpsi, vc, ew)
      if (n_start .le. n_end) &
      CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,nb1), kdmx )
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      ! clean up garbage if there is any
-     IF (npw < npwx) psi(npw+1:npwx,nb1:nbase+notcnv) = ZERO
-     IF (npol == 2)  psi(npwx+npw+1:2*npwx,nb1:nbase+notcnv) = ZERO
+     IF (npw < npwx) CALL dev_memset(psi, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
+     IF (npol == 2)  CALL dev_memset(psi, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
      !
+     !$acc end host_data
      CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
+     CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -345,25 +412,39 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
+     !$acc parallel vector_length(96) 
+     !$acc loop gang private(nbn)
      DO n = 1, notcnv
         !
         nbn = nbase + n
         !
-        IF ( npol == 1 ) THEN
-           !
-           ew(n) = ddot( 2*npw, psi(1,nbn), 1, psi(1,nbn), 1 )
-           !
-        ELSE
-           !
-           ew(n) = ddot( 2*npw, psi(1,nbn), 1, psi(1,nbn), 1 ) + &
-                   ddot( 2*npw, psi(npwx+1,nbn), 1, psi(npwx+1,nbn), 1 )
-           !
-        END IF
+        ew(n) = MYDDOT_VECTOR_GPU( 2*npw, psi(1,nbn), psi(1,nbn) )
         !
      END DO
      !
-     CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
+     IF(npol.ne.1) THEN 
+       !$acc loop gang private(nbn)
+       DO n = 1, notcnv 
+         nbn = nbase + n
+         ew(n) = ew(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) ) 
+       END DO 
+     END IF 
+     !$acc end parallel 
      !
+     !$acc host_data use_device(ew)
+     CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
+     !$acc end host_data
+     !
+#if defined(__CUDA)
+     !$acc parallel loop collapse(3) 
+     DO i = 1,notcnv
+        DO ipol = 1,npol
+           DO k=1,npw
+             psi(k + (ipol-1)*npwx,nbase+i) = psi(k+(ipol-1)*npwx,nbase+i)/SQRT( ew(i) )
+           END DO
+        END DO
+     END DO
+#else
      !$omp parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
@@ -377,17 +458,19 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         END DO
      END DO
      !$omp end parallel do
+#endif
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
+     CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
      CALL start_clock( 'cegterg:overlap' )
      !
+     !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
      CALL divide_all(inter_bgrp_comm,nbase+notcnv,n_start,n_end,recv_counts,displs)
      CALL mp_type_create_column_section(sc(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
@@ -395,7 +478,12 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc(nb1,n_start), nvecx )
      !
-     if (n_start .le. n_end) CALL mp_sum( hc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     if (n_start .le. n_end) &
+#if defined(__CUDA)
+       CALL mp_sum( hc, nb1, nbase+notcnv, n_start, n_end , intra_bgrp_comm )
+#else
+       CALL mp_sum( hc(nb1:nbase+notcnv, n_start:n_end) , intra_bgrp_comm )
+#endif
      CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
@@ -412,8 +500,14 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
      END IF
      !
-     if (n_start .le. n_end) CALL mp_sum( sc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     if (n_start .le. n_end) & 
+#if defined(__CUDA)
+         CALL mp_sum( sc, nb1, nbase+notcnv, n_start, n_end , intra_bgrp_comm )
+#else
+         CALL mp_sum( sc(nb1:nbase+notcnv, n_start:n_end) , intra_bgrp_comm )
+#endif
      CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     !$acc end host_data
      !
      CALL mp_type_free( column_section_type )
      !
@@ -421,6 +515,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      nbase = nbase + notcnv
      !
+     !$acc parallel vector_length(64)
+     !$acc loop gang
      DO n = 1, nbase
         !
         ! ... the diagonal of hc and sc must be strictly real
@@ -430,6 +526,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
         ENDIF
         !
+        !$acc loop vector
         DO m = MAX(n+1,nb1), nbase
            !
            hc(n,m) = CONJG( hc(m,n) )
@@ -438,9 +535,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         END DO
         !
      END DO
+     !$acc end parallel 
      !
      ! ... diagonalize the reduced hamiltonian
      !
+     !$acc host_data use_device(hc, sc, vc, ew)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL diaghg( nbase, nvec, hc, sc, nvecx, ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
@@ -450,24 +549,27 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
+     !$acc end host_data
      !
      ! ... test for convergence
      !
-     WHERE( btype(1:nvec) == 1 )
-        !
-        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < ethr ) )
-        !
-     ELSEWHERE
-        !
-        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
-        !
-     END WHERE
+     !$acc parallel loop copy(conv(1:nvec)) copyin(btype(1:nvec))
+     DO i = 1, nvec
+       IF(btype(i) == 1) THEN
+         conv(i) = ( ( ABS( ew(i) - e(i) ) < ethr ) )
+       ELSE
+         conv(i) = ( ( ABS( ew(i) - e(i) ) < empty_ethr ) )
+       END IF 
+     END DO 
+     !
      ! ... next line useful for band parallelization of exact exchange
      IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp_id,inter_bgrp_comm)
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
-     e(1:nvec) = ew(1:nvec)
+     !$acc host_data use_device(ew)
+     CALL dev_memcpy (e, ew, (/ 1, nvec /) )
+     !$acc end host_data
      !
      ! ... if overall convergence has been achieved, or the dimension of
      ! ... the reduced basis set is becoming too large, or in any case if
@@ -482,9 +584,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+        !$acc host_data use_device(evc, psi, vc)
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, evc, kdmx )
         CALL mp_sum( evc, inter_bgrp_comm )
+        !$acc end host_data
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -509,38 +613,54 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
+        !$acc host_data use_device(evc, psi, hpsi, spsi, vc)
+        CALL dev_memcpy(psi, evc, (/ 1, npwx*npol /), 1, &
+                                      (/ 1, nvec /), 1)
         !
         IF ( uspp ) THEN
            !
            CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,nvec+1), kdmx)
-           CALL threaded_memcpy(spsi, psi(1,nvec+1), nvec*npol*npwx*2)
+           CALL dev_memcpy(spsi, psi(:,nvec+1:), &
+                                        (/1, npwx*npol/), 1, &
+                                        (/1, nvec/), 1)
            CALL mp_sum( spsi(:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nvec+1), kdmx )
-        CALL threaded_memcpy(hpsi, psi(1,nvec+1), nvec*npol*npwx*2)
+        CALL dev_memcpy(hpsi, psi(:,nvec+1:), &
+                                        (/1, npwx*npol/), 1, &
+                                        (/1, nvec/), 1)
         CALL mp_sum( hpsi(:,1:nvec), inter_bgrp_comm )
+        !$acc end host_data
         !
         ! ... refresh the reduced hamiltonian 
         !
         nbase = nvec
         !
-        hc(1:nbase,1:nbase) = ZERO
-        sc(1:nbase,1:nbase) = ZERO
-        vc(1:nbase,1:nbase) = ZERO
+        ! These variables are set to ZERO in the CUF Kernel below
+        !hc(1:nbase,1:nbase) = ZERO
+        !sc(1:nbase,1:nbase) = ZERO
+        !vc(1:nbase,1:nbase) = ZERO
         !
+        !$acc kernels 
         DO n = 1, nbase
-           !
            hc(n,n) = CMPLX( e(n), 0.0_DP ,kind=DP)
-           !
            sc(n,n) = ONE
            vc(n,n) = ONE
+           DO j = n+1, nbase
+              hc(j,n) = ZERO
+              hc(n,j) = ZERO
+              sc(j,n) = ZERO
+              sc(n,j) = ZERO
+              vc(j,n) = ZERO
+              vc(n,j) = ZERO
+           END DO
            !
         END DO
+        !$acc end kernels
         !
         CALL stop_clock( 'cegterg:last' )
         !
@@ -551,15 +671,22 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( recv_counts )
   DEALLOCATE( displs )
   DEALLOCATE( conv )
+  !$acc exit data delete(ew)
   DEALLOCATE( ew )
   DEALLOCATE( vc )
   DEALLOCATE( hc )
   DEALLOCATE( sc )
   !
-  IF ( uspp ) DEALLOCATE( spsi )
+  IF ( uspp ) THEN
+     !$acc exit data delete(spsi)
+     DEALLOCATE( spsi )
+  END IF
   !
+  !$acc exit data delete(psi, hpsi)
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )
+  !
+  !$acc end data 
   !
   CALL stop_clock( 'cegterg' ); !write(*,*) 'stop cegterg' ; FLUSH(6)
   !call print_clock( 'cegterg' )
@@ -578,7 +705,7 @@ END SUBROUTINE cegterg
 !  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &  
+SUBROUTINE pcegterg(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &  
                     npw, npwx, nvec, nvecx, npol, evc, ethr, &
                     e, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
@@ -670,13 +797,13 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   !
   REAL(DP), EXTERNAL :: ddot
   !
-  EXTERNAL  h_psi, s_psi, g_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr, s_psi_ptr, g_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
-    ! g_psi(npwx,npw,notcnv,psi,e)
+    ! g_psi_ptr(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
@@ -782,9 +909,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
+  CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
-  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
+  IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -855,7 +982,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
+     CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -898,9 +1025,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
+     CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
@@ -1160,7 +1287,7 @@ CONTAINS
                     END IF
                  END IF
                  !
-                 ! ... for use in g_psi
+                 ! ... for use in g_psi_ptr
                  !
                  ew(nbase+np) = e(n)
                  !   

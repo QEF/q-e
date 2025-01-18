@@ -1,3 +1,5 @@
+# Makefile for EPW
+sinclude ../make.inc
 
 default: epw
 
@@ -10,11 +12,12 @@ epw:
 	(cd ZG/src ; make )
 
 clean:
-	cd src ; rm -f *.o *.mod  *~ *.F90
-	cd ZG/src ; rm -f *.o *.mod  *~
+	(cd src ; make clean )
+	(cd ZG/src ; make clean )
 
 distclean : clean
 	rm -f src/epw.x bin/epw.x
+	rm -f src/nscf2supercond.x bin/nscf2supercond.x
 	rm -f ZG/src/*.x
 
 release:

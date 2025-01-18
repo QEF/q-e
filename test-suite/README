@@ -1,55 +1,22 @@
-# Copyright (C) 2016-2018 Quantum ESPRESSO
+# Copyright (C) 2016-2022 Quantum ESPRESSO
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-TEST-SUITE  v6.4 
+TEST-SUITE  v7.1
 ----------------
 
-Type 'make' for the list of possible options. Currently only PW, CP, PH, 
-HP, EPW, are supported.
+Type 'make' with no options for a list of targets
 
-'make compare' compare the latest run of tests (SERIAL or PARALLEl) and 
-redirect the output to a file called "out.XXX.`date +%Y%m%d_%H%M%S`" 
-'XXX' is replaced by the name of the package ('PW', 'CP', 'EPW')
+#################################################################
+# TEST DESCRIPTIONS and what is tested (may or may not be updated)
+#################################################################
 
-Clean all test files and leave only benchmark reference via 'make clean'
-command
-
-
-
-REFERENCE OUTPUTS
------------------
-
-BEWARE: part of the following text may be obsolete
-
-Most reference outputs have been computed using GCC 4.8.5 with the following
-"configure" options:
-
-./configure --enable-openmp --disable-parallel --with-netlib
-
-DFLAGS         = -D__OPENMP -D__GFORTRAN -D__STD_F95 -D__FFTW
-CFLAGS         = -O3 $(DFLAGS) $(IFLAGS)
-F90FLAGS       = $(FFLAGS) -x f95-cpp-input -fopenmp
-FFLAGS         = -O3 -g -fopenmp
-FFLAGS_NOOPT   = -O0 -g
-LD             = gfortran
-LDFLAGS        = -g -pthread -fopenmp
-
-
-During execution:
-
-OMP_NUM_THREADS = 4
-
-#################################################################################################
-# TEST DESCRIPTIONS and what is tested.
-#################################################################################################
-
-#################################################################################################
+#################################################################
 # PWSCF tests
-#################################################################################################
+#################################################################
 ######################
 # pw_atom : O and Ni #
 ######################
@@ -156,6 +123,16 @@ The following features of the code are tested:
 - constrained occupancies: tot_magnetization, nelup+neldw
 - LSDA stress
 - non-scf calculation
+
+###########################
+# pw_libxc : O, Si and CH #
+###########################
+The following features of the code are tested:
+- Libxc initialization in PW
+- Libxc LDA (pz)
+- Libxc GGA (pbe)
+- Libxc hyb-GGA (hse)
+- Libxc metaGGA (tpss)
 
 ###############
 # pw_md : Si  #
@@ -303,9 +280,9 @@ The following features of the code are tested:
 - XDM dispersion correction.
 
 
-#################################################################################################
+#################################################################
 # PH tests
-#################################################################################################
+#################################################################
 #######################
 # ph_base : Si, C, Ni #
 #######################
@@ -344,9 +321,9 @@ The following features of the code are tested:
 - Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
   with Hubbard U, using PAW
 
-#################################################################################################
+#################################################################
 # HP tests
-#################################################################################################
+#################################################################
 ############################
 # hp_insulator_us : LiCoO2 #
 ############################
@@ -396,9 +373,9 @@ The following features of the code are tested:
 - Calculation of U and V for a ferromagnetic metal (it is a metal even
 at the DFT+U+V level for the rhombohedral structure), with PAW
 
-#################################################################################################
+#################################################################
 # EPW tests
-#################################################################################################
+#################################################################
 #############################
 # epw_base: B-doped diamond # 
 #############################
@@ -482,6 +459,10 @@ The following features of the code are tested:
 - Test anisotropic Eliashberg superconductivity (epw2.in)
 - Test anisotropic Eliashberg superconductivity restart from interrupted q-point while writing ephmat using 'restart.fmt' (epw3.in)
 - Test anisotropic Eliashberg superconductivity restart by reading ephmat files (after writing ephmat files) (epw4.in)
+- Test isotropic Eliashberg superconductivity with linearized Eliashberg equation (epw5.in)
+- Test anisotropic Eliashberg superconductivity (FBW) (epw6.in)
+- Test anisotropic Eliashberg superconductivity (FBW) using sparse-ir sampling (epw7.in)
+- Test anisotropic Eliashberg superconductivity (FBW) with outer bands using sparse-ir sampling (epw8.in)
 
 #################
 # epw_trev: SiC #
@@ -510,3 +491,33 @@ This test is to compare electron-phonon matrix element produced directly by the 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 
 
+####################
+# epw_qdpt: Si #
+####################
+The following features are tested:
+- The quasidegenerate perturbation theory for single-particle optical absorption
+in presence of phonons.
+
+#################################################################
+# KCW tests
+#################################################################
+############################
+# kcw-nc-ks : H2O molecule #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for KS orbitals
+- Calculation of KI@KS eigenvalues
+
+############################
+# kcw-nc-wann : Si FCC #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for MLWF
+- Calculation of KI@Wann eigenvalues
+
+##################################
+# kcw-nc-wann-nc : Si FCC NC SOC #
+##################################
+The following features of the code are tested:
+- Calculation of non-collinear screening coefficients for MLWF
+- Calculation of non-collinear KI@Wann eigenvalues

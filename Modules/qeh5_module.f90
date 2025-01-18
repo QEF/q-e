@@ -17,7 +17,7 @@ MODULE qeh5_base_module
   !! Last revision June 2017
   !
 #if defined(__HDF5)
-  USE KINDS,   ONLY: DP
+  USE KINDS,   ONLY: DP, sgl
   USE hdf5 
   USE ISO_C_BINDING
   IMPLICIT NONE 
@@ -56,19 +56,20 @@ MODULE qeh5_base_module
 
 
   INTERFACE qeh5_set_space
-     MODULE PROCEDURE qeh5_wplan_real, qeh5_wplan_complex, qeh5_wplan_integer   
+     MODULE PROCEDURE qeh5_wplan_real, qeh5_wplan_complex, qeh5_wplan_complex_sp, qeh5_wplan_integer   
   END INTERFACE
 
 
   INTERFACE qeh5_write_dataset
      MODULE PROCEDURE qeh5_write_real, qeh5_write_real_2, qeh5_write_real_3, &
              qeh5_write_complex, qeh5_write_complex_2,qeh5_write_complex_3, &
+             qeh5_write_complex_sp, &
              qeh5_write_integer,qeh5_write_integer_2,qeh5_write_integer_3 
   END INTERFACE 
 
 
   INTERFACE qeh5_read_dataset
-     MODULE PROCEDURE qeh5_read_real, qeh5_read_complex, qeh5_read_integer,&
+     MODULE PROCEDURE qeh5_read_real, qeh5_read_complex, qeh5_read_complex_sp, qeh5_read_integer,&
                       qeh5_read_real_2, qeh5_read_complex_2, qeh5_read_integer_2,&
                       qeh5_read_real_3, qeh5_read_complex_3, qeh5_read_integer_3
   END INTERFACE 
@@ -93,6 +94,7 @@ MODULE qeh5_base_module
   END INTERFACE
   ! 
   INTEGER(HID_T)   :: H5_REALDP_TYPE  
+  INTEGER(HID_T)   :: H5_REALSP_TYPE  
   PRIVATE 
   PUBLIC           :: qeh5_file, qeh5_dataset  
   PUBLIC           :: initialize_hdf5, finalize_hdf5, qeh5_openfile, qeh5_close, qeh5_open_group, &
@@ -108,6 +110,7 @@ MODULE qeh5_base_module
     INTEGER :: ierr 
     CALL h5open_f(ierr)
     H5_REALDP_TYPE = h5kind_to_type( DP, H5_REAL_KIND) 
+    H5_REALSP_TYPE = h5kind_to_type( sgl, H5_REAL_KIND) 
 END SUBROUTINE initialize_hdf5
 
   !-------------------------------
@@ -381,6 +384,31 @@ END SUBROUTINE finalize_hdf5
        CALL prepare_dataspace( h5_dataset, rank, dims(1:rank) )
     END IF 
   END SUBROUTINE qeh5_wplan_complex 
+
+! NsC >>>
+   !-----------------------------------------------------------------------------------
+  SUBROUTINE qeh5_wplan_complex_sp  ( h5_dataset, complex_data, rank, dimensions, mode )
+    !---------------------------------------------------------------------------------
+    IMPLICIT NONE
+    COMPLEX(sgl),INTENT(IN)               :: complex_data
+    INTEGER,INTENT(IN)                   :: rank
+    INTEGER,INTENT(IN)                   :: dimensions(rank)
+    TYPE(qeh5_dataset),INTENT(INOUT)     :: h5_dataset
+    CHARACTER(1),OPTIONAL,INTENT(IN)     :: mode
+    !
+    INTEGER                              :: ierr
+    INTEGER,DIMENSION(24)                :: dims
+    !
+    CALL H5Tcopy_f  ( H5T_IEEE_F32LE  , h5_dataset%datatype%id  , ierr )
+    dims(1:rank) = dimensions(1:rank)
+    dims(1) = dims(1)*2
+    IF ( PRESENT( mode ) ) THEN
+       CALL prepare_dataspace( h5_dataset, rank, dims(1:rank), mode )
+    ELSE
+       CALL prepare_dataspace( h5_dataset, rank, dims(1:rank) )
+    END IF
+  END SUBROUTINE qeh5_wplan_complex_sp
+! NsC <<<
  
   !------------------------------------------------------------------------------------
   SUBROUTINE qeh5_wplan_integer ( h5_dataset, integer_data, rank, dimensions, mode )  
@@ -479,6 +507,27 @@ END SUBROUTINE finalize_hdf5
     CALL H5Dread_f( h5_dataset%id, H5_REALDP_TYPE, ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
     !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
   END SUBROUTINE qeh5_read_complex          
+
+! NsC >>>
+    !----------------------------------------------------------
+  SUBROUTINE qeh5_read_complex_sp ( complex_data, h5_dataset)
+    !--------------------------------------------------------
+    IMPLICIT NONE
+    COMPLEX(sgl), TARGET, INTENT(INOUT)               :: complex_data(1)
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER                                          :: ierr
+    ptr = C_LOC(complex_data)
+    file_hid = H5S_ALL_F
+    mem_hid  = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, H5_REALSP_TYPE, ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE qeh5_read_complex_sp
+! NsC <<<
 
   !----------------------------------------------------------
   SUBROUTINE qeh5_read_complex_2 ( complex_data, h5_dataset)
@@ -662,6 +711,29 @@ END SUBROUTINE finalize_hdf5
                      filespace_, H5P_DEFAULT_F )
    
   END SUBROUTINE qeh5_write_complex
+
+! NsC >>>
+    !--------------------------------------------------------------
+  SUBROUTINE qeh5_write_complex_sp( complex_data, h5_dataset )
+   !-------------------------------------------------------------
+   IMPLICIT NONE
+   COMPLEX(sgl), TARGET, INTENT(IN)         ::  complex_data(1)
+   TYPE(qeh5_dataset),INTENT(IN)            ::  h5_dataset
+   !
+   TYPE(C_PTR)                              ::  buf
+   INTEGER                                  ::  ierr, jerr
+   INTEGER(HID_T)                           ::  memspace_, filespace_
+   !
+   buf = C_LOC(complex_data)
+   memspace_ =  H5S_ALL_F
+   filespace_ = H5S_ALL_F
+   IF ( ALLOCATED (h5_dataset%filespace%offset) ) filespace_ = h5_dataset%filespace%id
+   IF ( h5_dataset%memspace_ispresent)  memspace_ = h5_dataset%memspace%id
+   CALL H5Dwrite_f ( h5_dataset%id, H5_REALSP_TYPE, buf  , ierr, memspace_,&
+                     filespace_, H5P_DEFAULT_F )
+
+  END SUBROUTINE qeh5_write_complex_sp
+! NsC <<<
 
   !------------------------------------------------------------
   SUBROUTINE qeh5_write_complex_2( complex_data, h5_dataset )

@@ -1,0 +1,184 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: ppacf.x / PWscf / Quantum ESPRESSO (version: 7.4)
+------------------------------------------------------------------------
+
+
+Purpose of ppacf.x:
+ACF analysis and print files to track signatures of binding
+(PRB 97, 085115 (2018)).
+
+For an illustration of how to use this code to set hybrid mixing
+value, please refer to JCP 148, 194115 (2018) doi: 10.1063/1.5012870.
+
+The code reads the output produced by pw.x, extracts and calculates
+$E_{c}^{nl}$, $T_{c}^{nl}$, $E_{c,\lambda}^{LDA}$, $E_{c,\lambda}^{nl}$,
+$E_{xc,\lambda}$, $T_c^{LDA}$.
+If "lfock" is set to .True., the code also computes the total Fock
+exchange value.
+
+With flag "code_num" = 2, the codes can read output produced by VASP.
+
+With flag "lplot", the codes also out puts files containing spatial
+variation in most of these quantities.
+
+
+The input data of this program is read from standard input or from file
+and has the following format:
+
+Structure of the input data:
+============================
+
+&PPACF
+...
+/
+
+Intermediate results can be saved to disk (see variable "lplot" in &PPACF)
+and later read by pp.x.
+Since the file with intermediate results is formatted, it can be safely
+transferred to a different machine. This also allows plotting of a
+linear combination (for instance, energy density differences) by saving
+two intermediate files and combining them (see variables in &PLOT
+from pp.x .)
+
+All output quantities are in ATOMIC (RYDBERG) UNITS unless otherwise
+explicitly specified.
+
+
+
+========================================================================
+NAMELIST: &PPACF
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Description:    prefix of files saved by program pw.x
+                   prepended to input/output filenames:
+                   prefix.ecnl, prefix.tcnl, etc.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    directory containing the output data from pw.x, i.e. the same as in pw.x
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                   current directory ('./') otherwise
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       n_lambda
+   
+   Type:           INTEGER
+   Description:    Number of fragments in coupling-constant scaling curve.
+                   In the default case, only $\lambda=0$ and $\lambda=1$ ends are calculated.
+   Default:        1
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lplot
+   
+   Type:           LOGICAL
+   Description:    If .True. print out the spatial distribution of energy density.
+                   prefix.tclda             the LDA component of kinetic-correlation energy density.
+                   prefix.tcnl(prefix.tcgc) the non-local (gradient corrected) component of kinetic-correlation energy density.
+                   prefix.exlda             the LDA component of exchange energy density.
+                   prefix.eclda             the LDA component of correlation energy density.
+                   prefix.exgc              the gradient-corrected component of exchange energy density.
+                   prefix.ecnl(prefix.ecgc) the non-local(gradient-corrected) component of correlation energy density.
+                   prefix.vcnl                  If vdW-DF: the non-local correlation-potential variation (at nspin=1).
+                   prefix.vcnl1,2                 If spin-vdW-DF: spin-reolved non-local correlation-potential variations.
+   Default:        .False.
+   +--------------------------------------------------------------------
+   
+   ________________________________________________________________________
+   * IF lplot=.True. : 
+   
+      OPTION FOR PLOT (LPLOT=.TRUE.):
+      
+      +--------------------------------------------------------------------
+      Variable:       ltks
+      
+      Type:           LOGICAL
+      Default:        .True.
+      Description:    If .True. also print out
+                      prefix.tks               the Kohn-Sham kinetic energy density.
+                                               In case of spin-polarized calculations, prefix.tks1 and prefix.tks2
+                                               save the spin-up and spin-down components.
+      +--------------------------------------------------------------------
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+   +--------------------------------------------------------------------
+   Variable:       lfock
+   
+   Type:           LOGICAL
+   Description:    If .True. calculate the Fock exchange based on input Kohn-Sham orbitals.
+   Default:        .False.
+   +--------------------------------------------------------------------
+   
+   ________________________________________________________________________
+   * IF lfock=.True. : 
+   
+      OPTION FOR FOCK EXCHANGE (LFOCK=.TRUE.):
+      
+      +--------------------------------------------------------------------
+      Variable:       use_ace
+      
+      Type:           LOGICAL
+      Description:    If .True. use Lin Lin's ACE (J. Chem. Theory Comput. 12(5), 2242-2249 (2016),
+                      doi: 10.1021/acs.jctc.6b00092).
+      Default:        .True.
+      +--------------------------------------------------------------------
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+   +--------------------------------------------------------------------
+   Variable:       code_num
+   
+   Type:           INTEGER
+   Description:    Select from which code to read output files.
+                     1 = Quantum ESPRESSO
+                     2 = VASP
+                         The codes will read vasprun.xml and CHGCAR from VASP
+                         calculations.
+                         Please note that in VASP-based analysis:
+                         - Core charge is ignored.
+                         - The ppacf-from-VASP-read-in only works for VASP
+                           calculations done in PBE, revPBE, vdW-DF, vdW-DF2, or vdW-DF-cx
+                         - The ppacf-from-VASP-read-in only always uses the full Ecnl kernel
+                           for coupling-constant scaling analysis of vdW-DF versions.
+                         - Wavefunction based analysis (Fock exchange energy and
+                           Kohn-Sham kinetic energy) are not available from VASP
+                         - When "lplot" = .True., the code will also print out
+                           charge density in prefix.chg (prefix.chg1 and prefix.chg2
+                           save the spin-up and spin-down components in case of
+                           spin-polarized calculations), which can be processed by pp.x.
+   Default:        1
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vdW_analysis
+   
+   Type:           INTEGER
+   Description:    Select type of vdw kernel table used in ppacf coupling-constant scaling
+                   analysis of nonlocal-correlations in vdW-DF versions:
+                   - vdW_analysis = 0: Full Ecnl kenel of vdW-DF method
+                   - vdW_analysis = 1: The cumulant- or susceptibility-Ecnl kernel component
+                   - vdW_analysis = 2: The pure-vdW-Ecnl kernel component
+                   See IOP JCPM (2020) for presentation of the latter two (non-default) options
+   Default:        o
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

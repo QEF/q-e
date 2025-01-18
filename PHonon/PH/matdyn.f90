@@ -13,6 +13,8 @@ Module ifconstants
   !
   REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:)
   !! interatomic force constants in real space
+  REAL(DP), ALLOCATABLE :: frc_lr(:,:,:,:,:,:,:)
+  !! long-range part of interatomic force constants in real space
   REAL(DP), ALLOCATABLE :: tau_blk(:,:)
   !! atomic positions for the original cell
   REAL(DP), ALLOCATABLE :: zeu(:,:,:)
@@ -52,6 +54,12 @@ PROGRAM matdyn
   !                  the diagonal elements of the force constants matrix)
   !               - 'crystal': 3 translational asr imposed by optimized
   !                  correction of the force constants (projection).
+  !               - 'all': 3 translational asr + 3 rotational asr + 15 Huang
+  !                  conditions for vanishing stress tensor, imposed by
+  !                  optimized correction of the force constants (projection).
+  !                  Remember to set write_lr to .true. to write long-range
+  !                  force constants into file when running q2r and set read_lr
+  !                  to .true. when running matdyn for the case of polar system.
   !               - 'one-dim': 3 translational asr + 1 rotational asr
   !                  imposed by optimized correction of the force constants
   !                  (the rotation axis is the direction of periodicity;
@@ -64,6 +72,8 @@ PROGRAM matdyn
   !               molecule or if all the atoms are aligned, etc.).
   !               In these cases the supplementary asr are cancelled
   !               during the orthonormalization procedure (see below).
+  !     huang     if .true. (default) Huang conditions for vanishing 
+  !               stress tensor are included in asr='all'.
   !     dos       if .true. calculate phonon Density of States (DOS)
   !               using tetrahedra and a uniform q-point grid (see below)
   !               NB: may not work properly in noncubic materials
@@ -119,6 +129,10 @@ PROGRAM matdyn
   !     loto_2d    set to .true. to activate two-dimensional treatment of LO-TO splitting.
   !     loto_disable (logical) if .true. do not apply LO-TO splitting for q=0
   !                  (default: .false.)
+  !     read_lr    set to .true. to read long-range force constants from file,
+  !                when enforcing asr='all' for polar solids in matdyn.
+  !     write_frc  set to .true. to write force constants into file.
+  !                The filename would be flfrc+".matdyn".
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -155,7 +169,7 @@ PROGRAM matdyn
   USE rigid,      ONLY : dyndiag, nonanal, nonanal_ifc
   USE el_phon,    ONLY : el_ph_nsigma
 
-  USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
+  USE ifconstants, ONLY : frc, frc_lr, atm, zeu, tau_blk, ityp_blk, m_loc
   !
   IMPLICIT NONE
   !
@@ -185,6 +199,7 @@ PROGRAM matdyn
                   amass_blk(ntypx),          &! original atomic masses
                   atws(3,3),      &! lattice vector for WS initialization
                   rws(0:3,nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
+  REAL(DP) :: alph ! Ewald coefficient for non-analytical term
   !
   INTEGER :: nat, nat_blk, ntyp, ntyp_blk, &
              l1, l2, l3,                   &! supercell dimensions
@@ -193,7 +208,8 @@ PROGRAM matdyn
 
   INTEGER :: nspin_mag, nqs, ios, ipol
   !
-  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym,  loto_2d 
+  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym, loto_2d, &
+             huang, read_lr, write_frc
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, qq, degauss
   REAL(DP) :: delta, pathL
@@ -226,7 +242,7 @@ PROGRAM matdyn
        &           la2F, ndos, DeltaE, degauss, q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
        &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma, &
-       &           loto_disable
+       &           loto_disable, huang, read_lr, write_frc
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -273,6 +289,9 @@ PROGRAM matdyn
      loto_2d=.false.
      el_ph_nsigma=10
      loto_disable = .false.
+     huang = .true.
+     read_lr = .false.
+     write_frc = .false.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -313,6 +332,9 @@ PROGRAM matdyn
      CALL mp_bcast(loto_2d,ionode_id, world_comm)
      CALL mp_bcast(loto_disable,ionode_id, world_comm)
      CALL mp_bcast(el_ph_nsigma,ionode_id, world_comm)
+     CALL mp_bcast(huang,ionode_id, world_comm)
+     CALL mp_bcast(read_lr,ionode_id, world_comm)
+     CALL mp_bcast(write_frc,ionode_id, world_comm)
      !
      IF (loto_2d .AND. loto_disable) CALL errore('matdyn', &
          'loto_2d and loto_disable cannot be both true', 1)
@@ -324,7 +346,7 @@ PROGRAM matdyn
            WRITE(stdout, *)
            WRITE(stdout, '(4x,a)') ' fildyn has been provided, running q2r...'
         END IF
-        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, la2F, loto_2d)
+        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, la2F, loto_2d, read_lr)
      END IF
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
@@ -343,11 +365,17 @@ PROGRAM matdyn
         call volume(alat,at_blk(1,1),at_blk(1,2),at_blk(1,3),omega_blk)
         CALL read_ifc_param(nr1,nr2,nr3)
         ALLOCATE(frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
-        CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
+        ALLOCATE(frc_lr(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
+        frc_lr = 0.d0
+        if (read_lr) THEN
+           CALL read_ifc(alph,nr1,nr2,nr3,nat_blk,frc,frc_lr)
+        else
+           CALL read_ifc(alph,nr1,nr2,nr3,nat_blk,frc)
+        end if
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
-            amass_blk, omega_blk, has_zstar)
+            amass_blk, omega_blk, has_zstar, alph, read_lr)
      ENDIF
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
@@ -443,6 +471,7 @@ PROGRAM matdyn
         ALLOCATE ( q(3,nq) )
         IF (.NOT.q_in_band_form) THEN
            ALLOCATE(wq(nq))
+           wq(:) = 0.0_dp
            DO n = 1,nq
               IF (ionode) READ (5,*) (q(i,n),i=1,3)
            END DO
@@ -525,8 +554,13 @@ PROGRAM matdyn
      END IF
      !
      IF (asr /= 'no') THEN
-        CALL set_asr (asr, nr1, nr2, nr3, frc, zeu, &
-             nat_blk, ibrav, tau_blk)
+        CALL set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, &
+             nat_blk, ibrav, tau_blk, at_blk, huang)
+     END IF
+     !
+     IF (write_frc) THEN
+        CALL writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, at_blk, bg_blk, &
+                     ntyp_blk, nat_blk, amass_blk, omega_blk, epsil, alph, nspin_mag, nqs)
      END IF
      !
      IF (flvec.EQ.' ') THEN
@@ -584,8 +618,8 @@ PROGRAM matdyn
 
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
-                   loto_2d, &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
+             loto_2d, epsil, zeu, alph, &
+             frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
         IF (.not.loto_2d) THEN 
         qhat(1) = q(1,n)*at(1,1)+q(2,n)*at(2,1)+q(3,n)*at(3,1)
         qhat(2) = q(1,n)*at(1,2)+q(2,n)*at(2,2)+q(3,n)*at(3,2)
@@ -729,7 +763,7 @@ PROGRAM matdyn
         OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
         WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
-           WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
+           WRITE(2, '(10x,4f10.6)')  q(1,n), q(2,n), q(3,n), wq(n)
            WRITE(2,'(6f10.4)') (freq(i,n), i=1,3*nat)
         END DO
         CLOSE(unit=2)
@@ -830,7 +864,7 @@ PROGRAM matdyn
          call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
                            rws, nrws, dos, Emin, DeltaE, ndos, &
-                           asr, q, freq,fd, wq)
+                           asr, q, freq,fd, wq, huang)
          !
          IF (.NOT.dos) THEN
             DO isig=1,el_ph_nsigma
@@ -841,11 +875,16 @@ PROGRAM matdyn
      DEALLOCATE ( freq)
      DEALLOCATE(num_rap_mode)
      DEALLOCATE(high_sym)
+     DEALLOCATE(frc_lr)
   !
-
   CALL environment_end('MATDYN')
   !
   CALL mp_global_end()
+  !
+  IF (asr == 'all') THEN
+     WRITE(stdout, '(/A117/)') "  You are using asr="//'"all"'//", please consider citing "// &
+                               "C. Lin, S. Ponc\'e and N. Marzari, npj Comput Mater 8, 236 (2022)."
+  ENDIF
   !
   STOP
   !
@@ -853,11 +892,12 @@ END PROGRAM matdyn
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
-                    ibrav, alat, at, ntyp, amass, omega, has_zstar )
+     ibrav, alat, at, ntyp, amass, omega, &
+     has_zstar, alph, read_lr )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
-  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
+  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, frc_lr, zeu, atm
   USE cell_base,  ONLY : celldm
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
@@ -867,15 +907,15 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   IMPLICIT NONE
   ! I/O variable
   CHARACTER(LEN=256) :: flfrc
+  CHARACTER(LEN=80)  :: line
   INTEGER :: ibrav, nr1,nr2,nr3,nat, ntyp
-  REAL(DP) :: alat, at(3,3), epsil(3,3)
-  LOGICAL :: has_zstar
+  REAL(DP) :: alat, at(3,3), epsil(3,3), alph
+  LOGICAL :: has_zstar, read_lr
   ! local variables
   INTEGER :: i, j, na, nb, m1,m2,m3
-  INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
+  INTEGER :: ios, ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
   REAL(DP) :: amass(ntyp), amass_from_file, omega
   INTEGER :: nt
-  CHARACTER(LEN=3) :: atm
   !
   !
   IF (ionode) OPEN (unit=1,file=flfrc,status='old',form='formatted')
@@ -903,10 +943,10 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   !  read atomic types, positions and masses
   !
+  ALLOCATE (atm(ntyp))
   DO nt = 1,ntyp
-     IF (ionode) READ(1,*) i,atm,amass_from_file
+     IF (ionode) READ(1,*) i,atm(nt),amass_from_file
      CALL mp_bcast(i,ionode_id, world_comm)
-     CALL mp_bcast(atm,ionode_id, world_comm)
      CALL mp_bcast(amass_from_file,ionode_id, world_comm)
      IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
@@ -915,6 +955,8 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
         WRITE(stdout,*) 'for atomic type',nt,' mass from file not used'
      END IF
   END DO
+  CALL mp_bcast(atm,ionode_id, world_comm)
+  CALL mp_bcast(amass,ionode_id, world_comm)
   !
   ALLOCATE (tau(3,nat), ityp(nat), zeu(3,3,nat))
   !
@@ -926,11 +968,18 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   CALL mp_bcast(ityp,ionode_id, world_comm)
   CALL mp_bcast(tau,ionode_id, world_comm)
   !
-  !  read macroscopic variable
+  !  read macroscopic variables
   !
-  IF (ionode) READ (1,*) has_zstar
+  alph = 1.0_dp
+  IF (ionode) THEN
+     READ (1,'(a)') line
+     READ(line,*,iostat=ios) has_zstar, alph
+     IF ( ios /= 0 ) READ(line,*) has_zstar
+  ENDIF
+  !
   CALL mp_bcast(has_zstar,ionode_id, world_comm)
   IF (has_zstar) THEN
+     CALL mp_bcast(alph,ionode_id, world_comm)
      IF (ionode) READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
      CALL mp_bcast(epsil,ionode_id, world_comm)
      IF (ionode) THEN
@@ -954,6 +1003,8 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   ALLOCATE ( frc(nr1,nr2,nr3,3,3,nat,nat) )
   frc(:,:,:,:,:,:,:) = 0.d0
+  ALLOCATE ( frc_lr(nr1,nr2,nr3,3,3,nat,nat) )
+  frc_lr(:,:,:,:,:,:,:) = 0.d0
   DO i=1,3
      DO j=1,3
         DO na=1,nat
@@ -966,11 +1017,18 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
               IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
                  na.NE.nabid .OR. nb.NE.nbbid)                      &
                  CALL errore  ('readfc','error in reading',1)
-              IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,        &
-                          frc(m1,m2,m3,i,j,na,nb),                  &
-                           m1=1,nr1),m2=1,nr2),m3=1,nr3)
-               
+              IF (read_lr) THEN
+                 IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,     &
+                             frc(m1,m2,m3,i,j,na,nb),               &
+                             frc_lr(m1,m2,m3,i,j,na,nb),            &
+                             m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              ELSE
+                 IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,     &
+                             frc(m1,m2,m3,i,j,na,nb),               &
+                             m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              END IF
               CALL mp_bcast(frc(:,:,:,i,j,na,nb),ionode_id, world_comm)
+              CALL mp_bcast(frc_lr(:,:,:,i,j,na,nb),ionode_id, world_comm)
            END DO
         END DO
      END DO
@@ -980,6 +1038,85 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   RETURN
 END SUBROUTINE readfc
+!
+!-----------------------------------------------------------------------
+SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
+                   at, bg, ntyp, nat, amass, omega, epsil, alph, nspin_mag, nqs)
+  !---------------------------------------------------------------------
+  !
+   USE kinds,      ONLY : DP
+   USE io_global,  ONLY : ionode
+   USE io_dyn_mat, ONLY : write_dyn_mat_header, write_ifc
+   USE cell_base,  ONLY : celldm
+   USE constants,  ONLY : amu_ry
+   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, &
+                          frc, frc_lr, zeu, atm, m_loc
+   !
+   IMPLICIT NONE
+   ! I/O variable
+   CHARACTER(LEN=256) :: flfrc
+   INTEGER :: nr1, nr2, nr3, ibrav, nat, ntyp, nspin_mag, nqs
+   REAL(DP) :: alat, omega, at(3,3), bg(3,3), amass(ntyp), epsil(3,3)
+   REAL(DP) :: alph
+   LOGICAL :: xmlifc, has_zstar
+   ! local variables
+   INTEGER :: i, j, nt, na, nb, nn, m1, m2, m3, leng
+   CHARACTER(LEN=256) :: flfrc2
+   COMPLEX(DP) :: frc2(nr1*nr2*nr3,3,3,nat,nat)
+   !
+   leng = LEN_TRIM(flfrc)
+   flfrc2 = flfrc(1:leng) // ".matdyn"
+   IF (xmlifc) THEN
+      frc2 = RESHAPE(frc, (/nr1*nr2*nr3,3,3,nat,nat/))
+      IF (has_zstar) THEN
+         CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, celldm, &
+              at, bg, omega, atm, amass, tau, ityp, m_loc, nqs, epsil, zeu)
+      ELSE
+         CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, &
+              celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
+      ENDIF
+      CALL write_ifc(alph,nr1, nr2, nr3, nat, frc2)
+   ELSE IF (ionode) THEN
+      OPEN(unit=1, file=flfrc2, status='unknown', form='formatted')
+      WRITE(1,'(i3,i5,i4,6f11.7)') ntyp, nat, ibrav, celldm
+      IF (ibrav == 0) WRITE(1,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
+      DO nt = 1, ntyp
+         WRITE(1,*) nt, " '", atm(nt), "' ", amass(nt)*amu_ry
+      END DO
+      DO na = 1, nat
+         WRITE(1,'(2i5,3f18.10)') na, ityp(na), (tau(j,na),j=1,3)
+      END DO
+      WRITE (1,*) has_zstar, alph
+      IF (has_zstar) THEN
+         WRITE(1,'(3f24.12)') ((epsil(i,j),j=1,3),i=1,3)
+         DO na = 1, nat
+            WRITE(1,'(i5)') na
+            WRITE(1,'(3f15.7)') ((zeu(i,j,na),j=1,3),i=1,3)
+         END DO
+      END IF
+      WRITE (1,'(4i4)') nr1, nr2, nr3
+      DO i = 1, 3
+         DO j = 1,3
+            DO na = 1, nat
+               DO nb = 1, nat
+                  WRITE (1,'(4i4)') i, j, na, nb
+                  nn = 0
+                  DO m3 = 1, nr3
+                     DO m2 = 1, nr2
+                        DO m1 = 1, nr1
+                           nn = nn+1
+                           WRITE (1,'(3i4,2x,1pe18.11)')   &
+                                  m1,m2,m3, DBLE(frc(m1,m2,m3,i,j,na,nb))
+                        END DO
+                     END DO
+                  END DO
+               END DO
+            END DO
+         END DO
+      END DO
+      CLOSE(1)
+   END IF
+END SUBROUTINE writefc
 !
 !-----------------------------------------------------------------------
 SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
@@ -1000,7 +1137,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
                total_weight, rws(0:3,nrws), alat
   REAL(DP), EXTERNAL :: wsweight
   REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
   LOGICAL,SAVE :: first=.true.
   LOGICAL :: fd
   !
@@ -1037,10 +1173,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
     ENDDO
   ENDIF FIRST_TIME
   !
-  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
-  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
-  ttt(:,:,:,:,:)=0.d0
-
   DO na=1, nat
      DO nb=1, nat
         DO n1=-nr1_,nr1_
@@ -1068,11 +1200,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
                     !
                     ! FOURIER TRANSFORM
                     !
-                    do i=1,3
-                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                    end do
-
                     arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
                     DO ipol=1, 3
                        DO jpol=1, 3
@@ -1095,8 +1222,8 @@ END SUBROUTINE frc_blk
 !-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
-     &         loto_2d, & 
-     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
+     &         loto_2d, epsil, zeu, alph, &
+     &         frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -1110,7 +1237,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   ! I/O variables
   !
   INTEGER:: nr1, nr2, nr3, nat, nat_blk, nsc, nrws, itau_blk(nat)
-  REAL(DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat,      &
+  REAL(DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat, alph,    &
                   epsil(3,3), zeu(3,3,nat_blk), rws(0:3,nrws),   &
                   frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
   REAL(DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
@@ -1137,11 +1264,10 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
      CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
           &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q,fd)
-      IF (has_zstar .and. .not.na_ifc) &
-           CALL rgd_blk(nr1,nr2,nr3,nat_blk,dyn_blk,qp,tau_blk,   &
-                         epsil,zeu,bg_blk,omega_blk,celldm(1), loto_2d,+1.d0)
-           ! LOTO 2D added celldm(1)=alat to passed arguments
-     !
+     IF (has_zstar .and. .not.na_ifc) &
+          CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp, tau_blk,   &
+          epsil, zeu, alph, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0 )
+      !
      DO na=1,nat
         na_blk = itau_blk(na)
         DO nb=1,nat
@@ -1178,7 +1304,7 @@ END SUBROUTINE setupmat
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
+SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, at_blk, huang)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1186,18 +1312,21 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   IMPLICIT NONE
   CHARACTER (LEN=10), intent(in) :: asr
+  LOGICAL, intent(in) :: huang
   INTEGER, intent(in) :: nr1, nr2, nr3, nat, ibrav
-  REAL(DP), intent(in) :: tau(3,nat)
+  REAL(DP), intent(in) :: tau_blk(3,nat), at_blk(3,3), frc_lr(nr1,nr2,nr3,3,3,nat,nat)
   REAL(DP), intent(inout) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat)
   !
-  INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1
-  REAL(DP) :: zeu_new(3,3,nat)
+  INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1, ip,ieq,neq
+  INTEGER :: huang_set(4,15)
+  REAL(DP) :: zeu_new(3,3,nat), tau(3,48), rcell(3), r_ws(3), eps
   REAL(DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
+  parameter (eps=1.0d-8)
   type vector
      real(DP),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
   !
-  type (vector) u(6*3*nat)
+  type (vector) u(6*3*nat+15)
   ! These are the "vectors" associated with the sum rules on force-constants
   !
   integer :: u_less(6*3*nat),n_less,i_less
@@ -1230,7 +1359,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3')
   !
   if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim') &
-                      .and.(asr.ne.'zero-dim')) then
+                      .and.(asr.ne.'zero-dim').and.(asr.ne.'all')) then
      call errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
   endif
   !
@@ -1273,7 +1402,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
       !
       return
       !
-   end if
+  end if
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
      ! the direction of periodicity is the rotation axis
@@ -1297,6 +1426,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      n=4
   endif
   if(asr.eq.'zero-dim') n=6
+  if(asr.eq.'all') n=21
   !
   ! Acoustic Sum Rule on effective charges
   !
@@ -1329,8 +1459,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
         ! single rotational sum rule (1D system)
         p=p+1
         do na=1,nat
-           zeu_u(p,i,MOD(axis,3)+1,na)=-tau(MOD(axis+1,3)+1,na)
-           zeu_u(p,i,MOD(axis+1,3)+1,na)=tau(MOD(axis,3)+1,na)
+           zeu_u(p,i,MOD(axis,3)+1,na)=-tau_blk(MOD(axis+1,3)+1,na)
+           zeu_u(p,i,MOD(axis+1,3)+1,na)=tau_blk(MOD(axis,3)+1,na)
         enddo
         !
      enddo
@@ -1343,8 +1473,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
            ! three rotational sum rules (0D system - typ. molecule)
            p=p+1
            do na=1,nat
-              zeu_u(p,i,MOD(j,3)+1,na)=-tau(MOD(j+1,3)+1,na)
-              zeu_u(p,i,MOD(j+1,3)+1,na)=tau(MOD(j,3)+1,na)
+              zeu_u(p,i,MOD(j,3)+1,na)=-tau_blk(MOD(j+1,3)+1,na)
+              zeu_u(p,i,MOD(j+1,3)+1,na)=tau_blk(MOD(j,3)+1,na)
            enddo
            !
         enddo
@@ -1397,8 +1527,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
   call sp_zeu(zeu_w,zeu_w,nat,norm2)
-  write(stdout,'("Norm of the difference between old and new effective ", &
-       & "charges: ",F25.20)') SQRT(norm2)
+  write(stdout,'(" Norm of the difference between old and new effective ", &
+       & "charges: ",F25.20/)') SQRT(norm2)
   !
   ! Check projection
   !
@@ -1423,26 +1553,16 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! generating the vectors of the orthogonal of the subspace to project
   ! the force-constants matrix on
   !
-  do k=1,18*nat
+  do k=1,18*nat+15
      allocate(u(k) % vec(nr1,nr2,nr3,3,3,nat,nat))
      u(k) % vec (:,:,:,:,:,:,:)=0.0d0
   enddo
   ALLOCATE (frc_new(nr1,nr2,nr3,3,3,nat,nat))
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
-                       frc_new(n1,n2,n3,i,j,na,nb)=frc(n1,n2,n3,i,j,na,nb)
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
-     enddo
-  enddo
+  if (asr.eq.'all') then
+     frc_new(:,:,:,:,:,:,:)=frc(:,:,:,:,:,:,:)+frc_lr(:,:,:,:,:,:,:)
+  else
+     frc_new(:,:,:,:,:,:,:)=frc(:,:,:,:,:,:,:)
+  endif
   !
   p=0
   do i=1,3
@@ -1464,8 +1584,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
            ! single rotational sum rule (1D system)
            p=p+1
            do nb=1,nat
-              u(p) % vec (:,:,:,i,MOD(axis,3)+1,na,nb)=-tau(MOD(axis+1,3)+1,nb)
-              u(p) % vec (:,:,:,i,MOD(axis+1,3)+1,na,nb)=tau(MOD(axis,3)+1,nb)
+              u(p) % vec (:,:,:,i,MOD(axis,3)+1,na,nb)=-tau_blk(MOD(axis+1,3)+1,nb)
+              u(p) % vec (:,:,:,i,MOD(axis+1,3)+1,na,nb)=tau_blk(MOD(axis,3)+1,nb)
            enddo
            !
         enddo
@@ -1480,13 +1600,175 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
               ! three rotational sum rules (0D system - typ. molecule)
               p=p+1
               do nb=1,nat
-                 u(p) % vec (:,:,:,i,MOD(j,3)+1,na,nb)=-tau(MOD(j+1,3)+1,nb)
-                 u(p) % vec (:,:,:,i,MOD(j+1,3)+1,na,nb)=tau(MOD(j,3)+1,nb)
+                 u(p) % vec (:,:,:,i,MOD(j,3)+1,na,nb)=-tau_blk(MOD(j+1,3)+1,nb)
+                 u(p) % vec (:,:,:,i,MOD(j+1,3)+1,na,nb)=tau_blk(MOD(j,3)+1,nb)
               enddo
               !
            enddo
         enddo
      enddo
+  endif
+  !
+  if (n.eq.21) then
+     !
+     !! Please consider citing C. Lin, S. Ponc\'e and N. Marzari, npj Comput Mater 8, 236 (2022)
+     !! if asr='all' is used.
+     !
+     ! Born-Huang invariance conditions
+     do i=1,3
+        do j=1,3
+           do na=1,nat
+              ! These are 3*3*nat vectors associated with the three
+              ! rotational sum rules (valid for system of any dimension).
+              ! These differ from the case of n=6 (zero-dim), where atom b is
+              ! in supercell and its position is wrapped to its nearest periodic
+              ! image with the correct weight in the case of degeneracy.
+              p=p+1
+              do nb=1,nat
+                 do n1=1,nr1
+                    do n2=1,nr2
+                       do n3=1,nr3
+                          rcell=matmul(at_blk,(/n1,n2,n3/)-(/1,1,1/))
+                          r_ws=rcell-tau_blk(:,nb)+tau_blk(:,na)
+                          call ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+                          do ieq=1,neq
+                             u(p) % vec (n1,n2,n3,i,MOD(j,3)+1,na,nb)=&
+                             u(p) % vec (n1,n2,n3,i,MOD(j,3)+1,na,nb)-(tau(MOD(j+1,3)+1,ieq)-tau_blk(MOD(j+1,3)+1,na))/DBLE(neq)
+                             u(p) % vec (n1,n2,n3,i,MOD(j+1,3)+1,na,nb)=&
+                             u(p) % vec (n1,n2,n3,i,MOD(j+1,3)+1,na,nb)+(tau(MOD(j,3)+1,ieq)-tau_blk(MOD(j,3)+1,na))/DBLE(neq)
+                          enddo  
+                       enddo
+                    enddo
+                 enddo
+              enddo
+              !call sp1(frc_new, u(p) % vec (:,:,:,:,:,:,:), nr1,nr2,nr3,nat,scal)
+              !write(*,*) scal
+              !
+              where(abs(u(p) % vec)<eps) u(p) % vec=0.d0
+           enddo
+        enddo
+     enddo
+     !
+     ! Huang conditions
+     if (huang) then
+     do na=1,nat
+        do nb=1,nat
+           do n1=1,nr1
+              do n2=1,nr2
+                 do n3=1,nr3
+                    ! These are 15 vectors for vanishing stress tensor
+                    rcell=matmul(at_blk,(/n1,n2,n3/)-(/1,1,1/))
+                    r_ws=rcell-tau_blk(:,nb)+tau_blk(:,na)
+                    call ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+                    !
+                    do ieq=1,neq
+                       ! 1 1 1 2, yx
+                       huang_set(:,1)=(/1,1,1,2/)
+                       u(p+1) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+1) % vec (n1,n2,n3,1,1,na,nb)-tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+1) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+1) % vec (n1,n2,n3,1,2,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 1 3, zx
+                       huang_set(:,2)=(/1,1,1,3/)
+                       u(p+2) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+2) % vec (n1,n2,n3,1,1,na,nb)-tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+2) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+2) % vec (n1,n2,n3,1,3,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 2 2, xx-yy
+                       huang_set(:,3)=(/1,1,2,2/)
+                       u(p+3) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+3) % vec (n1,n2,n3,1,1,na,nb)-tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+3) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+3) % vec (n1,n2,n3,2,2,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 2 3
+                       huang_set(:,4)=(/1,1,2,3/)
+                       u(p+4) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+4) % vec (n1,n2,n3,1,1,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+4) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+4) % vec (n1,n2,n3,2,3,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 1 3 3, xx-zz
+                       huang_set(:,5)=(/1,1,3,3/)
+                       u(p+5) % vec (n1,n2,n3,1,1,na,nb)=&
+                       u(p+5) % vec (n1,n2,n3,1,1,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+5) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+5) % vec (n1,n2,n3,3,3,na,nb)+tau(1,ieq)*tau(1,ieq)/DBLE(neq)
+                       ! 1 2 1 3
+                       huang_set(:,6)=(/1,2,1,3/)
+                       u(p+6) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+6) % vec (n1,n2,n3,1,2,na,nb)-tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+6) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+6) % vec (n1,n2,n3,1,3,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 2 2 2, xy
+                       huang_set(:,7)=(/1,2,2,2/)
+                       u(p+7) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+7) % vec (n1,n2,n3,1,2,na,nb)-tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+7) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+7) % vec (n1,n2,n3,2,2,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 2 2 3
+                       huang_set(:,8)=(/1,2,2,3/)
+                       u(p+8) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+8) % vec (n1,n2,n3,1,2,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+8) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+8) % vec (n1,n2,n3,2,3,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 2 3 3
+                       huang_set(:,9)=(/1,2,3,3/)
+                       u(p+9) % vec (n1,n2,n3,1,2,na,nb)=&
+                       u(p+9) % vec (n1,n2,n3,1,2,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+9) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+9) % vec (n1,n2,n3,3,3,na,nb)+tau(1,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 1 3 2 2
+                       huang_set(:,10)=(/1,3,2,2/)
+                       u(p+10) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+10) % vec (n1,n2,n3,1,3,na,nb)-tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       u(p+10) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+10) % vec (n1,n2,n3,2,2,na,nb)+tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       ! 1 3 2 3
+                       huang_set(:,11)=(/1,3,2,3/)
+                       u(p+11) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+11) % vec (n1,n2,n3,1,3,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+11) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+11) % vec (n1,n2,n3,2,3,na,nb)+tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       ! 1 3 3 3, xz
+                       huang_set(:,12)=(/1,3,3,3/)
+                       u(p+12) % vec (n1,n2,n3,1,3,na,nb)=&
+                       u(p+12) % vec (n1,n2,n3,1,3,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+12) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+12) % vec (n1,n2,n3,3,3,na,nb)+tau(1,ieq)*tau(3,ieq)/DBLE(neq)
+                       ! 2 2 2 3, zy
+                       huang_set(:,13)=(/2,2,2,3/)
+                       u(p+13) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+13) % vec (n1,n2,n3,2,2,na,nb)-tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+13) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+13) % vec (n1,n2,n3,2,3,na,nb)+tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 2 2 3 3, yy-zz
+                       huang_set(:,14)=(/2,2,3,3/)
+                       u(p+14) % vec (n1,n2,n3,2,2,na,nb)=&
+                       u(p+14) % vec (n1,n2,n3,2,2,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+14) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+14) % vec (n1,n2,n3,3,3,na,nb)+tau(2,ieq)*tau(2,ieq)/DBLE(neq)
+                       ! 2 3 3 3, yz
+                       huang_set(:,15)=(/2,3,3,3/)
+                       u(p+15) % vec (n1,n2,n3,2,3,na,nb)=&
+                       u(p+15) % vec (n1,n2,n3,2,3,na,nb)-tau(3,ieq)*tau(3,ieq)/DBLE(neq)
+                       u(p+15) % vec (n1,n2,n3,3,3,na,nb)=&
+                       u(p+15) % vec (n1,n2,n3,3,3,na,nb)+tau(2,ieq)*tau(3,ieq)/DBLE(neq)
+                    enddo
+                    !
+                 enddo
+              enddo
+           enddo
+        enddo
+     enddo
+     !
+     do ip=1,15
+        where(abs(u(p+ip) % vec)<eps) u(p+ip) % vec=0.d0
+        call sp1(u(p+ip) % vec (:,:,:,:,:,:,:), frc_new, nr1,nr2,nr3,nat,scal)
+        write(stdout,'(A, 4I4, A, F20.16)') " Huang before: ", huang_set(:,ip), ",   residual stress: ", scal
+     enddo
+     write(stdout,*)
+     p=p+15
+     endif
+     !
   endif
   !
   allocate (ind_v(9*nat*nat*nr1*nr2*nr3,2,7), v(9*nat*nat*nr1*nr2*nr3,2) )
@@ -1571,15 +1853,17 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
         i1=MOD((((k-na1)/nat)-j1+1)/3,3)+1
      else
         q=k-9*nat
-        if (n.eq.4) then
-           na1=MOD(q,nat)
-           if (na1.eq.0) na1=nat
-           i1=MOD((q-na1)/nat,3)+1
-        else
-           na1=MOD(q,nat)
-           if (na1.eq.0) na1=nat
-           j1=MOD((q-na1)/nat,3)+1
-           i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
+        if (k.le.(18*nat)) then
+           if (n.eq.4) then
+              na1=MOD(q,nat)
+              if (na1.eq.0) na1=nat
+              i1=MOD((q-na1)/nat,3)+1
+           else
+              na1=MOD(q,nat)
+              if (na1.eq.0) na1=nat
+              j1=MOD((q-na1)/nat,3)+1
+              i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
+           endif
         endif
      endif
      do q=1,k-1
@@ -1588,12 +1872,16 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
            if (u_less(i_less).eq.q) r=0
         enddo
         if (r.ne.0) then
-           call sp3(x,u(q) % vec (:,:,:,:,:,:,:), i1,na1,nr1,nr2,nr3,nat,scal)
-           w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) - scal* u(q) % vec (:,:,:,:,:,:,:)
+           if (k.le.(18*nat)) then
+              call sp3(x,u(q) % vec (:,:,:,:,:,:,:), i1,na1,nr1,nr2,nr3,nat,scal)
+           else
+              call sp1(x,u(q) % vec (:,:,:,:,:,:,:), nr1,nr2,nr3,nat,scal)
+           endif
+           w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) - scal * u(q) % vec (:,:,:,:,:,:,:)
         endif
      enddo
      call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-     if (norm2.gt.1.0d-16) then
+     if (norm2.gt.eps) then
         u(k) % vec (:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) / DSQRT(norm2)
      else
         n_less=n_less+1
@@ -1635,9 +1923,10 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! the new "projected" frc
   !
   frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - w(:,:,:,:,:,:,:)
+  if (asr.eq.'all') frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - frc_lr(:,:,:,:,:,:,:)
   call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-  write(stdout,'("Norm of the difference between old and new force-constants:",&
-       &     F25.20)') SQRT(norm2)
+  write(stdout,'(" Norm of the difference between old and new force-constants:",&
+       &     F25.20/)') SQRT(norm2)
   !
   ! Check projection
   !
@@ -1653,21 +1942,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !  deallocate(u(k) % vec)
   !enddo
   !
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
-                       frc(n1,n2,n3,i,j,na,nb)=frc_new(n1,n2,n3,i,j,na,nb)
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
-     enddo
-  enddo
+  frc(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:)
+  !
   deallocate (x, w)
   deallocate (v, ind_v)
   deallocate (frc_new)
@@ -1801,6 +2077,76 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   return
   !
 end subroutine sp3
+!
+!-----------------------------------------------------------------------
+SUBROUTINE ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+  !-----------------------------------------------------------------------
+  !! Used in set_asr
+  !! Determine the nearest periodic image for an atom pair
+  !! Calculte the number of degeneracies as weight when
+  !! on the surface of the optimal Wigner-Seitz cell
+  !
+  USE kinds, ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: nr1,nr2,nr3
+  !! Supercell size
+  INTEGER, INTENT(out) :: neq
+  !! Weight of the degeneracy
+  REAL(DP), INTENT(in) :: r_ws(3)
+  !! Original position in the supercell
+  REAL(DP), INTENT(in) :: at_blk(3, 3)
+  !! Lattice vector of the primitive cell
+  REAL(DP), INTENT(out) :: tau(3, 48)
+  !! Nearest periodic atomic position 
+  !
+  ! Local variable
+  INTEGER :: n1, n2, n3
+  !! Search around the cell to a maximum of 2 around
+  REAL(DP) :: rnorm
+  !! Distance betweem origin cell and current cell
+  REAL(DP) :: eps
+  !! Tolerence
+  REAL(DP) :: tau_tmp(3)
+  !! Position of the current cell 
+  REAL(DP) :: at(3,3)
+  !! Lattice vector of the supercell
+  REAL(DP) :: rmin
+  !! Minimal distance
+  ! 
+  ! Large tolerence to find degeneracy position in case of bad relaxation
+  eps = 1.0d-5
+  !
+  at(:, 1) = at_blk(:, 1) * DBLE(nr1)
+  at(:, 2) = at_blk(:, 2) * DBLE(nr2)
+  at(:, 3) = at_blk(:, 3) * DBLE(nr3)
+  !
+  rmin = HUGE(rmin)
+  DO n1 = -2,2
+    DO n2 = -2,2
+      DO n3 = -2,2
+        tau_tmp = r_ws + n1 * at(:, 1) + n2 * at(:, 2) + n3 * at(:, 3)
+        rnorm = NORM2(tau_tmp)
+        IF (ABS(rnorm - rmin) .gt. eps) THEN
+          IF (rnorm .lt. rmin) THEN
+            neq = 1
+            rmin = rnorm
+            tau(:, neq) = tau_tmp
+          ENDIF
+        ELSE
+          neq = neq + 1
+          tau(:, neq) = tau_tmp
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
+  !
+  RETURN
+  !
+!-----------------------------------------------------------------------
+END SUBROUTINE ws_all
+!-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
 SUBROUTINE q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
@@ -2100,7 +2446,7 @@ END SUBROUTINE gen_qpoints
 SUBROUTINE a2Fdos &
      (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
      nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, rws, nrws, &
-     dos, Emin, DeltaE, ndos, asr, q, freq,fd, wq )
+     dos, Emin, DeltaE, ndos, asr, q, freq, fd, wq, huang)
   !-----------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
@@ -2108,7 +2454,7 @@ SUBROUTINE a2Fdos &
   USE mp,          ONLY : mp_bcast
   USE mp_world,    ONLY : world_comm
   USE mp_images,   ONLY : intra_image_comm
-  USE ifconstants, ONLY : zeu, tau_blk
+  USE ifconstants, ONLY : zeu, tau_blk, frc_lr
   USE constants,   ONLY : pi, RY_TO_THZ
   USE constants,   ONLY : K_BOLTZMANN_RY
   USE el_phon,     ONLY : el_ph_nsigma
@@ -2116,7 +2462,7 @@ SUBROUTINE a2Fdos &
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: nat, nq, nr1, nr2, nr3, ibrav, ndos
-  LOGICAL, INTENT(in) :: dos,fd
+  LOGICAL, INTENT(in) :: dos, fd, huang
   CHARACTER(LEN=*), INTENT(IN) :: asr
   REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), wq(nq), at(3,3), bg(3,3), &
        tau(3,nat), alat, Emin, DeltaE
@@ -2179,7 +2525,8 @@ SUBROUTINE a2Fdos &
      CALL readfg ( filea2F, nr1, nr2, nr3, nat, frcg )
      !
      if ( asr /= 'no') then
-        CALL set_asr (asr, nr1, nr2, nr3, frcg, zeu, nat_blk, ibrav, tau_blk)
+        CALL set_asr (asr, nr1, nr2, nr3, frcg, frc_lr, zeu, nat_blk, ibrav, &
+                      tau_blk, at_blk, huang)
      endif
      !
      IF (ionode) open(unit=300,file='dyna2F',status='old')

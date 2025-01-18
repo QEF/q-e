@@ -8,13 +8,11 @@ SUBROUTINE openfile_school()
   !
   USE kinds,          ONLY : DP
   USE wvfct,          ONLY : nbnd, npwx
-  USE io_files,       ONLY : prefix, iunwfc, nwordwfc,  iunsat, nwordatwfc, diropn
+  USE io_files,       ONLY : prefix, iunwfc, nwordwfc,  iunsat, diropn
   USE noncollin_module, ONLY : npol
   USE ldaU,             ONLY : lda_plus_u
-  USE basis,            ONLY : natomwfc
   USE ions_base,        ONLY : nat, ityp
   USE noncollin_module, ONLY : noncolin
-  USE upf_ions,         ONLY : n_atom_wfc
 
   !
   IMPLICIT NONE
@@ -42,8 +40,8 @@ SUBROUTINE openfile_school()
   ! ... iunocc contains the atomic occupations computed in new_ns
   ! ... it is opened and closed for each reading-writing operation  
   !
-  natomwfc = n_atom_wfc( nat, ityp, noncolin )
-  nwordatwfc = 2*npwx*natomwfc*npol
+  !natomwfc = n_atom_wfc( nat, ityp, noncolin )
+  !nwordatwfc = 2*npwx*natomwfc*npol
   !
   IF ( lda_plus_u ) then
      !CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
@@ -51,7 +49,7 @@ SUBROUTINE openfile_school()
         call errore ('openfile_school','file '//TRIM( prefix )//'.atwfc'//' not found',1)
      END IF
 
-     CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
+     !CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
      IF ( .NOT. exst ) THEN
         call errore ('openfile_school','file '//TRIM( prefix )//'.satwfc'//' not found',1)
      END IF

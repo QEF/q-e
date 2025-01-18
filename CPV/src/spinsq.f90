@@ -1,29 +1,32 @@
 !-----------------------------------------------------------------------
-   SUBROUTINE spinsq (c,bec,rhor)
+   SUBROUTINE spinsq( c, bec, rhor )
 !-----------------------------------------------------------------------
-!
-!     estimate of <S^2>=s(s+1) in two different ways.
-!     1) using as many-body wavefunction a single Slater determinant
-!        constructed with Kohn-Sham orbitals:
-!
-!        <S^2> = (Nup-Ndw)/2 * (Nup-Ndw)/2+1) + Ndw - 
-!                \sum_up\sum_dw < psi_up | psi_dw >
-!
-!        where Nup, Ndw = number of up and down states, the sum is over 
-!        occupied states. Not suitable for fractionary occupancy.
-!        In the ultrasoft scheme (c is the smooth part of \psi): 
-!
-!        < psi_up | psi_dw > = \sum_G c*_up(G) c_dw(G) +
-!                              \int Q_ij <c_up|beta_i><beta_j|c_dw>
-!
-!        This is the usual formula, unsuitable for fractionary occupancy.
-!     2) using the "LSD model" of Wang, Becke, Smith, JCP 102, 3477 (1995):
-!
-!        <S^2> = (Nup-Ndw)/2 * (Nup-Ndw)/2+1) + Ndw -
-!                \int max(rhoup(r),rhodw(r)) dr
-!
-!     Requires on input: c=psi, bec=<c|beta>, rhoup(r), rhodw(r)
-!     Assumes real psi, with only half G vectors.
+      !! Estimate of \( \langle S^2 \rangle=s(s+1) \) in two different 
+      !! ways:
+      !
+      !! * using as many-body wavefunction a single Slater determinant
+      !!   constructed with Kohn-Sham orbitals:
+      !
+      !!   \[ \langle S^2 \rangle = (N_{up}-N_{dw})/2 \cdot (N_{up}-N_{dw})/2+1)  
+      !!       + N_{dw} - \sum_{up}\sum_{dw} \langle \psi_{up} | \psi_{dw} \rangle \]
+      !
+      !!   where \(N_{up}\), \(N_{dw}\) are the number of up and down states and 
+      !!   the sum is over occupied states. Not suitable for fractionary occupancy.
+      !!   In the ultrasoft scheme (c is the smooth part of \psi): 
+      !
+      !!   \[ \langle \psi_{up} | \psi_{dw} \rangle = \sum_G c^*_{up}(G) c_{dw}(G) +
+      !!     \int Q_{ij} \langle c_{up}|\beta_i\rangle\langle\beta_j|c_{dw}\rangle \]
+      !
+      !!   This is the usual formula, unsuitable for fractionary occupancy;
+      !
+      !! * using the "LSD model" of Wang, Becke, Smith, JCP 102, 3477 (1995):
+      !!
+      !!   \[ \langle S^2 \rangle = (N_{up}-N_{dw})/2 \cdot (N_{up}-N_{dw})/2+1) + N_{dw} -
+      !!           \int \text{max}(\rho_{up}(r),\rho_{dw}(r)) dr \]
+      !
+      !! Requires on input: \(c=\psi\), \(\text{bec}=\langle c|\beta\rangle\), 
+      !! \(\rho_{up}(r)\), \(\rho_{dw}(r)\).  
+      !! Assumes real \(\psi\), with only half G vectors.
 !
       USE kinds, only: dp
       USE electrons_base, ONLY: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin

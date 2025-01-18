@@ -28,7 +28,7 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
 
   IMPLICIT NONE
   INTEGER, INTENT(IN):: nat, ityp(nat), ounit, nr1,nr2,nr3, nr1x,nr2x,nr3x
-  CHARACTER(len=3), INTENT(IN) :: atm(*)
+  CHARACTER(len=*), INTENT(IN) :: atm(*)
   REAL(DP), INTENT(IN) :: alat, tau(3,nat), at(3,3),bg(3,3), rho(nr1x,nr2x,nr3x)
   ! --
   INTEGER          :: i, nt, i1, i2, i3, at_num
@@ -50,7 +50,6 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
 !C      REST: 6E13.5      CUBE DATA
 !C
 !C     ALL COORDINATES ARE GIVEN IN ATOMIC UNITS.
-
   WRITE(ounit,*) 'Cubefile created from PWScf calculation'
   IF ( LEN_TRIM(title) > 1 ) THEN
      WRITE(ounit,*) TRIM(title) ! perhaps there is a better option...
@@ -100,7 +99,7 @@ SUBROUTINE write_cubefile_new (alat, nat, tau, atm, ityp, x0, &
   implicit none
   integer, intent(in)  :: nat, ityp(nat), ounit, nx, ny, nz
   real(dp), intent(in) :: alat, tau(3,nat)
-  character(len=3)     :: atm(*)
+  character(len=6)     :: atm(*)
   real(dp), intent(in) :: m1, m2, m3, x0(3), e1(3), e2(3), e3(3), carica(nx,ny,nz)
   integer              :: ia, i, j, k, at_num
   integer, external    :: atomic_number

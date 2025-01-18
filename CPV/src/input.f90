@@ -117,6 +117,7 @@ MODULE input
    !-------------------------------------------------------------------------
    SUBROUTINE set_control_flags()
      !-------------------------------------------------------------------------
+     !! Set internal flags according to the input.
      !
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
@@ -214,6 +215,11 @@ MODULE input
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
         memory, ref_cell, tcpbo, max_seconds, pre_state
      USE xc_lib,             ONLY : xclib_dft_is
+     !
+#if defined (__ENVIRON)
+     USE plugin_flags,        ONLY : use_environ
+     USE environ_base_module, ONLY : read_environ_input, init_environ_setup
+#endif
      !
      IMPLICIT NONE
      !
@@ -436,7 +442,7 @@ MODULE input
      ! ... Electronic randomization
         
      SELECT CASE ( TRIM(startingwfc) )
-       CASE ('default','none')
+       CASE ('default','none','atomic')
          trane_ = .FALSE.
        CASE ('random')
          trane_ = .TRUE.
@@ -692,8 +698,15 @@ MODULE input
       force_pairing_ = force_pairing
 
       ! ... having set all input keywords, read plugins' input file(s)
-
-      CALL plugin_read_input()
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_read_input()
+#endif 
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         CALL read_environ_input()
+         CALL init_environ_setup()
+      END IF
+#endif
 
       !
       ! ... the 'ATOMIC_SPECIES' card must be present, check it
@@ -718,6 +731,7 @@ MODULE input
    !-------------------------------------------------------------------------
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
+     !! Call the module specific setup routine.
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
@@ -763,10 +777,11 @@ MODULE input
                                   step_rad, Surf_t, dthr, R_j, h_j,   &
                                   delta_eps, delta_sigma, n_cntr,     &
                                   axis
-     USE input_parameters, ONLY : lda_plus_u, Hubbard_U
+     USE input_parameters, ONLY : lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
                                   ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
+     USE input_parameters, ONLY : exx_fraction, screening_parameter
      !
      USE constants,        ONLY : amu_au, pi
      USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
@@ -779,7 +794,6 @@ MODULE input
      USE ions_nose,        ONLY : ions_nose_init
      USE wave_base,        ONLY : grease_ => grease
      USE electrons_nose,   ONLY : electrons_nose_init
-     USE printout_base,    ONLY : printout_base_init
      USE efield_module,    ONLY : efield_init
      USE cg_module,        ONLY : cg_init
      USE pres_ai_mod,      ONLY : pres_ai_init
@@ -796,6 +810,7 @@ MODULE input
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
+     USE xc_lib,           ONLY : xclib_set_exx_fraction, set_screening_parameter
      !
      IMPLICIT NONE
      !
@@ -931,7 +946,7 @@ MODULE input
      !
      ! ... initialize variables for lda+U calculations
      !
-     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
+     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n )
      CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
      !
      !  ... initialize variables for vdW (dispersions) corrections
@@ -974,6 +989,14 @@ MODULE input
         vdw_econv_thr= ts_vdw_econv_thr
      END IF
      !
+     ! ... must be done AFTER dft is read from PP files and initialized
+     ! ... or else the two following parameters will be overwritten
+     !
+     IF (exx_fraction >= 0.0_DP) CALL xclib_set_exx_fraction (exx_fraction)
+     !
+     IF (screening_parameter >= 0.0_DP) &
+       & CALL set_screening_parameter(screening_parameter)
+     !
      RETURN
      !
   END SUBROUTINE modules_setup
@@ -984,7 +1007,7 @@ MODULE input
   !
   SUBROUTINE input_info()
 
-    ! this subroutine print to standard output some parameters read from input
+    !! This subroutine print to standard output some parameters read from input.
     ! ----------------------------------------------
 
     USE input_parameters,   ONLY: restart_mode
@@ -1021,6 +1044,8 @@ MODULE input
   !
   SUBROUTINE modules_info()
 
+    !! write to stdout input module information
+  
     USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
       orthogonalization
 
@@ -1039,6 +1064,10 @@ MODULE input
     USE io_global,            ONLY: ionode, stdout
     USE time_step,            ONLY: delt
     !
+#if defined (__ENVIRON)
+    USE plugin_flags,         ONLY : use_environ
+    USE environ_base_module,  ONLY : print_environ_summary
+#endif
     !
     IMPLICIT NONE
 
@@ -1110,7 +1139,9 @@ MODULE input
       !
       !   CALL sic_info()  ! maybe useful
       !
-      CALL plugin_print_info( )
+#if defined (__ENVIRON)
+      IF (use_environ) CALL print_environ_summary()
+#endif
       !
       IF(tefield) call efield_info( ) 
       IF(tefield2) call efield_info2( )

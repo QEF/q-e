@@ -8,11 +8,12 @@
 !
 !--------------------------------------------------------------------
 subroutine sph_bes (msh, r, q, l, jl)
+  !$acc routine vector
   !--------------------------------------------------------------------
   !! Spherical Bessel function.
   !
   USE upf_kinds, only: DP
-  USE upf_const, ONLY : eps14
+  USE upf_const, only: eps14
   !
   implicit none
   !
@@ -29,8 +30,8 @@ subroutine sph_bes (msh, r, q, l, jl)
   !
   ! xseries = convergence radius of the series for small x of j_l(x)
   real(DP) :: x, xl, xseries = 0.05_dp
-  integer :: ir, ir0
-  integer, external:: semifact
+  integer :: i, ir, ir0
+  integer :: semifact
   !
 #if defined (__MASS)
   real(DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
@@ -40,11 +41,17 @@ subroutine sph_bes (msh, r, q, l, jl)
 
   if (abs (q) < eps14) then
      if (l == -1) then
-        call upf_error ('sph_bes', 'j_{-1}(0) ?!?', 1)
+        stop !call upf_error ('sph_bes', 'j_{-1}(0) ?!?', 1)
      elseif (l == 0) then
-        jl(:) = 1.d0
+        !$acc loop vector
+        do ir = 1, msh
+          jl(ir) = 1.d0
+        enddo
      else
-        jl(:) = 0.d0
+        !$acc loop vector
+        do ir = 1, msh
+          jl(ir) = 0.d0
+        enddo  
      endif
      return
   end if 
@@ -52,7 +59,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   !  case l=-1
 
   if (l == - 1) then
-     if (abs (q * r (1) ) < eps14) call upf_error ('sph_bes', 'j_{-1}(0) ?!?',1)
+     if (abs (q * r (1) ) < eps14) stop !call upf_error ('sph_bes', 'j_{-1}(0) ?!?',1)
 
 #if defined (__MASS)
 
@@ -61,9 +68,10 @@ subroutine sph_bes (msh, r, q, l, jl)
      jl = cos_qr / qr
 
 #else
-
-     jl (:) = cos (q * r (:) ) / (q * r (:) )
-
+     !$acc loop vector
+     do ir = 1, msh
+       jl (ir) = cos (q * r (ir) ) / (q * r (ir) )
+     enddo
 #endif
 
      return
@@ -75,6 +83,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   ! notice that for small q it may happen that q*r(msh) < xseries !
 
   ir0 = msh+1
+  !$acc loop vector
   do ir = 1, msh
      if ( abs (q * r (ir) ) > xseries ) then
         ir0 = ir
@@ -82,6 +91,7 @@ subroutine sph_bes (msh, r, q, l, jl)
      end if
   end do
 
+  !$acc loop vector
   do ir = 1, ir0 - 1
      x = q * r (ir)
      if ( l == 0 ) then
@@ -89,11 +99,18 @@ subroutine sph_bes (msh, r, q, l, jl)
      else
         xl = x**l
      end if
-     jl (ir) = xl/semifact(2*l+1) * &
-                ( 1.0_dp - x**2/1.0_dp/2.0_dp/(2.0_dp*l+3) * &
-                ( 1.0_dp - x**2/2.0_dp/2.0_dp/(2.0_dp*l+5) * &
-                ( 1.0_dp - x**2/3.0_dp/2.0_dp/(2.0_dp*l+7) * &
-                ( 1.0_dp - x**2/4.0_dp/2.0_dp/(2.0_dp*l+9) ) ) ) )
+     !--
+     semifact = 1
+     !$acc loop seq reduction(*:semifact)
+     do i = 2*l+1, 1, -2
+       semifact = i*semifact
+     enddo
+     !---
+     jl (ir) = xl/DBLE(semifact) * &
+                ( 1.0_dp - x**2/1.0_dp/2.0_dp/DBLE(2*l+3) * &
+                ( 1.0_dp - x**2/2.0_dp/2.0_dp/DBLE(2*l+5) * &
+                ( 1.0_dp - x**2/3.0_dp/2.0_dp/DBLE(2*l+7) * &
+                ( 1.0_dp - x**2/4.0_dp/2.0_dp/DBLE(2*l+9) ) ) ) )
   end do
 
   ! the following shouldn't be needed but do you trust compilers
@@ -110,9 +127,10 @@ subroutine sph_bes (msh, r, q, l, jl)
      jl (ir0:) = sin_qr(ir0:) / (q * r (ir0:) )
 
 #else
-
-     jl (ir0:) = sin (q * r (ir0:) ) / (q * r (ir0:) )
-
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = sin (q * r (ir) ) / (q * r (ir) )
+     enddo
 #endif
 
   elseif (l == 1) then
@@ -126,10 +144,11 @@ subroutine sph_bes (msh, r, q, l, jl)
                    cos_qr(ir0:) ) / (q * r (ir0:) )
 
 #else
-
-     jl (ir0:) = (sin (q * r (ir0:) ) / (q * r (ir0:) ) - &
-                  cos (q * r (ir0:) ) ) / (q * r (ir0:) )
-
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = (sin (q * r (ir) ) / (q * r (ir) ) - &
+                  cos (q * r (ir) ) ) / (q * r (ir) )
+     enddo
 #endif
 
   elseif (l == 2) then
@@ -143,10 +162,11 @@ subroutine sph_bes (msh, r, q, l, jl)
                     3.d0 * cos_qr(ir0:) ) / (q*r(ir0:))**2
 
 #else
-
-     jl (ir0:) = ( (3.d0 / (q*r(ir0:)) - (q*r(ir0:)) ) * sin (q*r(ir0:)) - &
-                    3.d0 * cos (q*r(ir0:)) ) / (q*r(ir0:))**2
-
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = ( (3.d0 / (q*r(ir)) - (q*r(ir)) ) * sin (q*r(ir)) - &
+                    3.d0 * cos (q*r(ir)) ) / (q*r(ir))**2
+     enddo
 #endif
 
   elseif (l == 3) then
@@ -162,12 +182,13 @@ subroutine sph_bes (msh, r, q, l, jl)
                   (q*r(ir0:))**3
 
 #else
-
-     jl (ir0:) = (sin (q*r(ir0:)) * &
-                  (15.d0 / (q*r(ir0:)) - 6.d0 * (q*r(ir0:)) ) + &
-                  cos (q*r(ir0:)) * ( (q*r(ir0:))**2 - 15.d0) ) / &
-                  (q*r(ir0:)) **3
-
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = (sin (q*r(ir)) * &
+                 (15.d0 / (q*r(ir)) - 6.d0 * (q*r(ir)) ) + &
+                 cos (q*r(ir)) * ( (q*r(ir))**2 - 15.d0) ) / &
+                 (q*r(ir)) **3
+     enddo
 #endif
 
   elseif (l == 4) then
@@ -184,12 +205,14 @@ subroutine sph_bes (msh, r, q, l, jl)
                     (q*r(ir0:))**5
 
 #else
-
-     jl (ir0:) = (sin (q*r(ir0:)) * &
-                  (105.d0 - 45.d0 * (q*r(ir0:))**2 + (q*r(ir0:))**4) + &
-                  cos (q*r(ir0:)) * &
-                  (10.d0 * (q*r(ir0:))**3 - 105.d0 * (q*r(ir0:))) ) / &
-                     (q*r(ir0:))**5
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = (sin (q*r(ir)) * &
+                 (105.d0 - 45.d0 * (q*r(ir))**2 + (q*r(ir))**4) + &
+                 cos (q*r(ir)) * &
+                 (10.d0 * (q*r(ir))**3 - 105.d0 * (q*r(ir))) ) / &
+                    (q*r(ir))**5
+     enddo
 #endif
 
   elseif (l == 5) then
@@ -205,12 +228,15 @@ subroutine sph_bes (msh, r, q, l, jl)
                   (420.d0*sin_qr(ir0:)) / (q*r(ir0:)) ** 3 + &
                   ( 15.d0*sin_qr(ir0:)) / (q*r(ir0:)) ) / (q*r(ir0:))
 #else
-     jl (ir0:) = (-cos(q*r(ir0:)) - &
-                  (945.d0*cos(q*r(ir0:))) / (q*r(ir0:)) ** 4 + &
-                  (105.d0*cos(q*r(ir0:))) / (q*r(ir0:)) ** 2 + &
-                  (945.d0*sin(q*r(ir0:))) / (q*r(ir0:)) ** 5 - &
-                  (420.d0*sin(q*r(ir0:))) / (q*r(ir0:)) ** 3 + &
-                  ( 15.d0*sin(q*r(ir0:))) / (q*r(ir0:)) ) / (q*r(ir0:))
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = (-cos(q*r(ir)) - &
+                  (945.d0*cos(q*r(ir))) / (q*r(ir)) ** 4 + &
+                  (105.d0*cos(q*r(ir))) / (q*r(ir)) ** 2 + &
+                  (945.d0*sin(q*r(ir))) / (q*r(ir)) ** 5 - &
+                  (420.d0*sin(q*r(ir))) / (q*r(ir)) ** 3 + &
+                  ( 15.d0*sin(q*r(ir))) / (q*r(ir)) ) / (q*r(ir))
+     enddo
 #endif
 
   elseif (l == 6) then
@@ -228,19 +254,21 @@ subroutine sph_bes (msh, r, q, l, jl)
                   (  4725.d0*sin_qr(ir0:)) / (q*r(ir0:))**4 + &
                   (   210.d0*sin_qr(ir0:)) / (q*r(ir0:))**2 ) / (q*r(ir0:))
 #else
-
-     jl (ir0:) = ((-10395.d0*cos(q*r(ir0:))) / (q*r(ir0:))**5 + &
-                  (  1260.d0*cos(q*r(ir0:))) / (q*r(ir0:))**3 - &
-                  (    21.d0*cos(q*r(ir0:))) / (q*r(ir0:))    - &
-                             sin(q*r(ir0:))                   + &
-                  ( 10395.d0*sin(q*r(ir0:))) / (q*r(ir0:))**6 - &
-                  (  4725.d0*sin(q*r(ir0:))) / (q*r(ir0:))**4 + &
-                  (   210.d0*sin(q*r(ir0:))) / (q*r(ir0:))**2 ) / (q*r(ir0:))
+     !$acc loop vector
+     do ir = ir0, msh
+       jl (ir) = ((-10395.d0*cos(q*r(ir))) / (q*r(ir))**5 + &
+                  (  1260.d0*cos(q*r(ir))) / (q*r(ir))**3 - &
+                  (    21.d0*cos(q*r(ir))) / (q*r(ir))    - &
+                             sin(q*r(ir))                   + &
+                  ( 10395.d0*sin(q*r(ir))) / (q*r(ir))**6 - &
+                  (  4725.d0*sin(q*r(ir))) / (q*r(ir))**4 + &
+                  (   210.d0*sin(q*r(ir))) / (q*r(ir))**2 ) / (q*r(ir))
+     enddo
 #endif
 
   else
 
-     call upf_error ('sph_bes', 'not implemented', abs(l))
+     stop !call upf_error ('sph_bes', 'not implemented', abs(l))
 
   endif
   !

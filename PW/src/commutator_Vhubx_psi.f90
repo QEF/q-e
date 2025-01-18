@@ -9,11 +9,11 @@
 !-----------------------------------------------------------------------
 SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   !-----------------------------------------------------------------------
+  !! This routine computes the commutator between the non-local
+  !! Hubbard potential and the position operator, applied to \text{psi}
+  !! of the current k-point. The result is added to \text{dpsi}.
   !
-  ! This routine computes the commutator between the non-local
-  ! Hubbard potential and the position operator, applied to psi
-  ! of the current k point, i.e. [V_hub, r \dot vpol]|psi_nk>.
-  ! The result is added to dpsi.
+  ! calculates: [V_hub, r \dot vpol]|psi_nk>
   !
   ! vpol is the polarization vector in Cartesian coordinates.
   ! For crystal coordinate, use vpol = at(:, ipol).
@@ -42,7 +42,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   USE gvect,          ONLY : g
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
-  USE mp_pools,       ONLY : intra_pool_comm
+  USE mp_bands,       ONLY : intra_bgrp_comm
   USE buffers,        ONLY : get_buffer
   USE basis,          ONLY : natomwfc
   USE noncollin_module, ONLY : noncolin, npol
@@ -50,11 +50,11 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik
-  !! k point index
+  !! k-point index
   INTEGER, INTENT(IN) :: nbnd_calc
   !! Number of bands to calculate [V_hub, x_ipol]|psi_ik>
   REAL(DP), INTENT(IN) :: vpol(3)
-  !! polarization vector in Cartesian coordinates
+  !! Polarization vector in Cartesian coordinates
   COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd_calc)
   !! Output wavefunction where [V_hub, x_ipol]|psi_ik> is added
   !
@@ -248,9 +248,9 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
      !
   ENDDO
   !
-  CALL mp_sum(proj1, intra_pool_comm)
-  CALL mp_sum(proj2, intra_pool_comm)
-  CALL mp_sum(proj3, intra_pool_comm)
+  CALL mp_sum(proj1, intra_bgrp_comm)
+  CALL mp_sum(proj2, intra_bgrp_comm)
+  CALL mp_sum(proj3, intra_bgrp_comm)
   !
   DO nah = 1, nat   ! the Hubbard atom
      !
@@ -313,7 +313,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
                                              (Hubbard_U(nt) - Hubbard_J0(nt))
             ENDDO
             !
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            !---------------------------------------------------------------
             ! The following is for the J0\=0 case
             !
             IF (nspin.EQ.2 .AND. Hubbard_J0(nt).NE.0.d0) THEN
@@ -414,7 +414,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     USE uspp,       ONLY : qq_nt, nkb, ofsbeta
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
-    USE mp_pools,   ONLY : intra_pool_comm
+    USE mp_bands,   ONLY : intra_bgrp_comm
     !
     IMPLICIT NONE
     !
@@ -455,7 +455,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
           !
           projaux1vec3 = dot_product (aux1(1:npw), vec3(1:npw))
           !
-          CALL mp_sum(projaux1vec3, intra_pool_comm)
+          CALL mp_sum(projaux1vec3, intra_bgrp_comm)
           !
           ! Summing on na and l1 for each ig
           !

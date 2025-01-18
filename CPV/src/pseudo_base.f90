@@ -24,21 +24,6 @@
       PUBLIC :: compute_rhops, formfn, formfa
       PUBLIC :: compute_eself, compute_rhocg
 
-      !FIXME device variable added here because cp implementation     
-      ! differs from the one of PW. Work yet to be done to remove it 
-      ! from cp 
-      PUBLIC :: vkb_d
-
-      COMPLEX(DP), ALLOCATABLE :: vkb_d(:,:)
-
-#if defined(__CUDA)
-      attributes (DEVICE) :: vkb_d
-#endif
-
-      
-
-
-
 !=----------------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------------=!

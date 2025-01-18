@@ -1,0 +1,90 @@
+
+     Program KC_PP_Self-Hartree v.7.3.1 starts on 25Sep2024 at 15:49: 3 
+        Git branch: GGA_fix
+        Last git commit: 3fc5531ed12a50bf5b056d0a6fce3c36b32692e5-dirty
+        Last git commit date: Wed Sep 25 15:27:14 2024 +0200
+        Last git commit subject: Update exmaple02. Use LDA pseudos and functional
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     204185 MiB available memory on the printing compute node when the environment starts
+ 
+
+     KC_PP INPUT SUMMARY 
+     ==========================================
+     # title               =KCWPP Self Hartree
+     # out_dir             =                ./
+     # prefix              =                Si
+     # seedname            =                Si
+     # kcw_iverbosity                        0
+     # num_wann            =                 8
+     # MP grid             =     2     2     2
+     # use_ws_distance     =                 F
+     # have_empty          =                 F
+     # io_sp               =                 F
+     # io_real_space       =                 F
+     ==========================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         295     295     91                 3287     3287     609
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: Coulomb q+G=0 treatment:
+     INFO: Divergence            none    
+     INFO: q-grid dimension         2   2   2
+     INFO: cell volume               270.256360799503
+     INFO: Gamma Extrapolation       F
+     INFO: extrapolation q->0 term not estimated
+     INFO: Bare Coulomb q+G=0            0.00000E+00
+
+     INFO: READING Wannier-orbital Densities ...
+
+     INFO: READING Wannier-orbital Densities ... DONE
+
+     INFO: WANNIER orbital SH 
+
+     orb, Self hartree     1     0.272879
+     orb, Self hartree     2     0.272879
+     orb, Self hartree     3     0.272879
+     orb, Self hartree     4     0.272879
+     orb, Self hartree     5     0.095365
+     orb, Self hartree     6     0.095366
+     orb, Self hartree     7     0.095366
+     orb, Self hartree     8     0.095366
+ 
+     KC_PP_Self-H :      0.21s CPU      0.27s WALL
+
+ 
+   This run was terminated on:  15:49: 3  25Sep2024            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

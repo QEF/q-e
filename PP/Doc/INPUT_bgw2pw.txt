@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: bgw2pw.x / PWscf / Quantum Espresso (version: 7.0)
+Program: bgw2pw.x / PWscf / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -107,4 +107,4 @@ NAMELIST: &INPUT_BGW2PW
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:46 CET 2021
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

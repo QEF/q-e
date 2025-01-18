@@ -7,7 +7,8 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
+SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at, &
+                                is_tau_read )
   !-----------------------------------------------------------------------
   !
   USE kinds,           ONLY : DP
@@ -30,15 +31,18 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
   REAL(DP),INTENT(out)   :: alat
   REAL(DP),INTENT(out)   :: at(3,3)
   REAL(DP),INTENT(inout) :: tau(3,nat)
+  LOGICAL,INTENT(out)    :: is_tau_read
   !
   ! ... local variables
   !
   TYPE ( output_type) :: output_obj
   !
-  INTEGER :: ierr, nat_, ibrav_
+  INTEGER :: ierr, nat_, ibrav_, natomwfc_
   INTEGER, ALLOCATABLE :: ityp_(:)
   REAL(dp), ALLOCATABLE :: tau_(:,:)
-  CHARACTER (LEN=3) :: atm_(nsp)
+  CHARACTER (LEN=6) :: atm_(nsp)
+  !
+  is_tau_read = .FALSE.
   !
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
                 &  /,5X,A)') TRIM(restart_dir())
@@ -58,7 +62,7 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
      !
      CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
      CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
-          atm_, nat_, tau_, ityp_, alat, at(:,1), at(:,2), at(:,3), ibrav_ )
+          atm_, nat_, tau_, ityp_, alat, at(:,1), at(:,2), at(:,3), ibrav_ , natomwfc_)
      CALL qes_reset (output_obj)
      IF ( nat_ /= nat ) CALL errore('read_conf_from_file','bad number of atoms',1)
      at(:,:) = at(:,:) / alat
@@ -66,6 +70,9 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
      IF ( SUM ( (tau_(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
         WRITE( stdout, '(5X,"Atomic positions from file used, from input discarded")' )
         tau(:,1:nat) = tau_(:,1:nat)
+        !
+        is_tau_read = .TRUE.
+        !
      END IF
      DEALLOCATE ( tau_, ityp_ )
      WRITE( stdout, * )

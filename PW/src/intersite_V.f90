@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -338,7 +338,7 @@ SUBROUTINE alloc_neighborhood()
         max_num_neighbors = neighood(i)%num_neigh
      ENDIF
      !
-     ALLOCATE (neighood(i)%neigh(1:neighood(i)%num_neigh))
+     IF (.NOT.ALLOCATED(neighood(i)%neigh)) ALLOCATE (neighood(i)%neigh(1:neighood(i)%num_neigh))
      ! 
      viz = 0
      !
@@ -531,13 +531,15 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !  Finally, we store in rat2 the position, in the full list of atoms in
   !  the supercell, the rotated and translated second atom corresponds to.
   !     
-  USE symm_base,       ONLY : s,ft,nsym,irt
+  USE symm_base,       ONLY : s,ft,nsym,irt,chem_symb
   USE ions_base,       ONLY : nat,ityp
   USE cell_base,       ONLY : bg
   USE fft_base,        ONLY : dfftp
   USE ldaU,            ONLY : atom_pos, at_sc, sc_at, num_uc
   USE kinds
   USE io_global,       ONLY : stdout
+  USE ions_base,       ONLY : atm
+  USE noncollin_module, ONLY : colin_mag
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN)  :: at1, at2, p_sym
@@ -601,7 +603,9 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !
   DO WHILE ( at.LE.nat .AND. diff > eps )
      !
-     IF ( ityp(at).EQ.ityp(equiv_2) ) THEN
+     IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(at)) ) == chem_symb( atm(ityp(equiv_2)) ) ) & 
+           .OR. (colin_mag < 0 .AND. ityp(at) == ityp(equiv_2) ) )THEN
+     ! IF ( ityp(at).EQ.ityp(equiv_2) ) THEN
         diff = 0.d0
         DO i = 1, 3
            dx(i) = r2(i) - atom_pos(at,i)
@@ -629,7 +633,9 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !
   DO WHILE ( at.LE.nat .AND. diff > eps )
      !
-     IF ( ityp(at).EQ.ityp(at1) ) THEN
+     IF ( (colin_mag >= 0 .AND. chem_symb( atm(ityp(at)) ) == chem_symb( atm(ityp(at1)) ) ) & 
+          .OR. (colin_mag < 0 .AND. ityp(at) == ityp(at1) ) )THEN
+     ! IF ( ityp(at).EQ.ityp(at1) ) THEN
         diff = 0.d0
         DO i = 1, 3
            dx(i) = r1(i) - atom_pos(at,i)
@@ -785,7 +791,7 @@ SUBROUTINE alloc_atom_pos()
   INTEGER :: na, ipol
   ! counters on atoms and coordinates
   !
-  ALLOCATE(atom_pos(nat,3))
+  IF (.NOT.ALLOCATED(atom_pos)) ALLOCATE(atom_pos(nat,3))
   !
   DO na = 1, nat
      DO ipol = 1, 3
@@ -798,84 +804,4 @@ SUBROUTINE alloc_atom_pos()
   RETURN
   !
 END SUBROUTINE alloc_atom_pos
-!-------------------------------------------------------------------------
-
-!-------------------------------------------------------------------------
-SUBROUTINE write_V
-  !-----------------------------------------------------------------------
-  !
-  ! This routine writes Hubbard_V to file
-  !
-  USE io_files,       ONLY : seqopn
-  USE io_global,      ONLY : ionode
-  USE ldaU,           ONLY : Hubbard_V
-  !
-  IMPLICIT NONE
-  INTEGER :: i, j, k, iunit
-  LOGICAL :: exst
-  INTEGER, EXTERNAL :: find_free_unit
-  !
-  iunit = find_free_unit()
-  ! 
-  IF (ionode) THEN
-     CALL seqopn( iunit, 'HubbardV.txt', 'FORMATTED', exst )
-     DO i = 1, SIZE(Hubbard_V,1)
-        DO j = 1, SIZE(Hubbard_V,2)
-           DO k = 1, SIZE(Hubbard_V,3)
-              IF (Hubbard_V(i,j,k) > 1.d-20) WRITE(iunit,*) i, j, k, Hubbard_V(i,j,k)
-           ENDDO
-        ENDDO
-     ENDDO
-     CLOSE(UNIT=iunit, STATUS='KEEP')
-  ENDIF
-  !
-  RETURN
-  ! 
-END SUBROUTINE write_V
-!-------------------------------------------------------------------------
-
-!-------------------------------------------------------------------------
-SUBROUTINE read_V
-  !-----------------------------------------------------------------------
-  !
-  ! This routine reads Hubbard_V from file
-  !
-  USE kinds,          ONLY : DP
-  USE io_files,       ONLY : seqopn
-  USE io_global,      ONLY : ionode, ionode_id
-  USE ldaU,           ONLY : Hubbard_V
-  USE mp_images,      ONLY : intra_image_comm
-  USE mp,             ONLY : mp_bcast
-  !
-  IMPLICIT NONE
-  REAL(DP) :: V
-  INTEGER :: i, j, k, iunit, ierr
-  LOGICAL :: exst
-  INTEGER, EXTERNAL :: find_free_unit
-  !
-  iunit = find_free_unit()
-  ! 
-  Hubbard_V(:,:,:) = 0.0d0
-  !
-  IF (ionode) THEN
-     CALL seqopn( iunit, 'HubbardV.txt', 'FORMATTED', exst )
-     IF (exst) THEN 
-10      READ(iunit,*,END=11,IOSTAT=ierr) i, j, k, V
-        IF ( ierr/=0 ) THEN
-           CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-           CALL errore('read_V', 'Reading Hubbard_V', 1)
-        ENDIF
-        Hubbard_V(i,j,k) = V
-        GO TO 10
-     ELSE
-        CALL errore('read_V','File HubbardV.txt was not found...',1)
-     ENDIF
-11   CLOSE( UNIT=iunit, STATUS='KEEP' )
-  ENDIF
-  ! Broadcast Hubbard_V across all processors
-  CALL mp_bcast( Hubbard_V, ionode_id, intra_image_comm )
-  !
-  RETURN
-  ! 
-END SUBROUTINE read_V
 !-------------------------------------------------------------------------

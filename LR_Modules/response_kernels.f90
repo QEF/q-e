@@ -49,18 +49,17 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !!
    !! Output:
    !!    - avg_iter: average number of iterations for the linear equation solver
-   !!    - drhoout: induced charge density
+   !!    - drhoout: induced charge density (dffts, without augmentation term)
    !!    - dbecsum: becsum with dpsi
    !!    - dbecsum_nc: becsum with dpsi. Optional, used if noncolin is true.
    !!
-   !! FIXME: Only 1:dffts%nnr is used for drhoout, but it is allocated as 1:dfftp%nnr.
    !----------------------------------------------------------------------------
    USE kinds,                 ONLY : DP
    USE io_global,             ONLY : stdout
    USE mp,                    ONLY : mp_sum
    USE mp_pools,              ONLY : inter_pool_comm
    USE buffers,               ONLY : get_buffer, save_buffer
-   USE fft_base,              ONLY : dfftp
+   USE fft_base,              ONLY : dffts
    USE ions_base,             ONLY : nat
    USE klist,                 ONLY : xk, wk, ngk, igk_k
    USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
@@ -77,6 +76,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    USE qpoint_aux,            ONLY : ikmks, ikmkmqs, becpt
    USE eqv,                   ONLY : dpsi, dvpsi, evq
    USE apply_dpot_mod,        ONLY : apply_dpot_bands
+   USE lr_nc_mag,             ONLY : lr_apply_time_reversal
    !
    IMPLICIT NONE
    !
@@ -98,9 +98,9 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !! True if converged at all k points and perturbations
    REAL(DP), INTENT(OUT) :: avg_iter
    !! average number of iterations for the linear equation solver
-   COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
+   COMPLEX(DP), POINTER, INTENT(INOUT) :: dvscfins(:, :, :)
    !! dV_ind calculated in the previous iteration
-   COMPLEX(DP), INTENT(INOUT) :: drhoout(dfftp%nnr, nspin_mag, npert)
+   COMPLEX(DP), INTENT(INOUT) :: drhoout(dffts%nnr, nspin_mag, npert)
    !! induced charge density
    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2, nat, nspin_mag, npert)
    !! becsum with dpsi
@@ -136,8 +136,16 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    exclude_hubbard_ = .FALSE.
    IF (PRESENT(exclude_hubbard)) exclude_hubbard_ = exclude_hubbard
    !
+   !  change the sign of the magnetic field if required
+   !
+   IF (time_reversed) CALL lr_apply_time_reversal(first_iter, 2, dvscfins)
+   !
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
+   h_diag = (0.d0, 0.d0)
+   aux2 = (0.d0, 0.d0)
+   !
+   !$acc enter data create(aux2(1:npwx*npol, 1:nbnd))
    !
    all_conv = .TRUE.
    tot_num_iter = 0
@@ -168,17 +176,23 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
       !
       IF (nksq > 1 .OR. (noncolin .AND. domag)) THEN
          IF (lgamma) THEN
+            !civn: in this case evq is a pointer to evc
             CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            !$acc update device(evc)
          ELSE
+            !civn: in this case evq is allocated separately and needs to be updated on device
             CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            !$acc update device(evc)
             CALL get_buffer(evq, lrwfc, iuwfc, ikmkmq)
+            !$acc update device(evq)
          ENDIF
       ENDIF
       !
       ! compute beta functions and kinetic energy for k-point ik
       ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
       !
-      CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb)
+      CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb, .true.)
+      !$acc update host(vkb)
       CALL g2_kin(ikq)
       !
       ! compute preconditioning matrix h_diag used by cgsolve_all
@@ -274,6 +288,15 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    CALL mp_sum(tot_num_iter, inter_pool_comm)
    CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
+   !
+   !$acc exit data delete(aux2)
+   !
+   !  reset the original magnetic field if it was changed
+   !
+   IF (time_reversed) CALL lr_apply_time_reversal(first_iter, 1, dvscfins)
+   !
+   DEALLOCATE(aux2)
+   DEALLOCATE(h_diag)
    !
    CALL stop_clock("sth_kernel")
    !

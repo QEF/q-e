@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhous( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
+subroutine incdrhous( drhos, weight, ik, dbecsum, evcr, wgg, becq, &
                       alpq, mode )
   !-----------------------------------------------------------------------
   !! This routine computes the change of the charge density due
@@ -18,10 +18,9 @@ subroutine incdrhous( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE cell_base, ONLY : omega
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE noncollin_module, ONLY : npol
   USE uspp,      ONLY : nkb, qq_nt
   USE uspp_param,ONLY : nhm, nh
-  USE wvfct,     ONLY : nbnd, npwx
+  USE wvfct,     ONLY : nbnd
   USE phus,      ONLY : alphap
   USE modes,     ONLY : u
   USE mp_bands,  ONLY : intra_bgrp_comm
@@ -47,7 +46,7 @@ subroutine incdrhous( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   
   complex(DP) :: evcr(dffts%nnr,nbnd)
   !! input: the wavefunctions at k in real space
-  complex(DP) :: drhoscf(dffts%nnr)
+  complex(DP) :: drhos(dffts%nnr)
   !! output: the change of the charge density
   complex(DP) :: dbecsum(nhm*(nhm+1)/2,nat)
   !! in/out: the accumulated dbec
@@ -126,7 +125,7 @@ subroutine incdrhous( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
      CALL invfft ('Wave', dpsir, dffts)
      do ir = 1, dffts%nnr
-        drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * CONJG(evcr(ir,ibnd))
+        drhos(ir) = drhos(ir) + wgt * dpsir(ir) * CONJG(evcr(ir,ibnd))
      enddo
   enddo
 

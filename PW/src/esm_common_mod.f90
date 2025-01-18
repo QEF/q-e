@@ -8,6 +8,7 @@ MODULE esm_common_mod
   CHARACTER(LEN=3)         :: esm_bc
   INTEGER, ALLOCATABLE     :: mill_2d(:, :), imill_2d(:, :)
   INTEGER                  :: ngm_2d = 0
+  LOGICAL                  :: do_comp_esm = .FALSE.
 
 CONTAINS
 
@@ -292,21 +293,22 @@ CONTAINS
       END IF
       z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
-      !! BC1 terms
-      Vhar0r(iz) = Vhar0r(iz) &
-                   - tpi*z**2*rg3 &
-                   - tpi*z0**2*rg3 &
-                   - fpi*z*sum1c &
-                   - fpi*sum2c
-
-      IF (esm_bc == 'bc2') THEN
-        !! BC2 terms
+      IF (do_comp_esm .AND. ( esm_bc /= 'pbc' )) THEN
+        !! BC1 terms
         Vhar0r(iz) = Vhar0r(iz) &
-                     + tpi*z1*2*z0*rg3 - tpi*(-z/z1)*2*z0*sum1c
-      ELSE IF (esm_bc == 'bc3') THEN
-        !! BC3 terms
-        Vhar0r(iz) = Vhar0r(iz) &
-                     - tpi*(z - 2*z1)*2*z0*rg3 + fpi*z0*sum1c
+                     - tpi*z**2*rg3 &
+                     - tpi*z0**2*rg3 &
+                     - fpi*z*sum1c &
+                     - fpi*sum2c
+        IF (esm_bc == 'bc2') THEN
+          !! BC2 terms
+          Vhar0r(iz) = Vhar0r(iz) &
+                       + tpi*z1*2*z0*rg3 - tpi*(-z/z1)*2*z0*sum1c
+        ELSE IF (esm_bc == 'bc3') THEN
+          !! BC3 terms
+          Vhar0r(iz) = Vhar0r(iz) &
+                       - tpi*(z - 2*z1)*2*z0*rg3 + fpi*z0*sum1c
+        END IF
       END IF
     END DO ! iz
 
@@ -362,19 +364,20 @@ CONTAINS
           za = za - L
         END IF
 
-        !! BC1 terms
-        Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
-                     *((z - za)*erf(salp*(z - za)) &
-                     + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
-
-        IF (esm_bc == 'bc2') THEN
-          !! BC2 terms
-          Vloc0r(iz) = Vloc0r(iz) &
-                       + tpi*Qa/S*(-z*za + z1*z1)/z1
-        ELSE IF (esm_bc == 'bc3') THEN
-          !! BC3 terms
-          Vloc0r(iz) = Vloc0r(iz) &
-                       + tpi*Qa/S*(-z + 2*z1 - za)
+        IF (do_comp_esm .AND. ( esm_bc /= 'pbc' )) THEN
+          !! BC1 terms
+          Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
+                       *((z - za)*erf(salp*(z - za)) &
+                       + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
+          IF (esm_bc == 'bc2') THEN
+            !! BC2 terms
+            Vloc0r(iz) = Vloc0r(iz) &
+                         + tpi*Qa/S*(-z*za + z1*z1)/z1
+          ELSE IF (esm_bc == 'bc3') THEN
+            !! BC3 terms
+            Vloc0r(iz) = Vloc0r(iz) &
+                         + tpi*Qa/S*(-z + 2*z1 - za)
+          END IF
         END IF
 
       END DO ! ia
@@ -1634,5 +1637,31 @@ CONTAINS
     ENDDO
     RETURN
   END SUBROUTINE polint
+  !
+  ! Checks inversion symmetry along z-axis
+  !
+  LOGICAL FUNCTION esm_z_inv(lrism)
+    !
+    USE constants, ONLY : eps14
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(IN) :: lrism
+    !
+    esm_z_inv = .TRUE.
+    !
+    IF (do_comp_esm) THEN
+      IF (TRIM(esm_bc) == 'bc1') THEN
+        esm_z_inv = (.NOT. lrism)
+      ELSE IF (TRIM(esm_bc) == 'bc2') THEN
+        esm_z_inv = (ABS(esm_efield) < eps14)
+      ELSE IF (TRIM(esm_bc) == 'bc3') THEN
+        esm_z_inv = .FALSE.
+      ELSE IF (TRIM(esm_bc) == 'bc4') THEN
+        esm_z_inv = .FALSE.
+      END IF
+    END IF
+    !
+  END FUNCTION esm_z_inv
 
 END MODULE esm_common_mod

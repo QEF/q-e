@@ -15,7 +15,7 @@ SUBROUTINE non_scf( )
   USE bp,                   ONLY : lelfield, lberry, lorbm
   USE check_stop,           ONLY : stopped_by_user
   USE control_flags,        ONLY : io_level, conv_elec, lbands, ethr, use_gpu
-  USE ener,                 ONLY : ef, ef_up, ef_dw
+  USE ener,                 ONLY : ef, ef_up, ef_dw, eband
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : save_buffer
@@ -25,9 +25,6 @@ SUBROUTINE non_scf( )
   USE wavefunctions,        ONLY : evc
   USE add_dmft_occ,         ONLY : dmft
   !
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-!civn 
   USE exx,                  ONLY : exxinit, aceinit, use_ace
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, kedtau
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
@@ -39,7 +36,6 @@ SUBROUTINE non_scf( )
   USE gvecs,                ONLY : doublegrid
   USE ions_base,            ONLY : nat
   USE xc_lib,               ONLY : stop_exx, xclib_dft_is
-!
   !
   IMPLICIT NONE
   !
@@ -47,12 +43,9 @@ SUBROUTINE non_scf( )
   !
   INTEGER :: iter, i, dr2 = 0.0_dp
   REAL(dp):: ef_scf, ef_scf_up, ef_scf_dw
-  REAL(DP), EXTERNAL :: get_clock
-!civn 
+  REAL(DP), EXTERNAL :: e_band, get_clock
   REAL(DP) :: charge
   REAL(DP) :: etot_cmp_paw(nat,2,2)
-!
-  CALL using_evc(0) ! This may not be needed. save buffer is intent(in)
   !
   !
   CALL start_clock( 'electrons' )
@@ -84,7 +77,6 @@ SUBROUTINE non_scf( )
   ! ... explicitly collected to the first node
   ! ... this is done here for et, in weights () for wg
   !
-  CALL using_et(1)
   CALL poolrecover( et, nbnd, nkstot, nks )
   !
   ! ... the new density is computed here. For PAW:
@@ -92,8 +84,7 @@ SUBROUTINE non_scf( )
   ! ... and a subtly different copy in rho%bec (scf module)
   !
   IF(xclib_dft_is('hybrid')) THEN 
-    IF (.not. use_gpu) CALL sum_band()
-    IF (      use_gpu) CALL sum_band_gpu()
+    CALL sum_band()
   END IF 
   !
   ! ... calculate weights of Kohn-Sham orbitals (only weights, not Ef,
@@ -108,6 +99,7 @@ SUBROUTINE non_scf( )
      CALL weights_only( )
   ELSE
      CALL weights( )
+     eband =  e_band( )
   ENDIF
   !
   ! ... Note that if you want to use more k-points for the phonon
@@ -129,8 +121,6 @@ SUBROUTINE non_scf( )
   ! ... FIXME: it shouldn't be necessary to do this here
   !
   IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
-        CALL using_evc(0) ! save buffer is intent(in)
-  IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
         CALL save_buffer( evc, nwordwfc, iunwfc, nks )
   !
   ! ... do a Berry phase polarization calculation if required
@@ -144,12 +134,10 @@ SUBROUTINE non_scf( )
   ! ... for DMFT write everything to file to restart next scf step from here
   !
   IF ( dmft ) THEN
-     CALL using_et(0)
      CALL save_in_electrons( iter-1, dr2, ethr, et )
      RETURN
   ENDIF
   !
-!civn 
   ! ... for exact exchange case update the ACE projector with the actual number of bands 
   !
   IF(xclib_dft_is('hybrid')) THEN 
@@ -173,7 +161,6 @@ SUBROUTINE non_scf( )
         conv_elec=.FALSE.
         RETURN
      ENDIF
-     CALL using_et(1)
      CALL poolrecover( et, nbnd, nkstot, nks )
      ef_scf = ef
      ef_scf_up = ef_up
@@ -188,13 +175,10 @@ SUBROUTINE non_scf( )
      conv_elec = .TRUE.
      CALL print_ks_energies_nonscf ( ef_scf, ef_scf_up, ef_scf_dw ) 
      IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
-           CALL using_evc(0) ! save buffer is intent(in)
-     IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
            CALL save_buffer( evc, nwordwfc, iunwfc, nks )
      IF ( lberry ) CALL c_phase()
      IF ( lorbm ) CALL orbm_kubo()
   END IF
-!
   !
   CALL stop_clock( 'electrons' )
   !
@@ -203,4 +187,3 @@ SUBROUTINE non_scf( )
 9102 FORMAT(/'     End of band structure calculation' )
   !
 END SUBROUTINE non_scf
-

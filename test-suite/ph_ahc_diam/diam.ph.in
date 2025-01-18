@@ -2,6 +2,7 @@
 &inputph
   prefix   = 'diam'
   outdir   = '.'
+  reduce_io = .true.
   fildyn   = 'diam.dyn'
   fildvscf = 'dvscf'
   ldisp    = .true.

@@ -12,7 +12,8 @@ INTEGER FUNCTION n_plane_waves( gcutw, nks, xk, g, ngm ) RESULT( npwx )
   !! Find maximum number of plane waves over all k-points.
   !  
   USE kinds,     ONLY : DP
-  USE mp,        ONLY : mp_max
+  USE mp,        ONLY : mp_min, mp_max
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp_pools,  ONLY : inter_pool_comm
   !
   IMPLICIT NONE
@@ -57,8 +58,11 @@ INTEGER FUNCTION n_plane_waves( gcutw, nks, xk, g, ngm ) RESULT( npwx )
 100  npwx = MAX(npwx,npw)
   ENDDO
   !
-  IF (npwx <= 0) CALL infomsg( 'n_plane_waves', &
-                'No plane waves found: running on too many processors?' )
+  npw = npwx
+  CALL mp_min( npw, intra_bgrp_comm )
+  IF ( npw == 0 .AND. nks > 0 ) CALL errore( 'n_plane_waves', &
+               &'Some processors have no plane waves! Wrong input &
+               & or too many processors for this job?', 1 )
   !
   ! when using pools, set npwx to the maximum value across pools
   ! (you may run into trouble at restart otherwise)

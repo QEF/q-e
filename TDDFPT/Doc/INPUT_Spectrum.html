@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.0)</span>
+	      turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.4)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm5">&amp;LR_INPUT</a></p>
 <blockquote>
-<a href="#idm7">prefix</a> | <a href="#idm10">outdir</a> | <a href="#idm13">verbosity</a> | <a href="#idm16">itermax0</a> | <a href="#idm19">itermax</a> | <a href="#idm22">extrapolation</a> | <a href="#idm29">epsil</a> | <a href="#idm32">units</a> | <a href="#idm35">start</a> | <a href="#idm38">end</a> | <a href="#idm41">increment</a> | <a href="#idm44">ipol</a> | <a href="#idm47">eels</a> | <a href="#idm50">td</a> | <a href="#idm53">eign_file</a>
+<a href="#idm7">prefix</a> | <a href="#idm10">outdir</a> | <a href="#idm13">verbosity</a> | <a href="#idm16">itermax0</a> | <a href="#idm19">itermax</a> | <a href="#idm22">extrapolation</a> | <a href="#idm29">epsil</a> | <a href="#idm32">units</a> | <a href="#idm35">start</a> | <a href="#idm38">end</a> | <a href="#idm41">increment</a> | <a href="#idm44">ipol</a> | <a href="#idm47">eels</a> | <a href="#idm50">magnons</a> | <a href="#idm53">td</a> | <a href="#idm56">eign_file</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -218,7 +218,8 @@ no extrapolation.
          </td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-The broadening/damping term (in Rydberg units).
+The broadening/damping term. In Rydberg units if magnons=.false.,
+    in meV if magnons = .true.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -234,9 +235,10 @@ The broadening/damping term (in Rydberg units).
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
     The unit system used for the output and the start, end and increment
-input parameters.
+input parameters. (only meV used in that case).
 
-0 = Rydbergs, 1 = Electron volts and 2 = Nanometres per electron volts.
+0 = Rydbergs, 1 = Electron volts, 2 = Nanometres per electron volts,
+3 = milli Electron volts (only for magnons=.true.)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -252,7 +254,7 @@ input parameters.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
   The polarizability and the absorption coefficient are computed
-starting from this value. In units set by the units variable.
+starting from this value. In units set.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -268,7 +270,7 @@ starting from this value. In units set by the units variable.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
   The polarizability and the absorption coefficient are computed
-up to this value. In units set by the units variable.
+up to this value. In units set.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -284,7 +286,7 @@ up to this value. In units set by the units variable.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
   Incremental step used to define the mesh between start and end.
-In units set by the units variable.
+In units set.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -324,7 +326,22 @@ will be performed.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm50"></a><a name="td"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm50"></a><a name="magnons"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">magnons</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Must be set to .true. for magnon-calculation post-processing.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm53"></a><a name="td"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">td</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -343,7 +360,7 @@ using the Davidson algorithm. See the variable 'eign_file'.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm53"></a><a name="eign_file"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm56"></a><a name="eign_file"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eign_file</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -364,7 +381,7 @@ in which are written the eigenvalues.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Sat Dec 18 20:08:54 CET 2021.
+	  This file has been created by helpdoc utility on Wed Oct 16 19:24:06 CEST 2024.
 	</small>
 </body>
 </html>

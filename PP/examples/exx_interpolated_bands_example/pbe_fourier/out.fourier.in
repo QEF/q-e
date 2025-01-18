@@ -1,0 +1,58 @@
+--------------------------------------------------------------------------
+[[43968,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: bionano2
+
+Another transport will be used instead, although this may result in
+lower performance.
+
+NOTE: You can disable this warning by setting the MCA parameter
+btl_base_warn_component_unused to 0.
+--------------------------------------------------------------------------
+PROGRAM: band_interpolation 
+Interpolation method: fourier                                                                         
+The uniform grid contains    60 q-points and     8 bands
+ Crystal lattice vectors found  
+      Ra:      -0.5000      0.0000      0.5000
+      Rb:       0.0000      0.5000      0.5000
+      Rc:      -0.5000      0.5000      0.0000
+ Reciprocal lattice vectors found  
+      Ga:      -1.0000     -1.0000      1.0000
+      Gb:       1.0000      1.0000      1.0000
+      Gc:      -1.0000      1.0000     -1.0000
+   48 symmetry operations found 
+
+--- Fourier interpolation method ---
+
+Roughness functional that will be minimized: 
+      sum_m |e_m|^2 ( 1.0000 + 0.5000 * R_m^2 + 0.2500 * R_m^4 )
+ 
+Computing the Star functions basis set
+     Including the (0,0,0) lattice vector
+     Creating  3375 Star vectors from     7 indexes
+     Sorting Star vectors in shells
+     Removing symmetry equivalent lattice vectors
+                0 (        0.00%) vectors analysed ...          0 Stars found
+              336 (        9.96%) vectors analysed ...         17 Stars found
+              673 (       19.94%) vectors analysed ...         28 Stars found
+             1010 (       29.93%) vectors analysed ...         40 Stars found
+             1347 (       39.91%) vectors analysed ...         52 Stars found
+             1684 (       49.90%) vectors analysed ...         61 Stars found
+             2021 (       59.88%) vectors analysed ...         77 Stars found
+             2358 (       69.87%) vectors analysed ...         98 Stars found
+             2695 (       79.85%) vectors analysed ...        128 Stars found
+             3032 (       89.84%) vectors analysed ...        163 Stars found
+             3369 (       99.82%) vectors analysed ...        203 Stars found
+       204 Stars of symmetry inequivalent lattice vectors found...
+Computing the Star functions values at the uniform grid points (fStarsOnQ)
+Computing the interpolation coefficients with matrix inversion 
+Solution check
+MaxDiag =    0.000000
+MaxOff  =    0.000000
+SumDiag =    0.000000 cfr    -5.000000
+SumOff  =    0.000000 cfr     0.000000
+Computing the Star functions values at the requested bands k-points (fStarsOnK)
+ 
+writing band structure on fourier.dat                                                                                         

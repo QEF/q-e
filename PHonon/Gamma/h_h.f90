@@ -41,7 +41,7 @@ SUBROUTINE H_h(npw,e,h,Ah)
      ENDDO
   ENDDO
   ! V_Loc psi
-  CALL vloc_psi_gamma(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
+  CALL vloc_psi_gamma_acc(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
   ! V_NL psi
    CALL calbec  ( npw, vkb, h, becp )
   IF (nkb > 0) CALL add_vuspsi (npwx, npw, nbnd, ah)

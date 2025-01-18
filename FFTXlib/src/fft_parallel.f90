@@ -196,7 +196,9 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
   USE fft_scatter, ONLY : fft_scatter_xy, fft_scatter_yz, &
          fft_scatter_tg_opt, fft_scatter_many_xy, fft_scatter_many_yz
   USE fft_types,   ONLY : fft_type_descriptor
+#if defined(_OPENMP)
   USE omp_lib
+#endif
   !
   IMPLICIT NONE
   !

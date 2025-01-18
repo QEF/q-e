@@ -3,12 +3,16 @@
                  --------------------------
 
 To compile the following side programs, once you have properly 
-configured QE, just type:
+configured QE, go to XClib directory and type:
 
 	make test
-	
-in the XClib directory. With CMake they will be compiled automati-
-cally if 'QE_ENABLE_TEST' is set to true (default).
+
+for the xclib testing program (xclib_test.x) and
+ 
+	make infos
+
+for the dft infos one (xc_infos.x). With CMake they will be compiled
+automatically if 'QE_ENABLE_TEST' is set to true (default).
 
 
 ---------------------- XC_INFO -----------------------------------

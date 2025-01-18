@@ -663,7 +663,7 @@ MODULE simple_objects
 
 
       if(associated(prod_c_exc%avc)) then
-         deallocate(prod_c_exc%avc)!DEBUG was commented
+         !deallocate(prod_c_exc%avc)!DEBUG was commented
          !write(stdout,*) 'DEALLOCATE =c*  DEBUG'
       endif
       if(prod_c_exc%nk_loc>0) then
@@ -716,6 +716,7 @@ MODULE simple_objects
          if(b%l_temporary) then
             pt=>b%avc
             deallocate(pt)
+            nullify(pt)
          endif
       endif
       

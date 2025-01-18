@@ -7,13 +7,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
-                              npwx, npw, nstart, nbnd, psi_d, evc_d, hevc_d, sevc_d, e_d )
+SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
+                              npwx, npw, nstart, nbnd, psi, evc, hevc, sevc, e_d )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_xpsi for Gamma-only calculations
   ! ... This version assumes real wavefunctions (k=0) with only
-  ! ... half plane waves stored: psi_d(-G)=psi_d*(G), except G=0
+  ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
 #if defined(__CUDA)
   USE cudafor
@@ -41,15 +41,15 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
     ! first G with nonzero norm
   LOGICAL, INTENT(IN) :: overlap
     ! if .FALSE. : S|psi> not needed
-  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx,nstart)
-  COMPLEX(DP), INTENT(OUT)   :: evc_d(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx,nstart)
+  COMPLEX(DP), INTENT(OUT)   :: evc(npwx,nbnd)
     ! input and output eigenvectors (may overlap)
-  COMPLEX(DP), INTENT(OUT) :: hevc_d(npwx,nbnd), sevc_d(npwx,nbnd)
+  COMPLEX(DP), INTENT(OUT) :: hevc(npwx,nbnd), sevc(npwx,nbnd)
     ! H|psi> and S|psi>
   REAL(DP), INTENT(OUT) :: e_d(nbnd)
     ! eigenvalues
 #if defined(__CUDA)
-  attributes(DEVICE) :: psi_d, evc_d, hevc_d, sevc_d, e_d
+  attributes(DEVICE) :: e_d
 #endif
   !
   ! ... local variables:
@@ -57,16 +57,16 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   INTEGER                  :: npw2, npwx2
   INTEGER                  :: n_start, n_end, my_n, i
   REAL(DP),    ALLOCATABLE :: hr_d(:,:), sr_d(:,:), vr_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: tpsi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: tpsi_d(:,:), hpsi(:,:), spsi(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: hr_d, sr_d, vr_d, tpsi_d, hpsi_d, spsi_d, en_d
+  attributes(DEVICE) :: hr_d, sr_d, vr_d, tpsi_d, en_d
 #endif
   !
-  EXTERNAL :: h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
 
@@ -77,9 +77,12 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   IF ( gstart == -1 ) CALL errore( 'rotxpsig', 'gstart variable not initialized', 1 )
   !
   ALLOCATE( tpsi_d( npwx, nstart ) )
-  ALLOCATE( hpsi_d( npwx, nstart ) )
-  IF ( overlap ) &
-  ALLOCATE( spsi_d( npwx, nstart ) )
+  ALLOCATE( hpsi( npwx, nstart ) )
+  !$acc enter data create(hpsi)
+  IF ( overlap ) THEN
+     ALLOCATE( spsi( npwx, nstart ) )
+     !$acc enter data create(spsi)
+  ENDIF
   ALLOCATE( hr_d( nstart, nstart ) )    
   ALLOCATE( sr_d( nstart, nstart ) )    
   ALLOCATE( vr_d( nstart, nstart ) )    
@@ -91,18 +94,19 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
-  ! ... set Im[ psi_d(G=0) ] -  needed for numerical stability
+  ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
   IF ( gstart == 2 ) THEN
-     !$cuf kernel do(1)
+     !$acc kernels      
      DO i=1,nstart
-        psi_d(1,i) = CMPLX( DBLE( psi_d(1,i) ), 0.D0, kind=DP)
+        psi(1,i) = CMPLX( DBLE( psi(1,i) ), 0.D0, kind=DP)
      END DO
+     !$acc end kernels
   END IF
   !
   CALL start_clock('rotxpsig:hpsi')
   !
-  CALL h_psi_gpu( npwx, npw, nstart, psi_d, hpsi_d)
+  CALL h_psi_ptr( npwx, npw, nstart, psi, hpsi)
   !
   CALL stop_clock('rotxpsig:hpsi')
   !
@@ -110,7 +114,7 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
      !
      CALL start_clock('rotxpsig:spsi')
      !
-     CALL s_psi_gpu( npwx, npw, nstart, psi_d, spsi_d )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, spsi )
      !
      CALL stop_clock('rotxpsig:spsi')
      !
@@ -121,12 +125,14 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   CALL divide(inter_bgrp_comm, nstart, n_start, n_end)
   my_n = n_end - n_start + 1
   !
+  !$acc host_data use_device(psi, hpsi)
   IF ( n_start .le. n_end ) &
-  CALL cublasDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, psi_d, &
-                    npwx2, hpsi_d(1,n_start), npwx2, 0.D0, hr_d(1,n_start), nstart )
+  CALL cublasDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, psi, &
+                    npwx2, hpsi(1,n_start), npwx2, 0.D0, hr_d(1,n_start), nstart )
   !
   IF ( gstart == 2 ) &
-  CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, hr_d(1,n_start), nstart )
+  CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr_d(1,n_start), nstart )
+  !$acc end host_data
   !
   CALL mp_sum( hr_d , inter_bgrp_comm )
   !
@@ -138,25 +144,27 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   sr_d = 0.D0
   !
+  !$acc host_data use_device(psi, spsi, hpsi)
   IF ( overlap ) THEN 
      !
      IF ( n_start .le. n_end ) &
-     CALL cublasDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, psi_d, &
-                        npwx2, spsi_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
+     CALL cublasDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, psi, &
+                        npwx2, spsi(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
      !
      IF ( gstart == 2 ) &
-     CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, npwx2, spsi_d(1,n_start), npwx2, sr_d(1,n_start), nstart )
+     CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr_d(1,n_start), nstart )
      !              
   ELSE
      !
      IF ( n_start .le. n_end ) &
-     CALL cublasDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, psi_d, &
-                        npwx2, psi_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
+     CALL cublasDGEMM( 'T', 'N', nstart, my_n, npw2, 2.D0, psi, &
+                        npwx2, psi(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
      !
      IF ( gstart == 2 ) &
-     CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, npwx2, psi_d(1,n_start), npwx2, sr_d(1,n_start), nstart )
+     CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr_d(1,n_start), nstart )
      !
   END IF
+  !$acc end host_data
   !
   CALL mp_sum( sr_d , inter_bgrp_comm )
   !
@@ -181,31 +189,39 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   ! ... update the basis set
   !
-  tpsi_d = psi_d
+  !$acc kernels
+  tpsi_d = psi
+  !$acc end kernels
   !
-  evc_d  = (0.D0, 0.D0)
-  hevc_d = (0.D0, 0.D0)
+  !$acc kernels
+  evc  = (0.D0, 0.D0)
+  hevc = (0.D0, 0.D0)
   IF ( overlap ) &
-  sevc_d = (0.D0, 0.D0)
+  sevc = (0.D0, 0.D0)
+  !$acc end kernels
   !
   IF ( n_start .le. n_end ) THEN
      !
+     !$acc host_data use_device(hevc, sevc, hpsi, spsi, evc)
      CALL cublasDGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
-                 tpsi_d(1,n_start), npwx2,  vr_d(n_start,1), nstart, 0.D0, evc_d,  npwx2 )
+                 tpsi_d(1,n_start), npwx2,  vr_d(n_start,1), nstart, 0.D0, evc,  npwx2 )
      !
      CALL cublasDGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
-                 hpsi_d(1,n_start), npwx2,  vr_d(n_start,1), nstart, 0.D0, hevc_d, npwx2 )
+                 hpsi(1,n_start), npwx2,  vr_d(n_start,1), nstart, 0.D0, hevc, npwx2 )
      !
      IF ( overlap ) &
      CALL cublasDGEMM( 'N', 'N', npw2, nbnd, my_n, 1.D0, &
-                 spsi_d(1,n_start), npwx2,  vr_d(n_start,1), nstart, 0.D0, sevc_d, npwx2 )
+                 spsi(1,n_start), npwx2,  vr_d(n_start,1), nstart, 0.D0, sevc, npwx2 )
+     !$acc end host_data
      !
   END IF
   !
-  CALL mp_sum( evc_d,  inter_bgrp_comm )
-  CALL mp_sum( hevc_d, inter_bgrp_comm )
+  !$acc host_data use_device(hevc, sevc, evc)
+  CALL mp_sum( evc,  inter_bgrp_comm )
+  CALL mp_sum( hevc, inter_bgrp_comm )
   IF ( overlap ) &
-  CALL mp_sum( sevc_d, inter_bgrp_comm )
+  CALL mp_sum( sevc, inter_bgrp_comm )
+  !$acc end host_data
   !
   CALL stop_clock('rotxpsig:evc')
   !
@@ -213,9 +229,12 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   DEALLOCATE( vr_d )
   DEALLOCATE( sr_d )
   DEALLOCATE( hr_d )
-  IF ( overlap ) &
-  DEALLOCATE( spsi_d )
-  DEALLOCATE( hpsi_d )
+  IF ( overlap ) THEN
+     !$acc exit data delete(spsi)
+     DEALLOCATE( spsi )
+  ENDIF
+  !$acc exit data delete(hpsi)
+  DEALLOCATE( hpsi )
   DEALLOCATE( tpsi_d )
   !
   CALL stop_clock('rotxpsig')

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum Espresso (version: 7.0)
+Program: cp.x / CP / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -13,11 +13,16 @@ All quantities whose dimensions are not explicitly specified are in
 HARTREE ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied
 by e); potentials are in energy units (i.e. they are multiplied by e)
 
-BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE
+USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
+
+Namelists must appear in the order given below.
 Comment lines in namelists can be introduced by a "!", exactly as in
 fortran code. Comments lines in ``cards'' can be introduced by
 either a "!" or a "#" character in the first position of a line.
 Do not start any line in ``cards'' with a "/" character.
+Leave a space between card names and card options, e.g.
+ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
 
 Structure of the input data:
 ===============================================================================
@@ -164,8 +169,7 @@ NAMELIST: &CONTROL
    Type:           LOGICAL
    Default:        .false.
    Description:    Write stress tensor to standard output each "iprint" steps.
-                   It is set to .TRUE. automatically if
-                   calculation='vc-relax'
+                   It is set to .TRUE. automatically if calculation='vc-relax'
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -244,7 +248,7 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    The restart files are write in the folder
+   Description:    The restart files are written, if ndw > 0, in the folder
                      outdir/prefix_ndw.save/
                    where outdir, prefix and ndw are the input variables described
                    in this document
@@ -622,18 +626,19 @@ NAMELIST: &SYSTEM
    
    Type:           CHARACTER
    Description:    a string describing the occupation of the electronic states.
+                   Allowed values are 'fixed' (default) and 'ensemble'.
                    In the case of conjugate gradient style of minimization
                    of the electronic states, if occupations is set to 'ensemble',
-                   this allows ensemble DFT calculations for metallic systems
+                   this allows ensemble DFT calculations for metallic systems.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
    Variable:       degauss
    
    Type:           REAL
-   Default:        0.D0 Ry
+   Default:        0.D0 Ha
    Description:    parameter for the smearing function, only used for ensemble DFT
-                   calculations
+                   calculations. Hartree atomic units
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -642,7 +647,9 @@ NAMELIST: &SYSTEM
    Type:           CHARACTER
    Description:    a string describing the kind of occupations for electronic states
                    in the case of ensemble DFT (occupations == 'ensemble' );
-                   now only Fermi-Dirac ('fd') case is implemented
+                   possible values are: 'gaussian', 'fermi-dirac', 'hermite-delta',
+                   'gaussian-splines', 'cold-smearing', 'marzari-vanderbilt', '0', '-1'.
+                   Warning: only 'gaussian' is tested.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -710,7 +717,8 @@ NAMELIST: &SYSTEM
    Type:           REAL
    Default:        it depends on the specified functional
    Description:    Fraction of EXX for hybrid functional calculations. In the case of
-                   input_dft='PBE0', the default value is 0.25.
+                               input_dft='PBE0', the default value is 0.25. This entry overrides
+                   the default (as well as the restart file) value of a given functional.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -755,6 +763,7 @@ NAMELIST: &SYSTEM
                         dispersion corrections with first-principle derived C6 coefficients
                         Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                         See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
+                        J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
                    
                        'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
                         (implemented in PW only)
@@ -812,18 +821,27 @@ NAMELIST: &SYSTEM
    Type:           CHARACTER
    Default:        'none'
    Description:    Used to perform calculation assuming the system to be
-                   isolated (a molecule of a clustr in a 3D supercell).
+                           isolated (a molecule of a clustr in a 3D supercell).
                    
-                   Currently available choices:
+                           Currently available choices:
                    
-                   'none' (default): regular periodic calculation w/o any correction.
+                           'none' (default): regular periodic calculation w/o any correction.
                    
-                   'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the
-                            total energy is computed.
-                            Theory:
-                            G.Makov, and M.C.Payne,
-                            "Periodic boundary conditions in ab initio
-                            calculations" , Phys.Rev.B 51, 4014 (1995)
+                           'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the
+                                    total energy is computed.
+                                    Theory:
+                                    G.Makov, and M.C.Payne,
+                                    "Periodic boundary conditions in ab initio
+                                    calculations" , Phys.Rev.B 51, 4014 (1995)
+                   
+                   
+                   var nextffield -type INTEGER {
+                     default { 0 }
+                     info {
+                         Number of activated external ionic force fields.
+                         See Doc/ExternalForceFields.tex for further explanation and parameterizations
+                     }
+                   }
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -1079,7 +1097,7 @@ NAMELIST: &ELECTRONS
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       ninter_cold_restart
+   Variable:       niter_cold_restart
    
    Type:           INTEGER
    Default:        1
@@ -1410,7 +1428,9 @@ NAMELIST: &CELL
    Variable:       cell_dynamics
    
    Type:           CHARACTER
-   Default:        'none'
+   Default:        'pr'      if "calculation" = 'vc-md', 'vc'cp', 'vc-cp-wf';
+                                        'damp-pr' if  "calculation" = 'vc-relax';
+                                        'none'    otherwise
    Description:    set how cell should be moved
                    'none'      : cell is kept fixed
                    'sd'        : steepest descent algorithm is used to optimise the
@@ -2151,7 +2171,7 @@ CARD: ATOMIC_VELOCITIES
       Variables:      vx, vy, vz
       
       Type:           REAL
-      Description:    atomic velocities along @i x, @i y and @i z direction
+      Description:    atomic velocities along x, y and z direction
       +--------------------------------------------------------------------
       
 ===END OF CARD==========================================================
@@ -2517,4 +2537,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021
+This file has been created by helpdoc utility on Wed Oct 16 21:49:46 CEST 2024

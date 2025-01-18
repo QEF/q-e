@@ -15,11 +15,15 @@ inputs_args = ('berry.in', ''), ('berry-1.in', ''), ('berry-2.in','')
 
 [pw_cluster/]
 program = PW
-inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in','')
+inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in',''), ('cluster5.in',''), ('cluster6.in',''),
 
 [pw_lsda/]
 program = PW
 inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
+
+[pw_libxc/]
+program = PW
+inputs_args = ('lda_pol_atom-lsda.in', ''), ('gga_unpol_atom-pbe.in', ''), ('hyb_gga_unpol_hse-si111.in', ''), ('mgga_unpol_metaGGA.in', '')
 
 [pw_metal/]
 program = PW
@@ -43,15 +47,19 @@ inputs_args = ('plugin-pw2casino_1.in', '1'), ('plugin-pw2casino_2.in', '1')
 
 [pw_scf/]
 program = PW
-inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-rmm-gamma.in',''), ('scf-rmm-paro-gamma.in',''), ('scf-rmm-k.in',''), ('scf-rmm-paro-k.in',''), ('scf-ppcg-gamma.in',''), ('scf-ppcg-k.in','')
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-cg-gamma.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-rmm-gamma.in',''), ('scf-rmm-paro-gamma.in',''), ('scf-rmm-k.in',''), ('scf-rmm-paro-k.in',''), ('scf-gth.in','')
 
 [pw_spinorbit/]
 program = PW
 inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,''), ('spinorbit-pbe.in' ,''), ('spinorbit-paw.in','')
 
+[pw_twochem/]
+program = PW
+inputs_args = ('scf_twochem.in', ''), ('nscf_twochem.in','2'), ('relax_twochem.in',''), ('vc-relax_twochem.in','')
+
 [pw_uspp/]
 program = PW
-inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in',''), ('uspp-ppcg-gamma.in',''), ('uspp-ppcg-k.in','')
+inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-cg-gamma.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in','')
 
 [pw_workflow_vc-relax_dos/]
 program = PW
@@ -71,7 +79,7 @@ inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
 [pw_workflow_exx_nscf/]
 program = PW
-inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2')
+inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2'), ('ncpp-gamma-restart-1.in','1'), ('ncpp-gamma-restart-2.in','2'), ('uspp-k-restart-1.in','1'), ('uspp-k-restart-2.in','2')
 
 [ph_base/]
 program = PH
@@ -105,6 +113,10 @@ inputs_args = ('al.scf.in', '1'), ('al.ph.in', '2'), ('al.dvscfq2r.in', '6'), ('
 program = PH
 inputs_args = ('diam.scf.in', '1'), ('diam.ph.in', '2'), ('diam.q2r.in', '3'), ('diam.matdyn1.in', '4'), ('diam.matdyn2.in', '4'), ('diam.matdyn3.in', '4'), ('diam.dvscfq2r.in', '6'), ('diam.dvscfq2r.doneutral.in', '6'), ('diam.nscf.in', '1'), ('diam.ahc1.in', '2'), ('diam.nscf.nosym.in', '1'), ('diam.ahc2.in', '2'), ('diam.ahc3.in', '2'), ('diam.postahc1.in', '7'), ('diam.postahc2.in', '7'), ('diam.postahc3.in', '7')
 
+[ph_ahc_bas/]
+program = PH
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '3'), ('matdyn1.in', '4'), ('matdyn2.in', '4'), ('dvscfq2r.in', '6'), ('nscf.in', '1'), ('ahc1.in', '2'), ('postahc1.in', '7'), ('ahc2.in', '2'), ('postahc2.in', '7')
+
 [ph_Ni_nc_spinorbit_mag/]
 program = PH
 inputs_args = ('Ni.scf.in', '1'), ('Ni.ph.in', '2')
@@ -117,9 +129,29 @@ inputs_args = ('NiO.scf.1.in', '1'), ('NiO.scf.2.in', '1'), ('NiO.phG.in', '2')
 program = PH
 inputs_args = ('O2.scf.1.in', '1'), ('O2.scf.2.in', '1'), ('O2.phG.in', '2')
 
+[ph_2d/]
+program = PH
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', '8'), ('q2r2.in', '3'), ('matdyn2.in', '8')
+
+[ph_1d/]
+program = PH
+inputs_args = ('ch4.scf.in','1'), ('ch4.ph.in', '2'), ('ch4.dynmat.in', '9')  
+
+[ph_restart/]
+program = PH
+inputs_args = ('SiC.scf.in', '1'), ('SiC.phG.in', '2'), ('SiC.phG.restart1.in', '2'), ('SiC.phG.restart2.in', '2'), ('SiC.phG.restart3.in', '2'), ('SiC.phG.restart4.in', '2')
+
+[ph_twochem/]
+program = PH
+inputs_args = ('scf_twochem.in', '1'), ('phG_twochem.in','11') 
+
+[ph_multipole/]
+program = PH
+inputs_args = ('scf.in', '12'), ('ph.in.01','2'), ('ph.in.02', '2'), ('ph.in.03', '2'),  ('ph.in.04', '2'),  ('ph.in.05', '2'),  ('ph.in.06', '2'),  ('ph.in.07', '2'), ('ph.in.08', '13')  
+
 [epw_base/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw12.in', '3'), ('epw13.in', '3'), ('epw7.in', '3'), ('epw8.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw12.in', '3'), ('epw13.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')
 
 [epw_trev/]
 program = EPW
@@ -143,19 +175,23 @@ inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw
 
 [epw_super/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw7.in', '3'), ('nscf_outerbands.in', '1'), ('nscf2supercond.in', '9'), ('epw8.in', '3')
 
 [epw_polar/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw3.in', '3')
 
 [epw_pl/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3')
 
+[epw_plrn/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+
 [epw_mob/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3')
 
 [epw_mob_ibte/]
 program = EPW
@@ -171,7 +207,19 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1')
 
 [epw_hall/]
 program = EPW
-inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5'), ('epw5.in', '5')
+
+[epw_qdpt/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+
+[epw_2D/]
+program = EPW
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf_epw.in', '0'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5'), ('epw5.in', '5'), ('epw6.in', '5')
+
+[epw_wfpt/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('matdyn.in', '6'), ('scf.in', '1'), ('nscf1.in', '1'), ('ahc1.in', '7'), ('epw11.in', '3'), ('epw12.in', '3'),  ('nscf2.in', '1'), ('ahc2.in', '7'), ('epw21.in', '3'), ('epw22.in', '3'), ('epw23.in', '3')
 
 ####[epw_scdm/]
 ####program = EPW
@@ -179,7 +227,7 @@ inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1')
 
 [zg_conf/]
 program = ZG
-inputs_args = ('zg.in', '')
+inputs_args = ('zg.in', '0')
 
 [tddfpt_CH4/]
 program = TDDFPT
@@ -225,6 +273,30 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[hp_soc_U_nc_nonmagn/]
+program = HP
+inputs_args = ('au.scf.in', '1'), ('au.hp.in', '3'), ('au.scf.in', '2'), ('au.hp.in', '4')
+
+[hp_soc_U_us_magn/]
+program = HP
+inputs_args = ('bn.scf.in', '1'), ('bn.hp.in', '3'), ('bn.scf.in', '2'), ('bn.hp.in', '4')
+
+[hp_soc_UV_paw_magn/]
+program = HP
+inputs_args = ('bn.scf.in', '1'), ('bn.hp.in', '3'), ('bn.scf.in', '2'), ('bn.hp.in', '4')
+
+[kcw_wann/]
+program = KCW
+inputs_args = ('Si.scf.in', '1'), ('Si.win', '2'), ('Si.pw2wann.in', '3'), ('Si.win', '4'), ('Si.kcw-wann2kcw.in', '5'), ('Si.kcw-screen.in', '6'), ('Si.kcw-ham.in', '7')
+
+[kcw_ks/]
+program = KCW
+inputs_args = ('h2o.scf.in', '1'), ('h2o.kcw-wann2kcw.in', '15'), ('h2o.kcw-screen.in', '16'), ('h2o.kcw-ham.in', '7')
+
+[kcw_wann-nc/]
+program = KCW
+inputs_args = ('Si_nc.scf.in', '1'), ('Si_nc.win', '2'), ('Si_nc.pw2wann.in', '3'), ('Si_nc.win', '4'), ('Si_nc.kcw-wann2kcw.in', '5'), ('Si_nc.kcw-screen.in', '6'), ('Si_nc.kcw-ham.in', '7')
+
 [pp_acf/]
 program = PP
 inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
@@ -266,6 +338,13 @@ program = QEHeat_h2o_mol_t
 [image_*/]
 program = IMAGE
 
+[oscdft_pw]
+program = OSCDFT
+inputs_args = ('nooscdft.in', '1'), ('view.in', '2 view.oscdft.in'), ('scf.in', '2 scf.oscdft.in'), ('relax.in', '2 scf.oscdft.in'), ('k.in', '2 k.oscdft.in'), ('normcons.in', '2 normcons.oscdft.in')
+
+[oscdft_pp]
+program = OSCDFT_PP
+inputs_args = ('view.in', '3 view.oscdft.in pw.in'), ('normalize.in', '3 normalize.oscdft.in pw.in')
 
 
 [categories]
@@ -275,9 +354,11 @@ ph_all = ph_*??
 pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
-epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob epw_hall
+epw_partial = epw_qdpt epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob epw_hall
 zg_all = zg_*??
 tddfpt_all = tddfpt_*??
 image_all = image_*??
 all_currents_all = QEHeat_*
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*?? all_currents_*??
+kcw_all = kcw_*??
+oscdft_all = oscdft_pw oscdft_pp

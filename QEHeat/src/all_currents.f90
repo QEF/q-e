@@ -46,15 +46,14 @@ program all_currents
 
    use dynamics_module, only: vel
    use ions_base, ONLY: tau, tau_format, nat
-   USE control_flags, ONLY: ethr
+   USE control_flags, ONLY: ethr, use_gpu
    USE extrapolation, ONLY: update_pot
 
 !from ../PW/src/pwscf.f90
    USE mp_global, ONLY: mp_startup, ionode_id
-   USE mp_world, ONLY: world_comm
+   USE mp_images, ONLY : intra_image_comm
    use mp, ONLY: mp_bcast, mp_barrier
-   USE mp_pools, ONLY: intra_pool_comm
-   USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm
+   USE mp_bands, ONLY: intra_bgrp_comm
    USE read_input, ONLY: read_input_file
    USE command_line_options, ONLY: input_file_, command_line, ndiag_, nimage_
    USE check_stop, ONLY: check_stop_init
@@ -68,12 +67,11 @@ program all_currents
 
    use wvfct, only: nbnd, npw, npwx
    use wavefunctions, only: psic, evc
-   use gvect, only: g, ngm, gstart, gg, igtongl, gl, ngl
+   use gvect, only: ecutrho, g, ngm, gstart, gg, igtongl, gl, ngl
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at, bg
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
    use uspp_param, ONLY: upf, nh, nbetam
-   use uspp_data, only: dq, nqxq
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
@@ -82,7 +80,10 @@ program all_currents
    use test_h_psi, only: init_test
 
    implicit none
-
+   ! next two variables used for interpolation tables
+   real(dp), parameter :: dq = 0.01_dp
+   integer :: nqxq
+   !
    type J_all
       !holds all the result calculated by this program
       real(dp) :: i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
@@ -122,13 +123,14 @@ program all_currents
    character(len=256) :: vel_input_units = 'PW', worker_id_char, format_string
    logical :: ec_test, hpsi_test ! activates tests for debugging purposes
    logical :: continue_not_converged ! don't stop the calculation if a step does not converge
+   LOGICAL,EXTERNAL :: check_gpu_support
    !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
 !from ../PW/src/pwscf.f90
+   use_gpu = check_gpu_support()
+   if(use_gpu) Call errore('QEHeat', 'QEHeat with GPU NYI.', 1)
    CALL mp_startup( images_only=.true. )
-   CALL set_mpi_comm_4_solvers(intra_pool_comm, intra_bgrp_comm, &
-                               inter_bgrp_comm)
    CALL environment_start('QEHeat')
    call start_clock('all_currents')
    IF (ionode) THEN
@@ -211,7 +213,7 @@ program all_currents
    ! PW input
    call read_namelists('PW', 5)
    if (n_workers>0 ) then
-      CALL mp_bcast(worker_id_char, ionode_id, world_comm)
+      CALL mp_bcast(worker_id_char, ionode_id, intra_image_comm)
       outdir = trim(outdir) //trim(worker_id_char)
    endif
    
@@ -219,7 +221,7 @@ program all_currents
 
    call check_input()
 
-   call mp_barrier(intra_pool_comm)
+   call mp_barrier(intra_image_comm)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
       vel_factor = 2.0_dp
       if (ionode) &
@@ -237,7 +239,7 @@ program all_currents
    call iosys()    ! ../PW/src/input.f90    save in internal variables
    call check_stop_init() ! ../PW/src/input.f90
 
-   !eventually read new positions and velocities from trajectory
+   !if needed read new positions and velocities from trajectory
    if (ionode) then
       !initialize trajectory reading
       call cpv_trajectory_initialize(traj, trajdir, nat, 1.0_dp, vel_factor, 1.0_dp, ios=ios, circular=.true.)
@@ -265,6 +267,8 @@ program all_currents
    call allocate_zero() ! only once per all trajectory
    ! current zero (pseudopotential part) quantities that do not depend on the positions/velocities but only on the cell and atomic types
    allocate (H_g(ngm, 3, 3, nsp))
+   ! FIXME: is the following the correct value?
+   nqxq = NINT( SQRT(ecutrho) / dq + 4) 
    allocate (tabr(nqxq, nbetam, nsp, 3))
    call init_zero(tabr, H_g, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                   ngm, gg, gstart, g, igtongl, gl, ngl, dq, &
@@ -286,7 +290,7 @@ program all_currents
       vel = vel*vel_factor
       call convert_tau(tau_format, nat, vel)
    end if
-   CALL mp_bcast(vel, ionode_id, world_comm)
+   CALL mp_bcast(vel, ionode_id, intra_image_comm)
 
    !initialize scf results object. Later it will saves evc, tau and vel arrays for t-dt, t and t+dt
    call multiple_scf_result_allocate(scf_all, .true.)
@@ -624,7 +628,7 @@ contains
       n_workers, worker_id, &
       continue_not_converged)
       use io_global, ONLY: stdout, ionode, ionode_id
-      use mp_world, ONLY: mpime, world_comm
+      USE mp_images, ONLY : intra_image_comm
       use mp, ONLY: mp_bcast
       implicit none
       real(kind=dp), intent(inout) :: eta
@@ -643,37 +647,37 @@ contains
       logical, intent(inout) :: ec_test, hpsi_test
       integer, intent(out) :: n_max
       logical, intent(inout) :: continue_not_converged
-      CALL mp_bcast(trajdir, ionode_id, world_comm)
-      CALL mp_bcast(delta_t, ionode_id, world_comm)
-      CALL mp_bcast(eta, ionode_id, world_comm)
-      CALL mp_bcast(restart, ionode_id, world_comm)
-      CALL mp_bcast(subtract_cm_vel, ionode_id, world_comm)
-      CALL mp_bcast(first_step, ionode_id, world_comm)
-      CALL mp_bcast(last_step, ionode_id, world_comm)
-      CALL mp_bcast(ethr_small_step, ionode_id, world_comm)
-      CALL mp_bcast(ethr_big_step, ionode_id, world_comm)
-      CALL mp_bcast(n_max, ionode_id, world_comm)
-      CALL mp_bcast(save_dvpsi, ionode_id, world_comm)
-      CALL mp_bcast(file_output, ionode_id, world_comm)
-      CALL mp_bcast(step_mul, ionode_id, world_comm)
-      CALL mp_bcast(step_rem, ionode_id, world_comm)
-      CALL mp_bcast(ec_test, ionode_id, world_comm)
-      CALL mp_bcast(add_i_current_b, ionode_id, world_comm)
-      CALL mp_bcast(re_init_wfc_1, ionode_id, world_comm)
-      CALL mp_bcast(re_init_wfc_2, ionode_id, world_comm)
-      CALL mp_bcast(re_init_wfc_3, ionode_id, world_comm)
-      CALL mp_bcast(three_point_derivative, ionode_id, world_comm)
-      CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
-      CALL mp_bcast(hpsi_test, ionode_id, world_comm)
-      CALL mp_bcast(n_workers, ionode_id, world_comm)
-      CALL mp_bcast(worker_id, ionode_id, world_comm)
-      CALL mp_bcast(vel_input_units, ionode_id, world_comm)
-      CALL mp_bcast(continue_not_converged, ionode_id, world_comm)
+      CALL mp_bcast(trajdir, ionode_id, intra_image_comm)
+      CALL mp_bcast(delta_t, ionode_id, intra_image_comm)
+      CALL mp_bcast(eta, ionode_id, intra_image_comm)
+      CALL mp_bcast(restart, ionode_id, intra_image_comm)
+      CALL mp_bcast(subtract_cm_vel, ionode_id, intra_image_comm)
+      CALL mp_bcast(first_step, ionode_id, intra_image_comm)
+      CALL mp_bcast(last_step, ionode_id, intra_image_comm)
+      CALL mp_bcast(ethr_small_step, ionode_id, intra_image_comm)
+      CALL mp_bcast(ethr_big_step, ionode_id, intra_image_comm)
+      CALL mp_bcast(n_max, ionode_id, intra_image_comm)
+      CALL mp_bcast(save_dvpsi, ionode_id, intra_image_comm)
+      CALL mp_bcast(file_output, ionode_id, intra_image_comm)
+      CALL mp_bcast(step_mul, ionode_id, intra_image_comm)
+      CALL mp_bcast(step_rem, ionode_id, intra_image_comm)
+      CALL mp_bcast(ec_test, ionode_id, intra_image_comm)
+      CALL mp_bcast(add_i_current_b, ionode_id, intra_image_comm)
+      CALL mp_bcast(re_init_wfc_1, ionode_id, intra_image_comm)
+      CALL mp_bcast(re_init_wfc_2, ionode_id, intra_image_comm)
+      CALL mp_bcast(re_init_wfc_3, ionode_id, intra_image_comm)
+      CALL mp_bcast(three_point_derivative, ionode_id, intra_image_comm)
+      CALL mp_bcast(n_repeat_every_step, ionode_id, intra_image_comm)
+      CALL mp_bcast(hpsi_test, ionode_id, intra_image_comm)
+      CALL mp_bcast(n_workers, ionode_id, intra_image_comm)
+      CALL mp_bcast(worker_id, ionode_id, intra_image_comm)
+      CALL mp_bcast(vel_input_units, ionode_id, intra_image_comm)
+      CALL mp_bcast(continue_not_converged, ionode_id, intra_image_comm)
    end subroutine
 
    subroutine set_first_step_restart(restart, file_output, first_step)
       use io_global, ONLY: ionode, ionode_id
-      use mp_world, ONLY: mpime, world_comm
+      USE mp_images, ONLY : intra_image_comm
       use mp, ONLY: mp_bcast
       use ions_base, ONLY: nsp
       implicit none
@@ -709,7 +713,7 @@ contains
          close (iun)
       endif
       !broadcast first_step
-      CALL mp_bcast(first_step, ionode_id, world_comm)
+      CALL mp_bcast(first_step, ionode_id, intra_image_comm)
 
    end subroutine
 
@@ -796,7 +800,7 @@ contains
       use cell_base, only: alat
       use dynamics_module, only: vel
       use io_global, ONLY: ionode, ionode_id
-      USE mp_world, ONLY: world_comm
+      USE mp_images, ONLY : intra_image_comm
       use mp, ONLY: mp_bcast, mp_barrier
       use wavefunctions, only: evc
       implicit none
@@ -807,15 +811,15 @@ contains
       if (ipm /= 0 .and. ipm /= -1 .and. ipm /= 1) &
          call errore('prepare_next_step', 'error: unknown timestep type')
       !broadcast
-      CALL mp_bcast(tau, ionode_id, world_comm)
-      CALL mp_bcast(vel, ionode_id, world_comm)
+      CALL mp_bcast(tau, ionode_id, intra_image_comm)
+      CALL mp_bcast(vel, ionode_id, intra_image_comm)
       !set new positions
       if (three_point_derivative) then
          tau = tau + delta_t*vel*real(ipm, dp)/2.0_dp
       else
          tau = tau + delta_t*vel*real(ipm, dp)
       end if
-      call mp_barrier(world_comm)
+      call mp_barrier(intra_image_comm)
       call update_pot()
       call hinit1()
 
@@ -832,7 +836,7 @@ contains
       use cell_base, only: alat
       use dynamics_module, only: vel
       use io_global, ONLY: ionode, ionode_id
-      USE mp_world, ONLY: world_comm
+      USE mp_images, ONLY : intra_image_comm
       use mp, ONLY: mp_bcast, mp_barrier
       implicit none
       integer, intent(in) :: first_step, last_step, step_mul, step_rem
@@ -870,10 +874,10 @@ contains
          res = .false.
 200      continue
       endif
-      CALL mp_bcast(res, ionode_id, world_comm)
+      CALL mp_bcast(res, ionode_id, intra_image_comm)
       if (res) then
-         CALL mp_bcast(vel, ionode_id, world_comm)
-         CALL mp_bcast(tau, ionode_id, world_comm)
+         CALL mp_bcast(vel, ionode_id, intra_image_comm)
+         CALL mp_bcast(tau, ionode_id, intra_image_comm)
          if (first_step > 0 .and. first) then
             first = .false.
             return

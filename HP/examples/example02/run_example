@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -96,9 +96,9 @@ cat > $PREFIX.scf1.in << EOF
     verbosity='high'
  /
  &system
-    ibrav = 0, 
-    celldm(1) = 7.88, 
-    nat = 4, 
+    ibrav = 0,
+    celldm(1) = 7.88,
+    nat = 4,
     ntyp = 3,
     ecutwfc = 50.0,
     ecutrho = 400.0,
@@ -108,11 +108,6 @@ cat > $PREFIX.scf1.in << EOF
     nspin = 2,
     starting_magnetization(1) =  0.5,
     starting_magnetization(2) = -0.5,
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
-    Hubbard_U(2) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-10
@@ -127,12 +122,15 @@ ATOMIC_POSITIONS {alat}
  Ni2  0.5000000   0.5000000   0.0000000
  O    0.5000000   0.0000000   0.0000000
  O    1.0000000   0.5000000   0.0000000
-CELL_PARAMETERS alat
+CELL_PARAMETERS {alat}
  1.00000000  0.50000000  0.50000000
  0.50000000  1.00000000  0.50000000
  0.50000000  0.50000000  1.00000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Ni1-3d 0.0001
+U Ni2-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf1.in > $PREFIX.scf1.out
@@ -155,9 +153,9 @@ cat > $PREFIX.scf2.in << EOF
     verbosity='high'
  /
  &system
-    ibrav = 0, 
-    celldm(1) = 7.88, 
-    nat = 4, 
+    ibrav = 0,
+    celldm(1) = 7.88,
+    nat = 4,
     ntyp = 3,
     ecutwfc = 50.0,
     ecutrho = 400.0,
@@ -165,11 +163,6 @@ cat > $PREFIX.scf2.in << EOF
     occupations = 'fixed'
     nspin = 2,
     tot_magnetization = $totmagn
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
-    Hubbard_U(2) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
@@ -186,12 +179,15 @@ ATOMIC_POSITIONS {alat}
  Ni2  0.5000000   0.5000000   0.0000000
  O    0.5000000   0.0000000   0.0000000
  O    1.0000000   0.5000000   0.0000000
-CELL_PARAMETERS alat
+CELL_PARAMETERS {alat}
  1.00000000  0.50000000  0.50000000
  0.50000000  1.00000000  0.50000000
  0.50000000  0.50000000  1.00000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Ni1-3d 0.0001
+U Ni2-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf2.in > $PREFIX.scf2.out

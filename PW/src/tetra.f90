@@ -50,6 +50,7 @@ CONTAINS
   !! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994).
   !
   USE kinds,      ONLY : DP
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   ! 
@@ -97,6 +98,7 @@ CONTAINS
              n1, n2, n3, n4, n5, n6, n7, n8
   INTEGER, ALLOCATABLE:: equiv(:)
   !
+  !
   ntetra  = 6*nk1*nk2*nk3
   nntetra = 4
   !
@@ -136,7 +138,7 @@ CONTAINS
                        s(i,2,ns) * xk(2,n) + &
                        s(i,3,ns) * xk(3,n)
            ENDDO
-           IF (t_rev(ns) == 1) xkr = -xkr
+           IF (t_rev(ns) == 1 .AND. colin_mag < 2) xkr = -xkr
            !  xkr is the n-th irreducible k-point rotated wrt the ns-th symmetry
            DO i = 1, 3
               deltap(i) = xkr(i)-xkg(i,nk) - NINT(xkr(i)-xkg(i,nk))
@@ -250,6 +252,7 @@ CONTAINS
   !! This rouotine sets the corners and additional points for each tetrahedron.
   !
   USE io_global,    ONLY : stdout
+  USE noncollin_module,   ONLY : colin_mag
   !
   IMPLICIT NONE
   !
@@ -288,6 +291,7 @@ CONTAINS
   !
   REAL(DP), INTENT(INOUT) :: xk(3,npk)
   !! k points [2 pi / a]
+  ! 
   !
   ! ... local variables
   !
@@ -299,7 +303,7 @@ CONTAINS
   !
   REAL(DP) :: xkr(3), l(4), bvec2(3,3), bvec3(3,4), xkg(3,nk1*nk2*nk3), &
               deltap(3), deltam(3)
-  !
+  ! 
   ! Take the shortest diagonal line as the "shaft" of tetrahedral devision
   !
   bvec2(1:3,1) = bg(1:3,1) / REAL(nk1, dp)
@@ -451,7 +455,7 @@ CONTAINS
         DO isym = 1, nsym
            !
            xkr(1:3) = MATMUL(REAL(s(1:3, 1:3, isym), dp), xk(1:3, jk))
-           IF (t_rev(isym) == 1) xkr(1:3) = - xkr(1:3)
+           IF (t_rev(isym) == 1 .AND. colin_mag < 2) xkr(1:3) = - xkr(1:3)
            !  xkr is the n-th irreducible k-point rotated wrt the ns-th symmetry
            deltap(1:3) = xkr(1:3) - xkg(1:3,ik) - NINT(xkr(1:3) - xkg(1:3,ik))
            deltam(1:3) = xkr(1:3) + xkg(1:3,ik) - NINT(xkr(1:3) + xkg(1:3,ik))
@@ -585,11 +589,15 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
   !! Calculates weights with the tetrahedron method (P.E.Bloechl).  
   !! Fermi energy has to be calculated in previous step.  
   !! Generalization to noncollinear case courtesy of Iurii Timrov.
+  !! Parallelization with full MPI procceses intra image for k-points (ntetra), and
+  !! OpenMP paralleization for band (nbnd)
   !! @Note (P. Delugas 8/10/2019) Needs to be called only after initializations,  
   !!       stops the program with an error call otherwise. 
   !!       
   !
   USE kinds
+  USE mp_images, ONLY : intra_image_comm
+  USE mp, ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -618,7 +626,7 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
   !
   REAL(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4), dosef
   INTEGER :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra(4)
-  INTEGER :: nspin_lsda
+  INTEGER :: nspin_lsda, s_tetra, l_tetra
   !
   IF ( ntetra == 0 ) &
      CALL errore('tetra_weights_only: ', 'called before initialization', 1)  
@@ -637,6 +645,13 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
      nspin_lsda = 1
   ENDIF
   !
+  CALL divide(intra_image_comm, ntetra, s_tetra, l_tetra)
+  !
+  !$OMP PARALLEL DEFAULT(NONE) &
+  !$OMP & SHARED(nspin_lsda,is,nks,s_tetra,l_tetra,nbnd,et,tetra,wg,ef,ntetra) &
+  !$OMP & PRIVATE(ns,nk,nt,ibnd,i,etetra,itetra,e1,e2,e3,e4,kp1,kp2,kp3,kp4, &
+  !$OMP &         c1,c2,c3,c4,dosef)
+  !
   DO ns = 1, nspin_lsda
      IF (is /= 0) THEN
         IF (ns /= is) CYCLE
@@ -650,7 +665,8 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
         nk = nks / 2
      ENDIF
      !
-     DO nt = 1, ntetra
+     DO nt = s_tetra, l_tetra
+        !$OMP DO
         DO ibnd = 1, nbnd
            !
            ! etetra are the energies at the vertexes of the nt-th tetrahedron
@@ -745,9 +761,18 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
            ENDIF
            !
         ENDDO
+        !$OMP END DO NOWAIT
      ENDDO
      !
   ENDDO
+  !
+  !$OMP END PARALLEL
+  !
+  ! Each process in a "image" communicator has contributions from only a part 
+  ! of tetrahedra (s_tetra - l_tetra). 
+  ! Contribution from full BZ is computed by combining them.
+  !
+  call mp_sum(wg, intra_image_comm)
   ! add correct spin normalization (2 for LDA, 1 for all other cases)
   IF ( nspin == 1 ) wg(:,1:nks) = wg(:,1:nks) * 2.d0
   !
@@ -836,8 +861,13 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
                                    wg, is, isk )
   !------------------------------------------------------------------------------------
   !! Calculate Occupation with given Fermi energy. 
+  !! Parallelization with full MPI procceses intra image for k-points (ntetra), and
+  !! OpenMP paralleization for band (nbnd)
   !! @Note ( P. Delugas 8/10/2019) Needs to be called only after initialization, otherwise
   !!       stops the program with an error call.
+  !
+  USE mp_images, ONLY : intra_image_comm
+  USE mp, ONLY : mp_sum
   !
   INTEGER, INTENT(IN) :: nks
   !! The total # of k in irr-BZ
@@ -850,7 +880,7 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
   INTEGER, INTENT(IN) :: isk(nks)
   !! which k is up/down
   REAL(DP), INTENT(IN) :: et(nbnd,nks)
-  !! Kohn Sham energy [Ry]
+  !! Kohn Sham energy [Ry]. All process must has the whole information of e
   REAL(DP), INTENT(INOUT) :: wg(nbnd,nks)
   !! Intetration weight of each k
   REAL(DP), INTENT(IN) :: ef
@@ -858,7 +888,7 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
   !
   ! ... local variables
   !
-  INTEGER :: ns, ik, nt, ibnd, jbnd, kbnd, i, ii, itetra(4), nk
+  INTEGER :: ns, ik, nt, ibnd, jbnd, kbnd, i, ii, itetra(4), nk, s_tetra, l_tetra
   REAL(DP) :: e(4), wg0(4), C(3), a(4,4), wg1
   INTEGER :: nspin_lsda
   !
@@ -879,6 +909,12 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
      nspin_lsda = 1
   ENDIF
   !
+  CALL divide(intra_image_comm, ntetra, s_tetra, l_tetra)
+  !
+  !$OMP PARALLEL DEFAULT(NONE) &
+  !$OMP & SHARED(nspin_lsda,is,nks,s_tetra,l_tetra,nbnd,nntetra,tetra,wlsm,et,ef,wg,ntetra) &
+  !$OMP & PRIVATE(ns,nk,nt,ibnd,e,ik,itetra,ii,i,a,C,wg0)
+  !
   DO ns = 1, nspin_lsda
      IF (is /= 0) THEN
         IF (ns /= is) CYCLE
@@ -892,8 +928,9 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
         nk = nks / 2
      ENDIF
      !
-     DO nt = 1, ntetra
+     DO nt = s_tetra, l_tetra
         !
+        !$OMP DO
         DO ibnd = 1, nbnd
            !
            e(1:4) = 0.0_dp
@@ -967,10 +1004,19 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
            ENDDO
            !
         ENDDO ! ibnd
+        !$OMP END DO NOWAIT
         !
      ENDDO ! nt
      !
   ENDDO
+  !
+  !$OMP END PARALLEL
+  !
+  ! Each process in a "image" communicator has contributions from only a part 
+  ! of tetrahedra (s_tetra - l_tetra). 
+  ! Contribution from full BZ is computed by combining them.
+  !
+  call mp_sum(wg, intra_image_comm)
   !
   ! Average weights of degenerated states
   !
@@ -1007,7 +1053,12 @@ END SUBROUTINE opt_tetra_weights_only
 SUBROUTINE tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
   !------------------------------------------------------------------
   !
+  !! Parallelization with full MPI procceses intra image for k-points (ntetra), and
+  !! OpenMP paralleization for band (nbnd)
+  ! 
   USE kinds,   ONLY : DP
+  USE mp_images, ONLY : intra_image_comm
+  USE mp, ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -1025,8 +1076,8 @@ SUBROUTINE tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
   !
   ! ... local variables
   !
-  INTEGER :: itetra(4), nk, ns, nt, ibnd, i
-  REAL(DP) :: etetra(4), e1, e2, e3, e4
+  INTEGER :: itetra(4), nk, ns, nt, ibnd, i, s_tetra, l_tetra
+  REAL(DP) :: etetra(4), e1, e2, e3, e4, dosint0(2)
   INTEGER :: nspin0
   !
   IF (nspin==4) THEN
@@ -1035,9 +1086,17 @@ SUBROUTINE tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
      nspin0=nspin
   ENDIF
   !
+  CALL divide(intra_image_comm, ntetra, s_tetra, l_tetra)
+  !
+  dost (1:nspin0) = 0.d0
+  dosint0(1:nspin0) = 0.d0
+  !
+  !$OMP PARALLEL DEFAULT(NONE) &
+  !$OMP & SHARED(nspin0,nks,s_tetra,l_tetra,nbnd,et,tetra,e,nspin,ntetra) &
+  !$OMP & REDUCTION(+: dost,dosint0) &
+  !$OMP & PRIVATE(ns,nk,nt,ibnd,i,etetra,itetra,e1,e2,e3,e4)
+  !
   DO ns = 1, nspin0
-     dost (ns) = 0.d0
-     IF (PRESENT(dosint)) dosint(ns) = 0.d0
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
@@ -1047,7 +1106,8 @@ SUBROUTINE tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
         nk = nks / 2
      ENDIF
      !
-     DO nt = 1, ntetra
+     DO nt = s_tetra, l_tetra
+        !$OMP DO
         DO ibnd = 1, nbnd
            ! these are the energies at the vertexes of the nt-th tetrahedron
            DO i = 1, 4
@@ -1060,36 +1120,49 @@ SUBROUTINE tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
            e3 = etetra(3)
            e4 = etetra(4)
            IF (e>=e4 ) THEN 
-              IF (PRESENT(dosint)) dosint(ns) = dosint(ns) + (1.d0 / ntetra) 
+              dosint0(ns) = dosint0(ns) + (1.d0 / ntetra) 
            ELSEIF (e<e4 .AND. e>=e3) THEN
               dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0d0 * (e4 - e) **2 / &
                    (e4 - e1) / (e4 - e2) / (e4 - e3) )
-              IF (PRESENT(dosint)) dosint(ns) = dosint(ns) + &
+              dosint0(ns) = dosint0(ns) + &
                  (1.d0/ntetra) * ( 1.d0 - ( e4 - e)**3/((e4 - e1)*(e4 - e2)*(e4 - e3))) 
            ELSEIF (e<e3 .AND. e>=e2) THEN
               dost (ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
                    * (3.0d0 * (e2 - e1) + 6.0d0 * (e-e2) - 3.0d0 * (e3 - e1 + e4 - e2) &
                    / (e3 - e2) / (e4 - e2) * (e-e2) **2)
-              IF (PRESENT(dosint)) dosint(ns) = dosint(ns) + (1.d0/ntetra) / (e3 - e1) / (e4 - e1) * &
+              dosint0(ns) = dosint0(ns) + (1.d0/ntetra) / (e3 - e1) / (e4 - e1) * &
                         ( (e2 -e1)**2 + 3.d0 * (e2 - e1) *(e - e2) +3.d0*(e - e2)**2 - & 
                         (e3 - e1 +e4 -e2 ) / (e3 - e2 ) / (e4 - e2) * (e - e2) **3)
            ELSEIF (e<e2 .AND. e>e1) THEN 
               dost (ns) = dost (ns) + (1.d0 / ntetra) * 3.0d0 * (e-e1) **2 / &
                    (e2 - e1) / (e3 - e1) / (e4 - e1)
-              IF ( PRESENT(dosint)) &
-                 dosint(ns) = dosint(ns) + (1.d0/ntetra) * ((e -e1)**3)/(e2 -e1)/(e3-e1)/(e4-e1) 
+              dosint0(ns) = dosint0(ns) + (1.d0/ntetra) * ((e -e1)**3)/(e2 -e1)/(e3-e1)/(e4-e1) 
            ENDIF
         ENDDO
+        !$OMP END DO NOWAIT
 
      ENDDO
      !
      ! add correct spin normalization : 2 for LDA, 1 for LSDA or
      ! noncollinear calculations 
      !
-     IF ( nspin == 1 ) dost(ns) = dost(ns) * 2.d0
-     IF (PRESENT(dosint) .AND. nspin==1) dosint(ns) = dosint(ns) * 2.d0 
+     IF ( nspin == 1 ) THEN
+        dost(ns) = dost(ns) * 2.d0
+        dosint0(ns) = dosint0(ns) * 2.d0
+     ENDIF
      !
   ENDDO
+  !
+  !$OMP END PARALLEL
+  !
+  ! Each process in a "image" communicator has contributions from only a part 
+  ! of tetrahedra (s_tetra - l_tetra). 
+  ! Contribution from full BZ is computed by combining them.
+  !
+  CALL mp_sum(dost, intra_image_comm)
+  CALL mp_sum(dosint0, intra_image_comm)
+  !
+  IF(present(dosint)) dosint(1:2) = dosint0(1:2)
   !
   RETURN
   !
@@ -1101,6 +1174,9 @@ SUBROUTINE opt_tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
   !------------------------------------------------------------------
   !! Optimized tetrahedron method.
   !
+  USE mp_images, ONLY : intra_image_comm
+  USE mp, ONLY : mp_sum
+  !
   IMPLICIT NONE
   !
   INTEGER :: nspin, nbnd, nks
@@ -1109,9 +1185,9 @@ SUBROUTINE opt_tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
   !
   ! ... local variables
   !
-  INTEGER :: itetra(4), nk, ns, nt, ibnd, i
+  INTEGER :: itetra(4), nk, ns, nt, ibnd, i, s_tetra, l_tetra
   !
-  REAL(DP) :: etetra(4), e1, e2, e3, e4
+  REAL(DP) :: etetra(4), e1, e2, e3, e4, dosint0(2)
   INTEGER :: nspin0
   !
   IF (nspin==4) THEN
@@ -1120,9 +1196,17 @@ SUBROUTINE opt_tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
      nspin0=nspin
   ENDIF
   !
+  CALL divide(intra_image_comm, ntetra, s_tetra, l_tetra)
+  !
+  dost(1:nspin0) = 0.0_dp
+  dosint0(1:nspin0) = 0.0_dp
+  !
+  !$OMP PARALLEL DEFAULT(NONE) &
+  !$OMP & SHARED(nspin0,nks,s_tetra,l_tetra,nbnd,nntetra,wlsm,et,tetra,nspin,e,ntetra) &
+  !$OMP & PRIVATE(ns,nk,nt,ibnd,etetra,i,itetra,e1,e2,e3,e4) &
+  !$OMP & REDUCTION(+: dost,dosint0)
+  !
   DO ns = 1, nspin0
-     dost (ns) = 0.d0
-     IF (PRESENT(dosint)) dosint(ns) = 0.d0
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
@@ -1132,7 +1216,8 @@ SUBROUTINE opt_tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
         nk = nks / 2
      ENDIF
      !
-     DO nt = 1, ntetra
+     DO nt = s_tetra, l_tetra
+        !$OMP DO
         DO ibnd = 1, nbnd
            ! these are the energies at the vertexes of the nt-th tetrahedron
            etetra(1:4) = 0.0_dp
@@ -1146,26 +1231,26 @@ SUBROUTINE opt_tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
            e3 = etetra(3)
            e4 = etetra(4)
            IF (e >= e4 ) THEN
-              IF (PRESENT(dosint)) dosint(ns) = dosint(ns) + (1.d0 / ntetra) 
+              dosint0(ns) = dosint0(ns) + (1.d0 / ntetra) 
            ELSEIF (e<e4 .AND. e>=e3) THEN
               dost(ns) = dost(ns) + 1.d0 / ntetra * (3.0d0 * (e4 - e) **2 / &
                          (e4 - e1) / (e4 - e2) / (e4 - e3) )
-              IF (PRESENT(dosint)) dosint(ns) = dosint(ns) + &
+              dosint0(ns) = dosint0(ns) + &
                  (1.d0/ntetra) * ( 1.d0 - ( e4 - e)**3/((e4 - e1)*(e4 - e2)*(e4 - e3))) 
            ELSEIF (e<e3 .AND. e>=e2) THEN
               dost(ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
                          * (3.0d0 * (e2 - e1) + 6.0d0 * (e-e2) - 3.0d0 * (e3 - e1 + e4 - e2) &
                          / (e3 - e2) / (e4 - e2) * (e-e2) **2)
-              IF (PRESENT(dosint)) dosint(ns) = dosint(ns) + (1.d0/ntetra) / (e3 - e1) / (e4 - e1) * &
+              dosint0(ns) = dosint0(ns) + (1.d0/ntetra) / (e3 - e1) / (e4 - e1) * &
                         ( (e2 -e1)**2 + 3.d0 * (e2 - e1) *(e - e2) +3.d0*(e - e2)**2 - & 
                         (e3 - e1 +e4 -e2 ) / (e3 - e2 ) / (e4 - e2) * (e - e2) **3)
            ELSEIF (e<e2 .AND. e>e1) THEN
               dost(ns) = dost (ns) + 1.d0 / ntetra * 3.0d0 * (e-e1) **2 / &
                    (e2 - e1) / (e3 - e1) / (e4 - e1)
-              IF ( PRESENT(dosint)) &
-                 dosint(ns) = dosint(ns) + (1.d0/ntetra) * ((e -e1)**3)/(e2 -e1)/(e3-e1)/(e4-e1) 
+              dosint0(ns) = dosint0(ns) + (1.d0/ntetra) * ((e -e1)**3)/(e2 -e1)/(e3-e1)/(e4-e1) 
            ENDIF
         ENDDO
+        !$OMP END DO NOWAIT
         !
      ENDDO
      !
@@ -1174,9 +1259,20 @@ SUBROUTINE opt_tetra_dos_t( et, nspin, nbnd, nks, e, dost, dosint )
      !
      IF ( nspin == 1 ) THEN
         dost(ns) = dost(ns) * 2.d0
-        IF (PRESENT(dosint)) dosint(ns) = dosint(ns) * 2.d0 
+        dosint0(ns) = dosint0(ns) * 2.d0 
      ENDIF
   ENDDO
+  !
+  !$OMP END PARALLEL
+  !
+  ! Each process in a "image" communicator has contributions from only a part 
+  ! of tetrahedra (s_tetra - l_tetra). 
+  ! Contribution from full BZ is computed by combining them.
+  !
+  call mp_sum(dost, intra_image_comm)
+  call mp_sum(dosint0, intra_image_comm)
+  !
+  IF(present(dosint)) dosint(1:2) = dosint0(1:2)
   !
   RETURN
   !
@@ -1191,11 +1287,11 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
   !
   USE lsda_mod,           ONLY : nspin, isk
   USE wvfct,              ONLY : et, nbnd
-  USE klist,              ONLY : nkstot, wk
+  USE klist,              ONLY : nkstot, wk, nks
   USE noncollin_module,   ONLY : lspinorb
   USE constants,          ONLY : rytoev
-  !
-  USE wvfct_gpum,         ONLY: using_et
+  USE mp_images,           ONLY : intra_image_comm
+  USE mp,                 ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -1209,9 +1305,10 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
   !
   ! ... local variables
   !
-  INTEGER :: ns, nk, nt, ibnd, itetra(4), ii, ik, ie, nwfc, nspin1
+  INTEGER :: ns, nk, nt, ibnd, itetra(4), ii, ik, ie, nwfc, nspin1, s_tetra, l_tetra
   REAL(DP) :: etetra(4), e0, e1, e2, e3, e4, wgt(4), G, spindeg,  &
               f12, f13, f14, f21, f23, f24, f31, f32, f34, f41, f42
+  REAL(DP),ALLOCATABLE :: et_col(:,:), proj_col(:,:,:)
   !
   IF(nspin == 2) THEN
      nspin1 = nspin
@@ -1219,7 +1316,22 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
      nspin1 = 1
   ENDIF
   !
-  CALL using_et(0)
+  ALLOCATE(et_col(nbnd,nkstot), proj_col(natomwfc,nbnd,nkstot))
+  CALL poolcollect(nbnd, nks, et, nkstot, et_col)
+  CALL poolcollect(nbnd*natomwfc, nks, proj, nkstot, proj_col)
+  !
+  CALL divide(intra_image_comm, ntetra, s_tetra, l_tetra)
+  !
+  pdos(  0:ne,1:natomwfc,1:nspin0,1:nkseff) = 0.0_dp
+  dostot(0:ne,1:nspindos,         1:nkseff) = 0.0_dp
+  !
+  !$OMP PARALLEL DEFAULT(NONE) &
+  !$OMP & SHARED(nspin1,nkstot,s_tetra,l_tetra,nbnd,nntetra,wlsm,et_col,tetra,Emin, &
+  !$OMP &        DeltaE,kresolveddos,natomwfc,proj_col,ne,wk,nspindos) &
+  !$OMP & REDUCTION(+: pdos, dostot) &
+  !$OMP & PRIVATE(ns,nk,nt,ibnd,etetra,ii,itetra,ie,e0,e1,e2,e3,e4, &
+  !$OMP &         f12,f13,f14,f21,f23,f24,f31,f32,f34,f41,f42,G,wgt,ik,nwfc)
+  !
   DO ns = 1, nspin1
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
@@ -1230,13 +1342,14 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
         nk = nkstot / 2
      ENDIF
      !
-     DO nt = 1, ntetra
+     DO nt = s_tetra, l_tetra
         !
+        !$OMP DO
         DO ibnd = 1, nbnd
            ! these are the energies at the vertexes of the nt-th tetrahedron
            etetra(1:4) = 0.0_dp
            DO ii = 1, nntetra
-              etetra(1:4) = etetra(1:4) + wlsm(1:4,ii) * et(ibnd,tetra(ii, nt) + nk)
+              etetra(1:4) = etetra(1:4) + wlsm(1:4,ii) * et_col(ibnd,tetra(ii, nt) + nk)
            ENDDO
            !
            itetra (1) = 0
@@ -1310,7 +1423,7 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
                     ik = tetra(ii, nt) + nk
                     DO nwfc = 1, natomwfc
                        pdos(ie,nwfc,ns,ik - nk) = pdos(ie,nwfc,ns,ik - nk) &
-                         + proj (nwfc, ibnd, ik) &
+                         + proj_col (nwfc, ibnd, ik) &
                          * DOT_PRODUCT(wlsm(itetra(1:4),ii), wgt(1:4)) * G / wk(ik)
                     ENDDO
                     !
@@ -1331,7 +1444,7 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
                     ik = tetra(ii, nt) + nk
                     DO nwfc = 1, natomwfc
                        pdos(ie,nwfc,ns,1) = pdos(ie,nwfc,ns,1) &
-                         + proj (nwfc, ibnd, ik) * DOT_PRODUCT(wlsm(itetra(1:4),ii), wgt(1:4)) * G
+                         + proj_col (nwfc, ibnd, ik) * DOT_PRODUCT(wlsm(itetra(1:4),ii), wgt(1:4)) * G
                     ENDDO
                     !
                  ENDDO
@@ -1347,10 +1460,20 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
            ENDDO
            !
         ENDDO
+        !$OMP END DO NOWAIT
         !
      ENDDO
      !
   ENDDO
+  !
+  !$OMP END PARALLEL
+  !
+  ! Each process in a "image" communicator has contributions from only a part 
+  ! of tetrahedra (s_tetra - l_tetra). 
+  ! Contribution from full BZ is computed by combining them.
+  !
+  CALL mp_sum(pdos, intra_image_comm)
+  CALL mp_sum(dostot, intra_image_comm)
   !
   spindeg= 1.0_dp
   IF (nspin == 1) spindeg= 2.0_dp
@@ -1358,6 +1481,8 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
       * spindeg / (rytoev * REAL(ntetra,dp))
   dostot(0:ne,1:nspindos,1:nkseff) = dostot(0:ne,1:nspindos,1:nkseff) &
       * spindeg / (rytoev * REAL(ntetra,dp))
+  !
+  DEALLOCATE(et_col, proj_col)
   !
 END SUBROUTINE opt_tetra_partialdos
 !

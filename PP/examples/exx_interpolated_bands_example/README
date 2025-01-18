@@ -1,0 +1,64 @@
+
+This example shows how to use pw.x and band_interpolation.x 
+to calculate the band structure of Silicon using PBE and 
+hybrid PBE0 functional.
+
+pwscf.xml files are compressed (as filexml.tar.gz) in each folder
+
+--------------------------------------------------------------------------------
+in pbe_reference_bands/ the reference PBE bands have been computed with 
+
+${QE}/PW/src/pw.x    < pbe.scf.in   > log.pbe.scf.in   
+${QE}/PW/src/pw.x    < pbe.nscf.in  > log.pbe.nscf.in  
+${QE}/PW/src/pw.x    < pbe.bands.in > log.pbe.bands.in 
+${QE}/PP/src/bands.x < pbe.pp.in    > log.pbe.pp.in    
+
+and the plottable PBE band structure is in pbe.bands.dat.gnu
+
+--------------------------------------------------------------------------------
+in pbe_fourier/ the interpolated PBE band structure has been computed 
+by performing a simple SCF 
+
+${QE}/PW/src/pw.x    < pbe.scf.in   > log.pbe.scf.in
+
+and then interpolating the eigenvalues read in pwscf.xml 
+with the fourier-diff method
+
+${QE}/PP/src/band_interpolation.x    < fourier-diff.in   > out.fourier-diff.in
+
+and fourier method
+
+${QE}/PP/src/band_interpolation.x    < fourier.in   > out.fourier.in
+
+The two band structures are stored in files fourier-diff.dat and fourier.dat, 
+respectively, and can be directly compared with the reference pbe.bands.dat.gnu.
+
+--------------------------------------------------------------------------------
+
+in pbe0_fourier/ the interpolated PBE0 band structure has been computed 
+similarly to the PBE case 
+
+${QE}/PW/src/pw.x    < pbe0.scf.in   > log.pbe0.scf.in
+
+${QE}/PP/src/band_interpolation.x    < fourier-diff.in   > out.fourier-diff.in
+
+${QE}/PP/src/band_interpolation.x    < fourier.in   > out.fourier.in
+
+and two band structures are stored in files fourier-diff.dat and fourier.dat,
+respectively.
+
+--------------------------------------------------------------------------------
+
+in pbe_idw/ the (low quality) interpolated PBE band structure has been computed 
+with the (very simple) idw and idw-sphere methods 
+
+${QE}/PW/src/pw.x    < pbe0.scf.in   > log.pbe0.scf.in
+
+${QE}/PP/src/band_interpolation.x    < idw.in   > out.idw.in
+
+${QE}/PP/src/band_interpolation.x    < idw-sphere.in   > out.idw-sphere.in
+
+and two band structures are stored in files idw.dat and idw-sphere.dat, 
+respectively.
+
+--------------------------------------------------------------------------------

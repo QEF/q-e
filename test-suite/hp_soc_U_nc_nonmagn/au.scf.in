@@ -1,0 +1,31 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'au'
+  pseudo_dir = '../../pseudo/'
+  tstress = .true.
+/
+&SYSTEM
+  ibrav = 2
+  celldm(1) = 7.829425389911
+  degauss =   0.01
+  ecutwfc =   40
+  nat = 1
+  ntyp = 1
+  occupations = 'smearing'
+  smearing = 'gauss'
+  noncolin = .true.
+  lspinorb = .true.
+/
+&ELECTRONS
+  conv_thr =   1.0000000000d-14
+  electron_maxstep = 80
+  mixing_beta =  0.4
+/
+ATOMIC_SPECIES
+Au     196.966569  Au_ONCV_PBE_FR_.upf
+ATOMIC_POSITIONS crystal
+Au    0.0000    0.0000    0.0000 
+K_POINTS automatic
+5 5 5 0 0 0
+Hubbard ortho-atomic
+U Au-5d 4

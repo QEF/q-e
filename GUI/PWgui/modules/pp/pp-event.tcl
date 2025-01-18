@@ -1,7 +1,5 @@
 tracevar plot_num w {
 
-    set spin_component_text [vartextvalue spin_component(1)]
-
     switch -exact -- [vartextvalue plot_num] {
 	"charge density" -
 	"total potential (= V_bare + V_H + V_xc)" -
@@ -15,16 +13,15 @@ tracevar plot_num w {
 		"spin up only"
 		"spin down only"		
 	    }
+            switch -exact [varvalue spin_component(1)] {
+                0 { varset spin_component(1) -textvalue "spin up + spin down" }
+                1 { varset spin_component(1) -textvalue "spin up only" }
+                2 { varset spin_component(1) -textvalue "spin down only" }
+            }
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable 
 	    groupwidget ildos disable
 	    groupwidget ldos  disable
-
-	    if { [regexp {charge|absolute} $spin_component_text] } {
-                varset spin_component(1) -textvalue "spin up + spin down"
-            } elseif { ! [regexp {spin} $spin_component_text] } {
-		varset spin_component(1) -value {}
-	    }		
 	}
 
 	"local density of states at specific energies (LDOS)" {
@@ -35,16 +32,15 @@ tracevar plot_num w {
 		"spin up only"
 		"spin down only"		
 	    }            
-	    groupwidget stm   disable 
+            switch -exact [varvalue spin_component(1)] {
+                0 { varset spin_component(1) -textvalue "spin up + spin down" }
+                1 { varset spin_component(1) -textvalue "spin up only" }
+                2 { varset spin_component(1) -textvalue "spin down only" }
+            }
+            groupwidget stm   disable 
 	    groupwidget psi2  disable  
 	    groupwidget ildos enable
 	    groupwidget ldos  enable
-
-            if { [regexp {charge|absolute} $spin_component_text] } {
-                varset spin_component(1) -textvalue "spin up + spin down"
-            } elseif { ! [regexp {spin} $spin_component_text] } {
-		varset spin_component(1) -value {}
-	    }		
 	}
 	
 	"STM images" {
@@ -67,23 +63,23 @@ tracevar plot_num w {
 	    widget spin_component enable
 	    widget spin_component(2) enable
 	    foreach i {1 2} {
-		widgetconfigure spin_component($i) -textvalues {
+                widgetconfigure spin_component($i) -textvalues {
 		    "charge"
 		    "x component of the magnetization"
 		    "y component of the magnetization"
 		    "z component of the magnetization"
 		}
-	    }
+                switch -exact [varvalue spin_component($i)] {
+                    0 { varset spin_component($i) -textvalue "charge" }
+                    1 { varset spin_component($i) -textvalue "x component of the magnetization" }
+                    2 { varset spin_component($i) -textvalue "y component of the magnetization" }
+                    3 { varset spin_component($i) -textvalue "z component of the magnetization" }
+                }
+            }
 	    groupwidget stm   disable 
 	    groupwidget psi2  enable  
 	    groupwidget ildos disable
 	    groupwidget ldos  disable
-
-	    if { $spin_component_text == "spin up + spin down" || $spin_component_text == "absolute value" } {
-		varset spin_component(1) -textvalue "charge"
-	    } else {
-                varset spin_component(2) -value {}
-            }
 	}
 	
 	"integrated local density of states (ILDOS)" {
@@ -94,16 +90,15 @@ tracevar plot_num w {
 		"spin up only"
 		"spin down only"		
 	    }
+            switch -exact [varvalue spin_component(1)] {
+                0 { varset spin_component(1) -textvalue "spin up + spin down" }
+                1 { varset spin_component(1) -textvalue "spin up only" }
+                2 { varset spin_component(1) -textvalue "spin down only" }
+            }
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable  
 	    groupwidget ildos enable
 	    groupwidget ldos  disable
-
-            if { [regexp {charge|absolute} $spin_component_text] } {
-                varset spin_component(1) -textvalue "spin up + spin down"
-            } elseif { ! [regexp {spin} $spin_component_text] } {
-		varset spin_component(1) -value {}
-	    }
 	}
 
 	"noncolinear magnetization" {
@@ -115,14 +110,16 @@ tracevar plot_num w {
 		"y component of the magnetization"
 		"z component of the magnetization"
 	    }	
+            switch -exact [varvalue spin_component(1)] {
+                0 { varset spin_component(1) -textvalue "absolute value" }
+                1 { varset spin_component(1) -textvalue "x component of the magnetization" }
+                2 { varset spin_component(1) -textvalue "y component of the magnetization" }
+                2 { varset spin_component(1) -textvalue "z component of the magnetization" }
+            }
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable  
 	    groupwidget ildos disable
 	    groupwidget ldos  disable
-
-	    if { $spin_component_text == "spin up + spin down" || $spin_component_text == "charge" } {
-		varset spin_component(1) -textvalue "absolute value"
-	    }
 	}
 
 	default {
@@ -286,8 +283,12 @@ tracevar output_format w {
     }
 }
 
+tracevar spin_component(2) w {
+    varset plot_num -textvalue "|psi|^2 (noncollinear case)"
+}
+
 postprocess {
     varset iflag         -textvalue "3D plot"
     varset output_format -textvalue "XCRYSDEN's XSF format - fast (whole unit cell, 3D)"
-    varset plot_num -textvalue ""
+    varset plot_num      -textvalue ""
 }

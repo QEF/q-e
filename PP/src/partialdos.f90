@@ -9,13 +9,15 @@
 SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
   USE ions_base, ONLY : ityp, atm
   USE klist, ONLY: wk, nkstot, degauss, ngauss, lgauss, ltetra
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE wvfct, ONLY: et, nbnd
   USE constants, ONLY: rytoev
   USE ktetra, ONLY: tetra_type, opt_tetra_partialdos
+  USE mp, ONLY : mp_bcast
+  USE mp_images, ONLY : intra_image_comm
   !
   USE projections
   !
@@ -40,6 +42,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   nproj = SIZE(proj,1)
   !
   ! find band extrema
+  ! Only the first proc of the first pool (#0 in intra_image_comm) has whole et
   !
   Elw = et (1, 1)
   Eup = et (nbnd, 1)
@@ -47,6 +50,9 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      Elw = min (Elw, et (1, ik) )
      Eup = max (Eup, et (nbnd, ik) )
   ENDDO
+  CALL mp_bcast(Elw, 0, intra_image_comm)
+  CALL mp_bcast(Eup, 0, intra_image_comm)
+
   IF (degauss/=0.d0) THEN
      Eup = Eup + 3d0 * degauss
      Elw = Elw - 3d0 * degauss
@@ -139,7 +145,10 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         ENDDO
      ENDDO
   ENDDO
-
+  !
+  ! Only IO-node outputs to a file
+  IF (.NOT. ionode) GO TO 20 
+  !
   DO nwfc = 1, nproj
      IF (nlmchi(nwfc)%m == 1) THEN
         filextension='.pdos_atm#'
@@ -178,8 +187,8 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
              'file extension not supporting so many atomic wfc', nwfc)
         END IF
         fileout = trim(filpdos)//trim(filextension)
+        !
         OPEN (4,file=fileout,form='formatted', status='unknown')
-
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
         ELSE
@@ -219,9 +228,9 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
               ENDIF
               etev = Emin + ie * DeltaE
               WRITE (4,'(f8.3,2e11.3,14e11.3)') etev*rytoev,  &
-                   (ldos(ie,is,ik), is=1,nspin), &
-                   ((pdos(ie,nwfc+m-1,is,ik), is=1,nspin), &
-                   m=1,2*nlmchi(nwfc)%l+1)
+                (ldos(ie,is,ik), is=1,nspin), &
+                ((pdos(ie,nwfc+m-1,is,ik), is=1,nspin), &
+                m=1,2*nlmchi(nwfc)%l+1)
            ENDDO
            IF (kresolveddos) WRITE (4,*)
         ENDDO
@@ -229,6 +238,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      ENDIF
   ENDDO
   fileout = trim(filpdos)//".pdos_tot"
+  !
   OPEN (4,file=fileout,form='formatted', status='unknown')
   IF (kresolveddos) THEN
      WRITE (4,'("# ik   ")', advance="NO")
@@ -247,11 +257,12 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         ENDIF
         etev = Emin + ie * DeltaE
         WRITE (4,'(f8.3,4e11.3)') etev*rytoev, (dostot(ie,is,ik), is=1,nspin), &
-             (pdostot(ie,is,ik), is=1,nspin)
-     ENDDO
-     IF (kresolveddos) WRITE (4,*)
+          (pdostot(ie,is,ik), is=1,nspin)
+      ENDDO
+      IF (kresolveddos) WRITE (4,*)
   ENDDO
   CLOSE (4)
+20 CONTINUE
   DEALLOCATE (ldos, dostot, pdostot)
   DEALLOCATE (pdos)
   !
@@ -265,7 +276,7 @@ END SUBROUTINE partialdos
 SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
   USE basis, ONLY : natomwfc
   USE ions_base, ONLY : ityp, atm
   USE klist, ONLY: wk, nkstot, degauss, ngauss, lgauss, ltetra
@@ -274,6 +285,8 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   USE constants, ONLY: rytoev
   USE ktetra, ONLY: opt_tetra_partialdos
   USE noncollin_module, ONLY: lspinorb
+  USE mp, ONLY : mp_bcast
+  USE mp_images, ONLY : intra_image_comm
   USE projections
   !
   IMPLICIT NONE
@@ -294,6 +307,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !
   !
   ! find band extrema
+  ! Only the first proc of the first pool (#0 in intra_image_comm) has whole et
   !
   Elw = et (1, 1)
   Eup = et (nbnd, 1)
@@ -301,6 +315,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
      Elw = min (Elw, et (1, ik) )
      Eup = max (Eup, et (nbnd, ik) )
   ENDDO
+  CALL mp_bcast(Elw, 0, intra_image_comm)
+  CALL mp_bcast(Eup, 0, intra_image_comm)
+
   IF (degauss/=0.d0) THEN
      Eup = Eup + 3d0 * degauss
      Elw = Elw - 3d0 * degauss
@@ -455,8 +472,12 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
              'file extension not supporting so many atomic wfc', nwfc)
         ENDIF
         fileout = trim(filpdos)//trim(filextension)
+        !
+        ! Only IO-node outputs to a file
+        !
+        IF(ionode) THEN
+        !
         OPEN (4,file=fileout,form='formatted', status='unknown')
-
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
         ELSE
@@ -543,9 +564,17 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            ENDDO
         ENDIF
         CLOSE (4)
+        !
+        END IF ! ionode
+        !
      ENDIF
   ENDDO
   fileout = trim(filpdos)//".pdos_tot"
+  !
+  ! Only IO-node outputs to a file
+  !
+  IF(ionode) THEN
+  !
   OPEN (4,file=fileout,form='formatted', status='unknown')
   IF (kresolveddos) THEN
      WRITE (4,'("# ik   ")', advance="NO")
@@ -569,6 +598,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
      IF (kresolveddos) WRITE (4,*)
   ENDDO
   CLOSE (4)
+  !
+  END IF ! ionode
+  !
   DEALLOCATE (ldos, dostot, pdostot)
   DEALLOCATE (pdos)
   !

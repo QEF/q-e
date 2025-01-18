@@ -99,13 +99,13 @@ if len(sys.argv)>1:
     print('''
     -o QE output file name (for grepping Fermi E)
     -s Selection of atoms for summing the DOSes. "*" for all, *1*Fe*d* for first Fe atom " (def. "*")
-    -p Print output to a file and aditionaly provide an output name (def. no output and "sum_dos.out")
+    -p Print output to a file and additionaly provide an output name (def. no output and "sum_dos.out")
     -t set title in the head of the graph
     -xr set min and max x value for the axes in the graph
     -yr set min and max y value for the axes in the graph
     -h print this help
     -v print version
-       Example: sum_states.py --s sys.pdos_atm#4\(Fe2\)_wfc#2\(d\) -t "Wustite LDA+U single Fe" -xr -9 4
+       Example: sum_states.py -s sys.pdos_atm#4\(Fe2\)_wfc#2\(d\) -t "Wustite LDA+U single Fe" -xr -9 4
    ''')
     sys.exit()
 

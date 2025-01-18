@@ -11,7 +11,9 @@
 
     MODULE splines
 
-! routines for handling splines
+      !! Routines for handling splines.  
+      !! This module is basad on a similar module from CP2K.
+      
 !   allocate_spline: allocates x and y vectors for splines
 !   init_spline:   generate table for spline (allocate spl%y2)
 !   spline:        return value of spline for given abscissa (optional:also y1)
@@ -31,12 +33,16 @@
         spline_int, kill_spline, splineh, splinedx, splintdx, nullify_spline
 
       TYPE spline_data
-        REAL (DP), POINTER :: x(:)  ! array containing x values
-        REAL (DP), POINTER :: y(:)  ! array containing y values 
-                                     ! y(i) is the function value corresponding
-                                     ! to x(i) in the interpolation table
-        REAL (DP), POINTER :: y2(:) ! second derivative of interpolating function
-        INTEGER :: n       ! number of element in the interpolation table
+        REAL (DP), POINTER :: x(:)
+        !! array containing x values
+        REAL (DP), POINTER :: y(:)
+        !! array containing y values. 
+        !! y(i) is the function value corresponding
+        !! to x(i) in the interpolation table
+        REAL (DP), POINTER :: y2(:)
+        !! second derivative of interpolating function
+        INTEGER :: n
+        !! number of element in the interpolation table
         INTEGER :: pos
         REAL (DP) :: h, invh, h26, h16 
         REAL (DP) :: xmin, xmax  ! ... added by Carlo Cavazzoni
@@ -65,7 +71,7 @@
       END SUBROUTINE nullify_spline
 
       SUBROUTINE allocate_spline( spl, nn, xmin, xmax )
-
+        !! Allocates x and y vectors for splines
         IMPLICIT NONE
 
         TYPE (spline_data), INTENT (INOUT) :: spl
@@ -126,7 +132,7 @@
 !-----------------------------------------------------------------------
 
       SUBROUTINE init_spline( spl, endpt, y1a, y1b )
-
+        !! Generate table for spline (allocate spl%y2).
 !   endpt: 's': regular spacing
 !          'l': left; 'r': right; 'b': both = specify 1-deriv for each endpoints
 
@@ -303,7 +309,7 @@
 
 !-----------------------------------------------------------------------
       FUNCTION spline( spl, xx, y1 )
-
+        !! Return value of spline for given abscissa (optional:also y1).
         IMPLICIT NONE
 
         TYPE (spline_data), INTENT (INOUT) :: spl
@@ -388,6 +394,7 @@
       END FUNCTION splineh
 !-----------------------------------------------------------------------
       FUNCTION spline_1(spl,xx)
+        !! Return value of 1. derivative of spline for given abscissa.
         IMPLICIT NONE
         TYPE (spline_data), INTENT (INOUT) :: spl
         REAL (DP), INTENT (IN) :: xx
@@ -436,6 +443,7 @@
 
 !-----------------------------------------------------------------------
       FUNCTION spline_int(spl,x0,x1)
+        !! Return value of integral on given interval of spline.
         IMPLICIT NONE
         TYPE (spline_data), INTENT (INOUT) :: spl
         REAL (DP), INTENT (IN) :: x0, x1
@@ -480,7 +488,7 @@
 
 !-----------------------------------------------------------------------
       SUBROUTINE kill_spline(spl,what)
-!   deallocate splines
+        !! Deallocate splines.
 !   what=='a' or not present: deallocate all (spl%x, spl%y, spl%y2)
 !   what=='d': deallocate only data (spl%x, spl%y)
 !   what=='2': deallocate only table of 2. derivatives (spl%y2)

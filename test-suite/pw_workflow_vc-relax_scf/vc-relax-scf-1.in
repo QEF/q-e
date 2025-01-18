@@ -19,7 +19,7 @@
                      degauss  =  0.005 
  /
  &ELECTRONS
-                    conv_thr  =  1.0d-7 
+                    conv_thr  =  1.0d-8
  /
  &IONS
    ! ion_positions = 'from_file'

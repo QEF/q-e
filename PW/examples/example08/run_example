@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -17,7 +17,7 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x to calculate the total energy of FeO"
-$ECHO "using LDA+U approximation. Read file README for more details"
+$ECHO "using DFT+U. Read file README for more details"
 
 # set the needed environment variables
 . ../../../environment_variables
@@ -92,36 +92,36 @@ FeO Wustite in LDA
     tprnfor = .true., tstress=.true.
  /
  &system
-    ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
-    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
-    starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5,
-    starting_magnetization(3)=-0.5,
+    ibrav= 0, celldm(1)=8.19, nat= 4, ntyp= 3,
+    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20, nspin=2,
+    starting_magnetization(1)= 0.5,
+    starting_magnetization(2)=-0.5,
     occupations='smearing', smearing='mv', degauss=0.01,
-    nspin=2,
-    lda_plus_u=.true.  Hubbard_U(2)=1.d-8, Hubbard_U(3)=1.d-8,
  /
  &electrons
     mixing_mode = 'plain'
     mixing_beta = 0.3
-    conv_thr =  1.0d-6
+    conv_thr =  1.0d-10
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS alat
-0.50 0.50 1.00
-0.50 1.00 0.50
-1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ O    1.  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
- O1  0.25 0.25 0.25
- O1  0.75 0.75 0.75
  Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
+ O   0.25 0.25 0.25
+ O   0.75 0.75 0.75
+CELL_PARAMETERS {alat}
+ 0.50 0.50 1.00
+ 0.50 1.00 0.50
+ 1.00 0.50 0.50
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {atomic}
+U Fe1-3d 0.0001
+U Fe2-3d 0.0001
 EOF
 $ECHO "  running scf for FeO in LDA ...\c"
 $PW_COMMAND < feo_LDA.in > feo_LDA.out
@@ -137,7 +137,7 @@ $ECHO " done"
 # self-consistent calculation with standard ns initial value
 cat > feo_standard.in << EOF
 FeO
-FeO Wustite whithin LDA+U using standard initial ns matrices
+FeO Wustite whithin DFT+U using standard initial ns matrices
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -147,38 +147,38 @@ FeO Wustite whithin LDA+U using standard initial ns matrices
     tprnfor = .true., tstress=.true.
  /
  &system
-    ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
-    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
-    starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5,
-    starting_magnetization(3)=-0.5,
+    ibrav= 0, celldm(1)=8.19, nat= 4, ntyp= 3,
+    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20, nspin=2,
+    starting_magnetization(1)= 0.5,
+    starting_magnetization(2)=-0.5,
     occupations='smearing', smearing='mv', degauss=0.01,
-    nspin=2,
-    lda_plus_u=.true.  Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
  /
  &electrons
     mixing_mode = 'plain'
     mixing_beta = 0.3
-    conv_thr =  1.0d-6
+    conv_thr =  1.0d-10
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS alat
-0.50 0.50 1.00
-0.50 1.00 0.50
-1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ O    1.  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
- O1  0.25 0.25 0.25
- O1  0.75 0.75 0.75
  Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
+ O   0.25 0.25 0.25
+ O   0.75 0.75 0.75
+CELL_PARAMETERS {alat}
+ 0.50 0.50 1.00
+ 0.50 1.00 0.50
+ 1.00 0.50 0.50
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {atomic}
+U Fe1-3d 4.3
+U Fe2-3d 4.3
 EOF
-$ECHO "  running scf for FeO in LDA+U using standard ns initial matrices...\c"
+$ECHO "  running scf for FeO in DFT+U using standard ns initial matrices...\c"
 $PW_COMMAND < feo_standard.in > feo_standard.out
 check_failure $?
 $ECHO " done"
@@ -191,7 +191,7 @@ $ECHO " done"
 # self-consistent calculation with user-defined ns initial value
 cat > feo_user_ns.in << EOF
 FeO
-FeO Wustite whithin LDA+U with user-defined ns initial matrices
+FeO Wustite whithin DFT+U with user-defined ns initial matrices
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -201,48 +201,48 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices
     tprnfor = .true., tstress=.true.
  /
  &system
-    ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
-    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
-    starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5,
-    starting_magnetization(3)=-0.5,
+    ibrav= 0, celldm(1)=8.19, nat= 4, ntyp= 3,
+    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20, nspin=2,
+    starting_magnetization(1)= 0.5,
+    starting_magnetization(2)=-0.5,
     occupations='smearing', smearing='mv', degauss=0.01,
-    nspin=2,
-    lda_plus_u=.true., Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
-    starting_ns_eigenvalue(3,2,2) = 1.d0
-    starting_ns_eigenvalue(3,1,3) = 1.d0
+    starting_ns_eigenvalue(5,2,1) = 1.d0
+    starting_ns_eigenvalue(5,1,2) = 1.d0
  /
  &electrons
     mixing_mode = 'plain'
     mixing_beta = 0.3
-    conv_thr =  1.0d-6
+    conv_thr =  1.0d-10
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS alat
-0.50 0.50 1.00
-0.50 1.00 0.50
-1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ O    1.  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
- O1  0.25 0.25 0.25
- O1  0.75 0.75 0.75
  Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
+ O   0.25 0.25 0.25
+ O   0.75 0.75 0.75
+CELL_PARAMETERS {alat}
+ 0.50 0.50 1.00
+ 0.50 1.00 0.50
+ 1.00 0.50 0.50
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {atomic}
+U Fe1-3d 4.3
+U Fe2-3d 4.3
 EOF
-$ECHO "  running scf for FeO in LDA+U using user-defined ns initial matrices...\c"
+$ECHO "  running scf for FeO in DFT+U using user-defined ns initial matrices...\c"
 $PW_COMMAND < feo_user_ns.in > feo_user_ns.out
 check_failure $?
 $ECHO " done"
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/feo_af*
 $ECHO " done"
-
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

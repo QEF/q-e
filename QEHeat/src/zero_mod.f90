@@ -44,7 +44,6 @@ contains
       integer :: isp, iun, a, b
       logical :: exst
       call start_clock('init_zero')
-      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       allocate (tablocal_hg(nqxq, nsp, 2))
       call init_us_1a(tabr, tablocal_hg, rgrid, nsp, zv, omega, nqxq, dq, upf)
       call init_reciprocal_parts_tab(H_g, tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
@@ -351,8 +350,8 @@ contains
    subroutine allocate_zero
       use ions_base, only: nsp
       use gvect, only: ngm
-      use uspp_data, ONLY: nqxq
-      USE uspp_param, ONLY: nbetam
+      !use uspp_data, ONLY: nqxq
+      !USE uspp_param, ONLY: nbetam
 !
       implicit none
 !

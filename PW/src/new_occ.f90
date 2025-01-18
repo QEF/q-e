@@ -10,16 +10,17 @@
 SUBROUTINE new_evc()
   !-----------------------------------------------------------------------
   !! This routine is used only for isolated atoms in combination with
-  !! the flag one_atom_occupations.  
+  !!    the flag one_atom_occupations.  
   !! It makes linear combinations of the degenerate bands so 
-  !! that they have maximum overlap with the atomic states, and order 
-  !! the bands in the same order as the atomic states.  
-  !! Weights "wg" must have been set to fixed values (as read in input).
+  !!    that they have maximum overlap with the atomic states,
+  !!    and order the bands in the same order as the atomic states.  
+  !! On input: S\psi orthogonalized atomic wavefunctions in buffer "iunsat";
+  !!    weights "wg" must have been set to fixed values (as read in input).
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
-  USE basis,                ONLY : natomwfc, swfcatom
+  USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE wvfct,                ONLY : nbnd, npwx, wg, et
@@ -32,9 +33,6 @@ SUBROUTINE new_evc()
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
-  USE wavefunctions_gpum,   ONLY : using_evc
-  USE wvfct_gpum,           ONLY : using_et
-  !
   IMPLICIT NONE
   !
   INTEGER :: ik, ibnd, jbnd, igroup, npw
@@ -44,7 +42,7 @@ SUBROUTINE new_evc()
   !
   REAL(DP), EXTERNAL :: ddot
   COMPLEX(DP), ALLOCATABLE :: proj(:,:), aux(:,:), aux_proj(:,:), a(:,:), v(:,:)
-  !
+  COMPLEX(DP), ALLOCATABLE :: swfcatom(:,:)
   REAL(DP) :: max_value, save_value, aux_et, maxproj
   INTEGER :: select_ibnd, iatwfc, first_available_band, info, nsize, &
              current_band, ngroups 
@@ -56,6 +54,7 @@ SUBROUTINE new_evc()
      CALL errore( 'new_evc', 'increase nbnd', 1 )
   ENDIF
   !
+  ALLOCATE( swfcatom(npwx*npol,natomwfc) )
   ALLOCATE( proj(natomwfc,nbnd) )
   ALLOCATE( wband(nbnd) )
   ALLOCATE( group_size(nbnd) )
@@ -65,14 +64,11 @@ SUBROUTINE new_evc()
   !
   ! ... we start a loop over k points
   !
-  CALL using_evc(0) ! save buffer is intent(in)
-  CALL using_et(1) ! this may be 0 but requires further checks
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk(ik)
      IF (nks > 1) &
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-     IF (nks > 1) CALL using_evc(2)
      !
      CALL get_buffer( swfcatom, nwordatwfc, iunsat, ik )
      !
@@ -110,7 +106,6 @@ SUBROUTINE new_evc()
      ! natomwfc with large projections.
      !
      IF (natomwfc < nbnd) THEN
-        CALL using_et(1)
         DO ibnd = 1, nbnd
            wband(ibnd) = 0.0_DP
            DO iatwfc = 1, natomwfc
@@ -132,7 +127,6 @@ SUBROUTINE new_evc()
         !
         current_band = natomwfc+1
         !
-        CALL using_evc(1)
         DO ibnd = 1, natomwfc
            IF (ind(ibnd) > natomwfc) THEN
               DO jbnd = current_band, nbnd
@@ -239,7 +233,6 @@ SUBROUTINE new_evc()
                                      proj(:,start_band(igroup)+jbnd-1)
               ENDDO
            ENDDO
-           CALL using_evc(1)
            evc(:,start_band(igroup):start_band(igroup)+nsize-1)= aux(:,:)
            proj(:,start_band(igroup):start_band(igroup)+nsize-1)= aux_proj(:,:)
            DEALLOCATE( aux )
@@ -253,7 +246,6 @@ SUBROUTINE new_evc()
      !
      ! ... Finally, we order the new bands as the atomic states
      !
-     CALL using_evc(1)
      ALLOCATE( aux(npwx*npol,natomwfc) )
      used_atwfc = 0
      DO ibnd = 1, natomwfc
@@ -275,12 +267,15 @@ SUBROUTINE new_evc()
      !
      ! ... If needed save the new bands on disk
      !
-     ! CALL using_evc(1) (already done above, no functions call in between)
      IF (nks > 1) THEN
         CALL save_buffer( evc, nwordwfc, iunwfc, ik )
      ENDIF
   ENDDO
   !
+  ! update current evc on device (expecially for gamma_only case)
+  !$acc update device(evc)
+  !
+  DEALLOCATE( swfcatom )
   DEALLOCATE( group_size )
   DEALLOCATE( start_band )
   DEALLOCATE( ind )

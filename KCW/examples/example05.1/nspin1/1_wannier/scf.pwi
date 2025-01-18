@@ -1,0 +1,29 @@
+&CONTROL
+   calculation      = 'scf'
+   verbosity        = 'high'
+   outdir           = '../out'
+   pseudo_dir       = '../../pseudo'
+   prefix           = 'si'
+/
+&SYSTEM
+   ibrav             = 2
+   celldm(1)         = 10.262200042863787
+   ecutwfc           = 20.0
+   ntyp              = 1
+   nat               = 2
+   nspin             = 1
+/
+&ELECTRONS
+   conv_thr         = 1.6e-08
+/
+
+ATOMIC_SPECIES
+Si  28.085 Si.upf
+
+K_POINTS automatic
+6 6 6  0 0 0
+
+ATOMIC_POSITIONS crystal
+Si  -0.0000000000 0.0000000000 -0.0000000000
+Si  0.2500000000 0.2500000000 0.2500000000
+

@@ -15,7 +15,6 @@ XOBJS = \
 ./mygetK.o \
 ./ipoolscatter.o \
 ./lr_sm1_psi.o \
-./orthoUatwfc_k.o \
 ./read_k_points.o \
 ./reset_k_points_and_reinit.o \
 ./select_nl_init.o \
@@ -33,7 +32,6 @@ XOBJS = \
 ./xanes_quadrupole.o 
 
 GIPAWOBJS=./paw_gipaw.o \
-./gipaw_module.o \
 ./init_gipaw_1.o \
 ./init_gipaw_2.o
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -65,7 +65,7 @@ if [ "$GP_COMMAND" = "" ]; then
         $ECHO "gnuplot not in PATH"
         $ECHO "Results will not be plotted"
 fi
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -111,7 +111,7 @@ cat > ni.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
@@ -202,7 +202,7 @@ cat > ni.band.in << EOF
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
@@ -469,7 +469,7 @@ Pt
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
-Pt  0.0   Pt.rel-pz-n-rrkjus.UPF 
+Pt  0.0   Pt.rel-pz-n-rrkjus.UPF
 ATOMIC_POSITIONS alat
 Pt  0.0000000   0.00000000   0.0
 K_POINTS
@@ -667,7 +667,7 @@ fi
 
 ################################################################################
 
- 
+
 # self-consistent calculation
 cat > silicene.scf.in << EOF
  &control
@@ -682,7 +682,7 @@ cat > silicene.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF
@@ -713,7 +713,7 @@ cat > silicene.band.in << EOF
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
     conv_thr_init = 1.0e-6
  /
 ATOMIC_SPECIES

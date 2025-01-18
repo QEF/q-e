@@ -68,10 +68,8 @@ subroutine phq_setup
   USE uspp,          ONLY : nlcc_any, deeq_nc, okvan
   USE noncollin_module, ONLY : noncolin, domag, m_loc, angle1, angle2, ux
   USE nlcc_ph,       ONLY : drc
-  USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
-                            last_irr, niter_ph, alpha_mix, all_done,  &
-                            trans, epsil, recover, where_rec, &
-                            flmixdpot, reduce_io, rec_code_read, &
+  USE control_ph,    ONLY : search_sym, start_irr, &
+                            last_irr, all_done,  trans, epsil, recover, &
                             done_epsil, zeu, done_zeu, current_iq, u_from_file
   USE el_phon,       ONLY : elph, comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
   USE output,        ONLY : fildrho
@@ -96,14 +94,16 @@ subroutine phq_setup
   USE mp,            ONLY : mp_max, mp_min
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
-  USE nc_mag_aux,    ONLY : deeq_nc_save
-  USE control_lr,    ONLY : lgamma
+  USE lr_nc_mag,     ONLY : deeq_nc_save
+  USE control_lr,    ONLY : lgamma, lgamma_gamma, niter_ph, alpha_mix, flmixdpot, &
+                            reduce_io, rec_code, rec_code_read, where_rec
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
   USE ldaU_lr,       ONLY : effU
   USE constants,     ONLY : rytoev
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
   USE ahc,           ONLY : elph_ahc, elph_ahc_setup
 
+  USE el_phon,       ONLY : elph_mat
   implicit none
 
   real(DP) :: sr_is(3,3,48)
@@ -111,8 +111,6 @@ subroutine phq_setup
   integer :: isym, jsym, irot, ik, ibnd, ipol, nah, &
        mu, nu, imode0, irr, ipert, na, it, nt, nsym_is, last_irr_eff
   ! counters
-
-  real(DP), allocatable :: wg_up(:,:), wg_dw(:,:)
 
   logical :: sym (48), magnetic_sym
   LOGICAL :: symmorphic_or_nzb
@@ -182,6 +180,7 @@ subroutine phq_setup
         v%of_r(:,2:4)=-v%of_r(:,2:4)
         deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
         deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+        !$acc update device(deeq_nc)
      ENDIF
   ENDIF
   !
@@ -195,10 +194,12 @@ subroutine phq_setup
   !
   ! 4) Computes the number of occupied bands for each k point
   !
+  if(.not.elph_mat)&
   call setup_nbnd_occ()
   !
   ! 5) Computes alpha_pv
   !
+  if(.not.elph_mat)&
   call setup_alpha_pv()
   !
   ! 6) Set all symmetries and variables needed to use the pattern representation
@@ -291,7 +292,6 @@ subroutine phq_setup
 
   if (fildrho.ne.' '.and.ionode) call io_pattern (nat,fildrho,nirr,npert,u,xq,tmp_dir,+1)
 
-  if (start_irr < 0) call errore('phq_setup', 'wrong start_irr', 1)
   last_irr_eff=last_irr
   if (last_irr > nirr.or.last_irr<0) last_irr_eff=nirr
   !
@@ -317,10 +317,8 @@ subroutine phq_setup
   !  9) set the variables needed for the partial computation:
   !     nat_todo, atomo, comp_irr
 
-  DO irr=0,nirr
-     comp_irr(irr)=comp_irr_iq(irr,current_iq)
-     IF (elph .AND. irr>0) comp_elph(irr)=comp_irr(irr)
-  ENDDO
+  comp_irr(0:nirr) = comp_irr_iq(0:nirr, current_iq)
+  IF (elph) comp_elph(1:nirr) = comp_irr_iq(1:nirr, current_iq)
   !
   !  The gamma_gamma case needs a different treatment
   !

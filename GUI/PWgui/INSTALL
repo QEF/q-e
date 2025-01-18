@@ -1,4 +1,3 @@
-
 ________________________________________________________________________
 
 *** INSTALLATION instructions for PWgui ***
@@ -10,9 +9,9 @@ The PWgui package comes in two flavors:
    (i)  SOURCE PACKAGE
 
    (ii) STANDALONE EXECUTABLE, which runs out of the box (but works
-	only on the platform for which it has been built)
+	only on the platform for which it was built)
 
-N.B.: for the usage of repository version of PWgui see the
+For the usage of the git repository version of PWgui, see the
 INSTALL.repository file
 
 ________________________________________________________________________
@@ -20,39 +19,30 @@ ________________________________________________________________________
 (i) Installation instructions for SOURCE PACKAGE
 ________________________________________________________________________
 
-To use the source package you need the required Tcl software, in
-particular Tcl + Tk + Itcl + Itk + Iwidgets. PWgui requires the Tcl/Tk
-version 8.4 or later. You may install the software from your OS
-distribution.
+The following Tcl/Tk packages are required to run PWgui: Tcl, Tk,
+Itcl, Itk, and Iwidgets. The Tcl/Tk version 8.4 or later is
+required. 
 
-For example, for GNU/Linux Debian-based distributions, execute as root
-(or sudo):
+For GNU/Linux Debian-based distributions, these packages can be installed as:
 
-   * apt-get update; apt-get install iwidgets4 
+   * sudo apt update; sudo apt install iwidgets4 
 
-(this will install also tcl/tk/itcl/itk, because iwidgets depend on them).
-On fedora-based distributions, the analogous command is "dnf". Hence:
+On Fedora-based distributions, the analogous command is "dnf", i.e.:
 
-   * dnf install iwidgets
+   * sudo dnf update; sudo dnf install iwidgets
 
-Once your computer has all the needed software, your source package is
-ready to run. You only need to untar the PWgui source tarball, i.e.:
+This will also install tcl/tk/itcl/itk because iwidgets depend on them.
 
-   * tar zxvf  PWgui-<version>.tgz
-or
-   * gunzip -c PWgui-<version>.tgz | tar xvf -
+Once these packages are installed, the PWgui source package is ready
+to run. Untar the PWgui source tarball, i.e.:
 
-where <version> stands for version number. To launch the PWgui
-program, type: pwgui. 
+   * tar zxvf  PWgui-VERSION.tgz
+
+where VERSION stands for version number. To launch the PWgui program,
+type: pwgui.
 
 You may either add the PWgui root directory to your PATH or create a
-link to pwgui launcher from some directory that is on the PATH.
-
-If you would like to copy "pwgui" launcher (but it is more convenient
-to make a link instead, see above) to some common place, such as
-/usr/local/bin or /opt/bin, then you need to define the PWGUI
-environmental variable so that "pwgui" will be able to locate its root
-directory (i.e. source files).
+link to the pwgui executable from some directory that is on the PATH.
 
 
 ________________________________________________________________________
@@ -60,22 +50,18 @@ ________________________________________________________________________
 (ii) Installation instructions for STANDALONE EXECUTABLE
 ________________________________________________________________________
 
-The standalone executable is available for Linux platform and
+The standalone executables are available for Linux platform and
 occasionally also for Mac and Windows. They are available at
 http://www-k3.ijs.si/kokalj/pwgui
 
-For zipped pwgui-xxx.zip package do:
+For zipped pwgui-VERSION.zip package do:
 	
-	* unzip pwgui-xxx.zip
+	* unzip pwgui-VERSION.zip
 
-For tar-gzipped pwgui-xxx.tgz package do either:
+For tar-gzipped pwgui-VERSION.tgz package do either:
 
 	* tar zxvf pwgui-xxx.tgz 
-or: 
-	* gunzip -c pwgui-xxx.tgz | tar xvf -
 
-To launch the program type either: 
+To launch the program, type: 
      
         * ./pwgui
-or 
-        * pwgui

@@ -26,7 +26,7 @@
   broyden_beta  = 1.0
 
   nstemp       = 2
-  temps        = 100 300
+  temps        = 300 400
 
   restart      = .true.
   restart_step = 50
@@ -68,7 +68,7 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 0.4 ! eV
+  fsthick     = 0.3 ! eV
   degaussw    = 0.00 ! eV
 
   efermi_read  = .true

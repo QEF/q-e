@@ -131,8 +131,9 @@ PROGRAM do_bands
      no_overlap=.true.
   ENDIF
   IF (lsym) no_overlap=.true.
-
-  IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
+  IF ( npool > 1 .and. poors_man ) CALL errore('bands_unfold', &
+                                             'pools not implemented',npool)
+  IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands_unfold', &
                                              'pools not implemented',npool)
   IF ( spin_component < 1 .OR. spin_component > 2 ) &
      CALL errore('bands','incorrect spin_component',1)
@@ -225,7 +226,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
   !mz_b
   logical, intent(in)      :: poors_man
   INTEGER, intent(in)      :: dim1,dim2,dim3
-  REAL(DP), ALLOCATABLE    :: g_mz(:,:), g_mz_or(:,:)
+  REAL(DP), ALLOCATABLE    :: g_mz(:,:)
   INTEGER                  :: ctr,ctr2, kbnd 
   INTEGER                  :: i_mz, ig_mz, kkx, kky, kkz
   REAL(DP), ALLOCATABLE    :: P_mk(:,:), et_mz(:) !!, 
@@ -297,7 +298,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
   CALL allocate_bec_type(nkb, nbnd, becp_mz)
   !
   !
-  IF (poors_man) ALLOCATE(P_mk(nbnd,nks))
+  IF (poors_man) ALLOCATE(P_mk(nbnd,nkstot))
   IF (poors_man) P_mk(:,:) = 0.0d0
   ! mz_e
   DO ik = nks1, nks2
@@ -413,14 +414,10 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
      !
      !mz_b
      call cryst_to_cart( npw, g, at, -1 ) ! here we convert them to crystal coordinates
-     ALLOCATE(g_mz(3,ngm),g_mz_or(3,ngm))
+     ALLOCATE(g_mz(3,ngm))
      !
-     g_mz(:,:) = g(:,:) ! save reciproval lattice vectors G = m1*B1+m2*B2+m3*B3
+     g_mz(:,:) = g(:,:) ! save reciprocal lattice vectors G = m1*B1+m2*B2+m3*B3
      ! 
-       !
-       !
-       ! 
-      !
       ! Calculate the poor's man spectral weights
       IF ( poors_man ) THEN
         IF (noncolin) ALLOCATE(evc_new(npol*npwx,nbnd)) ! to compute becp contribution PAW or ultrasof
@@ -521,11 +518,12 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
         ENDIF ! noncol
      END DO
      ! Bring them back to cartesian, for the main loops
-     call cryst_to_cart( npw, g, bg, 1 ) 
+      call cryst_to_cart( npw, g, bg, 1 ) 
      !
      !
-    DEALLOCATE(psi_mz,g_mz,g_mz_or)
+    DEALLOCATE(psi_mz,g_mz)
   ENDDO ! k-loop
+  !call mp_sum( P_mk, intra_bgrp_comm ) ! collect P_mk
   !
   !
   IF (noncolin) CALL poolrecover(sigma_avg,4*nbnd,nkstot,nks)
@@ -536,9 +534,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
      OPEN (unit = 44, file = filename_mz, status = 'unknown', form = &
                'formatted', iostat = ios(0))
      WRITE (44, '(" &plot nbnd=",i4,", nks=",i6," /")') &
-          nbnd, nks
-     DO ik=nks1,nks2
-    !   WRITE(*,*) "vizoula2", ik, nks1, nks2, nks1tot,nks2tot
+           nbnd, nks2tot-nks1tot+1
+     DO ik=nks1tot,nks2tot
+       !WRITE(*,*) "hiiii",  ik, nks1, nks2, nks1tot,nks2tot
        WRITE (44, '(10x,3f10.6)') dble(xk(1,ik)/dim1), dble(xk(2,ik)/dim2), dble(xk(3,ik)/dim3) !
        WRITE (44,'(10f14.6)') ( et(i_mz,ik)*rytoev, i_mz = 1, nbnd) ! write the energies of the supercell E_mK
      ENDDO
@@ -548,18 +546,15 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
        filename_mz = 'spectral_weights' // TRIM( pointer_mz ) // '.dat'
        OPEN (unit = 25, file = filename_mz, status = 'unknown', form = &
                'formatted', iostat = ios(0))
-       WRITE (25, '(" &plot nbnd=",i4,", nks=",i6," /")') nbnd 
-       DO ik=nks1,nks2
+       WRITE (25, '(" &plot nbnd=",i4,", nks=",i6," /")') & 
+             nbnd, nks2tot-nks1tot+1
+       DO ik=nks1tot,nks2tot
          ! We write the header for the output files and the new band structure
          WRITE (25, '(10x,3f10.6)') dble(xk(1, ik) / dim1), dble(xk(2, ik) / dim2),& 
                                   dble(xk(3, ik) / dim3) !xk(1,ik)/dim1, xk(2,ik)/dim2, xk(3,ik)/dim3
          WRITE (25,'(10f12.6)') ( P_mk(i_mz, ik), i_mz = 1, nbnd)
-      CLOSE(25)          
-     ENDDO! ik
-      ! Final sum rule
-      !!DO ibnd = 1, nbnd
-      !!   WRITE(*,*) "sum_rule_completeness", sum(P_mk(ibnd,ik,:))
-      !!END DO
+       ENDDO! ik
+       CLOSE(25)          
       ! 
      END IF ! poorsman 
   ENDIF
@@ -884,61 +879,6 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
   RETURN
   !
 END SUBROUTINE punch_plottable_bands
-!cdiagh2  copy from PHonon/PH/rigid.f90
-!
-subroutine cdiagh2 (n,h,ldh,e,v)
-  !-----------------------------------------------------------------------
-  !
-  !   calculates all the eigenvalues and eigenvectors of a complex
-  !   hermitean matrix H . On output, the matrix is unchanged
-  !
-  use kinds, only: dp
-  implicit none
-  !
-  ! on INPUT
-  integer          n,       &! dimension of the matrix to be diagonalized
-       &           ldh       ! leading dimension of h, as declared
-  ! in the calling pgm unit
-  complex(DP)  h(ldh,n)  ! matrix to be diagonalized
-  !
-  ! on OUTPUT
-  real(DP)     e(n)      ! eigenvalues
-  complex(DP)  v(ldh,n)  ! eigenvectors (column-wise)
-  !
-  ! LOCAL variables (LAPACK version)
-  !
-  integer          lwork,   &! aux. var.
-       &           ILAENV,  &! function which gives block size
-       &           nb,      &! block size
-       &           info      ! flag saying if the exec. of libr. routines was ok
-  !
-  real(DP), allocatable::   rwork(:)
-  complex(DP), allocatable:: work(:)
-  !
-  !     check for the block size
-  !
-  nb = ILAENV( 1, 'ZHETRD', 'U', n, -1, -1, -1 )
-  if (nb.lt.1) nb=max(1,n)
-  if (nb.eq.1.or.nb.ge.n) then
-     lwork=2*n-1
-  else
-     lwork = (nb+1)*n
-  endif
-  !
-  ! allocate workspace
-  !
-  call zcopy(n*ldh,h,1,v,1)
-  allocate(work (lwork))
-  allocate(rwork (3*n-2))
-  call ZHEEV('V','U',n,v,ldh,e,work,lwork,rwork,info)
-  call errore ('cdiagh2','info =/= 0',abs(info))
-  ! deallocate workspace
-  deallocate(rwork)
-  deallocate(work)
-  !
-  return
-end subroutine cdiagh2
-
 !-----------------------------------------------------------------------
 FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, npol, upf)
   !-----------------------------------------------------------------------

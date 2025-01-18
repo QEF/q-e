@@ -20,11 +20,11 @@ MODULE fft_param
   INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
   
-  INTEGER, PARAMETER :: ndims = 10
+  INTEGER, PARAMETER :: ndims = 20
   !! Number of different FFT tables that the module
   !!could keep into memory without reinitialization
 
-  INTEGER, PARAMETER :: nfftx = 2049
+  INTEGER, PARAMETER :: nfftx = 16385
   !!Max allowed fft dimension
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)

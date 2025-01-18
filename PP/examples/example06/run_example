@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -102,10 +102,10 @@ cat > Fe.scf_pbe.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
-    ibrav=  3, 
-    celldm(1) =5.42, 
-    nat=  1, 
+ &system
+    ibrav=  3,
+    celldm(1) =5.42,
+    nat=  1,
     ntyp= 1,
     nr1=27,
     nr2=27,
@@ -116,7 +116,7 @@ cat > Fe.scf_pbe.in << EOF
     occupations='smearing',
     smearing='mv',
     degauss=0.04,
-    ecutwfc =45.0, 
+    ecutwfc =45.0,
     ecutrho =300.0
  /
  &electrons
@@ -125,9 +125,9 @@ cat > Fe.scf_pbe.in << EOF
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-kjpaw.UPF
 ATOMIC_POSITIONS alat
-Fe  0.0000000   0.00000000   0.0  
+Fe  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
-8 8 8 1 1 1 
+8 8 8 1 1 1
 EOF
 $ECHO "  running the scf calculation for Fe with PAW spin-orbit...\c"
 $PW_COMMAND < Fe.scf_pbe.in > Fe.scf_pbe.out
@@ -143,10 +143,10 @@ cat > Fe.band_pbe.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
-    ibrav=  3, 
-    celldm(1) =5.42, 
-    nat=  1, 
+ &system
+    ibrav=  3,
+    celldm(1) =5.42,
+    nat=  1,
     ntyp= 1,
     nr1=27,
     nr2=27,
@@ -157,7 +157,7 @@ cat > Fe.band_pbe.in << EOF
     occupations='smearing',
     smearing='mv',
     degauss=0.04,
-    ecutwfc =45.0, 
+    ecutwfc =45.0,
     ecutrho =300.0
  /
  &electrons
@@ -167,7 +167,7 @@ cat > Fe.band_pbe.in << EOF
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-kjpaw.UPF
 ATOMIC_POSITIONS alat
-Fe  0.0000000   0.00000000   0.0  
+Fe  0.0000000   0.00000000   0.0
 K_POINTS tpiba_b
 3
 H1  40

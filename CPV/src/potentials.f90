@@ -9,7 +9,7 @@
 !  ----------------------------------------------
 !  Car-Parrinello Parallel Program
 !----------------------------------------------------------------
-#include<cpv_device_macros.h> 
+#include<cpv_device_macros.h>
 !----------------------------------------------------------------
 
 
@@ -42,7 +42,7 @@
       USE fft_rho
 
       IMPLICIT NONE
-      
+
       REAL(DP), INTENT(IN) :: hg( dfftp%ngm )
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
       COMPLEX(DP) :: screen_coul( dfftp%ngm )
@@ -103,7 +103,7 @@
         ELSE
           g2  = tpiba2 * hg(ig)
           arg = - g2 / ( 4.0d0 * rc2 )
-          screen_coul(ig) = grg(ig,1) - ( 4.0d0 * pi * EXP( arg ) / g2 ) 
+          screen_coul(ig) = grg(ig,1) - ( 4.0d0 * pi * EXP( arg ) / g2 )
         END IF
       END DO
 
@@ -154,7 +154,7 @@
       !
       eps   = (0.D0,0.D0)
       !
-      DO ig = gstart, dfftp%ngm 
+      DO ig = gstart, dfftp%ngm
 
         vp   = (0.D0,0.D0)
         DO is = 1, nsp
@@ -165,7 +165,7 @@
         eps      = eps  +     vp * CONJG( rhoeg( ig ) )
 
       END DO
-      ! ... 
+      ! ...
       ! ... G = 0 element
       !
       IF ( gstart == 2 ) THEN
@@ -192,8 +192,8 @@
 
       !  this routine computes:
       !  omega = ht%deth
-      !  rho_e(ig)    =  (sum over iss) rhoeg(ig,iss) 
-      !  rho_I(ig)    =  (sum over is) sfac(is,ig) * rhops(ig,is) 
+      !  rho_e(ig)    =  (sum over iss) rhoeg(ig,iss)
+      !  rho_I(ig)    =  (sum over is) sfac(is,ig) * rhops(ig,is)
       !  vloc_h(ig)   =  fpi / ( g(ig) * tpiba2 ) * { rho_e(ig) + rho_I(ig) }
       !
       !  Eh  = Fact * omega * (sum over ig) * fpi / ( g(ig) * tpiba2 ) *
@@ -201,7 +201,7 @@
       !  if Gamma symmetry Fact = 1 else Fact = 1/2
       !
       !  Hatree potential and local pseudopotential
-      !  vloc(ig)     =  vloc_h(ig) + vloc_ps(ig) 
+      !  vloc(ig)     =  vloc_h(ig) + vloc_ps(ig)
       !
 
       USE kinds,              ONLY: DP
@@ -241,7 +241,7 @@
       ehti  = 0.0d0
 
 !$omp parallel do default(shared), private(rp,is,rhet,rhog,fpibg), reduction(+:eh,ehte,ehti)
-      DO ig = gstart, dfftp%ngm 
+      DO ig = gstart, dfftp%ngm
 
         rp   = (0.D0,0.D0)
         DO is = 1, nsp
@@ -257,13 +257,13 @@
           fpibg     = fpi / ( gg(ig) * tpiba2 )
         END IF
 
-        vloc(ig) = vloc(ig)  +  fpibg *        rhog 
+        vloc(ig) = vloc(ig)  +  fpibg *        rhog
         eh       = eh        +  fpibg *        rhog * CONJG(rhog)
         ehte     = ehte      +  fpibg *   DBLE(rhet * CONJG(rhet))
         ehti     = ehti      +  fpibg *   DBLE(  rp * CONJG(rp))
 
       END DO
-      ! ... 
+      ! ...
       ! ... G = 0 element
       !
       IF ( gstart == 2 ) THEN
@@ -309,9 +309,9 @@
       !  tx_h(ig,is)     = fpibg * rhops(ig, is) * CONJG( rho_e(ig) + rho_I(ig) )
       !  tx_ps(ig,is)    = vps(ig,is) * CONJG( rho_e(ig) )
       !  gx(ig)          = cmplx(0.D0, gx(1,ig),kind=DP) * tpiba
-      !  fion(x,isa)     = fion(x,isa) + 
-      !      Fact * omega * ( sum over ig, iss) (tx_h(ig,is) + tx_ps(ig,is)) * 
-      !      gx(ig) * eigrx(ig,isa) * eigry(ig,isa) * eigrz(ig,isa) 
+      !  fion(x,isa)     = fion(x,isa) +
+      !      Fact * omega * ( sum over ig, iss) (tx_h(ig,is) + tx_ps(ig,is)) *
+      !      gx(ig) * eigrx(ig,isa) * eigry(ig,isa) * eigrz(ig,isa)
       !  if Gamma symmetry Fact = 2.0 else Fact = 1
       !
 
@@ -343,78 +343,78 @@
       INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg
       COMPLEX(DP) :: cxc, rhet, rhog, vp, gxc, gyc, gzc
-      COMPLEX(DP),ALLOCATABLE :: rp(:) 
-      INTEGER                 :: ngm_ 
-      ! 
+      COMPLEX(DP),ALLOCATABLE :: rp(:)
+      INTEGER                 :: ngm_
+      !
       COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz, fx, fy, fz
       COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
-      INTEGER :: s_ngm_ 
+      INTEGER :: s_ngm_
 
-      ! ... Subroutine body ... 
+      ! ... Subroutine body ...
 
       s_ngm_ = dffts%ngm
-      ALLOCATE (rp(s_ngm_)) 
-  
+      ALLOCATE (rp(s_ngm_))
+
 !
 
-DEV_ACC data present(rhoeg, rhops, mill,g ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, gg, vps, ityp,ei1, ei2, ei3) 
+!$acc data present(rhoeg, rhops, mill,g,gg ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, vps, ityp,ei1, ei2, ei3)
 !
-DEV_OMP parallel default(none) &
-DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
-DEV_OMP         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
-DEV_OMP private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
-DEV_OMP          ty, tz, teigr,fx, fy, fz )
- 
- 
-DEV_ACC parallel loop       
-DEV_OMP do  
+DEV_OMP_NOACC parallel default(none) &
+DEV_OMP_NOACC shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
+DEV_OMP_NOACC         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
+DEV_OMP_NOACC private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
+DEV_OMP_NOACC          ty, tz, teigr,fx, fy, fz )
+
+
+!$acc parallel loop
+DEV_OMP_NOACC do
    DO ig = gstart, s_ngm_
-      rp( ig) = (0.d0,0.d0) 
-      DO is = 1, nsp 
+      rp( ig) = (0.d0,0.d0)
+      DO is = 1, nsp
          rp( ig)   = rp( ig)  + sfac(ig, is) * rhops( ig, is)
-      END DO 
-   END DO 
+      END DO
+   END DO
 
-DEV_ACC parallel vector_length(128) 
-DEV_ACC loop gang private(is, fx,fy,fz) 
-DEV_OMP do  
+!$acc parallel vector_length(128)
+!$acc loop gang private(is, fx,fy,fz)
+DEV_OMP_NOACC do
    DO ia = 1, nat
-      is = ityp(ia) 
-      fx = (0.d0, 0.d0) 
-      fy = (0.d0, 0.d0) 
-      fz = (0.d0, 0.d0) 
-DEV_ACC loop vector private(rhet, rhog, fpibg, ig1, ig2, ig3, gxc,gyc,gzc, cnvg, cvn, &
-DEV_ACC&                             tx, ty, tz, teigr) reduction(+:fx,fy,fz)   
-      DO ig = gstart, s_ngm_ 
-         rhet = rhoeg ( ig ) 
+      is = ityp(ia)
+      fx = (0.d0, 0.d0)
+      fy = (0.d0, 0.d0)
+      fz = (0.d0, 0.d0)
+!$acc loop vector private(rhet, rhog, fpibg, ig1, ig2, ig3, gxc,gyc,gzc, cnvg, cvn, &
+!$acc &                   tx, ty, tz, teigr) reduction(+:fx,fy,fz)
+      DO ig = gstart, s_ngm_
+         rhet = rhoeg ( ig )
          rhog = rhet + rp ( ig)
-         IF ( tscreen ) THEN 
-            fpibg = fpi / ( gg(ig) * tpiba2  ) + screen_coul (ig) 
-         ELSE  
-            fpibg = fpi / ( gg (ig) * tpiba2 ) 
-         END IF 
+         IF ( tscreen ) THEN
+            fpibg = fpi / ( gg(ig) * tpiba2  ) + screen_coul (ig)
+         ELSE
+            fpibg = fpi / ( gg (ig) * tpiba2 )
+         END IF
          ig1 = mill (1,ig)
-         ig2 = mill (2,ig) 
-         ig3 = mill (3,ig) 
-         gxc = CMPLX(0.d0,g(1,ig),KIND=DP) 
-         gyc = CMPLX(0.d0,g(2,ig),KIND=DP) 
+         ig2 = mill (2,ig)
+         ig3 = mill (3,ig)
+         gxc = CMPLX(0.d0,g(1,ig),KIND=DP)
+         gyc = CMPLX(0.d0,g(2,ig),KIND=DP)
          gzc = CMPLX(0.d0,g(3,ig),KIND=DP)
-         cnvg = rhops ( ig, is) * fpibg * CONJG ( rhog ) 
-         cvn  = vps ( ig, is ) * CONJG( rhet) 
-         tx   = (cnvg + cvn) * gxc 
-         ty   = (cnvg + cvn) * gyc 
-         tz   = (cnvg + cvn) * gzc 
-         teigr = ei1( ig1, ia) * ei2 ( ig2, ia) * ei3 (ig3, ia) 
-         fx    = fx + teigr * tx 
-         fy    = fy + teigr * ty 
+         cnvg = rhops ( ig, is) * fpibg * CONJG ( rhog )
+         cvn  = vps ( ig, is ) * CONJG( rhet)
+         tx   = (cnvg + cvn) * gxc
+         ty   = (cnvg + cvn) * gyc
+         tz   = (cnvg + cvn) * gzc
+         teigr = ei1( ig1, ia) * ei2 ( ig2, ia) * ei3 (ig3, ia)
+         fx    = fx + teigr * tx
+         fy    = fy + teigr * ty
          fz    = fz + teigr * tz
-      END DO         
+      END DO
       fion (:,ia) =  fion(:,ia) + [DBLE(fx),DBLE(fy),DBLE(fz)] * 2.d0 * omega * tpiba
    END DO
-DEV_ACC end parallel
-DEV_ACC end data 
-DEV_OMP end parallel 
-   DEALLOCATE (rp) 
+!$acc end parallel
+!$acc end data
+DEV_OMP_NOACC end parallel
+   DEALLOCATE (rp)
       RETURN
       END SUBROUTINE force_loc_x
 
@@ -430,11 +430,11 @@ DEV_OMP end parallel
       USE mp_global,   ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,          ONLY : mp_sum
       USE ions_base,   ONLY : rcmax, zv, nsp, na, nat, ityp
- 
+
       IMPLICIT NONE
 
-! ... ARGUMENTS 
-      
+! ... ARGUMENTS
+
       INTEGER,  INTENT(IN) :: iesr
       REAL(DP), INTENT(IN) :: taus(3,nat)
       REAL(DP) :: ESR
@@ -445,15 +445,15 @@ DEV_OMP end parallel
 
       INTEGER, EXTERNAL :: ldim_block, gind_block
 
-      
-! ... LOCALS 
+
+! ... LOCALS
 
       INTEGER :: na_loc, ia_s, ia_e, igis
       INTEGER :: k, i, j, is, ia, ib, ix, iy, iz
       LOGICAL :: split, tzero, tshift
       REAL(DP), ALLOCATABLE :: zv2(:,:)
-      REAL(DP), ALLOCATABLE :: rc(:,:)  
-      REAL(DP), ALLOCATABLE :: fionloc(:,:) 
+      REAL(DP), ALLOCATABLE :: rc(:,:)
+      REAL(DP), ALLOCATABLE :: fionloc(:,:)
       REAL(DP)  :: rxlm(3), sxlm(3)
       REAL(DP)  :: xlm,ylm,zlm, xlm0,ylm0,zlm0, erre2, rlm, arg, esrtzero
       REAL(DP)  :: addesr, addpre, repand, fxx
@@ -466,7 +466,7 @@ DEV_OMP end parallel
 
       INTEGER :: omp_get_num_threads
 
-! ... SUBROUTINE BODY 
+! ... SUBROUTINE BODY
 
       ALLOCATE( rc( nsp, nsp ) )
       ALLOCATE( zv2( nsp, nsp ) )
@@ -509,9 +509,9 @@ DEV_OMP end parallel
           rckj_m1  = 1.0_DP / rc(k,j)
           fact_pre = (2.0_DP * zv2_kj * sqrtpm1) * rckj_m1
 
-          IF( ia.EQ.ib ) THEN      
+          IF( ia.EQ.ib ) THEN
             ! ...     same atoms
-            xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; 
+            xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP;
             tzero=.TRUE.
           ELSE
             ! ...     different atoms
@@ -572,11 +572,11 @@ DEV_OMP end parallel
       CALL daxpy( 3*nat, 1.0d0, fionloc, 1, fion, 1 )
 
       CALL mp_sum(esr, intra_bgrp_comm)
-     
+
       DEALLOCATE(rc)
       DEALLOCATE(zv2)
       DEALLOCATE(fionloc)
-      
+
       RETURN
 !=----------------------------------------------------------------------------=!
    END SUBROUTINE vofesr
@@ -588,7 +588,7 @@ DEV_OMP end parallel
    SUBROUTINE self_vofhar_x( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
 !=----------------------------------------------------------------------------=!
 
-      !  adds the hartree part of the self interaction
+      !! Adds the Hartree part of the self interaction.
 
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
@@ -644,7 +644,7 @@ DEV_OMP end parallel
         ehte     = ehte   +  fpibg *   rhog * CONJG(rhog)
 
       END DO
- 
+
       ! ... G = 0 element
       !
       IF ( gstart == 2 ) THEN

@@ -4,8 +4,8 @@
                            Hubbard U parameters:
 
        site n.  type  label  spin  new_type  new_label  Hubbard U (eV)
-         1        1    Fe      1      1         Fe         3.5064
-         2        1    Fe      1      1         Fe         3.5064
+         1        1    Fe      1      1         Fe      3d   3.5064
+         2        1    Fe      1      1         Fe      3d   3.5064
 
   =-------------------------------------------------------------------=
 

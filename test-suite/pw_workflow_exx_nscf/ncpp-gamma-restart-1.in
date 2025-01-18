@@ -1,0 +1,37 @@
+############################################################
+##  Succinic acid molecular crystal from the X23 dataset
+############################################################
+&CONTROL
+ verbosity='high'
+ calculation='scf'
+ outdir='./out',
+/
+
+&SYSTEM
+  ibrav   = 0
+  nat     = 4 
+  ntyp    = 2
+  ecutwfc = 80
+  input_dft = 'b3lyp',
+/
+
+&ELECTRONS
+ diagonalization='david'
+ conv_thr = 1.0e-8
+ exx_maxstep = 2
+/
+CELL_PARAMETERS {angstrom}
+   5.4658881   0.0000000  -0.0064642 
+   0.0000000   8.7402311   0.0000000
+  -0.1461485   0.0000000   5.1056962
+ATOMIC_SPECIES
+N  14.0067 N.blyp-mt.UPF 
+H  1.008   H.blyp-hgh.UPF  
+ATOMIC_POSITIONS {angstrom}
+N         -5.56689        1.39187        0.00000
+H         -4.54689        1.39187        0.00000
+H         -5.90689        2.06240        0.68934
+H         -5.90689        0.45962        0.23602
+K_POINTS {tpiba}
+1 
+ 0.0 0.0 0.0 1.0 

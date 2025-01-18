@@ -15,7 +15,7 @@
   subroutine init_dimensions(  )
 
       !
-      !     initialize G-vectors and related quantities
+      !! Initialize G-vectors and related quantities.
       !
 
       USE kinds,                ONLY : dp
@@ -184,9 +184,9 @@
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
-!NOTE g and mill already allocate in the device they are initialized below. 
-!$acc data present(g, mill) 
-!$acc update device(g,mill) 
+!NOTE g, gg and mill already allocate in the device they are initialized below. 
+!$acc data present(g,gg,mill) 
+!$acc update device(g,gg,mill) 
 !$acc end data 
       !
       CALL gshells (.TRUE.)
@@ -205,6 +205,7 @@
       allocate( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
       allocate( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
       allocate( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
+      !$acc enter data create(eigts1, eigts2, eigts3)
       !
       !     small boxes
       !
@@ -384,10 +385,11 @@
 
     subroutine newinit_x( h, iverbosity )
       !
-      !     re-initialization of lattice parameters and g-space vectors.
-      !     Note that direct and reciprocal lattice primitive vectors
-      !     at, ainv, and corresponding quantities for small boxes
-      !     are recalculated according to the value of cell parameter h
+      !! Re-initialization of lattice parameters and g-space vectors.
+      !! Note that direct and reciprocal lattice primitive vectors
+      !! \(\text{at}\), \(\text{ainv}\), and corresponding quantities
+      !! for small boxes are recalculated according to the value of 
+      !! cell parameter h.
       !
       USE kinds,                 ONLY : DP
       USE constants,             ONLY : tpi
@@ -400,6 +402,11 @@
       USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
       !
+#if defined (__ENVIRON)
+      USE plugin_flags,          ONLY : use_environ
+      USE environ_base_module,   ONLY : update_environ_cell
+#endif
+      !
       implicit none
       !
       REAL(DP), INTENT(IN) :: h(3,3)
@@ -407,6 +414,10 @@
       !
       REAL(DP) :: rat1, rat2, rat3
       INTEGER :: ig, dfftp_ngm
+      !
+#if defined (__ENVIRON)
+      REAL(DP) :: at_scaled(3, 3)
+#endif
       !
       !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
@@ -420,13 +431,13 @@
       !  re-calculate G-vectors and kinetic energy
       !
       dfftp_ngm = dfftp%ngm 
-!$acc parallel loop present(g, mill) copyin(bg) copyout(gg)  
+!$acc parallel loop present(g,gg,mill) copyin(bg)
       do ig = 1, dfftp_ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2 
       enddo
-!$acc end parallel loop 
-!$acc update host(g) 
+!$acc end parallel loop
+!$acc update host(g,gg)
       !
       call g2kin_init ( gg, tpiba2 )
       !
@@ -443,14 +454,22 @@
       !
       !   pass new cell parameters to plugins
       !
-      CALL plugin_init_cell( )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_cell() 
+#endif 
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         at_scaled = at * alat
+         CALL update_environ_cell(at_scaled)
+      END IF
+#endif
       !
       return
     end subroutine newinit_x
 
     SUBROUTINE realspace_grids_info ( dfftp, dffts )
 
-      !  Print info on local and global dimensions for real space grids
+      !!  Print info on local and global dimensions for real space grids.
 
       USE fft_types, ONLY: fft_type_descriptor
       use io_global, only: stdout, ionode

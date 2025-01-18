@@ -1,7 +1,7 @@
  &input_xspectra
     calculation='xanes_dipole',
     prefix='NiO',
-    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/XSpectra/examples/results/tmp/',
     xonly_plot=.true.,
     xniter=1000,
     xcheck_conv=50,
@@ -10,7 +10,6 @@
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='NiO.xspectra_dip.sav',
-    ef_r=1.01439527,
     xerror=0.001,
  /
  &plot

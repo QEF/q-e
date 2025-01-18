@@ -203,11 +203,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   USE laxlib_parallel_include
 #if defined(__CUDA)
   USE cudafor
-#if defined(__USE_CUSOLVER)
   USE cusolverdn
-#else
-  USE dsygvdx_gpu
-#endif
 #endif
   !
   ! NB: the flag below can be used to decouple LAXlib from devXlib.
@@ -274,9 +270,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   REAL(DP), ALLOCATABLE :: h_diag_d(:), s_diag_d(:)
 #if defined(__CUDA)
   ATTRIBUTES( DEVICE )  :: h_diag_d, s_diag_d
-#endif
   !
-#if defined(__USE_CUSOLVER)
   INTEGER                      :: devInfo_d, h_meig
   ATTRIBUTES( DEVICE )         :: devInfo_d
   TYPE(cusolverDnHandle), SAVE :: cuSolverHandle
@@ -292,61 +286,8 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   IF ( me_bgrp == root_bgrp ) THEN
      !
-#if (!defined(__USE_CUSOLVER)) && defined(__CUDA)
-     ALLOCATE(e_h(n), v_h(ldh,n))
+#if defined(__CUDA)
      !
-     ALLOCATE(h_diag_d(n), s_diag_d(n))
-     !$cuf kernel do(1) <<<*,*>>>
-     DO i = 1, n
-        h_diag_d(i) = DBLE( h_d(i,i) )
-        s_diag_d(i) = DBLE( s_d(i,i) )
-     END DO
-     !
-     lwork  = 1 + 6*n + 2*n*n
-     liwork = 3 + 5*n
-     ALLOCATE(work(lwork), iwork(liwork))
-     !
-     lwork_d = 2*64*64 + 66*n
-#if ! defined(__USE_GLOBAL_BUFFER)
-     ALLOCATE(work_d(1*lwork_d), STAT = info)
-#else
-     CALL dev%lock_buffer( work_d,  lwork_d, info )
-     IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
-#endif
-     IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
-     !
-     CALL dsygvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d, &
-                      lwork_d, work, lwork, iwork, liwork, v_h, size(v_h, 1), &
-                      e_h, info, .TRUE.)
-     !
-     IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' dsygvdx_gpu failed ', ABS( info ) )
-     !
-!$cuf kernel do(1) <<<*,*>>>
-     DO i = 1, n
-        h_d(i,i) = h_diag_d(i)
-        s_d(i,i) = s_diag_d(i)
-        DO j = i + 1, n
-           h_d(i,j) = h_d(j,i)
-           s_d(i,j) = s_d(j,i)
-        END DO
-        ! This could be avoided, need to check dsygvdx_gpu implementation
-        DO j = n + 1, ldh
-           h_d(j,i) = 0.0_DP
-           s_d(j,i) = 0.0_DP
-        END DO
-     END DO
-     DEALLOCATE(h_diag_d,s_diag_d)
-     !
-     DEALLOCATE(work, iwork)
-#if ! defined(__USE_GLOBAL_BUFFER)
-     DEALLOCATE(work_d)
-#else
-     CALL dev%release_buffer( work_d,  info )
-#endif
-     !
-     DEALLOCATE(v_h, e_h)
-#elif defined(__USE_CUSOLVER) && defined(__CUDA)
-! vvv __USE_CUSOLVER
 #if ! defined(__USE_GLOBAL_BUFFER)
       ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
       IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )

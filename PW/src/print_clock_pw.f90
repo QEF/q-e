@@ -22,6 +22,16 @@ SUBROUTINE print_clock_pw()
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
    USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
+   USE rism_module,        ONLY : rism_print_clock
+   !
+#if defined (__ENVIRON)
+   USE plugin_flags,        ONLY : use_environ
+   USE environ_base_module, ONLY : print_environ_clocks
+#endif
+#if defined (__OSCDFT)
+   USE plugin_flags,        ONLY : use_oscdft
+   USE oscdft_base,         ONLY : print_oscdft_clocks
+#endif
    !
    IMPLICIT NONE
    !
@@ -100,9 +110,6 @@ SUBROUTINE print_clock_pw()
    ELSE  IF (isolve == 1) THEN
       CALL print_clock( 'rcgdiagg' )   ; CALL print_clock( 'ccgdiagg' )
       CALL print_clock( 'wfcrot' )
-   ELSE  IF (isolve == 2) THEN
-      CALL print_clock( 'ppcg_gamma' ) ; CALL print_clock( 'ppcg_k' )
-      CALL print_clock( 'wfcrot' )
    ELSE  IF (isolve == 3) THEN
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
    ELSE IF ( isolve == 4 ) THEN
@@ -150,16 +157,6 @@ SUBROUTINE print_clock_pw()
       END IF
    ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
-   ELSE IF ( isolve == 2 ) THEN
-      WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
-      IF ( iverbosity > 0 )  THEN
-         CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
-         CALL print_clock( 'ppcg:hpsi' )
-         CALL print_clock( 'ppcg:cholQR' )
-         CALL print_clock( 'ppcg:RR' )
-         CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
-         CALL print_clock( 'ppcg:lock' )
-      END IF
    ELSE IF ( isolve == 3 ) THEN
       WRITE( stdout, '(/5x,"Called by paro_*:")' )
       IF ( iverbosity > 0 )  THEN
@@ -171,7 +168,8 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'pcg' )
          CALL print_clock( 'pcg:hs_1psi' )
          CALL print_clock( 'pcg:ortho' )
-         CALL print_clock( 'pcg:move' )
+         CALL print_clock( 'pcg:move1' )
+         CALL print_clock( 'pcg:move2' )
 
          CALL print_clock( 'rotHSw' )
          CALL print_clock( 'rotHSw:move' )
@@ -234,6 +232,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'fftw' )
    CALL print_clock( 'fftc' )
    CALL print_clock( 'fftcw' )
+   CALL print_clock( 'fftr' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    !    
@@ -329,7 +328,17 @@ SUBROUTINE print_clock_pw()
       call print_clock('c_phase_field')
    END IF
    !
+   CALL rism_print_clock()
+   !
+#if defined(__LEGACY_PLUGINS)
    CALL plugin_clock()
+#endif 
+#if defined (__ENVIRON)
+   IF (use_environ) CALL print_environ_clocks()
+#endif
+#if defined (__OSCDFT)
+   IF (use_oscdft) CALL print_oscdft_clocks()
+#endif
    !
    RETURN
    !

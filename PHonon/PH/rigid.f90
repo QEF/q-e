@@ -11,7 +11,8 @@ MODULE rigid
   CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat, loto_2d, sign)
+  SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, alph, &
+         bg, omega, alat, loto_2d, sign)
   !-----------------------------------------------------------------------
   !! Compute the rigid-ion (long-range) term for q.  
   !! The long-range term used here, to be added to or subtracted from the
@@ -35,10 +36,12 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! q-vector 
   REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
+  REAL(KIND = DP), INTENT(IN) :: alph
+  !! Ewald parameter
   REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
   REAL(KIND = DP), INTENT(in) :: sign
-  !! signe=+/-1.0 ==> add/subtract rigid-ion term
+  !! sign =+/-1.0 ==> add/subtract rigid-ion term
   REAL(KIND = DP), INTENT(in) :: tau(3, nat)
   !! Atomic positions
   REAL(KIND = DP), INTENT(in) :: bg(3, 3)
@@ -65,8 +68,6 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! Loop over q-points
   REAL(KIND = DP):: geg
   !! <q+G| epsil | q+G>
-  REAL(KIND = DP) :: alph
-  !! Ewald parameter
   REAL(KIND = DP) :: fac
   !! Prefactor
   REAL(KIND = DP) :: g1, g2, g3
@@ -85,6 +86,8 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! Z * G
   REAL(KIND = DP) :: fnat(3)
   !! Z * G * cos(arg)
+  REAL(KIND = DP) :: fmtx(3, 3)
+  !! Z * Z * G * cos(arg)
   REAL(KIND = DP) :: reff(2, 2)
   !! Effective screening length for 2D materials  
   REAL(KIND = DP) :: grg
@@ -92,13 +95,12 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   COMPLEX(KIND = DP) :: facg
   !! Factor
   !
-  ! alph is the Ewald parameter, geg is an estimate of G^2
-  ! such that the G-space sum is convergent for that alph
+  ! geg is an estimate of G^2 such that the G-space sum is convergent 
+  ! given the value of alph
   ! very rough estimate: geg/4/alph > gmax = 14
   ! (exp (-14) = 10^-6)
   !
   gmax = 14.d0
-  alph = 1.0d0
   geg  = gmax * alph * 4.0d0
   ! 
   ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg
@@ -158,14 +160,15 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
                  g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))             
         ENDIF
         !
-        IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN        
+        IF (geg > 0.0d0 .AND. geg / (alph * 4) < gmax) THEN        
           !
           IF (loto_2d) THEN
             facgd = fac * (tpi / alat) * EXP(-geg / (alph * 4.0d0)) / (SQRT(geg) * (1.0 + grg * SQRT(geg)))       
           ELSE
-            facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
+            facgd = fac * EXP(-geg / (alph * 4)) / geg
           ENDIF
           !
+!$OMP PARALLELDO DEFAULT(shared) PRIVATE(zcg,zag,arg,nb,na,i,j,fnat)
           DO na = 1, nat
             zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
             fnat(:) = 0.d0
@@ -176,12 +179,17 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
               zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
               fnat(:) = fnat(:) + zcg(:) * COS(arg)
             ENDDO
+            ! Impose Hermiticity on long-range part of dynamical matrix
+            ! Symmetrize long-range part of the on-site dynamical matrix by its conjugate transpose
+            fmtx = MATMUL(RESHAPE(zag, (/3,1/)), RESHAPE(fnat, (/1,3/)))
+            fmtx = (fmtx + TRANSPOSE(fmtx)) / 2.d0
             DO j = 1, 3
               DO i = 1, 3
-                dyn(i, j, na, na) = dyn(i, j, na, na) - facgd * zag(i) * fnat(j)
+                dyn(i, j, na, na) = dyn(i, j, na, na) - facgd * fmtx(i,j)
               ENDDO ! i
             ENDDO ! j
-          ENDDO ! nat 
+          ENDDO ! nat
+!$OMP END PARALLELDO
         ENDIF ! geg
         !
         g1 = g1 + q(1)
@@ -209,6 +217,7 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
             facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           ENDIF
           !
+!$OMP PARALLELDO DEFAULT(shared) PRIVATE(zbg,zag,arg,nb,na,i,j,facg)
           DO nb = 1, nat
             zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
             DO na = 1, nat
@@ -225,6 +234,7 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
               ENDDO ! j
             ENDDO ! na
           ENDDO ! nb
+!$OMP END PARALLELDO
         ENDIF 
       ENDDO ! m3 
     ENDDO ! m2

@@ -9,6 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE deallocate_modules_var()
   !----------------------------------------------------------------------------
+  !! Deallocates all variables in modules.
   !
   USE uspp,       ONLY : beta, dbeta, qq_nt
   USE core,       ONLY : rhocb
@@ -25,7 +26,7 @@ SUBROUTINE deallocate_modules_var()
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE betax,                ONLY : deallocate_betax
-  USE wavefunctions, ONLY : deallocate_wavefunctions
+  USE cp_wavefunctions,     ONLY : deallocate_cp_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
   USE fft_types,            ONLY : fft_type_descriptor, fft_type_deallocate
   USE fft_smallbox_type,    ONLY : fft_box_deallocate
@@ -74,7 +75,7 @@ SUBROUTINE deallocate_modules_var()
   !
   CALL deallocate_ions_base()
   !
-  CALL deallocate_wavefunctions()
+  CALL deallocate_cp_wavefunctions()
   CALL deallocate_wannier()
   !
   CALL deallocate_elct()

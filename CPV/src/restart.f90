@@ -12,7 +12,7 @@
    SUBROUTINE writefile_x                                         &
      &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,idesc,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-     &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
+     &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho, dt )
 !-----------------------------------------------------------------------
 !
       USE kinds,            ONLY: DP
@@ -42,7 +42,7 @@
       REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer,      INTENT(in) :: nhpcl, nhpdim
       REAL(DP), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      REAL(DP), INTENT(in) :: tps
+      REAL(DP), INTENT(in) :: tps, dt
       REAL(DP), INTENT(in) :: rho(:,:)
       REAL(DP), INTENT(in) :: occ_f(:)
       REAL(DP), INTENT(in) :: mat_z(:,:,:)
@@ -92,8 +92,7 @@
            ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
            vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
            occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, eitot,         &
-           rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn_tot, nupdwn_tot, wfc )
-      ! BS added wfc
+           rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn_tot, nupdwn_tot, wfc, dt )
       !
       IF( tens ) CALL cp_write_zmat( ndw, mat_z, ierr )
       !
@@ -112,7 +111,7 @@
      &     ( flag, h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh,&
-     &       fion, tps, mat_z, occ_f )
+     &       fion, tps, mat_z, occ_f, dt )
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
@@ -143,7 +142,7 @@
       integer, INTENT(inout) :: nhpcl,nhpdim
       REAL(DP) :: ekincm
       REAL(DP) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      REAL(DP), INTENT(OUT) :: tps
+      REAL(DP), INTENT(OUT) :: tps, dt
       REAL(DP), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       !
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
@@ -175,7 +174,7 @@
            ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
            vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
            occ_ , lambda, lambdam, b1, b2, b3, &
-           xnhe0, xnhem, vnhe, ekincm, c0, cm, wfc ) ! BS added wfc
+           xnhe0, xnhem, vnhe, ekincm, c0, cm, wfc, dt )
       !
       IF( tens ) CALL cp_read_zmat( ndr, mat_z, ierr )
       !

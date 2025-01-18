@@ -650,7 +650,7 @@ ELSEIF (code_group==21) THEN
       ELSE IF (ts==4) THEN
          which_irr(iclass)=5
       ELSE IF (ts==5) THEN
-         IF (nelem(iclass)>1) THEN
+         IF (nelem(iclass)>2) THEN
             which_irr(iclass)=9
          ELSE 
             which_irr(iclass)=6
@@ -3416,7 +3416,7 @@ USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
                                  name_class_so,d_spin, name_class_so1,  &
                                  elem_name_so
 USE rap_point_group_is,   ONLY : code_group_is, gname_is
-USE noncollin_module,     ONLY : noncolin, domag
+USE noncollin_module,     ONLY : noncolin, domag, colin_mag
 USE io_global,            ONLY : stdout
 !
 IMPLICIT NONE
@@ -3436,7 +3436,13 @@ IF (noncolin) THEN
    END IF
    WRITE(stdout,'(5x, "there are", i3," classes and",i3, &
                      &   " irreducible representations")') nclass, nrap
-ELSE
+! symmetries with time-reversal are detected in collinear systems
+ELSE IF (colin_mag == 2) THEN
+   WRITE(stdout,'(/,5x,"point group of the spacial part of the full symmetry ",a11)') gname
+   WRITE(stdout,'(/,5x,"point group of the symmetry without spin operations ",a11)') gname_is
+   WRITE(stdout,'(5x, "there are", i3," classes")') nclass
+! symmetries with time-reversal are not detected in collinear systems
+ELSE ! IF (colin_mag <= 1)
    WRITE(stdout,'(/,5x,"point group ",a11)') gname
    WRITE(stdout,'(5x, "there are", i3," classes")') nclass
 ENDIF

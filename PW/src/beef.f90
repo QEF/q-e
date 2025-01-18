@@ -35,7 +35,6 @@ SUBROUTINE beef_energies( )
 
   USE io_global,         ONLY  : stdout, ionode
   USE xc_lib,            ONLY  : xclib_dft_is
-  USE control_flags,     ONLY  : io_level
   USE ener,                 ONLY : vtxc, etxc
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   !
@@ -106,7 +105,6 @@ SUBROUTINE beef_print( )
 !-------------------------------------------------------------------------
 
   USE io_global,         ONLY  : stdout, ionode
-  USE control_flags,     ONLY  : io_level
   
   implicit none
   integer                     :: i

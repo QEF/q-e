@@ -5,9 +5,10 @@ set(src_ph
     PH/add_zstar_ue.f90
     PH/add_zstar_ue_us.f90
     PH/addcore.f90
-    PH/addnlcc.f90
+    PH/dynmat_nlcc.f90
     PH/addnlcc_zstar_eu_us.f90
     PH/addusddens.f90
+    PH/addusddens_cond.f90
     PH/addusddense.f90
     PH/addusdynmat.f90
     PH/allocate_part.f90
@@ -23,8 +24,10 @@ set(src_ph
     PH/clinear.f90
     PH/close_phq.f90
     PH/compute_alphasum.f90
+    PH/compute_alphasum_cond.f90
     PH/compute_becalp.f90
     PH/compute_becsum_ph.f90
+    PH/compute_becsum_ph_cond.f90
     PH/compute_drhous.f90
     PH/compute_drhous_nc.f90
     PH/compute_dvloc.f90
@@ -37,10 +40,12 @@ set(src_ph
     PH/d2nsq_bare.f90
     PH/dnsq_bare.f90
     PH/dnsq_orth.f90
+    PH/dnsq_orth_set_irr.f90
     PH/dnsq_scf.f90
     PH/davcio_drho.f90
     PH/dfile_autoname.f90
     PH/dfile_star.f90
+    PH/dfpt_kernels.f90
     PH/dielec.f90
     PH/do_phonon.f90
     PH/do_q2r.f90
@@ -66,6 +71,7 @@ set(src_ph
     PH/dvqhub_barepsi_us2.f90
     PH/delta_sphi.f90
     PH/dpsi_orth.f90
+    PH/dump_drho.f90
     PH/ep_matrix_element_wannier.f90
     PH/elph.f90
     PH/el_ph_collect.f90
@@ -89,6 +95,7 @@ set(src_ph
     PH/openfilq.f90
     PH/phcom.f90
     PH/ph_restart.f90
+    PH/ph_set_upert.f90
     PH/phescf.f90
     PH/phq_init.f90
     PH/phq_readin.f90
@@ -101,10 +108,6 @@ set(src_ph
     PH/prepare_q.f90
     PH/prepare_sym_analysis.f90
     PH/psidspsi.f90
-    PH/psymdvscf.f90
-    PH/psyme.f90
-    PH/psym_dmag.f90
-    PH/psym_dmage.f90
     PH/punch_plot_e.f90
     PH/q_points.f90
     PH/q_points_wannier.f90
@@ -130,17 +133,11 @@ set(src_ph
     PH/stop_ph.f90
     PH/summarize.f90
     PH/sym_and_write_zue.f90
-    PH/sym_def.f90
-    PH/sym_dmag.f90
-    PH/sym_dmage.f90
-    PH/symdvscf.f90
     PH/symdyn_munu.f90
     PH/symdynph_gq.f90
-    PH/syme.f90
     PH/symm.f90
     PH/symmorphic_or_nzb.f90
     PH/swfc.f90
-    PH/syme_dns.f90
     PH/sym_dns.f90
     PH/sym_dns_wrapper.f90
     PH/transform_int_so.f90
@@ -149,6 +146,7 @@ set(src_ph
     PH/transform_alphasum_so.f90
     PH/tra_write_matrix.f90
     PH/trntnsc.f90
+    PH/twochem_postproc_dfpt.f90
     PH/write_epsilon_and_zeu.f90
     PH/write_qplot_data.f90
     PH/write_matrix.f90
@@ -175,11 +173,9 @@ set(src_ph
     PH/raman.f90
     PH/dhdrhopsi.f90
     PH/set_dvscf.f90
-    PH/non_scf_ph.f90
-    PH/apply_trev.f90
-    PH/c_bands_ph.f90
     PH/dvscf_interpolate.f90
     PH/ahc.f90)
+qe_enable_cuda_fortran("${src_ph}")
 
 set(src_phaux
     PH/write_eigenvectors.f90)
@@ -219,11 +215,14 @@ target_link_libraries(qe_phonon_ph
     PRIVATE
         qe_hdf5_fortran
         qe_openmp_fortran
+	qe_openacc_fortran
+        qe_mpi_fortran
         qe_pw
         qe_modules
         qe_lr_modules
         qe_upflib
         qe_fftx
+        qe_dftd3
         qe_fox
         qe_xclib)
 
@@ -250,7 +249,12 @@ target_link_libraries(qe_phonon_fd
         qe_pw
         qe_modules
         qe_lr_modules)
-        
+
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::cublas)
+endif()
 
 ###########################################################
 # ph.x
@@ -261,6 +265,9 @@ qe_add_executable(qe_phonon_ph_exe ${src_phonon_x})
 set_target_properties(qe_phonon_ph_exe PROPERTIES OUTPUT_NAME ph.x)
 target_link_libraries(qe_phonon_ph_exe
     PRIVATE
+        qe_openacc_fortran
+	qe_openmp_fortran
+	qe_mpi_fortran
         qe_pw
         qe_lax
         qe_modules
@@ -352,6 +359,7 @@ qe_add_executable(qe_phonon_alpha2f_exe ${src_alpha2f_x})
 set_target_properties(qe_phonon_alpha2f_exe PROPERTIES OUTPUT_NAME alpha2f.x)
 target_link_libraries(qe_phonon_alpha2f_exe
     PRIVATE
+        qe_openacc_fortran
         qe_pw
         qe_modules
         qe_phonon_ph)
@@ -387,6 +395,8 @@ set_target_properties(qe_phonon_postahc_exe PROPERTIES OUTPUT_NAME postahc.x)
 target_link_libraries(qe_phonon_postahc_exe
     PRIVATE
         qe_modules
+        qe_pw
+        qe_lr_modules
         qe_phonon_ph)
 
 ###########################################################

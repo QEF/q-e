@@ -7,19 +7,19 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
+subroutine addusddens (drhop, dbecsum, mode0, npe, iflag)
   !----------------------------------------------------------------------
   !! This routine adds to the change of the charge and of the
   !! magnetization densities the part due to the US augmentation.
   !! It assumes that the array dbecsum has already accumulated the
   !! change of the becsum term. It calculates Eq. B31 of Ref [1].
-  !! If called from drho (iflag=1), dbecsum and drhoscf contain the
+  !! If called from drho (iflag=1), dbecsum and drhop contain the
   !! orthogonalization contribution to the change of the wavefunctions
   !! and the terms with alphasum and becsum are added. If called
-  !! from solve_* (iflag=0) drhoscf and dbecsum contain the contribution
+  !! from solve_* (iflag=0) drhop and dbecsum contain the contribution
   !! of the solution of the linear system and the terms due to alphasum
   !! and becsum are not added. In this case the change of the charge
-  !! calculated by drho (called \Delta \rho in [1]) is read from file
+  !! calculated by drho (called \(\Delta \rho\) in [1]) is read from file
   !! and added. The contribution of the change of
   !! the Fermi energy is not calculated here but added later by ef_shift.
   !! [1] PRB 64, 235118 (2001).
@@ -53,7 +53,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !! input: if zero does not compute drho
   integer :: npe
   !! input: the number of perturbations
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  complex(DP) :: drhop (dfftp%nnr, nspin_mag, npe)
   !! inp/out: change of the charge density
   complex(DP) :: dbecsum (nhm*(nhm+1)/2, nat, nspin_mag, npe)
   !! input: sum over kv of bec
@@ -190,7 +190,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
            psic (dfftp%nl (ig) ) = aux (ig, is, ipert)
         enddo
         CALL invfft ('Rho', psic, dfftp)
-        call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
+        call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhop(1,is,ipert), 1)
      enddo
   enddo
   if (.not.lgamma) deallocate (qpg)
@@ -205,7 +205,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
      do ipert = 1, npe
         mu = mode0 + ipert
         call get_buffer (drhous, lrdrhous, iudrhous, mu)
-        call daxpy (2*dfftp%nnr*nspin_mag, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
+        call daxpy (2*dfftp%nnr*nspin_mag, 1.d0, drhous, 1, drhop(1,1,ipert), 1)
      end do
      deallocate (drhous)
   end if

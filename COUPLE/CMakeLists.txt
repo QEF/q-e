@@ -5,11 +5,14 @@ set(src_couple
 qe_enable_cuda_fortran("${src_couple}")
 
 qe_add_library(qe_couple ${src_couple})
+
+set_target_properties(qe_couple PROPERTIES PUBLIC_HEADER include/libqecouple.h)
+
 target_link_libraries(qe_couple
     PRIVATE
         qe_modules
         qe_lax
-	    qe_fftx
+        qe_fftx
         qe_cpv)
 
 ###########################################################

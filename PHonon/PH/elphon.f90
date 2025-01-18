@@ -24,7 +24,7 @@ SUBROUTINE elphon()
   USE paw_variables, ONLY : okpaw
   USE el_phon,  ONLY : done_elph
   USE dynmat, ONLY : dyn, w2
-  USE modes,  ONLY : npert, nirr, u
+  USE modes,  ONLY : npert, nirr, u, nmodes
   USE uspp_param, ONLY : nhm
   USE control_ph, ONLY : trans, xmldyn
   USE output,     ONLY : fildyn,fildvscf
@@ -73,6 +73,10 @@ SUBROUTINE elphon()
     WRITE (6, '(5x,a)') "Fourier interpolating dVscf"
     ALLOCATE(dvscfin_all(dfftp%nnr, nspin_mag, 3 * nat))
     CALL dvscf_r2q(xq, u, dvscfin_all)
+    ! To save the interpolated dVscf potential to file, uncomment below.
+    ! DO imode0 = 1, nmodes
+    !    CALL davcio_drho(dvscfin_all(1, 1, imode0), lrdrho, iudvscf, imode0, +1)
+    ! ENDDO
     !
   ELSE
     WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)
@@ -143,8 +147,8 @@ SUBROUTINE elphon()
         allocate( phip(3,3,nat,nat) )
         CALL read_dyn_mat_param(fildyn, ntyp_, nat_)
         IF ( ntyp_ /= ntyp .OR. nat_ /= nat ) &
-           CALL errore('elphon','uncorrect nat or ntyp',1)
-
+           CALL errore('elphon','incorrect nat or ntyp',1)
+          
         CALL read_dyn_mat_header(ntyp, nat, ibrav_, nspin_mag_, &
                  celldm_, at, bg, omega, atm, amass, tau, ityp, &
                  m_loc, nqs_)
@@ -358,7 +362,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
   USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE lr_nc_mag,    ONLY : int1_nc_save, deeq_nc_save, int3_nc_save
   USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
@@ -394,6 +398,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   ALLOCATE (aux2(npwx*npol, nbnd))
   el_ph_mat_rec=(0.0_DP,0.0_DP)
   aux2(:, :) = (0.0_DP, 0.0_DP)
+  !
+  !$acc enter data create(dvscfins(1:dffts%nnr, 1:nspin_mag, 1:npe), aux2(1:npwx*npol, 1:nbnd))
+  !
   CALL apply_dpot_allocate()
   !
   ! DFPT+U case
@@ -461,9 +468,12 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         IF (nksq.GT.1 .OR. nsolv==2) THEN
            IF (lgamma) THEN
               CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+              !$acc update device(evc)
            ELSE
               CALL get_buffer (evc, lrwfc, iuwfc, ikmk)
+              !$acc update device(evc)
               CALL get_buffer (evq, lrwfc, iuwfc, ikmq)
+              !$acc update device(evq)
            ENDIF
         ENDIF
         !
@@ -479,10 +489,6 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
               IF (isolv==1) THEN
                  ! FIXME: .false. or .true. ???
                  CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
-                 !
-                 ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
-                 !
-                 IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(1,mode))
                  !
               ELSE
                  IF (okvan) THEN
@@ -505,7 +511,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            IF (isolv==2) THEN
               dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_nc_save(:,:,:,:,ipert,2)
            ENDIF
            !
            CALL apply_dpot_bands(ik, ibnd_lst - ibnd_fst + 1, dvscfins(:, :, ipert), &
@@ -537,7 +543,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            IF (isolv==2) THEN
               dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_nc_save(:,:,:,:,ipert,1)
            ENDIF
            !
            ! If doing Allen-Heine-Cardona (AHC) calculation, we need dvpsi
@@ -604,6 +610,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   DEALLOCATE(el_ph_mat_rec)
   !
   CALL apply_dpot_deallocate()
+  !
+  !$acc exit data delete(dvscfins, aux2)
+  !
   DEALLOCATE (elphmat)
   DEALLOCATE (aux2)
   !
@@ -795,10 +804,8 @@ SUBROUTINE elphsum()
   CALL start_clock('elphsum')
 
   elph_dir='elph_dir/'
-  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, intra_image_comm)
-  IF (.NOT.exst) CALL create_directory( elph_dir )
-  WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
+  CALL create_directory( elph_dir )
+  WRITE (6, '(5x,"Electron-phonon interaction  ..."/)')
   ngauss1 = 0
 
   ALLOCATE(xk_collect(3,nkstot))
@@ -1388,6 +1395,7 @@ SUBROUTINE elph_prt()
   !!
   !! 06/2018 - Written by S. Ponc\'e and C. Verdi based on elphsum subroutine
   !! 06/2021 - Rewritten by H. Lee based on the previous version
+  !! 06/2023 - Merged to PH/ by S. Ponc\'e
   !!
   USE kinds,       ONLY : DP
   USE constants,   ONLY : rytoev
@@ -1409,7 +1417,10 @@ SUBROUTINE elph_prt()
   !
   LOGICAL :: found
   !
-  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr, istatus
+#if defined(__MPI)
+  INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr
   INTEGER :: nksq2, ikk2, ikq2, nkq2, ik1, ik2, ipert, jpert, n
   !
   REAL(DP), PARAMETER :: ryd2mev  = rytoev * 1.0E3_DP

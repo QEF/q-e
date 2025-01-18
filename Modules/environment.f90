@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO groups
+! Copyright (C) 2002-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -62,17 +62,6 @@ CONTAINS
     CHARACTER(LEN=3)           :: env_maxdepth
     INTEGER :: ios, crashunit, max_depth 
 
-
-    ! ... The Intel compiler allocates a lot of stack space
-    ! ... Stack limit is often small, thus causing SIGSEGV and crash
-    ! ... One may use "ulimit -s unlimited" but it doesn't always work
-    ! ... The following call does the same and always works
-    !
-#if defined(__INTEL_COMPILER)
-    CALL remove_stack_limit ( )
-#endif
-    ! ... use ".FALSE." to disable all clocks except the total cpu time clock
-    ! ... use ".TRUE."  to enable clocks
 #if defined(__TRACE)
     CALL get_environment_variable('ESPRESSO_MAX_DEPTH', env_maxdepth)
     IF (env_maxdepth .NE. ' ') THEN 
@@ -80,6 +69,8 @@ CONTAINS
       IF (ios == 0 ) CALL set_trace_max_depth( max_depth )
     END IF
 #endif
+    ! ... use ".FALSE." to disable all clocks except the total cpu time clock
+    ! ... use ".TRUE."  to enable clocks
     CALL init_clocks(.TRUE.) 
     CALL start_clock( TRIM(code) )
 
@@ -349,8 +340,14 @@ SUBROUTINE print_cuda_info(check_use_gpu)
   IF ( PRESENT(check_use_gpu) ) THEN 
     IF (check_use_gpu) use_gpu = use_gpu_ 
   END IF 
+  !
+  ierr = cudaGetDevice( idev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
+  ierr = cudaGetDeviceCount( ndev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
+  !
   IF (use_gpu) THEN
-     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE. ",i2," visible GPUs per MPI rank")' ) ndev
 #if defined(__GPU_MPI)
      WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
 #endif
@@ -359,12 +356,7 @@ SUBROUTINE print_cuda_info(check_use_gpu)
      WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
   END IF
   !
-  ierr = cudaGetDevice( idev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
-  ierr = cudaGetDeviceCount( ndev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
-  !
-  ! User friendly, approximated warning.
+  ! User friendly, approximated warning. FIXME: does it really work?
   ! In order to get this done right, one needs an intra_node communicator
   !
   IF (nproc > ndev * nnode * 2) &

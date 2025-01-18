@@ -1,14 +1,14 @@
  &lr_input
    prefix = 'Fe',
-   outdir = '/scratch/timrov/QE_gitlab/magnons/q-e/tempdir/',
+   outdir = '/scratch/obaseggi/q-e-develop/tempdir/',
    magnons = .true.,
-   itermax0 = 1600,
-   itermax = 20000,
-   extrapolation='osc',
-   epsil = 0.001,
+   units = 3
+   itermax0 = 150,
+   itermax = 150,
+   extrapolation='no',
+   epsil = 0.5,
    ipol = 2,
-   units = 1,
-   start = 0.0d0,
-   increment = 0.001d0,
-   end = 1.0d0
+   start = 1780.0d0,
+   increment = 0.1d0,
+   end = 1820.0d0
  /

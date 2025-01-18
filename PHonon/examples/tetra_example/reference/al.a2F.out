@@ -1,0 +1,96 @@
+
+     Program ALPHA2F v.7.2 starts on  2Jun2023 at  1:49:26 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       2 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     2
+
+     MPI processes distributed on     1 nodes
+     30431 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from al.elph.in
+
+     Reading xml data from directory:
+
+     ./aluminum.save/
+ 
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         301     301    109                 3479     3479     749
+ 
+     Using Slab Decomposition
+ 
+
+     Check: negative core charge=   -0.000013
+     Reading collected, re-writing distributed wavefunctions in ./
+
+
+     Dynamical matrices for ( 4, 4, 4)  uniform grid of q-points
+     With a half shift
+     (  10 q-points):
+       N         xq(1)         xq(2)         xq(3) 
+       1  -0.125000000   0.125000000   0.125000000
+       2  -0.375000000   0.375000000  -0.125000000
+       3   0.375000000  -0.375000000   0.625000000
+       4   0.125000000  -0.125000000   0.375000000
+       5  -0.125000000   0.625000000   0.125000000
+       6   0.625000000  -0.125000000   0.875000000
+       7   0.375000000   0.125000000   0.625000000
+       8  -0.125000000  -0.875000000   0.125000000
+       9  -0.375000000   0.375000000   0.375000000
+      10   0.375000000  -0.375000000   1.125000000
+     Because shifted q grid is used, q2r will not work !
+
+     Saving dvscf to file. Distribute only q points, not irreducible represetations.
+ 
+   Calculation of alpha2F
+ 
+     Number of Frequencies :  500
+     Frequency Step [Ry] :  5.770178506770826E-06
+     [opt_tetra]  Optimized tetrahedron method is used.
+ 
+     Writing a2F to a file aluminum.a2F.dat
+ 
+     Compute lambda and omega_ln from a2F to verify it.
+              lambda :  0.3963915104345056
+       omega_ln [Ry] :  1.950315478791357E-03
+ 
+   Compute lambda and omega_ln directly from omega_q and lambda_q
+ 
+             lambda :  0.3986718750000003
+     omega_ln [Ryd] :  1.932669032022485E-03
+     omega_ln [THz] :  6.358175676824925
+       omega_ln [K] :  305.1443057624760
+ 
+   For plotting T_c from the McMillan formula, please type
+     $ gnuplot aluminum.McMillan.gp
+ 
+     ALPHA2F      :      0.94s CPU      0.70s WALL
+
+ 
+   This run was terminated on:   1:49:27   2Jun2023            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

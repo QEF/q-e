@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,9 @@ SUBROUTINE hp_readin()
                                perturb_only_atom, sum_pertq, determine_num_pert_only,  &
                                skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter
+                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter, &
+                               determine_q_mesh_only
+  USE paw_variables,    ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -41,7 +43,8 @@ SUBROUTINE hp_readin()
                          background, thresh_init, find_atpert, max_seconds, rmax,     &
                          niter_max, alpha_mix, nmix, compute_hp, perturb_only_atom,   &
                          start_q, last_q, sum_pertq, ethr_nscf, num_neigh, lmin,      &
-                         determine_num_pert_only, disable_type_analysis, docc_thr
+                         determine_num_pert_only, disable_type_analysis, docc_thr,    &
+                         determine_q_mesh_only
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       Data read from input is subsequently broadcast to all processors
@@ -63,6 +66,7 @@ SUBROUTINE hp_readin()
   perturb_only_atom(:)    = .FALSE.
   skip_equivalence_q      = .FALSE.
   determine_num_pert_only = .FALSE.
+  determine_q_mesh_only   = .FALSE.
   disable_type_analysis   = .FALSE.
   equiv_type(:)      = 0
   find_atpert        = 1
@@ -141,8 +145,8 @@ SUBROUTINE input_sanity()
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
   USE xc_lib,           ONLY : xclib_dft_is
-  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
-                               is_hubbard_back, Hubbard_V
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind, Hubbard_J0, &
+                               Hubbard_V, is_hubbard_back
   !
   IMPLICIT NONE
   !
@@ -156,16 +160,19 @@ SUBROUTINE input_sanity()
   IF (compute_hp .AND. ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'compute_hp and perturb_only_atom are not allowed to be true together', 1)
   !
-  IF (ANY(is_hubbard_back(:))) &
-     CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
-  !
   IF ( ANY(Hubbard_V(:,:,2).NE.0.d0) .OR. &
        ANY(Hubbard_V(:,:,3).NE.0.d0) .OR. &
        ANY(Hubbard_V(:,:,4).NE.0.d0) ) &
      CALL errore ('hp_readin', 'The HP code does not support DFT+U+V with the background', 1)
   !
+  IF (ANY(is_hubbard_back(:))) CALL errore ("hp_readin", &
+          &" Two (or more) Hubbard channels per atomic type is not implemented", 1)
+  !
   IF (ANY(Hubbard_J0(:).NE.0.d0)) &
      CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)
+  !
+  IF (determine_q_mesh_only .AND. .NOT.ANY(perturb_only_atom(:))) &
+     CALL errore ('hp_readin', 'determine_q_mesh_only can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
   !
   IF (sum_pertq .AND. .NOT.ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'sum_pertq can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
@@ -182,8 +189,7 @@ SUBROUTINE input_sanity()
   !
   IF (lmin.LT.0 .OR. lmin.GT.3) CALL errore('hp_readin','Not allowed value of lmin',1)
   !
-  IF (nmix.LT.1 .OR. nmix.GT.5) &
-     & CALL errore ('hp_readin', ' Wrong nmix ', 1) 
+  IF (nmix.LT.1) CALL errore ('hp_readin', ' Wrong nmix ', 1) 
   !
   IF (ltetra) CALL errore ('hp_readin', 'HP with tetrahedra is not supported', 1)
   !
@@ -191,17 +197,15 @@ SUBROUTINE input_sanity()
      & 'Cannot start from pw.x data file using Gamma-point tricks',1)
   !
   IF (.NOT.lda_plus_u) CALL errore('hp_readin',&
-     & 'The HP code can be used only when lda_plus_u=.true.',1)
+     & 'The HP code can be used only on top of DFT+Hubbard (i.e. when the HUBBARD card is used in pw.x)',1)
   !
   IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
-     & ' The HP code does not support lda_plus_u_kind=1',1)
+     & ' The HP code does not support the Liechtenstein formulation of DFT+U',1)
   !
-  IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
+  IF (Hubbard_projectors.NE."atomic" .AND. Hubbard_projectors.NE."ortho-atomic") &
      CALL errore("hp_readin", &
-     " The HP code for this U_projection_type is not implemented",1)
-  !
-  IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
-  !
+     " The HP code for this Hubbard_projectors type is not implemented",1)
+  !   
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
   !
   IF (nbgrp > 1) CALL errore('hp_readin', &

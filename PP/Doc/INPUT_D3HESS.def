@@ -1,0 +1,69 @@
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program d3hess.x {
+
+    toc {}
+
+    intro {
+	@b {Purpose of d3hess.x:}
+	  This is a post processing program to compute second derivatives of D3 dispersion in QE.
+
+	  The d3hess.x program should be run after an scf or relax calculation. 
+          It reads the molecular geometry from the xml file in the outdir and save 
+          the second derivatives matrix in a file on the disk.
+          Afterwords, phonon reads the file and add the D3 Hessian matrix to the dynamical matrix with the proper phase (q), 
+          to include dispersion effects on vibrational frequencies.
+
+	  The workflow is just:
+
+		(1) do an SCF 
+		(2) run d3hess 
+		(3) run phonon
+
+          Please note that filhess in d3hess input and dftd3_hess in phonon input, if given, should match.
+          Please also note that second derivatives of the three-body term of d3 dispersion are not implemented, 
+          and phonon calculations with d3 should be run with dftd3_threebody=.false. in the SCF.  
+
+        @b {Structure of the input data:}
+	============================
+
+	   @b &INPUT
+	     ...
+	   @b /
+
+    }
+
+    namelist INPUT {
+
+	var prefix -type CHARACTER {
+	    default { 'pwscf' } 
+	    info {
+		prefix of input file produced by pw.x   
+		(wavefunctions are not needed)
+	    }
+	}
+
+        var outdir -type CHARACTER {
+            info {
+		directory containing the input data, i.e. the same as in pw.x
+	    }
+            default {
+                      value of the @tt ESPRESSO_TMPDIR environment variable if set;
+                      current directory ('./') otherwise }
+        }
+
+	var filhess  -type CHARACTER {
+	    default { 'prefix.hess' } 
+	    info {
+		output file where the D3 hessian matrix is written 
+                (should match dftd3_hess keyword in phonon calculation)
+	    }
+	}
+
+	var step -type REAL {       
+	    info { step for numerical differentiation in a.u.  }
+	    default { 1.d-3 }
+	}
+ 
+
+    }
+
+}

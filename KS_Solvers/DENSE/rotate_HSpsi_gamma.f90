@@ -20,6 +20,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
                             me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
   USE mp,            ONLY : mp_sum, mp_barrier, mp_allgather, mp_type_create_column_section, mp_type_free
+  USE device_memcpy_m,    ONLY: dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -41,8 +42,11 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   !
   INTEGER                  :: kdim, kdmx
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  !$acc declare device_resident(aux)
   REAL(DP),    ALLOCATABLE :: hh(:,:), ss(:,:), vv(:,:)
+  !$acc declare device_resident(hh, ss, vv)
   REAL(DP),    ALLOCATABLE :: en(:)
+  !$acc declare device_resident(en)
   INTEGER :: n_start, n_end, my_n, recv_counts(nbgrp), displs(nbgrp), column_type
   !
   IF ( gstart == -1 ) CALL errore( 'rotHSw', 'gstart variable not initialized', 1 )
@@ -53,9 +57,11 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   ! ... set Im[ psi(G=0) ] etc -  needed for numerical stability
   !
   IF ( gstart == 2 ) then
+     !$acc kernels
      psi (1,1:nstart) = CMPLX( DBLE( psi (1,1:nstart) ), 0.D0,kind=DP)
      hpsi(1,1:nstart) = CMPLX( DBLE( hpsi(1,1:nstart) ), 0.D0,kind=DP)
      if (overlap) spsi(1,1:nstart) = CMPLX( DBLE( spsi(1,1:nstart) ), 0.D0,kind=DP)
+     !$acc end kernels
   END IF
   
   kdim = 2 * npw
@@ -65,6 +71,8 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   ALLOCATE( ss( nstart, nstart ) )
   ALLOCATE( vv( nstart, nstart ) )
   ALLOCATE( en( nstart ) )
+  !
+  !$acc host_data use_device(psi, hpsi, spsi, hh, ss, vv, en)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
@@ -77,8 +85,8 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL DGEMM( 'T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, hpsi(1,n_start),kdmx, 0.D0, hh(1,n_start),nstart )
-  IF ( gstart == 2 ) call DGER( nstart, my_n, -1.D0, psi,kdmx, hpsi(1,n_start),kdmx, hh(1,n_start),nstart )
+  CALL MYDGEMM( 'T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, hpsi(1,n_start),kdmx, 0.D0, hh(1,n_start),nstart )
+  IF ( gstart == 2 ) call MYDGER( nstart, my_n, -1.D0, psi,kdmx, hpsi(1,n_start),kdmx, hh(1,n_start),nstart )
   call start_clock('rotHSw:hc:s1')
   CALL mp_sum( hh(:,n_start:n_end), intra_bgrp_comm ) ! this section only needs to be collected inside bgrp
   call stop_clock('rotHSw:hc:s1')
@@ -90,14 +98,14 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   IF ( overlap ) THEN
      !
      if (n_start .le. n_end) &
-     CALL DGEMM('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, spsi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart)
-     IF ( gstart == 2 ) CALL DGER(nstart, my_n, -1.D0, psi,kdmx, spsi(1,n_start),kdmx, ss(1,n_start),nstart)
+     CALL MYDGEMM('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, spsi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart)
+     IF ( gstart == 2 ) CALL MYDGER(nstart, my_n, -1.D0, psi,kdmx, spsi(1,n_start),kdmx, ss(1,n_start),nstart)
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL DGEMM('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, psi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart)
-     IF ( gstart == 2 ) CALL DGER(nstart, my_n, -1.D0, psi,kdmx, psi(1,n_start),kdmx, ss(1,n_start),nstart)
+     CALL MYDGEMM('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, psi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart)
+     IF ( gstart == 2 ) CALL MYDGER(nstart, my_n, -1.D0, psi,kdmx, psi(1,n_start),kdmx, ss(1,n_start),nstart)
      !
   END IF
   call start_clock('rotHSw:hc:s3')
@@ -116,7 +124,9 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   !
   call start_clock('rotHSw:diag'); !write(*,*) 'start rotHSw:diag' ; FLUSH(6)
   CALL diaghg( nstart, nbnd, hh, ss, nstart, en, vv, me_bgrp, root_bgrp, intra_bgrp_comm )
-  e(:) = en(1:nbnd)
+  !$acc data deviceptr(e)
+  CALL dev_memcpy(e, en, [1,nbnd])
+  !$acc end data
   call stop_clock('rotHSw:diag'); !write(*,*) 'stop rotHSw:diag' ; FLUSH(6)
   !
   ! ... update the basis set
@@ -125,21 +135,23 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
   CALL mp_type_create_column_section(psi(1,1), 0, npwx, npwx, column_type)
   CALL divide_all(inter_bgrp_comm,nbnd,n_start,n_end,recv_counts,displs)
+  !$acc end host_data
 
   ALLOCATE( aux ( npwx, nbnd ) )
+  !$acc host_data use_device(psi, hpsi, spsi, hh, ss, vv, en, aux)
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL DGEMM( 'N','N', kdim,my_n,nstart, 1.D0, psi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
-  psi(:,n_start:n_end) = aux(:,n_start:n_end)
+  CALL MYDGEMM( 'N','N', kdim,my_n,nstart, 1.D0, psi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
+  CALL dev_memcpy(psi, aux, [1, npwx], 1, [n_start,n_end])
 !  call start_clock('rotHSw:ev:b3'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b3')
   call start_clock('rotHSw:ev:s5')
   CALL mp_allgather(psi(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
   call stop_clock('rotHSw:ev:s5')
 
   if (n_start .le. n_end) &
-  CALL DGEMM( 'N','N', kdim,my_n,nstart, 1.D0,hpsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
-  hpsi(:,n_start:n_end) = aux(:,n_start:n_end)
+  CALL MYDGEMM( 'N','N', kdim,my_n,nstart, 1.D0,hpsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
+  CALL dev_memcpy(hpsi, aux, [1, npwx], 1, [n_start,n_end])  
 !  call start_clock('rotHSw:ev:b4'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b4')
   call start_clock('rotHSw:ev:s6')
   CALL mp_allgather(hpsi(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
@@ -148,8 +160,8 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   IF (overlap) THEN
 
      if (n_start .le. n_end) &
-     CALL DGEMM( 'N','N', kdim,my_n,nstart, 1.D0,spsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
-     spsi(:,n_start:n_end) = aux(:,n_start:n_end)
+     CALL MYDGEMM( 'N','N', kdim,my_n,nstart, 1.D0,spsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
+     CALL dev_memcpy(spsi, aux, [1, npwx], 1, [n_start,n_end])     
 !     call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
      call start_clock('rotHSw:ev:s7')
      CALL mp_allgather(spsi(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
@@ -157,19 +169,22 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
   ELSE IF (present(spsi)) THEN
 
-     spsi(:,1:nbnd) = psi(:,1:nbnd)
+     CALL dev_memcpy(spsi, psi, [1, npwx], 1, [1,nbnd])
 
   END IF
-
+  !
+  !$acc end host_data
+  !
   DEALLOCATE( aux )
   CALL mp_type_free( column_type )
 
   call stop_clock('rotHSw:evc'); !write(*,*) 'stop rotHSw:evc' ; FLUSH(6)
   !
-  DEALLOCATE( en )
   DEALLOCATE( vv )
   DEALLOCATE( ss )
   DEALLOCATE( hh )
+  DEALLOCATE( en )
+  !
   call stop_clock('rotHSw'); !write(*,*) 'stop rotHSw' ; FLUSH(6)
   !call print_clock('rotHSw')
   !call print_clock('rotHSw:hc')

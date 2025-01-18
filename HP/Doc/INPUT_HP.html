@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      hp.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 7.0)</span>
+	      hp.x / PWscf / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.4)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm8">&amp;INPUTHP</a></p>
 <blockquote>
-<a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm17">iverbosity</a> | <a href="#idm20">max_seconds</a> | <a href="#idm24">nq1</a> | <a href="#idm25">nq2</a> | <a href="#idm26">nq3</a> | <a href="#idm29">skip_equivalence_q</a> | <a href="#idm32">determine_num_pert_only</a> | <a href="#idm36">find_atpert</a> | <a href="#idm39">docc_thr</a> | <a href="#idm43">skip_type</a> | <a href="#idm51">equiv_type</a> | <a href="#idm58">perturb_only_atom</a> | <a href="#idm65">start_q</a> | <a href="#idm73">last_q</a> | <a href="#idm81">sum_pertq</a> | <a href="#idm88">compute_hp</a> | <a href="#idm93">conv_thr_chi</a> | <a href="#idm96">thresh_init</a> | <a href="#idm99">ethr_nscf</a> | <a href="#idm102">niter_max</a> | <a href="#idm105">alpha_mix(i)</a> | <a href="#idm109">nmix</a> | <a href="#idm113">num_neigh</a> | <a href="#idm116">lmin</a> | <a href="#idm122">rmax</a> | <a href="#idm125">dist_thr</a>
+<a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm17">iverbosity</a> | <a href="#idm20">max_seconds</a> | <a href="#idm24">nq1</a> | <a href="#idm25">nq2</a> | <a href="#idm26">nq3</a> | <a href="#idm29">skip_equivalence_q</a> | <a href="#idm32">determine_num_pert_only</a> | <a href="#idm36">determine_q_mesh_only</a> | <a href="#idm40">find_atpert</a> | <a href="#idm43">docc_thr</a> | <a href="#idm47">skip_type</a> | <a href="#idm55">equiv_type</a> | <a href="#idm62">perturb_only_atom</a> | <a href="#idm69">start_q</a> | <a href="#idm77">last_q</a> | <a href="#idm85">sum_pertq</a> | <a href="#idm92">compute_hp</a> | <a href="#idm97">conv_thr_chi</a> | <a href="#idm100">thresh_init</a> | <a href="#idm103">ethr_nscf</a> | <a href="#idm106">niter_max</a> | <a href="#idm109">alpha_mix(i)</a> | <a href="#idm113">nmix</a> | <a href="#idm117">num_neigh</a> | <a href="#idm120">lmin</a> | <a href="#idm126">rmax</a> | <a href="#idm129">dist_thr</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -209,7 +209,29 @@ determines the indices of inter-site couples.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm36"></a><a name="find_atpert"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm36"></a><a name="determine_q_mesh_only"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">determine_q_mesh_only</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#perturb_only_atom">perturb_only_atom</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. determines the number of q points
+for a given perturbed atom and exits smoothly.
+This keyword can be used only if perturb_only_atom
+is set to .true.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm40"></a><a name="find_atpert"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">find_atpert</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -233,10 +255,11 @@ Method for searching of atoms which must be perturbed.
     there are using symmetry. Atoms which have the
     same type but are not equivalent by symmetry will
     be distinguished in this case.
+4 = Perturb all Hubbard atoms (the most expensive option)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm39"></a><a name="docc_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm43"></a><a name="docc_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">docc_thr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -253,7 +276,7 @@ be perturbed. Can be used only when <a href="#find_atpert">find_atpert</a> = 1.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm43"></a><a name="skip_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm47"></a><a name="skip_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">skip_type(i), i=1,ntyp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -279,7 +302,7 @@ This keyword cannot be used when <a href="#find_atpert">find_atpert</a> = 1.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm51"></a><a name="equiv_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm55"></a><a name="equiv_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">equiv_type(i), i=1,ntyp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -302,7 +325,7 @@ This keyword cannot be used when <a href="#find_atpert">find_atpert</a> = 1.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm58"></a><a name="perturb_only_atom"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm62"></a><a name="perturb_only_atom"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">perturb_only_atom(i), i=1,ntyp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -326,7 +349,7 @@ the whole calculation on parts.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm65"></a><a name="start_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm69"></a><a name="start_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">start_q</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -350,7 +373,7 @@ the total number of q points found.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm73"></a><a name="last_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm77"></a><a name="last_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_q</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -374,7 +397,7 @@ the total number of q points found.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm81"></a><a name="sum_pertq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm85"></a><a name="sum_pertq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">sum_pertq</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -398,7 +421,7 @@ q points. This variable should be used only when
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm88"></a><a name="compute_hp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm92"></a><a name="compute_hp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">compute_hp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -425,7 +448,7 @@ calculation was parallelized over perturbations.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm93"></a><a name="conv_thr_chi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm97"></a><a name="conv_thr_chi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">conv_thr_chi</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -442,7 +465,7 @@ occupation matrix.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm96"></a><a name="thresh_init"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm100"></a><a name="thresh_init"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">thresh_init</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -461,7 +484,7 @@ number of electrons in the system.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm99"></a><a name="ethr_nscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm103"></a><a name="ethr_nscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ethr_nscf</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -479,7 +502,7 @@ k and k+q points. Note, this quantity is NOT extensive.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm102"></a><a name="niter_max"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm106"></a><a name="niter_max"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">niter_max</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -495,7 +518,7 @@ solution of the linear-response Kohn-Sham equations.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm105"></a><a name="alpha_mix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm109"></a><a name="alpha_mix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">alpha_mix(i)</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -512,7 +535,7 @@ method. See: D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.110
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm109"></a><a name="nmix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm113"></a><a name="nmix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nmix</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -529,7 +552,7 @@ D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.38
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm113"></a><a name="num_neigh"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm117"></a><a name="num_neigh"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">num_neigh</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -544,11 +567,11 @@ Number of nearest neighbors of every Hubbard atom which
 will be considered when writting Hubbard V parameters to
 the file parameters.out, which can be used in the
 subsequent DFT+U+V calculation. This keyword is used only
-when lda_plus_u_kind = 2 (post-processing stage).
+for DFT+U+V (post-processing stage).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm116"></a><a name="lmin"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm120"></a><a name="lmin"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lmin</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -564,7 +587,7 @@ atoms starting from which (and up to the maximum l in the
 system) Hubbard V will be written to the file parameters.out.
 <a href="#lmin">lmin</a> refers to the orbital quantum number of the atom
 corresponding to the first site-index in Hubbard_V(:,:,:).
-This keyword is used only when lda_plus_u_kind = 2 and only
+This keyword is used only for DFT+U+V and only
 in the post-processing stage. Example: <a href="#lmin">lmin</a>=1 corresponds to
 writing to file V between e.g. oxygen (with p states) and its
 neighbors, and including V between transition metals (with d
@@ -573,7 +596,7 @@ latter will be written to parameters.out.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm122"></a><a name="rmax"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm126"></a><a name="rmax"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rmax</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -585,13 +608,13 @@ latter will be written to parameters.out.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 Maximum distance (in Bohr) between two atoms to search
-neighbors (used only at the postprocessing step when
-lda_plus_u_kind = 2). This keyword is useful when there
+neighbors (used only at the postprocessing step for
+DFT+U+V). This keyword is useful when there
 are e.g. defects in the system.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm125"></a><a name="dist_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm129"></a><a name="dist_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dist_thr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -613,7 +636,7 @@ susceptibility in the post-processing step.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021.
+	  This file has been created by helpdoc utility on Wed Oct 16 19:29:01 CEST 2024.
 	</small>
 </body>
 </html>

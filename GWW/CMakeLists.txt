@@ -72,6 +72,7 @@ set(src_pw4gww
     pw4gww/cgsolve_all_gamma.f90
     pw4gww/gww_realus.f90
     pw4gww/operator_1_vp.f90
+    pw4gww/operator_debug.f90
     pw4gww/lanczos_chains.f90
     pw4gww/convergence.f90
     pw4gww/easy_gw.f90)
@@ -147,7 +148,6 @@ set(src_simple
     simple/epe.f90
     simple/gk_sort_limit.f90
     simple/khamiltonian.f90
-    simple/init_us_2_max.f90
     simple/commutator.f90)
 
 set(src_simple_bse

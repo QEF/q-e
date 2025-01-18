@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -93,7 +93,7 @@ SIMPLE_BSE_COMMAND="$PARA_PREFIX $BIN_DIR/simple_bse.x "
 $ECHO
 $ECHO "  running simple_bse.x as: $SIMPLE_BSE_COMMAND"
 $ECHO
-ABCOEFF_TO_EPS_COMMAND="$BIN_DIR/../GWW/util/abcoeff_to_eps.x"
+ABCOEFF_TO_EPS_COMMAND="$BIN_DIR/abcoeff_to_eps.x"
     # self-consistent calculation
     cat > si_scf_k.in << EOF
 &control
@@ -134,11 +134,10 @@ EOF
     check_failure $?
     $ECHO " done"
 
-    #calculation of head 
+    #calculation of head
     cat > si_head.in << EOF
 calculation of head
  &inputph
-  trans=.false.
   l_head=.true.
   tr2_ph=1.d-4,
   prefix='si',
@@ -200,9 +199,9 @@ EOF
 
 
 
-    #pw4gww calculations 
+    #pw4gww calculations
     cat > si_pw4gww.in << EOF
-&inputpw4gww    
+&inputpw4gww
     prefix='si'
     num_nbndv(1)=16
     num_nbnds=32
@@ -299,7 +298,7 @@ prefix='si'
 outdir='$TMP_DIR/'
 calc_mode=0
 num_nbndv=16
-num_val=16     
+num_val=16
 num_cond=24
 s_bands=0.1
 s_product=1.0
@@ -338,7 +337,7 @@ EOF
  cat > abcoeff_to_eps.in << EOF
 100
 100
-0. 
+0.
 5.
 0.2
 2000
@@ -353,9 +352,6 @@ EOF
 #    $ECHO  "copying self-energy files..\c"
 #    cp $TMP_DIR/si-im_on_im* .
 #    cp $TMP_DIR/si-re_on_im* .
- #copy  alpha and beta coefficients
-     cp $TMP_DIR/ab_coeff.dat .	 
-     cp  $TMP_DIR/lanczos.eps*dat .     
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"

@@ -28,7 +28,7 @@ subroutine solve_head
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
                                    l_scissor,scissor,len_head_block_freq, &
                                    len_head_block_wfc, l_easy
-  USE control_ph,           ONLY : tr2_ph
+  USE control_lr,           ONLY : tr2_ph
   USE gvect,                ONLY : ngm, ngm_g, ig_l2g, gstart, g
   USE gvecs,                ONLY : doublegrid
   USE mp,                   ONLY : mp_sum, mp_barrier, mp_bcast
@@ -470,13 +470,14 @@ subroutine solve_head
         head(first_f+i-1,2)=epsilon_g(2,2,i)
         head(first_f+i-1,3)=epsilon_g(3,3,i)
 
-
+        call ph_set_upert_e()
 #if defined(__MPI)
         call mp_sum ( pola_charge(:,:,:,i) , inter_pool_comm )
-        call psyme (pola_charge(:,:,:,i))
+        call psymdvscf (pola_charge(:,:,:,i))
 #else
-        call syme (pola_charge(:,:,:,i))
+        call symdvscf (pola_charge(:,:,:,i))
 #endif
+        call ph_deallocate_upert()
         call create_scf_type ( wing, .true. )
         do ipol=1,3
            CALL fwfft ('Rho',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
@@ -533,11 +534,7 @@ subroutine solve_head
         enddo
      enddo
      call mp_barrier( world_comm )
-     write(stdout,*) 'ATT02'
      if(ionode) close(iun)
-
-     call mp_barrier( world_comm )
-     write(stdout,*) 'ATT1'
      deallocate(pola_charge)
      deallocate(e_head_pol)
      deallocate(e_head_g)
@@ -571,11 +568,6 @@ subroutine solve_head
   deallocate(head,head_tmp,freqs)
   deallocate( tmp_g)
   deallocate(epsilon_g)
-
-  
-
-   call mp_barrier( world_comm )
-   write(stdout,*) 'THIS IS THE END'
 
   call stop_clock ('solve_head')
   return

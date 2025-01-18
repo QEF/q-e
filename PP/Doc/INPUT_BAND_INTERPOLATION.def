@@ -1,0 +1,231 @@
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program band_interpolation.x {
+
+    toc {}
+
+    intro {
+	@b {Purpose of band_interpolation.x:}
+	  This contains four band energies interpolation methods, 
+	  to be advantageously (but not necessarly) used for EXX band structure computations.
+
+	  The PP/src/band_interpolation.x post-processing subprogram reads the band energies 
+	  stored in the pwscf.xml file after an SCF calculation on a uniform Monkhorst-Pack grid, 
+	  and interpolates the eigenvalues to an arbitrary set of k-points provided in input.
+
+	  The workflow is just:
+
+		(1) do an SCF on a uniform grid
+		(2) call the interpolator from the folder in which the pwscf.xml 
+		     file is present (band_interpolation.x < input)
+
+	  For large EXX calculations the first step can be splitted in two substeps:
+
+		(1) do an SCF calculation on a uniform grid with occupied bands only
+		(2) do a NSCF (or Bands) calculation on the same uniform grid adding virtual orbitals
+		(3) call the interpolator from the folder in which the pwscf.xml file is present
+
+	  Four interpolation methods have been included (see @ref method).
+
+	  The interpolated band structure in eV units is written in a file named [method].dat 
+	  (e.g. fourier-diff.dat for the fourier-diff method) that is plottable with Grace or Gnuplot 
+	  (e.g. xmgrace -nxy fourier-diff.dat) 
+
+        @b {Structure of the input data:}
+	============================
+
+	   @b &INTERPOLATION
+	     ...
+	   @b /
+
+	   [ @b ROUGHNESS
+	        RoughN
+                'automatic' or RoughC(1) RoughC(2) RoughC(3) ... RoughC(RoughN) ]
+
+	   [ @b USER_STARS 
+	        NUser
+                vec_X vec_Y vec_Z ]
+
+           @b K_POINTS { tpiba_b }
+              nks
+              xk_x, xk_y, xk_z,  wk
+
+    }
+
+    namelist INTERPOLATION {
+
+	var method -type CHARACTER { 
+            default { 'fourier-diff' }
+	    info { The interpolation method to be used }
+            options {
+                info { Available options are: }
+                opt -val 'fourier-diff' {
+                    band energies, as functions of k, are expanded in reciprocal space using a Star function basis set 
+		    (algorithm from Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988, 
+		     https://link.aps.org/doi/10.1103/PhysRevB.38.2721 ).
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .false. . }
+                opt -val 'fourier' {
+                    band energies, as functions of k, are expanded in reciprocal space using a Star function basis set 
+		    (algorithm from D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986). 
+		     https://ui.adsabs.harvard.edu/abs/1986JCoPh..67..253K ). 
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .false. . }
+                opt -val 'idw' {
+                    inverse distance weighting interpolation with Shepard metric 
+		    (ACM 68: Proceedings of the 1968 23rd ACM national conference, January 1968, Pages 517–524, 
+		     https://doi.org/10.1145/800186.810616 ).
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .true. . 
+		    WARNING: This method is REALLY simple and provides only a very rough estimate of the band structure. }
+                opt -val 'idw-sphere' {
+                    inverse distance weighting interpolation inside a sphere of given radius. 
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .true. . 
+		    WARNING: This method is REALLY simple and provides only a very rough estimate of the band structure. }
+	    }
+	}
+
+	var miller_max -type INTEGER { 
+            default { 6 }
+	    info { The maximum Miller index used to automatically generate the set of symmetry inequivalent Star vectors 
+		   (only for @ref method == 'fourier-diff' or 'fourier') } 
+	}
+
+	var check_periodicity -type LOGICAL { 
+            default { .FALSE. }
+	    info { If .TRUE. a (time consuming) step is performed, to check whether all the Star functions have 
+		   the correct lattice periodicity (only for @ref method == 'fourier-diff' or 'fourier') .
+
+		   For automatically generated Star functions this should never occur by construction, and the program 
+		   will stop and exit in case one Star function with wrong periodicity is found (useful for 
+		   debugging and program sanity check).
+
+		   If additional user-defined Star vectors are specified (see optional card @ref USER_STARS), 
+	           the program will print a WARNING in case one Star function with wrong periodicity is found. } 
+	}
+
+	var p_metric -type INTEGER { 
+            default { 2 }
+	    info { The exponent of the distance in the IDW method ( only for @ref method == 'idw' or 'idw-sphere') } 
+	}
+
+	var scale_sphere -type INTEGER { 
+            default { 4.0d0 }
+	    info { The search radius for @ref method == 'idw-sphere', is Rmin * scale_sphere, where Rmin is the 
+		   minimum distance found between the uniform grid of k-points. 
+
+		   If scale_sphere is too small, some k-points of the path might not see enough uniform grid points 
+		   to average energies, whereas for large values the method becomes equal to @ref method == 'idw'. } 
+	}
+
+    }
+
+    card ROUGHNESS { 
+    	label { Optional card, used only if @ref method == 'fourier-diff', or 'fourier', ignored otherwise!  }
+ 	message { This card can be used to change the roughness functional that is minimized 
+                  in the @ref method == 'fourier-diff' and 'fourier'.
+                  In case @ref method == 'fourier-diff', or 'fourier' and card ROUGHNESS is not specified the default 
+                  roughness will be used with @ref RoughN == 1 and @ref RoughC(1) == 1.0d0.
+        }
+        syntax {
+	        line { var RoughN -type INTEGER { 
+                        default { 1 }
+			info {Number of terms included in the roughness functional } } 
+		     }
+		table RoughC { 
+			cols -start 1 -end RoughN {
+				rowgroup -type REAL {
+				default { 1.0d0 } 
+				info {Coefficients for the terms included in the roughness functional. 
+			        They can be explicitely given or 'automatic' can be specified instead of numbers 
+				to use default coefficients. } 
+				row RoughC
+				}
+			}
+		}
+    	}
+    }
+
+    card USER_STARS {
+    	label { Optional card, used only if @ref method == 'fourier-diff', or 'fourier', ignored otherwise ! }
+        syntax {
+            line { 
+                var NUser -type INTEGER {
+                    default { 0 }
+                    info {Number of supplied additional Star vectors.}
+                }
+            }
+            table kpoints {
+                rows -start 1 -end NUser {
+                    colgroup -type REAL {
+                        col vec_x 
+                        col vec_y
+                        col vec_z
+                        info {
+			    Additional user-defined Star vectors that are added to the 
+			    automatically generated ones to augment the Star functions 
+			    basis set.
+			    You might also want to check @ref check_periodicity when providing
+			    user-defined Star vectors.
+
+                        }
+                    }
+                }
+            }
+        }               
+        
+        
+    }
+
+    card K_POINTS {
+        flag kpoint_type -use optional {
+            enum { tpiba_b }
+            default { none }
+            options {
+                info {
+                    All K_POINTS options other than tpiba_b have been disabled in the interpolation.
+                }
+                opt -val tpiba_b {
+                    Used for band-structure plots.
+                    See Doc/brillouin_zones.pdf for usage of BZ labels;
+                    otherwise, k-points are in units of  2 pi/a. 
+                    nks points specify nks-1 lines in reciprocal space.
+                    Every couple of points identifies the initial and
+                    final point of a line. pw.x generates N intermediate
+                    points of the line where N is the weight of the first point.
+                }
+
+            }
+        }
+
+        choose {
+            when -test "tpiba_b" {
+                syntax -flag { tpiba_b } {
+                    line { 
+                        var nks -type INTEGER {
+                            info {Number of supplied special k-points.}
+                        }
+                    }
+                    table kpoints {
+                        rows -start 1 -end nks {
+                            colgroup -type REAL {
+                                col xk_x 
+                                col xk_y
+                                col xk_z
+                                col wk
+                                info {
+                                    Special k-points (xk_x/y/z) in the irreducible Brillouin Zone
+                                    (IBZ) of the lattice (with all symmetries) and weights (wk)
+                                    See the literature for lists of special points and
+                                    the corresponding weights.
+                                    
+                                    If the symmetry is lower than the full symmetry
+                                    of the lattice, additional points with appropriate
+                                    weights are generated. Notice that such procedure
+                                    assumes that ONLY k-points in the IBZ are provided in input
+
+                                }
+                            }
+                        }
+                    }
+                }               
+            }
+        }
+    }
+
+}

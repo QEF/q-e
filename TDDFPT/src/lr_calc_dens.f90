@@ -60,6 +60,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE lr_exx_kernel,          ONLY : lr_exx_kernel_int, revc_int,&
                                      & revc_int_c
   USE constants,              ONLY : eps12
+  USE qpoint,                ONLY : nksq
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -75,6 +76,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   INTEGER       :: ir, ik, ibnd, jbnd, ig, ijkb0, np, na
   INTEGER       :: ijh,ih,jh,ikb,jkb,is
   INTEGER       :: i, j, k, l
+  INTEGER       :: v_siz, nnr_siz, irho
   REAL(kind=dp) :: w1, w2, scal, rho_sum
   ! These are temporary buffers for the response 
   REAL(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:), rho_sum_resp_y(:),&
@@ -86,13 +88,23 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      WRITE(stdout,'("<lr_calc_dens>")')
   ENDIF
   !
-  CALL start_clock('lr_calc_dens')
+  CALL start_clock_gpu('lr_calc_dens')
   !
   ALLOCATE( psic(dfftp%nnr) )
+
+  v_siz = dfftp%nnr
+  nnr_siz = dffts%nnr
+  !
+  !$acc data create(psic(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag)) 
+  !
+  !$acc kernels
   psic(:) = (0.0d0, 0.0d0)
+  !$acc end kernels
   !
   IF (gamma_only) THEN
+     !$acc kernels     
      rho_1(:,:) = 0.0d0
+     !$acc end kernels
   ELSE
      rho_1c(:,:) = (0.0d0, 0.0d0)
   ENDIF
@@ -105,10 +117,17 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL fft_interpolate(dffts, rho_1(:,1), dfftp, rho_1(:,1))
+     IF ( doublegrid ) THEN
+        print *, 'doublegrid', doublegrid
+        !$acc host_data use_device(rho_1(:,1))     
+        CALL fft_interpolate(dffts, rho_1(:,1), dfftp, rho_1(:,1))
+        !$acc end host_data
+     ENDIF
      !
 #if defined(__MPI)
+     !$acc host_data use_device(rho_1)
      CALL mp_sum(rho_1, inter_bgrp_comm)
+     !$acc end host_data
 #endif
      !
   ELSE
@@ -162,11 +181,11 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   ! The psic workspace can present a memory bottleneck
   !
-  DEALLOCATE ( psic )
-  !
 #if defined(__MPI)
   IF(gamma_only) THEN
+     !$acc host_data use_device(rho_1)
      CALL mp_sum(rho_1, inter_pool_comm)
+     !$acc end host_data
   ELSE
      CALL mp_sum(rho_1c, inter_pool_comm)
   ENDIF
@@ -179,7 +198,11 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      DO is = 1, nspin_mag
         !
         rho_sum = 0.0d0
-        rho_sum = SUM(rho_1(:,is))
+!        rho_sum = SUM(rho_1(:,is))
+        !$acc parallel loop private(rho_sum) copy(rho_sum)
+        do irho = 1, v_siz
+           rho_sum = rho_sum + rho_1(irho,is)
+        enddo   
         !
 #if defined(__MPI)
         CALL mp_sum(rho_sum, intra_bgrp_comm )
@@ -212,6 +235,10 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      ENDDO
      !
   ENDIF
+  !
+  !$acc end data
+  !
+  DEALLOCATE ( psic )
   !
   IF (charge_response == 2 .AND. LR_iteration /=0) THEN
      !
@@ -335,7 +362,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
     !
  ENDIF
  !
- CALL stop_clock('lr_calc_dens')
+ CALL stop_clock_gpu('lr_calc_dens')
  !
  RETURN
  !
@@ -360,15 +387,18 @@ CONTAINS
 
     IMPLICIT NONE
     !
-    INTEGER :: ibnd_start_gamma, ibnd_end_gamma
+    INTEGER :: ibnd_start_gamma, ibnd_end_gamma, ibnd
     INTEGER :: v_siz, incr, ir3, ioff, ioff_tg, nxyp, idx
     REAL(DP), ALLOCATABLE :: tg_rho(:)
+    INTEGER :: nnr_siz, pnnr_siz, ir
     !
     ibnd_start_gamma = ibnd_start
     IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start + 1
     ibnd_end_gamma = MAX(ibnd_end, ibnd_start_gamma)
     !
     incr = 2
+    nnr_siz = dffts%nnr
+    pnnr_siz = dfftp%nnr
     !
     IF ( dffts%has_task_groups ) THEN
        !
@@ -446,9 +476,10 @@ CONTAINS
           ! in no way the final response charge density.  
           ! The loop is over real space points.
           !
-          DO ir = 1, dffts%nnr
+          !$acc parallel loop
+          DO ir = 1, nnr_siz
              rho_1(ir,1) = rho_1(ir,1) &
-                  + 2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
+                  + 2.0d0*(w1*dble(revc0(ir,ibnd,1))*dble(psic(ir))&
                   +       w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
           ENDDO
           !

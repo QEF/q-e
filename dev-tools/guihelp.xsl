@@ -42,8 +42,10 @@
     <xsl:if test="boolean(ancestor::card/@nameless) = false()">
       help <xsl:value-of select="@name"/>_flags {
       <h2>Description of <xsl:value-of select="@name"/> card's flags</h2>
+
+      <xsl:apply-templates select="flag/info | flag/options"/>
       
-      <pre><xsl:value-of select="flag/info"/></pre>
+      <!--<pre><xsl:value-of select="flag/info"/></pre>-->
       }
     </xsl:if>
     

@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2022 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 #####
 #
 # SYNOPSIS
@@ -48,31 +48,38 @@ AC_ARG_WITH([cuda-runtime],
    [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8+, Volta: 9+) @<:@default=10.1@:>@])],
    [],
    [with_cuda_runtime=10.1])
-
-AC_ARG_ENABLE([openacc],
-   [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=yes@:>@])],
+   
+AC_ARG_WITH([cuda-mpi],
+   [AS_HELP_STRING([--with-cuda-mpi=VAL],[CUDA-aware MPI (yes|no) @<:@default=no@:>@])],
    [],
-   [enable_openacc=yes])
+   [with_cuda_mpi=no])
 
-if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
-   # NVHPC v. 20.7 and later
-   mMcuda="-cuda -gpu"
-   mMcudalib="-cudalib"
-else
-   # NVHPC previous to v. 20.7
-   mMcuda="-Mcuda"
-   mMcudalib="-Mcudalib"
-fi
+
+AC_ARG_ENABLE([nvtx],
+   [AS_HELP_STRING([--enable-nvtx],[Enable compilation for NVTX @<:@default=no@:>@])],
+   []
+   [enable_nvtx=no])
+
 
 if test "x$with_cuda" != "xno"
 then
+   # NVHPC v.< 21.7 too old (FIXME: still allowing 21.2 for CI)
+   if (test "$f90_major_version" -lt 21 ) || (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -lt 2 ) ; then
+      AC_MSG_WARN([Compiler version too old, use at least 21.7])
+   fi
+   if (test "$f90_major_version" -lt 21 ) ; then
+      AC_MSG_ERROR([Compiler version too old, use at least 21.7])
+   fi
+   # NVHPC v. 21.11-22.1 buggy
+   if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
+      (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -le 1 ) ; then
+      AC_MSG_ERROR([Buggy compiler version, upgrade to 22.3 or downgrade to 21.9])
+   fi
+
    # -----------------------------------------
    # Check compiler
    # -----------------------------------------
-   AC_LANG_PUSH([Fortran])
-   AC_FC_SRCEXT([f90])
-   AX_CHECK_COMPILE_FLAG([$mMcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
-   AC_LANG_POP([Fortran])
+   AX_CHECK_COMPILE_FLAG([-cuda -gpu=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
    if test "x$have_cudafor" != "xyes"
    then
       AC_MSG_ERROR([You do not have the cudafor module. Are you using NVHPC compiler?])
@@ -81,40 +88,41 @@ then
    # Headers and libraries
    # -----------------------------------------
    try_dflags="$try_dflags -D__CUDA"
+   if test "$use_parallel" -eq 1 && test "$with_cuda_mpi" == "yes"; then 
+      try_dflags="$try_dflags -D__GPU_MPI"
+   fi
    cuda_extlibs="devxlib"
-   cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_libs="-cudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
    
-   cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_fflags="-cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
+   #
+   if test "$enable_nvtx" == "yes"; then
+      try_dflags="$try_dflags -D__PROFILE_NVTX"
+      cuda_fflags="$cuda_fflags -InvToolsExt.h -lnvToolsExt"
+   fi
    # -----------------------------------------
    # Fortran flags
    # -----------------------------------------   
    runtime_major_version=`echo $with_cuda_runtime | cut -d. -f1`
    runtime_minor_version=`echo $with_cuda_runtime | cut -d. -f2`
    if test "$runtime_major_version" -lt 10 || 
-         ( "$runtime_major_version" -eq 10 && "$runtime_minor_version" -lt 1 )
+     (test "$runtime_major_version" -eq 10 && test "$runtime_minor_version" -lt 1 )
    then
-       # CUDA toolkit v < 10.1: new solver not available
-       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
-       cuda_extlibs="$cuda_extlibs eigensolver"
-       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-       AC_MSG_WARN([Using legacy custom solver.])
-   else
-       try_dflags="$try_dflags -D__USE_CUSOLVER"
+       # CUDA toolkit v < 10.1: cusolver not available
+       AC_MSG_ERROR([Unsupported CUDA Toolkit, too old])
    fi
    # -----------------------------------------
-   # C flags - not sure whether they are suitable for old version as well
+   # C flags 
    # -----------------------------------------   
-   cuda_cflags=" -I$with_cuda/include -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
-   ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_cflags=" -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   ldflags="$ldflags -cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"
-   if test "$enable_openacc" == "yes"; then
-      ldflags="$ldflags -acc"
-      cuda_fflags="$cuda_fflags -acc"
-      cuda_cflags="$cuda_cflags -acc"
-   fi
+   ldflags="$ldflags -acc"
+   cuda_fflags="$cuda_fflags -acc"
+   cuda_cflags="$cuda_cflags -acc"
 
 fi
 

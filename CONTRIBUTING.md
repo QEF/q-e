@@ -1,7 +1,7 @@
 # How to contribute
 You can contribute to this project, even as an ordinary user, by:
 
-1. subscribing and partecipating to the [users' mailing list](https://lists.quantum-espresso.org/mailman/listinfo/users), answering other people's questions
+1. subscribing and participating in the [users' mailing list](https://lists.quantum-espresso.org/mailman/listinfo/users), answering other people's questions
 and doubts;
 
 2. suggesting improvements and reporting bugs, either to the [developers mailing list](https://lists.quantum-espresso.org/mailman/listinfo/developers),

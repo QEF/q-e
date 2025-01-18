@@ -98,7 +98,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE lsda_mod,         ONLY : nspin
   USE modes,            ONLY : nirr, npert, npertx
   USE units_ph,         ONLY : lrdrho
-  USE io_global,        ONLY : stdout , ionode, ionode_id
+  USE io_global,        ONLY : stdout , ionode
   use io_files,         ONLY : diropn, prefix
   USE constants,        ONLY : tpi
   USE dfile_autoname,   ONLY : dfile_name
@@ -171,10 +171,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   ! the next line is not needed in phonon, but may be needed if this code is reused
   descr%dir = trimcheck(descr%dir)
   !
-  IF (ionode) INQUIRE(file=trimcheck(descr%dir)//'.', exist = exst)
-  CALL mp_bcast( exst, ionode_id, intra_image_comm )
-  !if(.not.exst) CALL create_directory(descr%dir)
-  if(.not.exst) is = f_mkdir_safe(descr%dir)
+  is = f_mkdir_safe(descr%dir)
 
   !search_sym_input = search_sym
   !search_sym = .false.

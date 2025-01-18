@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag) 
+SUBROUTINE dnsq_scf (npe, lmetq0)
   !-----------------------------------------------------------------------
   !! DFPT+U: This routine calculates, for each SCF iteration, 
   !! the SCF variation of the occupation matrix ns, for npe perturbations.
@@ -27,26 +27,27 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   USE kinds,         ONLY : DP
   USE io_files,      ONLY : nwordwfcU
   USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
-  USE ions_base,     ONLY : nat, ityp, ntyp => nsp
+  USE ions_base,     ONLY : nat, ityp
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : proj1, proj2, dnsorth
-  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf
-  USE klist,         ONLY : xk, wk, degauss, ngauss, ngk
-  USE wvfct,         ONLY : npwx, wg, nbnd, et 
+  USE ldaU_ph,       ONLY : proj1, proj2
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf, lr_has_dnsorth, lr_dnsorth
+  USE klist,         ONLY : wk, degauss, ngauss, ngk, degauss_cond
+  USE wvfct,         ONLY : npwx, nbnd, et, nbnd_cond
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE control_lr,    ONLY : lgamma, nbnd_occ
   USE units_lr,      ONLY : iuatswfc
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions, ONLY : evc
-  USE ener,          ONLY : ef
+  USE ener,          ONLY : ef, ef_cond
   USE uspp,          ONLY : okvan 
-  USE ldaU_ph,       ONLY : dnsscf_all_modes
   USE mp_pools,      ONLY : inter_pool_comm 
   USE mp_bands,      ONLY : intra_bgrp_comm   
   USE mp,            ONLY : mp_sum
   USE io_global,     ONLY : stdout
   USE buffers,       ONLY : get_buffer
   USE efermi_shift,  ONLY : def
+  USE lr_two_chem,   ONLY : def_val,def_cond
+  USE two_chem,      ONLY : twochem
   USE control_flags, ONLY : iverbosity
   !
   IMPLICIT NONE
@@ -55,17 +56,10 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   !! the number of perturbations
   LOGICAL,  INTENT(IN) :: lmetq0
   !! TRUE if \(xq=(0,0,0)\) in a metal
-  LOGICAL,  INTENT(IN) :: lflag  
-  !! TRUE for phonon calculation, FALSE for electric field calculation
-  INTEGER , INTENT(IN) :: imode0
-  !! the position of the modes
-  INTEGER , INTENT(IN) :: irr
-  !! the irreducible representation
   !
   ! ... local variables
   !
-  INTEGER  :: i, j, k, icar, nt, na, l, ina, ih, n,               &
-              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, is, &
+  INTEGER  :: nt, ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, is, &
               ipert, nrec, ldim, npw, npwq, ik , ikk, ikq
   COMPLEX(DP), ALLOCATABLE :: dpsi(:,:)
   REAL(DP) :: weight, wdelta, w1
@@ -107,7 +101,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
         nrec = (ipert - 1) * nksq + ik
         !
         ! At each SCF iteration for each ik and ipert read dpsi on iunit iudwf
-        ! iudwf contains data for the actual irreducible representation irr.
+        ! iudwf contains data for the actual perturbation ipert.
         !
         CALL get_buffer (dpsi, lrdwf, iudwf, nrec)
         !
@@ -176,9 +170,25 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
                           weight = wk(ikk)  
                           w1 = weight * wdelta   
                           !
-                          dnsscf(m1,m2,current_spin,nah,ipert) = &
+                          IF (twochem) THEN
+                           !two chem case, valence and condcution must be treated separately for the two fermi shifts
+                             IF (ibnd.le.nbnd-nbnd_cond) then
+                                  dnsscf(m1,m2,current_spin,nah,ipert) = &
+                                  dnsscf(m1,m2,current_spin,nah,ipert) + w1 * def_val(ipert) * &
+                                         CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                             ELSE
+                                        wdelta = w0gauss ( (ef_cond-et(ibnd,ikk))/degauss_cond, ngauss) / degauss_cond
+                                        dnsscf(m1,m2,current_spin,nah,ipert) = &
+                                        dnsscf(m1,m2,current_spin,nah,ipert) + w1 * def_cond(ipert) * &
+                                         CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                             !  
+                             END IF
+                          !
+                          ELSE
+                                          dnsscf(m1,m2,current_spin,nah,ipert) = &
                                dnsscf(m1,m2,current_spin,nah,ipert) + w1 * def(ipert) * &
                                          CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                          END IF
                           !
                        ENDIF
                        !
@@ -214,43 +224,15 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   ! USPP case: add to the dnsscf calculated with the P_c^+dpsi 
   ! the non-scf part coming from the orthogonality contraints. 
   ! The orthogonality correction comes only for an atomic displacement. 
-  ! In the case of the electric field calculation (lflag=.false.), 
-  ! this contribution is zero.
+  ! In the case of the electric field calculation, lr_has_dnsorth is false.
   !
-  IF (okvan.AND.lflag) THEN
-     DO ipert = 1, npe
-        DO nah = 1, nat
-           nt = ityp(nah)
-           IF (is_hubbard(nt)) THEN
-              DO is = 1, nspin
-                 DO m1 = 1, 2*Hubbard_l(nt) + 1
-                    DO m2 = 1, 2*Hubbard_l(nt) + 1
-                       !
-                       dnsscf(m1,m2,is,nah,ipert) = dnsscf(m1,m2,is,nah,ipert) &
-                                           + dnsorth(m1,m2,is,nah,imode0+ipert)  
-                       !
-                    ENDDO
-                 ENDDO
-              ENDDO
-           ENDIF
-        ENDDO
-     ENDDO
+  IF (okvan .AND. lr_has_dnsorth) THEN
+     dnsscf = dnsscf + lr_dnsorth
   ENDIF
   !
   ! Symmetrize dnsscf
   !
-  IF (.NOT.lflag) THEN
-     !
-     ! Symmetrization in the case of the electric field calculation
-     !
-     CALL syme_dns (ldim, npe, dnsscf) 
-     !  
-  ELSE
-     ! Symmetrization in the case of the phonon calculation
-     !
-     CALL sym_dns (ldim, npe, irr, dnsscf)  
-     !
-  ENDIF
+  CALL sym_dns(ldim, npe, dnsscf)
   !
   ! Write symmetrized dnsscf in the pattern basis 
   ! to the standard output
@@ -273,25 +255,6 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
      ENDDO     
   ENDIF
   !
-  ! Store the result in the full matrix dnsscf_all_modes
-  ! (i.e for all modes and not only for the npe related to irr)
-  !
-  DO ipert = 1, npe
-     DO nah = 1, nat
-        nt = ityp(nah)
-        IF (is_hubbard(nt)) THEN
-           DO is = 1, nspin
-              DO m1 = 1, 2*Hubbard_l(nt)+1
-                 DO m2 = 1, 2*Hubbard_l(nt)+1
-                    dnsscf_all_modes(m1,m2,is,nah,imode0+ipert) = &
-                                     dnsscf(m1,m2,is,nah,ipert)
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDIF
-     ENDDO
-  ENDDO
-  !
   DEALLOCATE (proj1)
   DEALLOCATE (proj2)
   DEALLOCATE (dpsi)
@@ -301,4 +264,43 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   RETURN
   ! 
 END SUBROUTINE dnsq_scf
+!----------------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+SUBROUTINE dnsq_store(npe, imode0)
+!----------------------------------------------------------------------------
+  !! Store the computed dnsscf in the full matrix dnsscf_all_modes
+  !! (i.e for all modes and not only for the npe irreducible representations)
+  !
+  USE ions_base,     ONLY : nat, ityp
+  USE lsda_mod,      ONLY : nspin
+  USE ldaU,          ONLY : is_hubbard, Hubbard_l
+  USE ldaU_ph,       ONLY : dnsscf_all_modes
+  USE ldaU_lr,       ONLY : dnsscf
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: npe
+  !! the number of perturbations
+  INTEGER , INTENT(IN) :: imode0
+  !! the position of the modes
+  !
+  INTEGER :: ipert, nah, nt, is, m1, m2
+  !
+  DO ipert = 1, npe
+   DO nah = 1, nat
+      nt = ityp(nah)
+      IF (is_hubbard(nt)) THEN
+         DO is = 1, nspin
+            DO m1 = 1, 2*Hubbard_l(nt)+1
+               DO m2 = 1, 2*Hubbard_l(nt)+1
+                  dnsscf_all_modes(m1,m2,is,nah,imode0+ipert) = &
+                                   dnsscf(m1,m2,is,nah,ipert)
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDIF
+   ENDDO
+ENDDO
+END SUBROUTINE dnsq_store
 !----------------------------------------------------------------------------

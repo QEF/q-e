@@ -1,6 +1,7 @@
 !
 ! Copyright (C) 2005 Andrea Ferretti
 !      Modified 2016 Guido Fratesi
+!      Modified 2024 Paolo Giannozzi
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,12 +13,12 @@ PROGRAM sumpdos
   !
   ! AUTHOR: Andrea Ferretti
   ! edited: Guido Fratesi (to sum K-resolved DOS files)
+  ! edited: Paolo Giannozzi (to avoid opening all files at once)
   !
   ! this program reads and sum pdos from different
   ! files (which are related to different atoms)
   !
-  ! file names are read from stdin
-  ! USAGE: sumpdos <file1> ... <fileN>
+  ! USAGE: see "sumpdos -h"
   !
   INTEGER             :: ngrid              ! dimension of the energy grid
   INTEGER             :: nfile              ! number of files to sum
@@ -29,42 +30,46 @@ PROGRAM sumpdos
   CHARACTER(10)       :: cdum, str1, str2, str3
 
   LOGICAL             :: exist, kresolveddos
-  REAL                :: efermi = 0.0d0       ! translate the input grid
-  REAL, ALLOCATABLE   :: pdos(:,:,:)
+  REAL                :: efermi = 0.0       ! translate the input grid
+  REAL, ALLOCATABLE   :: pdos(:,:)
   REAL, ALLOCATABLE   :: egrid(:)
-  REAL, ALLOCATABLE   :: mysum(:,:)
+  REAL, ALLOCATABLE   :: mysum(:,:,:)
 
-  INTEGER :: ios, ierr, iarg, ie, isp, ifile, i
+  INTEGER :: ios, ierr, nargs, iarg, ie, isp, ifile, i
   INTEGER :: ik, nk, iun
-
-  !**************************************************************
-  ! User should supply input values here
-  !
-  efermi = 0.0d0
-
-  !**************************************************************
 
   !
   ! get the number of arguments (i.e. the number of files)
   !
-  nfile = command_argument_count ()
-  IF ( nfile == 0 ) THEN
+  nargs = command_argument_count ()
+  IF ( nargs == 0 ) THEN
      WRITE(0,"( 'No file to sum' )")
      STOP
   ENDIF
-
-  CALL get_command_argument ( 1, str1 )
+  !
+  ALLOCATE( file(nargs), STAT=ierr )
+  IF (ierr/=0) CALL errore('sumpdos','allocating FILE',abs(ierr))
+  iarg = 0
+  nfile= 0
+  filein = ' '
+  !
+20 CONTINUE ! loop on command-line arguments
+  !
+  iarg = iarg +1
+  CALL get_command_argument ( iarg, str1 )
   !
   SELECT CASE ( trim(str1) )
+     !
   CASE ( "-h" )
      !
      ! write the manual
      !
-     WRITE(0,"(/,'USAGE: sumpdos [-h] [-f <filein>] [<file1> ... <fileN>]', /, &
+     WRITE(0,"(/,'USAGE: sumpdos [-h] [-f <filein>] [-Ef <value>] [<file1> ... <fileN>]', /, &
           &'  Sum the pdos from the file specified in input and write the sum ', /, &
           &'  to stdout', /, &
           &'     -h           : write this manual',/, &
-          &'     -f <filein>  : takes the list of pdos files from <filein> ', /, &
+          &'     -Ef <value>  : Fermi energy value (eV)',/, &
+          &'     -f <filein>  : read the list of pdos files from <filein>', /, &
           &'                    (one per line) instead of command line',/, &
           &'     <fileM>      : the M-th pdos file', &
           & / )")
@@ -74,14 +79,37 @@ PROGRAM sumpdos
      !
      ! read file names from file
      !
-     CALL get_command_argument ( 2, filein )
+     iarg = iarg + 1
+     CALL get_command_argument ( iarg, filein )
      IF ( len_trim(filein) == 0 ) CALL errore('sumpdos','provide filein name',2)
-
+     !
+  CASE ( "-EF", "-Ef", "-ef" )
+     !
+     ! Read the Fermi energy from here
+     !
+     iarg = iarg + 1
+     CALL get_command_argument ( iarg, str1 )
+     READ (str1,*, IOSTAT=ios ) efermi
+     IF (ios /=0 ) CALL errore('sumpdos','wrong EFermi read from command line',iarg+1)
+     !
+  CASE DEFAULT
+     !
+     ! get the name of the file
+     !
+     nfile = nfile +1
+     CALL get_command_argument ( iarg, file(nfile) )
+     !
+  END SELECT
+  !
+  IF ( iarg < nargs ) GO TO 20 ! continue reading command-line arguments
+  !
+  IF ( trim(filein) /= '') THEN
+     IF ( nfile > 0 ) CALL errore ('sumpdos', &
+       'file names found both in command line and in file '//trim(filein),nfile)
      INQUIRE( FILE=trim(filein), EXIST=exist )
      IF (.not. exist) CALL errore('sumpdos','file '//trim(filein)//' does not exist',3)
      OPEN( 10, FILE=trim(filein), IOSTAT=ios )
      IF (ios/=0) CALL errore('sumpdos','opening '//trim(filein),abs(ios))
-
      !
      ! get the number of non-empty lines in the file
      ! (which is assumed to be the number of files to sum)
@@ -95,10 +123,10 @@ PROGRAM sumpdos
         IF ( ios ==0 .and. len_trim(cdum)==0 ) nfile = nfile -1
      ENDDO
      nfile = nfile -1
-
      !
      IF (nfile ==0 ) CALL errore('sumpdos','no file to sum in '//trim(filein),4)
      !
+     IF ( ALLOCATED( file ) ) DEALLOCATE (file)
      ALLOCATE( file(nfile), STAT=ierr )
      IF (ierr/=0) CALL errore('sumpdos','allocating FILE',abs(ierr))
      !
@@ -111,20 +139,9 @@ PROGRAM sumpdos
            IF (ios /=0 ) CALL errore('sumpdos','reading from '//trim(filein),i)
         ENDDO
      ENDDO
-
-  CASE DEFAULT
-
+     CLOSE (unit=10)
      !
-     ! get the names of the files
-     !
-     ALLOCATE( file(nfile), STAT=ierr )
-     IF (ierr/=0) CALL errore('sumpdos','allocating FILE',abs(ierr))
-     DO iarg = 1, nfile
-        CALL get_command_argument ( iarg, file(iarg) )
-     ENDDO
-
-  END SELECT
-
+  END IF
   !
   ! open the first file and get data about spin
   ! and grid dimensions
@@ -194,25 +211,25 @@ PROGRAM sumpdos
   END IF
   !
   CLOSE(10)
-
   !
   ! allocations
   !
-  ALLOCATE( pdos( ngrid, nspin, nfile), STAT=ierr )
+  ALLOCATE( pdos( ngrid, nspin), STAT=ierr )
   IF (ierr/=0) CALL errore("sumpdos", "allocating pdos", ierr)
-  ALLOCATE( mysum( ngrid, nspin), STAT=ierr )
+  ALLOCATE( mysum( ngrid, nspin, nk), STAT=ierr )
   IF (ierr/=0) CALL errore("sumpdos", "allocating mysum", ierr)
+  mysum(:,:,:) = 0.0
   ALLOCATE( egrid( ngrid) )
   IF (ierr/=0) CALL errore("sumpdos", "allocating egrid", ierr)
-
 
   !
   ! get data
   !
   WRITE(0,"('Reading the following ',i5,' files: ')") nfile
   !
+  iun=11
+  !
   DO ifile = 1, nfile
-     iun=10+ifile
      !
      INQUIRE( FILE=trim(file(ifile)), EXIST=exist )
      IF (.not. exist) &
@@ -221,13 +238,7 @@ PROGRAM sumpdos
      WRITE(0,"(2x,'Reading file: ',a)") trim(file(ifile))
      OPEN(iun, FILE=trim(file(ifile)), IOSTAT=ios)
      IF (ios/=0) CALL errore("sumpdos", "error opening "//trim(file(ifile)), ios )
-     !
-  END DO
-  !
-  DO ik = 1, nk
-     DO ifile = 1, nfile
-        iun=10+ifile
-        !
+     DO ik = 1, nk
         READ(iun,*, IOSTAT=ios)
         IF (ios/=0) &
              CALL errore("sumpdos", "reading first line in "//trim(file(ifile)), ios )
@@ -236,26 +247,33 @@ PROGRAM sumpdos
         !
         DO ie = 1, ngrid
            IF (kresolveddos) THEN
-              READ(iun, *, IOSTAT=ios ) cdum, egrid(ie), pdos(ie, 1:nspin, ifile)
+              READ(iun, *, IOSTAT=ios ) cdum, egrid(ie), pdos(ie, 1:nspin)
            ELSE
-              READ(iun, *, IOSTAT=ios ) egrid(ie), pdos(ie, 1:nspin, ifile)
+              READ(iun, *, IOSTAT=ios ) egrid(ie), pdos(ie, 1:nspin)
            END IF
            IF (ios/=0) &
-                CALL errore("sumpdos", "reading first line in "//trim(file(ifile)), ie )
+                CALL errore("sumpdos", "reading "//trim(file(ifile)), ie )
         ENDDO
-     ENDDO
-
+        !
+        ! perform the sum
+        !
+        mysum(:,:,ik) = mysum(:,:,ik) + pdos(:,:)
+        !
+     END DO
      !
-     ! perform the sum and write
+     CLOSE (iun)
      !
+  ENDDO
+  !
+  ! now write
+  !
+  DO ik = 1, nk
      IF (kresolveddos) THEN
         IF ( ik == 1 ) THEN
            IF ( nspin == 1 ) THEN
               WRITE(6,"('# ik   E (eV)  pdos(E) ')")
            ELSEIF ( nspin == 2) THEN
               WRITE(6,"('# ik   E (eV)  pdosup(E)  pdosdw(E) ')")
-           ELSE
-              CALL errore("sumpdos", "really sure NSPIN /= 1 or 2 ???", 3 )
            ENDIF
         ELSE
            WRITE(6,*)
@@ -265,25 +283,18 @@ PROGRAM sumpdos
            WRITE(6,"('# E (eV) pdos(E) ')")
         ELSEIF ( nspin == 2) THEN
            WRITE(6,"('# E (eV) pdosup(E)  pdosdw(E) ')")
-        ELSE
-           CALL errore("sumpdos", "really sure NSPIN /= 1 or 2 ???", 3 )
         ENDIF
      END IF
-
-     mysum = 0.0d0
+  
      DO ie=1,ngrid
-        DO isp=1,nspin
-           mysum(ie,isp) = sum( pdos(ie,isp,:) )
-        ENDDO
         IF (kresolveddos) THEN
-           WRITE(6,"(i5,' ',f7.3,2e11.3)") ik, egrid(ie) - efermi, mysum(ie,1:nspin)
+           WRITE(6,"(i5,' ',f7.3,2e11.3)") ik, egrid(ie) - efermi, mysum(ie,1:nspin,1)
         ELSE
-           WRITE(6,"(f7.3,2e11.3)") egrid(ie) - efermi, mysum(ie,1:nspin)
+           WRITE(6,"(f7.3,2e11.3)") egrid(ie) - efermi, mysum(ie,1:nspin,ik)
         END IF
      ENDDO
-
+     !
   END DO
-
   !
   ! clean
   !
@@ -295,11 +306,6 @@ PROGRAM sumpdos
   IF (ierr/=0) CALL errore("sumpdos", "deallocating mysum", ierr)
   DEALLOCATE( egrid, STAT=ierr )
   IF (ierr/=0) CALL errore("sumpdos", "deallocating egrid", ierr)
-  DO ifile = 1, nfile
-     iun=10+ifile
-     CLOSE (iun)
-  END DO
-
 
 CONTAINS
 

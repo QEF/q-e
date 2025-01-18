@@ -43,7 +43,7 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   USE uspp,       ONLY : nkb, qq_nt, okvan, ofsbeta
   USE ldaU,       ONLY : nwfcU
   USE wvfct,      ONLY : npwx
-  USE mp_pools,   ONLY : intra_pool_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum 
   USE klist,      ONLY : ngk
   USE io_global,  ONLY : stdout
@@ -106,9 +106,9 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
            sc2(ih) = ZDOTC (npw, dvkb_(:,ih+ofsbeta(na)), 1, wfcatomk_(:,ihubst), 1)
         ENDDO
         !
-        CALL mp_sum(sc1, intra_pool_comm)
-        CALL mp_sum(sc2, intra_pool_comm)
-        ! 
+        CALL mp_sum(sc1, intra_bgrp_comm)
+        CALL mp_sum(sc2, intra_bgrp_comm)
+        !
      ENDIF
      ! 
      ! Add to Dq the term |S_{k+q} d_^(na,icart)\phi_(k+q,I,m) > * dkroneker Ina
@@ -153,9 +153,9 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
            sc2(ih) = ZDOTC (npwq, dvkbkpq_(:,ih+ofsbeta(na)), 1, wfcatomkpq_(:,ihubst), 1)
         ENDDO
         !
-        CALL mp_sum(sc1, intra_pool_comm)
-        CALL mp_sum(sc2, intra_pool_comm)
-        ! 
+        CALL mp_sum(sc1, intra_bgrp_comm)
+        CALL mp_sum(sc2, intra_bgrp_comm)
+        !
      ENDIF
      !
      ! Add to D-q the term |S_{k} d_^(na,icart)\phi_(k,I,m) > * dkroneker Ina

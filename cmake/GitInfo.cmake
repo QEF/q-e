@@ -40,7 +40,6 @@ else(SED_ERROR MATCHES ".*invalid.*")
     message("   sed supports -E")
 endif(SED_ERROR MATCHES ".*invalid.*")
 
-set(GIT_FORMAT_STRING "%<(50,trunc)%s")
 add_custom_target(gitrev
   COMMAND ${CMAKE_COMMAND} -E echo_append "#define GIT_BRANCH_RAW \"" > ${GITREV_TMP}
   COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD | sed "s/$/\"/" >> ${GITREV_TMP}
@@ -52,7 +51,7 @@ add_custom_target(gitrev
   COMMAND ${GIT_EXECUTABLE} log -1 --format=%ad | sed "s/$/\"/" >> ${GITREV_TMP}
   COMMAND ${CMAKE_COMMAND} -E echo >> ${GITREV_TMP}
   COMMAND ${CMAKE_COMMAND} -E echo_append "#define GIT_COMMIT_SUBJECT_RAW \"" >> ${GITREV_TMP}
-  COMMAND ${GIT_EXECUTABLE} log -1 --format=${GIT_FORMAT_STRING} | sed ${SED_FLAG} "s/\"/\\\\\"/g" | tr -d '\\n' >> ${GITREV_TMP}
+  COMMAND ${GIT_EXECUTABLE} log -1 --format=%s | cut -c 1-50 | sed ${SED_FLAG} "s/\"/\"\\/\\/'\"'\\/\\/\"/g" | tr -d "\\n" >> ${GITREV_TMP}
   COMMAND ${CMAKE_COMMAND} -E echo_append "\"" >> ${GITREV_TMP}
   COMMAND ${CMAKE_COMMAND} -E echo >> ${GITREV_TMP}
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GITREV_TMP} ${GITREV_FILE}

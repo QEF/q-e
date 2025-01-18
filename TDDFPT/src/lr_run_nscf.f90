@@ -15,7 +15,7 @@ SUBROUTINE lr_run_nscf( )
   ! Created by Iurii Timrov (2013)
   !
   USE control_flags,   ONLY : conv_ions, restart
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
+  USE starting_scf,    ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE io_global,       ONLY : stdout
   USE lr_variables,    ONLY : tmp_dir_lr
@@ -25,6 +25,7 @@ SUBROUTINE lr_run_nscf( )
   USE cell_base,       ONLY : at, bg
   USE gvect,           ONLY : gcutm
   USE gvecs,           ONLY : gcutms
+  USE rism_module,     ONLY : lrism, rism_set_restart
   !
   IMPLICIT NONE
   !
@@ -48,6 +49,8 @@ SUBROUTINE lr_run_nscf( )
   startingconfig    = 'input'
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
+  !
+  IF (lrism) CALL rism_set_restart()
   !
   ! Do not confuse the below restart (from control_flags) with
   ! the one from the TDDFPT code (from lr_variables).

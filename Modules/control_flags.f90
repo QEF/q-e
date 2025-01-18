@@ -37,7 +37,8 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub  
+            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub,       &
+            dt_xml_old, symm_by_label, use_spinflip
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -78,6 +79,8 @@ MODULE control_flags
                                      ! and let PW rotuines to know about this
   LOGICAL :: tddfpt        = .FALSE. ! use TDDFPT specific tweaks when using the Environ plugin
   LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
+  LOGICAL :: symm_by_label = .FALSE. ! use atomic labels to detect symmetry 
+  LOGICAL :: use_spinflip = .FALSE.      ! in collinear case add allow rotations + spinflip 
   !
   TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence
@@ -107,6 +110,11 @@ MODULE control_flags
   ! This variable is used whenever a timestep change is requested
   !
   REAL(DP) :: dt_old = -1.0_DP
+  !
+  ! This is necessary to mantain compatibility with the old way of changing the molecular dynamics integration timestep.
+  ! The code needs to check, in case the old method is used, that the input old timestep and the xml old timestep are the same
+  !
+  REAL(DP) :: dt_xml_old = -1.0_DP 
   !
   ! ... Wave function randomization
   !
@@ -174,6 +182,7 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     ngm0,             &! used in mix_rho
+    nexxiter,         &! the maximum number of outer iteration (exx)
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)
@@ -201,10 +210,9 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! index selecting Davidson,  CG, PPCG, ParO or RMM diagonalization
+    isolve,           &! index selecting Davidson,  CG, ParO or RMM diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
     max_cg_iter,      &! maximum number of iterations in a CG call
-    max_ppcg_iter,    &! maximum number of iterations in a PPCG call
     rmm_ndim,         &! max dimension of subspace in RMM-DIIS diagonalization
     gs_nblock          ! blocking size in Gram-Schmidt orthogonalization
   LOGICAL, PUBLIC :: &
@@ -240,6 +248,11 @@ MODULE control_flags
   INTEGER, PUBLIC :: & ! variable controlling the amount of I/O to output
     iverbosity = 0     ! -1 minimal, 0 low, 1 medium, 2 high, 3 debug
   !
+  ! ... self-interaction correction and scissor operator
+  !
+  LOGICAL, PUBLIC :: sic = .FALSE.
+  LOGICAL, PUBLIC :: scissor = .FALSE.
+  !
   ! ... miscellany
   !
   LOGICAL, PUBLIC :: &
@@ -255,9 +268,25 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
                                ! when available
+  !
+  TYPE(offload_kind_acc), PUBLIC :: offload_acc  ! flag to select CUF/OpenACC offload type
+  TYPE(offload_kind_omp), PUBLIC :: offload_omp  ! flag to select OpenMP5 offload type
+  TYPE(offload_kind_cpu), PUBLIC :: offload_cpu  ! flag to select no offload type (CPU execution)
+#if defined(__CUDA)
+  TYPE(offload_kind_acc), PUBLIC :: offload_type ! flag to point the actual currently used offload type 
+#elif defined(__OPENMP_GPU)
+  TYPE(offload_kind_omp), PUBLIC :: offload_type
+#else
+  TYPE(offload_kind_cpu), PUBLIC :: offload_type
+#endif
+  !
   INTEGER, PUBLIC :: &
+#if defined(__CUDA)
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.
+#else
+    many_fft = 1
+#endif
   !
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
@@ -266,13 +295,11 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: iesr = 1
   !
-  ! ... Real-sapce algorithms
+  ! ... Real-space algorithms
   !
   LOGICAL,          PUBLIC :: tqr=.FALSE. ! if true the Q are in real space
-
-  !LOGICAL,          PUBLIC :: real_space=.false. ! beta functions in real space
   !
-  ! ... Augmetation charge and beta smoothing
+  ! ... Augmentation charge and beta smoothing
   !
   LOGICAL,          PUBLIC :: tq_smoothing=.FALSE. ! if true the Q are smoothed 
   LOGICAL,          PUBLIC :: tbeta_smoothing=.FALSE. ! if true the betas are smoothed 
@@ -284,7 +311,6 @@ MODULE control_flags
 
   LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
-  LOGICAL,          PUBLIC :: diagonalize_on_host = .FALSE.
   !
   ! ...  end of module-scope declarations
   !

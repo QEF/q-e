@@ -1,7 +1,6 @@
 # Makefile for EPW
 
 include ../../make.inc
-include make.libs
 
 #
 # use recursive definitions in Makefile to modify the PATH for modules
@@ -11,81 +10,81 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
           $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../wannier90-3.1.0/src/obj \
+          $(MOD_FLAG)../../external/wannier90/src/obj \
           $(MOD_FLAG)../../dft-d3
 
 #
 # The above is in alphabetical order except when order matter during compilation
 #
-##### io_scattering.o \
 
 EPWOBJS = \
-epwcom.o \
-constants_epw.o \
-elph2.o \
-io_var.o \
-low_lvl.o \
-division.o \
-rigid_epw.o \
-io_epw.o \
-io_transport.o \
-io_selfen.o \
+input.o \
+ep_constants.o \
+global_var.o \
+io/io_var.o \
+bloch2wannier.o \
+utilities/low_lvl.o \
+utilities/parallelism.o \
+longrange.o \
+io/io.o \
+io/io_transport.o \
+io/io_selfen.o \
 wigner.o \
-wan2bloch.o \
-cum_mod.o \
-close_epw.o \
-poolgathering.o \
+wannier2bloch.o \
+wannier2bloch_opt.o \
+cumulant.o \
+close.o \
 printing.o \
-kfold.o \
-dynmat_asr.o \
-io_eliashberg.o \
-utilities.o \
-eliashbergcom.o \
+utilities/kfold.o \
+utilities/bzgrid.o \
+io/io_supercond.o \
+utilities/utilities.o \
+supercond_common.o \
 supercond.o \
 supercond_iso.o \
 supercond_aniso.o \
-grid.o \
-bfield.o \
-rotate.o \
+supercond_coul.o \
+utilities/sparse_ir.o \
+io/io_sparse_ir.o \
+stop.o \
+transport_mag.o \
+utilities/symmetry.o \
+transport_legacy.o \
 transport.o \
-transport_iter.o \
-pw2wan2epw.o \
+pw2wan.o \
 wannierization.o \
 indabs.o \
-io_indabs.o\
-bcast_epw_input.o \
-bloch2wan.o \
+io/io_indabs.o\
+utilities/bcast_input.o \
+io/io_ahc.o \
 dvqpsi.o \
-eliashberg.o \
-elphel2_shuffle.o \
-elphon_shuffle.o \
-elphon_shuffle_wrap.o \
+ep_coarse.o \
+ep_coarse_unfolding.o \
+supercond_driver.o \
 selfen.o \
-spectral_func.o \
-ephwann_shuffle.o \
-ephwann_shuffle_mem.o \
-epw_init.o \
-epw_readin.o \
-epw_setup.o \
-epw_summary.o \
-loadumat.o \
-stop_epw.o \
-wannierEPW.o \
-loadbm.o
-EPWOBJS += ephblochkq.o wfc_elec.o test_tools.o
-
+spectral.o \
+wannier.o \
+use_wannier.o \
+init.o \
+readin.o \
+setups.o \
+summaries.o \
+wann_common.o \
+polaron.o \
+qdabs.o\
+wfpt.o \
+utilities/screening.o \
 #default : epw
 
-
 PHOBJS = ../../PHonon/PH/libph.a
-W90LIB = ../../wannier90-3.1.0/libwannier.a
+W90LIB = ../../external/wannier90/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
 
 TLDEPS= pw ph pp
 
-all :   pw ph pp wannier libepw.a epw.x
+all : pw ph pp wannier libepw.a epw.x nscf2supercond.x
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -95,6 +94,12 @@ epw.x : epw.o libepw.a $(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../bin ; ln -fs ../src/epw.x . )
+
+nscf2supercond.x : utilities/nscf2supercond.o $(PWOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	utilities/nscf2supercond.o ../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../bin ; ln -fs ../src/$@ . )
+	- ( cd ../../bin ; ln -fs ../EPW/src/$@ . )
 
 pw :
 	cd ../../ ; make pw
@@ -106,12 +111,12 @@ pp :
 	cd ../../ ; make pp
 
 wannier :
-	cd ../../ ; make w90 ; cd wannier90-3.1.0/ ; make lib
+	cd ../../ ; make w90
 
 ld1 :
 	cd ../../ ; make ld1
 
 clean :
-	- /bin/rm -f  *.o *~ *.d *.mod *.i libepw.a liblr.a
+	- /bin/rm -f  *.o *~ *.d *.mod *.i io/*.mod io/*.o utilities/*.mod utilities/*.o libepw.a liblr.a
 
 include make.depend

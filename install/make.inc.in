@@ -32,13 +32,14 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
-# To use libxc (v>=4.3.0), add -D__LIBXC to DFLAGS
 # See include/defs.h.README for a list of options and their meaning
+# To use libxc (v>=4.3.0), add -D__LIBXC to DFLAGS
+# FDFLAGS = precompilation options used by the Fortran compiler
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas
 
-# MANUAL_DFLAGS  = additional precompilation option(s), if desired
-#                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
+# MANUAL_DFLAGS  = additional Fortran precompilation option(s), if desired
+#                  BEWARE: does not work for IBM xlf, manually edit FDFLAGS
 MANUAL_DFLAGS  =
 DFLAGS         = @dflags@
 FDFLAGS        = @fdflags@
@@ -66,8 +67,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
-	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers \
-	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
+	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers $(FOX_MOD)
 
 # If A depends upon B, A should come before B in the list below
 # (most compilers don't care but some don't resolve cross links)
@@ -89,10 +89,10 @@ MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
 
-# GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
+# GPU architecture (Kepler: 35, Pascal: 60, Volta: 70, Turing: 75, Ampere: 80)
 GPU_ARCH=@gpu_arch@
 
-# CUDA runtime (Pascal: 8.0, Volta: 9.0)
+# CUDA runtime (should be compatible with the CUDA driver)
 CUDA_RUNTIME=@cuda_runtime@
 
 # CUDA F90 Flags
@@ -137,16 +137,16 @@ LD_LIBS        = @ld_libs@
 # External Libraries (if any) : blas, lapack, fft, MPI
 
 # If you have nothing better, use the local copy
-# BLAS_LIBS = $(TOPDIR)/LAPACK/libblas.a
+# BLAS_LIBS = $(TOPDIR)/external/lapack/libblas.a
 
 BLAS_LIBS      = @blas_libs@
 
 # If you have nothing better, use the local copy
-# LAPACK_LIBS_SWITCH = internal
-# LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
+# LAPACK = liblapack
+# LAPACK_LIBS = $(TOPDIR)/external/lapack/liblapack.a
 
-LAPACK_LIBS    = @lapack_libs@
-LAPACK_LIBS_SWITCH = @lapack_libs_switch@
+LAPACK      = @lapack_target@
+LAPACK_LIBS = @lapack_libs@
 
 SCALAPACK_LIBS = @scalapack_libs@
 
@@ -157,9 +157,15 @@ FFT_LIBS       = @fft_libs@
 
 # HDF5
 HDF5_LIBS = @hdf5_libs@
-FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
-            -lFoX_utils -lFoX_fsys 
+
+# FOX
+FOX      = @extfox@
+FOX_MOD  = @foxmods@
+FOX_LIB  = @foxlibs@
 FOX_FLAGS = @foxflags@
+
+# ENVIRON
+ENVIRON_LIBS = @environ_libs@
 
 # MPI libraries (should not be needed)
 
@@ -190,7 +196,8 @@ FLIB_TARGETS   = all
 LIBXC_LIBS     = @LIBS_LIBXC@
 QELIBS         = $(LIBXC_LIBS) \
                  $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
-		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
+		 		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) \
+			 	 $(ENVIRON_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

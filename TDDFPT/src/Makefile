@@ -13,6 +13,7 @@ PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libd
 LRMODS = ../../LR_Modules/liblrmod.a
 
 LROBJS= \
+environ_td_module.o \
 lr_variables.o \
 lr_charg_resp.o \
 bcast_lr_input.o \
@@ -73,7 +74,7 @@ lr_calc_dens_magnons.o
 
 TLDEPS=lrmods
 
-all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnons.x turbo_spectrum.x
+all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnon.x turbo_spectrum.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
@@ -97,7 +98,7 @@ turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_magnons.x : lr_magnons_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
+turbo_magnon.x : lr_magnons_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	        lr_magnons_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )

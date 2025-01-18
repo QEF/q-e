@@ -9,6 +9,10 @@
 
 #include "pbecor.h"
 
+#ifdef _WIN32
+#define srandom srand
+#endif
+
 // evaluate bee exchange energy and its derivatives de/drho and ( de/d|grad rho| ) / |grad rho|
 #pragma acc routine seq
 void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda)

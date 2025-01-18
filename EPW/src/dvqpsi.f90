@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -54,12 +55,12 @@
     USE uspp,                  ONLY : nlcc_any
     USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
     USE qpoint,                ONLY : eigqts
-    USE klist_epw,             ONLY : isk_loc
+    USE input,                 ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
     USE funct,                 ONLY : dft_is_nonlocc
     USE xc_lib,                ONLY : xclib_dft_is
-    USE elph2,                 ONLY : lower_band, upper_band, ibndstart
-    USE constants_epw,         ONLY : czero, eps12
+    USE global_var,            ONLY : lower_band, upper_band, ibndkept
+    USE ep_constants,          ONLY : czero, eps12
     !
     IMPLICIT NONE
     !
@@ -94,6 +95,8 @@
     INTEGER :: nt
     !! counter on atomic types
     INTEGER :: ibnd
+    !! counter on bands
+    INTEGER :: jbnd
     !! counter on bands
     INTEGER ::  ir
     !! counter on real mesh
@@ -161,6 +164,7 @@
           gu = gu0 + g(1, ig) * u1 + g(2, ig) * u2 + g(3, ig) * u3
           aux1(dffts%nl(ig)) = aux1(dffts%nl(ig)) + vlocq(ig, nt) * gu * fact * gtau
         ENDDO
+        !
       ENDIF
     ENDDO
     !
@@ -237,15 +241,16 @@
     !
     CALL invfft('Rho', aux1, dffts)
     DO ibnd = lower_band, upper_band
+      jbnd = ibndkept(ibnd)
       DO ip = 1, npol
         aux2(:) = czero
         IF (ip == 1) THEN
           DO ig = 1, npw
-            aux2(dffts%nl(igk(ig))) = evc(ig, ibnd + ibndstart - 1)
+            aux2(dffts%nl(igk(ig))) = evc(ig, jbnd)
           ENDDO
         ELSE
           DO ig = 1, npw
-            aux2(dffts%nl(igk(ig))) = evc(ig + npwx, ibnd + ibndstart - 1)
+            aux2(dffts%nl(igk(ig))) = evc(ig + npwx, jbnd)
           ENDDO
         ENDIF
         !
@@ -311,21 +316,21 @@
     !! Adapted from PH/dvqpsi_us_only (QE)
     !!
     !-----------------------------------------------------------------------
-    USE kinds,      ONLY : DP
-    USE cell_base,  ONLY : tpiba
-    USE gvect,      ONLY : g
-    USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-    USE lsda_mod,   ONLY : lsda, current_spin, nspin
-    USE wvfct,      ONLY : npwx, et
-    USE uspp,       ONLY : okvan, nkb, vkb
-    USE uspp_param, ONLY : nh, nhm
-    USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
-    USE lrus,       ONLY : becp1
-    USE eqv,        ONLY : dvpsi
-    USE elph2,      ONLY : lower_band, upper_band, ibndstart
+    USE kinds,            ONLY : DP
+    USE cell_base,        ONLY : tpiba
+    USE gvect,            ONLY : g
+    USE ions_base,        ONLY : nat, ityp, ntyp => nsp
+    USE lsda_mod,         ONLY : lsda, current_spin, nspin
+    USE wvfct,            ONLY : npwx, et
+    USE uspp,             ONLY : okvan, nkb, vkb
+    USE uspp_param,       ONLY : nh, nhm
+    USE phus,             ONLY : int1, int1_nc, int2, int2_so, alphap
+    USE lrus,             ONLY : becp1
+    USE eqv,              ONLY : dvpsi
+    USE global_var,       ONLY : lower_band, upper_band, ibndkept
     USE noncollin_module, ONLY : noncolin, npol, lspinorb
-    USE constants_epw,    ONLY : czero, zero, cone, eps12
-    USE klist_epw,  ONLY : isk_loc
+    USE ep_constants,     ONLY : czero, zero, cone, eps12
+    USE input,            ONLY : isk_loc
     !
     IMPLICIT NONE
     !
@@ -358,6 +363,8 @@
     INTEGER :: nt
     !! Counter on atomic types
     INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: jbnd
     !! Counter on bands
     INTEGER :: ijkb0
     !! Auxiliary variable for counting
@@ -425,10 +432,11 @@
     !   we first compute the coefficients of the vectors
     !
     DO ibnd = lower_band, upper_band
+      jbnd = ibndkept(ibnd)
       IF (noncolin) THEN
-        CALL compute_deff_nc(deff_nc, et(ibnd + ibndstart - 1, ik))
+        CALL compute_deff_nc(deff_nc, et(jbnd, ik))
       ELSE
-        CALL compute_deff(deff, et(ibnd + ibndstart - 1, ik))
+        CALL compute_deff(deff, et(jbnd, ik))
       ENDIF
       !
       ijkb0 = 0
@@ -448,16 +456,16 @@
                         DO js = 1, npol
                           ijs = ijs + 1
                           ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + deff_nc(ih, jh, na, ijs) * &
-                                 alphap(ipol, ik)%nc(jkb, js, ibnd + ibndstart - 1) * uact(mu + ipol)
+                                 alphap(ipol, ik)%nc(jkb, js, jbnd) * uact(mu + ipol)
                           ps2_nc(ikb, is, ibnd, ipol) = ps2_nc(ikb, is, ibnd, ipol) + &
-                                 deff_nc(ih, jh, na, ijs) * becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1) * &
+                                 deff_nc(ih, jh, na, ijs) * becp1(ik)%nc(jkb, js, jbnd) * &
                                  (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                         ENDDO
                       ENDDO
                     ELSE
                       ps1(ikb, ibnd) = ps1(ikb, ibnd) + &
-                                       deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, ibnd + ibndstart - 1) * uact(mu + ipol)
-                      ps2(ikb, ibnd, ipol) = ps2(ikb, ibnd, ipol) + deff(ih, jh, na) * becp1(ik)%k(jkb, ibnd + ibndstart - 1) * &
+                                       deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, jbnd) * uact(mu + ipol)
+                      ps2(ikb, ibnd, ipol) = ps2(ikb, ibnd, ipol) + deff(ih, jh, na) * becp1(ik)%k(jkb, jbnd) * &
                                              (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                     ENDIF
                     IF (okvan) THEN
@@ -467,12 +475,12 @@
                           DO js = 1, npol
                             ijs = ijs + 1
                             ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int1_nc(ih, jh, ipol, na, ijs) * &
-                               becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1) * uact(mu + ipol)
+                               becp1(ik)%nc(jkb, js, jbnd) * uact(mu + ipol)
                           ENDDO
                         ENDDO
                       ELSE
                         ps1(ikb, ibnd) = ps1(ikb, ibnd) + int1(ih, jh, ipol, na, current_spin) * &
-                            becp1(ik)%k(jkb, ibnd + ibndstart - 1) * uact(mu + ipol)
+                            becp1(ik)%k(jkb, jbnd) * uact(mu + ipol)
                       ENDIF
                     ENDIF ! okvan
                   ENDIF  ! uact>0
@@ -486,18 +494,18 @@
                             DO js = 1, npol
                               ijs = ijs + 1
                               ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int2_so(ih, jh, ipol, nb, na, ijs) * &
-                                 becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1) * uact(nu + ipol)
+                                 becp1(ik)%nc(jkb, js, jbnd) * uact(nu + ipol)
                             ENDDO
                           ENDDO
                         ELSE
                           DO is = 1, npol
                             ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int2(ih, jh, ipol, nb, na) * &
-                               becp1(ik)%nc(jkb, is, ibnd + ibndstart - 1) * uact(nu + ipol)
+                               becp1(ik)%nc(jkb, is, jbnd) * uact(nu + ipol)
                           ENDDO
                         ENDIF
                       ELSE
                         ps1(ikb,ibnd) = ps1(ikb,ibnd) + int2(ih, jh, ipol, nb, na) * &
-                            becp1(ik)%k(jkb, ibnd + ibndstart - 1) * uact(nu + ipol)
+                            becp1(ik)%k(jkb, jbnd) * uact(nu + ipol)
                       ENDIF
                     ENDDO
                   ENDIF  ! okvan
@@ -599,27 +607,26 @@
     !!
     !! Roxana Margine - Dec 2018: Updated based on QE 6.3
     !! SP: Sept. 2019 - Cleaning
+    !! SP: Jan. 2022 - Addition 2D Coulomb
     !!
-    !! HL: Mar 2020 - Parallelization over G using intra image communicator 
+    !! HL: Mar 2020 - Parallelization over G using intra image communicator
     !!
     !
     USE kinds,            ONLY : DP
     USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-    USE cell_base,        ONLY : tpiba2, omega, tpiba
-    USE gvect,            ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
-    USE scf,              ONLY : v, vltot
+    USE cell_base,        ONLY : omega, tpiba
+    USE gvect,            ONLY : gg, g, eigts1, eigts2, eigts3, mill
     USE noncollin_module, ONLY : noncolin, nspin_mag
     USE phcom,            ONLY : int1, int2, vlocq
     USE qpoint,           ONLY : xq, eigqts
     USE uspp_param,       ONLY : upf, lmaxq, nh
     USE uspp,             ONLY : okvan, ijtoh
-    USE mp_global,        ONLY : intra_pool_comm
     USE mp,               ONLY : mp_sum
     USE fft_base,         ONLY : dfftp
     USE fft_interfaces,   ONLY : fwfft
-    USE constants_epw,    ONLY : zero, czero
+    USE ep_constants,     ONLY : zero, czero
     USE mp_images,        ONLY : intra_image_comm
-    USE elph2,            ONLY : veff, ig_s, ig_e
+    USE global_var,       ONLY : veff, ig_s, ig_e
     !
     IMPLICIT NONE
     !
@@ -634,8 +641,6 @@
     !! index of atomic type (specie)
     INTEGER :: ig
     !! counter on G vectors
-    INTEGER :: ir
-    !! counter on FFT mesh points
     INTEGER :: ih
     !! counter on beta functions per atomic type
     INTEGER :: jh
@@ -643,8 +648,6 @@
     INTEGER :: ijh
     !! correspondence beta indexes ih,jh -> composite index ijh
     INTEGER :: ipol
-    !! counter on polarizations
-    INTEGER :: jpol
     !! counter on polarizations
     INTEGER :: is
     !! counter on spin
@@ -771,6 +774,7 @@
                   !    nb is the atom of the augmentation function
                   !
                   nta = ityp(na)
+                  !
                   DO ig = 1, ngvec
                     sk(ig) = vlocq(ig + ig_s - 1, nta) &
                              * eigts1(mill(1, ig + ig_s - 1), na) &
@@ -875,7 +879,7 @@
     !! Roxana Margine - Jan 2019: Updated based on QE 6.3
     !!
     !! HL: Mar 2020
-    !! 1. Parallelization over G using intra image communicator 
+    !! 1. Parallelization over G using intra image communicator
     !! 2. PAW added and cleaning
     !!
     USE kinds,                ONLY : DP
@@ -884,17 +888,16 @@
     USE cell_base,            ONLY : omega, tpiba
     USE fft_base,             ONLY : dfftp
     USE fft_interfaces,       ONLY : fwfft
-    USE gvect,                ONLY : g, ngm, mill, eigts1, eigts2, eigts3
+    USE gvect,                ONLY : g, mill, eigts1, eigts2, eigts3
     USE uspp,                 ONLY : okvan
     USE uspp_param,           ONLY : upf, lmaxq, nh
     USE paw_variables,        ONLY : okpaw
-    USE mp_global,            ONLY : intra_pool_comm
     USE mp,                   ONLY : mp_sum
     USE lrus,                 ONLY : int3, int3_paw
     USE qpoint,               ONLY : eigqts
-    USE constants_epw,        ONLY : czero, zero
+    USE ep_constants,         ONLY : czero, zero
     USE mp_images,            ONLY : intra_image_comm
-    USE elph2,                ONLY : ig_s, ig_e
+    USE global_var,           ONLY : ig_s, ig_e
     !
     IMPLICIT NONE
     !
@@ -1044,7 +1047,7 @@
     !
     CALL mp_sum(int3, intra_image_comm)
     !
-    ! Sum of the USPP and PAW terms 
+    ! Sum of the USPP and PAW terms
     ! (see last two terms in Eq.(12) in PRB 81, 075123 (2010))
     !
     IF (okpaw) int3 = int3 + int3_paw
@@ -1088,19 +1091,19 @@
     !! Roxana Margine - Jan 2019: Updated based on QE 6.3
     !! SP - Jan 2019: Clean
     !!
-    USE kinds,      ONLY : DP
-    USE uspp_param, ONLY : upf, nh
-    USE uspp,       ONLY : vkb, okvan
-    USE lsda_mod,   ONLY : lsda, current_spin
-    USE klist_epw,  ONLY : isk_loc
-    USE ions_base,  ONLY : ntyp => nsp, nat, ityp
-    USE wvfct,      ONLY : npwx
-    USE lrus,       ONLY : int3, int3_nc, becp1
-    USE qpoint,     ONLY : npwq
-    USE eqv,        ONLY : dvpsi
-    USE elph2,      ONLY : lower_band, upper_band, ibndstart
+    USE kinds,            ONLY : DP
+    USE uspp_param,       ONLY : upf, nh
+    USE uspp,             ONLY : vkb, okvan
+    USE lsda_mod,         ONLY : lsda, current_spin
+    USE input,            ONLY : isk_loc
+    USE ions_base,        ONLY : ntyp => nsp, nat, ityp
+    USE wvfct,            ONLY : npwx
+    USE lrus,             ONLY : int3, int3_nc, becp1
+    USE qpoint,           ONLY : npwq
+    USE eqv,              ONLY : dvpsi
+    USE global_var,       ONLY : lower_band, upper_band, ibndkept
     USE noncollin_module, ONLY : noncolin, npol
-    USE constants_epw,    ONLY : czero
+    USE ep_constants,     ONLY : czero
     !
     IMPLICIT NONE
     !
@@ -1116,6 +1119,8 @@
     INTEGER :: nt
     !! Counter on atomic types
     INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: jbnd
     !! Counter on bands
     INTEGER :: ih
     !! Counter on beta functions
@@ -1154,6 +1159,7 @@
             ! We multiply the integral for the becp term and the beta_n
             !
             DO ibnd = lower_band, upper_band
+              jbnd = ibndkept(ibnd)
               DO ih = 1, nh(nt)
                  ikb = ijkb0 + ih
                  IF (noncolin) THEN
@@ -1168,12 +1174,12 @@
                      DO is = 1, npol
                        DO js = 1, npol
                          ijs = ijs + 1
-                         sum_nc(is) = sum_nc(is) + int3_nc(ih, jh, na, ijs, ipert) * becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1)
+                         sum_nc(is) = sum_nc(is) + int3_nc(ih, jh, na, ijs, ipert) * becp1(ik)%nc(jkb, js, jbnd)
                        ENDDO
                      ENDDO
                    ELSE
                      sum_k = sum_k + int3(ih,jh,na,current_spin,ipert) * &
-                                 becp1(ik)%k(jkb,ibnd + ibndstart - 1)
+                                 becp1(ik)%k(jkb, jbnd)
                    ENDIF
                  ENDDO
                  IF (noncolin) THEN
@@ -1204,4 +1210,3 @@
   !-----------------------------------------------------------------------------
   END MODULE dvqpsi
   !-----------------------------------------------------------------------------
-

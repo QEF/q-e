@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2019 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
   ! This file is distributed under the terms of the GNU General Public
@@ -26,16 +27,16 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub
-    USE elph2,         ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
+    USE input,         ONLY : nbndsub
+    USE global_var,    ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
                               nkf, epf17, xkf, nkqtotf, wf, nktotf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero
+    USE ep_constants,  ONLY : ryd2mev, ryd2ev, two, zero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE division,      ONLY : fkbounds
-    USE poolgathering, ONLY : poolgather2
+    USE parallelism,   ONLY : fkbounds
+    USE parallelism,  ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -261,9 +262,9 @@
     !!
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
-    USE elph2,         ONLY : nbndfst, gtemp, nktotf, nkqtotf
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE input,         ONLY : ncarrier, nstemp, assume_metal
+    USE global_var,    ONLY : nbndfst, gtemp, nktotf, evbm, ecbm
+    USE ep_constants,  ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE symm_base,     ONLY : nsym
@@ -334,12 +335,12 @@
           !  energy at k (relative to Ef)
           ekk = etf_all(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
-          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+          IF (etf_all(ibnd, ik) < (evbm + eps10) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma_sym(f_out(:, ibnd, ik, itemp), bztoibz_mat(:, ik), &
                                    vkk_all(:, ibnd, ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+          ELSE IF (etf_all(ibnd, ik) > (ecbm - eps10) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma_sym(f_out(:, ibnd, ik, itemp), bztoibz_mat(:, ik), &
                                    vkk_all(:, ibnd, ik), sigma_tmp, fi_check)
             carrier_density = carrier_density + wkf_all(ik) * fnk
@@ -378,8 +379,8 @@
     !----------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE cell_base,        ONLY : at, bg
-    USE epwcom,           ONLY : nkf1, nkf2, nkf3
-    USE elph2,            ONLY : s_bztoibz
+    USE input,            ONLY : nkf1, nkf2, nkf3
+    USE global_var,       ONLY : s_bztoibz
     USE symm_base,        ONLY : s, nsym
     USE noncollin_module, ONLY : noncolin
     !
@@ -466,9 +467,9 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
-    USE elph2,         ONLY : nbndfst, gtemp, nktotf
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE input,         ONLY : ncarrier, nstemp, assume_metal
+    USE global_var,    ONLY : nbndfst, gtemp, nktotf, evbm, ecbm
+    USE ep_constants,  ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE mp,            ONLY : mp_sum
@@ -529,11 +530,11 @@
           !  energy at k (relative to Ef)
           ekk = etf_all(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
-          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+          IF (etf_all(ibnd, ik) < (evbm + eps10) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out(:, ibnd, ik, itemp), vkk_all(:, ibnd, ik), wkf_all(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+          ELSE IF (etf_all(ibnd, ik) > (ecbm - eps10) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out(:, ibnd, ik, itemp), vkk_all(:, ibnd, ik), wkf_all(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * fnk
@@ -564,7 +565,7 @@
     !!
     !----------------------------------------------------------------------
     USE kinds,            ONLY : DP
-    USE epwcom,           ONLY : nkf1, nkf2, nkf3
+    USE input,            ONLY : nkf1, nkf2, nkf3
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
@@ -594,7 +595,7 @@
     !
     DO j = 1, 3
       DO i = 1, 3
-        sigma(i, j) = sigma(i, j) - vkk_all(j) * f_out(i) * wkf_all
+        sigma(i, j) = sigma(i, j) - vkk_all(i) * f_out(j) * wkf_all
       ENDDO
     ENDDO
     fi_check(:) = fi_check(:) + f_out(:) * sfac / (nkf1 * nkf2 * nkf3)
@@ -610,11 +611,11 @@
     !! nice format and in proper units.
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : assume_metal, system_2d
+    USE input,         ONLY : assume_metal, system_2d
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega, at, alat
-    USE elph2,         ONLY : dos
-    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, &
+    USE global_var,    ONLY : dos
+    USE ep_constants,  ONLY : zero, kelvin2eV, ryd2ev, eps80, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     !
@@ -643,15 +644,17 @@
     REAL(KIND = DP) :: nden
     !! Carrier density in cm^-3
     !
-    inv_cell = 1.0d0 / omega
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d ) inv_cell = inv_cell * at(3, 3) * alat
-
-    ! carrier_density in cm^-1
-    IF (system_2d) THEN
-      nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2)
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
     ELSE
-      nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+    ENDIF
+    ! carrier_density in cm^-1
+    IF (system_2d == 'no') THEN
+      nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3.0d0)
+    ELSE
+      nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
     ENDIF
     mobility(:, :) = (sigma(:, :) * electron_si ** 2 * inv_cell) / (hbarJ * bohr2ang * ang2cm)
     IF (.NOT. assume_metal) THEN
@@ -659,13 +662,13 @@
       IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
       mobility(:, :) = (mobility(:, :) / (electron_si * carrier_density * inv_cell)) * (bohr2ang * ang2cm) ** 3
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-           nden, SUM(fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+           nden, fi_check(1), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ELSE
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-           dos(itemp), SUM(fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+           dos(itemp), fi_check(1), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ENDIF
-    WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3)
-    WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+    WRITE(stdout, '(36x, 1E14.5, 3E16.6)') fi_check(2), mobility(2, 1), mobility(2, 2), mobility(2, 3)
+    WRITE(stdout, '(36x, 1E14.5, 3E16.6)') fi_check(3), mobility(3, 1), mobility(3, 2), mobility(3, 3)
     IF (PRESENT(max_mob)) THEN
       max_mob = MAXVAL(mobility(:,:))
     ENDIF
@@ -682,15 +685,14 @@
     !! nice format and in proper units.
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : assume_metal, system_2d, ncarrier, nkf1, nkf2, nkf3, nstemp
-    USE io_global,     ONLY : stdout
+    USE input,         ONLY : system_2d, ncarrier, nkf1, nkf2, nkf3, nstemp
     USE cell_base,     ONLY : omega, at, alat, bg
-    USE elph2,         ONLY : dos, nkqtotf, s_bztoibz, nbndfst, nktotf
+    USE global_var,    ONLY : s_bztoibz, nbndfst, nktotf
     USE io_var,        ONLY : iufilmu_nk
     USE symm_base,     ONLY : s, nsym
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, eps10, &
+    USE ep_constants,  ONLY : zero, kelvin2eV, ryd2ev, eps80, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE noncollin_module, ONLY : noncolin
@@ -775,9 +777,12 @@
         sfac = 2.0
       ENDIF
       !
-      inv_cell = 1.0d0 / omega
-      ! for 2d system need to divide by area (vacuum in z-direction)
-      IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+      IF (system_2d == 'no') THEN
+        inv_cell = 1.0d0 / omega
+      ELSE
+        ! for 2d system need to divide by area (vacuum in z-direction)
+        inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
+      ENDIF
       !
       mobility(:, :) = zero
       DO ik = 1, nktotf
@@ -848,18 +853,26 @@
     !! This routine print a header for mobility calculation
     !!
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : assume_metal, ncarrier
+    USE input,         ONLY : assume_metal, ncarrier, system_2d
     !
     IMPLICIT NONE
     !
     WRITE(stdout, '(/5x, a)') REPEAT('=', 93)
     IF (.NOT. assume_metal) THEN
       IF (ncarrier < -1E5) THEN
-        WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
-        WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
+        WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR            Drift Hole mobility ")')
+        IF (system_2d == 'no') THEN
+          WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
+        ELSE
+          WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]")')
+        ENDIF
       ELSE
-        WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
-        WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
+        WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR            Drift Elec mobility ")')
+        IF (system_2d == 'no') THEN
+          WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
+        ELSE
+          WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-2]      [e per cell]                    [cm^2/Vs]")')
+        ENDIF
       ENDIF
     ELSE
       WRITE(stdout, '(5x, "  Temp     Fermi        DOS        Population SR                 Conductivity ")')
@@ -880,10 +893,12 @@
     !! This routine print a header for superconductivity calculation
     !!
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsiw, nsw
-    USE constants_epw, ONLY : kelvin2eV
+    USE input,         ONLY : liso, laniso, lreal, imag_read, wscut, &
+                              fbw, broyden_beta, gridsamp, icoulomb, &
+                              eps_cut_ir
+    USE global_var,    ONLY : gtemp
+    USE supercond_common,     ONLY : nsiw, nsw, wsi, nlambda, ndigit
+    USE ep_constants,  ONLY : kelvin2eV, zero
     USE constants,     ONLY : pi
     !
     IMPLICIT NONE
@@ -897,24 +912,60 @@
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
-      IF (liso) &
+      IF (liso .AND. .NOT. fbw) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. .NOT. imag_read) &
+      IF (liso .AND. fbw) &
+        WRITE(stdout, '(5x, a)') 'Solve full-bandwidth isotropic Eliashberg equations on imaginary-axis'
+      IF (laniso .AND. .NOT. fbw .AND. .NOT. imag_read) &
         WRITE(stdout, '(5x, a)') 'Solve anisotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. imag_read) &
-        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis '
+      IF (laniso .AND. fbw .AND. .NOT. imag_read) &
+        WRITE(stdout, '(5x, a)') 'Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis'
+      IF (laniso .AND. .NOT. fbw .AND. imag_read .AND. itemp == 1) &
+        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis'
+      IF (laniso .AND. fbw .AND. imag_read .AND. itemp == 1) &
+        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm and shift on imaginary-axis'
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
-      WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
+      IF ((.NOT. fbw) .OR. ((gridsamp == 0) .OR. (gridsamp == 1) .OR. (gridsamp == 3))) THEN
+        ! uniform sampling
+        WRITE(stdout, '(5x, a, f10.4, a)') 'Cutoff frequency wscut = ', wscut, ' eV'
+        WRITE(stdout, '(5x, a, f14.4, a)') 'Maximum frequency = ', wsi(nsiw(itemp)), ' eV'
+      ELSEIF (fbw) THEN
+        IF ((gridsamp == 2)) THEN
+          WRITE(stdout, '(5x, a, ES12.2, a, ES12.2)') &
+                'Parameters for IR basis: Lambda = ', 1.0d1 ** nlambda, ', eps_IR = ', 1.0d-1 ** ndigit
+          IF (eps_cut_ir > zero) THEN
+            WRITE(stdout, '(5x, a, ES12.2)') 'The noise reduction will be performed using the threshold of ', eps_cut_ir
+          ELSE
+            WRITE(stdout, '(5x, a, ES12.2)') 'The noise reduction will not be performed.'
+          ENDIF
+        ENDIF
+        ! any other sampling (freqs read from a file, sparse sampling, sparse-ir sampling)
+        WRITE(stdout, '(5x, a, f14.4, a)') 'Maximum frequency = ', wsi(nsiw(itemp)), ' eV'
+      ENDIF
+      IF (broyden_beta < zero ) THEN
+        WRITE(stdout, '(5x, a, f12.5)') 'linear mixing factor = ', DABS(broyden_beta)
+      ELSE
+        WRITE(stdout, '(5x, a, f12.5)') 'broyden mixing factor = ', broyden_beta
+      ENDIF
+      IF ((icoulomb == 1) .AND. (broyden_beta  < -0.2d0)) THEN
+        WRITE(stdout, '(5x, a)') 'mixing factor = 0.2 is used for the first five iterations.'
+      ELSEIF ((broyden_beta  < -0.2d0)) THEN
+        WRITE(stdout, '(5x, a)') 'mixing factor = 0.2 is used for the first three iterations.'
+      ENDIF
       WRITE(stdout, '(a)') '    '
     ENDIF
     !
     IF (cal_type == 2) THEN
       WRITE(stdout, '(a)') '    '
-      IF (liso) &
-        WRITE(stdout, '(5x, a)') 'Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis'
-      IF (laniso) &
-        WRITE(stdout, '(5x, a)') 'Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (liso .AND. .NOT. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (laniso .AND. .NOT. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (liso .AND. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of full-bandwidth isotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (laniso .AND. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis'
       WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', wscut
       WRITE(stdout, '(a)') '    '
     ENDIF
@@ -939,7 +990,7 @@
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on real-axis'
       WRITE(stdout, '(a)') '    '
     ENDIF
-
+    !
     RETURN
     !
     !-----------------------------------------------------------------------
@@ -982,6 +1033,7 @@
     WRITE(stdout, '(5x, a)') 'Electron-Phonon interpolation'
     CALL print_clock('ephwann')
     CALL print_clock('ep-interp')
+    CALL print_clock('ep-int-ahc')
     CALL print_clock('PH SELF-ENERGY')
     CALL print_clock('ABS SPECTRA')
     CALL print_clock('crys_cart')
@@ -995,16 +1047,31 @@
     CALL print_clock('ep: step 2')
     CALL print_clock('ep: step 3')
     CALL print_clock('ep: step 4')
+    CALL print_clock('unfold_sthmat')
+    CALL print_clock('collect_sthmat')
+    CALL print_clock('dg: step 1')
+    CALL print_clock('dg: step 2')
+    CALL print_clock('sth: step 1')
+    CALL print_clock('sth: step 2')
+    CALL print_clock('wigner_seitz')
     CALL print_clock('DynW2B')
     CALL print_clock('HamW2B')
     CALL print_clock('ephW2Bp')
+    CALL print_clock('ephW2Bp_opt')
+    CALL print_clock('ephW2Bp_s23')
+    CALL print_clock('ephW2Bp_s3')
+    CALL print_clock('ephW2Bp_g3')
     CALL print_clock('ephW2B')
+    CALL print_clock('sthW2Bp')
+    CALL print_clock('dgW2B')
+    CALL print_clock('dwW2B')
+    CALL print_clock('vmeW2B')
+    CALL print_clock('vmeW2Bp')
+    CALL print_clock('rgd_blk_epw')
     CALL print_clock('print_ibte')
-    CALL print_clock('vmewan2bloch')
-    CALL print_clock('vmewan2blochp')
-    CALL print_clock('ephW2Bp1')
-    CALL print_clock('ephW2Bp2')
     CALL print_clock('kpoint_paral')
+    !
+    CALL print_clock('selfen_elec_q')
     !
     ! Eliashberg equations
     WRITE(stdout, '(5x)')
@@ -1030,15 +1097,15 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE modes,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, filqf, filkf
-    USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, zero
+    USE input,         ONLY : nbndsub, filqf, filkf
+    USE global_var,    ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
+    USE ep_constants,  ONLY : ryd2mev, ryd2ev, zero
     USE io_var,        ONLY : iufilfreq, iufileig
-    USE elph2,         ONLY : nkqf
+    USE global_var,    ONLY : nkqf
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-    USE poolgathering, ONLY : poolgather2
+    USE parallelism,  ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -1187,17 +1254,16 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg
-    USE control_flags, ONLY : iverbosity
     USE pwcom,         ONLY : ef
-    USE epwcom,        ONLY : mp_mesh_k, nbndsub, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : bztoibz, etf, xkf, nkqtotf, nktotf
-    USE constants_epw, ONLY : ryd2ev, zero
+    USE input,         ONLY : mp_mesh_k, nbndsub, nkf1, nkf2, nkf3
+    USE global_var,    ONLY : bztoibz, etf, xkf, nkqtotf, nktotf
+    USE ep_constants,  ONLY : ryd2ev, zero
     USE io_var,        ONLY : iufilFS
-    USE elph2,         ONLY : nkqf, ibndmin, ibndmax
+    USE global_var,    ONLY : nkqf, ibndmin, ibndmax
     USE io_global,     ONLY : ionode_id, stdout
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-    USE poolgathering, ONLY : poolgather2
+    USE parallelism,  ONLY : poolgather2
     USE io_files,      ONLY : prefix
     !
     IMPLICIT NONE
@@ -1312,9 +1378,9 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
-    USE elph2,         ONLY : nbndfst, nkpt_bztau_max, gtemp
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE input,         ONLY : ncarrier, nstemp, assume_metal
+    USE global_var,    ONLY : nbndfst, nkpt_bztau_max, gtemp, evbm, ecbm
+    USE ep_constants,  ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     USE mp,            ONLY : mp_sum
@@ -1374,11 +1440,11 @@
           !  energy at k (relative to Ef)
           ekk = etf_all_b(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
-          IF (etf_all_b(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+          IF (etf_all_b(ibnd, ik) < (evbm + eps10) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * (1.0d0 - fnk)
-          ELSEIF (etf_all_b(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+          ELSEIF (etf_all_b(ibnd, ik) > (ecbm - eps10) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
             CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
             ! The wkf(ikk) already include a factor 2
             carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * fnk
@@ -1407,12 +1473,12 @@
     !! This routine print the final conductivity, mobility and Hall factor
     !!
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : system_2d, nstemp, bfieldx, bfieldy, bfieldz
+    USE input,         ONLY : system_2d, nstemp, bfieldx, bfieldy, bfieldz
     USE low_lvl,       ONLY : matinv3
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega, at, alat
-    USE elph2,         ONLY : gtemp
-    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, cm2m, &
+    USE global_var,    ONLY : gtemp
+    USE ep_constants,  ONLY : zero, kelvin2eV, ryd2ev, eps80, cm2m, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
     !
@@ -1460,20 +1526,20 @@
     !! Hall factor
     REAL(KIND = DP) :: hall(3, 3, nstemp)
     !! Hall factor
-    REAL(KIND = DP) :: sigma_inv(3, 3, nstemp)
-    !! Inverse conductivity tensor
+    REAL(KIND = DP) :: mob_hall(3, 3)
+    !! Hall mobility
     REAL(KIND = DP) :: mob_inv(3, 3, nstemp)
     !! Inverse mobility tensor
     !
     ! Convert carrier number in true carrier density
     carrier_density_cm(:) = zero
     DO itemp = 1, nstemp
-      IF (system_2d) THEN
-        inv_cell = (at(3, 3) * alat) / omega
-        carrier_density_cm(itemp) = carrier_density(itemp) * (inv_cell * (bohr2ang * ang2cm)**(-2))
-      ELSE
+      IF (system_2d == 'no') THEN
         inv_cell = 1.0d0 / omega
-        carrier_density_cm(itemp) = carrier_density(itemp) * (inv_cell * (bohr2ang * ang2cm)**(-3))
+        carrier_density_cm(itemp) = carrier_density(itemp) * (inv_cell * (bohr2ang * ang2cm)**(-3.0d0))
+      ELSE
+        inv_cell = (at(3, 3) * alat) / omega
+        carrier_density_cm(itemp) = carrier_density(itemp) * (inv_cell * (bohr2ang * ang2cm)**(-2.0d0))
       ENDIF
       !
       mob_serta(:, :, itemp)  = (sigma_serta(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
@@ -1487,17 +1553,23 @@
       !
       ! Convert conductivity tensor in SI units [Siemens m^-1=Coulomb s^-1 V^-1 m^-d ]
       ! in 3d: cm^2 s^-1 V^-1 * (cm ^-2  cmtom^-1 C) = Coulomb s^-1 V^-1
-      IF (system_2d) THEN
-        sigma_serta_si(:, :, itemp)  = mob_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
-        sigma_bte_si(:, :, itemp)    = mob_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
-        sigmab_serta_si(:, :, itemp) = mobb_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
-        sigmab_bte_si(:, :, itemp)   = mobb_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
-      ELSE
+      IF (system_2d == 'no') THEN
         sigma_serta_si(:, :, itemp)  = mob_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
         sigma_bte_si(:, :, itemp)    = mob_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
         sigmab_serta_si(:, :, itemp) = mobb_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
         sigmab_bte_si(:, :, itemp)   = mobb_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
+      ELSE
+        sigma_serta_si(:, :, itemp)  = mob_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+        sigma_bte_si(:, :, itemp)    = mob_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+        sigmab_serta_si(:, :, itemp) = mobb_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+        sigmab_bte_si(:, :, itemp)   = mobb_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
       ENDIF
+      !
+      ! To make the diagonal of mobb zero.
+      mobb_serta(:, :, itemp) = mobb_serta(:, :, itemp) - mob_serta(:, :, itemp)
+      mobb_bte(:, :, itemp) = mobb_bte(:, :, itemp) - mob_bte(:, :, itemp)
+      !
+
     ENDDO ! itemp
     !
     b_norm = SQRT(bfieldx**2 + bfieldy**2 + bfieldz**2)
@@ -1506,40 +1578,43 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      !
+      IF (system_2d == 'no') THEN ! We suppose vacuum is in the z direction
+        mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
       ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigmab_serta_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigmab_serta_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigmab_serta_si(:, 3, itemp)
-      !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mobb_serta(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mobb_serta(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mobb_serta(:, 3, itemp)
-      !
-      sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
-      IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_serta(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
         mob_inv(3, 3, :) = 0d0
-      ELSE
-        mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
       ENDIF
-      hall_serta(:, :, itemp) = MATMUL(MATMUL(mobb_serta(:, :, itemp), mob_inv(:, :, itemp)), &
+      hall_serta(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_serta(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !
+      mob_hall(:, :)   = MATMUL(hall_serta(:, :, itemp),mob_serta(:, :, itemp))
+      !
+      !
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d == 'no') THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(1, :, itemp), '  |', sigmab_serta_si(1, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(2, :, itemp), '  |', sigmab_serta_si(2, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(3, :, itemp), '  |', sigmab_serta_si(3, :, itemp)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(1, :, itemp), '  |', mob_hall(1, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(2, :, itemp), '  |', mob_hall(2, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(3, :, itemp), '  |', mob_hall(3, :)
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
       ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
       WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
-      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 1, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 2, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 3, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(1, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(2, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(3, :, itemp)
     ENDDO
     !
     WRITE(stdout, '(/5x, a)') REPEAT('=',93)
@@ -1547,40 +1622,41 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
-      ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigmab_bte_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigmab_bte_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigmab_bte_si(:, 3, itemp)
       !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mobb_bte(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mobb_bte(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mobb_bte(:, 3, itemp)
-      !
-      sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
-      IF (system_2d) THEN ! We suppose vacuum is in the z direction
+      IF (system_2d == 'no') THEN
+        mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
+      ELSE ! We suppose vacuum is in the z direction
         mob_bte(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
         mob_inv(3, 3, :) = 0d0
-      ELSE
-        mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
       ENDIF
-      hall(:, :, itemp) = MATMUL(MATMUL(mobb_bte(:, :, itemp), mob_inv(:, :, itemp)), &
+      hall(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_bte(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      mob_hall(:, :)   = MATMUL(hall(:, :, itemp),mob_bte(:, :, itemp))
+      !
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d == 'no') THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(1, :, itemp), '  |', sigmab_bte_si(1, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(2, :, itemp), '  |', sigmab_bte_si(2, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(3, :, itemp), '  |', sigmab_bte_si(3, :, itemp)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(1, :, itemp), '  |', mob_hall(1, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(2, :, itemp), '  |', mob_hall(2, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(3, :, itemp), '  |', mob_hall(3, :)
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
       ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
       WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
-      WRITE(stdout, '(3x, 3E16.6)') hall(:, 1, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall(:, 2, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall(:, 3, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(1, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(2, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(3, :, itemp)
     ENDDO
     !
     ! SP: To be removed when adding to the main QE repo.

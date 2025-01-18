@@ -86,6 +86,9 @@ SUBROUTINE cg_readin()
   !  read the input file produced by the pwscf program
   !  allocate memory and recalculate what is needed
   !
+  IF (raman) CALL errore('cg_readin','Raman calculation little tested' // &
+       &   ' - Please remove this check and test whether it works',1)
+  !
   CALL read_file
 
   IF (lsda) CALL errore('cg_readin','LSDA not available',1)

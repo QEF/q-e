@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ld1.x /  / Quantum Espresso (version: 7.0)
+Program: ld1.x /  / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -964,11 +964,11 @@ NAMELIST: &TEST
    
    Type:           REAL
    Default:        decut=5.0 Ry; ecutmin=ecutmax=0Ry
-   Status:         specify @ref ecutmin and @ref ecutmax if you want to perform this test
+   Status:         specify "ecutmin" and "ecutmax" if you want to perform this test
    Description:    Parameters (Ry) used for test with a basis set of spherical
                    Bessel functions j_l(qr) . The hamiltonian at fixed scf
                    potential is diagonalized for various values of ecut:
-                   @ref ecutmin, @ref ecutmin+@ref decut, @ref ecutmin+2*@ref decut ... up to @ref ecutmax.
+                   "ecutmin", "ecutmin"+"decut", "ecutmin"+2*"decut" ... up to "ecutmax".
                    This yields an indication of convergence with the
                    corresponding plane-wave cutoff in solids, and shows
                    in an unambiguous way if there are "ghost" states
@@ -1266,4 +1266,4 @@ CARD:
       
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:55 CET 2021
+This file has been created by helpdoc utility on Wed Oct 16 19:29:41 CEST 2024
