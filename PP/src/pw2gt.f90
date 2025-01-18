@@ -130,11 +130,11 @@ SUBROUTINE simple_output ( fileout  )
   !
   CHARACTER(LEN=*), intent(in) :: fileout
   COMPLEX(dp), ALLOCATABLE :: vaux(:,:)
-  INTEGER :: iun, ig, is, ik, ikb, ibnd, na, nt, npw
+  INTEGER :: iun=4, ig, is, ik, ikb, ibnd, na, nt, npw
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing simple output data file ",A)' ) &
        trim(fileout)
-  OPEN ( NEWUNIT = iun, FORM = 'formatted', STATUS = 'unknown', &
+  OPEN ( UNIT = iun, FORM = 'formatted', STATUS = 'unknown', &
        FILE = fileout )
   WRITE(iun,'("# Primitive lattice vectors a_1, a_2, a_3 (a.u.)")')
   WRITE(iun,*) alat*at(:,1), alat*at(:,2), alat*at(:,3)
@@ -255,7 +255,7 @@ SUBROUTINE simple_diag ( fileout )
   REAL(dp) :: dvan_re, dvan_im
   !
   CHARACTER(LEN=80) :: line
-  INTEGER :: iun, ig, is, ik, ikb, ibnd, na, nt, nt_, i, j, ii, jj, ij, &
+  INTEGER :: iun=4, ig, is, ik, ikb, ibnd, na, nt, nt_, i, j, ii, jj, ij, &
        nhm, ih, jh, i1, i2, i3, ipol
   INTEGER, ALLOCATABLE :: limm(:,:,:)
   LOGICAL :: debug = .false., skip_diag = .false.
@@ -265,7 +265,7 @@ SUBROUTINE simple_diag ( fileout )
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Checking simple output data file ",A)' ) &
        trim(fileout)
-  OPEN ( NEWUNIT = iun, FORM = 'formatted', STATUS = 'old', FILE = fileout )
+  OPEN ( UNIT = iun, FORM = 'formatted', STATUS = 'old', FILE = fileout )
   READ(iun,'(a)')  line
   READ(iun,*) at(:,1), at(:,2), at(:,3)
   WRITE(stdout,*) trim(line), at(:,1), at(:,2), at(:,3)
