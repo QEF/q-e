@@ -167,6 +167,7 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
+  ! kx, ky, kz   : when specified in input, search that k-point to print el-ph matrix element
   ! nk1,nk2,nk3, k1,k2,k3 :
   !              when specified in input, the phonon run uses a different
   !              k-point mesh from that used for the charge density.
