@@ -463,3 +463,27 @@ implicit none
   return
 END SUBROUTINE MYDSWAP
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MYDSWAP_VECTOR_GPU(n, dx, dy) 
+#if defined(__CUDA)
+!$acc routine(MYDSWAP_VECTOR_GPU) vector
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE PRECISION, dimension(*) :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy 
+  DOUBLE PRECISION DTEMP
+  INTEGER I,IX,IY
+  IF (n.LE.0) RETURN
+  !$acc loop vector private(dtemp)
+  DO i = 1,n
+     dtemp = dx(i)
+     dx(i) = dy(i)
+     dy(i) = dtemp
+  END DO 
+#else
+  CALL DSWAP(n, dx, 1, dy, 1)  
+#endif
+  return
+END SUBROUTINE MYDSWAP_VECTOR_GPU
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

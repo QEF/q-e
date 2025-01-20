@@ -575,9 +575,13 @@ CONTAINS
     INTEGER  :: ibnd
     INTEGER  :: nswap
     REAL(DP) :: e0
+    EXTERNAL :: MYDSWAP_VECTOR_GPU  
+    !$acc routine(MYDSWAP_VECTOR_GPU) vector
     !
 10  nswap = 0
     !
+    !$acc parallel copy(nswap) copyin(npw2)
+    !$acc loop gang reduction(+:nswap) private(e0)
     DO ibnd = 2, nbnd
        !
        IF ( e(ibnd) < e(ibnd-1) ) THEN
@@ -588,19 +592,18 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          !$acc host_data use_device(psi, hpsi, spsi)
-          CALL MYDSWAP( npw2, psi(1,ibnd), 1, psi(1,ibnd-1), 1 )
+          CALL MYDSWAP_VECTOR_GPU( npw2, psi(1,ibnd), psi(1,ibnd-1) )
           !
           IF ( eigen_ ) &
-          CALL MYDSWAP( npw2, hpsi(1,ibnd), 1, hpsi(1,ibnd-1), 1 )
+          CALL MYDSWAP_VECTOR_GPU( npw2, hpsi(1,ibnd), hpsi(1,ibnd-1) )
           !
           IF ( uspp ) &
-          CALL MYDSWAP( npw2, spsi(1,ibnd), 1, spsi(1,ibnd-1), 1 )
-          !$acc end host_data
+          CALL MYDSWAP_VECTOR_GPU( npw2, spsi(1,ibnd), spsi(1,ibnd-1) )
           !
        END IF
        !
     END DO
+    !$acc end parallel
     !
     IF ( nswap > 0 ) GOTO 10
     !
