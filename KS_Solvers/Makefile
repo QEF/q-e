@@ -33,7 +33,6 @@ DENSE/rotate_wfc_k.o \
 DENSE/rotate_driver.o \
 DENSE/gram_schmidt_gamma.o \
 DENSE/gram_schmidt_k.o \
-DENSE/gram_schmidt_gamma_gpu.o \
 DENSE/rotate_xpsi_gamma.o \
 DENSE/rotate_xpsi_k.o \
 RMM/crmmdiagg.o \

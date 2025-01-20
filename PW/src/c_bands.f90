@@ -504,14 +504,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... Gram-Schmidt orthogonalization
        !
-       IF (.not. use_gpu) THEN
-        CALL gram_schmidt_gamma( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
-                        okvan, .TRUE., .TRUE., gs_nblock )
-       ELSE
-          CALL gram_schmidt_gamma_gpu( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
-                          okvan, .TRUE., .TRUE., gs_nblock )
-          !$acc update device(et)
-       END IF
+       CALL gram_schmidt_gamma( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
+                       okvan, .TRUE., .TRUE., gs_nblock )
        !
        avg_iter = avg_iter + 0.5D0
        !
@@ -807,7 +801,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        CALL gram_schmidt_k( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                           okvan, .TRUE., .TRUE., gs_nblock )
-       !$acc update device(et)
        !
        avg_iter = avg_iter + 0.5D0
        !

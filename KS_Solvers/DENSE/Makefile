@@ -14,8 +14,7 @@ rotate_driver.o \
 rotate_xpsi_k.o \
 rotate_xpsi_gamma.o \
 gram_schmidt_gamma.o \
-gram_schmidt_k.o \
-gram_schmidt_gamma_gpu.o
+gram_schmidt_k.o
 
 all : libdense.a
 
