@@ -204,7 +204,7 @@ SUBROUTINE symmetries_of_wannier_function()
         rho_rotated(:) = rhowann_(:,iq, iwann)
         CALL fwfft ('Rho', rho_rotated, dffts)
         rho_rotated(:)  = rho_rotated(dffts%nl(:))    
-        CALL sym_rho(1, rho_rotated)
+        CALL sym_rho(1, rho_rotated, is_sym)
         rho_rotated(dffts%nl(:)) = rho_rotated(:)
         CALL invfft ('Rho', rho_rotated, dffts)
 
