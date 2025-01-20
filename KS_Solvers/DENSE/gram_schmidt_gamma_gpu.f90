@@ -51,10 +51,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   INTEGER     :: ii, buf_start, buf_end, buf_size, info
   !
-  COMPLEX(DP), ALLOCATABLE :: sr_d(:), sr2_d(:,:)
-#if defined (__CUDA)
-  attributes(device) :: sr_d, sr2_d
-#endif 
+  COMPLEX(DP), ALLOCATABLE :: sr(:), sr2(:,:)
   !
   !
   CALL start_clock( 'gsorth' )
@@ -166,8 +163,9 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ! ... Buffer allocation 
   !
   !
-  ALLOCATE( sr_d(nbsize))
-  IF (nbnd .GT. nbsize) ALLOCATE( sr2_d(nbsize, nbnd - nbsize))
+  ALLOCATE( sr(nbsize))
+  IF (nbnd .GT. nbsize) ALLOCATE( sr2(nbsize, nbnd - nbsize))
+  !$acc enter data create( sr, sr2 )
   !
   ! ... Blocking loop
   !
@@ -208,8 +206,9 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   ! ... Buffer Realese
   !
-  DEALLOCATE (sr_d) 
-  IF (nbnd .GT. nbsize) DEALLOCATE(sr2_d) 
+  !$acc exit data delete( sr, sr2 )
+  DEALLOCATE (sr) 
+  IF (nbnd .GT. nbsize) DEALLOCATE(sr2) 
   !
   !
   ! ... Copy psi <- phi
@@ -270,47 +269,49 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             !$acc host_data use_device( phi, spsi )
+             !$acc host_data use_device( phi, spsi, sr )
              CALL MYDGEMV( 'T', npw2, ibnd - ibnd_start, 2._DP, phi(1,ibnd_start), npwx2, &
-                         spsi(1,ibnd), 1, 0._DP, sr_d(1), 1 )
+                         spsi(1,ibnd), 1, 0._DP, sr(1), 1 )
              !$acc end host_data
              !
              IF ( gstart == 2 ) THEN
                 !$acc kernels copyout( psi_ibnd )
                 psi_ibnd = -spsi(1,ibnd)
                 !$acc end kernels
-                !$acc host_data use_device( phi )
+                !$acc host_data use_device( phi, sr )
                 CALL MYDAXPY( ibnd - ibnd_start, psi_ibnd , phi(1,ibnd_start), npwx2, &
-                         sr_d(1), 1 )
+                         sr(1), 1 )
                 !$acc end host_data
              END IF
              !
           ELSE
              !
-             !$acc host_data use_device( phi, psi )
+             !$acc host_data use_device( phi, psi, sr )
              CALL MYDGEMV( 'T', npw2, ibnd - ibnd_start, 2._DP, phi(1,ibnd_start), npwx2, &
-                         psi(1,ibnd), 1, 0._DP, sr_d(1), 1 )
+                         psi(1,ibnd), 1, 0._DP, sr(1), 1 )
              !$acc end host_data
              !
              IF ( gstart == 2 ) THEN
                 !$acc kernels copyout(psi_ibnd)
                 psi_ibnd = -psi(1,ibnd)
                 !$acc end kernels
-                !$acc host_data use_device( phi )
+                !$acc host_data use_device( phi, sr )
                 CALL MYDAXPY( ibnd - ibnd_start, psi_ibnd, phi(1,ibnd_start), npwx2, &
-                            sr_d(1), 1 )
+                            sr(1), 1 )
                 !$acc end host_data
              END IF
              !
           END IF
           !
-          CALL mp_sum( sr_d, intra_bgrp_comm )
+          !$acc host_data use_device(sr)
+          CALL mp_sum( sr, intra_bgrp_comm )
+          !$acc end host_data
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
-          !$acc host_data use_device(phi)
+          !$acc host_data use_device(phi, sr)
           CALL MYDGEMV( 'N', npw2, ibnd - ibnd_start, -1._DP, phi(1,ibnd_start), npwx2, &
-                      sr_d(1), 1, 1._DP, phi(1,ibnd), 1 )
+                      sr(1), 1, 1._DP, phi(1,ibnd), 1 )
           !$acc end host_data
           !
           ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
@@ -322,9 +323,9 @@ CONTAINS
           !
           IF ( eigen_ ) THEN
              !
-             !$acc host_data use_device(hphi)
+             !$acc host_data use_device(hphi, sr)
              CALL MYDGEMV( 'N', npw2, ibnd - ibnd_start, -1._DP, hphi(1,ibnd_start), npwx2, &
-                         sr_d(1), 1, 1._DP, hphi(1,ibnd), 1 )
+                         sr(1), 1, 1._DP, hphi(1,ibnd), 1 )
              !$acc end host_data
              !
              ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
@@ -338,9 +339,9 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             !$acc host_data use_device(sphi)
+             !$acc host_data use_device(sphi, sr)
              CALL MYDGEMV( 'N', npw2, ibnd - ibnd_start, -1._DP, sphi(1,ibnd_start), npwx2, &
-                         sr_d(1), 1, 1._DP, sphi(1,ibnd), 1 )
+                         sr(1), 1, 1._DP, sphi(1,ibnd), 1 )
              !$acc end host_data
              !
              ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
@@ -453,33 +454,33 @@ CONTAINS
     !
     ! ... <phi_i| S |psi_j>
     !
-    !$acc host_data use_device(phi, spsi, psi)
+    !$acc host_data use_device(phi, spsi, psi, sr2)
     IF ( uspp ) THEN
        !
        CALL MYDGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi(1,ibnd_start), npwx2, &
-                   spsi(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), nbsize )
+                   spsi(1,jbnd_start), npwx2, 0._DP, sr2(1,1), nbsize )
        !
        IF ( gstart == 2 ) &
        CALL MYDGER( ibnd_size, jbnd_size, -1._DP, psi(1,ibnd_start), npwx2, &
-                  spsi(1,jbnd_start), npwx2, sr2_d(1,1), nbsize )
+                  spsi(1,jbnd_start), npwx2, sr2(1,1), nbsize )
        !
     ELSE
        !
        CALL MYDGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi(1,ibnd_start), npwx2, &
-                   psi(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), nbsize )
+                   psi(1,jbnd_start), npwx2, 0._DP, sr2(1,1), nbsize )
        !
        IF ( gstart == 2 ) &
        CALL MYDGER( ibnd_size, jbnd_size, -1._DP, psi(1,ibnd_start), npwx2, &
-                  psi(1,jbnd_start), npwx2, sr2_d(1,1), nbsize )
+                  psi(1,jbnd_start), npwx2, sr2(1,1), nbsize )
        !
     END IF
     !
-    CALL mp_sum( sr2_d, intra_bgrp_comm )
+    CALL mp_sum( sr2, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
     CALL MYDGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi(1,ibnd_start), npwx2, &
-                sr2_d(1,1), nbsize, 1._DP, phi(1,jbnd_start), npwx2 )
+                sr2(1,1), nbsize, 1._DP, phi(1,jbnd_start), npwx2 )
     !$acc end host_data
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
@@ -492,9 +493,9 @@ CONTAINS
     !
     IF ( eigen_ ) THEN
        !
-       !$acc host_data use_device(hphi)
+       !$acc host_data use_device(hphi, sr2)
        CALL MYDGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi(1,ibnd_start), npwx2, &
-                   sr2_d(1,1), nbsize, 1._DP, hphi(1,jbnd_start), npwx2 )
+                   sr2(1,1), nbsize, 1._DP, hphi(1,jbnd_start), npwx2 )
        !$acc end host_data
        !
        ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
@@ -509,9 +510,9 @@ CONTAINS
     !
     IF ( uspp ) THEN
        !
-       !$acc host_data use_device(sphi)
+       !$acc host_data use_device(sphi, sr2)
        CALL MYDGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi(1,ibnd_start), npwx2, &
-                   sr2_d(1,1), nbsize, 1._DP, sphi(1,jbnd_start), npwx2 )
+                   sr2(1,1), nbsize, 1._DP, sphi(1,jbnd_start), npwx2 )
        !$acc end host_data
        !
        ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
