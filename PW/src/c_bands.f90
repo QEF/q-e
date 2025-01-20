@@ -480,13 +480,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             !$acc data present(g2kin)
-             !$acc host_data use_device(g2kin)
              CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, evc, hevc, sevc, &
                           et(1,ik), g2kin, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
-             !$acc end host_data 
-             !$acc end data
           END IF
           !
           !
@@ -776,13 +772,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             !$acc data present(g2kin)
-             !$acc host_data use_device(g2kin)
              CALL crmmdiagg_gpu( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, npol, evc, hevc, sevc, &
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
-             !$acc end host_data
-             !$acc end data
           END IF
           !
           IF ( lscf .AND. ( .NOT. rmm_conv ) ) notconv = 0

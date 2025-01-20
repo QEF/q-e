@@ -10,7 +10,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi, e, &
-                      g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
+                      g2kin, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
   ! ... Iterative diagonalization of a complex hermitian matrix
@@ -62,11 +62,10 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   COMPLEX(DP), INTENT(INOUT)  :: psi (npwx,nbnd)
   COMPLEX(DP), INTENT(INOUT)  :: hpsi(npwx,nbnd)
   COMPLEX(DP), INTENT(INOUT)  :: spsi(npwx,nbnd)
-  REAL(DP), INTENT(IN)        :: g2kin_d(npwx)
+  REAL(DP), INTENT(IN)        :: g2kin(npwx)
   COMPLEX(DP), ALLOCATABLE    :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
 #if defined(__CUDA)
-  attributes(device) :: g2kin_d
   attributes(device) :: phi_d, hphi_d, sphi_d
 #endif
   EXTERNAL :: h_psi_ptr, s_psi_ptr
@@ -854,7 +853,7 @@ CONTAINS
        !
        !$acc kernels
        DO ig = gstart, npw
-          ekinj = ekinj + 2._DP * g2kin_d(ig) * & 
+          ekinj = ekinj + 2._DP * g2kin(ig) * & 
               (DBLE ( psi(ig,ibnd) ) * DBLE ( psi(ig,ibnd) ) + AIMAG( psi(ig,ibnd) ) * AIMAG( psi(ig,ibnd) ))
        END DO
        !$acc end kernels
@@ -863,7 +862,7 @@ CONTAINS
           !
           !$acc kernels
           DO ii = 1, 1
-            ekinj = ekinj + g2kin_d(1) * DBLE ( psi(1,ibnd) ) * DBLE ( psi(1,ibnd) ) 
+            ekinj = ekinj + g2kin(1) * DBLE ( psi(1,ibnd) ) * DBLE ( psi(1,ibnd) ) 
           END DO 
           !$acc end kernels
           !
@@ -894,7 +893,7 @@ CONTAINS
        !
        !$acc kernels
        DO ig = 1, npw
-          x  = g2kin_d(ig) / ( 1.5_DP * ekinj )
+          x  = g2kin(ig) / ( 1.5_DP * ekinj )
           x2 = x * x
           x3 = x * x2
           x4 = x * x3

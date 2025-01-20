@@ -11,7 +11,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
-                      g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
+                      g2kin, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
   ! ... Iterative diagonalization of a complex hermitian matrix
@@ -31,7 +31,7 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx*npol,nbnd)
   COMPLEX(DP), INTENT(INOUT) :: spsi(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
-  REAL(DP),    INTENT(IN)    :: g2kin_d(npwx)
+  REAL(DP),    INTENT(IN)    :: g2kin(npwx)
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: ethr
   INTEGER,     INTENT(IN)    :: ndiis
@@ -74,7 +74,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
 #if defined(__CUDA)
   attributes(device) :: phi_d, hphi_d, sphi_d 
-  attributes(device) :: g2kin_d 
 #endif 
   !
   CALL start_clock( 'crmmdiagg' )
@@ -800,8 +799,8 @@ CONTAINS
        !$acc kernels
        DO ipol = 1, npol
           DO ig = 1, npw
-             ekinj = ekinj + g2kin_d(ig) * ( DBLE ( psi(ig+(ipol-1)*npwx,ibnd) ) * DBLE ( psi(ig+(ipol-1)*npwx,ibnd) ) + &
-                                             AIMAG( psi(ig+(ipol-1)*npwx,ibnd) ) * AIMAG( psi(ig+(ipol-1)*npwx,ibnd) )     ) 
+             ekinj = ekinj + g2kin(ig) * ( DBLE ( psi(ig+(ipol-1)*npwx,ibnd) ) * DBLE ( psi(ig+(ipol-1)*npwx,ibnd) ) + &
+                                           AIMAG( psi(ig+(ipol-1)*npwx,ibnd) ) * AIMAG( psi(ig+(ipol-1)*npwx,ibnd) )     ) 
           END DO
        END DO
        !$acc end kernels
@@ -832,7 +831,7 @@ CONTAINS
        !$acc kernels
        DO ipol = 1, npol
           DO ig = 1, npw
-             x  = g2kin_d(ig) / ( 1.5_DP * ekinj )
+             x  = g2kin(ig) / ( 1.5_DP * ekinj )
              x2 = x * x
              x3 = x * x2
              x4 = x * x3
