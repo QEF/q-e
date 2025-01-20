@@ -15,7 +15,7 @@ SUBROUTINE symmetries_of_wannier_function()
   USE control_kcw,           ONLY : ir_end, num_wann, Rvect, x_q
   USE control_kcw,           ONLY : spin_component, nqstot, kcw_iverbosity
   USE mp_bands,              ONLY : root_bgrp, intra_bgrp_comm
-  USE gvect,                 ONLY : ig_l2g, mill, g
+  USE gvect,                 ONLY : ig_l2g, mill, g, ngm
   USE gvecs,                 ONLY : doublegrid, ngms
   USE fft_base,              ONLY : dffts
   USE control_flags,         ONLY : gamma_only
@@ -33,6 +33,8 @@ SUBROUTINE symmetries_of_wannier_function()
   USE interpolation,         ONLY : read_wannier_centers
   USE io_global,             ONLY : stdout
   USE mp,                    ONLY : mp_sum  
+  USE symme,                 ONLY : sym_rho
+
   IMPLICIT NONE 
   !
   COMPLEX(DP)              ::IMAG
@@ -56,6 +58,7 @@ SUBROUTINE symmetries_of_wannier_function()
   COMPLEX(DP)                 :: delta_rho_R
   COMPLEX(DP) :: sh
   COMPLEX (DP) :: int_rho_Rq, eiRqR
+  INTEGER :: is_sym( nsym )
   !
   !
   CALL start_clock ( 'check_symm' )
@@ -183,6 +186,8 @@ SUBROUTINE symmetries_of_wannier_function()
     WRITE(stdout, '(/, 7X, "SYM : Checking WF #", I5)') iwann
     !
     DO isym=1, nsym
+      is_sym(:) = 0
+      is_sym(isym) = 1
       !
       sym_only_for_q(nsym_w_q(iwann) + 1, iwann) = .FALSE.
       !
@@ -193,7 +198,16 @@ SUBROUTINE symmetries_of_wannier_function()
         !
         ! calculate rho_rotated = rho_q(R^{-1}.r-f)*EXP(-i k.f)
         !
-        CALL rotate_rhowann_r(isym, rhowann_(:,iq,iwann), rho_rotated)
+        !!!!!CALL rotate_rhowann_r(isym, rhowann_(:,iq,iwann), rho_rotated)
+
+
+        rho_rotated(:) = rhowann_(:,iq, iwann)
+        CALL fwfft ('Rho', rho_rotated, dffts)
+        rho_rotated(:)  = rho_rotated(dffts%nl(:))    
+        CALL sym_rho(1, rho_rotated)
+        rho_rotated(dffts%nl(:)) = rho_rotated(:)
+        CALL invfft ('Rho', rho_rotated, dffts)
+
         x_q_cryst(:)=xk(:,iq)
         CALL cryst_to_cart(1,x_q_cryst,at,-1)
         rho_rotated(:) = rho_rotated(:)*EXP(-IMAG*tpi*dot_product(x_q_cryst(:),ft(:,isym)))
