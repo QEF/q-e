@@ -70,11 +70,8 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   ! device variables
   ! 
   INTEGER :: ii, jj, kk
-  COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: phi(:,:,:), hphi(:,:,:), sphi(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
-#if defined(__CUDA)
-  attributes(device) :: phi_d, hphi_d, sphi_d 
-#endif 
   !
   CALL start_clock( 'crmmdiagg' )
   !
@@ -98,18 +95,19 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   !
   IF( ibnd_size == 0 ) CALL errore( ' crmmdiagg ', ' ibnd_size == 0 ', 1 )
   !
-  ALLOCATE( phi_d( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate phi_d ', ABS(ierr) )
+  ALLOCATE( phi( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
+  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate phi ', ABS(ierr) )
   !
-  ALLOCATE( hphi_d( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hphi_d ', ABS(ierr) )
+  ALLOCATE( hphi( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
+  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hphi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      !
-     ALLOCATE( sphi_d( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sphi_d ', ABS(ierr) )
+     ALLOCATE( sphi( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
+     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sphi ', ABS(ierr) )
      !
   END IF
+  !$acc enter data create(phi, sphi, hphi)
   !
   ALLOCATE( kpsi( kdmx, nbnd ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
@@ -146,25 +144,11 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
-!$cuf kernel do(3)
-  DO ii = 1, kdmx
-    DO jj = ibnd_start, ibnd_end 
-      DO kk = 1, ndiis
-        phi_d(ii, jj, kk) = ZERO
-        hphi_d(ii, jj, kk) = ZERO
-      END DO 
-    END DO 
-  END DO 
-  IF(uspp) THEN 
-!$cuf kernel do(3)
-    DO ii = 1, kdmx
-      DO jj = ibnd_start, ibnd_end 
-        DO kk = 1, ndiis
-          sphi_d(ii, jj, kk) = ZERO
-        END DO 
-      END DO 
-    END DO 
-  END IF 
+  !$acc kernels
+  phi = ZERO
+  hphi = ZERO
+  IF(uspp) sphi = ZERO
+  !$acc end kernels
   !
   !$acc kernels
   kpsi = ZERO
@@ -254,9 +238,10 @@ SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi, hpsi
   CALL mp_sum( spsi, inter_bgrp_comm )
   !$acc end host_data
   !
-  DEALLOCATE( phi_d )
-  DEALLOCATE( hphi_d )
-  IF ( uspp ) DEALLOCATE( sphi_d )
+  !$acc exit data delete(phi, sphi, hphi)
+  DEALLOCATE( phi )
+  DEALLOCATE( hphi )
+  IF ( uspp ) DEALLOCATE( sphi )
   !$acc exit data delete(kpsi, hkpsi)
   DEALLOCATE( kpsi )
   DEALLOCATE( hkpsi )
@@ -397,11 +382,11 @@ CONTAINS
        !
        IF ( conv(ibnd) ) CYCLE
        !
-       !$acc host_data use_device(psi, hpsi, spsi)
-       CALL MYZCOPY( kdim, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
-       CALL MYZCOPY( kdim, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
+       !$acc host_data use_device(psi, hpsi, spsi, phi, hphi, sphi )
+       CALL MYZCOPY( kdim, psi (1,ibnd), 1, phi (1,ibnd,idiis), 1 )
+       CALL MYZCOPY( kdim, hpsi(1,ibnd), 1, hphi(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL MYZCOPY( kdim, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       CALL MYZCOPY( kdim, spsi(1,ibnd), 1, sphi(1,ibnd,idiis), 1 )
        !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
@@ -423,33 +408,37 @@ CONTAINS
           !
           ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
           !
-          CALL MYZCOPY( kdim, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          !$acc host_data use_device(hphi, sphi, phi)
+          CALL MYZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL MYZAXPY( kdim, -ec, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYZAXPY( kdim, -ec, sphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL MYZAXPY( kdim, -ec, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYZAXPY( kdim, -ec, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           END IF
+          !$acc end host_data
           !
        END DO
        !
        ec = CMPLX( php(ibnd,idiis), 0._DP, kind=DP )
        !
-       CALL MYZCOPY( kdim, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       !$acc host_data use_device(hphi, sphi, phi)
+       CALL MYZCOPY( kdim, hphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL MYZAXPY( kdim, -ec, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZAXPY( kdim, -ec, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL MYZAXPY( kdim, -ec, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZAXPY( kdim, -ec, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
+       !$acc end host_data
        !
        CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
                    vec1_d(1), 1, ZERO, tc_d(1,jbnd), 1 )
@@ -484,21 +473,23 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
+       !$acc host_data use_device(phi, sphi, hphi)
        DO kdiis = 1, idiis
           !
-          CALL MYZCOPY( kdim, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYZCOPY( kdim, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL MYZCOPY( kdim, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZCOPY( kdim, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL MYZCOPY( kdim, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZCOPY( kdim, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
+       !$acc end host_data
        !
        CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
                    vec1_d(1), 1, ZERO, tc_d(1,jbnd), 1 )
@@ -553,27 +544,29 @@ CONTAINS
              !
              kvc = vc(kdiis) 
              !
-             !$acc host_data use_device(psi, hpsi, spsi)
-             CALL MYZAXPY( kdim, kvc, phi_d (1,ibnd,kdiis), 1, psi(1,ibnd), 1 )
-             CALL MYZAXPY( kdim, kvc, hphi_d (1,ibnd,kdiis), 1, hpsi (1,ibnd), 1 )
-             IF (uspp) CALL MYZAXPY( kdim, kvc, sphi_d (1,ibnd,kdiis), 1, spsi (1,ibnd), 1 )
+             !$acc host_data use_device(psi, hpsi, spsi, phi, hphi, sphi )
+             CALL MYZAXPY( kdim, kvc, phi (1,ibnd,kdiis), 1, psi(1,ibnd), 1 )
+             CALL MYZAXPY( kdim, kvc, hphi (1,ibnd,kdiis), 1, hpsi (1,ibnd), 1 )
+             IF (uspp) CALL MYZAXPY( kdim, kvc, sphi (1,ibnd,kdiis), 1, spsi (1,ibnd), 1 )
              !$acc end host_data
              !
              ! ... Residual vectors
              !
              ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
              !
-             CALL MYZCOPY( kdim, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             !$acc host_data use_device(phi, hphi, sphi )
+             CALL MYZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL MYZAXPY( kdim, -ec, sphi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
+                CALL MYZAXPY( kdim, -ec, sphi (1,ibnd,kdiis), 1, vec1_d (1), 1 )
                 !
              ELSE
                 !
-                CALL MYZAXPY( kdim, -ec, phi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
+                CALL MYZAXPY( kdim, -ec, phi (1,ibnd,kdiis), 1, vec1_d (1), 1 )
                 !
              END IF
+             !$acc end host_data
              !
              !$acc host_data use_device(kpsi)
              CALL MYZAXPY( kdim, kvc, vec1_d (1), 1, kpsi (1,kbnd), 1 )

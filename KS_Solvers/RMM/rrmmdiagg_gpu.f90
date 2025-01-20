@@ -63,11 +63,8 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   COMPLEX(DP), INTENT(INOUT)  :: hpsi(npwx,nbnd)
   COMPLEX(DP), INTENT(INOUT)  :: spsi(npwx,nbnd)
   REAL(DP), INTENT(IN)        :: g2kin(npwx)
-  COMPLEX(DP), ALLOCATABLE    :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
+  COMPLEX(DP), ALLOCATABLE    :: phi(:,:,:), hphi(:,:,:), sphi(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
-#if defined(__CUDA)
-  attributes(device) :: phi_d, hphi_d, sphi_d
-#endif
   EXTERNAL :: h_psi_ptr, s_psi_ptr
     ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
@@ -90,18 +87,19 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   !
   IF( ibnd_size == 0 ) CALL errore( ' rrmmdiagg ', ' ibnd_size == 0 ', 1 )
   !
-  ALLOCATE( phi_d( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate phi_d ', ABS(ierr) )
+  ALLOCATE( phi( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
+  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate phi ', ABS(ierr) )
   !
-  ALLOCATE( hphi_d( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hphi_d ', ABS(ierr) )
+  ALLOCATE( hphi( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
+  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hphi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      !
-     ALLOCATE( sphi_d( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate sphi_d ', ABS(ierr) )
+     ALLOCATE( sphi( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
+     IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate sphi ', ABS(ierr) )
      !
   END IF
+  !$acc enter data create(phi, sphi, hphi)
   !
   ALLOCATE( kpsi( npwx, nbnd ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
@@ -139,25 +137,11 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
-!$cuf kernel do(3)
-  DO ii = 1, npwx 
-    DO jj = ibnd_start, ibnd_end
-      DO kk = 1, ndiis 
-        phi_d(ii,jj,kk) = ZERO
-        hphi_d(ii,jj,kk) = ZERO
-      END DO 
-    END DO 
-  END DO 
-  IF ( uspp ) THEN  
-!$cuf kernel do(3)
-    DO ii = 1, npwx 
-      DO jj = ibnd_start, ibnd_end
-        DO kk = 1, ndiis 
-          sphi_d(ii,jj,kk) = ZERO
-        END DO 
-      END DO 
-    END DO 
-  END IF
+  !$acc kernels
+  phi = ZERO
+  hphi = ZERO
+  IF ( uspp ) sphi = ZERO
+  !$acc end kernels
   !
   !$acc kernels
   kpsi = ZERO
@@ -265,9 +249,10 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi
   CALL mp_sum( spsi, inter_bgrp_comm )
   !$acc end host_data
   !
-  DEALLOCATE( phi_d )
-  DEALLOCATE( hphi_d )
-  IF ( uspp ) DEALLOCATE( sphi_d )
+  !$acc exit data delete(phi, sphi, hphi)
+  DEALLOCATE( phi )
+  DEALLOCATE( hphi )
+  IF ( uspp ) DEALLOCATE( sphi )
   !$acc exit data delete(kpsi, hkpsi)
   DEALLOCATE( kpsi )
   DEALLOCATE( hkpsi )
@@ -416,11 +401,11 @@ CONTAINS
        !
        IF ( conv(ibnd) ) CYCLE
        !
-       !$acc host_data use_device(psi, hpsi, spsi)
-       CALL MYDCOPY( npw2, psi (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
-       CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
+       !$acc host_data use_device( psi, hpsi, spsi, phi, hphi, sphi )
+       CALL MYDCOPY( npw2, psi (1,ibnd), 1, phi (1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, hphi(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL MYDCOPY( npw2, spsi(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, spsi(1,ibnd), 1, sphi(1,ibnd,idiis), 1 )
        !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
@@ -442,36 +427,40 @@ CONTAINS
           !
           er = php(ibnd,kdiis)
           !
-          CALL MYDCOPY( npw2, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          !$acc host_data use_device(phi, sphi, hphi)
+          CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           END IF
+          !$acc end host_data
           !
        END DO
        !
        er = php(ibnd,idiis)
        !
-       CALL MYDCOPY( npw2, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       !$acc host_data use_device(phi, sphi, hphi)
+       CALL MYDCOPY( npw2, hphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
        CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
                    vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
+       !$acc end host_data
        !
        IF ( gstart == 2 ) THEN  
 !$cuf kernel do(1)
@@ -509,21 +498,23 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
+       !$acc host_data use_device(phi, sphi)
        DO kdiis = 1, idiis
           !
-          CALL MYDCOPY( npw2, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL MYDCOPY( npw2, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL MYDCOPY( npw2, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
+       !$acc end host_data
        !
        CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
                    vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
@@ -583,28 +574,30 @@ CONTAINS
              ! ... Wave functions
              !
              kvr = vr(kdiis) 
-             !$acc host_data use_device(psi, hpsi, spsi)
-             CALL MYDAXPY( npw2, kvr, phi_d (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
-             CALL MYDAXPY( npw2, kvr, hphi_d(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
+             !$acc host_data use_device(psi, hpsi, spsi, phi, hphi, sphi )
+             CALL MYDAXPY( npw2, kvr, phi (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, hphi(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
              IF ( uspp ) &
-             CALL MYDAXPY( npw2, kvr, sphi_d(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, sphi(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
              !$acc end host_data
              !
              ! ... Residual vectors
              !
              er = php(ibnd,kdiis)
              !
-             CALL MYDCOPY( npw2, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             !$acc host_data use_device(phi, hphi, sphi )
+             CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL MYDAXPY( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              ELSE
                 !
-                CALL MYDAXPY( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              END IF
+             !$acc end host_data
              !
              !$acc host_data use_device(kpsi)
              CALL MYDAXPY( npw2, kvr, vec1_d(1), 1, kpsi(1,kbnd), 1 )
