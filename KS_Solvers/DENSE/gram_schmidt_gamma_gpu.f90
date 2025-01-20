@@ -49,7 +49,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   ! ... device variables
   !
-  INTEGER     :: ii, buf_start, buf_end, buf_size, info
+  INTEGER     :: buf_start, buf_end, buf_size, info
   !
   COMPLEX(DP), ALLOCATABLE :: sr(:), sr2(:,:)
   !
@@ -535,35 +535,33 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
-    REAL(DP) :: e_ibnd
     !
-    REAL(DP), EXTERNAL :: MYDDOT
+    REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
+    !$acc routine( MYDDOT_VECTOR_GPU ) vector
     !
     ! ... <psi_i| H |psi_i>
     !
+    !$acc kernels
     e(:) = 0._DP
+    !$acc end kernels
     !
     CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
     !
+    !$acc parallel copyin(npw2, ibnd_start, ibnd_end, gstart) 
+    !$acc loop gang 
     DO ibnd = ibnd_start, ibnd_end
        !
-       !$acc host_data use_device(psi, hpsi)
-       e(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
-       !$acc end host_data
+       e(ibnd) = 2._DP * MYDDOT_VECTOR_GPU( npw2, psi(1,ibnd), hpsi(1,ibnd) )
        !
-       IF ( gstart == 2 ) THEN
-          !$acc kernels copyout(e_ibnd)
-          DO ii=1,1
-             e_ibnd = DBLE( psi(1,ibnd) ) * DBLE ( hpsi(1,ibnd) )
-          END DO
-          !$acc end kernels
-          e(ibnd) = e(ibnd) - e_ibnd
-       END IF
+       IF ( gstart == 2 ) e(ibnd) = e(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( hpsi(1,ibnd) ) 
        !
     END DO
+    !$acc end parallel
     !
+    !$acc host_data use_device(e)
     CALL mp_sum( e(ibnd_start:ibnd_end), intra_bgrp_comm )
     CALL mp_sum( e, inter_bgrp_comm )
+    !$acc end host_data
     !
     RETURN
     !
