@@ -7,7 +7,6 @@ MODFLAGS= $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../PPCG $(MOD_FLAG) ../../UtilXli
 
 RMM = \
 crmmdiagg.o \
-crmmdiagg_gpu.o \
 rrmmdiagg.o \
 rrmmdiagg_gpu.o
 

@@ -56,7 +56,6 @@ set(src_rmmdiis
     RMM/crmmdiagg.f90 
     RMM/rrmmdiagg.f90 
     # GPU
-    RMM/crmmdiagg_gpu.f90
     RMM/rrmmdiagg_gpu.f90)
     qe_enable_cuda_fortran("${src_rmmdiis}")
 
