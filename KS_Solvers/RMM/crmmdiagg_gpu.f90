@@ -361,20 +361,14 @@ CONTAINS
     !
     ! device variables
     !
-    COMPLEX(DP), ALLOCATABLE :: vec1_d(:)
-    COMPLEX(DP), ALLOCATABLE :: vec2_d(:,:)
-    COMPLEX(DP), ALLOCATABLE :: tc_d(:,:)
-#if defined (__CUDA)
-    attributes(device) :: vec1_d
-    attributes(device) :: vec2_d
-    attributes(device) :: tc_d
-#endif
+    COMPLEX(DP), ALLOCATABLE :: vec1(:)
+    COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
     !
     IF ( idiis > 1 )   ALLOCATE( vc( idiis ) )
-    ALLOCATE( vec1_d( kdmx ) )
-    ALLOCATE( vec2_d( kdmx, idiis ) )
-    IF ( motconv > 0 ) ALLOCATE( tc_d( idiis, motconv ) )
+    ALLOCATE( vec1( kdmx ) )
+    ALLOCATE( vec2( kdmx, idiis ) )
     IF ( motconv > 0 ) ALLOCATE( tc( idiis, motconv ) )
+    !$acc enter data create( vec1, vec2, tc )
     !
     ! ... Save current wave functions and matrix elements
     !
@@ -408,16 +402,16 @@ CONTAINS
           !
           ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
           !
-          !$acc host_data use_device(hphi, sphi, phi)
-          CALL MYZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          !$acc host_data use_device(hphi, sphi, phi, vec2)
+          CALL MYZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL MYZAXPY( kdim, -ec, sphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYZAXPY( kdim, -ec, sphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL MYZAXPY( kdim, -ec, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYZAXPY( kdim, -ec, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
              !
           END IF
           !$acc end host_data
@@ -426,32 +420,36 @@ CONTAINS
        !
        ec = CMPLX( php(ibnd,idiis), 0._DP, kind=DP )
        !
-       !$acc host_data use_device(hphi, sphi, phi)
-       CALL MYZCOPY( kdim, hphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       !$acc host_data use_device(hphi, sphi, phi, vec1)
+       CALL MYZCOPY( kdim, hphi(1,ibnd,idiis), 1, vec1(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL MYZAXPY( kdim, -ec, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZAXPY( kdim, -ec, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        ELSE
           !
-          CALL MYZAXPY( kdim, -ec, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZAXPY( kdim, -ec, phi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        END IF
        !$acc end host_data
        !
-       CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
-                   vec1_d(1), 1, ZERO, tc_d(1,jbnd), 1 )
+       !$acc host_data use_device(vec1, vec2, tc)
+       CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2(1,1), kdmx, &
+                   vec1(1), 1, ZERO, tc(1,jbnd), 1 )
+       !$acc end host_data
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
-       CALL mp_sum( tc_d, intra_bgrp_comm )
+       !$acc host_data use_device(tc)
+       CALL mp_sum( tc, intra_bgrp_comm )
+       !$acc end host_data
        !
     END IF
     !
-    tc = tc_d
+    !$acc update self(tc) 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -473,36 +471,40 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
-       !$acc host_data use_device(phi, sphi, hphi)
+       !$acc host_data use_device(phi, sphi, hphi, vec1, vec2)
        DO kdiis = 1, idiis
           !
-          CALL MYZCOPY( kdim, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYZCOPY( kdim, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL MYZCOPY( kdim, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZCOPY( kdim, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        ELSE
           !
-          CALL MYZCOPY( kdim, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYZCOPY( kdim, phi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        END IF
        !$acc end host_data
        !
-       CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2_d(1,1), kdmx, &
-                   vec1_d(1), 1, ZERO, tc_d(1,jbnd), 1 )
+       !$acc host_data use_device(vec1, vec2, tc)
+       CALL MYZGEMV( 'C', kdim, idiis, ONE, vec2(1,1), kdmx, &
+                   vec1(1), 1, ZERO, tc(1,jbnd), 1 )
+       !$acc end host_data
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
-       CALL mp_sum( tc_d, intra_bgrp_comm )
+       !$acc host_data use_device(tc)
+       CALL mp_sum( tc, intra_bgrp_comm )
+       !$acc end host_data
        !
     END IF
     !
-    tc = tc_d
+    !$acc update self(tc) 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -554,22 +556,22 @@ CONTAINS
              !
              ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
              !
-             !$acc host_data use_device(phi, hphi, sphi )
-             CALL MYZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             !$acc host_data use_device(phi, hphi, sphi, vec1 )
+             CALL MYZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL MYZAXPY( kdim, -ec, sphi (1,ibnd,kdiis), 1, vec1_d (1), 1 )
+                CALL MYZAXPY( kdim, -ec, sphi (1,ibnd,kdiis), 1, vec1 (1), 1 )
                 !
              ELSE
                 !
-                CALL MYZAXPY( kdim, -ec, phi (1,ibnd,kdiis), 1, vec1_d (1), 1 )
+                CALL MYZAXPY( kdim, -ec, phi (1,ibnd,kdiis), 1, vec1 (1), 1 )
                 !
              END IF
              !$acc end host_data
              !
-             !$acc host_data use_device(kpsi)
-             CALL MYZAXPY( kdim, kvc, vec1_d (1), 1, kpsi (1,kbnd), 1 )
+             !$acc host_data use_device(kpsi, vec1)
+             CALL MYZAXPY( kdim, kvc, vec1 (1), 1, kpsi (1,kbnd), 1 )
              !$acc end host_data
              !
           END DO
@@ -609,9 +611,10 @@ CONTAINS
     END DO
     !
     IF ( idiis > 1 )   DEALLOCATE( vc )
-    DEALLOCATE( vec1_d )
-    DEALLOCATE( vec2_d )
-    IF ( motconv > 0 ) DEALLOCATE( tc_d )
+    !$acc exit data delete( vec1, vec2, tc)
+    DEALLOCATE( vec1 )
+    DEALLOCATE( vec2 )
+    IF ( motconv > 0 ) DEALLOCATE( tc )
     !
     RETURN
     !

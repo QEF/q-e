@@ -382,18 +382,14 @@ CONTAINS
     !
     REAL(DP) :: kvr  ! vr(kdiis)
     COMPLEX(DP) :: ctmp , cctmp
-    COMPLEX(DP), ALLOCATABLE :: vec1_d(:)
-    COMPLEX(DP), ALLOCATABLE :: vec2_d(:,:)
-    REAL(DP),    ALLOCATABLE :: tr_d(:,:)
-#if defined (__CUDA) 
-    attributes(device) :: vec1_d, vec2_d, tr_d
-#endif
+    COMPLEX(DP), ALLOCATABLE :: vec1(:)
+    COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
     !
-    ALLOCATE( vec1_d( npwx ) )
-    ALLOCATE( vec2_d( npwx, idiis ) )
+    ALLOCATE( vec1( npwx ) )
+    ALLOCATE( vec2( npwx, idiis ) )
     IF ( idiis > 1 )   ALLOCATE( vr( idiis ) )
     IF ( motconv > 0 ) ALLOCATE( tr( idiis, motconv ) )
-    IF ( motconv > 0 ) ALLOCATE( tr_d( idiis, motconv ) )
+    !$acc enter data create(vec1, vec2, tr)
     !
     ! ... Save current wave functions and matrix elements
     !
@@ -427,16 +423,16 @@ CONTAINS
           !
           er = php(ibnd,kdiis)
           !
-          !$acc host_data use_device(phi, sphi, hphi)
-          CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          !$acc host_data use_device(phi, sphi, hphi, vec2)
+          CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
              !
           END IF
           !$acc end host_data
@@ -445,39 +441,42 @@ CONTAINS
        !
        er = php(ibnd,idiis)
        !
-       !$acc host_data use_device(phi, sphi, hphi)
-       CALL MYDCOPY( npw2, hphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+       !$acc host_data use_device(phi, sphi, hphi, vec1)
+       CALL MYDCOPY( npw2, hphi(1,ibnd,idiis), 1, vec1(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL MYDAXPY( npw2, -er, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        ELSE
           !
-          CALL MYDAXPY( npw2, -er, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDAXPY( npw2, -er, phi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        END IF
+       !$acc end host_data
        !
-       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
-                   vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
+       !$acc host_data use_device(vec1, vec2, tr)
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
+                   vec1(1), 1, 0._DP, tr(1,jbnd), 1 )
        !$acc end host_data
        !
        IF ( gstart == 2 ) THEN  
-!$cuf kernel do(1)
-         DO ii = 1, idiis
-           tr_d(ii,jbnd) = tr_d(ii,jbnd) - DBLE( vec2_d(1,ii) ) * DBLE( vec1_d(1) )
-         END DO 
+         !$acc kernels
+         tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+         !$acc end kernels
        END IF 
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
-       !
-       CALL mp_sum( tr_d, intra_bgrp_comm )
+       ! 
+       !$acc host_data use_device(tr)
+       CALL mp_sum( tr, intra_bgrp_comm )
+       !$acc end host_data
        !
     END IF
     !
-    tr = tr_d
+    !$acc update self(tr) 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -498,43 +497,46 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
-       !$acc host_data use_device(phi, sphi)
+       !$acc host_data use_device(phi, sphi, vec1, vec2)
        DO kdiis = 1, idiis
           !
-          CALL MYDCOPY( npw2, phi(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL MYDCOPY( npw2, sphi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        ELSE
           !
-          CALL MYDCOPY( npw2, phi(1,ibnd,idiis), 1, vec1_d(1), 1 )
+          CALL MYDCOPY( npw2, phi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        END IF
        !$acc end host_data
        !
-       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
-                   vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
+       !$acc host_data use_device(vec1, vec2, tr)
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
+                   vec1(1), 1, 0._DP, tr(1,jbnd), 1 )
+       !$acc end host_data
        !
        IF ( gstart == 2 ) THEN 
-!$cuf kernel do(1)
-         DO ii = 1, idiis
-           tr_d(ii,jbnd) = tr_d(ii,jbnd) - DBLE( vec2_d(1,ii) ) * DBLE( vec1_d(1) )
-         END DO 
+         !$acc kernels
+         tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+         !$acc end kernels
        END IF 
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
-       CALL mp_sum( tr_d, intra_bgrp_comm )
+       !$acc host_data use_device(tr)
+       CALL mp_sum( tr, intra_bgrp_comm )
+       !$acc end host_data
        !
     END IF
     !
-    tr = tr_d
+    !$acc update self(tr) 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -585,22 +587,22 @@ CONTAINS
              !
              er = php(ibnd,kdiis)
              !
-             !$acc host_data use_device(phi, hphi, sphi )
-             CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+             !$acc host_data use_device(phi, hphi, sphi, vec1 )
+             CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec1(1), 1 )
                 !
              ELSE
                 !
-                CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec1_d(1), 1 )
+                CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec1(1), 1 )
                 !
              END IF
              !$acc end host_data
              !
-             !$acc host_data use_device(kpsi)
-             CALL MYDAXPY( npw2, kvr, vec1_d(1), 1, kpsi(1,kbnd), 1 )
+             !$acc host_data use_device(kpsi, vec1)
+             CALL MYDAXPY( npw2, kvr, vec1(1), 1, kpsi(1,kbnd), 1 )
              !$acc end host_data
              !
           END DO
@@ -663,11 +665,11 @@ CONTAINS
        !
     END DO
     !
-    DEALLOCATE( vec1_d )
-    DEALLOCATE( vec2_d )
+    !$acc exit data delete(vec1, vec2, tr)
+    DEALLOCATE( vec1 )
+    DEALLOCATE( vec2 )
     IF ( idiis > 1 )   DEALLOCATE( vr )
     IF ( motconv > 0 ) DEALLOCATE( tr )
-    IF ( motconv > 0 ) DEALLOCATE( tr_d )
     !
     RETURN
     !
