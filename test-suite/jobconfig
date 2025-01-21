@@ -147,7 +147,7 @@ inputs_args = ('scf_twochem.in', '1'), ('phG_twochem.in','11')
 
 [ph_multipole/]
 program = PH
-inputs_args = ('scf.in', '12'), ('ph.in.01','2'), ('ph.in.02', '2'), ('ph.in.03', '2'),  ('ph.in.04', '2'),  ('ph.in.05', '2'),  ('ph.in.06', '2'),  ('ph.in.07', '2'), ('ph.in.08', '13')  
+inputs_args = ('scf.in', '12'), ('ph.in.01','2'), ('ph.in.02', '2'), ('ph.in.03', '2'),  ('ph.in.04', '13')  
 
 [epw_base/]
 program = EPW

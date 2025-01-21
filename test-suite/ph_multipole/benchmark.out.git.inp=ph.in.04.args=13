@@ -1,5 +1,5 @@
 
-     Program PHONON v.7.4 starts on 12Jan2025 at 13:57:36 
+     Program PHONON v.7.4 starts on 20Jan2025 at  9:21:18 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,7 +13,7 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     1381 MiB available memory on the printing compute node when the environment starts
+     1232 MiB available memory on the printing compute node when the environment starts
 
      Waiting for input...
      Reading input from standard input
@@ -45,12 +45,12 @@
 
      Number and degeneracy of irreps per q-point
        N         xq(1)         xq(2)         xq(3)   N irreps
-       1  -0.003535534   0.003535534   0.003535534       4
+       1   0.010000000  -0.010000000   0.010000000       4
         1   1   2   2
 
      Saving dvscf to file. Distribute only q points, not irreducible representations.
 
-     Calculation of q =   -0.0035355   0.0035355   0.0035355
+     Calculation of q =    0.0100000  -0.0100000   0.0100000
 
      G-vector sticks info
      --------------------
@@ -190,7 +190,7 @@
         2  C      12.0108   tau(    2) = (    0.25000    0.25000    0.25000  )
 
      Computing dynamical matrix for 
-                    q = (  -0.0035355   0.0035355   0.0035355 )
+                    q = (   0.0100000  -0.0100000   0.0100000 )
 
       6 Sym.Ops. (no q -> -q+G )
 
@@ -233,7 +233,7 @@
 
      Message from routine init_vloc:
      Interpolation table for Vloc re-allocated
-     PHONON       :      0.85s CPU      0.87s WALL
+     PHONON       :      0.86s CPU      0.87s WALL
 
 
 
@@ -241,29 +241,29 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     1.0 secs   av.it.:   1.0
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.034E-11
+      iter #   1 total cpu time :     1.0 secs   av.it.:   1.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  8.292E-10
 
-      iter #   2 total cpu time :     1.3 secs   av.it.:   9.8
-      thresh= 4.510E-07 alpha_mix =  0.700 |ddv_scf|^2 =  6.394E-11
+      iter #   2 total cpu time :     1.3 secs   av.it.:   8.8
+      thresh= 2.880E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.418E-11
 
-      iter #   3 total cpu time :     1.5 secs   av.it.:   7.0
-      thresh= 7.996E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.083E-10
+      iter #   3 total cpu time :     1.5 secs   av.it.:   8.5
+      thresh= 5.846E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.385E-12
 
-      iter #   4 total cpu time :     1.8 secs   av.it.:   8.3
-      thresh= 1.041E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.333E-12
+      iter #   4 total cpu time :     1.8 secs   av.it.:   8.2
+      thresh= 1.544E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.846E-13
 
-      iter #   5 total cpu time :     2.0 secs   av.it.:   8.4
-      thresh= 1.154E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.387E-13
+      iter #   5 total cpu time :     2.1 secs   av.it.:   8.0
+      thresh= 5.335E-08 alpha_mix =  0.700 |ddv_scf|^2 =  3.712E-15
 
-      iter #   6 total cpu time :     2.3 secs   av.it.:   8.2
-      thresh= 3.724E-08 alpha_mix =  0.700 |ddv_scf|^2 =  8.076E-15
+      iter #   6 total cpu time :     2.3 secs   av.it.:   8.1
+      thresh= 6.092E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.024E-16
 
-      iter #   7 total cpu time :     2.6 secs   av.it.:   8.2
-      thresh= 8.987E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.435E-18
+      iter #   7 total cpu time :     2.6 secs   av.it.:   7.8
+      thresh= 1.012E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.275E-18
 
-      iter #   8 total cpu time :     2.8 secs   av.it.:   7.6
-      thresh= 1.198E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.598E-20
+      iter #   8 total cpu time :     2.8 secs   av.it.:   7.5
+      thresh= 1.129E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.342E-20
 
      End of self-consistent calculation
 
@@ -305,7 +305,7 @@
  ------------------------------------------------------------------------
 
      init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.72s CPU      0.74s WALL (       1 calls)
+     electrons    :      0.74s CPU      0.74s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
@@ -313,61 +313,61 @@
      hinit0       :      0.02s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.72s CPU      0.74s WALL (       1 calls)
+     c_bands      :      0.74s CPU      0.74s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       2 calls)
 
      Called by c_bands:
      init_us_2    :      0.02s CPU      0.02s WALL (     896 calls)
-     cegterg      :      0.55s CPU      0.56s WALL (     112 calls)
+     cegterg      :      0.56s CPU      0.57s WALL (     112 calls)
 
      Called by *egterg:
-     cdiaghg      :      0.04s CPU      0.04s WALL (    1258 calls)
-     h_psi        :      2.01s CPU      2.06s WALL (    5076 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (    1146 calls)
+     cdiaghg      :      0.04s CPU      0.04s WALL (    1259 calls)
+     h_psi        :      1.97s CPU      2.06s WALL (    5067 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (    1147 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.04s CPU      0.04s WALL (    5076 calls)
-     vloc_psi     :      1.92s CPU      1.97s WALL (    5076 calls)
-                                        0.00s GPU  (    5076 calls)
-     add_vuspsi   :      0.03s CPU      0.04s WALL (    5076 calls)
+     h_psi:calbec :      0.04s CPU      0.04s WALL (    5067 calls)
+     vloc_psi     :      1.88s CPU      1.97s WALL (    5067 calls)
+                                        0.00s GPU  (    5067 calls)
+     add_vuspsi   :      0.03s CPU      0.04s WALL (    5067 calls)
 
      General routines
-     calbec       :      0.05s CPU      0.05s WALL (    6644 calls)
+     calbec       :      0.05s CPU      0.05s WALL (    6635 calls)
      fft          :      0.00s CPU      0.00s WALL (      50 calls)
      ffts         :      0.01s CPU      0.01s WALL (     136 calls)
-     fftw         :      2.08s CPU      2.13s WALL (   46466 calls)
+     fftw         :      2.03s CPU      2.13s WALL (   46470 calls)
      davcio       :      0.02s CPU      0.02s WALL (    2951 calls)
 
      Parallel routines
 
-     PHONON       :      2.79s CPU      2.86s WALL
+     PHONON       :      2.72s CPU      2.86s WALL
 
      INITIALIZATION: 
      phq_setup    :      0.00s CPU      0.00s WALL (       1 calls)
-     phq_init     :      0.02s CPU      0.02s WALL (       1 calls)
+     phq_init     :      0.01s CPU      0.02s WALL (       1 calls)
 
-     phq_init     :      0.02s CPU      0.02s WALL (       1 calls)
+     phq_init     :      0.01s CPU      0.02s WALL (       1 calls)
      init_vloc    :      0.02s CPU      0.02s WALL (       2 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       2 calls)
      init_us_2    :      0.02s CPU      0.02s WALL (     896 calls)
 
      DYNAMICAL MATRIX:
-     phqscf       :      1.94s CPU      1.99s WALL (       1 calls)
+     phqscf       :      1.86s CPU      1.99s WALL (       1 calls)
 
-     phqscf       :      1.94s CPU      1.99s WALL (       1 calls)
-     solve_linter :      1.91s CPU      1.96s WALL (       4 calls)
-     dfpt_kernel  :      1.88s CPU      1.92s WALL (       1 calls)
-     sth_kernel   :      1.86s CPU      1.90s WALL (       8 calls)
+     phqscf       :      1.86s CPU      1.99s WALL (       1 calls)
+     solve_linter :      1.83s CPU      1.96s WALL (       4 calls)
+     dfpt_kernel  :      1.79s CPU      1.92s WALL (       1 calls)
+     sth_kernel   :      1.78s CPU      1.91s WALL (       8 calls)
      h_prec       :      0.00s CPU      0.00s WALL (     448 calls)
      apply_dpot_b :      0.16s CPU      0.16s WALL (     392 calls)
      ortho        :      0.00s CPU      0.00s WALL (     448 calls)
-     cgsolve      :      1.48s CPU      1.52s WALL (     448 calls)
+     cgsolve      :      1.42s CPU      1.52s WALL (     448 calls)
      incdrhoscf   :      0.18s CPU      0.19s WALL (     448 calls)
                                         0.00s GPU  (     448 calls)
      dv_of_drho   :      0.00s CPU      0.00s WALL (      12 calls)
      mix_pot      :      0.00s CPU      0.00s WALL (       8 calls)
      drhodv       :      0.02s CPU      0.02s WALL (       4 calls)
-     psymdvscf    :      0.01s CPU      0.01s WALL (      16 calls)
+     psymdvscf    :      0.01s CPU      0.01s WALL (       8 calls)
      com_dvloc    :      0.00s CPU      0.00s WALL (      24 calls)
                                         0.00s GPU  (      24 calls)
      addcore      :      0.00s CPU      0.00s WALL (       1 calls)
@@ -376,40 +376,40 @@
      dvqpsi_us    :      0.03s CPU      0.03s WALL (      56 calls)
                                         0.00s GPU  (      56 calls)
 
-     add_vuspsi   :      0.03s CPU      0.04s WALL (    5076 calls)
+     add_vuspsi   :      0.03s CPU      0.04s WALL (    5067 calls)
 
 
       General routines
-     calbec       :      0.05s CPU      0.05s WALL (    6644 calls)
+     calbec       :      0.05s CPU      0.05s WALL (    6635 calls)
      fft          :      0.00s CPU      0.00s WALL (      50 calls)
      ffts         :      0.01s CPU      0.01s WALL (     136 calls)
-     fftw         :      2.08s CPU      2.13s WALL (   46466 calls)
+     fftw         :      2.03s CPU      2.13s WALL (   46470 calls)
      davcio       :      0.02s CPU      0.02s WALL (    2951 calls)
      write_rec    :      0.00s CPU      0.00s WALL (      12 calls)
 
       Additional routines
-     ch_psi       :      1.46s CPU      1.50s WALL (    3706 calls)
-     last         :      0.04s CPU      0.05s WALL (    3706 calls)
-     Hesh         :      0.00s CPU      0.00s WALL (    3706 calls)
-     ch_psi_all_k :      0.03s CPU      0.04s WALL (    3706 calls)
-                                        0.00s GPU  (    3706 calls)
-     h_psi_bgrp   :      2.02s CPU      2.06s WALL (    5076 calls)
-     h_psi        :      2.01s CPU      2.06s WALL (    5076 calls)
-     h_psi:pot    :      2.01s CPU      2.05s WALL (    5076 calls)
-     h_psi:calbec :      0.04s CPU      0.04s WALL (    5076 calls)
-     s_psi_bgrp   :      0.00s CPU      0.00s WALL (    7860 calls)
+     ch_psi       :      1.40s CPU      1.50s WALL (    3696 calls)
+     last         :      0.04s CPU      0.05s WALL (    3696 calls)
+     Hesh         :      0.00s CPU      0.00s WALL (    3696 calls)
+     ch_psi_all_k :      0.03s CPU      0.04s WALL (    3696 calls)
+                                        0.00s GPU  (    3696 calls)
+     h_psi_bgrp   :      1.97s CPU      2.07s WALL (    5067 calls)
+     h_psi        :      1.97s CPU      2.06s WALL (    5067 calls)
+     h_psi:pot    :      1.96s CPU      2.06s WALL (    5067 calls)
+     h_psi:calbec :      0.04s CPU      0.04s WALL (    5067 calls)
+     s_psi_bgrp   :      0.00s CPU      0.00s WALL (    7840 calls)
 
 
-     PHONON       :      2.79s CPU      2.86s WALL
+     PHONON       :      2.72s CPU      2.86s WALL
 
 
-   This run was terminated on:  13:57:39  12Jan2025            
+   This run was terminated on:   9:21:21  20Jan2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
 =------------------------------------------------------------------------------=
 postprocessing.out
-Started on 2025-01-12 13:57:40.052855
+Started on 2025-01-20 09:21:21.555616
  __  __       _ _   _             _
 |  \/  |_   _| | |_(_)_ __   ___ | | ___
 | |\/| | | | | | __| | '_ \ / _ \| |/ _ \
@@ -438,69 +438,61 @@ Summary of dielectric tensors:
 - Total number of free components: 3
 Reconstructing sensing matrix of multipole expansion from file.
 Starting to fit multipole and dielectric tensors by a linear model.
-Reading inverse dielectric function, 8 q-points.
+Reading inverse dielectric function, 4 q-points.
 - drhodv.dat.01 read successfully.
 - drhodv.dat.02 read successfully.
 - drhodv.dat.03 read successfully.
 - drhodv.dat.04 read successfully.
-- drhodv.dat.05 read successfully.
-- drhodv.dat.06 read successfully.
-- drhodv.dat.07 read successfully.
-- drhodv.dat.08 read successfully.
-Reading charge density response, 8 q-points.
+Reading charge density response, 4 q-points.
 - drho.dat.01 read successfully.
 - drho.dat.02 read successfully.
 - drho.dat.03 read successfully.
 - drho.dat.04 read successfully.
-- drho.dat.05 read successfully.
-- drho.dat.06 read successfully.
-- drho.dat.07 read successfully.
-- drho.dat.08 read successfully.
 Fitting multipole tensors via the ordinary least-square.
 Summary of multipole tensors fitting:
 - Free multipole components: 3
 - Rank of coefficient matrix: 3
-- RMSE: 0.0003559016957399153 |e| / bohr^3
-- Mean relative error: 0.11863942018880387
-- Relative norm error: 0.04136345392068712
-- r2 score: 0.9982890645165146
+- RMSE: 0.0006875284794099483 |e| / bohr^3
+- Mean relative error: 0.03779380365037728
+- Relative norm error: 0.0370450779721153
+- r2 score: 0.998627534533091
 Writing multipole tensors into files.
-Multipole tensor fitting finished, time elapsed: 0:00:00.000925
+Multipole tensor fitting finished, time elapsed: 0:00:00.000936
 Fitting dielectric tensors via the ordinary least-square.
 Summary of dielectric tensors fitting:
 - Free dielectric components: 3
-- Rank of coefficient matrix: 2
-- RMSE: 1.2431949506382477e-12
-- Mean relative error: 9.82847514013902e-10
-- Relative norm error: 1.062885756474235e-09
+- Rank of coefficient matrix: 3
+- RMSE: 1.5953611342294002e-13
+- Mean relative error: 7.767812188229447e-11
+- Relative norm error: 5.328241842479095e-11
 - r2 score: 1.0
 Writing dielectric tensors into files.
-Dielectric tensor fitting finished, time elapsed: 0:00:00.000500
-Finshed on 2025-01-12 13:57:40.083128, total time elapsed: 0:00:00.030273
+Dielectric tensor fitting finished, time elapsed: 0:00:00.000539
+Finshed on 2025-01-20 09:21:21.588380, total time elapsed: 0:00:00.032764
 ####################################################################################
 # You are using `Multipole` program developed in the work:                         #
-# C. Lin, S. Ponce, F. Macheda, F. Mauri, and N. Marzari, https://arxiv.org/abs/2412.18482 (2024). #
+# C. Lin, S. Ponce, F. Macheda, F. Mauri, and N. Marzari, arXiv:2412.18482 (2024). #
 # Please consider to cite it if you find the program useful.                       #
 ####################################################################################
 epsilon.fmt
   2
-        8.353615292963079        0.000000000000000        0.000000000000000
-        0.000000000000000        8.353615292963079        0.000000000000000
-        0.000000000000000        0.000000000000000        8.353615292963079
+        8.355817435309268        0.000000000000000        0.000000000000000
+        0.000000000000000        8.355817435309268        0.000000000000000
+        0.000000000000000        0.000000000000000        8.355817435309268
   4
-    1    1    1    1     -127.802942522180047
+    1    1    1    1     -126.371503433689725
     1    1    1    2        0.000000000000000
     1    1    1    3        0.000000000000000
     1    1    2    1        0.000000000000000
-    1    1    2    2      -14.200218932034200
+    1    1    2    2      -82.627718923653802
     1    1    2    3        0.000000000000000
     1    1    3    1        0.000000000000000
     1    1    3    2        0.000000000000000
-    1    1    3    3      -14.200218932034202
+    1    1    3    3      -82.627718923653816
     1    2    1    1        0.000000000000000
-    1    2    1    2      -14.200218932034200
+    1    2    1    2      -82.627718923653802
     1    2    1    3        0.000000000000000
-    1    2    2    1      -14.200218932034202
+    1    2    2    1      -82.627718923653816
     1    2    2    2        0.000000000000000
     1    2    2    3        0.000000000000000
     1    2    3    1        0.000000000000000
@@ -508,47 +500,47 @@ epsilon.fmt
     1    2    3    3        0.000000000000000
     1    3    1    1        0.000000000000000
     1    3    1    2        0.000000000000000
-    1    3    1    3      -14.200218932034202
+    1    3    1    3      -82.627718923653816
     1    3    2    1        0.000000000000000
     1    3    2    2        0.000000000000000
     1    3    2    3        0.000000000000000
-    1    3    3    1      -14.200218932034206
+    1    3    3    1      -82.627718923653831
     1    3    3    2        0.000000000000000
     1    3    3    3        0.000000000000000
     2    1    1    1        0.000000000000000
-    2    1    1    2      -14.200218932034202
+    2    1    1    2      -82.627718923653816
     2    1    1    3        0.000000000000000
-    2    1    2    1      -14.200218932034200
+    2    1    2    1      -82.627718923653802
     2    1    2    2        0.000000000000000
     2    1    2    3        0.000000000000000
     2    1    3    1        0.000000000000000
     2    1    3    2        0.000000000000000
     2    1    3    3        0.000000000000000
-    2    2    1    1      -14.200218932034200
+    2    2    1    1      -82.627718923653802
     2    2    1    2        0.000000000000000
     2    2    1    3        0.000000000000000
     2    2    2    1        0.000000000000000
-    2    2    2    2     -127.802942522180047
+    2    2    2    2     -126.371503433689725
     2    2    2    3        0.000000000000000
     2    2    3    1        0.000000000000000
     2    2    3    2        0.000000000000000
-    2    2    3    3      -14.200218932034202
+    2    2    3    3      -82.627718923653816
     2    3    1    1        0.000000000000000
     2    3    1    2        0.000000000000000
     2    3    1    3        0.000000000000000
     2    3    2    1        0.000000000000000
     2    3    2    2        0.000000000000000
-    2    3    2    3      -14.200218932034202
+    2    3    2    3      -82.627718923653816
     2    3    3    1        0.000000000000000
-    2    3    3    2      -14.200218932034206
+    2    3    3    2      -82.627718923653831
     2    3    3    3        0.000000000000000
     3    1    1    1        0.000000000000000
     3    1    1    2        0.000000000000000
-    3    1    1    3      -14.200218932034202
+    3    1    1    3      -82.627718923653816
     3    1    2    1        0.000000000000000
     3    1    2    2        0.000000000000000
     3    1    2    3        0.000000000000000
-    3    1    3    1      -14.200218932034200
+    3    1    3    1      -82.627718923653802
     3    1    3    2        0.000000000000000
     3    1    3    3        0.000000000000000
     3    2    1    1        0.000000000000000
@@ -556,33 +548,33 @@ epsilon.fmt
     3    2    1    3        0.000000000000000
     3    2    2    1        0.000000000000000
     3    2    2    2        0.000000000000000
-    3    2    2    3      -14.200218932034202
+    3    2    2    3      -82.627718923653816
     3    2    3    1        0.000000000000000
-    3    2    3    2      -14.200218932034200
+    3    2    3    2      -82.627718923653802
     3    2    3    3        0.000000000000000
-    3    3    1    1      -14.200218932034200
+    3    3    1    1      -82.627718923653802
     3    3    1    2        0.000000000000000
     3    3    1    3        0.000000000000000
     3    3    2    1        0.000000000000000
-    3    3    2    2      -14.200218932034200
+    3    3    2    2      -82.627718923653802
     3    3    2    3        0.000000000000000
     3    3    3    1        0.000000000000000
     3    3    3    2        0.000000000000000
-    3    3    3    3     -127.802942522180047
+    3    3    3    3     -126.371503433689725
 born_charge.fmt
     1
-        1.840333960360303        0.000000000000000        0.000000000000000
-        0.000000000000000        1.840333960360303        0.000000000000000
-        0.000000000000000        0.000000000000000        1.840333960360303
+        2.598655040949617        0.000000000000000        0.000000000000000
+        0.000000000000000        2.598655040949617        0.000000000000000
+        0.000000000000000        0.000000000000000        2.598655040949617
     2
-       -1.840333960360303        0.000000000000000        0.000000000000000
-        0.000000000000000       -1.840333960360303        0.000000000000000
-        0.000000000000000        0.000000000000000       -1.840333960360303
+       -2.598655040949617        0.000000000000000        0.000000000000000
+        0.000000000000000       -2.598655040949617        0.000000000000000
+        0.000000000000000        0.000000000000000       -2.598655040949617
 quadrupole.fmt
   atom   dir                Qxx                      Qyy                      Qzz                      Qyz                      Qxz                      Qxy       
-   1      1          0.000000000000000        0.000000000000000        0.000000000000000        4.597252303072437        0.000000000000000        0.000000000000000
-   1      2          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        4.597252303072437        0.000000000000000
-   1      3          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        4.597252303072437
-   2      1          0.000000000000000        0.000000000000000        0.000000000000000       -1.569301749554007        0.000000000000000        0.000000000000000
-   2      2          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000       -1.569301749554007        0.000000000000000
-   2      3          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000       -1.569301749554007
+   1      1          0.000000000000000        0.000000000000000        0.000000000000000        8.567222868538906        0.000000000000000        0.000000000000000
+   1      2          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        8.567222868538906        0.000000000000000
+   1      3          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        8.567222868538906
+   2      1          0.000000000000000        0.000000000000000        0.000000000000000       -3.882890060645853        0.000000000000000        0.000000000000000
+   2      2          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000       -3.882890060645853        0.000000000000000
+   2      3          0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000        0.000000000000000       -3.882890060645853
