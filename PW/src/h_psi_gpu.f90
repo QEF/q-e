@@ -89,9 +89,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !! This routine computes the product of the Hamiltonian matrix with m 
   !! wavefunctions contained in psi.
   !
-#if defined(__CUDA)
-  USE cudafor
-#endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
   USE becmod,                  ONLY: bec_type, becp, calbec
