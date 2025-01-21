@@ -72,9 +72,6 @@ SUBROUTINE clean_pw( lflag )
   USE plugin_flags,         ONLY : use_environ
   USE environ_base_module,  ONLY : clean_environ
 #endif
-#if defined (__CUDA)
-  USE cudafor
-#endif
   !
   IMPLICIT NONE
   !
