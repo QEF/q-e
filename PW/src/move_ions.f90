@@ -78,6 +78,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
   INTEGER               :: iunit
+  INTEGER               :: nose_cycle
   !
   optimizer_failed = .FALSE.
   !
@@ -349,10 +350,16 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
                 ions_nose_energy = ions_nose_nrg(xnhp0,vnhp,qnp,gkbt2nhp,kbt,nhpcl, nhpdim)
               END IF  
               CALL verlet()
+              if (idone == 1) nose_cycle = 0
               IF (tnosep) THEN 
-                CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
+                DO 
+                  CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
                                nhpcl, nhpdim, nhpbeg, nhpend)
-                CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm)
+                  CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm)
+                  nose_cycle = nose_cycle + 1
+                  IF (nose_cycle .ge. 2) EXIT 
+                END DO 
+                
               END IF         
               !
            END IF

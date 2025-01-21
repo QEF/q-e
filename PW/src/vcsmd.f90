@@ -113,6 +113,7 @@ SUBROUTINE vcsmd( conv_ions )
   CHARACTER(LEN=80):: calc_long    ! Verbose description of type of calculation
   LOGICAL :: exst
   INTEGER :: na, nst, ipol, i, j, k
+  INTEGER :: ions_nose_cycle=0, cell_nose_cycle=0 
     ! counters
   !
   ! ... I/O units
@@ -318,16 +319,24 @@ SUBROUTINE vcsmd( conv_ions )
                 nat, acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh, tnosep,&
                 vnhp, ekin2nhp, atm2nhp, nhpdim, nhpcl, tnoseh, vnhh, temphh) 
      !
-     IF (tnosep) THEN 
-      CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, &
+     IF (tnosep) THEN
+      DO  
+         CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, &
                         kbt, nhpcl, nhpdim, nhpbeg, nhpend) 
-      CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm) 
-      ions_nose_energy =  ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim)
+         CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm) 
+         ions_nose_energy =  ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim)
+         ions_nose_cycle = ions_nose_cycle+1 
+         IF (ions_nose_cycle .ge. 2) exit 
+      END DO 
      END IF 
-     IF(tnoseh) THEN 
-       CALL cell_noseupd(xnhhp, xnhh0, xnhhm, RyDt_to_HaDt * dt, qnh, temphh, temph, vnhh) 
-       CALL cell_nose_shiftvar(xnhhp, xnhh0, xnhhm)
-       cell_nose_energy = cell_nose_nrg(qnh, xnhh0, vnhh, temph, iforceh) 
+     IF(tnoseh) THEN
+        DO  
+          CALL cell_noseupd(xnhhp, xnhh0, xnhhm, RyDt_to_HaDt * dt, qnh, temphh, temph, vnhh) 
+          CALL cell_nose_shiftvar(xnhhp, xnhh0, xnhhm)
+          cell_nose_cycle = cell_nose_cycle + 1 
+          cell_nose_energy = cell_nose_nrg(qnh, xnhh0, vnhh, temph, iforceh) 
+          IF (cell_nose_cycle .ge. 2) exit 
+        END DO 
      END IF 
   END IF
   !

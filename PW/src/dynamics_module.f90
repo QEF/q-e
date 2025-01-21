@@ -109,7 +109,7 @@ MODULE dynamics_module
    REAL(DP)  :: elapsed_time
    !! elapsed time in ps (picoseconds)
    REAL(DP), PARAMETER, PUBLIC  :: RyDt_to_HaDt = RYDBERG_SI/HARTREE_SI, HaddT_to_RyddT = HARTREE_SI/RYDBERG_SI,& 
-                           Ha_to_Ry = HARTREE_SI/RYDBERG_SI 
+                           Ha_to_Ry = HARTREE_SI/RYDBERG_SI
    !! 1/2  and 2 factors used to convert dt from Ry to Ha,  and  velocities from Ha to Ry 
    INTEGER, PARAMETER :: hist_len = 1000
    !
@@ -184,7 +184,7 @@ CONTAINS
       !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
-      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy
+      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy, ions_nose_info 
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
@@ -521,6 +521,11 @@ CONTAINS
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"temperature is set once at start"/)' )
                !
+            CASE ('nose') 
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is controlled by ", &
+                            &     "Nose Hoover thermostat",/,5x)') 
+               CALL ions_nose_info(dt)
             CASE DEFAULT
                !
                WRITE( UNIT = stdout, &
@@ -742,7 +747,7 @@ CONTAINS
          !
          DO na_ = 1, nat
             !
-            sigma = SQRT( kt / mass(na) )
+            sigma = SQRT( kt / mass(na_) )
             !
             ! ... N.B. velocities must in a.u. units of alat
             !

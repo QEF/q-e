@@ -1132,6 +1132,7 @@ SUBROUTINE control_iosys()
      thermostat = trim(ion_temperature)
      temperature = tempw 
      tnosep = .true. 
+     control_temp = .true.
 
 
   CASE DEFAULT
