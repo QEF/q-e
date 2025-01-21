@@ -116,8 +116,12 @@ then
   then
     cat $3
   fi
-  echo "Before running the multipole.py Python script, pip install spglib dependency"
+  echo "Before running the multipole.py Python script, pip install numpy and spglib"
   echo " "
+  pip install numpy
+  pip3 install numpy
+  pip install scipy
+  pip3 install scipy
   pip install spglib
   pip3 install spglib
   echo " "

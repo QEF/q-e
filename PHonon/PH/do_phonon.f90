@@ -8,22 +8,22 @@
 !-----------------------------------------------------------------------
 SUBROUTINE do_phonon(auxdyn)
   !-----------------------------------------------------------------------
-  !! This is the main driver of the phonon code. It assumes that the 
-  !! preparatory stuff has been already done.  
+  !! This is the main driver of the phonon code. It assumes that the
+  !! preparatory stuff has been already done.
   !! When the code calls this routine it has already read input
   !! decided which irreducible representations have to be calculated
   !! and it has set the variables that decide which work this routine
   !! will do. The parallel stuff has been already setup by the calling
   !! codes. This routine makes the two loops over
   !! the q-points and the irreps and does only the calculations
-  !! that have been decided by the driver routine.  
-  !! At a generic q-point, if necessary, it recalculates the band structure 
+  !! that have been decided by the driver routine.
+  !! At a generic q-point, if necessary, it recalculates the band structure
   !! calling pwscf again. Then it can calculate the response to an atomic
-  !! displacement, the dynamical matrix at that q-point, and the 
-  !! electron-phonon interaction at that q. At q=0 it can calculate 
+  !! displacement, the dynamical matrix at that q-point, and the
+  !! electron-phonon interaction at that q. At q=0 it can calculate
   !! the linear response to an electric field perturbation and hence the
   !! dielectric constant, the Born effective charges and the polarizability
-  !! at imaginary frequencies.  
+  !! at imaginary frequencies.
   !! At q=0, from the second order response to an electric field,
   !! it can calculate also the electro-optic and the raman tensors.
   !
@@ -87,7 +87,7 @@ SUBROUTINE do_phonon(auxdyn)
         CALL print_cuda_info(check_use_gpu=.true.) 
      ENDIF
      !
-     !  If only_wfc=.TRUE. the code computes only the wavefunctions 
+     !  If only_wfc=.TRUE. the code computes only the wavefunctions
      !
      IF (only_wfc) THEN
         where_rec='only_wfc'
@@ -104,7 +104,7 @@ SUBROUTINE do_phonon(auxdyn)
      !
      IF (epsil) CALL phescf()
      !
-     !  IF only_init is .true. the code computes only the 
+     !  IF only_init is .true. the code computes only the
      !  initialization parts.
      !
      IF (only_init) THEN
