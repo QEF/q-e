@@ -1,5 +1,5 @@
 
-     Program PHONON v.7.4 starts on 12Jan2025 at 13:56:53 
+     Program PHONON v.7.4 starts on 20Jan2025 at  9:21: 6 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,7 +13,7 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     1409 MiB available memory on the printing compute node when the environment starts
+     1213 MiB available memory on the printing compute node when the environment starts
 
      Waiting for input...
      Reading input from standard input
@@ -45,12 +45,12 @@
 
      Number and degeneracy of irreps per q-point
        N         xq(1)         xq(2)         xq(3)   N irreps
-       1   0.010606602   0.003535534   0.003535534       6
+       1   0.020000000  -0.000000000   0.000000000       6
      No degeneracy
 
      Saving dvscf to file. Distribute only q points, not irreducible representations.
 
-     Calculation of q =    0.0106066   0.0035355   0.0035355
+     Calculation of q =    0.0200000  -0.0000000   0.0000000
 
      G-vector sticks info
      --------------------
@@ -122,7 +122,7 @@
          1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
          2        C      tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
-     number of k points=   252
+     number of k points=   150
 
      Number of k-points >= 100: set verbosity='high' to print them.
 
@@ -138,9 +138,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations = 10.1
+     ethr =  1.25E-10,  avg # of iterations = 10.2
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.0 secs
 
      End of band structure calculation
 
@@ -190,13 +190,13 @@
         2  C      12.0108   tau(    2) = (    0.25000    0.25000    0.25000  )
 
      Computing dynamical matrix for 
-                    q = (   0.0106066   0.0035355   0.0035355 )
+                    q = (   0.0200000  -0.0000000   0.0000000 )
 
-      2 Sym.Ops. (no q -> -q+G )
+      4 Sym.Ops. (no q -> -q+G )
 
 
      G cutoff =  137.4891  (   1687 G-vectors)     FFT grid: ( 18, 18, 18)
-     number of k points=   252
+     number of k points=   150
 
      PseudoPot. # 1 for Si read from file:
      ../../pseudo/Si.pz-vbc.UPF
@@ -216,7 +216,7 @@
                 l(1) =   0
                 l(2) =   1
 
-     Mode symmetry, C_s (m)     point group:
+     Mode symmetry, C_2v (mm2)  point group:
 
 
      Atomic displacements:
@@ -237,7 +237,7 @@
 
      Message from routine init_vloc:
      Interpolation table for Vloc re-allocated
-     PHONON       :      1.76s CPU      1.83s WALL
+     PHONON       :      1.07s CPU      1.12s WALL
 
 
 
@@ -245,29 +245,29 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     2.0 secs   av.it.:   1.1
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.974E-10
+      iter #   1 total cpu time :     1.3 secs   av.it.:   1.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.339E-09
 
-      iter #   2 total cpu time :     2.7 secs   av.it.:   9.5
-      thresh= 1.724E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.001E-11
+      iter #   2 total cpu time :     1.6 secs   av.it.:   8.8
+      thresh= 3.659E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.446E-11
 
-      iter #   3 total cpu time :     3.3 secs   av.it.:   8.6
-      thresh= 5.478E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.437E-12
+      iter #   3 total cpu time :     2.0 secs   av.it.:   8.4
+      thresh= 4.945E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.608E-12
 
-      iter #   4 total cpu time :     4.0 secs   av.it.:   8.4
-      thresh= 1.854E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.456E-13
+      iter #   4 total cpu time :     2.4 secs   av.it.:   8.5
+      thresh= 1.268E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.673E-13
 
-      iter #   5 total cpu time :     4.6 secs   av.it.:   8.1
-      thresh= 3.816E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.677E-14
+      iter #   5 total cpu time :     2.7 secs   av.it.:   7.8
+      thresh= 4.090E-08 alpha_mix =  0.700 |ddv_scf|^2 =  3.156E-15
 
-      iter #   6 total cpu time :     5.2 secs   av.it.:   8.3
-      thresh= 1.295E-08 alpha_mix =  0.700 |ddv_scf|^2 =  9.243E-16
+      iter #   6 total cpu time :     3.1 secs   av.it.:   8.1
+      thresh= 5.618E-09 alpha_mix =  0.700 |ddv_scf|^2 =  7.823E-17
 
-      iter #   7 total cpu time :     5.7 secs   av.it.:   8.0
-      thresh= 3.040E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.273E-18
+      iter #   7 total cpu time :     3.4 secs   av.it.:   7.8
+      thresh= 8.845E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.700E-18
 
-      iter #   8 total cpu time :     6.3 secs   av.it.:   7.9
-      thresh= 1.128E-10 alpha_mix =  0.700 |ddv_scf|^2 =  2.457E-20
+      iter #   8 total cpu time :     3.7 secs   av.it.:   8.0
+      thresh= 1.304E-10 alpha_mix =  0.700 |ddv_scf|^2 =  2.827E-20
 
      End of self-consistent calculation
 
@@ -326,8 +326,8 @@
   Physical Review B, 110, 094306. https://doi.org/10.1103/PhysRevB.110.094306
  ------------------------------------------------------------------------
 
-     init_run     :      0.03s CPU      0.03s WALL (       1 calls)
-     electrons    :      1.63s CPU      1.68s WALL (       1 calls)
+     init_run     :      0.02s CPU      0.02s WALL (       1 calls)
+     electrons    :      0.95s CPU      0.99s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
@@ -335,34 +335,34 @@
      hinit0       :      0.02s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.63s CPU      1.68s WALL (       1 calls)
+     c_bands      :      0.95s CPU      0.99s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       2 calls)
 
      Called by c_bands:
-     init_us_2    :      0.06s CPU      0.06s WALL (    2268 calls)
-     cegterg      :      1.24s CPU      1.28s WALL (     252 calls)
+     init_us_2    :      0.03s CPU      0.04s WALL (    1350 calls)
+     cegterg      :      0.72s CPU      0.76s WALL (     150 calls)
 
      Called by *egterg:
-     cdiaghg      :      0.09s CPU      0.10s WALL (    2804 calls)
-     h_psi        :      4.62s CPU      4.77s WALL (   11581 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (    2552 calls)
+     cdiaghg      :      0.05s CPU      0.06s WALL (    1676 calls)
+     h_psi        :      2.65s CPU      2.77s WALL (    6865 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (    1526 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.10s CPU      0.10s WALL (   11581 calls)
-     vloc_psi     :      4.41s CPU      4.55s WALL (   11581 calls)
-                                        0.00s GPU  (   11581 calls)
-     add_vuspsi   :      0.08s CPU      0.08s WALL (   11581 calls)
+     h_psi:calbec :      0.06s CPU      0.06s WALL (    6865 calls)
+     vloc_psi     :      2.53s CPU      2.65s WALL (    6865 calls)
+                                        0.00s GPU  (    6865 calls)
+     add_vuspsi   :      0.05s CPU      0.05s WALL (    6865 calls)
 
      General routines
-     calbec       :      0.11s CPU      0.12s WALL (   15109 calls)
+     calbec       :      0.06s CPU      0.07s WALL (    8965 calls)
      fft          :      0.00s CPU      0.00s WALL (      60 calls)
-     ffts         :      0.02s CPU      0.02s WALL (     288 calls)
-     fftw         :      4.74s CPU      4.90s WALL (  106156 calls)
-     davcio       :      0.04s CPU      0.04s WALL (    6521 calls)
+     ffts         :      0.01s CPU      0.01s WALL (     186 calls)
+     fftw         :      2.73s CPU      2.86s WALL (   62546 calls)
+     davcio       :      0.02s CPU      0.02s WALL (    3920 calls)
 
      Parallel routines
 
-     PHONON       :      6.18s CPU      6.39s WALL
+     PHONON       :      3.60s CPU      3.79s WALL
 
      INITIALIZATION: 
      phq_setup    :      0.00s CPU      0.00s WALL (       1 calls)
@@ -371,61 +371,61 @@
      phq_init     :      0.02s CPU      0.02s WALL (       1 calls)
      init_vloc    :      0.02s CPU      0.02s WALL (       2 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       2 calls)
-     init_us_2    :      0.06s CPU      0.06s WALL (    2268 calls)
+     init_us_2    :      0.03s CPU      0.04s WALL (    1350 calls)
 
      DYNAMICAL MATRIX:
-     phqscf       :      4.41s CPU      4.57s WALL (       1 calls)
+     phqscf       :      2.53s CPU      2.67s WALL (       1 calls)
 
-     phqscf       :      4.41s CPU      4.57s WALL (       1 calls)
-     solve_linter :      4.36s CPU      4.50s WALL (       6 calls)
-     dfpt_kernel  :      4.29s CPU      4.42s WALL (       1 calls)
-     sth_kernel   :      4.28s CPU      4.41s WALL (       8 calls)
-     h_prec       :      0.00s CPU      0.00s WALL (    1008 calls)
-     apply_dpot_b :      0.36s CPU      0.37s WALL (     882 calls)
-     ortho        :      0.01s CPU      0.01s WALL (    1008 calls)
-     cgsolve      :      3.43s CPU      3.54s WALL (    1008 calls)
-     incdrhoscf   :      0.41s CPU      0.43s WALL (    1008 calls)
-                                        0.00s GPU  (    1008 calls)
+     phqscf       :      2.53s CPU      2.67s WALL (       1 calls)
+     solve_linter :      2.50s CPU      2.63s WALL (       6 calls)
+     dfpt_kernel  :      2.45s CPU      2.58s WALL (       1 calls)
+     sth_kernel   :      2.44s CPU      2.56s WALL (       8 calls)
+     h_prec       :      0.00s CPU      0.00s WALL (     600 calls)
+     apply_dpot_b :      0.21s CPU      0.22s WALL (     525 calls)
+     ortho        :      0.01s CPU      0.01s WALL (     600 calls)
+     cgsolve      :      1.95s CPU      2.05s WALL (     600 calls)
+     incdrhoscf   :      0.24s CPU      0.25s WALL (     600 calls)
+                                        0.00s GPU  (     600 calls)
      dv_of_drho   :      0.00s CPU      0.00s WALL (      14 calls)
      mix_pot      :      0.00s CPU      0.00s WALL (       8 calls)
-     drhodv       :      0.05s CPU      0.06s WALL (       6 calls)
-     psymdvscf    :      0.00s CPU      0.00s WALL (      16 calls)
+     drhodv       :      0.03s CPU      0.04s WALL (       6 calls)
+     psymdvscf    :      0.00s CPU      0.00s WALL (       8 calls)
      com_dvloc    :      0.00s CPU      0.00s WALL (      36 calls)
                                         0.00s GPU  (      36 calls)
      addcore      :      0.00s CPU      0.00s WALL (       1 calls)
                                         0.00s GPU  (       1 calls)
 
-     dvqpsi_us    :      0.07s CPU      0.07s WALL (     126 calls)
-                                        0.00s GPU  (     126 calls)
+     dvqpsi_us    :      0.04s CPU      0.04s WALL (      75 calls)
+                                        0.00s GPU  (      75 calls)
 
-     add_vuspsi   :      0.08s CPU      0.08s WALL (   11581 calls)
+     add_vuspsi   :      0.05s CPU      0.05s WALL (    6865 calls)
 
 
       General routines
-     calbec       :      0.11s CPU      0.12s WALL (   15109 calls)
+     calbec       :      0.06s CPU      0.07s WALL (    8965 calls)
      fft          :      0.00s CPU      0.00s WALL (      60 calls)
-     ffts         :      0.02s CPU      0.02s WALL (     288 calls)
-     fftw         :      4.74s CPU      4.90s WALL (  106156 calls)
-     davcio       :      0.04s CPU      0.04s WALL (    6521 calls)
+     ffts         :      0.01s CPU      0.01s WALL (     186 calls)
+     fftw         :      2.73s CPU      2.86s WALL (   62546 calls)
+     davcio       :      0.02s CPU      0.02s WALL (    3920 calls)
      write_rec    :      0.00s CPU      0.00s WALL (      14 calls)
 
       Additional routines
-     ch_psi       :      3.38s CPU      3.49s WALL (    8525 calls)
-     last         :      0.10s CPU      0.11s WALL (    8525 calls)
-     Hesh         :      0.01s CPU      0.01s WALL (    8525 calls)
-     ch_psi_all_k :      0.08s CPU      0.08s WALL (    8525 calls)
-                                        0.00s GPU  (    8525 calls)
-     h_psi_bgrp   :      4.62s CPU      4.77s WALL (   11581 calls)
-     h_psi        :      4.62s CPU      4.77s WALL (   11581 calls)
-     h_psi:pot    :      4.60s CPU      4.75s WALL (   11581 calls)
-     h_psi:calbec :      0.10s CPU      0.10s WALL (   11581 calls)
-     s_psi_bgrp   :      0.01s CPU      0.01s WALL (   18058 calls)
+     ch_psi       :      1.92s CPU      2.02s WALL (    5039 calls)
+     last         :      0.06s CPU      0.06s WALL (    5039 calls)
+     Hesh         :      0.01s CPU      0.01s WALL (    5039 calls)
+     ch_psi_all_k :      0.05s CPU      0.05s WALL (    5039 calls)
+                                        0.00s GPU  (    5039 calls)
+     h_psi_bgrp   :      2.65s CPU      2.78s WALL (    6865 calls)
+     h_psi        :      2.65s CPU      2.77s WALL (    6865 calls)
+     h_psi:pot    :      2.64s CPU      2.76s WALL (    6865 calls)
+     h_psi:calbec :      0.06s CPU      0.06s WALL (    6865 calls)
+     s_psi_bgrp   :      0.01s CPU      0.01s WALL (   10678 calls)
 
 
-     PHONON       :      6.18s CPU      6.39s WALL
+     PHONON       :      3.60s CPU      3.79s WALL
 
 
-   This run was terminated on:  13:56:59  12Jan2025            
+   This run was terminated on:   9:21:10  20Jan2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

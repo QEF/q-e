@@ -76,7 +76,7 @@ SUBROUTINE write_epsilon(npe, drhop)
     iurhoun=find_free_unit()
     OPEN(unit=iurhoun, file=fildvscf)
     !
-    WRITE(iurhoun, '(a)') "#  Re(\bar \rho^{el}_q),Im(\bar \rho^{el}_q),Re(\bar V^{tot}_q),Im(\bar V^{tot}_q)"
+    WRITE(iurhoun, '(a)') "#  Re(bar rho^{el}_q),Im(bar rho^{el}_q),Re(bar V^{tot}_q),Im(bar V^{tot}_q)"
     !
     WRITE(iurhoun,'(4f18.12)') REAL(drhoaux), AIMAG(drhoaux),&
                                REAL(dvaux)  , AIMAG(dvaux)
@@ -84,15 +84,15 @@ SUBROUTINE write_epsilon(npe, drhop)
     vq = fpi*e2/tpiba**2/DOT_PRODUCT(xq, xq)
     !
     chi0 = drhoaux/(1d0+dvaux)
-    WRITE(iurhoun, '(a)') "#  $\bar \chi^0_q$"
+    WRITE(iurhoun, '(a)') "#  $bar chi^0_q$"
     WRITE(iurhoun,'(2f18.12)') REAL(chi0), AIMAG(chi0)
     !
-    WRITE(iurhoun, '(a)') "#  $\bar \chi_q$   Eq. (32) PRB 110, 094306 (2024)"
+    WRITE(iurhoun, '(a)') "#  $bar chi_q$   Eq. (32) PRB 110, 094306 (2024)"
     !
     barchi = drhoaux
     WRITE(iurhoun,'(2f18.12)') REAL(barchi), AIMAG(barchi)
     !
-    WRITE(iurhoun, '(a)') "# $1/\epsilon^{-1}_{L}(q)$   Eqs. (43) and (45) PRB 110, 094306 (2024)"
+    WRITE(iurhoun, '(a)') "# $1/epsilon^{-1}_{L}(q)$   Eqs. (43) and (45) PRB 110, 094306 (2024)"
     WRITE(iurhoun,'(2f18.12)') REAL(1d0 - vq * drhoaux), AIMAG(1d0 - vq * drhoaux)
     !
   ENDIF
@@ -198,8 +198,8 @@ SUBROUTINE write_drhoun
     iudumpdrho = find_free_unit()
     !
     OPEN(unit=iudumpdrho,file=fildrho)
-    WRITE(iudumpdrho,'(a)') '#     Re(\bar \rho^{tot}_{qsx}),Im(\bar \rho^{tot}_{qsx}),Re(\bar \rho^{tot}_{qsy}),&
-                         Im(\bar \rho^{tot}_{qsy}),Re(\bar \rho^{tot}_{qsz}),Im(\bar \rho^{tot}_{qsz}) '
+    WRITE(iudumpdrho,'(a)') '#     Re(bar rho^{tot}_{qsx}),Im(bar rho^{tot}_{qsx}),Re(bar rho^{tot}_{qsy}),&
+                         Im(bar rho^{tot}_{qsy}),Re(bar rho^{tot}_{qsz}),Im(bar rho^{tot}_{qsz}) '
     !
     DO ig = 1, ngms_g 
       !
