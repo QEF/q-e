@@ -1,4 +1,4 @@
-input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
+&input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
 
     toc {}
 
@@ -2410,7 +2410,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
 
     
     #
-    # NAMELIST IONS
+    # NAMELIST &IONS
     #
     
     namelist IONS  {
@@ -2742,11 +2742,21 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                 default { 1 }
                 info {
                     Number of old forces and displacements vectors used in the
-                    PULAY mixing of the residual vectors obtained on the basis
+                    PULAY (GDIIS) mixing of the residual vectors obtained on the basis
                     of the inverse hessian matrix given by the BFGS algorithm.
+                    The variable  @ref tgdiis_step in this case sets whether to use to full GDIIS step 
+                    or the BFGS trust_radius. 
                     When @ref bfgs_ndim = 1, the standard quasi-Newton BFGS method is
                     used.
                     (bfgs only)
+                }
+            var tgdiis_step LOGICAL {
+                defauls {.true.} 
+                info { 
+                    When G-DIIS (@ref bfgs_ndim > 1) is used for the structural relaxation this variable 
+                    selects whether to use to full gdiis step or the BFGS trus radius. 
+                    (bfgs only)
+                }
                 }
             }
 

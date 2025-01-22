@@ -411,7 +411,7 @@ SUBROUTINE control_iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim, &
+                               trust_radius_ini, bfgs_ndim, tgdiis_step,       &
                                fire_nmin, fire_f_inc, fire_f_dec, &
                                fire_alpha_init, fire_falpha, fire_dtmax
   !
@@ -1282,7 +1282,7 @@ SUBROUTINE control_iosys()
   ! ... BFGS specific
   !
   CALL init_bfgs( stdout, bfgs_ndim, trust_radius_max, trust_radius_min, &
-        trust_radius_ini, w_1, w_2 )
+        trust_radius_ini, w_1, w_2, (bfgs_ndim .gt. 1) .and. tgdiis_step )
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
