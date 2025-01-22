@@ -1225,6 +1225,7 @@ MODULE input_parameters
         !
 
         INTEGER ::  bfgs_ndim = 1
+        LOGICAL ::  tgdiis_step = .TRUE. 
 
         REAL(DP)  :: trust_radius_max = 0.8_DP
         REAL(DP)  :: trust_radius_min = 1.E-3_DP
@@ -1252,7 +1253,7 @@ MODULE input_parameters
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           trust_radius_max, trust_radius_min,                  &
-                          trust_radius_ini, w_1, w_2, bfgs_ndim,               &
+                          trust_radius_ini, w_1, w_2, bfgs_ndim,tgdiis_step,   &
                           fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init,  &
                           fire_falpha, fire_dtmax 
 
