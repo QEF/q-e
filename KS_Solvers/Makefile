@@ -36,8 +36,7 @@ DENSE/gram_schmidt_k.o \
 DENSE/rotate_xpsi_gamma.o \
 DENSE/rotate_xpsi_k.o \
 RMM/crmmdiagg.o \
-RMM/rrmmdiagg.o \
-RMM/rrmmdiagg_gpu.o 
+RMM/rrmmdiagg.o
 
 
 # GPU-related objects

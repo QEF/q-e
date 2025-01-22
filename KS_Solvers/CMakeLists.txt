@@ -54,9 +54,7 @@ qe_enable_cuda_fortran("${src_paro}")
 
 set(src_rmmdiis
     RMM/crmmdiagg.f90 
-    RMM/rrmmdiagg.f90 
-    # GPU
-    RMM/rrmmdiagg_gpu.f90)
+    RMM/rrmmdiagg.f90) 
     qe_enable_cuda_fortran("${src_rmmdiis}")
 
 qe_add_library(qe_kssolver_davidson ${src_davidson})

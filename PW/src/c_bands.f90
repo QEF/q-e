@@ -480,7 +480,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, evc, hevc, sevc, &
+             CALL rrmmdiagg( h_psi_gpu, s_psi_acc, npwx, npw, nbnd, evc, hevc, sevc, &
                           et(1,ik), g2kin, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
           END IF
