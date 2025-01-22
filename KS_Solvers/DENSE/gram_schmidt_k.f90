@@ -392,7 +392,7 @@ CONTAINS
     !
 10  nswap = 0
     !
-    !$acc parallel
+    !$acc parallel copy(nswap) copyin(kdim)
     !$acc loop gang reduction(+:nswap) private(e0)
     DO ibnd = 2, nbnd
        !
