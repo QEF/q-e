@@ -271,7 +271,7 @@ implicit none
   !civn: from here lapack source code. code for unequal increments 
   !      or equal increments not equal to 1 NOT implemented
   COMPLEX*16 ztemp
-  INTEGER i,ix,iy
+  INTEGER i
   INTRINSIC dconjg
   ztemp = (0.0d0,0.0d0)
   MYZDOTC_VECTOR_GPU = (0.0d0,0.0d0)
@@ -309,12 +309,12 @@ SUBROUTINE MYZSWAP_VECTOR_GPU(n, zx, zy)
 !$acc routine(MYZSWAP_VECTOR_GPU) vector
 #endif
 implicit none
-  integer :: n, incx, incy 
+  integer :: n
   DOUBLE COMPLEX, dimension(*) :: zx, zy
 #if defined(__CUDA)
   attributes(device) :: zx, zy 
-  COMPLEX*16 ZTEMP
-  INTEGER I,IX,IY
+  complex*16 ztemp
+  integer i
   IF (n.LE.0) RETURN
   !$acc loop vector private(ztemp)
   DO i = 1,n
@@ -468,12 +468,12 @@ SUBROUTINE MYDSWAP_VECTOR_GPU(n, dx, dy)
 !$acc routine(MYDSWAP_VECTOR_GPU) vector
 #endif
 implicit none
-  integer :: n, incx, incy 
+  integer :: n
   DOUBLE PRECISION, dimension(*) :: dx, dy
 #if defined(__CUDA)
   attributes(device) :: dx, dy 
-  DOUBLE PRECISION DTEMP
-  INTEGER I,IX,IY
+  double precision dtemp
+  integer i
   IF (n.LE.0) RETURN
   !$acc loop vector private(dtemp)
   DO i = 1,n
