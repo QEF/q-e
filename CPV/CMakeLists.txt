@@ -1,7 +1,6 @@
 set(src_cpv
     src/berryion.f90
     src/bforceion.f90
-    src/cell_nose.f90
     src/cg.f90
     src/cg_sub.f90
     src/chargedensity.f90
@@ -39,7 +38,6 @@ set(src_cpv
     src/init_run.f90
     src/inner_loop_cold.f90
     src/input.f90
-    src/ions_nose.f90
     src/ions_positions.f90
     src/ksstates.f90
     src/ldaU_cp.f90

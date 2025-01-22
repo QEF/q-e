@@ -24,7 +24,7 @@ MODULE dynamics_module
    USE io_files,        ONLY : prefix, tmp_dir, seqopn
    USE constants,       ONLY : tpi, fpi
    USE constants,       ONLY : amu_ry, ry_to_kelvin, au_ps, bohr_radius_cm, &
-                               ry_kbar
+                               ry_kbar, HARTREE_SI, RYDBERG_SI  
    USE constants,       ONLY : eps8
    USE control_flags,   ONLY : tolp
    !
@@ -35,7 +35,8 @@ MODULE dynamics_module
    SAVE
    PRIVATE
    PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
-             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
+             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars,& 
+             get_ndof
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, elapsed_time
    ! FIRE parameters
@@ -107,6 +108,9 @@ MODULE dynamics_module
    !
    REAL(DP)  :: elapsed_time
    !! elapsed time in ps (picoseconds)
+   REAL(DP), PARAMETER, PUBLIC  :: RyDt_to_HaDt = RYDBERG_SI/HARTREE_SI, HaddT_to_RyddT = HARTREE_SI/RYDBERG_SI,& 
+                           Ha_to_Ry = HARTREE_SI/RYDBERG_SI
+   !! 1/2  and 2 factors used to convert dt from Ry to Ha,  and  velocities from Ha to Ry 
    INTEGER, PARAMETER :: hist_len = 1000
    !
    ! Restart type
@@ -180,10 +184,11 @@ CONTAINS
       !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
+      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy, ions_nose_info 
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
-      USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
+      USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress, tnosep
       ! istep counts all MD steps, including those of previous runs
       USE constraints_module, ONLY : check_constraint, remove_constr_force, &
          remove_constr_vec, check_wall_constraint
@@ -281,6 +286,12 @@ CONTAINS
       !
       ! ... Verlet integration scheme
       !
+      IF (tnosep) THEN 
+         DO na = 1, nat
+           acc(:, na) = acc(:,na) - HaddT_to_RyddT * vnhp(atm2nhp(na)) * vel(:,na)
+         END DO
+      END IF
+
       IF (vel_defined) THEN
          !
          ! ... remove the component of the velocity along the
@@ -426,6 +437,11 @@ CONTAINS
                      & 5X,"temperature           = ",F20.8," K ",/,  &
                      & 5X,"Ekin + Etot (const)   = ",F20.8," Ry")' ) &
              ekin, temp_new, ( ekin  + etot )
+      IF (tnosep) THEN  
+        WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
+                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
+                     & Ha_to_Ry *ions_nose_energy, (ekin + etot + Ha_to_Ry * ions_nose_energy)
+      END IF  
       !
       IF (tstress) WRITE ( stdout, &
       '(5X,"Ions kinetic stress = ",F15.2," (kbar)",/3(27X,3F15.2/)/)') &
@@ -505,6 +521,11 @@ CONTAINS
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"temperature is set once at start"/)' )
                !
+            CASE ('nose') 
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is controlled by ", &
+                            &     "Nose Hoover thermostat",/,5x)') 
+               CALL ions_nose_info(dt)
             CASE DEFAULT
                !
                WRITE( UNIT = stdout, &
@@ -717,20 +738,20 @@ CONTAINS
          !
          IMPLICIT NONE
          !
-         INTEGER  :: na, nb
-         REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
+         INTEGER  :: na_, nb
+         REAL(DP) :: total_mass_, kt, sigma, ek, ml_(3), system_temp
          !
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
          !
-         DO na = 1, nat
+         DO na_ = 1, nat
             !
-            sigma = SQRT( kt / mass(na) )
+            sigma = SQRT( kt / mass(na_) )
             !
             ! ... N.B. velocities must in a.u. units of alat
             !
-            vel(:,na) = gauss_dist( 0.D0, sigma, 3 ) / alat
+            vel(:,na_) = gauss_dist( 0.D0, sigma, 3 ) / alat
             !
          ENDDO
          !
@@ -752,15 +773,15 @@ CONTAINS
             ! ... if there is inversion symmetry, equivalent atoms have
             ! ... opposite velocities
             !
-            DO na = 1, nat
+            DO na_ = 1, nat
                !
-               nb = irt( ( nsym / 2 + 1 ), na )
+               nb = irt( ( nsym / 2 + 1 ), na_ )
                !
-               IF ( nb > na ) vel(:,nb) = - vel(:,na)
+               IF ( nb > na_ ) vel(:,nb) = - vel(:,na_)
                !
                ! ... the atom on the inversion center is kept fixed
                !
-               IF ( na == nb ) vel(:,na) = 0.D0
+               IF ( na_ == nb ) vel(:,na_) = 0.D0
                !
             ENDDO
             !
@@ -769,15 +790,15 @@ CONTAINS
             ! ... put total linear momentum equal zero if all atoms
             ! ... are free to move
             !
-            ml(:) = 0.D0
+            ml_(:) = 0.D0
             !
             IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
                !
-               total_mass = SUM( mass(1:nat) )
+               total_mass_ = SUM( mass(1:nat) )
                DO na = 1, nat
-                  ml(:) = ml(:) + mass(na)*vel(:,na)
+                  ml_(:) = ml_(:) + mass(na)*vel(:,na)
                ENDDO
-               ml(:) = ml(:) / total_mass
+               ml_(:) = ml_(:) / total_mass_
                !
             ENDIF
             !
@@ -785,12 +806,12 @@ CONTAINS
          !
          ek = 0.D0
          !
-         DO na = 1, nat
+         DO na_ = 1, nat
             !
-            vel(:,na) = vel(:,na) - ml(:)
+            vel(:,na_) = vel(:,na_) - ml_(:)
             !
-            ek = ek + 0.5D0 * mass(na) * &
-                     ( ( vel(1,na) )**2 + ( vel(2,na) )**2 + ( vel(3,na) )**2 )
+            ek = ek + 0.5D0 * mass(na_) * &
+                     ( ( vel(1,na_) )**2 + ( vel(2,na_) )**2 + ( vel(3,na_) )**2 )
             !
          ENDDO
          !
@@ -811,15 +832,23 @@ CONTAINS
      !------------------------------------------------------------------------
      USE cell_base,      ONLY : alat
      USE ions_base,      ONLY : nat
-     IMPLICIT NONE
+     USE ions_nose,      ONLY : ekin2nhp, atm2nhp
+     USE control_flags,  ONLY : tnosep
+     IMPLICIT NONE  
      REAL (dp), INTENT (out) :: ekin, temp_new
      INTEGER :: na
+     REAL(DP), parameter :: Ry_to_Ha = 1._dp/Ha_to_Ry 
+     REAL(dp) :: ekin_at 
      !
      ekin = 0.0_dp
+     ekin_at = 0.0_dp 
+     ekin2nhp = 0.0_dp 
      DO na = 1, nat
-        ekin  = ekin + 0.5_dp * mass(na) * &
+        ekin_at  =  0.5_dp * mass(na) * &
              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
-     ENDDO
+        ekin = ekin + ekin_at
+        IF  (tnosep)  ekin2nhp(atm2nhp(na)) = ekin2nhp(atm2nhp(na)) + Ry_to_Ha * ekin_at*alat**2 
+     END DO
      ekin = ekin*alat**2
      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
      !
@@ -1852,7 +1881,7 @@ CONTAINS
    END SUBROUTINE project_velocity
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE thermalize( nraise, system_temp, required_temp )
+   SUBROUTINE thermalize( nraise_, system_temp, required_temp )
       !-----------------------------------------------------------------------
       !! * Berendsen rescaling (Eq. 7.59 of Allen & Tildesley);
       !! * rescale the velocities by a factor 3 / 2KT / Ek.
@@ -1860,11 +1889,11 @@ CONTAINS
       IMPLICIT NONE
       !
       REAL(DP), INTENT(IN) :: system_temp, required_temp
-      INTEGER, INTENT(IN) :: nraise
+      INTEGER, INTENT(IN) :: nraise_
       !
       REAL(DP) :: aux
       !
-      IF ( nraise > 0 ) THEN
+      IF ( nraise_ > 0 ) THEN
          !
          ! ... Berendsen rescaling (Eq. 7.59 of Allen & Tildesley)
          ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
@@ -1996,7 +2025,7 @@ CONTAINS
    END SUBROUTINE smart_MC
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE thermalize_resamp_vscaling( nraise, system_temp, required_temp )
+   SUBROUTINE thermalize_resamp_vscaling( nraise_, system_temp, required_temp )
       !-----------------------------------------------------------------------
       !! Sample velocities using stochastic velocity rescaling, based on:
       !! Bussi, Donadio, Parrinello, J. Chem. Phys. 126, 014101 (2007),
@@ -2012,9 +2041,9 @@ CONTAINS
       IMPLICIT NONE
       !
       REAL(DP), INTENT(in) :: system_temp, required_temp
-      INTEGER,  INTENT(in) :: nraise
+      INTEGER,  INTENT(in) :: nraise_
       !
-      INTEGER  :: i, ndof
+      INTEGER  :: i
       REAL(DP) :: factor, rr
       REAL(DP) :: aux, aux2
       real(DP), external :: gasdev, sumnoises
@@ -2022,12 +2051,12 @@ CONTAINS
       !
       ndof = get_ndof()
       !
-      IF ( nraise > 0 ) THEN
+      IF ( nraise_ > 0 ) THEN
          !
          ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
          ! ... Equivalent to traditional rescaling if nraise=1
          !
-         factor = exp(-1.0/nraise)
+         factor = exp(-1.0/nraise_)
       ELSE
          !
          factor = 0.0
@@ -2039,9 +2068,9 @@ CONTAINS
          ! Applying Eq. (A7) from J. Chem. Phys. 126, 014101 (2007)
          !
          rr = gauss_dist(0.0D0, 1.0D0)
-         aux2 = factor + (1.0D0-factor)*( sum_of_gaussians2(ndof-1) +rr**2) &
-                * required_temp/(ndof*system_temp) &
-                + 2*rr*sqrt((factor*(1.0D0-factor)*required_temp)/(ndof*system_temp))
+         aux2 = factor + (1.0D0-factor)*( sum_of_gaussians2(ndof - 1) +rr**2) &
+                * required_temp/(ndof * system_temp) &
+                + 2*rr*sqrt((factor*(1.0D0-factor)*required_temp)/(ndof * system_temp))
          !
          aux  = sqrt(aux2)
 

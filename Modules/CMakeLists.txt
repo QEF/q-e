@@ -2,6 +2,8 @@ set(src_modules
     additional_kpoints.f90 
     atomic_wfc_mod.f90
     autopilot.f90 
+    ions_nose.f90
+    cell_nose.f90
     basic_algebra_routines.f90 
     becmod.f90 
     bfgs_module.f90 
