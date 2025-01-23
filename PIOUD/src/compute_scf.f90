@@ -357,7 +357,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! stress_pes(:,image) = RESHAPE( sigma,(/ 9 /) )
       ! stress_pes(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/)
       stress_pes_md(:,image) = (/sigma(1,1), sigma(2,2), sigma(3,3), sigma(1,2), sigma(1,3),sigma(2,3)/) / e2
-      write(11000000+mpime,*)stress_pes_md
+      ! write(11000000+mpime,*)stress_pes_md
       ! write(10000000+mpime,*)stress_pes
 
 

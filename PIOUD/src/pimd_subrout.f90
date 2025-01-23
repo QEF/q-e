@@ -1,3 +1,94 @@
+module random_pioud
+  USE kinds, ONLY : DP
+
+  IMPLICIT NONE
+
+contains
+
+
+    !
+    !------------------------------------------------------------------------
+FUNCTION pioud_randy ( irand )
+  !------------------------------------------------------------------------
+  !! * x=pioud_randy(n): reseed with initial seed \(\text{idum}=n\) ( 0 <= n <= ic, see below)
+  !!               if pioud_randy is not explicitly initialized, it will be
+  !!               initialized with seed \(\text{idum}=0\) the first time it is called;
+  !! * x=pioud_randy() : generate uniform REAL(DP) numbers x in [0,1].
+  !
+  REAL(DP) :: pioud_randy
+  INTEGER, optional    :: irand
+  !
+  INTEGER , PARAMETER  :: m    = 714025, &
+                          ia   = 1366, &
+                          ic   = 150889, &
+                          ntab = 97
+  REAL(DP), PARAMETER  :: rm = 1.0_DP / m
+  INTEGER              :: j
+  INTEGER, SAVE        :: ir(ntab), iy, idum=0
+  LOGICAL, SAVE        :: first=.true.
+  !
+  ! return 0.5_dp
+
+  IF ( present(irand) ) THEN
+     idum = MIN( ABS(irand), ic) 
+     first=.true.
+  END IF
+
+  IF ( first ) THEN
+     !
+     first = .false.
+     idum = MOD( ic - idum, m )
+     !
+     DO j=1,ntab
+        idum=mod(ia*idum+ic,m)
+        ir(j)=idum
+     END DO
+     idum=mod(ia*idum+ic,m)
+     iy=idum
+  END IF
+  j=1+(ntab*iy)/m
+  IF( j > ntab .OR. j <  1 ) call errore('prandy','j out of range',ABS(j)+1)
+  iy=ir(j)
+  pioud_randy=iy*rm
+  idum=mod(ia*idum+ic,m)
+  ir(j)=idum
+  !
+  RETURN
+  !
+END FUNCTION pioud_randy
+!
+!------------------------------------------------------------------------
+SUBROUTINE set_random_seed (iseed )
+  !------------------------------------------------------------------------
+  !! poor-man random seed for \(\texttt{randy}\).
+  !
+  INTEGER, DIMENSION (8) :: itime
+  INTEGER :: iseed, irand
+  !
+  irand = pioud_randy ( iseed )
+  !
+END SUBROUTINE set_random_seed
+end module  
+
+! module random_pioud
+!   USE kinds, ONLY : DP
+
+!   IMPLICIT NONE
+
+! contains
+
+!   FUNCTION pioud_randy (irand)
+!     !! This function is simplified for testing purposes.
+!     !! It always returns the same number (e.g., 0.123_DP).
+!     REAL(DP) :: pioud_randy
+!     INTEGER, optional :: irand
+
+!     ! Return a fixed value for testing
+!     pioud_randy = 0.123_DP
+!   END FUNCTION pioud_randy
+
+! end module random_pioud
+
 subroutine vel_verlet_1half_irun0(intinp)
   
   use pimd_variables, only : delt,nh
@@ -330,6 +421,7 @@ subroutine normal_modes_fw(coord_mode,coord,first)
                              indx,amas,cov,cmatrix,cost1,friction_mode,&
                              gamma_eigen,gammaMD,delt,cost2,tfakeMD,pi
   USE random_numbers, ONLY: randy
+  USE random_pioud, ONLY: pioud_randy
   
   implicit none
   integer :: i,k,l,kk,ind
@@ -389,8 +481,8 @@ subroutine normal_modes_fw(coord_mode,coord,first)
    !!! gamma_eigen(i) non viene mai ricalcolato e rimane sempre uguale a gamma.....    
          cost1(k)=exp(-(friction_mode(k)+gamma_eigen(i)-gammaMD)*delt/2.d0) 
          cost2(k)=sqrt(1.d0-cost1(k)**2) 
-         drand1 = randy()  
-         drand2 = randy()
+         drand1 = pioud_randy()  
+         drand2 = pioud_randy()
 
         !  call random_number(drand1)
         !  call random_number(drand2)
@@ -418,8 +510,8 @@ subroutine normal_modes_fw(coord_mode,coord,first)
            enddo
            if (first) then
              if (.not. yesglobal .or. k .gt. 1) then ! PILE_L + PILE_G for modes > 0
-                drand1 = randy()  
-                drand2 = randy()
+                drand1 = pioud_randy()  
+                drand2 = pioud_randy()
                 ! call random_number(drand1)
                 ! call random_number(drand2)
                 xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
@@ -436,8 +528,8 @@ subroutine normal_modes_fw(coord_mode,coord,first)
             ind=indx(i)
             do l=1,ndimMD
               kin=kin+coord_mode(l,i,1)**2/amas(ind)
-              drand1 = randy()  
-              drand2 = randy()
+              drand1 = pioud_randy()  
+              drand2 = pioud_randy()
               ! call random_number(drand1)
               ! call random_number(drand2)
               xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
@@ -571,6 +663,7 @@ subroutine propGamma
                              gamma_eigen,cost1,cost2,pi
 
   USE random_numbers, ONLY: randy
+  USE random_pioud, ONLY: pioud_randy
 
 
   implicit none
@@ -598,8 +691,8 @@ subroutine propGamma
        cost0=exp(-alphaqmc_eig(i)*delt/(8.d0*tempMD))
        cost1(1)=exp(-(gamma_eigen(i)-alphaqmc_eig(i)/(2.d0*tempMD))*delt/2.d0)
        cost2(1)=sqrt(1.d0-cost1(1)**2)
-       drand1 = randy()  
-       drand2 = randy()
+       drand1 = pioud_randy()  
+       drand2 = pioud_randy()
       !  call random_number(drand1)
       !  call random_number(drand2)
        xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
@@ -626,8 +719,8 @@ subroutine propGamma
      do i=1,natMD
        ind=indx(i)
        do l=1,ndimMD
-         drand1 = randy()  
-         drand2 = randy()
+         drand1 = pioud_randy()  
+         drand2 = pioud_randy()
         !  call random_number(drand1)
         !  call random_number(drand2)
          xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
@@ -827,6 +920,8 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
                          ,write_cov,kdyn,nbead,ndimMD
  USE path_io_units_module,         ONLY : iunpath
  USE random_numbers, ONLY: randy
+ USE random_pioud, ONLY: pioud_randy
+
 ! three vectors as fundamental input (bead dependent)
 ! rion, velion, forza
 ! forza(ieskin,*),velocity(3,ieskin,*),rion(3,nion,*)
@@ -1021,8 +1116,8 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
      if(yessecond) then
 ! Compute the temperature at half time intervals.
         do i=1,ieskin 
-           drand1 = randy()  
-           drand2 = randy()
+           drand1 = pioud_randy()  
+           drand2 = pioud_randy()
           !  call random_number(drand1)
           !  call random_number(drand2)
            zeta=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
@@ -1032,8 +1127,8 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
         tmes(ibead)=dnrm2(ieskin,sov4,1)**2/ieskin 
 ! Second half time interval.
         do i=1,ieskin 
-           drand1 = randy()  
-           drand2 = randy()
+           drand1 = pioud_randy()  
+           drand2 = pioud_randy()
           !  call random_number(drand1)
           !  call random_number(drand2)
            zeta=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
@@ -1042,8 +1137,8 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
         enddo
      else
         do i=1,ieskin
-           drand1 = randy()  
-           drand2 = randy()
+           drand1 = pioud_randy()  
+           drand2 = pioud_randy()
           !  call random_number(drand1)
           !  call random_number(drand2)
            zeta=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
@@ -1097,15 +1192,15 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
 !!!! START equations of motion integration 
 
      do i=1,ieskin 
-        drand1 = randy()  
-        drand2 = randy()
+        drand1 = pioud_randy()  
+        drand2 = pioud_randy()
 
         ! call random_number(drand1)
         ! call random_number(drand2)
         zetan(1)=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
 
-        drand1 = randy()  
-        drand2 = randy()
+        drand1 = pioud_randy()  
+        drand2 = pioud_randy()
         ! call random_number(drand1)
         ! call random_number(drand2)
         zetan(2)=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2) 
@@ -1740,7 +1835,7 @@ subroutine pimd_allocation
    implicit none
    integer :: i,j,ii,jj,ind
    
-WRITE(9999,*) "Alloc dims", ndimMD, natMD, nbeadMD
+! WRITE(9999,*) "Alloc dims", ndimMD, natMD, nbeadMD
 !FLUSH(9999)
 
    ! Allocation of variables
@@ -2285,6 +2380,8 @@ subroutine pimd_setvel(iff)
                              amas,mtot,pimp,indx,fixcm,gMD,tfakeMD
 
   USE random_numbers, ONLY: randy
+  USE random_pioud, ONLY: pioud_randy
+
 
 
   implicit none
@@ -2304,7 +2401,7 @@ subroutine pimd_setvel(iff)
     do i=1,natMD
       if (iff==0) then
         do l=1,ndimMD
-          dummy = randy()  
+          dummy = pioud_randy()  
           vel(l,i,k)=dummy-0.5d0
         enddo
       endif
@@ -2482,8 +2579,8 @@ subroutine checkpoint(ttk)
         fcentroid(:,:)=fcentroid(:,:)+forceMD(:,:,k)
         vcentroid(:,:)=vcentroid(:,:)+vel(:,:,k)
         scentroid(:)=scentroid(:)+stress_pes_md(:,k)
-        write(90000,*)scentroid
-        write(90001,*)stress_pes_md
+        ! write(90000,*)scentroid
+        ! write(90001,*)stress_pes_md
       end do
       fcentroid=fcentroid/nbeadMD; vcentroid=vcentroid/nbeadMD; scentroid=scentroid/nbeadMD
 
@@ -2498,7 +2595,7 @@ subroutine checkpoint(ttk)
 !!!--------------------writes velocity,force and position files for postprocessing----------
 !!!--------------------if the number of unit cells > 1 (crystal system)---------------------
 !!!--------------------writes only the centroid coordinatMDes---------------------------------
-     write(90002,*)scentroid
+    !  write(90002,*)scentroid
      write(unit_dot_positions_cen,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_positions_cen)
      write(unit_dot_velocities_cen,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)

@@ -60,8 +60,9 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 # how to run executables
 # PIOUD_COMMAND="$PARA_PREFIX $BIN_DIR/pioud.x $PARA_POSTFIX"
-# PIOUD_COMMAND="mpirun -n 4 $BIN_DIR/pioud.x -ni 4"
-PIOUD_COMMAND="mpirun -n 1 $BIN_DIR/pioud.x"
+PIOUD_COMMAND="mpirun -n 4 $BIN_DIR/pioud.x -ni 4"
+# PIOUD_COMMAND="mpirun -n 4 $BIN_DIR/pioud.x -ni 2"
+# PIOUD_COMMAND="mpirun -n 1 $BIN_DIR/pioud.x"
 $ECHO
 $ECHO "  running Born-Oppenheimer PIOUD as: $PIOUD_COMMAND"
 $ECHO
@@ -87,7 +88,7 @@ BEGIN_PIMD_INPUT
   nblocks=4 !! not used check - only used for first run. restart not working -check
   nstep_block=4 !! not used check - only used for first run. restart not working -check
   iprint=1 !! Freqncy of output print
-  run='pioud'
+  run='pioud' !! verlet,ceriotti,pioud
   delt=0.2d0  !! for pioud, 41.32231 which is 1 fs in a.u., must be divided for sqrt(m_1) #time step
   tempMD=300.d0 !! temprature in Kelvin
   gammaMD=0.21d0 !! Damping parameter in(1/fs)

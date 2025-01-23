@@ -43,7 +43,7 @@ SUBROUTINE engine_to_path_pos(idx)
   ! ... note that this positions array is in Bohr
   !
   pos(1:3*nat,idx) = reshape( tau, (/ 3 * nat /) ) * alat
-  write(14000+mpime,*)input_images,"input_images",minimum_image
+!   write(14000+mpime,*)input_images,"input_images",minimum_image
   
   !
   ! If requested, use the translational periodicity of the unit cell to ensure

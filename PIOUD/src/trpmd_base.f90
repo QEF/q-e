@@ -109,7 +109,7 @@ MODULE trpmd_base
       !    !
       ! END IF
       ! num_of_images=nbeadMD
-      write(12000+mpime,*) nbeadMD,nimage
+      ! write(12000+mpime,*) nbeadMD,nimage
       if( nimage > nbeadMD ) &
              CALL errore( 'initialize_polymer', 'nimage is ' // &
                         & 'more computing images than polymer images', 1 )
@@ -264,7 +264,7 @@ MODULE trpmd_base
       !
       
       
-      write(13000+mpime,*)istep_path,nstep_path,pending_image
+      ! write(13000+mpime,*)istep_path,nstep_path,pending_image
       IF ( istep_path == nstep_path ) THEN
          !
          CALL write_output()
@@ -274,14 +274,14 @@ MODULE trpmd_base
          RETURN
          !
       END IF
-      write(13000+mpime,*)istep_path,nstep_path,pending_image
+      ! write(13000+mpime,*)istep_path,nstep_path,pending_image
       !IF ( meta_ionode ) 
       CALL pimd_allocation !!! <----my mod.
       
       IF ( meta_ionode .and. restart_pimd) CALL pimd_restart_traj  !!! <----my mod.
       CALL mp_bcast( pos,  meta_ionode_id, world_comm )   !!! <----my mod.
       
-      write(13000+mpime,*)istep_path,nstep_path,pending_image
+      ! write(13000+mpime,*)istep_path,nstep_path,pending_image
 
       if ( meta_ionode) then 
         write(*,*)
@@ -300,7 +300,7 @@ MODULE trpmd_base
       !
       ! ... path optimisation loop
       !
-      write(13000+mpime,*)istep_path,nstep_path,pending_image
+      ! write(13000+mpime,*)istep_path,nstep_path,pending_image
 
       optimisation: DO
          !

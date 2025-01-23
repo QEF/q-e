@@ -253,13 +253,13 @@ SUBROUTINE pimd_mp_bcast
   nstep_path = nblocks*nstep_block
   natMD=nat
   ! write(*,*) nstep_path
-  write(10000,*) "nstep_path",nstep_path, &
-                  nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
+  ! write(10000,*) "nstep_path",nstep_path, &
+                  ! nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
   num_of_images = nbeadMD
   !if (nbeadMD.eq.1) num_of_images=2
   ! first_last_opt=.true.
-  write(10001,*) "nstep_path",nstep_path, &
-                 nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
+  ! write(10001,*) "nstep_path",nstep_path, &
+                !  nbeadMD,"nbeadMD",nblocks,"nblocks",nstep_block,"nstep_block"
   CALL mp_bcast( nstep_path,  meta_ionode_id, world_comm )
   CALL mp_bcast( num_of_images,  meta_ionode_id, world_comm )
   ! CALL mp_bcast( first_last_opt,  meta_ionode_id, world_comm )
@@ -269,7 +269,7 @@ SUBROUTINE pimd_mp_bcast
   CALL mp_bcast( natMD, meta_ionode_id, world_comm ) 
   ! CALL mp_bcast( forceMD, meta_ionode_id, world_comm ) 
 
-  write(11000+mpime,*) nstep_path,nbeadMD,natMD
+  ! write(11000+mpime,*) nstep_path,nbeadMD,natMD
 
   return
   
