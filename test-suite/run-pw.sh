@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2001 Quantum ESPRESSO
+# Copyright (C) 2025 Quantum ESPRESSO
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,43 +15,44 @@ else
   unset PARA_PREFIX
   unset PARA_SUFFIX
 fi
-
+pw_input=$2
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
-  if [[ -e CRASH ]]
+  if [[ -e "CRASH" ]]
   then
     cat $3
   fi
 elif [[ "$1" == "2" ]]
 then
-  if [[-e CRASH ]]
+  if [[ -e "CRASH" ]]
   then 
     cat CRASH > $3
   else
     echo "Running PW ..."
 # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
     ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
-    if [[ -e CRASH ]]
+    if [[ -e "CRASH" ]]
     then
       cat $3
     fi
   fi 
-elif [[ "$1" = "plugin-pw2casino_1.in" ]] || [[ "$1" = "plugin-pw2casino_2.in" ]]
+elif [[ $1 == "48" ]]
 then
   export PARA_SUFFIX="$PARA_SUFFIX --pw2casino"
   # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3
-elif [[ "$1" = "md_restart_verlet.in" ]]
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
+elif [[ $1 == "22" ]]
 then
   # This is a restart test, need to clean up previous results if present
   rm -rf md_restart_verlet.save
   cp md_restart_verlet_original.md md_restart_verlet.md
   # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
 else
+  # no arg provided input is $1 output $2 stderr is $3 
   # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3
 fi
