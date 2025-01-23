@@ -62,7 +62,7 @@ program = PW
 inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-cg-gamma.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in','')
 
 [pw_md/]
-inputs_args = ('md.in','1'), ('md_restart_verlet.in','22'), ('md-wfc_extrap1.in','1'), ('md-wfc_extrap2.in','2'), ('md-wfc_extrap2.in','1'), ('md-wfc_extrap2.in','2')
+inputs_args = ('md.in','1'), ('md_restart_verlet.in','22'), ('md-wfc_extrap1.in','1'), ('md-wfc_extrap2.in','2'), ('md-pot_extrap1.in','1')  ,('md-pot_extrap2.in','2')
 
 [pw_workflow_vc-relax_dos/]
 program = PW

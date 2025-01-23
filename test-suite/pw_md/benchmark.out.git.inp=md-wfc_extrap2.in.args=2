@@ -1,5 +1,5 @@
 
-     Program PWSCF v.7.4 starts on 23Jan2025 at 17: 7:20 
+     Program PWSCF v.7.4 starts on 23Jan2025 at 18: 0:11 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,7 +13,7 @@
      Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     4062 MiB available memory on the printing compute node when the environment starts
+     4389 MiB available memory on the printing compute node when the environment starts
 
      Waiting for input...
      Reading input from standard input
@@ -1377,7 +1377,7 @@ Si               0.1260701651        0.1260701648        0.1260701692
      Davidson diagonalization with overlap
      ethr =  1.92E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.2 secs
 
      total energy              =     -14.44895437 Ry
      estimated scf accuracy    <       0.00000156 Ry
@@ -1386,7 +1386,7 @@ Si               0.1260701651        0.1260701648        0.1260701692
      Davidson diagonalization with overlap
      ethr =  1.96E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.2 secs
 
      total energy              =     -14.44895455 Ry
      estimated scf accuracy    <       0.00000011 Ry
@@ -1395,7 +1395,7 @@ Si               0.1260701651        0.1260701648        0.1260701692
      Davidson diagonalization with overlap
      ethr =  1.43E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.2 secs
 
      End of self-consistent calculation
 
@@ -3268,7 +3268,7 @@ Si               0.1235398761        0.1235398764        0.1235398731
      second order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      Self-consistent Calculation
 
@@ -3282,7 +3282,7 @@ Si               0.1235398761        0.1235398764        0.1235398731
      Davidson diagonalization with overlap
      ethr =  1.29E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -14.44859935 Ry
      estimated scf accuracy    <       0.00000105 Ry
@@ -3291,7 +3291,7 @@ Si               0.1235398761        0.1235398764        0.1235398731
      Davidson diagonalization with overlap
      ethr =  1.31E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -14.44859946 Ry
      estimated scf accuracy    <       0.00000008 Ry
@@ -3300,7 +3300,7 @@ Si               0.1235398761        0.1235398764        0.1235398731
      Davidson diagonalization with overlap
      ethr =  1.01E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      End of self-consistent calculation
 
@@ -3840,8 +3840,8 @@ Si               0.1231028825        0.1231028826        0.1231028838
      XML data file, charge density, pseudopotentials, collected wavefunctions
 
      init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.11s CPU      0.12s WALL (      50 calls)
-     update_pot   :      0.01s CPU      0.01s WALL (      49 calls)
+     electrons    :      0.10s CPU      0.12s WALL (      50 calls)
+     update_pot   :      0.01s CPU      0.02s WALL (      49 calls)
      forces       :      0.01s CPU      0.01s WALL (      50 calls)
 
      Called by init_run:
@@ -3857,7 +3857,7 @@ Si               0.1231028825        0.1231028826        0.1231028838
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (     443 calls)
-     cegterg      :      0.06s CPU      0.06s WALL (     196 calls)
+     cegterg      :      0.05s CPU      0.06s WALL (     196 calls)
 
      Called by *egterg:
      cdiaghg      :      0.01s CPU      0.01s WALL (     399 calls)
@@ -3874,15 +3874,15 @@ Si               0.1231028825        0.1231028826        0.1231028838
      calbec       :      0.00s CPU      0.01s WALL (     746 calls)
      fft          :      0.02s CPU      0.02s WALL (     739 calls)
      ffts         :      0.00s CPU      0.00s WALL (     196 calls)
-     fftw         :      0.04s CPU      0.04s WALL (    4258 calls)
+     fftw         :      0.03s CPU      0.04s WALL (    4258 calls)
      davcio       :      0.00s CPU      0.00s WALL (     192 calls)
 
      Parallel routines
 
-     PWSCF        :      0.39s CPU      0.43s WALL
+     PWSCF        :      0.38s CPU      0.42s WALL
 
 
-   This run was terminated on:  17: 7:20  23Jan2025            
+   This run was terminated on:  18: 0:12  23Jan2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
