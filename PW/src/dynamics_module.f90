@@ -842,7 +842,7 @@ CONTAINS
      !
      ekin = 0.0_dp
      ekin_at = 0.0_dp 
-     ekin2nhp = 0.0_dp 
+     if (tnosep) ekin2nhp = 0.0_dp 
      DO na = 1, nat
         ekin_at  =  0.5_dp * mass(na) * &
              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )

@@ -20,8 +20,8 @@ fi
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -33,7 +33,7 @@ then
     cat CRASH > $3
   else
     echo "Running PH ..."
-    ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+    ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
     if [[ -e CRASH ]]
     then
       cat $3
@@ -42,8 +42,8 @@ then
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -51,8 +51,8 @@ then
 elif [[ "$1" == "3" ]]
 then
   echo "Running Q2R ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/q2r.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/q2r.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -60,8 +60,8 @@ then
 elif [[ "$1" == "4" ]]
 then
   echo "Running MATDYN ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/matdyn.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/matdyn.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -69,8 +69,8 @@ then
 elif [[ "$1" == "5" ]]
 then
   echo "Running LAMBDA ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4"
-  ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/lambda.x < $2 > $3 2> $4"
+  ${ESPRESSO_BUILD}/bin/lambda.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -78,8 +78,8 @@ then
 elif [[ "$1" == "6" ]]
 then
   echo "Running DVSCF_Q2R ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dvscf_q2r.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dvscf_q2r.x < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/dvscf_q2r.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/dvscf_q2r.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -87,8 +87,8 @@ then
 elif [[ "$1" == "7" ]]
 then
   echo "Running POSTAHC ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -96,8 +96,8 @@ then
 elif [[ "$1" == "8" ]]
 then
   echo "Running MATDYN ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/matdyn.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/matdyn.x < $2 > $3 2> $4
   cp matdyn.modes $3
   if [[ -e CRASH ]]
   then
@@ -106,12 +106,12 @@ then
 elif [[ "$1" == "9" ]]
 then
    echo "Running DYNMAT ... "
-   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dynmat.x < $2 > $3 2> $4
+   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/dynmat.x < $2 > $3 2> $4
 elif [[ "$1" == "12" ]]
 then
   echo "Running PW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -130,8 +130,8 @@ then
 elif [[ "$1" == "13" ]]
 then
   echo "Running PH ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
   echo "Running Python postprocessing.."
   python3 multipole.py -f --order 3 --epsil_order 4 --alat 8.237B > postprocessing.out
   echo "postprocessing.out" >> $3

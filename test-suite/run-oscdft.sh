@@ -12,7 +12,7 @@ fi
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $4
@@ -21,7 +21,7 @@ elif [[ "$1" == "2" ]]
 then
   echo "Running PW OSCDFT ..."
   cp "$2" oscdft.in
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -oscdft < $3 > $4 2> $5
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} -oscdft < $3 > $4 2> $5
   if [[ -e CRASH ]]
   then
     cat $5
@@ -29,9 +29,9 @@ then
 elif [[ "$1" == "3" ]]
 then
   echo "Running OSCDFT_PP ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $3 > "$3".out.tmp 2> "$3".err.tmp
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $3 > "$3".out.tmp 2> "$3".err.tmp
   cp "$2" oscdft.in
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/oscdft_pp.x ${PARA_SUFFIX} < $4 > $5 2> $6
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/oscdft_pp.x ${PARA_SUFFIX} < $4 > $5 2> $6
   if [[ -e CRASH ]]
   then
     cat $6

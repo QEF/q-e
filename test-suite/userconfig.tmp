@@ -2,7 +2,7 @@
 exe = XXXXXX/test-suite/run-pw.sh
 extract_program = XXXXXX/test-suite/extract-pw.sh
 inputs_args = ('*.in', '')
-run_cmd_template = tc.program tc.input tc.output tc.error
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (8.0e+0, 1.0e+1, 'n1'),
               (1.0e-3, None,   'f1'),
