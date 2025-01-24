@@ -236,7 +236,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   REAL(KIND=DP) :: cg_iter, rmm_iter
   ! (weighted) number of iterations in RMM-DIIS
-  INTEGER :: npw, ig, dav_iter, ntry, notconv, nhpsi
+  INTEGER :: npw, dav_iter, ntry, notconv, nhpsi
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
@@ -330,7 +330,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     IMPLICIT NONE
     !
-    INTEGER :: j
+    INTEGER :: ig
     !
     IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .OR. rmm_use_paro(iter))   THEN
        !
@@ -610,7 +610,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     INTEGER :: ipol
     REAL(DP) :: eps=0.000001d0
     ! --- Define a small number ---
-    INTEGER :: j
+    INTEGER :: ig
     !
     !write (*,*) ' enter diag_bands_k'; FLUSH(6)
     IF ( lelfield ) THEN
