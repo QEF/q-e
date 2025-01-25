@@ -2488,6 +2488,10 @@
                     Newton's equation. For constrained 
                     dynamics, see @ref CONSTRAINTS card
                 }
+                opt -val 'velocity-verlet' {
+                  use velocity-Verlet algorithm to integrate Newton's equation. 
+                  For constrained dynamics, see @ref CONSTRAINTS card. 
+                }
                 opt -val 'langevin' {
                     ion dynamics is over-damped Langevin
                 }
@@ -4079,7 +4083,7 @@
     card CONSTRAINTS {
         label {
             Optional card, used for constrained dynamics or constrained optimizations
-            (only if @ref ion_dynamics=='damp' or 'verlet', variable-cell excepted)
+            (only if @ref ion_dynamics=='damp','verlet' or 'velocity-verlet', variable-cell excepted)
         }
         message {
             When this card is present the SHAKE algorithm is automatically used.

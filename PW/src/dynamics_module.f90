@@ -606,7 +606,7 @@ CONTAINS
       !
       FORALL( na = 1:nat) vel(:,na) = vel(:,na) + 0.5_dp * dt * acc(:,na)
       IF (tnosep) THEN 
-         FORALL ( na = 1:nat) vel(:,na) = vel(:,na)/(1 + 0.5 * HaddT_to_RyddT * vnhp(atm2nhp(na)))
+         FORALL ( na = 1:nat) vel(:,na) = vel(:,na)/(1 + 0.5 * dt * HaddT_to_RyddT * vnhp(atm2nhp(na)))
       END IF 
       !
       ! ... remove the component of the velocity along the

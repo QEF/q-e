@@ -1091,7 +1091,7 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
         !! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(11)
+        CHARACTER(len=80) :: ion_dynamics_allowed(12)
         !! allowed options for ion\_dynamics.
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'velocity-verlet', 'bfgs', 'beeman',& 

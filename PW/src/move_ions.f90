@@ -380,10 +380,12 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               conv_ions = .true.
               !
            ENDIF
-         ELSE IF (calc .eq. 'vvd' .AND. SUM(if_pos(:,:)) .GT. 0 ) THEN
+        ELSE IF (calc .eq. 'wd' .AND. ANY(if_pos(:,:) == 1) ) THEN
             CALL velocity_verlet() 
-            IF (idone .GE. nstep) CALL terminate_verlet() 
-            conv_ions = .true.  
+            IF (idone .GE. nstep) THEN 
+               CALL terminate_verlet() 
+               conv_ions = .true.  
+            END IF
         ELSE
            !
            ! ... variable cell shape md
