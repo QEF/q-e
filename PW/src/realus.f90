@@ -2293,7 +2293,6 @@ MODULE realus
     INTEGER :: j, idx, incr, ebnd, brange
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
-    !$acc declare device_resident(psio)
     !
     ! ... Task groups
     !print *, "->Fourier space"
@@ -2308,6 +2307,7 @@ MODULE realus
         !
         incr = 2*fftx_ntgrp(dffts)
         ALLOCATE( psio(ngk(1),incr) )
+        !$acc enter data create(psio)
         !
         brange = last-ibnd+1
         !
@@ -2335,6 +2335,7 @@ MODULE realus
            ENDIF
         ENDDO
         !
+        !$acc exit data delete(psio)
         DEALLOCATE( psio )
         !
         IF (PRESENT(conserved)) THEN
@@ -2351,6 +2352,7 @@ MODULE realus
         brange = ebnd-ibnd+1
         !
         ALLOCATE( psio(ngk(1),brange) )
+        !$acc enter data create(psio)
         !
         CALL wave_r2g( psic(1:dffts%nnr), psio, dffts )
         !
@@ -2379,6 +2381,7 @@ MODULE realus
            ENDDO
         ENDIF
         !
+        !$acc exit data delete(psio)
         DEALLOCATE( psio )
         !
         IF (PRESENT(conserved)) THEN
@@ -2507,7 +2510,6 @@ MODULE realus
     INTEGER :: idx, ik_ , incr, ig, brange
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
-    !$acc declare device_resident(psio)
     !
     CALL start_clock( 'fwfft_orbital' )
     !
@@ -2524,6 +2526,7 @@ MODULE realus
        incr = fftx_ntgrp(dffts)
        !
        ALLOCATE( psio(ngk(ik_),incr) )
+       !$acc enter data create(psio)
        !
        brange = last-ibnd+1
        !
@@ -2541,6 +2544,7 @@ MODULE realus
           !
        ENDDO
        !
+       !$acc exit data delete(psio)
        DEALLOCATE( psio )
        !
        IF (PRESENT(conserved)) THEN
@@ -2552,6 +2556,7 @@ MODULE realus
     ELSE !non task groups version
        !
        ALLOCATE( psio(ngk(ik_),1) )
+       !$acc enter data create(psio)
        !
        CALL wave_r2g( psic(1:dffts%nnr), psio, dffts, igk=igk_k(:,ik_) )
        !
@@ -2567,6 +2572,7 @@ MODULE realus
           ENDDO
        ENDIF
        !
+       !$acc exit data delete(psio)
        DEALLOCATE( psio )
        !
        IF ( PRESENT(conserved) ) THEN
