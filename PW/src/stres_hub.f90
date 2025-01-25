@@ -89,9 +89,9 @@ SUBROUTINE stres_hub ( sigmah )
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
-      !$acc enter data create(swfcatom)
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
+      !$acc enter data create(swfcatom,eigenval,eigenvect)
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
    ENDIF
    !
@@ -428,11 +428,11 @@ SUBROUTINE stres_hub ( sigmah )
       DEALLOCATE (us_dy, us_dj)
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      !$acc exit data delete (swfcatom)
+      DEALLOCATE (overlap_inv)
+      !$acc exit data delete (swfcatom,eigenval,eigenvect)
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)
-      DEALLOCATE (overlap_inv)
    ENDIF
    !
    use_bgrp_in_hpsi = save_flag
