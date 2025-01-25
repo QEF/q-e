@@ -37,6 +37,7 @@ MODULE dynamics_module
    PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
              fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars,& 
              get_ndof
+   PUBLIC :: velocity_verlet 
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, elapsed_time
    ! FIRE parameters
@@ -115,7 +116,8 @@ MODULE dynamics_module
    !
    ! Restart type
    INTEGER, PARAMETER :: restart_verlet = 1, restart_proj_verlet = 2, &
-                         restart_fire = 3, restart_langevin = 4
+                         restart_fire = 3, restart_langevin = 4,      & 
+                         restart_velverlet = 5
    !
 CONTAINS
    !
@@ -184,7 +186,7 @@ CONTAINS
       !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
-      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy, ions_nose_info 
+      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy 
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
@@ -251,7 +253,7 @@ CONTAINS
          !
          ! ... the file is absent :  simulation is starting from scratch
          !
-         CALL md_init()
+         CALL md_init(total_mass, ekin, temp_new, temp_av, tv0rd)
          !
       ENDIF
       !
@@ -266,7 +268,7 @@ CONTAINS
                     &I5,/,T28,"time",T37," = ",F8.4," pico-seconds",/)' ) &
           istep, elapsed_time
       !
-      IF ( control_temp ) CALL apply_thermostat()
+      IF ( control_temp ) CALL apply_thermostat(temp_new, temp_av)
       !
       ! ... Update forces if potential wall constraint was requested
       !
@@ -465,368 +467,685 @@ CONTAINS
       !
       CALL compute_averages( istep )
       !
-   CONTAINS
+      !      !
+   END SUBROUTINE verlet
+   !
+    !------------------------------------------------------------------------
+   SUBROUTINE velocity_verlet()
+      !------------------------------------------------------------------------
+      !! This routine performs two half  steps of molecular dynamics evolution
+      !! using the velocity Verlet algorithm. Parameters:
       !
-      !--------------------------------------------------------------------
-      SUBROUTINE md_init()
-         !--------------------------------------------------------------------
+      !! * mass: mass of the atoms;
+      !! * dt: time step;
+      !! * temperature: starting temperature.
+      !! 
+      !! reads from previous step tau(t) and vel(t-dt/2)
+      !! computes:
+      !!   (1)     v(t) = v(t-dt/2) + forces(t)/mass * dt/2 
+      !!   (2)     tau(t+dt) = tau(t) + v(t) * dt + forces(t)/mass * dt^2/2
+      !!   (3)     v(t+dt/2) = v(t) + forces(t)/mass * dt/2 
+      !! saves for next step v(t+dt/2), tau(t + dt) 
+      !! :
+      !! The starting velocities of atoms are set accordingly to the
+      !! starting temperature, in random directions. 
+      !! The initial velocity distribution is therefore a constant.
+      !
+      !! Must be run on a single processor, results broadcast to all other procs
+      !! Unpredictable behavoiour may otherwise result due to I/O operations
+      !! 
+      !!
+      !! Author: Pietro Delugas 2025; based on the Verlet subroutine above: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
+      !
+      USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
+      USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy, ions_nosevel, ions_noseupd, &
+                                     ions_nose_shiftvar, xnhp0, xnhpp, xnhpm, qnp, gkbt2nhp, kbt, & 
+                                     nhpcl, nhpdim, ekin2nhp, gkbt2nhp, nhpbeg, nhpend
+      USE cell_base,          ONLY : alat, omega
+      USE ener,               ONLY : etot
+      USE force_mod,          ONLY : force
+      USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress, tnosep
+      ! istep counts all MD steps, including those of previous runs
+      USE constraints_module, ONLY : check_constraint, remove_constr_force, &
+         remove_constr_vec, check_wall_constraint
+      USE input_parameters,   ONLY : nextffield
+      !
+      IMPLICIT NONE
+      !
+      ! ... local variables
+      !
+      REAL(DP) :: ekin, etotold
+      REAL(DP) :: total_mass, temp_new, temp_av
+      REAL(DP) :: delta(3), ml(3), mlt
+      INTEGER  :: na
+      LOGICAL  :: is_restart
+      REAL(DP), EXTERNAL :: dnrm2
+      REAL(DP) :: kstress(3,3), tau_tmp(3, nat), vel_tmp(3, nat)
+      INTEGER :: i, j, restart_id
+      !
+      ndof = get_ndof()
+      !
+      vel_defined  = .TRUE.
+      temp_av      = 0.D0
+      !
+      !       
+      CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
+      !
+      IF ( is_restart ) THEN
          !
-         IMPLICIT NONE
+         ! ... the file is read :  simulation is continuing
          !
-         istep = 0
+         READ( UNIT = 4, FMT = * ) restart_id
          !
-         WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Molecular Dynamics Calculation")' )
-         !
-         ! ... atoms are refold in the central box if required
-         !
-         IF ( refold_pos ) CALL refold_tau()
-         !
-         ! ... reference positions
-         !
-         tau_ref(:,:) = tau(:,:)
-         !
-         IF ( control_temp ) THEN
+         IF ( restart_id .EQ. restart_velverlet ) THEN
+            ! Restarting...
+                        !
+            ! tau_tmp is read here but not used. It is used for restart in
+            ! verlet_read_tau_from_conf
             !
-            WRITE( stdout, &
-                  '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
-               temperature
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
+               vel(:,:), temp_new, temp_av, mass(:), total_mass, &
+               elapsed_time, tau_ref(:,:)
             !
-            SELECT CASE( TRIM( thermostat ) )
-               !
-            CASE( 'andersen', 'Andersen' )
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is controlled by Andersen ", &
-                              &   "thermostat",/,5x,"Collision frequency =",&
-                              &    f7.4,"/timestep")' ) 1.0_dp/nraise
-               !
-            CASE( 'berendsen', 'Berendsen' )
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is controlled by soft ", &
-                            &     "(Berendsen) velocity rescaling",/,5x,&
-                            &     "Characteristic time =",i3,"*timestep")') &
-                               nraise
-               !
-            CASE( 'svr', 'Svr', 'SVR' )
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is controlled by ", &
-                            &     "stochastic velocity rescaling",/,5x,&
-                            &     "Characteristic time   =",i3,"*timestep")') &
-                               nraise
-            CASE( 'initial', 'Initial' )
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is set once at start"/)' )
-               !
-            CASE ('nose') 
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is controlled by ", &
-                            &     "Nose Hoover thermostat",/,5x)') 
-               CALL ions_nose_info(dt)
-            CASE DEFAULT
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is controlled by ", &
-                              &     "velocity rescaling (",A,")"/)' )&
-                              TRIM( thermostat )
-               !
-            END SELECT
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+            ! for velocity verlet velocity is always defined 
+            ! here is vel(t-dt/2) which is the same as (tau(t)-tau(t-dt)/dt in standard verlet
+            vel_defined = .TRUE.
             !
+         ELSE
+            is_restart = .FALSE.
          ENDIF
+      ENDIF
+      !
+      IF (.NOT.is_restart) THEN
          !
-         DO na = 1, nsp
-            !
-            WRITE( UNIT = stdout, &
-                  FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
-            !
+         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         !
+         ! ... the file is absent :  simulation is starting from scratch
+         !
+         CALL md_init(total_mass, ekin, temp_new, temp_av, tv0rd)
+         !
+      ENDIF
+      ! this is the nose friction at time t computed with kinetic energy at time (t-dt/2) 
+      IF (tnosep) call ions_nosevel(vnhp, xnhp0, xnhpm, RyDt_to_HaDt * 0.5 * dt, nhpcl, nhpdim)
+
+      !
+      ! ... elapsed_time is in picoseconds
+      !
+      elapsed_time = elapsed_time + dt*2.D0*au_ps
+      !
+      istep = istep + 1
+      !
+      WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ", &
+                    &I5,/,T28,"time",T37," = ",F8.4," pico-seconds",/)' ) &
+          istep, elapsed_time
+      !
+      ! thermostat applied to v(t-dt/2) here    
+      IF ( control_temp ) CALL apply_thermostat(temp_new, temp_av)
+      !
+      ! ... Update forces if potential wall constraint was requested
+      !
+      IF (lconstrain) &
+         CALL check_wall_constraint( nat, tau, if_pos, ityp, alat, force )
+      !
+      ! ... we first remove the component of the force along the
+      ! ... constraint gradient ( this constitutes the initial
+      ! ... guess for the calculation of the lagrange multipliers )
+      !
+      IF ( lconstrain ) &
+         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+      !
+      ! ... calculate accelerations in a.u. units / alat
+      !
+      FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
+      !
+      ! ... Velocity Verlet integration scheme
+      !
+      ! we first compute v(t) 
+      !
+      FORALL( na = 1:nat) vel(:,na) = vel(:,na) + 0.5_dp * dt * acc(:,na)
+      IF (tnosep) THEN 
+         FORALL ( na = 1:nat) vel(:,na) = vel(:,na)/(1 + 0.5 * HaddT_to_RyddT * vnhp(atm2nhp(na)))
+      END IF 
+      !
+      ! ... remove the component of the velocity along the
+      ! ... constraint gradient
+      !
+      IF ( lconstrain ) CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+      !
+      IF (tnosep) THEN 
+         DO na = 1, nat
+           acc(:, na) = acc(:,na) - HaddT_to_RyddT * vnhp(atm2nhp(na)) * vel(:,na)
+         END DO
+      END IF
+      !
+      ! then we compute tau(t+dt)
+      !
+      tau_new(:,:) = tau(:,:) + vel(:,:) * 0.5 * dt + acc(:,:) * dt**2
+      !   
+
+      !
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield == 0 ) THEN
+         !
+         ! ... if no atom has been fixed  we compute the displacement of the
+         ! ... center of mass and we subtract it from the displaced positions
+         !
+         ! ... bypassed if external ionic force fields are activated
+         ! 
+         delta(:) = 0.D0
+         DO na = 1, nat
+            delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
          ENDDO
+         delta(:) = delta(:) / total_mass
+         FORALL( na = 1:nat ) tau_new(:,na) = tau_new(:,na) - delta(:)
          !
-         WRITE( UNIT = stdout, &
-               FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
-                        & " femto-seconds")' ) dt, dt*2.D+3*au_ps
+      ENDIF
+      !
+      IF ( lconstrain ) THEN
          !
-         ! ... masses in rydberg atomic units
+         ! ... check if the new positions satisfy the constrain equation
          !
-         total_mass = 0.D0
+         CALL check_constraint( nat, tau_new, tau, &
+                                force, if_pos, ityp, alat, dt, amu_ry )
+         !
+#if ! defined (__REDUCE_OUTPUT)
+         !
+         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
          !
          DO na = 1, nat
             !
-            mass(na) = amass( ityp(na) ) * amu_ry
-            !
-            total_mass = total_mass + mass(na)
+            WRITE( stdout, &
+                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                   na, ityp(na), force(:,na)
             !
          ENDDO
          !
-         IF ( tv0rd ) THEN
-            !
-            ! ... initial velocities available from input file
-            !
-            vel(:,:) = vel(:,:) / alat
-            vel_defined = .true.
-            !
-            CALL compute_ekin ( ekin, temp_new )
-            !
-         ELSEIF ( control_temp ) THEN
-            !
-            ! ... initial thermalization. N.B. tau is in units of alat
-            !
-            CALL start_therm()
-            vel_defined = .TRUE.
-            !
-            temp_new = temperature
-            !
-            temp_av = 0.D0
-            !
-         ELSE
-            !
-            vel(:,:) = 0.0_DP
-            vel_defined = .TRUE.
-            !
-         ENDIF
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
          !
-         elapsed_time = 0.D0
-         !
-      END SUBROUTINE md_init
+#endif   
       !
+      ENDIF
+      ! 
+      ! ... we compute v(t+dt/2)
+      !
+      FORALL (na=1:nat) vel_tmp(:,na) = vel(:,na) + 0.5_dp * dt * acc(:,na) * dble(if_pos(:,na))
+      !
+      ! ... kinetic energy and new temperature are computed here  with v(t)
+      !
+      CALL compute_ekin( ekin, temp_new )
+
+      IF (tnosep) THEN 
+         CALL ions_noseupd(xnhpp, xnhp0, xnhpm, 0.5_dp * RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, &
+                           vnhp, kbt, nhpcl, nhpdim, nhpbeg, nhpend)
+         CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm)
+      END IF
+      ! 
+      ! ... update average temperature
+      !
+      temp_av = temp_av + temp_new
+      !
+      ! ... linear momentum and kinetic stress
+      !
+      ml   = 0.D0
+      kstress = 0.d0
+      !
+      DO na = 1, nat
+         !
+         ml(:) = ml(:) + vel(:,na) * mass(na)
+         DO i = 1, 3
+             DO j = 1, 3
+                 kstress(i,j) = kstress(i,j) + mass(na)*vel(i,na)*vel(j,na)
+             ENDDO
+         ENDDO
+         !
+      ENDDO
+      !
+      kstress = kstress * alat**2 / omega
+      !
+      !
+      ! ... save all the needed quantities on file
+      !
+      CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
+      !
+      WRITE( UNIT = 4, FMT = * ) restart_velverlet
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau_new(:,:), vel_tmp(:,:), &
+         temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+      !
+      CLOSE( UNIT = 4, STATUS = 'KEEP' )
+      !
+      CALL dump_trajectory_frame( elapsed_time, temperature )
+      !
+      ! ... here the tau are shifted
+      !
+      tau(:,:) = tau_new(:,:)
+      vel(:,:) = vel_tmp(:,:)
+
+      !
+#if ! defined (__REDUCE_OUTPUT)
+      !
+      CALL output_tau( .FALSE., .FALSE. )
+      !
+#endif
+      !
+      ! ... infos are written on the standard output
+      !
+      WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F20.8," Ry",/,  &
+                     & 5X,"temperature           = ",F20.8," K ",/,  &
+                     & 5X,"Ekin + Etot (const)   = ",F20.8," Ry")' ) &
+             ekin, temp_new, ( ekin  + etot )
+      IF (tnosep) THEN  
+        WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
+                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
+                     & Ha_to_Ry *ions_nose_energy, (ekin + etot + Ha_to_Ry * ions_nose_energy)
+      END IF  
+      !
+      IF (tstress) WRITE ( stdout, &
+      '(5X,"Ions kinetic stress = ",F15.2," (kbar)",/3(27X,3F15.2/)/)') &
+              ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
+              (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
+      !
+      IF ( .NOT.( lconstrain .or. ANY( if_pos(:,:) == 0 ) ) ) THEN
+         !
+         ! ... total linear momentum must be zero if all atoms move
+         !
+         mlt = norm( ml(:) )
+         !
+         IF ( mlt > eps8 ) &
+            CALL infomsg( 'dynamics', 'Total linear momentum <> 0' )
+         !
+         WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml(:)
+         !
+      ENDIF
+      !
+      ! ... compute the average quantities
+      !
+      CALL compute_averages( istep )
+      !
+      ! after printout of quantities if needed we perform the second half-step of Nose-Hoover chains
+      IF (tnosep) THEN 
+         CALL compute_ekin(ekin, temp_new)
+         CALL ions_noseupd(xnhpp, xnhp0, xnhpm, 0.5_dp * RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp,&
+                           vnhp, kbt, nhpcl, nhpdim, nhpbeg, nhpend) 
+         CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm) 
+      END IF 
+      !
+      !      !
+   END SUBROUTINE velocity_verlet
+
+   !--------------------------------------------------------------------
+   SUBROUTINE md_init(total_mass, ekin, temp_new, temp_av, tv0rd)
       !--------------------------------------------------------------------
-      SUBROUTINE apply_thermostat()
-         !--------------------------------------------------------------------
+      !
+      USE ions_base, ONLY: tau, nsp, ityp, nat, atm, amass
+      USE control_flags, ONLY: istep
+      USE cell_base, ONLY: alat
+      USE ions_nose, ONLY: ions_nose_info
+      IMPLICIT NONE
+      REAL(DP), INTENT(OUT) :: total_mass, ekin, temp_new, temp_av
+      LOGICAL, INTENT(IN)   :: tv0rd
+      INTEGER :: na
+      !
+      istep = 0
+      !
+      WRITE( UNIT = stdout, &
+            FMT = '(/,5X,"Molecular Dynamics Calculation")' )
+      !
+      ! ... atoms are refold in the central box if required
+      !
+      IF ( refold_pos ) CALL refold_tau()
+      !
+      ! ... reference positions
+      !
+      tau_ref(:,:) = tau(:,:)
+      !
+      IF ( control_temp ) THEN
          !
-         USE random_numbers,    ONLY : randy, gauss_dist
-         !
-         IMPLICIT NONE
-         !
-         INTEGER :: nat_moved
-         REAL(DP) :: sigma, kt
-         !
-         IF (.NOT. vel_defined) THEN
-            vel(:,:) = ( tau(:,:) - tau_old(:,:) ) / dt * dble( if_pos(:,:) )
-         ENDIF
+         WRITE( stdout, &
+               '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
+            temperature
          !
          SELECT CASE( TRIM( thermostat ) )
-         CASE( 'rescaling' )
             !
-            IF ( ABS(temp_new-temperature) > tolp ) THEN
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"Velocity rescaling: T (",F6.1,"K) ", &
-                                 & "out of range, reset to " ,F6.1)' ) &
-                           temp_new, temperature
-               CALL thermalize( 0, temp_new, temperature )
-            ENDIF
+         CASE( 'andersen', 'Andersen' )
             !
-         CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
-            !
-            IF ( MOD( istep, nraise ) == 0 ) THEN
-               !
-               temp_av = temp_av / DBLE( nraise )
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"Velocity rescaling: average T on ",i3, &
-                                 &" steps (",F6.1,"K) reset to ",F6.1)' )  &
-                           nraise, temp_av, temperature
-               !
-               CALL thermalize( 0, temp_new, temperature )
-               temp_av = 0.D0
-            ENDIF
-            !
-         CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
-            ! Clearly it makes sense to check for positive delta_t
-            ! If a negative delta_t is given, I suggest to have a message
-            ! printed, that delta_t is ignored (TODO)
-            IF ( delta_t > 0 ) THEN
-               !
-               temperature = temperature*delta_t
-               !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
-                                 & "by a factor ",F6.3)' ) temp_new, delta_t
-               !
-               CALL thermalize( 0, temp_new, temperature )
-               !
-            ENDIF
-         CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
-            IF ( mod( istep, nraise ) == 0 ) THEN
-               !
-               ! First printing message, than reduce target temperature:
-               !
-               IF ( delta_t > 0 ) THEN
-                 WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) augmented ",&
-                                 & "by ",F6.3)' ) temperature, delta_t
-
-               ELSE
-                 WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
-                                 & "by ",F6.3)' ) temperature, -delta_t
-               ENDIF
-               ! I check whether the temperature is negative, so that I avoid
-               ! nonsensical behavior:
-               IF (temperature < 0.0D0 ) CALL errore('apply_thermostat','Negative target temperature',1)
-               !
-               temperature = temperature + delta_t
-               !
-               CALL thermalize( 0, temp_new, temperature )
-               !
-            ENDIF
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"temperature is controlled by Andersen ", &
+                           &   "thermostat",/,5x,"Collision frequency =",&
+                           &    f7.4,"/timestep")' ) 1.0_dp/nraise
             !
          CASE( 'berendsen', 'Berendsen' )
             !
             WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Soft (Berendsen) velocity rescaling")' )
-            !
-            CALL thermalize( nraise, temp_new, temperature )
+                  FMT = '(/,5X,"temperature is controlled by soft ", &
+                         &     "(Berendsen) velocity rescaling",/,5x,&
+                         &     "Characteristic time =",i3,"*timestep")') &
+                            nraise
             !
          CASE( 'svr', 'Svr', 'SVR' )
             !
             WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Canonical sampling velocity rescaling")' )
-            !
-            CALL thermalize_resamp_vscaling( nraise, temp_new, temperature )
-            !
-         CASE( 'andersen', 'Andersen' )
-            !
-            kt = temperature / ry_to_kelvin
-            nat_moved = 0
-            !
-            DO na = 1, nat
-               !
-               IF ( randy() < 1.D0 / DBLE( nraise ) ) THEN
-                  !
-                  nat_moved = nat_moved + 1
-                  sigma = SQRT( kt / mass(na) )
-                  !
-                  ! ... N.B. velocities must in a.u. units of alat and are zero
-                  ! ...      for fixed ions
-                  !
-                  vel(:,na) = DBLE( if_pos(:,na) ) * &
-                              gauss_dist( 0.D0, sigma, 3 ) / alat
-                  !
-               ENDIF
-               !
-            ENDDO
-            !
-            IF ( nat_moved > 0) WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Andersen thermostat: ",I4," collisions")' ) &
-                     nat_moved
-            !
+                  FMT = '(/,5X,"temperature is controlled by ", &
+                         &     "stochastic velocity rescaling",/,5x,&
+                         &     "Characteristic time   =",i3,"*timestep")') &
+                            nraise
          CASE( 'initial', 'Initial' )
             !
-            CONTINUE
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"temperature is set once at start"/)' )
+            !
+         CASE ('nose') 
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"temperature is controlled by ", &
+                         &     "Nose Hoover thermostat",/,5x)') 
+            CALL ions_nose_info(dt)
+         CASE DEFAULT
+            !
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"temperature is controlled by ", &
+                           &     "velocity rescaling (",A,")"/)' )&
+                           TRIM( thermostat )
             !
          END SELECT
          !
-         ! ... the old positions are updated to reflect the new velocities
-         !
-         IF (.NOT. vel_defined) THEN
-            tau_old(:,:) = tau(:,:) - vel(:,:) * dt
-         ENDIF
-         !
-      END SUBROUTINE apply_thermostat
+      ENDIF
       !
+      DO na = 1, nsp
+         !
+         WRITE( UNIT = stdout, &
+               FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
+         !
+      ENDDO
+      !
+      WRITE( UNIT = stdout, &
+            FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
+                     & " femto-seconds")' ) dt, dt*2.D+3*au_ps
+      !
+      ! ... masses in rydberg atomic units
+      !
+      total_mass = 0.D0
+      !
+      DO na = 1, nat
+         !
+         mass(na) = amass( ityp(na) ) * amu_ry
+         !
+         total_mass = total_mass + mass(na)
+         !
+      ENDDO
+      !
+      IF ( tv0rd ) THEN
+         !
+         ! ... initial velocities available from input file
+         !
+         vel(:,:) = vel(:,:) / alat
+         vel_defined = .true.
+         !
+         CALL compute_ekin ( ekin, temp_new )
+         !
+      ELSEIF ( control_temp ) THEN
+         !
+         ! ... initial thermalization. N.B. tau is in units of alat
+         !
+         CALL start_therm()
+         vel_defined = .TRUE.
+         !
+         temp_new = temperature
+         !
+         temp_av = 0.D0
+         !
+      ELSE
+         !
+         vel(:,:) = 0.0_DP
+         vel_defined = .TRUE.
+         !
+      ENDIF
+      !
+      elapsed_time = 0.D0
+      !
+   END SUBROUTINE md_init
+
+   !-----------------------------------------------------------------------
+   SUBROUTINE start_therm()
       !-----------------------------------------------------------------------
-      SUBROUTINE start_therm()
-         !-----------------------------------------------------------------------
-         !! Starting thermalization of the system.
+      !! Starting thermalization of the system.
+      !
+      USE control_flags,  ONLY: lconstrain
+      USE symm_base,      ONLY : invsym, nsym, irt
+      USE cell_base,      ONLY : alat
+      USE ions_base,      ONLY : nat, if_pos, ityp, tau
+      USE constraints_module, ONLY: remove_constr_vec
+      USE random_numbers, ONLY : gauss_dist
+      !
+      IMPLICIT NONE
+      !
+      INTEGER  :: na_, nb
+      REAL(DP) :: total_mass_, kt, sigma, ek, ml_(3), system_temp
+      !
+      kt = temperature / ry_to_kelvin
+      !
+      ! ... starting velocities have a Maxwell-Boltzmann distribution
+      !
+      DO na_ = 1, nat
          !
-         USE symm_base,      ONLY : invsym, nsym, irt
-         USE cell_base,      ONLY : alat
-         USE ions_base,      ONLY : nat, if_pos
-         USE random_numbers, ONLY : gauss_dist
+         sigma = SQRT( kt / mass(na_) )
          !
-         IMPLICIT NONE
+         ! ... N.B. velocities must in a.u. units of alat
          !
-         INTEGER  :: na_, nb
-         REAL(DP) :: total_mass_, kt, sigma, ek, ml_(3), system_temp
+         vel(:,na_) = gauss_dist( 0.D0, sigma, 3 ) / alat
          !
-         kt = temperature / ry_to_kelvin
+      ENDDO
+      !
+      ! ... the velocity of fixed ions must be zero
+      !
+      vel = vel * DBLE( if_pos )
+      !
+      IF ( lconstrain ) THEN
          !
-         ! ... starting velocities have a Maxwell-Boltzmann distribution
+         ! ... remove the component of the velocity along the
+         ! ... constraint gradient
+         !
+         CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+         !
+      ENDIF
+      !
+      IF ( invsym ) THEN
+         !
+         ! ... if there is inversion symmetry, equivalent atoms have
+         ! ... opposite velocities
          !
          DO na_ = 1, nat
             !
-            sigma = SQRT( kt / mass(na_) )
+            nb = irt( ( nsym / 2 + 1 ), na_ )
             !
-            ! ... N.B. velocities must in a.u. units of alat
+            IF ( nb > na_ ) vel(:,nb) = - vel(:,na_)
             !
-            vel(:,na_) = gauss_dist( 0.D0, sigma, 3 ) / alat
+            ! ... the atom on the inversion center is kept fixed
+            !
+            IF ( na_ == nb ) vel(:,na_) = 0.D0
             !
          ENDDO
          !
-         ! ... the velocity of fixed ions must be zero
+      ELSE
          !
-         vel = vel * DBLE( if_pos )
+         ! ... put total linear momentum equal zero if all atoms
+         ! ... are free to move
          !
-         IF ( lconstrain ) THEN
+         ml_(:) = 0.D0
+         !
+         IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
             !
-            ! ... remove the component of the velocity along the
-            ! ... constraint gradient
-            !
-            CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+            total_mass_ = SUM( mass(1:nat) )
+            DO na_ = 1, nat
+               ml_(:) = ml_(:) + mass(na_)*vel(:,na_)
+            ENDDO
+            ml_(:) = ml_(:) / total_mass_
             !
          ENDIF
          !
-         IF ( invsym ) THEN
+      ENDIF
+      !
+      ek = 0.D0
+      !
+      DO na_ = 1, nat
+         !
+         vel(:,na_) = vel(:,na_) - ml_(:)
+         !
+         ek = ek + 0.5D0 * mass(na_) * &
+                  ( ( vel(1,na_) )**2 + ( vel(2,na_) )**2 + ( vel(3,na_) )**2 )
+         !
+      ENDDO
+      !
+      ! ... after the velocity of the center of mass has been subtracted the
+      ! ... temperature is usually changed. Set again the temperature to the
+      ! ... right value.
+      !
+      system_temp = 2.D0 / DBLE( ndof ) * ek * alat**2 * ry_to_kelvin
+      !
+      CALL thermalize( 0, system_temp, temperature )
+      !
+   END SUBROUTINE start_therm
+      !--------------------------------------------------------------------
+   SUBROUTINE apply_thermostat(temp_new, temp_av)
+      !--------------------------------------------------------------------
+      !
+      USE random_numbers,    ONLY : randy, gauss_dist
+      USE ions_base,         ONLY:  tau, if_pos, nat
+      USE control_flags,     ONLY:  istep
+      USE cell_base,         ONLY:  alat
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN)  :: temp_new
+      REAL(DP), INTENT(OUT) :: temp_av
+      INTEGER :: nat_moved
+      REAL(DP) :: sigma, kt
+      INTEGER  :: na
+      !
+      IF (.NOT. vel_defined) THEN
+         vel(:,:) = ( tau(:,:) - tau_old(:,:) ) / dt * dble( if_pos(:,:) )
+      ENDIF
+      !
+      SELECT CASE( TRIM( thermostat ) )
+      CASE( 'rescaling' )
+         !
+         IF ( ABS(temp_new-temperature) > tolp ) THEN
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Velocity rescaling: T (",F6.1,"K) ", &
+                              & "out of range, reset to " ,F6.1)' ) &
+                        temp_new, temperature
+            CALL thermalize( 0, temp_new, temperature )
+         ENDIF
+         !
+      CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
+         !
+         IF ( MOD( istep, nraise ) == 0 ) THEN
             !
-            ! ... if there is inversion symmetry, equivalent atoms have
-            ! ... opposite velocities
+            temp_av = temp_av / DBLE( nraise )
             !
-            DO na_ = 1, nat
-               !
-               nb = irt( ( nsym / 2 + 1 ), na_ )
-               !
-               IF ( nb > na_ ) vel(:,nb) = - vel(:,na_)
-               !
-               ! ... the atom on the inversion center is kept fixed
-               !
-               IF ( na_ == nb ) vel(:,na_) = 0.D0
-               !
-            ENDDO
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Velocity rescaling: average T on ",i3, &
+                              &" steps (",F6.1,"K) reset to ",F6.1)' )  &
+                        nraise, temp_av, temperature
             !
-         ELSE
+            CALL thermalize( 0, temp_new, temperature )
+            temp_av = 0.D0
+         ENDIF
+         !
+      CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
+         ! Clearly it makes sense to check for positive delta_t
+         ! If a negative delta_t is given, I suggest to have a message
+         ! printed, that delta_t is ignored (TODO)
+         IF ( delta_t > 0 ) THEN
             !
-            ! ... put total linear momentum equal zero if all atoms
-            ! ... are free to move
+            temperature = temperature*delta_t
             !
-            ml_(:) = 0.D0
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
+                              & "by a factor ",F6.3)' ) temp_new, delta_t
             !
-            IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+            CALL thermalize( 0, temp_new, temperature )
+            !
+         ENDIF
+      CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
+         IF ( mod( istep, nraise ) == 0 ) THEN
+            !
+            ! First printing message, than reduce target temperature:
+            !
+            IF ( delta_t > 0 ) THEN
+              WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Thermalization: T (",F6.1,"K) augmented ",&
+                              & "by ",F6.3)' ) temperature, delta_t
+
+            ELSE
+              WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
+                              & "by ",F6.3)' ) temperature, -delta_t
+            ENDIF
+            ! I check whether the temperature is negative, so that I avoid
+            ! nonsensical behavior:
+            IF (temperature < 0.0D0 ) CALL errore('apply_thermostat','Negative target temperature',1)
+            !
+            temperature = temperature + delta_t
+            !
+            CALL thermalize( 0, temp_new, temperature )
+            !
+         ENDIF
+         !
+      CASE( 'berendsen', 'Berendsen' )
+         !
+         WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Soft (Berendsen) velocity rescaling")' )
+         !
+         CALL thermalize( nraise, temp_new, temperature )
+         !
+      CASE( 'svr', 'Svr', 'SVR' )
+         !
+         WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Canonical sampling velocity rescaling")' )
+         !
+         CALL thermalize_resamp_vscaling( nraise, temp_new, temperature )
+         !
+      CASE( 'andersen', 'Andersen' )
+         !
+         kt = temperature / ry_to_kelvin
+         nat_moved = 0
+         !
+         DO na = 1, nat
+            !
+            IF ( randy() < 1.D0 / DBLE( nraise ) ) THEN
                !
-               total_mass_ = SUM( mass(1:nat) )
-               DO na = 1, nat
-                  ml_(:) = ml_(:) + mass(na)*vel(:,na)
-               ENDDO
-               ml_(:) = ml_(:) / total_mass_
+               nat_moved = nat_moved + 1
+               sigma = SQRT( kt / mass(na) )
+               !
+               ! ... N.B. velocities must in a.u. units of alat and are zero
+               ! ...      for fixed ions
+               !
+               vel(:,na) = DBLE( if_pos(:,na) ) * &
+                           gauss_dist( 0.D0, sigma, 3 ) / alat
                !
             ENDIF
             !
-         ENDIF
-         !
-         ek = 0.D0
-         !
-         DO na_ = 1, nat
-            !
-            vel(:,na_) = vel(:,na_) - ml_(:)
-            !
-            ek = ek + 0.5D0 * mass(na_) * &
-                     ( ( vel(1,na_) )**2 + ( vel(2,na_) )**2 + ( vel(3,na_) )**2 )
-            !
          ENDDO
          !
-         ! ... after the velocity of the center of mass has been subtracted the
-         ! ... temperature is usually changed. Set again the temperature to the
-         ! ... right value.
+         IF ( nat_moved > 0) WRITE( UNIT = stdout, &
+            FMT = '(/,5X,"Andersen thermostat: ",I4," collisions")' ) &
+                  nat_moved
          !
-         system_temp = 2.D0 / DBLE( ndof ) * ek * alat**2 * ry_to_kelvin
+      CASE( 'initial', 'Initial' )
          !
-         CALL thermalize( 0, system_temp, temperature )
+         CONTINUE
          !
-      END SUBROUTINE start_therm
+      END SELECT
       !
-   END SUBROUTINE verlet
-   !
+      ! ... the old positions are updated to reflect the new velocities
+      !
+      IF (.NOT. vel_defined) THEN
+         tau_old(:,:) = tau(:,:) - vel(:,:) * dt
+      ENDIF
+      !
+   END SUBROUTINE apply_thermostat
+      !
+
+
    !------------------------------------------------------------------------
    SUBROUTINE compute_ekin ( ekin, temp_new )
      !------------------------------------------------------------------------
