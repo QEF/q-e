@@ -181,7 +181,7 @@ CONTAINS
       !! The initial velocity distribution is therefore a constant.
       !
       !! Must be run on a single processor, results broadcast to all other procs
-      !! Unpredictable behavoiour may otherwise result due to I/O operations
+      !! Unpredictable behavior may otherwise result due to I/O operations
       !!
       !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
@@ -492,7 +492,7 @@ CONTAINS
       !! The initial velocity distribution is therefore a constant.
       !
       !! Must be run on a single processor, results broadcast to all other procs
-      !! Unpredictable behavoiour may otherwise result due to I/O operations
+      !! Unpredictable behavior may otherwise result due to I/O operations
       !! 
       !!
       !! Author: Pietro Delugas 2025; based on the Verlet subroutine above: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
@@ -500,7 +500,7 @@ CONTAINS
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
       USE ions_nose,          ONLY : vnhp, atm2nhp, ions_nose_energy, ions_nosevel, ions_noseupd, &
                                      ions_nose_shiftvar, xnhp0, xnhpp, xnhpm, qnp, gkbt2nhp, kbt, & 
-                                     nhpcl, nhpdim, ekin2nhp, gkbt2nhp, nhpbeg, nhpend
+                                     nhpcl, nhpdim, ekin2nhp, gkbt2nhp, nhpbeg, nhpend, ions_nose_nrg    
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
@@ -522,6 +522,7 @@ CONTAINS
       REAL(DP), EXTERNAL :: dnrm2
       REAL(DP) :: kstress(3,3), tau_tmp(3, nat), vel_tmp(3, nat)
       INTEGER :: i, j, restart_id
+      REAL(DP) :: nose_energy
       !
       ndof = get_ndof()
       !
@@ -567,8 +568,10 @@ CONTAINS
          !
       ENDIF
       ! this is the nose friction at time t computed with kinetic energy at time (t-dt/2) 
-      IF (tnosep) call ions_nosevel(vnhp, xnhp0, xnhpm, RyDt_to_HaDt * 0.5 * dt, nhpcl, nhpdim)
-
+      IF (tnosep) THEN 
+         call ions_nosevel(vnhp, xnhp0, xnhpm, RyDt_to_HaDt * 0.5 * dt, nhpcl, nhpdim)
+         nose_energy = Ha_to_Ry * ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim) 
+      END IF
       !
       ! ... elapsed_time is in picoseconds
       !
@@ -674,7 +677,7 @@ CONTAINS
       ! ... kinetic energy and new temperature are computed here  with v(t)
       !
       CALL compute_ekin( ekin, temp_new )
-
+      !   ... and we perform the first half-step for the Nose-Hoover chain 
       IF (tnosep) THEN 
          CALL ions_noseupd(xnhpp, xnhp0, xnhpm, 0.5_dp * RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, &
                            vnhp, kbt, nhpcl, nhpdim, nhpbeg, nhpend)
@@ -737,7 +740,7 @@ CONTAINS
       IF (tnosep) THEN  
         WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
                      &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
-                     & Ha_to_Ry *ions_nose_energy, (ekin + etot + Ha_to_Ry * ions_nose_energy)
+                     & Ha_to_Ry * nose_energy, (ekin + etot + Ha_to_Ry * nose_energy)
       END IF  
       !
       IF (tstress) WRITE ( stdout, &
@@ -762,7 +765,7 @@ CONTAINS
       !
       CALL compute_averages( istep )
       !
-      ! after printout of quantities if needed we perform the second half-step of Nose-Hoover chains
+      ! after printout of quantities if needed we perform the second half-step of Nose-Hoover chains with vel = v(t+dt/2)
       IF (tnosep) THEN 
          CALL compute_ekin(ekin, temp_new)
          CALL ions_noseupd(xnhpp, xnhp0, xnhpm, 0.5_dp * RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp,&
