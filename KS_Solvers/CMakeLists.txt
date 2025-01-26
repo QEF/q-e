@@ -38,15 +38,7 @@ set(src_dense
     DENSE/rotate_xpsi_gamma.f90
     DENSE/gram_schmidt_k.f90
     DENSE/gram_schmidt_gamma.f90
-    DENSE/rotate_driver.f90
-    # GPU
-    DENSE/rotate_wfc_gamma_gpu.f90
-    DENSE/rotate_xpsi_k_gpu.f90
-    DENSE/rotate_xpsi_gamma_gpu.f90
-    DENSE/gram_schmidt_k_gpu.f90
-    DENSE/gram_schmidt_gamma_gpu.f90
-    DENSE/rotate_wfc_k_gpu.f90
-    DENSE/rotate_driver_cuf.f90)
+    DENSE/rotate_driver.f90)
 qe_enable_cuda_fortran("${src_dense}")
 
 set(src_paro
@@ -62,10 +54,7 @@ qe_enable_cuda_fortran("${src_paro}")
 
 set(src_rmmdiis
     RMM/crmmdiagg.f90 
-    RMM/rrmmdiagg.f90 
-    # GPU
-    RMM/crmmdiagg_gpu.f90
-    RMM/rrmmdiagg_gpu.f90)
+    RMM/rrmmdiagg.f90) 
     qe_enable_cuda_fortran("${src_rmmdiis}")
 
 qe_add_library(qe_kssolver_davidson ${src_davidson})

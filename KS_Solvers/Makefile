@@ -33,25 +33,16 @@ DENSE/rotate_wfc_k.o \
 DENSE/rotate_driver.o \
 DENSE/gram_schmidt_gamma.o \
 DENSE/gram_schmidt_k.o \
-DENSE/gram_schmidt_k_gpu.o \
-DENSE/gram_schmidt_gamma_gpu.o \
 DENSE/rotate_xpsi_gamma.o \
-DENSE/rotate_xpsi_gamma_gpu.o \
-DENSE/rotate_xpsi_k_gpu.o \
 DENSE/rotate_xpsi_k.o \
 RMM/crmmdiagg.o \
-RMM/crmmdiagg_gpu.o \
-RMM/rrmmdiagg.o \
-RMM/rrmmdiagg_gpu.o 
+RMM/rrmmdiagg.o
 
 
 # GPU-related objects
 ALLOBJS += \
 Davidson/cegterg_gpu.o \
-Davidson/regterg_gpu.o \
-DENSE/rotate_wfc_k_gpu.o \
-DENSE/rotate_wfc_gamma_gpu.o \
-DENSE/rotate_driver_cuf.o
+Davidson/regterg_gpu.o
 
 # add here other objects, e.g. ParO/*.o NewSolver/*.o
 
