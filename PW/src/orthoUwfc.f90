@@ -382,7 +382,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
         !$acc end kernels
      ENDIF
      IF (allocated (overlap_inv)) THEN
-        !$acc kernels copyout(overlap_inv)
+        !$acc kernels 
         overlap_inv(:,:) = overlap(:,:)
         !$acc end kernels
      ENDIF

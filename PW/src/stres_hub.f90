@@ -91,8 +91,8 @@ SUBROUTINE stres_hub ( sigmah )
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
-      !$acc enter data create(swfcatom,eigenval,eigenvect)
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
+      !$acc enter data create(swfcatom,eigenval,eigenvect,overlap_inv)
    ENDIF
    !
    !$acc data create(spsi,wfcatom) copyin(wfcU)
@@ -428,8 +428,8 @@ SUBROUTINE stres_hub ( sigmah )
       DEALLOCATE (us_dy, us_dj)
    END IF
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete (swfcatom,eigenval,eigenvect,overlap_inv)
       DEALLOCATE (overlap_inv)
-      !$acc exit data delete (swfcatom,eigenval,eigenvect)
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)
@@ -1411,7 +1411,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
    ALLOCATE ( dwfcU(npwx*npol,nwfcU) )
    ALLOCATE (a1_temp(npw), a2_temp(npw))
-   !$acc data create(dwfcU) copyin(overlap_inv, wfcU)
+   !$acc data create(dwfcU) present(overlap_inv) copyin(wfcU)
    !$acc kernels
    dwfcU(:,:) = (0.d0, 0.d0)
    !$acc end kernels
@@ -1566,7 +1566,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       IF (okvan) THEN
          ! Calculate doverlap_us = < phi_I | dS/d\epsilon(ipol,jpol) | phi_J >
          ALLOCATE (doverlap_us(natomwfc,natomwfc))
-         !$acc data create(doverlap_us) ! copyin(wfcatom)
+         !$acc data create(doverlap_us) 
          CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
               natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0, .false.)
          ! Sum up the "normal" and ultrasoft terms
