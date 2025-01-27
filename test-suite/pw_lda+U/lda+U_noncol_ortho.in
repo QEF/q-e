@@ -1,6 +1,5 @@
 &control
       calculation = 'scf'
-      prefix = 'bn'
       tprnfor = .true.
       tstress = .true.
    /

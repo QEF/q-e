@@ -111,10 +111,10 @@ SUBROUTINE force_hub( forceh )
    !$acc enter data create(spsi,wfcatom)
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE( swfcatom(npwx*npol,natomwfc) )
-      !$acc enter data create(swfcatom)
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
+      !$acc enter data create(swfcatom,eigenval, eigenvect, overlap_inv)
    ENDIF
    !
    IF (noncolin) THEN
@@ -179,8 +179,6 @@ SUBROUTINE force_hub( forceh )
       ELSE
          !$acc update self(proj%k)
       ENDIF
-      !
-      !$acc data copyin(overlap_inv)
       !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -333,8 +331,6 @@ SUBROUTINE force_hub( forceh )
          !
       ENDDO ! alpha
       !
-      !$acc end data
-      !
    ENDDO ! ik
    !
    CALL mp_sum( forceh, inter_pool_comm )
@@ -357,11 +353,11 @@ SUBROUTINE force_hub( forceh )
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      !$acc exit data delete(swfcatom) 
+      !$acc exit data delete(swfcatom,eigenval,eigenvect,overlap_inv) 
+      DEALLOCATE( overlap_inv )
       DEALLOCATE( swfcatom )
       DEALLOCATE( eigenval )
       DEALLOCATE( eigenvect )
-      DEALLOCATE( overlap_inv )
    ENDIF
    !
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
@@ -1547,7 +1543,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE basis,                ONLY : natomwfc, wfcatom
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
+   USE force_mod,            ONLY : overlap_inv, doverlap_inv
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, offsetU
    !
    IMPLICIT NONE
@@ -1693,7 +1689,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                  " Forces with background and  ortho-atomic are not supported", 1 )
       !
       ALLOCATE( dwfc(npwx*npol,ldim*npol) )
-      !$acc data create(dwfc) present_or_copyin(wfcatom,overlap_inv)
+      !$acc data create(dwfc) present(wfcatom,overlap_inv)
       !
       !$acc kernels
       dwfc(:,:) = (0.d0,0.d0)
