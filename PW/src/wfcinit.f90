@@ -220,6 +220,7 @@ SUBROUTINE wfcinit()
      ! ... write  starting wavefunctions to file
      !
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) THEN
+        !$acc update self(evc)
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      END IF
      !
@@ -275,7 +276,6 @@ SUBROUTINE init_wfc ( ik )
   INTEGER :: rnd_idx, ngk_ik
   REAL(DP) :: rr1, rr2, arg, xk_1, xk_2, xk_3
   REAL(DP), ALLOCATABLE :: etatom(:) ! atomic eigenvalues
-  !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
   !
@@ -420,6 +420,7 @@ SUBROUTINE init_wfc ( ik )
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
   ALLOCATE( etatom( n_starting_wfc ) )
+  !$acc enter data create(etatom)
   !
   ! ... Allocate space for <beta|psi>
   !
@@ -439,7 +440,6 @@ SUBROUTINE init_wfc ( ik )
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   IF(use_gpu) THEN
     CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
-    !$acc update self(evc)
   ELSE
     CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   END IF
@@ -456,6 +456,7 @@ SUBROUTINE init_wfc ( ik )
   !
   CALL deallocate_bec_type_acc ( becp )
   !
+  !$acc exit data delete(etatom)
   DEALLOCATE( etatom )
   !$acc end data
   DEALLOCATE( wfcatom )
