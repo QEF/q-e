@@ -539,6 +539,10 @@ SUBROUTINE control_iosys()
         !
         calc        = 'vd'
         !
+     CASE ('velocity-verlet')
+        !
+        calc = 'wd'
+        !
      CASE( 'langevin' )
         !
         calc        = 'ld'

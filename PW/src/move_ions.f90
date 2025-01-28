@@ -52,6 +52,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel, elapsed_time
   USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
                                      fire_alpha_init, fire_falpha, fire_dtmax, RyDt_to_HaDt
+  USE dynamics_module,        ONLY : velocity_verlet
   USE klist,                  ONLY : nelec, tot_charge
   USE dfunct,                 only : newd
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
@@ -379,7 +380,12 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               conv_ions = .true.
               !
            ENDIF
-           !
+        ELSE IF (calc .eq. 'wd' .AND. ANY(if_pos(:,:) == 1) ) THEN
+            CALL velocity_verlet() 
+            IF (idone .GE. nstep) THEN 
+               CALL terminate_verlet() 
+               conv_ions = .true.  
+            END IF
         ELSE
            !
            ! ... variable cell shape md

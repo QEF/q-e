@@ -927,7 +927,7 @@ SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,
   !
   !       rescale velocities
   !
-  if ( mod (nst, ntcheck) == 0 ) then
+  if ( mod (nst, ntcheck) == 0 .and. .not. tnosep) then
      !
      !       with the new definition of tolp, this is the test to perform
      !
