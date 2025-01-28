@@ -126,6 +126,7 @@ subroutine drhodv (nu_i0, nper, drhos)
            ELSE
              nrec = ik
              call get_buffer(dpsi, lrdwf, iudwf, nrec)
+             !$acc update device(dpsi)
            ENDIF
            !
 #if defined(__CUDA)

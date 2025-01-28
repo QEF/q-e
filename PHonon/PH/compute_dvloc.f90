@@ -57,6 +57,8 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   complex(DP), allocatable :: aux (:,:)
   complex(DP), pointer :: auxs (:)
   COMPLEX(DP), ALLOCATABLE :: drhoc(:)
+  COMPLEX(DP), EXTERNAL :: Vaeps_dvloc
+  COMPLEX(DP) :: pot
   !
 #if defined(__CUDA)
   INTEGER, POINTER, DEVICE :: nl_d(:), nlp_d(:)
@@ -164,7 +166,10 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   endif
   !
   IF (lmultipole .AND. gg(1) < 1d-8) THEN !FM: refer potential to all-electron calculation, see routine description
-    CALL Vaeps_dvloc(uact, dvlocin(dffts%nl(1)), dffts%nl(1))
+    pot = Vaeps_dvloc(uact, dffts%nl(1))
+    !$acc kernels
+    dvlocin(dffts%nl(1)) = dvlocin(dffts%nl(1)) + pot
+    !$acc end kernels
   ENDIF
   !
   ! Now we compute dV_loc/dtau in real space
