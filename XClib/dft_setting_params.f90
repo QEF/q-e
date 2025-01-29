@@ -23,6 +23,8 @@ MODULE dft_setting_params
     !! Full name of the XC functional
     INTEGER, PARAMETER :: notset = -1
     !! Value of indexes that have not been set yet
+    INTEGER, PARAMETER :: max_flags = 29
+    !! maximum number of libxc flags per functional
     !
     LOGICAL :: is_libxc(6) = .FALSE.
     !! \(\text{is_libxc(i)}=TRUE\) if the i-th term of the input 
@@ -36,7 +38,7 @@ MODULE dft_setting_params
     !! pointers to libxc functional structs
     TYPE(xc_f03_func_info_t) :: xc_info(6)
     !! pointers to libxc info structs
-    INTEGER :: libxc_flags(6,0:15) = notset
+    INTEGER :: libxc_flags(6,0:max_flags) = notset
     !! flags related to specific features of libxc functionals 
     !! (see Libxc doc)
     INTEGER :: n_ext_params(6) = 0
