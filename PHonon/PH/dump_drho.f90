@@ -450,7 +450,7 @@ END SUBROUTINE write_drhoun
 !----------------------------------------------------------
 !
 !----------------------------------------------------------
-SUBROUTINE Vaeps_dvloc(uact, pot, ind_ig)
+COMPLEX(DP) FUNCTION Vaeps_dvloc(uact, ind_ig)
   !----------------------------------------------------------
   !! F. Macheda (2024)
   !! This routine takes the mode-th irreducible component of the potential, pot, and refers its macroscopic components to the value
@@ -470,8 +470,6 @@ SUBROUTINE Vaeps_dvloc(uact, pot, ind_ig)
   IMPLICIT NONE
   COMPLEX(DP), INTENT(IN) :: uact(nmodes)
   !! pattern of the representation
-  COMPLEX(DP), INTENT(INOUT) :: pot
-  !! potential to be refered to the Coulombian potential
   INTEGER, INTENT(IN) :: ind_ig
   !! Index to be passed, that identifies the macroscopic component
   !
@@ -530,7 +528,7 @@ SUBROUTINE Vaeps_dvloc(uact, pot, ind_ig)
     !
   ENDDO
   !
-  pot = pot - aux1(ind_ig)
+  Vaeps_dvloc = - aux1(ind_ig)
   DEALLOCATE(aux1)
   !
   CONTAINS

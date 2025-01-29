@@ -107,12 +107,18 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
     CALL compute_dvloc (uact, addnlcc, dvlocin)
   ELSE
     ! Bring potential in reciprocal space
+    !$acc host_data use_device(dvlocin)
     CALL fwfft ('Rho', dvlocin, dffts)
+    !$acc end host_data
     IF (gg(1) < 1d-8) THEN
+      !$acc kernels
       dvlocin(dffts%nl(1)) = 1d0
+     !$acc end kernels
     ENDIF
     ! Bring potential in real space
+   !$acc host_data use_device(dvlocin)
     CALL invfft ('Rho', dvlocin, dffts)
+   !$acc end host_data
   ENDIF
   ! Now we compute dV_loc/dtau * psi in real space
   !
