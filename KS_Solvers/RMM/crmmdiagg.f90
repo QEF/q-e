@@ -872,6 +872,8 @@ CONTAINS
        !
        DO ibnd = ( ibnd_end + 1 ), nbnd
           !
+          idx = ibnd_index(ibnd) 
+          !
           IF ( .NOT. conv(ibnd) ) THEN
             !$acc kernels
             kpsi(:,idx) = ZERO
