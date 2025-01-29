@@ -1034,6 +1034,5 @@ FUNCTION e_band ( )
   END DO k_loop
   !
   CALL mp_sum (e_band, inter_pool_comm)
-  CALL mp_sum (e_band, inter_bgrp_comm)
   !
 END FUNCTION e_band
