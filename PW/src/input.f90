@@ -1254,7 +1254,7 @@ SUBROUTINE control_iosys()
   !
   ! DFT+U
   !
-  CALL dftu_iosys ( nsp, noncolin )
+  CALL dftu_iosys ( nsp )
   !
   ! REAL-SPACE TREATMENT
   !
@@ -1988,7 +1988,7 @@ SUBROUTINE pos_iosys ( )
 END SUBROUTINE pos_iosys
 !
 !----------------------------------------------------------------------------
-SUBROUTINE dftu_iosys ( ntyp, noncolin )
+SUBROUTINE dftu_iosys ( ntyp )
   !----------------------------------------------------------------------------
   !
   ! Hubbard parameters: input
@@ -2035,7 +2035,6 @@ SUBROUTINE dftu_iosys ( ntyp, noncolin )
   !
   ! Needed input variables
   INTEGER, INTENT(IN) :: ntyp
-  LOGICAL, INTENT(IN) :: noncolin
   !
   !
   lda_plus_u_      = lda_plus_u
