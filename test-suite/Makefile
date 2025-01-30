@@ -46,7 +46,7 @@ run-tests-cp : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw : prolog pseudo
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
+	env QE_USE_MPI=$(NPROCS) env QE_USE_BGRP=$(NBGRP) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 run-tests-ph : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
@@ -83,7 +83,7 @@ run-travis : clean prolog pseudo
 
 run-custom-test : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
+	env QE_USE_MPI=$(NPROCS) env QE_USE_BGRP=$(NBGRP) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 run-tests-xsd-pw : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \

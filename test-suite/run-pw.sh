@@ -15,6 +15,9 @@ else
   unset PARA_PREFIX
   unset PARA_SUFFIX
 fi
+if [[ "$QE_USE_BGRP" != "" ]]; then
+  export PARA_SUFFIX=" -nb $QE_USE_BGRP "
+fi
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
