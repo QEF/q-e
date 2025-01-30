@@ -14,16 +14,17 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests-XX [NPROCS=N]        : run tests [optionally, on N processors]'
+	@echo ' run-tests-XX [NPROCS=N NBGRP=M]  : run tests [optionally, on N processors and M band groups]'
 	@echo ' for XX=pw, cp, ph, pp, hp, tddfpt, kcw, all_currents, epw, zg, xsd-pw'
-	@echo ' run-tests [NPROCS=N]           : run all tests above (except the last four)'
-	@echo ' run-custom-test testdir=DIR [NPROCS=N]: run test in DIR only'
-	@echo ' compare                     : compare last output with reference'
-	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
-	@echo ' clean                       : clean stdout/sderr of all tests'
+	@echo ' run-tests [NPROCS=N]             : run all tests above (except the last four)'
+	@echo ' run-custom-test testdir=DIR [NPROCS=N NBGRP=M]: run test in DIR only'
+	@echo ' compare                          : compare last output with reference'
+	@echo ' pseudo                           : download needed PPs into ESPRESSO_PSEUDO'
+	@echo ' clean                            : clean stdout/sderr of all tests'
 	@echo ' '
 	@echo 'For additional advanced commands and settings please manually inspect'
 	@echo 'ENVIRONMENT and Makefile files'
+	@echo 'NBGRP is ignored if NPROCS is not set'
 
 prolog :
 	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
