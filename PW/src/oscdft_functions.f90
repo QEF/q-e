@@ -658,7 +658,7 @@ MODULE oscdft_functions
 
          IMPLICIT NONE
 
-         COMPLEX(dp), INTENT(INOUT) :: h_diag(npwx,npol)
+         REAL(dp), INTENT(INOUT) :: h_diag(npwx,npol)
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
          TYPE(oscdft_input_type),           POINTER       :: inp
          TYPE(oscdft_indices_type),         POINTER       :: idx
