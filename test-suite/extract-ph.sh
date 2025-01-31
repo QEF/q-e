@@ -29,6 +29,8 @@ born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
 # in the version below, phfreq only contains frequencies in cm^-1, not in THz
 phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 dos=`grep "DOS =" $fname | awk '{print $3; print $8}'`
+quad=`grep -A 2 'quadrupole.fmt' $fname | tail -1 | awk '{print $6}'`
+epsil=`grep -A 6 'epsilon.fmt' $fname | tail -1 | awk '{print $5}'`
 lambda=$(awk '
 # reset counters
 /Diagonalizing the dynamical matrix/{
@@ -172,6 +174,16 @@ fi
 if test "$dos" != ""; then
         echo dos
         for x in $dos; do echo $x; done
+fi
+
+if test "$quad" != ""; then
+        echo quad 
+        for x in $quad; do echo $quad; done
+fi
+
+if test "$epsil" != ""; then
+        echo epsil 
+        for x in $epsil; do echo $epsil; done
 fi
 
 if test "$lambda" != ""; then

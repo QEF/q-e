@@ -58,7 +58,7 @@ SUBROUTINE phq_init()
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
   USE eqv,                  ONLY : evq
-  USE control_lr,           ONLY : nbnd_occ, lgamma
+  USE control_lr,           ONLY : nbnd_occ, lgamma, lmultipole
   USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
   !
@@ -346,7 +346,7 @@ SUBROUTINE phq_init()
      !
   ENDIF
   !
-  IF ( trans ) CALL dynmat0_new()
+  IF ( trans .AND. (.NOT. lmultipole) ) CALL dynmat0_new()
   !
 #if defined(__CUDA)
   Call deallocate_bec_type_acc ( bectmp )

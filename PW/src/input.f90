@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
-  !! Copy data read from input file (subroutine \(\texttt{read_input_file}\)
+  !! Copy data read from input file (subroutine \(\tex/temttt{read_input_file}\)
   !! and stored in modules input_parameters into internal modules.  
   !! Wrapper routine: the original "iosys" was too long and was split into
   !! more *iosys* routines, containing input_parameters module
@@ -287,9 +287,9 @@ SUBROUTINE control_iosys()
  
   !
   USE extrapolation, ONLY : pot_order, wfc_order
-  USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
+  USE control_flags, ONLY : isolve, max_cg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
-                            tr2, imix, gamma_only, &
+                            tr2, imix, gamma_only, tnosep, tnoseh, &
                             nmix, iverbosity, smallmem, nexxiter, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
@@ -396,7 +396,7 @@ SUBROUTINE control_iosys()
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, tq_smoothing, tbeta_smoothing,         &
                                diago_thr_init,                             &
-                               diago_cg_maxiter, diago_ppcg_maxiter,       &
+                               diago_cg_maxiter,                           &
                                diago_david_ndim, diago_rmm_ndim,           &
                                diago_rmm_conv, diago_gs_nblock,            &
                                diagonalization, diago_full_acc,            &
@@ -411,15 +411,24 @@ SUBROUTINE control_iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim, &
+                               trust_radius_ini, bfgs_ndim, tgdiis_step,       &
                                fire_nmin, fire_f_inc, fire_f_dec, &
                                fire_alpha_init, fire_falpha, fire_dtmax
+!
+! ... IONS NOSE HOOVER THERMOSTAT
+
+  USE input_parameters, ONLY: fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl  
+                           
   !
   ! ... CELL namelist
   !
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass,  &
                                cell_temperature, cell_factor, press_conv_thr, &
                                cell_dofree, treinit_gvecs 
+  !
+  ! ... CELL NOSE HOOVER THERMOSTAT
+  ! 
+  USE input_parameters, ONLY: fnoseh, temph                                      
   !
   ! ... WANNIER_NEW namelist
   !
@@ -529,6 +538,10 @@ SUBROUTINE control_iosys()
      CASE( 'verlet' )
         !
         calc        = 'vd'
+        !
+     CASE ('velocity-verlet')
+        !
+        calc = 'wd'
         !
      CASE( 'langevin' )
         !
@@ -951,10 +964,10 @@ SUBROUTINE control_iosys()
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
-  CASE ( 'ppcg' )
+  CASE ( 'ppcg', 'PPCG' )
      !
      isolve = 2
-     max_ppcg_iter = diago_ppcg_maxiter
+     CALL errore( 'iosys', 'PPCG diagonalization not supported anymore (Dec. 2024)', 1 )
      !
   CASE ( 'paro', 'ParO' )
      !
@@ -1119,12 +1132,31 @@ SUBROUTINE control_iosys()
      temperature  = tempw
      nraise_      = nraise
      !
+  CASE ('nose')
+     thermostat = trim(ion_temperature)
+     temperature = tempw 
+     tnosep = .true. 
+     control_temp = .true.
+
+
   CASE DEFAULT
      !
      CALL errore( 'iosys', &
                 & 'unknown ion_temperature ' // trim( ion_temperature ), 1 )
      !
   END SELECT
+  !
+  ! CELL TEMPERATURE
+  ! 
+  SELECT CASE (trim(cell_temperature))
+    CASE ('nose')
+      IF (.not. (control_temp .or. tnosep)) temperature = temph 
+      tnoseh = .true.
+    CASE ('not_controlled', 'not-controlled', 'not controlled') 
+      tnoseh = .false. 
+    CASE DEFAULT 
+      CALL errore('iosys', 'unsupported cell_temperature',1)
+  END SELECT 
   !
   ! SELF-CONSISTENCY
   !
@@ -1222,7 +1254,7 @@ SUBROUTINE control_iosys()
   !
   ! DFT+U
   !
-  CALL dftu_iosys ( nsp, noncolin )
+  CALL dftu_iosys ( nsp )
   !
   ! REAL-SPACE TREATMENT
   !
@@ -1282,7 +1314,7 @@ SUBROUTINE control_iosys()
   ! ... BFGS specific
   !
   CALL init_bfgs( stdout, bfgs_ndim, trust_radius_max, trust_radius_min, &
-        trust_radius_ini, w_1, w_2 )
+        trust_radius_ini, w_1, w_2, (bfgs_ndim .gt. 1) .and. tgdiis_step )
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
@@ -1848,13 +1880,16 @@ SUBROUTINE pos_iosys ( )
   USE input_parameters,   ONLY : taspc, tapos, rd_pos, atomic_positions,  &
                                  rd_if_pos, ibrav, nat_ => nat, ntyp,     &
                                  sp_pos, rd_for, tavel, sp_vel, rd_vel,   &
-                                 atom_mass, atom_label, lsg
+                                 atom_mass, atom_label, lsg, tempw,&
+                                 fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl
   USE kinds,              ONLY : DP
-  USE dynamics_module,    ONLY : vel
+  USE dynamics_module,    ONLY : vel, get_ndof
   USE force_mod,          ONLY : force
   USE ions_base,          ONLY : nat, nsp, ityp, tau, atm, &
-                                 extfor, if_pos, amass, fixatom, tau_format
-  USE control_flags,      ONLY : textfor, tv0rd
+                                 extfor, if_pos, amass, fixatom, tau_format, &
+                                 tions_base_init
+  USE ions_nose,          ONLY:  ions_nose_init 
+  USE control_flags,      ONLY : textfor, tv0rd, tnosep
   USE wyckoff,            ONLY : nattot, tautot, ityptot, extfortot, &
                                  if_postot, clean_spacegroup
   !
@@ -1944,11 +1979,16 @@ SUBROUTINE pos_iosys ( )
   !
   tau_format = trim( atomic_positions )
   CALL convert_tau ( tau_format, nat, tau )
+  IF (tnosep) THEN 
+     tions_base_init = .TRUE. 
+     IF (ndega == 0) ndega = get_ndof() 
+     call ions_nose_init(tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
+  END IF 
   !
 END SUBROUTINE pos_iosys
 !
 !----------------------------------------------------------------------------
-SUBROUTINE dftu_iosys ( ntyp, noncolin )
+SUBROUTINE dftu_iosys ( ntyp )
   !----------------------------------------------------------------------------
   !
   ! Hubbard parameters: input
@@ -1995,7 +2035,6 @@ SUBROUTINE dftu_iosys ( ntyp, noncolin )
   !
   ! Needed input variables
   INTEGER, INTENT(IN) :: ntyp
-  LOGICAL, INTENT(IN) :: noncolin
   !
   !
   lda_plus_u_      = lda_plus_u
@@ -2133,7 +2172,10 @@ SUBROUTINE set_wmass ( )
   USE constants,     ONLY : pi
   USE cell_base,     ONLY : wmass, omega
   USE ions_base,     ONLY : ityp, nat, amass
+  USE cell_nose,     ONLY : cell_nose_init
+  USE input_parameters, ONLY: fnoseh, temph
   USE cellmd,        ONLY : calc, lmovecell
+  USE control_flags, ONLY : tnoseh
   !
   IMPLICIT NONE
   INTEGER :: ia
@@ -2157,5 +2199,7 @@ SUBROUTINE set_wmass ( )
   ENDIF
   IF ( wmass <= 0.D0 ) CALL errore( 'set_wmass', &
             & 'vcsmd: a positive value for cell mass is required', 1 )
+  print *, 'check tnoseh fnoseh', tnoseh, fnoseh
+  IF (tnoseh) CALL cell_nose_init(temph, fnoseh)
   !
 END SUBROUTINE set_wmass

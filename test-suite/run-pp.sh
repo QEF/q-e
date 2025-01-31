@@ -19,7 +19,7 @@ fi
 if [[ "$1" == "1" ]]
 then
   # echo "Running PW ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -27,7 +27,7 @@ then
 elif [[ "$1" == "2" ]]
 then
   # echo "Running PP ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ppacf.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ppacf.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3

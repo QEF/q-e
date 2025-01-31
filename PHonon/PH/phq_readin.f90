@@ -63,7 +63,7 @@ SUBROUTINE phq_readin()
 
   USE qpoint,        ONLY : nksq, xq
   USE control_lr,    ONLY : lgamma, lrpa, alpha_mix, lgamma_gamma, tr2_ph, niter_ph, &
-                            nmix_ph, maxter, reduce_io, rec_code_read
+                            nmix_ph, maxter, reduce_io, rec_code_read, lmultipole, lnolr
   ! YAMBO >
   USE YAMBO,         ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
@@ -127,7 +127,7 @@ SUBROUTINE phq_readin()
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upper, dftd3_hess, kx, ky, kz
+                       skip_upper, dftd3_hess, kx, ky, kz, lmultipole
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -167,6 +167,7 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
+  ! kx, ky, kz   : when specified in input, search that k-point to print el-ph matrix element
   ! nk1,nk2,nk3, k1,k2,k3 :
   !              when specified in input, the phonon run uses a different
   !              k-point mesh from that used for the charge density.
@@ -212,6 +213,7 @@ SUBROUTINE phq_readin()
   ! skip_upper: If .true., skip the calculation of upper Fan self-energy.
   !
   ! dftd3_hess: file from where the dftd3 hessian is read
+  ! lmultipole : If .true. macroscopic density response to q-potential perturbation is written as output
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
@@ -496,8 +498,8 @@ SUBROUTINE phq_readin()
   ENDIF
   !
   ! Set default value for fildrho and fildvscf if they are required
-  IF ( (lraman.OR.elop.OR.drho_star%open) .AND. fildrho == ' ') fildrho = 'drho'
-  IF ( (elph_mat.OR.dvscf_star%open) .AND. fildvscf == ' ') fildvscf = 'dvscf'
+  IF ( (lraman.OR.elop.OR.drho_star%open.or.lmultipole) .AND. fildrho == ' ') fildrho = 'drho'
+  IF ( (elph_mat.OR.dvscf_star%open.or.lmultipole) .AND. fildvscf == ' ') fildvscf = 'dvscf'
   !
   !  We can calculate  dielectric, raman or elop tensors and no Born effective
   !  charges dF/dE, but we cannot calculate Born effective charges dF/dE
@@ -856,6 +858,16 @@ SUBROUTINE phq_readin()
   IF (tqr) CALL errore('phq_readin',&
      'The phonon code with Q in real space not available',1)
 
+  ! FM : incompatibility for lmultipole
+  IF (lmultipole) lnolr = .TRUE.
+  IF (lmultipole .and. (okvan .or. domag)) CALL errore('phq_readin',&
+     'lmultipole implemented only for norm-conserving potential, and without magnetization', 1)
+  IF (lmultipole .and. (ltetra .OR. lgauss)) CALL errore('phq_readin',&
+     'lmultipole does not work with metal', 1)
+  IF (lmultipole .and. epsil) CALL errore('phq_readin',&
+     'lmultipole is already an electric field calculation', 1)
+  !
+  !
   IF (start_irr < 0 ) CALL errore('phq_readin', 'wrong start_irr',1)
   !
   IF (start_q <= 0 ) CALL errore('phq_readin', 'wrong start_q',1)

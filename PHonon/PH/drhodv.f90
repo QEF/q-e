@@ -55,6 +55,7 @@ subroutine drhodv (nu_i0, nper, drhos)
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
   USE control_flags,    ONLY : offload_type
+  USE control_lr,       ONLY : lmultipole
 
   implicit none
 
@@ -115,11 +116,19 @@ subroutine drhodv (nu_i0, nper, drhos)
      call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb, .true.)
      DO isolv=1, nsolv
         do mu = 1, nper
-           nrec = (mu - 1) * nksq + ik + (isolv-1) * nksq * nper
-           if (nksq > 1 .or. nper > 1 .OR. nsolv==2) then
-                             call get_buffer(dpsi, lrdwf, iudwf, nrec)
-                             !$acc update device(dpsi)
-           endif
+           !
+           IF (.NOT. lmultipole) THEN
+             nrec = (mu - 1) * nksq + ik + (isolv-1) * nksq * nper
+             if (nksq > 1 .or. nper > 1 .OR. nsolv==2) then
+                               call get_buffer(dpsi, lrdwf, iudwf, nrec)
+                               !$acc update device(dpsi)
+             endif
+           ELSE
+             nrec = ik
+             call get_buffer(dpsi, lrdwf, iudwf, nrec)
+             !$acc update device(dpsi)
+           ENDIF
+           !
 #if defined(__CUDA)
            call calbec( offload_type, npwq, vkb, dpsi, bectmp )
            call becupdate( offload_type, dbecq, mu, nper, bectmp )

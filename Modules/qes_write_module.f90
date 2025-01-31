@@ -1479,11 +1479,6 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%diago_cg_maxiter)
         CALL xml_EndElement(xp, "diago_cg_maxiter")
      END IF
-     IF (obj%diago_ppcg_maxiter_ispresent) THEN
-        CALL xml_NewElement(xp, "diago_ppcg_maxiter")
-           CALL xml_addCharacters(xp, obj%diago_ppcg_maxiter)
-        CALL xml_EndElement(xp, "diago_ppcg_maxiter")
-     END IF
      IF (obj%diago_david_ndim_ispresent) THEN
         CALL xml_NewElement(xp, "diago_david_ndim")
            CALL xml_addCharacters(xp, obj%diago_david_ndim)

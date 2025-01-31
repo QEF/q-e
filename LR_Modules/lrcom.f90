@@ -102,6 +102,11 @@ MODULE control_lr
   REAL(DP) :: alpha_mix(maxter)
   !! the mixing parameter
   !
+  LOGICAL :: lmultipole=.FALSE.   
+  !! if TRUE macroscopic density response to q-potential perturbation is written as output
+  LOGICAL :: lnolr=.FALSE.   
+  !! if TRUE G=0 component of the Hartree term is not added in dv_of_drho
+  !
 END MODULE control_lr
 !
 MODULE eqv

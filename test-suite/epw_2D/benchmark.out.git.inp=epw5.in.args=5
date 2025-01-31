@@ -1,3 +1,11 @@
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
                                                                                       
                                        ``:oss/                                        
                            `.+s+.     .+ys--yh+     `./ss+.                           
@@ -29,7 +37,7 @@
                                                      npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.9 starts on 20Aug2024 at 20:24:55 
+     Program EPW v.5.9 starts on 22Jan2025 at 17:50:54 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -40,13 +48,13 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     8 processors
 
      MPI processes distributed on     1 nodes
-     41599 MiB available memory on the printing compute node when the environment starts
-
-     Waiting for input...
-     Reading input from standard input
+     K-points division:     npool     =       8
+     184401 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from epw5.in
 
      WARNING: The specified dis_win_min is ignored.
               You should instead use bands_skipped = 'exclude_bands = ...'
@@ -64,19 +72,20 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         253     253    109                17131    17131    4855
-
+ 
      Using Slab Decomposition
-
+ 
  ----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D
   The code is running with the 2D cutoff
   Please refer to:
   Sohier, T., Calandra, M., & Mauri, F. (2017), 
-  Density functional perturbation theory for gated two-dimensional heterostructures:
+  Density functional perturbation theory for gated two-dimensional heterostructu
+ res:
   Theoretical developments and application to flexural phonons in graphene.
   Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
  ----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D
@@ -106,9 +115,9 @@
                a(3) = (  0.0000  0.0000  5.3363 )  
 
      reciprocal axes: (cart. coord. in units 2 pi/a_0)
-               b(1) = (  1.0000  0.5774 -0.0000 )  
+               b(1) = (  1.0000  0.5774  0.0000 )  
                b(2) = (  0.0000  1.1547  0.0000 )  
-               b(3) = (  0.0000 -0.0000  0.1874 )  
+               b(3) = (  0.0000  0.0000  0.1874 )  
 
 
      Atoms inside the unit cell: 
@@ -119,7 +128,7 @@
         1     Mo     95.9620   tau( 1) = (    0.00000    0.57735    0.00000  )
         2     S      32.0650   tau( 2) = (    0.50000    0.28868   -0.49064  )
         3     S      32.0650   tau( 3) = (    0.50000    0.28868    0.49064  )
-
+ 
      13 Sym.Ops. (with q -> -q+G )
 
 
@@ -145,32 +154,40 @@
 
      PseudoPot. # 1 for Mo read from file:
      ../../pseudo/Mo-PBE.upf
-     MD5 check sum: 7ca7a9feba7bf08d88d14bc7fbf60c1e
+     MD5 check sum: 4e1c3579de4f68baf863f15f5be96aa1
      Pseudo is Norm-conserving + core correction, Zval = 14.0
      Generated using ONCVPSP code by D. R. Hamann
-     Using radial grid of 1640 points,  6 beta functions with: 
+     Using radial grid of 1640 points, 10 beta functions with: 
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-                l(5) =   2
-                l(6) =   2
+                l(5) =   1
+                l(6) =   1
+                l(7) =   2
+                l(8) =   2
+                l(9) =   2
+               l(10) =   2
 
      PseudoPot. # 2 for S  read from file:
      ../../pseudo/S-PBE.upf
-     MD5 check sum: b72b6a9ca752e39de1a6cc592280dae2
+     MD5 check sum: a7319d53700e7dada26ada44d0048388
      Pseudo is Norm-conserving + core correction, Zval =  6.0
      Generated using ONCVPSP code by D. R. Hamann
-     Using radial grid of 1148 points,  6 beta functions with: 
+     Using radial grid of 1146 points, 10 beta functions with: 
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-                l(5) =   2
-                l(6) =   2
-     EPW          :      0.14s CPU      0.16s WALL
+                l(5) =   1
+                l(6) =   1
+                l(7) =   2
+                l(8) =   2
+                l(9) =   2
+               l(10) =   2
+     EPW          :      0.23s CPU      0.27s WALL
 
-     EPW          :      0.14s CPU      0.16s WALL
+     EPW          :      0.24s CPU      0.27s WALL
 
 
      -------------------------------------------------------------------
@@ -179,7 +196,7 @@
 
 
      Dipole matrix elements calculated
-
+ 
      Area is   31.38708819 [Bohr^2]
      Symmetries of Bravais lattice:  24
      Symmetries of crystal:          12
@@ -198,86 +215,86 @@
      Number of WS vectors for electron-phonon        7
      Maximum number of cores for efficient parallelization       63
      Results may improve by using use_ws == .TRUE. 
+
+     Inside velocity step 1
+ 
+
+     Velocity matrix elements calculated
+ 
      Find optimal range separation length L
       
-     L     53.66667 Bohr with IFC =       1.078782248799
-     L     62.44444 Bohr with IFC =       1.078782248799
-     L     68.29630 Bohr with IFC =       1.078782248799
-     L     72.19753 Bohr with IFC =       1.078782248799
-     L     74.79835 Bohr with IFC =       1.078782248799
-     L     76.53224 Bohr with IFC =       1.078782248799
-     L     77.68816 Bohr with IFC =       1.078782248799
-     L     78.45877 Bohr with IFC =       1.078782248799
-     L     78.97251 Bohr with IFC =       1.078782248799
-     L     79.31501 Bohr with IFC =       1.078782248799
-     L     79.54334 Bohr with IFC =       1.078782248799
-     L     79.69556 Bohr with IFC =       1.078782248799
-     L     79.79704 Bohr with IFC =       1.078782248799
-     L     79.86469 Bohr with IFC =       1.078782248799
-     L     79.90980 Bohr with IFC =       1.078782248799
-     L     79.93986 Bohr with IFC =       1.078782248799
-     L     79.95991 Bohr with IFC =       1.078782248799
-     L     79.97327 Bohr with IFC =       1.078782248799
-     L     79.98218 Bohr with IFC =       1.078782248799
-     L     79.98812 Bohr with IFC =       1.078782248799
-     L     79.99208 Bohr with IFC =       1.078782248799
-     L     79.99472 Bohr with IFC =       1.078782248799
-     L     79.99648 Bohr with IFC =       1.078782248799
-     L     79.99765 Bohr with IFC =       1.078782248799
-     L     79.99844 Bohr with IFC =       1.078782248799
-     L     79.99896 Bohr with IFC =       1.078782248799
-     L     79.99930 Bohr with IFC =       1.078782248799
-     L     79.99954 Bohr with IFC =       1.078782248799
-     L     79.99969 Bohr with IFC =       1.078782248799
-     L     79.99979 Bohr with IFC =       1.078782248799
-     L     79.99986 Bohr with IFC =       1.078782248799
-     L     79.99991 Bohr with IFC =       1.078782248799
-     L     79.99994 Bohr with IFC =       1.078782248799
-     L     79.99996 Bohr with IFC =       1.078782248799
-     L     79.99997 Bohr with IFC =       1.078782248799
-     L     79.99998 Bohr with IFC =       1.078782248799
-     L     79.99999 Bohr with IFC =       1.078782248799
-     L     79.99999 Bohr with IFC =       1.078782248799
-     L     79.99999 Bohr with IFC =       1.078782248799
-     L     80.00000 Bohr with IFC =       1.078782248799
-     L     80.00000 Bohr with IFC =       1.078782248799
-     L     80.00000 Bohr with IFC =       1.078782248799
-     L     80.00000 Bohr with IFC =       1.078782248799
-     L     80.00000 Bohr with IFC =       1.078782248799
-     L     80.00000 Bohr with IFC =       1.078782248799
+     L     53.66667 Bohr with IFC =       1.077836941944
+     L     62.44444 Bohr with IFC =       1.077836941944
+     L     68.29630 Bohr with IFC =       1.077836941944
+     L     72.19753 Bohr with IFC =       1.077836941944
+     L     74.79835 Bohr with IFC =       1.077836941944
+     L     76.53224 Bohr with IFC =       1.077836941944
+     L     77.68816 Bohr with IFC =       1.077836941944
+     L     78.45877 Bohr with IFC =       1.077836941944
+     L     78.97251 Bohr with IFC =       1.077836941944
+     L     79.31501 Bohr with IFC =       1.077836941944
+     L     79.54334 Bohr with IFC =       1.077836941944
+     L     79.69556 Bohr with IFC =       1.077836941944
+     L     79.79704 Bohr with IFC =       1.077836941944
+     L     79.86469 Bohr with IFC =       1.077836941944
+     L     79.90980 Bohr with IFC =       1.077836941944
+     L     79.93986 Bohr with IFC =       1.077836941944
+     L     79.95991 Bohr with IFC =       1.077836941944
+     L     79.97327 Bohr with IFC =       1.077836941944
+     L     79.98218 Bohr with IFC =       1.077836941944
+     L     79.98812 Bohr with IFC =       1.077836941944
+     L     79.99208 Bohr with IFC =       1.077836941944
+     L     79.99472 Bohr with IFC =       1.077836941944
+     L     79.99648 Bohr with IFC =       1.077836941944
+     L     79.99765 Bohr with IFC =       1.077836941944
+     L     79.99844 Bohr with IFC =       1.077836941944
+     L     79.99896 Bohr with IFC =       1.077836941944
+     L     79.99930 Bohr with IFC =       1.077836941944
+     L     79.99954 Bohr with IFC =       1.077836941944
+     L     79.99969 Bohr with IFC =       1.077836941944
+     L     79.99979 Bohr with IFC =       1.077836941944
+     L     79.99986 Bohr with IFC =       1.077836941944
+     L     79.99991 Bohr with IFC =       1.077836941944
+     L     79.99994 Bohr with IFC =       1.077836941944
+     L     79.99996 Bohr with IFC =       1.077836941944
+     L     79.99997 Bohr with IFC =       1.077836941944
+     L     79.99998 Bohr with IFC =       1.077836941944
+     L     79.99999 Bohr with IFC =       1.077836941944
+     L     79.99999 Bohr with IFC =       1.077836941944
+     L     79.99999 Bohr with IFC =       1.077836941944
+     L     80.00000 Bohr with IFC =       1.077836941944
+     L     80.00000 Bohr with IFC =       1.077836941944
+     L     80.00000 Bohr with IFC =       1.077836941944
+     L     80.00000 Bohr with IFC =       1.077836941944
+     L     80.00000 Bohr with IFC =       1.077836941944
+     L     80.00000 Bohr with IFC =       1.077836941944
       
       In-plane polarizability in cartesian axis
-         15.403907621551648           1.1352918934689648E-015
-         0.0000000000000000           15.403907621549465     
-      Out-of-plane polarizability in cartesian axis   0.77495273224301120     
+         15.3591220261621          0.000000000000000E+000
+        1.135291893468965E-015      15.3591220261599     
+      Out-of-plane polarizability in cartesian axis   0.775038429315652     
   
  
      Bloch2wane:          1 /          4
      Bloch2wane:          2 /          4
      Bloch2wane:          3 /          4
      Bloch2wane:          4 /          4
-     Bloch2wanp:          1 /          7
-     Bloch2wanp:          2 /          7
-     Bloch2wanp:          3 /          7
-     Bloch2wanp:          4 /          7
-     Bloch2wanp:          5 /          7
-     Bloch2wanp:          6 /          7
-     Bloch2wanp:          7 /          7
+     Bloch2wanp:          1 /          1
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =        50Mb
-                   VmPeak =       252Mb
+     Memory usage:  VmHWM =       240Mb
+                   VmPeak =      4022Mb
      ===================================================================
      
      Using uniform q-mesh:    30   30    1
      Size of q point mesh for interpolation:        900
      Using uniform MP k-mesh:    30   30    1
      Size of k point mesh for interpolation:        332
-     Max number of k points per pool:              332
+     Max number of k points per pool:               42
 
-     Fermi energy coarse grid =  -5.953591 eV
+     Fermi energy coarse grid =  -5.949796 eV
 
      ===================================================================
 
@@ -289,25 +306,26 @@
 
      The Fermi level will be determined with   2.00000 electrons
 
-              ibndmin =     1  ebndmin =    -6.075 eV
-              ibndmax =     2  ebndmax =    -5.954 eV
+              ibndmin =     1  ebndmin =    -6.074 eV
+              ibndmax =     2  ebndmax =    -5.950 eV
 
 
-     Number of ep-matrix elements per pool :         5976 ~=   46.69 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :          756 ~=    5.91 Kb (@ 8 bytes/ DP)
 
      File ./Fepmatkq1/mos2.epmatkq1_0 deleted, as requested
 
      File ./Fsparse/sparse_0 deleted, as requested
       
      A selecq.fmt file was found but re-created because selecqread == .FALSE. 
-     Number selected, total            100            873
-     We only need to compute      109 q-points
+     Number selected, total            100            399
+     Number selected, total            200            838
+     We only need to compute      227 q-points
       
-     Valence band maximum    =  -5.953591 eV
-     Conduction band minimum =  -3.984996 eV
+     Valence band maximum    =  -5.949796 eV
+     Conduction band minimum =  -3.996847 eV
 
      Temperature  300.000 K
-     Mobility VB Fermi level =  -5.749334 eV
+     Mobility VB Fermi level =  -5.744116 eV
 
      ===================================================================
      Scattering rate for IBTE
@@ -322,17 +340,18 @@
 
      Save matrix elements larger than threshold:   0.308641975309E-22
       
-     Progression iq (fine) =        100/       109
-      300.000     -5.7493       0.999999E+10
+     Progression iq (fine) =        100/       227
+     Progression iq (fine) =        200/       227
+      300.000     -5.7441       0.999993E+10
       
      epmatkqread automatically changed to .TRUE. as all scattering have been computed.
       
      ===================================================================
-     Memory usage:  VmHWM =        50Mb
-                   VmPeak =       252Mb
+     Memory usage:  VmHWM =       245Mb
+                   VmPeak =      4094Mb
      ===================================================================
 
-     Number of elements per core       1832
+     Number of elements per core        348
      Symmetry mapping finished
       
      =============================================================================================
@@ -344,8 +363,8 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11  -0.10842E-18    0.473268E+02    0.328000E-16    0.000000E+00
-                                      -0.21142E-17   -0.328000E-16    0.473268E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10  -0.34694E-17    0.371644E+02    0.000000E+00    0.000000E+00
+                                       0.17347E-17    0.000000E+00    0.371644E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
       
      =============================================================================================
@@ -359,11 +378,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11  -0.24395E-18    0.581319E+02    0.656000E-16    0.000000E+00
-                                      -0.43368E-18    0.328000E-16    0.581319E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10  -0.17347E-17    0.440127E+02    0.000000E+00    0.000000E+00
+                                      -0.17347E-17    0.000000E+00    0.440127E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.581319E+02    Max error
+                                                      0.440127E+02    Max error
      Iteration number:         2
 
      =============================================================================================
@@ -371,11 +390,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11  -0.24123E-17    0.610409E+02    0.000000E+00    0.000000E+00
-                                      -0.39573E-17    0.656000E-16    0.610409E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10   0.86736E-18    0.453422E+02    0.000000E+00    0.000000E+00
+                                       0.52042E-17    0.000000E+00    0.453422E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.290898E+01    Max error
+                                                      0.132955E+01    Max error
      Iteration number:         3
 
      =============================================================================================
@@ -383,11 +402,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11   0.51771E-17    0.618665E+02    0.000000E+00    0.000000E+00
-                                      -0.30358E-17    0.000000E+00    0.618665E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10  -0.34694E-17    0.456217E+02    0.000000E+00    0.000000E+00
+                                      -0.34694E-17    0.000000E+00    0.456217E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.825611E+00    Max error
+                                                      0.279462E+00    Max error
      Iteration number:         4
 
      =============================================================================================
@@ -395,11 +414,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11  -0.49602E-17    0.621079E+02    0.000000E+00    0.000000E+00
-                                      -0.69389E-17   -0.328000E-16    0.621079E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10   0.26021E-17    0.456822E+02    0.000000E+00    0.000000E+00
+                                      -0.17347E-17    0.000000E+00    0.456822E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.241418E+00    Max error
+                                                      0.605018E-01    Max error
      Iteration number:         5
 
      =============================================================================================
@@ -407,11 +426,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11  -0.78063E-17    0.621794E+02    0.000000E+00    0.000000E+00
-                                      -0.38489E-17   -0.656000E-16    0.621794E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10   0.26021E-17    0.456956E+02    0.000000E+00    0.000000E+00
+                                      -0.52042E-17    0.000000E+00    0.456956E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.715351E-01    Max error
+                                                      0.133578E-01    Max error
      Iteration number:         6
 
      =============================================================================================
@@ -419,11 +438,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11   0.35779E-17    0.622008E+02    0.656000E-16    0.000000E+00
-                                       0.98120E-17   -0.328000E-16    0.622008E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10  -0.34694E-17    0.456985E+02    0.000000E+00    0.000000E+00
+                                       0.17347E-17    0.000000E+00    0.456985E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.213684E-01    Max error
+                                                      0.297735E-02    Max error
      Iteration number:         7
 
      =============================================================================================
@@ -431,11 +450,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11   0.33339E-17    0.622072E+02    0.000000E+00    0.000000E+00
-                                       0.54210E-18    0.328000E-16    0.622072E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10   0.17347E-17    0.456992E+02    0.000000E+00    0.000000E+00
+                                      -0.52042E-17    0.000000E+00    0.456992E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.640251E-02    Max error
+                                                      0.668929E-03    Max error
      Iteration number:         8
 
      =============================================================================================
@@ -443,11 +462,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11   0.62613E-17    0.622091E+02    0.000000E+00    0.000000E+00
-                                       0.35779E-17    0.328000E-16    0.622091E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10   0.86736E-18    0.456994E+02    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.456994E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.192276E-02    Max error
+                                                      0.150908E-03    Max error
      Iteration number:         9
 
      =============================================================================================
@@ -455,11 +474,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11  -0.16534E-17    0.622097E+02    0.000000E+00    0.000000E+00
-                                       0.75894E-18   -0.328000E-16    0.622097E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10  -0.26021E-17    0.456994E+02    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.456994E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.577740E-03    Max error
+                                                      0.342225E-04    Max error
      Iteration number:        10
 
      =============================================================================================
@@ -467,11 +486,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.10000E+11   0.94868E-18    0.622099E+02    0.000000E+00    0.000000E+00
-                                       0.43368E-17    0.328000E-16    0.622099E+02    0.000000E+00
+      300.000  -5.7441   0.99999E+10   0.86736E-18    0.456994E+02   -0.131201E-15    0.000000E+00
+                                      -0.17347E-17    0.000000E+00    0.456994E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.173729E-03    Max error
+                                                      0.773482E-05    Max error
      Iteration number:        11
      =============================================================================================
      The iteration reached the maximum but did not converge.
@@ -481,18 +500,18 @@
      =============================================================================================
      BTE in the SERTA with B-field
      =============================================================================================
-     Number of contributing elements for the master core      21984
+     Number of contributing elements for the master core       4176
 
      =============================================================================================
        Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.10551E-07    0.478737E+02    0.109101E-03    0.000000E+00
-                                       0.00000E+00   -0.138099E-03    0.478737E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.57485E-08    0.375354E+02    0.639332E-04    0.000000E+00
+                                       0.00000E+00   -0.877486E-04    0.375354E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.143362E+02    Max error
+                                                      0.816402E+01    Max error
       
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation with B-field
@@ -505,11 +524,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.42485E-07    0.588036E+02    0.131298E-03    0.000000E+00
-                                      -0.15819E-14   -0.167956E-03    0.588036E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.21082E-07    0.444520E+02    0.764934E-04    0.000000E+00
+                                      -0.50203E-14   -0.103214E-03    0.444520E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.109299E+02    Max error
+                                                      0.691665E+01    Max error
       
      Iteration number:         2
 
@@ -518,11 +537,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.83546E-07    0.617462E+02    0.164068E-03    0.000000E+00
-                                      -0.57768E-13   -0.208565E-03    0.617462E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.42404E-07    0.457949E+02    0.902772E-04    0.000000E+00
+                                      -0.37774E-13   -0.122094E-03    0.457949E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.294260E+01    Max error
+                                                      0.134282E+01    Max error
       
      Iteration number:         3
 
@@ -531,11 +550,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.12771E-06    0.625813E+02    0.178226E-03    0.000000E+00
-                                      -0.12802E-12   -0.227139E-03    0.625813E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.64774E-07    0.460771E+02    0.954176E-04    0.000000E+00
+                                      -0.76352E-13   -0.128737E-03    0.460771E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.835150E+00    Max error
+                                                      0.282251E+00    Max error
       
      Iteration number:         4
 
@@ -544,11 +563,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.17302E-06    0.628255E+02    0.183796E-03    0.000000E+00
-                                      -0.20654E-12   -0.234175E-03    0.628255E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.87164E-07    0.461382E+02    0.969120E-04    0.000000E+00
+                                      -0.11495E-12   -0.130603E-03    0.461382E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.244207E+00    Max error
+                                                      0.611057E-01    Max error
       
      Iteration number:         5
 
@@ -557,11 +576,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.21850E-06    0.628979E+02    0.185845E-03    0.000000E+00
-                                      -0.29231E-12   -0.236675E-03    0.628979E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.10965E-06    0.461517E+02    0.973214E-04    0.000000E+00
+                                      -0.15614E-12   -0.131101E-03    0.461517E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.723617E-01    Max error
+                                                      0.134912E-01    Max error
       
      Iteration number:         6
 
@@ -570,11 +589,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.26418E-06    0.629195E+02    0.186576E-03    0.000000E+00
-                                      -0.38609E-12   -0.237538E-03    0.629195E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.13235E-06    0.461547E+02    0.974309E-04    0.000000E+00
+                                      -0.19829E-12   -0.131228E-03    0.461547E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.216153E-01    Max error
+                                                      0.300707E-02    Max error
       
      Iteration number:         7
 
@@ -583,11 +602,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.30991E-06    0.629260E+02    0.186830E-03    0.000000E+00
-                                      -0.48201E-12   -0.237829E-03    0.629260E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.15534E-06    0.461554E+02    0.974593E-04    0.000000E+00
+                                      -0.24035E-12   -0.131260E-03    0.461554E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.647649E-02    Max error
+                                                      0.675606E-03    Max error
       
      Iteration number:         8
 
@@ -596,11 +615,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.35566E-06    0.629279E+02    0.186917E-03    0.000000E+00
-                                      -0.57944E-12   -0.237927E-03    0.629279E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.17864E-06    0.461555E+02    0.974666E-04    0.000000E+00
+                                      -0.28236E-12   -0.131268E-03    0.461555E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.194498E-02    Max error
+                                                      0.152415E-03    Max error
       
      Iteration number:         9
 
@@ -609,11 +628,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.40140E-06    0.629285E+02    0.186946E-03    0.000000E+00
-                                      -0.67729E-12   -0.237959E-03    0.629285E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.20230E-06    0.461556E+02    0.974685E-04    0.000000E+00
+                                      -0.32447E-12   -0.131270E-03    0.461556E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.584415E-03    Max error
+                                                      0.345641E-04    Max error
       
      Iteration number:        10
 
@@ -622,11 +641,11 @@
         [K]      [eV]     [cm^-2]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  -5.7493   0.98858E+10  -0.44712E-06    0.629287E+02    0.186956E-03    0.000000E+00
-                                      -0.77556E-12   -0.237970E-03    0.629287E+02    0.000000E+00
+      300.000  -5.7441   0.99011E+10  -0.22634E-06    0.461556E+02    0.974689E-04    0.000000E+00
+                                      -0.36682E-12   -0.131270E-03    0.461556E+02    0.000000E+00
                                        0.00000E+00    0.000000E+00    0.000000E+00    0.000000E+00
 
-                                                      0.175737E-03    Max error
+                                                      0.781203E-05    Max error
       
      Iteration number:        11
      =============================================================================================
@@ -644,16 +663,16 @@
       
      Temperature:   300.0000 K
      Conductivity tensor without magnetic field | with magnetic field [Siemens]
-       0.75826E-07   0.52551E-25   0.00000E+00  |   0.75826E-07   0.17280E-12   0.00000E+00
-      -0.52551E-25   0.75826E-07   0.00000E+00  |  -0.21873E-12   0.75826E-07   0.00000E+00
+       0.59544E-07   0.00000E+00   0.00000E+00  |   0.59544E-07   0.10142E-12   0.00000E+00
+       0.00000E+00   0.59544E-07   0.00000E+00  |  -0.13920E-12   0.59544E-07   0.00000E+00
        0.00000E+00   0.00000E+00   0.00000E+00  |   0.00000E+00   0.00000E+00   0.00000E+00
      Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]
-       0.47874E+02   0.33179E-16   0.00000E+00  |   0.11823E-07   0.60514E+02   0.00000E+00
-      -0.33179E-16   0.47874E+02   0.00000E+00  |  -0.76599E+02   0.78822E-08   0.00000E+00
+       0.37535E+02   0.00000E+00   0.00000E+00  |   0.00000E+00   0.45228E+02   0.00000E+00
+       0.00000E+00   0.37535E+02   0.00000E+00  |  -0.62076E+02  -0.10053E-07   0.00000E+00
        0.00000E+00   0.00000E+00   0.10000E+01  |   0.00000E+00   0.00000E+00   0.00000E+00
      Hall factor
-       0.246970E-09    0.126404E+01    0.000000E+00
-      -0.160001E+01    0.164647E-09    0.000000E+00
+       0.000000E+00    0.120495E+01    0.000000E+00
+      -0.165381E+01   -0.267833E-09    0.000000E+00
        0.000000E+00    0.000000E+00    0.000000E+00
 
      =============================================================================================
@@ -662,47 +681,47 @@
       
      Temperature:   300.0000 K
      Conductivity tensor without magnetic field | with magnetic field [Siemens]
-       0.99671E-07   0.00000E+00   0.00000E+00  |   0.99671E-07   0.29611E-12   0.00000E+00
-       0.52551E-25   0.99671E-07   0.00000E+00  |  -0.37691E-12   0.99671E-07   0.00000E+00
+       0.73218E-07  -0.21021E-24   0.00000E+00  |   0.73218E-07   0.15462E-12   0.00000E+00
+       0.00000E+00   0.73218E-07   0.00000E+00  |  -0.20824E-12   0.73218E-07   0.00000E+00
        0.00000E+00   0.00000E+00   0.00000E+00  |   0.00000E+00   0.00000E+00   0.00000E+00
      Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]
-       0.62929E+02   0.00000E+00   0.00000E+00  |  -0.26824E-03   0.78889E+02   0.00000E+00
-       0.33179E-16   0.62929E+02   0.00000E+00  |  -0.10042E+03  -0.29408E-03   0.00000E+00
+       0.46156E+02  -0.13251E-15   0.00000E+00  |  -0.12835E-03   0.56075E+02   0.00000E+00
+       0.00000E+00   0.46156E+02   0.00000E+00  |  -0.75521E+02  -0.15763E-03   0.00000E+00
        0.00000E+00   0.00000E+00   0.10000E+01  |   0.00000E+00   0.00000E+00   0.00000E+00
      Hall factor
-      -0.426253E-05    0.125362E+01    0.000000E+00
-      -0.159570E+01   -0.467328E-05    0.000000E+00
+      -0.278080E-05    0.121491E+01    0.000000E+00
+      -0.163623E+01   -0.341511E-05    0.000000E+00
        0.000000E+00    0.000000E+00    0.000000E+00
 
      Unfolding on the coarse grid
-     elphon_wrap  :      1.38s CPU      1.44s WALL (       1 calls)
+     elphon_wrap  :      0.10s CPU      0.12s WALL (       1 calls)
 
      INITIALIZATION: 
 
      set_drhoc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
 
 
 
      Electron-Phonon interpolation
-     ep-interp    :      0.59s CPU      0.62s WALL (     109 calls)
+     ep-interp    :      0.44s CPU      1.82s WALL (     227 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.00s WALL (       4 calls)
      ep: step 2   :      0.00s CPU      0.00s WALL (       4 calls)
      wigner_seitz :      0.00s CPU      0.00s WALL (       1 calls)
-     DynW2B       :      0.03s CPU      0.03s WALL (     109 calls)
-     HamW2B       :      0.44s CPU      0.46s WALL (   36686 calls)
-     ephW2Bp      :      0.03s CPU      0.03s WALL (     109 calls)
-     ephW2B       :      0.03s CPU      0.03s WALL (     473 calls)
-     rgd_blk_epw  :      0.01s CPU      0.01s WALL (     537 calls)
-     print_ibte   :      0.02s CPU      0.02s WALL (     109 calls)
+     DynW2B       :      0.01s CPU      0.02s WALL (     227 calls)
+     HamW2B       :      0.20s CPU      0.24s WALL (    9597 calls)
+     ephW2Bp      :      0.04s CPU      0.07s WALL (     227 calls)
+     ephW2B       :      0.01s CPU      0.01s WALL (     126 calls)
+     rgd_blk_epw  :      0.01s CPU      0.01s WALL (     134 calls)
+     print_ibte   :      0.15s CPU      1.44s WALL (     227 calls)
 
 
      Total program execution
-     EPW          :      2.37s CPU      2.48s WALL
+     EPW          :      0.89s CPU      2.39s WALL
 
      % Copyright (C) 2016-2023 EPW-Collaboration                                    
                                                                                     

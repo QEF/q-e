@@ -22,11 +22,11 @@ subroutine wannier_proj(ik, wan_func)
   USE klist,            ONLY : ngk
   USE lsda_mod,         ONLY : lsda, isk
   USE constants,        ONLY : rytoev
-  USE basis,            ONLY : swfcatom
+  USE basis,            ONLY : natomwfc
   USE control_flags,    ONLY : gamma_only
   USE uspp_param,       ONLY : upf 
-  USE wavefunctions, ONLY : evc
-  USE gvect,                ONLY : gstart
+  USE wavefunctions,    ONLY : evc
+  USE gvect,            ONLY : gstart
   USE noncollin_module, ONLY : npol
   USE buffers,          ONLY : get_buffer, save_buffer
 
@@ -35,6 +35,7 @@ subroutine wannier_proj(ik, wan_func)
   INTEGER, intent(in) :: ik
   COMPLEX(DP), intent(out) :: wan_func(npwx,nwan)
   !
+  COMPLEX(DP), ALLOCATABLE :: swfcatom(:,:)
   COMPLEX(DP), ALLOCATABLE :: pp(:,:)
   COMPLEX(DP), ALLOCATABLE :: trialwf(:,:)
   
@@ -54,7 +55,7 @@ subroutine wannier_proj(ik, wan_func)
   call read_collected_wfc ( restart_dir(), ik, evc )  
   ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90
-  swfcatom = ZERO
+  ALLOCATE ( swfcatom(npwx,natomwfc) )
   CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
   
   ! generates trial wavefunctions as a sum of ingredients
@@ -111,6 +112,7 @@ subroutine wannier_proj(ik, wan_func)
   !And dump wannier to file
   call save_buffer( wan_func, nwordwf, iunwf, ik)
 
+  DEALLOCATE(swfcatom)
   DEALLOCATE(trialwf)
   DEALLOCATE(pp)
   

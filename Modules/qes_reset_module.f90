@@ -1165,7 +1165,6 @@ MODULE qes_reset_module
     obj%real_space_q_ispresent = .FALSE.
     obj%real_space_beta_ispresent = .FALSE.
     obj%diago_cg_maxiter_ispresent = .FALSE.
-    obj%diago_ppcg_maxiter_ispresent = .FALSE.
     obj%diago_david_ndim_ispresent = .FALSE.
     obj%diago_rmm_ndim_ispresent = .FALSE.
     obj%diago_gs_nblock_ispresent = .FALSE.

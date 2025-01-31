@@ -51,14 +51,14 @@ MODULE mp
   ! 
   INTERFACE mp_sum
     MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_i8v, mp_sum_im, mp_sum_it, mp_sum_i4, mp_sum_i5, &
-      mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rm_nc, mp_sum_rt, mp_sum_r4d, &
-      mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_cm_nc, mp_sum_ct, mp_sum_c4d, &
+      mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rm1_nc, mp_sum_rm2_nc, mp_sum_rt, mp_sum_r4d, &
+      mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_cm1_nc, mp_sum_cm2_nc, mp_sum_ct, mp_sum_c4d, &
       mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d, &
       mp_sum_r6d
 #if defined(__CUDA)
     MODULE PROCEDURE  mp_sum_i1_gpu, mp_sum_iv_gpu, mp_sum_im_gpu, mp_sum_it_gpu, &
-      mp_sum_r1_gpu, mp_sum_rv_gpu, mp_sum_rm_gpu, mp_sum_rm_nc_gpu, mp_sum_rt_gpu, mp_sum_r4d_gpu, &
-      mp_sum_c1_gpu, mp_sum_cv_gpu, mp_sum_cm_gpu, mp_sum_cm_nc_gpu, mp_sum_ct_gpu, mp_sum_c4d_gpu, &
+      mp_sum_r1_gpu, mp_sum_rv_gpu, mp_sum_rm_gpu, mp_sum_rm_nc1_gpu, mp_sum_rm_nc2_gpu, mp_sum_rt_gpu, mp_sum_r4d_gpu,&
+      mp_sum_c1_gpu, mp_sum_cv_gpu, mp_sum_cm_gpu, mp_sum_cm_nc1_gpu, mp_sum_cm_nc2_gpu, mp_sum_ct_gpu, mp_sum_c4d_gpu,&
       mp_sum_c5d_gpu, mp_sum_c6d_gpu, mp_sum_rmm_gpu, mp_sum_cmm_gpu, mp_sum_r5d_gpu, &
       mp_sum_r6d_gpu
 #endif
@@ -1607,9 +1607,28 @@ MODULE mp
 #endif
       END SUBROUTINE mp_sum_rm
 
+      SUBROUTINE mp_sum_rm1_nc(msg, k1, k2, gid)
+        ! for non-contiguous 1D arrays  
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:)
+        INTEGER, INTENT (IN) :: gid
+        INTEGER, INTENT (IN) :: k1, k2
+#if defined(__MPI)
+        REAL(DP), ALLOCATABLE :: msg_buff(:)
+        INTEGER :: msglen
+        IF ( k2-k1+1 < 1 ) RETURN
+        ALLOCATE( msg_buff(k2-k1+1) )
+        msg_buff(1:k2-k1+1)=msg(k1:k2)
+        msglen = size(msg_buff)
+        CALL reduce_base_real( msglen, msg_buff, gid, -1 )
+        msg(k1:k2)=msg_buff(1:k2-k1+1)
+        DEALLOCATE( msg_buff )
+#endif
+      END SUBROUTINE mp_sum_rm1_nc
 
-      SUBROUTINE mp_sum_rm_nc(msg, k1, k2, k3, k4, gid)
-        ! for non-contiguous arrays  
+
+      SUBROUTINE mp_sum_rm2_nc(msg, k1, k2, k3, k4, gid)
+        ! for non-contiguous 2D arrays  
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:,:)
         INTEGER, INTENT (IN) :: gid
@@ -1617,6 +1636,7 @@ MODULE mp
 #if defined(__MPI)
         REAL(DP), ALLOCATABLE :: msg_buff(:,:)
         INTEGER :: msglen
+        IF ( min(k2-k1+1,k4-k3+1) < 1 ) RETURN
         ALLOCATE( msg_buff(k2-k1+1,k4-k3+1) )
         msg_buff(1:k2-k1+1,1:k4-k3+1)=msg(k1:k2,k3:k4)
         msglen = size(msg_buff)
@@ -1624,7 +1644,7 @@ MODULE mp
         msg(k1:k2,k3:k4)=msg_buff(1:k2-k1+1,1:k4-k3+1)
         DEALLOCATE( msg_buff )
 #endif
-      END SUBROUTINE mp_sum_rm_nc
+      END SUBROUTINE mp_sum_rm2_nc
 
       SUBROUTINE mp_root_sum_rm( msg, res, root, gid )
         USE parallel_include
@@ -1801,8 +1821,27 @@ MODULE mp
 !------------------------------------------------------------------------------!
 
 
-      SUBROUTINE mp_sum_cm_nc(msg, k1, k2, k3, k4, gid)
-        ! for non-contiguous arrays  
+      SUBROUTINE mp_sum_cm1_nc(msg, k1, k2, gid)
+        ! for non-contiguous 1D arrays  
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:)
+        INTEGER, INTENT (IN) :: gid
+        INTEGER, INTENT (IN) :: k1, k2
+#if defined(__MPI)
+        COMPLEX(DP), ALLOCATABLE :: msg_buff(:)
+        INTEGER :: msglen
+        IF ( k2-k1+1 < 1 ) RETURN
+        ALLOCATE( msg_buff(k2-k1+1) )
+        msg_buff(1:k2-k1+1)=msg(k1:k2)
+        msglen = size(msg_buff)
+        CALL reduce_base_real( 2 * msglen, msg_buff, gid, -1 )
+        msg(k1:k2)=msg_buff(1:k2-k1+1)
+        DEALLOCATE( msg_buff )
+#endif
+      END SUBROUTINE mp_sum_cm1_nc
+
+      SUBROUTINE mp_sum_cm2_nc(msg, k1, k2, k3, k4, gid)
+        ! for non-contiguous 2D arrays  
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:,:)
         INTEGER, INTENT (IN) :: gid
@@ -1810,6 +1849,7 @@ MODULE mp
 #if defined(__MPI)
         COMPLEX(DP), ALLOCATABLE :: msg_buff(:,:)
         INTEGER :: msglen
+        IF ( min(k2-k1+1,k4-k3+1) < 1 ) RETURN
         ALLOCATE( msg_buff(k2-k1+1,k4-k3+1) )
         msg_buff(1:k2-k1+1,1:k4-k3+1)=msg(k1:k2,k3:k4)
         msglen = size(msg_buff)
@@ -1817,7 +1857,7 @@ MODULE mp
         msg(k1:k2,k3:k4)=msg_buff(1:k2-k1+1,1:k4-k3+1)
         DEALLOCATE( msg_buff )
 #endif
-      END SUBROUTINE mp_sum_cm_nc
+      END SUBROUTINE mp_sum_cm2_nc
 !
 !------------------------------------------------------------------------------!
 
@@ -4682,11 +4722,49 @@ END SUBROUTINE mp_type_free
 !
 !------------------------------------------------------------------------------!
 !
-      SUBROUTINE mp_sum_rm_nc_gpu(msg_d, k1, k2, k3, k4, gid)
-        ! for non-contiguous (nc) arrays
+      SUBROUTINE mp_sum_rm_nc1_gpu(msg_d, k1, k2, gid)
+        ! for non-contiguous 1D arrays
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
+        INTEGER, INTENT (IN) :: k1, k2
+        INTEGER, INTENT (IN) :: gid
+        REAL (DP), ALLOCATABLE :: msg_buff(:) 
+#if defined(__GPU_MPI)
+        ATTRIBUTES(DEVICE) :: msg_buff
+#endif
+        !
+        INTEGER :: msglen, ierr
+        ! Avoid unnecessary communications on __MPI and syncs SERIAL
+        IF ( mp_size(gid) == 1 ) THEN
+          ierr = cudaDeviceSynchronize()
+          RETURN
+        END IF
+        !
+#if defined(__MPI)
+        IF ( k2-k1+1 < 1 ) RETURN
+        ALLOCATE( msg_buff(k2-k1+1) ) 
+        msg_buff(1:k2-k1+1) = msg_d(k1:k2)
+        msglen = size(msg_buff)
+        !
+#if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
+        CALL reduce_base_real_gpu( msglen, msg_buff, gid, -1 )
+        ! No need for final syncronization
+#else
+        CALL reduce_base_real( msglen, msg_buff, gid, -1 )
+        ierr = cudaDeviceSynchronize()  ! This syncs __MPI for small copies
+#endif
+        !
+        msg_d(k1:k2) = msg_buff(1:k2-k1+1) 
+        DEALLOCATE( msg_buff ) 
+#endif
+        !
+      END SUBROUTINE mp_sum_rm_nc1_gpu
+
+      SUBROUTINE mp_sum_rm_nc2_gpu(msg_d, k1, k2, k3, k4, gid)
+        ! for non-contiguous 2D arrays
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
-        REAL (DP), ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT (IN) :: k1, k2, k3, k4 
         INTEGER, INTENT (IN) :: gid
         REAL (DP), ALLOCATABLE :: msg_buff(:,:) 
@@ -4701,31 +4779,26 @@ END SUBROUTINE mp_type_free
           RETURN
         END IF
         !
+#if defined(__MPI)
+        IF ( min(k2-k1+1,k4-k3+1) < 1 ) RETURN
         ALLOCATE( msg_buff(k2-k1+1,k4-k3+1) ) 
-
         msg_buff(1:k2-k1+1,1:k4-k3+1) = msg_d(k1:k2,k3:k4)
         msglen = size(msg_buff)
         !
-#if defined(__MPI)
 #if defined(__GPU_MPI)
-        !msglen = size(msg_buff)
         ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_buff, gid, -1 )
         ! No need for final syncronization
 #else
-        !ALLOCATE( msg_h, source=msg_buff ) ! This syncs __MPI case
-        !msglen = size(msg_h)
-        !msglen = size(msg_buff)
         CALL reduce_base_real( msglen, msg_buff, gid, -1 )
-        !msg_buff = msg_h; DEALLOCATE(msg_h)
         ierr = cudaDeviceSynchronize()  ! This syncs __MPI for small copies
-#endif
 #endif
         !
         msg_d(k1:k2,k3:k4) = msg_buff(1:k2-k1+1,1:k4-k3+1) 
         DEALLOCATE( msg_buff ) 
+#endif
         !
-      END SUBROUTINE mp_sum_rm_nc_gpu
+      END SUBROUTINE mp_sum_rm_nc2_gpu
 !
 !------------------------------------------------------------------------------!
 !
@@ -5009,11 +5082,49 @@ END SUBROUTINE mp_type_free
 !
 !------------------------------------------------------------------------------!
 !
-      SUBROUTINE mp_sum_cm_nc_gpu(msg_d, k1, k2, k3, k4, gid)
-        ! for non-contiguous (nc) arrays
+      SUBROUTINE mp_sum_cm_nc1_gpu(msg_d, k1, k2, gid)
+        ! for non-contiguous 1D arrays
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:)
+        INTEGER, INTENT (IN) :: k1, k2
+        INTEGER, INTENT (IN) :: gid
+        COMPLEX (DP), ALLOCATABLE :: msg_buff(:) 
+#if defined(__GPU_MPI)
+        ATTRIBUTES(DEVICE) :: msg_buff
+#endif
+        !
+        INTEGER :: msglen, ierr
+        ! Avoid unnecessary communications on __MPI and syncs SERIAL
+        IF ( mp_size(gid) == 1 ) THEN
+          ierr = cudaDeviceSynchronize()
+          RETURN
+        END IF
+        !
+#if defined(__MPI)
+        IF ( k2-k1+1 < 1 ) RETURN
+        ALLOCATE( msg_buff(k2-k1+1) ) 
+        msg_buff(1:k2-k1+1) = msg_d(k1:k2)
+        msglen = size(msg_buff)
+        !
+#if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
+        CALL reduce_base_real_gpu( 2 * msglen, msg_buff, gid, -1 )
+        ! No need for final syncronization
+#else
+        CALL reduce_base_real( 2 * msglen, msg_buff, gid, -1 )
+        ierr = cudaDeviceSynchronize()  ! This syncs __MPI for small copies
+#endif
+        !
+        msg_d(k1:k2) = msg_buff(1:k2-k1+1) 
+        DEALLOCATE( msg_buff ) 
+#endif
+        !
+      END SUBROUTINE mp_sum_cm_nc1_gpu
+
+      SUBROUTINE mp_sum_cm_nc2_gpu(msg_d, k1, k2, k3, k4, gid)
+        ! for non-contiguous 2D arrays
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
-        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT (IN) :: k1, k2, k3, k4 
         INTEGER, INTENT (IN) :: gid
         COMPLEX (DP), ALLOCATABLE :: msg_buff(:,:) 
@@ -5028,31 +5139,26 @@ END SUBROUTINE mp_type_free
           RETURN
         END IF
         !
+#if defined(__MPI)
+        IF ( min(k2-k1+1,k4-k3+1) < 1 ) RETURN
         ALLOCATE( msg_buff(k2-k1+1,k4-k3+1) ) 
-
         msg_buff(1:k2-k1+1,1:k4-k3+1) = msg_d(k1:k2,k3:k4)
         msglen = size(msg_buff)
         !
-#if defined(__MPI)
 #if defined(__GPU_MPI)
-        !msglen = size(msg_buff)
         ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_buff, gid, -1 )
         ! No need for final syncronization
 #else
-        !ALLOCATE( msg_h, source=msg_buff ) ! This syncs __MPI case
-        !msglen = size(msg_h)
-        !msglen = size(msg_buff)
         CALL reduce_base_real( 2 * msglen, msg_buff, gid, -1 )
-        !msg_buff = msg_h; DEALLOCATE(msg_h)
         ierr = cudaDeviceSynchronize()  ! This syncs __MPI for small copies
-#endif
 #endif
         !
         msg_d(k1:k2,k3:k4) = msg_buff(1:k2-k1+1,1:k4-k3+1) 
         DEALLOCATE( msg_buff ) 
+#endif
         !
-      END SUBROUTINE mp_sum_cm_nc_gpu
+      END SUBROUTINE mp_sum_cm_nc2_gpu
 !
 !------------------------------------------------------------------------------!
 !

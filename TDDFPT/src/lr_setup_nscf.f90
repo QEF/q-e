@@ -26,7 +26,6 @@ SUBROUTINE lr_setup_nscf ()
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ityp, zv
   USE force_mod,          ONLY : force
-  USE basis,              ONLY : natomwfc
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
