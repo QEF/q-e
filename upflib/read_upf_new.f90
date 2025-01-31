@@ -545,7 +545,7 @@ CONTAINS
     INTEGER, INTENT(INOUT) :: ierr
     !
     INTEGER :: nw, ind, l
-    CHARACTER(LEN=8) :: tag
+    CHARACTER(LEN=9) :: tag
     !
     allocate ( upf%chi(1:upf%mesh,upf%nwfc) )
     allocate ( upf%els(upf%nwfc), &
