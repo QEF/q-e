@@ -2165,7 +2165,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
                                       conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
                                       diago_thr_init, diago_full_acc, exx_nstep, real_space_q,&
-                                      real_space_beta, diago_cg_maxiter, diago_ppcg_maxiter,&
+                                      real_space_beta, diago_cg_maxiter, &
                                       diago_david_ndim, diago_rmm_ndim, diago_gs_nblock, diago_rmm_conv &
                                       )
     !
@@ -2187,7 +2187,6 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: diago_thr_init
     LOGICAL,INTENT(IN) :: diago_full_acc
     INTEGER,OPTIONAL,INTENT(IN) :: diago_cg_maxiter
-    INTEGER,OPTIONAL,INTENT(IN) :: diago_ppcg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_david_ndim
     INTEGER,OPTIONAL,INTENT(IN) :: diago_rmm_ndim
     INTEGER,OPTIONAL,INTENT(IN) :: diago_gs_nblock
@@ -2230,12 +2229,6 @@ MODULE qes_init_module
       obj%diago_cg_maxiter = diago_cg_maxiter
     ELSE
       obj%diago_cg_maxiter_ispresent = .FALSE.
-    END IF
-    IF ( PRESENT(diago_ppcg_maxiter)) THEN
-      obj%diago_ppcg_maxiter_ispresent = .TRUE. 
-      obj%diago_ppcg_maxiter = diago_ppcg_maxiter
-    ELSE
-      obj%diago_ppcg_maxiter_ispresent = .FALSE.
     END IF
     IF ( PRESENT(diago_david_ndim)) THEN
       obj%diago_david_ndim_ispresent = .TRUE. 

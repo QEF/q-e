@@ -39,16 +39,16 @@ SUBROUTINE usnldiag (npw, npol, h_diag, s_diag)
   ! number of polarizations (2 for noncolinear, 1 for colinear)
   REAL(dp), INTENT(out) :: h_diag (npwx,npol)
   ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag (npwx,npol)
+  REAL(dp), INTENT(out) :: s_diag (npwx,npol)
   ! the diagonal part of the S matrix
   !
-  INTEGER :: ig
+  INTEGER :: i
   !$acc data present( g2kin ) present_or_copyout( h_diag, s_diag )
   !
-  !$acc parallel loop 
-  DO ig = 1, npw
-     h_diag(ig,1:npol) = g2kin(ig) + v_of_0
-     s_diag(ig,1:npol) = 1.d0
+  !$acc parallel loop
+  DO i = 1, npw
+     h_diag(i,1:npol) = g2kin(i) + v_of_0
+     s_diag(i,1:npol) = 1.d0
   END DO
   !
   IF (noncolin) THEN
@@ -68,7 +68,7 @@ CONTAINS
     COMPLEX(DP), ALLOCATABLE :: pc1(:,:,:), pc2(:,:,:)
     !$acc declare device_resident(pc1, pc2)
     COMPLEX(DP) :: ac
-    INTEGER :: ikb, jkb, ih, jh, na, nt, ipol, nhnt, offset
+    INTEGER :: ig, ikb, jkb, ih, jh, na, nt, ipol, nhnt, offset
     !
     IF ( nhm == 0 ) RETURN
     !
@@ -126,7 +126,7 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: pr1(:,:), pr2(:,:)
     !$acc declare device_resident(pr1, pr2)
     REAL(DP)    :: ar
-    INTEGER :: ikb, jkb, ih, jh, na, nt, nhnt, offset
+    INTEGER :: ig, ikb, jkb, ih, jh, na, nt, nhnt, offset
     !
     IF ( nhm == 0 ) RETURN
     !

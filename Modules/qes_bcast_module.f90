@@ -1471,9 +1471,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%diago_cg_maxiter_ispresent, ionode_id, comm)
     IF (obj%diago_cg_maxiter_ispresent) &
       CALL mp_bcast(obj%diago_cg_maxiter, ionode_id, comm)
-    CALL mp_bcast(obj%diago_ppcg_maxiter_ispresent, ionode_id, comm)
-    IF (obj%diago_ppcg_maxiter_ispresent) &
-      CALL mp_bcast(obj%diago_ppcg_maxiter, ionode_id, comm)
     CALL mp_bcast(obj%diago_david_ndim_ispresent, ionode_id, comm)
     IF (obj%diago_david_ndim_ispresent) &
       CALL mp_bcast(obj%diago_david_ndim, ionode_id, comm)

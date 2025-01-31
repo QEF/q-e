@@ -120,7 +120,7 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
    USE qpoint,               ONLY : xq
    USE control_ph,           ONLY : lnoloc
    USE control_lr,           ONLY : lgamma, niter_ph, nmix_ph, tr2_ph, alpha_mix, convt, &
-                                    lgamma_gamma, flmixdpot, where_rec
+                                    lgamma_gamma, flmixdpot, where_rec, lmultipole
    USE dv_of_drho_lr,        ONLY : dv_of_drho
    USE ldaU,                 ONLY : lda_plus_u
    USE lr_nc_mag,            ONLY : int3_nc_save
@@ -382,6 +382,17 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
       !
       IF (.NOT. lgamma_gamma) THEN
          CALL psymdvscf(drhop)
+         IF (lmultipole) THEN !FM: density computed for the first representation only, needs to be symmetrized
+            IF (doublegrid) then
+               DO is = 1, nspin_mag
+                  DO ipert = 1, npert
+                     CALL fft_interpolate(dfftp, drhop(:, is, ipert), dffts, drhos(:, is, ipert))
+                  ENDDO
+               ENDDO
+            ELSE
+              CALL zcopy(npert * nspin_mag * dfftp%nnr, drhop, 1, drhos, 1)
+            ENDIF
+         ENDIF
          !
          IF (okpaw) THEN
             IF (option == 'phonon') THEN
@@ -404,9 +415,9 @@ SUBROUTINE dfpt_kernel(code, npert, iter0, lrdvpsi, iudvpsi, dr2, drhos, drhop, 
             ! No local field effect: set dvscf to 0
             dvscftmp(:, :, ipert) = (0.d0, 0.d0)
          ELSE
-            IF (PRESENT(drhoc)) THEN
+            IF (PRESENT(drhoc) .AND. .NOT. lmultipole) THEN
                CALL dv_of_drho(dvscftmp(1, 1, ipert), drhoc = drhoc(:, ipert))
-            ELSE
+            ELSE !FM: as the case of solve_e
                CALL dv_of_drho(dvscftmp(1, 1, ipert))
             ENDIF
          ENDIF

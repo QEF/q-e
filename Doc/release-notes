@@ -2,7 +2,14 @@ New in development version:
   * Interface between Wannier90 and DFT+U to use Wannier functions as
     Hubbard projectors (I. Timrov, A. Carta, C. Ederer et al., arXiv:2411.03937)
   * Extension of pp.x to visualize Hubbard projectors of DFT+U (I. Timrov)
-  * Modularization of DFPT routines into dfpt_kernel by Jae-Mo Lihm
+  * Modularization of DFPT routines into dfpt_kernel (Jae-Mo Lihm)
+  * End support for PPCG diagonalization (I.C.)
+  * CUDA Fortran replaced by OpenACC almost everywhere (I.C., PG)
+  * Dynamical quadrupoles, octupoles, and Taylor expansion of the dielectric
+    response function, courtesy Francesco Macheda et al.
+    (Phys. Rev. B 110, 094306,https://doi.org/10.1103/PhysRevB.110.094306).
+  * Implemented NVT dynamics with Nose-Hoover thermostats with Verlet and velocity-Verlet engines
+  * Implemented NPT dynamics with Nose-Hoover thermostats, Parrinello-Rahman and Wentzcovich barostats and Beeman MD engine.  
 
 Fixed in 7.4.1 version:
   * Error in qexml_init might cause EPW to fail in some cases

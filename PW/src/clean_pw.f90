@@ -1,5 +1,5 @@
 
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,6 @@ SUBROUTINE clean_pw( lflag )
   !! phonon, vc-relax). Beware: the new calculation should not CALL any
   !! of the routines mentioned above.
   !
-  USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
   USE fixed_occ,            ONLY : f_inp
@@ -72,9 +71,6 @@ SUBROUTINE clean_pw( lflag )
 #if defined (__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
   USE environ_base_module,  ONLY : clean_environ
-#endif
-#if defined (__CUDA)
-  USE cudafor
 #endif
   !
   IMPLICIT NONE
@@ -169,7 +165,6 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   CALL deallocate_wfc ( )
-  IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
   ! ... fft structures allocated in data_structure.f90  
   !

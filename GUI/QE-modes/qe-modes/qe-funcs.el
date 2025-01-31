@@ -6330,13 +6330,6 @@ ENDRULES
   )
 
 
-(defun pw-diago_ppcg_maxiter ()
-  (interactive)
-  (let ((value (read-string "Value of diago_ppcg_maxiter: ")))
-    (insert "diago_ppcg_maxiter = " value))
-  )
-
-
 (defun pw-diago_rmm_conv ()
   (interactive)
   (let ((value (read-string "Value of diago_rmm_conv: ")))

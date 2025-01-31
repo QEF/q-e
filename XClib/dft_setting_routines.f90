@@ -499,7 +499,7 @@ CONTAINS
                                    islda, isgradient, ismeta, exx_fraction, &
                                    screening_parameter, gau_parameter,      &
                                    ishybrid, has_finite_size_correction,    &
-                                   is_libxc, exx_term
+                                   is_libxc, exx_term, max_flags
 #if defined(__LIBXC)
     USE xc_f03_lib_m
 #endif
@@ -512,7 +512,7 @@ CONTAINS
 #if defined(__LIBXC)
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, nflags, libxc_flag(17)
+    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, libxc_flag(max_flags)
     REAL(DP) :: omega, alpha, beta
 #endif
     LOGICAL :: is_libxc13, is_libxc12
@@ -581,11 +581,7 @@ CONTAINS
         family = xc_f03_func_info_get_family( xc_info )
         flags_tot = xc_f03_func_info_get_flags( xc_info )
         !
-        nflags = 15
-#if (XC_MAJOR_VERSION > 6)
-        nflags = 16
-#endif
-        DO iflag = nflags, 0, -1
+        DO iflag = max_flags, 0, -1
           libxc_flag(iflag+1) = 0
           IF ( flags_tot-2**iflag < 0 ) CYCLE
           libxc_flag(iflag+1) = 1
@@ -1081,7 +1077,7 @@ CONTAINS
     !! Initialize Libxc functionals, if present.
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac,   &
                                    is_libxc, libxc_initialized, exx_fraction, &
-                                   screening_parameter
+                                   screening_parameter, max_flags
 #if defined(__LIBXC)
     USE xclib_utils_and_para,ONLY: nowarning
     USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list, &
@@ -1094,7 +1090,7 @@ CONTAINS
     LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
     INTEGER :: i, ii, iid, iexx, iscr, ip, nspin0, iflag, family
-    INTEGER :: id_vec(6), flags_tot, nflags
+    INTEGER :: id_vec(6), flags_tot
     !
 #if defined(__LIBXC)
     CHARACTER(LEN=100) :: pdesc
@@ -1122,16 +1118,17 @@ CONTAINS
         family = xc_f03_func_info_get_family( xc_info(iid) )
         !
         flags_tot = xc_f03_func_info_get_flags( xc_info(iid) )
-        nflags = 15
-#if (XC_MAJOR_VERSION > 6)
-        nflags = 16
-#endif
-        DO iflag = nflags, 0, -1
+        !
+        DO iflag = max_flags, 0, -1
           libxc_flags(iid,iflag) = 0
           IF ( flags_tot-2**iflag < 0 ) CYCLE
           libxc_flags(iid,iflag) = 1
           flags_tot = flags_tot-2**iflag
         ENDDO
+        !
+#if (XC_MAJOR_VERSION >= 7)
+        IF (libxc_flags(iid,17)==1) CALL xc_f03_func_set_fhc_enforcement(xc_func(iid),.FALSE.)
+#endif
         !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
         DO ip = 0, n_ext_params(iid)-1

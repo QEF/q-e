@@ -44,9 +44,9 @@
                                 ip_diagonalization=>diagonalization, mixing_mode, mixing_beta,                        &
                                 mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, exx_maxstep, electron_maxstep,       &
                                 diago_thr_init, diago_full_acc,                                                       & 
-                                diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
+                                diago_cg_maxiter, diago_david_ndim,                               &
                                 diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock,                                      &
-                                nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
+                                nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk, ip_labelk => labelk,     &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
                                 bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2,            &
@@ -473,7 +473,7 @@
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
                                    mixing_ndim, exx_maxstep, electron_maxstep, tqr, real_space, tq_smoothing, &
                                    tbeta_smoothing, diago_thr_init, &
-                                   diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
+                                   diago_full_acc, diago_cg_maxiter, diago_david_ndim, &
                                    diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
@@ -486,7 +486,7 @@
 
   ELSE 
      CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
-                                   alat,a1, ibrav_lattice,ip_xk, ip_wk)
+                                   alat,a1, ibrav_lattice,ip_xk, ip_wk,ip_labelk)
 
   END IF
   !--------------------------------------------------------------------------------------------------------------------------------

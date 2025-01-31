@@ -1561,7 +1561,7 @@ SUBROUTINE postahc_read_unformatted_file(filename, irec, array)
   IF (ios /= 0) CALL errore('postahc', 'Error opening ' // TRIM(filename), 1)
   READ(iun, REC=irec) array
   CLOSE(iun, STATUS='KEEP')
-END
+END SUBROUTINE
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------

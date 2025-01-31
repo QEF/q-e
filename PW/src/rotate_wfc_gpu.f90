@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_wfc_gpu &
-            ( npwx, npw, nstart, gstart, nbnd, psi, npol, overlap, evc_d, e_d )
+            ( npwx, npw, nstart, gstart, nbnd, psi, npol, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Driver routine (maybe it should be an interface) for
@@ -34,13 +34,10 @@ SUBROUTINE rotate_wfc_gpu &
     ! number of spin polarizations
   LOGICAL, INTENT(IN) :: overlap
     ! if .FALSE. : S|psi> not needed
-  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nstart), evc_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nstart), evc(npwx*npol,nbnd)
     ! input and output eigenvectors (may overlap)
-  REAL(DP), INTENT(OUT) :: e_d(nbnd)
+  REAL(DP), INTENT(OUT) :: e(nbnd)
     ! eigenvalues
-#if defined(__CUDA)
-  attributes(DEVICE)       :: evc_d, e_d
-#endif
   COMPLEX(DP), ALLOCATABLE :: psi_h(:,:), evc_h(:,:)
   REAL(DP), ALLOCATABLE    :: e_h(:)
   EXTERNAL h_psi, s_psi, h_psi_gpu, s_psi_acc
@@ -61,7 +58,7 @@ SUBROUTINE rotate_wfc_gpu &
      ALLOCATE(psi_h(npwx*npol,nstart), evc_h(npwx*npol,nbnd), e_h(nbnd))
      !$acc update self(psi)
      psi_h(1:npwx*npol,1:nstart) = psi(1:npwx*npol,1:nstart)
-     evc_h(1:npwx*npol,1:nbnd) = evc_d(1:npwx*npol,1:nbnd)
+     evc_h(1:npwx*npol,1:nbnd) = evc(1:npwx*npol,1:nbnd)
      !
      ! use data distributed subroutine
      !
@@ -80,8 +77,8 @@ SUBROUTINE rotate_wfc_gpu &
      END IF
      psi(1:npwx*npol,1:nstart) = psi_h(1:npwx*npol,1:nstart)
      !$acc update device(psi)
-     evc_d(1:npwx*npol,1:nbnd)   = evc_h(1:npwx*npol,1:nbnd)
-     e_d(1:nbnd)                 = e_h(1:nbnd)
+     evc(1:npwx*npol,1:nbnd)   = evc_h(1:npwx*npol,1:nbnd)
+     e(1:nbnd)                 = e_h(1:nbnd)
      DEALLOCATE(psi_h, evc_h, e_h)
      !
   ELSE
@@ -91,14 +88,14 @@ SUBROUTINE rotate_wfc_gpu &
      IF ( gamma_only ) THEN
   !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
-        CALL rotate_wfc_gamma_gpu ( h_psi_gpu, s_psi_acc, overlap, &
-                                    npwx, npw, nstart, nbnd, psi, evc_d, e_d )
+        CALL rotate_wfc_gamma ( h_psi_gpu, s_psi_acc, overlap, &
+                                    npwx, npw, nstart, nbnd, psi, evc, e )
         !
      ELSE
   !write (*,*) 'inside serial k'; FLUSH(6)
         !
-        CALL rotate_wfc_k_gpu ( h_psi_gpu, s_psi_acc, overlap, &
-                                npwx, npw, nstart, nbnd, npol, psi, evc_d, e_d )
+        CALL rotate_wfc_k ( h_psi_gpu, s_psi_acc, overlap, &
+                                npwx, npw, nstart, nbnd, npol, psi, evc, e )
         !
      END IF
      !

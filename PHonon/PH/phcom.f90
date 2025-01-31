@@ -401,6 +401,10 @@ MODULE units_ph
   !! length of DV_SCF * psi
   INTEGER :: iugauge
   !! Unit for reading and writing gauge information in ahc.f90
+  INTEGER :: iudumpdrho
+  !! Unit to print the macroscopic density at q
+  INTEGER :: iurhoun
+  !! Unit to print the epsilon at q
   !
   LOGICAL, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)

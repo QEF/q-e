@@ -2,7 +2,7 @@
 exe = XXXXXX/test-suite/run-pw.sh
 extract_program = XXXXXX/test-suite/extract-pw.sh
 inputs_args = ('*.in', '')
-run_cmd_template = tc.program tc.input tc.output tc.error
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (8.0e+0, 1.0e+1, 'n1'),
               (1.0e-3, None,   'f1'),
@@ -59,7 +59,10 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (1.0e-3, 1.0e-5, 'rlatt_cart'),
               (1.0e-3, 1.0e-5, 'rlatt_crys'),
               (5.0e-1,   None, 'sum_w_pot'),
-              (5.0e-4, 1.0e-2, 'postahc_selfen'))
+              (5.0e-4, 1.0e-2, 'postahc_selfen'),
+              (1.0e-2, 1.0e-2, 'quad'),
+              (1.0e-1, 1.0e-2, 'epsil'))
+
 skip_program = grep
 skip_args = 'not present in this version'
 

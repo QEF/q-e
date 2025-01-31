@@ -20,7 +20,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE cell_base,        ONLY : tpiba
   USE fft_base,         ONLY : dfftp, dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g
+  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g, gg
   USE gvecs,            ONLY : ngms
   USE lsda_mod,         ONLY : lsda, current_spin
   USE noncollin_module, ONLY : nspin_mag
@@ -29,6 +29,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE qpoint,           ONLY : xq, eigqts
   USE modes,            ONLY : nmodes
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
+  USE control_lr,       ONLY : lmultipole
   !
   IMPLICIT NONE
   !
@@ -56,6 +57,8 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   complex(DP), allocatable :: aux (:,:)
   complex(DP), pointer :: auxs (:)
   COMPLEX(DP), ALLOCATABLE :: drhoc(:)
+  COMPLEX(DP), EXTERNAL :: Vaeps_dvloc
+  COMPLEX(DP) :: pot
   !
 #if defined(__CUDA)
   INTEGER, POINTER, DEVICE :: nl_d(:), nlp_d(:)
@@ -161,6 +164,13 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      deallocate (aux)
      deallocate (auxs)
   endif
+  !
+  IF (lmultipole .AND. gg(1) < 1d-8) THEN !FM: refer potential to all-electron calculation, see routine description
+    pot = Vaeps_dvloc(uact, dffts%nl(1))
+    !$acc kernels
+    dvlocin(dffts%nl(1)) = dvlocin(dffts%nl(1)) + pot
+    !$acc end kernels
+  ENDIF
   !
   ! Now we compute dV_loc/dtau in real space
   !

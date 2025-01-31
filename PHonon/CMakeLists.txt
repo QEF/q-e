@@ -71,6 +71,7 @@ set(src_ph
     PH/dvqhub_barepsi_us2.f90
     PH/delta_sphi.f90
     PH/dpsi_orth.f90
+    PH/dump_drho.f90
     PH/ep_matrix_element_wannier.f90
     PH/elph.f90
     PH/el_ph_collect.f90
