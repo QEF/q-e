@@ -1,0 +1,49 @@
+# MINT input (MINpuT) file that outputs structural information for a graphene flake twisted with respect to an hBN substrate
+
+# Specify the format of the flake and substrate input files based on the DFT code
+INPUT_FORMAT  CIF # JDFTx, CIF
+
+# Specify the format that the lattice and ionpos of the MINT system should be dumped in
+OUTPUT_FORMAT CIF # JDFTx, XSF, CIF, PWscf, POSCAR
+
+# Include files to specify a unitcell of the substrate material
+SubstrateCIF hBN.cif
+
+# Include files to specify a unitcell of the flake material
+FlakeCIF graphene.cif
+
+# Specify whether to use the hydrogen termination scheme for the flake
+FlakeTermination Y   # 
+TermAtomDist 1.09 Angstrom
+
+# JDFTx specific hyperplane constraint commands for the flake
+FlakeEdgeHPC N     # To be implemented:  Y/N add hyperplane constraints to the flake edges
+FlakeXCOMHPC N     # To be implemented:  Y/N constrain the flake's X-COM
+FlakeYCOMHPC N     # To be implemented:  Y/N constrain the flake's Y-COM
+FlakeRotaHPC N     # To be implemented:  Y/N constrain the flake's rotation
+
+# Specify the Flake's: size, shape, shift, and rotation  
+FlakeSupercell 4 4      # can be fractional
+# FlakeCut      [center-x] [center-y] [normal-x] [normal-y] [latticeFlake, bohr, Angstrom]
+FlakeCut 8 0 -1 0 bohr
+FlakeCut 0 2 0 1 bohr
+FlakeCut 0 14 0 -1 bohr
+FlakeCut 5 11.5 -1 -1 bohr
+FlakeCut -1 4 1 1 bohr
+FlakeCut -5 0 1 0 bohr
+
+FlakeRotate     45 deg 1.333333 1.333333 latticeFlake   # [angle] [rad/deg] [x] [y] [latFlake, bohr, Angstrom]
+FlakeShift      1.0 0.0 latticeSubstrate # [x] [y] [latFlake, latSubstrate, bohr, Angstrom]
+
+# Used to generate a substrate supercell that accommodates the flake
+MinVacuumPad 5.0 8.0 bohr # Minimum distance between periodic flake images
+                        # The two numbers correspond to the substrate lattice directions
+                        # 0.0 can be used to indicate a commensurate lock-in
+
+InterlayerDistance 5.0 bohr # Distance between top of substrate and bottom of flake
+LatticeVectorC 0.0 0.0 25.0 bohr # The third non-planar lattice vector
+                                # The user should think carefully about what this should be
+                                # Choose it large enough in the z-dir for a 2D system
+                                # The first two values can be used for stacking registry
+
+
