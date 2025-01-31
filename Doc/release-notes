@@ -5,6 +5,8 @@ Fixed in 7.4.1 version
   * Bad weights occasionally written by matdyn.x
   * ESM stress for 'bc3' case now works
   * Glitches reading some specific  pseudopotentials (pw.x, neb.x)
+  * "spinor: j and l not compatible" error in some cases with spin-orbit
+
 Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
