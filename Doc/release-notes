@@ -1,3 +1,10 @@
+Fixed in 7.4.1 version 
+  Fixed in 7.4.1 version:
+  * Error in qexml_init might cause EPW to fail in some cases
+  * Case tefield=.true.: bad xml tag written
+  * Bad weights occasionally written by matdyn.x
+  * ESM stress for 'bc3' case now works
+  * Glitches reading some specific  pseudopotentials (pw.x, neb.x)
 Incompatible changes in 7.4 version:
   * Parameter lambda for fixed_magnetization = 'atomic' and 'atomic direction'
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
