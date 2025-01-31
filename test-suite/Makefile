@@ -14,16 +14,17 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests-XX [NPROCS=N]        : run tests [optionally, on N processors]'
+	@echo ' run-tests-XX [NPROCS=N NBGRP=M]  : run tests [optionally, on N processors and M band groups]'
 	@echo ' for XX=pw, cp, ph, pp, hp, tddfpt, kcw, all_currents, epw, zg, xsd-pw'
-	@echo ' run-tests [NPROCS=N]           : run all tests above (except the last four)'
-	@echo ' run-custom-test testdir=DIR [NPROCS=N]: run test in DIR only'
-	@echo ' compare                     : compare last output with reference'
-	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
-	@echo ' clean                       : clean stdout/sderr of all tests'
+	@echo ' run-tests [NPROCS=N]             : run all tests above (except the last four)'
+	@echo ' run-custom-test testdir=DIR [NPROCS=N NBGRP=M]: run test in DIR only'
+	@echo ' compare                          : compare last output with reference'
+	@echo ' pseudo                           : download needed PPs into ESPRESSO_PSEUDO'
+	@echo ' clean                            : clean stdout/sderr of all tests'
 	@echo ' '
 	@echo 'For additional advanced commands and settings please manually inspect'
 	@echo 'ENVIRONMENT and Makefile files'
+	@echo 'NBGRP is ignored if NPROCS is not set'
 
 prolog :
 	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
@@ -46,7 +47,7 @@ run-tests-cp : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw : prolog pseudo
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
+	env QE_USE_MPI=$(NPROCS) env QE_USE_BGRP=$(NBGRP) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 run-tests-ph : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
@@ -83,7 +84,7 @@ run-travis : clean prolog pseudo
 
 run-custom-test : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
+	env QE_USE_MPI=$(NPROCS) env QE_USE_BGRP=$(NBGRP) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 run-tests-xsd-pw : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \

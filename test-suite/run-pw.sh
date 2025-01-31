@@ -11,6 +11,11 @@
 if [[ "$QE_USE_MPI" != "" ]]; then
   export PARA_PREFIX="mpirun -np $QE_USE_MPI"
   export PARA_SUFFIX=" "
+  if [[ "$QE_USE_BGRP" != "" ]]; then
+    export PARA_SUFFIX=" -nb $QE_USE_BGRP "
+  fi
+elif [[ "$QE_USE_BGRP" != "" ]]; then
+  echo "WARNING: ignoring NBGRP because NPROCS is not set"
 else
   unset PARA_PREFIX
   unset PARA_SUFFIX
