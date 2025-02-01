@@ -11,7 +11,7 @@ A framework for regression testing numerical programs.
 from __future__ import print_function
 import glob
 import os
-import pipes
+import shlex
 import shutil
 import subprocess
 import sys
@@ -101,13 +101,13 @@ class TestProgram:
                 input_file, args)
 
         # Need to escape filenames for passing them to the shell.
-        exe = pipes.quote(self.exe)
-        output_file = pipes.quote(output_file)
-        error_file = pipes.quote(error_file)
+        exe = shlex.quote(self.exe)
+        output_file = shlex.quote(output_file)
+        error_file = shlex.quote(error_file)
 
         cmd = self.run_cmd_template.replace('tc.program', exe)
         if type(input_file) is str:
-            input_file = pipes.quote(input_file)
+            input_file = shlex.quote(input_file)
             cmd = cmd.replace('tc.input', input_file)
         else:
             cmd = cmd.replace('tc.input', '')
@@ -128,18 +128,18 @@ class TestProgram:
                 input_file, args)
         bench_file = self.select_benchmark_file(path, input_file, args)
         cmd = self.extract_cmd_template
-        cmd = cmd.replace('tc.extract', pipes.quote(self.extract_program))
+        cmd = cmd.replace('tc.extract', shlex.quote(self.extract_program))
         cmd = cmd.replace('tc.args', self.extract_args)
         if self.verify:
             # Single command to compare benchmark and test outputs.
-            cmd = cmd.replace('tc.test', pipes.quote(test_file))
-            cmd = cmd.replace('tc.bench', pipes.quote(bench_file))
+            cmd = cmd.replace('tc.test', shlex.quote(test_file))
+            cmd = cmd.replace('tc.bench', shlex.quote(bench_file))
             return (cmd,)
         else:
             # Need to return commands to extract data from the test and
             # benchmark outputs.
-            test_cmd = cmd.replace('tc.file', pipes.quote(test_file))
-            bench_cmd = cmd.replace('tc.file', pipes.quote(bench_file))
+            test_cmd = cmd.replace('tc.file', shlex.quote(test_file))
+            bench_cmd = cmd.replace('tc.file', shlex.quote(bench_file))
             return (bench_cmd, test_cmd)
 
     def skip_cmd(self, input_file, args):
@@ -147,9 +147,9 @@ class TestProgram:
         test_file = util.testcode_filename(FILESTEM['test'], self.test_id,
                 input_file, args)
         cmd = self.skip_cmd_template
-        cmd = cmd.replace('tc.skip', pipes.quote(self.skip_program))
+        cmd = cmd.replace('tc.skip', shlex.quote(self.skip_program))
         cmd = cmd.replace('tc.args', self.skip_args)
-        cmd = cmd.replace('tc.test', pipes.quote(test_file))
+        cmd = cmd.replace('tc.test', shlex.quote(test_file))
         return cmd
 
     def select_benchmark_file(self, path, input_file, args):
@@ -263,9 +263,9 @@ class Test:
                         out = self.output
                         if not compat.compat_any(wild in self.output for wild in
                                 ['*', '?', '[', '{']):
-                            out = pipes.quote(self.output)
+                            out = shlex.quote(self.output)
                         test_cmds[ind] = '%s; mv %s %s' % (test_cmds[ind],
-                                out, pipes.quote(test_files[ind]))
+                                out, shlex.quote(test_files[ind]))
                 test_cmds = ['\n'.join(test_cmds)]
             for (ind, test) in enumerate(test_cmds):
                 job = self.start_job(test, cluster_queue, verbose)
