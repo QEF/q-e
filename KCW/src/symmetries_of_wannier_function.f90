@@ -45,6 +45,7 @@ SUBROUTINE symmetries_of_wannier_function()
     COMPLEX(DP), ALLOCATABLE :: rhowann_aux(:)
     COMPLEX(DP), ALLOCATABLE :: rho_rotated(:,:)
     COMPLEX(DP), ALLOCATABLE :: rhog(:)
+    COMPLEX(DP), ALLOCATABLE :: rhog_all(:,:)
     CHARACTER (LEN=256)      :: file_base
     REAL(DP)                 :: Gvector(3), Gvector_cryst(3)
     CHARACTER (LEN=6), EXTERNAL :: int_to_char
@@ -70,6 +71,7 @@ SUBROUTINE symmetries_of_wannier_function()
     ALLOCATE (rhowann ( nrho, dffts%nnr, nkstot/nspin, num_wann) )
     ALLOCATE ( rhowann_aux(dffts%nnr) )
     ALLOCATE ( rhowann_(nrho,dffts%nnr,nqstot,num_wann) )
+    ALLOCATE ( rhog_all(ngms,nrho) )
     ALLOCATE ( rho_rotated(nrho, dffts%nnr) )
     ALLOCATE( phase (dffts%nnr) )
     ALLOCATE ( nsym_w_k(num_wann) )
@@ -206,11 +208,11 @@ SUBROUTINE symmetries_of_wannier_function()
           DO ip = 1, nrho 
             rhowann_aux(:) = rhowann_(ip,:,iq, iwann)
             CALL fwfft ('Rho', rhowann_aux(:), dffts)
-            rho_rotated(ip,:)  = rhowann_aux(dffts%nl(:))    
+            rhog_all(:,ip)  = rhowann_aux(dffts%nl(:))    
           END DO
-          CALL sym_rho(nrho, rho_rotated, is_sym)
+          CALL sym_rho(nrho, rhog_all, is_sym)
           DO ip = 1, nrho
-            rhowann_aux(dffts%nl(:)) = rho_rotated(ip,:)  
+            rhowann_aux(dffts%nl(:)) = rhog_all(:,ip)  
             CALL invfft ('Rho', rhowann_aux(:), dffts)
             rho_rotated(ip,:) = rhowann_aux(:)
           END DO
@@ -319,6 +321,7 @@ SUBROUTINE symmetries_of_wannier_function()
     END DO !iwann 
     !
     DEALLOCATE(rhowann_)
+    DEALLOCATE(rhog_all)
     !
     CALL stop_clock ( 'check_symm' )
     !
