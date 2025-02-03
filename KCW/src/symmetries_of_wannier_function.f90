@@ -68,11 +68,11 @@ SUBROUTINE symmetries_of_wannier_function()
     !
     IMAG = CMPLX(0.D0, 1.D0, kind=DP)
     ALLOCATE ( rhog (ngms) )
-    ALLOCATE (rhowann ( nrho, dffts%nnr, nkstot/nspin, num_wann) )
+    ALLOCATE (rhowann ( dffts%nnr, nkstot/nspin, num_wann, nrho) )
     ALLOCATE ( rhowann_aux(dffts%nnr) )
-    ALLOCATE ( rhowann_(nrho,dffts%nnr,nqstot,num_wann) )
+    ALLOCATE ( rhowann_(dffts%nnr,nqstot,num_wann, nrho) )
     ALLOCATE ( rhog_all(ngms,nrho) )
-    ALLOCATE ( rho_rotated(nrho, dffts%nnr) )
+    ALLOCATE ( rho_rotated( dffts%nnr, nrho) )
     ALLOCATE( phase (dffts%nnr) )
     ALLOCATE ( nsym_w_k(num_wann) )
     ALLOCATE ( nsym_w_q(num_wann) )
@@ -131,13 +131,13 @@ SUBROUTINE symmetries_of_wannier_function()
             rhowann_aux=(0.d0,0.d0)
             rhowann_aux(dffts%nl(:)) = rhog(:)
             CALL invfft ('Rho', rhowann_aux, dffts)
-            rhowann(ip,:,iq, iwann) = rhowann_aux(:)*omega
+            rhowann(:,iq, iwann,ip) = rhowann_aux(:)*omega
             !
           ELSE 
             !
             file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((iwann-1)*nrho+ip))
             CALL read_rhowann( file_base, dffts, rhowann_aux )
-            rhowann(ip,:,iq, iwann) = rhowann_aux(:)
+            rhowann(:,iq, iwann,ip) = rhowann_aux(:)
             !
           ENDIF
           !
@@ -206,7 +206,7 @@ SUBROUTINE symmetries_of_wannier_function()
           !
   
           DO ip = 1, nrho 
-            rhowann_aux(:) = rhowann_(ip,:,iq, iwann)
+            rhowann_aux(:) = rhowann_(:,iq, iwann,ip)
             CALL fwfft ('Rho', rhowann_aux(:), dffts)
             rhog_all(:,ip)  = rhowann_aux(dffts%nl(:))    
           END DO
@@ -214,7 +214,7 @@ SUBROUTINE symmetries_of_wannier_function()
           DO ip = 1, nrho
             rhowann_aux(dffts%nl(:)) = rhog_all(:,ip)  
             CALL invfft ('Rho', rhowann_aux(:), dffts)
-            rho_rotated(ip,:) = rhowann_aux(:)
+            rho_rotated(:, ip) = rhowann_aux(:)
           END DO
   
           x_q_cryst(:)=xk(:,iq)
@@ -237,7 +237,7 @@ SUBROUTINE symmetries_of_wannier_function()
           !
           !
           DO ip = 1, nrho
-              rhowann_aux(:) = rho_rotated(ip,:) - phase(:)*rhowann_(ip,:,iRq,iwann) 
+              rhowann_aux(:) = rho_rotated(:,ip) - phase(:)*rhowann_(:,iRq,iwann,ip) 
               rhowann_aux(:) = rhowann_aux(:)
             !
             ! integrate difference and normalize with respect to number of r points in the grid
@@ -245,7 +245,7 @@ SUBROUTINE symmetries_of_wannier_function()
             delta_rho = SUM( (rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
             CALL mp_sum (delta_rho, intra_bgrp_comm)
             !
-            int_rho_Rq = SUM( phase(:)*rhowann_(ip,:,iRq,iwann)  ) / (dffts%nr1*dffts%nr2*dffts%nr3)
+            int_rho_Rq = SUM( phase(:)*rhowann_(:,iRq,iwann,ip)  ) / (dffts%nr1*dffts%nr2*dffts%nr3)
             CALL mp_sum (int_rho_Rq, intra_bgrp_comm)
             !
             !
