@@ -462,18 +462,13 @@ if(NOT QE_LAPACK_INTERNAL)
         unset(CMAKE_REQUIRED_LINK_OPTIONS)
     endif()
     if(LAPACK_FOUND)
-        list(APPEND _lapack_libs
-            ${BLAS_LIBRARIES}
-            ${BLAS_LINKER_FLAGS}
-            ${LAPACK_LIBRARIES}
-            ${LAPACK_LINKER_FLAGS})
+        target_link_libraries(qe_lapack INTERFACE ${LAPACK_LIBRARIES})
+        target_link_options(qe_lapack INTERFACE ${LAPACK_LINKER_FLAGS})
+        set(CMAKE_REQUIRED_LIBRARIES "${LAPACK_LINKER_FLAGS};${LAPACK_LIBRARIES}")
         if(QE_ENABLE_OPENMP)
-            list(APPEND _lapack_libs ${OpenMP_Fortran_LIBRARIES})
+            target_link_libraries(qe_lapack INTERFACE ${OpenMP_Fortran_LIBRARIES})
+            list(APPEND CMAKE_REQUIRED_LIBRARIES "${OpenMP_Fortran_LIBRARIES}")
         endif()
-        list(REMOVE_DUPLICATES "${_lapack_libs}")
-        message(STATUS "Found LAPACK: ${_lapack_libs}")
-        target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
-        set(CMAKE_REQUIRED_LIBRARIES ${_lapack_libs})
         check_fortran_function_exists(zhpev ZHPEV_FOUND)
         unset(CMAKE_REQUIRED_LIBRARIES)
         if(NOT ZHPEV_FOUND)
