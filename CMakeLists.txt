@@ -148,6 +148,14 @@ set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
 # OSCDFT
 option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
 
+# Expose Fortran module install directory
+# https://gitlab.kitware.com/cmake/cmake/-/issues/19608
+set(QE_INSTALL_Fortran_MODULES ${CMAKE_INSTALL_INCLUDEDIR} CACHE PATH
+        "Fortran module install directory"
+)
+if(IS_ABSOLUTE QE_INSTALL_Fortran_MODULES)
+    message(FATAL_ERROR "Absolute path of QE_INSTALL_Fortran_MODULES is NOT supported.")
+endif()
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
