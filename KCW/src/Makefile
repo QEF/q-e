@@ -57,8 +57,6 @@ kcw_allocate_q.o\
 kcw_deallocate_q.o\
 setup_coulomb_exx.o\
 coulomb.o\
-kcw_set_symm.o\
-rotate_rhowann_r.o\
 symmetries_of_wannier_function.o\
 kcw_kpoint_grid.o\
 write_qlist_ibz.o\

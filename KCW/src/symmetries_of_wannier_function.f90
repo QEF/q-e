@@ -99,10 +99,7 @@ SUBROUTINE symmetries_of_wannier_function()
              iwann, centers(1:3, iwann) 
     END DO
     !
-    ! construct rir
     !
-    CALL kcw_set_symm( dffts%nr1,  dffts%nr2,  dffts%nr3, &
-    dffts%nr1x, dffts%nr2x, dffts%nr3x )  
     nsym_w_k = 0
     nsym_w_q = 0
     !
