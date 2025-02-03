@@ -20,7 +20,7 @@ then
     dirs=" LAXlib FFTXlib/src UtilXlib \
            dft-d3 \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
-	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
+	   KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
            upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src EPW/ZG/src XSpectra/src NEB/src TDDFPT/src \
@@ -81,8 +81,8 @@ for dir in $dirs; do
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/KS_Solvers/Davidson $LEVEL2/KS_Solvers/CG $LEVEL2/KS_Solvers/PPCG $LEVEL2/KS_Solvers/ParO $LEVEL2/KS_Solvers/DENSE $LEVEL2/KS_Solvers/RMM $LEVEL2/dft-d3" ;;
-	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG | KS_Solvers/ParO | KS_Solvers/DENSE | KS_Solvers/RMM )
+	     DEPENDS="$DEPEND2 $LEVEL2/KS_Solvers/Davidson $LEVEL2/KS_Solvers/CG $LEVEL2/KS_Solvers/ParO $LEVEL2/KS_Solvers/DENSE $LEVEL2/KS_Solvers/RMM $LEVEL2/dft-d3" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/ParO | KS_Solvers/DENSE | KS_Solvers/RMM )
 	     DEPENDS="$DEPEND3" ;;
 	PP/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/dft-d3" ;;

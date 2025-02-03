@@ -10,17 +10,17 @@
 SUBROUTINE orthoatwfc (orthogonalize_wfc)
   !-----------------------------------------------------------------------
   !
-  ! This routine calculates atomic wavefunctions, orthogonalizes them
-  ! if "orthogonalize_wfc" is .true., saves them into buffer "iunsat".
-  ! "swfcatom" must be allocated on input.
-  ! Useful for options "wannier" and "one_atom_occupations"
+  !! This routine calculates atomic wavefunctions,
+  !! orthogonalizes them if "orthogonalize_wfc" is .true.,
+  !! saves them into buffer "iunsat" (that must be opened on input)
+  !! Useful for options "wannier" and "one_atom_occupations"
   !
   USE kinds,            ONLY : DP
   USE buffers,          ONLY : save_buffer
   USE io_global,        ONLY : stdout
   USE io_files,         ONLY : iunsat, nwordatwfc
   USE ions_base,        ONLY : nat
-  USE basis,            ONLY : natomwfc, swfcatom
+  USE basis,            ONLY : natomwfc
   USE klist,            ONLY : nks, xk, ngk, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp,             ONLY : nkb, vkb
@@ -38,10 +38,12 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   ! ik: the k point under consideration
   ! ibnd: counter on bands
   LOGICAL :: normalize_only = .FALSE.
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
+  COMPLEX(DP) , ALLOCATABLE ::  wfcatom (:,:)
+  COMPLEX(DP) , ALLOCATABLE :: swfcatom (:,:)
   
   normalize_only=.FALSE.
-  ALLOCATE (wfcatom( npwx*npol, natomwfc))
+  ALLOCATE(  wfcatom(npwx*npol,natomwfc) )
+  ALLOCATE( swfcatom(npwx*npol,natomwfc) )
   !$acc enter data create(wfcatom, swfcatom)
 
   ! Allocate the array becp = <beta|wfcatom>
@@ -70,7 +72,8 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      !
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
-  DEALLOCATE (wfcatom)
+  DEALLOCATE (swfcatom)
+  DEALLOCATE ( wfcatom)
   CALL deallocate_bec_type_acc ( becp )
   !
   RETURN

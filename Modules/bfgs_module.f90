@@ -52,7 +52,7 @@ MODULE bfgs_module
    !
    ! ... public methods
    !
-   PUBLIC :: bfgs, init_bfgs, terminate_bfgs, bfgs_get_n_iter 
+   PUBLIC :: bfgs, init_bfgs, terminate_bfgs, bfgs_get_n_iter  
    !
    ! ... global module variables
    !
@@ -115,6 +115,7 @@ MODULE bfgs_module
    ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
    ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
+   LOGICAL :: use_gdiis_step
    LOGICAL :: bfgs_initialized = .FALSE.
    INTEGER :: stdout
    !! standard output for writing
@@ -139,7 +140,7 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE init_bfgs( stdout_, bfgs_ndim_, trust_radius_max_, &
-                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_)
+                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_, use_gdiis_step_)
      !------------------------------------------------------------------------
      !! set values for several parameters of the algorithm
      !
@@ -152,6 +153,7 @@ CONTAINS
         trust_radius_max_, &
         w_1_,              &
         w_2_
+      LOGICAL,INTENT(IN) :: use_gdiis_step_
      !
      stdout            = stdout_
      bfgs_ndim         = bfgs_ndim_
@@ -160,6 +162,7 @@ CONTAINS
      trust_radius_ini  = trust_radius_ini_
      w_1               = w_1_
      w_2               = w_2_
+     use_gdiis_step = use_gdiis_step_
      bfgs_initialized  = .true.
      !
    END SUBROUTINE init_bfgs
@@ -580,7 +583,11 @@ CONTAINS
       !
       ! ... positions and cell are updated
       !
-      pos(:) = pos(:) + trust_radius * step(:)
+      IF (use_gdiis_step .and. bfgs_ndim .gt. 1 ) THEN 
+         pos(:) = pos + nr_step_length * step(:)
+      ELSE 
+         pos(:) = pos(:) + trust_radius * step(:)
+      END IF 
       !
 1000  stop_bfgs = conv_bfgs
       ! ... input ions+cell variables

@@ -89,13 +89,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !! This routine computes the product of the Hamiltonian matrix with m 
   !! wavefunctions contained in psi.
   !
-#if defined(__CUDA)
-  USE cudafor
-  USE becmod,                  ONLY: calbec
-#endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp
+  USE becmod,                  ONLY: bec_type, becp, calbec
   USE lsda_mod,                ONLY: current_spin
   USE uspp,                    ONLY: nkb, vkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
@@ -229,13 +225,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:calbec' )
-#if defined(__CUDA)
      Call calbec(offload_type, n, vkb, psi, becp, m )
-#endif
      CALL stop_clock( 'h_psi:calbec' )
-     !$acc host_data use_device(hpsi)
-     CALL add_vuspsi_gpu( lda, n, m, hpsi )
-     !$acc end host_data
+     CALL add_vuspsi_acc( lda, n, m, hpsi )
      !
   END IF
   !  

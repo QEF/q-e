@@ -310,8 +310,10 @@ SUBROUTINE setup()
   ! ... are transformed into standard pseudopotentials
   !
   IF ( lspinorb ) THEN
-     IF ( ALL ( .NOT. upf(:)%has_so ) ) &
-          CALL infomsg ('setup','At least one non s.o. pseudo')
+     IF ( ALL ( .NOT. upf(:)%has_so ) ) CALL errore ('setup', &
+         'Spin-orbit calculations require at least one spin-orbit pseudo',1)
+     IF ( ANY ( .NOT. upf(:)%has_so ) ) CALL infomsg ('setup', &
+         'Not all pseudopotentials have spin-orbit data')
   ELSE
      CALL average_pp ( ntyp )
   END IF

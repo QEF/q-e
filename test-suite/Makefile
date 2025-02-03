@@ -159,6 +159,7 @@ clean:
 	@rm -rf ph_1d/dynmat.axsf ph_1d/dynmat.mold
 	@rm -rf ph_2d/bn.frc ph_2d/bn.frq ph_2d/bn.frq.gp
 	@rm -rf ph_twochem/dynq1
+	@rm -rf ph_multipole/*npz ph_multipole/*fmt ph_multipole/*dat* ph_multipole/*pkl ph_multipole/*processing*
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.dyn.freq
 # Special case for PH ahc

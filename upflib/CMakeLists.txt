@@ -49,7 +49,7 @@ set(src_upflib
     write_upf_new.f90
     ylmr2.f90
     dylmr2.f90
-    # GPU
+    # CUDA Fortran routines
     ylmr2_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")
 

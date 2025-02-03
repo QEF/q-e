@@ -35,7 +35,7 @@ subroutine dv_of_drho (dvscf, drhoc)
   USE Coul_cut_2D,       ONLY : do_cutoff_2D  
   USE Coul_cut_2D_ph,    ONLY : cutoff_dv_of_drho 
   USE qpoint,            ONLY : xq
-  USE control_lr,        ONLY : lrpa
+  USE control_lr,        ONLY : lrpa, lnolr
 
   IMPLICIT NONE
   COMPLEX(DP), INTENT(INOUT) :: dvscf(dfftp%nnr, nspin_mag)
@@ -51,10 +51,11 @@ subroutine dv_of_drho (dvscf, drhoc)
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
-  REAL(DP) :: qg2, eh_corr
+  REAL(DP) :: qg2, eh_corr, g2
   ! qg2: the modulus of (q+G)^2
   ! eh_corr: the correction to response Hartree energy due 
   ! to Martyna-Tuckerman correction (calculated, but not used).
+  ! g2: modulus of G^2
   COMPLEX(DP), ALLOCATABLE :: dvaux(:,:), dvhart(:,:), & 
                               dvaux_mt(:), rgtot(:)
   ! dvaux: response XC potential 
@@ -182,10 +183,20 @@ subroutine dv_of_drho (dvscf, drhoc)
          ELSE
             do ig = 1, ngm
                qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-               if (qg2 > 1.d-8) then
-                  dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
-                                 & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
-               endif
+               g2  = g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
+               IF (lnolr) THEN
+                 !
+                 IF (g2 > 1d-8 .AND. qg2 > 1.d-8) THEN
+                    dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
+                                   & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+                 ENDIF
+                 ! 
+               ELSE
+                 if (qg2 > 1.d-8) then
+                    dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
+                                   & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+                 endif
+               ENDIF
             enddo
          ENDIF
          !

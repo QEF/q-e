@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE wfcinit()
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE ions_base,            ONLY : nat, ityp
-  USE basis,                ONLY : natomwfc, swfcatom
+  USE basis,                ONLY : natomwfc
   USE upf_ions,             ONLY : n_atom_wfc
   USE starting_scf,         ONLY : starting_wfc
   USE bp,                   ONLY : lelfield
@@ -62,7 +62,6 @@ SUBROUTINE wfcinit()
      IF ( lda_plus_u ) CALL errore ( 'wfcinit', 'incompatible options', 1 )
      nwordatwfc= npwx*natomwfc*npol
      CALL open_buffer( iunsat, 'satwfc', nwordatwfc, io_level, exst )
-     ALLOCATE( swfcatom(npwx*npol,natomwfc) )
      CALL orthoatwfc ( use_wannier )
      !
   ELSE IF ( lda_plus_u .AND. ( Hubbard_projectors.NE.'pseudo') ) THEN
@@ -221,6 +220,7 @@ SUBROUTINE wfcinit()
      ! ... write  starting wavefunctions to file
      !
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) THEN
+        !$acc update self(evc)
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      END IF
      !
@@ -276,7 +276,6 @@ SUBROUTINE init_wfc ( ik )
   INTEGER :: rnd_idx, ngk_ik
   REAL(DP) :: rr1, rr2, arg, xk_1, xk_2, xk_3
   REAL(DP), ALLOCATABLE :: etatom(:) ! atomic eigenvalues
-  !$acc declare device_resident(etatom)
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
   !
@@ -421,6 +420,7 @@ SUBROUTINE init_wfc ( ik )
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
   ALLOCATE( etatom( n_starting_wfc ) )
+  !$acc enter data create(etatom)
   !
   ! ... Allocate space for <beta|psi>
   !
@@ -439,10 +439,7 @@ SUBROUTINE init_wfc ( ik )
   IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   IF(use_gpu) THEN
-    !$acc host_data use_device(etatom,evc)
     CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
-    !$acc end host_data
-    !$acc update self(evc)
   ELSE
     CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   END IF
@@ -459,6 +456,7 @@ SUBROUTINE init_wfc ( ik )
   !
   CALL deallocate_bec_type_acc ( becp )
   !
+  !$acc exit data delete(etatom)
   DEALLOCATE( etatom )
   !$acc end data
   DEALLOCATE( wfcatom )

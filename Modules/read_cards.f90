@@ -139,7 +139,7 @@ CONTAINS
       !
       IF( tend ) GOTO 120
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
-                                 input_line(1:1) == '!' ) GOTO 100
+          input_line == '/' .OR. input_line(1:1) == '!' ) GOTO 100
       !
       DO i = 1, len_trim( input_line )
          input_line( i : i ) = capital( input_line( i : i ) )
@@ -696,7 +696,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line, buffer
       INTEGER            :: i, j
-      INTEGER            :: nkaux
+      INTEGER            :: nkaux, ierr
       INTEGER, ALLOCATABLE :: wkaux(:)
       REAL(DP), ALLOCATABLE :: xkaux(:,:)
       INTEGER            :: npk_label, nch
@@ -868,12 +868,20 @@ CONTAINS
 !
 !    Reads on input the k points
 !
-            ALLOCATE ( xk(3, nkstot), wk(nkstot) )
+            ALLOCATE ( xk(3, nkstot), wk(nkstot), labelk(nkstot) )
             DO i = 1, nkstot
+               labelk(i) = ''
+               !
                CALL read_line( input_line, end_of_file = tend, error = terr )
                IF (tend) GOTO 10
                IF (terr) GOTO 20
-               READ(input_line,*, END=10, ERR=20) xk(1,i),xk(2,i),xk(3,i),wk(i)
+               !
+               ! Try to read with optional label
+               READ(input_line,*, IOSTAT=ierr) xk(1,i),xk(2,i),xk(3,i),wk(i),labelk(i)
+               !
+               IF (ierr /= 0 ) &
+                  READ(input_line,*, END=10, ERR=20) xk(1,i),xk(2,i),xk(3,i),wk(i)
+               !
             ENDDO
          ENDIF
          !

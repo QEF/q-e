@@ -82,7 +82,6 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_psi_ptr, psi0, spsi0, npw, npwx, nbnd, nvec
   !
   COMPLEX(DP), ALLOCATABLE ::  b(:,:),                        & ! RHS for testing
                                p(:,:), hp(:,:), sp(:,:), z(:,:) ! additional working vetors
-  !$acc declare device_resident(b, z)
 
   REAL(DP), ALLOCATABLE    ::  spsi0vec (:,:) ! the product of spsi0 and a group of vectors
   !$acc declare device_resident(spsi0vec)
@@ -119,7 +118,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_psi_ptr, psi0, spsi0, npw, npwx, nbnd, nvec
   ALLOCATE( z( npwx, block_size ), b( npwx, block_size ) )
   ALLOCATE( p(npwx,block_size), hp(npwx,block_size), sp(npwx,block_size) )
   ALLOCATE( spsi0vec(nbnd, block_size) )
-  !$acc enter data create(p, hp, sp)
+  !$acc enter data create(p, hp, sp, z, b)
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
@@ -415,7 +414,7 @@ SUBROUTINE bpcg_gamma( hs_psi_ptr, g_psi_ptr, psi0, spsi0, npw, npwx, nbnd, nvec
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 
-  !$acc exit data delete(p, hp, sp)
+  !$acc exit data delete(p, hp, sp, z, b)
   DEALLOCATE( spsi0vec )
   DEALLOCATE( b, p, hp, sp, z )
   DEALLOCATE( ethr_cg, ff, ff0, cg_iter )

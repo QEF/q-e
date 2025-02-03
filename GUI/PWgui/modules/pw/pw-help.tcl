@@ -3741,7 +3741,7 @@ MUCH slower than 'david' but uses less memory and is
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'ppcg'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-PPCG iterative diagonalization
+PPCG iterative diagonalization (end support Dec 2024)
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -3802,22 +3802,6 @@ help diago_cg_maxiter -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 For conjugate gradient diagonalization:  max number of iterations
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help diago_ppcg_maxiter -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>diago_ppcg_maxiter</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-For <b>ppcg</b> diagonalization:  max number of iterations
          </pre></blockquote>
 </ul>      
       

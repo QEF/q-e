@@ -348,7 +348,7 @@ run_test_args: arguments to pass to test.run_test method.
         # patterns in the output file--otherwise we can't figure out which
         # output file belongs to which test.  We might be able to for some
         # wildcards, but let's err on the side of caution.
-        wildcards = re.compile('.*(\*|\?|\[.*\]).*')
+        wildcards = re.compile(r'.*(\*|\?|\[.*\]).*')
         serialized_tests = []
         test_store = {}
         for test in tests:

@@ -43,11 +43,11 @@ inputs_args = ('paw-atom.in', ''), ('paw-atom_l=2.in', ''), ('paw-atom_lda.in','
 
 [pw_plugins/]
 program = PW
-inputs_args = ('plugin-pw2casino_1.in', '1'), ('plugin-pw2casino_2.in', '1')
+inputs_args = ('plugin-pw2casino_1.in', '48'), ('plugin-pw2casino_2.in', '48')
 
 [pw_scf/]
 program = PW
-inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-cg-gamma.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-rmm-gamma.in',''), ('scf-rmm-paro-gamma.in',''), ('scf-rmm-k.in',''), ('scf-rmm-paro-k.in',''), ('scf-ppcg-gamma.in',''), ('scf-ppcg-k.in',''), ('scf-gth.in','')
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-cg-gamma.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-rmm-gamma.in',''), ('scf-rmm-paro-gamma.in',''), ('scf-rmm-k.in',''), ('scf-rmm-paro-k.in',''), ('scf-gth.in','')
 
 [pw_spinorbit/]
 program = PW
@@ -59,7 +59,10 @@ inputs_args = ('scf_twochem.in', ''), ('nscf_twochem.in','2'), ('relax_twochem.i
 
 [pw_uspp/]
 program = PW
-inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-cg-gamma.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in',''), ('uspp-ppcg-gamma.in',''), ('uspp-ppcg-k.in','')
+inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-cg-gamma.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in','')
+
+[pw_md/]
+inputs_args = ('md.in','1'), ('md_restart_verlet.in','22'), ('md-wfc_extrap1.in','1'), ('md-wfc_extrap2.in','2'), ('md-pot_extrap1.in','1')  ,('md-pot_extrap2.in','2')
 
 [pw_workflow_vc-relax_dos/]
 program = PW
@@ -144,6 +147,10 @@ inputs_args = ('SiC.scf.in', '1'), ('SiC.phG.in', '2'), ('SiC.phG.restart1.in', 
 [ph_twochem/]
 program = PH
 inputs_args = ('scf_twochem.in', '1'), ('phG_twochem.in','11') 
+
+[ph_multipole/]
+program = PH
+inputs_args = ('scf.in', '12'), ('ph.in.01','2'), ('ph.in.02', '2'), ('ph.in.03', '2'),  ('ph.in.04', '13')  
 
 [epw_base/]
 program = EPW

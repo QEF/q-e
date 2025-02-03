@@ -22,7 +22,6 @@ SUBROUTINE openfil_pw4gww()
   USE io_files,       ONLY : prefix, tmp_dir, iunwfc, nwordwfc, iunsat, nwordatwfc, diropn
   USE noncollin_module, ONLY : npol
   USE ldaU,             ONLY : lda_plus_u
-  USE basis,            ONLY : natomwfc
   USE ions_base,        ONLY : nat, ityp
   USE noncollin_module, ONLY : noncolin
   !

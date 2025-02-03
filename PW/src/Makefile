@@ -15,9 +15,12 @@ add_bfield.o \
 add_efield.o \
 add_dmft_occ.o \
 add_vuspsi.o \
+add_vuspsi_acc.o \
 add_gatefield.o \
 add_paw_to_deeq.o \
+add_paw_to_deeq_acc.o \
 add_vhub_to_deeq.o \
+add_vhub_to_deeq_acc.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \
@@ -30,6 +33,7 @@ atomic_wfc_mod.o \
 average_pp.o \
 acfdt_in_pw.o \
 newd.o \
+newd_acc.o \
 beef.o \
 bp_mod.o \
 bp_c_phase.o \
@@ -273,14 +277,10 @@ oscdft_forces_subs.o \
 d3hess_mod.o
 
 
-# GPU versions of routines
+# CUDA Fortran versions of routines
 PWLIBS += \
   h_psi_gpu.o \
   vhpsi_gpu.o \
-  add_vuspsi_gpu.o \
-  newd_gpu.o \
-  add_paw_to_deeq_gpu.o \
-  add_vhub_to_deeq_gpu.o \
   rotate_wfc_gpu.o \
   hs_1psi_gpu.o \
   hs_psi_gpu.o \

@@ -107,7 +107,7 @@ MODULE pw_restart_new
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_J, &
                                        Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V, Hubbard_occ,&
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
-                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, ityp_s, &
+                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, &
                                        is_hubbard, is_hubbard_back, backall, neighood, nsg
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&

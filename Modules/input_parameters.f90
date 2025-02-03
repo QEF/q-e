@@ -907,7 +907,7 @@ MODULE input_parameters
         !! dimension of mixing subspace. Used in PWscf only.
 
         CHARACTER(len=80) :: diagonalization = 'david'
-        !! diagonalization = 'david', 'cg', 'ppcg', 'paro' or 'rmm'
+        !! diagonalization = 'david', 'cg', 'paro' or 'rmm'
         !! algorithm used by PWscf for iterative diagonalization
 
         REAL(DP) :: diago_thr_init = 0.0_DP
@@ -917,11 +917,6 @@ MODULE input_parameters
         INTEGER :: diago_cg_maxiter = 100
         !! max number of iterations for the first iterative diagonalization.
         !! Using conjugate-gradient algorithm - used in PWscf only.
-
-        INTEGER :: diago_ppcg_maxiter = 100
-        !! max number of iterations for the first iterative diagonalization
-        !! using projected preconditioned conjugate-gradient algorithm - 
-        !! used in PWscf only.
 
         INTEGER :: diago_david_ndim = 4
         !! dimension of the subspace used in Davidson diagonalization
@@ -1096,10 +1091,10 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
         !! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(11)
+        CHARACTER(len=80) :: ion_dynamics_allowed(12)
         !! allowed options for ion\_dynamics.
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
-                                    'damp', 'verlet', 'bfgs', 'beeman',& 
+                                    'damp', 'verlet', 'velocity-verlet', 'bfgs', 'beeman',& 
                                     'langevin-smc', 'ipi', 'fire' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
@@ -1230,6 +1225,7 @@ MODULE input_parameters
         !
 
         INTEGER ::  bfgs_ndim = 1
+        LOGICAL ::  tgdiis_step = .TRUE. 
 
         REAL(DP)  :: trust_radius_max = 0.8_DP
         REAL(DP)  :: trust_radius_min = 1.E-3_DP
@@ -1257,7 +1253,7 @@ MODULE input_parameters
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           trust_radius_max, trust_radius_min,                  &
-                          trust_radius_ini, w_1, w_2, bfgs_ndim,               &
+                          trust_radius_ini, w_1, w_2, bfgs_ndim,tgdiis_step,   &
                           fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init,  &
                           fire_falpha, fire_dtmax 
 
@@ -1820,6 +1816,7 @@ MODULE input_parameters
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .false.
         REAL(DP), ALLOCATABLE :: xk(:,:), wk(:)
+        CHARACTER(len=50), ALLOCATABLE :: labelk(:)
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(len=80) :: k_points = 'gamma'
         !! select the k points mesh. Available options:  
@@ -2018,6 +2015,7 @@ SUBROUTINE reset_input_checks()
     !
     IF ( allocated( xk ) ) DEALLOCATE( xk )
     IF ( allocated( wk ) ) DEALLOCATE( wk )
+    IF ( allocated( labelk ) ) DEALLOCATE( labelk )
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
     IF ( allocated( rd_if_pos ) ) DEALLOCATE( rd_if_pos )
