@@ -54,9 +54,9 @@ SUBROUTINE compute_becsum( iflag )
   !$acc kernels
   becsum(:,:,:) = 0.D0
   !$acc end kernels
-  CALL allocate_bec_type_acc( nkb,nbnd, becp,intra_bgrp_comm )
   CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
+  CALL allocate_bec_type_acc( nkb, this_bgrp_nbnd, becp,intra_bgrp_comm )
   !
   k_loop: DO ik = 1, nks
      !
@@ -148,20 +148,22 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      !$acc end data
   ELSE
      if (gamma_only) then
-        do ibnd = ibnd_start, ibnd_end, 2
+        do kbnd = 1, this_bgrp_nbnd, 2
+           ibnd = ibnd_start + kbnd -1 
            call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
-           call calbec_rs_gamma(ibnd,ibnd_end,becp%r)
+           call calbec_rs_gamma(kbnd,this_bgrp_nbnd,becp%r)
         enddo
-        call mp_sum(becp%r,inter_bgrp_comm)
+        !call mp_sum(becp%r,inter_bgrp_comm)
         !$acc update device(becp%r)
      else
         current_k = ik
         becp%k = (0.d0,0.d0)
-        do ibnd = ibnd_start, ibnd_end
+        do kbnd = 1, this_bgrp_nbnd
+           ibnd = ibnd_start + kbnd -1
            call invfft_orbital_k(evc,ibnd,ibnd_end)
-           call calbec_rs_k(ibnd,ibnd_end)
+           call calbec_rs_k(kbnd,this_bgrp_nbnd)
         enddo
-        call mp_sum(becp%k,inter_bgrp_comm)
+        !call mp_sum(becp%k,inter_bgrp_comm)
         !$acc update device(becp%k)
      endif
   ENDIF
