@@ -51,7 +51,6 @@ SUBROUTINE symmetries_of_wannier_function()
     CHARACTER (LEN=6), EXTERNAL :: int_to_char
     COMPLEX(DP), ALLOCATABLE :: phase(:)
     COMPLEX(DP), ALLOCATABLE :: rhowann_(:,:,:,:)
-    REAL(DP), ALLOCATABLE    :: cx(:)
     REAL(DP)                 :: x_qG_cryst(3)
     REAL(DP)                 :: x_q_cryst(3)
     REAL(DP)                 :: ft_cart(3)
@@ -80,7 +79,6 @@ SUBROUTINE symmetries_of_wannier_function()
     ALLOCATE (s_w(3,3,48,num_wann))
     ALLOCATE (ft_w(3,48,num_wann))
     ALLOCATE( centers(3,num_wann) )
-    ALLOCATE(cx(3))
     !
     WRITE( stdout, '(5X, "SYM : Checking Symmetry of the WFs")')
     WRITE( stdout, '(7X, "SYM : nkstot=", I5, 3X, "nsym tot=", I5, 3X, "num_wann=", I5)') nkstot, nsym,num_wann
@@ -317,8 +315,14 @@ SUBROUTINE symmetries_of_wannier_function()
       IF (check_rvect) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES ( only q)= ", I5)') nsym_w_q(iwann)
     END DO !iwann 
     !
-    DEALLOCATE(rhowann_)
-    DEALLOCATE(rhog_all)
+    DEALLOCATE ( rhowann_ )
+    DEALLOCATE ( rhog_all )
+    DEALLOCATE ( rhog )
+    DEALLOCATE ( rhowann )
+    DEALLOCATE ( rhowann_aux )
+    DEALLOCATE ( rho_rotated )
+    DEALLOCATE ( phase )
+    DEALLOCATE( centers )
     !
     CALL stop_clock ( 'check_symm' )
     !
