@@ -152,18 +152,11 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !
      if (iter == 1) then
         call ch_psi (ndim, dpsi(1,n_start), g, e(n_start), ik, my_nbnd)
-        do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-           !$acc host_data use_device(d0psi,g)
-           call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd_), 1)
-           !$acc end host_data
+        !$acc parallel loop
+        do ibnd = n_start, n_end
+           ibnd_ = ibnd - n_start + 1
+           g(:,ibnd_) = g(:,ibnd_) - d0psi(:,ibnd)
         enddo
-        IF (npol==2) THEN
-           do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-              !$acc host_data use_device(d0psi,g)
-              call zaxpy (ndim, (-1.d0,0.d0), d0psi(ndmx+1,ibnd), 1, g(ndmx+1,ibnd_), 1)
-              !$acc end host_data
-           enddo
-        END IF
      endif
      !
      !    compute preconditioned residual vector and convergence check
@@ -173,9 +166,9 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = n_start, n_end ;  ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
-           !$acc host_data use_device(g,h)
-           call zcopy (ndmx*npol, g (1, ibnd_), 1, h (1, ibnd_), 1)
-           !$acc end host_data
+           !$acc kernels
+           h(:,ibnd_) = g(:, ibnd_)
+           !$acc end kernels
            call cg_psi(ndmx, ndim, 1, h(1,ibnd_), h_diag(1,ibnd) )
            
            IF (gamma_only) THEN
@@ -226,27 +219,23 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !
 !          change sign to h
 !
-#if defined(__CUDA)
-           !$acc kernels 
-           h(:,ibnd_)=-1.0d0*h(:,ibnd_)    
+           !$acc kernels
+           h(:,ibnd_) = -h(:,ibnd_)    
            !$acc end kernels 
-#else
-           call dscal (2 * ndmx * npol, - 1.d0, h (1, ibnd_), 1)
-#endif
            if (iter.ne.1) then
               dcgamma = rho (ibnd_) / rhoold (ibnd_)
-              !$acc host_data use_device(hold,h)
-              call zaxpy (ndmx*npol, dcgamma, hold (1, ibnd_), 1, h (1, ibnd_), 1)
-              !$acc end host_data
+              !$acc kernels
+              h(:,ibnd_) = h(:,ibnd_) + dcgamma*hold(:,ibnd_)    
+              !$acc end kernels 
            endif
 !
 ! here hold is used as auxiliary vector in order to efficiently compute t = A*h
 ! it is later set to the current (becoming old) value of h
 !
            lbnd = lbnd+1
-           !$acc host_data use_device(hold,h)
-           call zcopy (ndmx*npol, h (1, ibnd_), 1, hold (1, lbnd), 1)
-           !$acc end host_data
+           !$acc kernels
+           hold(:,lbnd) = h(:,ibnd_)
+           !$acc end kernels 
            !$acc serial 
            eu (lbnd) = e (ibnd)
            !$acc end serial
@@ -301,22 +290,22 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !
            !    move to new position
            !
-           !$acc host_data use_device(dpsi,h)
-           call zaxpy (ndmx*npol, dclambda, h(1,ibnd_), 1, dpsi(1,ibnd), 1)
-           !$acc end host_data
+           !$acc kernels
+           dpsi(:,ibnd) = dpsi(:,ibnd) + dclambda*h(:,ibnd_)    
+           !$acc end kernels 
            !
            !    update to get the gradient
            !
            !g=g+lam
-           !$acc host_data use_device(t,g)
-           call zaxpy (ndmx*npol, dclambda, t(1,lbnd), 1, g(1,ibnd_), 1)
-           !$acc end host_data
+           !$acc kernels
+           g(:,ibnd_) = g(:,ibnd_) + dclambda*t(:,lbnd)    
+           !$acc end kernels 
            !
            !    save current (now old) h and rho for later use
            !
-           !$acc host_data use_device(h,hold)
-           call zcopy (ndmx*npol, h(1,ibnd_), 1, hold(1,ibnd_), 1)
-           !$acc end host_data
+           !$acc kernels
+           hold(:,ibnd_) = h(:,ibnd_)
+           !$acc end kernels 
            rhoold (ibnd_) = rho (ibnd_)
         endif
      enddo
