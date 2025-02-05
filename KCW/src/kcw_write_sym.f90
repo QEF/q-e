@@ -2,7 +2,7 @@ SUBROUTINE write_symmetry_op(iwann)
 !this function reset s, ft, nsym with the symmetries respect by wf iwann, 
 !computed at step wann2kcw
   USE control_kcw,         ONLY : tmp_dir_kcw
-  USE symm_base,           ONLY : s, ft, nsym
+  USE symm_base,           ONLY : ft, nsym
   USE control_kcw,         ONLY : nsym_w_k, s_w, ft_w,&
                                   sym_only_for_q, nsym_w_q
   !
