@@ -1,7 +1,7 @@
 !
 !Giovanni Cistaro
 !
-SUBROUTINE symmetries_of_wannier_function()
+SUBROUTINE find_IBZ_q()
   ! For all symmetry operations, we check if the following equation
   ! is satisfied:
   !        \rho^{0n}_{Rq}(r) = \rho^{0n}_{q}(R^{-1}.r-f) e^{-iqf}
@@ -287,7 +287,7 @@ SUBROUTINE symmetries_of_wannier_function()
     !
     CALL stop_clock ( 'check_symm' )
     !
-  END SUBROUTINE symmetries_of_wannier_function
+  END SUBROUTINE find_IBZ_q
   
   
   
