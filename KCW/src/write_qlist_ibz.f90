@@ -3,8 +3,8 @@ SUBROUTINE write_qlist_ibz()
   USE control_kcw,         ONLY : num_wann, spin_component
   USE io_global,           ONLY : ionode
   USE klist,               ONLY : nkstot, xk
-  USE lsda_mod,            ONLY : nspin, lsda, isk
-  USE control_kcw,         ONLY : nqstot_ibz, fbz2ibz, ibz2fbz, wq_ibz
+  USE lsda_mod,            ONLY : lsda, isk
+  USE control_kcw,         ONLY : nqstot_ibz, fbz2ibz, wq_ibz
   !
   implicit none
   !
