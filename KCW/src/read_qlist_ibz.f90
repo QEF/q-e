@@ -1,10 +1,8 @@
 SUBROUTINE read_qlist_ibz()
   USE constants,           ONLY : DP
   USE control_kcw,         ONLY : tmp_dir_kcw
-  USE control_kcw,         ONLY : num_wann, spin_component
-  USE io_global,           ONLY : ionode
-  USE klist,               ONLY : nkstot, xk
-  USE lsda_mod,            ONLY : nspin, lsda, isk
+  USE control_kcw,         ONLY : num_wann
+  USE klist,               ONLY : xk
   USE control_kcw,         ONLY : nqstot_ibz, fbz2ibz, ibz2fbz, wq_ibz, nqstot
   USE control_kcw,         ONLY : xq_ibz
   USE control_kcw,         ONLY : mp1, mp2, mp3
@@ -13,7 +11,7 @@ SUBROUTINE read_qlist_ibz()
   implicit none
   !
   INTEGER             :: iq, iwann, iq_ibz
-  INTEGER             :: iun_qlist_ibz,i,j
+  INTEGER             :: iun_qlist_ibz
   character(len=1024) :: filename
   REAL(DP) :: wq
   !
