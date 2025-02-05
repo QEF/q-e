@@ -9,7 +9,7 @@ SUBROUTINE kcw_kpoint_grid()
   USE control_kcw,        ONLY : nqstot_ibz, xq_ibz, wq_ibz
   USE control_kcw,        ONLY : mp1, mp2, mp3
   USE control_kcw,        ONLY : kcw_iverbosity
-  USE klist,              ONLY : nkstot, xk
+  USE klist,              ONLY : xk
   USE control_kcw,        ONLY : ibz2fbz, fbz2ibz
   USE cell_base,          ONLY : bg
   USE symm_base,          ONLY : time_reversal
