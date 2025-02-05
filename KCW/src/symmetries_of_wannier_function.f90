@@ -50,7 +50,6 @@ SUBROUTINE symmetries_of_wannier_function()
     REAL(DP)                 :: Gvector(3), Gvector_cryst(3)
     CHARACTER (LEN=6), EXTERNAL :: int_to_char
     COMPLEX(DP), ALLOCATABLE :: phase(:)
-    COMPLEX(DP), ALLOCATABLE :: rhowann_(:,:,:,:)
     REAL(DP)                 :: x_qG_cryst(3)
     REAL(DP)                 :: x_q_cryst(3)
     REAL(DP)                 :: ft_cart(3)
@@ -69,7 +68,6 @@ SUBROUTINE symmetries_of_wannier_function()
     ALLOCATE ( rhog (ngms) )
     ALLOCATE (rhowann ( dffts%nnr, nkstot/nspin, num_wann, nrho) )
     ALLOCATE ( rhowann_aux(dffts%nnr) )
-    ALLOCATE ( rhowann_(dffts%nnr,nqstot,num_wann, nrho) )
     ALLOCATE ( rhog_all(ngms,nrho) )
     ALLOCATE ( rho_rotated( dffts%nnr, nrho) )
     ALLOCATE( phase (dffts%nnr) )
@@ -141,44 +139,9 @@ SUBROUTINE symmetries_of_wannier_function()
         END DO ! ip
       END DO!iwann
     END DO !iq
-    !copy variable rhowann so that we can shift the center
     !
-    rhowann_(:,:,:,:) = rhowann(:,:,:,:)
+    !initializing variables for sym_rho function (to get the rotated density)
     !
-    !density we will use to check symmetries
-    !
-  !  ! Shift center to detect more symmetries. NOT WORKING PROPERLY 
-  !  ! Kept here for reference 
-  !  !
-  !  IF (shift_centers) THEN
-  !    DO iwann = 1, num_wann
-  !      DO iq = 1, nqstot
-  !        x_q_cryst(:) = xk(:,iq)
-  !        CALL cryst_to_cart(1, x_q_cryst, at, -1)
-  !        !
-  !        !go to G space
-  !        !
-  !        rhowann_(:,iq,iwann) = rhowann_(:,iq,iwann)!/omega
-  !        CALL fwfft ('Rho', rhowann_(:,iq,iwann), dffts)  
-  !        rhog(:) = rhowann_(dffts%nl(:),iq,iwann)
-  !        !
-  !        !apply shift
-  !        !
-  !        DO ig = 1, ngms
-  !          x_qG_cryst(:) = g(:,ig)
-  !          CALL cryst_to_cart(1, x_qG_cryst, at, -1)
-  !          x_qG_cryst(:) = x_qG_cryst(:) + x_q_cryst(:)
-  !          rhog(ig) = rhog(ig)*EXP( -IMAG*tpi*DOT_PRODUCT(x_qG_cryst(:),centers(:,iwann)) )
-  !        END DO
-  !        !
-  !        !back to r space
-  !        !
-  !        rhowann_(:,iq,iwann) = 0.D0
-  !        rhowann_(dffts%nl(:),iq,iwann) = rhog(:)
-  !        CALL invfft ('Rho', rhowann_(:,iq,iwann), dffts)
-  !      END DO!iq
-  !    END DO!iwann
-  !  ENDIF!shift_centers
     CALL sym_rho_init(.false.)
     !
     ! check which symmetries are satisfied by rhowann(:,:, iwann)
@@ -201,7 +164,7 @@ SUBROUTINE symmetries_of_wannier_function()
           !
   
           DO ip = 1, nrho 
-            rhowann_aux(:) = rhowann_(:,iq, iwann,ip)
+            rhowann_aux(:) = rhowann(:,iq, iwann,ip)
             CALL fwfft ('Rho', rhowann_aux(:), dffts)
             rhog_all(:,ip)  = rhowann_aux(dffts%nl(:))    
           END DO
@@ -232,15 +195,14 @@ SUBROUTINE symmetries_of_wannier_function()
           !
           !
           DO ip = 1, nrho
-              rhowann_aux(:) = rho_rotated(:,ip) - phase(:)*rhowann_(:,iRq,iwann,ip) 
-              rhowann_aux(:) = rhowann_aux(:)
+              rhowann_aux(:) = rho_rotated(:,ip) - phase(:)*rhowann(:,iRq,iwann,ip) 
             !
             ! integrate difference and normalize with respect to number of r points in the grid
             !delta_rho = SUM( ABS(rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
             delta_rho = SUM( (rhowann_aux(:)) )/(dffts%nr1*dffts%nr2*dffts%nr3)
             CALL mp_sum (delta_rho, intra_bgrp_comm)
             !
-            int_rho_Rq = SUM( phase(:)*rhowann_(:,iRq,iwann,ip)  ) / (dffts%nr1*dffts%nr2*dffts%nr3)
+            int_rho_Rq = SUM( phase(:)*rhowann(:,iRq,iwann,ip)  ) / (dffts%nr1*dffts%nr2*dffts%nr3)
             CALL mp_sum (int_rho_Rq, intra_bgrp_comm)
             !
             !
@@ -315,7 +277,6 @@ SUBROUTINE symmetries_of_wannier_function()
       IF (check_rvect) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES ( only q)= ", I5)') nsym_w_q(iwann)
     END DO !iwann 
     !
-    DEALLOCATE ( rhowann_ )
     DEALLOCATE ( rhog_all )
     DEALLOCATE ( rhog )
     DEALLOCATE ( rhowann )
