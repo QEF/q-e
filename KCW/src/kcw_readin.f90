@@ -56,7 +56,7 @@ SUBROUTINE kcw_readin()
   NAMELIST / CONTROL /  outdir, prefix, read_unitary_matrix, kcw_at_ks, &
                         spread_thr, homo_only, kcw_iverbosity, calculation, &
                         l_vcut, assume_isolated, spin_component, & 
-                        mp1, mp2, mp3, lrpa, io_sp, io_real_space, irr_bz, check_rvect !, shift_centers
+                        mp1, mp2, mp3, lrpa, io_sp, io_real_space, irr_bz, check_rvect 
   !
   NAMELIST / WANNIER /  num_wann_occ, num_wann_emp, have_empty, has_disentangle, &
                         seedname, check_ks, l_unique_manifold
@@ -189,7 +189,6 @@ SUBROUTINE kcw_readin()
   io_sp               = .FALSE.
   io_real_space       = .FALSE.
   irr_bz              = .FALSE.
-!  shift_centers       = .FALSE.
   check_rvect         = .FALSE.
   ! 
   ! ...  reading the namelists (if needed)

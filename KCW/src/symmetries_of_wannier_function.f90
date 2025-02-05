@@ -30,7 +30,7 @@ SUBROUTINE symmetries_of_wannier_function()
     USE cell_base,             ONLY : bg, at
     USE control_kcw,           ONLY : nsym_w_k, nsym_w_q, s_w, ft_w, & 
                                       centers, check_rvect, &
-                                      sym_only_for_q !, shift_centers
+                                      sym_only_for_q 
     USE interpolation,         ONLY : read_wannier_centers
     USE io_global,             ONLY : stdout
     USE mp,                    ONLY : mp_sum  
