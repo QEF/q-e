@@ -82,7 +82,6 @@ SUBROUTINE kcw_readin()
   !! lrpa            : If true the response of the system is evaluated at the RPA level (no xc contribution) 
   !! spread_thr      : the tollerance within which two orbital are considered to have the same spread 
   !! irr_bz          : Use the symmetries to calculate screening coefficients and koopmans hamiltonian
-!  !! shift_centers   : When irr_bz=.true., it allows to shift the wannier orbital density in the centre of the axes
   !! check_rvect     : When irr_bz=.true., it allows to check a symmetry is respected upon a translation into a unit cell  with R=/0
   !
   !### WANNIER 
