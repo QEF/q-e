@@ -590,7 +590,7 @@ CONTAINS
   COMPLEX(KIND=DP), INTENT(IN) :: swfcatom(:,:)
   LOGICAL, INTENT(IN), OPTIONAL :: noncolin
   LOGICAL :: twice
-  INTEGER :: na, nt, m1, m2
+  INTEGER :: na, nt, m1, m2, offU, offa
 
   IF ( PRESENT(noncolin) ) THEN
      twice = noncolin
@@ -604,18 +604,22 @@ CONTAINS
         m1 = 1
         m2 = 2*hubbard_l(nt)+1
         IF ( twice ) m2 = 2*m2
-        wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2)
+        offU = offsetU(na)
+        offa = oatwfc(na)
+        wfcU(:,offU+m1:offU+m2) = swfcatom(:,offa+m1:offa+m2)
      ENDIF
      IF (is_hubbard_back(nt)) THEN
         m1 = 1
         m2 = 2*Hubbard_l2(nt)+1
-        wfcU(:,offsetU_back(na)+m1:offsetU_back(na)+m2) = &
-            swfcatom(:,oatwfc_back(na)+m1:oatwfc_back(na)+m2)
+        offU = offsetU_back(na)
+        offa = oatwfc_back(na)
+        wfcU(:,offU+m1:offU+m2) = swfcatom(:,offa+m1:offa+m2)
         IF (backall(nt)) THEN
            m1 = 1
            m2 = 2*Hubbard_l3(nt)+1
-           wfcU(:,offsetU_back1(na)+m1:offsetU_back1(na)+m2) = &
-               swfcatom(:,oatwfc_back1(na)+m1:oatwfc_back1(na)+m2)
+           offU = offsetU_back1(na)
+           offa = oatwfc_back1(na)
+           wfcU(:,offU+m1:offU+m2) = swfcatom(:,offa+m1:offa+m2)
         ENDIF
      ENDIF
   ENDDO
