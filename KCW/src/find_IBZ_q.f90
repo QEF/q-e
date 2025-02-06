@@ -29,7 +29,7 @@ SUBROUTINE find_IBZ_q()
     USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
     USE cell_base,             ONLY : bg, at
     USE control_kcw,           ONLY : nsym_w_k, nsym_w_q, s_w, ft_w, & 
-                                      centers, check_rvect, &
+                                      centers, use_wct, &
                                       sym_only_for_q 
     USE interpolation,         ONLY : read_wannier_centers
     USE io_global,             ONLY : stdout
@@ -206,7 +206,7 @@ SUBROUTINE find_IBZ_q()
             CALL mp_sum (int_rho_Rq, intra_bgrp_comm)
             !
             !
-            IF (check_rvect .AND. ABS(delta_rho) .gt. 1D-02) THEN 
+            IF (use_wct .AND. ABS(delta_rho) .gt. 1D-02) THEN 
               ! Try with the same Wannier in different cells:
               ! Each q contribution to the self-Hxc or to the screened self-Hxc (i.e. the alpha coeff)
               ! does not depend on the center of the Wannier density contribution at q. 
@@ -239,7 +239,7 @@ SUBROUTINE find_IBZ_q()
                     EXIT 
                  ENDIF 
                ENDDO
-            ENDIF!check_rvect
+            ENDIF!use_wct
             ! 
             IF (kcw_iverbosity .gt. 2 ) & 
                !WRITE(stdout,'(7X, "iq=", I5, 3X, "isym =", I5, 3X, "iwann =", I5, 3X, "SUM =", F20.12)')&
@@ -274,7 +274,7 @@ SUBROUTINE find_IBZ_q()
         END DO!isym
       END DO!iq
       WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES (k and q)= ", I5)') nsym_w_k(iwann)
-      IF (check_rvect) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES ( only q)= ", I5)') nsym_w_q(iwann)
+      IF (use_wct) WRITE(stdout,'(/, 13X, "TOTAL NUMBER OF RESPECTED SYMMETRIES ( only q)= ", I5)') nsym_w_q(iwann)
     END DO !iwann 
     !
     DEALLOCATE ( rhog_all )

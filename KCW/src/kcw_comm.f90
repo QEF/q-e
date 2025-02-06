@@ -134,7 +134,7 @@ MODULE control_kcw
   !to keep track of number of symmetries of crystal, without restrictions
   LOGICAL                  :: setup_pw
 !  !variable to decide wether we want to move the wannier centers in the origin when checking symmetries
-  LOGICAL                  :: check_rvect
+  LOGICAL                  :: use_wct
   !variable to decide wether we want to verify if symmetries move a Wannier in an other unitcell in the supercell
   LOGICAL, ALLOCATABLE     :: sym_only_for_q(:,:)
 END MODULE control_kcw
