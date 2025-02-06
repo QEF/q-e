@@ -234,6 +234,15 @@ input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
            }
         }
 
+      var use_wct -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. allow to use symmetries that send the Wannier orbital density into
+           the Wannier translated by a lattice vector (wcf= wannier center translation) 
+           to further reduce the number of q points
+           }
+        }
+
 }  
 
 
