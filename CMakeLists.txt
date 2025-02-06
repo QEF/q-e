@@ -148,6 +148,14 @@ set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
 # OSCDFT
 option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
 
+# Expose Fortran module install directory
+# https://gitlab.kitware.com/cmake/cmake/-/issues/19608
+set(QE_INSTALL_Fortran_MODULES ${CMAKE_INSTALL_INCLUDEDIR} CACHE PATH
+        "Fortran module install directory"
+)
+if(IS_ABSOLUTE QE_INSTALL_Fortran_MODULES)
+    message(FATAL_ERROR "Absolute path of QE_INSTALL_Fortran_MODULES is NOT supported.")
+endif()
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -462,18 +470,12 @@ if(NOT QE_LAPACK_INTERNAL)
         unset(CMAKE_REQUIRED_LINK_OPTIONS)
     endif()
     if(LAPACK_FOUND)
-        list(APPEND _lapack_libs
-            ${BLAS_LIBRARIES}
-            ${BLAS_LINKER_FLAGS}
-            ${LAPACK_LIBRARIES}
-            ${LAPACK_LINKER_FLAGS})
+        target_link_libraries(qe_lapack INTERFACE LAPACK::LAPACK)
+        set(CMAKE_REQUIRED_LIBRARIES LAPACK::LAPACK)
         if(QE_ENABLE_OPENMP)
-            list(APPEND _lapack_libs ${OpenMP_Fortran_LIBRARIES})
+            target_link_libraries(qe_lapack INTERFACE ${OpenMP_Fortran_LIBRARIES})
+            list(APPEND CMAKE_REQUIRED_LIBRARIES "${OpenMP_Fortran_LIBRARIES}")
         endif()
-        list(REMOVE_DUPLICATES "${_lapack_libs}")
-        message(STATUS "Found LAPACK: ${_lapack_libs}")
-        target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
-        set(CMAKE_REQUIRED_LIBRARIES ${_lapack_libs})
         check_fortran_function_exists(zhpev ZHPEV_FOUND)
         unset(CMAKE_REQUIRED_LIBRARIES)
         if(NOT ZHPEV_FOUND)
