@@ -43,8 +43,7 @@ subroutine input_summary ( )
     WRITE(stdout, 43)  "# io_sp               =", io_sp
     WRITE(stdout, 43)  "# io_real_space       =", io_real_space
     WRITE(stdout, 43)  "# irr_bz              =", irr_bz
-!    WRITE(stdout, 43)  "# shift_centers       =", shift_centers
-    WRITE(stdout, 43)  "# check_rvect         =", check_rvect
+    WRITE(stdout, 43)  "# use_wct         =", use_wct
     !
     IF ( .NOT. kcw_at_ks .AND. .NOT. calculation=='cc' ) THEN 
 !!! WANNIER

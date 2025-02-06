@@ -104,10 +104,6 @@ MODULE control_kcw
   !
   !Giovanni Cistaro
   !
-  INTEGER, ALLOCATABLE :: rir(:,:) !rotate grid using a symmetry operation. to 
-                                   !build it, use kcw_set_symm
-                                   !first dim -> number of r points
-                                   !second dim-> number of symmetries
   REAL(DP),    ALLOCATABLE :: r(:,:)! position in the real grid
                                     ! defined by q-e
   INTEGER                  :: ir_end !last index of r array
@@ -137,9 +133,8 @@ MODULE control_kcw
   INTEGER                  :: nsym_old
   !to keep track of number of symmetries of crystal, without restrictions
   LOGICAL                  :: setup_pw
-!  LOGICAL                  :: shift_centers
 !  !variable to decide wether we want to move the wannier centers in the origin when checking symmetries
-  LOGICAL                  :: check_rvect
+  LOGICAL                  :: use_wct
   !variable to decide wether we want to verify if symmetries move a Wannier in an other unitcell in the supercell
   LOGICAL, ALLOCATABLE     :: sym_only_for_q(:,:)
 END MODULE control_kcw

@@ -34,17 +34,16 @@ SUBROUTINE reset_symmetry_op(iwann)
   USE symm_base,           ONLY : invsym, s, ft, nsym, inverse_s, nrot
   USE symm_base,           ONLY : s_axis_to_cart
   USE symm_base,           ONLY : copy_sym, time_reversal
-  !USE symm_base,           ONLY : is_group
-  USE io_global,            ONLY : stdout, ionode
-  USE control_kcw,         ONLY : nsym_old, mp1, mp2, mp3
-  USE cell_base,          ONLY: bg
-  USE klist,                ONLY : xk, wk, nkstot
-  USE start_k,              ONLY : nks_start, xk_start, wk_start
+  USE io_global,           ONLY : stdout
+  USE control_kcw,         ONLY : nsym_old
+  USE cell_base,           ONLY : bg
+  USE klist,               ONLY : xk
+  USE start_k,             ONLY : xk_start, wk_start
   !
   implicit none
   !
   INTEGER, intent(in) :: iwann
-  INTEGER             :: isym, jsym, ik
+  INTEGER             :: isym, jsym
   INTEGER             :: nsym_aux
   INTEGER             :: s_aux(3,3,48)
   REAL(DP)            :: ft_aux(3,48)
@@ -76,11 +75,6 @@ SUBROUTINE reset_symmetry_op(iwann)
   nsym = copy_sym( nrot, sym )
   WRITE(stdout,'(8X, "SYM : number of symmetry for iwann =", I5, " :", I5, 3x "(out of ", I5, " )")') iwann, nsym, nrot
   !
-  !IF ( .NOT. is_group( nsym ) ) THEN
-  !  CALL infomsg( 'find_sym', 'not a group! symmetry disabled' )
-  !  nsym = 1
-  !END IF
-  !
   ! ... check if inversion (I) is a symmetry.
   ! If so, it should be the (nsym/2+1)-th operation of the group
   !
@@ -89,27 +83,5 @@ SUBROUTINE reset_symmetry_op(iwann)
   CALL inverse_s()
   !
   CALL s_axis_to_cart()
-  !
-  ! calculate IBZ of k points
-  !
-  !t_rev_eff=0 
-  !CALL kpoint_grid ( nsym, time_reversal, .FALSE., s, t_rev_eff, &
-  !bg, mp1*mp2*mp3, 0.D0, 0.D0, 0.D0, mp1,mp2,mp3, nkstot, xk, wk)
-  !nks_start = nkstot
-  !xk_start(:,1:nkstot) = xk(:,1:nkstot) 
-  !wk_start(1:nkstot) = wk(1:nkstot)  
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*) 
-  !WRITE(*,*) ( xk(:,ik), ik=1, nkstot)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
-  !WRITE(*,*)
   !
 END SUBROUTINE

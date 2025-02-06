@@ -453,7 +453,7 @@ subroutine kcw_setup
   !
   IF(irr_bz) THEN
     !
-    CALL symmetries_of_wannier_function()
+    CALL find_IBZ_q()
     !
     ! Define IBZ for every wannier function
     !

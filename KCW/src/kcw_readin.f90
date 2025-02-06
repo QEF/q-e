@@ -56,7 +56,7 @@ SUBROUTINE kcw_readin()
   NAMELIST / CONTROL /  outdir, prefix, read_unitary_matrix, kcw_at_ks, &
                         spread_thr, homo_only, kcw_iverbosity, calculation, &
                         l_vcut, assume_isolated, spin_component, & 
-                        mp1, mp2, mp3, lrpa, io_sp, io_real_space, irr_bz, check_rvect !, shift_centers
+                        mp1, mp2, mp3, lrpa, io_sp, io_real_space, irr_bz, use_wct 
   !
   NAMELIST / WANNIER /  num_wann_occ, num_wann_emp, have_empty, has_disentangle, &
                         seedname, check_ks, l_unique_manifold
@@ -82,8 +82,7 @@ SUBROUTINE kcw_readin()
   !! lrpa            : If true the response of the system is evaluated at the RPA level (no xc contribution) 
   !! spread_thr      : the tollerance within which two orbital are considered to have the same spread 
   !! irr_bz          : Use the symmetries to calculate screening coefficients and koopmans hamiltonian
-!  !! shift_centers   : When irr_bz=.true., it allows to shift the wannier orbital density in the centre of the axes
-  !! check_rvect     : When irr_bz=.true., it allows to check a symmetry is respected upon a translation into a unit cell  with R=/0
+  !! use_wct         : When irr_bz=.true., it allows to check a symmetry is respected upon a translation into a unit cell  with R=/0
   !
   !### WANNIER 
   !! seedname        : seedname for the Wannier calculation
@@ -189,8 +188,7 @@ SUBROUTINE kcw_readin()
   io_sp               = .FALSE.
   io_real_space       = .FALSE.
   irr_bz              = .FALSE.
-!  shift_centers       = .FALSE.
-  check_rvect         = .FALSE.
+  use_wct             = .FALSE.
   ! 
   ! ...  reading the namelists (if needed)
   !
@@ -316,18 +314,22 @@ SUBROUTINE kcw_readin()
      'The KCW code with US or PAW is not available yet',1)
   !
   IF (noncolin) THEN 
-   CALL infomsg('kcw_readin','Non-collinear KCW calculation.') 
-   IF (xclib_dft_is('gradient')) &
-       call errore('kcw_readin', 'Non-collinear KCW calculation &
-                    does not support GGA', 1 )
-   IF (xclib_dft_is('meta')) &
-       call errore('kcw_readin', 'Non-collinear KCW calculation &
-                    does not support MGGA', 1 )
-   IF (irr_bz) & 
-       call errore('kcw_readin', 'Non-collinear KCW calculation &
-                    does not support symmetries. Set irr_bz to .false.', 1 )
-
+    CALL infomsg('kcw_readin','Non-collinear KCW calculation.') 
+    IF (xclib_dft_is('gradient')) &
+        call errore('kcw_readin', 'Non-collinear KCW calculation &
+                     does not support GGA', 1 )
+    IF (xclib_dft_is('meta')) &
+        call errore('kcw_readin', 'Non-collinear KCW calculation &
+                     does not support MGGA', 1 )
+    IF (irr_bz) & 
+        call errore('kcw_readin', 'Non-collinear KCW calculation &
+                     does not support symmetries. Set irr_bz to .false.', 1 )
   END IF 
+  !
+  IF (.NOT. irr_bz .AND. use_wct) THEN
+     CALL infomsg('kcw_readin','WARNING: "use_wct" set to FALSE since irr_bz=.FALSE.')
+     use_wct=.FALSE.
+  ENDIF
   !
   IF ( nspin == 1 .OR. (nspin==4 .AND. .NOT. domag) ) THEN   !This should be equivalent to nspin_mag==1
      WRITE(stdout, '(/, 5X, "WARNING: !!! NON-MAGNETIC setup !!!")')
