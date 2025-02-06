@@ -77,9 +77,6 @@ CONTAINS
                          v_loc_psir, s_psir_gamma
     USE lrus,     ONLY : bbg
     USE uspp,             ONLY : vkb
-#if defined(__CUDA)
-    USE cublas
-#endif
 
     !
     IMPLICIT NONE
@@ -98,7 +95,6 @@ CONTAINS
     !$acc kernels
     spsi(:,:) = psi(:,:)
     !$acc end kernels 
-    !!CALL ZCOPY( lda * npol * m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
@@ -129,7 +125,7 @@ CONTAINS
     !
     !$acc enter data copyin(ps)
     !$acc host_data use_device(vkb, ps, spsi)
-    call DGEMM('N','N',2*n,m,nkb,1.d0,vkb,2*lda,ps,nkb,1.d0,spsi,2*lda)
+    call mydgemm('N','N',2*n,m,nkb,1.d0,vkb,2*lda,ps,nkb,1.d0,spsi,2*lda)
     !$acc end host_data
     !
     !$acc exit data delete(ps)

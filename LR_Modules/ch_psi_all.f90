@@ -156,9 +156,6 @@ CONTAINS
     !
     USE becmod, ONLY : becp, calbec
     USE control_lr,  ONLY : alpha_pv
-#if defined(__CUDA)
-    USE cublas
-#endif
     
     IMPLICIT NONE
     INTEGER :: m_start, m_end
@@ -184,10 +181,10 @@ CONTAINS
     !
     !$acc host_data use_device(spsi, ps, evq)
     IF (noncolin) THEN
-       CALL zgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
             npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
     ELSE
-       CALL zgemm ('C', 'N', k, m, n, (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('C', 'N', k, m, n, (1.d0, 0.d0) , evq, &
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     !$acc end host_data
@@ -200,10 +197,10 @@ CONTAINS
     !$acc end host_data
     !$acc host_data use_device(hpsi, ps, evq)
     IF (noncolin) THEN
-       CALL zgemm ('N', 'N', npwx*npol, m, k, (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('N', 'N', npwx*npol, m, k, (1.d0, 0.d0) , evq, &
             npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
     ELSE
-       CALL zgemm ('N', 'N', n, m, k, (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('N', 'N', n, m, k, (1.d0, 0.d0) , evq, &
             npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
     END IF
     !$acc end host_data
@@ -289,7 +286,7 @@ CONTAINS
     CALL mp_sum ( ps, intra_bgrp_comm )
     !$acc end host_data
     !$acc host_data use_device(hpsi, ps, evc)
-    CALL MYDGEMM ('N', 'N', 2*n, m, ntemp , 1.d0 , evc, 2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
+    CALL mydgemm ('N', 'N', 2*n, m, ntemp , 1.d0 , evc, 2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
     !$acc end host_data
     !$acc kernels
     spsi(:,:) = hpsi(:,:)

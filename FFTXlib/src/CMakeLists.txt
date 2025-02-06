@@ -38,7 +38,7 @@ set(c_src_fftx
     fftw_sp.c
     fftw_dp.c)
 
-qe_add_library(qe_fftx_c ${c_src_fftx})
+add_library(qe_fftx_c ${c_src_fftx})
 
 qe_add_library(qe_fftx 
     ${f_src_fftx} 
