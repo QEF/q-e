@@ -101,8 +101,8 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! (this is used during the self-consistent solution of Kohn-Sham equations)
      ! save to unit iunhub
      !
-     !$acc update host(swfcatom)
      CALL copy_U_wfc (swfcatom, noncolin)
+     !$acc update host(wfcU)
      IF ( nks > 1 ) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      ! If save_wfcatom=.TRUE. copy the orthonormalized wfcatom to wfcU and save
@@ -118,12 +118,13 @@ SUBROUTINE orthoUwfc(save_wfcatom)
            ALLOCATE (wfcUaux(npwx*npol,nwfcU))
            wfcUaux = wfcU
         ENDIF
-        !$acc update host(wfcatom)
         CALL copy_U_wfc (wfcatom, noncolin)
+        !$acc update host(wfcU)
         ! Write wfcU = O^{-1/2} \phi (no ultrasoft S)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
         IF (nks==1) THEN
            wfcU = wfcUaux
+           !$acc update device(wfcU)
            DEALLOCATE (wfcUaux)
         ENDIF
      ENDIF
@@ -232,14 +233,13 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   IF (lflag) THEN
      ! Copy (ortho-)atomic wavefunctions with Hubbard U term only
      ! in wfcU (no ultrasoft S): wfcatom = O^{-1/2} \phi.
-     !$acc update host(wfcatom)
      CALL copy_U_wfc (wfcatom, noncolin)
   ELSE
      ! Copy (ortho-)atomic wavefunctions with Hubbard U term only
      ! in wfcU (with ultrasoft S): swfcatom = O^{-1/2} S\phi.
-     !$acc update host(swfcatom)
      CALL copy_U_wfc (swfcatom, noncolin)
   ENDIF
+  !$acc update host(wfcU)
   !
   IF (Hubbard_projectors=="ortho-atomic") THEN
      ! Copy atomic wfcs

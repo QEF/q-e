@@ -72,7 +72,7 @@ SUBROUTINE force_hub( forceh )
    !
    CALL start_clock( 'force_hub' )
    !
-   !$acc data  present(vkb) copyin(wfcU) 
+   !$acc data  present(vkb,wfcU) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
@@ -158,7 +158,6 @@ SUBROUTINE force_hub( forceh )
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
       CALL orthoUwfc_k( ik, .TRUE. )
-      !$acc update device(wfcU)
       !
       ! ... proj=<wfcU|S|evc>
       IF (noncolin) THEN
@@ -448,7 +447,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
+   !$acc data present(wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -653,7 +652,7 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
-   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
+   !$acc data present(wfcU) create(dproj,dproj_us)
    !
    ! Compute the USPP contribution to dproj:
    ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
@@ -1190,7 +1189,7 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE ( dproj1(nwfcU,nb_s:nb_e) )
    ALLOCATE ( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
-   !$acc data present_or_copyin(wfcU) create(dproj1,dproj2,dproj_us)
+   !$acc data present(wfcU) create(dproj1,dproj2,dproj_us)
    !
    !
    ! Compute the derivative of the generalized occupation matrices 

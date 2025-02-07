@@ -20,11 +20,7 @@ MODULE ldaU
   SAVE
   !
   COMPLEX(DP), ALLOCATABLE :: wfcU(:,:)
-  !! atomic wfcs with U term
-#if defined(__CUDA)
-  ! while waiting for a better implementation
-  attributes(PINNED) :: wfcU
-#endif
+  !! atomic wfcs with U term - FIXME: should be PINNED
   COMPLEX(DP), ALLOCATABLE :: d_spin_ldau(:,:,:)
   !! the rotations in spin space for all symmetries
   REAL(DP) :: eth
@@ -557,7 +553,10 @@ CONTAINS
      IF ( ALLOCATED( ldim_back ) )     DEALLOCATE( ldim_back )
   END IF
   !
-  IF ( ALLOCATED( wfcU ) )             DEALLOCATE( wfcU )
+  IF ( ALLOCATED( wfcU ) ) THEN
+     !$acc exit data delete(wfcU)
+     DEALLOCATE( wfcU )
+  END IF
   !
   IF (.NOT.dfpt_hub) THEN
      IF ( ALLOCATED( dist_s ) )        DEALLOCATE( dist_s )
@@ -597,7 +596,7 @@ CONTAINS
   ELSE
      twice = .FALSE.
   ENDIF
-  !
+  !$acc data present(swfcatom) present(wfcU)
   DO na = 1, nat
      nt = ityp(na)
      IF ( is_hubbard(nt) ) THEN
@@ -606,24 +605,30 @@ CONTAINS
         IF ( twice ) m2 = 2*m2
         offU = offsetU(na)
         offa = oatwfc(na)
+        !$acc kernels
         wfcU(:,offU+m1:offU+m2) = swfcatom(:,offa+m1:offa+m2)
+        !$acc end kernels
      ENDIF
      IF (is_hubbard_back(nt)) THEN
         m1 = 1
         m2 = 2*Hubbard_l2(nt)+1
         offU = offsetU_back(na)
         offa = oatwfc_back(na)
+        !$acc kernels
         wfcU(:,offU+m1:offU+m2) = swfcatom(:,offa+m1:offa+m2)
+        !$acc end kernels
         IF (backall(nt)) THEN
            m1 = 1
            m2 = 2*Hubbard_l3(nt)+1
            offU = offsetU_back1(na)
            offa = oatwfc_back1(na)
+           !$acc kernels
            wfcU(:,offU+m1:offU+m2) = swfcatom(:,offa+m1:offa+m2)
+           !$acc end kernels
         ENDIF
      ENDIF
   ENDDO
-  !
+  !$acc end data
   RETURN
   !
   END SUBROUTINE copy_U_wfc

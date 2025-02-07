@@ -45,7 +45,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   !
   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
-  !$acc data copyin(wfcU)
+  !$acc data present(wfcU)
   !
   ! proj = <wfcU|psip>
   IF (gamma_only) THEN
