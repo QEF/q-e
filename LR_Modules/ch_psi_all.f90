@@ -80,6 +80,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      ! Hubbard potential.
      !
      CALL get_buffer (wfcU, nwordwfcU, iuatswfc, current_k)
+     !$acc update device(wfcU)
      !
      ! Compute the phase factor at k+q (needed for DFT+U+V)
      !

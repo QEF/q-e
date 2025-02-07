@@ -117,8 +117,10 @@ SUBROUTINE c_bands( iter )
      !
      ! ... Needed for DFT+Hubbard
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
-          CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
+        CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+        !$acc update device(wfcU)
+     END IF
      !
      ! ... diagonalization of bands for k-point ik
      ! ... (skip only in charge self-consistent DFT+DMFT calculations)
@@ -1054,8 +1056,10 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... Needed for DFT+Hubbard
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
-          CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
+        CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+        !$acc update device(wfcU)
+     END IF
      !
      ! ... calculate starting  wavefunctions
      !

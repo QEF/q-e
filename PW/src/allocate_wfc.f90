@@ -9,11 +9,11 @@
 !----------------------------------------------------------------------------
 SUBROUTINE allocate_wfc_k()
   !----------------------------------------------------------------------------
-  !! Dynamical allocation of k-point-dependent arrays: wavefunctions, betas
-  !! kinetic energy, k+G indices. Computes max no. of plane waves \(\text{npwx}\)
-  !! and k+G indices \(\text{igk_k}\) (needs G-vectors and cutoff \(\text{gcutw}\)).  
-  !! Requires dimensions \(\text{nbnd}\), \(\text{npol}\), \(\text{natomwfc}\),
-  !! \(\text{nwfcU}\).  
+  !! Dynamical allocation of k-point-dependent arrays: 
+  !! wavefunctions, betas kinetic energy, k+G indices. 
+  !! Computes max no. of plane waves \(\text{npwx}\) and k+G indices 
+  !! \(\text{igk_k}\) (needs G-vectors and cutoff \(\text{gcutw}\)).  
+  !! Requires dimensions \(\text{nbnd}\), \(\text{npol}\)
   !! Requires that k-points are set up and distributed (if parallelized).
   !
   USE wavefunctions,    ONLY : allocate_wfc

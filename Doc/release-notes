@@ -24,6 +24,9 @@ Incompatible changes in 7.4 version:
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
 
 New in 7.4 version:
+  * Added to PW/tools MINpuT: an auxiliary DFT input generation script for
+    performing mismatched interface theory (MINT). See E. Gerber et al.,
+    Phys. Rev. Lett. 124, 106804 (2020)
   * Linear response phonon calculations with a two-chemical potential approach
     by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
   * Enabling detection of symmetries by comparison of species labels for example 

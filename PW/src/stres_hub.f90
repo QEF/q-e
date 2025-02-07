@@ -95,7 +95,7 @@ SUBROUTINE stres_hub ( sigmah )
       !$acc enter data create(swfcatom,eigenval,eigenvect,overlap_inv)
    ENDIF
    !
-   !$acc data create(spsi,wfcatom) copyin(wfcU)
+   !$acc data create(spsi,wfcatom) present(wfcU)
    !
    IF (gamma_only) THEN
       ALLOCATE( projrd(nwfcU,nbnd))
@@ -181,7 +181,6 @@ SUBROUTINE stres_hub ( sigmah )
       ! Set up various quantities, in particular wfcU which 
       ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
       CALL orthoUwfc_k (ik, .TRUE.)
-      !$acc update device(wfcU)
       !
       ! proj=<wfcU|S|evc>
       IF (noncolin) THEN
@@ -1411,7 +1410,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
    ALLOCATE ( dwfcU(npwx*npol,nwfcU) )
    ALLOCATE (a1_temp(npw), a2_temp(npw))
-   !$acc data create(dwfcU) present(overlap_inv) copyin(wfcU)
+   !$acc data create(dwfcU) present(overlap_inv,wfcU)
    !$acc kernels
    dwfcU(:,:) = (0.d0, 0.d0)
    !$acc end kernels
@@ -2133,7 +2132,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
       !
    ENDDO
    !
-   !$acc data present(us_dy, us_dj) copyin(a1_temp, a2_temp, at_dy, at_dj, qq_at, wfcU)
+   !$acc data present(us_dy, us_dj, wfcU) copyin(a1_temp, a2_temp, at_dy, at_dj, qq_at)
    !$acc data create(dwfc) 
    !
    DO na = 1, nat

@@ -68,6 +68,7 @@ SUBROUTINE wfcinit()
      !
      ! nwfcU is computed in init_hubbard
      ALLOCATE( wfcU(npwx*npol,nwfcU) )
+     !$acc enter data create(wfcU)
      IF (io_level>=1) THEN
         CALL orthoUwfc(.TRUE.)
      ELSE
@@ -206,8 +207,10 @@ SUBROUTINE wfcinit()
      !
      ! ... Needed for DFT+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
+        !$acc update device(wfcU)
+     END IF
      !
      ! DFT+U+V: calculate the phase factor at a given k point
      !

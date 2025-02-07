@@ -91,8 +91,11 @@ SUBROUTINE lr_orthoUwfc (lflag)
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   ALLOCATE (wfcatom(npwx*npol,natomwfc))
   ALLOCATE (swfcatom(npwx*npol,natomwfc))
- !$acc enter data create(wfcatom, swfcatom)
-  IF ( .NOT. ALLOCATED(wfcU) ) ALLOCATE (wfcU(npwx*npol,nwfcU))
+  !$acc enter data create(wfcatom, swfcatom)
+  IF ( .NOT. ALLOCATED(wfcU) ) THEN
+     ALLOCATE (wfcU(npwx*npol,nwfcU))
+     !$acc enter data create(wfcU)
+  ENDIF
   !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
@@ -129,8 +132,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
      ! and then write wfcU = phi(k) to file with unit iuatwfc.
      !
      IF (lflag) THEN
-        !$acc update host(wfcatom)
         CALL copy_U_wfc (wfcatom, noncolin)
+        !$acc update host(wfcU)
         CALL save_buffer (wfcU, nwordwfcU, iuatwfc, ikk)
         IF (lgamma) CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
@@ -139,8 +142,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
      ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
      ! and then write wfcU = S(k)*phi(k) to file with unit iuatswfc.
      !
-     !$acc update host(swfcatom)
      CALL copy_U_wfc (swfcatom, noncolin)
+     !$acc update host(wfcU)
      CALL save_buffer (wfcU, nwordwfcU, iuatswfc, ikk)
      IF (lgamma) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
@@ -169,8 +172,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
         ! and then write wfcU = phi(k) to file with unit iuatwfc.
         !
         IF (lflag) THEN
-           !$acc update host(wfcatom)
            CALL copy_U_wfc (wfcatom, noncolin)
+           !$acc update host(wfcU)
            CALL save_buffer (wfcU, nwordwfcU, iuatwfc, ikq)
         ENDIF
         !
@@ -178,8 +181,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
         ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
         ! and then write wfcU = S(k+q)*phi(k+q) to file with unit iuatswfc.
         !
-        !$acc update host(swfcatom)
         CALL copy_U_wfc (swfcatom, noncolin)
+        !$acc update host(wfcU)
         CALL save_buffer (wfcU, nwordwfcU, iuatswfc, ikq)
         !
      ENDIF
