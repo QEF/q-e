@@ -81,6 +81,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
      ! Hubbard potential.
      !
      CALL get_buffer (wfcU, nwordwfcU, iuatswfc, current_k)
+     !$acc update device(wfcU)
      !
      ! Compute the phase factor at k+q
      !IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ikq)

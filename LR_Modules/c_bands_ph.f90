@@ -91,8 +91,10 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... Needed for LDA+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
-          CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
+        CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+        !$acc update device(wfcU)
+     END IF
      !
      ! ... calculate starting  wavefunctions
      !
