@@ -6,12 +6,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; QE modes: BEGIN
-
-
 
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/qe-modes/"))
 (require 'qe-modes)
@@ -62,7 +59,6 @@
 ;;                ld1-mode-hook
 ;;		  pp-mode-hook))
 ;;  (add-hook hook (lambda () (setq indent-line-function 'indent-relative))))
-
 
 ;; QE modes: END
 ;;

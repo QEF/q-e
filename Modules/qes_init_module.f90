@@ -91,6 +91,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_inputOccupations
     MODULE PROCEDURE qes_init_outputElectricField
     MODULE PROCEDURE qes_init_BerryPhaseOutput
+    MODULE PROCEDURE qes_init_sawtoothEnergy
     MODULE PROCEDURE qes_init_dipoleOutput
     MODULE PROCEDURE qes_init_finiteFieldOut
     MODULE PROCEDURE qes_init_polarization
@@ -3540,7 +3541,8 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_inputOccupations
   !
   !
-  SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, dipoleInfo, gateInfo)
+  SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, sawtoothEnergy,&
+                                         dipoleInfo, gateInfo)
     !
     IMPLICIT NONE
     !
@@ -3548,6 +3550,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     TYPE(BerryPhaseOutput_type),OPTIONAL,INTENT(IN) :: BerryPhase
     TYPE(finiteFieldOut_type),OPTIONAL,INTENT(IN) :: finiteElectricFieldInfo
+    TYPE(sawtoothEnergy_type),OPTIONAL,INTENT(IN) :: sawtoothEnergy
     TYPE(dipoleOutput_type),OPTIONAL,INTENT(IN) :: dipoleInfo
     TYPE(gateInfo_type),OPTIONAL,INTENT(IN) :: gateInfo
     !
@@ -3566,6 +3569,12 @@ MODULE qes_init_module
       obj%finiteElectricFieldInfo = finiteElectricFieldInfo
     ELSE
       obj%finiteElectricFieldInfo_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(sawtoothEnergy)) THEN
+      obj%sawtoothEnergy_ispresent = .TRUE. 
+      obj%sawtoothEnergy = sawtoothEnergy
+    ELSE
+      obj%sawtoothEnergy_ispresent = .FALSE.
     END IF
     IF ( PRESENT(dipoleInfo)) THEN
       obj%dipoleInfo_ispresent = .TRUE. 
@@ -3608,6 +3617,51 @@ MODULE qes_init_module
     obj%electronicPolarization = electronicPolarization
     !
   END SUBROUTINE qes_init_BerryPhaseOutput
+  !
+  !
+  SUBROUTINE qes_init_sawtoothEnergy(obj, tagname, eamp, eopreg, emaxpos, edir, sawtoothEnergy)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(sawtoothEnergy_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), OPTIONAL, INTENT(IN) :: eamp
+    REAL(DP), OPTIONAL, INTENT(IN) :: eopreg
+    REAL(DP), OPTIONAL, INTENT(IN) :: emaxpos
+    INTEGER, OPTIONAL, INTENT(IN) :: edir
+    REAL(DP), INTENT(IN) :: sawtoothEnergy
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(eamp)) THEN
+      obj%eamp_ispresent = .TRUE.
+      obj%eamp = eamp
+    ELSE
+      obj%eamp_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(eopreg)) THEN
+      obj%eopreg_ispresent = .TRUE.
+      obj%eopreg = eopreg
+    ELSE
+      obj%eopreg_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(emaxpos)) THEN
+      obj%emaxpos_ispresent = .TRUE.
+      obj%emaxpos = emaxpos
+    ELSE
+      obj%emaxpos_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(edir)) THEN
+      obj%edir_ispresent = .TRUE.
+      obj%edir = edir
+    ELSE
+      obj%edir_ispresent = .FALSE.
+    END IF
+    !
+    obj%sawtoothEnergy = sawtoothEnergy
+    !
+  END SUBROUTINE qes_init_sawtoothEnergy
   !
   !
   SUBROUTINE qes_init_dipoleOutput(obj, tagname, idir, dipole, ion_dipole, elec_dipole, dipoleField,&

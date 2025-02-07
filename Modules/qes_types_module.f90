@@ -332,6 +332,25 @@ MODULE qes_types_module
     !
   END TYPE inputOccupations_type
   !
+  TYPE :: sawtoothEnergy_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    REAL(DP) :: eamp
+    LOGICAL :: eamp_ispresent = .FALSE.
+    REAL(DP) :: eopreg
+    LOGICAL :: eopreg_ispresent = .FALSE.
+    REAL(DP) :: emaxpos
+    LOGICAL :: emaxpos_ispresent = .FALSE.
+    INTEGER :: edir
+    LOGICAL :: edir_ispresent = .FALSE.
+    !
+    REAL(DP) :: sawtoothEnergy
+    !
+  END TYPE sawtoothEnergy_type
+  !
   TYPE :: phase_type
     !
     CHARACTER(len=100) :: tagname
@@ -1909,6 +1928,8 @@ MODULE qes_types_module
     TYPE(BerryPhaseOutput_type) :: BerryPhase
     LOGICAL  :: finiteElectricFieldInfo_ispresent = .FALSE.
     TYPE(finiteFieldOut_type) :: finiteElectricFieldInfo
+    LOGICAL  :: sawtoothEnergy_ispresent = .FALSE.
+    TYPE(sawtoothEnergy_type) :: sawtoothEnergy
     LOGICAL  :: dipoleInfo_ispresent = .FALSE.
     TYPE(dipoleOutput_type) :: dipoleInfo
     LOGICAL  :: gateInfo_ispresent = .FALSE.

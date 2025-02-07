@@ -1,4 +1,4 @@
-input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
+&input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
 
     toc {}
 
@@ -1794,7 +1794,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
              }
              options {
                  info {
-                     Type of Van der Waals correction. Allowed values:
+                     Type of the van der Waals correction. Allowed values:
                  }
 
                  opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d'} {
@@ -1821,8 +1821,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                  opt -val {'MBD', 'mbd', 'many-body-dispersion', 'mbd_vdw'} {
                      Many-body dipersion (MBD) correction to long-range interactions.
                      Optional variables: @ref ts_vdw_isolated
-                     A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
-                     18A508 (2014).
+                     A. Ambrosetti et al., J. Chem. Phys. 140, 18A508 (2014), doi:10.1063/1.4865104
                      J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
                  }
 
@@ -2410,7 +2409,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
 
     
     #
-    # NAMELIST IONS
+    # NAMELIST &IONS
     #
     
     namelist IONS  {
@@ -2742,11 +2741,21 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                 default { 1 }
                 info {
                     Number of old forces and displacements vectors used in the
-                    PULAY mixing of the residual vectors obtained on the basis
+                    PULAY (GDIIS) mixing of the residual vectors obtained on the basis
                     of the inverse hessian matrix given by the BFGS algorithm.
+                    The variable  @ref tgdiis_step in this case sets whether to use to full GDIIS step 
+                    or the BFGS trust_radius. 
                     When @ref bfgs_ndim = 1, the standard quasi-Newton BFGS method is
                     used.
                     (bfgs only)
+                }
+            var tgdiis_step LOGICAL {
+                defauls {.true.} 
+                info { 
+                    When G-DIIS (@ref bfgs_ndim > 1) is used for the structural relaxation this variable 
+                    selects whether to use to full gdiis step or the BFGS trus radius. 
+                    (bfgs only)
+                }
                 }
             }
 
