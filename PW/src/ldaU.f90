@@ -596,7 +596,7 @@ CONTAINS
   ELSE
      twice = .FALSE.
   ENDIF
-  !$acc data present(swfcatom) present(wfcU)
+  !$acc data present_or_copyin(swfcatom) present_or_copyout(wfcU)
   DO na = 1, nat
      nt = ityp(na)
      IF ( is_hubbard(nt) ) THEN
