@@ -29,9 +29,8 @@ SUBROUTINE find_IBZ_q()
     USE lsda_mod,              ONLY : lsda, isk, nspin, current_spin
     USE cell_base,             ONLY : bg, at
     USE control_kcw,           ONLY : nsym_w_k, nsym_w_q, s_w, ft_w, & 
-                                      centers, use_wct, &
+                                      use_wct, &
                                       sym_only_for_q 
-    USE interpolation,         ONLY : read_wannier_centers
     USE io_global,             ONLY : stdout
     USE mp,                    ONLY : mp_sum  
     USE symme,                 ONLY : sym_rho, sym_rho_init
@@ -66,34 +65,19 @@ SUBROUTINE find_IBZ_q()
     !
     IMAG = CMPLX(0.D0, 1.D0, kind=DP)
     ALLOCATE ( rhog (ngms) )
-    ALLOCATE (rhowann ( dffts%nnr, nkstot/nspin, num_wann, nrho) )
+    ALLOCATE ( rhowann ( dffts%nnr, nkstot/nspin, num_wann, nrho) )
     ALLOCATE ( rhowann_aux(dffts%nnr) )
     ALLOCATE ( rhog_all(ngms,nrho) )
     ALLOCATE ( rho_rotated( dffts%nnr, nrho) )
-    ALLOCATE( phase (dffts%nnr) )
+    ALLOCATE ( phase (dffts%nnr) )
     ALLOCATE ( nsym_w_k(num_wann) )
     ALLOCATE ( nsym_w_q(num_wann) )
     ALLOCATE ( sym_only_for_q(48, num_wann) )
-    ALLOCATE (s_w(3,3,48,num_wann))
-    ALLOCATE (ft_w(3,48,num_wann))
-    ALLOCATE( centers(3,num_wann) )
+    ALLOCATE ( s_w(3,3,48,num_wann) )
+    ALLOCATE ( ft_w(3,48,num_wann) )
     !
     WRITE( stdout, '(5X, "SYM : Checking Symmetry of the WFs")')
     WRITE( stdout, '(7X, "SYM : nkstot=", I5, 3X, "nsym tot=", I5, 3X, "num_wann=", I5)') nkstot, nsym,num_wann
-    !
-    !get wannier centres in lattice coordinates
-    WRITE(stdout, '(7X, "SYM : read_wannier_centers ...")', advance='no')
-    CALL read_wannier_centers()
-    WRITE(stdout, '(" DONE")')
-    !
-    !go to crystal coordinates
-    !
-    !CALL cryst_to_cart( num_wann, centers, at, +1 )
-    WRITE(stdout, '(13X, "Centers of wannier functions (crys)...")')
-    DO iwann=1, num_wann
-      WRITE(stdout, '(13X, "iwann=", I5, 3X, "centers = (", 3(F20.12, ","), ")" )') &
-             iwann, centers(1:3, iwann) 
-    END DO
     !
     !
     nsym_w_k = 0
@@ -209,7 +193,7 @@ SUBROUTINE find_IBZ_q()
             IF (use_wct .AND. ABS(delta_rho) .gt. 1D-02) THEN 
               ! Try with the same Wannier in different cells:
               ! Each q contribution to the self-Hxc or to the screened self-Hxc (i.e. the alpha coeff)
-              ! does not depend on the center of the Wannier density contribution at q. 
+              ! does not depend on the homecell of the Wannier density contribution at q. 
               ! This means we can use also the symmetries that send 
               ! \rho_q^{0n}(R^-1r -f) in \rho_Rq^{Ln}(r) = e^{-i(Rq).L}\rho_Rq^{0n}(r)
               ! with L any lattice vector in the SC to reduce the number of q points. 
@@ -283,7 +267,6 @@ SUBROUTINE find_IBZ_q()
     DEALLOCATE ( rhowann_aux )
     DEALLOCATE ( rho_rotated )
     DEALLOCATE ( phase )
-    DEALLOCATE( centers )
     !
     CALL stop_clock ( 'check_symm' )
     !
