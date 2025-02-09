@@ -56,7 +56,6 @@ target_link_libraries(qe_kcwpp_ups_exe
     PRIVATE
         qe_pw
         qe_modules
-        qe_pp
         qe_upflib)
 
 ###########################################################
