@@ -7,6 +7,13 @@ cd example01/
 echo "DONE"
 cd $home
 
+echo "Running example01_sym"
+cd example01_sym/
+./run_example
+./compare.sh
+echo "DONE"
+cd $home
+
 echo "Running example02"
 cd example02/
 ./run_example
@@ -41,4 +48,5 @@ cd example06/
 ./compare.sh
 echo "DONE"
 cd $home
+
 

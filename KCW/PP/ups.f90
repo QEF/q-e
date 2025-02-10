@@ -146,7 +146,7 @@ PROGRAM ups
   USE kinds,       ONLY : DP
   USE io_global,   ONLY : stdout, ionode, ionode_id
   USE mp,          ONLY : mp_bcast
-  USE mp_global,   ONLY : mp_startup
+  USE mp_global,   ONLY : mp_startup, mp_global_end
   USE mp_images,   ONLY : intra_image_comm
   USE io_files,    ONLY : tmp_dir, prefix
   USE constants,   ONLY : RYTOEV
@@ -341,7 +341,9 @@ PROGRAM ups
   !
   CALL environment_end ( 'ups' )
   !
-  CALL stop_pp ()
+#if defined(__MPI)
+  CALL mp_global_end()
+#endif
 
 END PROGRAM ups
 

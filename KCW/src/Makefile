@@ -56,18 +56,22 @@ kcw_init_q.o\
 kcw_allocate_q.o\
 kcw_deallocate_q.o\
 setup_coulomb_exx.o\
-coulomb.o
-#restore_symm.o 
-#check_density.o 
-#setup_coulomb.o\
+coulomb.o\
+find_IBZ_q.o\
+kcw_kpoint_grid.o\
+write_qlist_ibz.o\
+read_qlist_ibz.o\
+kcw_read_sym.o\
+kcw_write_sym.o\
+kcw_deallocate_symmetry_arrays.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
-PWOBJS = ../../PHonon/PH/libph.a ../../PW/src/libpw.a ### FIXME: libph.a is needed to call run_nsn_ph (to apply t_rev)
+PWOBJS = ../../PW/src/libpw.a 
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
          ../../FFTXlib/src/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a \
-          ../..//MBD/libmbd.a
+         ../..//MBD/libmbd.a
 
-TLDEPS= pwlibs lrmods pp w90 phlibs #Dependency. To be compiled first
+TLDEPS= pwlibs lrmods pp w90
 
 all : tldeps libs-kcw kcw.x clean_partial
 

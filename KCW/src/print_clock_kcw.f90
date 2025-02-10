@@ -14,6 +14,7 @@ subroutine print_clock_kcw
   USE io_global,  ONLY : stdout
   USE uspp,       ONLY : nlcc_any
   USE uspp_init,  ONLY : init_us_2
+  USE control_kcw,ONLY : irr_bz
   implicit none
   !
   WRITE( stdout, * )
@@ -23,6 +24,7 @@ subroutine print_clock_kcw
   call print_clock ('phq_init')
   call print_clock ('map')
   call print_clock ('rho_of_q')
+  IF (irr_bz) call print_clock ('check_symm')
   WRITE( stdout, * )
   if (nlcc_any) call print_clock ('set_drhoc')
   call print_clock ('init_vloc')

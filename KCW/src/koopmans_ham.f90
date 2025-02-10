@@ -146,7 +146,7 @@ SUBROUTINE koopmans_ham ()
     WRITE( stdout, '(10x, "KS  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
     ehomo_ks = MAX ( ehomo_ks, eigvl(num_wann_occ ) )
-    elumo_ks = MIN ( elumo_ks, eigvl(num_wann_occ+1 ) )
+    IF (num_wann .gt. num_wann_occ) elumo_ks = MIN ( elumo_ks, eigvl(num_wann_occ+1 ) )
     !
     ham(:,:) = Hamlt(ik,:,:) 
     CALL cdiagh( num_wann, ham, num_wann, eigvl, eigvc )

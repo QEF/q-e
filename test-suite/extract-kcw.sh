@@ -36,7 +36,7 @@ eig1=`head -1  $fname | awk '{print $3}'`
 omega=`grep "Omega Total" $fname | awk '{print $7}'`
 
 ## WANN2KCW
-sh=`grep "orb     1" $fname | awk '{print $4}'`
+sh=`grep "orb     1" $fname | awk '{print $4}' | tail -1`
 
 ##KCW screen
 rpi=`grep "iwann  =     1" $fname | awk '{print $6}'`

@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #define ZERO (0.D0,0.D0)
+!#define DEBUG
 !-----------------------------------------------------------------------
 subroutine kcw_setup
   !-----------------------------------------------------------------------
@@ -34,7 +35,6 @@ subroutine kcw_setup
   USE noncollin_module,  ONLY : domag, noncolin, m_loc, angle1, angle2, ux, nspin_lsda, nspin_gga, nspin_mag, npol
   USE gvect,             ONLY : ig_l2g, mill
   USE wvfct,             ONLY : nbnd
-  !USE funct,             ONLY : dft_is_gradient
   USE xc_lib,            ONLY : xclib_dft_is
   !
   USE units_lr,          ONLY : iuwfc
@@ -45,39 +45,42 @@ subroutine kcw_setup
   USE control_kcw,       ONLY : evc0, iuwfc_wann, iuwfc_wann_allk, kcw_iverbosity, lgamma_iq, &
                                 spin_component, isq, read_unitary_matrix, x_q, tmp_dir_save, & 
                                 num_wann, num_wann_occ, occ_mat, tmp_dir_kcw, tmp_dir_kcwq, &
-                                io_sp, io_real_space, nrho, nkstot_eff!, wq, nqstot
+                                io_sp, io_real_space, nqstot, nrho, nkstot_eff!, wq, nqstot
   USE io_global,         ONLY : stdout
   USE klist,             ONLY : nkstot, xk, nelec, nelup, neldw
   USE cell_base,         ONLY : at, omega, bg, tpiba
   USE fft_base,          ONLY : dffts
   !
-  USE control_lr,       ONLY : nbnd_occ, lgamma
-  USE scf,              ONLY : rho
-  USE io_global,        ONLY : ionode, ionode_id
-  USE mp_images,        ONLY : intra_image_comm
-  USE mp,               ONLY : mp_bcast
-  USE io_files,         ONLY : create_directory
-  USE io_rho_xml,       ONLY : write_scf
+  USE control_lr,        ONLY : nbnd_occ, lgamma
+  USE scf,               ONLY : rho
+  USE io_global,         ONLY : ionode, ionode_id
+  USE mp_images,         ONLY : intra_image_comm
+  USE mp,                ONLY : mp_bcast
+  USE io_files,          ONLY : create_directory
+  USE io_rho_xml,        ONLY : write_scf
   !
-  USE io_kcw,           ONLY : write_rhowann, write_rhowann_g
+  USE io_kcw,            ONLY : write_rhowann, write_rhowann_g
   !
-  USE mp,               ONLY : mp_sum
-  USE control_lr,       ONLY : lrpa
-  USE coulomb,          ONLY : setup_coulomb
+  USE mp,                ONLY : mp_sum
+  USE control_lr,        ONLY : lrpa
+  USE coulomb,           ONLY : setup_coulomb
   !
-  USE mp_pools,         ONLY : my_pool_id
-  USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
-                               root_bgrp, intra_bgrp_comm, &
-                               inter_bgrp_comm
-
+  USE mp_pools,          ONLY : my_pool_id
+  USE mp_bands,          ONLY : my_bgrp_id, root_bgrp_id, &
+                                root_bgrp, intra_bgrp_comm, &
+                                inter_bgrp_comm
+  USE symm_base,         ONLY : s, time_reversal, sr, ft
+  USE control_kcw,       ONLY : fbz2ibz, wq_ibz, irr_bz
+  USE io_kcw,            ONLY : read_rhowann, read_rhowann_g
+  USE fft_interfaces,    ONLY : invfft, fwfft
 
   !
   implicit none
-
-  integer :: na, i, ik, ip, ipp
+  !
+  integer :: na, i, ik, ip, ipp, iq_ibz
   ! counters
   !
-  INTEGER   :: lrwfc, iun_qlist!, nkstot_eff
+  INTEGER   :: lrwfc, iun_qlist, iun_qlist_ibz
   LOGICAL   :: exst, exst_mem
   INTEGER :: iq, nqs
   REAL(DP) :: xq(3)
@@ -104,6 +107,7 @@ subroutine kcw_setup
   COMPLEX(DP), ALLOCATABLE :: rho_c(:,:,:),wann_c(:,:,:)
   COMPLEX(DP) :: phase(dffts%nnr)
   INTEGER :: iwann
+  COMPLEX (DP) :: sh_q
   !
   ALLOCATE ( delta_vg(ngms,nspin_mag), vh_rhog(ngms), delta_vg_(ngms,nspin_mag) )
   !WRITE(*,*), 'NGMS', ngms
@@ -141,6 +145,8 @@ subroutine kcw_setup
      IF ( xclib_dft_is('gradient') ) CALL compute_ux(m_loc,ux,nat)
      !if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
   ENDIF
+  !
+  CALL kcw_R_points ()
   !
   ! ... Computes the number of occupied bands for each k point
   !
@@ -247,8 +253,8 @@ subroutine kcw_setup
   iun_qlist = 127
   OPEN (iun_qlist, file = TRIM(tmp_dir_kcw)//'qlist.txt')
   !
-  ! 
   nqs = nkstot_eff
+  nqstot = nqs ! FIXME: replace nqs (local) with nqstot (global)
   ALLOCATE (x_q (3, nqs), isq(nqs) )
   ALLOCATE (weight(nqs) )
   iq=1
@@ -347,6 +353,13 @@ subroutine kcw_setup
       !! The periodic part of the perturbation DeltaV_q(G)
       ! 
       sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:) )*weight(iq)*omega
+#ifdef DEBUG
+      sh_q  = sum (0.5D0*CONJG(rhog (:,1)) * vh_rhog(:) )*omega
+      CALL mp_sum (sh_q,    intra_bgrp_comm)
+      WRITE(1005,*) "iwann=", i, "q=", iq, "weight=", weight(iq), &
+                    "nq eq=", INT(weight(iq)/weight(iq)), &
+                    "SH="   , REAL(sh_q), AIMAG(sh_q)
+#endif
       !
     ENDDO
     !
@@ -436,6 +449,100 @@ subroutine kcw_setup
   WRITE(stdout, '(/,5X,"INFO: PREPARING THE KCW CALCULATION ... DONE")')
   WRITE(stdout,'(/)')
   !
+  ! Find symmetries respected by each wannier function
+  !
+  IF(irr_bz) THEN
+    !
+    CALL find_IBZ_q()
+    !
+    ! Define IBZ for every wannier function
+    !
+    CALL kcw_kpoint_grid()
+    !
+    ! Compute self - Hartree with the IBZ and the weights  
+    !
+    sh=0 
+    DO iq = 1, nqs
+      DO i = 1, num_wann
+        !
+        ! check if the q point is in the IBZ
+        !
+        IF( fbz2ibz(iq, i) .eq. -1 ) CYCLE
+        iq_ibz = fbz2ibz(iq, i)
+        !
+        ! read orbital density in r space for current q point
+        !
+        tmp_dir_kcwq= TRIM (tmp_dir_kcw) //'q' &
+        & // TRIM(int_to_char(iq))//'/'
+        !
+        IF ( .NOT. io_real_space ) THEN 
+          !
+          ! FIXME: TO BE UPDATED FOR NC
+          ip=1
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_g_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          CALL read_rhowann_g( file_base, &
+               root_bgrp, intra_bgrp_comm, &
+               ig_l2g, 1, rhog(:,1), .FALSE., gamma_only )
+          rhowann_aux=(0.d0,0.d0)
+          rhowann_aux(dffts%nl(:)) = rhog(:,1)
+          CALL invfft ('Rho', rhowann_aux, dffts)
+          rhowann_aux(:)= rhowann_aux(:)*omega
+        ELSE 
+          ! FIXME: TO BE UPDATED FOR NC
+          ip=1
+          file_base=TRIM(tmp_dir_kcwq)//'rhowann_iwann_'//TRIM(int_to_char((i-1)*nrho+ip))
+          CALL read_rhowann( file_base, dffts, rhowann_aux )
+        ENDIF
+        !
+        ! end of read orbital density
+        !
+        ! 
+        lrpa_save=lrpa
+        lrpa = .true.
+        !
+        rhog(:,:)       = CMPLX(0.D0,0.D0,kind=DP)
+        delta_vg(:,:)   = CMPLX(0.D0,0.D0,kind=DP)
+        vh_rhog(:)      = CMPLX(0.D0,0.D0,kind=DP)
+        rhor(:,:)       = CMPLX(0.D0,0.D0,kind=DP)
+        !
+        rhor(:,1) = rhowann_aux(:)
+        !! The periodic part of the orbital desity in real space
+        !
+        CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_ )
+        !! The periodic part of the perturbation DeltaV_q(G)
+        ! 
+        sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:,1)) * vh_rhog(:) )*wq_ibz(iq_ibz, i)*omega
+#ifdef DEBUG
+        sh_q  =sum (0.5D0*CONJG(rhog (:,1)) * vh_rhog(:) )*omega
+        CALL mp_sum (sh_q,    intra_bgrp_comm)
+        WRITE(2005,*) "iwann=", i, "q=", iq, "weight=", wq_ibz(iq_ibz, i), &
+                      "nq eq=", INT(wq_ibz(iq_ibz, i)/weight(iq)), &
+                      "SH="   , REAL(sh_q), AIMAG(sh_q)
+#endif
+      END DO!iwann
+    END DO!iq
+
+    ! Print on output the self-Hatree
+    CALL mp_sum (sh, intra_bgrp_comm)
+    !
+    WRITE(stdout,'(/, 5X, "INFO: Orbital Self-Hartree (SH) with Symmetries")') 
+    DO i = 1, num_wann
+      WRITE(stdout,'(5X, "orb ", 1i5, 5X, "SH ", 1F10.6)') i, REAL(sh(i))
+    END DO
+    !
+    !create a file with all the info about IBZ for each wannier function
+    !
+    IF (ionode) THEN 
+      CALL write_qlist_ibz()
+      DO i = 1, num_wann
+        CALL write_symmetry_op(i)
+      END DO 
+    ENDIF
+      !
+    !CALL compute_dmn()
+  END IF!if for symmetries
+  !
+  CALL close_buffer  ( iuwfc, 'KEEP' )
   !
   CALL stop_clock ('kcw_setup')
   !

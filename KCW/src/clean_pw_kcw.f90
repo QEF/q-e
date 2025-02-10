@@ -12,7 +12,7 @@ SUBROUTINE clean_pw_kcw( )
   !! This routine deallocate all the variables of pwscf and of the
   !! screen code.
   !
-  USE control_kcw,     ONLY : iudvwfc
+  USE control_kcw,     ONLY : iudvwfc, setup_pw
   USE units_lr,        ONLY : iudwf, iuwfc
   USE buffers,         ONLY : close_buffer
 
@@ -20,14 +20,14 @@ SUBROUTINE clean_pw_kcw( )
   !
   IMPLICIT NONE
   !
-  CALL clean_pw( .FALSE. )
+  IF( setup_pw ) CALL clean_pw( .FALSE. )
   CALL kcw_deallocate_q ()
   nsymq=0
   !
   ! ... Close the files
   !
-  CALL close_buffer(iuwfc,'delete')
-  CALL close_buffer(iudwf,'delete')
+  CALL close_buffer(iuwfc, 'delete')
+  CALL close_buffer(iudwf, 'delete')
   CALL close_buffer(iudvwfc,'delete')
   !
 RETURN
