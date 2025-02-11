@@ -65,7 +65,7 @@ MODULE constraints_module
    !
    ! ... global variables
    !
-   INTEGER               :: nconstr=0, nconstr_ndof
+   INTEGER               :: nconstr = 0, nconstr_ndof = 0
    REAL(DP)              :: constr_tol
    INTEGER,  ALLOCATABLE :: constr_type(:)
    REAL(DP), ALLOCATABLE :: constr(:,:)
