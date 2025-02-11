@@ -108,11 +108,6 @@ subroutine solve_e
      dr2 = 0.d0
   endif
   !
-  IF ( ionode .AND. fildrho /= ' ') THEN
-     INQUIRE (UNIT = iudrho, OPENED = exst)
-     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
-  end if
   IF (rec_code_read > -20) convt=.TRUE.
   !
   if (convt) go to 155
@@ -157,6 +152,17 @@ subroutine solve_e
   CALL dfpt_kernel('PHONON', 3, iter0, lrebar, iuebar, dr2, drhos, drhop, dvscfins, dvscfin, dbecsum, 1, 0, 'efield')
   !
   IF (lda_plus_u) CALL dnsq_store(3, 0)
+  !
+  IF ( fildrho /= ' ') THEN
+     IF ( ionode ) THEN
+        INQUIRE (UNIT = iudrho, OPENED = exst)
+        IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+        CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
+     END IF
+     DO ipol=1,3
+        CALL davcio_drho(dvscfin(1,1,ipol),lrdrho, iudrho,ipol,+1)
+     END DO
+  END IF
   !
 155 continue
   !
