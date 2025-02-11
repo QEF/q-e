@@ -446,8 +446,6 @@ def wavevector_perturb_simple(nq, q_max, q_min=0.01, q_dir=None, rand_seed=None)
 def wavevector_perturb_uniform(grid, q_step=0.01):
     """Generate a uniform grid of q-points.
 
-    TODO: with only symmetry-distinct q-points.
-
     This returns a grid around the origin with the step size
     of q_step in crystal coordinate.
 
@@ -675,7 +673,7 @@ def write_ph_input(q_vec, filename, ph_header="ph.in"):
             ph_in.write(line.format(iq))
         else:
             ph_in.write(line)
-    ph_in.write("{0[0]:>20.15f} {0[1]:>20.15f} {0[2]:>20.15f}\n".format(q_vec.tolist()))
+    ph_in.write("{0[0]:>13.8f} {0[1]:>13.8f} {0[2]:>13.8f}\n".format(q_vec.tolist()))
     with open(filename, "w") as finalf:
         finalf.write(ph_in.getvalue())
     ph_in.close()
@@ -1322,6 +1320,12 @@ class Atoms(baseAtoms):
                 else:
                     cell *= alat
             if line_split[0].upper() == "ATOMIC_POSITIONS":
+                try:
+                    cell
+                except NameError or UnboundLocalError:
+                    raise ValueError(
+                        "CELL_PARAMETERS must be set before ATOMIC_POSITIONS."
+                    )
                 atom_pos = np.zeros((nat, 3))
                 symbols = []
                 for i in range(nat):
