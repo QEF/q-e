@@ -28,7 +28,7 @@
 !=----------------------------------------------------------------------------=!
 !
 ! These routines allocate buffer spaces used in reduce_base_real_gpu.
-! These should be in data_buffer.f90 but need to be here becouse size is
+! These should be in data_buffer.f90 but need to be here because size
 ! depends on the __MSGSIZ_MAX definition
 
 #if defined (__CUDA)
