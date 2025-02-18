@@ -83,7 +83,6 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
                               dvqhbar_orth_lm(:,:,:,:), aux1(:,:,:), dyn1_test(:,:) 
   REAL(DP), ALLOCATABLE :: wgg(:,:,:)
   COMPLEX(DP) :: dvi, prj, prj_orth
-  COMPLEX(DP), EXTERNAL :: ZDOTC   
   LOGICAL :: lmetq0   ! .true. if q=0 for a metal
   ! 
   CALL start_clock( 'dynmat_hub_scf' )
@@ -172,11 +171,11 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
                     DO ibnd = 1, nbnd
                        !
                        !          from E_Hub alone
-                       prj_orth = ZDOTC (npwq, dpsi_orth_cart(:,ibnd,jcar,nap), 1,  &
-                                               dvqhbar_orth(:,ibnd,icar,na), 1)   + & 
-                       !          extra term     
-                                  ZDOTC (npwq, dvqhbar_orth_lm(:,ibnd,jcar,nap), 1, &
-                                               dpsi_orth_cart(:,ibnd,icar,na), 1)
+                       prj_orth = dot_product (dpsi_orth_cart(1:npwq,ibnd,jcar,nap), &
+                                                 dvqhbar_orth(1:npwq,ibnd,icar,na))+ & 
+                       !          extra term      
+                                  dot_product (dvqhbar_orth_lm(1:npwq,ibnd,jcar,nap),&
+                                               dpsi_orth_cart( 1:npwq,ibnd,icar,na))
                        ! 
                        CALL mp_sum(prj_orth, intra_bgrp_comm) 
                        ! 
@@ -225,7 +224,7 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
            !
            DO ibnd = 1, nbnd
               !
-              prj = ZDOTC (npwq, dpsi(:,ibnd), 1, aux1(:,ibnd,imode), 1)
+              prj = dot_product  (dpsi(1:npwq,ibnd), aux1(1:npwq,ibnd,imode))
                           
               CALL mp_sum (prj, intra_bgrp_comm) 
               !

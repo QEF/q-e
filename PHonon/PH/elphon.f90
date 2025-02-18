@@ -375,8 +375,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   INTEGER :: isolv, nsolv, ikmk, ikmq
   COMPLEX(DP) , ALLOCATABLE :: elphmat (:,:,:), aux2(:,:)
   LOGICAL :: exst
-  COMPLEX(DP), EXTERNAL :: zdotc
-  integer :: ibnd_fst, ibnd_lst
+  integer :: ibnd_fst, ibnd_lst, block_cols, block_rows
   !
   CALL start_clock('elphel')
   !
@@ -560,15 +559,15 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !
            ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
            !
-           DO ibnd = ibnd_fst, ibnd_lst
-              DO jbnd = ibnd_fst, ibnd_lst
-                 elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
-                      dvpsi (1, ibnd), 1)
-                 IF (noncolin) &
-                    elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
-                      zdotc (npwq, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
-              ENDDO
-           ENDDO
+           block_rows = ibnd_lst - ibnd_fst + 1 
+           block_cols = block_rows  
+           CALL zgemm('C','N',block_rows, block_cols, npwq, cmplx(1._dp, 0._dp, kind=dp), &
+                       evq(1,ibnd_fst), npwx*npol, dvpsi(1, ibnd_fst), npwx*npol,         &
+                       cmplx(0._dp, 0._dp,kind=dp), elphmat(ibnd_fst, ibnd_fst,ipert),nbnd) 
+           IF (noncolin) & 
+              CALL zgemm('C','N',block_rows, block_cols, npwq, cmplx(1._dp, 0._dp, kind=dp), &
+                         evq(npwx+1,ibnd_fst), npwx*npol, dvpsi(npwx+1, ibnd_fst), npwx*npol,         &
+                         cmplx(1._dp, 0._dp,kind=dp), elphmat(ibnd_fst, ibnd_fst,ipert),nbnd)                        
         ENDDO ! ipert
         !
         ! If elph_ahc, the matrix elements are computed in ahc.f90

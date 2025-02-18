@@ -30,7 +30,6 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
             auxr(dffts%nnr), auxg(npwx)
 
   complex(DP) :: tmp
-  complex(DP), EXTERNAL :: zdotc
   complex(DP) , allocatable :: ps1(:,:,:), ps2(:,:,:), &
                      ps3(:,:,:,:), ps4(:,:,:), au2r(:)
   integer :: ip, jp, ib, jb, ipa, ipb, nrec, ir
@@ -54,9 +53,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      call davcio (dpsi, lrd2w, iud2w, nrec, -1)
      do ip = 1, 3
         do ib = 1, nbnd_occ (ik)
-              ps1 (ib, ip, jp) =                        &
-                    -zdotc (npwq, depsi (1, ib, ip), 1, &
-                                  dpsi (1, ib), 1)
+              ps1 (ib, ip, jp) = -dot_product (depsi (1:npwq, ib, ip), dpsi (1:npwq, ib))
         enddo
      enddo
   enddo
@@ -65,8 +62,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      do ib = 1, nbnd_occ (ik)
         do jp = 1, 3
            do jb = 1, nbnd_occ (ik)
-              ps3(ib, ip, jb, jp) =                              &
-        zdotc (npwq, depsi (1, ib, ip), 1, depsi (1, jb, jp), 1)
+              ps3(ib, ip, jb, jp) =  dot_product (depsi (1:npwq, ib, ip), depsi (1:npwq, jb, jp))
            enddo
         enddo
      enddo
@@ -81,8 +77,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
         auxg (:) = (0.d0, 0.d0)
         call cft_wave (ik, auxg, auxr, -1 )
         do jb = 1, nbnd_occ (ik)
-           ps4 (ib, ip, jb) =                          &
-                 zdotc (npwq, auxg, 1, evc (1, jb), 1)
+           ps4 (ib, ip, jb) = dot_product (auxg(1:npwq), evc (1:npwq, jb))
         enddo
      enddo
   enddo
@@ -114,7 +109,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
            auxg (:) = (0.d0, 0.d0)
            call cft_wave (ik, auxg, auxr, -1 )
            do ipb = 1, 3
-              tmp = zdotc (npwq, auxg, 1, depsi (1, ib, ipb), 1)
+           tmp = dot_product (auxg(1:npwq), depsi (1:npwq, ib, ipb))
               if (ipa.eq.ipb) tmp = tmp * 2.d0
               ps1 (ib, ip, jab (ipa, ipb)) =       &
               ps1 (ib, ip, jab (ipa, ipb)) + tmp
@@ -139,8 +134,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
         enddo
         call cft_wave (ik, auxg, auxr, -1 )
         do jp = 1, 6
-              ps2 (ib, ip, jp) =                             &
-                  zdotc (npwq, auxg, 1, chif (1, ib, jp), 1)
+              ps2 (ib, ip, jp) =  dot_product (auxg(1:npwq), chif (1:npwq, ib, jp))
         enddo
      enddo
   enddo

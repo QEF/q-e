@@ -82,7 +82,6 @@ SUBROUTINE dynmat_hub_bare
   COMPLEX(DP) :: dnsaux1, dnsaux2, d2ns_bare_aux, d2ns_bare_k, work
   LOGICAL :: exst
   COMPLEX(DP), ALLOCATABLE :: d2ns_bare(:,:,:,:,:,:), dynwrk(:,:)  
-  COMPLEX(DP), EXTERNAL :: ZDOTC  
   !
   CALL start_clock ( 'dynmat_hub_bare' )
   !
@@ -191,13 +190,14 @@ SUBROUTINE dynmat_hub_bare
         !
         proj1 = (0.d0, 0.d0)
         !
+        !FIXME use zgemms here 
         DO nah = 1, nat
            nt = ityp(nah)
            IF (is_hubbard(nt)) THEN
               DO m1 = 1, 2*Hubbard_l(nt)+1
                  ihubst1 = offsetU(nah) + m1   ! I m index
                  DO ibnd = 1, nbnd
-                    proj1(ibnd, ihubst1) = ZDOTC (npw, swfcatomk(:,ihubst1), 1, evc(:,ibnd), 1)
+                 proj1(ibnd, ihubst1) = dot_product (swfcatomk(1:npw,ihubst1), evc(1:npw,ibnd))
                  ENDDO
               ENDDO
            ENDIF
@@ -208,12 +208,13 @@ SUBROUTINE dynmat_hub_bare
         !
         projpb = (0.d0, 0.d0)
         !
+        !FIXME zgemms of even calbec could be use here 
         DO na = 1, nat    
            nt = ityp(na)  
            DO ih = 1, nh(nt)
               ibeta = ofsbeta(na) + ih
               DO ibnd = 1, nbnd
-                 projpb(ibnd, ibeta) = ZDOTC (npw, evc(:,ibnd), 1, vkb(:,ibeta), 1)
+                 projpb(ibnd, ibeta) = dot_product (evc(1:npw,ibnd), vkb(1:npw,ibeta))
               ENDDO
            ENDDO
         ENDDO
@@ -269,7 +270,7 @@ SUBROUTINE dynmat_hub_bare
                                             ! 
                                             DO ibnd = 1, nbnd
                                                projpdb(ibnd, ibeta, icar) = &
-                                                 ZDOTC (npw, evc(:,ibnd), 1, dvkb(:,ibeta,icar), 1)
+                                                       dot_product(evc(1:npw,ibnd), dvkb(1:npw,ibeta,icar))
                                             ENDDO
                                             !
                                          ENDDO ! ih

@@ -34,7 +34,6 @@ subroutine dielec_test
   INTEGER :: npw
   integer :: ibnd, ipol, jpol, nrec, ik, i1, i2
   real(DP) :: w_, weight, tmp
-  complex(DP), external :: zdotc
 
   epsilon (:,:) = 0.d0
   do ik = 1, nksq
@@ -48,7 +47,7 @@ subroutine dielec_test
         tmp = 0.d0
         do ibnd = 1, nbnd_occ (ik)
            tmp = tmp + 2.0d0 * w_ *                        &
-              real (zdotc (npw, evc (1, ibnd), 1, dpsi (1, ibnd), 1))
+                   real (dot_product (evc (1:npw, ibnd), dpsi (1:npw, ibnd)))
         enddo
         i1 = a1j (ipol)
         i2 = a2j (ipol)

@@ -47,7 +47,6 @@ subroutine polariz ( iw, iu )
   ! counter on k points
   real(kind=DP) :: w, weight, repsilon(3,3)
 
-  complex(kind=DP), EXTERNAL :: zdotc
 
   call start_clock ('polariz')
   repsilon(:,:) = 0.d0
@@ -65,7 +64,7 @@ subroutine polariz ( iw, iu )
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
               repsilon(ipol,jpol)=repsilon(ipol,jpol)-4.d0*w*REAL( &
-                   zdotc ( ngk(ik), dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1) )
+                      dot_product ( dvpsi (1:ngk(ik), ibnd), dpsi (1:ngk(ik), ibnd)))
            enddo
         enddo
      enddo

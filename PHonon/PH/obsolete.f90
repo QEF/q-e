@@ -1776,7 +1776,6 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
 
   COMPLEX(DP) :: times              ! safe dimension
   ! in case of accidental degeneracy
-  COMPLEX(DP), EXTERNAL :: zdotc
   REAL(DP), ALLOCATABLE :: w1(:)
   COMPLEX(DP), ALLOCATABLE ::  rmode(:,:), trace(:,:), z(:,:)
   LOGICAL :: is_linear
@@ -1839,7 +1838,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
            nu_i=istart(igroup)+i-1
            CALL rotate_mod(z,rmode,sr(1,1,irot),irt,rtau,xq,nat,irot)
            trace(iclass,igroup)=trace(iclass,igroup) + &
-                zdotc(3*nat,z(1,nu_i),1,rmode(1,nu_i),1)
+                   dot_product(z(1:3*nat,nu_i),rmode(1:3*nat,nu_i))
         END DO
 !              write(6,*) igroup,iclass, trace(iclass,igroup)
      END DO
