@@ -293,7 +293,12 @@ PROGRAM images_interpolator
   WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
   WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
   WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
+  ! FF 18/02/25 apply renewed syntax START
+  WRITE( UNIT = iunrestart, FMT = '("NUMBER OF IMAGES")' )
+  WRITE( UNIT = iunrestart, FMT = '(I4)' ) new_num_of_images
+  WRITE( UNIT = iunrestart, FMT = '("APPLY CONSTANT BIAS")' )
   WRITE( UNIT = iunrestart, FMT = '(A4)' ) 'F'
+  ! FF 18/02/25 apply renewed syntax END
   !
   WRITE( UNIT = iunrestart, FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
   !
