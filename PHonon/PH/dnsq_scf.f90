@@ -64,7 +64,6 @@ SUBROUTINE dnsq_scf (npe, lmetq0)
   COMPLEX(DP), ALLOCATABLE :: dpsi(:,:)
   REAL(DP) :: weight, wdelta, w1
   REAL(DP), EXTERNAL :: w0gauss 
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock( 'dnsq_scf' )
   ! 
@@ -121,8 +120,8 @@ SUBROUTINE dnsq_scf (npe, lmetq0)
                  !
                  DO ibnd = 1, nbnd_occ(ikk)
                     !
-                    proj1(ibnd,ihubst) = ZDOTC (npw,  swfcatomk(:,ihubst),   1, evc(:,ibnd),  1)
-                    proj2(ibnd,ihubst) = ZDOTC (npwq, swfcatomkpq(:,ihubst), 1, dpsi(:,ibnd), 1)
+                    proj1(ibnd,ihubst) = dot_product (swfcatomk(1:npw,ihubst), evc(1:npw,ibnd))
+                    proj2(ibnd,ihubst) = dot_product (swfcatomkpq(1:npwq,ihubst), dpsi(1:npwq,ibnd))
                     !
                  ENDDO
                  ! 

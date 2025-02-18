@@ -88,7 +88,6 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, s, sr, irt, xq,    &
 
   COMPLEX(DP) :: times              ! safe dimension
   ! in case of accidental degeneracy
-  COMPLEX(DP), EXTERNAL :: zdotc
   REAL(DP), ALLOCATABLE :: w1(:)
   COMPLEX(DP), ALLOCATABLE ::  rmode(:,:), trace(:,:), z(:,:)
   LOGICAL :: is_linear
@@ -178,7 +177,7 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, s, sr, irt, xq,    &
         DO i=1,dim_rap(igroup)
            nu_i=istart(igroup)+i-1
            trace(iclass,igroup)=trace(iclass,igroup) + &
-                zdotc(3*nat,z(1,nu_i),1,rmode(1,nu_i),1)
+                dot_product(z(1:3*nat, nu_i),rmode(1:3*nat,nu_i))
         END DO
 !              write(6,*) 'group,class',igroup, iclass, trace(iclass,igroup)
      END DO

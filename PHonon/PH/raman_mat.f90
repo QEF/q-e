@@ -83,7 +83,6 @@ subroutine raman_mat
   ! swap space
   complex(DP) :: tmpc
   !! the scalar product function
-  complex(DP), EXTERNAL :: zdotc
 
   allocate (wrk       (6,3*nat,2)   )
   allocate (matram    (3,3,3,nat)   )
@@ -141,9 +140,7 @@ subroutine raman_mat
         do ipb = 1, 3
            do ibnd = 1, nbnd_occ (ik)
               do jbnd = 1, nbnd_occ (ik)
-                 ps (ibnd, jbnd, ipa, ipb) =                &
-                      zdotc (npwq, depsi (1, ibnd, ipa), 1, &
-                             depsi (1, jbnd, ipb), 1)
+                 ps (ibnd, jbnd, ipa, ipb) = dot_product (depsi (1:npwq, ibnd, ipa), depsi (1:npwq, jbnd, ipb))
               enddo
            enddo
         enddo
@@ -172,8 +169,7 @@ subroutine raman_mat
         do ipa = 1, 6
            tmp = 0.d0
            do ibnd = 1, nbnd_occ (ik)
-              tmp = tmp + weight *  DBLE( zdotc(npwq,             &
-                    chif (1, ibnd, ipa), 1, dvpsi (1, ibnd), 1) )
+           tmp = tmp + weight *  DBLE( dot_product(chif (1:npwq, ibnd, ipa), dvpsi (1:npwq, ibnd)))
            enddo
            wrk (ipa, imod, 1) = wrk (ipa, imod, 1) + tmp
         enddo
@@ -215,8 +211,7 @@ subroutine raman_mat
            do ipb = 1, ipa
               tmp = 0.d0
               do ibnd = 1, nbnd_occ (ik)
-                 tmp = tmp + weight *  DBLE(zdotc (npwq, &
-                       chif (1, ibnd, ipb), 1, dvpsi (1, ibnd), 1) )
+              tmp = tmp + weight *  DBLE(dot_product (chif (1:npwq, ibnd, ipb), dvpsi (1:npwq, ibnd)))
               enddo
               wrk (jab (ipa, ipb), imod, 2) = &
               wrk (jab (ipa, ipb), imod, 2) + tmp
