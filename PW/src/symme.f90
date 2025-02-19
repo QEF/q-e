@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2008-2010 Quantum ESPRESSO group
+! Copyright (C) 2008-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -540,6 +540,10 @@ CONTAINS
     ! some gcut_ value (see above) cuts a shell of G-vectors in the middle
     ! This may happen if G-vector ordering with |G| is not perfect
     !
+    ierr = 0
+10  ierr = ierr+1
+    IF ( ierr > 5 ) CALL errore('sym_rho_init', &
+         'internal error: G-vector distribution failed', ierr)
     ngpos=0
     gtop = 0.0_dp
     gnext= 0.0_dp
@@ -547,7 +551,12 @@ CONTAINS
        ngloc=0
 cutg:  DO ig=ngpos+1,ngm
           IF ( gg(ig) > gcut_(np) ) THEN
-             gtop = gg(ig-1)
+             ! this is to prevent an unlikely out-of-bound error
+             IF ( ig > 1 ) THEN
+                gtop = gg(ig-1)
+             ELSE
+                gtop = gcut_(np)
+             END IF
              gnext = gg(ig)
              EXIT cutg
           END IF
@@ -557,13 +566,19 @@ cutg:  DO ig=ngpos+1,ngm
             'some processors have no G-vectors for symmetrization')
        ngpos = ngpos + ngloc
        IF ( ngpos > ngm ) &
-            CALL errore('sym_rho','internal error: too many G-vectors', ngpos)
+            CALL errore('sym_rho_init','internal error : too many G-vectors', ngpos)
        ! Note that gnext > gtop only for perfect ordering
        CALL mp_max( gtop , intra_bgrp_comm)
        CALL mp_min( gnext, intra_bgrp_comm)
-       ! The following criterion is rather arbitrary: it should as small as
-       ! possible but slightly larger than the expected numerical noise 
-       IF ( ABS ( gnext-gtop ) < 1.0e-7*gcut_(np) ) gcut_(np) = MAX(gnext,gtop)
+       ! The following criterion is rather arbitrary:
+       ! the quantity at the rhs below should be as small as possible,
+       ! but larger than the expected numerical noise
+       IF ( ABS ( gnext-gtop ) < 1.0e-7*gcut_(np) ) THEN
+          ! The largest vector in this slice is too close to the smallest one
+          ! in the next slice: raise the gcut_ for this slice, check again
+          gcut_(np) = MAX(gnext,gtop)
+          GO TO 10
+       END IF
     END DO
     !
     ! now find the number of G-vectors in each "slice"
