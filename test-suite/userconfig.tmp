@@ -1,3 +1,14 @@
+[PIOUD]
+exe = XXXXXX/test-suite/run-pioud.sh
+extract_program = XXXXXX/test-suite/extract-pioud.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.input tc.output tc.error tc.args
+tolerance = ( (8.0e-4, 1.0e-4, 'Temp_K'),
+              (8.0e+0, 1.0e+1, 'Temp_Ha'),
+               (8.0e-4, 1.0e-4, 'E_kin'))
+skip_program = grep
+skip_args = 'not present in this version\|libxc needed for this functional'
+
 [PW]
 exe = XXXXXX/test-suite/run-pw.sh
 extract_program = XXXXXX/test-suite/extract-pw.sh

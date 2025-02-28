@@ -2,10 +2,10 @@ BEGIN
 BEGIN_PIMD_INPUT
 &dynamics
   restart_pimd=.false.
-  nbeadMD=4
+  nbeadMD=5
   nunitcells=1
-  nblocks=4 !! not used check - only used for first run. restart not working -check
-  nstep_block=4 !! not used check - only used for first run. restart not working -check
+  nblocks=2 !! not used check - only used for first run. restart not working -check
+  nstep_block=2 !! not used check - only used for first run. restart not working -check
   iprint=1 !! Freqncy of output print
   run='pioud' !! verlet,ceriotti,pioud
   delt=0.2d0  !! for pioud, 41.32231 which is 1 fs in a.u., must be divided for sqrt(m_1) #time step

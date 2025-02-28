@@ -42,10 +42,16 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial run-tests-pioud-serial
 
-run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel run-tests-tddfpt-parallel
+run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel run-tests-tddfpt-parallel run-tests-pioud-parallel
 
+run-tests-pioud-serial : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pioud_all
+
+run-tests-pioud-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pioud_all
 
 run-tests-cp-serial : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
