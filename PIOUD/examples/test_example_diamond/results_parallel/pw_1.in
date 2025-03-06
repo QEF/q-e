@@ -1,7 +1,7 @@
 &CONTROL
   prefix         = "diamond"
-  outdir         = "/home/arivazha/gitlab/q-e-pioud/tempdir",
-  pseudo_dir     = "/home/arivazha/gitlab/q-e-pioud/pseudo",
+  outdir         = "/home/aadhityan/Documents/gitlab/pioud_aadhityan/tempdir",
+  pseudo_dir     = "/home/aadhityan/Documents/gitlab/pioud_aadhityan/pseudo",
   tstress = .true.
 /
 &SYSTEM

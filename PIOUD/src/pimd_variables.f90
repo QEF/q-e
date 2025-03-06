@@ -40,10 +40,7 @@ MODULE pimd_variables
        gammaMD,                    &
        sigmacov,                 &
        delta_force,              &
-       delta_harm,               &
-       delta0,                   &
-       delta0k,                  &
-       delta0q
+       delta_harm               
   
   INTEGER :: &
        nblocks,                  &! number of blocks for averages  

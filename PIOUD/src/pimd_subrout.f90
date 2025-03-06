@@ -259,8 +259,8 @@ subroutine prop_ceriotti_1half_irun3(intinp)
    
   use pimd_variables, ONLY : nbeadMD,tmes_bead,mass_ion,vel,gMD,&
                              cost,fbead,rcentroid,rpos,forceMD,&
-                             ekinq,tempMD,natMD,ekinqp,tfakeMD,&
-                             ptilde,pimp,sigmacov,delt,rtilde_mode,&
+                             sigmacov, ekinq,tempMD,natMD,ekinqp,tfakeMD,&
+                             ptilde,pimp,delt,rtilde_mode,&
                              yesquantum,ndimMD,sigma_true, rpos_old
   implicit none
   integer :: i,l,ind,k,kk,jj,ii,intinp
@@ -744,7 +744,7 @@ subroutine prop_pioud_irun4(ekin,epot)
                              cov, cov_pimd, velocity, forcedyn, forceMD,&
                              ieskin, sigmacov, averaged_cov, psip, &
                              scalpar,iflagerr, rankMD, friction, &
-                             delta0, delta0q, delta0k, dt, tmes_bead, &
+                             dt, tmes_bead, &
                              normcorr, ener_true, tmes, unit_dot_sigma
   
   implicit none 
@@ -873,7 +873,7 @@ subroutine prop_pioud_irun4(ekin,epot)
 
   call reweight_pioud_irun4(psip,ieskin &
                            ,scalpar,iflagerr,rankMD,temp,friction &
-                           ,delta0,delta0q,delta0k,dt,tmes_bead,cov_pimd &
+                           ,dt,tmes_bead,cov_pimd &
                            ,nion,normcorr,forcedyn,rpos,velocity)
 
 ! rescale velocity into atomic units 
@@ -913,7 +913,7 @@ end subroutine prop_pioud_irun4
 
 subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
                               ,temp,friction &
-                              ,delta0,delta0q,delta0k,dtr,tmes,cov &
+                              ,dtr,tmes,cov &
                               ,nion,normcorr,forza,rion,velocity)
 
  use pimd_variables, only: kdyn_eig,yessecond &
@@ -942,7 +942,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
   real*8 normcorr,psip(*),cost,zeta &
          ,scalpar(*),forza(ieskin,*),velocity(3,ieskin,*) &
          ,temp,pi,dt,friction,tmes(*),dtr &
-         ,cov(ieskin*ieskin,*),delta0,delta0q,delta0k &
+         ,cov(ieskin*ieskin,*) &
          ,rion(ndimMD,nion,*),cov_sav(ieskin*ieskin)
   real*8 mnoise(2,2),zetan(2),costh,eta_v,eta_r &
          ,Tn,Gn,Gni(2,2),alphaqmc,alphaall &
@@ -1001,8 +1001,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
 ! covariance computed outside (cov given in input)!!!
 
   if(temp.ne.0.d0) then 
-     cost=delta0*0.5d0/temp !!! cost ha le dimensioni di un'azione
-  else 
+     cost=0.5d0/temp !!! cost ha le dimensioni di un'azione 
      cost=0.d0 
   endif
   call dscal(ieskin2_pimd,cost,cov,1) !!! cov ora ha le dimensioni di (gamma=alfa/2T)
@@ -1033,7 +1032,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
 
 ! add diagonal contribution to gamma matrix
      do i=1,ieskin 
-        cov(ieskin*(i-1)+i,ibead)=cov(ieskin*(i-1)+i,ibead)+delta0q 
+        cov(ieskin*(i-1)+i,ibead)=cov(ieskin*(i-1)+i,ibead)
      enddo
      
 ! save cov for output before it is destroyed by covariance diagonalization
@@ -1070,7 +1069,8 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
      endif
 
 !  if(rank.eq.0) write(6,*) ' Ratio dyn =',(psip(ieskin)-friction)/sqrt(temp*157.8873306d0)
-     if(ibead.eq.1 .and. rank.eq.0) write(6,*) ' Ratio dyn =',(psip(ieskin)-delta0q)*dt
+     if(ibead.eq.1 .and. rank.eq.0) write(6,*) ' Ratio dyn =',(psip(ieskin))*dt !!!Aadhityan      
+
 !  write(6,*) psip(ieskin),friction,temp
 
      do i=1,ieskin 
@@ -1089,7 +1089,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
         if(psip(i).gt.0.d0) then 
 !         the following is protected for overflow                       
            cost=exp(-dth*psip(i)) 
-           alphaqmc=normcorr*2.d0*temp*(psip(i)-delta0q)/delta0
+           alphaqmc=normcorr*2.d0*temp*(psip(i))
            psip(n4+i-1)=temp*psip(i)**2*(1.d0+cost)/(1.d0-cost)-alphaqmc                          
 !          subtracting the noise already present in the forces          
         else 
@@ -1100,10 +1100,10 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
            psip(n4+i-1)=dsqrt(psip(n4+i-1)) 
         else 
            psip(n4+i-1)=0.d0 
-           if(delta0q.gt.0.d0) then 
+        
               if(rank.eq.0) write(iunpath,*) 'There should be some error in reweight0',i,ibead,psip(n4+i-1)
               errnoise=5 
-           endif
+           
         endif
 
      enddo
@@ -1214,7 +1214,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
 
 !!!! START equations of motion integration for harmonic part
 ! gammaall
-        psip(i)=2.d0*delta0k*sqrt(abs(kdyn_eig(ibead)))
+        psip(i)=2.d0*sqrt(abs(kdyn_eig(ibead)))
         if(psip(i).lt.friction) psip(i)=friction ! cutoff on the lowest eigenvalue. Ceriotti's choice.
 
         alphaall=2.d0*temp*psip(i)
@@ -1856,10 +1856,7 @@ subroutine pimd_allocation
    
    rpos=0.0
   
-  if(sigmacov .ne. 0.d0) then 
-    allocate(dynmat(natMD*ndimMD,natMD*ndimMD))
-    allocate(dynmat_eig(natMD*ndimMD),dynmatforce_eig(natMD*ndimMD))
-  endif 
+
 
 
 ! set indexes of the different atoms for interactions
@@ -1873,18 +1870,7 @@ subroutine pimd_allocation
       allocate(tmes_bead(nbeadMD))
       allocate(mass_ion(ndimMD,natMD))
       allocate(rpos_old(ndimMD,natMD,nbeadMD),forceMD_old(ndimMD,natMD,nbeadMD))
-    
-      if(sigmacov .ne. 0) then
-        allocate(fk(natMD*ndimMD,natMD*ndimMD))
-        allocate(cov(natMD*ndimMD*natMD*ndimMD))
-        allocate(alpha_qmc(natMD*ndimMD*natMD*ndimMD))
-        allocate(alphaqmc_eig(natMD*ndimMD))
-        allocate(gamma_eigen(natMD*ndimMD))
-        cov=0.d0 ! for the first iteration
-        gamma_eigen=gammaMD ! for the first iteration
-        alpha_qmc=0.d0
-        alphaqmc_eig=0.d0
-      endif    
+      
 
       if(yesquantum) then 
         allocate(omega_mode(nbeadMD),friction_mode(nbeadMD)) 
@@ -1948,9 +1934,7 @@ subroutine pimd_allocation
       normcorr=1.d0
       scalecov=1.d0
 
-      if(nbeadMD.eq.1) then
-        delta0q=gammaMD
-      else
+      if(nbeadMD.ne.1) then
         friction=gammaMD
       endif
 
@@ -1964,14 +1948,10 @@ subroutine pimd_allocation
          write(unit_dot_out,*) 'PIOUD integrator parameters'
          write(unit_dot_out,*) 'time step =',dt
          write(unit_dot_out,*) 'friction (gamma) =',gammaMD
-         write(unit_dot_out,*) 'delta0 =',delta0
          if(yessecond) write(unit_dot_out,*) 'second order Trotter beakup'
          if(nbeadMD.gt.1) then
            write(unit_dot_out,*) 'Quantum MD: Path integral Langevin!!!!'
            write(unit_dot_out,*) 'Generalized dynamics in the bead eigenmodes'
-           write(unit_dot_out,*) 'delta0k, delta0q =',delta0k,delta0q
-           if(averaged_cov.and.sigmacov.ne.0.d0) &
-              write(unit_dot_out,*) 'Warning: averaging the covariance over the beads!!!'
          endif
       end if
        
@@ -1980,12 +1960,7 @@ subroutine pimd_allocation
       allocate(cov_pimd(ieskin*ieskin,nbead))
       allocate(fk(natMD*ndimMD,natMD*ndimMD))
 
-      if(delta0 .lt. dt*normcorr) then 
-        delta0=dt*normcorr
-        write(iunpath,*) ' Warning  delta_0 >= dt !!! Changed to ',delta0
-       if(.not.restart_pimd) write(unit_dot_out,*) &
-           ' Warning  delta_0 >= dt !!! Changed to ',delta0
-      endif
+     
       if(.not.restart_pimd)  write(unit_dot_out,*) &
            '*************************************'
 
@@ -2024,7 +1999,6 @@ subroutine pimd_allocation
         do ii=1,nbead
           write(iunpath,*) ii,kdyn_eig(ii)
         enddo
-        if(averaged_cov .and. sigmacov.ne.0.d0) allocate(cov(ieskin*ieskin))
 
       elseif(nbead.eq.1) then ! classical molecular dynamic case 
 
@@ -2057,22 +2031,14 @@ subroutine pimd_deallocation
    deallocate(pes)
    deallocate(stress_pes_md)
  
-  if (sigmacov .ne. 0.d0) then
-     deallocate(dynmat,dynmat_eig,dynmatforce_eig)
-  endif 
+ 
   
   if (irun .eq. 3) then
      deallocate(cost1,cost2)
      deallocate(tmes_bead)
      deallocate(mass_ion)
      deallocate(rpos_old,forceMD_old)
-     if (sigmacov .ne. 0) then
-       deallocate(fk)
-       deallocate(cov)
-       deallocate(alpha_qmc)
-       deallocate(alphaqmc_eig)
-       deallocate(gamma_eigen)
-     endif     
+     
      if (yesquantum) then  
        deallocate(omega_mode,friction_mode) 
        deallocate(cmatrix)  
@@ -2095,7 +2061,6 @@ subroutine pimd_deallocation
        deallocate(fbead)
        deallocate(kdyn,kdyn_eig)
      endif
-     if (averaged_cov.and.sigmacov.ne.0.d0) deallocate(cov)
   end if
   
   return
@@ -2184,9 +2149,9 @@ subroutine pimd_read_input(unit)
 ! Namelists for input file
   namelist /dynamics/ restart_pimd,nbeadMD,nunitcells,nblocks,nstep_block  &
                      ,iprint,run   &
-                     ,delt,tempMD,gammaMD,sigmacov     &
+                     ,delt,tempMD,gammaMD     &
                      ,delta_force,delta_harm     &
-                     ,delta0,delta0k,delta0q,yessecond         &
+                     ,yessecond         &
                      ,yesturboq,yesglobal,averaged_cov &
                      ,dynmat_cutoff
   
@@ -2210,13 +2175,9 @@ subroutine pimd_read_input(unit)
   verbose=.false.
 ! Default values defined
   nh = .false.
-  sigmacov = 0.d0
   fixcm = .false.
   averaged_cov=.false.
   dynmat_cutoff=0.d0
-  delta0 = 0.d0
-  delta0k = 1.d0
-  delta0q = 0.d0
   yessecond = .true.
   yesturboq = .true.
   yesglobal = .false. ! PILE_L is the default thermostat for irun=3
@@ -2253,7 +2214,6 @@ subroutine pimd_read_input(unit)
  
   tempMD=tempMD/kbm1
   tfakeMD=tempMD*nbeadMD
-  sigmavar=sigmacov*sigmacov   
   
   if(.not. restart_pimd) then
   
