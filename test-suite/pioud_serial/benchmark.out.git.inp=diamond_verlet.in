@@ -1,0 +1,101 @@
+
+     Program PIOUD v.7.0 starts on 12Feb2025 at 14:11: 1 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     1041 MiB available memory on the printing compute node when the environment starts
+ 
+
+     parsing_file_name: diamond_verlet.in
+ 
+----------------------------------------------------------
+      *** Ab Initio PIMD Program ***                      
+ Classical/Quantum (N,V,T) or (N,V,E) molecular dynamics  
+ with Path Integral Langevin approach                     
+----------------------------------------------------------
+ 
+     Reading input from pw_1.in
+ iat           1 natMD           2
+ iat           1 natMD           2
+ iat           2 natMD           2
+ iat           2 natMD           2
+ 
+ -------- computes initial forces and energy --------------
+     tcpu =      0.0    self-consistency for image   1
+ ----------------------------------------------------------
+ 
+ 
+ **********************************************************
+ initial potential energy:  -11.3766660907937     
+ initial kinetic energy:  2.850130414367414E-003
+ initial potential energy per atom =      -5.688333045    
+ quantities after initialization
+
+
+1)block   2)nmove   3)H   4)H_Nosé   5)E_pot   6)E_kin   7)Temp(Ha)   8)Temp(K)
+
+
+ 0 0  -11.37382      -11.37382      -11.37667      0.2850130E-02  0.9500435E-03   300.0000    
+ 
+ 
+ ***********************************************************
+ **************** start of dynamics ************************
+
+     ------------------------------ iteration    1 ------------------------------
+
+     tcpu =      2.5    self-consistency for image   1
+     image        energy (eV)
+
+         1       -309.5748551
+ 
+     1     1  -11.37382       0.000000      -11.37667      0.2850128E-02  0.9500426E-03   299.9997    
+ **********************************************************
+
+     ------------------------------ iteration    2 ------------------------------
+
+     tcpu =      4.1    self-consistency for image   1
+     image        energy (eV)
+
+         1       -309.5748549
+ 
+     1     2  -11.37382       0.000000      -11.37667      0.2850119E-02  0.9500398E-03   299.9988    
+ **********************************************************
+
+     ------------------------------ iteration    3 ------------------------------
+
+     tcpu =      5.6    self-consistency for image   1
+     image        energy (eV)
+
+         1       -309.5748545
+ 
+     2     1  -11.37382       0.000000      -11.37667      0.2850106E-02  0.9500352E-03   299.9974    
+ **********************************************************
+
+     ------------------------------ iteration    4 ------------------------------
+
+     tcpu =      7.1    self-consistency for image   1
+     image        energy (eV)
+
+         1       -309.5748540
+ 
+     2     2  -11.37382       0.000000      -11.37667      0.2850087E-02  0.9500288E-03   299.9954    
+ **********************************************************
+ 
+     PIOUD        :      7.77s CPU      8.59s WALL
+
+ 
+   This run was terminated on:  14:11:10  12Feb2025            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

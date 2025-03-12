@@ -1,0 +1,128 @@
+
+     Program PIOUD v.7.0 starts on 12Feb2025 at 14:31:12 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     1087 MiB available memory on the printing compute node when the environment starts
+ 
+
+     parsing_file_name: diamond_ceriotti.in
+ 
+----------------------------------------------------------
+      *** Ab Initio PIMD Program ***                      
+ Classical/Quantum (N,V,T) or (N,V,E) molecular dynamics  
+ with Path Integral Langevin approach                     
+----------------------------------------------------------
+ 
+     Reading input from pw_1.in
+ iat           1 natMD           2
+ iat           1 natMD           2
+ iat           2 natMD           2
+ iat           2 natMD           2
+ 
+ -------- computes initial forces and energy --------------
+     tcpu =      0.0    self-consistency for image   1
+     tcpu =      1.5    self-consistency for image   2
+     tcpu =      3.0    self-consistency for image   3
+     tcpu =      4.5    self-consistency for image   4
+ ----------------------------------------------------------
+ 
+ 
+ **********************************************************
+ initial potential energy:  -11.3766660905538     
+ initial kinetic energy:  1.140052165746966E-002
+ initial potential energy per atom =      -5.688333045    
+ quantities after initialization
+
+
+1)block   2)nmove   3)H   4)H_Nosé   5)E_pot   6)E_kin   7)Temp(Ha)   8)Temp(K)   9)quantum_kin_virial   10)quantum_kin_primitive  
+
+
+ 0 0  -11.36527      -11.36527      -11.37667      0.1140052E-01  0.9500435E-03   300.0000      0.7125326E-03  0.2850130E-02
+ 
+ 
+ ***********************************************************
+ **************** start of dynamics ************************
+
+     ------------------------------ iteration    1 ------------------------------
+
+     tcpu =      6.1    self-consistency for image   1
+     tcpu =      7.5    self-consistency for image   2
+     tcpu =      9.1    self-consistency for image   3
+     tcpu =     10.6    self-consistency for image   4
+     image        energy (eV)
+
+         1       -309.5748551
+         2       -309.5748550
+         3       -309.5748549
+         4       -309.5748550
+ 
+     1     1  -11.37667       0.000000      -11.37667      0.1087650E-01  0.9063750E-03   286.2106      0.2850130E-02  0.2850130E-02
+ **********************************************************
+
+     ------------------------------ iteration    2 ------------------------------
+
+     tcpu =     12.1    self-consistency for image   1
+     tcpu =     13.6    self-consistency for image   2
+     tcpu =     15.1    self-consistency for image   3
+     tcpu =     16.6    self-consistency for image   4
+     image        energy (eV)
+
+         1       -309.5748546
+         2       -309.5748543
+         3       -309.5748543
+         4       -309.5748545
+ 
+     1     2  -11.37667       0.000000      -11.37667      0.1093146E-01  0.9109553E-03   287.6569      0.2850136E-02  0.2850130E-02
+ **********************************************************
+
+     ------------------------------ iteration    3 ------------------------------
+
+     tcpu =     18.1    self-consistency for image   1
+     tcpu =     19.7    self-consistency for image   2
+     tcpu =     21.2    self-consistency for image   3
+     tcpu =     22.7    self-consistency for image   4
+     image        energy (eV)
+
+         1       -309.5748539
+         2       -309.5748529
+         3       -309.5748536
+         4       -309.5748539
+ 
+     2     1  -11.37667       0.000000      -11.37667      0.1008919E-01  0.8407656E-03   265.4928      0.2850155E-02  0.2850127E-02
+ **********************************************************
+
+     ------------------------------ iteration    4 ------------------------------
+
+     tcpu =     24.3    self-consistency for image   1
+     tcpu =     25.9    self-consistency for image   2
+     tcpu =     27.4    self-consistency for image   3
+     tcpu =     29.0    self-consistency for image   4
+     image        energy (eV)
+
+         1       -309.5748528
+         2       -309.5748508
+         3       -309.5748525
+         4       -309.5748532
+ 
+     2     2  -11.37667       0.000000      -11.37667      0.9509339E-02  0.7924449E-03   250.2343      0.2850184E-02  0.2850123E-02
+ **********************************************************
+ 
+     PIOUD        :     27.28s CPU     30.48s WALL
+
+ 
+   This run was terminated on:  14:31:43  12Feb2025            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

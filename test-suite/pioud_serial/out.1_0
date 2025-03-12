@@ -1,0 +1,29 @@
+
+     Program PIOUD v.7.0 starts on 12Mar2025 at 13:55:33 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     path-images division:  nimage    =       2
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+     6230 MiB available memory on the printing compute node when the environment starts
+ 
+
+     parsing_file_name: diamond_pimd.in
+     Reading input from pw_1.in
+     cpu =  1   tcpu =      0.0    self-consistency for image   2
+     cpu =  1   tcpu =      0.8    self-consistency for image   2
+     cpu =  1   tcpu =      1.6    self-consistency for image   2
+     cpu =  1   tcpu =      2.4    self-consistency for image   2
+     cpu =  1   tcpu =      3.2    self-consistency for image   2
+     PIOUD        :      3.85s CPU      4.02s WALL
+
