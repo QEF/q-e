@@ -38,7 +38,6 @@ MODULE pimd_variables
        delt,                     &
        tempMD,                   &
        gammaMD,                    &
-       sigmacov,                 &
        delta_force,              &
        delta_harm               
   

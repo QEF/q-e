@@ -259,7 +259,7 @@ subroutine prop_ceriotti_1half_irun3(intinp)
    
   use pimd_variables, ONLY : nbeadMD,tmes_bead,mass_ion,vel,gMD,&
                              cost,fbead,rcentroid,rpos,forceMD,&
-                             sigmacov, ekinq,tempMD,natMD,ekinqp,tfakeMD,&
+                             ekinq,tempMD,natMD,ekinqp,tfakeMD,&
                              ptilde,pimp,delt,rtilde_mode,&
                              yesquantum,ndimMD,sigma_true, rpos_old
   implicit none
@@ -323,11 +323,9 @@ subroutine prop_ceriotti_1half_irun3(intinp)
 
  ! Propagation in the quantum case
     call normal_modes_fw(ptilde,pimp,.true.) ! half step for the friction in normal modes representation
-    if (sigmacov .ne. 0.d0) then 
-       call normal_modes_bw(ptilde,pimp,.true.)
-    else
-       call normal_modes_bw(ptilde,pimp,.false.) ! back to the real space
-    endif
+  
+    call normal_modes_bw(ptilde,pimp,.false.) ! back to the real space
+  
   
   else 
     call propGamma
@@ -349,7 +347,7 @@ end subroutine prop_ceriotti_1half_irun3
 subroutine prop_ceriotti_2half_irun3(ekinetic,epot)
 
   use pimd_variables, only : delt,yesquantum,ptilde,&
-                             pimp,sigmacov,nbeadMD,natMD,indx,ndimMD,&
+                             pimp,nbeadMD,natMD,indx,ndimMD,&
                              vel,amas,deltahtilde,forceMD,forceMD_old,&
                              rpos,rpos_old,tmes,tmes_bead,ekinq,&
                              unit_dot_sigma,sigma_true,ekinqp,epot_old,&
@@ -364,11 +362,9 @@ subroutine prop_ceriotti_2half_irun3(ekinetic,epot)
    
   if (yesquantum) then 
      call normal_modes_fw(ptilde,pimp,.true.) ! second half step for the friction in normal modes representation
-     if (sigmacov .ne. 0.d0) then
-        call normal_modes_bw(ptilde,pimp,.true.)
-     else 
-        call normal_modes_bw(ptilde,pimp,.false.) ! back to the real spaces 
-     endif
+     
+     call normal_modes_bw(ptilde,pimp,.false.) ! back to the real spaces 
+
   else
      call propGamma
   endif
@@ -417,7 +413,7 @@ end subroutine prop_ceriotti_2half_irun3
 
 subroutine normal_modes_fw(coord_mode,coord,first)
   
-  use pimd_variables, only : sigmacov,yesglobal,natMD,ndimMD,nbeadMD,&
+  use pimd_variables, only : yesglobal,natMD,ndimMD,nbeadMD,&
                              indx,amas,cov,cmatrix,cost1,friction_mode,&
                              gamma_eigen,gammaMD,delt,cost2,tfakeMD,pi
   USE random_numbers, ONLY: randy
@@ -440,66 +436,6 @@ subroutine normal_modes_fw(coord_mode,coord,first)
      sumxi2=0.d0
      xi1=0.d0
   endif
-      
-  if (first .and. sigmacov .ne. 0.d0) then ! Noise on CC forces 
-
-     allocate(sov4(natMD*ndimMD),pimpion(natMD*ndimMD),sov6(natMD*ndimMD,nbeadMD))
-     allocate(sov5(natMD*ndimMD,nbeadMD))
-     sov4=0.d0
-     sov6=0.d0
-! sov4 non ha gli indici bead (così come pimpion), mentre sov5 e sov6 si!!
-     do k=1,nbeadMD
-       do i=1,natMD
-       ind=indx(i)
-         do l=1,ndimMD
-! Mass scaling to have mass-independant propagation in the space which diagonalizes gamma matrix
-            pimpion(l+(i-1)*ndimMD)=coord(l,i,k)/sqrt(amas(ind))   
-         enddo
-       enddo
-       
-       do i=1,natMD*ndimMD
-! Transformation in the basis which diagonalizes the friction
-!! perchè fa quest aoperazione dentro un ciclo ????
-         call dgemv('T',natMD*ndimMD,natMD*ndimMD,1.d0,cov,natMD*ndimMD,pimpion,1,0.d0,sov4,1) ! Now, momenta are in the sov4 vector
-       enddo
-! Store the momenta in a bead dependant vector
-       sov5(1:natMD*ndimMD,k)=sov4(1:natMD*ndimMD)
-     enddo 
-     
-! Second basis transformation to work in normal modes
-     do k=1,nbeadMD
-       do i=1,natMD*ndimMD
-         do kk=1,nbeadMD
-           sov6(i,k)=sov6(i,k)+sov5(i,kk)*cmatrix(kk,k) ! sov6 are the momenta after the double transformation
-         enddo
-       enddo 
-     enddo
-     
-     do k=1,nbeadMD
-       sov4(1:natMD*ndimMD)=sov6(1:natMD*ndimMD,k)
-       do i=1,natMD*ndimMD
-   !!! gamma_eigen(i) non viene mai ricalcolato e rimane sempre uguale a gamma.....    
-         cost1(k)=exp(-(friction_mode(k)+gamma_eigen(i)-gammaMD)*delt/2.d0) 
-         cost2(k)=sqrt(1.d0-cost1(k)**2) 
-         drand1 = pioud_randy()  
-         drand2 = pioud_randy()
-
-        !  call random_number(drand1)
-        !  call random_number(drand2)
-         xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
-         sov4(i) = cost1(k)*sov4(i) + sqrt(tfakeMD)*cost2(k)*xi
-       enddo
-       sov5(1:natMD*ndimMD,k)=sov4(1:natMD*ndimMD)
-       do i=1,natMD
-         do l=1,ndimMD
-           coord_mode(l,i,k)=sov5(l+(i-1)*ndimMD,k) ! to store momenta before calling the backward transformation routine
-         enddo
-       enddo 
-     enddo
-
-     deallocate(sov4,sov5,sov6,pimpion)
- 
-   else ! No noise on CC forces
 
      do k=1,nbeadMD
        do i=1,natMD
@@ -550,7 +486,7 @@ subroutine normal_modes_fw(coord_mode,coord,first)
         endif
      endif
 
-  endif 
+
 
   return
 
@@ -558,7 +494,7 @@ end subroutine normal_modes_fw
 
 subroutine normal_modes_bw(coord_mode,coord,first)
     
-  use pimd_variables, only : ndimMD,natMD,nbeadMD,sigmacov,cmatrix,&
+  use pimd_variables, only : ndimMD,natMD,nbeadMD,cmatrix,&
                              amas,cov,indx
   
   implicit none
@@ -570,41 +506,6 @@ subroutine normal_modes_bw(coord_mode,coord,first)
   logical :: first
 
   coord=0.d0
-
-  if (first .and. sigmacov .ne. 0.d0) then  ! Noisy CC forces
-     allocate(sov5(natMD*ndimMD,nbeadMD),sov6(natMD*ndimMD,nbeadMD))
-     allocate(sov4(natMD*ndimMD),pimpion(natMD*ndimMD))
-     sov6=0.d0
-     pimpion=0.d0
-     do k=1,nbeadMD
-       do i=1,natMD
-         do l=1,ndimMD
-           sov5(l+(i-1)*ndimMD,k)=coord_mode(l,i,k)
-         enddo
-       enddo
-     enddo
-! Backward transformation to leave from normal modes representation
-     do k=1,nbeadMD
-       do i=1,natMD*ndimMD
-         do kk=1,nbeadMD
-           sov6(i,k)=sov6(i,k)+cmatrix(k,kk)*sov5(i,kk) ! sov6 are now the momenta in the space which diagonalizes gamma (1 transformation remaining)
-         enddo
-       enddo
-       sov4(1:natMD*ndimMD)=sov6(1:natMD*ndimMD,k)
-! backward tranformation with respect to gamma (coordinatMDe space)
-       call dgemv('N',natMD*ndimMD,natMD*ndimMD,1.d0,cov,natMD*ndimMD,sov4,1,0.d0,pimpion,1)
-! Mass-scaling to recover the physical momenta
-       do i=1,natMD
-         ind=indx(i)
-         do l=1,ndimMD
-           coord(l,i,k)=pimpion(l+(i-1)*ndimMD)*sqrt(amas(ind))
-         enddo
-       enddo
-     enddo
-     
-     deallocate(sov4,sov5,sov6,pimpion)
-         
-  else 
  
      do k=1,nbeadMD
        do i=1,natMD
@@ -616,7 +517,6 @@ subroutine normal_modes_bw(coord_mode,coord,first)
        enddo
      enddo
 
-  endif
 
   return
 
@@ -658,7 +558,7 @@ end subroutine propHarm
 
 subroutine propGamma
      
-  use pimd_variables, only : natMD,ndimMD,indx,pimp,amas,sigmacov,&
+  use pimd_variables, only : natMD,ndimMD,indx,pimp,amas,&
                              cov,alphaqmc_eig,delt,tempMD,&
                              gamma_eigen,cost1,cost2,pi
 
@@ -672,50 +572,6 @@ subroutine propGamma
   real(8) :: drand1,drand2,xi,correct_noise,cost0
   real(8), dimension(:), allocatable :: pimpion,sov4
       
-  if (sigmacov .ne. 0.d0) then  ! Noisy forces
-     allocate(sov4(natMD*ndimMD),pimpion(natMD*ndimMD))
-     sov4=0.d0
-     do i=1,natMD
-       ind=indx(i)
-       do l=1,ndimMD
-! Mass scaling to have mass-independant propagation in the space which diagonalizes gamma matrix       
-         pimpion(l+(i-1)*ndimMD)=pimp(l,i,1)/sqrt(amas(ind))  
-       enddo 
-     enddo
-
-! Transformation in the basis which diagonalizes the friction
-     call dgemv('T',natMD*ndimMD,natMD*ndimMD,1.d0,cov,natMD*ndimMD,pimpion,1,0.d0,sov4,1) ! Now, momenta are in the sov4 vector
-
-     do i=1,natMD*ndimMD
-        !correct_noise=gamma/gamma_eigen(i)
-       cost0=exp(-alphaqmc_eig(i)*delt/(8.d0*tempMD))
-       cost1(1)=exp(-(gamma_eigen(i)-alphaqmc_eig(i)/(2.d0*tempMD))*delt/2.d0)
-       cost2(1)=sqrt(1.d0-cost1(1)**2)
-       drand1 = pioud_randy()  
-       drand2 = pioud_randy()
-      !  call random_number(drand1)
-      !  call random_number(drand2)
-       xi=dsqrt(-2.d0*dlog(1.d0-drand1))*dcos(2.d0*pi*drand2)
-       !xi=xi*sqrt(correct_noise)
-       sov4(i) = cost0*sov4(i)
-       sov4(i) = cost1(1)*sov4(i) + sqrt(tempMD)*cost2(1)*xi
-       sov4(i) = cost0*sov4(i)
-     enddo
-
-! Back to the original basis 
-     call dgemv('N',natMD*ndimMD,natMD*ndimMD,1.d0,cov,natMD*ndimMD,sov4,1,0.d0,pimpion,1)
-
-     do i=1,natMD
-       ind=indx(i)
-       do l=1,ndimMD
-         pimp(l,i,1)=pimpion(l+(i-1)*ndimMD)*sqrt(amas(ind))
-       enddo
-     enddo
-
-     deallocate(sov4,pimpion)
-
-  else ! No noise on forces
-      
      do i=1,natMD
        ind=indx(i)
        do l=1,ndimMD
@@ -728,8 +584,6 @@ subroutine propGamma
        enddo
      enddo
  
-  endif 
-
   return
  
 end subroutine propGamma
@@ -742,7 +596,7 @@ subroutine prop_pioud_irun4(ekin,epot)
                              sigma_true, fk, yesquantum, fbead, rcentroid,&
                              rpos ,ekinq, cost, temp, nion, ekinqp, mass_ion,&
                              cov, cov_pimd, velocity, forcedyn, forceMD,&
-                             ieskin, sigmacov, averaged_cov, psip, &
+                             ieskin, averaged_cov, psip, &
                              scalpar,iflagerr, rankMD, friction, &
                              dt, tmes_bead, &
                              normcorr, ener_true, tmes, unit_dot_sigma
@@ -837,40 +691,9 @@ subroutine prop_pioud_irun4(ekin,epot)
            forcedyn(l+(i-1)*ndimMD,k)=forceMD(l,i,k)
         enddo
      enddo
-
-     if(sigmacov.ne.0.d0) then 
-! stochastic model based on dynamical matrix assumption
-! fill fk (stochastic displacement diagonal in the normal harmonic coordinatMDes)
-       if(k.eq.1) yeswrite_loc=.true.
-       
-       !!call dynmatrix(rpos(1,1,k),yeswrite_loc)      
-       
-! add stochastic noise to forces
-       do i=1,ieskin
-           delta_noise=0.d0
-           do kk=1,ieskin
-              delta_noise=delta_noise+fk(kk,i) 
-           enddo
-           forcedyn(i,k)=forcedyn(i,k)+delta_noise
-        enddo
-! compute covariance (by adding contribution of each bead)
-        call dgemm('T','N',ieskin,ieskin,ieskin,1.d0,fk,ieskin,fk,ieskin,0.d0,cov_pimd(1,k),ieskin)   
-
-        yeswrite_loc=.false.
-     endif
   enddo
-  
-  if(sigmacov.ne.0.d0 .and. yesquantum .and. averaged_cov) then
-     cov(:)=0.d0
-     do k=1,nbead
-        cov(:)=cov(:)+cov_pimd(:,k)
-     enddo
-     cov(:)=cov(:)/dble(nbead)
-     do k=1,nbead
-        cov_pimd(:,k)=cov(:)
-     enddo
-  endif
 
+     
   call reweight_pioud_irun4(psip,ieskin &
                            ,scalpar,iflagerr,rankMD,temp,friction &
                            ,dt,tmes_bead,cov_pimd &
