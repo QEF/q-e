@@ -12,7 +12,7 @@ SUBROUTINE run_nscf(do_band, iq)
   !! the \(\texttt{PHonon}\) code.
   !
   USE control_flags,   ONLY : conv_ions, restart, io_level
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
+  USE starting_scf,    ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
   USE check_stop,      ONLY : check_stop_now
@@ -24,10 +24,10 @@ SUBROUTINE run_nscf(do_band, iq)
   USE gvecs,     ONLY: gcutms
   !!!
   USE disp,            ONLY : lgamma_iq
-  USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
+  USE control_ph,      ONLY : recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
-  USE io_global,       ONLY : stdout
+  USE io_global,       ONLY : stdout, ionode
   !USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
@@ -36,7 +36,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
   USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
-  USE control_lr,      ONLY : ethr_nscf
+  USE control_lr,      ONLY : ethr_nscf, reduce_io
   USE qpoint,          ONLY : xq
   USE noncollin_module,ONLY : noncolin, domag
   USE klist,           ONLY : qnorm, nelec
@@ -44,6 +44,10 @@ SUBROUTINE run_nscf(do_band, iq)
   USE ahc,             ONLY : elph_ahc
   USE mp_images,       ONLY : intra_image_comm
   USE mp,              ONLY : mp_barrier
+  USE rism_module,     ONLY : lrism, rism_set_restart
+  USE two_chem,        ONLY : twochem
+  USE input_parameters, ONLY : occupations
+
   !
   IMPLICIT NONE
   !
@@ -95,11 +99,15 @@ SUBROUTINE run_nscf(do_band, iq)
   ethr_nscf      = 1.0D-9 / nelec 
   ! threshold for diagonalization ethr_nscf - should be good for all cases
   !
+  IF (lrism) CALL rism_set_restart()
+  !
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
   CALL setup_nscf ( newgrid, xq, elph_mat .OR. elph_ahc )
   !
+  !
+  if (twochem) occupations ='smearing' !this is needed to avoid init_twochem error check.
   CALL init_run()
   !
 !°°°°°°°°°°°°°°°°°°°° ACFDT TEST °°°°°°°°°°°°°°°°°°°°°°°°°
@@ -109,7 +117,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
 !°°°°°°°°°°°°°°°°°END OF ACFDT TEST °°°°°°°°°°°°°°°°°°°°°°
 !
-  IF (do_band) CALL non_scf_ph ( )
+  IF (do_band.and..not.elph_mat) CALL non_scf_ph ( )
 
 
   IF ( check_stop_now() ) THEN

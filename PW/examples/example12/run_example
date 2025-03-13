@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -82,17 +82,17 @@ $ECHO "  running pw.x     as: $PW_COMMAND"
 $ECHO
 
 # self-consistent calculation for bcc-Fe with fully relativistic US-PP
-cat > Fe.scf_pbe.in << EOF
+cat > Fe.scf.in << EOF
  &control
     calculation = 'scf'
     prefix='Fe',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
-    ibrav=  3, 
-    celldm(1) =5.42, 
-    nat=  1, 
+ &system
+    ibrav=  3,
+    celldm(1) =5.42,
+    nat=  1,
     ntyp= 1,
     noncolin=.true.
     lspinorb=.true.
@@ -100,44 +100,42 @@ cat > Fe.scf_pbe.in << EOF
     occupations='smearing',
     smearing='mv',
     degauss=0.01,
-    ecutwfc=60.0, 
+    ecutwfc=60.0,
     ecutrho=400.0,
     angle1(1)=90.0
-    angle2(1)=0.0    
-    lda_plus_u=.true.
-    lda_plus_u_kind=1
-    Hubbard_U(1)=2.2
-    Hubbard_J(1,1)=1.75
-    Hubbard_J(2,1)=0.0
+    angle2(1)=0.0
  /
  &electrons
     conv_thr =  1.0d-10
-!    diagonalization='cg'
  /
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-spn-rrkjus_psl.0.2.1.UPF
-ATOMIC_POSITIONS alat
-Fe  0.0000000   0.00000000   0.0  
-K_POINTS AUTOMATIC
-8 8 8 1 1 1 
+ATOMIC_POSITIONS {alat}
+Fe  0.0000000   0.00000000   0.00000000
+K_POINTS {automatic}
+8 8 8 1 1 1
+HUBBARD {atomic}
+U Fe-3d 2.20
+J Fe-3d 1.75
+B Fe-3d 0.00
 EOF
 $ECHO "  running the scf calculation for Fe with USPS and DFT+U with spin-orbit...\c"
-$PW_COMMAND < Fe.scf_pbe.in > Fe.scf_pbe.out
+$PW_COMMAND < Fe.scf.in |tee Fe.scf.out
 check_failure $?
 $ECHO " done"
 
 # self-consistent calculation for bcc-Fe with fully relativistic US-PP
-cat > Fe.band_pbe.in << EOF
+cat > Fe.bands.in << EOF
  &control
     calculation = 'bands'
     prefix='Fe',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
-    ibrav=  3, 
-    celldm(1) =5.42, 
-    nat=  1, 
+ &system
+    ibrav=  3,
+    celldm(1) =5.42,
+    nat=  1,
     ntyp= 1,
     noncolin=.true.
     lspinorb=.true.
@@ -147,29 +145,28 @@ cat > Fe.band_pbe.in << EOF
     occupations='smearing',
     smearing='mv',
     degauss=0.04,
-    ecutwfc =60.0, 
+    ecutwfc =60.0,
     ecutrho =400.0
-    lda_plus_u=.true.
-    lda_plus_u_kind=1
-    Hubbard_U(1)=2.2
-    Hubbard_J(1,1)=1.75
-    Hubbard_J(2,1)=0.0
  /
  &electrons
-    conv_thr =  1.0d-10
+    conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-spn-rrkjus_psl.0.2.1.UPF
-ATOMIC_POSITIONS alat
-Fe  0.0000000   0.00000000   0.0  
-K_POINTS tpiba_b
+ATOMIC_POSITIONS {alat}
+Fe  0.0000000   0.00000000   0.00000000
+K_POINTS {tpiba_b}
 3
 1.0 0.0 0.0 40
 0.0 0.0 0.0 40
 0.0 0.0 1.0 1
+HUBBARD {atomic}
+U Fe-3d 2.20
+J Fe-3d 1.75
+B Fe-3d 0.00
 EOF
 $ECHO "  running the band calculation for Fe with USPP and DFT+U and spin-orbit...\c"
-$PW_COMMAND < Fe.band_pbe.in > Fe.band_pbe.out
+$PW_COMMAND < Fe.bands.in |tee Fe.bands.out
 check_failure $?
 $ECHO " done"
 

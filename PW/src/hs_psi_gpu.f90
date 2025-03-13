@@ -22,14 +22,11 @@ SUBROUTINE hs_psi_gpu( lda, n, m, psi, hpsi, spsi )
   !
   INTEGER, INTENT(IN) :: lda, n, m
   COMPLEX (DP) :: psi(lda*npol, m), hpsi(lda*npol,m), spsi(lda*npol,m)
-#if defined (__CUDA)
-  attributes(device) :: psi, hpsi, spsi
-#endif
   !
   CALL start_clock( 'hs_psi' )
   ! 
   CALL h_psi__gpu ( lda, n, m, psi, hpsi ) ! apply H to m wfcs (no bgrp parallelization here)
-  CALL s_psi__gpu ( lda, n, m, psi, spsi ) ! apply S to m wfcs (no bgrp parallelization here)
+  CALL s_psi__acc ( lda, n, m, psi, spsi ) ! apply S to m wfcs (no bgrp parallelization here)
   !
   CALL stop_clock( 'hs_psi' )
   !

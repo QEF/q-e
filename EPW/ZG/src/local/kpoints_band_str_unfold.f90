@@ -1,6 +1,6 @@
 program kpoints_unfold
 
- integer :: nk,sdim
+ integer :: nk,sdim1,sdim2,sdim3
  ! counter
  integer :: i, y_n
  DOUBLE PRECISION, ALLOCATABLE   :: kpts_mat(:,:),v2(:), v(:)
@@ -14,13 +14,6 @@ program kpoints_unfold
  DO i=1,nk
       read(*,*) kpts_mat(i,:)
  ENDDO
-  !
-  !
-  !
-  WRITE(*,*) "New high-sym kpts after Symmetry operation:"
-  DO i=1,nk
-        WRITE(*,*) kpts_mat(i,:)
-   ENDDO
   !
   !
    WRITE(*,*) "Write x-positions of high-sym kpts"
@@ -40,12 +33,14 @@ program kpoints_unfold
          v(i)=(v2(i+1)-v2(i))/step
   ENDDO
   v(nk)=1 ! this should be always one because is the last one
-  WRITE(*,*) "Supercell size ?"
-  read(*,*) sdim
+  WRITE(*,*) "Supercell size (n * m * p) ?"
+  read(*,*) sdim1, sdim2, sdim3
   !
   !
    WRITE(*,*) "kpts to use for Supercell calculation:"
-    kpts_mat(:,:)=sdim*kpts_mat(:,:)
+    kpts_mat(:,1)=sdim1*kpts_mat(:,1)
+    kpts_mat(:,2)=sdim2*kpts_mat(:,2)
+    kpts_mat(:,3)=sdim3*kpts_mat(:,3)
     DO i=1,nk
         WRITE(*,'(3F11.6,I4)')  kpts_mat(i,:), abs(nint(v(i)))
     ENDDO

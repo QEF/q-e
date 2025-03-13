@@ -8,7 +8,6 @@
     nat= 4, ntyp= 1,
     ecutwfc= 30.0, ecutrho= 250.0,
     occupations='smearing', smearing='mp', degauss=0.02,
-    lda_plus_U = .true., Hubbard_U(1) = 4.4,
  /
  &electrons
     mixing_beta= 0.7,
@@ -23,3 +22,5 @@ ATOMIC_POSITIONS {crystal}
  Au 0.50 0.50 0.00 
 K_POINTS {automatic}
 4 4 4 1 1 1
+HUBBARD {pseudo}
+U Au-5d 4.4

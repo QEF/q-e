@@ -1,0 +1,10 @@
+SiC
+ &inputph
+  outdir='./',
+  prefix='sic',
+  tr2_ph=1.0d-18,
+  lmultipole = .true.
+  fildrho = 'drho.dat.04'
+  fildvscf = 'drhodv.dat.04'
+ /
+   0.01000000   -0.01000000    0.01000000

@@ -13,6 +13,8 @@
 !
 ! Copyright (C) 2016, Bálint Aradi
 !
+! r2r4 data for Ba corrected by Vahid Askarpour, July 2022
+! removal of unused routines in QE by Paolo Giannozzi, March 2022
 ! MPI parallelization  added by Paolo Giannozzi, June 2021
 ! OpenACC acceleration added by Ivan Carnimeo,   June 2021
 !
@@ -55,7 +57,7 @@ module dftd3_core
     &6.58711862_wp, 6.19536215_wp, 6.01517290_wp, 5.81623410_wp, 5.65710424_wp,&
     &5.52640661_wp, 5.44263305_wp, 5.58285373_wp, 7.02081898_wp, 6.46815523_wp,&
     &5.98089120_wp, 5.81686657_wp, 5.53321815_wp, 5.25477007_wp,11.02204549_wp,&
-    &0.15679528_wp, 9.35167836_wp, 9.06926079_wp, 8.97241155_wp, 8.90092807_wp,&
+    &10.15679528_wp,9.35167836_wp, 9.06926079_wp, 8.97241155_wp, 8.90092807_wp,&
     &8.85984840_wp, 8.81736827_wp, 8.79317710_wp, 7.89969626_wp, 8.80588454_wp,&
     &8.42439218_wp, 8.54289262_wp, 8.47583370_wp, 8.45090888_wp, 8.47339339_wp,&
     &7.83525634_wp, 8.20702843_wp, 7.70559063_wp, 7.32755997_wp, 7.03887381_wp,&
@@ -779,652 +781,6 @@ contains
   end subroutine setfuncpar
 
 
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  ! compute energy
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-
-  subroutine edisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,rcov, &
-      & rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,rthr,cn_thr,&
-      & e6,e8,e10,e12,e63)
-    integer n,iz(*),max_elem,maxc,version,mxc(max_elem)
-    real(wp) xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
-    real(wp) rs6,rs8,rs10,alp6,alp8,alp10,rcov(max_elem)
-    real(wp) c6ab(max_elem,max_elem,maxc,maxc,3)
-    real(wp) e6, e8, e10, e12, e63
-    logical noabc
-
-    integer iat,jat,kat
-    real(wp) r,r2,r6,r8,tmp,alp,dx,dy,dz,c6,c8,c10,ang,rav
-    real(wp) damp6,damp8,damp10,rr,thr,c9,r42,c12,r10,c14,rthr,cn_thr
-    real(wp) cn(n)
-    real(wp) r2ab(n*n),cc6ab(n*n),dmp(n*n),d2(3),t1,t2,t3,a1,a2,tmp2
-    real(wp) abcthr
-    integer(int64) icomp(n*n)
-    integer ij,ik,jk,k
-
-    e6 =0
-    e8 =0
-    e10=0
-    e12=0
-    e63=0
-    ! the threebody term uses the same threshold as the
-    abcthr=cn_thr
-
-    ! Becke-Johnson parameters
-    a1=rs6
-    a2=rs8
-
-
-    ! DFT-D2
-    if (version.eq.2)then
-
-      do iat=1,n-1
-        do jat=iat+1,n
-          dx=xyz(1,iat)-xyz(1,jat)
-          dy=xyz(2,iat)-xyz(2,jat)
-          dz=xyz(3,iat)-xyz(3,jat)
-          r2=dx*dx+dy*dy+dz*dz
-          ! if (r2.gt.rthr) cycle
-          r=sqrt(r2)
-          c6=c6ab(iz(jat),iz(iat),1,1,1)
-          damp6=1./(1.+exp(-alp6*(r/(rs6*r0ab(iz(jat),iz(iat)))-1.)))
-          r6=r2**3
-          e6 =e6+c6*damp6/r6
-        end do
-      end do
-
-    else
-      ! DFT-D3
-      call ncoord(n,rcov,iz,xyz,cn,cn_thr)
-
-      icomp=0
-      do iat=1,n-1
-        do jat=iat+1,n
-          dx=xyz(1,iat)-xyz(1,jat)
-          dy=xyz(2,iat)-xyz(2,jat)
-          dz=xyz(3,iat)-xyz(3,jat)
-          r2=dx*dx+dy*dy+dz*dz
-          !THR
-          if (r2.gt.rthr) cycle
-          r =sqrt(r2)
-          tmp2=r0ab(iz(jat),iz(iat))
-          rr=tmp2/r
-          ! damping
-          if(version.eq.3)then
-            ! DFT-D3 zero-damp
-            tmp=rs6*rr
-            damp6 =1.d0/( 1.d0+6.d0*tmp**alp6 )
-            tmp=rs8*rr
-            damp8 =1.d0/( 1.d0+6.d0*tmp**alp8 )
-          else
-            ! DFT-D3M zero-damp
-            tmp=(r/(rs6*tmp2))+rs8*tmp2
-            damp6 =1.d0/( 1.d0+6.d0*tmp**(-alp6) )
-            tmp=(r/tmp2)+rs8*tmp2
-            damp8 =1.d0/( 1.d0+6.d0*tmp**(-alp8) )
-          endif
-          ! get C6
-          call getc6(maxc,max_elem,c6ab,mxc,iz(iat),iz(jat), &
-              & cn(iat),cn(jat),c6)
-
-          r6=r2**3
-          r8=r6*r2
-          ! r2r4 stored in main as sqrt
-          c8 =3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
-
-          ! DFT-D3 zero-damp or DFT-D3 M(zero)
-          if((version.eq.3).or.(version.eq.5))then
-            e6=e6+c6*damp6/r6
-            e8=e8+c8*damp8/r8
-          end if
-          ! DFT-D3(BJ) or DFT-D3M(BJ)
-          if((version.eq.4).or.(version.eq.6))then
-            ! use BJ radius
-            tmp=sqrt(c8/c6)
-            e6=e6+ c6/(r6+(a1*tmp+a2)**6)
-            e8=e8+ c8/(r8+(a1*tmp+a2)**8)
-          end if
-
-          ! if (.not.noabc) then
-          if ((.not.noabc).and.(r2.lt.abcthr)) then
-            ij=lin(jat,iat)
-            icomp(ij)=1
-            ! store C6 for C9, calc as sqrt
-            cc6ab(ij)=sqrt(c6)
-            ! store R^2 for abc
-            r2ab(ij)=r2
-            ! store for abc damping
-            dmp(ij)=(1./rr)**(1./3.)
-            !noabc
-          end if
-        end do
-      end do
-
-      if (.not.noabc) then 
-
-      ! compute non-additive third-order energy using averaged C6
-      do iat=1,n
-        do jat=1,iat-1
-          ij=lin(jat,iat)
-          if (icomp(ij).eq.1)then
-            do kat=1,jat-1
-
-              ik=lin(kat,iat)
-              jk=lin(kat,jat)
-              if ((icomp(ik).eq.0).or.(icomp(jk).eq.0)) cycle
-              ! damping func product
-              ! tmp=dmp(ik)*dmp(jk)*dmp(ij)
-              rav=(4./3.)/(dmp(ik)*dmp(jk)*dmp(ij))
-              tmp=1.d0/( 1.d0+6.d0*rav**alp8 )
-              ! triple C6 coefficient (stored as sqrt)
-              c9=cc6ab(ij)*cc6ab(ik)*cc6ab(jk)
-              ! write(*,*) 'C9', c9
-              ! angular terms with law of cosines
-
-              t1 = (r2ab(ij)+r2ab(jk)-r2ab(ik))
-              t2 = (r2ab(ij)+r2ab(ik)-r2ab(jk))
-              t3 = (r2ab(ik)+r2ab(jk)-r2ab(ij))
-              tmp2=r2ab(ij)*r2ab(jk)*r2ab(ik)
-              ang=(0.375d0*t1*t2*t3/tmp2+1.0d0)/tmp2**1.5d0
-
-              e63=e63-tmp*c9*ang
-
-            end do
-          end if
-        end do
-      end do
-
-    end if
-
-    end if
- 
-  end subroutine edisp
-
-
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  ! compute gradient
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-
-  subroutine gdisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,rcov, &
-      & s6,s18,rs6,rs8,rs10,alp6,alp8,alp10,noabc,rthr, &
-      & num,version,echo,g,disp,gnorm,cn_thr,fix)
-
-    integer n,iz(*),max_elem,maxc,version,mxc(max_elem)
-    real(wp) xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
-    real(wp) c6ab(max_elem,max_elem,maxc,maxc,3)
-    real(wp) g(3,*),s6,s18,rcov(max_elem)
-    real(wp) rs6,rs8,rs10,alp10,alp8,alp6,a1,a2
-    logical noabc,num,echo,fix(n)
-
-    integer iat,jat,i,j,kat,k
-    real(wp) R0,C6,alp,R42,disp,x1,y1,z1,x2,y2,z2,rr,e6abc
-    real(wp) dx,dy,dz,r2,r,r4,r6,r8,r10,r12,t6,t8,t10,damp1
-    real(wp) damp6,damp8,damp10,e6,e8,e10,e12,gnorm,tmp1
-    real(wp) s10,s8,gC6(3),term,step,dispr,displ,r235,tmp2
-    real(wp) cn(n),gx1,gy1,gz1,gx2,gy2,gz2,rthr,c8,cn_thr
-    real(wp) rthr3
-
-    real(wp) rij(3),rik(3),rjk(3),r7,r9
-    real(wp) rik_dist,rjk_dist
-    !d(E)/d(r_ij) derivative wrt. dist. iat-ja
-    real(wp) drij(n*(n+1)/2)
-    real(wp) drik,drjk
-    real(wp) rcovij
-    !d(C6ij)/d(r_ij)
-    real(wp) dc6,c6chk
-    real(wp) expterm,dcni
-    !dCN(iat)/d(r_ij) is equal to
-    real(wp) dcn
-    !dCN(jat)/d(r_ij)
-    ! saves (1/r^6*f_dmp + 3*r4r2/r^8*f_dmp) for kat l
-    real(wp) dc6_rest
-    integer linij,linik,linjk
-    real(wp) vec(3),vec2(3)
-    ! dE_disp/dCN(iat) in dc6i(iat)
-    real(wp) dc6i(n)
-    ! saves dC6(ij)/dCN(iat)
-    real(wp) dc6ij(n,n)
-    real(wp) dc6iji,dc6ijj
-    logical abccalc(n*(n+1)/2)
-    real(wp) abcthr
-    ! temporary container to store iat gradient
-    real(wp) gtmp(3)
-    real(wp) labc,rabc
-    real(wp) c6abc(n*(n+1)/2)
-    real(wp) r2abc(n*(n+1)/2)
-    real(wp) r3abc(n*(n+1)/2)
-    real(wp) c9,rav,rav3,fdmp,ang,angr9,eabc,dc9,dfdmp,dang
-    real(wp) r2ij,r2jk,r2ik,mijk,imjk,ijmk,rijk3
-    integer mat,linim,linjm,linkm,kk
-
-
-    dc6i=0.0d0
-    abccalc=.FALSE.
-    abcthr=cn_thr
-
-
-
-
-    !NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
-    if (num) then
-      if (echo)write(*,*) 'doing numerical gradient O(N^3) ...'
-
-      call edisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,rcov, &
-          & rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,rthr,cn_thr, &
-          & e6,e8,e10,e12,e6abc)
-      disp=-s6*e6-s18*e8-e6abc
-
-      step=2.d-5
-
-      do i=1,n
-        do j=1,3
-          xyz(j,i)=xyz(j,i)+step
-          call edisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,rcov, &
-              & rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,rthr,cn_thr, &
-              & e6,e8,e10,e12,e6abc)
-          dispr=-s6*e6-s18*e8-e6abc
-          rabc=e6abc
-          xyz(j,i)=xyz(j,i)-2*step
-          call edisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,rcov, &
-              & rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,rthr,cn_thr, &
-              & e6,e8,e10,e12,e6abc)
-          displ=-s6*e6-s18*e8-e6abc
-          labc=e6abc
-          g(j,i)=0.5*(dispr-displ)/step
-          xyz(j,i)=xyz(j,i)+step
-        end do
-      end do
-      goto 999
-    end if
-
-    ! this is the crucial threshold to reduce the N^3 to an
-    ! effective N^2.
-
-    ! write(*,*)'rthr=',rthr,'rthr2=',rthr2,'rthr3=',rthr3
-
-    if (echo)write(*,*)
-    ! 2222222222222222222222222222222222222222222222222222222222222222222222
-    if (version.eq.2)then
-      if (echo)write(*,*) 'doing analytical gradient O(N^2) ...'
-      disp=0
-      do iat=1,n-1
-        do jat=iat+1,n
-          R0=r0ab(iz(jat),iz(iat))*rs6
-          dx=(xyz(1,iat)-xyz(1,jat))
-          dy=(xyz(2,iat)-xyz(2,jat))
-          dz=(xyz(3,iat)-xyz(3,jat))
-          r2 =dx*dx+dy*dy+dz*dz
-          ! if (r2.gt.rthr) cycle
-          r235=r2**3.5
-          r =dsqrt(r2)
-          damp6=exp(-alp6*(r/R0-1.0d0))
-          damp1=1.+damp6
-          c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
-          tmp1=damp6/(damp1*damp1*r235*R0)
-          tmp2=6./(damp1*r*r235)
-          gx1=alp6* dx*tmp1-tmp2*dx
-          gx2=alp6*(-dx)*tmp1+tmp2*dx
-          gy1=alp6* dy*tmp1-tmp2*dy
-          gy2=alp6*(-dy)*tmp1+tmp2*dy
-          gz1=alp6* dz*tmp1-tmp2*dz
-          gz2=alp6*(-dz)*tmp1+tmp2*dz
-          g(1,iat)=g(1,iat)-gx1*c6
-          g(2,iat)=g(2,iat)-gy1*c6
-          g(3,iat)=g(3,iat)-gz1*c6
-          g(1,jat)=g(1,jat)-gx2*c6
-          g(2,jat)=g(2,jat)-gy2*c6
-          g(3,jat)=g(3,jat)-gz2*c6
-          disp=disp+c6*(1./damp1)/r2**3
-        end do
-      end do
-      disp=-disp
-
-
-      goto 999
-
-      ! 3333333333333333333333333333333333333333333333333333333333333333333333
-      ! zero damping
-    elseif ((version.eq.3).or.(version.eq.5)) then
-
-      if (echo)write(*,*) 'doing analytical gradient O(N^2) ...'
-      call ncoord(n,rcov,iz,xyz,cn,cn_thr)
-      s8 =s18
-      s10=s18
-
-      disp=0
-
-      drij=0.0d0
-      dc6_rest=0.0d0
-      kat=0
-
-
-      kk=0
-      do iat=1,n
-        do jat=1,iat-1
-          rij=xyz(:,jat)-xyz(:,iat)
-          r2=sum(rij*rij)
-          if (r2.gt.rthr) cycle
-          linij=lin(iat,jat)
-
-          r0=r0ab(iz(jat),iz(iat))
-          r42=r2r4(iz(iat))*r2r4(iz(jat))
-          ! rcovij=rcov(iz(iat))+rcov(iz(jat))
-          !
-          ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
-          ! dC6(iat,jat)/dCN(jat).
-          !
-          call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)), &
-              & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat, &
-              & c6,dc6iji,dc6ijj)
-
-
-          r=dsqrt(r2)
-          r6=r2*r2*r2
-          r7=r6*r
-          r8=r6*r2
-          r9=r8*r
-
-          !
-          ! Calculates damping functions:
-          if (version.eq.3) then
-            t6 = (r/(rs6*R0))**(-alp6)
-            damp6 =1.d0/( 1.d0+6.d0*t6 )
-            t8 = (r/(rs8*R0))**(-alp8)
-            damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
-            tmp1=s6*6.d0*damp6*C6/r7
-            tmp2=s8*6.d0*C6*r42*damp8/r9
-            ! d(r^(-6))/d(r_ij)
-            drij(linij)=drij(linij)-tmp1 &
-                & -4.d0*tmp2
-  
-  
-            drij(linij)=drij(linij) &
-                & +tmp1*alp6*t6*damp6 &
-                & +3.d0*tmp2*alp8*t8*damp8
-            !d(f_dmp)/d(r_ij)
-
-          else ! version.eq.5
-            t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
-            damp6 =1.d0/( 1.d0+6.d0*t6 )
-            t8 = (r/R0+R0*rs8)**(-alp8)
-            damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
-            tmp1=s6*6.d0*damp6*C6/r7
-            tmp2=s8*6.d0*C6*r42*damp8/r9
-            ! d(r^(-6))/d(r_ij)
-            drij(linij)=drij(linij)-tmp1 &  
-                &  -4.d0*tmp2
-  
-  
-            drij(linij)=drij(linij) &
-                & +tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) & 
-                & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)
-            !d(f_dmp)/d(r_ij)
-
-          end if
-
-
-          if ((.not.noabc).and.(r2.lt.abcthr)) then
-            ! if (.not.noabc) then
-            abccalc(linij)=.TRUE.
-            dc6ij(iat,jat)=dc6iji
-            dc6ij(jat,iat)=dc6ijj
-            c6abc(linij)=c6
-            r2abc(linij)=r2
-            r3abc(linij)=(r/R0)**(1.0/3.0)
-            !noabc
-          end if
-
-          dc6_rest=s6/r6*damp6+3.d0*s8*r42/r8*damp8
-
-          ! calculate E_disp for sanity check
-          disp=disp-dc6_rest*c6
-          !
-          !
-          ! saving all f_dmp/r6*dC6(ij)/dCN(i) for each atom for later
-          dc6i(iat)=dc6i(iat)+dc6_rest*dc6iji
-          dc6i(jat)=dc6i(jat)+dc6_rest*dc6ijj
-
-
-          !jat
-        end do
-        !iat
-      end do
-
-
-
-
-
-
-      ! end if !version 3+5
-
-      ! BJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJBJ
-      ! Becke-Johnson finite damping
-    elseif ((version.eq.4).or.(version.eq.6)) then
-      a1 =rs6
-      a2 =rs8
-      s8 =s18
-
-      if (echo)write(*,*) 'doing analytical gradient O(N^2) ...'
-      disp=0
-      call ncoord(n,rcov,iz,xyz,cn,cn_thr)
-
-      drij=0.0d0
-      dc6_rest=0.0d0
-      kat=0
-
-
-      do iat=1,n
-        do jat=1,iat-1
-          rij=xyz(:,jat)-xyz(:,iat)
-          r2=sum(rij*rij)
-          if (r2.gt.rthr) cycle
-
-          linij=lin(iat,jat)
-          r0=r0ab(iz(jat),iz(iat))
-          r42=r2r4(iz(iat))*r2r4(iz(jat))
-          !
-          ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
-          ! dC6(iat,jat)/dCN(jat).
-          !
-          call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)), &
-              & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat, &
-              & c6,dc6iji,dc6ijj)
-
-
-          r=dsqrt(r2)
-          r4=r2*r2
-          r6=r4*r2
-          r8=r6*r2
-
-          if ((.not.noabc).and.(r2.lt.abcthr)) then
-            ! if (.not.noabc) then
-            abccalc(linij)=.TRUE.
-            dc6ij(iat,jat)=dc6iji
-            dc6ij(jat,iat)=dc6ijj
-            c6abc(linij)=c6
-            r2abc(linij)=r2
-            r3abc(linij)=(r/r0)**(1.0/3.0)
-            !noabc
-          end if
-          ! use BJ radius
-          R0=a1*dsqrt(3.0d0*r42)+a2
-
-          t6=(r6+R0**6)
-          t8=(r8+R0**8)
-
-          drij(linij)=drij(linij) &
-              & -s6*C6*6.0d0*r4*r/(t6*t6) &
-              & -s8*C6*24.0d0*r42*r6*r/(t8*t8)
-
-          dc6_rest=s6/t6+3.d0*s8*r42/t8
-          ! calculate E_disp for sanity check
-          disp=disp-dc6_rest*c6
-
-          ! saving all (1/r^6...)* dC6/dCN(i) for each atom
-          dc6i(iat)=dc6i(iat)+dc6_rest*dc6iji
-          dc6i(jat)=dc6i(jat)+dc6_rest*dc6ijj
-
-          !jat
-        end do
-        !iat
-      end do
-
-      !version=4 (BJ)
-    end if
-
-
-    if (.not.noabc)then
-
-      if (echo)write(*,*) 'doing analytical gradient O(N^3) ...'
-      do iat=1,n
-        do jat=1,iat-1
-          linij=lin(iat,jat)
-          if (.NOT.abccalc(linij))cycle
-          r2ij=r2abc(linij)
-          do kat=1,jat-1
-
-            linik=lin(iat,kat)
-            linjk=lin(jat,kat)
-            !cuto
-            if (.NOT.(abccalc(linjk).AND.abccalc(linik)))cycle
-            ! calculating the 3body energy:
-            r2jk=r2abc(linjk)
-            r2ik=r2abc(linik)
-            c9=c6abc(linij)*c6abc(linjk)*c6abc(linik)
-            c9=dsqrt(c9)
-            rav=r3abc(linij)*r3abc(linjk)*r3abc(linik)
-            fdmp=1.0d0/(1+6.0d0*(0.75d0*rav)**(-alp8))
-            mijk=-r2ij+r2jk+r2ik
-            imjk= r2ij-r2jk+r2ik
-            ijmk= r2ij+r2jk-r2ik
-            rijk3=r2ij*r2jk*r2ik
-            rav3=rijk3**1.5
-            ang=0.375d0*ijmk*imjk*mijk/rijk3
-            angr9=(ang +1.0d0) &
-                & /rav3
-
-            eabc=eabc+c9*angr9*fdmp
-            !end of 3body energy calculation
-
-            !start calculating the derivatives of each part w.r.t. r_ij
-
-            r=dsqrt(r2ij)
-            dfdmp=-2.d0*alp8*(0.75d0*rav)**(-alp8)*fdmp*fdmp
-
-            dang=-0.375d0*(r2ij**3+r2ij**2*(r2jk+r2ik) &
-                & +r2ij*(3.0d0*r2jk**2+2.0*r2jk*r2ik+3.0*r2ik**2) &
-                & -5.0*(r2jk-r2ik)**2*(r2jk+r2ik)) &
-                & /(r*rijk3*rav3)
-
-
-            tmp1=dfdmp/r*c9*angr9-dang*c9*fdmp
-            drij(linij)=drij(linij)+tmp1
-
-            !start calculating the derivatives of each part w.r.t. r_jk
-            r=dsqrt(r2jk)
-
-            dang=-0.375d0*(r2jk**3+r2jk**2*(r2ik+r2ij) &
-                & +r2jk*(3.0d0*r2ik**2+2.0*r2ik*r2ij+3.0*r2ij**2) &
-                & -5.0*(r2ik-r2ij)**2*(r2ik+r2ij)) &
-                & /(r*rijk3*rav3)
-
-            drij(linjk)=drij(linjk) &
-                & +dfdmp/r*c9*angr9-dang*c9*fdmp
-
-
-            !start calculating the derivatives of each part w.r.t. r_ik
-            r=dsqrt(r2abc(linik))
-
-            dang=-0.375d0*(r2ik**3+r2ik**2*(r2jk+r2ij) &
-                & +r2ik*(3.0d0*r2jk**2+2.0*r2jk*r2ij+3.0*r2ij**2) &
-                & -5.0*(r2jk-r2ij)**2*(r2jk+r2ij)) &
-                & /(r*rijk3*rav3)
-
-            drij(linik)=drij(linik) &
-                & +dfdmp/r*c9*angr9-dang*c9*fdmp
-
-
-
-            ! calculate rest* dc9/dcn(iat) and sum it up for every atom ijk
-            dc6_rest=angr9*fdmp
-
-            dc9=dc6ij(iat,jat)/c6abc(linij)+dc6ij(iat,kat)/c6abc(linik)
-            dc9=-0.5d0*c9*dc9
-            dc6i(iat)=dc6i(iat)+dc6_rest*dc9
-
-            dc9=dc6ij(jat,iat)/c6abc(linij)+dc6ij(jat,kat)/c6abc(linjk)
-            dc9=-0.5d0*c9*dc9
-            dc6i(jat)=dc6i(jat)+dc6_rest*dc9
-
-            dc9=dc6ij(kat,iat)/c6abc(linik)+dc6ij(kat,jat)/c6abc(linjk)
-            dc9=-0.5d0*c9*dc9
-            dc6i(kat)=dc6i(kat)+dc6_rest*dc9
-
-            !kat
-          end do
-          !jat
-        end do
-        !iat
-      end do
-
-      disp=disp+eabc
-      !noabc
-    end if
-
-
-
-    ! After calculating all derivatives dE/dr_ij w.r.t. distances,
-    ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-    do iat=2,n
-      gtmp=0.0
-      do jat=1,iat-1
-        linij=lin(iat,jat)
-        rij=xyz(:,jat)-xyz(:,iat)
-
-
-        r2=sum(rij*rij)
-        r=dsqrt(r2)
-        if (r2.lt.cn_thr) then
-          rcovij=rcov(iz(iat))+rcov(iz(jat))
-          expterm=exp(-k1*(rcovij/r-1.d0))
-          dcn=-k1*rcovij*expterm/ &
-              & (r*r*(expterm+1.d0)*(expterm+1.d0))
-        else
-          dcn=0.d0
-        end if
-        x1=drij(linij)+dcn*(dc6i(iat)+dc6i(jat))
-
-        gtmp=gtmp+x1*rij/r
-        !g(:,iat)=g(:,iat)+x1*rij/r
-        g(:,jat)=g(:,jat)-x1*rij/r
-
-        !iat
-      end do
-      g(:,iat)=g(:,iat)+gtmp
-      !jat
-    end do
-
-
-
-999 continue
-    gnorm=sum(abs(g(1:3,1:n)))
-    if (echo)then
-      write(*,*)
-      write(*,*)'|G|=',gnorm
-    end if
-
-    !fixed atoms have no gradient
-    do i=1,n
-      if (fix(i))g(:,i)=0.0
-    end do
-
-
-
-  end subroutine gdisp
-
-
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
   ! The N E W gradC6 routine C
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -1549,48 +905,6 @@ contains
     end if
 
   end subroutine getc6
-
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  ! compute coordination numbers by adding an inverse damping function
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-
-  subroutine ncoord(natoms,rcov,iz,xyz,cn,cn_thr)
-    integer iz(*),natoms,i,max_elem
-    real(wp) xyz(3,*),cn(*),rcov(94),input
-    real(wp) cn_thr
-
-    integer iat
-    real(wp) dx,dy,dz,r,damp,xn,rr,rco,r2
-
-    do i=1,natoms
-      xn=0.0d0
-      do iat=1,natoms
-        if (iat.ne.i)then
-          dx=xyz(1,iat)-xyz(1,i)
-          dy=xyz(2,iat)-xyz(2,i)
-          dz=xyz(3,iat)-xyz(3,i)
-          r2=dx*dx+dy*dy+dz*dz
-          if (r2.gt.cn_thr) cycle
-          r=sqrt(r2)
-          ! covalent distance in Bohr
-          rco=rcov(iz(i))+rcov(iz(iat))
-          rr=rco/r
-          ! counting function exponential has a better long-range behavior than MH
-          damp=1.d0/(1.d0+exp(-k1*(rr-1.0d0)))
-          xn=xn+damp
-        end if
-      end do
-      ! if (iz(i).eq.19) then
-      ! write(*,*) "Input CN of Kalium"
-      ! read(*,*),input
-      ! cn(i)=input
-      ! else
-      cn(i)=xn
-      ! end if
-    end do
-
-  end subroutine ncoord
-
 
   integer function lin(i1,i2)
 !$acc routine  seq
@@ -2505,6 +1819,59 @@ contains
     end do
 
   end subroutine pbcncoord
+
+  subroutine pbcncoord_new(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,xyz_hstep)
+    integer,intent(in) :: natoms,iz(*)
+    real(wp),intent(in) :: rcov(94)
+    real(wp), intent(in):: xyz(3,*),lat(3,3)
+    real(wp), intent(in) :: crit_cn
+    real(wp), intent(out):: cn(*)
+    real(wp), intent(in) :: xyz_hstep(3,*) ! displaced geometry
+  
+    integer i,max_elem,rep_cn(3)
+
+    integer iat,taux,tauy,tauz
+    real(wp) dx,dy,dz,r,damp,xn,rr,rco,tau(3)
+
+    do i=1,natoms
+      xn=0.0d0
+      do iat=1,natoms
+        do taux=-rep_cn(1),rep_cn(1)
+          do tauy=-rep_cn(2),rep_cn(2)
+            do tauz=-rep_cn(3),rep_cn(3)
+              if (iat.eq.i .and. taux.eq.0 .and. tauy.eq.0 .and.&
+                  & tauz.eq.0) cycle
+              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+              if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                dx=xyz_hstep(1,iat)-xyz_hstep(1,i) ! both in the unit cell, use the displaced geometry
+                dy=xyz_hstep(2,iat)-xyz_hstep(2,i) 
+                dz=xyz_hstep(3,iat)-xyz_hstep(3,i) 
+              else
+                dx=xyz(1,iat)-xyz_hstep(1,i)+tau(1) ! only iat in the unit cell, use the undisplaced geometry for i
+                dy=xyz(2,iat)-xyz_hstep(2,i)+tau(2) 
+                dz=xyz(3,iat)-xyz_hstep(3,i)+tau(3) 
+              end if 
+
+              r=(dx*dx+dy*dy+dz*dz)
+              if (r.gt.crit_cn) cycle
+              r=sqrt(r)
+              ! covalent distance in Bohr
+              rco=rcov(iz(i))+rcov(iz(iat))
+              rr=rco/r
+              ! counting function exponential has a better long-range behavior than MH
+              damp=1.d0/(1.d0+exp(-k1*(rr-1.0d0)))
+              xn=xn+damp
+              ! print '("cn(",I2,I2,"): ",E14.8)',i,iat,damp
+
+            end do
+          end do
+        end do
+      end do
+      cn(i)=xn
+    end do
+
+  end subroutine pbcncoord_new
 
 
 
@@ -4617,6 +3984,409 @@ contains
 
   end subroutine pbcgdisp
 
+  subroutine pbcgdisp_new(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+      & rcov,s6,s18,rs6,rs8,rs10,alp6,alp8,alp10,noabc,num,&
+      & version,g,disp,gnorm,lat,rep_v,rep_cn,&
+      & crit_vdw,echo,crit_cn, hstep, ia, ix, is, g_supercell_)
+    !
+    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
+    USE mp,           ONLY : mp_sum
+    !
+    ! input/output variables
+    !   
+    real(wp), intent(in) :: c6ab(max_elem,max_elem,maxc,maxc,3)
+    real(wp), intent(in) :: s6,s18,rcov(max_elem)
+    real(wp), intent(in) :: rs6,rs8,rs10,alp10,alp8,alp6
+    integer,  intent(in) :: n,iz(*),max_elem,maxc,version,mxc(max_elem)
+    real(wp), intent(in) :: xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
+    logical,  intent(in) :: noabc,num,echo
+    real(wp), dimension(3,3), intent(in) :: lat
+    integer,  dimension(3),   intent(in) :: rep_v,rep_cn
+    real(wp), intent(in) :: crit_vdw,crit_cn
+    integer,  intent(in) :: ia, ix, is
+    real(wp), intent(in) :: hstep ! step (in Bohr) for atom displacement for numerical Hessian calculation
+    real(wp), intent(inout) :: g(3,*), disp
+    real(wp), intent(out) :: gnorm
+    real(wp), target, contiguous, intent(out) :: g_supercell_(:,:,:,:,:) 
+    ! 
+    ! local variables
+    !
+    real(wp), pointer :: g_supercell(:,:,:,:,:) 
+    integer, allocatable :: ns(:)
+    real(wp), allocatable :: xyz_hstep(:,:) ! displaced geometry
+    real(wp) :: iat_jat_fact ! weight for diagonal/off-diagonal gradient terms
+    logical  :: unit_cell     ! a quick flag to check whether a certain taux,tauy,tauz points to the unit cell or to some image
+    integer  :: mykey, na_s, na_e
+    real(wp) :: hdisp,a1,a2,R0,C6,R42,r2,s10,s8,cn(n),rthr,rcovij,dcnn
+    integer  :: iat,jat, taux,tauy,tauz, linij
+    real(wp), DIMENSION(3) :: tau, rij, vec
+    real(wp), allocatable,dimension(:,:,:,:) :: drij, drij_hstep(:,:,:,:)
+    real(wp), allocatable,dimension(:,:,:,:) :: dcn
+    real(wp) :: dc6i(n), dc6i_hstep(n), dc6ij(n,n), dc6iji,dc6ijj
+    real(wp) :: dc6_rest_sum(n*(n+1)/2)
+    real(wp),DIMENSION(n*(n+1)) ::c6save
+    real(wp) :: res1, res2, gnorm_supercell
+
+    if(num) Call errore('pbcgdisp', 'Atom displacement not implemented with numerical forces', 1)
+    if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term ' // &
+                                 ' (set dftd3_threebody=.false. for phonon calculations)', 1)
+
+    ns = shape(g_supercell_)
+    g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
+    g_supercell(:,:,:,:,:) = 0.0_wp 
+    hdisp = dble(is) * hstep
+    allocate(xyz_hstep(3,n))
+    xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
+    xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
+
+    ! R^2 cut-off
+    rthr=crit_vdw
+
+    if (echo)write(*,*)
+    if (echo) write(*,*) 'doing analytical gradient for version...', version
+
+    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+
+    if ((version.eq.3).or.(version.eq.5).or.(version.eq.4).or.(version.eq.6)) then
+
+      ! precompute for analytical part
+      call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,xyz_hstep)
+
+
+      a1 =rs6
+      a2 =rs8
+      s8 =s18
+      s10=s18
+      allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),-rep_v(1):rep_v(1),n*(n+1)/2), &
+               drij_hstep(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),-rep_v(1):rep_v(1),n*(n+1)/2) )
+
+      disp=0
+      drij=0.0d0
+      drij_hstep=0.0d0
+      dc6_rest_sum=0.0d0
+      c6save=0.0d0
+      dc6i=0.0d0
+      dc6i_hstep=0.0d0
+      dc6ij=0.0d0
+
+      IF ( mykey == 0 ) THEN
+
+      do taux=-rep_v(1),rep_v(1)
+        do tauy=-rep_v(2),rep_v(2)
+          do tauz=-rep_v(3),rep_v(3)
+
+            unit_cell = taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0  
+            tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+            r2=sqrt(sum(tau*tau))
+            if(unit_cell .and. (r2.gt.0.000010d0)) Call errore('pbcgdisp', &
+                                                      'non zero traslation vector found for the unit cell', 1)
+
+            do iat=na_s, na_e
+              call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+                  & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
+                  & c6,dc6iji,dc6ijj)
+
+              c6save(lin(iat,iat))=c6
+              dc6ij(iat,iat)=dc6iji
+              r42=r2r4(iz(iat))*r2r4(iz(iat))
+              rcovij=rcov(iz(iat))+rcov(iz(iat))
+              if((version.eq.3).or.(version.eq.5)) then 
+                R0=r0ab(iz(iat),iz(iat))
+              elseif((version.eq.4).or.(version.eq.6)) then
+                R0=a1*sqrt(3.0d0*r42)+a2
+              end if 
+
+              iat_jat_fact = 0.50d0 ! each diagonal contribution is weighted 1/2
+
+              rij=tau
+              r2=sum(rij*rij)
+              if (r2.gt.0.1.and.r2.lt.rthr) then
+                !
+                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,iat)) + res1
+                disp=disp-res2*c6
+                dc6i(iat)=dc6i(iat)+res2*(dc6iji+dc6ijj)
+                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2
+                !
+                if(.not. unit_cell .and. (iat.eq.ia) ) then 
+                  !
+                  disp=disp+res2*c6 ! remove the previous contribution 
+                  dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))-res2 ! remove the previous contribution
+                  !
+                  rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
+                  r2=sum(rij*rij)
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                  drij_hstep(tauz,tauy,taux,lin(iat,iat))=drij_hstep(tauz,tauy,taux,lin(iat,iat)) + res1
+                  disp=disp-res2*c6
+                  dc6i_hstep(iat)=dc6i_hstep(iat)+res2*(dc6iji+dc6ijj)
+                  dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2
+                end if 
+              else
+                drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
+                if(.not.unit_cell) drij_hstep(tauz,tauy,taux,lin(iat,iat))=0.0d0
+              end if
+
+              do jat=1,iat-1
+                !
+                ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
+                ! dC6(iat,jat)/dCN(jat)
+                !
+                call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+                    & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
+                    & c6,dc6iji,dc6ijj)
+      
+                r42=r2r4(iz(iat))*r2r4(iz(jat))
+                rcovij=rcov(iz(iat))+rcov(iz(jat))
+                linij=lin(iat,jat)
+                dc6ij(iat,jat)=dc6iji
+                dc6ij(jat,iat)=dc6ijj
+                c6save(linij)=c6
+                if((version.eq.3).or.(version.eq.5)) then 
+                  R0=r0ab(iz(iat),iz(iat))
+                elseif((version.eq.4).or.(version.eq.6)) then
+                  R0=a1*dsqrt(3.0d0*r42)+a2 
+                end if 
+
+                iat_jat_fact = 1.0d0 ! off diagonal contributions for iat and jat are equivalent: they are weighted twice the diagonal ones 
+
+                rij=xyz(:,jat)-xyz(:,iat)+tau
+
+                if (r2.gt.rthr) cycle
+
+                r2=sum(rij*rij)
+                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) + res1
+                disp = disp - res2 * C6
+                dc6i(iat)=dc6i(iat)+res2 * dc6iji
+                dc6i(jat)=dc6i(jat)+res2 * dc6ijj
+                dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
+
+                if( iat.eq.ia ) then 
+                  !
+                  ! remove previous contributions from disp and dc6_rest_sum
+                  disp = disp + res2 * C6 
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) - res2
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz_hstep(:,iat) 
+                  r2=sum(rij*rij)
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                  drij_hstep(tauz,tauy,taux,linij)=drij_hstep(tauz,tauy,taux,linij) + res1 
+                  disp = disp - res2 * C6
+                  dc6i_hstep(iat)=dc6i_hstep(iat)+res2*dc6iji
+                  dc6i_hstep(jat)=dc6i_hstep(jat)+res2*dc6ijj
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
+                  !
+                elseif( jat.eq.ia ) then 
+                  !
+                  ! remove previous contributions from disp and dc6_rest_sum
+                  disp = disp + res2 * C6 
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) - res2
+                  !
+                  rij = xyz_hstep(:,jat) - ( xyz(:,iat) - tau )  
+                  r2=sum(rij*rij)
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                  drij_hstep(tauz,tauy,taux,linij)=drij_hstep(tauz,tauy,taux,linij) + res1 
+                  disp = disp - res2 * C6
+                  dc6i_hstep(iat)=dc6i_hstep(iat)+res2*dc6iji
+                  dc6i_hstep(jat)=dc6i_hstep(jat)+res2*dc6ijj
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
+                end if 
+                
+              end do ! jat 
+            end do ! iat
+
+          end do ! tauz 
+        end do ! tauy
+      end do ! taux
+
+      END IF ! mykey == 0
+
+      CALL mp_sum ( drij , intra_image_comm )
+      CALL mp_sum ( dc6i , intra_image_comm )
+      CALL mp_sum ( drij_hstep , intra_image_comm )
+      CALL mp_sum ( dc6i_hstep , intra_image_comm )
+
+    end if ! version
+
+    ! After calculating all derivatives dE/dr_ij w.r.t. distances,
+    ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
+
+    do taux=-rep_v(1),rep_v(1)
+      do tauy=-rep_v(2),rep_v(2)
+        do tauz=-rep_v(3),rep_v(3)
+          !
+          unit_cell = taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0  
+          tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+          r2=sqrt(sum(tau*tau))
+          if(unit_cell .and. (r2.gt.0.000010d0)) Call errore('pbcgdisp', &
+                                                      'non zero traslation vector found for the unit cell', 1)
+          !
+          do iat = 1, n 
+            !
+            if(.not. unit_cell .and. (iat.eq.ia) ) then 
+              !
+              linij=lin(iat,iat)
+              rcovij=rcov(iz(iat))+rcov(iz(iat))
+              !
+              rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
+              r2=sum(rij*rij)
+              if(version.eq.2) then 
+                iat_jat_fact = 0.5_wp
+                R0=r0ab(iz(iat),iz(iat))*rs6
+                c6=c6ab(iz(iat),iz(iat),1,1,1)*s6
+                Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+              else
+                Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(iat), vec)
+              endif 
+              g(:,iat)=g(:,iat)+vec
+              g_supercell(0,0,0,1:3,iat)          = g_supercell(0,0,0,1:3,iat)          + vec
+              g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) - vec
+              !
+            !else 
+            !  whenever iat is not displaced (i.e. iat.ne.ia), forces from -tau and +tau cancel out each other 
+            !  whenever iat is in the unit_cell, there is no force contribution from iat with itself
+            end if 
+            !
+            do jat=1,iat-1
+              !
+              linij=lin(iat,jat)
+              rcovij=rcov(iz(iat))+rcov(iz(jat))
+              if(version.eq.2) then 
+                iat_jat_fact = 1.0_wp
+                R0=r0ab(iz(jat),iz(iat))*rs6
+                c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
+              end if 
+              !
+              if(unit_cell) then 
+                !
+                if(iat.eq.ia) then
+                  rij=xyz(:,jat)-xyz_hstep(:,iat) 
+                  r2=sum(rij*rij)
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  endif 
+                elseif(jat.eq.ia) then
+                  rij=xyz_hstep(:,jat)-xyz(:,iat) 
+                  r2=sum(rij*rij)
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  end if
+                else
+                  rij=xyz(:,jat)-xyz(:,iat) 
+                  r2=sum(rij*rij)
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  end if 
+                end if 
+                g(:,iat)=g(:,iat)+vec
+                g(:,jat)=g(:,jat)-vec
+                g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec
+                !
+              elseif(.not. unit_cell) then 
+                !
+                if(iat.eq.ia) then 
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz_hstep(:,iat) ! displaced 
+                  r2=sum(rij*rij)                
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  end if 
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
+                  g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
+                  g(:,iat)=g(:,iat)+vec
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz(:,iat)        ! undisplaced
+                  r2=sum(rij*rij)                
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  end if  
+                  g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec       
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                  g(:,jat)=g(:,jat)-vec
+                  !
+                elseif(jat.eq.ia) then 
+                  !
+                  rij = xyz_hstep(:,jat) - ( xyz(:,iat) - tau )  ! displaced
+                  r2=sum(rij*rij)                
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  endif 
+                  !vec = -vec
+                  g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec       
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                  g(:,jat)=g(:,jat)-vec
+                  !
+                  rij = xyz(:,jat)  - ( xyz(:,iat) - tau )        ! undisplaced
+                  r2=sum(rij*rij)                
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  endif 
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
+                  g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
+                  g(:,iat)=g(:,iat)+vec
+                  !
+                else
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz(:,iat)        ! undisplaced
+                  r2=sum(rij*rij)                
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  endif 
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec       
+                  g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec
+                  g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
+                  g(:,jat)=g(:,jat)-vec
+                  g(:,iat)=g(:,iat)+vec
+                  !
+                end if 
+                !
+              end if ! unit_cell 
+              !
+            end do
+          end do
+        end do
+      end do
+    end do
+    !
+    if(allocated(drij)) deallocate(drij)
+    if(allocated(drij_hstep)) deallocate(drij_hstep)
+    !
+    gnorm_supercell=sum(abs(g_supercell(:,:,:,1:3,:)))
+    write(*,*)'|G(force)| =',gnorm_supercell, ' supercell gradient'
+    gnorm_supercell=sum(abs(g_supercell(0,0,0,1:3,:)))
+    write(*,*)'|G(force)| =',gnorm_supercell, ' supercell gradient for atoms in the unit cell '
+    gnorm=sum(abs(g(1:3,1:n)))
+    write(*,*)'|G(force)| =',gnorm, ' unit cell gradient'
+    deallocate(xyz_hstep, ns)
+    !
+    return
+    !
+  end subroutine pbcgdisp_new
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -4983,6 +4753,111 @@ contains
     end do
 
   end subroutine abc_to_xyz
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine gkernel1 ( version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, &
+                          fact, res1, res2 ) 
+  implicit none
+  integer, intent(in)   :: version
+  real(wp), intent(in)  :: fact ! overall scaling factor for res1 and res2
+  real(wp), intent(in)  :: r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42
+  real(wp), intent(out) :: res1, res2
+
+  real(wp) :: r, r4, r6, r7, r8, r9, tmp1, tmp2
+  real(wp) :: t6, damp6, t8, damp8 , dc6_rest
+
+  r=dsqrt(r2)
+  r4=r2*r2
+  r6=r4*r2
+  r7=r6*r
+  r8=r6*r2
+  r9=r8*r
+
+  if (version.eq.3) then
+    t6 = (r/(rs6*R0))**(-alp6)
+    damp6 =1.d0/( 1.d0+6.d0*t6 )
+    t8 = (r/(rs8*R0))**(-alp8)
+    damp8 =1.d0/( 1.d0+6.d0*t8 )
+    res1 = -s6*(6.0/(r7)*C6*damp6) -s8*(24.0/(r9)*C6*r42*damp8) &
+            +s6*C6/r7*6.d0*alp6*t6*damp6*damp6 +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8 
+    res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
+
+  elseif(version.eq.5) then  
+    t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
+    damp6 =1.d0/( 1.d0+6.d0*t6 )
+    t8 = (r/(R0)+R0*rs8)**(-alp8)
+    damp8 =1.d0/( 1.d0+6.d0*t8 )
+    tmp1=s6*6.d0*damp6*C6/r7
+    tmp2=s8*6.d0*C6*r42*damp8/r9
+    res1 = - (tmp1 +4.d0*tmp2) +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)) 
+    res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
+
+  elseif((version.eq.4).or.(version.eq.6)) then  
+    t6=(r6+R0**6)
+    t8=(r8+R0**8)
+    res1 = -s6*C6*6.0d0*r4*r/(t6*t6) -s8*C6*24.0d0*r42*r7/(t8*t8) 
+    res2 = s6/t6+3.d0*s8*r42/t8
+
+  endif
+
+  res1 = fact * res1
+  res2 = fact * res2
+
+  return
+
+  end subroutine gkernel1
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine gkernel2 ( rij, r2, crit_cn, rcovij, drij_linij, dc6i_iat, dc6i_jat, vec ) 
+  implicit none
+  real(wp), intent(in)  :: rij(3) 
+  real(wp), intent(in)  :: r2, crit_cn, rcovij, drij_linij, dc6i_iat, dc6i_jat
+  real(wp), intent(out) :: vec(3) 
+
+  real(wp) :: r, expterm, dcnn, x1
+  
+  r=dsqrt(r2)
+
+  if (r2.lt.crit_cn) then
+    expterm=exp(-k1*(rcovij/r-1.d0))
+    dcnn=-k1*rcovij*expterm/&
+        & (r2*(expterm+1.d0)*(expterm+1.d0))
+  else
+    dcnn=0.0d0
+  end if
+
+  x1=drij_linij + dcnn*(dc6i_iat + dc6i_jat )
+  vec=x1*rij/r
+
+  return 
+
+  end subroutine gkernel2
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+  subroutine gkernel3 ( fact, dxyz, r2, alp6, R0, c6, vec )
+  implicit none
+  real(wp), intent(in) :: fact, dxyz(3), r2, alp6, R0, c6
+  real(wp), intent(out) :: vec(3)
+
+  real(wp) :: r235, r, damp6, damp1, tmp1, tmp2, term
+
+  r235=r2**3.5
+  r =dsqrt(r2)
+  damp6=exp(-alp6*(r/R0-1.0d0))
+  damp1=1.+damp6
+  tmp1=damp6/(damp1*damp1*r235*R0)
+  tmp2=6./(damp1*r*r235)
+
+  term=alp6*tmp1-tmp2
+
+  vec(1:3) = fact * term*dxyz(1:3)*c6
+
+  return
+  
+  end subroutine gkernel3
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

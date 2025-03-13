@@ -1,0 +1,44 @@
+&CONTROL
+  prefix='anatase',
+  calculation='scf',
+  nstep=50,
+  tprnfor=.true.,
+/
+&SYSTEM
+  ibrav=6,
+  a=3.78,
+  c=9.51,
+  nspin=2,
+  ecutwfc=30.0,
+  ecutrho=240.0,
+  tot_charge=-1.0,
+  occupations='smearing',
+  smearing='gauss',
+  degauss=0.01,
+  starting_magnetization(2)=0.1,
+  ntyp=3,
+  nat=12,
+/
+&ELECTRONS
+  mixing_beta=0.2,
+  electron_maxstep=400,
+/
+ATOMIC_SPECIES
+Ti 47.867 Ti.pbe-sp-van_ak.UPF
+Ti1 47.867 Ti.pbe-sp-van_ak.UPF
+O 15.999 O.pbe-van_ak.UPF
+ATOMIC_POSITIONS angstrom
+Ti  0.000000  0.000000  0.000000
+Ti1  1.890000  1.890000  4.755000
+Ti  0.000000  1.890000  2.377500
+Ti  1.890000  0.000000  7.132500
+O  0.000000  0.000000  1.978080
+O  1.890000  1.890000  6.733080
+O  0.000000  1.890000  4.355580
+O  1.890000  0.000000  9.110580
+O  1.890000  0.000000  5.154420
+O  0.000000  1.890000  0.399420
+O  1.890000  1.890000  2.776920
+O  0.000000  0.000000  7.531920
+K_POINTS automatic
+1 1 1 0 0 0

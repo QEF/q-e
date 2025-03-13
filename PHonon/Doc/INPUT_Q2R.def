@@ -104,6 +104,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
                 of LO-TO splitting.
             }
         }
+        var write_lr -type LOGICAL {
+            default { @tt .false. }
+            info {
+                set to @b .true. to write long-range IFC into q2r IFC file.
+                This is required when enforcing asr='all' for infrared-
+                active solids in matdyn. An additional column will be written
+                for long-range part of IFC for text format, while a tag named 
+                IFC_LR will be created for xml format.
+            }
+        }
     }
 
     choose {

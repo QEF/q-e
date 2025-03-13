@@ -64,7 +64,6 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! the dynamical matrix
   complex(DP), allocatable ::  drhous (:,:)
   ! the change of the charge
-  complex(DP), external :: zdotc
 
   if (.not.okvan) then
      dyn_rec=(0.0_DP,0.0_DP)
@@ -78,14 +77,11 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   do irr1 = 1, nirr
      do ipert = 1, npert (irr1)
         nu_j = mode0 + ipert
+        ! FIXME : use zgemm instead of zgemv 
         call get_buffer (drhous,  lrdrhous, iudrhous, nu_j)
-        do mu = 1, npert (irr)
-           nu_i = imode0 + mu
-           ! FIXME : use zgemm instead of zdotc
-           dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
-                   zdotc (dfftp%nnr*nspin_mag,dvscfin(1,1,mu),1,drhous, 1) &
-                   * omega / DBLE (nrtot)
-        enddo
+        CALL zgemv('C',dfftp%nnr*nspin_mag, npert(irr), &
+                   cmplx(omega/dble(nrtot), 0._dp,kind=dp),  dvscfin(1,1,1), dfftp%nnr*nspin_mag,&
+                   drhous(1,1),1,cmplx(1._dp, 0._dp,kind=dp), dyn1(imode0+1,nu_j),1)  
      enddo
      mode0 = mode0 + npert (irr1)
   enddo

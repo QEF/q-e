@@ -23,7 +23,7 @@ PROGRAM fermi_velocity
   USE read_input,           ONLY : read_input_file
   USE command_line_options, ONLY : input_file_
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : nbnd, et
+  USE wvfct,                ONLY : et
   USE start_k,              ONLY : nk1, nk2, nk3
   USE cell_base,            ONLY : at, alat
   USE lsda_mod,             ONLY : nspin
@@ -135,12 +135,15 @@ PROGRAM fermi_velocity
   !
   IF (nspin == 2) THEN
      CALL write_fermisurfer(eig(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
-     &                       vf(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), "vfermi1.frmsf")
+     &                       vf(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
+     &                      TRIM(tmp_dir) // TRIM(prefix) // "_vfermi1.frmsf")
      CALL write_fermisurfer(eig(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 2), &
-     &                       vf(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 2), "vfermi2.frmsf")
+     &                       vf(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 2), &
+     &                      TRIM(tmp_dir) // TRIM(prefix) // "_vfermi2.frmsf")
   ELSE
      CALL write_fermisurfer(eig(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
-     &                       vf(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), "vfermi.frmsf")
+     &                       vf(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
+     &                      TRIM(tmp_dir) // TRIM(prefix) // "_vfermi.frmsf")
   END IF
   !
   DEALLOCATE(vf, eig, equiv)

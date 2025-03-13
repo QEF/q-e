@@ -10,8 +10,13 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 
     page extract -name "Specify property to calculate" {
 	namelist inputpp -name "INPUTPP" {
-	    
-	    var prefix \
+
+            var title {
+                -label "Title (title):"
+                -validate string
+            }
+
+            var prefix \
 		-label    "Prefix of punch file saved by program PW.X (prefix):" \
 		-widget   [list entrybutton "Prefix ..." [list ::pwscf::selectFileRoot $this prefix]] \
 		-fmt      %S -validate string \
@@ -135,6 +140,12 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    -label "Broadening of energy levels for LDOS in eV (degauss_ldos):"
 		    -validate fortrannonnegreal
 		}
+                var use_gauss_ldos {
+                    -label "Use gaussian broadening or LDOS (use_gauss_ldos):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
 	    }
 	}
     }

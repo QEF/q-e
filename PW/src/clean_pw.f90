@@ -1,12 +1,9 @@
 
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-! TB
-! included deallocation of forcefield of gate 'forcegate'
 !
 !----------------------------------------------------------------------
 SUBROUTINE clean_pw( lflag )
@@ -22,7 +19,6 @@ SUBROUTINE clean_pw( lflag )
   !! phonon, vc-relax). Beware: the new calculation should not CALL any
   !! of the routines mentioned above.
   !
-  USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
   USE fixed_occ,            ONLY : f_inp
@@ -36,12 +32,12 @@ SUBROUTINE clean_pw( lflag )
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
-  USE wavefunctions,        ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : deallocate_wfc, psic, psic_nc
   USE uspp,                 ONLY : deallocate_uspp
-  USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
+  USE atwfc_mod,            ONLY : deallocate_tab_atwfc
   USE m_gth,                ONLY : deallocate_gth
-  USE ldaU,                 ONLY : deallocate_ldaU
+  USE ldaU,                 ONLY : deallocate_hubbard
   USE extfield,             ONLY : forcefield, forcegate
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
@@ -62,14 +58,20 @@ SUBROUTINE clean_pw( lflag )
   USE exx,                  ONLY : deallocate_exx
   USE Coul_cut_2D,          ONLY : cutoff_2D, lr_Vloc 
   !
-  USE control_flags,        ONLY : ts_vdw, mbd_vdw
+  USE control_flags,        ONLY : ts_vdw, mbd_vdw, use_gpu
   USE tsvdw_module,         ONLY : tsvdw_finalize
   USE libmbd_interface,     ONLY : clean_mbd
   USE dftd3_qe,             ONLY : dftd3_clean
   !
-  USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
-  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
-  USE scf_gpum,             ONLY : deallocate_scf_gpu
+  USE control_flags,        ONLY : sic, scissor
+  USE sic_mod,              ONLY : deallocate_sic
+  USE sci_mod,              ONLY : deallocate_scissor
+  !
+  USE rism_module,          ONLY : deallocate_rism
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_base_module,  ONLY : clean_environ
+#endif
   !
   IMPLICIT NONE
   !
@@ -78,7 +80,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... local variables
   !
-  INTEGER :: nt, nr1, nr2, nr3
+  INTEGER :: nt, nr1, nr2, nr3, istat
   !
   IF ( lflag ) THEN
      !
@@ -112,7 +114,7 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_bp_efield()
   !
-  CALL deallocate_ldaU( lflag )
+  CALL deallocate_hubbard( lflag )
   !
   IF ( ALLOCATED( f_inp ) .AND. lflag )  DEALLOCATE( f_inp )
   !
@@ -134,8 +136,8 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
   IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
+  !$acc exit data delete(vrs)
   IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
-  CALL deallocate_scf_gpu()
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
@@ -144,9 +146,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( lr_Vloc )   )  DEALLOCATE( lr_Vloc   )
   IF ( ALLOCATED( strf )      )  DEALLOCATE( strf      )
   !
-  ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
-  !
-  CALL deallocate_uspp_data()
+  CALL deallocate_tab_atwfc()
   CALL deallocate_uspp() 
   !
   CALL deallocate_gth( lflag ) 
@@ -155,18 +155,16 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
+  !$acc exit data delete(g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  CALL deallocate_wvfct_gpu()
+  !$acc exit data delete(et)
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
-  IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  !
-  CALL deallocate_wavefunctions_gpu()
+  CALL deallocate_wfc ( )
   !
   ! ... fft structures allocated in data_structure.f90  
   !
@@ -206,10 +204,23 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_exx() 
   !
+  IF(sic) CALL deallocate_sic()
+  IF(scissor) CALL deallocate_scissor()
+  !
   IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
   IF (mbd_vdw) CALL clean_mbd()
   !
+  ! ... arrays for RISM
+  !
+  CALL deallocate_rism( lflag )
+  !
+#if defined (__LEGACY_PLUGINS) 
   CALL plugin_clean( 'PW', lflag )
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) CALL clean_environ('PW', lflag)
+#endif
+  CALL   plugin_clean('PW', lflag) 
   !
   RETURN
   !

@@ -387,8 +387,8 @@ MODULE exx_base
     CALL exx_grid_check( xk_collect(:,:) )
     DEALLOCATE( xk_collect )
     !
-    ! qnorm = max |q|, used in allocate_nlpot to compute the maximum size
-    !         of some arrays (e.g. qrad) - beware: needed for US/PAW+EXX
+    ! qnorm = max |q|, used to compute the maximum size of interpolation
+    !         tables (tab_beta, tab_qrad, etc.) - needed for US/PAW+EXX
     !
     qnorm = 0.0_dp
     DO iq = 1, nkqs

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: q2r.x / PHonon / Quantum ESPRESSO (version: 7.0)
+Program: q2r.x / PHonon / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -113,6 +113,18 @@ NAMELIST: &INPUT
                    of LO-TO splitting.
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       write_lr
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    set to .true. to write long-range IFC into q2r IFC file.
+                   This is required when enforcing asr='all' for infrared-
+                   active solids in matdyn. An additional column will be written
+                   for long-range part of IFC for text format, while a tag named
+                   IFC_LR will be created for xml format.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
@@ -182,4 +194,4 @@ ________________________________________________________________________
 ENDIF
 ________________________________________________________________________
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:41 CET 2021
+This file has been created by helpdoc utility on Wed Oct 16 19:27:30 CEST 2024

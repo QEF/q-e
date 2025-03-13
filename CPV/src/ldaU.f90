@@ -7,11 +7,11 @@
 !
 !-------------------------------------------------------------------------
       SUBROUTINE s_wfc(nwfc,becwfc,betae,wfc,swfc)
-!-----------------------------------------------------------------------
-!
-!     input: wfc, becwfc=<wfc|beta>, betae=|beta>
-!     output: swfc=S|wfc>
-!
+      !-----------------------------------------------------------------------
+      !! Take as input the wfc, \(\text{becwfc}=\langle\text{wfc}|\text{beta}\rangle\),
+      !! \(\text{betae}=|\text{beta}\rangle\).
+      !! Gives as output: \(\text{swfc}=S|\text{wfc}\rangle\)
+      !
       USE kinds, ONLY: DP
       USE ions_base, ONLY: nat, ityp
       USE uspp, ONLY: nkb, nkbus, qq_nt, ofsbeta
@@ -71,7 +71,6 @@
       !
       implicit none
       integer is, nb, l
-      integer, external :: set_hubbard_l
 
       IF ( .NOT.lda_plus_u ) RETURN
       ! FIXME: wasteful allocation, should be removed
@@ -81,7 +80,7 @@
       Hubbard_lmax = -1
       do is=1,nsp
          if (Hubbard_U(is).ne.0.d0) then 
-            Hubbard_l(is) = set_hubbard_l( upf(is)%psd )
+            ! Hubbard_l is read from the HUBBARD card in the input file
             Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
             write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ', Hubbard_l(is)
          else
@@ -101,11 +100,10 @@
 !-----------------------------------------------------------------------
       subroutine new_ns( c, eigr, betae, hpsi, forceh )
 !-----------------------------------------------------------------------
-!
-! This routine computes the on site occupation numbers of the Hubbard ions.
-! It also calculates the contribution of the Hubbard Hamiltonian to the
-! electronic potential and to the forces acting on ions.
-!
+      !! This routine computes the on site occupation numbers of the Hubbard ions.
+      !! It also calculates the contribution of the Hubbard Hamiltonian to the
+      !! electronic potential and to the forces acting on ions.
+
       use kinds,              ONLY: DP        
       use control_flags,      ONLY: tfor, tprnfor
       use ions_base,          only: nat, nsp, ityp
@@ -385,11 +383,10 @@
       subroutine dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,         &
                         offset,wfcU,eigr,proj,ipol,nb_s,nb_e,mykey,dns)
 !-----------------------------------------------------------------------
-!
-! This routine computes the derivative of the ns with respect to the ionic
-! displacement tau(alpha,ipol) used to obtain the Hubbard contribution to the
-! atomic forces.
-!
+      !! This routine computes the derivative of the ns with respect to the ionic
+      !! displacement \(\text{tau}(\text{alpha},\text{ipol})\) used to obtain
+      !! the Hubbard contribution to the atomic forces.
+      !
       use ions_base, only: nat, nsp, ityp
       use gvecw, only: ngw
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
@@ -464,12 +461,12 @@
       subroutine dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
                            alpha_s,ipol,offset,nb_s,nb_e,mykey,dproj)
 !-----------------------------------------------------------------------
-!
-! This routine computes the first derivative of the projection
-! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the atomic displacement
-! u(alpha,ipol) (we remember that ns_{m1,m2,s,I} = \sum_{k,v}
-! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
-!
+      !! This routine computes the first derivative of the projection
+      !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to the
+      !! atomic displacement \(u(\alpha,\text{ipol})\) (we remember that 
+      !! \(ns_{m1,m2,s,I} = \sum_{k,v} f_{kv} \langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}
+      !! \rangle\langle \psi_{k,v,s}|S|\phi^{at}_{I,m2}\rangle\) ).
+      !
       use ions_base, only: nat
       use gvecw, only: ngw
       use gvect, only: g, gstart
@@ -609,9 +606,8 @@
       SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, nwfcU,  &
      &                        offset, Hubbard_l, wfcU, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
-      !
-      ! Projection on atomic wavefunctions
-      ! Atomic wavefunctions are not orthogonalized
+      !! Projection on atomic wavefunctions.  
+      !! Atomic wavefunctions are not orthogonalized.
       !
       USE kinds,              ONLY: DP
       USE io_global,          ONLY: stdout
@@ -665,9 +661,8 @@
 !-----------------------------------------------------------------------
       SUBROUTINE atomic_wfc_hub( offset, Hubbard_l, eigr, nwfcU, wfcU )
 !-----------------------------------------------------------------------
-!
-! Compute atomic wavefunctions (not orthogonalized) in G-space
-!
+      !! Compute atomic wavefunctions (not orthogonalized) in G-space.
+      !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart, gg, g
@@ -733,6 +728,8 @@
                natwfc = natwfc + 1
                DO ia = 1, nat
                   IF( ityp(ia) == is ) THEN
+                      IF (natwfc+offset(ia) > nwfcU ) &
+                        CALL errore('atomic_wfc_hub','unexpected error',natwfc)
                      wfcU(:,natwfc+offset(ia)) = (0.d0,1.d0)**l * eigr(:,ia) * ylm(:,lm)*chiq(:)
                   END IF
                ENDDO
@@ -740,8 +737,6 @@
   10        CONTINUE
          ENDDO
       ENDDO
-!
-      IF (natwfc+offset(nat) .NE. nwfcU )  CALL errore('atomic_wfc','unexpected error',natwfc)
 !
       do i = 1,nwfcU
         call dscal(2*ngw,fpi/sqrt(omega),wfcU(1,i),1)

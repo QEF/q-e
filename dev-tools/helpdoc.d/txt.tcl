@@ -92,7 +92,6 @@ proc ::helpdoc::txt_tag_enter {tree node tag attr content depth} {
     }
 
     set content [formatString [trimEmpty [txt_atTags [txt_ref_link $content]]]]
-    #set content [formatString [trimEmpty  $content]]
     attr2array_ arr $attr
 
     global sourcedir
@@ -143,6 +142,8 @@ proc ::helpdoc::txt_subtree_print {tree node action} {
     set attributes [getFromTree $tree $node attributes]
     set content    [getFromTree $tree $node text]
     
+    set content [formatString [trimEmpty [txt_atTags [txt_ref_link $content]]]]
+
     txt_tag_${action} $tree $node $tag $attributes $content [expr $depth - 1]
 }
 

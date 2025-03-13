@@ -13,7 +13,7 @@ SUBROUTINE iosys_gcscf()
   ! ...  stored in modules input_parameters into internal modules of GC-SCF
   !
   USE constants,     ONLY : RYTOEV
-  USE control_flags, ONLY : imix, diago_full_acc, isolve
+  USE control_flags, ONLY : imix, diago_full_acc, isolve, rmm_conv
   USE gcscf_module,  ONLY : gcscf_ignore_mun_ => gcscf_ignore_mun, &
                           & gcscf_mu_         => gcscf_mu,         &
                           & gcscf_gk_         => gcscf_gk,         &
@@ -53,6 +53,17 @@ SUBROUTINE iosys_gcscf()
      !
      CALL infomsg('iosys', &
      & 'accurate eigenvalues are required for all states: diago_full_acc=.TRUE.')
+     !
+  END IF
+  !
+  ! ... modify rmm_conv
+  !
+  IF (isolve == 4 .AND. (.NOT. rmm_conv)) THEN
+     !
+     rmm_conv = .TRUE.
+     !
+     CALL infomsg('iosys', &
+     & 'eigenvalues have to be converged: diago_rmm_conv=.TRUE.')
      !
   END IF
   !

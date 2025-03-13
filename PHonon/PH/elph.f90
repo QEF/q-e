@@ -12,14 +12,14 @@ MODULE el_phon
   !
   SAVE
   !
-  LOGICAL :: elph, elph_mat, elph_simple, elph_epa
+  LOGICAL :: elph, elph_mat, elph_simple, elph_epa, elph_print
   INTEGER :: elph_nbnd_min, elph_nbnd_max
   INTEGER :: el_ph_ngauss, el_ph_nsigma
   INTEGER :: iunwfcwann, lrwfcr
   INTEGER :: npwq_refolded, ikqg
   INTEGER, allocatable :: wan_index_dyn(:)
   INTEGER, allocatable :: kpq(:), g_kpq(:,:),igqg(:)
-  REAL(DP) :: el_ph_sigma
+  REAL(DP) :: el_ph_sigma, kx, ky, kz
   REAL(DP), allocatable :: xk_gamma(:,:)
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        el_ph_mat(:,:,:,:), &    !  nbnd, nbnd, nks, 3*nat

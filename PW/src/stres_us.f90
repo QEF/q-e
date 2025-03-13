@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,8 +9,9 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stres_us( ik, gk, sigmanlc )
   !----------------------------------------------------------------------------
-  !! nonlocal (separable pseudopotential) contribution to the stress
-  !! NOTICE: sum of partial results over procs is performed in calling routine
+  !! Nonlocal (separable pseudopotential) contribution to the stress
+  !! IMPORTANT NOTICE: sum of partial results over processors (inter_pool_comm
+  !! and intra_bgrp_group) is done in the calling routine "stres_knl"
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -18,72 +19,80 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wvfct,                ONLY : npwx, nbnd, wg, et
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, offload_type
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
-  USE wavefunctions,        ONLY : evc
+  USE uspp,                 ONLY : nkb, vkb, deeq, qq_at, ofsbeta, deeq_nc, qq_so
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
-  USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
-  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+  USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp, root_bgrp
+  USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp, calbec
-  USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
-  USE wavefunctions_gpum,   ONLY : using_evc
-  USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE mp,                   ONLY : mp_sum
+  USE wavefunctions,        ONLY : evc
   USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN)    :: ik
+  INTEGER,  INTENT(IN) :: ik
   !! k-point index
-  REAL(DP), INTENT(IN)    :: gk(npwx,3)
+  REAL(DP), INTENT(IN) :: gk(npwx,3)
   !! wave function components for fixed k-point
   REAL(DP), INTENT(INOUT) :: sigmanlc(3,3)
   !! stress tensor, non-local contribution
   !
-  REAL(DP), ALLOCATABLE   :: qm1(:)
-  REAL(DP)                :: q
-  INTEGER                 :: npw, i
+  ! ... local variables
   !
-  CALL using_evc(0)
+  REAL(DP), ALLOCATABLE :: qm1(:)
+  REAL(DP) :: q
+  INTEGER  :: npw, i
   !
   !
   IF ( nkb == 0 ) RETURN
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
-  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
-  CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
-  
-  CALL using_becp_auto(2)
-  CALL calbec( npw, vkb, evc, becp )
+  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
   !
-  ALLOCATE( qm1( npwx ) )
+  CALL allocate_bec_type_acc( nkb, nbnd, becp )
+  !$acc data present( vkb, evc, becp )
+  CALL calbec( offload_type, npw, vkb, evc, becp )
+  !$acc end data
+  !
+  ALLOCATE( qm1(npwx) )
+  !$acc data create(qm1) present(gk)
+  !
+  !$acc parallel loop
   DO i = 1, npw
-     q = SQRT( gk(i, 1)**2 + gk(i, 2)**2 + gk(i, 3)**2 )
+     q = SQRT( gk(i,1)**2 + gk(i,2)**2 + gk(i,3)**2 )
      IF ( q > eps8 ) THEN
-        qm1(i) = 1.D0 / q
+        qm1(i) = 1._DP / q
      ELSE
-        qm1(i) = 0.D0
-     END IF
-  END DO
+        qm1(i) = 0._DP
+     ENDIF
+  ENDDO
   !
+  !$acc data present(et) copyin( ityp, wg, nh, ofsbeta ) 
   IF ( gamma_only ) THEN
      !
      CALL stres_us_gamma()
      !
+  ELSE IF ( noncolin ) THEN
+     ! 
+     CALL stres_us_nc()
+     !
   ELSE
      !
      CALL stres_us_k()
-     !
-  END IF
+    !
+  ENDIF
+  !$acc end data
+  !
+  !$acc end data
   !
   DEALLOCATE( qm1 )
-  CALL deallocate_bec_type( becp ) 
-  CALL using_becp_auto(2)
+  CALL deallocate_bec_type_acc( becp ) 
   !
   RETURN
   !
@@ -92,550 +101,532 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !-----------------------------------------------------------------------
      SUBROUTINE stres_us_gamma()
        !-----------------------------------------------------------------------
-       !! nonlocal contribution to the stress - gamma version
+       !! nonlocal contribution to the stress - gamma version.
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER                  :: na, np, ibnd, ipol, jpol, l, i,    &
-                                   ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
-                                   nproc, nbnd_loc, nbnd_begin, icyc
-       REAL(DP)                 :: fac, xyz(3,3), evps, ddot
-       REAL(DP), ALLOCATABLE    :: deff(:,:,:)
-       COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
-       ! dvkb contains the derivatives of the kb potential
-       COMPLEX(DP)              :: ps
-       ! xyz are the three unit vectors in the x,y,z directions
-       DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
+       INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
+                   jkb, ih, jh, ijkb0, na_s, na_e, mykey
+       REAL(DP) :: sigmaij
+       COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
+       TYPE(bec_type) :: becd
        !
+       !! xyz are the three unit vectors in the x,y,z directions
+       REAL(DP) :: xyz(3,3) 
+       DATA xyz / 1._DP, 0._DP, 0._DP, &
+                  0._DP, 1._DP, 0._DP, &
+                  0._DP, 0._DP, 1._DP /
        !
-       IF( becp%comm /= mp_get_comm_null() ) THEN
-          nproc      = becp%nproc
-          nbnd_loc   = becp%nbnd_loc
-          nbnd_begin = becp%ibnd_begin
-          IF( ( nbnd_begin + nbnd_loc - 1 ) > nbnd ) nbnd_loc = nbnd - nbnd_begin + 1
-       ELSE
-          nproc      = 1
-          nbnd_loc   = nbnd
-          nbnd_begin = 1
-       END IF
-
-       ALLOCATE( work1( npwx ), work2( npwx ) ) 
-       ALLOCATE( deff(nhm,nhm,nat) )
+       sigmaij = 0._DP
        !
-       ! ... diagonal contribution - if the result from "calbec" are not 
-       ! ... distributed, must be calculated on a single processor
+       ! ... Calls to calbec are parallelized over the bgrp group
+       ! ... The rest of the calculation is parallelized by subdividing 
+       ! ... the atoms over the bgrp group
        !
-       evps = 0.D0
-       IF ( nproc == 1 .AND. me_pool /= root_pool ) GO TO 100
+       CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
        !
-       CALL using_et(0) ! compute_deff : intent(in)
-       DO ibnd_loc = 1, nbnd_loc
-          ibnd = ibnd_loc + becp%ibnd_begin - 1 
-          CALL compute_deff ( deff, et(ibnd,ik) )
-          fac = wg(ibnd,ik)
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      evps = evps + fac * deff(ih,ih,na) * &
-                                    ABS( becp%r(ikb,ibnd_loc) )**2
+       compute_diag: IF ( mykey == 0 ) THEN
+          !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r) &
+          !$acc reduction(+:sigmaij)
+          DO na = na_s, na_e
+             DO ibnd = 1, nbnd
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      !! NOTE: in deff(ih,jh)=deeq(ih,jh)-et(i)*qq_at(ih,jh)
+                      !! a nondiagonal contribution (ih,jh) is present only
+                      !! for US-PP or multiprojector PP:
+                      !!   IF ( upf(np)%tvanp) .or. upf(np)%is_multiproj ) 
+                      !! but it may not be worth to make two distinct cases
+                      !! For norm-conserving PP, qq_at=0 but again, it may
+                      !! not be worth to make two distinct cases
+                      !! The same applies to the two similar loops below
                       !
-                      IF ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) THEN
-                         !
-                         ! ... only in the US case there is a contribution 
-                         ! ... for jh<>ih
-                         ! ... we use here the symmetry in the interchange of 
-                         ! ... ih and jh
-                         !
-                         DO jh = ( ih + 1 ), nh(np)
-                            jkb = ijkb0 + jh
-                            evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
-                                 becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
-                         END DO
-                      END IF
+                      ikb = ijkb0 + ih
+                      jkb = ijkb0 + jh
+                      sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) - &
+                              et(ibnd,ik)*qq_at(ih,jh,na)) * wg(ibnd,ik) * &
+                              becp%r(ikb,ibnd) * becp%r(jkb,ibnd)
                    END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-             END DO
-          END DO
-       END DO
-       !
-100    CONTINUE
-       !
-       ! ... non diagonal contribution - derivative of the bessel function
-       !------------------------------------
-       ALLOCATE( dvkb( npwx, nkb ) )
-       !
-       CALL gen_us_dj( ik, dvkb )
-       !
-       CALL using_et(0) ! compute_deff : intent(in)
-       CALL using_evc(0)
-       DO icyc = 0, nproc -1
-          !
-          DO ibnd_loc = 1, nbnd_loc
-             !  
-             ibnd = ibnd_loc + becp%ibnd_begin - 1 
-             CALL compute_deff ( deff, et(ibnd,ik) )
-             work2(:) = (0.D0,0.D0)
-             ijkb0 = 0
-             DO np = 1, ntyp
-                DO na = 1, nat
-                   IF ( ityp(na) == np ) THEN
-                      DO ih = 1, nh(np)
-                         ikb = ijkb0 + ih
-                         IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                            ps = becp%r(ikb,ibnd_loc) * deff(ih,ih,na)
-                         ELSE
-                            !
-                            ! ... in the US case there is a contribution 
-                            ! ... also for jh<>ih
-                            !
-                            ps = (0.D0,0.D0)
-                            DO jh = 1, nh(np)
-                               jkb = ijkb0 + jh
-                               ps = ps + becp%r(jkb,ibnd_loc) * deff(ih,jh,na)
-                            END DO
-                         END IF
-                         CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
-                      END DO
-                      ijkb0 = ijkb0 + nh(np)
-                   END IF
-                END DO
-             END DO
-             !
-             ! ... a factor 2 accounts for the other half of the G-vector sphere
-             !
-             DO ipol = 1, 3
-                DO jpol = 1, ipol
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(i, ipol) * gk(i, jpol) * qm1(i)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                        4.D0 * wg(ibnd,ik) * &
-                        ddot( 2 * npw, work1, 1, work2, 1 )
                 END DO
              END DO
           END DO
-          IF ( nproc > 1 ) THEN
-             CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
-             CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
-             CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
-          END IF
-       END DO
-       !
-       ! ... non diagonal contribution - derivative of the spherical harmonics
-       ! ... (no contribution from l=0)
-       !
-       IF ( lmaxkb == 0 ) GO TO 10
-       !
-       !------------------------------------
-       CALL using_evc(0); CALL using_et(0) ! compute_deff : intent(in) (this is redundant)
-       DO ipol = 1, 3
           !
-          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-          !
-          DO icyc = 0, nproc -1
-             !
-             DO ibnd_loc = 1, nbnd_loc
-                ibnd = ibnd_loc + becp%ibnd_begin - 1 
-                CALL compute_deff ( deff, et(ibnd,ik) )
-                work2(:) = (0.D0,0.D0)
-                ijkb0 = 0
-                DO np = 1, ntyp
-                   DO na = 1, nat
-                      IF ( ityp(na) == np ) THEN
-                         DO ih = 1, nh(np)
-                            ikb = ijkb0 + ih
-                            IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                               ps = becp%r(ikb,ibnd_loc) * deff(ih,ih,na)
-                            ELSE 
-                               !
-                               ! ... in the US case there is a contribution 
-                               ! ... also for jh<>ih
-                               !
-                               ps = (0.D0,0.D0)
-                               DO jh = 1, nh(np)
-                                  jkb = ijkb0 + jh
-                                  ps = ps + becp%r(jkb,ibnd_loc)*deff(ih,jh,na)
-                               END DO
-                            END IF
-                            CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
-                         END DO
-                         ijkb0 = ijkb0 + nh(np)
-                      END IF
-                   END DO
-                END DO
-                !
-                ! ... a factor 2 accounts for the other half of the G-vector sphere
-                !
-                DO jpol = 1, ipol
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(i, jpol)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                        4.D0 * wg(ibnd,ik) * &
-                        ddot( 2 * npw, work1, 1, work2, 1 )
-                END DO
-             END DO
-
-             IF ( nproc > 1 ) THEN
-                CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
-                CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
-                CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
-             END IF
-
+          DO l = 1, 3
+             sigmanlc(l,l) = sigmanlc(l,l) - sigmaij
           ENDDO
+       END IF compute_diag
+       !
+       ! ... non diagonal contribution - derivative of the Bessel function
+       !
+       CALL allocate_bec_type_acc( nkb, nbnd, becd )
+       !
+       ALLOCATE( dvkb(npwx,nkb) )
+       !$acc data create(dvkb)
+       !$acc data present( dvkb, becd )
+       CALL gen_us_dj( ik, dvkb )
+       !
+       DO ipol = 1,3
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,ipol) * gk(i,jpol) * qm1(i)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in vkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             compute_djl: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r) &
+                !$acc reduction(+:sigmaij)
+                DO na = na_s, na_e
+                   DO ibnd = 1, nbnd
+                      np = ityp(na)
+                      ijkb0 = ofsbeta(na)
+                      !$acc loop seq collapse(2)
+                      DO ih = 1, nh(np)
+                         DO jh = 1, nh(np)
+                            ! 
+                            ikb = ijkb0 + ih
+                            jkb = ijkb0 + jh
+                            sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) -&
+                              et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                              wg(ibnd,ik) * becp%r(ikb,ibnd) * &
+                              becd%r(jkb,ibnd)
+                         END DO
+                      END DO
+                   END DO
+                END DO
+                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+             END IF compute_djl
+          END DO
        END DO
-
+       !
+       ! ... non diagonal contribution - derivative of the spherical harmonics
+       IF ( lmaxkb <= 0 ) GO TO 10
+       !
+       DO ipol = 1,3
+          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,jpol)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in dvkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             compute_dylm: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%r, becd%r) &
+                !$acc reduction(+:sigmaij)
+                DO na = na_s, na_e
+                   DO ibnd = 1, nbnd
+                      np = ityp(na)
+                      ijkb0 = ofsbeta(na)
+                      !$acc loop seq collapse(2)
+                      DO ih = 1, nh(np)
+                         DO jh = 1, nh(np)
+                            ikb = ijkb0 + ih
+                            jkb = ijkb0 + jh
+                            sigmaij = sigmaij + (deeq(ih,jh,na,current_spin) -&
+                                 et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                                 wg(ibnd,ik) * becp%r(ikb,ibnd) * &
+                                 becd%r(jkb,ibnd)
+                         END DO
+                      END DO
+                   END DO
+                END DO
+                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+             END IF compute_dylm
+          END DO
+       END DO
 10     CONTINUE
-       !
-       DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
+       !$acc end data
+       !$acc end data
+       DEALLOCATE( dvkb )
+       CALL deallocate_bec_type_acc( becd ) 
+       DO ipol = 1,3
+          DO jpol = 1,ipol-1
+             sigmanlc(ipol,jpol) = sigmanlc(jpol,ipol)
+          END DO
        END DO
        !
-       DEALLOCATE( dvkb )
-       DEALLOCATE( deff, work2, work1 )
-       !
-       RETURN
-       !
-     END SUBROUTINE stres_us_gamma     
+     END SUBROUTINE stres_us_gamma
      !
-     !
-     !----------------------------------------------------------------------
+     !-----------------------------------------------------------------------
      SUBROUTINE stres_us_k()
-       !----------------------------------------------------------------------  
-       !! nonlocal contribution to the stress - k-points version
+       !-----------------------------------------------------------------------
+       !! nonlocal contribution to the stress - k-point version
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, ipw, &
-                                        ikb, jkb, ih, jh, ijkb0, is, js, ijs
-       REAL(DP)                 :: fac, xyz (3, 3), evps, ddot
-       COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
-       COMPLEX(DP), ALLOCATABLE :: work2_nc(:,:)
-       COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
-       REAL(DP), ALLOCATABLE :: deff(:,:,:)
-       ! dvkb contains the derivatives of the kb potential
-       COMPLEX(DP)              :: ps, ps_nc(2)
+       INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
+                   jkb, ih, jh, ijkb0, na_s, na_e, mykey
+       REAL(DP) :: sigmaij
+       COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
+       TYPE(bec_type) :: becd
+       !
        ! xyz are the three unit vectors in the x,y,z directions
-       DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
+       REAL(DP) :: xyz(3,3) 
+       DATA xyz / 1._DP, 0._DP, 0._DP, &
+                  0._DP, 1._DP, 0._DP, &
+                  0._DP, 0._DP, 1._DP /
        !
+       sigmaij = 0._DP
        !
-       if (noncolin) then
-          ALLOCATE( work2_nc(npwx,npol) )
-          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
-       else
-          ALLOCATE( deff(nhm,nhm,nat) )
-       endif
+       ! ... Calls to calbec are parallelized over the bgrp group
+       ! ... The rest of the calculation is parallelized by subdividing 
+       ! ... the atoms over the bgrp group
        !
-       ALLOCATE( work1(npwx), work2(npwx) )
+       CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
        !
-       evps = 0.D0
-       ! ... diagonal contribution
-       !
-       IF ( me_bgrp /= root_bgrp ) GO TO 100
-       !
-       ! ... the contribution is calculated only on one processor because
-       ! ... partial results are later summed over all processors
-       !
-       CALL using_et(0) ! compute_deff : intent(in)
-       DO ibnd = 1, nbnd
-          fac = wg(ibnd,ik)
-          IF (ABS(fac) < 1.d-9) CYCLE
-          IF (noncolin) THEN
-             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
-          ELSE
-             CALL compute_deff(deff,et(ibnd,ik))
-          ENDIF
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      IF (noncolin) THEN
-                         ijs=0
-                         DO is=1,npol
-                            DO js=1,npol
-                               ijs=ijs+1
-                               evps=evps+fac*deff_nc(ih,ih,na,ijs)*   &
-                                         CONJG(becp%nc(ikb,is,ibnd))* &
-                                               becp%nc(ikb,js,ibnd)
-                            END DO
-                         END DO
-                      ELSE
-                         evps = evps+fac*deff(ih,ih,na)*ABS(becp%k(ikb,ibnd) )**2
-                      END IF
+       compute_diag: IF ( mykey == 0 ) THEN
+          !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k) &
+          !$acc reduction(+:sigmaij)
+          DO na = na_s, na_e
+             DO ibnd = 1, nbnd
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      ! 
+                      ! see note in the analogous loop for gamma-only case
                       !
-                      IF ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) THEN
-                         !
-                         ! ... only in the US case there is a contribution 
-                         ! ... for jh<>ih
-                         ! ... we use here the symmetry in the interchange of 
-                         ! ... ih and jh
-                         !
-                         DO jh = ( ih + 1 ), nh(np)
-                            jkb = ijkb0 + jh
-                            IF (noncolin) THEN
-                               ijs=0
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     evps = evps+2.d0*fac&
-                                            *DBLE(deff_nc(ih,jh,na,ijs)*      &
-                                            (CONJG( becp%nc(ikb,is,ibnd) ) * &
-                                                    becp%nc(jkb,js,ibnd))  )
-                                  END DO
-                               END DO
-                            ELSE
-                               evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
-                                     DBLE( CONJG( becp%k(ikb,ibnd) ) * &
-                                                  becp%k(jkb,ibnd) )
-                            END IF
-                         END DO
-                      END IF
+                      ikb = ijkb0 + ih
+                      jkb = ijkb0 + jh
+                      sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) - &
+                              et(ibnd,ik)*qq_at(ih,jh,na)) * wg(ibnd,ik) * &
+                              DBLE( CONJG(becp%k(ikb,ibnd)) * becp%k(jkb,ibnd))
                    END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
+                END DO
              END DO
           END DO
-       END DO
-       DO l = 1, 3
-          sigmanlc(l,l) = sigmanlc(l,l) - evps
-       END DO
+          !
+          DO l = 1, 3
+             sigmanlc(l,l) = sigmanlc(l,l) - sigmaij
+          ENDDO
+       END IF compute_diag
        !
-100    CONTINUE
+       ! ... non diagonal contribution - derivative of the Bessel function
        !
-       ! ... non diagonal contribution - derivative of the bessel function
+       CALL allocate_bec_type_acc( nkb, nbnd, becd )
        !
-       ALLOCATE( dvkb( npwx, nkb ) )
-       !
+       ALLOCATE( dvkb(npwx,nkb) )
+       !$acc data create(dvkb)
+       !$acc data present( dvkb, becd )
        CALL gen_us_dj( ik, dvkb )
        !
-       CALL using_evc(0); CALL using_et(0) ! this is redundant
-       ! 
-       DO ibnd = 1, nbnd
-          IF (noncolin) THEN
-             work2_nc = (0.D0,0.D0)
-             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
-          ELSE
-             work2 = (0.D0,0.D0)
-             CALL compute_deff(deff,et(ibnd,ik))
-          ENDIF
-          !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                         IF (noncolin) THEN
-                            if (lspinorb) call errore('stres_us','wrong case',1)
-                            ijs=0
-                            ps_nc=(0.D0, 0.D0)
-                            DO is=1,npol
-                               DO js=1,npol
-                                  ijs=ijs+1
-                                  ps_nc(is)=ps_nc(is)+becp%nc(ikb,js,ibnd)* &
-                                         deff_nc(ih,ih,na,ijs)
-                               END DO
-                            END DO
-                         ELSE
-                            ps = becp%k(ikb, ibnd) * deeq(ih,ih,na,current_spin)
-                         ENDIF
-                      ELSE
-                         !
-                         ! ... in the US case there is a contribution 
-                         ! ... also for jh<>ih
-                         !
-                         ps = (0.D0,0.D0)
-                         ps_nc = (0.D0,0.D0)
+       DO ipol = 1,3
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,ipol) * gk(i,jpol) * qm1(i)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in vkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             compute_djl: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
+                !$acc reduction(+:sigmaij)
+                DO na = na_s, na_e
+                   DO ibnd = 1, nbnd
+                      np = ityp(na)
+                      ijkb0 = ofsbeta(na)
+                      !$acc loop seq collapse(2)
+                      DO ih = 1, nh(np)
                          DO jh = 1, nh(np)
+                            ! 
+                            ikb = ijkb0 + ih
                             jkb = ijkb0 + jh
-                            IF (noncolin) THEN
-                               ijs=0
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     ps_nc(is)=ps_nc(is)+becp%nc(jkb,js,ibnd)* &
-                                           deff_nc(ih,jh,na,ijs)
-                                  END DO
-                               END DO
-                            ELSE
-                               ps = ps + becp%k(jkb,ibnd) * deff(ih,jh,na)
-                            END IF
+                            sigmaij = sigmaij + ( deeq(ih,jh,na,current_spin) -&
+                              et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                              wg(ibnd,ik) * DBLE ( CONJG(becp%k(ikb,ibnd)) * &
+                              becd%k(jkb,ibnd) )
                          END DO
-                      END IF
-                      IF (noncolin) THEN
-                         DO is=1,npol
-                            !$omp do
-                            DO ipw = 1, npw
-                               work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
-                            END DO
-                            !$omp end do nowait
-                         END DO
-                      ELSE
-                         !$omp do
-                         DO ipw = 1, npw
-                            work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
-                         END DO
-                         !$omp end do nowait
-                      END IF
+                      END DO
                    END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-             END DO
-          END DO
-          !$omp end parallel
-          DO ipol = 1, 3
-             DO jpol = 1, ipol
-                IF (noncolin) THEN
-                   DO i = 1, npw
-                      work1(i) = evc(   i  ,ibnd)*gk(i,ipol)* &
-                                                  gk(i,jpol)*qm1(i)
-                      work2(i) = evc(i+npwx,ibnd)*gk(i,ipol)* &
-                                                  gk(i,jpol)*qm1(i)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                   2.D0 * wg(ibnd,ik) * &
-                                 ( ddot(2*npw,work1,1,work2_nc(1,1), 1) + &
-                                   ddot(2*npw,work2,1,work2_nc(1,2), 1) )
-                ELSE
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd)*gk(i, ipol)*gk(i, jpol)*qm1(i)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                         2.D0 * wg(ibnd,ik) * &
-                                         ddot( 2*npw, work1, 1, work2, 1 )
-                END IF
-             END DO
+                END DO
+                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+             END IF compute_djl
           END DO
        END DO
        !
        ! ... non diagonal contribution - derivative of the spherical harmonics
-       ! ... (no contribution from l=0)
+       IF ( lmaxkb <= 0 ) GO TO 10
        !
-       IF ( lmaxkb == 0 ) GO TO 10
-       !
-       DO ipol = 1, 3
+       DO ipol = 1,3
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-          DO ibnd = 1, nbnd
-             IF (noncolin) THEN
-                work2_nc = (0.D0,0.D0)
-                CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
-             ELSE
-                work2 = (0.D0,0.D0)
-                CALL compute_deff( deff, et(ibnd,ik) )
-             ENDIF
-             !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
-             ijkb0 = 0
-             DO np = 1, ntyp
-                DO na = 1, nat
-                   IF ( ityp(na) == np ) THEN
-                      DO ih = 1, nh(np)
-                         ikb = ijkb0 + ih
-                         IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                            IF (noncolin) THEN
-                               ijs=0
-                               ps_nc = (0.D0,0.D0)
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     ps_nc(is) = ps_nc(is) + becp%nc( ikb,js,ibnd )* &
-                                                 deff_nc( ih,ih,na,ijs )
-                                  END DO
-                               END DO
-                            ELSE
-                               ps = becp%k(ikb,ibnd) * deeq(ih,ih,na,current_spin)
-                            END IF
-                         ELSE
-                            !
-                            ! ... in the US case there is a contribution 
-                            ! ... also for jh<>ih
-                            !
-                            ps = (0.D0,0.D0)
-                            ps_nc = (0.D0,0.D0)
-                            DO jh = 1, nh(np)
-                               jkb = ijkb0 + jh
-                               IF (noncolin) THEN
-                                  ijs=0
-                                  DO is=1,npol
-                                     DO js=1,npol
-                                        ijs=ijs+1
-                                        ps_nc(is)=ps_nc(is)+ &
-                                               becp%nc(jkb,js,ibnd)* &
-                                               deff_nc(ih,jh,na,ijs)
-                                     END DO
-                                  END DO
-                               ELSE
-                                  ps = ps + becp%k(jkb,ibnd) * deff(ih,jh,na)
-                               END IF
-                            END DO
-                         END IF
-                         IF (noncolin) THEN
-                            DO is=1,npol
-                               !$omp do
-                               DO ipw = 1, npw
-                                  work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
-                               END DO
-                               !$omp end do nowait
-                            END DO
-                         ELSE
-                            !$omp do
-                            DO ipw = 1, npw
-                               work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
-                            END DO
-                            !$omp end do nowait
-                         END IF
-                      END DO
-                      ijkb0 = ijkb0 + nh(np)
-                   END IF
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,jpol)
                 END DO
              END DO
-             !$omp end parallel
-             DO jpol = 1, ipol
-                IF (noncolin) THEN
-                   DO i = 1, npw
-                      work1(i) = evc(i     ,ibnd) * gk(i, jpol)
-                      work2(i) = evc(i+npwx,ibnd) * gk(i, jpol)
+             ! ... becd like becp with derivatives of beta functions in dvkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             compute_dylm: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
+                !$acc reduction(+:sigmaij)
+                DO na = na_s, na_e
+                   DO ibnd = 1, nbnd
+                      np = ityp(na)
+                      ijkb0 = ofsbeta(na)
+                      !$acc loop seq collapse(2)
+                      DO ih = 1, nh(np)
+                         DO jh = 1, nh(np)
+                            ikb = ijkb0 + ih
+                            jkb = ijkb0 + jh
+                            sigmaij = sigmaij + (deeq(ih,jh,na,current_spin) -&
+                                 et(ibnd,ik)*qq_at(ih,jh,na) ) * &
+                                 wg(ibnd,ik) * DBLE ( CONJG(becp%k(ikb,ibnd)) *&
+                                 becd%k(jkb,ibnd) )
+                         END DO
+                      END DO
                    END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                              2.D0 * wg(ibnd,ik) * & 
-                            ( ddot( 2 * npw, work1, 1, work2_nc(1,1), 1 ) + &
-                              ddot( 2 * npw, work2, 1, work2_nc(1,2), 1 ) )
-                ELSE
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(i, jpol)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      2.D0 * wg(ibnd,ik) * & 
-                                      ddot( 2 * npw, work1, 1, work2, 1 )
-                END IF
-             END DO
+                END DO
+                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+             END IF compute_dylm
           END DO
        END DO
-       !
 10     CONTINUE
-       !
-       IF (noncolin) THEN
-           DEALLOCATE( work2_nc )
-           DEALLOCATE( deff_nc )
-       ELSE
-           DEALLOCATE( work2 )
-           DEALLOCATE( deff )
-       ENDIF
+       !$acc end data
+       !$acc end data
        DEALLOCATE( dvkb )
-       DEALLOCATE( work1 )
-       !
-       RETURN
+       CALL deallocate_bec_type_acc( becd ) 
+       DO ipol = 1,3
+          DO jpol = 1,ipol-1
+             sigmanlc(ipol,jpol) = sigmanlc(jpol,ipol)
+          END DO
+       END DO
        !
      END SUBROUTINE stres_us_k
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE stres_us_nc()
+       !-----------------------------------------------------------------------
+       !! nonlocal contribution to the stress - noncollinear version
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
+                   is, js, ijs, jkb, ih, jh, ijkb0, na_s, na_e, mykey
+       REAL(DP) :: sigmaij
+       REAL(DP) :: ps(4)
+       ! NOTE: This variable ps, even if not strictly necessary, has been defined as a workaround
+       !       for an issue in nvhpc-24.3 compiler (it fails to perform acc reductons seemingly when
+       !       a >3 number of sequential nested loops are present in a main parallel loop)
+       !
+       COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
+       COMPLEX(DP) :: deff_nc
+       TYPE(bec_type) :: becd
+       !
+       ! xyz are the three unit vectors in the x,y,z directions
+       REAL(DP) :: xyz(3,3) 
+       DATA xyz / 1._DP, 0._DP, 0._DP, &
+                  0._DP, 1._DP, 0._DP, &
+                  0._DP, 0._DP, 1._DP /
+       !
+       sigmaij = 0._DP
+       !
+       ! ... Calls to calbec are parallelized over the bgrp group
+       ! ... The rest of the calculation is parallelized by subdividing 
+       ! ... the atoms over the bgrp group
+       !
+       CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
+       !
+       compute_diag: IF ( mykey == 0 ) THEN
+          !$acc parallel loop collapse(2) present(deeq_nc, qq_at, qq_so, becp%nc) &
+          !$acc reduction(+:sigmaij) private(ps) 
+          DO na = na_s, na_e
+             DO ibnd = 1, nbnd
+                np = ityp(na)
+                ijkb0 = ofsbeta(na)
+                !$acc loop seq collapse(2)
+                DO ih = 1, nh(np)
+                   DO jh = 1, nh(np)
+                      !
+                      ps = 0._dp
+                      !$acc loop seq collapse(2)
+                      DO is = 1, npol
+                         DO js = 1, npol
+                            ijs = (is-1)*npol+js
+                            ! 
+                            ! see note in the analogous loop for gamma-only case
+                            ! note that unlike deff, deff_nc is complex
+                            !
+                            ikb = ijkb0 + ih
+                            jkb = ijkb0 + jh
+                            deff_nc = deeq_nc(ih,jh,na,ijs)
+                            IF (lspinorb) THEN
+                               deff_nc = deff_nc - et(ibnd,ik)*qq_so(ih,jh,ijs,np)
+                            ELSE IF (is == js) THEN
+                               deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
+                            END IF
+                            ps(ijs) = wg(ibnd,ik) * DBLE(deff_nc * &
+                                 CONJG(becp%nc(ikb,is,ibnd)) * &
+                                 becp%nc(jkb,js,ibnd))
+                         END DO
+                      END DO
+                      sigmaij = sigmaij + ps(1) + ps(2) + ps(3) + ps(4) 
+                   END DO
+                END DO
+             END DO
+          END DO
+          !
+          DO l = 1, 3
+             sigmanlc(l,l) = sigmanlc(l,l) - sigmaij
+          ENDDO
+       END IF compute_diag
+       !
+       ! ... non diagonal contribution - derivative of the Bessel function
+       !
+       CALL allocate_bec_type_acc( nkb, nbnd, becd )
+       !
+       ALLOCATE( dvkb(npwx,nkb) )
+       !$acc data create(dvkb)
+       !$acc data present( dvkb, becd )
+       CALL gen_us_dj( ik, dvkb )
+       !
+       DO ipol = 1,3
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,ipol) * gk(i,jpol) * qm1(i)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in vkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             compute_djl: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
+                !$acc reduction(+:sigmaij) private(ps)  
+                DO na = na_s, na_e
+                   DO ibnd = 1, nbnd
+                      np = ityp(na)
+                      ijkb0 = ofsbeta(na)
+                      !$acc loop seq collapse(2)
+                      DO ih = 1, nh(np)
+                         DO jh = 1, nh(np)
+                            !
+                            ps = 0._dp
+                            !$acc loop seq collapse(2)
+                            DO is = 1, npol
+                               DO js = 1, npol
+                                  ijs = (is-1)*npol+js
+                                  ! 
+                                  ikb = ijkb0 + ih
+                                  jkb = ijkb0 + jh
+                                  deff_nc = deeq_nc(ih,jh,na,ijs)
+                                  IF (lspinorb) THEN
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_so(ih,jh,ijs,np)
+                                  ELSE IF (is == js) THEN
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
+                                  END IF
+                                  ps(ijs) = wg(ibnd,ik) * DBLE(deff_nc * &
+                                       CONJG(becp%nc(ikb,is,ibnd)) * becd%nc(jkb,js,ibnd))
+                               END DO
+                            END DO
+                            sigmaij = sigmaij + ps(1) + ps(2) + ps(3) + ps(4) 
+                         END DO
+                      END DO
+                   END DO
+                END DO
+                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+             END IF compute_djl
+          END DO
+       END DO
+       !
+       ! ... non diagonal contribution - derivative of the spherical harmonics
+       IF ( lmaxkb <= 0 ) GO TO 10
+       !
+       DO ipol = 1,3
+          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
+          DO jpol = ipol, 3
+             sigmaij = 0.0_dp 
+             !$acc parallel loop collapse(2) present(vkb, gk, qm1)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   ! ... vkb is used here as work space
+                   vkb(i,ikb) = dvkb(i,ikb) * gk(i,jpol)
+                END DO
+             END DO
+             ! ... becd like becp with derivatives of beta functions in dvkb
+             CALL calbec( offload_type, npw, vkb, evc, becd )
+             !
+             compute_dylm: IF ( mykey == 0 ) THEN
+                !$acc parallel loop collapse(2) present(deeq, qq_at, becp%k, becd%k) &
+                !$acc reduction(+:sigmaij) private(ps) 
+                DO na = na_s, na_e
+                   DO ibnd = 1, nbnd
+                      np = ityp(na)
+                      ijkb0 = ofsbeta(na)
+                      !$acc loop seq collapse(2)
+                      DO ih = 1, nh(np)
+                         DO jh = 1, nh(np)
+                            !
+                            ps = 0._dp
+                            !$acc loop seq collapse(2)
+                            DO is = 1, npol
+                               DO js = 1, npol
+                                  ijs = (is-1)*npol+js
+                                  ikb = ijkb0 + ih
+                                  jkb = ijkb0 + jh
+                                  deff_nc = deeq_nc(ih,jh,na,ijs)
+                                  IF (lspinorb) THEN
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_so(ih,jh,ijs,np)
+                                  ELSE IF (is == js) THEN
+                                     deff_nc = deff_nc - et(ibnd,ik)*qq_at(ih,jh,na)
+                                  END IF
+                                  ps(ijs) = wg(ibnd,ik) * DBLE(deff_nc * &
+                                       CONJG(becp%nc(ikb,is,ibnd)) * becd%nc(jkb,js,ibnd))
+                               END DO
+                            END DO
+                            sigmaij = sigmaij + ps(1) + ps(2) + ps(3) + ps(4)
+                         END DO
+                      END DO
+                   END DO
+                END DO
+                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - 2.0_dp*sigmaij
+             END IF compute_dylm
+          END DO
+       END DO
+10     CONTINUE
+       !$acc end data
+       !$acc end data
+       DEALLOCATE( dvkb )
+       CALL deallocate_bec_type_acc( becd ) 
+       DO ipol = 1,3
+          DO jpol = 1,ipol-1
+             sigmanlc(ipol,jpol) = sigmanlc(jpol,ipol)
+          END DO
+       END DO
+       !
+     END SUBROUTINE stres_us_nc
      !
 END SUBROUTINE stres_us

@@ -43,7 +43,7 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
      !
      lgauss = ( degauss > 0.0_dp ) 
      IF ( .NOT. lgauss ) CALL errore( ' set_occupations ',  &
-          ' smearing requires a vaklue for gaussian broadening (degauss)', 1 )
+          ' smearing requires a value for gaussian broadening (degauss)', 1 )
      !
      SELECT CASE ( trim( smearing ) )
      CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum_ESPRESSO group
+! Copyright (C) 2001-2023 Quantum_ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -228,7 +228,7 @@ SUBROUTINE dns_sum_q (xq_)
               !
               DO m1 = 1, 2 * Hubbard_l(nt) + 1
                  !
-                 DO m2 = m1, 2 * Hubbard_l(nt) + 1
+                 DO m2 = 1, 2 * Hubbard_l(nt) + 1
                     !
                     dnsscf_tot(m1,m2,is,na,icell) = dnsscf_tot(m1,m2,is,na,icell) + &
                                                     & fac * phase * dnsscf_rot(m1,m2,is,na)
@@ -263,7 +263,7 @@ SUBROUTINE dns_conjg()
      IF (is_hubbard(nt)) THEN
         DO is = 1, nspin
            DO m1 = 1, 2 * Hubbard_l(nt) + 1
-              DO m2 = m1, 2 * Hubbard_l(nt) + 1
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1
                  dnsscf_rot(m1,m2,is,na) = CONJG(dnsscf_rot(m1,m2,is,na))
                  dns0_rot(m1,m2,is,na)   = CONJG(dns0_rot(m1,m2,is,na))
               ENDDO

@@ -14,14 +14,15 @@ subroutine compute_weight (wgg)
   !! The weights are computed for each k point.
   !
   USE kinds,          ONLY : DP
-  USE klist,          ONLY : wk, lgauss, degauss, ngauss, ltetra
-  USE ener,           ONLY : ef
-  USE wvfct,          ONLY : nbnd, wg, et
+  USE klist,          ONLY : wk, lgauss, degauss, ngauss, ltetra, degauss_cond
+  USE ener,           ONLY : ef, ef_cond
+  USE wvfct,          ONLY : nbnd, wg, et, nbnd_cond
   USE paw_variables,  ONLY : okpaw
   USE qpoint,         ONLY : nksq, ikks, ikqs
-  USE control_ph,     ONLY : rec_code_read
+  USE control_lr,     ONLY : rec_code_read
   USE dfpt_tetra_mod, ONLY : dfpt_tetra_ttheta
   USE ldaU,           ONLY : lda_plus_u
+  USE two_chem,         ONLY : twochem
   !
   implicit none
   !
@@ -71,6 +72,14 @@ subroutine compute_weight (wgg)
            wg1 = 0.d0
         else
            wg1 = wg (ibnd, ikk) / wk (ikk)
+           !two chemical potentials case
+           if (twochem) then
+            if (ibnd.gt.(nbnd-nbnd_cond)) then
+             wg1 = wgauss ( (ef_cond - et (ibnd, ikk) ) / degauss_cond, ngauss)
+             else
+             wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
+            end if
+           end if
         endif
         !
         !     and each band v' ...
@@ -79,6 +88,12 @@ subroutine compute_weight (wgg)
            if (lgauss) then
               theta = wgauss ( (et (jbnd,ikq) - et (ibnd,ikk) ) / degauss, 0)
               wg2 = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
+              ! two chemical potentials case
+              if (twochem) then
+                if (jbnd.gt.(nbnd-nbnd_cond)) then
+                 wg2 = wgauss ( (ef_cond - et (jbnd, ikq) ) / degauss_cond, ngauss)
+                end if
+              end if
            else
               IF (et (jbnd,ikq) > et (ibnd,ikk)) THEN
                  theta = 1.0d0

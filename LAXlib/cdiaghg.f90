@@ -223,11 +223,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #if defined(__CUDA)
   USE cudafor
   !
-#if defined(__USE_CUSOLVER)
   USE cusolverdn
-#else
-  USE zhegvdx_gpu
-#endif
 #endif
   !
   USE laxlib_parallel_include
@@ -294,9 +290,6 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   REAL(DP), VARTYPE    :: h_diag_d(:), s_diag_d(:)
 #if defined(__CUDA)
   ATTRIBUTES( DEVICE ) :: work_d, rwork_d, h_diag_d, s_diag_d
-#endif
-  INTEGER :: i, j
-#if defined( __USE_CUSOLVER )
   INTEGER                      :: devInfo_d, h_meig
   ATTRIBUTES( DEVICE )         :: devInfo_d
   TYPE(cusolverDnHandle), SAVE :: cuSolverHandle
@@ -305,6 +298,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   COMPLEX(DP), VARTYPE   :: h_bkp_d(:,:), s_bkp_d(:,:)
   ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
 #endif
+  INTEGER :: i, j
 #undef VARTYPE
   !
   !
@@ -318,9 +312,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       !
       ! Keeping compatibility for both CUSolver and CustomEigensolver, CUSolver below
       !
-#if defined(__USE_CUSOLVER) && defined(__CUDA)
-!
-! vvv __USE_CUSOLVER
+#if defined(__CUDA)
 
 #if ! defined(__USE_GLOBAL_BUFFER)
       ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
@@ -387,96 +379,9 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       CALL dev%release_buffer( h_bkp_d, info )
       CALL dev%release_buffer( s_bkp_d, info )
 #endif
-! ^^^ __USE_CUSOLVER
       !
       ! Keeping compatibility for both CUSolver and CustomEigensolver, CustomEigensolver below
       !
-#elif defined(__CUDA)
-! vvv not __USE_CUSOLVER
-#if ! defined(__USE_GLOBAL_BUFFER)
-      ! NB: dimension is different!
-      ALLOCATE(v_h(ldh,n), e_h(n))
-      ALLOCATE(h_diag_d(n) , s_diag_d(n))
-#else
-      CALL pin%lock_buffer( v_h, (/ldh,n/), info )
-      CALL pin%lock_buffer( e_h, n, info )
-      !
-      CALL dev%lock_buffer( h_diag_d, n, info )
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d ', ABS( info ) )
-      CALL dev%lock_buffer( s_diag_d, n, info )
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate s_bkp_d ', ABS( info ) )
-#endif
-      !
-      lwork  = n
-      lrwork = 1+5*n+2*n*n
-      liwork = 3+5*n
-      !
-      lwork_d  = 2*64*64 + 65 * n
-      lrwork_d = n
-      !
-#if ! defined(__USE_GLOBAL_BUFFER)
-      ALLOCATE(work(lwork), rwork(lrwork), iwork(liwork))
-      !
-      ALLOCATE(work_d(1*lwork_d), STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
-      !
-      ALLOCATE(rwork_d(1*lrwork_d), STAT = info)
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' allocate rwork_d ', ABS( info ) )
-#else
-      CALL pin%lock_buffer(work, lwork, info)
-      CALL pin%lock_buffer(rwork, lrwork, info)
-      CALL pin%lock_buffer(iwork, liwork, info)
-      CALL dev%lock_buffer( work_d,  lwork_d, info)
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
-      CALL dev%lock_buffer( rwork_d, lrwork_d, info)
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate rwork_d ', ABS( info ) )
-#endif
-      !
-      !$cuf kernel do(1) <<<*,*>>>
-      DO i = 1, n
-         h_diag_d(i) = DBLE( h_d(i,i) )
-         s_diag_d(i) = DBLE( s_d(i,i) )
-      END DO
-      CALL zhegvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d,&
-                       lwork_d, rwork_d, lrwork_d, &
-                       work, lwork, rwork, lrwork, &
-                       iwork, liwork, v_h, SIZE(v_h, 1), e_h, info, .TRUE.)
-      !
-
-      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' zhegvdx_gpu failed ', ABS( info ) )
-      !
-!$cuf kernel do(1) <<<*,*>>>
-      DO i = 1, n
-         h_d(i,i) = DCMPLX( h_diag_d(i), 0.0_DP)
-         s_d(i,i) = DCMPLX( s_diag_d(i), 0.0_DP)
-         DO j = i + 1, n
-            h_d(i,j) = DCONJG( h_d(j,i) )
-            s_d(i,j) = DCONJG( s_d(j,i) )
-         END DO
-         DO j = n + 1, ldh
-            h_d(j,i) = ( 0.0_DP, 0.0_DP )
-            s_d(j,i) = ( 0.0_DP, 0.0_DP )
-         END DO
-      END DO
-#if ! defined(__USE_GLOBAL_BUFFER)
-      DEALLOCATE(h_diag_d, s_diag_d)
-      !
-      DEALLOCATE(work, rwork, iwork)
-      DEALLOCATE(work_d, rwork_d)
-      DEALLOCATE(v_h, e_h)
-#else
-      CALL dev%release_buffer( h_diag_d, info )
-      CALL dev%release_buffer( s_diag_d, info)
-      !
-      CALL pin%release_buffer(work, info)
-      CALL pin%release_buffer(rwork, info)
-      CALL pin%release_buffer(iwork, info)
-      CALL dev%release_buffer( work_d,  info)
-      CALL dev%release_buffer( rwork_d, info)
-      CALL pin%release_buffer(v_h, info)
-      CALL pin%release_buffer(e_h, info)
-#endif
-! ^^^ not __USE_CUSOLVER
 #else
      CALL lax_error__( 'cdiaghg', 'Called GPU eigensolver without GPU support', 1 )
 #endif

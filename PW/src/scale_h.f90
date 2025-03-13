@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,23 +18,29 @@ SUBROUTINE scale_h
   USE cell_base,      ONLY : bg, omega, set_h_ainv, tpiba
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
-  USE gvect,          ONLY : g, gg, ngm, g_d, gg_d
-  USE klist,          ONLY : xk, wk, nkstot
-  USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
+  USE gvect,          ONLY : g, gg, ngm
+  USE klist,          ONLY : nks, xk, wk, ngk, igk_k, nkstot, qnorm
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
   USE exx,            ONLY : exx_gvec_reinit
   USE xc_lib,         ONLY : xclib_dft_is
+  USE rism_module,    ONLY : lrism, rism_reinit3d
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
+  USE mp_pools,       ONLY: inter_pool_comm
+  USE atwfc_mod,      ONLY : scale_tab_atwfc, init_tab_atwfc
+  USE beta_mod,       ONLY : scale_tab_beta, init_tab_beta
+  USE qrad_mod,       ONLY : scale_tab_qrad, init_tab_qrad
+  USE vloc_mod,       ONLY : scale_tab_vloc
+  USE rhoc_mod,       ONLY : scale_tab_rhc
+  USE rhoat_mod,      ONLY : scale_tab_rhoat
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig
-  ! counter on G vectors
-  INTEGER  :: ik, ipol
-  REAL(DP) :: gg_max
+  INTEGER :: ig, ik, ipol, ierr
+  ! counters
+  REAL(DP) :: gg_max, gk_max, gmax, kmax, gk2
   !
   ! scale the k points
   !
@@ -69,39 +75,74 @@ SUBROUTINE scale_h
      gg (ig) = g(1,ig) * g(1,ig) + g(2,ig) * g(2,ig) + g(3,ig) * g(3,ig)
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
-#if defined(__CUDA)
-  ! update GPU copies of variables as well
-  g_d  = g
-  gg_d = gg
-#endif
-  !$acc update device(g)
+  !$acc update device(g,gg)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
+  gmax = SQRT(gg_max)*tpiba
   !
-  IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN
-     CALL errore( 'scale_h', 'Not enough space allocated for radial FFT: '//&
-                             'try restarting with a larger cell_factor.', 1 )
-  ENDIF
-  !
-  ! scale the non-local pseudopotential tables
-  !
-  call scale_uspp_data( omega_old/omega )
-
-  !
-  ! recalculate the local part of the pseudopotential
-  !
-  CALL init_vloc( )
-  !
-  ! for hybrid functionals
+  ! gmax is the largest |G| actually needed in interpolation tables
+  ! (gmax^2=ecutrho at the first step or at fixed cell)
   !
   IF ( xclib_dft_is('hybrid') ) THEN
      CALL exx_grid_init( reinit=.TRUE. )
      ! not sure next line is needed
      CALL exx_mp_init( )
      CALL exx_gvec_reinit( at_old )
-  ENDIF
+     gmax = gmax + qnorm
+     ! For USPP + hybrid, gmax is the largest |q+G| needed
+     ! Note that qnorm is recomputed in exx_grid_init
+  END IF
+  !
+  ! Now we need the largest |k+G| for beta and atwfc interpolation
+  !
+  gk_max = 0.0_dp
+  DO ik = 1, nks
+     DO ig = 1, ngk(ik)
+        gk2 = (xk(1,ik) + g(1,igk_k(ig,ik)))**2 + &
+              (xk(2,ik) + g(2,igk_k(ig,ik)))**2 + &
+              (xk(3,ik) + g(3,igk_k(ig,ik)))**2
+        gk_max = MAX(gk2, gk_max)
+     END DO
+  ENDDO
+  CALL mp_max( gk_max, intra_bgrp_comm )
+  CALL mp_max( gk_max, inter_pool_comm )
+  kmax = SQRT(gk_max)*tpiba
+  ! (kmax^2=ecutwfc at the first step or at fixed cell)
+  ! for hybrid functionals, we need max |k+q+G|
+  IF ( xclib_dft_is('hybrid') )  kmax = kmax + qnorm
+  !
+  ! Scale the interpolation tables with correct volume
+  !
+  CALL scale_tab_atwfc( omega_old/omega )
+  CALL scale_tab_beta ( omega_old/omega )
+  CALL scale_tab_rhc  ( omega_old/omega )
+  CALL scale_tab_rhoat( omega_old/omega )
+  CALL scale_tab_qrad ( omega_old/omega )
+  CALL scale_tab_vloc ( omega_old/omega )
+  !
+  ! Check that interpolation tables are of sufficient size,
+  ! re-allocate and re-compute if needed
+  ! For tab_vloc, tab_rhc, tab_rhoc, this is done when used
+  !
+  WRITE( stdout, '(5x,"New effective cutoffs (rho, wfc):",2f8.2)' ) gmax**2,kmax**2
+  CALL init_tab_qrad ( gmax, omega, intra_bgrp_comm, ierr)
+  IF ( ierr == -1) WRITE( stdout, '(5x,"Interpolation table for Q(G) re-allocated")' ) 
+  CALL init_tab_beta ( kmax, omega, intra_bgrp_comm, ierr)
+  IF ( ierr == -1) WRITE( stdout, '(5x,"Interpolation table for beta(G) re-allocated")' ) 
+  CALL init_tab_atwfc( kmax, omega, intra_bgrp_comm, ierr)
+  IF ( ierr == -1) WRITE( stdout, '(5x,"Interpolation table for atomic wavefunctions re-allocated")' ) 
+  !
+  ! recalculate the local part of the pseudopotential
+  !
+  CALL init_vloc( )
+  !
   ! for ts-vdw
+  !
   CALL set_h_ainv()
+  !
+  ! for 3D-RISM
+  !
+  IF ( lrism ) CALL rism_reinit3d()
   !
   RETURN
   !

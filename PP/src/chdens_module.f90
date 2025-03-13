@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@
 MODULE chdens_module
 CONTAINS
 !-----------------------------------------------------------------------
-SUBROUTINE chdens (plot_files,plot_num)
+SUBROUTINE chdens (plot_files,plot_num,nc)
   !-----------------------------------------------------------------------
   !      Writes the charge density (or potential, or polarisation)
   !      into a file format suitable for plotting
@@ -46,6 +46,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE run_info,   ONLY: title
   USE control_flags, ONLY: gamma_only
   USE wavefunctions,  ONLY: psic
+  USE wannier,        ONLY : dfftp_c, dffts_c
 
   IMPLICIT NONE
   CHARACTER (len=256), DIMENSION(:), ALLOCATABLE, INTENT(in) :: plot_files
@@ -56,11 +57,13 @@ SUBROUTINE chdens (plot_files,plot_num)
   !
   INTEGER, INTENT(in) :: plot_num
   !
+  INTEGER, INTENT(IN) :: nc(3) ! dimension of the supercell 
+  !
   INTEGER, PARAMETER :: nfilemax = 7
   ! maximum number of files with charge
 
   INTEGER :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, i, output_format, idum, direction, iplot
+       na, i, j, k, n, output_format, idum, direction, iplot
 
   real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), isovalue,heightmin,heightmax
@@ -86,12 +89,12 @@ SUBROUTINE chdens (plot_files,plot_num)
           '3D                  ', &
           '2D polar on a sphere'/)
 
-  real(DP) :: celldms (6), gcutmsa, duals, zvs(ntypx), ats(3,3)
+  real(DP) :: celldms (6), gcutmsa, duals, zvs(ntypx), ats(3,3), bgs(3,3)
   real(DP), ALLOCATABLE :: taus (:,:), rhor(:), rhos(:)
   INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   INTEGER, ALLOCATABLE :: ityps (:)
-  CHARACTER (len=3) :: atms(ntypx)
+  CHARACTER (len=6) :: atms(ntypx)
   CHARACTER (len=256) :: filepp(nfilemax)
   CHARACTER (len=20) :: interpolation
   real(DP) :: rhotot
@@ -334,8 +337,13 @@ SUBROUTINE chdens (plot_files,plot_num)
     fileout = output_files(iplot)
     IF (.NOT. luse_filepp) filepp(1) = plot_files(iplot)
 
-    ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-    ALLOCATE  (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+    IF (plot_num==25) THEN
+       ALLOCATE (rhor(dffts_c%nr1x*dffts_c%nr2x*dffts_c%nr3x))
+       ALLOCATE (rhos(dffts_c%nr1x*dffts_c%nr2x*dffts_c%nr3x))
+    ELSE
+       ALLOCATE (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+       ALLOCATE (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+    ENDIF
     ALLOCATE  (taus( 3 , nat))
     ALLOCATE  (ityps( nat))
     !
@@ -358,10 +366,12 @@ SUBROUTINE chdens (plot_files,plot_num)
        ENDIF
        !
        IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-       IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
-            errore ('chdens', 'incompatible nr1x or nr2x', 1)
-       IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
-            errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
+       IF (.NOT.plot_num==25) THEN
+          IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
+               errore ('chdens', 'incompatible nr1x or nr2x', 1)
+          IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
+              errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
+       ENDIF
        IF (ibravs/=ibrav) CALL errore ('chdens', 'incompatible ibrav', 1)
        IF (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
            abs(ecuts-ecutwfc)>1.d-8) &
@@ -375,6 +385,7 @@ SUBROUTINE chdens (plot_files,plot_num)
        !
        rhor (:) = rhor (:) + weight (ifile) * rhos (:)
     ENDDO
+    !
     DEALLOCATE (ityps)
     DEALLOCATE (taus)
     DEALLOCATE (rhos)
@@ -493,6 +504,34 @@ SUBROUTINE chdens (plot_files,plot_num)
        !
     ENDIF
     !
+    IF (plot_num==25) THEN
+       !
+       ! Constructing the supercell nc(1) x nc(2) x nc(3)
+       DO i = 1, 3
+          ats(:,i) = at(:,i) * nc(i)
+          bgs(:,i) = bg(:,i) / nc(i)
+       ENDDO
+       nats = nat*nc(1)*nc(2)*nc(3)
+       ALLOCATE (taus(3,nats))
+       ALLOCATE (ityps(nats))
+       n = 0
+       DO i = 1, nc(1)
+          DO j = 1, nc(2)
+             DO k = 1, nc(3)
+                DO na = 1, nat
+                   n = n + 1
+                   taus(:,n) = tau(:,na) + DBLE(i)*at(:,1) &
+                                         + DBLE(j)*at(:,2) &
+                                         + DBLE(k)*at(:,3)
+                   ityps(n) = ityp(na)
+                ENDDO
+             ENDDO
+          ENDDO
+       ENDDO
+       IF (iflag/=3) CALL errore("chdens","plot_num=25 currently supports only iflag=3",1) 
+       !
+    ENDIF 
+    ! 
     !     And now the plot (rhog in G-space, rhor in real space)
     !
     IF (iflag <= 1) THEN
@@ -500,7 +539,7 @@ SUBROUTINE chdens (plot_files,plot_num)
        IF (TRIM(interpolation) == 'fourier') THEN
           CALL plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
        ELSE
-          CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit)
+          CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit, .FALSE.)
        ENDIF
   
     ELSEIF (iflag == 2) THEN
@@ -510,7 +549,7 @@ SUBROUTINE chdens (plot_files,plot_num)
               at, nat, tau, atm, ityp, output_format, ounit)
        ELSE
          CALL plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
-              at, nat, tau, atm, ityp, output_format, ounit)
+              at, nat, tau, atm, ityp, output_format, ounit, .FALSE.)
        ENDIF
        IF (output_format == 2.and.ionode) THEN
           WRITE (ounit, '(i4)') nat
@@ -520,15 +559,45 @@ SUBROUTINE chdens (plot_files,plot_num)
        ENDIF
   
     ELSEIF (iflag == 3) THEN
-  
+
+      IF (plot_num==25) THEN
+       !
+       IF (output_format == 5.and.ionode) THEN
+          !
+          ! XCRYSDEN FORMAT
+          !
+          CALL xsf_struct (alat, ats, nats, taus, atm, ityps, ounit)
+          CALL xsf_fast_datagrid_3d &
+               (rhor, dffts_c%nr1, dffts_c%nr2, dffts_c%nr3, &
+                dffts_c%nr1x, dffts_c%nr2x, dffts_c%nr3x, ats, alat, ounit)
+          !
+       ELSEIF (output_format == 6.and.ionode ) THEN
+          !
+          ! GAUSSIAN CUBE FORMAT
+          !
+          IF (TRIM(interpolation) == 'fourier') THEN
+             CALL write_cubefile (alat, ats, bgs, nats, taus, atm, ityps, rhor, &
+                  dffts_c%nr1, dffts_c%nr2, dffts_c%nr3, &
+                  dffts_c%nr1x, dffts_c%nr2x, dffts_c%nr3x, ounit)
+          ELSE
+             CALL errore("chdens","The chosen type of interpolation is not supported",1)
+          END IF 
+          !
+       ELSEIF (ionode) THEN
+          CALL errore("chdens","The chosen type of the output format is not supported",1)
+       END IF
+       !
+      ELSE
+       !
        IF (output_format == 5.and.ionode) THEN
           !
           ! XCRYSDEN FORMAT
           !
           CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
           CALL xsf_fast_datagrid_3d &
-               (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
-  
+               (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
+ 
        ELSEIF (output_format == 6.and.ionode ) THEN
           !
           ! GAUSSIAN CUBE FORMAT
@@ -539,7 +608,7 @@ SUBROUTINE chdens (plot_files,plot_num)
           ELSE
              CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
                   nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                  ounit, rhotot)
+                  ounit, rhotot, .FALSE.)
           END IF
   
        ELSEIF (ionode) THEN
@@ -563,12 +632,14 @@ SUBROUTINE chdens (plot_files,plot_num)
              ELSE
                 CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
                      nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                     ounit, rhotot)
+                     ounit, rhotot, .FALSE.)
              ENDIF
              !
           ENDIF
        ENDIF
-  
+       !
+      ENDIF
+
     ELSEIF (iflag == 4) THEN
        radius = radius / alat
        CALL plot_2ds (nx, ny, radius, ngm, g, rhog, output_format, ounit)
@@ -583,11 +654,12 @@ SUBROUTINE chdens (plot_files,plot_num)
     !
     IF (allocated(rhog)) DEALLOCATE(rhog)
     DEALLOCATE(rhor)
-  
+    !
+    IF (ALLOCATED(taus)) DEALLOCATE(taus)
+    IF (ALLOCATED(ityps)) DEALLOCATE(ityps)
+    !
   ENDDO
 
-  DEALLOCATE(tau)
-  DEALLOCATE(ityp)
   IF (ALLOCATED(output_files)) DEALLOCATE(output_files)
 
 END SUBROUTINE chdens
@@ -601,6 +673,7 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   USE io_global, ONLY : stdout, ionode
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
+  USE fft_interpolation_mod, ONLY: fft_1d_interpolate, fft_spherical_average 
 
   IMPLICIT NONE
   INTEGER :: nx, ngm, iflag, ounit
@@ -608,14 +681,13 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   ! number of G vectors
   ! type of plot
   ! output unit
-
   real(DP) :: e (3), x0 (3), m1, alat, g (3, ngm)
+  real(DP),ALLOCATABLE :: line(:,:)
   ! vector defining the line
   ! origin of the line
   ! modulus of e
   ! lattice parameter
   ! G-vectors
-
   COMPLEX(DP) :: rhog (ngm)
   ! rho or polarization in G space
   INTEGER :: i, ig
@@ -628,58 +700,19 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   ! steps along the line
   ! the argument of the exponential
   ! |G|*|r|
-
+  !
   COMPLEX(DP) :: rho0g, carica (nx)
-
+  !
   deltax = m1 / (nx - 1)
-  carica(:) = (0.d0,0.d0)
+  carica(:) = cmplx (0.d0,0.d0, KIND = DP)
+  line = reshape([(x0 + (i - 1 )* deltax * e, i =1, nx)],[3,nx])  
   IF (iflag == 1) THEN
-     DO i = 1, nx
-        xi = x0 (1) + (i - 1) * deltax * e (1)
-        yi = x0 (2) + (i - 1) * deltax * e (2)
-        zi = x0 (3) + (i - 1) * deltax * e (3)
-        !
-        !     for each point we compute the charge from the Fourier components
-        !
-        DO ig = 1, ngm
-           !
-           !     NB: G are in 2pi/alat units, r are in alat units
-           !
-           arg = 2.d0 * pi * ( xi*g(1,ig) + yi*g(2,ig) + zi*g(3,ig) )
-           carica(i) = carica(i) + rhog (ig) * cmplx(cos(arg),sin(arg),kind=DP)
-        ENDDO
-     ENDDO
+     CALL fft_1d_interpolate(rhog, g, line, carica) 
   ELSEIF (iflag == 0) THEN
-     !
-     !     spherically averaged charge: rho0(|r|) = int rho(r) dOmega
-     !     rho0(r) = 4pi \sum_G rho(G) j_0(|G||r|)
-     !
-     !     G =0 term
-     gg=sqrt(g(1,1)**2+g(2,1)**2+g(3,1)**2)
-     IF (gg<1.d-10) THEN
-        DO i = 1, nx
-           carica (i) = 4.d0 * pi * rhog (1)
-        ENDDO
-     ENDIF
-     !     G!=0 terms
-     DO ig = 2, ngm
-        arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
-        !     This displaces the origin into x0
-        rho0g = rhog (ig) * cmplx(cos(arg),sin(arg),kind=DP)
-        !     r =0 term
-        carica (1) = carica (1) + 4.d0 * pi * rho0g
-        !     r!=0 terms
-        DO i = 2, nx
-           gr = 2.d0 * pi * sqrt(g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2) * &
-                       (i-1) * deltax
-           carica (i) = carica (i) + 4.d0 * pi * rho0g * sin (gr) / gr
-        ENDDO
-
-     ENDDO
+      CALL fft_spherical_average(rhog, g, x0, deltax, carica)
   ELSE
      CALL errore ('plot_1d', ' bad type of plot', 1)
   ENDIF
-  CALL mp_sum( carica, intra_bgrp_comm )
   !
   !    Here we check the value of the resulting charge
   !
@@ -730,6 +763,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   USE io_global, ONLY : stdout, ionode
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
+  USE fft_interpolation_mod, ONLY : fft_2d_interpolate
   IMPLICIT NONE
   INTEGER :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
   ! number of points along x
@@ -739,7 +773,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! types of atoms
   ! output unit
   ! output format
-  CHARACTER(len=3) :: atm(*) ! atomic symbols
+  CHARACTER(len=6) :: atm(*) ! atomic symbols
   real(DP) :: e1(3), e2(3), x0(3), m1, m2, g(3,ngm), alat, &
        tau(3,nat), at(3,3)
   ! vectors e1, e2 defining the plane
@@ -758,37 +792,15 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! integrated imaginary charge
   ! steps along e1
   ! steps along e2
-  COMPLEX(DP), ALLOCATABLE :: eigx (:), eigy (:), carica(:,:)
+  COMPLEX(DP), ALLOCATABLE :: carica(:,:)
 
-  ALLOCATE (eigx(  nx))
-  ALLOCATE (eigy(  ny))
   ALLOCATE (carica( nx , ny))
 
   deltax = m1 / (nx - 1)
   deltay = m2 / (ny - 1)
 
   carica(:,:) = (0.d0,0.d0)
-  DO ig = 1, ngm
-     !
-     ! eigx=exp(iG*e1+iGx0), eigy=(iG*e2)
-     ! These factors are calculated and stored in order to save CPU time
-     !
-     DO i = 1, nx
-        eigx (i) = exp ( (0.d0, 1.d0) * 2.d0 * pi * ( (i - 1) * deltax * &
-             (e1(1) * g(1,ig) + e1(2) * g(2,ig) + e1(3) * g(3,ig) ) + &
-             (x0 (1) * g(1,ig) + x0 (2) * g(2,ig) + x0 (3) * g(3,ig) ) ) )
-     ENDDO
-     DO j = 1, ny
-        eigy (j) = exp ( (0.d0, 1.d0) * 2.d0 * pi * (j - 1) * deltay * &
-             (e2(1) * g(1,ig) + e2(2) * g(2,ig) + e2(3) * g(3,ig) ) )
-     ENDDO
-     DO j = 1, ny
-        DO i = 1, nx
-           carica (i, j) = carica (i, j) + rhog (ig) * eigx (i) * eigy (j)
-        ENDDO
-     ENDDO
-  ENDDO
-  CALL mp_sum( carica, intra_bgrp_comm )
+  CALL fft_2d_interpolate(rhog, g, nx, ny, x0, m1*e1, m2*e2, carica)
   !
   !    Here we check the value of the resulting charge
   !
@@ -859,8 +871,6 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ENDIF
 
   DEALLOCATE (carica)
-  DEALLOCATE (eigy)
-  DEALLOCATE (eigx)
   RETURN
 END SUBROUTINE plot_2d
 !
@@ -993,7 +1003,7 @@ SUBROUTINE plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   ! number of points along x, y, z
   ! output format
   ! output unit
-  CHARACTER(len=3) :: atm(*)
+  CHARACTER(len=6) :: atm(*)
 
   real(DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
                    e1(3), e2(3), e3(3), m1, m2, m3
@@ -1099,7 +1109,7 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
   IMPLICIT NONE
   INTEGER :: nat, ityp(nat), nr1x, nr2x, nr3x, nr1, nr2, nr3, &
        output_format, ounit
-  CHARACTER(len=3) :: atm(*)
+  CHARACTER(len=6) :: atm(*)
 
   real(DP) :: alat, tau (3, nat), at (3, 3), rho(nr1x,nr2x,nr3x), &
        bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3

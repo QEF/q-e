@@ -8,17 +8,10 @@
 
 subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
-! this subroutine returns the berry phase energy
-! = L/2*Pi*Im(log Sum_R exp(i*(2pi/L)*R_i*rho_i))
-! of the ions and the constant force on the ions
-! now only for orthorombic primitive cell
-
-!  tau0    : input, positions of ions
-!  fion    : input,output, forces on ions
-!  tfor    : input, flag for force calculation
-!  ipol    : input, electric field polarization
-!  evalue  : input, scale for electric field
-!  enbi    : output, berry phase energy of the ions
+  !! This subroutine returns the Berry phase energy, e.g.:  
+  !! \( L/2\pi\ \text{Im}(\log \sum_R \exp(i(2\pi/L)R_i \rho_i)) \)  
+  !! of the ions and the constant force on the ions.
+  !! Now only for orthorombic primitive cell.
 
   use kinds,      only : dp
   use constants,  only : pi
@@ -27,17 +20,25 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
   implicit none
 
-  real(dp) tau0(3,*)
-  real(dp) fion(3,*)
-  real(dp) enbi, evalue
-  integer ipol
-  logical tfor
+  real(dp) :: tau0(3,*)
+  !! input, positions of ions
+  real(dp) :: fion(3,*)
+  !! input-output, forces on ions
+  real(dp) :: enbi
+  !! output, berry phase energy of the ions
+  real(dp) :: evalue
+  !! input, scale for electric field
+  integer :: ipol
+  !! input, electric field polarization
+  logical :: tfor
+  !! input, flag for force calculation
+  
+  ! ... local variables
 
-!local variables
   real(dp) :: gmes, pola
-  integer is, ia
-  complex(dp) temp, ci
-  real(dp), external:: g_mes
+  integer :: is, ia
+  complex(dp) :: temp, ci
+  real(dp), external :: g_mes
 
   temp = (0.0_dp,0.0_dp)
   ci = (0.0_dp,1.0_dp)
@@ -60,18 +61,24 @@ end subroutine berryion
 
             
 !-------------------------------------------------------------------------
-      subroutine cofcharge(tau,cdz)
+    subroutine cofcharge(tau,cdz)
 !-----------------------------------------------------------------------
-!this subroutine gives the center of the ionic charge
+      !! This subroutine gives the center of the ionic charge.
 
       use kinds, only : dp
       use ions_base, only: na, nsp, zv, ityp, nat
 !
       implicit none
-      real(dp) tau(3,*), cdz(3)
-! local variables
-      real(dp) zmas
-      integer is,i,ia
+!
+      real(dp) :: tau(3,*)
+      !! input, positions of ions
+      real(dp) :: cdz(3)
+      !! output, the center of the ionic charge
+      
+      ! ... local variables
+      
+      real(dp) :: zmas
+      integer :: is,i,ia
 !
       zmas=0.0d0
       do is=1,nsp
@@ -89,7 +96,7 @@ end subroutine berryion
 !      write(6,*) 'Center of charge', cdz(3)!ATTENZIONE
 !
       return
-      end subroutine cofcharge
+    end subroutine cofcharge
 !
 
 
@@ -97,23 +104,25 @@ end subroutine berryion
 !----------------------------------------------------
         subroutine noforce(fion, ipol)
 !----------------------------------------------------
-
-! this subroutine adds an electric force, in order
-! to keep steady the center of mass along the electric
-! field direction
+          !! This subroutine adds an electric force, in order
+          !! to keep steady the center of mass along the electric
+          !! field direction.
 
           use kinds,     only : dp
           use ions_base, ONLY : zv, nat, ityp
 
           implicit none
 
-          real(dp) fion(3,*)
-          integer ipol!el. field polarization
+          real(dp) :: fion(3,*)
+          !! electric force
+          integer :: ipol
+          !! electric field polarization
 
+          ! ... local variables
 
-          integer i,ia
-          real(dp) fcm!force appplied on center of mass
-          real(dp) tch!total charge
+          integer :: i,ia
+          real(dp) :: fcm!force appplied on center of mass
+          real(dp) :: tch!total charge
 
           fcm=0.d0
           tch=0.d0

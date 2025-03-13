@@ -1,0 +1,32 @@
+&CONTROL
+  calculation  = 'cp'
+  nstep = 1
+  restart_mode = 'from_scratch'
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 12.0
+  nat       = 5,
+  ntyp      = 2,
+  ecutwfc   = 30.D0,
+  ecutrho   = 120.D0,
+  assume_isolated = 'makov-payne'
+  tot_charge = +1.0
+  nr1b=15, nr2b=15, nr3b=15
+/
+&ELECTRONS
+  conv_thr    = 1.D-7
+  electron_dynamics = 'cg'
+/
+&IONS
+/
+ATOMIC_SPECIES
+N  1.00  N.pbe-n-rrkjus_psl.1.0.0.UPF
+H  1.00  H.pbe-rrkjus.UPF
+ATOMIC_POSITIONS {bohr}
+N  0.0  0.0  0.0  0 0 0
+H  1.0  1.0  1.0
+H -1.0 -1.0  1.0
+H -1.0  1.0 -1.0
+H  1.0 -1.0 -1.0
+K_POINTS Gamma

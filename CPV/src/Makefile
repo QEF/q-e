@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS)
 FOBJS = \
 berryion.o \
 bforceion.o \
-cell_nose.o \
 cg.o \
 cg_sub.o \
 chargedensity.o \
@@ -16,6 +15,7 @@ cp_autopilot.o \
 cp_emass.o \
 cp_interfaces.o \
 cp_restart_new.o \
+cp_wavefunctions.o \
 cplib.o \
 cpr_mod.o \
 cpr.o \
@@ -28,6 +28,7 @@ electrons.o \
 electrons_nose.o \
 energies.o \
 ensemble_dft.o \
+environ_cp_module.o \
 exch_corr.o \
 exx_cg.o \
 exx_es.o \
@@ -44,7 +45,6 @@ init.o \
 init_run.o \
 inner_loop_cold.o \
 input.o \
-ions_nose.o \
 ions_positions.o \
 ksstates.o \
 ldaU_cp.o \
@@ -80,7 +80,6 @@ plugin_utilities.o \
 potentials.o \
 pres_ai_mod.o \
 print_out.o \
-printout_base.o \
 problem_size.o \
 pseudo_base.o \
 pseudopot.o \
@@ -107,8 +106,7 @@ wannier.o \
 wave.o \
 wave_base.o \
 wave_types.o \
-wf.o \
-makov_payne.o
+wf.o
 
 LOBJS = \
 entropy.o 

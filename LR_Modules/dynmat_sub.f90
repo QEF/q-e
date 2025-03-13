@@ -971,7 +971,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   END DO
   
   WRITE(6,*)
-  WRITE(6,'("Electronic dielectric permittivity tensor (F/m units)")')
+  WRITE(6,'("Electronic dielectric permittivity tensor (relative, adimensional)")')
   WRITE(6,'(5x,3f12.6)') eps0(1,:)
   WRITE(6,'(5x,3f12.6)') eps0(2,:)
   WRITE(6,'(5x,3f12.6)') eps0(3,:)

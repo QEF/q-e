@@ -14,9 +14,10 @@ addusdens1d.o \
 add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
-atomic_wfc_nc_proj.o \
+wannier_mod.o \
 chdens_module.o \
 chdens_bspline.o \
+chdens_bspline_sphere.o \
 compute_ppsi.o \
 compute_sigma_avg.o \
 cube.o \
@@ -37,8 +38,10 @@ paw_postproc.o \
 projections_mod.o \
 projwfc_box.o \
 punch_plot.o \
+punch_rism.o \
 read_proj.o \
 smallgk.o \
+solvdens.o \
 stm.o \
 stop_pp.o \
 sum_band_kin.o \
@@ -55,7 +58,11 @@ write_hamiltonians.o \
 globalmod.o \
 fouriermod.o \
 idwmod.o \
-xc_vdW_scale_mod.o   # added by Yang Jiao
+hubbard_projectors.o \
+oscdft_pp_mod.o \
+oscdft_et_mod.o \
+xc_vdW_scale_mod.o \
+fft_interpolation_mod.o  
 
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
 QEMODS = $(BASEMODS)
@@ -68,15 +75,17 @@ all : tldeps open_grid.x average.x bands.x band_interpolation.x dos.x epsilon.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x pw2gt.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x pprism.x \
+      d3hess.x wannier2pw.x \
+      oscdft_pp.x oscdft_et.x
 
 
 libpp.a : $(PPOBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) 
+pp_example.x: pp_example.o $(MODULES)
+	$(LD) $(LDFLAGS) -o $@ pp_example.o libpp.a $(MODULES) $(QELIBS) 
 
 open_grid.x : open_grid.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
@@ -96,6 +105,11 @@ bands.x : bands.o libpp.a $(MODULES)
 band_interpolation.x : band_interpolation.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		band_interpolation.o libpp.a $(MODULES) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+d3hess.x : d3hess.o libpp.a $(MODULES) 
+	$(LD) $(LDFLAGS) -o $@ \
+		d3hess.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 dos.x : dos.o libpp.a $(MODULES) 
@@ -148,6 +162,11 @@ projwfc.x : projwfc.o libpp.a $(MODULES)
 pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		pw2wannier90.o libpp.a $(MODULES) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+wannier2pw.x : wannier2pw.o libpp.a $(MODULES)
+	$(LD) $(LDFLAGS) -o $@ \
+		wannier2pw.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pw2critic.x : pw2critic.o libpp.a $(MODULES) 
@@ -233,6 +252,22 @@ ppacf.x : ppacf.o libpp.a $(MODULES)
 pw2gt.x : pw2gt.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		pw2gt.o libpp.a $(MODULES) $(QELIBS)
+
+pprism.x : postrism.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		postrism.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+# ***OSCDFT BEGIN***
+oscdft_pp.x : oscdft_pp.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		oscdft_pp.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+oscdft_et.x : oscdft_et.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		oscdft_et.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+# ***OSCDFT END***
 
 clean :
 	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libpp.a

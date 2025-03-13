@@ -22,7 +22,7 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   USE io_files,      ONLY : nwordwfcU
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
-  USE ldaU,          ONLY : U_projection, Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
+  USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
   USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq,  &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2
@@ -56,7 +56,6 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                               dvqi_orth(:,:), dvqi_orth_lm(:,:), aux1(:), aux2(:)
   INTEGER :: i, j, k, icart, na, nt, l, ih, n, mu, ig, npw, npwq, &
              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, op_spin, ikk, ikq, ibeta
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock( 'dvqhub_barepsi_us2' )
   !
@@ -184,9 +183,10 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                  ! proj1 (ihubst, ibnd) = < S_{k}\phi_(k,I,m) | psi(inbd,k) >
                  ! proj2 (ihubst, ibnd) = < \Delta_{-q}(S_{k+q} \phi_(k+q,I,m)) | psi(inbd,k) > 
                  !
+                 !FIXME these are zgemms 
                  DO ibnd = 1, nbnd
-                    proj1(ibnd,ihubst) = ZDOTC (npw, swfcatomk(:,ihubst), 1, evc(:,ibnd), 1)
-                    proj2(ibnd,ihubst) = ZDOTC (npw, dmqsphi(:,ihubst), 1, evc(:,ibnd), 1)
+                 proj1(ibnd,ihubst) = dot_product(swfcatomk(1:npw,ihubst), evc(1:npw,ibnd))
+                 proj2(ibnd,ihubst) = dot_product(dmqsphi(1:npw,ihubst), evc(1:npw,ibnd))
                  ENDDO
                  !
               ENDDO ! m

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -144,7 +144,7 @@ Pt
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
-Pt  0.0   Pt.rel-pz-n-rrkjus.UPF 
+Pt  0.0   Pt.rel-pz-n-rrkjus.UPF
 ATOMIC_POSITIONS alat
 Pt  0.0000000   0.00000000   0.0
 K_POINTS

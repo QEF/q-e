@@ -24,34 +24,25 @@ target_link_libraries(qe_lax
         qe_utilx
         qe_devxlib)
 if(QE_ENABLE_CUDA)
-    if(QE_ENABLE_LAXLIB_CUSOLVER)
-        if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
-            set(CMAKE_REQUIRED_LINK_OPTIONS "${CUDA_FLAG}lib=cusolver;-fortranlibs")
-            check_function_exists(cusolverDnZhegvdx cusolverDnZhegvdx_FOUND)
-            if (NOT cusolverDnZhegvdx_FOUND)
-                unset(cusolverDnZhegvdx_FOUND CACHE)
-                message(FATAL_ERROR "The version of CUDAToolkit chosen by the PGI/NVHPC compiler internally"
-                                    " doesn't contain cusolverDnZhegvdx. cuSOLVER features used by LAXLib are"
-                                    " only supported since CUDAToolkit 10.1 release. Use a newer compiler or"
-                                    " disable cuSOLVER in LAXLIB by '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF'.")
-            endif()
-        else()
-            if(CUDAToolkit_VERSION VERSION_LESS 10.1)
-                message(FATAL_ERROR "cuSOLVER for LAXLib is only supported from CUDA compiler 10.1, disable it with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF'")
-            endif()
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
+        set(CMAKE_REQUIRED_LINK_OPTIONS "${CUDA_FLAG}lib=cusolver;-fortranlibs")
+        check_function_exists(cusolverDnZhegvdx cusolverDnZhegvdx_FOUND)
+        if (NOT cusolverDnZhegvdx_FOUND)
+            unset(cusolverDnZhegvdx_FOUND CACHE)
+            message(FATAL_ERROR "The version of CUDAToolkit chosen by the PGI/NVHPC compiler internally"
+                                " doesn't contain cusolverDnZhegvdx. cuSOLVER features used by LAXLib are"
+                                " only supported since CUDAToolkit 10.1 release. Use a newer compiler"
+                                " or select a newer CUDAToolkit internal to the PGI/NVHPC compiler.")
         endif()
-        target_link_libraries(qe_lax
-            PRIVATE
-                CUDA::cusolver
-                CUDA::cublas)
-        set_property(TARGET qe_lax APPEND
-            PROPERTY
-                COMPILE_DEFINITIONS __USE_CUSOLVER)
     else()
-        target_link_libraries(qe_lax
-            PRIVATE
-                qe_eigensolver_gpu)
+        if(CUDAToolkit_VERSION VERSION_LESS 10.1)
+            message(FATAL_ERROR "cuSOLVER for LAXLib is only supported from CUDA compiler 10.1")
+        endif()
     endif()
+    target_link_libraries(qe_lax
+        PRIVATE
+            CUDA::cusolver
+            CUDA::cublas)
 endif()
 
 # LAX relies on header files that should be preprocessed

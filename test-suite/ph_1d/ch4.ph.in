@@ -1,0 +1,14 @@
+vibrations of ch4
+ &inputph
+  tr2_ph=4.0d-17,
+  prefix='ch4',
+  outdir='./',
+  amass(1)=1.d0,
+  amass(2)=12.d0,
+  asr=.true.,
+  zue=.true.,
+  epsil=.true.,
+  trans=.true.,
+  fildyn='ch4.dyn.xml',
+ /
+0.0 0.0 0.0

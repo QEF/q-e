@@ -23,7 +23,7 @@ $header
 (defvar qe-closed-supercards (list $closed_supercards))
   
 ;; QE's namelists
-(defvar qe-namelists (list $namelists))
+(defvar pwtk-qe-namelists (list $namelists))
 
 ;; QE's variables
 (defvar qe-vars (list $vars))
@@ -47,7 +47,7 @@ $header
 			    (append qe-cards qe-open-supercards) 'symbols))
 (defvar qe-flags-regexp (regexp-opt qe-flags 'symbols))
 
-(defvar qe-namelist-face (cons (regexp-opt (append qe-namelists) 'symbols) font-lock-function-name-face))
+(defvar pwtk-qe-namelist-face (cons (regexp-opt (append pwtk-qe-namelists) 'symbols) font-lock-function-name-face))
 (defvar $mode-cmds-face (cons (regexp-opt (append $mode-cmds) 'symbols) font-lock-function-name-face))
 (defvar qe-variable-face (cons (regexp-opt qe-vars 'symbols) font-lock-variable-name-face))
 
@@ -72,7 +72,7 @@ $header
 
 
 (font-lock-add-keywords '$mode-mode (list
-				     qe-namelist-face 
+				     pwtk-qe-namelist-face 
 				     $mode-cmds-face 
 				     qe-variable-face
 				     qe-logic-face
@@ -91,7 +91,7 @@ $header
 				      (qe-flags-matcher 1 font-lock-type-face    t)
 				      ))
 
-;;(defvar qe-keywords '(qe-namelist-face qe-variable-face))
+;;(defvar qe-keywords '(pwtk-qe-namelist-face qe-variable-face))
 (defvar qe-keywords '(((list "") . font-lock-constant-face)))
 
 
@@ -116,7 +116,7 @@ $header
 
 ;; free memory
 
-(setq qe-namelists nil)
+(setq pwtk-qe-namelists nil)
 (setq pwtk-cmds nil)
 (setq qe-vars nil)
 (setq qe-cards nil)

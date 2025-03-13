@@ -37,9 +37,16 @@
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
 !
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
+! GPU porting by Ivan Carnimeo
+!
+!NOTE (Ivan Carnimeo, May, 30th, 2022): 
+!   paro_k_new and paro_gamma_new have been ported to GPU with OpenACC, 
+!   the previous CUF versions (paro_k_new_gpu and paro_gamma_new_gpu) have been removed, 
+!   and now paro_k_new and paro_gamma_new are used for both CPU and GPU execution.
+!   If you want to see the previous code checkout to commit: 55c4e48ba650745f74bad43175f65f5449fd1273 (on Fri May 13 10:57:23 2022 +0000)
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
+SUBROUTINE paro_gamma_new( h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_psi_ptr, overlap, &
                  npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
@@ -66,12 +73,11 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi, s_psi, hs_psi, g_1psi
-  ! subroutine h_psi  (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
-  ! subroutine s_psi  (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
-  ! subroutine hs_1psi(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
-  ! subroutine g_1psi  (npwx,npw,psi,eig)       computes g*psi  for a single band
-
+  EXTERNAL h_psi_ptr, s_psi_ptr, hs_psi_ptr, g_psi_ptr
+  ! subroutine h_psi_ptr (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
+  ! subroutine s_psi_ptr (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
+  ! subroutine hs_psi_ptr(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
+  ! subroutine g_psi_ptr (npwx,npw,npol,m,psi,eig) computes g*psi  for m bands
   !
   ! ... local variables
   !
@@ -86,6 +92,8 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
   !
+  !$acc data deviceptr(eig)
+  !
   ! ... init local variables
   !
   CALL laxlib_getval( nproc_ortho = nproc_ortho )
@@ -95,15 +103,24 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !
   CALL start_clock( 'paro_gamma' ); !write (6,*) ' enter paro diag'
 
+  !$acc host_data use_device(evc)
   CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
+  !$acc end host_data
 
-  ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx), conv(nbnd) )
+  ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx) )
+  ALLOCATE ( conv(nbnd) )
+  !$acc enter data create(psi, hpsi, spsi, ew)
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
+  !$acc kernels
   psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
-  call h_psi  (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
-  call s_psi  (npwx,npw,nbnd,psi,spsi) ! computes S*psi
+  !$acc end kernels
+  !$acc data present(psi, spsi, hpsi)
+  call h_psi_ptr (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
+  call s_psi_ptr (npwx,npw,nbnd,psi,spsi) ! computes S*psi
+  !$acc end data
+
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
 
@@ -113,7 +130,11 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      CALL rotate_HSpsi_gamma (  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
 #if defined(__MPI)
   ELSE
+#if defined(__CUDA)
+     Call errore('paro_gamma_new','nproc_ortho /= 1 with gpu NYI', 1)
+#else
      CALL protate_HSpsi_gamma(  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
+#endif
   ENDIF
 #endif
   !write (6,'(10f10.4)') psi(1:5,1:3)
@@ -153,52 +174,58 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      lbnd = 1; kbnd = 1
      DO ibnd = 1, ntrust ! pack unconverged roots in the available space
         IF (.NOT.conv(ibnd) ) THEN
+           !$acc kernels 
            psi (:,nbase+kbnd)  = psi(:,ibnd)
            hpsi(:,nbase+kbnd) = hpsi(:,ibnd)
            spsi(:,nbase+kbnd) = spsi(:,ibnd)
-           ew(kbnd) = eig(ibnd) ; last_unconverged = ibnd
+           ew(kbnd) = eig(ibnd) 
+           !$acc end kernels
+           last_unconverged = ibnd
            lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
         END IF
      END DO
      DO ibnd = nbnd+1, nbase   ! add extra vectors if it is the case
+        !$acc kernels 
         psi (:,nbase+kbnd)  = psi(:,ibnd)
         hpsi(:,nbase+kbnd) = hpsi(:,ibnd)
         spsi(:,nbase+kbnd) = spsi(:,ibnd)
         ew(kbnd) = eig(last_unconverged)
+        !$acc end kernels
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
-     psi (:,nbase+1:nbase+how_many) = psi (:,nbase+ibnd_start:nbase+ibnd_end)
-     hpsi(:,nbase+1:nbase+how_many) = hpsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     spsi(:,nbase+1:nbase+how_many) = spsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     ew(1:how_many) = ew(ibnd_start:ibnd_end)
      CALL stop_clock( 'paro:pack' ); 
    
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-
-     CALL bpcg_gamma(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
+     CALL bpcg_gamma(hs_psi_ptr, g_psi_ptr, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_bar' ); 
      CALL start_clock( 'paro:mp_sum' ); 
-     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
+
+     !$acc host_data use_device(psi, hpsi, spsi)
      CALL mp_allgather(psi (:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
-     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
      CALL mp_allgather(hpsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
-     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
      CALL mp_allgather(spsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
+     !$acc end host_data
      CALL stop_clock( 'paro:mp_sum' ); 
 
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
+        !$acc host_data use_device(ew)
         CALL rotate_HSpsi_gamma (  npwx, npw, ndiag, ndiag, psi, hpsi, overlap, spsi, ew )
+        !$acc end host_data
 #if defined(__MPI)
      ELSE
+#if defined(__CUDA)
+       Call errore('paro_gamma_new','nproc_ortho /= 1 with gpu NYI', 2)
+#else
         CALL protate_HSpsi_gamma(  npwx, npw, ndiag, ndiag, psi, hpsi, overlap, spsi, ew )
+#endif
      ENDIF
 #endif
 
@@ -206,16 +233,28 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      ! only the first nbnd eigenvalues are relevant for convergence
      ! but only those that have actually been corrected should be trusted
      conv(1:nbnd) = .FALSE.
-     conv(1:ntrust) = ABS(ew(1:ntrust)-eig(1:ntrust)).LT.ethr ; nconv = COUNT(conv(1:ntrust)) ; notconv = nbnd - nconv
+
+     !$acc kernels copy(conv) 
+     conv(1:ntrust) = ABS(ew(1:ntrust)-eig(1:ntrust)).LT.ethr 
+     !$acc end kernels
+
+     nconv = COUNT(conv(1:ntrust)) ; notconv = nbnd - nconv
+     !$acc kernels 
      eig(1:nbnd)  = ew(1:nbnd)
+     !$acc end kernels
      IF ( nconv == nbnd ) EXIT ParO_loop
 
   END DO ParO_loop
 
+  !$acc kernels
   evc(:,1:nbnd) = psi(:,1:nbnd)
-
+  !$acc end kernels
+  !
+  !$acc end data
+  !
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
+  !$acc exit data delete(psi, hpsi, spsi, ew)
   DEALLOCATE ( ew, conv, psi, hpsi, spsi )
   CALL mp_type_free( column_type )
 

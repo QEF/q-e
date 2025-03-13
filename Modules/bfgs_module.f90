@@ -52,7 +52,7 @@ MODULE bfgs_module
    !
    ! ... public methods
    !
-   PUBLIC :: bfgs, init_bfgs, terminate_bfgs, bfgs_get_n_iter 
+   PUBLIC :: bfgs, init_bfgs, terminate_bfgs, bfgs_get_n_iter  
    !
    ! ... global module variables
    !
@@ -115,6 +115,7 @@ MODULE bfgs_module
    ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
    ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
+   LOGICAL :: use_gdiis_step
    LOGICAL :: bfgs_initialized = .FALSE.
    INTEGER :: stdout
    !! standard output for writing
@@ -139,7 +140,7 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE init_bfgs( stdout_, bfgs_ndim_, trust_radius_max_, &
-                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_)
+                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_, use_gdiis_step_)
      !------------------------------------------------------------------------
      !! set values for several parameters of the algorithm
      !
@@ -152,6 +153,7 @@ CONTAINS
         trust_radius_max_, &
         w_1_,              &
         w_2_
+      LOGICAL,INTENT(IN) :: use_gdiis_step_
      !
      stdout            = stdout_
      bfgs_ndim         = bfgs_ndim_
@@ -160,6 +162,7 @@ CONTAINS
      trust_radius_ini  = trust_radius_ini_
      w_1               = w_1_
      w_2               = w_2_
+     use_gdiis_step = use_gdiis_step_
      bfgs_initialized  = .true.
      !
    END SUBROUTINE init_bfgs
@@ -234,6 +237,7 @@ CONTAINS
       INTEGER  :: n, i, j, k, nat
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
+      REAL(DP), ALLOCATABLE :: step_tmp(:)
       ! ... for scaled coordinates
       REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3), omega
       !
@@ -326,7 +330,25 @@ CONTAINS
       !
       ! ... convergence is checked here
       !
-      energy_error = ABS( energy_p - energy )
+      IF (scf_iter .EQ. 1) THEN
+          ! Compute predicted energy change for the initial iteration, since
+          ! there is no previous energy.
+          ! See section 6.2 of Nocedal and Wright "Numerical Optimization",
+          ! there it is called "predicted reduction".
+          ! Note that since it is first iteration, hessian is metric.
+          ALLOCATE (step_tmp( n ) )
+          !
+          step_tmp(:) = inv_metric(:,:) .times. grad(:)
+          if (lmovecell) FORALL( i=1:3, j=1:3) step_tmp( n-NADD+j+3*(i-1) ) = &
+              step_tmp( n-NADD+j+3*(i-1) )*iforceh(i,j)
+          !
+          energy_error = abs(grad(:) .dot. step_tmp(:) + &
+              0.5_DP * (step_tmp(:) .dot. (metric(:, :) .times. step_tmp(:))))
+          !
+          DEALLOCATE( step_tmp )
+      ELSE
+          energy_error = ABS( energy_p - energy )
+      END IF
       !
       ! ... obscure PGI bug as of v.17.4
       !
@@ -376,6 +398,8 @@ CONTAINS
       IF( lmovecell ) WRITE(stdout, &
           '(5X,"Cell gradient error",T30,"= ",1PE12.1," kbar")') &
           cell_error * ry_kbar
+      IF( lfcp ) WRITE(stdout, &
+         '(5X,"FCP gradient error",T30,"= ",1PE12.1,/)') fcp_error
       !
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -559,7 +583,11 @@ CONTAINS
       !
       ! ... positions and cell are updated
       !
-      pos(:) = pos(:) + trust_radius * step(:)
+      IF (use_gdiis_step .and. bfgs_ndim .gt. 1 ) THEN 
+         pos(:) = pos + nr_step_length * step(:)
+      ELSE 
+         pos(:) = pos(:) + trust_radius * step(:)
+      END IF 
       !
 1000  stop_bfgs = conv_bfgs
       ! ... input ions+cell variables
@@ -696,7 +724,7 @@ CONTAINS
       !! \(\text{inv_hess}\) in re-initialized to the initial guess 
       !! defined as the inverse metric.
       !
-      INTEGER, INTENT(IN) :: n
+      INTEGER,  INTENT(IN) :: n
       LOGICAL,  INTENT(IN) :: lfcp
       REAL(DP), INTENT(IN) :: fcp_hess
       !

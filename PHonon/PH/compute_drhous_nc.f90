@@ -18,7 +18,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
   USE klist,            ONLY : xk, wk, ngk, igk_k
   USE buffers,          ONLY : get_buffer
-  USE fft_base,         ONLY : dffts, dfftp
+  USE fft_base,         ONLY : dffts
   USE fft_interfaces,   ONLY : invfft
   USE wvfct,            ONLY : npwx, nbnd
   USE noncollin_module, ONLY : npol, nspin_mag
@@ -37,7 +37,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   !
   complex(DP) :: dbecsum(nhm,nhm,nat,nspin,3*nat)
   !! output: the derivative of becsum
-  complex(DP) :: drhous(dfftp%nnr,nspin_mag,3*nat)
+  complex(DP) :: drhous(dffts%nnr,nspin_mag,3*nat)
   !! output: add the orthogonality term
   type(bec_type) :: becq(nksq) ! (nkb, nbnd)
   !! input: the becp with \(\text{psi}_{k+q}\)

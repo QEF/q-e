@@ -1,0 +1,6 @@
+--
+&input
+  fildyn   = 'si.dyn',
+  flfrc = 'si.fc'
+  zasr = 'simple'
+/

@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='LiCoO2'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp1/q-e/pseudo/'
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -14,10 +14,6 @@
     ntyp = 3,
     ecutwfc = 50.0
     ecutrho = 400.0
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 7.83
  /
  &electrons
     conv_thr =  1.d-15
@@ -34,3 +30,5 @@ ATOMIC_POSITIONS {crystal}
  Li  0.5000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Co-3d 7.83

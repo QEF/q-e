@@ -117,7 +117,8 @@ cat CELL_PARAMETERS | $GAWK '{ if ( NR == 1 ) { print }; if ( NR > 1 ) \
 { printf "  %12.8f  %12.8f  %12.8f\n", $1, $2, $3} }' >> input
 #
 #
-$ROOT_DIR/bin/path_int.x < input
+# FF 18/02/25 changed the name of the executable
+$ROOT_DIR/bin/path_interpolation.x < input
 #
 if [[ "${list_of_atoms}" != "" ]]; then
   #

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,32 +22,30 @@ SUBROUTINE forces()
   !! - force_d3: Grimme-D3 (DFT-D3) dispersion forces
   !! - force_xdm: XDM dispersion forces
   !! - more terms from external electric fields, Martyna-Tuckerman, etc.
+  !! - force_sol: contribution due to 3D-RISM
   !
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout
   USE cell_base,         ONLY : at, bg, alat, omega  
-  USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
-  USE fft_base,          ONLY : dfftp
-  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g, gg, &
-                                g_d, gcutm
+  USE ions_base,         ONLY : nat, ntyp => nsp,nsp, ityp, tau, zv, amass, extfor, atm
+  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
   USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
   USE ions_base,         ONLY : if_pos
-  USE ldaU,              ONLY : lda_plus_u, U_projection
+  USE ldaU,              ONLY : lda_plus_u, Hubbard_projectors
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
-                                mbd_vdw, lforce => tprnfor
-  USE plugin_flags
+                                mbd_vdw, lforce => tprnfor, istep
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
   USE uspp,              ONLY : okvan
   USE martyna_tuckerman, ONLY : do_comp_mt, wg_corr_force
   USE london_module,     ONLY : force_london
-  USE dftd3_api,         ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,         ONLY : get_atomic_number
   USE dftd3_qe,          ONLY : dftd3_pbc_gdisp, dftd3
 
   USE xdm_module,        ONLY : force_xdm
@@ -55,11 +53,23 @@ SUBROUTINE forces()
   USE libmbd_interface,  ONLY : FmbdvdW
   USE esm,               ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,              ONLY : qmmm_mode
+  USE rism_module,       ONLY : lrism, force_rism
+  USE extffield,         ONLY : apply_extffield_PW
+  USE input_parameters,  ONLY : nextffield
   !
-  USE control_flags,     ONLY : use_gpu
 #if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
-  USE device_memcpy_m,     ONLY : dev_memcpy
+#endif
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : calc_environ_force
+  USE environ_pw_module,   ONLY : is_ms_gcs, run_ms_gcs
+#endif
+#if defined (__OSCDFT)
+  USE plugin_flags,        ONLY : use_oscdft
+  USE oscdft_base,         ONLY : oscdft_ctx
+  USE oscdft_forces_subs,  ONLY : oscdft_apply_forces, oscdft_print_forces
 #endif
   !
   IMPLICIT NONE
@@ -74,7 +84,8 @@ SUBROUTINE forces()
                            force_mt(:,:),        &
                            forcescc(:,:),        &
                            forces_bp_efield(:,:),&
-                           forceh(:,:)
+                           forceh(:,:), &
+                           force_sol(:,:)
   ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
   !
   ! aux is used to store a possible additional density
@@ -88,16 +99,11 @@ SUBROUTINE forces()
   ! counter on polarization
   ! counter on atoms
   !
-  REAL(DP) :: latvecs(3,3)
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
   INTEGER :: ierr
-#if defined(__CUDA)
-  ! TODO: get rid of this !!!! Use standard method for duplicated global data
-  REAL(DP), POINTER :: vloc_d (:, :)
-  attributes(DEVICE) :: vloc_d
-#endif
   !
   force(:,:)    = 0.D0
   !
@@ -122,48 +128,27 @@ SUBROUTINE forces()
   !
   ! ... The nonlocal contribution is computed here
   !
-  call start_clock('frc_us') 
-  IF (.not. use_gpu) CALL force_us( forcenl )
-  IF (      use_gpu) CALL force_us_gpu( forcenl )
-  call stop_clock('frc_us') 
+  call start_clock('frc_us')
+  CALL force_us( forcenl )
+  call stop_clock('frc_us')
   !
   ! ... The local contribution
   !
-  CALL start_clock('frc_lc') 
-  IF (.not. use_gpu) & ! On the CPU
-     CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
-                 forcelc )
-#if defined(__CUDA)
-  IF (      use_gpu) THEN ! On the GPU
-     ! move these data to the GPU
-     CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
-     IF (ierr /= 0) CALL errore( 'forces', 'cannot allocate buffers', -1 )
-     CALL dev_memcpy(vloc_d, vloc)
-     CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
-                   g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &
-                   forcelc )
-     CALL dev_buf%release_buffer(vloc_d, ierr)
-  END IF
-#endif
-  call stop_clock('frc_lc') 
+  call start_clock('frc_lc')
+  CALL force_lc( nat, tau, ityp, ntyp, alat, omega, ngm, ngl, igtongl, &
+                 g, rho%of_r(:,1), gstart, gamma_only, vloc, forcelc )
+  call stop_clock('frc_lc')
   !
   ! ... The NLCC contribution
   !
-  call start_clock('frc_cc') 
-  IF (.not. use_gpu) CALL force_cc( forcecc )
-  IF (      use_gpu) CALL force_cc_gpu( forcecc )
-  !
-  call stop_clock('frc_cc') 
+  call start_clock('frc_cc')
+  CALL force_cc( forcecc )
+  call stop_clock('frc_cc')
 
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
   !
-  IF (.not. use_gpu) THEN
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
-  ELSE
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub_gpu( forceh )
-  ENDIF
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
   !
   ! ... The ionic contribution is computed here
   !
@@ -191,13 +176,17 @@ SUBROUTINE forces()
     CALL start_clock('force_dftd3')
     ALLOCATE( force_d3(3, nat) )
     force_d3(:,:) = 0.0_DP
-    latvecs(:,:) = at(:,:)*alat
-    tau(:,:) = tau(:,:)*alat
+    ! taupbc are atomic positions in alat units, centered around r=0
+    ALLOCATE ( taupbc(3,nat) )
+    taupbc(:,:) = tau(:,:)
+    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
     atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, tau, atnum, latvecs, &
+    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
                           force_d3, stress_dftd3 )
     force_d3 = -2.d0*force_d3
-    tau(:,:) = tau(:,:)/alat
+    DEALLOCATE( taupbc)
     CALL stop_clock('force_dftd3')
   ENDIF
   !
@@ -218,8 +207,7 @@ SUBROUTINE forces()
   IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
 #endif
   !
-  IF ( .not. use_gpu ) CALL force_corr( forcescc )
-  IF (       use_gpu ) CALL force_corr_gpu( forcescc )
+  CALL force_corr( forcescc )
   call stop_clock('frc_scc') 
   !
   IF (do_comp_mt) THEN
@@ -229,9 +217,24 @@ SUBROUTINE forces()
                         rho%of_g(:,1), force_mt )
   ENDIF
   !
+  ! ... The solvation contribution (3D-RISM)
+  !
+  IF (lrism) THEN
+     ALLOCATE ( force_sol ( 3 , nat ) )
+     CALL force_rism( force_sol )
+  END IF
+  !
   ! ... call void routine for user define/ plugin patches on internal forces
   !
-  CALL plugin_int_forces()
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_int_forces() 
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_force(force)
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_apply_forces(oscdft_ctx)
+#endif
   !
   ! ... Berry's phase electric field terms
   !
@@ -284,6 +287,7 @@ SUBROUTINE forces()
         IF ( gate )     force(ipol,na) = force(ipol,na) + forcegate(ipol,na) ! TB
         IF (lelfield)   force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt) force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
+        IF ( lrism )    force(ipol,na) = force(ipol,na) + force_sol(ipol,na)
         !
         sumfor = sumfor + force(ipol,na)
         !
@@ -313,6 +317,14 @@ SUBROUTINE forces()
      !
   ENDDO
   !
+  ! ... call run_extffield to apply external force fields on ions
+  ! 
+  IF ( nextffield > 0 ) THEN 
+     tau(:,:) = tau(:,:)*alat
+     CALL apply_extffield_PW(istep,nextffield,tau,force)
+     tau(:,:) = tau(:,:)/alat
+  END IF
+  !
   ! ... resymmetrize (should not be needed, but ...)
   !
   CALL symvector( nat, force )
@@ -324,7 +336,14 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on external forces
   !
-  CALL plugin_ext_forces()
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_ext_forces() 
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL run_ms_gcs()
+  END IF
+#endif
   !
   ! ... write on output the forces
   !
@@ -339,6 +358,7 @@ SUBROUTINE forces()
   forcescc(:,:) = forcescc(:,:) * DBLE( if_pos )
   !
   IF ( iverbosity > 0 ) THEN
+     !
      IF ( do_comp_mt ) THEN
         WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
         DO na = 1, nat
@@ -414,7 +434,17 @@ SUBROUTINE forces()
         ENDDO
      END IF
      !
+     IF ( lrism ) THEN
+        WRITE( stdout, '(/,5x,"3D-RISM Solvation contribution to forces:")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), (force_sol(ipol,na), ipol = 1, 3)
+        END DO
+     END IF
+     !
   END IF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_print_forces(oscdft_ctx)
+#endif
   !
   sumfor = 0.D0
   sumscf = 0.D0
@@ -468,11 +498,24 @@ SUBROUTINE forces()
      !
   END IF
   !
+  IF ( lrism .AND. iverbosity > 0 ) THEN
+     !
+     sum_mm = 0.D0
+     DO na = 1, nat
+        sum_mm = sum_mm + &
+                 force_sol(1,na)**2 + force_sol(2,na)**2 + force_sol(3,na)**2
+     END DO
+     sum_mm = SQRT( sum_mm )
+     WRITE ( stdout, '(/,5x, "Total 3D-RISM Solvation Force = ",F12.6)') sum_mm
+     !
+  END IF
+  !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   IF ( llondon  ) DEALLOCATE( force_disp       )
   IF ( ldftd3   ) DEALLOCATE( force_d3         )
   IF ( lxdm     ) DEALLOCATE( force_disp_xdm   ) 
   IF ( lelfield ) DEALLOCATE( forces_bp_efield )
+  IF ( lrism    ) DEALLOCATE( force_sol        )
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
   !
   ! FIXME: what is the following line good for?

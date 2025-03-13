@@ -375,7 +375,7 @@ MODULE contour
                 wp%a_0(jj,ii,is)=(0.0,0.0d0)
                 do mm=1,options%n_multipoles
                    wp%a(mm,jj,ii,is)=cmplx(real(mm)*(0.01d0),0.d0)
-                   wp%b(mm,jj,ii,is)=cmplx((0.5d0)*real(mm)*(-1.d0)**real(mm),-0.01d0)
+                   wp%b(mm,jj,ii,is)=cmplx((0.5d0)*real(mm)*(-1.d0)**mm,-0.01d0)
                 enddo
                 write(stdout,*) 'Call fit_multipole'
                 FLUSH(stdout)

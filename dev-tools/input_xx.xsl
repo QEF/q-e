@@ -443,7 +443,7 @@
   <!-- card//syntax//line -->
 
   <xsl:template match="line" mode="syntax">
-    <xsl:apply-templates select="optional | conditional | var | keyword | vargroup | list" mode="syntax"/>
+    <xsl:apply-templates select="optional | conditional | var | keyword | constant | etc | vargroup | list" mode="syntax"/>
     <br/>
   </xsl:template>	
 
@@ -453,7 +453,7 @@
   <xsl:template match="optional" mode="syntax">
     <!--<div style="background: #eeeeee; color: #555555;">-->
     <xsl:text> { </xsl:text>
-    <xsl:apply-templates select="line | var | list | keyword | table" mode="syntax"/>
+    <xsl:apply-templates select="line | var | vargroup | list | keyword | constant | etc | table" mode="syntax"/>
     <xsl:text> } </xsl:text>	    
     <!--</div>-->
   </xsl:template>	      
@@ -462,7 +462,7 @@
 
   <xsl:template match="conditional" mode="syntax">
     <xsl:text> [ </xsl:text>
-    <xsl:apply-templates select="line | var | list | keyword | table" mode="syntax"/>
+    <xsl:apply-templates select="line | var | vargroup | list | keyword | constant | etc | table" mode="syntax"/>
     <xsl:text> ] </xsl:text>	    
   </xsl:template>	      
 
@@ -470,6 +470,18 @@
 
   <xsl:template match="keyword" mode="syntax">
     <b><xsl:value-of select="@name"/></b><xsl:text>&#160;&#160;</xsl:text>
+  </xsl:template>
+
+  <!-- card//syntax//constant -->
+
+  <xsl:template match="constant" mode="syntax">
+    <xsl:apply-templates/><xsl:text>&#160;&#160;</xsl:text>
+  </xsl:template>
+
+  <!-- card//syntax//etc --> 
+
+  <xsl:template match="etc" mode="syntax">
+    <xsl:text>. . .&#160;&#160;</xsl:text>
   </xsl:template>
 
   <!-- card//syntax//list -->
@@ -508,7 +520,7 @@
   <!-- card//syntax//vargroup -->      
 
   <xsl:template match="vargroup" mode="syntax">
-    <xsl:apply-templates select="var" mode="syntax"/>
+    <xsl:apply-templates select="var | constant | keyword" mode="syntax"/>
   </xsl:template>
 
   <!-- card//syntax//table -->      
@@ -520,7 +532,7 @@
     </table>    
   </xsl:template>
 
-  <!-- sytntax//table/rows -->
+  <!-- syntax//table/rows -->
 
   <xsl:template match="rows" mode="syntaxTableMode">
     <tr>
@@ -856,7 +868,7 @@
 	    </xsl:when>
 	    <xsl:when test="name(.)='multidimension'">
 		    <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">
-	            <xsl:value-of select="@name"/>(<xsl:value-of select="@indexes"/>), (<xsl:value-of select="@indexes"/>) = (<xsl:value-of select="@start"/>) ... (<xsl:value-of select="@end"/>)
+	            <xsl:value-of select="@name"/>(<xsl:value-of select="@indexes"/>), (<xsl:value-of select="@indexes"/>) = (<xsl:value-of select="@start"/>) . . . (<xsl:value-of select="@end"/>)
                     </th>
             </xsl:when> 
 	    <xsl:when test="name(.)='flag'">
@@ -924,7 +936,7 @@
 		<a name="{substring-before(concat(@name,'('),'(')}"></a>
 		<xsl:value-of select="@name"/>(i), 
 		<xsl:if test="position()=last()"> 
-		(<xsl:value-of select="../@indexes"/>)= (<xsl:value-of select="../@start"/>) ... (<xsl:value-of select="../@end"/>)
+		(<xsl:value-of select="../@indexes"/>)= (<xsl:value-of select="../@start"/>) . . . (<xsl:value-of select="../@end"/>)
 		</xsl:if>
 	    </xsl:for-each>
 	  </xsl:if>

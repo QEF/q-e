@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -147,7 +147,7 @@ $ECHO " done"
 
 $ECHO " # "
 $ECHO " # x-ray absorption spectrum calculation "
-$ECHO " # including occupied states  " 
+$ECHO " # including occupied states  "
 $ECHO " # "
 
 cat > diamond.xspectra.in << EOF
@@ -188,7 +188,7 @@ $ECHO " done"
 
 $ECHO " # "
 $ECHO " # x-ray absorption spectrum calculation "
-$ECHO " # cutting occupied states and reading  " 
+$ECHO " # cutting occupied states and reading  "
 $ECHO " # save file already calculated in previous"
 $ECHO " # run"
 $ECHO " # "
@@ -246,8 +246,8 @@ $ECHO "  extracting core wavefunction from pseudo...\c"
 ../../../XSpectra/tools/upf2plotcore.sh $PSEUDO_DIR/C_PBE_TM_2pj.UPF > ./C.wfc
 $ECHO " done"
 #
-# self-consistent calculation for diamond with core hole. 
-# 
+# self-consistent calculation for diamond with core hole.
+#
 cat > diamondh.scf.in << EOF
  &control
     calculation='scf',
@@ -329,7 +329,7 @@ EOF
 $ECHO "  running xspectra.x ...\c"
 $X_COMMAND < diamondh.xspectra.in > diamondh.xspectra.out
 check_failure $?
-mv xanes.dat diamondh.xspectra.dat 
+mv xanes.dat diamondh.xspectra.dat
 $ECHO " done"
 
 # clean TMP_DIR

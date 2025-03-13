@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sym_dns (ldim, npe, irr, dns)
+SUBROUTINE sym_dns (ldim, npe, dns)
   !-----------------------------------------------------------------------
   !! DFPT+U: This routine symmetrizes the first order variation of 
   !! the occupation matrices dns due to the perturbation caused
@@ -19,22 +19,20 @@ SUBROUTINE sym_dns (ldim, npe, irr, dns)
   USE kinds,            ONLY : DP
   USE constants,        ONLY : tpi
   USE ions_base,        ONLY : nat, ityp
-  USE ldaU,             ONLY : Hubbard_l, is_hubbard, nwfcU
-  USE lsda_mod,         ONLY : lsda, nspin
-  USE lr_symm_base,     ONLY : nsymq, irgq, minus_q, irotmq, rtau
-  USE modes,            ONLY : t, tmq
+  USE ldaU,             ONLY : Hubbard_l, is_hubbard
+  USE lsda_mod,         ONLY : nspin
+  USE lr_symm_base,     ONLY : nsymq, minus_q, irotmq, rtau, upert, upert_mq
   USE qpoint,           ONLY : xq
-  USE uspp_param,       ONLY : upf
-  USE symm_base,        ONLY : d1, d2, d3, nsym, irt, s, invs
+  USE symm_base,        ONLY : d1, d2, d3, irt
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ldim, npe, irr
+  INTEGER, INTENT(IN) :: ldim, npe
   COMPLEX(DP), INTENT(INOUT) :: dns(ldim,ldim,nspin,nat,npe)
   !
   ! ... local variables
   !
-  INTEGER :: nt, n, counter, l, ip, jp, na, nb, is, m1, m2, &
+  INTEGER :: nt, ip, jp, na, nb, is, m1, m2, &
              m0, m00, isym, irot
   COMPLEX(DP), ALLOCATABLE :: dnr(:,:,:,:,:), dnraux(:,:,:,:,:)
   COMPLEX(DP) :: phase
@@ -45,18 +43,6 @@ SUBROUTINE sym_dns (ldim, npe, irr, dns)
   ! Initialization
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
-  !
-  counter = 0  
-  DO na = 1, nat  
-     nt = ityp(na) 
-     IF (.NOT.is_hubbard(nt)) CYCLE
-     DO n = 1, upf(nt)%nwfc  
-        l = upf(nt)%lchi(n)
-        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) &
-           counter = counter + 2 * l + 1  
-     ENDDO
-  ENDDO
-  IF (counter.NE.nwfcU) CALL errore ('sym_dns', 'nwfcU<>counter', 1)
   !
   ALLOCATE (dnraux(ldim,ldim,nspin,nat,npe))
   ALLOCATE (dnr(ldim,ldim,nspin,nat,npe))
@@ -105,22 +91,22 @@ SUBROUTINE sym_dns (ldim, npe, irr, dns)
                              DO jp = 1, npe
                                 IF (Hubbard_l(nt).EQ.0) THEN
                                    dns(m1,m2,is,na,ip) = dns(m1,m2,is,na,ip) + &
-                                   dnr(m0,m00,is,nb,jp) * tmq(jp,ip,irr) *     &
+                                   dnr(m0,m00,is,nb,jp) * upert_mq(jp,ip) *    &
                                    phase
                                 ELSE IF (Hubbard_l(nt).EQ.1) THEN
                                    dns(m1,m2,is,na,ip) = dns(m1,m2,is,na,ip) + &
                                    d1(m0 ,m1,irotmq) * d1(m00,m2,irotmq) *     &
-                                   dnr(m0,m00,is,nb,jp) * tmq(jp,ip,irr) *     &
+                                   dnr(m0,m00,is,nb,jp) * upert_mq(jp,ip) *    &
                                    phase
                                 ELSE IF (Hubbard_l(nt).EQ.2) THEN
                                    dns(m1,m2,is,na,ip) = dns(m1,m2,is,na,ip) + &
                                    d2(m0 ,m1,irotmq) * d2(m00,m2,irotmq) *     &
-                                   dnr(m0,m00,is,nb,jp) * tmq(jp,ip,irr) *     &
+                                   dnr(m0,m00,is,nb,jp) * upert_mq(jp,ip) *    &
                                    phase
                                 ELSE IF (Hubbard_l(nt).EQ.3) THEN
                                    dns(m1,m2,is,na,ip) = dns(m1,m2,is,na,ip) + &
                                    d3(m0 ,m1,irotmq) * d3(m00,m2,irotmq) *     &
-                                   dnr(m0,m00,is,nb,jp) * tmq(jp,ip,irr) *     &
+                                   dnr(m0,m00,is,nb,jp) * upert_mq(jp,ip) *    &
                                    phase
                                 ELSE
                                    CALL errore ('sym_dns', &
@@ -168,22 +154,22 @@ SUBROUTINE sym_dns (ldim, npe, irr, dns)
                           do jp=1, npe
                              IF (Hubbard_l(nt).EQ.0) THEN
                                 dns(m1,m2,:,na,ip) = dns(m1,m2,:,na,ip) +  &
-                                dnr(m0,m00,:,nb,jp) * t(jp,ip,irot,irr) * &
+                                dnr(m0,m00,:,nb,jp) * upert(jp,ip,irot) * &
                                 phase 
                              ELSE IF (Hubbard_l(nt).EQ.1) THEN
                                 dns(m1,m2,:,na,ip) = dns(m1,m2,:,na,ip) + &
                                 d1(m0 ,m1,irot) * d1(m00,m2,irot) *       &
-                                dnr(m0,m00,:,nb,jp) * t(jp,ip,irot,irr) * &
+                                dnr(m0,m00,:,nb,jp) * upert(jp,ip,irot) * &
                                 phase 
                              ELSE IF (Hubbard_l(nt).EQ.2) THEN
                                 dns(m1,m2,:,na,ip) = dns(m1,m2,:,na,ip) + &
                                 d2(m0 ,m1,irot) * d2(m00,m2,irot) *       &
-                                dnr(m0,m00,:,nb,jp) * t(jp,ip,irot,irr) * &
+                                dnr(m0,m00,:,nb,jp) * upert(jp,ip,irot) * &
                                 phase 
                              ELSE IF (Hubbard_l(nt).EQ.3) THEN
                                 dns(m1,m2,:,na,ip) = dns(m1,m2,:,na,ip) + &
                                 d3(m0 ,m1,irot) * d3(m00,m2,irot) *       &
-                                dnr(m0,m00,:,nb,jp) * t(jp,ip,irot,irr) * &
+                                dnr(m0,m00,:,nb,jp) * upert(jp,ip,irot) * &
                                 phase 
                              ELSE
                                 CALL errore ('new_ns', &

@@ -27,17 +27,25 @@ PROGRAM lr_dav_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,  ONLY : psic
-  USE control_flags,         ONLY : do_makov_payne
+  USE control_flags,         ONLY : do_makov_payne, use_gpu
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE xc_lib,                ONLY : xclib_dft_is
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : print_environ_summary
+#endif
+  !
   IMPLICIT NONE
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
   LOGICAL            :: rflag, nomsg
   complex(dp)            :: temp
+  LOGICAL, EXTERNAL  :: check_gpu_support
+
+  use_gpu = check_gpu_support()
 
 #if defined(__MPI)
   CALL mp_startup ( )
@@ -55,7 +63,9 @@ PROGRAM lr_dav_main
 
   ! Writing a summary of plugin variables
 
-  CALL plugin_summary()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
 
   CALL check_stop_init()
 
@@ -86,6 +96,7 @@ PROGRAM lr_dav_main
   CALL lr_dv_setup()
 
   !   Davidson loop
+  !$acc data copyin(revc0(:,:,:))
   if (precondition) write(stdout,'(/5x,"Precondition is used in the algorithm,")')
   do while (.not. dav_conv .and. dav_iter .lt. max_iter)
     dav_iter=dav_iter+1
@@ -100,13 +111,15 @@ PROGRAM lr_dav_main
       ! Check to see if the wall time limit has been exceeded.
       if ( check_stop_now() ) then
          call lr_write_restart_dav() 
-         goto 100
+!!         goto 100
+         exit
       endif
       !
   enddo
+  !$acc end data
   ! call check_hermitian()
   ! Extract physical meaning from the solution
-  
+  if ( check_stop_now() ) goto 100
   call interpret_eign('END')
   ! The check_orth at the end may take quite a lot of time in the case of 
   ! USPP because we didn't store the S* vector basis. Turn this step on only

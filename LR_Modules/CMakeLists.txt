@@ -5,6 +5,9 @@ set(sources
     addusdbec_nc.f90
     apply_dpot.f90
     apply_dpot_mod.f90
+    apply_trev.f90
+    non_scf_ph.f90
+    c_bands_ph.f90
     addusldos.f90
     adddvepsi_us.f90
     cft_wave.f90
@@ -31,6 +34,7 @@ set(sources
     smallgq.f90
     lr_sm1_psi.f90
     lr_addusddens.f90
+    lr_two_chem.f90
     localdos.f90
     setup_dgc.f90
     compute_vsgga.f90
@@ -48,27 +52,42 @@ set(sources
     lrcom.f90
     lr_dot.f90
     lr_dot_magnons.f90
+    lr_nc_mag.f90
     lanczos_pseudohermitian.f90
     lanczos_nonhermitian.f90
     lanczos_pseudohermitian_c.f90
     lanczos_nonhermitian_c.f90
     set_kplusq_nc.f90
     lr_sym_mod.f90
+    sym_def.f90
+    psymdvscf.f90
+    symdvscf.f90
+    sym_dmag.f90
     ccg_psi.f90
     ccgsolve_all.f90
     ch_psi_all_complex.f90
     addusddenseq.f90
     response_kernels.f90
     efermi_shift.f90)
-
+qe_enable_cuda_fortran("${sources}")
 qe_add_library(qe_lr_modules ${sources})
 target_link_libraries(qe_lr_modules
     PRIVATE
+        qe_openacc_fortran
+	qe_openmp_fortran
+	qe_mpi_fortran
         qe_modules
         qe_pw
         qe_upflib
         qe_fftx
-        qe_xclib)
+        qe_xclib
+	qe_device_lapack)
+
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::cublas)
+endif()
 
 ###########################################################
 

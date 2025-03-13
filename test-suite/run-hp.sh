@@ -8,9 +8,9 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
-  export PARA_SUFFIX="-npool ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
+  export PARA_SUFFIX="-npool $QE_USE_MPI"
 else
   unset PARA_PREFIX
   unset PARA_SUFFIX
@@ -21,8 +21,8 @@ echo $0" "$@
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -31,8 +31,8 @@ then
 elif [[ "$1" == "2" ]]
 then
   echo "Running PW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -41,8 +41,8 @@ then
 elif [[ "$1" == "3" ]]
 then
   echo "Running HP ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/hp.x < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/hp.x < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/hp.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/hp.x < $2 > $3 2> $4
   cp *.Hubbard_parameters.dat $3
   if [[ -e CRASH ]]
   then
@@ -52,8 +52,8 @@ then
 elif [[ "$1" == "4" ]]
 then
   echo "Running HP ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/hp.x < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/hp.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/hp.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/hp.x ${PARA_SUFFIX} < $2 > $3 2> $4
   cp *.Hubbard_parameters.dat $3
   if [[ -e CRASH ]]
   then

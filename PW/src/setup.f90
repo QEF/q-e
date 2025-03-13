@@ -44,7 +44,7 @@ SUBROUTINE setup()
   USE io_files,           ONLY : xmlfile
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,              ONLY : starting_pot, natomwfc
+  USE starting_scf,       ONLY : starting_pot
   USE fft_support,        ONLY : good_fft_order
   USE gvect,              ONLY : gcutm, ecutrho
   USE gvecw,              ONLY : gcutw, ecutwfc
@@ -65,12 +65,12 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, tstress, &
-                                 lbands, gamma_only, restart
+                                 lbands, gamma_only, restart, use_spinflip, symm_by_label 
   USE cellmd,             ONLY : calc
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard, lda_plus_u_kind
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
@@ -81,7 +81,7 @@ SUBROUTINE setup()
                                  starting_magnetization
   USE noncollin_module,   ONLY : noncolin, domag, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
-                                 nspin_gga, nspin_mag, lspinorb
+                                 nspin_gga, nspin_mag, lspinorb, colin_mag
   USE qexsd_module,       ONLY : qexsd_readschema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
@@ -89,15 +89,24 @@ SUBROUTINE setup()
   USE exx,                ONLY : ecutfock
   USE xc_lib,             ONLY : xclib_dft_is
   USE paw_variables,      ONLY : okpaw
+  USE extfield,           ONLY : gate
   USE esm,                ONLY : esm_z_inv
   USE fcp_module,         ONLY : lfcp
   USE gcscf_module,       ONLY : lgcscf
-  USE extfield,           ONLY : gate
+  USE rism_module,        ONLY : lrism, rism_calc1d
   USE additional_kpoints, ONLY : add_additional_kpoints
+  USE control_flags,      ONLY : sic
+  USE sic_mod,            ONLY : init_sic, occ_f2fn, sic_energy
+  USE random_numbers,     ONLY : set_random_seed
+  USE dynamics_module,    ONLY : control_temp
+#if defined (__OSCDFT)
+  USE plugin_flags,          ONLY : use_oscdft
+#endif
+
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nr3, nk_
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nbnd_, nr3, nk_, natomwfc 
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
@@ -146,8 +155,12 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
-  IF ( xclib_dft_is('meta') .AND. noncolin )  CALL errore( 'setup', &
+  IF ( xclib_dft_is('meta') ) THEN
+     IF ( noncolin )  CALL errore( 'setup', &
                                'Non-collinear Meta-GGA not implemented', 1 )
+     IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
+               & ' nonlinear core correction is not consistent with meta-GGA')
+  END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
@@ -169,13 +182,14 @@ SUBROUTINE setup()
   IF ( .NOT. lscf .OR. ( (lfcp .OR. lgcscf) .AND. restart ) ) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
+     ! ... also, number of bands is needed for FCP/GC-SCF
      !
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr > 0 ) CALL errore ( 'setup', 'problem reading ef from file ' //&
           & TRIM(xmlfile()), ierr )
      IF (ionode) CALL qexsd_copy_efermi ( output_obj%band_structure, &
-          nelec, ef, two_fermi_energies, ef_up, ef_dw )
+          nelec, ef, two_fermi_energies, ef_up, ef_dw, nbnd_ )
      ! convert to Ry a.u. 
      ef = ef*e2
      ef_up = ef_up*e2
@@ -185,12 +199,14 @@ SUBROUTINE setup()
      CALL mp_bcast(two_fermi_energies, ionode_id, intra_image_comm)
      CALL mp_bcast(ef_up, ionode_id, intra_image_comm)
      CALL mp_bcast(ef_dw, ionode_id, intra_image_comm)
+     CALL mp_bcast(nbnd_, ionode_id, intra_image_comm)
      CALL qes_reset  ( output_obj )
      !
   END IF
   !
   IF ( (lfcp .OR. lgcscf) .AND. restart ) THEN
      tot_charge = ionic_charge - nelec
+     nbnd = nbnd_
   END IF
   !
   ! ... magnetism-related quantities
@@ -208,6 +224,36 @@ SUBROUTINE setup()
   !
   CALL set_spin_vars( lsda, noncolin, domag, &
          npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  ! set colin_mag.
+  IF (symm_by_label .AND. nspin == 2 .AND. (ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6)) ) THEN 
+    IF (use_spinflip) THEN 
+       colin_mag = 2
+    ELSE 
+       colin_mag = 1 
+    END IF 
+  ELSE IF (symm_by_label) THEN 
+     colin_mag = 0
+  END IF
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( colin_mag == 2 ) THEN
+        CALL infomsg( 'setup', 'colin_mag=2 not implemented for hybrid' )
+        colin_mag = 1
+     ENDIF
+  ENDIF
+  IF (lda_plus_u .AND. lda_plus_u_kind == 2) THEN
+     IF ( colin_mag == 2 ) THEN
+        CALL infomsg( 'setup', 'colin_mag=2 not implemented for lda+U+V' )
+        colin_mag = 1
+     ENDIF
+  ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     IF ( colin_mag == 2 ) THEN
+        CALL infomsg( 'setup', 'colin_mag=2 not implemented for OSCDFT' )
+        colin_mag = 1
+     ENDIF
+  ENDIF
+#endif
   !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
@@ -244,7 +290,15 @@ SUBROUTINE setup()
         do na=1,nat
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
-     end if
+     !  set initial magnetization for collinear case
+     ELSE IF ( colin_mag >= 1 ) THEN
+        DO na = 1, nat
+            m_loc(1,na) = 0.0_dp
+            m_loc(2,na) = 0.0_dp
+            m_loc(3,na) = starting_magnetization(ityp(na))
+        END DO
+     ENDIF     
+
      IF ( i_cons /= 0 .AND. nspin==1 ) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
      IF ( i_cons /= 0 .AND. i_cons /= 1 ) &
@@ -256,8 +310,10 @@ SUBROUTINE setup()
   ! ... are transformed into standard pseudopotentials
   !
   IF ( lspinorb ) THEN
-     IF ( ALL ( .NOT. upf(:)%has_so ) ) &
-          CALL infomsg ('setup','At least one non s.o. pseudo')
+     IF ( ALL ( .NOT. upf(:)%has_so ) ) CALL errore ('setup', &
+         'Spin-orbit calculations require at least one spin-orbit pseudo',1)
+     IF ( ANY ( .NOT. upf(:)%has_so ) ) CALL infomsg ('setup', &
+         'Not all pseudopotentials have spin-orbit data')
   ELSE
      CALL average_pp ( ntyp )
   END IF
@@ -343,7 +399,7 @@ SUBROUTINE setup()
         CALL errore( 'setup', 'too few spin dw bands', 1 )
      !
      IF ( nbnd < NINT( nelec ) .AND. lscf .AND. noncolin ) &
-        CALL errore( 'setup', 'too few bands', 1 )
+        CALL errore( 'setup', 'too few bands noncolin case', 1 )
      !
   END IF
   !
@@ -404,9 +460,6 @@ SUBROUTINE setup()
   !
   IF ( .NOT. lscf ) niter = 1
   !
-  ! ... set number of atomic wavefunctions
-  !
-  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
   ! ... set the max number of bands used in iterative diagonalization
   !
@@ -423,7 +476,8 @@ SUBROUTINE setup()
   !
   doublegrid = ( dual > 4.0_dp + eps8 )
   IF ( doublegrid .AND. ( .NOT.okvan .AND. .NOT.okpaw .AND. &
-                          .NOT. ANY (upf(1:ntyp)%nlcc)      ) ) &
+                          .NOT. ANY (upf(1:ntyp)%nlcc) .AND. &
+                          .NOT. lrism ) ) &
        CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
   IF ( ecutwfc > 10000.d0 .OR. ecutwfc < 1.d0 ) THEN
        WRITE(stdout,*) 'ECUTWFC = ', ecutwfc
@@ -492,7 +546,7 @@ SUBROUTINE setup()
      ELSE
         !
         CALL kpoint_grid ( nrot_,time_reversal, skip_equivalence, s, t_rev, bg,&
-                           npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+                           npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk )
         !
      END IF
      !
@@ -538,8 +592,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate .OR. &
-                     (.NOT. esm_z_inv()) )
+     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, &
+                   & gate .OR. (.NOT. esm_z_inv(lrism)) )
      !
      ! ... do not force FFT grid to be commensurate with fractional translations
      !
@@ -565,7 +619,7 @@ SUBROUTINE setup()
   !
   IF ( .NOT. lbands ) THEN
      CALL irreducible_BZ (nrot_, s, nsym, time_reversal, &
-                          magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
+                          magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev )
   ELSE
      one = SUM (wk(1:nkstot))
      IF ( one > 0.0_dp ) wk(1:nkstot) = wk(1:nkstot) / one
@@ -627,6 +681,7 @@ SUBROUTINE setup()
   IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
   IF (one_atom_occupations) THEN
+     natomwfc = n_atom_wfc( nat, ityp, noncolin )
      DO ik=1,nkstot
         DO ibnd=natomwfc+1, nbnd
            IF (f_inp(ibnd,ik)> 0.0_DP) CALL errore('setup', &
@@ -635,9 +690,9 @@ SUBROUTINE setup()
      ENDDO
   ENDIF
   !
-  ! ... Set up Hubbard parameters for DFT+U(+V) calculation
+  ! ... Set up Hubbard parameters for DFT+Hubbard
   !
-  CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
+  CALL init_hubbard ( upf(1:ntyp)%psd, nspin, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
@@ -664,20 +719,38 @@ SUBROUTINE setup()
   ! ... checks and initializations to be performed after parallelization setup
   !
   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
-     IF ( npool > 1 ) CALL errore( 'iosys', &
+     IF ( npool > 1 ) CALL errore( 'setup', &
           'Berry Phase/electric fields not implemented with pools', 1 )
   END IF
+  IF ( gamma_only .AND. nkstot == 1 .AND. npool > 1 ) CALL errore( 'setup', &
+          'Gamma-only calculations not allowed with pools', 1 )
   IF ( xclib_dft_is('hybrid') ) THEN
      IF ( nks == 0 ) CALL errore('setup','pools with no k-points' &
           & // ' not allowed for hybrid functionals',1)
      IF ( tstress .and. npool > 1 )  CALL errore('setup', &
          'stress for hybrid functionals not available with pools', 1)
+     !!!IF ( tstress )  CALL errore('setup', &
+     !!!    'stress for hybrid functionals not available', 1)
      !
      CALL setup_exx  ()
      !
   END IF
   !
-  RETURN
+  ! ... calculate solvent-solvent interaction (1D-RISM).
+  !
+  IF (lrism) CALL rism_calc1d()
+  !
+  ! ... SIC calculation
+  !
+  IF(sic) THEN
+     CALL init_sic()
+     IF (sic_energy) CALL occ_f2fn()
+  END IF
+  !
+  ! ... next command prevents different MD runs to start
+  ! ... with exactly the same "random" velocities
+  !
+  IF (lmd.AND.control_temp) CALL set_random_seed( )
   !
 END SUBROUTINE setup
 !
@@ -731,10 +804,8 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
 pool:   do np = 2, nkstot
            ! npool should be a divisor of the number of processors
            if ( mod(nproc_image, np) /= 0 ) cycle
-           if ( nproc_image/np <= nr3/2 ) then
-              npool_= np
-              exit pool
-           end if
+           npool_= np
+           if ( nproc_image/np <= nr3/2 ) exit pool
         end do pool
      end if
   END IF
@@ -808,35 +879,15 @@ END SUBROUTINE setup_para
 !
 !----------------------------------------------------------------------------
 LOGICAL FUNCTION check_gpu_support( )
-  !
-  ! FIXME: seems useless. If one has GPUs, one wants to run on GPUs.
-  !
+  ! Minimal case: returns true if compiled for GPUs
   IMPLICIT NONE
   !
-  LOGICAL, SAVE :: first = .TRUE.
-  LOGICAL, SAVE :: saved_value = .FALSE.
-  CHARACTER(len=255) :: gpu_env
-  INTEGER :: vlen, istat
-
 #if defined(__CUDA)
-  IF( .NOT. first ) THEN
-      check_gpu_support = saved_value
-      RETURN
-  END IF
-  first = .FALSE.
-  !
-  CALL get_environment_variable("USEGPU", gpu_env, vlen, istat, .true.)
-  IF (istat == 0) THEN
-     check_gpu_support = (gpu_env /= "no")
-  ELSE 
-     check_gpu_support = .TRUE.
-  END IF
-  saved_value = check_gpu_support
-  !
+  check_gpu_support = .TRUE.
 #else
   check_gpu_support = .FALSE.
 #endif
-  RETURN
+  !
 END FUNCTION check_gpu_support
 !
 !----------------------------------------------------------------------------

@@ -3,13 +3,13 @@
     calculation = 'cp',
     restart_mode = 'restart',
     ndr = 51,
-    ndw = 51,
-    nstep  = 200,
+    ndw = 52,
+    nstep  = 250,
     iprint = 100,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
-    dt    = 5.0d0,
+    dt    = 4.0d0,
     prefix = 'h2o'
     verbosity='medium',
  /

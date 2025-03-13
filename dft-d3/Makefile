@@ -10,7 +10,7 @@ MODFLAGS= $(BASEMOD_FLAGS)
 TESTOBJ = \
 test_code.o
 
-QELIBS= ../Modules/libqemod.a ../UtilXlib/libutil.a
+QELIBS= ../Modules/libqemod.a ../UtilXlib/libutil.a ../LAXlib/libqela.a
 
 TESTMODS = \
 libdftd3qe.a

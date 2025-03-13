@@ -18,12 +18,13 @@ SUBROUTINE setup_alpha_pv
   USE kinds,      ONLY : DP
   USE constants,  ONLY : pi
   USE wvfct,      ONLY : nbnd, et
-  USE klist,      ONLY : nks, lgauss, ngauss, degauss, ltetra
-  USE ener,       ONLY : ef
+  USE klist,      ONLY : nks, lgauss, ngauss, degauss, ltetra, degauss_cond
+  USE ener,       ONLY : ef,ef_cond
   USE mp,         ONLY : mp_max, mp_min
   USE mp_pools,   ONLY : inter_pool_comm
   USE control_lr, ONLY : alpha_pv, nbnd_occ
   USE dfpt_tetra_mod, ONLY : dfpt_tetra_main
+  USE two_chem,         ONLY : twochem
   !
   IMPLICIT NONE
   !
@@ -71,6 +72,10 @@ SUBROUTINE setup_alpha_pv
      ENDIF
      !
      emax = ef + xmax * degauss
+     !
+     ! max energy for two chemical potentials case
+     !
+     IF (twochem) emax = ef_cond + xmax * degauss_cond 
      !
      alpha_pv = emax - emin
      !

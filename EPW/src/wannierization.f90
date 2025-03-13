@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
   !
@@ -28,13 +29,13 @@
     USE kinds,          ONLY : DP
     USE io_global,      ONLY : stdout, ionode_id
     USE wvfct,          ONLY : nbnd
-    USE epwcom,         ONLY : nkc1, nkc2, nkc3
+    USE input,          ONLY : nkc1, nkc2, nkc3
     USE pwcom,          ONLY : nkstot
-    USE klist_epw,      ONLY : xk_cryst
-    USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt
+    USE input,          ONLY : xk_cryst
+    USE wann_common,    ONLY : mp_grid, n_wannier, kpt_latt
     USE mp,             ONLY : mp_bcast
     USE mp_world,       ONLY : world_comm
-    USE pw2wan2epw,     ONLY : pw2wan90epw
+    USE pw2wan,         ONLY : pw2wan90epw
     !
     IMPLICIT NONE
     !
@@ -99,11 +100,11 @@
     USE io_var,      ONLY : iuwinfil
     USE io_global,   ONLY : meta_ionode
     USE pwcom,       ONLY : et, nbnd, nkstot, nks
-    USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
+    USE input,       ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
                             dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                            bands_skipped, wdata, vme, auto_projections
-    USE constants_epw, ONLY : ryd2ev
-    USE poolgathering, ONLY : poolgather
+                            bands_skipped, wdata, auto_projections
+    USE ep_constants,  ONLY : ryd2ev
+    USE parallelism,   ONLY : poolgather
     !
     IMPLICIT NONE
     !
@@ -166,45 +167,43 @@
       IF (dis_froz_min > -9000) WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min
       IF (dis_froz_max <  9000) WRITE(iuwinfil, '("dis_froz_max = ", f18.12)') dis_froz_max
       WRITE(iuwinfil, '("num_iter = ", i7)')         num_iter
-      IF (vme == 'wannier') WRITE(iuwinfil, '(a)') "write_bvec = .true."
+      WRITE(iuwinfil, '(a)') "write_bvec = .true."
       !
       ! HL 11/2020: The code block below is necessary
       !             until the bug fix in W90 is merged into its master branch.
       !
-      IF (vme == 'wannier') THEN
-        notfound = .TRUE.
-        DO i = 1, nwanxx
-          IF (wdata(i) /= ' ') THEN
-            pos = INDEX(TRIM(ADJUSTL(wdata(i))), 'write_hr')
-            IF (pos == 1) THEN
-              dummy = wdata(i) (LEN('write_hr') + 1:)
-              pos1 = INDEX(dummy, '!')
-              pos2 = INDEX(dummy, '#')
-              IF (pos1 == 0 .AND. pos2 == 0) lvalue = dummy
-              IF (pos1 == 0 .AND. pos2 > 0) lvalue = dummy(:pos2 - 1)
-              IF (pos2 == 0 .AND. pos1 > 0) lvalue = dummy(:pos1 - 1)
-              IF (pos1 > 0 .AND. pos2 > 0) lvalue = dummy(:MIN(pos1, pos2) - 1)
-              lvalue = TRIM(ADJUSTL(lvalue))
-              IF (lvalue(1:1) == '=' .OR. lvalue(1:1) == ':') THEN
-                lvalue = lvalue(2:)
-                IF (INDEX(lvalue, 't') > 0) THEN
-                  notfound = .FALSE.
-                ELSEIF (INDEX(lvalue, 'f') > 0) THEN
-                  wdata(i) = "write_hr = .true."
-                  notfound = .FALSE.
-                ENDIF
+      notfound = .TRUE.
+      DO i = 1, nwanxx
+        IF (wdata(i) /= ' ') THEN
+          pos = INDEX(TRIM(ADJUSTL(wdata(i))), 'write_hr')
+          IF (pos == 1) THEN
+            dummy = wdata(i) (LEN('write_hr') + 1:)
+            pos1 = INDEX(dummy, '!')
+            pos2 = INDEX(dummy, '#')
+            IF (pos1 == 0 .AND. pos2 == 0) lvalue = dummy
+            IF (pos1 == 0 .AND. pos2 > 0) lvalue = dummy(:pos2 - 1)
+            IF (pos2 == 0 .AND. pos1 > 0) lvalue = dummy(:pos1 - 1)
+            IF (pos1 > 0 .AND. pos2 > 0) lvalue = dummy(:MIN(pos1, pos2) - 1)
+            lvalue = TRIM(ADJUSTL(lvalue))
+            IF (lvalue(1:1) == '=' .OR. lvalue(1:1) == ':') THEN
+              lvalue = lvalue(2:)
+              IF (INDEX(lvalue, 't') > 0) THEN
+                notfound = .FALSE.
+              ELSEIF (INDEX(lvalue, 'f') > 0) THEN
+                wdata(i) = "write_hr = .true."
+                notfound = .FALSE.
               ENDIF
             ENDIF
           ENDIF
-        ENDDO
-      ENDIF
+        ENDIF
+      ENDDO
       !
       ! Write any extra parameters to the prefix.win file
       DO i = 1, nwanxx
         IF (wdata(i) /= ' ') WRITE(iuwinfil, *) TRIM(wdata(i))
       ENDDO
       !
-      IF (vme == 'wannier' .AND. notfound) WRITE(iuwinfil, *) "write_hr = .true."
+      IF (notfound) WRITE(iuwinfil, *) "write_hr = .true."
       !
       CLOSE(iuwinfil)
       !
@@ -225,18 +224,19 @@
     !!          If this would be called in the future, modification
     !!          is needed in accordance with the changes for exclusion of semicore states.
     !
-    USE kinds,       ONLY : DP
-    USE io_files,    ONLY : prefix
-    USE io_var,      ONLY : iuprojfil
-    USE mp_global,   ONLY : inter_pool_comm
-    USE io_global,   ONLY : stdout, meta_ionode
-    USE mp,          ONLY : mp_sum
-    USE epwcom,      ONLY : dis_win_max, dis_win_min
-    USE constants_epw, ONLY : ryd2ev, zero
-    USE wannierEPW,  ONLY : n_wannier
-    USE wvfct,       ONLY : nbnd, et
-    USE klist,       ONLY : nks, nkstot
-    USE elph2,       ONLY : xkq
+    USE kinds,         ONLY : DP
+    USE io_files,      ONLY : prefix
+    USE io_var,        ONLY : iuprojfil
+    USE io,            ONLY : loadumat
+    USE mp_global,     ONLY : inter_pool_comm
+    USE io_global,     ONLY : stdout, meta_ionode
+    USE mp,            ONLY : mp_sum
+    USE input,         ONLY : dis_win_max, dis_win_min
+    USE ep_constants,  ONLY : ryd2ev, zero
+    USE wann_common,   ONLY : n_wannier
+    USE wvfct,         ONLY : nbnd, et
+    USE klist,         ONLY : nks, nkstot
+    USE global_var,    ONLY : xkq
     !
     IMPLICIT NONE
     !
@@ -268,6 +268,8 @@
     !!
     REAL(KIND = DP) :: xxq(3)
     !! Current q-point
+    REAL(KIND = DP) :: w_centers(3, n_wannier)
+    !! Wannier center
     REAL(KIND = DP), ALLOCATABLE :: proj_wf(:, :)
     !! Projection
     COMPLEX(KIND = DP), ALLOCATABLE :: cu(:, :, :)
@@ -298,7 +300,7 @@
     IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating cuq', 1)
     ALLOCATE(xkq(3, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating xkq', 1)
-    CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband)
+    CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
     DEALLOCATE(xkq, STAT = ierr)
     IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating xkq', 1)
     !
@@ -362,7 +364,7 @@
     USE io_global,       ONLY : ionode, stdout
     USE mp_global,       ONLY : inter_pool_comm, nproc_pool
     USE mp,              ONLY : mp_sum
-    USE elph2,           ONLY : umat, umat_all
+    USE global_var,      ONLY : umat, umat_all
     USE pwcom,           ONLY : nbnd, nks
     !
     IMPLICIT NONE

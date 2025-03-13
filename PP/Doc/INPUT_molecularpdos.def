@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program molecularpdos.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program molecularpdos.x {
 
     toc {}
 
@@ -63,7 +63,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program molec
 	var i_atmwfc_end_part -type INTEGER {
 	    default { 0, i.e., all atomic wavefunctions }
             info {
-		first atomic wavefunction of the molecular part
+		last atomic wavefunction of the molecular part
 	        considered for the projection
             }
 	}       

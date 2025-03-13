@@ -1,7 +1,6 @@
 set(src_cpv
     src/berryion.f90
     src/bforceion.f90
-    src/cell_nose.f90
     src/cg.f90
     src/cg_sub.f90
     src/chargedensity.f90
@@ -9,6 +8,7 @@ set(src_cpv
     src/cp_emass.f90
     src/cp_interfaces.f90
     src/cp_restart_new.f90
+    src/cp_wavefunctions.f90
     src/cplib.f90
     src/cpr_mod.f90
     src/cpr.f90
@@ -21,6 +21,7 @@ set(src_cpv
     src/electrons_nose.f90
     src/energies.f90
     src/ensemble_dft.f90
+    src/environ_cp_module.f90
     src/exch_corr.f90
     src/exx_cg.f90
     src/exx_es.f90
@@ -37,7 +38,6 @@ set(src_cpv
     src/init_run.f90
     src/inner_loop_cold.f90
     src/input.f90
-    src/ions_nose.f90
     src/ions_positions.f90
     src/ksstates.f90
     src/ldaU_cp.f90
@@ -73,7 +73,6 @@ set(src_cpv
     src/potentials.f90
     src/pres_ai_mod.f90
     src/print_out.f90
-    src/printout_base.f90
     src/problem_size.f90
     src/pseudo_base.f90
     src/pseudopot.f90
@@ -101,7 +100,6 @@ set(src_cpv
     src/wave_base.f90
     src/wave_types.f90
     src/wf.f90
-    src/makov_payne.f90
     src/entropy.f90)
 qe_enable_cuda_fortran("${src_cpv}")
 
@@ -120,6 +118,9 @@ target_link_libraries(qe_cpv
      PUBLIC 
         qe_openacc_fortran)
 
+if ("legacy" IN_LIST QE_ENABLE_PLUGINS) 
+  target_compile_definitions(qe_cpv PUBLIC __LEGACY_PLUGINS)
+endif() 
 ###########################################################
 # cp.x
 ###########################################################

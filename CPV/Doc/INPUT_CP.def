@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package CP -program cp.x {
+input_description -distribution {Quantum ESPRESSO} -package CP -program cp.x {
 
     toc {}
 
@@ -9,11 +9,16 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	HARTREE ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
         by e); potentials are in energy units (i.e. they are multiplied by e)
 
-        BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+        @b BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE 
+        @b USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
+
+        Namelists must appear in the order given below.
         Comment lines in namelists can be introduced by a "!", exactly as in
         fortran code. Comments lines in ``cards'' can be introduced by
         either a "!" or a "#" character in the first position of a line.
         Do not start any line in ``cards'' with a "/" character.
+        Leave a space between card names and card options, e.g.
+        ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
 
 	Structure of the input data:
 	===============================================================================
@@ -157,8 +162,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             default { .false. }
 	    info {
 		Write stress tensor to standard output each "iprint" steps.
-                It is set to .TRUE. automatically if
-                calculation='vc-relax'
+                It is set to .TRUE. automatically if calculation='vc-relax'
 	    }
 	}
 	
@@ -233,7 +237,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var ndw -type INTEGER { 
 	    default { 50 }
 	    info {
-               The restart files are write in the folder
+               The restart files are written, if ndw > 0, in the folder
                  outdir/prefix_ndw.save/
                where outdir, prefix and ndw are the input variables described
                in this document
@@ -613,17 +617,18 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var occupations -type CHARACTER {
 	    info {
                a string describing the occupation of the electronic states.
+               Allowed values are 'fixed' (default) and 'ensemble'.
                In the case of conjugate gradient style of minimization
                of the electronic states, if occupations is set to 'ensemble',
-               this allows ensemble DFT calculations for metallic systems
+               this allows ensemble DFT calculations for metallic systems.
 	    }
 	}
 
 	var degauss -type REAL { 
-	    default { 0.D0 Ry }
+	    default { 0.D0 Ha }
 	    info {
                parameter for the smearing function, only used for ensemble DFT
-               calculations
+               calculations. Hartree atomic units
 	    }
 	}
 	
@@ -631,7 +636,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
                a string describing the kind of occupations for electronic states
                in the case of ensemble DFT (occupations == 'ensemble' );
-               now only Fermi-Dirac ('fd') case is implemented
+               possible values are: 'gaussian', 'fermi-dirac', 'hermite-delta',
+               'gaussian-splines', 'cold-smearing', 'marzari-vanderbilt', '0', '-1'.
+               Warning: only 'gaussian' is tested.
 	    }
 	}
 	
@@ -683,7 +690,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    default { it depends on the specified functional }
 	    info {
 		Fraction of EXX for hybrid functional calculations. In the case of 
-		input_dft='PBE0', the default value is 0.25.
+		input_dft='PBE0', the default value is 0.25. This entry overrides
+    the default (as well as the restart file) value of a given functional.
 	    }
 	}
 
@@ -724,6 +732,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                     dispersion corrections with first-principle derived C6 coefficients
                     Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                     See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
+                    J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
 
                    'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
                     (implemented in PW only)
@@ -787,6 +796,14 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                          "Periodic boundary conditions in ab initio
                          calculations" , Phys.Rev.B 51, 4014 (1995)
 
+
+        var nextffield -type INTEGER {
+          default { 0 }
+          info {
+              Number of activated external ionic force fields. 
+              See Doc/ExternalForceFields.tex for further explanation and parameterizations
+          }
+        }
 
             }
         }
@@ -1044,7 +1061,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
         }      
 
 
-       var ninter_cold_restart -type INTEGER {
+       var niter_cold_restart -type INTEGER {
             default { 1 }
             info {
                frequency in iterations at which a full inner cycle, only
@@ -1377,7 +1394,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
 
 	var cell_dynamics -type CHARACTER {
-            default { 'none' }
+            default { 'pr'      if @ref calculation = 'vc-md', 'vc'cp', 'vc-cp-wf';
+	              'damp-pr' if  @ref calculation = 'vc-relax';
+		      'none'    otherwise }
 	    info {
                set how cell should be moved
                'none'      : cell is kept fixed

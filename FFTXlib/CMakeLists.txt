@@ -26,7 +26,6 @@ if(QE_FFTW_VENDOR STREQUAL "AUTO")
         target_link_libraries(qe_ext_fft INTERFACE VendorFFTW)
     else()
         # Try to find the official FFTW3
-        message(STATUS "No vendor FFTW found")
         if(QE_ENABLE_OPENMP)
             find_package(FFTW3 COMPONENTS DOUBLE_OPENMP DOUBLE)
         else()
@@ -126,6 +125,10 @@ SET(BLA_VENDOR ${BLA_VENDOR_SAVED})
 
 add_subdirectory(src)
 
+###########################################################
+# Tests
+# TODO move all tests to a proper location
+###########################################################
 if(QE_ENABLE_TEST)
     add_subdirectory(tests)
 endif()

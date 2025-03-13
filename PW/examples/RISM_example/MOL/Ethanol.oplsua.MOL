@@ -1,0 +1,58 @@
+<MOL version="1.0.0">
+  <!--
+    Copyright (C) 2016 Satomichi Nishihara [nisihara225@gmail.com]
+  -->
+  <MOL_INFO>
+    Ethanol (OPLS-UA: W.L.Jorgensen et al., JACS, 1988, 110, 1657.),
+    although Lennad-Jones parameters of hydrogen (HO-) are modified
+    and its geometry is calculated by M06-2X/def2-TZVPPD.
+    The parameters of H2O/SPC are substituted
+    (M.Matsugami et al., J. Chem. Phys. 2014, 140, 104511).
+  </MOL_INFO>
+  <MOL_HEADER author="S.Nishihara"
+              date="17Nov2016"
+              comment="Ethanol"
+              formula="C2H5OH"
+              has_charge="T"
+              has_lj="T"
+              number_of_atoms="4"/>
+  <MOL_MASS type="real" size="1" columns="1" UNITS="g/mol">
+    46.06844
+  </MOL_MASS>
+  <MOL_DENSITY type="real" size="1" columns="1" UNITS="g/cm^3">
+    0.789
+  </MOL_DENSITY>
+  <MOL_ELEMENT type="character" size="4" columns="1" len="6">
+CH3/et
+CH2/et
+O/et
+H/et
+  </MOL_ELEMENT>
+  <MOL_XYZ type="real" size="12" columns="3" UNITS="angstrom">
+    -0.15329132    -1.20449407     0.00000000
+     0.52122770     0.14806752     0.00000000
+    -0.49452384     1.13851228     0.00000000
+    -0.09079379     2.00792208     0.00000000
+  </MOL_XYZ>
+  <MOL_CHARGE type="real" size="4" columns="1">
+     0.000
+    +0.265
+    -0.700
+    +0.435
+  </MOL_CHARGE>
+  <MOL_LJ>
+    <MOL_EPSILON type="real" size="4" columns="1" UNITS="kcal/mol">
+      0.207
+      0.118
+      0.170
+      0.046
+    </MOL_EPSILON>
+    <MOL_SIGMA type="real" size="4" columns="1" UNITS="angstrom">
+      3.775
+      3.905
+      3.070
+      1.000
+    </MOL_SIGMA>
+  </MOL_LJ>
+</MOL>
+

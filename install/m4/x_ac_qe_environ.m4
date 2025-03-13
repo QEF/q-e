@@ -2,19 +2,31 @@
 #
 AC_DEFUN([X_AC_QE_ENVIRON], [
 
-	AC_ARG_ENABLE(environment,
-		[AS_HELP_STRING([--enable-environment], [compile solvent-related stuff (default: no)])],
-		[if   test "$enableval" = "yes" ; then
-			enable_environment=1
-		else
-			enable_environment=0
-		fi],
-		[enable_environment=0])
-	
-	if test "$enable_environment" -eq 1 ;
-	then
-		try_dflags="$try_dflags -D__ENVIRONMENT"
-	fi  
-	
+	AC_MSG_CHECKING([for Environ])
+
+	AC_ARG_WITH(environ,
+		[AS_HELP_STRING([--with-environ], [absolute path to Environ root directory])],
+		[
+			if test "$withval" != yes ;
+		 	then
+		 	 	environ_root="$withval"
+		 	else
+				environ_root="$topdir/Environ"
+		 	fi
+		 	
+			if test -d $environ_root; then
+				environ_libs="-L$environ_root/libs -lenvsrc -lenvfft -lenvutil"
+				try_iflags="$try_iflags -I$environ_root/src"
+		 		try_dflags="$try_dflags -D__ENVIRON"
+				AC_MSG_RESULT(found at $environ_root)
+			else
+			    AC_MSG_ERROR([$environ_root is not a valid path])
+			fi
+
+		], 
+		[AC_MSG_RESULT(not used)]
+	)
+
+	AC_SUBST(environ_libs)
 	]
 )

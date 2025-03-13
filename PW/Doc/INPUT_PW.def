@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program pw.x {
+&input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
 
     toc {}
 
@@ -9,7 +9,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
         by e); potentials are in energy units (i.e. they are multiplied by e).
         
-        @b BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
+        @b BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE 
+        @b USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
 
         Namelists must appear in the order given below.
         Comment lines in @i namelists can be introduced by a "!", exactly as in 
@@ -18,7 +19,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         Do not start any line in @i cards with a "/" character.
         Leave a space between card names and card options, e.g.
         ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
-        Do not start any line in @i cards with a "/" character.
 
         
         @b {Structure of the input data:}
@@ -45,6 +45,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          @b / ]
 
         [ @b &FCP
+          ...
+         @b / ]
+
+        [ @b &RISM
           ...
          @b / ]
 
@@ -95,6 +99,38 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         [ @b ADDITIONAL_K_POINTS
              see: K_POINTS ]
+
+        [ @b SOLVENTS
+           label(1)     Density(1)     Molecule(1)
+           label(2)     Density(2)     Molecule(2)
+           .....
+           label(nsolv) Density(nsolv) Molecule(nsolv) ]
+        
+        [ @b HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+          if (DFT+U)
+              U  label(1)-manifold(1) u_val(1)
+            [ J0 label(1)-manifold(1) j0_val(1) ]
+              .....
+              U  label(n)-manifold(n) u_val(n)
+            [ J0 label(n)-manifold(n) j0_val(n) ]            
+          if (DFT+U+J)
+              paramType(1) label(1)-manifold(1) paramValue(1)
+              .....
+              paramType(n) label(n)-manifold(n) paramValue(n)            
+          if (DFT+U+V)
+              U  label(I)-manifold(I) u_val(I)
+            [ J0 label(I)-manifold(I) j0_val(I) ]
+              V  label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+              .....
+              U  label(N)-manifold(N) u_val(N)
+            [ J0 label(N)-manifold(N) j0_val(N) ]
+              V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+        ]
+        All Hubbard parameters must be specified in eV.
+        manifold  = 3d, 2p, 4f...
+        paramType = U, J, B, E2, or E3
+        Check Doc/Hubbard_input.pdf for more details. 
+
     }
 
     #
@@ -191,7 +227,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var iprint -type INTEGER {
             default { write only at convergence }
             info {
-                band energies are written every @i iprint iterations
+		When @ref calculation == 'md' (molecular dynamics)  
+                trajectory is written every @i iprint md steps.
             }
         }
         
@@ -325,8 +362,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
 
                 opt -val 'nowf' {
-                    save to disk only the xml data file,
-                    never save wavefunctions and charge density
+                    save to disk only the xml data file and the charge density
+                    at convergence, never save wavefunctions. Restarting from
+                    an interrupted calculation is not possible with this option.
+                }
+
+                opt -val 'minimal' {
+                    save to disk only the xml data file at convergence
                 }
 
                 opt -val 'none' {
@@ -434,23 +476,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
-        var lfcp -type LOGICAL {
-            see { fcp_mu }
-            default { .FALSE. }
-            info {
-                If .TRUE. perform a constant bias potential (constant-mu) calculation
-                for a system with ESM method. See the header of PW/src/fcp_module.f90
-                for documentation. To perform the calculation, you must set a namelist FCP.
-
-                NB:
-                - The total energy displayed in output includes the potentiostat
-                  contribution (-mu*N).
-                - @ref calculation must be 'relax' or 'md'.
-                - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
-                  in @ref SYSTEM namelist.
-            }
-        }
-
         var gate -type LOGICAL {
             default { .FALSE. }
             see { zgate, relaxz, block, block_1, block_2, block_height }
@@ -467,6 +492,63 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 could still use them for symmetric systems (i.e. no dipole correction).
                 For @ref nosym=.false. verbosity is set to 'high'.
                 Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
+            }
+        }
+
+        var twochem -type LOGICAL {
+            default { .FALSE. }
+            see { nelec_cond, nbnd_cond, degauss_cond }
+            info {
+             IF .TRUE. , a two chemical potential calculation for the simulation of
+             photoexcited systems is performed, constraining a fraction of the 
+             electrons in the conduction manifold. 
+             See G. Marini, M. Calandra; PRB 104, 144103 (2021).  
+             Note: requires @ref occupations to be set to 'smearing'.
+            }
+        }
+
+
+
+        var lfcp -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE. perform a constant bias potential (constant-mu) calculation
+                for a system with ESM method. See the header of PW/src/fcp_module.f90 
+                for documentation. To perform the calculation, you must set a namelist FCP.
+
+                NB:
+                - The total energy displayed in output includes the potentiostat
+                  contribution (-mu*N).
+                - @ref calculation must be 'relax' or 'md'. 
+                - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
+                  in @ref SYSTEM namelist.
+                - ESM-RISM is also supported (@ref assume_isolated = 'esm' and @ref esm_bc = 'bc1'
+                  and @ref trism = .TRUE.).
+                - @ref ignore_wolfe is always .TRUE., for BFGS.
+            }
+        }
+
+        var trism -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE. perform a 3D-RISM-SCF calculation
+                [for details see H.Sato et al., JCP 112, 9463 (2000), doi:10.1063/1.481564].
+                The solvent's distributions are calculated by 3D-RISM,
+                though solute is treated as SCF. The charge density and
+                the atomic positions are optimized, simultaneously with
+                the solvents. To perform the calculation, you must set
+                a namelist @ref RISM and a card @ref SOLVENTS.
+
+                If @ref assume_isolated = 'esm' and @ref esm_bc = 'bc1',
+                Laue-RISM is calculated instead of 3D-RISM
+                and coupled with ESM method (i.e. ESM-RISM).
+                [for details see S.Nishihara and M.Otani, PRB 96, 115429 (2017)].
+
+                The default of @ref mixing_beta is 0.2
+                for both 3D-RISM and Laue-RISM.
+
+                For structural relaxation with BFGS,
+                @ref ignore_wolfe is always .TRUE. .
             }
         }
 
@@ -683,6 +765,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 k-point, not the number of bands per k-point, is doubled
             }
         }
+
+         var nbnd_cond -type INTEGER {
+            default { nbnd_cond = @ref nbnd - # of electrons / 2 in the collinear case;
+                      nbnd_cond = @ref nbnd - # of electrons in the noncollinear case.
+            }
+            info {
+                Number of electronic states in the conduction manifold
+                for a two chemical-potential calculation (@ref twochem=.true.). 
+            }
+        }
         
         var tot_charge -type REAL { 
             default { 0.0 }
@@ -719,31 +811,35 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         dimension starting_magnetization -start 1 -end ntyp -type REAL {
             default { 0 }
             info {
-                Starting spin polarization on atomic type 'i' in a spin 
-                polarized (LSDA or noncollinear/spin-orbit) calculation.
-                Allowed values range between -1 (all spins down for the
-                valence electrons of atom type 'i') to 1 (all spins up).
+                Starting spin polarization on atomic type 'i' in a spin-polarized 
+                (LSDA or non-collinear/spin-orbit) calculation. 
+                The input values can have an absolute value greater than or equal to 1, 
+                which will be interpreted as the site's magnetic moment. 
+                Alternatively, the values can range between -1 and 1, 
+                which will be interpreted as the site magnetization per valence electron. 
+                For QE-v7.2 and older versions, only the second option is allowed.
+
                 If you expect a nonzero magnetization in your ground state,
-		you MUST either specify a nonzero value for at least one
-		atomic type, or constrain the magnetization using variable
-		@ref tot_magnetization for LSDA, @ref constrained_magnetization
-		for noncollinear/spin-orbit calculations. If you don't,
-		you will get a nonmagnetic (zero magnetization) state. 
+		        you MUST either specify a nonzero value for at least one
+		        atomic type, or constrain the magnetization using variable
+		        @ref tot_magnetization for LSDA, @ref constrained_magnetization
+		        for noncollinear/spin-orbit calculations. If you don't,
+		        you will get a nonmagnetic (zero magnetization) state. 
                 In order to perform LSDA calculations for an antiferromagnetic
-		state, define two different atomic species corresponding to
-		sublattices of the same atomic type.
+		        state, define two different atomic species corresponding to
+		        sublattices of the same atomic type.
                 
                 @b {NOTE 1:} @ref starting_magnetization is ignored in most BUT NOT ALL
-		cases in non-scf calculations: it is safe to keep the same
-		values for the scf and subsequent non-scf calculation.
+		        cases in non-scf calculations: it is safe to keep the same
+		        values for the scf and subsequent non-scf calculation.
                 
-		@b {NOTE 2:} If you fix the magnetization with
-		@ref tot_magnetization, do not specify @ref starting_magnetization.
+		        @b {NOTE 2:} If you fix the magnetization with
+		        @ref tot_magnetization, do not specify @ref starting_magnetization.
                 
-		@b {NOTE 3:} In the noncollinear/spin-orbit case, starting with zero 
+		        @b {NOTE 3:} In the noncollinear/spin-orbit case, starting with zero 
                 starting_magnetization on all atoms imposes time reversal
                 symmetry. The magnetization is never calculated and is
-		set to zero (the internal variable domag is set to .FALSE.).
+		        set to zero (the internal variable domag is set to .FALSE.).
             }
         }
 
@@ -871,29 +967,29 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-       var force_symmorphic -type LOGICAL { 
-           default { .FALSE. }
-           info {
+        var force_symmorphic -type LOGICAL { 
+            default { .FALSE. }
+            info {
                if (.TRUE.) force the symmetry group to be symmorphic by disabling
                symmetry operations having an associated fractionary translation
-          }
-      }
+            }
+        }
 
-       var use_all_frac -type LOGICAL { 
-           default { .FALSE. }
-           info {
-               if (.FALSE.) force real-space FFT grids to be commensurate with
-               fractionary translations of non-symmorphic symmetry operations,
-               if present (e.g.: if a fractional translation (0,0,c/4) exists, 
-               the FFT dimension along the c axis must be multiple of 4).
-               if (.TRUE.) do not impose any constraints to FFT grids, even in
-               the presence of non-symmorphic symmetry operations. 
-               BEWARE: use_all_frac=.TRUE. may lead to wrong results for
-               hybrid functionals and phonon calculations. Both cases use 
-               symmetrization in real space that works for non-symmorphic 
-               operations only if the real-space FFT grids are commensurate.
-          }
-      }
+        var use_all_frac -type LOGICAL { 
+            default { .FALSE. }
+            info {
+                if (.FALSE.) force real-space FFT grids to be commensurate with
+                fractionary translations of non-symmorphic symmetry operations,
+                if present (e.g.: if a fractional translation (0,0,c/4) exists, 
+                the FFT dimension along the c axis must be multiple of 4).
+                if (.TRUE.) do not impose any constraints to FFT grids, even in
+                the presence of non-symmorphic symmetry operations. 
+                BEWARE: use_all_frac=.TRUE. may lead to wrong results for
+                hybrid functionals and phonon calculations. Both cases use 
+                symmetrization in real space that works for non-symmorphic 
+                operations only if the real-space FFT grids are commensurate.
+            }
+        }
 
         var occupations -type CHARACTER {
             options {
@@ -988,6 +1084,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var degauss_cond -type REAL {
+            default { 0.D0 Ry }
+            info {
+                value of the gaussian spreading (Ry) for brillouin-zone
+                integration in the conduction manifold in a two-chemical
+                potential calculation (@ref twochem=.true.).
+            }
+        }
+
+        var nelec_cond -type REAL {
+            default { 0.D0 }
+            info {
+                Number of electrons placed in the conduction manifold in a two-chemical 
+                potential calculation (@ref twochem=.true.). Of the total # of 
+                electrons nelec, nelec-nelec_cond will occupy the valence 
+                manifold and nelec_cond will be constrained in the conduction manifold. 
+            }
+        }
+ 
         var degauss -type REAL { 
             default { 0.D0 Ry }
             info {
@@ -995,7 +1110,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 integration in metals.
             }
         }
-        
+       
         var smearing -type CHARACTER {
             default { 'gaussian' }
 
@@ -1036,6 +1151,52 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                              (magnetization in generic direction)
                              DO NOT specify @ref nspin in this case;
                              specify @ref noncolin=.TRUE. instead
+            }
+        }
+
+        var sic_gamma -type REAL {
+            default { 0 }
+            info {
+                Strength of the gammaDFT potential.
+            }
+        }
+
+        var pol_type -type CHARACTER {
+            options {
+                info {
+                    Type of polaron in gammaDFT.
+                }
+                opt -val 'e' { electron polaron }
+                opt -val 'h' { hole polaron }
+            }
+        }
+
+        var sic_energy -type LOGICAL {
+            default { .false. }
+            info {
+                Enable the calculation of the total energy in gammaDFT. When .true., 
+                a preliminary calculation is performed to calculate the electron density 
+                in the absence of the polaron. When .false., the total energy printed in 
+                output should not be considered. For structural relaxations, it is 
+                recommended to use .false. to avoid doubling the computational cost.
+            }
+        }
+
+        var sci_vb -type REAL {
+            default { 0 }
+            info {
+                Valence band shift (in eV) through self-consistent 
+                scissor operator. When performing gammaDFT calculations 
+                of polarons, the polaron level is not shifted.
+            }
+        }
+
+        var sci_cb -type REAL {
+            default { 0 }
+            info {
+                Conduction band band shift (in eV) through self-consistent 
+		        scissor operator. When performing gammaDFT calculations 
+                of polarons, the polaron level is not shifted.
             }
         }
 
@@ -1112,13 +1273,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     for treating the Coulomb potential divergencies at small q vectors.
                 }
 
-                opt -val 'gygi-baldereschi' { appropriate for cubic and quasi-cubic supercells }
+                opt -val 'gygi-baldereschi' {
+                    appropriate for cubic and quasi-cubic supercells
+                }
                 
-                opt -val 'vcut_spherical' { appropriate for cubic and quasi-cubic supercells }
+                opt -val 'vcut_spherical' {
+                    appropriate for cubic and quasi-cubic supercells
+                    (untested for non-orthogonal crystal axis)
+                }
 
-                opt -val 'vcut_ws' { appropriate for strongly anisotropic supercells, see also @ref ecutvcut. }
+                opt -val 'vcut_ws' {
+                    appropriate for strongly anisotropic supercells, see also @ref ecutvcut
+                    (untested for non-orthogonal crystal axis)
+                }
                 
-                opt -val 'none' { sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE) }
+                opt -val 'none' {
+                    sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
+                }
             }
         }
 
@@ -1129,7 +1300,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 potential (see README in examples/EXX_example for more)
                 Set this to .false. for GAU-PBE.
             }
-         }
+        }
 
         var ecutvcut -type REAL {
             default { 0.0 Ry }
@@ -1164,93 +1335,28 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                        evaluation } 
         } 
 
-        var lda_plus_u -type LOGICAL { 
-            default { .FALSE. }
-            status {
-                DFT+U (formerly known as LDA+U) currently works only for 
-                a few selected elements. Modify @tt Modules/set_hubbard_l.f90 and 
-                @tt PW/src/tabd.f90 if you plan to use DFT+U with an element that 
-                is not configured there.
-            }
-            info { 
-                Specify @ref lda_plus_u = .TRUE. to enable @b DFT+U, @b DFT+U+V, or @b DFT+U+J calculations.
-                See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
-                     Anisimov et al., PRB 48, 16929 (1993); 
-                     Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                You must specify, for each Hubbard atom, the value of
-                U and (optionally) V, J, alpha of the Hubbard model (all in eV):
-                see @ref lda_plus_u_kind, @ref Hubbard_U, @ref Hubbard_V, 
-                @ref Hubbard_J, @ref Hubbard_alpha
-            }
-        }
-        var lda_plus_u_kind -type INTEGER { 
-            default { 0 }
-            options {
-                info { Specifies the type of calculation: }
-                
-                opt -val { lda_plus_u_kind = 0 } {
-                    DFT+U simplified version of Cococcioni and de Gironcoli, 
-                    PRB 71, 035105 (2005), using @ref Hubbard_U
-                }
-
-                opt -val { lda_plus_u_kind = 1 } {                
-                    DFT+U rotationally invariant scheme of Liechtenstein et al., 
-                    using @ref Hubbard_U and @ref Hubbard_J
-                }
-
-                opt -val { lda_plus_u_kind = 2 } {
-                    DFT+U+V simplified version of Campo Jr and Cococcioni,
-                    J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
-                    using @ref Hubbard_V
-                }
-            }
-        }
-        dimension Hubbard_U -start 1 -end ntyp -type REAL {      
-            default { 0.D0 for all species }
+        multidimension Hubbard_occ -start 1,1 -end ntyp,3 -indexes ityp,i -type REAL {
+            default { read from pseudopotentials }
             info {
-                Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation 
+                Hubbard occupations is the number of electrons in the
+                Hubbard manifold. By default they are initialized by 
+                reading the occupations from pseudopotentials. If specified
+                from the input, then the values read from the pseudopotentials
+                will be overwritten.
+                The second index of the Hubbard_occ array corresponds to the
+                Hubbard manifold number. It is possible to specify up to
+                three Hubbard manifolds per Hubbard atom. However, if you want
+                to specify three manifolds then the second and the third manifolds
+                will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
             }
         }
-        dimension Hubbard_J0 -start 1 -end ntype -type REAL {
-            default { 0.D0 for all species }
-            info {
-                Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
-                see PRB 84, 115108 (2011) for details.
-            }
-        }
-        multidimension  Hubbard_V  -start 1,1,1 -end natx,27*natx,4 -indexes na,nb,k -type REAL {
-            default { 0.D0 for all elements}
-            info {
-                Hubbard_V(na,nb,k): V parameters (eV) between atoms na and nb,
-                used in DFT+U+V calculations (only for @ref lda_plus_u_kind=2).
-                The atomic indices na and nb correspond to the atomic positions
-                in the @ref ATOMIC_POSITIONS card (this is not the same as Hubbard_U
-                which is specified for @ref ATOMIC_SPECIES). 
-
-                When na=nb, then @ref Hubbard_V(na,na,k) is the on-site @ref Hubbard_U
-                for the atom na.
-                
-                natx=50 (if needed it can be changed in /Modules/parameters.f90)
-
-                The index k controls the "interaction type" (k=1 is used for the
-                simplest DFT+U+V calculation):
-                @b k=1 - interaction between standard orbitals (both on na and nb); 
-                @b k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                @b k=3 - interaction between background orbitals (both on na and nb);
-                @b k=4 - interaction between background (on na) and standard (on nb) orbitals.
-                
-                Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
-                in transition metals) and background orbitals correspond to the secondary
-                Hubbard channel (e.g. p electrons in transition metals).
-            }
-        } 
         dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
             default { 0.D0 for all species }
             info {
                 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
                 used to compute U (and V) with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0 and 2).
+                (only for DFT+U or DFT+U+V).
                 
                 Note: Hubbard U and V can be computed using the HP code
                 which is based on density-functional perturbation theory,
@@ -1264,23 +1370,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_beta(i) is the perturbation (on atom i, in eV)
                 used to compute J0 with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0 and 2). See also 
+                (only for DFT+U or DFT+U+V). See also 
                 PRB 84, 115108 (2011).
-            }
-        }
-        multidimension  Hubbard_J  -start 1,1 -end 3,ntyp -indexes i,ityp -type REAL { 
-            default { 0.D0 for all species }
-            info {
-                Hubbard_J(i,ityp): J parameters (eV) for species ityp, 
-                used in DFT+U calculations (only for @ref lda_plus_u_kind=1)
-                
-                For p orbitals:  J = Hubbard_J(1,ityp);
-                For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
-                For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
-                                 E3= Hubbard_J(3,ityp).
-
-                If B or E2 or E3 are not specified or set to 0 they will be
-                calculated from J using atomic ratios.
             }
         }
         
@@ -1297,72 +1388,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 This is useful to suggest the desired orbital occupations 
                 when the default choice takes another path.
             }
-        }
-
-        var U_projection_type -type CHARACTER {   
-            default { 'atomic' }
-            options {
-                info {
-                    Only active when @ref lda_plus_U is .true., specifies the type
-                    of projector on localized orbital to be used in the DFT+U
-                    scheme.
-                    
-                    Currently available choices:
-                }
-                
-                opt -val 'atomic' { use atomic wfc's (as they are) to build the projector }
-
-                opt -val 'ortho-atomic' { use Lowdin orthogonalized atomic wfc's }
-                
-                opt -val 'norm-atomic' {
-                    Lowdin normalization of atomic wfc. Keep in mind:
-                    atomic wfc are not orthogonalized in this case.
-                    This is a "quick and dirty" trick to be used when
-                    atomic wfc from the pseudopotential are not
-                    normalized (and thus produce occupation whose
-                    value exceeds unity). If orthogonalized wfc are
-                    not needed always try @b 'atomic' first.
-                }
-                opt -val 'file' {
-                    use the information from file "prefix".atwfc that must
-                    have been generated previously, for instance by pmw.x
-                    (see PP/src/poormanwannier.f90 for details).
-                }
-
-                opt -val 'pseudo' {
-                    use the pseudopotential projectors. The charge density
-                    outside the atomic core radii is excluded.
-                    N.B.: for atoms with +U, a pseudopotential with the 
-                    all-electron atomic wavefunctions is required (i.e.,
-                    as generated by ld1.x with lsave_wfc flag).
-                }
-
-                info {
-                    NB: forces and stress currently implemented only for the
-                    'atomic' and 'pseudo' choice.
-                }
-            }
-        }
-
-        var Hubbard_parameters -type CHARACTER {
-            default { 'input' }
-            options {
-                info {
-                    Available choices:
-                }
-                opt -val 'input' {
-                    read the @ref Hubbard_U (or @ref Hubbard_V) parameters from
-                    the PW input file
-                }
-                opt -val 'file' {
-                    read the @ref Hubbard_V parameters from the file "parameters.in"
-                    which can be generated after the linear-response calculation
-                    (using the HP code). This option has a higher priority over 
-                    the @ref Hubbard_V if they are specified in the input. This option 
-                    can be used only when @ref lda_plus_u_kind = 2.
-                }
-            }
-        }        
+        } 
 
         var dmft -type LOGICAL { 
             default { .FALSE. }
@@ -1557,7 +1583,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	        determines when atomic magnetic moments are printed on output:
                 @b {report = 0}  never
                 @b {report =-1}  at the beginning of the scf and at convergence
-		@b {report = N}  as -1, plus every N scf iterations
+		        @b {report = N}  as -1, plus every N scf iterations
             }
         }
         
@@ -1764,12 +1790,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              default { 'none' }
              see {
                  london_s6, london_rcut, london_c6, london_rvdw, 
-                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
-                 mbd_vdw
+                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
              }
              options {
                  info {
-                     Type of Van der Waals correction. Allowed values:
+                     Type of the van der Waals correction. Allowed values:
                  }
 
                  opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d'} {
@@ -1790,13 +1815,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                      C6 coefficients.
                      Optional variables: @ref ts_vdw_econv_thr, @ref ts_vdw_isolated
                      See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
+                     J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
                  }
 
-                 opt -val {'mbd_vdw', 'many-body dispersion'} {
+                 opt -val {'MBD', 'mbd', 'many-body-dispersion', 'mbd_vdw'} {
                      Many-body dipersion (MBD) correction to long-range interactions.
                      Optional variables: @ref ts_vdw_isolated
-                     A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
-                     18A508 (2014).
+                     A. Ambrosetti et al., J. Chem. Phys. 140, 18A508 (2014), doi:10.1063/1.4865104
+                     J. Hermann et al., J. Chem. Phys. 159, 174802 (2023), doi:10.1063/5.0170972
                  }
 
                  opt -val {'XDM', 'xdm'} {
@@ -1910,7 +1936,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                Damping function parameter a1 (adimensional). It is NOT necessary to give
                a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
                in this list, the coefficients are given in:
-                  http://schooner.chem.dal.ca/wiki/XDM
+                  https://github.com/aoterodelaroza/postg/blob/master/xdm.param
+                  or https://erin-r-johnson.github.io/software/
                   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
                   doi:10.1063/1.4705760
            }
@@ -1921,7 +1948,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                Damping function parameter a2 (angstrom). It is NOT necessary to give
                a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
                in this list, the coefficients are given in:
-                  http://schooner.chem.dal.ca/wiki/XDM
+                  https://github.com/aoterodelaroza/postg/blob/master/xdm.param
+                  or https://erin-r-johnson.github.io/software/
                   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
                   doi:10.1063/1.4705760
            }
@@ -2041,6 +2069,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+         var nextffield -type INTEGER {
+           default { 0 }
+           info {
+               Number of activated external ionic force fields. 
+               See Doc/ExternalForceFields.tex for further explanation and parameterizations
+           }
+         }  
+    
+
     }
 
     #
@@ -2052,7 +2089,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var electron_maxstep    -type INTEGER { 
             default { 100 }
             info {
-                maximum number of iterations in a scf step
+                maximum number of iterations in a scf step. If exact exchange is active, 
+                this will affect the inner loops.
+            }
+        }
+
+        var exx_maxstep    -type INTEGER { 
+            default { 100 }
+            info {
+                maximum number of outer iterations in a scf calculation with exact exchange.
             }
         }
 
@@ -2161,7 +2206,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
 
                 opt -val {'ppcg'} {
-                    PPCG iterative diagonalization
+                    PPCG iterative diagonalization (end support on Dec 2024)
                 }
 
                 opt -val {'paro', 'ParO'} {
@@ -2214,6 +2259,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var diago_rmm_ndim -type INTEGER { 
+            default { 4 }
+            info {
+                For RMM-DIIS diagonalization: dimension of workspace
+                (number of wavefunction packets, at least 2 needed).
+            }
+        }
+
+        var diago_rmm_conv -type LOGICAL { 
+            default { .FALSE. }
+            info {
+                If .TRUE., RMM-DIIS is performed up to converge.
+                If .FALSE., RMM-DIIS is performed only once.
+            }
+        }
+
+        var diago_gs_nblock -type INTEGER { 
+            default { 16 }
+            info {
+                For RMM-DIIS diagonalization:
+                blocking size of Gram-Schmidt orthogonalization
+            }
+        }
+
         var diago_full_acc -type LOGICAL { 
             default { .FALSE. }
             info {
@@ -2224,20 +2293,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
-        var diago_rmm_ndim -type INTEGER {
-           default {4}
-           info {
-               Max dimension  of the iterative subspace for RMM-DIIS diagonalization 
-           }
-        }
-       
-       var diago_rmm_conv -type LOGICAL {
-          default { .FALSE. }
-          info {
-             If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands 
-             are converged or up to a max of 8 times. 
-          }
-       }
+
         var efield -type REAL {
             default { 0.D0 }
             info {
@@ -2347,12 +2403,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
     
     #
-    # NAMELIST IONS
+    # NAMELIST &IONS
     #
     
     namelist IONS  {
         label { 
-            REQUIRED if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            REQUIRED if @ref calculation == 'relax', 'md', 'vc-hrelax', or 'vc-md' 
             OPTIONAL for @ref calculation == 'scf' (only @ref ion_positions is used)
         }
  
@@ -2415,15 +2471,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Can be used for constrained 
                     optimisation: see @ref CONSTRAINTS card
                 }
-		opt -val 'fire' {
+		        opt -val 'fire' {
                     use the FIRE minimization algorithm employing the
-		    semi-implicit Euler integration scheme
-		    see:
-		       Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
-		       Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+		            semi-implicit Euler integration scheme
+		            see:
+		            Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+		            Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
 
-                    Can be used for constrained 
-                    optimisation: see @ref CONSTRAINTS card
+                    Can be used for constrained optimisation: see @ref CONSTRAINTS card
                 }
                 info {
                     @b CASE ( @ref calculation == 'md' )
@@ -2432,6 +2487,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     @b (default)  use Verlet algorithm to integrate
                     Newton's equation. For constrained 
                     dynamics, see @ref CONSTRAINTS card
+                }
+                opt -val 'velocity-verlet' {
+                  use velocity-Verlet algorithm to integrate Newton's equation. 
+                  For constrained dynamics, see @ref CONSTRAINTS card. 
                 }
                 opt -val 'langevin' {
                     ion dynamics is over-damped Langevin
@@ -2542,8 +2601,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     opt -val 'rescaling' {
                         control ionic temperature via velocity rescaling
                         (first method) see parameters @ref tempw, @ref tolp, and
-                        @ref nraise (for VC-MD only). This rescaling method
-                        is the only one currently implemented in VC-MD
+                        @ref nraise (for VC-MD only). 
                     }
                     opt -val 'rescale-v' {
                         control ionic temperature via velocity rescaling
@@ -2559,6 +2617,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                         by the (negative) value @ref delta_t, starting from @ref tempw.
                         If  @ref delta_t is positive, the target temperature is augmented.
                         The temperature is controlled via velocitiy rescaling.
+                    }
+                    opt -val 'nose' {
+                        control ionic temperature using Nose-Hoover 
+                        thermostat. See also parameters @ref fnosep , @ref tempw , 
+                        @ref nhpcl, @ref ndega , @ref nhptyp
+
                     }
                     opt -val 'berendsen' {
                         control ionic temperature using "soft" velocity
@@ -2591,6 +2655,77 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
             }
 
+            var fnosep - type REAL {
+                default {1.D0}
+                info{
+                    oscillation frequency of the Nose thermorstat (in THz)
+                    [note that 3 THz = 100 cm^-1], meaningful only with 
+                    "ion_temperature = 'nose'" for Nose-Hoover chain one can 
+                    ser frequncies for all @ref nhpcl thermostats 
+                    ( fnosep = X Y Z etc.) If only first is set, the defaults for
+                    the others will be the same. 
+                     
+                }
+            }       
+            var nhpcl -type INTEGER{
+                default { 1 }
+                info {
+                    number of thermostats in the Nose-Hoover chain; 
+                    currently maximum allowed is 4
+                }
+            }  
+
+            var nhptyp -type INTEGER {
+                default { 0 } 
+                info {
+                    type of the "massive" Nose-Hoover chain thermostat:
+                     * nhptyp = 0 usese one NH chain for all atoms. 
+                     * nhtyp=1 uses a  NH chain per each atomic type
+                     * nhptyp=2 use a NH chaing per atom, this one is usefulf
+                       for extremely rapid equipartioning. 
+                     * nhptyp =3 together with @ref nhgrp allows fine grained thermostat 
+                       control 
+                }
+            }  
+            dimension nhgrp -start 1 -end ntyp -type INTEGER {
+                default { 0 }
+                info {
+                    specifies which thermostat group to use for given atomic type
+                    when >0 assigns all the atoms in this type to thermostat
+                    labeled nhgrp(i), when =0 each atom in the type gets its own
+                    thermostat. Finally, when <0, then this atomic type will have
+                    temperature "not controlled". Example: HCOOLi, with types H (1), C(2), O(3), Li(4);
+                    setting nhgrp={2 2 0 -1} will add a common thermostat for both H & C,
+                    one thermostat per each O (2 in total), and a non-updated thermostat
+                    for Li which will effectively make temperature for Li "not controlled"
+                }
+            }    
+
+
+            dimension fnhscl -start 1 -end ntyp -type REAL {
+                default { (Nat_{total}-1)/Nat_{total} }
+                info {
+                    these are the scaling factors to be used together with nhptyp=3 and nhgrp(i)
+                    in order to take care of possible reduction in the degrees of freedom due to
+                    constraints. Suppose that with the previous example HCOOLi, C-H bond is
+                    constrained. Then, these 2 atoms will have 5 degrees of freedom in total instead
+                    of 6, and one can set fnhscl={5/6 5/6 1. 1.}. This way the target kinetic energy
+                    for H&C will become 6(kT/2)*5/6 = 5(kT/2). This option is to be used for
+                    simulations with many constraints, such as rigid water with something else in there
+                }
+            }  
+
+
+            var ndega -type INTEGER {
+                default { 0 }
+                info {
+                    number of degrees of freedom used for temperature calculation
+                    ndega <= 0 sets the number of degrees of freedom to
+                    [3*nat-abs(ndega)], ndega > 0 is used as the target number
+                }   
+            } 
+
+      
             var tolp -type REAL { 
                 default { 100.D0 }
                 info {
@@ -2679,11 +2814,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 default { 1 }
                 info {
                     Number of old forces and displacements vectors used in the
-                    PULAY mixing of the residual vectors obtained on the basis
+                    PULAY (GDIIS) mixing of the residual vectors obtained on the basis
                     of the inverse hessian matrix given by the BFGS algorithm.
+                    The variable  @ref tgdiis_step in this case sets whether to use to full GDIIS step 
+                    or the BFGS trust_radius. 
                     When @ref bfgs_ndim = 1, the standard quasi-Newton BFGS method is
                     used.
                     (bfgs only)
+                }
+            var tgdiis_step LOGICAL {
+                defauls {.true.} 
+                info { 
+                    When G-DIIS (@ref bfgs_ndim > 1) is used for the structural relaxation this variable 
+                    selects whether to use to full gdiis step or the BFGS trus radius. 
+                    (bfgs only)
+                }
                 }
             }
 
@@ -2733,35 +2878,35 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    recommended values are between 0.1 and 0.3 
                 }
             }
-	    var fire_falpha -type REAL { 
+	        var fire_falpha -type REAL { 
                 default { 0.99D0 }
                 info {
                     Scaling of the alpha mixing parameter for steps with P > 0;  
                 }
             }
-	    var fire_nmin -type INTEGER { 
+	        var fire_nmin -type INTEGER { 
                 default { 5 }
                 info {
                     Minimum number of steps with P > 0 before increase of @ref dt 
                 }
             }
-	    var fire_f_inc -type REAL { 
+	        var fire_f_inc -type REAL { 
                 default { 1.1D0 }
                 info {
                    Factor for increasing @ref dt 
                 }
             }
-	    var fire_f_dec -type REAL { 
+	        var fire_f_dec -type REAL { 
                 default { 0.5D0 }
                 info {
                    Factor for decreasing @ref dt 
                 }
             }
-	    var fire_dtmax -type REAL { 
+	        var fire_dtmax -type REAL { 
                 default { 10.D0 }
                 info {
                    Determines the maximum value of @ref dt in the FIRE minimization;
-		   dtmax = fire_dtmax*@ref dt 
+		            dtmax = fire_dtmax*@ref dt 
                 }
             }
         }
@@ -2865,8 +3010,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 opt -val 'b'            { the y component of axis 2 (v2_y) is fixed }
                 opt -val 'c'            { the z component of axis 3 (v3_z) is fixed }
                 opt -val 'fixa'         { axis 1 (v1_x,v1_y,v1_z) is fixed }
-                opt -val 'fixb'         { axis 1 (v2_x,v2_y,v2_z) is fixed }
-                opt -val 'fixc'         { axis 1 (v3_x,v3_y,v3_z) is fixed }
+                opt -val 'fixb'         { axis 2 (v2_x,v2_y,v2_z) is fixed }
+                opt -val 'fixc'         { axis 3 (v3_x,v3_y,v3_z) is fixed }
                 opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
                 opt -val 'y'            { only the y component of axis 2 (v2_y) is moved }
                 opt -val 'z'            { only the z component of axis 3 (v3_z) is moved }
@@ -2970,6 +3115,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             var fcp_mass -type REAL {
                 default {
                     5.D+6 / (xy area) for ESM only;
+                    5.D+4 / (xy area) for ESM-RISM
                 }
                 info {
                     Mass of the FCP.
@@ -3089,6 +3235,432 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }
+
+    #
+    # namelist RISM
+    #
+
+    namelist RISM {
+        label {
+            Input this namelist only if @ref trism = .TRUE.
+        }
+
+        var nsolv -type INTEGER {
+            status { REQUIRED }
+            info {
+                The number of solvents (i.e. molecular species) in the unit cell
+            }
+        }
+
+        var closure -type CHARACTER {
+            default { 'kh' }
+            options {
+                info {
+                    Specify the type of closure equation:
+                }
+                opt -val 'kh' {
+                    The Kovalenko and Hirata's model.
+                    [A.Kovalenko, F.Hirata, JCP 110, 10095 (1999), doi:10.1063/1.478883]
+                }
+                opt -val 'hnc' {
+                    The HyperNetted-Chain model, which is
+                    suitable only for solvents without charge.
+                    [J.P.Hansen et al., Theory of simple liquids. Academic Press, London, 1990]
+                }
+            }
+        }
+
+        var tempv -type REAL {
+            default { 300.D0 }
+            info {
+                Temperature (Kelvin) of solvents.
+            }
+        }
+
+        var ecutsolv -type REAL {
+            default { 4 * @ref ecutwfc }
+            info {
+                Kinetic energy cutoff (Ry) for solvent's correlation functions.
+                If a solute is an isolated system or slab, you may allowed to
+                use default value. For a frameworked or porous solute (e.g. Zeolite, MOF),
+                it is desirable to apply a larger value. Solvents confined in a framework
+                often have a high frequency.
+            }
+        }
+
+        dimension solute_lj -start 1 -end ntyp -type CHARACTER {
+            default { 'uff' }
+            options {
+                info {
+                    Specify the Lennard-Jones potential of solute on atomic type 'i':
+                }
+                opt -val 'none' {
+                    The Lennard-Jones potential is not specified here.
+                    you must set @ref solute_epsilon and @ref solute_sigma.
+                }
+                opt -val 'uff' {
+                    Universal Force Field.
+                    [A.K.Rappe et al., JACS 144, 10024 (1992), doi:10.1021/ja00051a040]
+                }
+                opt -val 'clayff' {
+                    Clay's Force Field
+                    [R.T.Cygan et al., JPC B 108, 1255 (2004), doi:10.1021/jp0363287]
+                }
+                opt -val 'opls-aa' {
+                    OPLS-AA (generic parameters for QM/MM)
+                }
+            }
+        }
+
+        dimension solute_epsilon -start 1 -end ntyp -type REAL {
+            info {
+                The Lennard-Jones potential of solute on atomic type 'i'.
+                Here, you can set the parameter 'epsilon' (kcal/mol).
+            }
+        }
+
+        dimension solute_sigma -start 1 -end ntyp -type REAL {
+            info {
+                The Lennard-Jones potential of solute on atomic type 'i'.
+                Here, you can set the parameter 'sigma' (Angstrom).
+            }
+        }
+
+        var starting1d -type CHARACTER {
+            options {
+                opt -val 'zero' {
+                    Starting correlation functions of 1D-RISM from zero.
+                    ( default for scf, *relax, *md )
+                }
+                opt -val 'file' {
+                    Start from existing "1d-rism_csvv_r.xml" file in the
+                    directory specified by variables "prefix" and "outdir".
+                }
+                opt -val 'fix' {
+                    Read from existing "1d-rism_csvv_r.xml" file in the
+                    directory specified by variables "prefix" and "outdir",
+                    and never calculate 1D-RISM.
+                    For nscf and bands calculation this is the default.
+                }
+            }
+        }
+
+        var starting3d -type CHARACTER {
+            options {
+                opt -val 'zero' {
+                    Starting correlation functions of 3D-RISM from zero.
+                    ( default for scf, *relax, *md )
+                }
+                opt -val 'file' {
+                    Start from existing "3d-rism_csuv_r.dat" file in the
+                    directory specified by variables "prefix" and "outdir".
+                    For nscf and bands calculation this is the default.
+                }
+            }
+        }
+
+        var smear1d -type REAL {
+            default { 2.D0 }
+            info {
+                Coulomb smearing radius (a.u.) for 1D-RISM.
+            }
+        }
+
+        var smear3d -type REAL {
+            default { 2.D0 }
+            info {
+                Coulomb smearing radius (a.u.) for 3D-RISM.
+            }
+        }
+
+        var rism1d_maxstep -type INTEGER {
+            default { 50000 }
+            info {
+                Maximum number of iterations in a 1D-RISM step.
+            }
+        }
+
+        var rism3d_maxstep -type INTEGER {
+            default { 5000 }
+            info {
+                Maximum number of iterations in a 3D-RISM step.
+            }
+        }
+
+        var rism1d_conv_thr -type REAL {
+            default { 1.D-8 }
+            info {
+                Convergence threshold for 1D-RISM.
+            }
+        }
+
+        var rism3d_conv_thr -type REAL {
+            default {
+                1.D-5 if @ref lgcscf == .FALSE.;
+                5.D-6 if @ref lgcscf == .TRUE.
+            }
+            info {
+                Convergence threshold for 3D-RISM.
+            }
+        }
+
+        var mdiis1d_size -type INTEGER {
+            default { 20 }
+            info {
+                Size of Modified DIIS (MDIIS) for 1D-RISM.
+            }
+        }
+
+        var mdiis3d_size -type INTEGER {
+            default { 10 }
+            info {
+                Size of Modified DIIS (MDIIS) for 3D-RISM.
+            }
+        }
+
+        var mdiis1d_step -type REAL {
+            default { 0.5D0 }
+            info {
+                Step of Modified DIIS (MDIIS) for 1D-RISM.
+            }
+        }
+
+        var mdiis3d_step -type REAL {
+            default { 0.8D0 }
+            info {
+                Step of Modified DIIS (MDIIS) for 3D-RISM.
+            }
+        }
+
+        var rism1d_bond_width -type REAL {
+            info {
+                Gaussian width of bonds to smear intra-molecular correlation for 1D-RISM.
+                If 3D-RISM calculation, default is 0.
+                If Laue-RISM calculation, default is 2 / SQRT(@ref ecutwfc).
+            }
+        }
+
+        var rism1d_dielectric -type REAL {
+            default { -1.0D0 }
+            info {
+                Dielectric constant for 1D-RISM.
+                If @ref rism1d_dielectric > 0, dielectrically consistent RISM (DRISM) is performed.
+
+                For details of DRISM, see:
+                J.S.Perkyns and B.M.Pettitt, CPL 1992, 190, 626, doi:10.1016/0009-2614(92)85201-K
+            }
+        }
+
+        var rism1d_molesize -type REAL {
+            default { 2.0D0 }
+            info {
+                Size of solvent molecules (a.u.) for 1D-RISM.
+                This is used only if @ref rism1d_dielectric > 0.
+                If you have large molecules, you have to set ~ 20 a.u. .
+            }
+        }
+
+        var rism1d_nproc -type INTEGER {
+            default { 128 }
+            info {
+                Number of processes to calculate 1D-RISM.
+            }
+        }
+
+        var rism3d_conv_level -type REAL {
+            default { 
+                0.1 if @ref laue_both_hands == .FALSE. .AND. @ref lgcscf == .FALSE.;
+                0.3 if @ref laue_both_hands == .FALSE. .AND. @ref lgcscf == .TRUE.;
+                0.5 if @ref laue_both_hands == .TRUE.
+            }
+            options {
+                info {
+                    Convergence level of 3D-RISM.
+                }
+                opt -val 0.0 {
+                    Convergence level is 'low'.
+                    Convergence threshold of 3D-RISM is greater than
+                    @ref rism3d_conv_thr, when estimated energy error >> @ref conv_thr .
+                    The threshold becomes @ref rism3d_conv_thr, when
+                    estimated energy error is enough small.
+                }
+                opt -val 0.0<x<1.0 {
+                    Convergence level is 'medium'.
+                    Convergence threshold of 3D-RISM is intermediate value
+                    between 'low' and 'high', where @ref rism3d_conv_level is mixing rate.
+                }
+                opt -val 1.0 {
+                    Convergence level is 'high'.
+                    Convergence threshold of 3D-RISM is always @ref rism3d_conv_thr .
+                }
+            }
+        }
+
+        var rism3d_planar_average -type LOGICAL {
+            info {
+                If .TRUE., planar averages of solvent densities and potentials
+                are calculated and written to 'prefix.rism1'.
+                For 3D-RISM, default is .FALSE.
+                For Laue-RISM, default is .TRUE.
+            }
+        }
+
+        var laue_nfit -type INTEGER {
+            default { 4 }
+            info {
+                The number of z-grid points for the polynomial fit along the cell edge.
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_expand_right -type REAL {
+            default { -1.0 }
+            info {
+                If positive value, set the ending position offset [in a.u.]
+                of the solvent region on right-hand side of the unit cell,
+                measured relative to the unit cell edge.
+                (the solvent region ends at z = + [L_z/2 + @ref laue_expand_right].)
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_expand_left -type REAL {
+            default { -1.0 }
+            info {
+                If positive value, set the ending position offset [in a.u.]
+                of the solvent region on left-hand side of the unit cell,
+                measured relative to the unit cell edge.
+                (the solvent region ends at z = - [L_z/2 + @ref laue_expand_left].)
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_starting_right -type REAL {
+            default { 0.0 }
+            info {
+                Set the starting position [in a.u.] of the solvent region
+                on right-hand side of the unit cell. Then the solvent region is
+                defined as [ @ref laue_starting_right , L_z/2 + @ref laue_expand_right ],
+                where distribution functions are finite.
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_starting_left -type REAL {
+            default { 0.0 }
+            info {
+                Set the starting position [in a.u.] of the solvent region
+                on left-hand side of the unit cell. Then the solvent region is
+                defined as [ -L_z/2 - @ref laue_expand_left , @ref laue_starting_left ],
+                where distribution functions are finite.
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_buffer_right -type REAL {
+            default {
+                8.0 if @ref laue_expand_right > 0.0;
+               -1.0 if @ref laue_expand_right <= 0.0
+            }
+            info {
+                If positive value, set the buffering length [in a.u.]
+                of the solvent region on right-hand side of the unit cell.
+                Then correlation functions are defined inside of
+                [ @ref laue_starting_right - @ref laue_buffer_right , L_z/2 + @ref laue_expand_right ].
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_buffer_left -type REAL {
+            default {
+                8.0 if @ref laue_expand_left > 0.0;
+               -1.0 if @ref laue_expand_left <= 0.0
+            }
+            info {
+                If positive value, set the buffering length [in a.u.]
+                of the solvent region on left-hand side of the unit cell.
+                Then correlation functions are defined inside of
+                [ -L_z/2 - @ref laue_expand_left , @ref laue_starting_left + @ref laue_buffer_left ].
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_both_hands -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., you can set different densities
+                to the solvent regions of right-hand side and left-hand side.
+                See @ref SOLVENTS card.
+            }
+        }
+
+        var laue_wall -type CHARACTER {
+            default { 'auto' }
+            options {
+                info {
+                    Set the repulsive wall with (1/r)^12 term of Lennard-Jones potential.
+                    This is only for Laue-RISM.
+                }
+                opt -val 'none' {
+                    The repulsive wall is not defined.
+                }
+                opt -val 'auto' {
+                    The repulsive wall is defined, whose edge position is set automatically.
+                    One does not have to set @ref laue_wall_z (the edge position).
+                }
+                opt -val 'manual' {
+                    The repulsive wall is defined, whose edge position is set manually.
+                    One have to set @ref laue_wall_z (the edge position).
+                }
+            }
+        }
+
+        var laue_wall_z -type REAL {
+            default { 0.0 }
+            info {
+                Set the edge position [in a.u.] of the repulsive wall.
+                If @ref laue_expand_right > 0.0, the repulsive wall is defined on [ -inf , @ref laue_wall_z ].
+                If @ref laue_expand_left > 0.0, the repulsive wall is defined on [ @ref laue_wall_z , inf ].
+                This is only for Laue-RISM and @ref laue_wall == 'manual' .
+            }
+        }
+
+        var laue_wall_rho -type REAL {
+            default { 0.01 }
+            info {
+                The density (1/bohr^3) of the repulsive wall.
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+
+        var laue_wall_epsilon -type REAL {
+            default { 0.1 }
+            info {
+                The Lennard-Jones potential of the repulsive wall.
+                Here, you can set the parameter 'epsilon' (kcal/mol).
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+
+        var laue_wall_sigma -type REAL {
+            default { 4.0 }
+            info {
+                The Lennard-Jones potential of the repulsive wall.
+                Here, you can set the parameter 'sigma' (Angstrom).
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+
+        var laue_wall_lj6 -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., the attractive term -(1/r)^6 of Lennard-Jones potential is added.
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+    }
+
+
 
     #
     # card ATOMIC_SPECIES
@@ -3481,7 +4053,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         label { 
-            Optional card, needed only if @ref ibrav == 0 is specified, ignored otherwise ! 
+            Optional card, must be present if @ref ibrav == 0, must be absent otherwise
         }
         
         syntax {
@@ -3510,8 +4082,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
     card CONSTRAINTS {
         label {
-            Optional card, used for constrained dynamics or constrained optimisations
-            (only if @ref ion_dynamics=='damp' or 'verlet', variable-cell excepted)
+            Optional card, used for constrained dynamics or constrained optimizations
+            (only if @ref ion_dynamics=='damp','verlet' or 'velocity-verlet', variable-cell excepted)
         }
         message {
             When this card is present the SHAKE algorithm is automatically used.
@@ -3570,7 +4142,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                 G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
                                 doi:10.1016/j.jnucmat.2010.06.001
                             }
-                        }                       
+                            opt -val 'potential_wall' {
+                                (experimental) add a potential wall at the origin
+                                normal to the the z-axis.
+                            }
+                        }
                     }
                     colgroup {
                         col constr(1)
@@ -3606,6 +4182,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                            @i constr(1) is the index of the atom whose position is constrained.
                                            @i constr(2:4) are the three coordinates of the vector that specifies
                                            the constraint direction.
+                            @b 'potential_wall' :
+                                           Formula is: External force = prefac * exponent * Exp(-exponent). Force is only applied
+                                           on atoms within the cutoff.
+                                           @i constr(1) is the prefactor
+                                           @i constr(2) is the value in the exponent
+                                           @i constr(3) is the cutoff (in a.u.)
                         }
                     }
 
@@ -3706,4 +4288,397 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            }
         }
     }   
+    
+    #
+    # card SOLVENTS
+    #
+
+    card SOLVENTS {
+        flag solvents_unit -use optional {
+            enum { 1/cell | mol/L | g/cm^3 }
+            options {
+                opt -val 1/cell {
+                    solvent's densities are specified
+                    as number of molecules in the unit cell.
+                }
+                opt -val mol/L {
+                    solvent's densities are specified as molar concentrations.
+                }
+                opt -val g/cm^3 {
+                    solvent's densities are in gram per cm^3.
+                }
+            }
+        }
+
+        label {
+            Optional card, used only if @ref trism = .TRUE., ignored otherwise !
+        }
+
+        choose {
+            when -test "laue_both_hands = .FALSE." {
+                syntax {
+                    table solvent {
+                        rows -start 1 -end nsolv {
+                            col X -type CHARACTER {
+                                info {
+                                    label of the solvent molecule.
+                                }
+                            }
+                            col Density -type REAL {
+                                info {
+                                    density of the solvent molecule.
+                                    if not positive value is set, density is read from MOL-file.
+                                }
+                            }
+                            col Molecule -type CHARACTER {
+                                info {
+                                    MOL-file of the solvent molecule.
+                                    in the MOL-file, molecular structure and some other data are written.
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            elsewhen -test "laue_both_hands = .TRUE." {
+                syntax {
+                    table solvent {
+                        rows -start 1 -end nsolv {
+                            col X -type CHARACTER {
+                                info {
+                                    label of the solvent molecule.
+                                }
+                            }
+                            col Density_Left -type REAL {
+                                info {
+                                    density of the solvent molecule in the left-hand side.
+                                    if not positive value is set, density is read from MOL-file.
+                                }
+                            }
+                            col Density_Right -type REAL {
+                                info {
+                                    density of the solvent molecule in the right-hand side.
+                                    if not positive value is set, density is read from MOL-file.
+                                }
+                            }
+                            col Molecule -type CHARACTER {
+                                info {
+                                    MOL-file of the solvent molecule.
+                                    in the MOL-file, molecular structure and some other data are written.
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #
+    # HUBBARD
+    #
+    card HUBBARD {
+        set Hflags { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+        flag hubbard_type {
+            enum $Hflags
+            options {
+                info {
+                    @b HUBBARD options are:
+                }
+                opt -val atomic    {
+                    use atomic orbitals (read from pseudopotential) to build the 
+                    Hubbard projectors
+                }
+
+                opt -val ortho-atomic {
+                    use Lowdin orthogonalized atomic orbitals. This option is 
+                    recommended to be used whenever possible instead of atomic
+                    because it allows to avoid applying Hubbard corrections twice
+                    in the orbital overlap regions.
+                }
+
+                opt -val norm-atomic  {
+                    Lowdin normalization of atomic orbitals. Keep in mind:
+                    atomic orbitals are not orthogonalized in this case.
+                    This is a "quick and dirty" trick to be used when
+                    atomic orbitals from the pseudopotential are not
+                    normalized (and thus produce occupation whose
+                    value exceeds unity). 
+                }
+
+                opt -val wf {
+                    use Wannier functions to built Hubbard projectors. 
+                    The information about the Wannier functionas are read
+                    from file "prefix".hub that must be generated using pmw.x
+                    (see PP/src/poormanwannier.f90 for details).
+                    Note: these are not maximally localized Wannier functions.
+                    (see PP/examples/example05)
+                }
+
+                opt -val pseudo {
+                    use the pseudopotential projectors. The charge density
+                    outside the atomic core radii is excluded.
+                    N.B.: for atoms with +U, a pseudopotential with the
+                    all-electron atomic orbitals are required (i.e.,
+                    as generated by ld1.x with lsave_wfc flag).
+                }
+
+                info {
+                    NB: forces and stress are currently implemented only for the
+                    'atomic', 'ortho-atomic', and 'pseudo' Hubbard projectors.
+                }
+
+                info {
+                    Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
+                    U, J0, J, B, E2, E3, V in the HUBBARD card.
+                }
+
+            }
+        }
+
+        choose {
+            when -test "DFT+U" {
+                syntax -flag $Hflags {
+
+                    # atom-1 specs
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                            keyword U
+                            var label(1)-manifold(1)
+                            var u_val(1)
+                            info {
+                                @b Syntax:
+                                  @b U @i {label-manifold u_val}
+
+                                @b Where:
+                                @b U        = string constant "U"; indicates the specs for the @i U parameter will be given
+                                @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                @i u_val    = value of the @i U parameter (in eV)
+                                    
+                                @b Example:
+                                HUBBARD (ortho-atomic)
+                                  U Mn-3d 5.0
+                                  U Ni-3d 6.0
+                            }                                                                
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword J0
+                                var label(1)-manifold(1)
+                                var j0_val(1)
+                                info {
+                                    @b Remark: specs of @b J0 parameters are optional
+                                    
+                                    @b Syntax:
+                                      @b J0 @i {label-manifold j0_val}
+                                        
+                                    @b Where:
+                                    @b J0       = string constant "J0"; indicates the specs for the @i J0 parameter will be given
+                                    @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                    @i j0_val   = value of the @i J0 parameter (in eV)
+                                    
+                                    @b Example:
+                                      HUBBARD (ortho-atomic)
+                                      U  Mn-3d 5.0
+                                      J0 Mn-3d 1.0
+                                      U  Ni-3d 6.0
+                                      J0 Ni-3d 1.2
+                                }
+                            }                                
+                        }
+                    }
+                        
+                    # print ". . ." on a separate line
+                        
+                    line { etc }
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                            keyword U
+                            var label(n)-manifold(n)
+                            var u_val(n)
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword J0
+                                var label(n)-manifold(n)
+                                var j0_val(n)
+                            }                                
+                        }
+                    }                        
+                }
+            }
+            
+            elsewhen -test "DFT+U+J" { 
+                syntax -flag $Hflags {
+                    
+                    # atom-1 specs
+                    
+                    line {
+                        vargroup -type {CHARACTER, CHARACTER, REAL} {
+                            var paramType(1)
+                            var label(1)-manifold(1)
+                            var paramValue(1)
+                            info {
+                                @b Syntax of the line:
+                                
+                                  @i {paramType label-manifold paramValue}
+
+                                @b Where:
+                                @i paramType  = character describing the type of Hubbard parameter 
+                                             allowed values: @b U, @b J and either @b B (for d-orbitals) or @b E2 and @b E3 (for f-orbitals)
+                                @i label      = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold   = specs of the manifold (e.g., 3d, 2p...)
+                                @i paramValue = value of the parameter (in eV)
+
+                                @b Example:
+                                  HUBBARD (ortho-atomic)
+                                  U Mn-3d 5.0
+                                  J Mn-3d 1.0
+                                  B Mn-3d 1.1
+                                  U Ni-3d 6.0
+                                  J Ni-3d 1.2
+                                  B Ni-3d 1.3
+                            }                        
+                        }
+                    }
+                                            
+                    # print ". . ." on a separate line
+                    line { etc }
+                    
+                    # atom-n specs
+                    
+                    line {
+                        vargroup -type {CHARACTER, CHARACTER, REAL} {
+                            var paramType(n)
+                            var label(n)-manifold(n)
+                            var paramValue(n)
+                        }
+                    }
+                }
+            }
+            elsewhen -test "DFT+U+V" { 
+                syntax -flag $Hflags {
+                    line {
+                        vargroup -type {CHARACTER, REAL} {
+                            keyword U
+                            var label(I)-manifold(I)
+                            var u_val(I)
+                            info {
+                                @b Syntax of the line:
+                                
+                                  @b U @i {label-manifold u_val}
+
+                                @b Where:
+                                @b U        = string constant "U"; indicates the specs for the @i U parameter will be given
+                                @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                @i u_val    = value of the @i U parameter (in eV)
+                            }
+                        }
+                    }
+
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER, REAL} {
+                                keyword J0
+                                var label(I)-manifold(I)
+                                var j0_val(I)
+                                info {
+                                    @b Remark: specs of @b J0 parameters are optional
+                                        
+                                    @b Syntax of the line:
+                                    
+                                      @b J0 @i {label(I)-manifold(I) j0_val(I)}
+                                        
+                                    @b Where:
+                                    @b J0       = string constant "J0"; indicates the specs for the @i J0 parameter will be given
+                                    @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                    @i j0_val   = value of the @i J0 parameter (in eV) 
+                                }
+                            }
+                        }
+                    }
+                        
+
+                    line {
+                        vargroup -type {CHARACTER, CHARACTER, INTEGER, INTEGER, REAL} {
+                            keyword V
+                            var label(I)-manifold(I)
+                            var label(J)-manifold(J)
+                            var I
+                            var J
+                            var v_val(I,J)
+                            info {
+                                @b Syntax of the line:
+                                
+                                  @b V @i {label(I)-manifold(J) label(J)-manifold(J) I J v_val(I,J)}
+
+                                @b Where:
+                                @b V           = string constant "V"; indicates the specs for the @i V parameter will be given
+                                @i label(I)    = label of the atom @i I (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold(I) = specs of the manifold for atom @i I (e.g., 3d, 2p...)
+                                @i label(J)    = label of the atom @i J (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold(J) = specs of the manifold for atom @i J (e.g., 3d, 2p...)
+                                @i I           = index of the atom @i I
+                                @i J           = index of the atom @i J
+                                @i v_val(I,J)  = value of the @i V parameter for the atom pair @i I,J (in eV)
+
+                                @b Example:
+                                  HUBBARD (ortho-atomic)
+                                  U Co-3d 7.70
+                                  V Co-3d O-2p 1 19 0.75
+                                  V Co-3d O-2p 1 46 0.75
+                                  V Co-3d O-2p 1 43 0.75
+                                  V Co-3d O-2p 1 54 0.75
+                                  V Co-3d O-2p 1 11 0.75
+                                  V Co-3d O-2p 1 22 0.75
+                            }
+                        }
+                    }
+                    
+                    line { etc }
+                    
+                    line {
+                        vargroup -type {CHARACTER, REAL} {
+                            keyword U
+                            var label(N)-manifold(N)
+                            var u_val(N)
+                        }
+                    }
+
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER, REAL} {
+                                keyword J0
+                                var label(N)-manifold(N)
+                                var j0_val(N)
+                            }
+                        }
+                    }
+                        
+
+                    line {
+                        vargroup -type {CHARACTER, REAL} {
+                            keyword V
+                            var label(N)-manifold(N)
+                            var label(M)-manifold(M)
+                            var N
+                            var M
+                            var v_val(N,M)
+                        }
+                    }
+                }
+            }
+        }
+    }
+   ###
 }

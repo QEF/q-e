@@ -1,0 +1,33 @@
+ &control
+    calculation='scf'
+    prefix='bn'
+    outdir='./'
+    pseudo_dir = '../../pseudo'
+    restart_mode='from_scratch'
+    tprnfor=.TRUE.
+    tstress=.TRUE.
+ /
+ &system
+    ibrav=  4,
+    celldm(1) = 4.6895
+    celldm(3) = 8.52969399  ! c/a = 40 Bohr
+    ntyp = 2,
+    nat =  2,
+    ecutwfc = 40,
+    occupations='fixed',
+    assume_isolated='2D',
+ /
+ &electrons
+    diagonalization='david'
+    mixing_beta = 0.7
+    conv_thr = 1.0d-10
+ /
+ATOMIC_SPECIES
+B 10.81    B-PBE.upf
+N 14.00674  N-PBE.upf
+ATOMIC_POSITIONS crystal
+B  0.000000000000   0.000000000000   0.000000000
+N  0.666666666667   0.333333333333   0.000000000
+K_POINTS automatic
+4 4 1 0 0 0
+

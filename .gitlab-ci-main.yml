@@ -1,0 +1,109 @@
+include: '.gitlab-ci.yml'
+
+build:pw:
+  tags: [gitlab-org-docker]
+  image: ubuntu:20.04
+  script:
+    - apt-get -qq update
+    - DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
+    - ./configure
+    - make -j 2 pw
+#    - export OMP_NUM_THREADS=1
+#    - cd test-suite
+#    - mkdir /tmp/save
+#    - make run-tests-pw-serial
+#    - rm -r /tmp/save
+
+build:cp:
+  tags: [gitlab-org-docker]
+  image: ubuntu:20.04
+  script:
+    - apt-get -qq update
+    - DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
+    - ./configure
+    - make -j 2 cp
+#    - export OMP_NUM_THREADS=1
+#    - cd test-suite
+#    - mkdir /tmp/save
+#    - make run-tests-cp-serial
+#    - rm -r /tmp/save
+
+build:cmake-nvhpc:
+  tags: [gitlab-org-docker]
+  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+  script:
+    - apt-get -qq update
+    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+    - apt-get install -qq git cmake libfftw3-dev
+    - cmake --version
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make -j 4
+
+build:cmake-nvhpc-nocuda:
+  tags: [gitlab-org-docker]
+  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+  script:
+    - apt-get -qq update
+    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+    - apt-get install -qq git cmake libfftw3-dev
+    - cmake --version
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DQE_ENABLE_CUDA=OFF -DQE_ENABLE_OPENACC=OFF .. && make -j 2
+
+
+#build:ph:
+#  tags: [docker]
+#  image: espressofoundation/ubuntu:latest
+#  script:
+#    - ./configure
+#    - make ph
+#    - export OMP_NUM_THREADS=1
+#    - cd test-suite
+#    - mkdir /tmp/save
+#    - make run-tests-ph-serial
+#    - rm -r /tmp/save
+
+
+            
+#build:centos:
+#  image: centos:latest
+#  script:
+#    - yum -y groupinstall "Development Tools"
+#    - yum -y install wget which python27
+#    - ./configure
+#    - make all
+#    - export OMP_NUM_THREADS=1
+#    - cd test-suite
+#    - mkdir /tmp/save
+#    - make run-tests-serial
+#    - rm -r /tmp/save
+
+
+#### BUILDS ON GALILEO ####
+
+#build:intel:
+#  tags: [galileo]
+#  script:
+#    - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
+#    - ./configure --enable-openmp
+#    - make pw cp
+#    - export OMP_NUM_THREADS=2
+#    - cd test-suite
+#    - mkdir -p /tmp/save
+#    - make run-tests-pw-parallel
+#    - make run-tests-cp-parallel
+#    - rm -r /tmp/save

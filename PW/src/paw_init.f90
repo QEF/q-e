@@ -176,7 +176,7 @@ MODULE paw_init
     USE paw_variables,        ONLY : okpaw
     USE paw_symmetry,         ONLY : PAW_symmetrize
     USE random_numbers,       ONLY : randy
-    USE basis,                ONLY : starting_wfc
+    USE starting_scf,         ONLY : starting_wfc
     USE noncollin_module,     ONLY : nspin_mag, angle1, angle2
     !
     IMPLICIT NONE
@@ -267,7 +267,6 @@ MODULE paw_init
                                    rad, paw_is_init, vs_rad, &
                                    total_core_energy, only_paw
     USE atom,               ONLY : g => rgrid
-    USE radial_grids,       ONLY : do_mesh
     USE uspp_param,         ONLY : upf
     USE lsda_mod,           ONLY : nspin
     USE noncollin_module,   ONLY : noncolin, domag

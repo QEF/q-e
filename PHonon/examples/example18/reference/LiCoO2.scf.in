@@ -2,8 +2,8 @@
     calculation='scf',
     restart_mode='from_scratch',
     prefix='LiCoO2'
-    pseudo_dir = '/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/pseudo/',
-    outdir='/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/tempdir/'
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp1/q-e/pseudo/',
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/tempdir/'
  /
  &system
     ibrav = 5, 
@@ -13,10 +13,6 @@
     ntyp = 3,
     ecutwfc = 40.0
     ecutrho = 320.0
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'atomic',
-    Hubbard_U(1) = 3.0
  /
  &electrons
     conv_thr =  1.d-13
@@ -33,3 +29,5 @@ ATOMIC_POSITIONS {crystal}
  Li  0.5000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
  4 4 4 0 0 0
+HUBBARD {atomic}
+U Co-3d 3.0

@@ -64,6 +64,15 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                     3 translational asr imposed by optimized
                     correction of the force constants (projection)
                 }
+                opt -val 'all' {
+                    3 translational asr + 3 rotational asr + 15 Huang
+                    conditions for vanishing stress tensor, imposed by
+                    optimized correction of the force constants (projection).
+                    Remember to set write_lr = .true. to write long-range
+                    force constants into file when running q2r and set @ref 
+                    read_lr = .true. when running matdyn in the case of 
+                    infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+                }
                 opt -val 'one-dim' {
                     3 translational asr + 1 rotational asr imposed
                     by optimized correction of the dyn. mat. (the
@@ -82,6 +91,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                     In these cases the supplementary asr are cancelled
                     during the orthonormalization procedure (see below).
                 }
+            }
+        }
+        var huang -type LOGICAL {
+            default {@tt .true.}
+            info {
+                if @b .true. 15 Huang conditions for vanishing stress
+                tensor are included in @ref asr = 'all'.
             }
         }
         var dos -type LOGICAL {
@@ -269,6 +285,24 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
             info {
                 if @b .true. do not apply LO-TO splitting for q=0
                 (default: @tt .false.)
+            }
+        }
+
+        var read_lr -type LOGICAL {
+            default {@tt .false.}
+            info {
+                if @b .true. read also long-range force constants when they exist in 
+                force constant file. This is required when enforcing @ref asr = 'all' 
+                for infrared-active solids.
+            }
+        }
+
+        var write_frc -type LOGICAL {
+            default {@tt .false.}
+            info {
+                if @b .true. write force constants with @ref asr imposed into file.
+                The filename would be @ref flfrc+".matdyn". The long-range part of 
+                force constants will be not written.
             }
         }
     }

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -98,7 +98,7 @@ rm -rf $TMP_DIR/_ph0/alas*
 for q in `seq 1 8 ` ; do
 for irr in `seq 1 6` ; do
 rm -rf $TMP_DIR/$q.$irr
-done 
+done
 done
 $ECHO " done"
 
@@ -143,7 +143,7 @@ $ECHO " done"
 # Initial calculation, only band structure. Note that here and in pw.x
 # you can use a different number of processors with respect to the
 # phonon calculation using the wf_collect=.true. flag.
-# 
+#
 cat > alas.ph.wfc.in << EOF
 phonons of AlAs
  &inputph
@@ -163,7 +163,7 @@ check_failure $?
 $ECHO " done"
 #
 # Initial calculation, initial part of the dynamical matrix
-# 
+#
 cat > alas.ph.in0 << EOF
 phonons of AlAs
  &inputph
@@ -220,7 +220,7 @@ $PH_COMMAND < input.$q.$irr > output.$q.$irr
 $ECHO " done"
 
 done
-done 
+done
 #
 #  Collecting all results in a single directory:
 #
@@ -230,9 +230,9 @@ for irr in `seq 1 6` ; do
 
 \cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/dynmat.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave 2> /dev/null
 
-done 
+done
 #
-#  collect also the representation 0 (contribution to the dynamical 
+#  collect also the representation 0 (contribution to the dynamical
 #  matrix independent from the induced charge).
 #
 \cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/dynmat.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave 2> /dev/null
@@ -374,7 +374,7 @@ set key off
 set xrange [0:450]
 set xlabel "frequency (cm^{-1})"
 set ylabel "DOS"
-plot 'alas.phdos' u 1:2 w l lw 3 
+plot 'alas.phdos' u 1:2 w l lw 3
 EOF
 $ECHO "  generating plot of phonon_dos in the file alas.phdos.ps...\c"
 $GP_COMMAND  gnuplot1.tmp

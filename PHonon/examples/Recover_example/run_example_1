@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -95,7 +95,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/aluminum*
 rm -rf $TMP_DIR/_ph0/aluminum*
 $ECHO " done"
-$ECHO 
+$ECHO
 
 #
 # SCF at dense k-mesh, good enough for electronic DOS
@@ -173,7 +173,7 @@ Electron-phonon coefficients for Al
   fildyn='al.dyn',
   electron_phonon='interpolated',
   max_seconds=3,
-  el_ph_sigma=0.005, 
+  el_ph_sigma=0.005,
   el_ph_nsigma=10,
   trans=.true.,
   ldisp=.true.
@@ -193,7 +193,7 @@ Electron-phonon coefficients for Al
   outdir='$TMP_DIR/',
   fildyn='al.dyn',
   electron_phonon='interpolated',
-  el_ph_sigma=0.005, 
+  el_ph_sigma=0.005,
   el_ph_nsigma=10,
   recover=.true.,
   trans=.true.,

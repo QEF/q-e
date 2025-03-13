@@ -8,8 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_energy(rhoin,plugin_etot)
 !----------------------------------------------------------------------------
-! This routine is used to calculate plugin energy related quantities
-! that needs to be solved inside the scf cycle
+!! This routine is used to calculate plugin energy related quantities
+!! that needs to be solved inside the scf cycle.
 !
 USE io_global,        ONLY : stdout, ionode
 USE kinds,            ONLY : DP

@@ -23,8 +23,8 @@ MODULE qexsd_copy
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
        qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
-       qexsd_copy_efermi
-  !
+       qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue, qexsd_copy_esm, qexsd_copy_twochem 
+ !
 CONTAINS
   !-------------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version)
@@ -126,7 +126,7 @@ CONTAINS
 
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_atomic_structure (atomic_structure, nsp, atm, &
-       nat, tau, ityp, alat, a1, a2, a3, ibrav )
+       nat, tau, ityp, alat, a1, a2, a3, ibrav, natomwfc )
   !--------------------------------------------------------------------------
     
     USE qes_types_module, ONLY : atomic_structure_type
@@ -135,9 +135,9 @@ CONTAINS
     !
     TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
     INTEGER, INTENT(in) :: nsp 
-    CHARACTER(LEN = 3), INTENT(in) :: atm(:)
+    CHARACTER(LEN = 6), INTENT(in) :: atm(:)
     !
-    INTEGER, INTENT(out)  :: nat, ibrav
+    INTEGER, INTENT(out)  :: nat, ibrav, natomwfc
     REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:)
     INTEGER, INTENT(inout),  ALLOCATABLE :: ityp(:)
     REAL(dp), INTENT(inout), ALLOCATABLE :: tau(:,:)
@@ -146,6 +146,11 @@ CONTAINS
     INTEGER :: iat, idx, isp
     !
     nat = atomic_structure%nat 
+    IF ( atomic_structure%num_of_atomic_wfc_ispresent ) THEN 
+      natomwfc = atomic_structure%num_of_atomic_wfc
+    ELSE 
+      natomwfc = 0 
+    END IF   
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
@@ -207,7 +212,7 @@ CONTAINS
   !------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_symmetry ( symms_obj, spacegroup, &
        nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
-       noinv, nosym, no_t_rev, flags_obj )
+       noinv, nosym, no_t_rev, colin_mag, flags_obj)
     !------------------------------------------------------------------------
     ! 
     USE qes_types_module,ONLY : symmetries_type, symmetry_flags_type
@@ -224,6 +229,7 @@ CONTAINS
     REAL(dp), INTENT(OUT):: ft(:,:)
     INTEGER, INTENT(OUT) :: irt(:,:)
     INTEGER, INTENT(OUT) :: t_rev(:)
+    INTEGER, INTENT(OUT) :: colin_mag
     CHARACTER(len=45) ::  sname(:)
     !
     LOGICAL, INTENT(OUT) :: noinv, nosym, no_t_rev
@@ -243,6 +249,11 @@ CONTAINS
     spacegroup = symms_obj%space_group
     nrot = symms_obj%nrot 
     nsym = symms_obj%nsym
+    IF (symms_obj%colin_mag_ispresent) THEN 
+      colin_mag = symms_obj%colin_mag 
+    ELSE 
+      colin_mag = -1 
+    END IF 
     !  
     invsym = .FALSE. 
     DO isym = 1, nrot
@@ -310,13 +321,14 @@ CONTAINS
   SUBROUTINE qexsd_copy_dft ( dft_obj, nsp, atm, &
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-       Hubbard_l_back, Hubbard_l1_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-       Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       vdw_corr, scal6, lon_rcut, vdw_isolated )
+       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
+       Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
+       Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
+       vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
+    USE upf_utils,        ONLY : spdf_to_l
     !
     IMPLICIT NONE 
     TYPE ( dft_type ),INTENT(in) :: dft_obj
@@ -335,20 +347,22 @@ CONTAINS
     LOGICAL, INTENT(out) :: lda_plus_U
     INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax, Hubbard_lmax_back
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
-    INTEGER, INTENT(inout) :: Hubbard_l(:), Hubbard_l_back(:), Hubbard_l1_back(:) 
-    REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U_back(:), Hubbard_J0(:), Hubbard_J(:,:), &
-                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
+    INTEGER, INTENT(inout) :: Hubbard_n(:), Hubbard_l(:), Hubbard_n2(:), Hubbard_l2(:), Hubbard_n3(:), Hubbard_l3(:) 
+    REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U2(:), Hubbard_J0(:), Hubbard_J(:,:), Hubbard_V(:,:,:), &
+                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:), Hubbard_occ(:,:)
     LOGICAL, INTENT(inout) :: backall(:)
-    OPTIONAL    :: Hubbard_U_back, Hubbard_l_back, Hubbard_lmax_back, Hubbard_alpha_back, &
-                   Hubbard_l1_back 
+    OPTIONAL    :: Hubbard_U2, Hubbard_n2, Hubbard_l2, Hubbard_lmax_back, Hubbard_alpha_back, &
+                   Hubbard_l3
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
+    LOGICAL,INTENT(inout)   :: dftd3_3body 
+    INTEGER,INTENT(inout)   :: dftd3_version 
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
     LOGICAL, INTENT(inout) :: vdw_isolated
     !
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
-    INTEGER :: ihub, isp
+    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich
     !
     dft_name = TRIM(dft_obj%functional)
     IF ( dft_obj%hybrid_ispresent ) THEN
@@ -370,17 +384,21 @@ CONTAINS
     !
     lda_plus_u = dft_obj%dftU_ispresent 
     IF ( lda_plus_u ) THEN 
-       Hubbard_U = 0.0_DP
-       Hubbard_U_back =0.0_DP
+       Hubbard_U  = 0.0_DP
+       Hubbard_U2 = 0.0_DP
        Hubbard_alpha = 0.0_DP
        Hubbard_alpha_back = 0.0_DP
        Hubbard_J = 0.0_DP
        Hubbard_J0 = 0.0_DP
        Hubbard_beta = 0.0_DP
+       Hubbard_V  = 0.0_DP 
        lda_plus_u_kind = dft_obj%dftU%lda_plus_u_kind
        U_projection = TRIM ( dft_obj%dftU%U_projection_type )
-       Hubbard_l =-1 
-       Hubbard_l_back =-1 
+       Hubbard_n  =-1 
+       Hubbard_l  =-1 
+       Hubbard_n2 =-1 
+       Hubbard_l2 =-1 
+       Hubbard_l3 =-1 
        backall = .false.
        !
        IF ( dft_obj%dftU%Hubbard_U_ispresent) THEN 
@@ -390,58 +408,59 @@ CONTAINS
              loop_on_speciesU:DO isp = 1, nsp
                 IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN 
                      Hubbard_U(isp) = dft_obj%dftU%Hubbard_U(ihub)%HubbardCommon
-                     SELECT CASE ( TRIM (label))
-                     CASE ( '1s', '2s', '3s', '4s', '5s', '6s', '7s' ) 
-                        Hubbard_l(isp) = 0 
-                     CASE ( '2p', '3p', '4p', '5p', '6p' ) 
-                        Hubbard_l(isp) = 1 
-                     CASE ( '3d', '4d', '5d' ) 
-                        Hubbard_l( isp ) = 2 
-                     CASE ( '4f', '5f' )  
-                        Hubbard_l(isp ) = 3
-                     CASE  default 
-                        IF (Hubbard_U(isp)/=0) &
-                             CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard "//label, 1 ) 
-                     END SELECT
+                     READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
+                     hu_l = spdf_to_l( label(2:2) )
+                     Hubbard_n(isp) = hu_n
+                     Hubbard_l(isp) = hu_l
+                     IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
+                        CALL errore ("qexsd_copy_dft:", &
+                            &"Problem while reading Hubbard_n and/or Hubbard_l", 1 )
                      EXIT loop_on_speciesU
                 END IF 
              END DO loop_on_speciesU
           END DO loop_on_hubbardU
        END IF 
        ! 
-       IF ( dft_obj%dftU%Hubbard_U_back_ispresent) THEN
-          loop_on_hubbardUback:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U_back
-             symbol = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%specie)
-             label  = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%label )
-             loop_on_speciesU_back:DO isp = 1, nsp
-                IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN
-                     Hubbard_U_back(isp) = dft_obj%dftU%Hubbard_U_back(ihub)%HubbardCommon
-                     EXIT loop_on_speciesU_back
-                END IF
-             END DO loop_on_speciesU_back
-          END DO loop_on_hubbardUback
-          IF (.NOT. dft_obj%dftU%Hubbard_back_ispresent) CALL errore("qexsd_copy:", &
-                                                        "internal error: U_back is present but not Hub_back",1) 
-          loop_hubbardBack: DO ihub =1, dft_obj%dftU%ndim_Hubbard_back
-              symbol = TRIM(dft_obj%dftU%Hubbard_back(ihub)%species) 
-              loop_on_species_2:DO isp = 1, nsp
-                 IF ( TRIM(symbol) == TRIM(atm(isp))) THEN 
-                    Hubbard_l_back(isp) = dft_obj%dftU%Hubbard_back(ihub)%l_number(1)%backL
-                    SELECT CASE ( TRIM (dft_obj%dftU%Hubbard_back(ihub)%background)) 
-                       CASE ('one_orbital') 
-                         backall(isp) = .FALSE. 
-                       CASE ('two_orbitals') 
-                         backall(isp)  = .TRUE. 
-                         Hubbard_l1_back(isp) = dft_obj%dftU%Hubbard_back(ihub)%l_number(2)%backL 
-                    END SELECT
-                    EXIT loop_on_species_2 
-                 END IF
-              END DO loop_on_species_2
-         END DO loop_hubbardBack
-
+       IF ( dft_obj%dftU%Hubbard_back_ispresent) THEN
+          loop_hubbardBack:DO ihub =1, dft_obj%dftU%ndim_Hubbard_back
+            symbol = TRIM(dft_obj%dftU%Hubbard_back(ihub)%species)
+            loop_on_species_back:DO isp = 1, nsp
+              IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN
+                Hubbard_U2(isp) = dft_obj%dftU%Hubbard_back(ihub)%Hubbard_U2
+                Hubbard_l2(isp) = dft_obj%dftU%Hubbard_back(ihub)%l2_number 
+                Hubbard_n2 =      dft_obj%dftU%Hubbard_back(ihub)%n2_number
+                SELECT  CASE (TRIM (dft_obj%dftU%Hubbard_back(ihub)%background))
+                  CASE ('one_orbital')
+                    backall(isp) = .FALSE. 
+                  CASE ('two_orbitals')
+                    backall(isp) = .TRUE.
+                    IF ( .NOT. dft_obj%dftU%Hubbard_back(ihub)%l3_number_ispresent) &
+                      CALL errore ("qexsd_copy_dft", "Only 1 l number found for 2 orbitals Hubbard Background", 1)
+                    Hubbard_l3(isp) = dft_obj%dftU%Hubbard_back(ihub)%l3_number
+                    IF (dft_obj%dftU%Hubbard_back(ihub)%n3_number_ispresent) & 
+                      Hubbard_n3 = dft_obj%dftU%Hubbard_back(ihub)%n3_number 
+                  CASE DEFAULT
+                    CALL errore ("qexsd_copy_dft", "Unrecognized Background type", 1)
+                END SELECT 
+                EXIT loop_on_species_back
+              END IF
+              END DO loop_on_species_back
+            END DO loop_hubbardBack
        END IF
-
-       ! 
+       !
+      IF (dft_obj%dftU%Hubbard_Occ_ispresent) THEN 
+         loop_on_hubbard_occ: DO ihub =1, dft_obj%dftU%ndim_Hubbard_Occ 
+            symbol = TRIM(dft_obj%dftU%Hubbard_Occ(ihub)%specie) 
+            loop_on_species: DO isp = 1, nsp
+               IF (TRIM(symbol) == TRIM(atm(isp))) THEN 
+                  DO ich = 1, dft_obj%dftU%Hubbard_Occ(ihub)%channels 
+                     Hubbard_occ(isp,ich) = dft_obj%dftU%Hubbard_Occ(ihub)%channel_occ(ich)%ChannelOcc 
+                  END DO 
+               END IF 
+            END DO loop_on_species 
+         END DO loop_on_hubbard_occ
+      END IF 
+      ! 
        IF ( dft_obj%dftU%Hubbard_J0_ispresent ) THEN 
             loop_on_hubbardj0:DO ihub =1, dft_obj%dftU%ndim_Hubbard_J0
                symbol = TRIM(dft_obj%dftU%Hubbard_J0(ihub)%specie)
@@ -502,8 +521,44 @@ CONTAINS
             END DO loop_on_hubbardJ
        END IF
        !
+       IF (dft_obj%dftU%Hubbard_V_ispresent .AND. SIZE (hubbard_v,1) > 1) THEN 
+         DO ihub = 1, dft_obj%dftU%ndim_Hubbard_V 
+           idx1 = dft_obj%dftU%Hubbard_V(ihub)%index1
+           idx2 = dft_obj%dftU%Hubbard_V(ihub)%index2
+           IF (Hubbard_V(idx1, idx2,1 ) == 0._DP ) THEN 
+             idx3 = 1 
+           ELSE IF (Hubbard_V(idx1, idx2, 2) == 0._DP) THEN 
+             idx3 = 2 
+           ELSE IF (Hubbard_V(idx1, idx2, 3) == 0._DP) THEN 
+             idx3 = 3 
+           ELSE IF (Hubbard_V(idx1, idx2, 4) == 0._DP) THEN
+             idx3 = 4  
+           END IF 
+           Hubbard_V(idx1, idx2, idx3 ) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
+           symbol = TRIM(dft_obj%dftU%Hubbard_V(ihub)%specie1) 
+           label  = TRIM(dft_obj%dftU%hubbard_V(ihub)%label1) 
+           DO isp = 1, nsp
+             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. & 
+                  ( Hubbard_n(isp) == -1 .OR. Hubbard_n2(isp) == -1 ))  THEN 
+               READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
+               hu_l = spdf_to_l( label(2:2) )
+               IF ( idx3 == 1 .OR. idx3 == 2 ) THEN 
+                 Hubbard_n(isp) = hu_n
+                 Hubbard_l(isp) = hu_l
+                 IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
+                    CALL errore ("qexsd_copy_dft:", "Problem while reading Hubbard_n and/or Hubbard_l", 1)
+               ELSE IF ( idx3 == 3 .OR. idx3 == 4 ) THEN 
+                 Hubbard_n2 = hu_n 
+                 Hubbard_l2 = hu_l 
+               END IF 
+             END IF 
+           END DO
+         END DO     
+       END IF  
+       !
        Hubbard_lmax      = MAXVAL( Hubbard_l(1:nsp) )
-       Hubbard_lmax_back = MAXVAL( Hubbard_l_back(1:nsp) ) 
+       Hubbard_lmax_back = MAXVAL( Hubbard_l2(1:nsp) ) 
+       ! IT: What about Hubbard_l3?
        !  
     END IF
 
@@ -513,7 +568,13 @@ CONTAINS
          vdw_corr = ''
       END IF
       
-      IF ( dft_obj%vdW_ispresent ) THEN 
+      IF ( dft_obj%vdW_ispresent ) THEN
+         IF (dft_obj%vdW%dftd3_threebody_ispresent) THEN 
+            dftd3_3body = dft_obj%vdw%dftd3_threebody 
+         END IF 
+         IF (dft_obj%vdw%dftd3_version_ispresent) THEN 
+            dftd3_version = dft_obj%vdW%dftd3_version 
+         END IF  
          IF (dft_obj%vdW%london_s6_ispresent ) THEN 
             scal6 = dft_obj%vdW%london_s6
          END IF
@@ -524,12 +585,17 @@ CONTAINS
             vdW_isolated = dft_obj%vdW%ts_vdW_isolated
          END IF
       END IF
-   
+
+      RETURN
+
+14    CALL errore ('qexsd_copy_dft:', ' End of file while parsing Hubbard manifolds', 1)
+15    CALL errore ('qexsd_copy_dft:', ' Error while parsing Hubbard manifolds', 1)
+
     END SUBROUTINE qexsd_copy_dft
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
+         isk, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
          ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
@@ -540,7 +606,7 @@ CONTAINS
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
       LOGICAL, INTENT(out) :: lsda
-      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, nbnd_up, nbnd_dw, &
+      INTEGER, INTENT(out) :: nkstot, nbnd, nbnd_up, nbnd_dw, &
               isk(:)
       REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, xk(:,:), wk(:)
       REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
@@ -549,8 +615,7 @@ CONTAINS
       INTEGER :: ik
       ! 
       lsda = band_struct_obj%lsda
-      nkstot = band_struct_obj%nks 
-      natomwfc = band_struct_obj%num_of_atomic_wfc
+      nkstot = band_struct_obj%nks  
       !
       IF ( lsda) THEN
          !
@@ -562,6 +627,10 @@ CONTAINS
             CALL errore ('qexsd_copy_band_structure: ','both nbnd and nbnd_up+nbnd_dw missing', 1)  
          END IF
          !
+         ! the quantity used below (not sure about the logic ...):
+         !    band_struct_obj%ks_energies(ik)%eigenvalues%size
+         ! should be the same for all k-points so ik=1 does the job
+         ik = 1
          IF ( band_struct_obj%nbnd_up_ispresent .AND. &
               band_struct_obj%nbnd_dw_ispresent ) THEN
             nbnd_up = band_struct_obj%nbnd_up
@@ -595,6 +664,7 @@ CONTAINS
            nelec, ef, two_fermi_energies, ef_up, ef_dw )
       !
       IF ( .NOT. ALLOCATED(et) ) ALLOCATE( et(nbnd,nkstot) )
+      !$acc enter data create(et)
       IF ( .NOT. ALLOCATED(wg) ) ALLOCATE( wg(nbnd,nkstot) )
       !
       DO ik =1, band_struct_obj%ndim_ks_energies
@@ -618,11 +688,12 @@ CONTAINS
          END IF
          !
       END DO
+      !$acc update device(et)
       !
     END SUBROUTINE qexsd_copy_band_structure
     !
     SUBROUTINE qexsd_copy_efermi ( band_struct_obj, &
-         nelec, ef, two_fermi_energies, ef_up, ef_dw )
+         nelec, ef, two_fermi_energies, ef_up, ef_dw, nbnd )
       !------------------------------------------------------------------------
       !
       USE qes_types_module, ONLY : band_structure_type
@@ -631,6 +702,7 @@ CONTAINS
       TYPE ( band_structure_type) :: band_struct_obj
       LOGICAL, INTENT(out) :: two_fermi_energies
       REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw
+      INTEGER, OPTIONAL, INTENT(out) :: nbnd
       !
       nelec = band_struct_obj%nelec
       two_fermi_energies = band_struct_obj%two_fermi_energies_ispresent 
@@ -648,6 +720,30 @@ CONTAINS
          ef_dw = 0.d0
       END IF      
       !
+      IF ( PRESENT(nbnd) ) THEN
+         !
+         IF ( band_struct_obj%lsda ) THEN
+            !
+            IF (band_struct_obj%nbnd_ispresent) THEN
+               nbnd  = band_struct_obj%nbnd / 2
+            ELSE IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent ) THEN
+               nbnd = (band_struct_obj%nbnd_up + band_struct_obj%nbnd_dw)/2
+            ELSE
+               CALL errore ('qexsd_copy_efermi: ','both nbnd and nbnd_up+nbnd_dw missing', 1)
+            END IF
+            !
+         ELSE
+            !
+            IF (band_struct_obj%nbnd_ispresent) THEN
+               nbnd  = band_struct_obj%nbnd
+            ELSE
+               CALL errore ('qexsd_copy_efermi: ','nbnd missing', 1)
+            END IF
+            !
+         END IF
+         !
+      END IF
+      !
     END SUBROUTINE qexsd_copy_efermi
     !-----------------------------------------------------------------------
     SUBROUTINE qexsd_copy_algorithmic_info ( algo_obj, &
@@ -664,6 +760,27 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_algorithmic_info
     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_twochem ( two_chem_obj, &
+         twochem, nbnd_cond, nelec_cond, degauss_cond, ef_cond)
+      USE qes_types_module, ONLY: two_chem_type
+      IMPLICIT NONE 
+      TYPE(two_chem_type),INTENT(IN)     ::  two_chem_obj
+      LOGICAL,INTENT(OUT)               ::  twochem
+      REAL(DP), INTENT(OUT)             ::  degauss_cond
+      REAL(DP), INTENT(OUT)             ::  nelec_cond
+      INTEGER, INTENT(OUT)              ::  nbnd_cond
+      REAL(DP),OPTIONAL, INTENT(OUT)    :: ef_cond
+      !
+      twochem = two_chem_obj%twochem
+      degauss_cond = two_chem_obj%degauss_cond
+      nelec_cond = two_chem_obj%nelec_cond
+      nbnd_cond = two_chem_obj%nbnd_cond
+      IF (PRESENT(ef_cond)) ef_cond = two_chem_obj%ef_cond 
+      !
+    END SUBROUTINE qexsd_copy_twochem
+    !-----------------------------------------------------------------------
+
     !
     !---------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_efield ( efield_obj, tefield, dipfield, edir, &
@@ -822,4 +939,111 @@ CONTAINS
        ! 
      END SUBROUTINE qexsd_copy_kpoints
      !
-   END MODULE qexsd_copy
+  !
+  !---------------------------------------------------------------
+  SUBROUTINE qexsd_copy_esm( pbc_obj, bc, nfit, w, efield, a) 
+    !------------------------------------------------------------
+    USE qes_types_module, ONLY: outputPBC_type 
+    IMPLICIT NONE 
+    TYPE(outputPBC_type),INTENT(IN) :: pbc_obj 
+    CHARACTER(LEN=3),INTENT(OUT)    :: bc 
+    INTEGER,INTENT(OUT)             :: nfit 
+    REAL(DP),INTENT(OUT)             :: w 
+    REAL(DP),INTENT(OUT)             :: efield
+    REAL(DP),INTENT(OUT)             :: a 
+    ! 
+    IF (pbc_obj%esm_ispresent) THEN 
+      bc = TRIM(pbc_obj%esm%bc) 
+      nfit = pbc_obj%esm%nfit 
+      w = pbc_obj%esm%w 
+      efield = pbc_obj%esm%efield
+      a = pbc_obj%esm%a 
+    ELSE 
+      CALL errore("qexsd_copy_esm","esm object not present in input", 1) 
+    END IF 
+  END SUBROUTINE qexsd_copy_esm 
+  !
+  !---------------------------------------------------------------------------
+  SUBROUTINE qexsd_copy_rism3d( rism3d_obj, pseudo_dir, nsolV, solVs, molfile, ecutsolv )
+    !---------------------------------------------------------------------------
+    !
+    USE qes_types_module, ONLY : rism3d_type
+    USE molecule_types,   ONLY : molecule, nullify_molecule
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rism3d_type), INTENT(IN)  :: rism3d_obj
+    CHARACTER(LEN=*),  INTENT(IN)  :: pseudo_dir
+    INTEGER,           INTENT(OUT) :: nsolV
+    TYPE(molecule),    INTENT(INOUT), ALLOCATABLE :: solVs(:)
+    CHARACTER(LEN=*),  INTENT(OUT) :: molfile(:)
+    REAL(DP),          INTENT(OUT) :: ecutsolv
+    !
+    INTEGER :: isolV
+    !
+    IF ( rism3d_obj%molec_dir_ispresent ) THEN
+       IF ( TRIM(pseudo_dir) /= TRIM(rism3d_obj%molec_dir) ) THEN
+          CALL errore ("qexsd_copy_rism3d:", "pseudo_dir /= molec_dir", 1)
+       END IF
+    END IF
+    !
+    nsolV = rism3d_obj%nmol
+    !
+    IF ( .NOT. ALLOCATED(solVs) ) ALLOCATE(solVs(nsolV))
+    !
+    DO isolV = 1, nsolV
+       !
+       CALL nullify_molecule(solVs(isolV))
+       solVs(isolV)%name       = TRIM(rism3d_obj%solvent(isolV)%label)
+       solVs(isolV)%density    = rism3d_obj%solvent(isolV)%density1
+       solVs(isolV)%subdensity = rism3d_obj%solvent(isolV)%density2
+       !
+       molfile(isolV) = TRIM(rism3d_obj%solvent(isolV)%molec_file)
+       !
+    END DO
+    !
+    ecutsolv = rism3d_obj%ecutsolv
+    !
+  END SUBROUTINE qexsd_copy_rism3d
+  !
+  !---------------------------------------------------------------------------
+  SUBROUTINE qexsd_copy_rismlaue( rismlaue_obj, both_hands, laue_nfit, ireference, qsol, &
+                                  starting_r, expand_r, buffer_r, buffer_ru, buffer_rv,   &
+                                  starting_l, expand_l, buffer_l, buffer_lu, buffer_lv )
+    !---------------------------------------------------------------------------
+    !
+    USE qes_types_module, ONLY : rismlaue_type
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rismlaue_type), INTENT(IN)  :: rismlaue_obj
+    LOGICAL,             INTENT(OUT) :: both_hands
+    INTEGER,             INTENT(OUT) :: laue_nfit
+    INTEGER,             INTENT(OUT) :: ireference
+    REAL(DP),            INTENT(OUT) :: qsol
+    REAL(DP),            INTENT(OUT) :: starting_r, starting_l
+    REAL(DP),            INTENT(OUT) :: expand_r,   expand_l
+    REAL(DP),            INTENT(OUT) :: buffer_r,   buffer_l
+    REAL(DP),            INTENT(OUT) :: buffer_ru,  buffer_lu
+    REAL(DP),            INTENT(OUT) :: buffer_rv,  buffer_lv
+    !
+    both_hands = rismlaue_obj%both_hands
+    laue_nfit  = rismlaue_obj%nfit
+    ireference = rismlaue_obj%pot_ref
+    qsol       = rismlaue_obj%charge
+    !
+    starting_r = rismlaue_obj%right_start
+    expand_r   = rismlaue_obj%right_expand
+    buffer_r   = rismlaue_obj%right_buffer
+    buffer_ru  = rismlaue_obj%right_buffer_u
+    buffer_rv  = rismlaue_obj%right_buffer_v
+    !
+    starting_l = rismlaue_obj%left_start
+    expand_l   = rismlaue_obj%left_expand
+    buffer_l   = rismlaue_obj%left_buffer
+    buffer_lu  = rismlaue_obj%left_buffer_u
+    buffer_lv  = rismlaue_obj%left_buffer_v
+    !
+  END SUBROUTINE qexsd_copy_rismlaue
+  !
+END MODULE qexsd_copy

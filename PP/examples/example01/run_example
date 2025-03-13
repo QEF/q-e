@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -113,7 +113,7 @@ ATOMIC_SPECIES
 ATOMIC_POSITIONS alat
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
-K_POINTS 
+K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
    0.1250000  0.1250000  0.3750000   3.00
@@ -200,7 +200,7 @@ else
 cat > gnuplot.tmp <<EOF
 #!$GP_COMMAND
 #
-set term png font ",18" enh size 1000,707 
+set term png font ",18" enh size 1000,707
 set pm3d
 set palette model HSV functions gray*0.75, 1, 0.9
 set view 0,0
@@ -209,12 +209,12 @@ alat=10.2
 set xra[0:1.4142136*alat]
 set yra [0.:alat]
 set xtics out nomirror
-set ytics axis in offset -4.0,0 nomirror 
+set ytics axis in offset -4.0,0 nomirror
 set label "r (a.u)" at 6.8,-2.2 center
 set label "r (a.u)" at -1.7,5.0 rotate by 90 center
 unset ztics
 unset key
-set colorbox 
+set colorbox
 #
 set out 'si.charge.png'
 set title "Si charge"
@@ -241,19 +241,19 @@ set table
 #
 set cntrparam levels discrete 0.01,0.02,0.03
 set output "table.dat"
-splot 'si.rho_new.dat' using 1:2:3 w l 
+splot 'si.rho_new.dat' using 1:2:3 w l
 
 set cntrparam levels discrete 0.04,0.05,0.06
 set output "table1.dat"
-splot 'si.rho_new.dat' using 1:2:3 w l 
+splot 'si.rho_new.dat' using 1:2:3 w l
 
 set cntrparam levels discrete 0.07,0.08
 set output "table2.dat"
-splot 'si.rho_new.dat' using 1:2:3 w l 
+splot 'si.rho_new.dat' using 1:2:3 w l
 #
 unset table
 #
-#  Now define a postcript terminal 
+#  Now define a postcript terminal
 #
 set encoding iso_8859_15
 set terminal postscript enhanced solid color "Helvetica" 20
@@ -265,7 +265,7 @@ set size ratio 1./1.4142
 set key off
 alat=10.2
 set border lw 3
-set label "Si" at 10.6,8.7 
+set label "Si" at 10.6,8.7
 set xrange [0:1.4142136*alat]
 set yrange [0:alat]
 set xlabel "r (a.u.)"
@@ -274,52 +274,52 @@ set ylabel "r (a.u.)"
 #  Set contour labels
 #
 dato="0.08"
-set obj 9 rect at 6.,1.3 size char strlen(dato)*0.6, char 0.6 
+set obj 9 rect at 6.,1.3 size char strlen(dato)*0.6, char 0.6
 set obj 9 fillstyle solid noborder front
 set label at 6.,1.3 dato front center font "Helvetica,12" tc rgb "blue"
 
 dato="0.07"
-set obj 10 rect at 7.9,1.3 size char strlen(dato)*0.6, char 0.6 
+set obj 10 rect at 7.9,1.3 size char strlen(dato)*0.6, char 0.6
 set obj 10 fillstyle solid noborder front
 set label at 7.9,1.3 dato front center font "Helvetica,12" tc rgb "blue"
 
 dato="0.06"
-set obj 11 rect at 3.3,1.0 size char strlen(dato)*0.6, char 0.6 
+set obj 11 rect at 3.3,1.0 size char strlen(dato)*0.6, char 0.6
 set obj 11 fillstyle solid noborder front
 set label at 3.3,1.0 dato front center font "Helvetica,12" tc rgb "green"
 
 dato="0.01"
-set obj 12 rect at 3.6,6.0 size char strlen(dato)*0.6, char 0.6 
+set obj 12 rect at 3.6,6.0 size char strlen(dato)*0.6, char 0.6
 set obj 12 fillstyle solid noborder front
 set label at 3.6,6.0 dato front center font "Helvetica,12" tc rgb "red"
 
 dato="0.02"
-set obj 13 rect at 3.6,5.4 size char strlen(dato)*0.6, char 0.6 
+set obj 13 rect at 3.6,5.4 size char strlen(dato)*0.6, char 0.6
 set obj 13 fillstyle solid noborder front
 set label at 3.6,5.4 dato front center font "Helvetica,12" tc rgb "red"
 
 dato="0.03"
-set obj 14 rect at 3.6,4.9 size char strlen(dato)*0.6, char 0.6 
+set obj 14 rect at 3.6,4.9 size char strlen(dato)*0.6, char 0.6
 set obj 14 fillstyle solid noborder front
 set label at 3.6,4.9 dato front center font "Helvetica,12" tc rgb "red"
 
 dato="0.04"
-set obj 15 rect at 2.3,3.7 size char strlen(dato)*0.6, char 0.6 
+set obj 15 rect at 2.3,3.7 size char strlen(dato)*0.6, char 0.6
 set obj 15 fillstyle solid noborder front
 set label at 2.3,3.7 dato front center font "Helvetica,12" tc rgb "green"
 
 dato="0.05"
-set obj 16 rect at 3.6,3.7 size char strlen(dato)*0.6, char 0.6 
+set obj 16 rect at 3.6,3.7 size char strlen(dato)*0.6, char 0.6
 set obj 16 fillstyle solid noborder front
 set label at 3.6,3.7 dato front center font "Helvetica,12" tc rgb "green"
 
 dato="0.05"
-set obj 17 rect at 7.2,1.9 size char strlen(dato)*0.6, char 0.6 
+set obj 17 rect at 7.2,1.9 size char strlen(dato)*0.6, char 0.6
 set obj 17 fillstyle solid noborder front
 set label at 7.2,1.9 dato front center font "Helvetica,12" tc rgb "green"
 
 dato="0.01"
-set obj 18 rect at 10.8,2.3 size char strlen(dato)*0.6, char 0.6 
+set obj 18 rect at 10.8,2.3 size char strlen(dato)*0.6, char 0.6
 set obj 18 fillstyle solid noborder front
 set label at 10.8,2.3 dato front center font "Helvetica,12" tc rgb "red"
 
@@ -332,7 +332,7 @@ $ECHO "  generating contour plot of the charge si.contour.ps...\c"
 $GP_COMMAND < gnuplot1.tmp
 $ECHO " done"
 rm gnuplot1.tmp table.dat table1.dat table2.dat
-$ECHO 
+$ECHO
 fi
 
 
@@ -461,7 +461,7 @@ plot "sibands.xmgr.1.1"   u 1:(\$2-vb_max) w l lw 3  lt 1 ,\
 "sibands.xmgr.4.1" u 1:(\$2-vb_max) w l lw 3  lt 1 ,\
 "sibands.xmgr.4.2" u 1:(\$2-vb_max) w l lw 3  lt 2 ,\
 "sibands.xmgr.4.3" u 1:(\$2-vb_max) w l lw 3  lt 5 ,\
-"sibands.xmgr.4.4" u 1:(\$2-vb_max) w l lw 3  lt 3 
+"sibands.xmgr.4.4" u 1:(\$2-vb_max) w l lw 3  lt 3
 EOF
 $ECHO "  creating the postscript file si.bands.ps...\c"
 $GP_COMMAND gnuplot1.tmp

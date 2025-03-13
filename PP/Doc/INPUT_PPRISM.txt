@@ -1,0 +1,314 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pprism.x / PWscf / Quantum ESPRESSO (version: 7.4)
+------------------------------------------------------------------------
+
+
+Purpose of pprism.x: data analysis and plotting for 3D-RISM or Laue-RISM.
+
+The code performs two steps:
+
+(1) reads the output file produced by pw.x, extract and calculate
+    solvent's quantities (solvent charge, solvent potential, ...)
+
+(2) writes solvent's quantities to file in a suitable format for
+    various types of plotting and various plotting programs
+
+The input data of this program is read from standard input
+or from file and has the following format:
+
+NAMELIST &INPUTPP
+   containing the variables for step (1), followed by
+
+NAMELIST &PLOT
+   containing the variables for step (2)
+
+The two steps can be performed independently. In order to perform
+only step (2), leave namelist &INPUTPP blank. In order to perform
+only step (1), do not specify namelist &PLOT
+
+Intermediate results from step 1 can be saved to disk (see
+variable "filplot" in &INPUTPP) and later read in step 2.
+Since the file with intermediate results is formatted, it
+can be safely transferred to a different machine.
+
+All output quantities are in ATOMIC (RYDBERG) UNITS unless
+otherwise explicitly specified.
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'pwscf'
+   Description:    prefix of files saved by program pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    directory containing the input data, i.e. the same as in pw.x
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                   current directory ('./') otherwise
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filplot
+   
+   Type:           CHARACTER
+   Default:        ""prefix"".pprism
+   Description:    file "filplot" contains solvent's quantities
+                   (can be saved for further processing)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lpunch
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    punch solvent's quantities to "fileplot", or not
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+========================================================================
+NAMELIST: &PLOT
+
+   +--------------------------------------------------------------------
+   Variable:       iflag
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    0 1D plot of the spherical average
+                   1 1D plot
+                   2 2D plot
+                   3 3D plot
+                   4 2D polar plot on a sphere
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       output_format
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    (ignored on 1D plot)
+                   
+                   0  = format suitable for gnuplot   (1D)
+                   
+                   1  = obsolete format no longer supported
+                   
+                   2  = format suitable for plotrho   (2D)
+                   
+                   3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
+                   
+                   4  = obsolete format no longer supported
+                   
+                   5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
+                   
+                   6  = format as gaussian cube file  (3D)
+                        (can be read by many programs)
+                   
+                   7  = format suitable for gnuplot   (2D) x, y, f(x,y)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fileout
+   
+   Type:           CHARACTER
+   Default:        ""prefix"".3drism
+   Description:    name of the file to which the plot is written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       interpolation
+   
+   Type:           CHARACTER
+   Default:        'fourier'
+   Description:   
+                   Type of interpolation:
+                        'fourier'
+    
+                   'bspline' :
+                        (EXPERIMENTAL)
+   +--------------------------------------------------------------------
+   
+   ________________________________________________________________________
+   * IF iflag = 0 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the line
+                      (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       nx
+      
+      Type:           INTEGER
+      Description:    number of radial grids
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       lebedev
+      
+      Type:           INTEGER
+      Description:    number of spherical grids of Lebedev quadrature
+                      (only for "interpolation" = 'bspline')
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 1 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variable:       e1(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector which determines the plotting line
+                      (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the line (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       nx
+      
+      Type:           INTEGER
+      Description:    number of points in the line:
+                      
+                      rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 2 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variables:      e1(i), e2(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vectors which determine the plotting plane (in alat units)
+                      
+                      BEWARE: e1 and e2 must be orthogonal
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the plane (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      nx, ny
+      
+      Type:           INTEGER
+      Description:    Number of points in the plane:
+                      
+                      rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
+                                 + e2 * (j-1)/(ny-1) ), i=1,nx ; j=1,ny
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 3 : 
+   
+      THE FOLLOWING VARIABLES ARE OPTIONAL:
+      
+      +--------------------------------------------------------------------
+      Variables:      e1(i), e2(i), e3(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vectors which determine the plotting parallelepiped
+                      (if present, must be orthogonal)
+                      
+                      "e1", "e2", and "e3" are in alat units !
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the parallelepiped
+                      
+                      "x0" is in alat units !
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      nx, ny, nz
+      
+      Type:           INTEGER
+      Description:    Number of points in the parallelepiped:
+                      
+                      rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
+                                       + e2 * (j-1)/ny
+                                       + e3 * (k-1)/nz ),
+                                  i = 1, nx ; j = 1, ny ; k = 1, nz
+                      
+                      - If "output_format" = 3 (XCRYSDEN), the above variables
+                        are used to determine the grid to plot.
+                      
+                      - If "output_format" = 5 (XCRYSDEN), the above variables
+                        are ignored, the entire FFT grid is written in the
+                        XCRYSDEN format - works for any crystal axis (VERY FAST)
+                      
+                      - If "e1", "e2", "e3", "x0" are present,
+                        and "e1", "e2", "e3" are parallel to xyz
+                        and parallel to crystal axis, a subset of the FFT
+                        grid that approximately covers the parallelepiped
+                        defined by "e1", "e2", "e3", "x0", is
+                        written - untested, might be obsolete
+                      
+                      - Otherwise, the required 3D grid is generated from the
+                        Fourier components (may be VERY slow)
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 4 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variable:       radius
+      
+      Type:           REAL
+      Description:    Radius of the sphere (alat units), centered at (0,0,0)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      nx, ny
+      
+      Type:           INTEGER
+      Description:    Number of points in the polar plane:
+                      
+                      phi(i)   = 2 pi * (i - 1)/(nx-1), i=1, nx
+                      theta(j) =   pi * (j - 1)/(ny-1), j=1, ny
+      +--------------------------------------------------------------------
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

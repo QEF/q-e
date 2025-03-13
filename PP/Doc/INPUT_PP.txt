@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pp.x / PWscf / Quantum Espresso (version: 7.0)
+Program: pp.x / PWscf / Quantum ESPRESSO (version: 7.4)
 ------------------------------------------------------------------------
 
 
@@ -49,6 +49,14 @@ All potentials have the dimension of an energy (e*V, not V).
 ========================================================================
 NAMELIST: &INPUTPP
 
+   +--------------------------------------------------------------------
+   Variable:       title
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:    reprinted on output, CUB files and other places
+   +--------------------------------------------------------------------
+   
    +--------------------------------------------------------------------
    Variable:       prefix
    
@@ -216,6 +224,18 @@ NAMELIST: &INPUTPP
                       
                       Defaults to broadening degauss specified for electronic smearing
                       in pw.x calculation.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       use_gauss_ldos
+      
+      Type:           LOGICAL
+      Default:        .false.
+      Status:         OPTIONAL
+      Description:    If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
+                      
+                      Defaults .false., in which case the broadening scheme
+                      of the pw.x calculation will be used.
       +--------------------------------------------------------------------
       
        
@@ -506,7 +526,7 @@ NAMELIST: &PLOT
       Type:           REAL
       Description:    3D vectors which determine the plotting plane (in alat units)
                       
-                      BEWARE: @b e1 and @b e2 must be orthogonal
+                      BEWARE: e1 and e2 must be orthogonal
       +--------------------------------------------------------------------
       
       +--------------------------------------------------------------------
@@ -538,7 +558,7 @@ NAMELIST: &PLOT
       Description:    3D vectors which determine the plotting parallelepiped
                       (if present, must be orthogonal)
                       
-                      @ref e1, @ref e2, and @ref e3 are in alat units !
+                      "e1", "e2", and "e3" are in alat units !
       +--------------------------------------------------------------------
       
       +--------------------------------------------------------------------
@@ -561,18 +581,18 @@ NAMELIST: &PLOT
                                         + e3 * (k-1)/nz ),
                                    i = 1, nx ; j = 1, ny ; k = 1, nz
                       
-                      - If @ref output_format = 3 (XCRYSDEN), the above variables
+                      - If "output_format" = 3 (XCRYSDEN), the above variables
                         are used to determine the grid to plot.
                       
-                      - If @ref output_format = 5 (XCRYSDEN), the above variables
+                      - If "output_format" = 5 (XCRYSDEN), the above variables
                         are ignored, the entire FFT grid is written in the
                         XCRYSDEN format - works for any crystal axis (VERY FAST)
                       
-                      - If @ref e1, @ref e2, @ref e3, @ref x0 are present,
-                        and @ref e1, @ref e2, @ref e3 are parallel to xyz
+                      - If "e1", "e2", "e3", "x0" are present,
+                        and "e1", "e2", "e3" are parallel to xyz
                         and parallel to crystal axis, a subset of the FFT
                         grid that approximately covers the parallelepiped
-                        defined by @ref e1, @ref e2, @ref e3, @ref x0, is
+                        defined by "e1", "e2", "e3", "x0", is
                         written - untested, might be obsolete
                       
                       - Otherwise, the required 3D grid is generated from the
@@ -608,4 +628,4 @@ NAMELIST: &PLOT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:46 CET 2021
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

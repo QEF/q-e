@@ -4,7 +4,7 @@
     restart_mode = 'restart',
     ndr = 51,
     ndw = 51,
-    nstep  = 1,
+    nstep  = 200,
     iprint = 100,
     isave  = 100,
     tstress = .TRUE.,
@@ -29,7 +29,8 @@
  &electrons
     emass = 400.d0,
     emass_cutoff = 2.5d0,
-    electron_dynamics = 'cg',
+    orthogonalization = 'ortho',
+    electron_dynamics = 'verlet',
  /
  &ions
     ion_dynamics = 'verlet',

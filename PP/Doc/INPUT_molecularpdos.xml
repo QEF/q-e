@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="PWscf" program="molecularpdos.x" >
+<input_description distribution="Quantum ESPRESSO" package="PWscf" program="molecularpdos.x" >
    <toc>
    </toc>
    <intro>
@@ -67,7 +67,7 @@ considered for the projection
          <default> 0, i.e., all atomic wavefunctions
          </default>
          <info>
-first atomic wavefunction of the molecular part
+last atomic wavefunction of the molecular part
 considered for the projection
          </info>
       </var>

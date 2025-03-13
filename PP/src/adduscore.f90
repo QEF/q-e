@@ -75,7 +75,7 @@ SUBROUTINE US_make_ae_charge(rho)
                               distsqmin,dist(8),distsq(8),rhoat
    REAL(DP)                :: rcsq,dr,sum1,sum2,dvol,X0(3),&
                               rc(3),distc,distsqc,inv_Nc,alatc,&
-                              volc,xspin,inv_nrc1,inv_nrc2,inv_nrc3
+                              volc,inv_nrc1,inv_nrc2,inv_nrc3
    INTEGER                 :: imin,ic,jc,kc
 
    ! Some initialization
@@ -88,7 +88,6 @@ SUBROUTINE US_make_ae_charge(rho)
    inv_nrc1 = inv_Nc*inv_nr1
    inv_nrc2 = inv_Nc*inv_nr2
    inv_nrc3 = inv_Nc*inv_nr3
-   xspin=1.d0/REAL(nspin)
    dvol = omega*inv_nr1*inv_nr2*inv_nr3
    !
    ! I cannot parallelize on atoms, because it is already parallelized
@@ -246,7 +245,7 @@ SUBROUTINE US_make_ae_charge(rho)
             ! Interpolate the radial function at distance |posi(:)|
             !
             DO is = 1,nspin
-             rho%of_r(ir,is)= rho%of_r(ir,is) + sum1*xspin
+             rho%of_r(ir,is)= rho%of_r(ir,is) + sum1
             ENDDO
          ENDDO rsp_point
          !

@@ -6,7 +6,7 @@ AC_PROG_MAKE_SET
 echo $ECHO_N "checking whether Fortran files must be preprocessed... $ECHO_C"
 if test "$have_cpp" -ne 0
 then
-        f90rule="\$(MPIF90) \$(F90FLAGS) -c \$<"
+        f90rule="\$(MPIF90) \$(F90FLAGS) -c \$< -o \$(@)"
         echo "${ECHO_T}no"
 else
         f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$(*)_tmp.f90 ; \\

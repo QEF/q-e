@@ -23,16 +23,19 @@
    -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
    shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
                                                                                       
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.2.0 starts on  9Jul2020 at 18:50:57 
+     Program EPW v.5.8 starts on  9Jan2024 at 13:31:12 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -41,7 +44,11 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     Fft bands division:     nmany     =       1
+     35505 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from epw1.in
+
+     Reading supplied temperature list.
 
      Reading xml data from directory:
 
@@ -58,6 +65,8 @@
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         211     211     85                 2109     2109     531
+ 
+     Using Slab Decomposition
  
      Reading collected, re-writing distributed wavefunctions
 
@@ -93,8 +102,8 @@
    Cartesian axes
 
      site n.  atom      mass           positions (a_0 units)
-        1        Si  28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
-        2        Si  28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
+        1     Si     28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2     Si     28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
  
      49 Sym.Ops. (with q -> -q+G )
 
@@ -183,9 +192,9 @@
                 l(8) =   2
                 l(9) =   2
                l(10) =   2
-     EPW          :      0.19s CPU      0.24s WALL
+     EPW          :      0.20s CPU      0.23s WALL
 
-     EPW          :      0.21s CPU      0.26s WALL
+     EPW          :      0.20s CPU      0.23s WALL
 
      -------------------------------------------------------------------
      Wannierization on  4 x  4 x  4 electronic grid
@@ -288,7 +297,7 @@
      (   0.16605   0.16605   0.33395) :   1.84645
  
      -------------------------------------------------------------------
-     WANNIER      :      2.56s CPU      4.17s WALL (       1 calls)
+     WANNIER      :      3.86s CPU      3.94s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -297,19 +306,20 @@
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.01s CPU      0.05s WALL (       1 calls)
+     kmaps        :      0.01s CPU      0.01s WALL (       1 calls)
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
 
      Reading interatomic force constants
 
-     IFC last   -0.0032824
+ end of file reached, closing tag not found
+     IFC last   -0.0032796
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000253
+     Norm of the difference between old and new force-constants:    0.0000254
      Imposed crystal ASR
 
      Finished reading ifcs
 
-     Symmetries of Bravais lattice:  48
-     Symmetries of crystal:          48
 
 
      ===================================================================
@@ -343,6 +353,8 @@
           3  -0.500000000  -0.500000000  -0.500000000
           4   0.500000000  -0.500000000  -0.500000000
      Dyn mat calculated from ifcs
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
  
         q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
         q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
@@ -390,7 +402,6 @@
      Bloch2wane:          6 /          8
      Bloch2wane:          7 /          8
      Bloch2wane:          8 /          8
- 
      Bloch2wanp:          1 /          5
      Bloch2wanp:          2 /          5
      Bloch2wanp:          3 /          5
@@ -400,8 +411,8 @@
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =       114Mb
-                   VmPeak =       460Mb
+     Memory usage:  VmHWM =        93Mb
+                   VmPeak =      3816Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
@@ -418,8 +429,8 @@
 
      ===================================================================
 
-              ibndmin =     3  ebndmin =     0.375
-              ibndmax =    12  ebndmax =     0.551
+              ibndmin =     3  ebndmin =     5.107 eV
+              ibndmax =    12  ebndmax =     7.499 eV
 
 
      Number of ep-matrix elements per pool :        15000 ~=  117.19 Kb (@ 8 bytes/ DP)
@@ -428,40 +439,54 @@
       
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =       114Mb
-                   VmPeak =       460Mb
+     Memory usage:  VmHWM =        93Mb
+                   VmPeak =      3816Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     15.66s CPU     16.66s WALL (       1 calls)
+     elphon_wrap  :     15.46s CPU     15.79s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.07s CPU      0.07s WALL (       9 calls)
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.01s CPU      0.01s WALL (       2 calls)
+     set_drhoc    :      0.01s CPU      0.01s WALL (       9 calls)
+     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_us_1    :      0.02s CPU      0.02s WALL (       1 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      1.32s CPU      2.37s WALL (       1 calls)
-     ep-interp    :      0.91s CPU      1.15s WALL (     100 calls)
+     ephwann      :      1.91s CPU      2.20s WALL (       1 calls)
+     ep-interp    :      1.27s CPU      1.49s WALL (     100 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
-     Ham: step 2  :      0.00s CPU      0.01s WALL (       1 calls)
-     ep: step 1   :      0.00s CPU      0.00s WALL (      48 calls)
-     ep: step 2   :      1.25s CPU      2.29s WALL (       1 calls)
+     Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
+     ep: step 1   :      0.01s CPU      0.01s WALL (       8 calls)
+     ep: step 2   :      0.04s CPU      0.04s WALL (       8 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.30s CPU      0.31s WALL (    6076 calls)
-     ephW2Bp      :      0.27s CPU      0.49s WALL (     100 calls)
-     ephW2B       :      0.10s CPU      0.11s WALL (    1052 calls)
+     HamW2B       :      0.43s CPU      0.45s WALL (    6076 calls)
+     ephW2Bp      :      0.40s CPU      0.60s WALL (     100 calls)
+     ephW2B       :      0.13s CPU      0.13s WALL (    1052 calls)
 
 
      Total program execution
-     EPW          :     19.74s CPU     23.45s WALL
+     EPW          :     21.44s CPU     22.16s WALL
 
-                                                                                          
- Please consider citing:                                                                  
- S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                          
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

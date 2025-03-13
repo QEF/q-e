@@ -1,0 +1,12 @@
+gaas
+&inputph
+    amass(1)= 28.086,
+    fildyn='dynq1',
+    fildvscf='dvscf',
+    outdir='./',
+    alpha_mix(1)=0.2
+    tr2_ph=1.0d-16,
+    trans=.true., 
+    nk1=4,nk2=4,nk3=4
+/
+ 0.0 0.0 0.0

@@ -144,7 +144,7 @@ CONTAINS
         !
         ! ... set corrections to the DFT occupations from DMFT for each band in nbnd_c at each ik
         !
-        n_dmft_root(:,:,:) = CMPLX(delta_n(1,:,:,:), delta_n(2,:,:,:))
+        n_dmft_root(:,:,:) = CMPLX(delta_n(1,:,:,:), delta_n(2,:,:,:), KIND=DP)
         !
         CALL h5dclose_f(d_id, ierr)
         CALL h5gclose_f(g_id, ierr)

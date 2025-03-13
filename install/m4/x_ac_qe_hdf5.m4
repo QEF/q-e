@@ -11,7 +11,7 @@ AC_ARG_WITH(hdf5,
       skip_hdf5_module_check=1 
    else
       with_hdf5_path="$withval"
-      skip_hdf5_module_chek=0
+      skip_hdf5_module_check=0
       with_hdf5=1
    fi],
    [with_hdf5=0])
@@ -59,7 +59,7 @@ if test "$use_parallel" -ne 0; then
     else
 
       # Test if it is really installed where it has been specified
-      AC_LANG_POP(Fortran 77)
+      AC_LANG_POP(Fortran)
       AC_LANG_PUSH(C)
       
       if test -e $with_hdf5_path/bin/h5pcc; then 
@@ -68,7 +68,7 @@ if test "$use_parallel" -ne 0; then
            h5cc=$with_hdf5_path/bin/h5cc; 
        elif command -v h5pcc > /dev/null; then 
            h5cc=$(command -v h5pcc) 
-       elif command -v h5cci > /dev/null; then 
+       elif command -v h5cc > /dev/null; then 
            h5cc=$(command -v h5cc) 
        else 
           h5cc=$CC; 
@@ -100,14 +100,14 @@ if test "$use_parallel" -ne 0; then
       done
 
       AC_LANG_POP(C)
-      AC_LANG_PUSH(Fortran 77)
+      AC_LANG_PUSH(Fortran)
 
       if test "$have_hdf5" -eq 1 ; then
           if test "$with_hdf5_include" -eq 1 ; then 
               AC_CHECK_FILE($with_hdf5_include_line/hdf5.mod,,[
                   AC_MSG_WARN([***HDF5 Fortran extensions not found])
                   have_hdf5=0])
-          elif skip_hdf5_module_chek -eq 0; then  
+          elif test "$skip_hdf5_module_check" -eq 0; then  
               AC_CHECK_FILE($with_hdf5_path/include/hdf5.mod,,[
                   AC_MSG_WARN([***HDF5 Fortran extensions not found])
                   have_hdf5=0])
@@ -129,27 +129,27 @@ if test "$use_parallel" -ne 0; then
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
          elif command -v h5pfc >/dev/null; then
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
 
          elif test -e $with_hdf5_path/bin/h5fc; then 
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
              try_dflags="$try_dflags -D__HDF5_SERIAL"
          elif command -v h5fc>/dev/null; then 
              if test $with_hdf5_libs -eq 1; then 
                 hdf5_libs=$with_hdf5_libline 
              else
-                hdf5_libs=`h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
+                hdf5_libs=`h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}' | xargs`
              fi 
              try_dflags="$try_dflags -D__HDF5_SERIAL"
 
@@ -184,7 +184,7 @@ else
     else
 
       # Test if it is really installed where it has been specified
-      AC_LANG_POP(Fortran 77)
+      AC_LANG_POP(Fortran)
       AC_LANG_PUSH(C)
       
       if test -e $with_hdf5_path/bin/h5cc ; then 
@@ -219,7 +219,7 @@ else
       done
 
       AC_LANG_POP(C)
-      AC_LANG_PUSH(Fortran 77)
+      AC_LANG_PUSH(Fortran)
 
       if test "$have_hdf5" -eq 1 ; then
           AC_CHECK_FILE($with_hdf5_path/include/hdf5.mod,,[

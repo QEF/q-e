@@ -22,10 +22,8 @@ SUBROUTINE openfil_pw4gww()
   USE io_files,       ONLY : prefix, tmp_dir, iunwfc, nwordwfc, iunsat, nwordatwfc, diropn
   USE noncollin_module, ONLY : npol
   USE ldaU,             ONLY : lda_plus_u
-  USE basis,            ONLY : natomwfc
   USE ions_base,        ONLY : nat, ityp
   USE noncollin_module, ONLY : noncolin
-  USE upf_ions,         ONLY : n_atom_wfc
   !
   IMPLICIT NONE
   !
@@ -50,8 +48,8 @@ SUBROUTINE openfil_pw4gww()
   ! ... iunocc contains the atomic occupations computed in new_ns
   ! ... it is opened and closed for each reading-writing operation  
   !
-  natomwfc = n_atom_wfc( nat, ityp, noncolin )
-  nwordatwfc = 2*npwx*natomwfc*npol
+  !natomwfc = n_atom_wfc( nat, ityp, noncolin )
+  !nwordatwfc = 2*npwx*natomwfc*npol
   !
   IF ( lda_plus_u ) then
      !CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
@@ -59,7 +57,7 @@ SUBROUTINE openfil_pw4gww()
         call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.atwfc'//' not found',1)
      END IF
 
-     CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
+     !CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
      IF ( .NOT. exst ) THEN
         call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.satwfc'//' not found',1)
      END IF

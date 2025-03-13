@@ -44,7 +44,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, iter, e, nhpsi )
+SUBROUTINE pcg_gamma( hs_1psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, psi, ethr, iter, e, nhpsi )
   !----------------------------------------------------------------------------
   !
   !  ... solve the linear system
@@ -88,8 +88,8 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
   !
   REAL(DP), EXTERNAL :: DDOT
 
-  EXTERNAL  hs_1psi, g_1psi
-  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
+  EXTERNAL  hs_1psi_ptr, g_1psi_ptr
+  ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
   !
   CALL start_clock( 'pcg' )
   !write (6,*) ' enter pcg' , e
@@ -104,12 +104,12 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
   IF ( gstart == 2 ) psi(1) = CMPLX( DBLE( psi(1) ), 0.D0 ,kind=DP)
   !
   CALL start_clock( 'pcg:hs_1psi' )
-  CALL hs_1psi( npwx, npw, psi, hpsi, spsi ) ! apply H and S to a single wavefunction (no bgrp parallelization inside)
+  CALL hs_1psi_ptr( npwx, npw, psi, hpsi, spsi ) ! apply H and S to a single wavefunction (no bgrp parallelization inside)
   CALL stop_clock( 'pcg:hs_1psi' )
   !
   ! define CG algorithm RHS and initial solution
   r(:) = e * spsi(:) - hpsi(:)               ! initial gradient
-  z(:) = r(:) ; call g_1psi(npwx,npw,z,e)    ! initial preconditioned gradient
+  z(:) = r(:) ; call g_1psi_ptr(npwx,npw,z,e)    ! initial preconditioned gradient
 !- project on conduction bands
   CALL start_clock( 'pcg:ortho' )
   CALL DGEMV( 'T', npw2, nbnd, 2.0_DP, spsi0, npwx2,       z, 1, 0.0_DP, spsi0vec, 1 )
@@ -142,7 +142,7 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
   DO cg_iter = 1, maxter
 
      CALL start_clock( 'pcg:hs_1psi' )
-     CALL hs_1psi( npwx, npw, p, w, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
+     CALL hs_1psi_ptr( npwx, npw, p, w, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
      CALL stop_clock( 'pcg:hs_1psi' )
      w = w - e* sp 
 
@@ -154,7 +154,7 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
      r(:) = r(:) - alpha * w(:)              ! updated gradient
      g2 = 2.d0 * DDOT( npw2, z ,1 ,r ,1) ; IF ( gstart == 2 ) g2 = g2 - CONJG (z(1)) * r(1)
      CALL mp_sum( g2, intra_bgrp_comm )      ! g2 = < old z | new r >
-     z(:) = r(:) ; call g_1psi(npwx,npw,z,e) ! updated preconditioned gradient
+     z(:) = r(:) ; call g_1psi_ptr(npwx,npw,z,e) ! updated preconditioned gradient
 !- project on conduction bands
   CALL start_clock( 'pcg:ortho' )
   CALL DGEMV( 'T', npw2, nbnd, 2.0_DP, spsi0, npwx2,       z, 1, 0.0_DP, spsi0vec, 1 )

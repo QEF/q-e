@@ -6,23 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include <cpv_device_macros.h> 
+#include <cpv_device_macros.h>
 
 !-----------------------------------------------------------------------
 SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
-!-----------------------------------------------------------------------
-!     computes: the one-particle potential v in real space,
-!               the total energy etot,
-!               the forces fion acting on the ions,
-!               the derivative of total energy to cell parameters h
-!     rhor input : electronic charge on dense real space grid
-!                  (plus core charge if present)
-!     rhog input : electronic charge in g space (up to density cutoff)
-!     rhos input : electronic charge on smooth real space grid
-!     rhor output: total potential on dense real space grid
-!     rhos output: total potential on smooth real space grid
-!
+      !-----------------------------------------------------------------------
+      !! It computes the one-particle potential v in real space, the total
+      !! energy etot, the forces fion acting on the ions, the derivative
+      !! of total energy to cell parameters h.
+      !
       USE kinds,            ONLY: dp
       USE control_flags,    ONLY: iprint, iverbosity, thdyn, tpre, tfor, &
                                   tprnfor, iesr, textfor
@@ -36,7 +29,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa, e2
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, &
-                                  exc, eextfor, exx 
+                                  exc, eextfor, exx
       USE local_pseudo,     ONLY: vps, dvps, rhops
       USE uspp,             ONLY: nlcc_any
       USE smallbox_gvec
@@ -64,24 +57,53 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
       USE fft_rho
       USE fft_helper_subroutines
-      
+      !
       USE plugin_variables, ONLY: plugin_etot
 #if defined(__CUDA) && defined(_OPENACC)
       USE cublas
-#endif  
+#endif
+
+#if defined (__ENVIRON)
+      USE plugin_flags,        ONLY : use_environ
+      USE environ_cp_module,   ONLY : add_environ_potential, calc_environ_potential
+      USE environ_base_module, ONLY : calc_environ_energy, calc_environ_force
+#endif
 
       IMPLICIT NONE
-!
-      LOGICAL     :: tlast, tfirst
-      INTEGER     :: nfi
-      REAL(DP)    :: rhor(:,:), drhor(:,:,:,:), rhos(:,:), fion(:,:)
-      REAL(DP)    :: rhoc(:), tau0(:,:)
+      !
+      INTEGER  :: nfi
+      !! Counter on the electronic iterations.
+      REAL(DP) :: rhor(:,:)
+      !! Input: electronic charge on dense real space grid
+      !! (plus core charge if present).
+      !! Output: total potential on dense real space grid.
+      REAL(DP) :: drhor(:,:,:,:)
+      !! Derivative of \(\text{rhor}\) with respect to cell.
+      COMPLEX(DP) :: rhog(:,:)
+      !! Input : electronic charge in g space (up to density cutoff).
+      COMPLEX(DP) :: drhog(:,:,:,:)
+      !! Derivative of \(\text{rhog}\) with respect to cell.
+      REAL(DP) :: rhos(:,:)
+      !! Input: electronic charge on smooth real space grid.
+      !! Output: total potential on smooth real space grid.
+      REAL(DP) :: rhoc(:)
+      !! Core charge density
+      LOGICAL :: tfirst
+      !! TRUE if first step
+      LOGICAL :: tlast
+      !! TRUE if last step
       ! COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat), ei3(-nr3:nr3,nat)
-      COMPLEX(DP) :: ei1(:,:), ei2(:,:), ei3(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
+      INTEGER :: irb(:,:)
       COMPLEX(DP) :: eigrb(:,:)
-      COMPLEX(DP) :: rhog(:,:), drhog(:,:,:,:)
       COMPLEX(DP) :: sfac(:,:)
-      INTEGER     :: irb(:,:)
+      REAL(DP) ::  tau0(:,:)
+      REAL(DP) :: fion(:,:)
+      !! Ionic forces
+      !
+      ! ... local variables
       !
       INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia, inlc
       REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
@@ -89,37 +111,40 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       COMPLEX(DP) :: x_tmp ! (same as rhotmp)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
-      REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:) 
+      REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:)
       !
-      REAL(DP), ALLOCATABLE :: fion1( :, : )
-      REAL(DP), ALLOCATABLE :: stmp( :, : )
+      REAL(DP), ALLOCATABLE :: fion1(:,:)
+      REAL(DP), ALLOCATABLE :: stmp(:,:)
       !
       COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
       COMPLEX(DP)              :: self_rhoeg
       REAL(DP)                 :: self_ehtet, fpibg
       LOGICAL                  :: ttsic
-      REAL(DP)                 :: detmp( 3, 3 ), desr( 6 ), deps( 6 )
-      REAL(DP)                 :: detmp2( 3, 3 )
-      REAL(DP)                 :: ht( 3, 3 )
-      REAL(DP)                 :: deht( 6 )
-      COMPLEX(DP)              :: screen_coul( 1 )
+      REAL(DP)                 :: detmp(3,3), desr(6), deps(6)
+      REAL(DP)                 :: detmp2(3,3)
+      REAL(DP)                 :: ht(3,3)
+      REAL(DP)                 :: deht(6)
+      COMPLEX(DP)              :: screen_coul(1)
       REAL(DP)                 :: dexx(3,3) ! stress tensor from exact exchange exx_wf related
-!
+      !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
-
+      !
       ! ...  dalbe(:) = delta( alpha(:), beta(:) )
       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
       COMPLEX(DP), PARAMETER :: ci = ( 0.0d0, 1.0d0 )
       INTEGER  :: p_ngm_, s_ngm_, p_nnr_, s_nnr_
 
+#if defined (__ENVIRON)
+      REAL(DP), ALLOCATABLE :: force_environ(:, :)
+#endif
+
       CALL start_clock( 'vofrho' )
-      p_ngm_ = dfftp%ngm 
+      p_ngm_ = dfftp%ngm
       s_ngm_ = dffts%ngm
       p_nnr_ = dfftp%nnr
       s_nnr_ = dffts%nnr
-      
       !
       !     TS-vdW calculation (RAD)
       !
@@ -130,7 +155,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         stmp(:,:) = tau0(:,:)
         !
         IF ( nspin==2 ) THEN
-           rhocsave(:) = rhor(:,1) + rhor(:,2) 
+           rhocsave(:) = rhor(:,1) + rhor(:,2)
         ELSE
            rhocsave(:) = rhor(:,1)
         ENDIF
@@ -147,15 +172,15 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       wz = 2.0d0
       !
       ht = TRANSPOSE( h )
-      
+
       !
       ALLOCATE( vtemp( p_ngm_ ) )
       ALLOCATE( rhotmp( p_ngm_ ) )
-DEV_ACC enter data create(rhotmp( 1:p_ngm_ ) )
+!$acc enter data create(rhotmp( 1:p_ngm_ ) )
       !
       IF ( tpre ) THEN
          ALLOCATE( drhot( p_ngm_, 6 ) )
-DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
+!$acc enter data create(drhot(1:p_ngm_, 1:6))
          ALLOCATE( gagb( 6, p_ngm_ ) )
          CALL compute_gagb( gagb, g, p_ngm_, tpiba2 )
       END IF
@@ -164,15 +189,27 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
 !
       if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
-      !     compute plugin contributions to the potential, add it later
-      !
-      CALL plugin_get_potential(rhor,nfi)
-      !
-      !     compute plugin contributions to the energy
-      !
       plugin_etot = 0.0_dp
+#if defined(__LEGACY_PLUGINS)
+      ! compute plugin contributions to the potential, add it later
+      CALL plugin_get_potential(rhor, nfi)
       !
-      CALL plugin_energy(rhor,plugin_etot)
+      ! compute plugin contribution to energy
+      !
+      CALL plugin_energy(rhor, plugin_etot)
+#endif
+  !
+      !
+
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         ! compute plugin contributions to the potential, add it later
+         CALL calc_environ_potential(rhor, nfi)
+         ! compute plugin contributions to the energy
+         CALL calc_environ_energy(plugin_etot)
+         plugin_etot = 0.5D0 * plugin_etot ! Rydberg to Hartree
+      END IF
+#endif
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
@@ -198,66 +235,67 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
          !
       END IF
       !
-      zpseu = 0.0_DP 
+      zpseu = 0.0_DP
       !
-      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg,rhops) copyout(vtemp) 
-      DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
+      !$acc  update device(gg)
+      !$acc  data copyin(rhog,drhog,ht,sfac,vps,rhops) copyout(vtemp)
+      DEV_OMP_NOACC  parallel default(shared), private(ig,is,ij,i,j,k)
       !
-      DEV_OMP do 
-      DEV_ACC parallel loop present(rhotmp, rhog)
+      DEV_OMP_NOACC do
+      !$acc parallel loop present(rhotmp, rhog)
       DO ig = 1, p_ngm_
         rhotmp( ig ) = rhog( ig, 1 )
-      END DO 
-      DEV_OMP end do
+      END DO
+      DEV_OMP_NOACC end do
       !
       IF( nspin == 2 ) THEN
         !
-        DEV_OMP do
-        DEV_ACC parallel loop present(rhotmp, rhog)
+        DEV_OMP_NOACC do
+        !$acc parallel loop present(rhotmp, rhog)
         DO ig = 1, p_ngm_
            rhotmp( ig ) = rhotmp( ig ) + rhog( ig, 2 )
-        END DO 
-        DEV_OMP end do
+        END DO
+        DEV_OMP_NOACC end do
         !
       END IF
       !
 
       IF( tpre ) THEN
-DEV_OMP do
+DEV_OMP_NOACC do
          DO ij = 1, 6
             i = alpha( ij )
             j = beta( ij )
             !
-DEV_ACC parallel loop present(drhot) 
+!$acc parallel loop present(drhot)
             DO ig = 1, p_ngm_
               drhot( ig, ij ) = 0.0d0
-            END DO 
+            END DO
             !
             DO k = 1, 3
                !
-DEV_ACC parallel loop present(drhot, drhog, ht) 
+!$acc parallel loop present(drhot, drhog, ht)
                DO ig = 1, p_ngm_
                  drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 1, i, k ) * ht( k, j )
-               END DO 
+               END DO
                !
             END DO
          END DO
-DEV_OMP end do
+DEV_OMP_NOACC end do
          IF( nspin == 2 ) THEN
-DEV_OMP do
+DEV_OMP_NOACC do
             DO ij = 1, 6
                i = alpha( ij )
-               j = beta( ij ) 
+               j = beta( ij )
                DO k = 1, 3
                   !
-DEV_ACC parallel loop present(drhot, drhog, ht)
+!$acc parallel loop present(drhot, drhog, ht)
                   DO ig = 1, p_ngm_
                     drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 2, i, k ) * ht( k, j )
-                  END DO  
+                  END DO
                   !
                END DO
             END DO
-DEV_OMP end do
+DEV_OMP_NOACC end do
          ENDIF
       END IF
       !
@@ -265,27 +303,27 @@ DEV_OMP end do
       !
 
       !
-DEV_OMP do
-DEV_ACC parallel loop 
+DEV_OMP_NOACC do
+!$acc parallel loop
       DO ig = 1, SIZE(vtemp)
          vtemp(ig)=(0.d0,0.d0)
       END DO
       DO is=1,nsp
-DEV_OMP do
-DEV_ACC parallel loop present(rhotmp)
+DEV_OMP_NOACC do
+!$acc parallel loop present(rhotmp)
          DO ig=1,s_ngm_
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
 
-DEV_OMP do reduction(+:zpseu)
-DEV_ACC parallel loop reduction(+:zpseu) 
+DEV_OMP_NOACC do reduction(+:zpseu)
+!$acc parallel loop reduction(+:zpseu)
       DO ig=1,s_ngm_
          zpseu = zpseu + vtemp(ig)
       END DO
-DEV_OMP end parallel
-      ! 
-DEV_ACC update self(vtemp(1)) 
+DEV_OMP_NOACC end parallel
+      !
+!$acc update self(vtemp(1))
       epseu = wz * DBLE(zpseu)
       !
       IF (gstart == 2) epseu = epseu - DBLE( vtemp(1) )
@@ -300,50 +338,50 @@ DEV_ACC update self(vtemp(1))
       END IF
 
       !
-      !     
+      !
       !     calculation hartree energy
-      !    
       !
-      self_ehtet = 0.d0  
       !
-      IF( ttsic ) self_vloc = 0.d0 
+      self_ehtet = 0.d0
+      !
+      IF( ttsic ) self_vloc = 0.d0
 
       zh = 0.0d0
 
-DEV_OMP parallel default(shared), private(ig,is,x_tmp)
-DEV_ACC parallel present(rhotmp) 
-DEV_ACC loop gang private(x_tmp)
-DEV_OMP do 
+DEV_OMP_NOACC parallel default(shared), private(ig,is,x_tmp)
+!$acc parallel present(rhotmp)
+!$acc loop gang private(x_tmp)
+DEV_OMP_NOACC do
       DO ig=1,s_ngm_
          x_tmp = rhotmp(ig)
-DEV_ACC loop vector reduction(+:x_tmp) 
+!$acc loop vector reduction(+:x_tmp)
          DO is=1,nsp
             x_tmp=x_tmp+sfac(ig,is)*rhops(ig,is)
          END DO
-         rhotmp(ig)=x_tmp 
+         rhotmp(ig)=x_tmp
       END DO
-DEV_ACC end parallel
+!$acc end parallel
       !
-DEV_OMP do
-DEV_ACC parallel loop present(rhotmp)
+DEV_OMP_NOACC do
+!$acc parallel loop present(rhotmp,gg)
       DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
-DEV_OMP do reduction(+:zh)
-DEV_ACC parallel loop reduction(+:zh) 
+DEV_OMP_NOACC do reduction(+:zh)
+!$acc parallel loop reduction(+:zh)
       DO ig = gstart, p_ngm_
          zh = zh + vtemp(ig)
       END DO
 
-DEV_OMP end parallel
+DEV_OMP_NOACC end parallel
 
       eh = DBLE( zh ) * wz * 0.5d0 * fpi / tpiba2
 !
       CALL mp_sum( eh, intra_bgrp_comm )
       !
       IF ( ttsic ) THEN
-         ! 
+         !
          CALL self_vofhar( .false., self_ehte, self_vloc, rhog, omega, h )
          !
          eh = eh - self_ehte / omega
@@ -356,13 +394,13 @@ DEV_OMP end parallel
          CALL stress_hartree(dh6, eh*omega, sfac, rhotmp, drhot, gagb, omega )
          !
          DEALLOCATE( gagb )
-DEV_ACC exit data delete(drhot)
+!$acc exit data delete(drhot)
          DEALLOCATE( drhot )
          !
       END IF
-      !    
+      !
       !     forces on ions, ionic term in reciprocal space
-      !     
+      !
       ALLOCATE( fion1( 3, nat ) )
       !
       fion1 = 0.d0
@@ -376,38 +414,38 @@ START_WSHARE
              vtemp( 1:p_ngm_ ) = vtemp(1:p_ngm_) + rhog( 1:p_ngm_, 2 )
 END_WSHARE
           END IF
-          CALL start_clock("force_loc") 
+          CALL start_clock("force_loc")
           CALL force_loc( .false., vtemp, fion1, rhops, vps, ei1, ei2, ei3, sfac, omega, screen_coul )
-          CALL stop_clock("force_loc") 
+          CALL stop_clock("force_loc")
       END IF
 
       !
       !     calculation hartree + local pseudo potential
       !
       !
-DEV_ACC kernels 
+!$acc kernels
       IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
-DEV_ACC end kernels 
+!$acc end kernels
 
 !
-DEV_ACC parallel loop present(rhotmp)
+!$acc parallel loop present(rhotmp,gg)
 !
-DEV_OMP parallel default(shared), private(ig,is)
-DEV_OMP do
+DEV_OMP_NOACC parallel default(shared), private(ig,is)
+DEV_OMP_NOACC do
       DO ig=gstart,p_ngm_
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
       !
-DEV_ACC parallel loop 
-DEV_OMP do
+!$acc parallel loop
+DEV_OMP_NOACC do
       DO ig=1,s_ngm_
-DEV_ACC loop seq 
+!$acc loop seq
          DO is=1,nsp
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
-DEV_OMP end parallel
-DEV_ACC exit data delete(rhotmp)
+DEV_OMP_NOACC end parallel
+!$acc exit data delete(rhotmp)
       DEALLOCATE (rhotmp)
 
 !
@@ -432,7 +470,9 @@ DEV_ACC exit data delete(rhotmp)
          ENDIF
       END IF
       !
+      !FIXME : need to complete the offloading of this part rhog rhor and nlc call shou
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
+!$acc update device(rhog)
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
       !
       ! ... add non local corrections (if any)
@@ -464,13 +504,13 @@ DEV_ACC exit data delete(rhotmp)
              !
              !^^ ... TEMPORARY FIX (newlsda) ...
              IF ( nspin==2 ) THEN ! PH adjusted 05/2020
-               rhosave(:,1) = rhosave(:,1) + rhosave(:,2) 
+               rhosave(:,1) = rhosave(:,1) + rhosave(:,2)
                newrhosave(:,1) = rhosave(:,1) + rhosave(:,2)
                newrhosave(:,2) = rhosave(:,1) - rhosave(:,2)
                ! CALL errore('stres_vdW', 'LSDA+stress+vdW-DF not implemented',1)
              END IF
              !^^.......................
-             !   
+             !
              inlc = get_inlc()
              IF ( inlc > 0 .AND. inlc < 26 ) THEN
                CALL vdW_DF_stress ( newrhosave, rhocsave, nspin, denlc )
@@ -493,9 +533,14 @@ DEV_ACC exit data delete(rhotmp)
         !
       END IF
       !
-      !     add plugin contributions to potential here... 
+      !     add plugin contributions to potential here...
       !
-      CALL plugin_add_potential( rhor )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_add_potential( rhor)
+#endif
+#if defined (__ENVIRON)
+      IF (use_environ) CALL add_environ_potential(rhor)
+#endif
       !
 !
 !     rhor contains the xc potential in r-space
@@ -505,27 +550,27 @@ DEV_ACC exit data delete(rhotmp)
 !     -------------------------------------------------------------------
 !
       IF( abivol .or. abisur ) THEN
-         CALL rho_r2g ( dfftp, rhor, rhog, v_vol )
+         CALL rho_r2g ( dfftp, rhor, rhog, v=v_vol )
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
-DEV_ACC update device (rhog) 
+      !
       IF( nspin == 1 ) THEN
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,1), 1)
       ELSE
          isup=1
          isdw=2
-DEV_ACC host_data use_device(vtemp,rhog) 
+!$acc host_data use_device(vtemp,rhog)
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isup), 1)
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isdw), 1)
-DEV_ACC end host_data  
+!$acc end host_data
          IF( ttsic ) THEN
-            rhog( 1:p_ngm_, isup ) = rhog( 1:p_ngm_, isup ) - self_vloc(1:p_ngm_) 
+            rhog( 1:p_ngm_, isup ) = rhog( 1:p_ngm_, isup ) - self_vloc(1:p_ngm_)
             rhog( 1:p_ngm_, isdw ) = rhog( 1:p_ngm_, isdw ) - self_vloc(1:p_ngm_)
          END IF
       END IF
-DEV_ACC update self(rhog) 
-DEV_ACC end data  
+!$acc update self(rhog)
+!$acc end data
       DEALLOCATE (vtemp)
       IF( ttsic ) DEALLOCATE( self_vloc )
 !
@@ -551,7 +596,17 @@ DEV_ACC end data
          !
          !     plugin patches on internal forces
          !
-         CALL plugin_int_forces(fion)
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_int_forces(fion)
+#endif
+#if defined (__ENVIRON)
+         IF (use_environ) THEN
+            ALLOCATE (force_environ(3, nat))
+            CALL calc_environ_force(force_environ)
+            fion = fion + 0.5D0 * force_environ ! Environ forces in Ry/bohr
+            DEALLOCATE (force_environ)
+         END IF
+#endif
 
       END IF
 
@@ -561,7 +616,7 @@ DEV_ACC end data
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
-      
+
       CALL rho_g2r( dfftp, rhog, rhor )
 
       IF(nspin.EQ.1) THEN
@@ -596,7 +651,7 @@ DEV_ACC end data
       !
       IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
         !
-        etot = etot - exxalfa*exx 
+        etot = etot - exxalfa*exx
         !
       END IF
       !
@@ -609,7 +664,7 @@ DEV_ACC end data
       !
       !     Add possible external contribution from plugins to the energy
       !
-      etot = etot + plugin_etot 
+      etot = etot + plugin_etot
       !
       IF( tpre ) THEN
          !
@@ -632,12 +687,12 @@ DEV_ACC end data
            !
            detot = detot + HtsvdW
            !
-           ! BS / RAD start print ts_vdW pressure ------------- 
+           ! BS / RAD start print ts_vdW pressure -------------
            !
            IF(MOD(nfi,iprint_stdout).EQ.0)  THEN
-             detmp = HtsvdW 
+             detmp = HtsvdW
              detmp = -1.d0 * (MATMUL( detmp(:,:), TRANSPOSE(h) )) / omega
-             detmp = detmp * au_gpa   ! GPa 
+             detmp = detmp * au_gpa   ! GPa
              WRITE( stdout,9013) (detmp(1,1)+detmp(2,2)+detmp(3,3))/3.0_DP , nfi
              9013  FORMAT (/,5X,'TS-vdW Pressure (GPa)',F15.5,I7)
            END IF
@@ -653,13 +708,13 @@ DEV_ACC end data
              !
              ! BS / RAD
              ! This part is dE/dV; so works only for cubic cells and isotropic change
-             ! in simulation cell while doing variable cell calculation .. 
+             ! in simulation cell while doing variable cell calculation ..
              ! dE/dV = -(1/3) * (-exx * 0.25_DP) / V
              ! dexx(3,3) = dE/dh = (dE/dV) * (dV/dh) = (dE/dV) * V * (Transpose h)^-1
              !
              DO k = 1, 6
                IF(alpha(k) .EQ. beta(k)) THEN
-                 detmp( alpha(k), beta(k) ) = - (1.0_DP/3.0_DP) * (-exx * exxalfa) 
+                 detmp( alpha(k), beta(k) ) = - (1.0_DP/3.0_DP) * (-exx * exxalfa)
                ELSE
                  detmp( alpha(k), beta(k) ) = 0.0_DP
                END IF
@@ -678,24 +733,24 @@ DEV_ACC end data
              !
            END IF
            !
-           detot = detot + dexx 
+           detot = detot + dexx
            !
            IF(MOD(nfi,iprint_stdout).EQ.0) WRITE( stdout,9014) (-1.0_DP/3.0_DP)*&
                (dexx(1,1)+dexx(2,2)+dexx(3,3))*au_gpa , nfi
            9014  FORMAT (5X,'EXX Pressure (GPa)',F15.5,I7)
            !
-         END IF  
-         ! BS / RAD : stress tensor from exx ends here ... 
+         END IF
+         ! BS / RAD : stress tensor from exx ends here ...
          !
-         ! BS / RAD start print total electronic pressure ------------- 
+         ! BS / RAD start print total electronic pressure -------------
          !
          IF(MOD(nfi,iprint_stdout).EQ.0)  THEN
            detmp = detot
            detmp = -1.d0 * (MATMUL( detmp(:,:), TRANSPOSE(h) )) / omega
-           detmp = detmp * au_gpa   ! GPa 
+           detmp = detmp * au_gpa   ! GPa
            WRITE( stdout,9015) (detmp(1,1)+detmp(2,2)+detmp(3,3))/3.0_DP , nfi
            9015  FORMAT (5X,'Total Electronic Pressure (GPa)',F15.5,I7)
-         END IF 
+         END IF
          !
       END IF
       !
@@ -703,7 +758,7 @@ DEV_ACC end data
       !
       IF ( tpre ) THEN
          !
-         IF( ( iverbosity > 1 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
+         IF( ( iverbosity > 1 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN
             !
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"

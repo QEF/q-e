@@ -48,6 +48,7 @@ SUBROUTINE adddvhubscf (ipert, ik)
   USE buffers,       ONLY : get_buffer
   USE qpoint,        ONLY : xq, ikks, ikqs
   USE units_lr,      ONLY : iuatswfc
+  USE noncollin_module,     ONLY : npol
   !  
   IMPLICIT NONE
   !
@@ -104,17 +105,12 @@ SUBROUTINE adddvhubscf (ipert, ik)
      !
      IF (is_hubbard(nt)) THEN        
         !   
-        DO m = 1, 2*Hubbard_l(nt)+1
-           !
-           ihubst = offsetU(nah) + m   ! I m index
-           !
-           ! Calculate proj1(ibnd,ihubst) = < S_{k}\phi_(k,I,m)| psi(inbd,k) >
-           !
-           DO ibnd = 1, nbnd
-              proj1(ibnd,ihubst) = ZDOTC (npw, swfcatomk(:,ihubst), 1, evc(:,ibnd), 1)
-           ENDDO
-           !
-        ENDDO
+        ! Calculate proj1(ibnd,ihubst) = < psi(inbd,k) | S_{k}\phi_(k,I,m) >
+        ldim = 2*Hubbard_l(nt) + 1
+        ihubst = offsetU(nah) + 1   ! I m index
+        CALL ZGEMM('C', 'N', nbnd, ldim, npw, (1.0d0, 0.0d0), &
+                evc, npwx*npol, swfcatomk(1, ihubst), npwx*npol, &
+                (0.0d0, 0.0d0), proj1(1, ihubst), nbnd)
         !
      ENDIF
      !
@@ -142,7 +138,7 @@ SUBROUTINE adddvhubscf (ipert, ik)
                  DO ig = 1, npwq
                     dvqi(ig,ibnd) = dvqi(ig,ibnd) - effU(nt) * &
                                     dnsscf(m1,m2,current_spin,nah,ipert) * &
-                                    swfcatomkpq(ig,ihubst1) * proj1(ibnd,ihubst2)
+                                    swfcatomkpq(ig,ihubst1) * CONJG(proj1(ibnd,ihubst2))
                  ENDDO
               ENDDO
               !
@@ -177,7 +173,7 @@ SUBROUTINE adddvhubscf (ipert, ik)
                     ! Notice that sign change here
                     dvqi(ig,ibnd) = dvqi(ig,ibnd) + Hubbard_J0(nt) * &
                                     dnsscf(m1,m2,op_spin,nah,ipert) * &
-                                    swfcatomkpq(ig,ihubst1) * proj1(ibnd,ihubst2)
+                                    swfcatomkpq(ig,ihubst1) * CONJG(proj1(ibnd,ihubst2))
                  ENDDO
               ENDDO
               !

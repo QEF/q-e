@@ -53,6 +53,12 @@ SUBROUTINE openfilq()
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, nrbase, nrlocal, &
                                 wpot_dir, iunwpot, lrwpot
   USE ahc,              ONLY : elph_ahc, ahc_nbnd_gauge
+  USE output,                ONLY : fildrho
+  USE io_global,     ONLY :  ionode_id,meta_ionode_id
+  USE mp_world,      ONLY : world_comm
+  USE mp,            ONLY : mp_bcast,mp_barrier
+  USE mp_pools,        ONLY : me_pool, my_pool_id, npool
+  USE mp_bands,        ONLY : intra_bgrp_comm,me_bgrp
   !
   IMPLICIT NONE
   !
@@ -155,6 +161,34 @@ SUBROUTINE openfilq()
   !
   iudrho = 23
   lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+
+  if(elph_mat.and.lgamma)then
+    IF ( fildrho == ' ')      then
+      write(stdout,'(5x,A)')  'openfilq: Not provided name for fildrho file '
+      iudrho = 0
+    else
+      INQUIRE ( file=TRIM(dvscf_star%dir)//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1', exist=exst )
+      IF (exst ) THEN
+        write(stdout,'(5x,A)')  'openfilq: Found file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'
+        iudrho = 23
+      else
+        write(stdout,'(5x,A)')  'openfilq: file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'//&
+          ' not found in '//dvscf_star%dir
+        iudrho = 0
+      end if
+    end if
+
+    IF ( ionode ) THEN
+      INQUIRE (UNIT = iudrho, OPENED = exst)
+      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+      CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst, dvscf_star%dir)
+      IF (.not.exst) then
+        write(stdout,'(5x,A)')  'openfilq: Error opening file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'//&
+          ' not found in '//dvscf_star%dir
+        iudrho = 0
+      end if
+    end if
+  end if
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
@@ -187,21 +221,31 @@ SUBROUTINE openfilq()
                    TRIM(dvscf_star%dir)//prefix, &
                    generate=.false., index_q=iq_dummy, equiv=.false. )
 
+
+           CALL diropn (iudvscf, fildvscf_rot, -1, exst, dvscf_star%dir)
+           if(.not.exst) then
+             WRITE(stdout,'(5x,5a)') "There is not a dvscf file '",TRIM(fildvscf_rot), &
+               "' in directory '",trim(dvscf_star%dir),"'"
+             iudvscf = 0
+           else
            WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
                    "' (for reading) in directory '",trim(dvscf_star%dir),"'"
 
            CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
+         end if
         ELSE
            CALL diropn (iudvscf, fildvscf, lrdrho, exst )
         ENDIF
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
            lint3paw = 2 * nhm * nhm * nat * nspin_mag
-           iuint3paw=34
+           iuint3paw=43
            CALL diropn (iuint3paw, filint, lint3paw, exst)
         ENDIF
         END IF
      END IF
+     CALL mp_bcast(iudvscf, ionode_id,intra_bgrp_comm)
+
   !
   !    In the USPP case we need two files for the Commutator, the first is
   !    given by filbar and a second which just contains P_c x |psi>,

@@ -45,13 +45,16 @@ SUBROUTINE lr_init_nfo()
   USE qpoint,               ONLY : xq, ikks, ikqs, nksq, eigqts, npwq
   USE eqv,                  ONLY : evq
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
-  USE control_flags,        ONLY : io_level
+  USE control_flags,        ONLY : io_level, use_gpu
   USE lr_magnons_routines,  ONLY : T_rev
   USE gvecw,                ONLY : ecutwfc
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_max
   use mp_world, only : mpime
   USE uspp_init,             ONLY : init_us_2
+#if defined (__CUDA)
+  USE cudafor
+#endif
   !
   IMPLICIT NONE
   !
@@ -68,7 +71,7 @@ SUBROUTINE lr_init_nfo()
   ! Magnons local variables 
   INTEGER :: ikq, imk, imkq, ibnd
   COMPLEX(DP), allocatable :: Tevc(:,:)
-  INTEGER :: npw_mk, npw_mkq
+  INTEGER :: npw_mk, npw_mkq, istat
   !
   ! logical variable to check file exists
   ! logical variable to check file exists in memory
@@ -170,7 +173,8 @@ SUBROUTINE lr_init_nfo()
            CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
            !
            ! Calculate beta-functions vkb at point k
-           CALL init_us_2(npw, igk_k(1,ikk), xk(1,ikk), vkb)
+           CALL init_us_2(npw, igk_k(1,ikk), xk(1,ikk), vkb, .true.)
+           !$acc update host(vkb)
            !
            ! Calculate becp1=<vkb|evc>
            CALL calbec (npw, vkb, evc, becp1(ik))
@@ -206,13 +210,23 @@ SUBROUTINE lr_init_nfo()
      !
      ! This used to be in lr_alloc_init, moved here because I need these variables now
      IF (allocated(evc)) THEN
+#if defined(__CUDA)
+        !$acc exit data delete(evc)
+        IF(use_gpu) istat = cudaHostUnregister(C_LOC(evc(1,1)))
+#endif
         DEALLOCATE(evc)
         ALLOCATE(evc(npwx*npol,nbnd))
+#if defined(__CUDA)
+        IF(use_gpu) istat = cudaHostRegister(C_LOC(evc(1,1)), sizeof(evc), cudaHostRegisterMapped)
+        !$acc enter data create(evc)
+#endif
         evc(:,:) = (0.0d0, 0.0d0)
+        !$acc update device(evc)
      ENDIF 
      !
      ALLOCATE(evq(npwx*npol,nbnd))
      evq(:,:) = (0.0d0, 0.0d0)     
+     !$acc enter data copyin(evq)
      !
      ! Write T-rev wfc to disk and keep unit open, they are going to be used
      ! throughout the whole calculation

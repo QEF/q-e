@@ -30,7 +30,7 @@
   wmin_specfun = -4
   wmax_specfun = 1
   nw_specfun   = 20
-  cumulant     = .true.
+  lcumulant    = .true.
   bnd_cum      = 4
 
   fsthick     = 15 ! eV

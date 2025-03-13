@@ -108,10 +108,9 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   CALL cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, nbnd_occ(ik), 1)
-  !
-  IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
+  IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4, &
        & " lr_dvpsi_e: root not converged ",e10.3)') &
-       ik, ibnd, anorm
+       ik, anorm
   !
   FLUSH( stdout )
   DEALLOCATE (h_diag)

@@ -1,0 +1,13 @@
+--
+&inputph
+  prefix   = 'BAs'
+  reduce_io = .true.
+  epsil    = .true.
+  fildyn   = 'BAs.dyn'
+  ldisp    = .true.
+  fildvscf = 'dvscf'
+  nq1 = 2
+  nq2 = 2
+  nq3 = 2
+ /
+

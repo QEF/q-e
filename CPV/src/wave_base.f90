@@ -23,10 +23,10 @@
           SAVE
           PRIVATE
 
-          REAL(DP) :: frice  = 0.0_DP   !  friction parameter for electronic 
-                                        !  damped dynamics
-          REAL(DP) :: grease = 0.0_DP   !  friction parameter for electronic 
-                                        !  damped dynamics
+          REAL(DP) :: frice  = 0.0_DP
+          !! friction parameter for electronic damped dynamics
+          REAL(DP) :: grease = 0.0_DP
+          !! friction parameter for electronic damped dynamics
 
           PUBLIC :: dotp, hpsi, rande_base, gram_kp_base, gram_gamma_base
           PUBLIC :: converg_base, rande_base_s, scalw
@@ -90,8 +90,9 @@
 !==----------------------------------------------==!
 !  BEGIN manual
       SUBROUTINE gram_gamma_base(wf, gzero, gid)
-
-! Gram-Schmidt orthogonalization procedure
+         
+!! Gram-Schmidt orthogonalization procedure.
+         
 ! input: cp(2,ngik,n) = ( <g(1 )|psi(1)>..<g(1 )|psi(k)>..<g(1 )|psi(n)> )
 !                       ( <g(2 )|psi(1)>..<g(2 )|psi(k)>..<g(2 )|psi(n)> )
 !                       ( ...............................................)
@@ -234,9 +235,9 @@
 
       SUBROUTINE converg_base_gamma(gzero, cgrad, gemax, cnorm, comm)
 
-!  this routine checks for convergence, by computing the norm of the
-!  gradients of wavefunctions
-!  version for the Gamma point
+        !! This routine checks for convergence, by computing the norm of the
+        !! gradients of wavefunctions.  
+        !! Version for the Gamma point.
 !  ----------------------------------------------
 !  END manual
 
@@ -287,10 +288,9 @@
 
       SUBROUTINE converg_base_kp(weight, cgrad, gemax, cnorm, comm)
 
-
-!  this routine checks for convergence, by computing the norm of the
-!  gradients of wavefunctions
-!  version for generic k-points
+        !! This routine checks for convergence, by computing the norm of the
+        !! gradients of wavefunctions.  
+        !! Version for generic k-points.
 !  ----------------------------------------------
 !  END manual
 
@@ -378,13 +378,13 @@
 
           REAL(DP) FUNCTION dotp_gamma(gzero, ng, a, b, comm)
 
-! ... Compute the dot product between distributed complex vectors "a" and "b"
-! ... representing HALF-SPACE complex wave functions, with the G-point symmetry
-! ... a( -G ) = CONJG( a( G ) ). Only half of the values plus G=0 are really
-! ... stored in the array.
-!
-! ... dotp = < a | b >
-!
+            !! Compute the dot product between distributed complex vectors "a" and "b"
+            !! representing HALF-SPACE complex wave functions, with the G-point symmetry
+            !! \(a(-G) = a(G)^*\). Only half of the values plus G=0 are really
+            !! stored in the array.
+            !
+            !! \( \text{dotp} = \langle a | b \rangle \)
+            !
 
             USE mp, ONLY: mp_sum
 
@@ -423,12 +423,12 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          REAL(DP) FUNCTION dotp_gamma_n(gzero, a, b, comm)
+          REAL(DP) FUNCTION dotp_gamma_n( gzero, a, b, comm )
 
-! ...  Compute the dot product between distributed complex vectors "a" and "b"
-! ...  representing HALF-SPACE complex wave functions, with the G-point symmetry
-! ...  a( -G ) = CONJG( a( G ) ). Only half of the values plus G=0 are really
-! ...  stored in the array.
+            !! Compute the dot product between distributed complex vectors "a" and "b"
+            !! representing HALF-SPACE complex wave functions, with the G-point symmetry
+            !! \(a(-G) = a(G)^*\). Only half of the values plus G=0 are really
+            !! stored in the array.
 
             USE mp, ONLY: mp_sum
 
@@ -454,8 +454,8 @@
 
           COMPLEX(DP) FUNCTION dotp_kp(ng, a, b, comm)
 
-! ...  Compute the dot product between distributed complex vectors "a" and "b"
-! ...  representing FULL-SPACE complex wave functions 
+            !! Compute the dot product between distributed complex vectors "a" and "b"
+            !! representing FULL-SPACE complex wave functions.
 
             USE mp, ONLY: mp_sum
 
@@ -484,10 +484,10 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          COMPLEX(DP) FUNCTION dotp_kp_n(a, b, comm)
+          COMPLEX(DP) FUNCTION dotp_kp_n( a, b, comm )
 
-! ...  Compute the dot product between distributed complex vectors "a" and "b"
-! ...  representing FULL-SPACE complex wave functions 
+            !! Compute the dot product between distributed complex vectors "a" and "b"
+            !! representing FULL-SPACE complex wave functions.
 
             USE mp, ONLY: mp_sum
 
@@ -516,9 +516,10 @@
 
           COMPLEX(DP) FUNCTION wdot_kp(ng, a, b)
 
-! ...  Compute the dot product between complex vectors "a" and "b"
-! ...  representing FULL-SPACE complex wave functions 
-! ...  Note this is a _SCALAR_ subroutine
+            !! Compute the dot product between complex vectors "a" and "b"
+            !! representing FULL-SPACE complex wave functions.
+            
+            ! Note this is a _SCALAR_ subroutine
 
             COMPLEX(DP) :: a(:), b(:)
             INTEGER, INTENT(IN), OPTIONAL :: ng
@@ -541,8 +542,7 @@
 !==----------------------------------------------==!
 
       SUBROUTINE rande_base(wf,ampre)
-
-!  randomize wave functions coefficients
+      !! Randomize wave functions coefficients.
 !  ----------------------------------------------
       USE random_numbers, ONLY : randy
       IMPLICIT NONE
@@ -568,8 +568,7 @@
 !==----------------------------------------------==!
 
       SUBROUTINE rande_base_s(wf,ampre)
-
-!  randomize wave functions coefficients
+      !! Randomize wave functions coefficients
 !  ----------------------------------------------
       USE random_numbers, ONLY : randy
       IMPLICIT NONE

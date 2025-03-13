@@ -1,5 +1,5 @@
 
-This example illustrates how to calculate calculate the electron-phonon
+This example illustrates how to calculate the electron-phonon
 renormalization of the valence band maximum (VBM) and conduction band
 minimum (CBM) energy of diamond.
 Also, this example demonstrates how to use Fourier interpolation of

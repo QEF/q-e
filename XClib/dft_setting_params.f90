@@ -23,6 +23,8 @@ MODULE dft_setting_params
     !! Full name of the XC functional
     INTEGER, PARAMETER :: notset = -1
     !! Value of indexes that have not been set yet
+    INTEGER, PARAMETER :: max_flags = 29
+    !! maximum number of libxc flags per functional
     !
     LOGICAL :: is_libxc(6) = .FALSE.
     !! \(\text{is_libxc(i)}=TRUE\) if the i-th term of the input 
@@ -36,7 +38,7 @@ MODULE dft_setting_params
     !! pointers to libxc functional structs
     TYPE(xc_f03_func_info_t) :: xc_info(6)
     !! pointers to libxc info structs
-    INTEGER :: libxc_flags(6,0:15) = notset
+    INTEGER :: libxc_flags(6,0:max_flags) = notset
     !! flags related to specific features of libxc functionals 
     !! (see Libxc doc)
     INTEGER :: n_ext_params(6) = 0
@@ -47,6 +49,19 @@ MODULE dft_setting_params
     !! some Libxc dfts are currently not usable in QE (for example
     !! kinetic dfts). If one of them is detected this variable is
     !! set to TRUE.
+    CHARACTER(LEN=100) :: lxc_exx_desc(5)
+    DATA lxc_exx_desc / 'Fraction of HF exchange',            &
+                        'Fraction of exact exchange',         &
+                        'Fraction of Hartree-Fock exchange ', &
+                        'Coefficient for exact exchange ',    &
+                        'Mixing parameter '/
+    !
+    CHARACTER(LEN=100) :: lxc_scr_desc(5)
+    DATA lxc_scr_desc / 'Range separation parameter', &
+                        'Range-separation parameter', &
+                        'Range separation constant',  &
+                        'Range-separation constant',  &
+                        'Screening parameter for HF' /
 #endif
     !
     LOGICAL  :: exx_started = .FALSE.
@@ -100,8 +115,8 @@ MODULE dft_setting_params
     !! TRUE if the functional is MGGA
     LOGICAL :: ishybrid    = .FALSE.
     !! TRUE if the functional is hybrid
-    LOGICAL :: scan_exx    = .FALSE.
-    !! TRUE if SCAN0 functional is active
+    INTEGER :: exx_term    = 0
+    !! term of the functional that is hybrid
     !
     LOGICAL :: discard_input_dft = .FALSE.
     !! TRUE if input DFT can be overwritten

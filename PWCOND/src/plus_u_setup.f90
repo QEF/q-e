@@ -6,7 +6,7 @@ subroutine plus_u_setup(natih, lsr)
   USE kinds,            ONLY : DP
   USE constants,        ONLY : rytoev
   use noncollin_module, ONLY : noncolin
-  USE ldaU,             ONLY : lda_plus_U, lda_plus_u_kind, U_projection, &
+  USE ldaU,             ONLY : lda_plus_U, lda_plus_u_kind, Hubbard_projectors, &
                                Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
                                Hubbard_J0, Hubbard_beta
   use atom,             ONLY : rgrid
@@ -49,9 +49,9 @@ subroutine plus_u_setup(natih, lsr)
     END IF
   END DO
 
-  if (U_projection.eq."pseudo") return
-  if (U_projection.ne."atomic") &
-   call errore('plus_u_setup','+U works only for U_projection=''pseudo'' or ''atomic'' ',1)
+  if (Hubbard_projectors.eq."pseudo") return
+  if (Hubbard_projectors.ne."atomic") &
+   call errore('plus_u_setup','+U works only for Hubbard_projectors=''pseudo'' or ''atomic'' ',1)
   if (noncolin) call errore('plus_u_setup','+U for noncollinear case not yet implemented',1)
   if (lsr.ne.2) call errore('plus_u_setup','+U atoms are allowed only in scatt. region',1)
 !--

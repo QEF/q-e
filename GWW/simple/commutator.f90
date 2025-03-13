@@ -14,8 +14,8 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   USE klist,      ONLY : ngk
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY : nqx, tab, dq
-  USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
+  USE beta_mod,   ONLY : interp_dbeta
+  USE uspp_param, ONLY : lmaxkb, nbetam, nh
   USE io_global, ONLY : stdout
   !
   implicit none
@@ -26,7 +26,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   !
   ! local variables
   !
-  integer :: ikb, nb, ih, ig, i0, i1, i2, i3 , nt
+  integer :: ikb, nb, ih, ig, nt
   ! counter on beta functions
   ! counter on beta functions
   ! counter on beta functions
@@ -34,7 +34,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   ! index of the first nonzero point in the r
   ! counter on atomic type
 
-  real(DP) :: arg, px, ux, vx, wx
+  real(DP) :: arg
   ! argument of the atomic phase factor
 
   complex(DP) :: phase, pref
@@ -43,7 +43,6 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
 
   integer :: na, l, iig, lm, iq
   real(DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
-  real(DP) ::  qt
   complex(DP), allocatable :: sk (:)
 
   call start_clock('gen_beta1')
@@ -70,28 +69,11 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   call stop_clock('stres_us32')
   call start_clock('stres_us33')
 
+  do ig = 1, npw_max
+     q (ig) = SQRT (q(ig)) * tpiba
+  enddo
   do nt = 1, ntyp
-     do nb = 1, upf(nt)%nbeta
-        do ig = 1, npw_max
-           qt = sqrt(q (ig)) * tpiba
-             px = qt / dq - int (qt / dq)
-             ux = 1.d0 - px
-             vx = 2.d0 - px
-             wx = 3.d0 - px
-             i0 = qt / dq + 1
-             i1 = i0 + 1
-             i2 = i0 + 2
-             i3 = i0 + 3
-             if (i3 <= nqx) then ! Approximation
-                djl(ig,nb,nt) = ( tab (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                               tab (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                               tab (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                               tab (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
-             else
-                djl(ig,nb,nt) = 0.d0  ! Approximation
-             endif
-        enddo
-     enddo
+     CALL interp_dbeta( nt, npw_max, q, djl(:,:,nt) )
   enddo
   call stop_clock('stres_us33')
   call start_clock('stres_us34')
@@ -156,7 +138,7 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   USE klist,      ONLY : ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY : nqx, tab, dq
+  USE beta_mod,   ONLY : interp_beta
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
   implicit none
@@ -166,10 +148,9 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   real(DP) :: u (3)
 
   complex(DP) :: dvkb (npw_max, nkb)
-  integer :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
-       i3, ig
+  integer :: na, nt, nb, ih, l, lm, ikb, iig, ipol, ig
   real(DP), allocatable :: gk(:,:), q (:)
-  real(DP) :: px, ux, vx, wx, arg
+  real(DP) :: arg
 
   real(DP), allocatable :: vkb0 (:,:,:), dylm (:,:), dylm_u (:,:)
   ! dylm = d Y_lm/dr_i in cartesian axes
@@ -211,26 +192,7 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
 
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
-     do nb = 1, upf(nt)%nbeta
-        do ig = 1, npw_max
-             px = q (ig) / dq - int (q (ig) / dq)
-             ux = 1.d0 - px
-             vx = 2.d0 - px
-             wx = 3.d0 - px
-             i0 = q (ig) / dq + 1
-             i1 = i0 + 1
-             i2 = i0 + 2
-             i3 = i0 + 3
-             if (i3<=nqx) then ! DEBUG
-                vkb0 (ig, nb, nt) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                                    tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                                   tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                                    tab (i3, nb, nt) * px * ux * vx / 6.d0
-             else
-                vkb0 (ig, nb, nt) = 0.d0 ! DEBUG
-             endif
-        enddo
-     enddo
+     CALL interp_beta( nt, npw_max, q, vkb0(:,:,nt) )
   enddo
 
   deallocate (q)

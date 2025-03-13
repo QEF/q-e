@@ -55,7 +55,7 @@ PROGRAM Q2QSTAR
   INTEGER :: ierr, nargs
   !
   INTEGER       :: nqs, isq (48), imq, nqq
-  REAL(DP)      :: sxq(3, 48), xq(3), xqs(3,48), epsil(3,3)
+  REAL(DP)      :: sxq(3, 48), xq(3), xqs(3,48), epsilon(3,3)
   !
   LOGICAL :: sym(48), lrigid
   LOGICAL, EXTERNAL :: has_xml
@@ -99,7 +99,7 @@ PROGRAM Q2QSTAR
     ! read system information
     CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
                              celldm, at, bg, omega, atm, amass, tau, ityp, &
-                             m_loc, nqs, lrigid, epsil, zeu )
+                             m_loc, nqs, lrigid, epsilon, zeu )
     ! read dyn.mat.
     CALL read_dyn_mat(nat,1,xq,phi)
     ! close file
@@ -112,7 +112,7 @@ PROGRAM Q2QSTAR
     IF (ierr /= 0) CALL errore(CODE,'file '//TRIM(fildyn)//' missing!',1)
     ! read everything, this use global variables
     ntyp = ntypx
-    CALL read_dyn_from_file (nqs, xqs, epsil, lrigid,  &
+    CALL read_dyn_from_file (nqs, xqs, epsilon, lrigid,  &
         ntyp, nat, ibrav, celldm, at, atm, amass)
     !
     IF (ionode) CLOSE(unit=1)
@@ -218,6 +218,9 @@ PROGRAM Q2QSTAR
   !
   CALL q2qstar_ph (d2, at, bg, nat, nsym, s, invs, irt, rtau, &
                    nqs, sxq, isq, imq, 1)
+
+  IF (lrigid .and. .not. xmldyn ) call write_epsilon_and_zeu (zeu, epsilon, nat, 1)
+
   ALLOCATE(w2(3*nat))
   CALL dyndia (xq, 3*nat, nat, ntyp, ityp, amass, 1, d2, w2)
 

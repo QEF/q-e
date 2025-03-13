@@ -24,7 +24,7 @@
 
   iverbosity  = 0
 
-  eps_acustic = 5.0    ! Lowest boundary for the
+  eps_acoustic= 5.0    ! Lowest boundary for the
   ephwrite    = .false. ! Writes .ephmat files used when Eliasberg = .true.
 
   fsthick     = 20.0  ! eV
@@ -34,7 +34,7 @@
 
   eliashberg = .true.
   mp_mesh_k  = .true.
-  fila2f = 'MgB2.a2f_iso'
+  fila2f = 'MgB2.a2f'
   liso   = .true.
   limag  = .true.
   tc_linear  = .true.

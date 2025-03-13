@@ -27,11 +27,15 @@ proc ::helpdoc::checkGui_def_vs_module {} {
 	switch -- $def_type {
 	    card {
 		set def_mapping_type keyword
+                if { $name == "HUBBARD" } { set hubbard 1 } else { set hubbard 0 }
 	    }
 	    listvar - list {
 		set def_mapping_type var
 		set name [string trim $name ,]
 	    }
+            multidimension {
+                set def_mapping_type table
+            }
 	    default {
 		set def_mapping_type ""
 	    }
@@ -74,9 +78,9 @@ proc ::helpdoc::checkGui_def_vs_module {} {
 	    } else {
 
 		set error 1
-		
+
 		# handle exceptions
-		
+
 		switch -glob -- $name {
 		    nwfts - test_wfs {
 			if { $::module == "atomic" } {
@@ -85,6 +89,13 @@ proc ::helpdoc::checkGui_def_vs_module {} {
 			}
 		    }
 		}
+                if { [info exists hubbard] && $hubbard && $::module == "pw" } {
+                    # don't report errors associated withe HUBBARD card as hubbard card is treated as table in PWgui
+                    set error 0
+                }
+
+                # end-of-exceptions
+
 		if { $error } {
 		    checkMsg ERROR "$def_type $name does not exist in MODULE file"
 
@@ -124,7 +135,12 @@ proc ::helpdoc::checkGui_def_vs_module {} {
 $options
 \}\n\n"
 			}
-		    }
+                        multidimension {
+                            append moduleNewCode "table $name \{
+$options
+\}\n\n"
+                        }
+                    }
 		}
 	    }
 	}
@@ -162,6 +178,9 @@ proc ::helpdoc::checkGui_module_vs_def {} {
 			set def_mapping_type var
 			set name [string trim $name ,]
 		    }
+                    multidimension {
+                        set def_mapping_type table
+                    }
 		    default {
 			set def_mapping_type ""
 		    }

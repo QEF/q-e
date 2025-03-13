@@ -1,0 +1,16 @@
+--
+&inputph
+  reduce_io=.true.,
+  verbosity='high',
+  tr2_ph=1.0d-14,
+  amass(1)=6.941,
+  amass(2)=18.998403,
+  prefix='lif',
+  outdir='./',
+  fildyn='lif.dyn',
+  fildvscf = 'dvscf',
+  ldisp=.true.,
+  nq1=4,
+  nq2=4,
+  nq3=4
+/

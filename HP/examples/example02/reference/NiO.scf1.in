@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='NiO'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp1/q-e/pseudo/'
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -19,11 +19,6 @@
     nspin = 2,
     starting_magnetization(1) =  0.5,
     starting_magnetization(2) = -0.5,
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
-    Hubbard_U(2) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-10
@@ -38,9 +33,12 @@ ATOMIC_POSITIONS {alat}
  Ni2  0.5000000   0.5000000   0.0000000
  O    0.5000000   0.0000000   0.0000000
  O    1.0000000   0.5000000   0.0000000
-CELL_PARAMETERS
+CELL_PARAMETERS {alat}
  1.00000000  0.50000000  0.50000000
  0.50000000  1.00000000  0.50000000
  0.50000000  0.50000000  1.00000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Ni1-3d 0.0001
+U Ni2-3d 0.0001

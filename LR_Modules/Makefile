@@ -12,14 +12,17 @@ addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
 apply_dpot_mod.o \
+apply_trev.o \
 addusldos.o \
 adddvepsi_us.o \
 addusddenseq.o \
+c_bands_ph.o \
 cft_wave.o \
 cgsolve_all.o \
 ccgsolve_all.o \
 cg_psi.o \
 ccg_psi.o \
+c_bands_ph.o \
 ch_psi_all.o \
 ch_psi_all_complex.o \
 Coul_cut_2D_ph.o \
@@ -35,8 +38,13 @@ dnonloccorr.o \
 dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
+non_scf_ph.o \
 set_intq_nc.o \
 lr_sym_mod.o \
+sym_def.o \
+psymdvscf.o \
+symdvscf.o \
+sym_dmag.o \
 orthogonalize.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
@@ -62,11 +70,14 @@ mix_pot.o \
 lrcom.o \
 lr_dot.o \
 lr_dot_magnons.o \
-lanczos_pseudohermitian.o \
+lr_nc_mag.o \
+lr_two_chem.o\
 lanczos_nonhermitian.o \
+lanczos_pseudohermitian.o \
 lanczos_pseudohermitian_c.o \
 lanczos_nonhermitian_c.o \
 response_kernels.o \
+non_scf_ph.o \
 efermi_shift.o
 
 TLDEPS=mods pwlibs

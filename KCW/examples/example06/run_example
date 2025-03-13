@@ -1,0 +1,614 @@
+#!/bin/sh
+
+nk=2
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, kcw.x"
+$ECHO "to calculate the KI electronic structure of Bulk Ferromagnetic CrI3 "
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw2wannier90.x wannier90.x kcw.x"
+PSEUDO_LIST="Cr.upf I.upf"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+#Overwrite NETWORK_PSEUDO
+NETWORK_PSEUDO="https://raw.githubusercontent.com/epfl-theos/koopmans/master/src/koopmans/pseudopotentials/pseudo_dojo_standard_v0.4.1/lda"
+
+# check for pseudopotentials
+$ECHO "  checking that pseudopotentials files exist      ...\c"
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET  $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+W90_COMMAND="$BIN_DIR/wannier90.x"
+PW2W90_COMMAND="$PARA_PREFIX $BIN_DIR/pw2wannier90.x"
+KCW_COMMAND_noPOSTFIX="$PARA_PREFIX $BIN_DIR/kcw.x"
+KCW_COMMAND="$PARA_PREFIX $BIN_DIR/kcw.x $PARA_POSTFIX"
+MERGE_WANN_COMMAND="$BIN_DIR/merge_wann.x"
+KMESH_COMMAND="$BIN_DIR/../external/wannier90/utility/kmesh.pl"
+
+$ECHO
+$ECHO "  running pw.x           as:   $PW_COMMAND"
+$ECHO "  running wannier90.x    as:   $W90_COMMAND"
+$ECHO "  running pw2wannier90.x as:   $PW2W90_COMMAND"
+$ECHO "  running kcw.x(screen)  as:   $KCW_COMMAND"
+$ECHO "  running kcw.x(ham)     as:   $KCW_COMMAND_noPOSTFIX"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='cri3'
+SEEDNAME='wann'
+
+$KMESH_COMMAND $nk $nk $nk  > k_points.txt
+
+# self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+&CONTROL
+  calculation='scf'
+  restart_mode='from_scratch',
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  pseudo_dir = '$PSEUDO_DIR/'
+  verbosity='high'
+/
+&SYSTEM
+  ecutwfc =   4.0000000000d+01
+  ibrav = 0
+  nat = 8
+  nosym = .false.
+  nspin = 2
+  ntyp = 2
+  tot_magnetization = 6
+  starting_magnetization(1) =   3.5714285714d-01
+  starting_magnetization(2) =   1.0000000000d-01
+  nbnd = 42
+  nosym = .true.
+  noinv = .true.
+/
+/
+&ELECTRONS
+  conv_thr =   1.6000000000d-09
+  electron_maxstep = 80
+  mixing_beta =   4.0000000000d-01
+  startingpot = 'file'
+/
+ATOMIC_SPECIES
+Cr     51.9961 Cr.upf
+I      126.90447 I.upf
+ATOMIC_POSITIONS crystal
+Cr  0.3336766667   0.3336766667   -0.6663233333
+Cr  0.6663233333   0.6663233333   -0.3336766667
+I   0.5699400001   0.9222300000   -0.7290700000
+I   0.9222300000   0.2709300000   -0.4300599999
+I   0.2709300000   0.5699400001   -0.0777700000
+I   0.4300599999   0.0777700000   -0.2709300000
+I   1.0777700000  -0.2709300000   -0.5699400001
+I   0.7290700000  -0.5699400001    0.0777700000
+
+CELL_PARAMETERS angstrom
+ 3.4335000000   1.9823321493    6.6023333333
+-3.4335000000   1.9823321493    6.6023333333
+ 0.0000000000  -3.9646642985    6.6023333333
+
+$(cat k_points.txt)
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX...\c"
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+
+$ECHO "  SPIN DOWN Channel"
+
+if [ ! -d SPIN_DOWN ]; then mkdir SPIN_DOWN; fi 
+cd SPIN_DOWN
+
+for ib in 1 2 3 4 5 6 ; do 
+
+if [ ! -d wann_block$ib ]; then  mkdir wann_block$ib ; fi
+cd wann_block$ib
+
+$KMESH_COMMAND $nk $nk $nk  wann > k_points.txt
+
+if [ $ib = 1 ]; then 
+ nw=2; eb="3-42"; proj="Cr  : s"
+elif [ $ib = 2 ]; then 
+ nw=6; eb="1-2,9-42"; proj="Cr  : p"
+elif [ $ib = 3 ]; then 
+ nw=6; eb="1-8,15-42"; proj="I  : s"
+elif [ $ib = 4 ]; then 
+ nw=18; eb="1-14,33-42"; proj="I  : p"
+elif [ $ib = 5 ]; then 
+ nw=6; eb="1-32, 39-42"; proj="Cr : l=2, mr=1,4,5"
+elif [ $ib = 6 ]; then 
+ nw=4; eb="1-38"; proj="Cr : l=2, mr=2,3"
+fi
+
+cat > $SEEDNAME.win << EOF
+num_bands         =   $nw
+num_wann          =   $nw
+exclude_bands     =   $eb
+spin = down
+guiding_centres = .true.
+
+wannier_plot = .false.
+wannier_plot_list = 1
+
+num_iter          = 1000
+num_print_cycles  = 10
+conv_window = 5
+conv_tol = 1e-10
+
+write_u_matrices = .true.
+write_xyz = .true.
+
+Begin Atoms_frac
+Cr  0.3336766667   0.3336766667   -0.6663233333
+Cr  0.6663233333   0.6663233333   -0.3336766667
+I   0.5699400001   0.9222300000   -0.7290700000
+I   0.9222300000   0.2709300000   -0.4300599999
+I   0.2709300000   0.5699400001   -0.0777700000
+I   0.4300599999   0.0777700000   -0.2709300000
+I   1.0777700000  -0.2709300000   -0.5699400001
+I   0.7290700000  -0.5699400001    0.0777700000
+End Atoms_frac
+
+begin unit_cell_cart
+angstrom
+ 3.4335000000   1.9823321493    6.6023333333
+-3.4335000000   1.9823321493    6.6023333333
+ 0.0000000000  -3.9646642985    6.6023333333
+end unit_cell_cart
+
+Begin Projections     
+$proj
+End Projections       
+
+bands_plot = .true.
+begin kpoint_path
+G 0.0000000000  0.0000000000    0.0000000000   T 0.5000000000  0.5000000000  0.5000000000
+T 0.5000000000 	0.5000000000 	0.5000000000   L 0.5000000000  0.0000000000  0.0000000000
+L 0.5000000000 	0.0000000000 	0.0000000000   F 0.5000000000  0.0000000000  0.5000000000
+F 0.5000000000 	0.0000000000 	0.5000000000   G 0.0000000000  0.0000000000  0.0000000000
+end kpoint_path
+
+
+
+mp_grid      = $nk $nk $nk
+
+begin kpoints
+$(cat k_points.txt)
+end kpoints
+EOF
+
+cat > pw2wann.in <<EOF 
+&inputpp
+ prefix='$PREFIX'
+ outdir='$TMP_DIR/'
+ seedname = 'wann'
+ wan_mode   =  'standalone'
+ write_unk  = .false.
+ spin_component   = 'down'
+/
+EOF
+
+$ECHO "    Running Wannierization block $ib for $PREFIX...\c"
+$W90_COMMAND -pp $SEEDNAME.win
+$PW2W90_COMMAND -in pw2wann.in > pw2wann.out
+$W90_COMMAND $SEEDNAME.win
+rm k_points.txt
+$ECHO "DONE"
+cd ../
+
+done 
+
+$ECHO "    Running merge_wann.x for $PREFIX...\c"
+$MERGE_WANN_COMMAND U wann_block5/wann_u.mat wann_block6/wann_u.mat > merge_U_emp.out 
+$MERGE_WANN_COMMAND centres wann_block5/wann_centres.xyz wann_block6/wann_centres.xyz > merge_centre_emp.out 
+mv wann_u.mat wann_emp_u.mat 
+mv wann_centres.xyz wann_emp_centres.xyz
+
+$MERGE_WANN_COMMAND U wann_block1/wann_u.mat wann_block2/wann_u.mat wann_block3/wann_u.mat wann_block4/wann_u.mat > merge_U.out
+$MERGE_WANN_COMMAND centres wann_block1/wann_centres.xyz wann_block2/wann_centres.xyz wann_block3/wann_centres.xyz wann_block4/wann_centres.xyz >  merge_centre.out
+$ECHO "DONE"
+
+cat > $PREFIX.kcw-wann2kcw.in << EOF
+W2K Silicon
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  kcw_iverbosity = 2
+  kcw_at_ks=.false.
+  read_unitary_matrix = .true.
+  calculation = 'wann2kcw'
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+  spin_component = 2
+/
+&wannier
+  seedname = '$SEEDNAME'
+  check_ks = .true.
+  num_wann_occ = 32
+  num_wann_emp = 10
+  have_empty = .true.
+  has_disentangle = .false.
+/
+EOF
+
+$ECHO "    Running the interface to KCW for $PREFIX...\c"
+$KCW_COMMAND -in $PREFIX.kcw-wann2kcw.in > $PREFIX.kcw-wann2kcw.out
+$ECHO " done"
+
+
+cat > $PREFIX.kcw-screen.in << EOF
+KCW Silicon screen
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  kcw_iverbosity = 2
+  kcw_at_ks=.false.
+  read_unitary_matrix = .true.
+  calculation = 'screen'
+  lrpa =.false.
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+  spin_component = 2
+/
+&wannier
+  seedname = 'wann'
+  check_ks = .true.
+  num_wann_occ = 32
+  num_wann_emp = 10
+  have_empty = .true.
+  has_disentangle = .false.
+/
+&screen
+  tr2    =1.0d-18
+  nmix   = 4
+  niter  = 33
+  check_spread = .true. 
+ /
+EOF
+
+#$ECHO "    Running the screening parameters calculation for $PREFIX...\c"
+#$KCW_COMMAND -in $PREFIX.kcw-screen.in > $PREFIX.kcw-screen.out
+#$ECHO " done"
+
+echo 42 > file_alpharef.txt
+for i in `seq 1 42`; do 
+ echo $i 0.122 1.0000 >> file_alpharef.txt
+done
+
+cat > $PREFIX.kcw-ham.in << EOF
+KI H2O
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR'
+  kcw_iverbosity = 1
+  kcw_at_ks=.false.
+  homo_only = .false.
+  read_unitary_matrix = .true.
+  calculation = 'ham'
+  lrpa =.false.
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+ spin_component = 2
+/
+&wannier
+  seedname = 'wann'
+  check_ks = .true.
+  num_wann_occ =32
+  num_wann_emp = 10
+  have_empty = .true.
+  has_disentangle = false.
+/
+&ham
+  do_bands = .true.
+  use_ws_distance = .true.
+  write_hr = .true.
+  on_site_only = .true.
+/
+K_POINTS crystal_b
+5
+0.0000000000    0.0000000000    0.0000000000 30 ! Gamma
+0.5000000000    0.5000000000    0.5000000000 30 ! T
+0.5000000000    0.0000000000    0.0000000000 30 ! L
+0.5000000000    0.0000000000    0.5000000000 30 ! F
+0.0000000000    0.0000000000    0.0000000000 30 ! Gamma
+EOF
+
+$ECHO "    Running the KI hamiltonian calculation for $PREFIX...\c"
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
+$ECHO " done"
+
+cd ../
+
+
+$ECHO "  SPIN UP Channel"
+
+if [ ! -d SPIN_UP ]; then mkdir SPIN_UP; fi
+cd SPIN_UP
+
+for ib in 1 2 3 4 5 ; do
+
+if [ ! -d wann_block$ib ]; then  mkdir wann_block$ib ; fi
+cd wann_block$ib
+
+$KMESH_COMMAND $nk $nk $nk  wann > k_points.txt
+
+if [ $ib = 1 ]; then
+ nw=2; eb="3-42"; proj="Cr  : s"
+elif [ $ib = 2 ]; then
+ nw=6; eb="1-2,9-42"; proj="Cr  : p"
+elif [ $ib = 3 ]; then
+ nw=6; eb="1-8,15-42"; proj="I  : s"
+elif [ $ib = 4 ]; then
+ nw=24; eb="1-14,39-42"; proj="I  : p
+ Cr : l=2, mr=1,4,5"
+elif [ $ib = 5 ]; then
+ nw=4; eb="1-38"; proj="Cr : l=2, mr=2,3"
+fi
+
+cat > $SEEDNAME.win << EOF
+num_bands         =   $nw
+num_wann          =   $nw
+exclude_bands     =   $eb
+spin = up
+guiding_centres = .true.
+
+wannier_plot = .false.
+wannier_plot_list = 1
+
+num_iter          = 1000
+num_print_cycles  = 10
+conv_window = 5
+conv_tol = 1e-10
+
+write_u_matrices = .true.
+write_xyz = .true.
+
+Begin Atoms_frac
+Cr  0.3336766667   0.3336766667   -0.6663233333
+Cr  0.6663233333   0.6663233333   -0.3336766667
+I   0.5699400001   0.9222300000   -0.7290700000
+I   0.9222300000   0.2709300000   -0.4300599999
+I   0.2709300000   0.5699400001   -0.0777700000
+I   0.4300599999   0.0777700000   -0.2709300000
+I   1.0777700000  -0.2709300000   -0.5699400001
+I   0.7290700000  -0.5699400001    0.0777700000
+End Atoms_frac
+
+begin unit_cell_cart
+angstrom
+ 3.4335000000   1.9823321493    6.6023333333
+-3.4335000000   1.9823321493    6.6023333333
+ 0.0000000000  -3.9646642985    6.6023333333
+end unit_cell_cart
+
+Begin Projections
+$proj
+End Projections
+
+bands_plot = .true.
+begin kpoint_path
+G 0.0000000000  0.0000000000    0.0000000000   T 0.5000000000  0.5000000000  0.5000000000
+T 0.5000000000 	0.5000000000 	0.5000000000   L 0.5000000000  0.0000000000  0.0000000000
+L 0.5000000000 	0.0000000000 	0.0000000000   F 0.5000000000  0.0000000000  0.5000000000
+F 0.5000000000 	0.0000000000 	0.5000000000   G 0.0000000000  0.0000000000  0.0000000000
+end kpoint_path
+
+
+
+mp_grid      = $nk $nk $nk
+
+begin kpoints
+$(cat k_points.txt)
+end kpoints
+EOF
+
+cat > pw2wann.in <<EOF
+&inputpp
+ prefix='$PREFIX'
+ outdir='$TMP_DIR/'
+ seedname = 'wann'
+ wan_mode   =  'standalone'
+ write_unk  = .false.
+ spin_component   = 'up'
+/
+EOF
+
+$ECHO "    Running Wannierization block $ib for $PREFIX...\c"
+$W90_COMMAND -pp $SEEDNAME.win
+$PW2W90_COMMAND -in pw2wann.in > pw2wann.out
+$W90_COMMAND $SEEDNAME.win
+rm k_points.txt
+$ECHO "DONE"
+cd ../
+
+done
+
+$ECHO "    Running merge_wann.x for $PREFIX...\c"
+$MERGE_WANN_COMMAND U wann_block5/wann_u.mat > merge_U_emp.out
+$MERGE_WANN_COMMAND centres wann_block5/wann_centres.xyz > merge_centre_emp.out
+mv wann_u.mat wann_emp_u.mat
+mv wann_centres.xyz wann_emp_centres.xyz
+
+$MERGE_WANN_COMMAND U wann_block1/wann_u.mat wann_block2/wann_u.mat wann_block3/wann_u.mat wann_block4/wann_u.mat > merge_U.out
+$MERGE_WANN_COMMAND centres wann_block1/wann_centres.xyz wann_block2/wann_centres.xyz wann_block3/wann_centres.xyz wann_block4/wann_centres.xyz >  merge_centre.out
+$ECHO "DONE"
+
+cat > $PREFIX.kcw-wann2kcw.in << EOF
+W2K Silicon
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  kcw_iverbosity = 2
+  kcw_at_ks=.false.
+  read_unitary_matrix = .true.
+  calculation = 'wann2kcw'
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+/
+&wannier
+  seedname = '$SEEDNAME'
+  check_ks = .true.
+  num_wann_occ = 38
+  num_wann_emp = 4
+  have_empty = .true.
+  has_disentangle = .false.
+/
+EOF
+
+$ECHO "    Running the interface to KCW for $PREFIX...\c"
+$KCW_COMMAND -in $PREFIX.kcw-wann2kcw.in > $PREFIX.kcw-wann2kcw.out
+$ECHO " done"
+
+
+cat > $PREFIX.kcw-screen.in << EOF
+KCW Silicon screen
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  kcw_iverbosity = 2
+  kcw_at_ks=.false.
+  read_unitary_matrix = .true.
+  calculation = 'screen'
+  lrpa =.false.
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+/
+&wannier
+  seedname = 'wann'
+  check_ks = .true.
+  num_wann_occ = 38
+  num_wann_emp = 4
+  have_empty = .true.
+  has_disentangle = .false.
+/
+&screen
+  tr2    =1.0d-18
+  nmix   = 4
+  niter  = 33
+  check_spread = .true.
+ /
+EOF
+
+#$ECHO "    Running the screening parameters calculation for $PREFIX...\c"
+#$KCW_COMMAND -in $PREFIX.kcw-screen.in > $PREFIX.kcw-screen.out
+#$ECHO " done"
+
+echo 42 > file_alpharef.txt
+for i in `seq 1 42`; do
+ echo $i 0.122 1.0000 >> file_alpharef.txt
+done
+
+cat > $PREFIX.kcw-ham.in << EOF
+KI H2O
+&control
+  prefix='$PREFIX'
+  outdir='$TMP_DIR'
+  kcw_iverbosity = 1
+  kcw_at_ks=.false.
+  homo_only = .false.
+  read_unitary_matrix = .true.
+  calculation = 'ham'
+  lrpa =.false.
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+/
+&wannier
+  seedname = 'wann'
+  check_ks = .true.
+  num_wann_occ =38
+  num_wann_emp = 4
+  have_empty = .true.
+  has_disentangle = false.
+/
+&ham
+  do_bands = .true.
+  use_ws_distance = .true.
+  write_hr = .true.
+  on_site_only = .true.
+/
+K_POINTS crystal_b
+5
+0.0000000000    0.0000000000    0.0000000000 30 ! Gamma
+0.5000000000    0.5000000000    0.5000000000 30 ! T
+0.5000000000    0.0000000000    0.0000000000 30 ! L
+0.5000000000    0.0000000000    0.5000000000 30 ! F
+0.0000000000    0.0000000000    0.0000000000 30 ! Gamma
+EOF
+
+$ECHO "    Running the KI hamiltonian calculation for $PREFIX...\c"
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
+$ECHO " done"
+
+cd ../
+

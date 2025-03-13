@@ -231,9 +231,9 @@ help lwrite_overlaps -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 if <b>.true.,</b> the overlap matrix of the atomic orbitals
-prior to orthogonalization is written to the atomic_proj
-datafile. Does not work together with linear-algebra
-diagonalization: run as "mpirun -np N projwfc.x -nd 1 ... "
+prior to orthogonalization is written to "atomic_proj.xml".
+Does not work together with parallel diagonalization:
+for parallel runs, use "mpirun -np N projwfc.x -nd 1 ... "
          </pre></blockquote>
 </ul>      
       
@@ -251,8 +251,8 @@ help lbinary_data -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if <b>.true.,</b> the atomic_proj datafile is written in binary fmt.
-Currently disabled.
+CURRENTLY DISABLED.
+if <b>.true.,</b> write atomic projections to a binary file.
          </pre></blockquote>
 </ul>      
       
@@ -324,7 +324,7 @@ number of boxes where the local DOS is computed
 # ------------------------------------------------------------------------
 help irmin -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>irmin(3,n_proj_boxes)</b></big>
+<li> <em>Variables: </em><big><b>irmin(i,n_proj_boxes), (i,n_proj_boxes) = (1,1) ... (3,n_proj_boxes)</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em> 1 for each box
@@ -344,7 +344,7 @@ BEWARE: "irmin" is a 2D array of the form: "irmin"(3,"n_proj_boxes")
 # ------------------------------------------------------------------------
 help irmax -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>irmax(3,n_proj_boxes)</b></big>
+<li> <em>Variables: </em><big><b>irmax(i,n_proj_boxes), (i,n_proj_boxes) = (1,1) ... (3,n_proj_boxes)</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em> 0 for each box

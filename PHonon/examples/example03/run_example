@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -168,7 +168,7 @@ Electron-phonon coefficients for Al
   outdir='$TMP_DIR/',
   fildyn='al.dyn',
   electron_phonon='interpolated',
-  el_ph_sigma=0.005, 
+  el_ph_sigma=0.005,
   el_ph_nsigma=10,
   trans=.true.,
   ldisp=.true.
@@ -239,19 +239,19 @@ $MATDYN_COMMAND < matdyn.in.dos > matdyn.out.dos
 check_failure $?
 $ECHO "  done"
 #
-# 
+#
 #
 cat > lambda.in << EOF
-10  0.12  1    ! emax (something more than highest phonon mode in THz), degauss, smearing method 
-    8          ! Number of q-points for which EPC is calculated, 
-    0.0000000  0.0000000  0.0000000   1.00  ! the first q-point, use kpoints.x program to calculate 
+10  0.12  1    ! emax (something more than highest phonon mode in THz), degauss, smearing method
+    8          ! Number of q-points for which EPC is calculated,
+    0.0000000  0.0000000  0.0000000   1.00  ! the first q-point, use kpoints.x program to calculate
     -0.2500000 -0.2500000  0.2500000   8.00  ! q-points and their weight
     -0.5000000 -0.5000000  0.5000000   4.00  !
      0.0000000  0.0000000  0.5000000   6.00  ! 4th q-point, qx,qy,qz
     -0.2500000 -0.2500000  0.7500000  24.00  !
     -0.5000000 -0.5000000  1.0000000  12.00  !
      0.0000000  0.0000000  1.0000000   3.00  !
-    -0.5000000  0.0000000  1.0000000   6.00  ! the last q-point 
+    -0.5000000  0.0000000  1.0000000   6.00  ! the last q-point
 elph_dir/elph.inp_lambda.1 ! elph output file names,
 elph_dir/elph.inp_lambda.2 ! in the same order as the q-points before
 elph_dir/elph.inp_lambda.3

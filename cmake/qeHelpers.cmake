@@ -69,7 +69,7 @@ function(qe_fix_fortran_modules TGT)
                 PUBLIC
                     $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${TGT}>
                 INTERFACE
-                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT}>)
+                    $<INSTALL_INTERFACE:${QE_INSTALL_Fortran_MODULES}/qe/${TGT}>)
         endif()
     endforeach()
 endfunction(qe_fix_fortran_modules)
@@ -130,7 +130,7 @@ function(qe_git_submodule_update PATH)
         # to call one command for each operation:
         execute_process(COMMAND ${GIT_EXECUTABLE} submodule init -- ${PATH}
                         WORKING_DIRECTORY ${qe_SOURCE_DIR})
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --depth 1 -- ${PATH}
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --depth 5 -- ${PATH}
                         WORKING_DIRECTORY ${qe_SOURCE_DIR})
     else()
         if(EXISTS ${commit_hash_file})
@@ -186,6 +186,7 @@ function(qe_add_library LIB)
     _qe_add_target(${LIB} ${ARGN})
 endfunction(qe_add_library)
 
+# Only use this one for Fortran targets
 function(_qe_add_target TGT)
     if(TARGET QEGlobalCompileDefinitions)
         target_link_libraries(${TGT} PUBLIC QEGlobalCompileDefinitions)
@@ -218,7 +219,7 @@ function(qe_install_targets TGT)
             get_target_property(tgt_module_dir ${tgt} Fortran_MODULE_DIRECTORY)
             if(tgt_module_dir)
                 install(DIRECTORY ${tgt_module_dir}/
-                    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT})
+                    DESTINATION ${QE_INSTALL_Fortran_MODULES}/qe/${TGT})
             endif()
         endif()        
     endforeach()

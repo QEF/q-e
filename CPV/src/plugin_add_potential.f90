@@ -9,7 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_add_potential( v )
 !----------------------------------------------------------------------------
-! This routine is used to add the plugin potentials to the total electronic potential
+!! This routine is used to add the plugin potentials to the total electronic 
+!! potential
 !
 USE io_global,        ONLY : stdout, ionode
 USE kinds,            ONLY : DP

@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="PWscf" program="bands.x" >
+<input_description distribution="Quantum ESPRESSO" package="PWscf" program="bands.x" >
    <toc>
    </toc>
    <intro>

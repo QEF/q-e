@@ -8,8 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [ $QE_USE_MPI == 1 ]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+if [ "$QE_USE_MPI" != "" ]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
 #
 # available flags: 
 #                  -ni n        number of images        (or -nimage)
@@ -26,7 +26,7 @@ else
   unset PARA_SUFFIX
 fi
 
-echo ' RUNNING ',${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_SUFFIX} "$@"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_SUFFIX} "$@"
+echo ' RUNNING ',${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/cp.x ${PARA_SUFFIX} "$@"
+${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/cp.x ${PARA_SUFFIX} "$@"
 
 rm -f input_tmp.in

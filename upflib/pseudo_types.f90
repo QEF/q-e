@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -56,6 +56,7 @@ MODULE pseudo_types
      LOGICAL :: is_gth             ! .true. if Goedecker-Teter-Hutter
      LOGICAL :: is_multiproj       ! .true. if multiple projectors per l
      ! (for NC PP only; US-PP and PAW are assumed to be multi-projector)
+     LOGICAL  :: with_metagga_info ! true if PP contains meta-GGA data
      CHARACTER(LEN=25) :: dft      ! Exch-Corr type
      REAL(DP) :: zp                ! z valence
      REAL(DP) :: etotps            ! total energy
@@ -82,7 +83,7 @@ MODULE pseudo_types
      !
      CHARACTER(LEN=2), ALLOCATABLE :: els(:)  ! els(nwfc) label of wfc
      CHARACTER(LEN=2), ALLOCATABLE :: els_beta(:)  ! els(nbeta) label of beta
-     INTEGER, ALLOCATABLE  :: nchi(:)    ! lchi(nwfc) value of pseudo-n for wavefcts
+     INTEGER, ALLOCATABLE  :: nchi(:)    ! nchi(nwfc) value of pseudo-n for wavefcts
      INTEGER, ALLOCATABLE  :: lchi(:)    ! lchi(nwfc) value of l for wavefcts
      REAL(DP), ALLOCATABLE :: oc(:)      ! oc(nwfc) occupancies for wavefcts
      REAL(DP), ALLOCATABLE :: epseu(:)   ! pseudo one-particle energy (nwfc)
@@ -125,6 +126,10 @@ MODULE pseudo_types
      ! Analitycal coeffs cor small r expansion of qfunc (Vanderbilt's code)
      REAL(DP), ALLOCATABLE :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
      ! coefficients for Q for |r|<r_L
+     !
+     ! META-GGA variables (not yet implemented!)
+     REAL(DP), ALLOCATABLE :: tau_core(:)
+     REAL(DP), ALLOCATABLE :: tau_atom(:)
      ! All electron and pseudo wavefunction, pswfc differ from chi as they are
      ! one for each beta, not just some choosen for initial conditions
      LOGICAL           :: has_wfc    ! if true, UPF contain AE and PS wfc for each beta
@@ -132,7 +137,6 @@ MODULE pseudo_types
      REAL(DP), ALLOCATABLE :: pswfc(:,:) ! wfc(mesh,nbeta) pseudo wfc
 
      LOGICAL :: has_so             ! if .true. includes spin-orbit
-     INTEGER, ALLOCATABLE :: nn(:)     ! nn(nwfc) quantum number of wfc
      REAL(DP), ALLOCATABLE :: rcut(:)  ! cut-off radius(nbeta)
      REAL(DP), ALLOCATABLE :: rcutus(:)! ultrasoft cut-off radius (nbeta)
      REAL(DP), ALLOCATABLE :: jchi(:)  ! jchi(nwfc) j=l+1/2 or l-1/2 of wfc
@@ -199,55 +203,9 @@ CONTAINS
     paw%augshape = ' '
   END SUBROUTINE deallocate_paw_in_upf
   !
-   SUBROUTINE deallocate_pseudo_config(conf)
-      TYPE(pseudo_config),INTENT(INOUT) :: conf
-      IF ( ALLOCATED(conf%els)   ) DEALLOCATE(conf%els)
-      IF ( ALLOCATED(conf%nns)   ) DEALLOCATE(conf%nns)
-      IF ( ALLOCATED(conf%lls)   ) DEALLOCATE(conf%lls)
-      IF ( ALLOCATED(conf%ocs)   ) DEALLOCATE(conf%ocs)
-      IF ( ALLOCATED(conf%rcut)  ) DEALLOCATE(conf%rcut)
-      IF ( ALLOCATED(conf%rcutus)) DEALLOCATE(conf%rcutus)
-      IF ( ALLOCATED(conf%enls)  ) DEALLOCATE(conf%enls)
-   END SUBROUTINE deallocate_pseudo_config
-
-
-
-  SUBROUTINE deallocate_pseudo_upf( upf )
+  SUBROUTINE deallocate_gipaw_in_upf ( upf )
     TYPE( pseudo_upf ), INTENT(INOUT) :: upf
-    CALL deallocate_paw_in_upf( upf%paw )
-    IF( ALLOCATED( upf%els ) )     DEALLOCATE( upf%els )
-    IF( ALLOCATED( upf%lchi ) )    DEALLOCATE( upf%lchi )
-    IF( ALLOCATED( upf%nchi ) )    DEALLOCATE( upf%nchi )
-    IF( ALLOCATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
-    IF( ALLOCATED( upf%oc ) )      DEALLOCATE( upf%oc )
     !
-    IF( ALLOCATED( upf%r ) ) DEALLOCATE( upf%r )
-    IF( ALLOCATED( upf%rab ) ) DEALLOCATE( upf%rab )
-    !
-    IF( ALLOCATED( upf%nn ) )      DEALLOCATE( upf%nn )
-    IF( ALLOCATED( upf%els_beta ) )DEALLOCATE( upf%els_beta )
-    IF( ALLOCATED( upf%rcut_chi ) )  DEALLOCATE( upf%rcut_chi )
-    IF( ALLOCATED( upf%rcutus_chi ) )DEALLOCATE( upf%rcutus_chi )
-    IF( ALLOCATED( upf%rcut ) )    DEALLOCATE( upf%rcut )
-    IF( ALLOCATED( upf%rcutus ) )  DEALLOCATE( upf%rcutus )
-    IF( ALLOCATED( upf%epseu ) )   DEALLOCATE( upf%epseu )
-    IF( ALLOCATED( upf%rho_atc ) ) DEALLOCATE( upf%rho_atc )
-    IF( ALLOCATED( upf%vloc ) )    DEALLOCATE( upf%vloc )
-    IF( ALLOCATED( upf%lll ) )     DEALLOCATE( upf%lll )
-    IF( ALLOCATED( upf%jjj ) )     DEALLOCATE( upf%jjj )
-    IF( ALLOCATED( upf%kbeta ) )   DEALLOCATE( upf%kbeta )
-    IF( ALLOCATED( upf%beta ) )    DEALLOCATE( upf%beta )
-    IF( ALLOCATED( upf%vnl ) )     DEALLOCATE( upf%vnl )
-    IF( ALLOCATED( upf%aewfc ) )   DEALLOCATE( upf%aewfc )
-    IF( ALLOCATED( upf%pswfc ) )   DEALLOCATE( upf%pswfc )
-    IF( ALLOCATED( upf%dion ) )    DEALLOCATE( upf%dion )
-    IF( ALLOCATED( upf%rinner ) )  DEALLOCATE( upf%rinner )
-    IF( ALLOCATED( upf%qqq ) )     DEALLOCATE( upf%qqq )
-    IF( ALLOCATED( upf%qfunc ) )   DEALLOCATE( upf%qfunc )
-    IF( ALLOCATED( upf%qfuncl ) )  DEALLOCATE( upf%qfuncl )
-    IF( ALLOCATED( upf%qfcoef ) )  DEALLOCATE( upf%qfcoef )
-    IF( ALLOCATED( upf%chi ) )     DEALLOCATE( upf%chi )
-    IF( ALLOCATED( upf%rho_at ) )  DEALLOCATE( upf%rho_at )
     IF ( ALLOCATED ( upf%gipaw_core_orbital_n ) ) &
          DEALLOCATE ( upf%gipaw_core_orbital_n )
     IF ( ALLOCATED ( upf%gipaw_core_orbital_l ) ) &
@@ -272,7 +230,70 @@ CONTAINS
          DEALLOCATE ( upf%gipaw_wfs_rcutus )
     IF ( ALLOCATED ( upf%gipaw_wfs_ps ) ) &
          DEALLOCATE ( upf%gipaw_wfs_ps )
-  !
+    !
+   END SUBROUTINE deallocate_gipaw_in_upf
+   !
+   SUBROUTINE deallocate_pseudo_config(conf)
+      TYPE(pseudo_config),INTENT(INOUT) :: conf
+      IF ( ALLOCATED(conf%els)   ) DEALLOCATE(conf%els)
+      IF ( ALLOCATED(conf%nns)   ) DEALLOCATE(conf%nns)
+      IF ( ALLOCATED(conf%lls)   ) DEALLOCATE(conf%lls)
+      IF ( ALLOCATED(conf%ocs)   ) DEALLOCATE(conf%ocs)
+      IF ( ALLOCATED(conf%rcut)  ) DEALLOCATE(conf%rcut)
+      IF ( ALLOCATED(conf%rcutus)) DEALLOCATE(conf%rcutus)
+      IF ( ALLOCATED(conf%enls)  ) DEALLOCATE(conf%enls)
+   END SUBROUTINE deallocate_pseudo_config
+
+   SUBROUTINE deallocate_pseudo_upf( upf )
+    !
+    TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+    !
+    CALL deallocate_paw_in_upf( upf%paw )
+    IF( ALLOCATED( upf%els ) )     DEALLOCATE( upf%els )
+    IF( ALLOCATED( upf%lchi ) )    DEALLOCATE( upf%lchi )
+    IF( ALLOCATED( upf%nchi ) )    DEALLOCATE( upf%nchi )
+    IF( ALLOCATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
+    IF( ALLOCATED( upf%oc ) )      DEALLOCATE( upf%oc )
+    !
+    IF( ALLOCATED( upf%r ) ) DEALLOCATE( upf%r )
+    IF( ALLOCATED( upf%rab ) ) DEALLOCATE( upf%rab )
+    !
+    IF( ALLOCATED( upf%els_beta ) )DEALLOCATE( upf%els_beta )
+    IF( ALLOCATED( upf%rcut_chi ) )  DEALLOCATE( upf%rcut_chi )
+    IF( ALLOCATED( upf%rcutus_chi ) )DEALLOCATE( upf%rcutus_chi )
+    IF( ALLOCATED( upf%rcut ) )    DEALLOCATE( upf%rcut )
+    IF( ALLOCATED( upf%rcutus ) )  DEALLOCATE( upf%rcutus )
+    IF( ALLOCATED( upf%epseu ) )   DEALLOCATE( upf%epseu )
+    IF( ALLOCATED( upf%rho_atc ) ) DEALLOCATE( upf%rho_atc )
+    IF( ALLOCATED( upf%vloc ) )    DEALLOCATE( upf%vloc )
+    IF( ALLOCATED( upf%lll ) )     DEALLOCATE( upf%lll )
+    IF( ALLOCATED( upf%jjj ) )     DEALLOCATE( upf%jjj )
+    IF( ALLOCATED( upf%kbeta ) )   DEALLOCATE( upf%kbeta )
+    IF( ALLOCATED( upf%beta ) )    DEALLOCATE( upf%beta )
+    IF( ALLOCATED( upf%vnl ) )     DEALLOCATE( upf%vnl )
+    IF( ALLOCATED( upf%aewfc ) )   DEALLOCATE( upf%aewfc )
+    IF( ALLOCATED( upf%pswfc ) )   DEALLOCATE( upf%pswfc )
+    IF( ALLOCATED( upf%dion ) )    DEALLOCATE( upf%dion )
+    IF( ALLOCATED( upf%rinner ) )  DEALLOCATE( upf%rinner )
+    IF( ALLOCATED( upf%qqq ) )     DEALLOCATE( upf%qqq )
+    IF( ALLOCATED( upf%qfunc ) )   DEALLOCATE( upf%qfunc )
+    IF( ALLOCATED( upf%qfuncl ) )  DEALLOCATE( upf%qfuncl )
+    IF( ALLOCATED( upf%qfcoef ) )  DEALLOCATE( upf%qfcoef )
+    IF( ALLOCATED( upf%chi ) )     DEALLOCATE( upf%chi )
+    IF( ALLOCATED( upf%rho_at ) )  DEALLOCATE( upf%rho_at )
+    IF( ALLOCATED( upf%tau_core ) )  DEALLOCATE( upf%tau_core )
+    IF( ALLOCATED( upf%tau_atom ) )  DEALLOCATE( upf%tau_atom )
+    !
+    CALL deallocate_gipaw_in_upf( upf )
+    !    
+    CALL reset_upf ( upf)
+    !
+  END SUBROUTINE deallocate_pseudo_upf
+
+  SUBROUTINE reset_upf( upf )
+    !
+    TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+    !
     upf%tvanp = .false.
     upf%tcoulombp = .false.
     upf%nlcc = .false.
@@ -303,10 +324,11 @@ CONTAINS
     upf%tpawp = .false.
     upf%has_gipaw = .false.
     upf%paw_as_gipaw = .false.
+    upf%with_metagga_info = .false.
     upf%gipaw_data_format = 0
     upf%gipaw_ncore_orbitals = 0
     upf%gipaw_wfs_nchannels = 0
 
-  END SUBROUTINE deallocate_pseudo_upf
+  END SUBROUTINE reset_upf
 
 END MODULE pseudo_types

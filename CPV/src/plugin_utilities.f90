@@ -1,9 +1,8 @@
 !-----------------------------------------------------------------------
 SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
-!-----------------------------------------------------------------------
-
-      !  this routine computes the R-space electrostatic potential of a 
-      !  density (possibly with two spin components) provided in G-space
+      !-----------------------------------------------------------------------
+      !! This routine computes the R-space electrostatic potential of a 
+      !! density (possibly with two spin components) provided in G-space.
       !  
       !  rho(ig) = (sum over ispin) rho(ig,ispin)
       !  v_h(ig) = fpi / ( g(ig) * tpiba2 ) * rho(ig) 
@@ -12,7 +11,6 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       !            | rho(ig) |**2
       !  if Gamma symmetry Fact = 1 else Fact = 1/2
       !
-
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE io_global,          ONLY: stdout
@@ -26,15 +24,13 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE fft_helper_subroutines, ONLY: fftx_oned2threed
 
       IMPLICIT NONE
-
-      ! ... Arguments
-
+      !
       COMPLEX(DP), INTENT(IN)    :: rhog(dfftp%ngm, nspin)
       REAL(DP),    INTENT(INOUT) :: v(dfftp%nnr, nspin)
       REAL(DP),    INTENT(OUT)   :: ehart, charge
-
-      ! ... Locals
-
+      !
+      ! ... local variables
+      !
       INTEGER :: ig
       REAL(DP) :: rhog_re, rhog_im, fpibg
       COMPLEX(DP),    ALLOCATABLE   :: aux1(:)
@@ -86,15 +82,14 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       DEALLOCATE(aux)
       !
       RETURN
-!-----------------------------------------------------------------------
+      !
   END SUBROUTINE v_h_of_rho_g
-!-----------------------------------------------------------------------
-!-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
-!-----------------------------------------------------------------------
-
-      !  this routine computes the R-space electrostatic potential of a 
-      !  density (possibly with two spin components) provided in R-space
+      !-----------------------------------------------------------------------
+      !! This routine computes the R-space electrostatic potential of a 
+      !! density (possibly with two spin components) provided in R-space.
       !  
       !  rhor(ir) = (sum over ispin) rhor(ir,ispin)
       !  rhog(ig) = fwfft(rhog(ir))
@@ -110,17 +105,15 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE electrons_base,     ONLY: nspin
       USE fft_helper_subroutines, ONLY: fftx_threed2oned
-
+      !
       IMPLICIT NONE
-
-      ! ... Arguments
-
+      !
       REAL(DP), INTENT(IN)    :: rhor(dfftp%nnr, nspin)
       REAL(DP), INTENT(INOUT) :: v(dfftp%nnr, nspin)
       REAL(DP), INTENT(OUT)   :: ehart, charge
-
-      ! ... Locals
-      
+      !
+      ! ... local variables
+      !
       INTEGER :: is
       COMPLEX(DP), ALLOCATABLE   :: aux(:)
       COMPLEX(DP), ALLOCATABLE   :: rhog(:,:)
@@ -142,16 +135,15 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       DEALLOCATE( rhog )
       !
       RETURN
-!-----------------------------------------------------------------------
-  END SUBROUTINE v_h_of_rho_r
-!-----------------------------------------------------------------------
-!-----------------------------------------------------------------------
-  SUBROUTINE force_h_of_rho_g( rhog, ei1, ei2, ei3, omega, fion )
-!-----------------------------------------------------------------------
-
-      !  this routine computes:
       !
-      !  Local contribution to the forces on the ions
+  END SUBROUTINE v_h_of_rho_r
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE force_h_of_rho_g( rhog, ei1, ei2, ei3, omega, fion )
+      !--------------------------------------------------------------------
+      !! this routine computes the local contribution to the forces 
+      !! on the ions.
+      !
       !  eigrx(ig,isa)   = ei1( mill(1,ig), isa)
       !  eigry(ig,isa)   = ei2( mill(2,ig), isa)
       !  eigrz(ig,isa)   = ei3( mill(3,ig), isa)
@@ -163,7 +155,6 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       !      eigrx(ig,isa) * eigry(ig,isa) * eigrz(ig,isa) 
       !  if Gamma symmetry Fact = 2.0 else Fact = 1
       !
-
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
@@ -173,20 +164,18 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE fft_base,           ONLY: dfftp, dffts
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
-
+      !
       IMPLICIT NONE
-
-      ! ... Arguments
-
+      !
       COMPLEX(DP), INTENT(IN) :: rhog(dfftp%ngm)
       COMPLEX(DP), INTENT(IN) :: ei1(-dfftp%nr1:dfftp%nr1,nat)
       COMPLEX(DP), INTENT(IN) :: ei2(-dfftp%nr2:dfftp%nr2,nat)
       COMPLEX(DP), INTENT(IN) :: ei3(-dfftp%nr3:dfftp%nr3,nat)
       REAL(DP), INTENT(IN)    :: omega
       REAL(DP), INTENT(INOUT) :: fion(3,nat)
-
-      ! ... Locals
-
+      !
+      ! ... local variables
+      !
       INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg, rhops, r2new
       COMPLEX(DP) :: rho, gxc, gyc, gzc
@@ -229,25 +218,19 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       CALL mp_sum( ftmp, intra_bgrp_comm )
       !
       fion = fion + DBLE(ftmp) * 2.D0 * omega * tpiba
-
-      DEALLOCATE( ftmp )
-       
-      RETURN
-!-----------------------------------------------------------------------
-  END SUBROUTINE force_h_of_rho_g
-!-----------------------------------------------------------------------
-!-----------------------------------------------------------------------
-SUBROUTINE gradv_h_of_rho_r( rho, gradv )
-!-----------------------------------------------------------------------
-
-      !  this routine computes the R-space gradient of the electrostatic 
-      !  potential of a spinless density in R-space
-      !  
-      !  rho(ig) = fwfft(rho(ir))
-      !  gradv_h(ig,ipol) = fpi * g(ig,ipol) / ( gg(ig) * tpiba ) * rho(ig) 
-      !  gradv_h(ir,ipol) = invfft(gradv_h(ig,ipol))
       !
-
+      DEALLOCATE( ftmp )
+      !
+      RETURN
+      !
+  END SUBROUTINE force_h_of_rho_g
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE gradv_h_of_rho_r( rho, gradv )
+      !----------------------------------------------------------------------
+      !! This routine computes the R-space gradient of the electrostatic 
+      !! potential of a spinless density in R-space.
+      !
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE io_global,          ONLY: stdout
@@ -258,16 +241,17 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       USE fft_base,           ONLY: dfftp
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_helper_subroutines, ONLY: fftx_oned2threed, fftx_threed2oned
-
+      !
       IMPLICIT NONE
-
-      ! ... Arguments
-
+      !
       REAL(DP), INTENT(IN)  :: rho(dfftp%nnr)
+      !! rho(ig) = fwfft(rho(ir))
       REAL(DP), INTENT(OUT) :: gradv(3,dfftp%nnr)
-
-      ! ... Locals
-      
+      !! gradv_h(ig,ipol) = fpi*g(ig,ipol)/(gg(ig)*tpiba)*rho(ig)  
+      !! gradv_h(ir,ipol) = invfft(gradv_h(ig,ipol))
+      !
+      ! ... local variables
+      !
       INTEGER :: ipol, ig
       COMPLEX(DP), ALLOCATABLE   :: rhoaux(:)
       COMPLEX(DP), ALLOCATABLE   :: gaux(:)
@@ -310,6 +294,4 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       RETURN
       !
-!-----------------------------------------------------------------------
   END SUBROUTINE gradv_h_of_rho_r
-!-----------------------------------------------------------------------

@@ -1,0 +1,42 @@
+! BEWARE: this input is used solely to test parsing of OCCUPATIONS & HUBBARD cards
+
+&control
+   calculation='scf'
+   restart_mode='from_scratch',
+   prefix='Ni2MnGa'
+   pseudo_dir = '../pseudo'
+   outdir='./tmp'
+/
+&system
+   ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+   nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+   occupations ='smearing', smearing ='mv', degauss = 0.01,
+   starting_magnetization(1) = 0.5,
+   starting_magnetization(2) = 0.5
+   occupations = 'from_input' 
+/
+&electrons
+   conv_thr = 1.d-10
+   mixing_beta = 0.7
+/
+ATOMIC_SPECIES
+   Mn 54.938 Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+   Ni 58.693 Ni.pbesol-n-rrkjus_psl.0.1.UPF
+   Ga 69.723 Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+   Mn 0.0000000000   0.0000000000   0.0000000000
+   Ni 0.5000000000   0.7500000000   0.2500000000
+   Ni 0.5000000000   0.2500000000   0.7500000000
+   Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+   4 4 4 0 0 0
+
+OCCUPATIONS
+ 2 2 2 2 2 2 2 2 2 2
+ 2 2 1 1 0 0 0
+
+HUBBARD (ortho-atomic)
+   U Mn-3d 5.0
+   U Mn-3p 3.0
+   U Ni-3d 6.0
+   U Ni-4s 2.0

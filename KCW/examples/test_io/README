@@ -1,0 +1,19 @@
+This is to test the different KCW IO schema. In practice if the 
+periodic part of the wannier orbital densities are read/written in 
+G-space (default) or real-space, and if these quantities are 
+read/written in double-precision (default) or single-precision.
+
+controlling variable:
+io_real_space
+io_sp
+
+For each example in the examples folder above 4 different calculations
+are run with all possible IO schema:
+     io_real_space    io_sp 
+          F             F (default since  Feb. 2024) 
+          F             T
+          T             F (default before Feb. 2024) 
+          T             T
+
+Each calculation is compared against the reference folder
+of the corresponding example in the "examples" folder.  

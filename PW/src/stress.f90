@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,26 +17,27 @@ SUBROUTINE stress( sigma )
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,        ONLY : ry_kbar
   USE ener,             ONLY : etxc, vtxc
-  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm
+  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl
   USE fft_base,         ONLY : dfftp
-  USE ldaU,             ONLY : lda_plus_u, U_projection
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
-  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw, use_gpu
+  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, &
+                               ts_vdw, mbd_vdw
   USE xc_lib,           ONLY : xclib_dft_is
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
   USE uspp,             ONLY : okvan
   USE london_module,    ONLY : stres_london
-  USE dftd3_api,        ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,        ONLY : get_atomic_number
   USE dftd3_qe,         ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress
   USE tsvdw_module,     ONLY : HtsvdW
   USE libmbd_interface, ONLY : HmbdvdW
+  USE rism_module,      ONLY : lrism, stres_rism
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
-  USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
-  USE gvect,            ONLY : g_d, gg_d
+  USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong 
   !
   IMPLICIT NONE
   !
@@ -51,12 +52,13 @@ SUBROUTINE stress( sigma )
               sigmad23(3,3),  sigmaxdm(3,3), sigma_ts(3,3), sigma_mbd(3,3),&
               sigma_nonloc_dft(3,3), sigmaexx(3,3)
   REAL(DP) :: sigmaloclong(3,3)  ! for ESM stress
+  REAL(DP) :: sigmasol(3,3)      ! for RISM stress
   INTEGER  :: l, m
   !
-  ! Auxiliary variables for Grimme-D3
+  ! ... Auxiliary variables for Grimme-D3
   !
   INTEGER  :: atnum(1:nat)
-  REAL(DP) :: latvecs(3,3)
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:)
   !
   WRITE( stdout, '(//5x,"Computing stress (Cartesian axis) and pressure"/)' )
@@ -68,10 +70,12 @@ SUBROUTINE stress( sigma )
   !
   CALL start_clock( 'stress' )
   !
-  !   contribution from local potential
+  !$acc update device( g, gg )
+  !FIXME: I don't think the above line is needed
   !
-  IF (.NOT. use_gpu) CALL stres_loc( sigmaloc )
-  IF (      use_gpu) CALL stres_loc_gpu( sigmaloc )
+  ! ... contribution from local potential
+  !
+  CALL stres_loc( sigmaloc )
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN
      ! In ESM, sigmaloc has only short-range term: add long-range term
@@ -79,51 +83,50 @@ SUBROUTINE stress( sigma )
      sigmaloc(:,:) = sigmaloc(:,:) + sigmaloclong(:,:)
   END IF
   !
-  !  hartree contribution
+  ! ... Hartree contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) )  THEN ! for ESM stress
      CALL esm_stres_har( sigmahar, rho%of_g(:,1) )
   ELSE
-     IF (.NOT. use_gpu) CALL stres_har( sigmahar )
-     IF (      use_gpu) CALL stres_har_gpu( sigmahar )
-  END IF
+     CALL stres_har( sigmahar )
+  ENDIF
   !
-  !  xc contribution (diagonal)
+  ! ... XC contribution (diagonal)
   !
   sigmaxc(:,:) = 0.d0
   DO l = 1, 3
-     sigmaxc (l, l) = - (etxc - vtxc) / omega
+     sigmaxc(l,l) = - (etxc - vtxc) / omega
   ENDDO
   !
-  !  xc contribution: add gradient corrections (non diagonal)
+  ! ... XC contribution: add gradient corrections (non diagonal)
   !
-  CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-       nspin, dfftp, g, alat, omega, sigmaxc )
+  IF (.NOT.xclib_dft_is('meta')) THEN
+    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
+                         nspin, dfftp, g, alat, omega, sigmaxc )
+  ELSE
+    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
+                         nspin, dfftp, g, alat, omega, sigmaxc, rho%kin_r )
+  ENDIF
   !
-  !  meta-GGA contribution 
+  ! ... meta-GGA contribution
   !
-  IF (.NOT. use_gpu) CALL stres_mgga( sigmaxc )
-  IF (      use_gpu) CALL stres_mgga_gpu( sigmaxc )
+  CALL stres_mgga( sigmaxc )
   !
-  ! core correction contribution
+  ! ... core correction contribution
   !
-  IF (.NOT. use_gpu) CALL stres_cc( sigmaxcc )
-  IF (      use_gpu) CALL stres_cc_gpu( sigmaxcc )
+  CALL stres_cc( sigmaxcc )
   !
-  !  ewald contribution
+  ! ... Ewald contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      CALL esm_stres_ewa( sigmaewa )
   ELSE
-     IF (.NOT. use_gpu) CALL stres_ewa( alat, nat, ntyp, ityp, zv, at,      &
-                                        bg, tau, omega, g, gg, ngm, gstart, &
-                                        gamma_only, gcutm, sigmaewa )
-     IF (      use_gpu) CALL stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg,&
-                                            tau, omega, g_d,gg_d, ngm, gstart,&
-                                            gamma_only, gcutm, sigmaewa )
-  END IF
+     CALL stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, &
+                     tau, omega, g, gg, ngm, gstart,    &
+                     gamma_only, gcutm, sigmaewa )
+  ENDIF
   !
-  ! semi-empirical dispersion contribution: Grimme-D2 and D3
+  ! ... semi-empirical dispersion contribution: Grimme-D2 and D3
   !
   sigmad23( : , : ) = 0.d0
   IF ( llondon ) THEN
@@ -132,21 +135,24 @@ SUBROUTINE stress( sigma )
     CALL start_clock('stres_dftd3')
     ALLOCATE( force_d3(3,nat) )
     force_d3( : , : ) = 0.0_DP
-    latvecs(:,:) = at(:,:)*alat
-    tau(:,:) = tau(:,:)*alat
+    ! taupbc are atomic positions in alat units, centered around r=0
+    ALLOCATE ( taupbc(3,nat) )
+    taupbc(:,:) = tau(:,:)
+    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
     atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, tau, atnum, latvecs, &
+    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
                          force_d3, sigmad23 )
     sigmad23 = 2.d0*sigmad23
-    tau(:,:)=tau(:,:)/alat
+    DEALLOCATE( taupbc )
     DEALLOCATE( force_d3 )
     CALL stop_clock('stres_dftd3')
   END IF
   !
-  !  kinetic + nonlocal contribuition
+  ! ... kinetic + nonlocal contribuition
   !
-  IF (.NOT. use_gpu) CALL stres_knl( sigmanlc, sigmakin )
-  IF (      use_gpu) CALL stres_knl_gpu( sigmanlc, sigmakin )
+  CALL stres_knl( sigmanlc, sigmakin )
   !
   DO l = 1, 3
      DO m = 1, 3
@@ -154,13 +160,13 @@ SUBROUTINE stress( sigma )
      ENDDO
   ENDDO
   !
-  !  Hubbard contribution
-  !  (included by stres_knl if using beta as local projectors)
+  ! ... Hubbard contribution
+  !     (included by stres_knl if using beta as local projectors)
   !
   sigmah(:,:) = 0.d0
-  IF ( lda_plus_u .AND. U_projection /= 'pseudo' ) CALL stres_hub( sigmah )
+  IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) CALL stres_hub( sigmah )
   !
-  !   Electric field contribution
+  ! ... Electric field contribution
   !
   sigmael(:,:)=0.d0
   sigmaion(:,:)=0.d0
@@ -168,15 +174,15 @@ SUBROUTINE stress( sigma )
 !  call stress_bp_efield (sigmael )
 !  call stress_ion_efield (sigmaion )
   !
-  ! vdW dispersion contribution: xdm
+  ! ... vdW dispersion contribution: xdm
   !
   sigmaxdm = 0._dp
   IF (lxdm) sigmaxdm = stress_xdm()
   !
-  ! vdW dispersion contribution: Tkatchenko-Scheffler
+  ! ... vdW dispersion contribution: Tkatchenko-Scheffler
   !
   sigma_ts = 0.0_DP
-    ! vdW dispersion contribution: Many-Body Dispersion
+  ! ... vdW dispersion contribution: Many-Body Dispersion
   !
   sigma_mbd = 0.0_DP
   IF ( mbd_vdw ) THEN
@@ -185,18 +191,24 @@ SUBROUTINE stress( sigma )
     sigma_ts = -2.0_DP*alat*MATMUL( HtsvdW, TRANSPOSE(at) )/omega
   ENDIF
   !
-  !   DFT-non_local contribution
+  ! ... DFT-non_local contribution
   !
   sigma_nonloc_dft(:,:) = 0.d0
   CALL stres_nonloc_dft( rho%of_r, rho_core, nspin, sigma_nonloc_dft )
   !
-  ! SUM
+  ! ... The solvation contribution (3D-RISM)
+  !
+  sigmasol(:,:) = 0.d0
+  IF (lrism) CALL stres_rism(sigmasol)
+  !
+  ! ... Sum all terms
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) +  &
                sigmaxc(:,:)  + sigmaxcc(:,:) + sigmaewa(:,:) +  &
                sigmanlc(:,:) + sigmah(:,:)   + sigmael(:,:)  +  &
                sigmaion(:,:) + sigmad23(:,:) + sigmaxdm(:,:) + &
-               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:)
+               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:) + &
+               sigmasol(:,:)
   !
   IF (xclib_dft_is('hybrid')) THEN
      sigmaexx = exx_stress()
@@ -205,12 +217,12 @@ SUBROUTINE stress( sigma )
   ELSE
      sigmaexx = 0.d0
   ENDIF
-  ! Resymmetrize the total stress. This should not be strictly necessary,
-  ! but prevents loss of symmetry in long vc-bfgs runs
+  ! ... Resymmetrize the total stress. This should not be strictly necessary,
+  !     but prevents loss of symmetry in long vc-bfgs runs
 
   CALL symmatrix( sigma )
   !
-  ! write results in Ry/(a.u.)^3 and in kbar
+  ! ... write results in Ry/(a.u.)^3 and in kbar
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2)) * ry_kbar/3d0, &
@@ -237,7 +249,8 @@ SUBROUTINE stress( sigma )
      (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
      (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3), &
-     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3)
+     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3), &
+     (sigmasol(l,1)*ry_kbar,sigmasol(l,2)*ry_kbar,sigmasol(l,3)*ry_kbar, l=1,3)
 
   IF ( xclib_dft_is('hybrid') .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
@@ -267,6 +280,8 @@ SUBROUTINE stress( sigma )
          &   5x,'DFT-D   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'MDB     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'3D-RISM stress (kbar)',3f10.2/2(26x,3f10.2/)) 
   !
 END SUBROUTINE stress

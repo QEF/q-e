@@ -13,15 +13,8 @@ subroutine plugin_summary()
 !
 USE plugin_flags
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 implicit none
 !
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
-!
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 end subroutine plugin_summary

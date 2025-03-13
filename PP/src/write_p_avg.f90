@@ -37,8 +37,13 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   INTEGER :: spin_component, nks1, nks2, firstk, lastk, npw, ndim
   INTEGER :: iunout, ios, ik, ibnd, jbnd, ipol, nbnd_occ
   COMPLEX(DP), ALLOCATABLE :: ppsi(:,:), ppsi_us(:,:), matp(:,:,:)
-  CHARACTER (len=256) :: filp, namefile
+  COMPLEX(DP)              :: za, zb, zc 
+  CHARACTER (len=256)      :: filp, namefile
+  REAL(DP)                 :: jet 
   !
+  za=cmplx(1.d0,0.d0, kind=dp)
+  zb = cmplx(0.d0,0.d0, kind=dp) 
+  zc = cmplx(0.d0,0.5d0,kind=dp)  
   IF (lda_plus_u) CALL errore('write_p_avg', &
                        'write_p_avg not working with LDA+U',1)
   ALLOCATE(matp(nbnd,nbnd,3))
@@ -101,22 +106,23 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      ELSE
         ndim = npw
      END IF
+     matp = cmplx( 0._dp, 0._dp, kind = dp) 
      DO ipol=1,3
         CALL compute_ppsi(ppsi, ppsi_us, ik, ipol, nbnd_occ, spin_component)
-        ! FIXME: use ZGEMM instead of DOT_PRODUCT
-        DO ibnd=nbnd_occ+1,nbnd
-           DO jbnd=1,nbnd_occ
-              matp(ibnd-nbnd_occ,jbnd,ipol)=  &
-                   DOT_PRODUCT( evc(1:ndim,ibnd),ppsi(1:ndim,jbnd) )
-              IF (okvan) THEN
-                 matp(ibnd-nbnd_occ,jbnd,ipol)=                  &
-                      matp(ibnd-nbnd_occ,jbnd,ipol)+             &
-                      (0.d0,0.5d0)*(et(ibnd,ik)-et(jbnd,ik))*  &
-                      DOT_PRODUCT( evc(1:ndim,ibnd),ppsi_us(1:ndim,jbnd))
-              ENDIF
-           ENDDO
-        ENDDO
-     ENDDO
+        IF (okvan) THEN 
+          CALL zgemm ('C','N', nbnd - nbnd_occ, nbnd_occ, ndim, za, evc(1, nbnd_occ + 1), size(evc,1),  & 
+                                                                    ppsi_us(1, 1), size(ppsi_us,1),      &
+                                                                zb, matp(1, 1,ipol), nbnd)
+          DO jbnd = 1, nbnd_occ  
+            jet = et(jbnd,ik)
+            matp(1:nbnd-nbnd_occ,jbnd, ipol)  = matp(1:nbnd - nbnd_occ,jbnd, ipol) * zc * (et(nbnd_occ+1:nbnd,ik) - jet)
+          END DO 
+          zb  = cmplx (1.d0, 0.d0, kind = dp)  
+        END IF 
+        CALL zgemm ('C','N', nbnd - nbnd_occ, nbnd_occ, ndim, za, evc(1,nbnd_occ+1), size(evc,1),     & 
+                                                                  ppsi(1, 1), size(ppsi,1),        & 
+                                                              zb, matp(1, 1, ipol), nbnd)
+     END DO
      DEALLOCATE(ppsi)
      DEALLOCATE(ppsi_us)
      CALL mp_sum(matp, intra_bgrp_comm)
@@ -142,7 +148,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   IF (ionode) THEN
      CLOSE(iunout)
   ENDIF
-
+  call deallocate_bec_type(becp)
   DEALLOCATE(matp)
   !
   RETURN

@@ -50,15 +50,11 @@ PROGRAM casino2upf
       READ(*,*,iostat=ios) wavefile(:)
       OPEN(newunit=waveunit(i),file=trim(wavefile(i)),&
            status='old',form='formatted', iostat=ios)
-      IF (ios /= 0 ) THEN
-         CALL upf_error ('casino2upf', 'cannot read file', trim(wavefile(i)))
-      ENDIF
+      CALL upf_error ('casino2upf', 'cannot read file'//trim(wavefile(i)), ios)
    ENDDO
 
    OPEN(newunit=pp_unit,file=trim(pp_data),status='old',form='formatted', iostat=ios)
-   IF (ios /= 0 ) THEN
-      CALL upf_error ('casino2upf', 'cannot read file', trim(wavefile(i)))
-   ENDIF
+   CALL upf_error ('casino2upf', 'cannot read file'//trim(pp_data), ios)
 
    CALL read_casino(pp_unit,nofiles, waveunit)
 

@@ -7,7 +7,7 @@ try_cc="cc gcc"
 
 case "$arch:$f90_flavor" in
 *:ifort* )
-        try_cc="icc ecc $try_cc"
+        try_cc="icc $try_cc"
         ;;
 *:pgf90 | *:nvfortran )
         try_cc="pgcc $try_cc"
@@ -49,7 +49,7 @@ case "$arch:$cc" in
         # Workaround for BEEF compilation with PGI v.19 and previous 
         if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
-crayxt*:cc )
+craype*:cc )
         # Actually we need something like is done for ftn to detect 
         # the proper compiler used (NdFilippo)
         try_cflags="-O3"

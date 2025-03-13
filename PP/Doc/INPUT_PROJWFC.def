@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program projwfc.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program projwfc.x {
 
     toc {}
 
@@ -6,9 +6,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         @b {Purpose of projwfc.x:}
             projects wavefunctions onto orthogonalized atomic wavefunctions, 
             calculates Lowdin charges, spilling parameter, projected DOS 
-            (separated into up and down components for lSDA)
-            alternatively, computes the local DOS(E), integrated in volumes
-            given in input
+            (separated into up and down components for LSDA). Alternatively:
+            computes the local DOS(E) integrated in volumes given in input 
+            (see @ref tdosinboxes) or k-resolved DOS (see @ref kresolveddos).
+            Atomic projections are written to file "atomic_proj.xml".
 
         @b {Structure of the input data:}
         ============================
@@ -115,17 +116,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             default { .false. }
             info {
                 if @b .true., the overlap matrix of the atomic orbitals
-                prior to orthogonalization is written to the atomic_proj
-		datafile. Does not work together with linear-algebra
-		diagonalization: run as "mpirun -np N projwfc.x -nd 1 ... "
+                prior to orthogonalization is written to "atomic_proj.xml".
+		Does not work together with parallel diagonalization:
+                for parallel runs, use "mpirun -np N projwfc.x -nd 1 ... "
             }
         }
 
         var lbinary_data -type LOGICAL {
             default { .false. }
             info {
-                if @b .true., the atomic_proj datafile is written in binary fmt.
-		Currently disabled.
+		CURRENTLY DISABLED.
+                if @b .true., write atomic projections to a binary file.
             }
         }
 
@@ -156,9 +157,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             info {
                 number of boxes where the local DOS is computed
             }
-        }       
-
-        var irmin(3,n_proj_boxes) -type INTEGER {
+        }
+        
+        multidimension irmin -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
             default { 1 for each box }
             info {
                 
@@ -168,7 +169,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             }
         }       
 
-        var irmax(3,n_proj_boxes) -type INTEGER {
+        multidimension irmax -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
             default { 0 for each box }
             info {
                 
@@ -250,8 +251,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		
 		    1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
 		
-		where phi is the polar angle:x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
-		This is determined in file Modules/ylmr2.f90 that calculates spherical harmonics.
+		where phi is the azimuthal angle: x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
+		This is determined in file upflib/ylmr2.f90 that calculates spherical harmonics.
 
 	        for l=1:
 	          1 pz     (m=0)

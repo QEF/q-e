@@ -2,6 +2,7 @@ phonons of BN at Gamma
  &inputph
   tr2_ph    = 1.0d-14,
   prefix    = 'bn',
+  outdir    = './'
   epsil     = .true.,
   fildyn    = 'bn.dynG',
   verbosity = 'medium'

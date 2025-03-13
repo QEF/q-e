@@ -3,7 +3,7 @@
     prefix          = 'si'
     restart_mode    = 'from_scratch'
     wf_collect      = .true.
-    pseudo_dir      = '../../pp'
+    pseudo_dir      = '../../pseudo'
     outdir          = './'
     tprnfor         = .true.
     tstress         = .true.
@@ -14,9 +14,9 @@
     nat             = 2
     ntyp            = 1
     ecutwfc         = 35
-    noncolin        =.true.
-    lspinorb        =.true.
-    nbnd            = 8
+    noncolin        =.false.
+    lspinorb        =.false.
+    nbnd            = 4
  /
  &electrons
     diagonalization = 'david'

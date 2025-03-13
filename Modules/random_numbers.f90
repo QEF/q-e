@@ -79,9 +79,12 @@ MODULE random_numbers
       INTEGER :: iseed, irand
       !
       CALL date_and_time ( values = itime ) 
-      ! itime contains: year, month, day, time difference in minutes, hours,
-      !                 minutes, seconds and milliseconds. 
-      iseed = ( itime(8) + itime(6) ) * ( itime(7) + itime(4) )
+      ! itime contains: year, month, day, time difference (minutes) from UTC,
+      !                 hours, minutes, seconds and milliseconds. 
+      ! The following rather arbitrary choice, modified as suggested by
+      ! Han Hsu, appears to yield sufficiently randomized initial seeds
+      !
+      iseed = ( itime(8) + itime(6) ) * ( itime(7) + itime(5) )
       irand = randy ( iseed )
       !
     END SUBROUTINE set_random_seed

@@ -10,6 +10,14 @@ LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
+HTMLS = INPUT_DYNMAT.html \
+	INPUT_MATDYN.html \
+	INPUT_PH.html \
+	INPUT_POSTAHC.html \
+	INPUT_Q2R.html
+
+XMLS = $(HTMLS:.html=.xml)
+TXTS = $(HTMLS:.html=.txt)
 
 doc:  all
 all:  defs pdf html
@@ -23,9 +31,8 @@ $(PDFS): %.pdf: %.tex
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
-	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
-	- rm -rf input_xx.xsl
-	- rm -rf ../../Doc/INPUT_PH.*
+	- rm -f $(HTMLS) $(TXTS) $(XMLS) input_xx.xsl
+	- rm -r $(patsubst %,../../Doc/%,$(HTMLS) $(XMLS) $(TXTS))
 
 user_guide: user_guide.pdf
 	- rm -rf user_guide/
@@ -48,10 +55,13 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: input_xx.xsl INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html \
-	INPUT_MATDYN.txt INPUT_MATDYN.html \
-	INPUT_Q2R.txt INPUT_Q2R.html \
-	INPUT_POSTAHC.txt INPUT_POSTAHC.html link_on_main_doc
+defs: input_xx.xsl $(HTMLS) link_on_main_doc
+
+$(HTMLS): %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+
+$(TXTS): %.txt: %.def input_xx.xsl
+	$(HELPDOC) $<
 
 input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
@@ -63,45 +73,5 @@ input_xx.xsl:
 	echo ; exit 1 ; \
 	fi) ; fi)
 
-INPUT_PH.html: %.html: %.def input_xx.xsl
-	$(HELPDOC) $<
-INPUT_PH.txt: %.txt: %.def input_xx.xsl
-	$(HELPDOC) $<
-
-INPUT_DYNMAT.html: %.html: %.def input_xx.xsl
-	$(HELPDOC) $<
-INPUT_DYNMAT.txt: %.txt: %.def input_xx.xsl
-	$(HELPDOC) $<
-
-INPUT_MATDYN.html: %.html: %.def input_xx.xsl
-	$(HELPDOC) $<
-INPUT_MATDYN.txt: %.txt: %.def input_xx.xsl
-	$(HELPDOC) $<
-
-INPUT_Q2R.html: %.html: %.def input_xx.xsl
-	$(HELPDOC) $<
-INPUT_Q2R.txt: %.txt: %.def input_xx.xsl
-	$(HELPDOC) $<
-
-INPUT_POSTAHC.html: %.html: %.def input_xx.xsl
-	$(HELPDOC) $<
-INPUT_POSTAHC.txt: %.txt: %.def input_xx.xsl
-	$(HELPDOC) $<
-
 link_on_main_doc:
-	-( cd ../../Doc ; \
-	ln -fs ../PHonon/Doc/INPUT_PH.html . ; \
-	ln -fs ../PHonon/Doc/INPUT_PH.xml . ; \
-	ln -fs ../PHonon/Doc/INPUT_PH.txt . ; \
-	ln -fs ../PHonon/Doc/INPUT_DYNMAT.html . ; \
-	ln -fs ../PHonon/Doc/INPUT_DYNMAT.xml . ; \
-	ln -fs ../PHonon/Doc/INPUT_DYNMAT.txt . ; \
-	ln -fs ../PHonon/Doc/INPUT_MATDYN.html . ; \
-	ln -fs ../PHonon/Doc/INPUT_MATDYN.xml . ; \
-	ln -fs ../PHonon/Doc/INPUT_MATDYN.txt . ; \
-	ln -fs ../PHonon/Doc/INPUT_Q2R.html . ; \
-	ln -fs ../PHonon/Doc/INPUT_Q2R.xml . ; \
-	ln -fs ../PHonon/Doc/INPUT_Q2R.txt . ; \
-	ln -fs ../PHonon/Doc/INPUT_POSTAHC.html . ; \
-	ln -fs ../PHonon/Doc/INPUT_POSTAHC.xml . ; \
-	ln -fs ../PHonon/Doc/INPUT_POSTAHC.txt . )
+	-@( cd ../../Doc ; for file in $(HTMLS) $(XMLS) $(TXTS); do ln -fs ../PHonon/Doc/$$file . ; done )

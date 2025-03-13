@@ -25,7 +25,6 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   USE upf_io,       ONLY: stdout
   USE upf_const,    ONLY: fpi, sqrt2, eps8, eps6
   USE atom,         ONLY: rgrid
-  USE uspp_data,    ONLY: dq
   USE uspp_param,   ONLY: nsp, upf, lmaxq, nbetam
   USE mp,           ONLY: mp_sum
   !
@@ -42,6 +41,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   INTEGER, PARAMETER :: nn=16     ! smoothing parameter, order of the polynomial inverse gaussian
                                   ! approximant
   REAL(DP), PARAMETER:: a=22.0_DP ! smoothing parameter, exponent of the gaussian decaying factor
+  REAL(DP), PARAMETER :: dq = 0.01_dp !nterpolation table 
                                   ! a=0.0 ; nn=0.0 would be no smoothing.
   !
   INTEGER :: nt, ih, jh, nb, mb, ijv, l, m, ir, ir0, iq, is, startq, lastq, ilast, ndm, ia

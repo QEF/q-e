@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,17 +29,18 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE lsda_mod,         ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,            ONLY : nbnd, npwx, et
-  USE becmod,           ONLY : calbec, bec_type, allocate_bec_type, deallocate_bec_type
+  USE becmod,           ONLY : calbec, bec_type, allocate_bec_type_acc, deallocate_bec_type_acc
   USE wavefunctions,    ONLY : evc, psic, psic_nc
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : upf, nh, nhm
-  USE qpoint,           ONLY : nksq
+  USE qpoint,           ONLY : nksq, ikks
   USE control_lr,       ONLY : nbnd_occ
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_delta
   USE uspp_init,        ONLY : init_us_2
+  USE control_flags,    ONLY : offload_type
 
   implicit none
 
@@ -48,7 +49,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! output: the local density of states at Ef without augmentation
   REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin_mag)
   ! output: the local becsum at ef
-  real(DP) :: dos_ef
+  real(DP) :: dos_ef, check
   ! output: the density of states at Ef
   !
   !    local variables for Ultrasoft PP's
@@ -64,20 +65,34 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! weights
   real(DP), external :: w0gauss
   !
-  integer :: npw, ik, is, ig, ibnd, j, is1, is2
+  integer :: npw, ik, is, ig, ibnd, j, is1, is2, v_siz
   ! counters
   integer :: ios
   ! status flag for i/o
   !
   !  initialize ldos and dos_ef
   !
+  ! For device buffer
+#if defined(__CUDA)
+  INTEGER, POINTER, DEVICE :: nl_d(:)
+  !
+  nl_d  => dffts%nl_d
+  !$acc update device(evc) 
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:)
+  !
+  ALLOCATE( nl_d(dffts%ngm) )
+  nl_d  = dffts%nl
+#endif
+  v_siz = dffts%nnr
+
   call start_clock ('localdos')
   IF (noncolin) THEN
      allocate (becsum1_nc( (nhm * (nhm + 1)) / 2, nat, npol, npol))
      becsum1_nc=(0.d0,0.d0)
   ENDIF
 
-  call allocate_bec_type (nkb, nbnd, becp)
+  call allocate_bec_type_acc (nkb, nbnd, becp)
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -86,23 +101,30 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !
   !  loop over kpoints
   !
+  !$acc data create(psic, psic_nc) copy(ldoss) 
   do ik = 1, nksq
-     if (lsda) current_spin = isk (ik)
-     npw = ngk(ik)
-     weight = wk (ik)
+     if (lsda) current_spin = isk (ikks(ik))
+     npw = ngk(ikks(ik))
+     weight = wk (ikks(ik))
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
-     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     if (nksq > 1) then
+             call get_buffer (evc, lrwfc, iuwfc, ikks(ik))
+             !$acc update device(evc)
+     endif
+     call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb, .true.)
      !
-     call calbec ( npw, vkb, evc, becp)
-     do ibnd = 1, nbnd_occ (ik)
+     !$acc data present(vkb, becp)
+     call calbec ( offload_type, npw, vkb, evc, becp)
+     !$acc end data
+     !
+     do ibnd = 1, nbnd_occ (ikks(ik))
         !
         if(ltetra) then
-           wdelta = dfpt_tetra_delta(ibnd,ik)
+           wdelta = dfpt_tetra_delta(ibnd,ikks(ik))
         else
-           wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
+           wdelta = w0gauss ( (ef-et(ibnd,ikks(ik))) / degauss, ngauss) / degauss
         end if
         !
         w1 = weight * wdelta / omega
@@ -110,20 +132,29 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         ! unperturbed wf from reciprocal to real space
         !
         IF (noncolin) THEN
+           !$acc kernels
            psic_nc = (0.d0, 0.d0)
+           !$acc end kernels
+           !$acc parallel loop present(igk_k, psic_nc)
            do ig = 1, npw
-              psic_nc (dffts%nl (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
-              psic_nc (dffts%nl (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
+              psic_nc (nl_d (igk_k(ig,ikks(ik))), 1 ) = evc (ig, ibnd)
+              psic_nc (nl_d (igk_k(ig,ikks(ik))), 2 ) = evc (ig+npwx, ibnd)
            enddo
+           !$acc end parallel loop
+           !$acc host_data use_device(psic_nc)
            CALL invfft ('Rho', psic_nc(:,1), dffts)
            CALL invfft ('Rho', psic_nc(:,2), dffts)
-           do j = 1, dffts%nnr
+           !$acc end host_data
+           !$acc parallel loop present(psic_nc, ldoss)
+           do j = 1, v_siz
               ldoss (j, 1) = ldoss (j, 1) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
                            DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
            enddo
+           !$acc end parallel loop
            IF (nspin_mag==4) THEN
-              DO j = 1, dffts%nnr
+              !$acc parallel loop present(psic_nc, ldoss)
+              DO j = 1, v_siz
               !
                  ldoss(j,2) = ldoss(j,2) + w1*2.0_DP* &
                              (DBLE(psic_nc(j,1))* DBLE(psic_nc(j,2)) + &
@@ -138,20 +169,35 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
                              -DBLE(psic_nc(j,2))**2-AIMAG(psic_nc(j,2))**2)
               !
               END DO
+              !$acc end parallel loop
            END IF
         ELSE
+           !$acc kernels
            psic (:) = (0.d0, 0.d0)
+           !$acc end kernels
+           !$acc parallel loop present(psic)
            do ig = 1, npw
-              psic (dffts%nl (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+              psic (nl_d (igk_k(ig,ikks(ik)) ) ) = evc (ig, ibnd)
            enddo
+           !$acc end parallel loop
+           !$acc host_data use_device(psic)
            CALL invfft ('Rho', psic, dffts)
-           do j = 1, dffts%nnr
+           !$acc end host_data
+           !$acc parallel loop present(ldoss, psic)
+           do j = 1, v_siz
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
            enddo
+           !$acc end parallel loop
         END IF
         !
         !    If we have a US pseudopotential we compute here the becsum term
+        !
+        if(noncolin) then
+        !$acc update self(becp%nc)
+        else
+        !$acc update self(becp%k)
+        endif
         !
         w1 = weight * wdelta
         ijkb0 = 0
@@ -209,6 +255,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      enddo
 
   enddo
+  !$acc end data
   if (doublegrid) then
      do is = 1, nspin_mag
         call fft_interpolate (dffts, ldoss (:, is), dfftp, ldos (:, is))
@@ -252,7 +299,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !check
   !
   IF (noncolin) deallocate(becsum1_nc)
-  call deallocate_bec_type(becp)
+  call deallocate_bec_type_acc(becp)
 
   call stop_clock ('localdos')
   return

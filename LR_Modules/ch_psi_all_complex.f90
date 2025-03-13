@@ -16,7 +16,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba
   USE wvfct,                ONLY : npwx, nbnd, current_k
-  USE becmod,               ONLY : bec_type, becp, calbec
+  USE becmod,               ONLY : becp, calbec
   USE uspp,                 ONLY : nkb, vkb
   USE fft_base,             ONLY : dffts
   USE gvect,                ONLY : g
@@ -28,7 +28,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   USE xc_lib,               ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, offload_type
   USE wavefunctions,        ONLY : evc
   USE buffers,              ONLY : get_buffer
   USE io_files,             ONLY : nwordwfcU
@@ -68,8 +68,6 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
-  hpsi (:,:) = (0.d0, 0.d0)
-  spsi (:,:) = (0.d0, 0.d0)
   !
   current_k = ikqs(ik) ! k+q
   !
@@ -83,6 +81,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
      ! Hubbard potential.
      !
      CALL get_buffer (wfcU, nwordwfcU, iuatswfc, current_k)
+     !$acc update device(wfcU)
      !
      ! Compute the phase factor at k+q
      !IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ikq)
@@ -92,27 +91,50 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   ! Compute an action of the Hamiltonian and the S operator
   ! on the h vector (i.e. H*h and S*h, respectively).
   !
+  !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
+  !$acc kernels present(hpsi,spsi)
+  hpsi (:,:) = (0.d0, 0.d0)
+  spsi (:,:) = (0.d0, 0.d0)
+  !$acc end kernels
+#if defined(__CUDA)
+  CALL h_psi_gpu (npwx, n, m, h, hpsi)
+  CALL s_psi_acc (npwx, n, m, h, spsi)
+#else
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
+#endif
   !
   CALL start_clock ('last')
   !
   !   then we compute ( H - \epsilon S ) * h
   !   and put the result in ah
   !
+  CALL start_clock ('Hesh')
+  !$acc data copyin(e)
+
+  !$acc kernels present(ah)
   ah=(0.d0,0.d0)
+  !$acc end kernels
+
+  !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
   DO ibnd = 1, m
      DO ig = 1, n
         ah(ig, ibnd) = hpsi(ig, ibnd) - e(ibnd) * spsi(ig, ibnd)
      ENDDO
   ENDDO
   IF (noncolin) THEN
+     CALL start_clock ('Hesh:noncolin')
+     !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
      DO ibnd = 1, m
         DO ig = 1, n
            ah(ig+npwx, ibnd) = hpsi(ig+npwx, ibnd) - e(ibnd) * spsi(ig+npwx, ibnd)
         ENDDO
      ENDDO
+     CALL stop_clock ('Hesh:noncolin')
   ENDIF
+  !$acc end data
+  CALL stop_clock ('Hesh')
+
   !
   !   lastly we compute alpha_pv * P_v * h (if alpha_pv.NE.0.0d0)
   !   and add it to ah 
@@ -124,7 +146,8 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
         CALL ch_psi_all_k_complex()
      ENDIF
   ENDIF
-  
+!!!!  !$acc exit data copyout(ah) delete(ps)
+  !$acc exit data delete(hpsi, spsi, ps)
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
   DEALLOCATE (ps)
@@ -138,59 +161,84 @@ CONTAINS
     !
     ! K-point part
     !
-    USE becmod, ONLY : becp, calbec
-    
     IMPLICIT NONE
     INTEGER :: m_start, m_end
+    INTEGER :: k
+    INTEGER :: ibnd, ig
+
+    k = nbnd_occ (ikqs(ik))
+    CALL start_clock_gpu ('ch_psi_all_k_complex')
+    !$acc data present(evq, ps, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
     !
+    !$acc kernels present(ps)
     ps (:,:) = (0.d0, 0.d0)
+    !$acc end kernels
     !
     ! ikqs(ik) is the index of the point k+q if q\=0
     !          is the index of the point k   if q=0
-    ! 
+    !
+    !$acc host_data use_device(spsi, ps, evq)
     IF (noncolin) THEN
-       CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
             npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
     ELSE
-       CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, n, (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('C', 'N', k, m, n, (1.d0, 0.d0) , evq, &
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
+    !$acc end host_data
+    !$acc kernels present(ps,hpsi) 
     ps (:,:) = ps(:,:) * alpha_pv
-    CALL mp_sum ( ps, intra_bgrp_comm )
-    
     hpsi (:,:) = (0.d0, 0.d0)
+    !$acc end kernels
+    !$acc host_data use_device(ps)
+    CALL mp_sum ( ps, intra_bgrp_comm )
+    !$acc end host_data
+    !$acc host_data use_device(hpsi, ps, evq)
     IF (noncolin) THEN
-       CALL zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikqs(ik)) , (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('N', 'N', npwx*npol, m, k, (1.d0, 0.d0) , evq, &
             npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
     ELSE
-       CALL zgemm ('N', 'N', n, m, nbnd_occ (ikqs(ik)) , (1.d0, 0.d0) , evq, &
+       CALL myzgemm ('N', 'N', n, m, k, (1.d0, 0.d0) , evq, &
             npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
     END IF
+    !$acc end host_data
+    !$acc kernels present(spsi, hpsi)
     spsi(:,:) = hpsi(:,:)
+    !$acc end  kernels
+    !$acc end data
     !
     !    And apply S again
     !
+    CALL start_clock_gpu ('ch_psi_calbec')
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
-       if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+       if (m_end >= m_start) then
+          CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+       endif
     else
-       CALL calbec (n, vkb, hpsi, becp, m)
-    end if
-    CALL s_psi (npwx, n, m, hpsi, spsi)
+       CALL calbec (offload_type, n, vkb, hpsi, becp, m)
+    endif
+    CALL stop_clock_gpu ('ch_psi_calbec')
+    CALL s_psi_acc (npwx, n, m, hpsi, spsi)
+    !$acc parallel loop collapse(2) present(ah, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
+    !$acc end parallel loop 
     IF (noncolin) THEN
+       !$acc parallel loop collapse(2) present(ah, spsi)
        DO ibnd = 1, m
           DO ig = 1, n
              ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
           ENDDO
        ENDDO
+       !$acc end parallel loop
     END IF
+    CALL stop_clock_gpu ('ch_psi_all_k_complex')
     return
   END SUBROUTINE ch_psi_all_k_complex
 
@@ -198,7 +246,6 @@ CONTAINS
     !
     ! gamma_only case
     !  
-    USE becmod, ONLY : becp,  calbec
     USE realus, ONLY : real_space, invfft_orbital_gamma, &
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart

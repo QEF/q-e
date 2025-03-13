@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
+SUBROUTINE rotate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
                          npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
@@ -45,13 +45,13 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   REAL(DP),    ALLOCATABLE :: en(:)
   INTEGER :: n_start, n_end, my_n
   !
-  EXTERNAL  h_psi,    s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
-
+  
   IF ( npol == 1 ) THEN
      !
      kdim = npw
@@ -69,6 +69,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ALLOCATE( sc( nstart, nstart) )    
   ALLOCATE( vc( nstart, nstart) )    
   ALLOCATE( en( nstart ) )
+  !$acc enter data create(aux, hc, sc, vc, en) 
   call start_clock('rotwfck'); !write(*,*) 'start rotwfck';FLUSH(6)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -76,56 +77,81 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('rotwfck:hpsi'); !write(*,*) 'start rotwfck:hpsi';FLUSH(6)
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   call stop_clock('rotwfck:hpsi') ; !write(*,*) 'stop rotwfck:hpsi';FLUSH(6)
   !
   call start_clock('rotwfck:hc'); !write(*,*) 'start rotwfck:hc';FLUSH(6)
+  !$acc kernels
   hc=(0.D0,0.D0)
+  !$acc end kernels
   CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
+  !$acc host_data use_device(psi, aux, hc)
   if (n_start .le. n_end) &
-  call ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), hc(1,n_start), nstart )
+  call MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), hc(1,n_start), nstart )
   CALL mp_sum( hc, inter_bgrp_comm )
   !            
   CALL mp_sum( hc, intra_bgrp_comm )
+  !$acc end host_data
   !
+  !$acc kernels
   sc=(0.D0,0.D0)
+  !$acc end kernels
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
-     if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
+     if (n_start .le. n_end) then
+       !$acc host_data use_device(psi, aux, sc)
+       CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
+       !$acc end host_data
+     end if
      !
   ELSE
      !
-     if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
+     if (n_start .le. n_end) then
+       !$acc host_data use_device(psi, sc)
+       CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
+       !$acc end host_data
+     end if
      !  
   END IF
+  !$acc host_data use_device(sc)
   CALL mp_sum( sc, inter_bgrp_comm )
   !
   CALL mp_sum( sc, intra_bgrp_comm )
+  !$acc end host_data
   call stop_clock('rotwfck:hc'); !write(*,*) 'stop rotwfck:hc';FLUSH(6)
   !
   ! ... Diagonalize
   !
   call start_clock('rotwfck:diag');  !write(*,*) 'start rotwfck:diag';FLUSH(6)
+  !$acc host_data use_device(hc, sc, en, vc)
   CALL diaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc end host_data
   call stop_clock('rotwfck:diag');  !write(*,*) 'stop rotwfck:diag';FLUSH(6)
   call start_clock('rotwfck:evc'); !write(*,*) 'start rotwfck:evc';FLUSH(6)
   !
+  !$acc kernels
   e(:) = en(1:nbnd)
+  !$acc end kernels
   !
   ! ...  update the basis set
   !  
+  !$acc kernels
   aux=(0.D0,0.D0)
+  !$acc end kernels
+  !$acc host_data use_device(psi, aux, vc)
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0,0.D0), aux, kdmx )
+  CALL MYZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0,0.D0), aux, kdmx )
   CALL mp_sum( aux, inter_bgrp_comm )
+  !$acc end host_data
   !     
+  !$acc kernels
   evc(:,:) = aux(:,1:nbnd)
+  !$acc end kernels
   call stop_clock('rotwfck:evc') ; !write(*,*) 'start rotwfck;evc';FLUSH(6)
   !
+  !$acc exit data delete(en, vc, sc, hc, aux)
   DEALLOCATE( en )
   DEALLOCATE( vc )
   DEALLOCATE( sc )
@@ -144,7 +170,7 @@ END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
+SUBROUTINE protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
                           npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
@@ -192,10 +218,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
-  EXTERNAL  h_psi,    s_psi
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -230,7 +256,7 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('protwfck:hpsi')
-  CALL h_psi( npwx, npw, nstart, psi, aux )
+  CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   call stop_clock('protwfck:hpsi')
   !
   call start_clock('protwfck:hc')
@@ -238,7 +264,7 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   !            
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
+     CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
      CALL compute_distmat( sc, psi, aux )
      !
   ELSE

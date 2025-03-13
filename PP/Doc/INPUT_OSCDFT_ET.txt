@@ -1,0 +1,94 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: oscdft_et.x / PWscf / Quantum ESPRESSO (version: 7.4)
+------------------------------------------------------------------------
+
+
+Input data format: { } = optional, [ ] = it depends, | = or
+
+Purpose of oscdft_et.x:
+This calculates the electronic coupling of an electron transfer process.
+This requires two scf calculations:
+- one calculation has the system constrained to its initial state and,
+- the other calculation has the system constrained to its final state,
+with both calculation using the same atomic positions.
+The transferring electron is constrained to the donor atom in the initial state
+while it is constrained to the acceptor atom in the final state.
+
+Structure of the input data:
+===============================================================================
+
+    &OSCDFT_ET_NAMELIST
+      ...
+    /
+
+
+
+========================================================================
+NAMELIST: &OSCDFT_ET_NAMELIST
+
+   +--------------------------------------------------------------------
+   Variable:       initial_prefix
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    prefix of the initial pw.x calculation.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       final_prefix
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    prefix of the final pw.x calculation.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       initial_dir
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    The directory containing the input data of the initial pw.x calculation,
+                   i.e. the same as in pw.x.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       final_dir
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    The directory containing the input data of the final pw.x calculation,
+                   i.e. the same as in pw.x.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       print_matrix
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., prints the occupation matrices.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       print_eigvect
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., prints the occupation eigenvectors.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       print_debug
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., prints additional debug informations.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Sat Oct 26 10:20:46 CEST 2024

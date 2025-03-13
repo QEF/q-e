@@ -149,7 +149,7 @@ subroutine dvpsi_e2
            aux6 (ir, ipa) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
      endif
-     call dv_of_drho (aux6(:, ipa), .false.)
+     call dv_of_drho (aux6(:, ipa))
   enddo
 
   if (doublegrid) deallocate (auxs1)

@@ -1,8 +1,0 @@
-# This is a test to compare matrix elements produced directly by DFPT inside the PH code
-# and matrix elements interpolated by EPW (Rewritten by H. Lee based on the previous version by S. Ponce and C. Verdi)
-
-1) Issue "make" after compiling pw.x and ph.x.
-
-2) Run EPW with prtgkk.
-
-You can compare the results.

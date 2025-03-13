@@ -19,7 +19,6 @@
   omegamin    = 0.05
   omegamax    = 3.0
   omegastep   = 0.05
-  n_r         = 3.4
 
   lifc        = .true.
   asr_typ     = 'crystal'

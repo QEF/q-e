@@ -8,8 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_get_potential(rhoin,nfi)
 !----------------------------------------------------------------------------
-! This routine is used to calculate plugin contribution
-! to the potential acting on the electrons
+!! This routine is used to calculate plugin contribution
+!! to the potential acting on the electrons.
 !
 USE io_global,        ONLY : stdout, ionode
 USE kinds,            ONLY : DP

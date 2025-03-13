@@ -1,0 +1,17 @@
+ &INPUTPP
+   prefix = 'TiO2'
+   outdir = '/home/timrov_i/WORKSPACE/PSI/Gitlab/tmp1/q-e/tempdir/',
+   filplot = 'hub'
+   plot_num = 25
+   nc(1) = 2
+   nc(2) = 2
+   nc(3) = 2
+   n0(1) = 1
+   n0(2) = 1
+   n0(3) = 1
+ /
+ &PLOT
+   iflag = 3
+   output_format = 5
+   fileout = 'plot.xsf'
+/

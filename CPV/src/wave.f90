@@ -11,11 +11,12 @@
 !=----------------------------------------------------------------------------=!
      SUBROUTINE interpolate_lambda_x( lambdap, lambda, lambdam )
 !=----------------------------------------------------------------------------=!
+       !! Interpolate new \(\text{lambda}\) at \(t+dt\) from \(\text{lambda}(t)\)
+       !! and \(\text{lambda}(t-dt)\).
+       !
        USE kinds, ONLY: DP
        IMPLICIT NONE
        REAL(DP) :: lambdap(:,:,:), lambda(:,:,:), lambdam(:,:,:) 
-       !
-       ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
        !
        lambdap= 2.d0*lambda - lambdam
        lambdam=lambda 
@@ -66,8 +67,7 @@
 !=----------------------------------------------------------------------------=!
   subroutine elec_fakekine_x( ekincm, ema0bg, emass, c0, cm, ngw, n, noff, delt )
 !=----------------------------------------------------------------------------=!
-    !
-    !  This subroutine computes the CP(fake) wave functions kinetic energy
+    !! This subroutine computes the CP(fake) wave functions kinetic energy.
     
     USE kinds,              only : DP
     use mp,                 only : mp_sum
@@ -116,8 +116,7 @@
 !=----------------------------------------------------------------------------=!
   subroutine bandsum( bsum, c0, ngw, tbgrp )
 !=----------------------------------------------------------------------------=!
-    !
-    !  This subroutine computes the CP(fake) wave functions kinetic energy
+    !! This subroutine computes the CP(fake) wave functions kinetic energy.
     
     USE kinds,              only : DP
     use mp,                 only : mp_sum
@@ -150,15 +149,15 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
-                        ityp, nat, ofsbeta, nh, np_rot, me_rot, comm_rot  )
+   SUBROUTINE protate_x( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
+                         ityp, nat, ofsbeta, nh, np_rot, me_rot, comm_rot )
 !=----------------------------------------------------------------------------=!
-
-      !  this routine rotates the wave functions using the matrix lambda
-      !  it works with a block-like distributed matrix
-      !  of the Lagrange multipliers ( lambda ).
-      !  no replicated data are used, allowing scalability for large problems.
-      !  the layout of lambda is as follows :
+      !! This routine rotates the wave functions using the matrix \(\text{lambda}\).
+      !! It works with a block-like distributed matrix
+      !! of the Lagrange multipliers ( \(\text{lambda}\) ).  
+      !! No replicated data are used, allowing scalability for large problems.
+      !
+      ! The layout of lambda is as follows:
       !
       !  (PE 0)                 (PE 1)               ..  (PE NPE-1)
       !  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
@@ -169,6 +168,7 @@
       !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_bgrp+1 to PE 1 and
       !  so on).
       !  nrl = local number of rows
+      !
       !  ----------------------------------------------
 
       ! ... declare modules
@@ -257,11 +257,10 @@
 !=----------------------------------------------------------------------------=!
    SUBROUTINE crot_gamma2 ( c0rot, c0, ngw, n, noffr, noff, lambda, nx, eig )
 !=----------------------------------------------------------------------------=!
-
-      !  this routine rotates the wave functions to the Kohn-Sham base
-      !  it works with a block-like distributed matrix
-      !  of the Lagrange multipliers ( lambda ).
-      !
+      !! This routine rotates the wave functions to the Kohn-Sham base.
+      !! It works with a block-like distributed matrix
+      !! of the Lagrange multipliers ( \(\text{lambda}\) ).
+      
       ! ... declare modules
 
       USE kinds,            ONLY: DP
@@ -327,10 +326,10 @@
 !=----------------------------------------------------------------------------=!
    SUBROUTINE proj_gamma( a, b, ngw, n, noff, lambda)
 !=----------------------------------------------------------------------------=!
-
-        !  projection A=A-SUM{B}<B|A>B
-        !  no replicated data are used, allowing scalability for large problems.
-        !  The layout of lambda is as follows :
+        !! Projection \( A = A-\sum_B \langle B | A \rangle B \).
+        !! No replicated data are used, allowing scalability for large problems.
+        !
+        ! The layout of lambda is as follows :
         !
         !  (PE 0)                 (PE 1)               ..  (PE NPE-1)
         !  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
@@ -396,8 +395,7 @@
 !=----------------------------------------------------------------------------=!
    SUBROUTINE wave_rand_init_x( cm_bgrp, global )
 !=----------------------------------------------------------------------------=!
-
-      !  this routine sets the initial wavefunctions at random
+      !! This routine sets the initial wavefunctions at random.
 
 ! ... declare modules
       USE kinds,              ONLY: DP

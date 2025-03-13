@@ -337,7 +337,7 @@
              se%a_0(ii,is)=(0.0,0.0d0)
              do jj=1,options%n_multipoles
                 se%a(jj,ii,is)=cmplx(real(jj)*(0.01d0),0.d0)
-                se%b(jj,ii,is)=cmplx((0.5d0)*real(jj)*(-1.d0)**real(jj),-0.01d0)
+                se%b(jj,ii,is)=cmplx((0.5d0)*real(jj)*(-1.d0)**jj,-0.01d0)
              enddo
           
              do icyc=1,options%cyc_minpack
@@ -429,7 +429,7 @@
                    se%a_0_off(kk,ii,is)=(0.0,0.0d0)
                    do jj=1,options%n_multipoles
                       se%a_off(jj,kk,ii,is)=cmplx(real(jj)*(0.01d0),0.d0)
-                      se%b_off(jj,kk,ii,is)=cmplx((0.5d0)*real(jj)*(-1.d0)**real(jj),-0.01d0)
+                      se%b_off(jj,kk,ii,is)=cmplx((0.5d0)*real(jj)*(-1.d0)**jj,-0.01d0)
                    enddo
 
                    do icyc=1,options%cyc_minpack

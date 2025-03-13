@@ -13,9 +13,7 @@ SUBROUTINE phq_init()
   !! local and nonlocal pseudopotential in the phononq program.
   !! In detail it computes:  
   !! 0)  initialize the structure factors;  
-  !! a0) compute rhocore for each atomic-type if needed for nlcc;  
-  !! a)  the local potential at G-G'. Needed for the part of the dynamic
-  !!     matrix independent of deltapsi;  
+  !! a)  compute rhocore for each atomic-type if needed for nlcc;  
   !! b)  the local potential at q+G-G'. Needed for the second
   !!     second part of the dynamical matrix;  
   !! c)  the D coefficients for the US pseudopotential or the E_l parame
@@ -31,50 +29,44 @@ SUBROUTINE phq_init()
   !
   !
   USE kinds,                ONLY : DP
-  USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
-  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE becmod,               ONLY : calbec, becp, allocate_bec_type, &
-                                   deallocate_bec_type
+  USE cell_base,            ONLY : bg, tpiba
+  USE ions_base,            ONLY : nat, ityp, tau
+  USE becmod,               ONLY : calbec, becp, becupdate, bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc
+  USE control_flags,        ONLY : offload_type
   USE constants,            ONLY : eps8, tpi
-  USE gvect,                ONLY : g, ngm
+  USE gvect,                ONLY : g
   USE klist,                ONLY : xk, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
-  USE atom,                 ONLY : msh, rgrid
-  USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
-  USE uspp_param,           ONLY : upf
-  USE m_gth,                ONLY : setlocq_gth
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_lr,             ONLY : lrwfc, iuwfc
-  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE acfdtest,             ONLY : acfdt_is_active, acfdt_num_der
   USE el_phon,              ONLY : elph_mat, iunwfcwann, npwq_refolded, &
                                    kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D     
-  USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
-  USE eqv,                  ONLY : vlocq, evq
-  USE control_lr,           ONLY : nbnd_occ, lgamma
+  USE eqv,                  ONLY : evq
+  USE control_lr,           ONLY : nbnd_occ, lgamma, lmultipole
   USE ldaU,                 ONLY : lda_plus_u
-  USE uspp_init,        ONLY : init_us_2
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER :: nt, ik, ikq, ipol, ibnd, ikk, na, ig, irr, imode0
+  INTEGER :: nt, ik, ikq, ipol, ibnd, ikk, na, ig, irr, imode0, itmp
     ! counter on atom types
     ! counter on k points
     ! counter on k+q points
@@ -89,11 +81,19 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:), tevc(:,:)
     ! used to compute alphap
+#if defined(__CUDA)
+  TYPE(bec_type) :: bectmp
+    ! temporary buffer to work with offload of arrays of derived types
+#endif
   !
   !
   IF (all_done) RETURN
   !
   CALL start_clock( 'phq_init' )
+  !
+#if defined(__CUDA)
+  Call allocate_bec_type_acc ( nkb, nbnd, bectmp )
+#endif
   !
   DO na = 1, nat
      !
@@ -105,37 +105,13 @@ SUBROUTINE phq_init()
      !
   END DO
   !
-  ! ... a0) compute rhocore for each atomic-type if needed for nlcc
+  ! ... a) compute rhocore for each atomic-type if needed for nlcc
   !
   IF ( nlcc_any ) CALL set_drhoc( xq, drc )
   !
   ! ... b) the fourier components of the local potential at q+G
   !
-  vlocq(:,:) = 0.D0
-  !
-  DO nt = 1, ntyp
-     !
-     IF (upf(nt)%tcoulombp) then
-        CALL setlocq_coul ( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
-     ELSE IF (upf(nt)%is_gth) then
-        CALL setlocq_gth ( nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
-     ELSE
-        CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
-                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
-                   vlocq(1,nt) )
-     END IF
-     !
-  END DO
-  ! for 2d calculations, we need to initialize the fact for the q+G 
-  ! component of the cutoff of the COulomb interaction
-  IF (do_cutoff_2D) call cutoff_fact_qg() 
-  !  in 2D calculations the long range part of vlocq(g) (erf/r part)
-  ! was not re-added in g-space because everything is caclulated in
-  ! radial coordinates, which is not compatible with 2D cutoff. 
-  ! It will be re-added each time vlocq(g) is used in the code. 
-  ! Here, this cutoff long-range part of vlocq(g) is computed only once
-  ! by the routine below and stored
-  IF (do_cutoff_2D) call cutoff_lr_Vlocq() 
+  CALL init_vlocq ( xq ) 
   !
   ! only for electron-phonon coupling with wannier functions
   ! 
@@ -157,8 +133,13 @@ SUBROUTINE phq_init()
   endif
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )
-  IF (noncolin.AND.domag) ALLOCATE(tevc(npwx*npol,nbnd))
   !
+  IF (noncolin.AND.domag) THEN
+          ALLOCATE(tevc(npwx*npol,nbnd))
+          !$acc enter data create(tevc(1:npwx*npol,1:nbnd))
+  ENDIF
+  !
+  !$acc data copyin(xk) create(aux1( 1:npwx*npol, 1:nbnd )) 
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
@@ -185,7 +166,7 @@ SUBROUTINE phq_init()
      !
      ! ... d) The functions vkb(k+G)
      !
-     CALL init_us_2( npw, igk_k(1,ikk), xk(1,ikk), vkb )
+     CALL init_us_2( npw, igk_k(1,ikk), xk(1,ikk), vkb, .true. )
      !
      ! ... read the wavefunctions at k
      !
@@ -196,55 +177,105 @@ SUBROUTINE phq_init()
         CALL get_buffer( evc, lrwfc, iuwfc, ikk )
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
-           CALL calbec (npw, vkb, tevc, becpt(ik) )
+#if defined(__CUDA)
+           !$acc update device(tevc)
+           Call calbec ( offload_type, npw, vkb, tevc, bectmp )
+           Call becupdate( offload_type, becpt, ik, nksq, bectmp )
+#else
+           Call calbec ( offload_type, npw, vkb, tevc, becpt(ik) )
+#endif
         ENDIF
      endif
      !
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
-     
-     CALL calbec (npw, vkb, evc, becp1(ik) )
-     
+#if defined(__CUDA)
+     !$acc update device(evc) 
+     Call calbec( offload_type, npw, vkb, evc, bectmp )
+     Call becupdate( offload_type, becp1, ik, nksq, bectmp ) 
+#else
+     Call calbec( offload_type, npw, vkb, evc, becp1(ik) )
+#endif
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
      !
      DO ipol = 1, 3
-        aux1=(0.d0,0.d0)
+#if defined(__CUDA)
+        !$acc parallel loop collapse(2)
         DO ibnd = 1, nbnd
            DO ig = 1, npw
-              aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
-                   ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+              aux1(ig,ibnd)=(0.d0,0.d0)
            END DO
-           IF (noncolin) THEN
-              DO ig = 1, npw
-                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
-                      ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
-              END DO
-           END IF
         END DO
-        CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
+#else
+        aux1=(0.d0,0.d0)
+#endif
+        !$acc parallel loop collapse(2) 
+        DO ibnd = 1, nbnd
+           DO ig = 1, npw
+              itmp = igk_k(ig,ikk)
+              aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
+                   ( xk(ipol,ikk) + g(ipol,itmp) )
+           END DO
+        END DO
+        IF (noncolin) THEN
+           !$acc parallel loop collapse(2) 
+           DO ibnd = 1, nbnd
+              DO ig = 1, npw
+                 itmp = igk_k(ig,ikk)
+                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                      ( xk(ipol,ikk) + g(ipol,itmp) )
+              END DO
+           END DO
+        END IF
+#if defined(__CUDA)
+        Call calbec ( offload_type, npw, vkb, aux1, bectmp )
+        Call becupdate( offload_type, alphap, ipol, 3, ik, nksq, bectmp )
+#else
+        Call calbec ( offload_type, npw, vkb, aux1, alphap(ipol,ik) )
+#endif
      END DO
      !
      IF (noncolin.AND.domag) THEN
         DO ipol = 1, 3
-           aux1=(0.d0,0.d0)
+#if defined(__CUDA)
+           !$acc parallel loop collapse(2)
            DO ibnd = 1, nbnd
               DO ig = 1, npw
-                 aux1(ig,ibnd) = tevc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
-                      ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+                 aux1(ig,ibnd)=(0.d0,0.d0)
               END DO
-              IF (noncolin) THEN
-                 DO ig = 1, npw
-                    aux1(ig+npwx,ibnd)=tevc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
-                         ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
-                 END DO
-              END IF
            END DO
-           CALL calbec (npw, vkb, aux1, alphapt(ipol,ik) )
-        END DO
-     ENDIF
+#else
+           aux1=(0.d0,0.d0)
+#endif
+           !$acc parallel loop collapse(2) 
+           DO ibnd = 1, nbnd
+              DO ig = 1, npw
+                 itmp = igk_k(ig,ikk)
+                 aux1(ig,ibnd) = tevc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
+                      ( xk(ipol,ikk) + g(ipol,itmp) )
+              END DO
+           END DO
+           IF (noncolin) THEN
+              !$acc parallel loop collapse(2) 
+              DO ibnd = 1, nbnd
+                 DO ig = 1, npw
+                    itmp = igk_k(ig,ikk)
+                    aux1(ig+npwx,ibnd)=tevc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                         ( xk(ipol,ikk) + g(ipol,itmp) )
+                 END DO
+              END DO
+           END IF
+#if defined(__CUDA)
+           Call calbec( offload_type, npw, vkb, aux1, bectmp )
+           Call becupdate( offload_type, alphapt, ipol, 3, ik, nksq, bectmp )
+#else
+           Call calbec( offload_type, npw, vkb, aux1, alphapt(ipol,ik) )
+#endif
+         END DO
+      ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
      IF (acfdt_is_active) THEN
         ! ACFDT -test always read calculated wcf from non_scf calculation
@@ -272,9 +303,15 @@ SUBROUTINE phq_init()
      ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      !
+
   END DO
+  !$acc end data
   !
   DEALLOCATE( aux1 )
+  IF (noncolin.AND.domag) THEN
+          !$acc exit data delete(tevc)
+          DEALLOCATE( tevc )
+  ENDIF
   !
   CALL dvanqq()
   CALL drho()
@@ -294,9 +331,9 @@ SUBROUTINE phq_init()
      ! Note: the array becp will be temporarily used
      ! in the routine lr_orthoUwfc.
      !
-     CALL deallocate_bec_type(becp)
+     CALL deallocate_bec_type_acc(becp)
      CALL lr_orthoUwfc (.TRUE.)
-     CALL allocate_bec_type(nkb,nbnd,becp)   
+     CALL allocate_bec_type_acc(nkb,nbnd,becp)   
      !
      ! Calculate dnsbare, i.e. the bare variation of ns, 
      ! for all cartesian coordinates
@@ -309,7 +346,11 @@ SUBROUTINE phq_init()
      !
   ENDIF
   !
-  IF ( trans ) CALL dynmat0_new()
+  IF ( trans .AND. (.NOT. lmultipole) ) CALL dynmat0_new()
+  !
+#if defined(__CUDA)
+  Call deallocate_bec_type_acc ( bectmp )
+#endif
   !
   CALL stop_clock( 'phq_init' )
   !

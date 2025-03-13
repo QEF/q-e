@@ -21,36 +21,37 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
 
     namelist INPUT {
 
+    var prefix -type CHARACTER {
+        default { 'pwscf' }
+        info {
+            Prepended to input/output filenames; must be the same
+            used in the calculation of unperturbed system.
+        }
+    }
+    var outdir -type CHARACTER {
+        default {
+            value of the @tt ESPRESSO_TMPDIR environment variable if set;
+            @br current directory ('./') otherwise
+        }
+        info {
+            Directory containing input, output, and scratch files;
+            must be the same as specified in the calculation of
+            the unperturbed system.
+        }
+    }
     var ahc_dir  -type CHARACTER {
         status { REQUIRED }
         info {
             Directory where the binary files are located.
         }
     }
-    var nk  -type INTEGER {
-        status { REQUIRED }
+    var use_irr_q  -type LOGICAL {
+        default { .false. }
         info {
-            Number of k points. Must be identical to that of the preceding SCF or NSCF run.
-        }
-    }
-    var nbnd  -type INTEGER {
-        status { REQUIRED }
-        info {
-            Number of bands. Must be identical to nbnd of the preceding SCF or NSCF run.
-        }
-    }
-    var nat  -type INTEGER {
-        status { REQUIRED }
-        info {
-            Number of atoms. Must be identical to nat of the preceding pw.x and ph.x
-            runs.
-        }
-    }
-    var nq  -type INTEGER {
-        status { REQUIRED }
-        info {
-            Number of q points. Must be identical to that of the preceding ph.x run
-            with electron_phonon='ahc'.
+            If .true., assume that the q points are on the irreducible grid. In this case,
+            the data in @ref ahc_dir must have been actually generated from a calculation
+            on an irreducible q grid.
+            Off-diagonal self-energies cannot be computed if use_irr_q = .true.
         }
     }
     var ahc_nbnd  -type INTEGER {
@@ -73,11 +74,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
             File containing the normalized phonon displacements written by matdyn.x.
         }
     }
-    var eta  -type REAL {
+    var eta_eV  -type REAL {
         status { REQUIRED }
         info {
             Magnitude of the small imaginary component included to smooth the energy
-            denominators, in Ry.
+            denominators, in eV.
         }
     }
     var temp_kelvin  -type REAL {
@@ -86,24 +87,39 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
             Temperature in Kelvins at which the electron self-energy is calculated.
         }
     }
-    var efermi  -type REAL {
+    var efermi_eV  -type REAL {
         status { REQUIRED }
         info {
-            Fermi energy of the electrons in Ry.
+            Fermi energy of the electrons in eV.
         }
     }
-    dimension amass_amu -start 1 -end nat -type REAL {
+    dimension amass_amu -start 1 -end ntyp -type REAL {
         status { REQUIRED }
         info {
-            Mass for each atom in atomic mass unit. In postahc.x, @ref amass_amu must be
-            set for each atom, not for each atom type as in other programs.
+            Mass for each atom type in atomic mass unit.
         }
     }
-    var skip_upperfan -type LOGICAL {
+    var ahc_win_min_eV -type REAL {
+        default { -1.d8 }
+        info {
+            Lower bound of active AHC window for the lower Fan term in eV.
+        }
+    }
+    var ahc_win_max_eV -type REAL {
+        default { 1.d8 }
+        info {
+            Upper bound of active AHC window for the lower Fan term in eV.
+        }
+    }
+    var skip_upper -type LOGICAL {
         default { .false. }
         info {
-            If .true., skip calculation of the upper Fan self-energy.
-            If .false., ahc_upfan_iq#.bin files must be present in @ref ahc_dir.
+            If .true., skip calculation of the upper Fan self-energy. Also, truncate the
+            Debye-Waller self-energy to include only the low-energy band contribution.
+            (Corresponds to the second term (lower Fan + lower DW) of Eq. (G1-revised) of
+            J.-M. Lihm and C.-H. Park, PRX 12, 039901(E) (2022).)
+            If .false., calculate the contribution of both the high-energy and low-energy
+            bands. In this case, ahc_upfan_iq#.bin files must be present in @ref ahc_dir.
         }
     }
     var skip_dw -type LOGICAL {
@@ -111,6 +127,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
         info {
             If .true., skip calculation of the Debye-Waller self-energy.
             If .false., ahc_dw.bin file must be present in @ref ahc_dir.
+        }
+    }
+    var adiabatic -type LOGICAL {
+        default { .false. }
+        info {
+            If .true., use the adiabatic approximation when computing the Fan self-energy
+            by ignoring the phonon frequency in the denominator. This approximation is known
+            to be inaccurate and even divergent in some materials (S. Poncé et al., J. Chem.
+            Phys. 143, 102813 (2015)). Therefore, this keyword should be used only for
+            experimental or debugging purposes.
         }
     }
 

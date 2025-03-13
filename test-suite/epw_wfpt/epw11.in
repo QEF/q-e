@@ -1,0 +1,56 @@
+--
+&inputepw
+  prefix      = 'BAs'
+  amass(1)    = 10.81
+  amass(2)    = 74.922
+  dvscf_dir   = './save/'
+  elph        = .true.
+
+  iverbosity  = 0
+  etf_mem     = 0
+  epw_memdist = .true.
+
+  use_ws = .false.
+  lpolar = .true.
+  vme    = 'dipole'
+
+  nbndsub     =  4
+
+  lwfpt = .true.
+  ahc_nbnd = 4
+  ahc_win_max = 100.0
+  ahc_win_min = -100.0
+
+  wannierize  = .true.
+  epbwrite = .true.
+  epwwrite = .true.
+
+  lifc        = .false.
+
+  num_iter    = 0
+  proj(1)     = 'B:sp3'
+  wdata(1)    = 'conv_tol = 1.d-10'
+  wdata(2)    = 'conv_window = 5'
+
+  nk1         = 2
+  nk2         = 2
+  nk3         = 2
+
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+
+  elecselfen = .true.
+
+  efermi_read = .true.
+  fermi_energy = 8.70
+  degaussw = 0.02 ! eV
+  temps = 0.0  600.0
+
+  filkf = 'kpath.GammaX.txt'
+  nqf1 = 3
+  nqf2 = 3
+  nqf3 = 3
+
+  lopt_w2b = .true.
+ /

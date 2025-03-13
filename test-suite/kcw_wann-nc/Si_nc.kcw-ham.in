@@ -1,0 +1,46 @@
+KI Silicon
+&control
+  prefix='Si_nc'
+  outdir='./out'
+  kcw_iverbosity = 2
+  kcw_at_ks=.false.
+  homo_only = .false.
+  read_unitary_matrix = .true.
+  l_vcut = .false.
+  calculation = 'ham'
+  lrpa =.false.
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+/
+&wannier
+  seedname = 'Si_nc'
+  check_ks = .true. 
+  num_wann_occ = 8
+  num_wann_emp = 0
+  have_empty = .false.
+  has_disentangle = .false.
+/
+&screen
+  tr2 = 1.0d-18
+  nmix = 4
+  niter = 33
+ /
+&ham
+  do_bands = .true.
+  use_ws_distance = .true.
+  write_hr = .true.
+  l_alpha_corr = .false.
+  on_site_only = .true.
+/
+K_POINTS crystal_b
+8
+0.000     0.000     0.000 10 ! GAMMA
+0.500     0.000     0.500 10 ! X
+0.625     0.250     0.625 1  ! U
+0.375     0.375     0.750 10 ! K
+0.000     0.000     0.000 10 ! GAMMA
+0.500     0.500     0.500 10 ! L
+0.500     0.250     0.750 10 ! W
+0.500     0.000     0.500 1  ! U
+

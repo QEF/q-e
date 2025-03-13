@@ -25,6 +25,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   !! no longer computed here but in update_pot.
   !
   USE constants,              ONLY : e2, eps4, eps6, ry_kbar
+  USE control_flags,          ONLY : tnosep
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, prefix
   USE kinds,                  ONLY : DP
@@ -37,21 +38,28 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
-                                     lconstrain, lmd, tr2
+                                     lconstrain, lmd, tr2, iprint, tnosep
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
+  USE ions_nose,              ONLY : ions_nosevel, ions_noseupd, ions_nose_shiftvar, vnhp, xnhp0, xnhpp, xnhpm, nhpcl, nhpdim,&
+                                     kbt, nhpbeg, nhpend, ekin2nhp, qnp, gkbt2nhp, ions_nose_energy, ions_nose_nrg
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
-  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt
+  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel, elapsed_time
   USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
-                                     fire_alpha_init, fire_falpha, fire_dtmax
+                                     fire_alpha_init, fire_falpha, fire_dtmax, RyDt_to_HaDt
+  USE dynamics_module,        ONLY : velocity_verlet
   USE klist,                  ONLY : nelec, tot_charge
+  USE dfunct,                 only : newd
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
+  USE rism_module,            ONLY : lrism, rism_new_conv_thr
+  USE printout_base,          ONLY : printout_base_open, printout_base_close, &
+                                     printout_cell, printout_pos, printout_stress
   !
   IMPLICIT NONE
   !
@@ -70,6 +78,8 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   REAL(DP)              :: relec, felec, helec, capacitance, tot_charge_
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
+  INTEGER               :: iunit
+  INTEGER               :: nose_cycle
   !
   optimizer_failed = .FALSE.
   !
@@ -336,7 +346,22 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
            !
            IF ( ANY( if_pos(:,:) == 1 ) ) THEN
               !
+              IF (tnosep) THEN 
+                CALL ions_nosevel(vnhp, xnhp0, xnhpm, RyDt_to_HaDt * dt, nhpcl, nhpdim) 
+                ions_nose_energy = ions_nose_nrg(xnhp0,vnhp,qnp,gkbt2nhp,kbt,nhpcl, nhpdim)
+              END IF  
               CALL verlet()
+              if (idone == 1) nose_cycle = 0
+              IF (tnosep) THEN 
+                DO 
+                  CALL ions_noseupd(xnhpp, xnhp0, xnhpm, RyDt_to_HaDt * dt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, &
+                               nhpcl, nhpdim, nhpbeg, nhpend)
+                  CALL ions_nose_shiftvar(xnhpp, xnhp0, xnhpm)
+                  nose_cycle = nose_cycle + 1
+                  IF (nose_cycle .ge. 2) EXIT 
+                END DO 
+                
+              END IF         
               !
            END IF
            !
@@ -353,8 +378,14 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               IF ( lfcp ) CALL fcp_terminate()
               !
               conv_ions = .true.
+              !
            ENDIF
-           !
+        ELSE IF (calc .eq. 'wd' .AND. ANY(if_pos(:,:) == 1) ) THEN
+            CALL velocity_verlet() 
+            IF (idone .GE. nstep) THEN 
+               CALL terminate_verlet() 
+               conv_ions = .true.  
+            END IF
         ELSE
            !
            ! ... variable cell shape md
@@ -386,6 +417,25 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
      ! ... FIXME 2: why not impose symmetry instead of just checking it?
      !
      CALL checkallsym( nat, tau, ityp)
+
+     ! write trajectory output files
+
+     if (mod(istep, iprint)==0) then
+        iunit = printout_base_open('.pos')
+        call printout_pos(iunit, tau*alat, nat, tps=elapsed_time, nfi=istep)
+        call printout_base_close(iunit)
+        iunit = printout_base_open('.cel')
+        call printout_cell(iunit,at*alat,istep,elapsed_time)
+        call printout_base_close(iunit)
+        iunit = printout_base_open('.for')
+        call printout_pos(iunit, force*alat, nat, tps=elapsed_time, nfi=istep)
+        call printout_base_close(iunit)
+        iunit = printout_base_open('.vel')
+        call printout_pos(iunit, vel*alat, nat, tps=elapsed_time, nfi=istep)
+        call printout_base_close(iunit)
+     endif
+
+
      !
   ENDIF
   !
@@ -414,6 +464,15 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   IF ( lfcp ) THEN
      CALL mp_bcast(nelec,      ionode_id, intra_image_comm)
      CALL mp_bcast(tot_charge, ionode_id, intra_image_comm)
+  END IF
+  !
+  !
+  ! ... update convergence threshold of 3D-RISM
+  !
+  IF ( lrism ) THEN
+     IF ( tr2 < starting_scf_threshold ) THEN
+       CALL rism_new_conv_thr()
+     END IF
   END IF
   !
   RETURN

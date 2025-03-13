@@ -10,8 +10,8 @@
 
    SUBROUTINE compute_dvan_x()
      !     
-     !     calculate array  dvan(iv,jv,is)
-     !    
+     !! Calculate array \(\text{dvan}(\text{iv},\text{jv},\text{is})\).
+     !
      !  rw**2 * vrps   = [ ( Vpsnl(r) - Vpsloc(r) )* Rps(r) * r^2 ]
      !                 = [ DVpsnl(r) * Rps(r) * r^2 ]
      !  dion           = (2l+1) / < Rps(r) | DVpsnl(r) | Rps(r) >
@@ -51,12 +51,12 @@
 
 
    SUBROUTINE pseudopotential_indexes_x( )
-
+      !! Define pseudopotential indexes (beta functions related).
       use upf_params, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
                             na, &    !  number of atoms for each specie
                             nat, &   !  total number of atom
-                            ityp     !  the atomi specie for each atom
+                            ityp     !  the atomic specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
       use uspp_param, only: upf,    &!
@@ -258,6 +258,11 @@
          CALL allocate_spline( vps_sp(is), mmx, xgmin, xgmax )
          CALL allocate_spline( dvps_sp(is), mmx, xgmin, xgmax )
 
+         if ( upf(is)%tcoulombp .and. .not.allocated(upf(is)%vloc) ) then
+            ! ugly workaround for 1/r potentials
+            allocate(upf(is)%vloc(rgrid(is)%mesh))
+            upf(is)%vloc(:) = - 2.0_dp* zv(is) / rgrid(is)%r(:)
+         end if
          call formfn( rgrid(is)%r, rgrid(is)%rab, &
                       upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), &
                       xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, &
@@ -357,7 +362,7 @@
 
    SUBROUTINE compute_betagx_x( tpre )
       !
-      ! calculation of array  betagx(ig,iv,is)
+      !! Calculation of array  \(\text{betagx}(ig,iv,is)\).
       !
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
@@ -459,12 +464,12 @@
 
    SUBROUTINE compute_qradx_x( tpre )
       !
-      !     calculation of array qradx(igb,iv,jv,is) for interpolation table
-      !     (symmetric wrt exchange of iv and jv: a single index ijv is used)
+      !! Calculation of array \(\text{qradx}(\text{igb},\text{iv},\text{jv},\text{is})\)
+      !! for interpolation table (symmetric wrt exchange of iv and jv: a single index
+      !! ijv is used).
       !
-      !       qradx(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
+      !  qradx(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
       !     
-      !
       !
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
@@ -600,7 +605,7 @@
       USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
       USE atom,               ONLY: rgrid
       USE uspp,               ONLY: indv
-      use uspp,               only: qq_nt, qq_nt_d, beta
+      use uspp,               only: qq_nt, beta
       USE betax,              only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
       use control_flags,      only: iprint, iverbosity
@@ -777,21 +782,7 @@
          end do
 
       end do
-
-#if defined (__CUDA)
-      call dev_memcpy(qq_nt_d,qq_nt)
-      !
-      !$cuf kernel do (3)
-      DO is = 1, SIZE(qq_nt_d,3)
-         DO jv=1,SIZE(qq_nt_d,2)
-            DO iv=1,SIZE(qq_nt_d,1)
-               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
-                  qq_nt_d(iv,jv,is) = 0.0d0
-               END IF
-            END DO
-         END DO
-      END DO
-#endif
+      !$acc update device (qq_nt)
 !
 !
       if (tpre) then
@@ -874,7 +865,7 @@
 
     LOGICAL FUNCTION check_tables_x( gmax )
       !
-      ! check table size against cell variations
+      !! Check table size against cell variations.
       !
       !
       USE kinds,              ONLY : DP
@@ -923,7 +914,7 @@
 
     SUBROUTINE interpolate_beta_x( tpre )
       !
-      ! interpolate array beta(ig,iv,is)
+      !! Interpolate array beta(ig,iv,is).
       !
       !
       USE kinds, ONLY : DP
@@ -1027,7 +1018,8 @@
 
    SUBROUTINE interpolate_qradb_x( tpre )
       !
-      ! interpolate array qradb(ig,iv,is)
+      !! Interpolate array \(\text{qradb}(\text{ig},\text{iv},\text{is})\) with:
+      !! $$ 4\pi/\Omega \int_0^r dr r^2 j_l(qr) q(r,l,k,is) $$
       !
       !
       USE kinds,             ONLY: DP
@@ -1035,7 +1027,7 @@
       use io_global,         only: stdout
       use gvecw,             only: ngw
       use cell_base,         only: ainv
-      use uspp,              only: qq_nt, qq_nt_d, nhtolm, beta
+      use uspp,              only: qq_nt, nhtolm, beta
       use constants,         only: pi, fpi
       use ions_base,         only: nsp
       use uspp_param,        only: upf, lmaxq, nbetam, nh
@@ -1129,21 +1121,8 @@
          end do
 
       end do
+      !$acc update device(qq_nt)
 
-#if defined (__CUDA)
-      call dev_memcpy(qq_nt_d,qq_nt)
-      !
-      !$cuf kernel do (3)
-      DO is = 1, SIZE(qq_nt_d,3)
-         DO jv=1,SIZE(qq_nt_d,2)
-            DO iv=1,SIZE(qq_nt_d,1)
-               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
-                  qq_nt_d(iv,jv,is) = 0.0d0
-               END IF
-            END DO
-         END DO
-      END DO
-#endif
 !
       if (tpre) then
 !     ---------------------------------------------------------------
@@ -1229,7 +1208,7 @@
 
     SUBROUTINE exact_beta_x( tpre )
       !
-      ! compute array beta without interpolation
+      !! Compute array \(\text{beta}\) without interpolation.
       !
       !
       USE control_flags, only : iverbosity

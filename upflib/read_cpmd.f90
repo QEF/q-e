@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2020 Quantum ESPRESSO Foundation
+! Copyright (C) 2020-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file 'License'
 ! in the root directory of the present distribution,
@@ -13,6 +13,7 @@ MODULE cpmd_module
   ! to unified pseudopotential format (v.2)
   !
   USE upf_kinds, ONLY: dp
+  USE upf_io,    ONLY: stdout
   !
   IMPLICIT NONE
   PRIVATE
@@ -53,7 +54,7 @@ MODULE cpmd_module
 CONTAINS
   !
   !     ----------------------------------------------------------
-SUBROUTINE read_cpmd(iunps, upf)
+SUBROUTINE read_cpmd(iunps, upf, ierr)
   !     ----------------------------------------------------------
   !
   USE pseudo_types, ONLY : pseudo_upf
@@ -61,14 +62,16 @@ SUBROUTINE read_cpmd(iunps, upf)
   !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: iunps
+  INTEGER, INTENT(out) :: ierr
   TYPE (pseudo_upf) :: upf
   !
   INTEGER :: found = 0, closed = 0, unknown = 0
   INTEGER :: i, l, dum, ios
   CHARACTER (len=256) line
-  CHARACTER (len=4) token
   REAL (dp) :: amesh_, vnl0(0:3)
   LOGICAL :: grid_read = .false., wfc_read=.false.
+  !
+  ierr = 1
   !
   info_lines = 0
 10 READ (iunps,'(A)',end=20,err=20) line
@@ -100,7 +103,10 @@ SUBROUTINE read_cpmd(iunps, upf)
            pstype = 3
         ENDIF
      ENDIF
-     IF (pstype == 0 ) CALL upf_error('read_cpmd','unknown type: '//line,1)
+     IF (pstype == 0 ) then
+        write(stdout,'(5x,"read_cpmd: unknown type ",a)') trim(line)
+        return
+     END IF
   ELSEIF (matches ("&INFO", trim(line)) ) THEN
      found = found + 1
      ! read (iunps,'(a)') title
@@ -145,7 +151,8 @@ SUBROUTINE read_cpmd(iunps, upf)
            READ(iunps, *) r(i),(vnl(i,l),l=0,lmax)
         ENDDO
         IF ( .not.grid_read ) THEN
-           CALL check_radial_grid ( amesh_, mesh, r, amesh )
+           CALL check_radial_grid ( amesh_, mesh, r, amesh, ios )
+           if (ios /= 0 ) return
            grid_read = .true.
         ENDIF
      ELSEIF ( pstype == 2 ) THEN
@@ -174,15 +181,19 @@ SUBROUTINE read_cpmd(iunps, upf)
         h(:,:) = 0.d0
         READ(iunps, *) lmax
         lmax = lmax - 1
-        IF ( lmax > lmaxx ) &
-          CALL upf_error('read_cpmd','incorrect parameter read',1)
+        IF ( lmax > lmaxx ) THEN
+           write(stdout,'(5x,"read_cpmd: incorrect lmax read")')
+           return
+        END IF
         READ(iunps, *) rc
         READ(iunps, '(A)') line
         READ(line, *) nc
-        IF ( nc > ncmax ) &
-          CALL upf_error('read_cpmd','incorrect parameter read',2)
-        ! I am not sure if it is possible to use nc in the same line
-        ! where it is read. Just in case, better to read twice
+        IF ( nc > ncmax ) THEN
+           ! I am not sure if it is possible to use nc in the same line
+           ! where it is read. Just in case, better to read twice
+           write(stdout,'(5x,"read_cpmd: incorrect nc read")')
+           return
+        END IF
         READ(line, *) dum, (c(i), i=1,nc)
         DO l=0,lmax+1
            READ(iunps, '(A)') line
@@ -191,8 +202,10 @@ SUBROUTINE read_cpmd(iunps, upf)
               exit
            ENDIF
            READ(line, *) rl(l), nl(l)
-           IF ( nl(l) > nlmax ) &
-             CALL upf_error('read_cpmd','incorrect parameter read',3)
+           IF ( nl(l) > nlmax ) THEN
+              write(stdout,'(5x,"read_cpmd: incorrect nl read")')
+              return
+           END IF
            IF ( nl(l) > 0 ) &
               READ(line, *) rl(l), dum, ( h(l,i), i=1,nl(l)*(nl(l)+1)/2)
         ENDDO
@@ -213,15 +226,18 @@ SUBROUTINE read_cpmd(iunps, upf)
         READ(line,*,iostat=ios) r(1),(vnl0(l),l=0,nwfc-1)
         IF ( ios == 0 ) exit
      ENDDO
-     IF ( ios /= 0 ) &
-        CALL upf_error('read_cpmd','at least one atomic wvfct should be present',1)
+     IF ( ios /= 0 ) THEN
+        write(stdout,'(5x,"read_cpmd: at least one atomic wvfct should be present")')
+        return
+     END IF
      ALLOCATE(chi(mesh,nwfc))
      chi(1,1:nwfc) = vnl0(0:nwfc-1)
      DO i=2,mesh
         READ(iunps, *) r(i),(chi(i,l),l=1,nwfc)
      ENDDO
      IF ( .not.grid_read ) THEN
-        CALL check_radial_grid ( amesh_, mesh, r, amesh )
+        CALL check_radial_grid ( amesh_, mesh, r, amesh, ios )
+        IF ( ios /= 0 ) return
         grid_read = .true.
      ENDIF
   ELSEIF (matches ("&NLCC", trim(line)) ) THEN
@@ -230,8 +246,10 @@ SUBROUTINE read_cpmd(iunps, upf)
      READ(iunps, *) mesh
      nlcc = ( mesh > 0 )
      IF (nlcc) THEN
-        IF ( .not. matches ("NUMERIC", trim(line)) ) &
-          CALL upf_error('read_cpmd',' only NUMERIC core-correction supported',1)
+        IF ( .not. matches ("NUMERIC", trim(line)) )  THEN
+           write(stdout,'(5x,"read_cpmd: only NUMERIC core correction supported")')
+           return
+        END IF
         ALLOCATE (rho_atc(mesh))
         READ(iunps, * ) (r(i), rho_atc(i), i=1,mesh)
      ENDIF
@@ -243,7 +261,7 @@ SUBROUTINE read_cpmd(iunps, upf)
   ELSEIF (matches ("&END", trim(line)) ) THEN
      closed = closed + 1
   ELSE
-     PRINT*, 'line ignored: ', line
+     WRITE(stdout, '(5x,"read_cpmd: line ",a," ignored")') trim(line)
      unknown = unknown + 1
   ENDIF
   GOTO 10
@@ -251,23 +269,29 @@ SUBROUTINE read_cpmd(iunps, upf)
 20 CONTINUE
 
   IF ( pstype /= 3 ) THEN
-     IF (nlcc .and. found /= 5 .or. .not.nlcc .and. found /= 4) &
-         CALL upf_error('read_cpmd','some &FIELD card missing',found)
+     IF (nlcc .and. found /= 5 .or. .not.nlcc .and. found /= 4) THEN
+        write(stdout,'(5x,"read_cpmd: some &FIELD card missing")')
+        return
+     end if
   ELSE
-     IF (found /= 3) &
-         CALL upf_error('read_cpmd','some &FIELD card missing',found)
+     IF (found /= 3) THEN
+        write(stdout,'(5x,"read_cpmd: some &FIELD card missing")')
+        return
+     end if
   ENDIF
-  IF (closed /= found) &
-       CALL upf_error('read_cpmd','some &END card missing',closed)
-  IF (unknown /= 0 ) PRINT '("WARNING: ",i3," cards not read")', unknown
+  IF (closed /= found) THEN
+     write(stdout,'(5x,"read_cpmd: some &END card missing")')
+     return
+  end if
+  IF (unknown /= 0 ) WRITE(stdout,'("WARNING: ",i3," cards not read")') unknown
   !
   IF ( .not. grid_read ) THEN
      xmin = -7.0d0
      amesh=0.0125d0
      rmax =100.0d0
-     PRINT '("A radial grid must be provided. We use the following one:")'
-     PRINT '("r_i = e^{xmin+(i-1)*dx}/Z, i=1,mesh, with parameters:")'
-     PRINT '("Z=",f6.2,", xmin=",f6.2," dx=",f8.4," rmax=",f6.1)', &
+     WRITE(stdout,'("A radial grid must be provided. We use the following one:")')
+     WRITE(stdout,'("r_i = e^{xmin+(i-1)*dx}/Z, i=1,mesh, with parameters:")')
+     WRITE(stdout,'("Z=",f6.2,", xmin=",f6.2," dx=",f8.4," rmax=",f6.1)') &
            z, xmin, amesh, rmax
      mesh = 1 + (log(z*rmax)-xmin)/amesh
      mesh = (mesh/2)*2+1 ! mesh is odd (for historical reasons?)
@@ -275,13 +299,13 @@ SUBROUTINE read_cpmd(iunps, upf)
      DO i=1, mesh
         r(i) = exp (xmin+(i-1)*amesh)/z
      ENDDO
-     PRINT '(I4," grid points, rmax=",f8.4)', mesh, r(mesh)
+     WRITE(stdout,'(I4," grid points, rmax=",f8.4)') mesh, r(mesh)
      grid_read = .true.
   ENDIF
   rmax = r(mesh)
   xmin = log(z*r(1))
   !
-  IF ( .not. wfc_read ) PRINT '("Notice: atomic wfcs not found")'
+  IF ( .not. wfc_read ) Write(stdout,'("Notice: atomic wfcs not found")')
   !
   IF ( pstype == 2 ) THEN
      ALLOCATE (vnl(mesh,0:lmax))
@@ -292,10 +316,10 @@ SUBROUTINE read_cpmd(iunps, upf)
         ENDDO
      ENDDO
   ENDIF
-
+  ierr = 0
   CALL convert_cpmd(upf)
   RETURN
-200 CALL upf_error('read_cpmd','error in reading file',1)
+200 WRITE(stdout, '("read_cpmd: error in reading file")')
 
 END SUBROUTINE read_cpmd
 
@@ -305,6 +329,7 @@ SUBROUTINE convert_cpmd(upf)
   !
   USE pseudo_types, ONLY : pseudo_upf
   USE upf_const, ONLY : e2
+  USE upf_utils, ONLY : spdf_to_l, l_to_spdf
   !
   IMPLICIT NONE
   !
@@ -312,9 +337,7 @@ SUBROUTINE convert_cpmd(upf)
   !
   REAL(dp), ALLOCATABLE :: aux(:)
   REAL(dp) :: x, x2, vll, rcloc, fac
-  CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
-  CHARACTER (len=1):: spdf(0:3) = ['S','P','D','F']
   CHARACTER (len=2), EXTERNAL :: atom_name
   INTEGER :: lloc, my_lmax, l, i, j, ij, ir, iv, jv
   !
@@ -327,7 +350,7 @@ SUBROUTINE convert_cpmd(upf)
   ! for the LMAX to really use. AK 2005/03/30.
   !
   DO i=1,info_lines
-     PRINT '(A)', info_sect(i)
+     WRITE(stdout,'(A)') info_sect(i)
   ENDDO
   IF ( pstype == 3 ) THEN
      ! not actually used, except by write_upf to write a meaningful message
@@ -370,7 +393,7 @@ SUBROUTINE convert_cpmd(upf)
   upf%nlcc = nlcc
   !
   IF (ixc==900) THEN
-     PRINT '("Pade approx. not implemented! assuming Perdew-Zunger LDA")'
+     WRITE(stdout,'("Pade approx. not implemented! assuming Perdew-Zunger LDA")')
      upf%dft='SLA-PZ-NOGX-NOGC'
   ELSEIF (ixc==1100) THEN
      upf%dft='SLA-PZ-NOGX-NOGC'
@@ -394,7 +417,7 @@ SUBROUTINE convert_cpmd(upf)
      WRITE(*,'("Unknown DFT ixc=",i4,". Please provide a DFT name > ")', advance="NO") ixc
      READ *, upf%dft
   ENDIF
-  PRINT '("Assuming DFT: ",A," . Please check this is what you want")', &
+  WRITE(stdout,'("Assuming DFT: ",A," . Please check this is what you want")') &
           trim(upf%dft)
   !
   upf%zp = zv
@@ -424,17 +447,7 @@ SUBROUTINE convert_cpmd(upf)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
      upf%nchi(i)  = l
-     IF ( label(2:2) == 's' .or. label(2:2) == 'S') THEN
-        l=0
-     ELSEIF ( label(2:2) == 'p' .or. label(2:2) == 'P') THEN
-        l=1
-     ELSEIF ( label(2:2) == 'd' .or. label(2:2) == 'D') THEN
-        l=2
-     ELSEIF ( label(2:2) == 'f' .or. label(2:2) == 'F') THEN
-        l=3
-     ELSE
-        l=i-1
-     ENDIF
+     l =spdf_to_l(label(2:2))
      upf%lchi(i)  = l
      upf%rcut_chi(i)  = 0.0d0
      upf%rcutus_chi(i)= 0.0d0
@@ -521,7 +534,7 @@ SUBROUTINE convert_cpmd(upf)
            DO i=1, nl(l)
               iv = iv+1
               upf%lll(iv)=l
-              WRITE (upf%els_beta(iv), '(I1,A1)' ) i, spdf(l)
+              WRITE (upf%els_beta(iv), '(I1,A1)' ) i, l_to_spdf(l)
               DO j=i, nl(l)
                  jv = iv+j-i
                  ij=ij+1
@@ -543,7 +556,8 @@ SUBROUTINE convert_cpmd(upf)
                  IF ( abs(upf%beta(ir,iv)) > 1.D-12 ) exit
               ENDDO
               IF ( ir < 2 ) THEN
-                 CALL upf_error('cpmd2upf','zero beta function?!?',iv)
+                 WRITE(stdout,'("cpmd2upf: zero beta function?!?")')
+                 return
               ELSEIF ( mod(ir,2) /= 0 ) THEN
                  ! even index
                  upf%kbeta(iv) = ir
@@ -604,21 +618,23 @@ SUBROUTINE convert_cpmd(upf)
 END SUBROUTINE convert_cpmd
 !
 ! ------------------------------------------------------------------
-SUBROUTINE check_radial_grid ( amesh_, mesh, r, amesh )
+SUBROUTINE check_radial_grid ( amesh_, mesh, r, amesh, ierr )
 ! ------------------------------------------------------------------
 !
    IMPLICIT NONE
-   INTEGER, INTENT (in) :: mesh
+   INTEGER, INTENT (in)  :: mesh
+   INTEGER, INTENT (out) :: ierr
    REAL(dp), INTENT (in) :: amesh_, r(mesh)
-   REAL(dp), INTENT (out) :: amesh
+   REAL(dp), INTENT (out):: amesh
    INTEGER :: i
    !
+   ierr = 1
    ! get amesh if not available directly, check its value otherwise
-   PRINT  "('Radial grid r(i) has ',i4,' points')", mesh
-   PRINT  "('Assuming log radial grid: r(i)=exp[(i-1)*amesh]*r(1), with:')"
+   WRITE(stdout, "('Radial grid r(i) has ',i4,' points')") mesh
+   WRITE(stdout, "('Assuming log radial grid: r(i)=exp[(i-1)*amesh]*r(1), with:')")
    IF (amesh_ < 0.0d0) THEN
       amesh = log (r(mesh)/r(1))/(mesh-1)
-      PRINT  "('amesh = log (r(mesh)/r(1))/(mesh-1) = ',f10.6)",amesh
+      WRITE(stdout,"('amesh = log (r(mesh)/r(1))/(mesh-1) = ',f10.6)") amesh
    ELSE
    ! not clear whether the value of amesh read from file
    ! matches the above definition, or if it is exp(amesh) ...
@@ -626,24 +642,26 @@ SUBROUTINE check_radial_grid ( amesh_, mesh, r, amesh )
       IF ( abs ( amesh - amesh_ ) > 1.0d-5 ) THEN
          IF ( abs ( amesh - exp(amesh_) ) < 1.0d-5 ) THEN
             amesh = log(amesh_)
-            PRINT  "('amesh = log (value read from file) = ',f10.6)",amesh
+            WRITE(stdout, "('amesh = log (value read from file) = ',f10.6)") amesh
          ELSE
-            CALL upf_error ('cpmd2upf', 'unknown real-space grid',2)
+            WRITE(stdout,'("check_radial_grid:  unknown real-space grid")')
+            return
          ENDIF
       ELSE
          amesh = amesh_
-         PRINT  "('amesh = value read from file = ',f10.6)",amesh
+         WRITE(stdout,"('amesh = value read from file = ',f10.6)") amesh
       ENDIF
    ENDIF
    ! check if the grid is what we expect
    DO i=2,mesh
       IF ( abs(r(i) - exp((i-1)*amesh)*r(1)) > 1.0d-5) THEN
-         PRINT  "('grid point ',i4,': found ',f10.6,', expected ',f10.6)",&
-              i, r(i),  exp((i-1)*amesh)*r(1)
-         CALL upf_error ('cpmd2upf', 'unknown real-space grid',1)
+         WRITE(stdout,"('check_radial_grid: grid point ',i4,', found ', &
+              & f10.6,', expected ',f10.6)") i, r(i), exp((i-1)*amesh)*r(1)
+         return
       ENDIF
    ENDDO
-   RETURN
+   ierr = 0
+   !
  END SUBROUTINE check_radial_grid
 ! ------------------------------------------------------------------
 FUNCTION mygamma ( n )
@@ -657,7 +675,7 @@ FUNCTION mygamma ( n )
   INTEGER, INTENT(in) :: n
   INTEGER :: i
   !
-  IF ( n < 2 ) CALL upf_error('mygamma','unexpected input argument',1)
+  IF ( n < 2 ) write(stdout,'("mygamma: unexpected input argument")')
   mygamma = sqrt(pi) / 2.d0**(n-1)
   ! next factor is (2n-3)!!
   do i = 2*n-3, 1, -2

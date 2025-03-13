@@ -7,11 +7,11 @@
 !
 !-----------------------------------------------------------------------
    subroutine eigs0( ei, nudx, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nlam, idesc )
-!-----------------------------------------------------------------------
-!     computes eigenvalues (wr) of the real symmetric matrix lambda
-!     Note that lambda as calculated is multiplied by occupation numbers
-!     so empty states yield zero. Eigenvalues are printed out in eV
-!
+      !-----------------------------------------------------------------------
+      !! Computes eigenvalues (wr) of the real symmetric matrix \(\text{lambda}\).
+      !! Note that \(\text{lambda}\) as calculated is multiplied by occupation numbers,
+      !! so empty states yield zero. Eigenvalues are printed out in eV.
+      !
       use kinds,             only : DP
       use io_global,         only : stdout
       use constants,         only : autoev
@@ -209,15 +209,14 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE fermi_energy_x(eig, occ, wke, ef, qtot, temp, sume)
-!-----------------------------------------------------------------------
-
-!  this routine computes Fermi energy and weights of occupied states
-!  using an improved Gaussian-smearing method
-!  refs: C.L.Fu and K.M.Ho, Phys.Rev. B28, 5480 (1983)
-!        M.Methfessel and A.T.Paxton Phys.Rev. B40 (15 aug. 89).
-!
-!  taken from APW code by J. Soler and A. Williams (jk+ss)
-!  added computation of occupation numbers without k-point weight
+      !-----------------------------------------------------------------------
+      !! This routine computes Fermi energy and weights of occupied states
+      !! using an improved Gaussian-smearing method.  
+      !! Refs: C.L.Fu and K.M.Ho, Phys.Rev. B28, 5480 (1983)
+      !!       M.Methfessel and A.T.Paxton Phys.Rev. B40 (15 aug. 89).
+      !
+      !! Taken from APW code by J. Soler and A. Williams (jk+ss).
+      !! Added computation of occupation numbers without k-point weight
 
       USE kinds,          ONLY: DP
       USE io_global,      ONLY: stdout

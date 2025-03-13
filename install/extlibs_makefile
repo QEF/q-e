@@ -11,12 +11,6 @@
 include ../make.inc
 include install_utils
 
-# For NVIDIA Eigensolver
-EIGENSOLVER_VERSION=0.3.1
-EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
-EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
-EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
-
 # MAIN target
 
 all: libcuda
@@ -25,12 +19,7 @@ all: libcuda
 # LAPACK (includes BLAS)
 ###################################
 
-liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
-
-# lapack is external: don't do anything
-liblapack_external : 
-
-liblapack_internal:
+liblapack:
 	$(call update_submodule,external,lapack)
 	if test ! -e $(TOPDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
 	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \
@@ -38,7 +27,8 @@ liblapack_internal:
         (echo "no configuration file found for lapack"; \
          echo "run configure from main QE dir"; exit); fi 
 lapack_clean:
-	cd $(TOPDIR)/external/lapack; $(MAKE) clean
+	if test -d $(TOPDIR)/external/lapack; then cd $(TOPDIR)/external/lapack; \
+          (if test -f make.inc; then $(MAKE) clean; fi); fi
 
 ###################################
 # FoX
@@ -62,6 +52,8 @@ libfox:
 fi
 fox_clean:
 	if test -d ../FoX; then (rm -R -f ../FoX); fi
+	if test -d $(TOPDIR)/external/fox; then cd $(TOPDIR)/external/fox; \
+          (if test -f FoX-config; then $(MAKE) clean; fi); fi
 
 ###################################
 # CUDA
@@ -69,33 +61,13 @@ fox_clean:
 
 libcuda : $(addprefix libcuda_,$(CUDA_EXTLIBS))
 
-libcuda_eigensolver :
-	$(call download_and_unpack,$(EIGENSOLVER_GPU_NAME),$(EIGENSOLVER_GPU_URL),EIGENSOLVER_GPU,EIGENSOLVER_GPU)
-	if test ! -e ../EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a ; then \
-    (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
-    cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
-	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
-
-libcuda_eigensolver_clean:
-	if test -d ../EIGENSOLVER_GPU; then (cd ../EIGENSOLVER_GPU/lib_eigsolve ; $(MAKE) clean); fi
-libcuda_eigensolver_veryclean:
-	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
-
 CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
 	$(call update_submodule,external,devxlib)
-	cd ../external/devxlib; \
-    touch make.inc; \
-    $(MAKE) clean; \
-    export F90FLAGS="$(FOX_FLAGS)"; \
-    ./configure FC=$(F90) F90=$(F90) CC=$(CC) \
-                --with-cuda=$(CUDA_PATH) \
-                --with-cuda-cc=$(GPU_ARCH) \
-                --with-cuda-runtime=$(CUDA_RUNTIME) \
-                --disable-parallel \
-                --enable-cuda-env-check=no; \
-    make all
-	touch ../install/libcuda_devxlib # do not download and configure again
+	cd $(TOPDIR)/external/devxlib/src; \
+	ln -fs $(TOPDIR)/make.inc ../; \
+	$(MAKE) all; \
+	touch $(TOPDIR)/install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
 	if test -f libcuda_devxlib; then rm libcuda_devxlib; fi
@@ -104,7 +76,7 @@ libcuda_devxlib_clean:
 libcuda_devxlib_veryclean:
 	if test -d ../external/devxlib; then \
 	   (cd ../external/devxlib; if test -f make.inc; then \
-	      ($(MAKE) distclean && rm make.inc); fi); fi
+	      ($(MAKE) distclean && rm -f make.inc); fi); fi
 
 ###################################
 # LIBMBD
@@ -114,18 +86,24 @@ libmbd:
 	$(call update_submodule,external,mbd)
 	if test ! -d ../MBD; then \
         mkdir ../MBD; \
-        cd $(TOPDIR)/external/mbd; \
-        tar -xzvf $(TOPDIR)/archive/libmbd-0.10.3-non-cmake-makefiles.tar.gz --strip-components=1; \
-	cd src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
-	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
+        cd $(TOPDIR)/external/mbd/src; \
+	export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+	$(MAKE) -f ../../mbd.make; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
 
 libmbd_clean:
 	if test -d ../MBD; then (rm -R -f ../MBD); fi
+	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+          $(MAKE) -f ../../mbd.make clean; fi
+
+libmbd_distclean:
+	if test -d ../MBD; then (rm -R -f ../MBD); fi
+	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+          $(MAKE) -f ../../mbd.make distclean; fi
 
 ###################################
 # cleaning
 ###################################
 
-clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libmbd_clean
+clean: lapack_clean fox_clean libcuda_devxlib_clean libmbd_clean
 
-veryclean: fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libmbd_clean
+veryclean: fox_clean libcuda_devxlib_veryclean libmbd_distclean

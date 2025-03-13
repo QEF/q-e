@@ -8,8 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
   export PARA_SUFFIX=" -nimage 2"
 else
   unset PARA_PREFIX
@@ -20,8 +20,8 @@ fi
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x  < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x  < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
@@ -29,8 +29,8 @@ then
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3

@@ -1,0 +1,69 @@
+
+ This example shows how to use the 3-Dimensional Reference Interaction
+Site Model (3D-RISM) in pw.x. 3D-RISM calculates the integral equation
+of the solvent theory, to provide solvent distributions:
+
+  A.Kovalenko, F.Hirata, Chem. Phys. Lett. 1998, 290, 237-244.
+
+ Solvent molecules have explicit internal structures, and interactions
+are defined as classical molecular force fields (written in MOL-format).
+The correlation among solvents are decomposed into correlations between
+two atoms in solvetns, which are calculated by 1D-RISM. In pw.x, 1D-RISM
+is performed at first, and the result allows to calculate 3D-RISM.
+
+ Solute is treated by qunatum mechanical DFT, that is the system with
+the ion-cores and the electrons means the solute in pw.x.
+3D-RISM calculates distributions around solute for all solvent atoms,
+while correlations between solvent atoms are involved.
+One can perform 3D-RISM coupled with SCF (i.e. 3D-RISM-SCF).
+And pprism.x allows to plot solvent distributions.
+
+  If ESM method is applied for DFT calculation, Laue-RISM is performed
+instead of 3D-RISM. The coupling method of ESM and Laue-RISM is called
+as ESM-RISM, which is able to simulate solvated slab system. Here,
+boundary condition of ESM must be `BC1', and boundary condition of
+ESM-RISM becomes Vacuum/Slab/Solvent. ESM-RISM works even if slab is
+`charged', because solvent with opposite charge screens slab naturally.
+
+ The details of the example calculation:
+
+1) A H2O molecule in NaCl(aq)
+   Performing 3D-RISM-SCF calculation for a H2O molecule, to optimize
+   the charge density and the solvent distributions simultaneously.
+   The solvent system is aqueous solution of sodium chloride (0.1M).
+   Molecular force field for water is Simple Point Charge (SPC) model.
+   Also, the atomic positions are relaxed under solvent environment.
+
+2) A HCHO molecule in water
+   Performing 3D-RISM-SCF calculation for a HCHO molecule, to optimize
+   the charge density and the solvent distributions simultaneously.
+   The solvent system is water (SPC). The Lennard-Jones force field
+   of HCHO is OPLS-AA. After 3D-RISM-SCF, pprism.x plots distributions
+   of the oxygen and the hydrogen atom in solvent water.
+
+3) A Li(100) slab with ethanol
+   Performing ESM-RISM calculation for a Li(100) slab with solvent
+   ethanol, to optimize the charge density and the solvent distributions
+   simultaneously. The system is defined as Vacuum/Li(100)/EtOH, where
+   ESM is applied for the Li(100) slab and Laue-RISM is applied for the
+   solvent ethanol (OPLS-UA). The Lennard-Jones force field of Li is UFF.
+   After ESM-RISM, pprism.x plots distributions of the solvent atoms.
+
+4) A charged Al(111) slab with NaCl(aq)
+   Performing ESM-RISM calculation for an Al(111) slab with aqueous
+   solution of sodium chloride (5.0M), to optimize the charge density,
+   the solvent distributions and the atomic positions of the Al(111)
+   simultaneously. The system is defined as Vacuum/Al(111)/NaCl(aq),
+   where ESM for the Al(111) and Laue-RISM for NaCl(aq). The Al(111)
+   slab has +0.1 charge, which is defined by "tot_charge". If ESM-RISM
+   calculation is converged, the Na+ ions will decrease and the Cl- ions
+   will increase to cause -0.1 charge for the solvent system.
+
+5) A Cl- ion in NaCl(aq)
+   Performing ESM-RISM calculation for an Cl- ion with aqueous solution
+   of sodium chloride (1.0M), to obtain the solvation free energy of
+   Cl- ion in bulk solution. By defining 'laue_expand_right' and
+   'laue_expand_left' in input file, one can calculate the situation
+   that an isolated atom/molecule/ion is in bulk solution. Using this
+   model one can calculate the salvation free energy with 'explicitly'
+   controlled the chemical potential of atoms.

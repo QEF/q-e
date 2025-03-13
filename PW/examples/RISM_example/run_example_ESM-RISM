@@ -1,0 +1,337 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  ESM-RISM EXAMPLE
+##
+###############################################################################
+
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use Laue-RISM calculation"
+$ECHO "3) Vacuum/Li(100)/EtOH,"
+$ECHO "4) Vacuum/Al(111)/NaCl(aq,5.0M) where slab of Al is charged., and"
+$ECHO "5) NaCl(aq,1.0M)/Cl-/NaCl(aq,1.0M)."
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables, pseudopotentials and molecules
+BIN_LIST="pw.x pprism.x"
+PSEUDO_LIST="Li.pbe-n-van.UPF Al.pbe-n-van.UPF Cl.pbe-n-van.UPF"
+MOL_LIST="H2O.spc.MOL Na+.aq.MOL Cl-.aq.MOL Ethanol.oplsua.MOL"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for molecules
+for FILE in $MOL_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Copy $FILE to $PSEUDO_DIR...\c"
+       cp $EXAMPLE_DIR/MOL/$FILE $PSEUDO_DIR 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PP_COMMAND="$PARA_PREFIX $BIN_DIR/pprism.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO "  running pprism.x as: $PP_COMMAND"
+$ECHO
+
+# ESM-RISM calculation for Li(100) with ethanol
+cat > Li-EtOH.in << EOF
+ &control
+    calculation = 'scf'
+    prefix      = 'Li-EtOH'
+    pseudo_dir  = '$PSEUDO_DIR/'
+    outdir      = '$TMP_DIR/'
+    trism       = .true.
+ /
+ &system
+    ibrav       = 0
+    ntyp        = 1
+    nat         = 5
+    ecutwfc     = 25.0
+    ecutrho     = 225.0
+    occupations = 'smearing'
+    smearing    = 'gauss'
+    degauss     = 0.01
+    ! ESM
+    assume_isolated = 'esm'
+    esm_bc          = 'bc1'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.4
+ /
+ &rism
+    nsolv    = 1
+    closure  = 'kh'
+    tempv    = 300.0  ! Kelvin
+    ecutsolv = 144.0  ! Rydberg
+    ! Lennard-Jones
+    solute_lj(1) = 'uff'
+    ! Laue-RISM
+    laue_expand_right   = 50.00 ! bohr
+    laue_starting_right =  3.24 ! bohr
+    laue_buffer_right   =  2.00 ! bohr
+ /
+ATOMIC_SPECIES
+Li  -1.0  Li.pbe-n-van.UPF
+CELL_PARAMETERS (angstrom)
+   3.430000067   0.000000000   0.000000000
+   0.000000000   3.430000067   0.000000000
+   0.000000000   0.000000000  26.860000179
+
+ATOMIC_POSITIONS (angstrom)
+Li            0.0000000000        0.0000000000       -3.4300000895
+Li            0.0000000000        0.0000000000        0.0000000005
+Li            0.0000000000        0.0000000000        3.4300000895
+Li            1.7150000330        1.7150000330       -1.7150000445
+Li            1.7150000330        1.7150000330        1.7149998915
+K_POINTS {automatic}
+ 2 2 1 0 0 0
+SOLVENTS {mol/L}
+EtOH -1.0  Ethanol.oplsua.MOL
+EOF
+$ECHO "  running the ESM-RISM calculation for Li(100) with ethanol...\c"
+$PW_COMMAND < Li-EtOH.in > Li-EtOH.out
+check_failure $?
+cp -f $TMP_DIR/Li-EtOH.1drism ./
+cp -f $TMP_DIR/Li-EtOH.rism1 ./
+cp -f $TMP_DIR/Li-EtOH.esm1 ./
+cp -f $TMP_DIR/Li-EtOH.xml ./
+$ECHO " done"
+
+# plot solvent distribution
+cat > Li-EtOH.post.in << EOF
+ &inputpp
+    prefix  = 'Li-EtOH'
+    outdir  = '$TMP_DIR/'
+    lpunch  = .true.
+ /
+ &plot
+    iflag         = 3  ! 3D plot
+    output_format = 6  ! Gaussian's CUBE
+ /
+EOF
+$ECHO "  running the postprocessing to plot solvent...\c"
+$PP_COMMAND < Li-EtOH.post.in > Li-EtOH.post.out
+check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Li-EtOH*
+$ECHO " done"
+
+# ESM-RISM calculation for charged Al(111) with NaCl(aq)/5.0M
+cat > Al-NaCl_aq.in << EOF
+ &control
+    calculation   = 'scf'
+    prefix        = 'Al-NaCl_aq'
+    pseudo_dir    = '$PSEUDO_DIR/'
+    outdir        = '$TMP_DIR/'
+    trism         = .true.
+    forc_conv_thr = 2.0e-3
+ /
+ &system
+    ibrav       = 0
+    ntyp        = 1
+    nat         = 3
+    ecutwfc     = 25.0
+    ecutrho     = 225.0
+    occupations = 'smearing'
+    smearing    = 'gauss'
+    degauss     = 0.01
+    ! Charged
+    tot_charge  = +0.1
+    ! ESM
+    assume_isolated = 'esm'
+    esm_bc          = 'bc1'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.2
+ /
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &rism
+    nsolv    = 3
+    closure  = 'kh'
+    tempv    = 300.0  ! Kelvin
+    ecutsolv = 100.0  ! Rydberg
+    ! Lennard-Jones
+    solute_lj(1) = 'uff'
+    ! Laue-RISM
+    laue_expand_right   = 50.00 ! bohr
+    laue_starting_right =  0.00 ! bohr
+ /
+ATOMIC_SPECIES
+Al  -1.0  Al.pbe-n-van.UPF
+CELL_PARAMETERS (angstrom)
+   2.863782644   0.000000000   0.000000000
+   1.431891322   2.480108521   0.000000000
+   0.000000000   0.000000000  24.676537653
+
+ATOMIC_POSITIONS (angstrom)
+Al            0.0000000000        0.0000000000       -2.3382688265
+Al            2.8637827300        1.6534057300        2.3382688265
+Al            1.4318913650        0.8267028650        0.0000000005
+K_POINTS {automatic}
+ 2 2 1 0 0 0
+SOLVENTS {mol/L}
+ H2O -1.0  H2O.spc.MOL
+ Na+  5.0  Na+.aq.MOL
+ Cl-  5.0  Cl-.aq.MOL
+EOF
+$ECHO "  running the ESM-RISM calculation for charged Al(111) with NaCl(aq)/5.0M...\c"
+$PW_COMMAND < Al-NaCl_aq.in > Al-NaCl_aq.out
+check_failure $?
+cp -f $TMP_DIR/Al-NaCl_aq.1drism ./
+cp -f $TMP_DIR/Al-NaCl_aq.rism1 ./
+cp -f $TMP_DIR/Al-NaCl_aq.esm1 ./
+cp -f $TMP_DIR/Al-NaCl_aq.xml ./
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Al-NaCl_aq*
+$ECHO " done"
+
+# ESM-RISM calculation for Cl- in NaCl(aq)/1.0M
+cat > Cl-_NaCl_aq.in << EOF
+ &control
+    calculation   = 'scf'
+    prefix        = 'Cl-_NaCl_aq'
+    pseudo_dir    = '$PSEUDO_DIR/'
+    outdir        = '$TMP_DIR/'
+    trism         = .true.
+ /
+ &system
+    ibrav       = 0
+    ntyp        = 1
+    nat         = 1
+    ecutwfc     = 25.0
+    ecutrho     = 225.0
+    occupations = 'smearing'
+    smearing    = 'gauss'
+    degauss     = 0.01
+    ! Charged
+    tot_charge  = -1.0
+    ! ESM
+    assume_isolated = 'esm'
+    esm_bc          = 'bc1'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.2
+ /
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &rism
+    nsolv    = 3
+    closure  = 'kh'
+    tempv    = 300.0  ! Kelvin
+    ecutsolv = 100.0  ! Rydberg
+    ! Lennard-Jones
+    solute_lj(1) = 'uff'
+    ! Laue-RISM
+    laue_expand_right   = 50.00 ! bohr
+    laue_expand_left    = 50.00 ! bohr
+ /
+ATOMIC_SPECIES
+Cl  -1.0  Cl.pbe-n-van.UPF
+CELL_PARAMETERS (angstrom)
+  10.000000000   0.000000000   0.000000000
+   0.000000000  10.000000000   0.000000000
+   0.000000000   0.000000000  10.000000000
+
+ATOMIC_POSITIONS (angstrom)
+Cl            5.0000000000        5.0000000000        0.0000000000
+K_POINTS {gamma}
+SOLVENTS {mol/L}
+ H2O -1.0  H2O.spc.MOL
+ Na+  1.0  Na+.aq.MOL
+ Cl-  1.0  Cl-.aq.MOL
+EOF
+$ECHO "  running the ESM-RISM calculation for Cl- in NaCl(aq)/1.0M...\c"
+$PW_COMMAND < Cl-_NaCl_aq.in > Cl-_NaCl_aq.out
+check_failure $?
+cp -f $TMP_DIR/Cl-_NaCl_aq.1drism ./
+cp -f $TMP_DIR/Cl-_NaCl_aq.rism1 ./
+cp -f $TMP_DIR/Cl-_NaCl_aq.esm1 ./
+cp -f $TMP_DIR/Cl-_NaCl_aq.xml ./
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Cl-_NaCl_aq*
+$ECHO " done"
+
+$ECHO
+$ECHO "run_example_ESM-RISM: done"

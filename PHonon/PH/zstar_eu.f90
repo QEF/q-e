@@ -33,7 +33,6 @@ subroutine zstar_eu
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
-  USE ldaU,             ONLY : lda_plus_u
   USE lrus,             ONLY : becp1
   USE phus,             ONLY : alphap
   USE uspp_init,        ONLY : init_us_2
@@ -67,10 +66,6 @@ subroutine zstar_eu
            !
            call dvqpsi_us (ik, u (1, mode), .not. okvan, becp1, alphap)
            !
-           ! DFPT+U: add the bare variation of the Hubbard potential 
-           !
-           IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(:,mode))
-           !
            do jpol = 1, 3
               nrec = (jpol - 1) * nksq + ik
               !
@@ -78,8 +73,11 @@ subroutine zstar_eu
               !
               call get_buffer (dpsi, lrdwf, iudwf, nrec)
               do ibnd = 1, nbnd_occ(ikk)
-                 zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
-                      dot_product( dpsi(:,ibnd), dvpsi(:,ibnd) )
+                 zstareu0(jpol, mode) = zstareu0(jpol, mode) - 2.d0 * weight * &
+                      dot_product(dpsi(1:npw, ibnd), dvpsi(1:npw, ibnd))
+                 IF (noncolin) &
+                 zstareu0(jpol, mode)=zstareu0 (jpol, mode) - 2.d0 * weight * &
+                      dot_product(dpsi(1+npwx:npw+npwx, ibnd), dvpsi(1+npwx:npw+npwx, ibnd))
               enddo
            enddo
         enddo

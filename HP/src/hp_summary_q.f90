@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,6 +28,7 @@ SUBROUTINE hp_summary_q
   USE control_flags, ONLY : iverbosity
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq
   USE ldaU_hp,       ONLY : conv_thr_chi
+  USE noncollin_module, ONLY : noncolin, domag, lspinorb
 
   IMPLICIT NONE
   !
@@ -46,6 +47,22 @@ SUBROUTINE hp_summary_q
   ! k point in crystal coordinates
   !
   WRITE( stdout, '(/,19x,"WRITING LINEAR-RESPONSE SUMMARY:",/)')
+  !
+  !  Here add a message if this is a noncollinear or a spin_orbit calculation
+  !
+  IF (noncolin) THEN
+    IF (lspinorb) THEN
+       IF (domag) THEN
+          WRITE( stdout, '(5x, "Noncollinear calculation with spin-orbit",/)')
+       ELSE
+          WRITE( stdout, '(5x, "Non magnetic calculation with spin-orbit",/)')
+       ENDIF
+    ELSE
+       WRITE( stdout, '(5x, "Noncollinear calculation without spin-orbit",/)')
+    ENDIF
+  ELSE
+    WRITE(stdout,'(/)')
+  ENDIF
   !
   ! Now print the information specific for every q point
   !

@@ -1,0 +1,14 @@
+&input
+  flfrc='bn.frc'
+  flfrq='bn.frq'
+  asr='all'
+  huang=.true.
+  read_lr=.true.
+  loto_2d = .true.
+  q_in_band_form=.true.
+  q_in_cryst_coord=.true.
+/
+3
+0.5  0.0  0.0  20   !M
+0.0  0.0  0.0  20   !G
+-0.3333 0.6667 0.0  20 !K

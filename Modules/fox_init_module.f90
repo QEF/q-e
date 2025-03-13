@@ -1,5 +1,5 @@
 MODULE fox_init_module
-#if ! defined(__outfoxed)
+#if defined(__fox)
 USE mp,   ONLY: mp_bcast, mp_barrier 
 USE io_global, ONLY: ionode, ionode_id
 USE mp_images, ONLY: intra_image_comm
@@ -12,7 +12,7 @@ PUBLIC     :: fox_init
 CONTAINS 
    SUBROUTINE fox_init() 
       INTEGER   :: errcodes(3)
-#if ! defined(__outfoxed)
+#if defined(__fox)
       IF (ionode) THEN
          call setup_io() 
          errcodes(1) = io_err

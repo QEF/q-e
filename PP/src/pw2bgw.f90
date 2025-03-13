@@ -7,9 +7,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! Converts the output files produced by pw.x to the input files for BerkeleyGW.
-! Last modified 6/13/2020 by Zhenglu Li:
-! Full spinor support for pw2bgw in QE6.4 (ported from internal QE5.1 pw2bgw)
-! No magnatization allowed!
+! Last modified 2/27/2024 by Fangzhou Zhao:
+! Full spinor with magnetization support for pw2bgw in QE7.2
+! To use full spinor + magnetization, no symmetries are allowed
+! disabled npool use in write_vkbg
 !
 ! Usage: Copy pw2bgw_qe6.4_with_spinor.f90 to QE6.4/PP/src/pw2bgw.f90 and then make
 ! This version supports conversion for both non-spinor and spinor cases
@@ -80,7 +81,7 @@
 ! write_vxc_r - calculates matrix elements of exchange-correlation potential
 !               in R-space (units of eV) [only local part of Vxc]
 ! write_vxc_g - calculates matrix elements of exchange-correlation potential
-!               in G-space (units of eV) [supports non-local Vxc]
+!               in G-space (units of eV) [only local part of Vxc]
 ! write_kih   - calculates matrix elements of KIH = Kinetic energy + Ionic potential
 !               + Hartree (units of eV) [supports non-local Vxc] [supports metaGGA, 
 !               hybrid functionals]  
@@ -1789,7 +1790,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     DO ib = rhog_nvmin, rhog_nvmax
       psic (:) = (0.0D0, 0.0D0)
-      psic_nc (:,:) = (0.0D0, 0.0D0)
+      if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)
       DO ig = 1, npw
         ! ZL: add for spinors
         IF (nspin == 4) THEN
@@ -1887,6 +1888,13 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   complex (DP), allocatable :: vxcg_g ( :, : )
 
   INTEGER, EXTERNAL :: atomic_number
+
+  ! ZL: Disable VXC for spinor case
+  !     this is because for SOC-mag case, the matrix elements of VXC by BGW is
+  !     not supported yet
+  if (nspin .eq. 4) then
+    call errore('write_vxcg', 'full spinors do not support VXC, nspin =', nspin)
+  endif
 
   CALL date_and_tim ( cdate, ctime )
   WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
@@ -2128,6 +2136,11 @@ SUBROUTINE write_vxcg_meta ( output_file_name, real_or_complex, symm_type, &
   nrecord = 1
   nd = 3
 
+  ! ZL: disable full spinor
+  if (nspin .eq. 4) then
+    call errore('write_vxcg_meta', 'full spinors do not support VXC, nspin =', nspin)
+  endif
+
   !FZ: use set_spin for spinors
   !ns = nspin
   call set_spin(ns, nst, nsf, nspin)
@@ -2337,7 +2350,12 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   nr = dfftp%nnr
   ng_l = ngm
 
-  IF (nspin.EQ.4)  CALL errore('write_vxc0 not supported with full spinors','ns',ns)
+  ! ZL: disable full spinor
+  if (nspin .eq. 4) then
+    call errore('write_vxc0', 'full spinors do not support VXC, nspin =', nspin)
+  endif
+
+  !IF (nspin.EQ.4)  CALL errore('write_vxc0 not supported with full spinors','ns',ns)
 
   ALLOCATE ( vxcr_g ( nr, ns ) )
   ALLOCATE ( vxc0_g ( ns ) )
@@ -2434,6 +2452,11 @@ SUBROUTINE write_vxc0_meta ( output_file_name, vxc_zero_rho_core )
   nr = dfftp%nnr
   ng_l = ngm
 
+  ! ZL: disable full spinor
+  if (nspin .eq. 4) then
+    call errore('write_vxc0_meta', 'full spinors not supported, nspin =', nspin)
+  endif
+
   ALLOCATE ( vxcr_g ( nr, ns ) )
   ALLOCATE ( vxc0_g ( ns ) )
   ALLOCATE (kedtaur (dfftp%nnr, nspin))   !FZ: for meta GGA
@@ -2504,11 +2527,11 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   offdiag_nmin, offdiag_nmax, vxc_zero_rho_core)
 
   USE kinds, ONLY : DP
-  USE constants, ONLY : rytoev
+  USE constants, ONLY : rytoev, eps12  ! ZL: add eps12
   USE cell_base, ONLY : tpiba2, at, bg
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
-  USE fft_interfaces, ONLY : invfft
+  USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY : ngm, g
   USE io_files, ONLY : nwordwfc, iunwfc
   USE io_global, ONLY : ionode
@@ -2520,6 +2543,9 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions, ONLY : evc, psic, psic_nc !FZ: added psic_nc for spinors
   USE wvfct, ONLY : nbnd, npwx !FZ: added npwx
+  USE symm_base, ONLY : nsym ! ZL: add
+  USE noncollin_module, ONLY : magtot_nc ! ZL: add
+  USE lsda_mod, ONLY : starting_magnetization ! ZL: add
 
   IMPLICIT NONE
 
@@ -2534,18 +2560,36 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   integer, external :: global_kpoint_index
   real (DP) :: dummyr
   complex (DP) :: dummyc
-  real (DP), allocatable :: mtxeld (:, :)
+  ! ZL: change mtxeld to complex to be compatible for SOC-mag case
+  !real (DP), allocatable :: mtxeld (:, :)
+  complex (DP), allocatable :: mtxeld (:, :)
   complex (DP), allocatable :: mtxelo (:, :, :)
   real (DP), allocatable :: vxcr (:, :)
   complex (DP), allocatable :: psic2 (:)
   complex (DP), allocatable :: psic_nc2 (:,:)  !FZ: added for spinor
   integer :: isp, ns, nst, nsf !FZ: added for spinor
 
+  ! ZL: for vxcr_spinor_mag
+  complex (DP), allocatable :: psic_nc_temp (:,:) ! ZL: added for vxcr_spinor_mag
+  complex (DP), allocatable :: hpsi_nc_temp (:,:) ! ZL: added for vxcr_spinor_mag
+  complex (DP) :: temp_psic_nc1, temp_psic_nc2  ! ZL: added for vxcr_spinor_mag
+  complex (DP) :: dummy_aux
+
   ! ZL: full spinors don't support vxc.dat yet
   !if (nspin .eq. 4) then
   !  call errore('write_vxc_r', 'full spinors do not support vxc.dat, nspin =', nspin)
   !endif
   !FZ: deleted, full spinors only works when there is no magnetization
+  ! ZL: -- updated Dec. 2023, now full spinors work with magnetization,
+  !     but no symmetry is allowed in the SOC-mag case.
+
+  ! ZL: soc-mag must not use symmetries
+  if ( sum(abs(starting_magnetization)) .gt. eps12 ) then
+    if (nsym .ne. 1) then
+      call errore('write_vxc_r', 'Magnetization detected for full spinor. No symmetry is allowed, nsym =', nsym)
+    endif
+  endif
+
   if(diag_nmin > diag_nmax) then
     call errore ( 'write_vxc_r', 'diag_nmin > diag_nmax', diag_nmin )
   endif
@@ -2577,7 +2621,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 
   IF (ndiag .GT. 0) THEN
     ALLOCATE (mtxeld (ndiag, nkstot))
-    mtxeld (:, :) = 0.0D0
+    mtxeld (:, :) = (0.0D0, 0.0D0) ! ZL: change to complex
   ENDIF
   IF (noffdiag .GT. 0) THEN
     ALLOCATE (mtxelo (noffdiag, noffdiag, nkstot))
@@ -2593,6 +2637,11 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
+
+  ! ZL: add
+  ALLOCATE (psic_nc_temp (dfftp%nnr, 2))
+  ALLOCATE (hpsi_nc_temp (dfftp%nnr, 2))
+
   !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
   !
@@ -2602,7 +2651,11 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0) ! FZ: added for spinors
+        if (nspin == 4) psic_nc_temp(:, :) = (0.0D0, 0.0D0) ! ZL: add
+        if (nspin == 4) hpsi_nc_temp(:, :) = (0.0D0, 0.0D0) ! ZL: add
+
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -2626,20 +2679,74 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
               dummyr = dummyr + vxcr (ir, 1) &   !FZ: added for spinors
                 * (dble (psic_nc (ir, isp)) **2 + aimag (psic_nc (ir,isp)) **2)   !FZ: added for spinors
             ENDDO  !FZ: added for spinors
+
+            ! ZL: add for extra SOC-mag terms
+            temp_psic_nc1 = psic_nc(ir, 1)
+            temp_psic_nc2 = psic_nc(ir, 2)
+
+            psic_nc_temp (ir, 1) =  temp_psic_nc1 * vxcr (ir, 4) + temp_psic_nc2 * ( vxcr (ir, 2) - (0.d0,1.d0) * (vxcr (ir, 3)) ) 
+            psic_nc_temp (ir, 2) = -temp_psic_nc2 * vxcr (ir, 4) + temp_psic_nc1 * ( vxcr (ir, 2) + (0.d0,1.d0) * (vxcr (ir, 3)) ) 
+
           ELSE !FZ: added for spinors
             dummyr = dummyr + vxcr (ir, isk (ik)) &
               * (dble (psic (ir)) **2 + aimag (psic (ir)) **2)
           ENDIF !FZ: added for spinors
         ENDDO
+
         dummyr = dummyr * rytoev / dble (dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
         CALL mp_sum (dummyr, intra_bgrp_comm)
-        mtxeld (ib - diag_nmin + 1, ik) = dummyr
+
+        ! ZL: we handle the vxc_spinor_mag part in G-space
+        if (nspin == 4) then 
+          do isp=1, nst
+            CALL fwfft ('Rho', psic_nc_temp(:,isp),dfftp)
+          enddo
+
+          do ig = 1, npw
+            do isp=1, nst
+              hpsi_nc_temp (ig, isp) = psic_nc_temp (dfftp%nl (igk_k(ig,ik-iks+1)), isp)
+            enddo
+          enddo
+
+          psic_nc (:,:) = (0.0D0, 0.0D0)
+          do ig = 1, npw
+            do isp = 1, nst
+              psic_nc (ig, isp) = evc(ig+npwx*(isp-1), ib)
+            enddo
+          enddo
+
+          dummy_aux = (0.0D0, 0.0D0)
+          do ig = 1, npw
+            do isp = 1, nst
+              ! collecting terms for vxc_spinor_mag
+              dummy_aux = dummy_aux + conjg (psic_nc(ig, isp)) * hpsi_nc_temp(ig, isp)
+            enddo
+          enddo
+
+          dummy_aux = dummy_aux * CMPLX (rytoev, 0.0D0, KIND=dp)
+          CALL mp_sum (dummy_aux, intra_bgrp_comm)
+
+        endif
+        ! ZL: done getting the matrix elements
+
+        ! ZL: now constructing matrix elements
+        if (nspin == 4) then
+          mtxeld (ib - diag_nmin + 1, ik) = cmplx(dummyr, 0.0d0, kind=dp) + dummy_aux
+        else
+          mtxeld (ib - diag_nmin + 1, ik) = dummyr
+        endif  ! ZL: done
       ENDDO
     ENDIF
+
+    ! ZL: non-offdiag matrix elements
     IF (noffdiag .GT. 0) THEN
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc_temp (:,:) = (0.0D0, 0.0D0) ! ZL: add
+        if (nspin == 4) hpsi_nc_temp (:,:) = (0.0D0, 0.0D0) ! ZL: add
+
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -2658,7 +2765,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
         ENDIF  !FZ: added for spinors
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
-          psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+          if (nspin == 4) psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
               DO isp = 1, nst !FZ: added for spinors
@@ -2682,17 +2789,63 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
                 dummyc = dummyc + CMPLX (vxcr (ir, 1), 0.0D0, KIND=dp) & !FZ: added for spinors
                   * conjg (psic_nc2 (ir, isp)) * psic_nc (ir, isp)   !FZ: added for spinors
               ENDDO  !FZ: added for spinors
+
+              ! ZL: add for extra SOC-mag terms
+              temp_psic_nc1 = psic_nc (ir, 1)
+              temp_psic_nc2 = psic_nc (ir, 2)
+
+              psic_nc_temp (ir, 1) =  temp_psic_nc1 * vxcr (ir, 4) + temp_psic_nc2 * ( vxcr (ir, 2) - (0.d0,1.d0) * vxcr (ir, 3) ) 
+              psic_nc_temp (ir, 2) = -temp_psic_nc2 * vxcr (ir, 4) + temp_psic_nc1 * ( vxcr (ir, 2) + (0.d0,1.d0) * vxcr (ir, 3) ) 
+
             ELSE !FZ: added for spinors
               dummyc = dummyc + CMPLX (vxcr (ir, isk (ik)), 0.0D0, KIND=dp) &
                 * conjg (psic2 (ir)) * psic (ir)
             ENDIF !FZ: added for spinors
           ENDDO
+
           dummyc = dummyc &
                * CMPLX (rytoev / dble (dfftp%nr1x * dfftp%nr2x * dfftp%nr3x), &
                         0.0D0, KIND=dp)
           CALL mp_sum (dummyc, intra_bgrp_comm)
-          mtxelo (ib2 - offdiag_nmin + 1, ib - offdiag_nmin &
-            + 1, ik) = dummyc
+
+          ! ZL: we handle the vxc_spinor_mag part in G-space
+          if (nspin == 4) then
+            do isp=1, nst
+              CALL fwfft ('Rho', psic_nc_temp(:,isp),dfftp)
+            enddo
+
+            do ig = 1, npw
+              do isp=1, nst
+                hpsi_nc_temp (ig, isp) = psic_nc_temp (dfftp%nl (igk_k(ig,ik-iks+1)), isp)
+              enddo
+            enddo
+
+            psic_nc2 (:,:) = (0.0D0, 0.0D0)
+            do ig = 1, npw
+              do isp = 1, nst
+                psic_nc2 (ig, isp) = evc(ig+npwx*(isp-1), ib2)
+              enddo
+            enddo
+
+            dummy_aux = (0.0D0, 0.0D0)
+            do ig = 1, npw
+              do isp=1, nst
+                ! collecting terms for vxc_spinor_mag
+                dummy_aux = dummy_aux + conjg (psic_nc2 (ig, isp)) * hpsi_nc_temp(ig, isp)
+              enddo
+            enddo
+
+            dummy_aux = dummy_aux * CMPLX (rytoev, 0.0D0, KIND=dp)
+            CALL mp_sum (dummy_aux, intra_bgrp_comm)
+
+          endif ! ZL: done
+
+          ! ZL: now constructing matrix elements
+          if (nspin == 4) then
+            mtxelo (ib2 - offdiag_nmin + 1, ib - offdiag_nmin + 1, ik) = dummyc + dummy_aux
+          else
+            mtxelo (ib2 - offdiag_nmin + 1, ib - offdiag_nmin + 1, ik) = dummyc
+          endif  ! ZL: done
         ENDDO
       ENDDO
     ENDIF
@@ -2701,6 +2854,10 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   DEALLOCATE (vxcr)
   IF (noffdiag .GT. 0) DEALLOCATE (psic2)
   IF (noffdiag .GT. 0) DEALLOCATE (psic_nc2) !FZ: added for spinors
+
+  ! ZL: add
+  DEALLOCATE (psic_nc_temp)
+  DEALLOCATE (hpsi_nc_temp)
 
   IF (ndiag .GT. 0) CALL mp_sum (mtxeld, inter_pool_comm)
   IF (noffdiag .GT. 0) CALL mp_sum (mtxelo, inter_pool_comm)
@@ -2716,8 +2873,11 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
           noffdiag **2
         IF (ndiag .GT. 0) THEN
           DO ib = diag_nmin, diag_nmax
+            ! ZL: now mtxeld is complex
+            !WRITE (unit, 102) 1, ib, mtxeld &
+            !  (ib - diag_nmin + 1, ik), 0.0D0
             WRITE (unit, 102) 1, ib, mtxeld &
-              (ib - diag_nmin + 1, ik), 0.0D0
+              (ib - diag_nmin + 1, ik)
           ENDDO
         ENDIF
         IF (noffdiag .GT. 0) THEN
@@ -2736,9 +2896,12 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
         IF (ndiag .GT. 0) THEN
           DO ib = diag_nmin, diag_nmax
             DO is = 1, nspin  !FZ: change order
+              ! ZL: now mtxeld is complex
+              !WRITE (unit, 102) is, ib, mtxeld &
+              !  (ib - diag_nmin + 1, ik + (is - 1) * nkstot / nspin), &
+              !  0.0D0
               WRITE (unit, 102) is, ib, mtxeld &
-                (ib - diag_nmin + 1, ik + (is - 1) * nkstot / nspin), &
-                0.0D0
+                (ib - diag_nmin + 1, ik + (is - 1) * nkstot / nspin)
             ENDDO
           ENDDO
         ENDIF
@@ -2814,6 +2977,11 @@ SUBROUTINE write_vxc_r_meta (output_file_name, diag_nmin, diag_nmax, &
   real (DP), allocatable :: vxcr (:, :)
   real (DP), allocatable :: kedtaur (:, :)   !FZ: for metaGGA  
   complex (DP), allocatable :: psic2 (:)
+
+  ! ZL: disable full spinor
+  if (nspin .eq. 4) then
+    call errore('write_vxc_r_meta', 'full spinors not supported, nspin =', nspin)
+  endif
 
   if(diag_nmin > diag_nmax) then
     call errore ( 'write_vxc_r', 'diag_nmin > diag_nmax', diag_nmin )
@@ -2975,7 +3143,7 @@ END SUBROUTINE write_vxc_r_meta
 SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   offdiag_nmin, offdiag_nmax, vxc_zero_rho_core)
 
-  USE constants, ONLY : rytoev
+  USE constants, ONLY : rytoev, eps12
   USE cell_base, ONLY : tpiba2, at, bg
   USE ener, ONLY : etxc, vtxc
   USE exx, ONLY : vexx
@@ -2987,13 +3155,14 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE io_global, ONLY : ionode
   USE kinds, ONLY : DP
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
-  USE lsda_mod, ONLY : nspin, isk
+  USE lsda_mod, ONLY : nspin, isk, starting_magnetization
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions, ONLY : evc, psic, psic_nc !FZ: added psic_nc for spinors
   USE wvfct, ONLY : npwx, nbnd
+  USE symm_base, ONLY : nsym
 
   IMPLICIT NONE
 
@@ -3015,11 +3184,20 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   complex (DP), allocatable :: hpsi (:)
   complex (DP), allocatable :: hpsi_nc (:,:)  !FZ: added for spinors
   integer :: isp, ns, nst, nsf !FZ: added for spinors
+  complex (DP) :: temp_psic_nc1, temp_psic_nc2  ! ZL: added for vxcr_spinor_mag
+
   ! ZL: full spinors don't support vxc.dat yet
   !if (nspin .eq. 4) then
   !  call errore('write_vxc_g', 'full spinors do not support vxc.dat, nspin =', nspin)
   !endif
   !FZ: deleted, full spinors only works when there is no magnetization
+
+  ! ZL: soc-mag must not use symmetries
+  if ( sum(abs(starting_magnetization)) .gt. eps12 ) then
+    if (nsym .ne. 1) then
+      call errore('write_vxc_r', 'Magnetization detected for full spinor. No symmetry is allowed, nsym =', nsym)
+    endif
+  endif
 
   if(diag_nmin > diag_nmax) then
     call errore ( 'write_vxc_g', 'diag_nmin > diag_nmax', diag_nmin )
@@ -3080,7 +3258,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -3099,9 +3277,21 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         ENDIF  !FZ: added for spinors
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-            DO isp=1,nst  !FZ: added for spinors
-              psic_nc (ir, isp) = psic_nc (ir, isp) * vxcr (ir, 1)  !FZ: addedfor spinors
-            ENDDO  !FZ: added for spinors
+            ! ZL: add for extra SOC-mag terms
+            temp_psic_nc1 = psic_nc(ir, 1)
+            temp_psic_nc2 = psic_nc(ir, 2)
+
+            ! ZL: redo to include all terms
+            !DO isp=1,nst  !FZ: added for spinors
+            !  psic_nc (ir, isp) = psic_nc (ir, isp) * vxcr (ir, 1)  !FZ: addedfor spinors
+            !ENDDO  !FZ: added for spinors
+
+            ! ZL: include all terms
+            psic_nc(ir, 1) = temp_psic_nc1 * vxcr (ir, 1) + temp_psic_nc1 * vxcr (ir, 4) + &
+                             temp_psic_nc2 * ( vxcr (ir, 2) - (0.d0,1.d0) * (vxcr (ir, 3)) ) 
+            psic_nc(ir, 2) = temp_psic_nc2 * vxcr (ir, 1) - temp_psic_nc2 * vxcr (ir, 4) + &
+                             temp_psic_nc1 * ( vxcr (ir, 2) + (0.d0,1.d0) * (vxcr (ir, 3)) ) 
+
           ELSE  !FZ: added for spinors
             psic (ir) = psic (ir) * vxcr (ir, isk (ik))
           ENDIF  !FZ: added for spinors
@@ -3125,7 +3315,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
           ENDIF
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -3155,7 +3345,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     IF (noffdiag .GT. 0) THEN
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -3174,9 +3364,21 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         ENDIF !FZ: added for spinors
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-            DO isp=1,nst  !FZ: added for spinors
-              psic_nc (ir, isp) = psic_nc (ir, isp) * vxcr (ir, 1)  !FZ: addedfor spinors
-            ENDDO  !FZ: added for spinors
+            ! ZL: add for extra SOC-mag terms
+            temp_psic_nc1 = psic_nc(ir, 1)
+            temp_psic_nc2 = psic_nc(ir, 2)
+
+            ! ZL: redo to include all terms
+            !DO isp=1,nst  !FZ: added for spinors
+            !  psic_nc (ir, isp) = psic_nc (ir, isp) * vxcr (ir, 1)  !FZ: addedfor spinors
+            !ENDDO  !FZ: added for spinors
+
+            ! ZL: include all terms
+            psic_nc(ir, 1) = temp_psic_nc1 * vxcr (ir, 1) + temp_psic_nc1 * vxcr (ir, 4) + &
+                             temp_psic_nc2 * ( vxcr (ir, 2) - (0.d0,1.d0) * (vxcr (ir, 3)) ) 
+            psic_nc(ir, 2) = temp_psic_nc2 * vxcr (ir, 1) - temp_psic_nc2 * vxcr (ir, 4) + &
+                             temp_psic_nc1 * ( vxcr (ir, 2) + (0.d0,1.d0) * (vxcr (ir, 3)) ) 
+
           ELSE  !FZ: added for spinors
             psic (ir) = psic (ir) * vxcr (ir, isk (ik))
           ENDIF  !FZ: added for spinors
@@ -3200,7 +3402,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
           ENDIF
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -3214,7 +3416,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         !   CALL vexx (npwx, npw, 1, psic, hpsi)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
-          psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+          if (nspin == 4) psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
               DO isp = 1, nst !FZ: added for spinors
@@ -3363,6 +3565,13 @@ SUBROUTINE write_vxc_g_meta (output_file_name, diag_nmin, diag_nmax, &
   real (DP), allocatable :: kedtaur (:, :)   !FZ: for metaGGA  
   complex (DP), allocatable :: psic2 (:)
   complex (DP), allocatable :: hpsi (:)
+
+  ! ZL: Disable VXC for spinor case
+  !     this is because for SOC-mag case, the matrix elements of VXC by BGW is
+  !     not supported yet
+  if (nspin .eq. 4) then
+    call errore('write_vxcg', 'full spinors do not support VXC, nspin =', nspin)
+  endif
 
   if(diag_nmin > diag_nmax) then
     call errore ( 'write_vxc_g', 'diag_nmin > diag_nmax', diag_nmin )
@@ -3554,7 +3763,7 @@ END SUBROUTINE write_vxc_g_meta
 SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax, &     
   offdiag_nmin, offdiag_nmax, kih_flag, vxc_hybrid_flag)                     
 
-  USE constants, ONLY : rytoev
+  USE constants, ONLY : rytoev, eps12  ! ZL: add eps12
   USE cell_base, ONLY : tpiba2, at, bg
   USE ener, ONLY : etxc, vtxc, ehart !FZ:  added ehart
   USE exx, ONLY : vexx
@@ -3576,7 +3785,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   USE scf, ONLY : rho, vrs, vltot, v_of_0, v, kedtau, rho_core, rhog_core  !FZ: for vhartree 
   USE wavefunctions, ONLY : evc, psic, psic_nc !FZ: added psic_nc for spinors
   USE wvfct, ONLY : npwx, nbnd, g2kin, et  !FZ: added g2kin
-  USE g_psi_mod,            ONLY : h_diag, s_diag 
   USE noncollin_module, ONLY: noncolin, npol  
   !USE uspp,                 ONLY : vkb, nkb, okvan, deeq, qq_at, qq_so, deeq_nc, indv_ijkb0 !FZ: 
   USE uspp,                 ONLY : vkb, nkb, okvan, deeq, qq_at, qq_so, deeq_nc, ofsbeta !FZ: 
@@ -3587,6 +3795,9 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
                          allocate_bec_type, deallocate_bec_type 
   USE fft_base,      ONLY : dffts !FZ: test
   USE uspp_init,            ONLY : init_us_2
+  USE symm_base, ONLY : nsym ! ZL: add
+  USE noncollin_module, ONLY : magtot_nc ! ZL: add
+  USE lsda_mod, ONLY: nspin, starting_magnetization
 
   IMPLICIT NONE
 
@@ -3623,6 +3834,13 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   INTEGER :: ierr   
   COMPLEX(DP), allocatable :: hpsinl(:,:)  
   COMPLEX(DP), allocatable :: psinl(:,:)  
+
+  ! ZL: soc-mag must not use symmetries
+  if ( sum(abs(starting_magnetization)) .gt. eps12 ) then
+    if (nsym .ne. 1) then
+      call errore('write_vxc_r', 'Magnetization detected for full spinor. No symmetry is allowed, nsym =', nsym)
+    endif
+  endif
 
   if(diag_nmin > diag_nmax) then
     call errore ( 'write_IHK', 'diag_nmin > diag_nmax', diag_nmin )  
@@ -3706,14 +3924,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   ENDIF
 
   CALL v_h (rho%of_g(:,1), ehart, charge, v_har)   
-  ALLOCATE( h_diag( npwx, npol ), STAT=ierr )    
-  IF( ierr /= 0 ) &    
-     CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )   
-  ALLOCATE( s_diag( npwx, npol ), STAT=ierr )   
-  IF( ierr /= 0 ) &     
-     CALL errore( ' diag_bands ', ' cannot allocate s_diag ', ABS(ierr) )    
-  h_diag (:,:) = 0.0D0  
-  s_diag (:,:) = 0.0D0  
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &    
                          nspin, doublegrid )    
   
@@ -3727,10 +3937,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
     CALL threaded_memcpy(psinl, evc, nbnd*npol*npwx*2)
     vkb (:,:) = 0.0D0  
     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb ) 
-    h_diag (:,:) = 0.0D0  
-    s_diag (:,:) = 0.0D0  
     hpsinl (:,:) = 0.0D0  
-    CALL usnldiag( npw, h_diag, s_diag )   
     g2kin(:) = 0.0D0  
     call g2_kin( ik )  
     CALL calbec ( npw, vkb, psinl, becp, nbnd )   
@@ -3744,7 +3951,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
         hpsi (:) = (0.0D0, 0.0D0)  
         psic_temp (:) = (0.0D0, 0.0D0)
         hpsi_temp (:) = (0.0D0, 0.0D0)  
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         psic_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
@@ -3777,12 +3984,19 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
           IF (nspin == 4) THEN !FZ: added for spinors
             temp_psic_nc1 = psic_nc_temp (ir, 1)
             temp_psic_nc2 = psic_nc_temp (ir, 2)
-            psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) + vxcr_2 (ir, 4))  &  !FZ: added for spinors
-                        + temp_psic_nc2 * ( (vxcr_2 (ir, 2) ) - (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
-            psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) - vxcr_2 (ir, 4))  &  !FZ: added for spinors
-                        + temp_psic_nc1 * ( (vxcr_2 (ir, 2)) + (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
+
+            ! ZL: vxc terms are not needed here
+            !psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) + vxcr_2 (ir, 4))  &  !FZ: added for spinors
+            !            + temp_psic_nc2 * ( (vxcr_2 (ir, 2) ) - (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
+            !psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) - vxcr_2 (ir, 4))  &  !FZ: added for spinors
+            !            + temp_psic_nc1 * ( (vxcr_2 (ir, 2)) + (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
+            psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1))
+            psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1))
+
           ELSE  !FZ: added for spinors
-            psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)) + vxcr_2 (ir, isk (ik)) - vxcr (ir, isk (ik)))   
+            ! ZL: no vxc
+            !psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)) + vxcr_2 (ir, isk (ik)) - vxcr (ir, isk (ik)))   
+            psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)))   
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
@@ -3811,7 +4025,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
           ENDIF  !FZ: added for spinors
         ENDDO                                           
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -3842,9 +4056,9 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
         hpsi (:) = (0.0D0, 0.0D0)  
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-        psic_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
@@ -3876,12 +4090,19 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
           IF (nspin == 4) THEN !FZ: added for spinors
             temp_psic_nc1 = psic_nc_temp (ir, 1)
             temp_psic_nc2 = psic_nc_temp (ir, 2)
-            psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) + vxcr_2 (ir, 4))  &  !FZ: added for spinors
-                        + temp_psic_nc2 * ( (vxcr_2 (ir, 2) ) - (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
-            psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) - vxcr_2 (ir, 4))  &  !FZ: added for spinors
-                        + temp_psic_nc1 * ( (vxcr_2 (ir, 2)) + (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
+
+            ! ZL: vxc terms are not needed here
+            !psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) + vxcr_2 (ir, 4))  &  !FZ: added for spinors
+            !            + temp_psic_nc2 * ( (vxcr_2 (ir, 2) ) - (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
+            !psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) - vxcr_2 (ir, 4))  &  !FZ: added for spinors
+            !            + temp_psic_nc1 * ( (vxcr_2 (ir, 2)) + (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
+            psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1))
+            psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1))
+
           ELSE  !FZ: added for spinors
-            psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)) + vxcr_2 (ir, isk (ik)) - vxcr (ir, isk (ik)))
+            ! ZL: no vxc
+            !psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)) + vxcr_2 (ir, isk (ik)) - vxcr (ir, isk (ik)))
+            psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)))
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
@@ -3911,7 +4132,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
           ENDIF  !FZ: added for spinors
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
-        psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+        if (nspin == 4) psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
             DO isp = 1, nst !FZ: added for spinors
@@ -3925,7 +4146,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
         !   CALL vexx (npwx, npw, 1, psic, hpsi)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
-          psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
+          if (nspin == 4) psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
               DO isp = 1, nst !FZ: added for spinors
@@ -3963,8 +4184,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   DEALLOCATE (hpsi)
   DEALLOCATE (hpsinl) 
   DEALLOCATE (psinl)  
-  DEALLOCATE (h_diag) 
-  DEALLOCATE (s_diag) 
   IF (noffdiag .GT. 0) DEALLOCATE (psic2)
   CALL deallocate_bec_type ( becp )   
   DEALLOCATE (hpsi_temp)
@@ -4393,6 +4612,11 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   ! ZL: use set_spin for spinors
   call set_spin(ns, nst, nsf, nspin)
 
+  ! FZ: npool is currently disabled since it may have some issues
+  if ( npool .gt. 1 ) then
+    call errore('write_vkbg', 'npool is not used for VKB calculations, please do not set npool when doing VKB calculation', npool)
+  endif
+
   iks = global_kpoint_index (nkstot, 1)
   ike = iks + nks - 1 
 
@@ -4525,6 +4749,9 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   ngk_g = ngk_g / nbgrp
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
   CALL mp_max ( npw_g, intra_pool_comm )
+  !XX
+  CALL mp_max( npw_g, inter_pool_comm )
+  !XX
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
   CALL cryst_to_cart (nkstot, xk, at, -1)
@@ -4593,6 +4820,9 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
       ENDDO
     ENDIF
     CALL mp_sum ( itmp, intra_bgrp_comm )
+    !XX
+    CALL mp_sum ( itmp, inter_pool_comm )
+    !XX
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
@@ -4633,15 +4863,16 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     ALLOCATE ( ipmask ( nproc ) )
     ipmask = 0
     ipsour = ionode_id
-    IF ( npool .GT. 1 ) THEN
-      IF ( ( ik .GE. iks ) .AND. ( ik .LE. ike ) ) THEN
-        IF ( me_pool .EQ. root_pool ) ipmask ( mpime + 1 ) = 1
-      ENDIF
-      CALL mp_sum ( ipmask, world_comm )
-      DO j = 1, nproc
-        IF ( ipmask ( j ) .EQ. 1 ) ipsour = j - 1
-      ENDDO
-    ENDIF
+    !FZ: npool is not used in VKB, since it may have induce some error
+    !IF ( npool .GT. 1 ) THEN
+    !  IF ( ( ik .GE. iks ) .AND. ( ik .LE. ike ) ) THEN
+    !    IF ( me_pool .EQ. root_pool ) ipmask ( mpime + 1 ) = 1
+    !  ENDIF
+    !  CALL mp_sum ( ipmask, world_comm )
+    !  DO j = 1, nproc
+    !    IF ( ipmask ( j ) .EQ. 1 ) ipsour = j - 1
+    !  ENDDO
+    !ENDIF
     DEALLOCATE ( ipmask )
 
     igwx = 0
@@ -4663,19 +4894,20 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     DO ikb = 1, nkb
 
       vkb_g = ( 0.0D0, 0.0D0 )
-      IF ( npool .GT. 1 ) THEN
-        IF ( ( ik .GE. iks ) .AND. ( ik .LE. ike ) ) THEN
-          CALL mergewf ( vkb ( :, ikb ), vkb_g, local_pw, igwf_l2g, &
-            me_pool, nproc_pool, root_pool, intra_pool_comm )
-        ENDIF
-        IF ( ipsour .NE. ionode_id ) THEN
-          CALL mp_get ( vkb_g, vkb_g, mpime, ionode_id, ipsour, ikb, &
-            world_comm )
-        ENDIF
-      ELSE
-        CALL mergewf ( vkb ( :, ikb ), vkb_g, local_pw, igwf_l2g, &
-          mpime, nproc, ionode_id, world_comm )
-      ENDIF
+      !FZ: npool is not used in VKB, since it may have induce some error
+      !IF ( npool .GT. 1 ) THEN
+      !  IF ( ( ik .GE. iks ) .AND. ( ik .LE. ike ) ) THEN
+      !    CALL mergewf ( vkb ( :, ikb ), vkb_g, local_pw, igwf_l2g, &
+      !      me_pool, nproc_pool, root_pool, intra_pool_comm )
+      !  ENDIF
+      !  IF ( ipsour .NE. ionode_id ) THEN
+      !    CALL mp_get ( vkb_g, vkb_g, mpime, ionode_id, ipsour, ikb, &
+      !      world_comm )
+      !  ENDIF
+      !ELSE
+      CALL mergewf ( vkb ( :, ikb ), vkb_g, local_pw, igwf_l2g, &
+        mpime, nproc, ionode_id, world_comm )
+      !ENDIF
 
       IF ( ionode ) THEN
         WRITE ( unit ) nrecord
@@ -4721,7 +4953,7 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
   USE kinds, ONLY : DP
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
   USE lsda_mod, ONLY : nspin, isk, current_spin, lsda
-  USE ldaU, ONLY : lda_plus_u, U_projection, wfcU, offsetU, Hubbard_l, nwfcU, Hubbard_lmax, is_hubbard
+  USE ldaU, ONLY : lda_plus_u, Hubbard_projectors, wfcU, offsetU, Hubbard_l, nwfcU, Hubbard_lmax, is_hubbard
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
@@ -4820,11 +5052,11 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
     ENDIF
     IF ( lsda ) current_spin = isk(ikk)
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
-    IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
+    IF ( lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) THEN
       CALL get_buffer ( wfcU, nwordwfcU, iunhub, ikk )
     ENDIF
 
-    IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
+    IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
       IF (noncolin) THEN
         CALL vhpsi_nc( npwx, npw, nbnd, evc, hpsi )
       ELSE

@@ -26,8 +26,8 @@
    SUBROUTINE runcp_uspp_x &
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
       !
-      !  This subroutine performs a Car-Parrinello or Steepest-Descent step
-      !  on the electronic variables, computing forces on electrons
+      !! This subroutine performs a Car-Parrinello or Steepest-Descent step
+      !! on the electronic variables, computing forces on electrons.
       ! 
       !  on input:
       !  c0_bgrp  wave functions at time t
@@ -46,7 +46,6 @@
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde, many_fft
-      use pseudo_base,         only : vkb_d
       use uspp,                only : deeq, vkb
       use gvect,               only : gstart
       use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp , nspin, nupdwn_bgrp, iupdwn_bgrp
@@ -276,8 +275,12 @@
            ELSE
 
 #if defined (__CUDA)
-              CALL dforce( i, bec_bgrp, vkb_d, c0_d, c2, c3, rhos_d, &
+              !$acc data present(vkb)
+              !$acc host_data use_device(vkb)
+              CALL dforce( i, bec_bgrp, vkb, c0_d, c2, c3, rhos_d, &
                            SIZE(rhos_d,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+              !$acc end host_data
+              !$acc end data
 #else
               CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, &
                            SIZE(rhos,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
@@ -367,9 +370,9 @@
        ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, &
          restart )
   !
-!  same as runcp, except that electrons are paired forcedly
-!  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
-!  unpaired is assumed to exist, to be unique, and located in highest index band
+  !! Same as \(\texttt{runcp_uspp_x}\), except that electrons are paired forcedly
+  !! i.e. this handles a state dependent Hamiltonian for the paired and unpaired electrons.
+  !! Unpaired is assumed to exist, to be unique, and located in highest index band.
 
       USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
@@ -385,9 +388,9 @@
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
       USE mp_global, ONLY: intra_bgrp_comm 
-!#@@@
+! # @@@
       USE ldaU_cp
-!#@@@
+! # @@@
   !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: nfi

@@ -19,7 +19,7 @@ subroutine ld1_readin( )
   USE io_global,  ONLY : ionode, ionode_id, qestdin, stdout
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
-  USE open_close_input_file,  ONLY : open_input_file, close_input_file
+  USE open_close_input_file,  ONLY : open_input_file
   use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
                          el, nn, ll, jj, oc, isw, nwf,rcut, rcutus, &
                          enls, nns, jjs, ocs, isws, nwfs, &
@@ -221,8 +221,11 @@ subroutine ld1_readin( )
   use_paw_as_gipaw = .false. !EMINE
   relpert = .false.
 
-  ! check if reading from file, dump stdin to file otherwise
-  ! (when generating a pseudopotential, input data file is needed)
+  ! check if reading from file, dump stdin to file otherwise;
+  ! open input data file as unit "qestdin". 
+  ! The information contained in the input data file is needed if
+  ! a pseudopotential is generated and written; the input data file
+  ! is kept open and it is closed in ld1_writeout at the end of run
 
   if (ionode) ios = open_input_file( )
   call mp_bcast(ios, ionode_id, world_comm)
@@ -358,10 +361,6 @@ subroutine ld1_readin( )
   which_augfun = 'DEFAULT'
   if (iswitch == 1) then
      !
-     !    no more data needed for AE calculations
-     !    (input unit can be safely closed)
-     !
-     ios = close_input_file ( )
      frozen_core=.false.
      return
      !     
@@ -608,9 +607,6 @@ subroutine ld1_readin( )
   !
   if (iswitch ==2.or.iswitch==4) then
      !
-     ! input unit can be safely closed (and temporary file deleted)
-     !
-     ios = close_input_file ( )
      lpaw=.false.
      !
      if (file_pseudo == ' ') &

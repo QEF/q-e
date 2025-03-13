@@ -1,0 +1,2 @@
+If you add a new file here, you need to refresh file ../aclocal.m4.
+Got to the parent directoryinstall/ (cd ..) then run "aclocal"

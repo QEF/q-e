@@ -7,33 +7,25 @@
 !
 !
 !------------------------------------------------
-SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
+SUBROUTINE addnlcc_zstar_eu_us( drhop )
 !----------===================-------------------
 
   USE kinds, ONLY : DP
-  USE funct, only : dft_is_nonlocc !, dft_is_gradient
-  USE xc_lib, only : xclib_dft_is
-  USE scf, only : rho, rho_core
+  USE mp_pools, ONLY : my_pool_id
   USE cell_base, ONLY : omega
-  USE gvect, ONLY : ngm, g
   USE fft_base, ONLY : dfftp
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
+  USE noncollin_module, ONLY : nspin_lsda,  nspin_mag
   USE efield_mod, ONLY : zstareu0
   USE uspp,   ONLY : nlcc_any
-  USE modes,  ONLY : npert, nirr
-
-  USE mp_pools, ONLY : my_pool_id
-
-  USE qpoint, ONLY : xq
-  USE eqv,     ONLY : dmuxc
-  USE gc_lr,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE modes,  ONLY : npert, nirr, u
+  USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
 
   IMPLICIT NONE
 
-  COMPLEX(DP) :: drhoscf (dfftp%nnr,nspin_mag,3)
+  COMPLEX(DP) :: drhop (dfftp%nnr,nspin_mag,3)
 
 
-  INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
+  INTEGER :: nrtot, ipert, is, irr, mode
   INTEGER :: imode0, npe, ipol
 
   REAL(DP) :: fac
@@ -58,31 +50,9 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            mode = imode0 + ipert
 
            dvaux = (0.0_dp,0.0_dp)
-           CALL addcore (mode, drhoc)
-
-           rho%of_r(:,1) = rho%of_r(:,1) + rho_core
-
-           DO is = 1, nspin_mag
-              DO is1 = 1, nspin_mag
-                 DO ir = 1, dfftp%nnr
-                    dvaux (ir, is) = dvaux (ir, is) +     &
-                         dmuxc (ir, is, is1) *            &
-                         drhoscf (ir, is1, ipol)
-                 ENDDO
-              ENDDO
-           END DO
+           CALL addcore(u(1, mode), drhoc)
            !
-           ! add gradient correction to xc, NB: if nlcc is true we need to add here
-           ! its contribution. grho contains already the core charge
-           !
-           IF ( xclib_dft_is('gradient') ) CALL dgradcorr( dfftp, rho%of_r, grho, dvxc_rr, &
-                                   dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1,1,ipol), &
-                                   nspin_mag, nspin_gga, g, dvaux )
-           !
-           IF (dft_is_nonlocc()) CALL dnonloccorr( rho%of_r, drhoscf(1, 1, ipol), &
-                                                  xq, dvaux )
-           !
-           rho%of_r(:,1) = rho%of_r(:,1) - rho_core
+           CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipol))
            !
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &

@@ -6,28 +6,30 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 module local_pseudo
+  !! Contains variables for ionic pseudocharges, pseudopotentials and
+  !! derivatives.
   use kinds, only: DP
   implicit none
   save
   !
-  !    rhops = ionic pseudocharges (for Ewald term)
-  !    vps   = local pseudopotential in G space for each species
+  real(DP), allocatable :: rhops(:,:)
+  !! ionic pseudocharges (for Ewald term)
+  real(DP), allocatable :: vps(:,:)
+  !! local pseudopotential in G space for each species
   !
-  real(DP), allocatable:: rhops(:,:), vps(:,:)
-  !
-  !    drhops = derivative of rhops respect to G^2
-  !    dvps   = derivative of vps respect to G^2
-  !
-  real(DP),allocatable:: dvps(:,:), drhops(:,:)
-  !
-  !    vps0  = correction factors needed to align V(0) to the "traditional"
-  !            value used by other plane-wave codes - one per species
+  real(DP), allocatable :: dvps(:,:)
+  !! derivative of vps respect to \(G^2\)
+  real(DP), allocatable :: drhops(:,:)
+  !! derivative of rhops respect to \(G^2\)
   !
   real(DP),allocatable:: vps0(:)
+  !! correction factors needed to align \(V(0)\) to the "traditional"
+  !! value used by other plane-wave codes - one per species
   !
 contains
   !
   subroutine allocate_local_pseudo( ng, nsp )
+      !! Allocate pseudocharges and pseudopotential and derivatives.
       integer, intent(in) :: ng, nsp
       call deallocate_local_pseudo()
       ALLOCATE( rhops( ng, nsp ) )
@@ -38,6 +40,7 @@ contains
   end subroutine
   !
   subroutine deallocate_local_pseudo
+      !! Dellocate pseudocharges and pseudopotential and derivatives.
       IF( ALLOCATED( vps0 ) ) DEALLOCATE( vps0 )
       IF( ALLOCATED( dvps ) ) DEALLOCATE( dvps )
       IF( ALLOCATED( drhops ) ) DEALLOCATE( drhops )
@@ -61,20 +64,25 @@ contains
 end module qgb_mod
 
 
-MODULE metagga_cp  !metagga
+MODULE metagga_cp
+  !! The variables needed for meta-GGA.
   USE kinds, ONLY: DP
   implicit none
-  !the variables needed for meta-GGA
-  REAL(DP), ALLOCATABLE :: &
-       kedtaus(:,:), &! KineticEnergyDensity in real space,smooth grid
-       kedtaur(:,:), &! real space, density grid
-       crosstaus(:,:,:), &!used by stress tensor,in smooth grid
-       dkedtaus(:,:,:,:)  !derivative of kedtau wrt h on smooth grid
-  COMPLEX(DP) , ALLOCATABLE :: &
-       kedtaug(:,:),    & !KineticEnergyDensity in G space
-       gradwfc(:,:)    !used by stress tensor
+  REAL(DP), ALLOCATABLE :: kedtaus(:,:)
+  !! KineticEnergyDensity in real space, smooth grid
+  REAL(DP), ALLOCATABLE :: kedtaur(:,:)
+  !! Real space, density grid
+  REAL(DP), ALLOCATABLE :: crosstaus(:,:,:)
+  !! Used by stress tensor, in smooth grid
+  REAL(DP), ALLOCATABLE :: dkedtaus(:,:,:,:)
+  !! Derivative of kedtau wrt h on smooth grid
+  COMPLEX(DP), ALLOCATABLE :: kedtaug(:,:)
+  !! KineticEnergyDensity in G space
+  COMPLEX(DP), ALLOCATABLE :: gradwfc(:,:)    
+  !! Used by stress tensor
 contains
   subroutine deallocate_metagga
+      !! Deallocate meta-GGA related variables.
       IF( ALLOCATED(crosstaus))DEALLOCATE(crosstaus)
       IF( ALLOCATED(dkedtaus)) DEALLOCATE(dkedtaus)
       IF( ALLOCATED(gradwfc))  DEALLOCATE(gradwfc)
@@ -82,6 +90,7 @@ contains
 END MODULE metagga_cp  !end metagga
 
 MODULE dener
+  !! Derivatives of the various energy terms.
   USE kinds, ONLY: DP
   IMPLICIT NONE
   SAVE
@@ -106,7 +115,7 @@ END MODULE dener
 
 
 MODULE stress_param
-
+   !! Stress parameters \(\text{alpha}\), \(\text{beta}\) and \(\text{delta}\).
    USE kinds, ONLY : DP
 
    IMPLICIT NONE
@@ -131,7 +140,7 @@ END MODULE
 
 
 MODULE core
-   !
+   !! Core charge arrays and allocations.
    USE kinds
    USE uspp, ONLY : nlcc_any
    ! 
@@ -149,7 +158,8 @@ MODULE core
    !
 CONTAINS
    !
-   SUBROUTINE allocate_core( nrxx, ngm, ngb, nsp ) 
+   SUBROUTINE allocate_core( nrxx, ngm, ngb, nsp )
+     !! Allocate core charge and derivative.
      INTEGER, INTENT(IN) :: nrxx, ngm, ngb, nsp
      IF ( nlcc_any ) THEN    
         !
@@ -169,6 +179,7 @@ CONTAINS
    END SUBROUTINE allocate_core
    !
    SUBROUTINE deallocate_core()
+      !! Deallocate Core charge and derivative.
       IF( ALLOCATED( rhocb  ) ) DEALLOCATE( rhocb )
       IF( ALLOCATED( rhoc   ) ) DEALLOCATE( rhoc  )
       IF( ALLOCATED( rhocg  ) ) DEALLOCATE( rhocg  )

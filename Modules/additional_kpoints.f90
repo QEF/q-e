@@ -44,6 +44,7 @@ MODULE additional_kpoints
      INTEGER :: k1_old,  k2_old,  k3_old
      INTEGER :: nqtot, i,j,k, iq, jq
      REAL(DP) :: xq(3), rq(3)
+     REAL(DP) :: almost_zero = 1.d-8
      LOGICAL, EXTERNAL  :: matches
      !
 !     IF(.not.allocated(xk) .or. .not.allocated(wk))&
@@ -61,17 +62,16 @@ MODULE additional_kpoints
      ALLOCATE(wk_old(nkstot_old))
      xk_old = xk(1:3, 1:nkstot)
      wk_old = wk(1:nkstot)
-!     DEALLOCATE(xk,wk)
      nkstot = 0
      !
      ! Simple case: EXX not used or used with self-exchange only: 
      IF( nqx1<=1 .and. nqx2<=1 .and. nqx3<=1 ) THEN
        nkstot = nkstot_old + nkstot_add
-       IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
+       IF(nkstot>npk) CALL errore("add_kpoint", "Maximum number of k-points exceeded: increase npk in pwcom", 1)
        xk(:,1:nkstot_old) = xk_old
        xk(:,nkstot_old+1:nkstot_old+nkstot_add) = xk_add
        wk(1:nkstot_old) = wk_old
-       wk(nkstot_old+1:nkstot_old+nkstot_add) = 0._dp
+       wk(nkstot_old+1:nkstot_old+nkstot_add) = almost_zero
        nqtot=1
      ELSE
      ! Difficult case: EXX with a finite grid of q-points. Ideally, we would want to use
@@ -79,14 +79,14 @@ MODULE additional_kpoints
      ! Furthermore, the q-point grid is obtained by opening the k-points one, so this would
      ! be a dog wagging its own tails
        nqtot = nqx1*nqx2*nqx3
-       nkstot = nkstot_old + nkstot_add*nqtot
-       IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
+       nkstot = nkstot_old + nkstot_add *nqtot
+       IF(nkstot>npk) CALL errore("add_kpoint", "Maximum number of k-points exceeded: increase npk in pwcom", 1)
        xk(:,1:nkstot_old) = xk_old
        wk(1:nkstot_old) = wk_old
        
        rq = (/nqx1,nqx2,nqx3/)
        rq = 1._dp / rq
-       iq = nqtot
+       iq = nkstot_old
        ! 
        DO  i = 0,nqx1-1
        DO  j = 0,nqx2-1
@@ -94,14 +94,17 @@ MODULE additional_kpoints
          xq = rq*(/i,j,k/)
          CALL cryst_to_cart(1,xq,bg,+1)
          DO jq = 1, nkstot_add
-           iq = iq + 1
-           xk(:,iq) = xk_add(:,jq) + xq
+            iq = iq + 1
+           xk(:,iq) = xk_add(:,jq)  + xq
+           wk(iq)=almost_zero
          ENDDO
        ENDDO
        ENDDO
        ENDDO
      ENDIF
-   
+  
+     ! renormalize 
+     wk(1:nkstot) = wk(1:nkstot)/SUM(wk(1:nkstot))
      
      WRITE(stdout,"(5x,a)")    " --- Additional k-points: --- "
      WRITE(stdout,"(5x,a,i6,a)")    "A request of ",nkstot_add," k-points with zero weight added to list"

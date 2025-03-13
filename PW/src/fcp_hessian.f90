@@ -18,8 +18,6 @@ SUBROUTINE fcp_hessian(hess)
   USE klist, ONLY : nkstot, wk, degauss, ngauss
   USE wvfct, ONLY : nbnd, et
   !
-  USE wvfct_gpum, ONLY : using_et
-  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: hess
@@ -28,8 +26,6 @@ SUBROUTINE fcp_hessian(hess)
   INTEGER :: ibnd
   !
   REAL(DP), EXTERNAL :: w0gauss
-  !
-  CALL using_et(0)
   !
   hess = 0.0_DP
   !

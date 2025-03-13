@@ -40,6 +40,9 @@ phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 # Q2R
 qdir=`grep " q= " $fname | awk '{print $2; print $3; print $4}'`
 
+# MATDYN
+born_diff=`grep "Norm of the difference between" $fname | awk '{print $NF}'`
+
 # EPW
 q1=`grep "   q(" $fname | awk '{print $6; print $7; print $8}'`
 dos1=`grep "DOS =" $fname | awk '{print $3}'`
@@ -70,10 +73,16 @@ density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
 indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'`
 mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
-mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $2}'`
-mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $3}'`
+mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $3}'`
+mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $4}'`
 ratmax=`grep "Maximum Im/Re Ratio =" $fname | awk '{print $9}'`
 hall=`sed -n -e "/     Hall factor/ {n;p}" $fname | awk '{print $2}'`
+eplrn=`grep 'Formation Energy (eV):' $fname | awk '{print $4}'`
+specfun=`grep "A(k,w) = " $fname | awk '{print $10}'`
+temperature=`grep Temperature $fname | awk '{print substr($2, 1, length($2)-1)}'`
+
+# NSCF2SUPERCOND
+outband=`grep -A 1000 'Program BANDS' $fname | grep -E -m2 '^\s*-?[0-9]+\.[0-9]+E[+-][0-9]+\s+-?[0-9]+\.[0-9]+E[+-][0-9]+\s+-?[0-9]+\.[0-9]+E[+-][0-9]+\s+-?[0-9]+\.[0-9]+E[+-][0-9]+\s*$' | awk '{print $1; print $2; print $3; print $4}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -294,4 +303,24 @@ fi
 if test "$ratmax" != ""; then
         echo ratmax
         for x in $ratmax; do echo $x; done
+fi
+
+if test "$eplrn" != ""; then
+        echo eplrn
+        for x in $eplrn; do echo $x; done
+fi
+
+if test "$specfun" != ""; then
+        echo specfun
+        for x in $specfun; do echo $x; done
+fi
+
+if test "$temperature" != ""; then
+        echo temperature
+        for x in $temperature; do echo $x; done
+fi
+
+if test "$outband" != ""; then
+        echo outband
+        for x in $outband; do echo $x; done
 fi

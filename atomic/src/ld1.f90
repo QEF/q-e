@@ -48,7 +48,6 @@ program ld1
      !   pseudopotential test
      !
      call run_test ( )
-     call ld1_writeout ( )
      !
   elseif (iswitch.eq.3) then
      !
@@ -58,21 +57,21 @@ program ld1
      call gener_pseudo ( )
      !if(.not. lgipaw_reconstruction) 
      call run_test ( )
-     call ld1_writeout ( )
      !
   elseif (iswitch.eq.4) then
      !
      ! LDA-1/2 correction to the input pseudopotential 
      !
      call run_lda_half ( )
-     call ld1_writeout ( )
      !
   else
      call errore('ld1','iswitch not implemented',1)
   endif
+  !
+  call ld1_writeout ( )
+  !
   call deallocate_radial_grid( grid )
-
   call mp_global_end()
-
+  !
 end program ld1
 !

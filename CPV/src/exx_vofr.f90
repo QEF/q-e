@@ -150,7 +150,7 @@ SUBROUTINE getvofr_sphere( np_in_sp_me, np_in_sp, &
       !
     END IF
     !
-    !!!!! This part is original !!!!!!!!!!
+    !***** This part is original ********
     CALL start_clock('getvofr_geterho')
     CALL geterho_sphere(np_in_sp_me, np_in_sp,rho, v_in_sp)
     CALL stop_clock('getvofr_geterho')

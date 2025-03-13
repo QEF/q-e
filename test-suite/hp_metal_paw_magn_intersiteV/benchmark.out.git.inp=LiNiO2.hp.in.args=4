@@ -4,9 +4,9 @@
                            Hubbard U parameters:
 
        site n.  type  label  spin  new_type  new_label  Hubbard U (eV)
-         1        1    Ni      0      1         Ni         5.8975
-         2        2    O       0      2         O         20.1182
-         3        2    O       0      2         O         20.1182
+         1        1    Ni      0      1         Ni      3d   5.8975
+         2        2    O       0      2         O       2p  20.1182
+         3        2    O       0      2         O       2p  20.1182
 
   =-------------------------------------------------------------------=
 

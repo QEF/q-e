@@ -1,0 +1,31 @@
+ &control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
+    outdir='./'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =25.0,
+    ecutrho =100.0,
+ /
+ &electrons
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-12
+ /
+ATOMIC_SPECIES
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-rrkjus.UPF
+ATOMIC_POSITIONS (alat)
+H        0.080728893   0.080728893   0.080728893
+H       -0.080728893  -0.080728893   0.080728893
+H        0.080728893  -0.080728893  -0.080728893
+H       -0.080728893   0.080728893  -0.080728893
+C        0.000000000   0.000000000   0.000000000
+K_POINTS
+1
+0.0 0.0 0.0 1.0

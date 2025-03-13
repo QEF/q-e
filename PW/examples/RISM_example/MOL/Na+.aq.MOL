@@ -1,0 +1,40 @@
+<MOL version="1.0.0">
+  <!--
+    Copyright (C) 2015 Satomichi Nishihara [nisihara225@gmail.com]
+  -->
+  <MOL_INFO>
+    Aqueous sodium ion.
+    (D.E.Smith et al., J. Chem. Phys. 1994, 100, 3757)
+  </MOL_INFO>
+  <MOL_HEADER author="S.Nishihara"
+              date="13Apr2015"
+              comment="Na+(aq)"
+              formula="Na+"
+              has_charge="T"
+              has_lj="T"
+              number_of_atoms="1"/>
+  <MOL_MASS type="real" size="1" columns="1" UNITS="g/mol">
+    22.98977
+  </MOL_MASS>
+  <MOL_DENSITY type="real" size="1" columns="1" UNITS="mol/L">
+    1.0
+  </MOL_DENSITY>
+  <MOL_ELEMENT type="character" size="1" columns="1" len="2">
+Na
+  </MOL_ELEMENT>
+  <MOL_XYZ type="real" size="3" columns="3" UNITS="angstrom">
+     0.00000  0.00000  0.00000
+  </MOL_XYZ>
+  <MOL_CHARGE type="real" size="1" columns="1">
+    +1.0000
+  </MOL_CHARGE>
+  <MOL_LJ>
+    <MOL_EPSILON type="real" size="1" columns="1" UNITS="kcal/mol">
+      0.1301
+    </MOL_EPSILON>
+    <MOL_SIGMA type="real" size="1" columns="1" UNITS="angstrom">
+      2.3500
+    </MOL_SIGMA>
+  </MOL_LJ>
+</MOL>
+

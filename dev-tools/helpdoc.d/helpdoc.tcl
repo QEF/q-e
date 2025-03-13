@@ -218,7 +218,7 @@ proc ::helpdoc::print_txt {tree node action} {
     set attributes [getFromTree $tree $node attributes]
     set content    [getFromTree $tree $node text]
 
-    
+    set content [formatString [trimEmpty [txt_atTags [txt_ref_link $content]]]]
 
     txt_tag_${action} $tree $node $tag $attributes $content [expr $depth - 1]
 

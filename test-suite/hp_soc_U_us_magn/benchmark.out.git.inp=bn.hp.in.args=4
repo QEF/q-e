@@ -1,0 +1,470 @@
+
+     Program HP v.7.3 starts on  6Jan2024 at 20: 2:38 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       8
+     57799 MiB available memory on the printing compute node when the environment starts
+ 
+
+     =---------------------------------------------------------------------------=
+
+           Calculation of Hubbard parameters using the HP code based on DFPT      
+
+               Please cite the following papers when using this program:          
+
+                 - HP code : Comput. Phys. Commun. 279, 108455 (2022).            
+
+                                                                                  
+
+           For a nonrelativistic, collinear calculation:                          
+
+                 - Theory  : I. Timrov et al, Phys. Rev. B 98,  085127 (2018) and 
+
+                             I. Timrov et al, Phys. Rev. B 103, 045141 (2021).    
+
+                                                                                  
+
+           For a fully-relativistic, and/or noncollinear calculation:             
+
+                 - Theory  : L. Binci et al., Phys. Rev. B 108, 115157 (2023) and 
+
+                             I. Timrov et al, Phys. Rev. B 98,  085127 (2018) 
+
+     =-----------------------------------------------------------------------------=
+
+     Reading xml data from directory:
+
+     ./bn.save/
+     file B.rel-pz-n-rrkjus_psl.1.0.0.UPF: wavefunction(s)  2S renormalized
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         547     211     73                43903    11075    2085
+ 
+     Using Slab Decomposition
+ 
+
+     Check: negative core charge=   -0.000003
+
+     negative rho (up, down):  1.850E-03 0.000E+00
+
+     HUBBARD ENERGY =    0.0893  (Ry)
+     Reading collected, re-writing distributed wavefunctions
+ 
+
+     bravais-lattice index     =             4
+     lattice parameter (alat)  =        4.7419 (a.u.)
+     unit-cell volume          =      397.0601 (a.u.)^3
+     number of atoms/cell      =             2
+     number of atomic types    =             2
+     kinetic-energy cut-off    =         35.00 (Ry)
+     charge density cut-off    =        350.00 (Ry)
+     conv. thresh. for NSCF    =       1.0E-11
+     conv. thresh. for chi     =       1.0E-07
+     Input Hubbard parameters (in eV):
+       U ( 1)                     =   2.00000E+00
+
+     celldm(1) =  4.74190  celldm(2) =  0.00000  celldm(3) =  4.30000
+     celldm(4) =  0.00000  celldm(5) =  0.00000  celldm(6) =  0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  1.0000  0.0000  0.0000 )  
+               a(2) = ( -0.5000  0.8660  0.0000 )  
+               a(3) = (  0.0000  0.0000  4.3000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.0000  0.5774  0.0000 )  
+               b(2) = (  0.0000  1.1547  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.2326 )  
+
+     Atoms inside the unit cell (Cartesian axes):
+     site n.  atom      mass           positions (alat units)
+        1   N         14.0067   tau(  1) = (  0.15434 -0.25000  0.00000  )
+        2   B         10.8100   tau(  2) = ( -0.14434  0.25000  0.00000  )
+
+     Atom which will be perturbed:
+
+        1   N         14.0067   tau( 1) = (  0.15434 -0.25000  0.00000  )
+ 
+     =====================================================================
+
+                          PERTURBED ATOM #    1
+
+     site n.  atom      mass           positions (alat units)
+        1   N         14.0067   tau( 1) = (  0.15434 -0.25000  0.00000  )
+ 
+     =====================================================================
+
+     The perturbed atom has a type which is unique!
+
+
+     The grid of q-points ( 2, 1, 1)  (  2 q-points ) :
+       N       xq(1)         xq(2)         xq(3)       wq
+       1   0.000000000   0.000000000   0.000000000   0.500000000
+       2  -0.500000000  -0.288675135   0.000000000   0.500000000
+
+
+     =-------------------------------------------------------------=
+
+     Calculation for q #   1 = (   0.0000000   0.0000000   0.0000000 )
+
+     =-------------------------------------------------------------=
+
+     Performing NSCF calculation at all points k...
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         547     211     73                43903    11075    2085
+ 
+     Using Slab Decomposition
+ 
+
+
+     bravais-lattice index     =            4
+     lattice parameter (alat)  =       4.7419  a.u.
+     unit-cell volume          =     397.0601 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     number of electrons       =         8.00
+     number of Kohn-Sham states=           16
+     kinetic-energy cutoff     =      35.0000  Ry
+     charge density cutoff     =     350.0000  Ry
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Noncollinear calculation with spin-orbit
+
+     Hubbard projectors: ortho-atomic
+     Hubbard parameters of DFT+U (Dudarev formulation) in eV:
+     U(N-2p) =  2.0000
+
+     Internal variables: lda_plus_u = T, lda_plus_u_kind = 0
+
+     celldm(1)=   4.741900  celldm(2)=   0.000000  celldm(3)=   4.300000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (  -0.500000   0.866025   0.000000 )  
+               a(3) = (   0.000000   0.000000   4.300000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.577350  0.000000 )  
+               b(2) = (  0.000000  1.154701  0.000000 )  
+               b(3) = (  0.000000  0.000000  0.232558 )  
+
+
+     PseudoPot. # 1 for N  read from file:
+     /home/lbinci/Quantum-Espresso/debug/developer-q-e/test-suite/..//pseudo/N.rel-pz-n-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: f3cfb2df669dd4dd70d9c7721d537e2e
+     Pseudo is Ultrasoft + core correction, Zval =  5.0
+     Generated using 'atomic' code by A. Dal Corso  v.7.2
+     Using radial grid of 1085 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   1
+                l(6) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for B  read from file:
+     /home/lbinci/Quantum-Espresso/debug/developer-q-e/test-suite/..//pseudo/B.rel-pz-n-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: d39aee9d98565c3fdc7020719cfebfd4
+     Pseudo is Ultrasoft + core correction, Zval =  3.0
+     Generated using 'atomic' code by A. Dal Corso  v.7.2
+     Using radial grid of 1059 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   1
+                l(6) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+     N                 5.00    14.00674     N ( 1.00)
+     B                 3.00    10.81000     B ( 1.00)
+
+      2 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1        N      tau(   1) = (   0.1543376  -0.2500000   0.0000000  )
+         2        B      tau(   2) = (  -0.1443376   0.2500000   0.0000000  )
+
+     number of k points=    18  Gaussian smearing, width (Ry)=  0.0100
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1111111
+        k(    2) = (   0.0000000   0.0000000   0.0000000), wk =   0.0000000
+        k(    3) = (   0.0000000   0.3849002   0.0000000), wk =   0.1111111
+        k(    4) = (   0.0000000  -0.3849002   0.0000000), wk =   0.0000000
+        k(    5) = (   0.3333333   0.5773503   0.0000000), wk =   0.1111111
+        k(    6) = (  -0.3333333  -0.5773503   0.0000000), wk =   0.0000000
+        k(    7) = (   0.0000000  -0.3849002   0.0000000), wk =   0.1111111
+        k(    8) = (   0.0000000   0.3849002   0.0000000), wk =   0.0000000
+        k(    9) = (  -0.3333333   0.1924501   0.0000000), wk =   0.1111111
+        k(   10) = (   0.3333333  -0.1924501   0.0000000), wk =   0.0000000
+        k(   11) = (   0.3333333   0.1924501   0.0000000), wk =   0.1111111
+        k(   12) = (  -0.3333333  -0.1924501   0.0000000), wk =   0.0000000
+        k(   13) = (  -0.3333333  -0.1924501   0.0000000), wk =   0.1111111
+        k(   14) = (   0.3333333   0.1924501   0.0000000), wk =   0.0000000
+        k(   15) = (   0.3333333  -0.1924501   0.0000000), wk =   0.1111111
+        k(   16) = (  -0.3333333   0.1924501   0.0000000), wk =   0.0000000
+        k(   17) = (  -0.3333333   0.5773503   0.0000000), wk =   0.1111111
+        k(   18) = (   0.3333333  -0.5773503   0.0000000), wk =   0.0000000
+
+     Dense  grid:    43903 G-vectors     FFT dimensions: (  30,  30, 125)
+
+     Smooth grid:    11075 G-vectors     FFT dimensions: (  18,  18,  80)
+
+     Estimated max dynamical RAM per process >      46.91 MB
+
+     Estimated total dynamical RAM >     375.26 MB
+
+     Check: negative core charge=   -0.000003
+
+     The potential is recalculated from file :
+     ./HP/bn.save/charge-density
+
+
+     negative rho (up, down):  1.850E-03 0.000E+00
+
+     STARTING HUBBARD OCCUPATIONS:
+
+     ================= HUBBARD OCCUPATIONS ================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] (up, down, total) =   2.14903  2.14903  4.29805
+     eigenvalues:
+       0.682  0.682  0.727  0.727  0.740  0.740
+     eigenvectors (columns):
+      -0.000  0.067 -0.003  0.000 -0.004  0.000
+       0.005  0.000 -0.000  0.374 -0.000  0.637
+       0.000 -0.000  0.000 -0.447  0.000  0.546
+      -0.992 -0.000 -0.000  0.005 -0.000  0.005
+      -0.000  0.001  0.659  0.000  0.751  0.000
+       0.000 -0.005 -0.752  0.000  0.659  0.000
+     occupations, | n_(i1, i2)^(sigma1, sigma2) |:
+       0.682  0.000  0.000  0.000  0.000  0.000
+       0.000  0.735  0.006  0.000  0.000  0.000
+       0.000  0.006  0.733  0.000  0.000  0.000
+       0.000  0.000  0.000  0.682  0.000  0.000
+       0.000  0.000  0.000  0.000  0.735  0.006
+       0.000  0.000  0.000  0.000  0.006  0.733
+     Atomic magnetic moment mx, my, mz =    -0.000000    0.000000    0.000000
+
+     Number of occupied Hubbard levels =    4.2981
+
+     Atomic wfc used for Hubbard projectors are orthogonalized
+
+     Starting wfcs are   16 atomic wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  1.00E-11,  avg # of iterations = 20.0
+
+     total cpu time spent up to now is       -1.0 secs
+
+     End of band structure calculation
+
+          k = 0.0000 0.0000 0.0000 (  1425 PWs)   bands (ev):
+
+   -19.8589 -19.8589  -9.2995  -9.2995  -8.5746  -8.5746  -2.0358  -2.0358
+     1.8814   1.8814   3.3025   3.3025   4.0723   4.0723   7.7750   7.7750
+
+          k = 0.0000 0.0000 0.0000 (  1425 PWs)   bands (ev):
+
+   -19.8589 -19.8589  -9.2995  -9.2995  -8.5746  -8.5746  -2.0358  -2.0358
+     1.8814   1.8814   3.3025   3.3025   4.0723   4.0723   7.7750   7.7750
+
+          k = 0.0000 0.3849 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5436 -18.5434 -10.6499 -10.6490  -5.9558  -5.9558  -3.3727  -3.3713
+     3.6572   3.6582   4.0868   4.0868   5.4304   5.4311   7.2772   7.2772
+
+          k = 0.0000-0.3849 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5436 -18.5434 -10.6499 -10.6490  -5.9558  -5.9558  -3.3727  -3.3713
+     3.6572   3.6582   4.0868   4.0868   5.4304   5.4311   7.2772   7.2772
+
+          k = 0.3333 0.5774 0.0000 (  1380 PWs)   bands (ev):
+
+   -17.2074 -17.2074 -10.4257 -10.4254  -8.6878  -8.6875  -4.3558  -4.3558
+     3.5383   3.5383   7.7690   7.7699   9.1584   9.1593   9.5459   9.5459
+
+          k =-0.3333-0.5774 0.0000 (  1380 PWs)   bands (ev):
+
+   -17.2074 -17.2074 -10.4257 -10.4254  -8.6878  -8.6875  -4.3558  -4.3558
+     3.5383   3.5383   7.7690   7.7699   9.1584   9.1593   9.5459   9.5459
+
+          k = 0.0000-0.3849 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5436 -18.5434 -10.6499 -10.6490  -5.9558  -5.9558  -3.3727  -3.3713
+     3.6572   3.6582   4.0868   4.0868   5.4304   5.4311   7.2772   7.2772
+
+          k = 0.0000 0.3849 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5436 -18.5434 -10.6499 -10.6490  -5.9558  -5.9558  -3.3727  -3.3713
+     3.6572   3.6582   4.0868   4.0868   5.4304   5.4311   7.2772   7.2772
+
+          k =-0.3333 0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5327 -18.5325 -10.6540 -10.6528  -5.9693  -5.9693  -3.2375  -3.2355
+     3.2709   3.2715   4.1319   4.1319   5.4363   5.4369   7.2839   7.2839
+
+          k = 0.3333-0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5327 -18.5325 -10.6540 -10.6528  -5.9693  -5.9693  -3.2375  -3.2355
+     3.2709   3.2715   4.1319   4.1319   5.4363   5.4369   7.2839   7.2839
+
+          k = 0.3333 0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -17.8286 -17.8279 -10.2552 -10.2493  -8.2448  -8.2387  -6.7194  -6.7194
+     5.0925   5.0930   6.0014   6.0014   7.0117   7.0118   8.5340   8.5348
+
+          k =-0.3333-0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -17.8286 -17.8279 -10.2552 -10.2493  -8.2448  -8.2387  -6.7194  -6.7194
+     5.0925   5.0930   6.0014   6.0014   7.0117   7.0118   8.5340   8.5348
+
+          k =-0.3333-0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -17.8286 -17.8279 -10.2552 -10.2493  -8.2448  -8.2387  -6.7194  -6.7194
+     5.0925   5.0930   6.0014   6.0014   7.0117   7.0118   8.5340   8.5348
+
+          k = 0.3333 0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -17.8286 -17.8279 -10.2552 -10.2493  -8.2448  -8.2387  -6.7194  -6.7194
+     5.0925   5.0930   6.0014   6.0014   7.0117   7.0118   8.5340   8.5348
+
+          k = 0.3333-0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5327 -18.5325 -10.6540 -10.6528  -5.9693  -5.9693  -3.2375  -3.2355
+     3.2709   3.2715   4.1319   4.1319   5.4363   5.4369   7.2839   7.2839
+
+          k =-0.3333 0.1925 0.0000 (  1394 PWs)   bands (ev):
+
+   -18.5327 -18.5325 -10.6540 -10.6528  -5.9693  -5.9693  -3.2375  -3.2355
+     3.2709   3.2715   4.1319   4.1319   5.4363   5.4369   7.2839   7.2839
+
+          k =-0.3333 0.5774 0.0000 (  1380 PWs)   bands (ev):
+
+   -17.2074 -17.2074 -10.4257 -10.4254  -8.6878  -8.6875  -4.3558  -4.3558
+     3.5383   3.5383   7.7690   7.7699   9.1584   9.1593   9.5459   9.5459
+
+          k = 0.3333-0.5774 0.0000 (  1380 PWs)   bands (ev):
+
+   -17.2074 -17.2074 -10.4257 -10.4254  -8.6878  -8.6875  -4.3558  -4.3558
+     3.5383   3.5383   7.7690   7.7699   9.1584   9.1593   9.5459   9.5459
+
+     the Fermi energy is    -1.1408 ev
+
+     Writing all to output data dir ./HP/bn.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
+     Done!
+
+                   WRITING LINEAR-RESPONSE SUMMARY:
+
+     Noncollinear calculation with spin-orbit
+
+
+     Number of symmetries in the small group of q, nsymq =  2
+
+     G cutoff =  199.3486  (  43903 G-vectors)     FFT grid: ( 30, 30,125)
+     G cutoff =   79.7394  (  11075 G-vectors)  smooth grid: ( 18, 18, 80)
+
+     Number of k (and k+q if q/=0) points =    18  Gaussian smearing, width (Ry) =  0.0100
+
+                       cart. coord. (in units 2pi/alat)
+        k (    1) = (   0.0000000   0.0000000   0.0000000), wk = 0.1111111
+        k (    2) = (   0.0000000   0.0000000   0.0000000), wk = 0.0000000
+        k (    3) = (   0.0000000   0.3849002   0.0000000), wk = 0.1111111
+        k (    4) = (   0.0000000  -0.3849002   0.0000000), wk = 0.0000000
+        k (    5) = (   0.3333333   0.5773503   0.0000000), wk = 0.1111111
+        k (    6) = (  -0.3333333  -0.5773503   0.0000000), wk = 0.0000000
+        k (    7) = (   0.0000000  -0.3849002   0.0000000), wk = 0.1111111
+        k (    8) = (   0.0000000   0.3849002   0.0000000), wk = 0.0000000
+        k (    9) = (  -0.3333333   0.1924501   0.0000000), wk = 0.1111111
+        k (   10) = (   0.3333333  -0.1924501   0.0000000), wk = 0.0000000
+        k (   11) = (   0.3333333   0.1924501   0.0000000), wk = 0.1111111
+        k (   12) = (  -0.3333333  -0.1924501   0.0000000), wk = 0.0000000
+        k (   13) = (  -0.3333333  -0.1924501   0.0000000), wk = 0.1111111
+        k (   14) = (   0.3333333   0.1924501   0.0000000), wk = 0.0000000
+        k (   15) = (   0.3333333  -0.1924501   0.0000000), wk = 0.1111111
+        k (   16) = (  -0.3333333   0.1924501   0.0000000), wk = 0.0000000
+        k (   17) = (  -0.3333333   0.5773503   0.0000000), wk = 0.1111111
+        k (   18) = (   0.3333333  -0.5773503   0.0000000), wk = 0.0000000
+
+                       cryst. coord.
+        k (    1) = (   0.0000000   0.0000000   0.0000000), wk = 0.1111111
+        k (    2) = (   0.0000000   0.0000000   0.0000000), wk = 0.0000000
+        k (    3) = (   0.0000000   0.3333333   0.0000000), wk = 0.1111111
+        k (    4) = (   0.0000000  -0.3333333   0.0000000), wk = 0.0000000
+        k (    5) = (   0.3333333   0.3333333   0.0000000), wk = 0.1111111
+        k (    6) = (  -0.3333333  -0.3333333   0.0000000), wk = 0.0000000
+        k (    7) = (   0.0000000  -0.3333333   0.0000000), wk = 0.1111111
+        k (    8) = (   0.0000000   0.3333333   0.0000000), wk = 0.0000000
+        k (    9) = (  -0.3333333   0.3333333   0.0000000), wk = 0.1111111
+        k (   10) = (   0.3333333  -0.3333333   0.0000000), wk = 0.0000000
+        k (   11) = (   0.3333333   0.0000000   0.0000000), wk = 0.1111111
+        k (   12) = (  -0.3333333   0.0000000   0.0000000), wk = 0.0000000
+        k (   13) = (  -0.3333333   0.0000000   0.0000000), wk = 0.1111111
+        k (   14) = (   0.3333333   0.0000000   0.0000000), wk = 0.0000000
+        k (   15) = (   0.3333333  -0.3333333   0.0000000), wk = 0.1111111
+        k (   16) = (  -0.3333333   0.3333333   0.0000000), wk = 0.0000000
+        k (   17) = (  -0.3333333   0.6666667   0.0000000), wk = 0.1111111
+        k (   18) = (   0.3333333  -0.6666667   0.0000000), wk = 0.0000000
+
+     Atomic wfc used for the projector on the Hubbard manifold are orthogonalized
+
+     Total time spent up to now is:
+     HP           :      1.84s CPU      1.96s WALL
+
+      =--------------------------------------------=
+                 SOLVE THE LINEAR SYSTEM
+      =--------------------------------------------=
+
+      atom #  1   q point #   1   iter #   1
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    -1.7141E+09    -2.6566E+03
+
+      WARNING: The Fermi energy shift too big!
+         DOS(E_Fermi) =    0.2018E-17
+         Fermi_shift  =   -0.1714E+10
+ 
+     HP           :      3.58s CPU      3.73s WALL
+
+ 
+   This run was terminated on:  20: 2:41   6Jan2024            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

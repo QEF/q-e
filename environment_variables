@@ -108,7 +108,7 @@ export OMP_NUM_THREADS=1
 LC_ALL=C
 export LC_ALL
 
-NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
+NETWORK_PSEUDO=https://pseudopotentials.quantum-espresso.org/upf_files/
 
 # wget or curl needed if some PP has to be downloaded from web site
 # script wizard will surely find a better way to find what is available

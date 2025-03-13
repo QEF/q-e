@@ -1,0 +1,21 @@
+KCW H2O KI hamiltonian
+&control
+  prefix='h2o'
+  outdir='./out'
+  kcw_iverbosity = 1
+  kcw_at_ks=.true.
+  homo_only = .false.
+  read_unitary_matrix = .false.
+  assume_isolated = 'mt' 
+  calculation = 'ham'
+  lrpa =.false.
+  mp1 = 1
+  mp2 = 1
+  mp3 = 1
+/
+&ham
+  do_bands = .false.
+  use_ws_distance = .false.
+  write_hr = .true.
+  l_alpha_corr = .true.
+/

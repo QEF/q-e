@@ -8,9 +8,9 @@
 !=----------------------------------------------------------------------------=!
    MODULE smallbox_grid_dim
 !=----------------------------------------------------------------------------=!
-
-     !  Dimensions of the 3D real and reciprocal space FFT subgrids
-     !  used for atomic augmentation charge density (USPP)
+     !! Dimensions of the 3D real and reciprocal space FFT subgrids used for
+     !! atomic augmentation charge density (USPP).
+     !
      !  Dependencies:
      !     fft_scalar       good_fft_dimension, good_fft_order
      !     io_global        stdout, ionode
@@ -25,6 +25,7 @@
    CONTAINS
 
      SUBROUTINE smallbox_grid_init( dfftp, dfftb )
+       !! Initialization of the box grid.
        !
        USE fft_support, only: good_fft_dimension, good_fft_order
        USE fft_types,  only: fft_type_descriptor
@@ -61,6 +62,8 @@
      END SUBROUTINE smallbox_grid_init
 
      SUBROUTINE smallbox_grid_info( dfftb )
+       !! Print infos on the small box (real mesh, global dimensions, local
+       !! dimensions, etc.)
        !
        USE io_global,  ONLY: stdout, ionode
        USE fft_smallbox_type,  only: fft_box_descriptor

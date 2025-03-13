@@ -110,6 +110,25 @@ MODULE qes_types_module
     !
   END TYPE HubbardCommon_type
   !
+  TYPE :: HubbardInterSpecieV_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: specie1
+    INTEGER :: index1
+    CHARACTER(len=256) :: label1
+    LOGICAL :: label1_ispresent = .FALSE.
+    CHARACTER(len=256) :: specie2
+    INTEGER :: index2
+    CHARACTER(len=256) :: label2
+    LOGICAL :: label2_ispresent = .FALSE.
+    !
+    REAL(DP) :: HubbardInterSpecieV
+    !
+  END TYPE HubbardInterSpecieV_type
+  !
   TYPE :: SiteMoment_type
     !
     CHARACTER(len=100) :: tagname
@@ -141,6 +160,22 @@ MODULE qes_types_module
     REAL(DP), DIMENSION(3) :: HubbardJ
     !
   END TYPE HubbardJ_type
+  !
+  TYPE :: ChannelOcc_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: specie
+    LOGICAL :: specie_ispresent = .FALSE.
+    CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
+    INTEGER :: index
+    !
+    REAL(DP) :: ChannelOcc
+    !
+  END TYPE ChannelOcc_type
   !
   TYPE :: SitMag_type
     !
@@ -199,19 +234,6 @@ MODULE qes_types_module
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
     !
   END TYPE Hubbard_ns_type
-  !
-  TYPE :: backL_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: l_index
-    LOGICAL :: l_index_ispresent = .FALSE.
-    !
-    INTEGER :: backL
-    !
-  END TYPE backL_type
   !
   TYPE :: smearing_type
     !
@@ -309,6 +331,25 @@ MODULE qes_types_module
     REAL(DP), DIMENSION(:), ALLOCATABLE :: inputOccupations
     !
   END TYPE inputOccupations_type
+  !
+  TYPE :: sawtoothEnergy_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    REAL(DP) :: eamp
+    LOGICAL :: eamp_ispresent = .FALSE.
+    REAL(DP) :: eopreg
+    LOGICAL :: eopreg_ispresent = .FALSE.
+    REAL(DP) :: emaxpos
+    LOGICAL :: emaxpos_ispresent = .FALSE.
+    INTEGER :: edir
+    LOGICAL :: edir_ispresent = .FALSE.
+    !
+    REAL(DP) :: sawtoothEnergy
+    !
+  END TYPE sawtoothEnergy_type
   !
   TYPE :: phase_type
     !
@@ -519,6 +560,8 @@ MODULE qes_types_module
     REAL(DP) :: press_conv_thr
     CHARACTER(len=256) :: verbosity
     INTEGER :: print_every
+    LOGICAL :: fcp
+    LOGICAL :: rism
     !
   END TYPE control_variables_type
   !
@@ -605,17 +648,37 @@ MODULE qes_types_module
     !
   END TYPE hybrid_type
   !
+  TYPE :: HubbardOcc_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: channels
+    CHARACTER(len=256) :: specie
+    TYPE(ChannelOcc_type), DIMENSION(:), ALLOCATABLE :: channel_occ
+    INTEGER   :: ndim_channel_occ
+    !
+  END TYPE HubbardOcc_type
+  !
   TYPE :: HubbardBack_type
     !
     CHARACTER(len=100) :: tagname
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    CHARACTER(len=256) :: background
+    CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
     CHARACTER(len=256) :: species
     LOGICAL :: species_ispresent = .FALSE.
-    CHARACTER(len=256) :: background
-    TYPE(backL_type), DIMENSION(:), ALLOCATABLE :: l_number
-    INTEGER   :: ndim_l_number
+    REAL(DP) :: Hubbard_U2
+    INTEGER :: n2_number
+    INTEGER :: l2_number
+    LOGICAL  :: n3_number_ispresent = .FALSE.
+    INTEGER :: n3_number
+    LOGICAL  :: l3_number_ispresent = .FALSE.
+    INTEGER :: l3_number
     !
   END TYPE HubbardBack_type
   !
@@ -732,6 +795,8 @@ MODULE qes_types_module
     REAL(DP) :: conv_thr
     INTEGER :: mixing_ndim
     INTEGER :: max_nstep
+    LOGICAL  :: exx_nstep_ispresent = .FALSE.
+    INTEGER :: exx_nstep
     LOGICAL  :: real_space_q_ispresent = .FALSE.
     LOGICAL :: real_space_q
     LOGICAL  :: real_space_beta_ispresent = .FALSE.
@@ -742,8 +807,6 @@ MODULE qes_types_module
     LOGICAL :: diago_full_acc
     LOGICAL  :: diago_cg_maxiter_ispresent = .FALSE.
     INTEGER :: diago_cg_maxiter
-    LOGICAL  :: diago_ppcg_maxiter_ispresent = .FALSE.
-    INTEGER :: diago_ppcg_maxiter
     LOGICAL  :: diago_david_ndim_ispresent = .FALSE.
     INTEGER :: diago_david_ndim
     LOGICAL  :: diago_rmm_ndim_ispresent = .FALSE.
@@ -754,6 +817,69 @@ MODULE qes_types_module
     LOGICAL :: diago_rmm_conv
     !
   END TYPE electron_control_type
+  !
+  TYPE :: fcp_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL  :: fcp_mu_ispresent = .FALSE.
+    REAL(DP) :: fcp_mu
+    LOGICAL  :: fcp_dynamics_ispresent = .FALSE.
+    CHARACTER(len=256) :: fcp_dynamics
+    LOGICAL  :: fcp_conv_thr_ispresent = .FALSE.
+    REAL(DP) :: fcp_conv_thr
+    LOGICAL  :: fcp_ndiis_ispresent = .FALSE.
+    INTEGER :: fcp_ndiis
+    LOGICAL  :: fcp_rdiis_ispresent = .FALSE.
+    REAL(DP) :: fcp_rdiis
+    LOGICAL  :: fcp_mass_ispresent = .FALSE.
+    REAL(DP) :: fcp_mass
+    LOGICAL  :: fcp_velocity_ispresent = .FALSE.
+    REAL(DP) :: fcp_velocity
+    LOGICAL  :: fcp_temperature_ispresent = .FALSE.
+    CHARACTER(len=256) :: fcp_temperature
+    LOGICAL  :: fcp_tempw_ispresent = .FALSE.
+    REAL(DP) :: fcp_tempw
+    LOGICAL  :: fcp_tolp_ispresent = .FALSE.
+    REAL(DP) :: fcp_tolp
+    LOGICAL  :: fcp_delta_t_ispresent = .FALSE.
+    REAL(DP) :: fcp_delta_t
+    LOGICAL  :: fcp_nraise_ispresent = .FALSE.
+    INTEGER :: fcp_nraise
+    LOGICAL  :: freeze_all_atoms_ispresent = .FALSE.
+    LOGICAL :: freeze_all_atoms
+    !
+  END TYPE fcp_type
+  !
+  TYPE :: solute_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: solute_lj
+    REAL(DP) :: epsilon
+    REAL(DP) :: sigma
+    !
+  END TYPE solute_type
+  !
+  TYPE :: solvent_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: label
+    CHARACTER(len=256) :: molec_file
+    REAL(DP) :: density1
+    LOGICAL  :: density2_ispresent = .FALSE.
+    REAL(DP) :: density2
+    LOGICAL  :: unit_ispresent = .FALSE.
+    CHARACTER(len=256) :: unit
+    !
+  END TYPE solvent_type
   !
   TYPE :: k_points_IBZ_type
     !
@@ -850,11 +976,43 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     CHARACTER(len=256) :: bc
+    LOGICAL  :: nfit_ispresent = .FALSE.
     INTEGER :: nfit
+    LOGICAL  :: w_ispresent = .FALSE.
     REAL(DP) :: w
+    LOGICAL  :: efield_ispresent = .FALSE.
     REAL(DP) :: efield
+    LOGICAL  :: a_ispresent = .FALSE.
+    REAL(DP) :: a
+    LOGICAL  :: zb_ispresent = .FALSE.
+    REAL(DP) :: zb
+    LOGICAL  :: debug_ispresent = .FALSE.
+    LOGICAL :: debug
+    LOGICAL  :: debug_gpmax_ispresent = .FALSE.
+    INTEGER :: debug_gpmax
     !
   END TYPE esm_type
+  !
+  TYPE :: gcscf_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL  :: ignore_mun_ispresent = .FALSE.
+    LOGICAL :: ignore_mun
+    LOGICAL  :: mu_ispresent = .FALSE.
+    REAL(DP) :: mu
+    LOGICAL  :: conv_thr_ispresent = .FALSE.
+    REAL(DP) :: conv_thr
+    LOGICAL  :: gk_ispresent = .FALSE.
+    REAL(DP) :: gk
+    LOGICAL  :: gh_ispresent = .FALSE.
+    REAL(DP) :: gh
+    LOGICAL  :: beta_ispresent = .FALSE.
+    REAL(DP) :: beta
+    !
+  END TYPE gcscf_type
   !
   TYPE :: ekin_functional_type
     !
@@ -911,6 +1069,7 @@ MODULE qes_types_module
     !
     REAL(DP), DIMENSION(4) :: constr_parms
     CHARACTER(len=256) :: constr_type
+    LOGICAL  :: constr_target_ispresent = .FALSE.
     REAL(DP) :: constr_target
     !
   END TYPE atomic_constraint_type
@@ -1045,16 +1204,6 @@ MODULE qes_types_module
     !
   END TYPE symmetry_type
   !
-  TYPE :: outputPBC_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    CHARACTER(len=256) :: assume_isolated
-    !
-  END TYPE outputPBC_type
-  !
   TYPE :: total_energy_type
     !
     CHARACTER(len=100) :: tagname
@@ -1082,6 +1231,10 @@ MODULE qes_types_module
     REAL(DP) :: gatefield_contr
     LOGICAL  :: vdW_term_ispresent = .FALSE.
     REAL(DP) :: vdW_term
+    LOGICAL  :: esol_ispresent = .FALSE.
+    REAL(DP) :: esol
+    LOGICAL  :: levelshift_contr_ispresent = .FALSE.
+    REAL(DP) :: levelshift_contr
     !
   END TYPE total_energy_type
   !
@@ -1214,6 +1367,58 @@ MODULE qes_types_module
     !
   END TYPE d3mags_type
   !
+  TYPE :: rismlaue_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL  :: both_hands_ispresent = .FALSE.
+    LOGICAL :: both_hands
+    LOGICAL  :: nfit_ispresent = .FALSE.
+    INTEGER :: nfit
+    LOGICAL  :: pot_ref_ispresent = .FALSE.
+    INTEGER :: pot_ref
+    LOGICAL  :: charge_ispresent = .FALSE.
+    REAL(DP) :: charge
+    LOGICAL  :: right_start_ispresent = .FALSE.
+    REAL(DP) :: right_start
+    LOGICAL  :: right_expand_ispresent = .FALSE.
+    REAL(DP) :: right_expand
+    LOGICAL  :: right_buffer_ispresent = .FALSE.
+    REAL(DP) :: right_buffer
+    LOGICAL  :: right_buffer_u_ispresent = .FALSE.
+    REAL(DP) :: right_buffer_u
+    LOGICAL  :: right_buffer_v_ispresent = .FALSE.
+    REAL(DP) :: right_buffer_v
+    LOGICAL  :: left_start_ispresent = .FALSE.
+    REAL(DP) :: left_start
+    LOGICAL  :: left_expand_ispresent = .FALSE.
+    REAL(DP) :: left_expand
+    LOGICAL  :: left_buffer_ispresent = .FALSE.
+    REAL(DP) :: left_buffer
+    LOGICAL  :: left_buffer_u_ispresent = .FALSE.
+    REAL(DP) :: left_buffer_u
+    LOGICAL  :: left_buffer_v_ispresent = .FALSE.
+    REAL(DP) :: left_buffer_v
+    !
+  END TYPE rismlaue_type
+  !
+  TYPE :: two_chem_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL :: twochem
+    INTEGER :: nbnd_cond
+    REAL(DP) :: degauss_cond
+    REAL(DP) :: nelec_cond
+    LOGICAL  :: ef_cond_ispresent = .FALSE.
+    REAL(DP) :: ef_cond
+    !
+  END TYPE two_chem_type
+  !
   TYPE :: timing_type
     !
     CHARACTER(len=100) :: tagname
@@ -1250,6 +1455,8 @@ MODULE qes_types_module
     !
     INTEGER :: nat
     LOGICAL :: nat_ispresent = .FALSE.
+    INTEGER :: num_of_atomic_wfc
+    LOGICAL :: num_of_atomic_wfc_ispresent = .FALSE.
     REAL(DP) :: alat
     LOGICAL :: alat_ispresent = .FALSE.
     INTEGER :: bravais_index
@@ -1272,8 +1479,13 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL :: new_format
+    LOGICAL :: new_format_ispresent = .FALSE.
     LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
     INTEGER :: lda_plus_u_kind
+    LOGICAL  :: Hubbard_Occ_ispresent = .FALSE.
+    TYPE(HubbardOcc_type), DIMENSION(:), ALLOCATABLE :: Hubbard_Occ
+    INTEGER   :: ndim_Hubbard_Occ
     LOGICAL  :: Hubbard_U_ispresent = .FALSE.
     TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
     INTEGER   :: ndim_Hubbard_U
@@ -1292,6 +1504,9 @@ MODULE qes_types_module
     LOGICAL  :: starting_ns_ispresent = .FALSE.
     TYPE(starting_ns_type), DIMENSION(:), ALLOCATABLE :: starting_ns
     INTEGER   :: ndim_starting_ns
+    LOGICAL  :: Hubbard_V_ispresent = .FALSE.
+    TYPE(HubbardInterSpecieV_type), DIMENSION(:), ALLOCATABLE :: Hubbard_V
+    INTEGER   :: ndim_Hubbard_V
     LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
     TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
     INTEGER   :: ndim_Hubbard_ns
@@ -1300,9 +1515,6 @@ MODULE qes_types_module
     LOGICAL  :: Hubbard_back_ispresent = .FALSE.
     TYPE(HubbardBack_type), DIMENSION(:), ALLOCATABLE :: Hubbard_back
     INTEGER   :: ndim_Hubbard_back
-    LOGICAL  :: Hubbard_U_back_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U_back
-    INTEGER   :: ndim_Hubbard_U_back
     LOGICAL  :: Hubbard_alpha_back_ispresent = .FALSE.
     TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha_back
     INTEGER   :: ndim_Hubbard_alpha_back
@@ -1336,6 +1548,104 @@ MODULE qes_types_module
     !
   END TYPE basis_set_type
   !
+  TYPE :: rism_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: nsolv
+    TYPE(solute_type), DIMENSION(:), ALLOCATABLE :: solute
+    INTEGER   :: ndim_solute
+    LOGICAL  :: closure_ispresent = .FALSE.
+    CHARACTER(len=256) :: closure
+    LOGICAL  :: tempv_ispresent = .FALSE.
+    REAL(DP) :: tempv
+    LOGICAL  :: ecutsolv_ispresent = .FALSE.
+    REAL(DP) :: ecutsolv
+    LOGICAL  :: rmax_lj_ispresent = .FALSE.
+    REAL(DP) :: rmax_lj
+    LOGICAL  :: rmax1d_ispresent = .FALSE.
+    REAL(DP) :: rmax1d
+    LOGICAL  :: starting1d_ispresent = .FALSE.
+    CHARACTER(len=256) :: starting1d
+    LOGICAL  :: starting3d_ispresent = .FALSE.
+    CHARACTER(len=256) :: starting3d
+    LOGICAL  :: smear1d_ispresent = .FALSE.
+    REAL(DP) :: smear1d
+    LOGICAL  :: smear3d_ispresent = .FALSE.
+    REAL(DP) :: smear3d
+    LOGICAL  :: rism1d_maxstep_ispresent = .FALSE.
+    INTEGER :: rism1d_maxstep
+    LOGICAL  :: rism3d_maxstep_ispresent = .FALSE.
+    INTEGER :: rism3d_maxstep
+    LOGICAL  :: rism1d_conv_thr_ispresent = .FALSE.
+    REAL(DP) :: rism1d_conv_thr
+    LOGICAL  :: rism3d_conv_thr_ispresent = .FALSE.
+    REAL(DP) :: rism3d_conv_thr
+    LOGICAL  :: mdiis1d_size_ispresent = .FALSE.
+    INTEGER :: mdiis1d_size
+    LOGICAL  :: mdiis3d_size_ispresent = .FALSE.
+    INTEGER :: mdiis3d_size
+    LOGICAL  :: mdiis1d_step_ispresent = .FALSE.
+    REAL(DP) :: mdiis1d_step
+    LOGICAL  :: mdiis3d_step_ispresent = .FALSE.
+    REAL(DP) :: mdiis3d_step
+    LOGICAL  :: rism1d_bond_width_ispresent = .FALSE.
+    REAL(DP) :: rism1d_bond_width
+    LOGICAL  :: rism1d_dielectric_ispresent = .FALSE.
+    REAL(DP) :: rism1d_dielectric
+    LOGICAL  :: rism1d_molesize_ispresent = .FALSE.
+    REAL(DP) :: rism1d_molesize
+    LOGICAL  :: rism1d_nproc_ispresent = .FALSE.
+    INTEGER :: rism1d_nproc
+    LOGICAL  :: rism1d_nproc_switch_ispresent = .FALSE.
+    INTEGER :: rism1d_nproc_switch
+    LOGICAL  :: rism3d_conv_level_ispresent = .FALSE.
+    REAL(DP) :: rism3d_conv_level
+    LOGICAL  :: rism3d_planar_average_ispresent = .FALSE.
+    LOGICAL :: rism3d_planar_average
+    LOGICAL  :: laue_nfit_ispresent = .FALSE.
+    INTEGER :: laue_nfit
+    LOGICAL  :: laue_expand_right_ispresent = .FALSE.
+    REAL(DP) :: laue_expand_right
+    LOGICAL  :: laue_expand_left_ispresent = .FALSE.
+    REAL(DP) :: laue_expand_left
+    LOGICAL  :: laue_starting_right_ispresent = .FALSE.
+    REAL(DP) :: laue_starting_right
+    LOGICAL  :: laue_starting_left_ispresent = .FALSE.
+    REAL(DP) :: laue_starting_left
+    LOGICAL  :: laue_buffer_right_ispresent = .FALSE.
+    REAL(DP) :: laue_buffer_right
+    LOGICAL  :: laue_buffer_right_solu_ispresent = .FALSE.
+    REAL(DP) :: laue_buffer_right_solu
+    LOGICAL  :: laue_buffer_right_solv_ispresent = .FALSE.
+    REAL(DP) :: laue_buffer_right_solv
+    LOGICAL  :: laue_buffer_left_ispresent = .FALSE.
+    REAL(DP) :: laue_buffer_left
+    LOGICAL  :: laue_buffer_left_solu_ispresent = .FALSE.
+    REAL(DP) :: laue_buffer_left_solu
+    LOGICAL  :: laue_buffer_left_solv_ispresent = .FALSE.
+    REAL(DP) :: laue_buffer_left_solv
+    LOGICAL  :: laue_both_hands_ispresent = .FALSE.
+    LOGICAL :: laue_both_hands
+    LOGICAL  :: laue_reference_ispresent = .FALSE.
+    CHARACTER(len=256) :: laue_reference
+    LOGICAL  :: laue_wall_ispresent = .FALSE.
+    CHARACTER(len=256) :: laue_wall
+    LOGICAL  :: laue_wall_z_ispresent = .FALSE.
+    REAL(DP) :: laue_wall_z
+    LOGICAL  :: laue_wall_rho_ispresent = .FALSE.
+    REAL(DP) :: laue_wall_rho
+    LOGICAL  :: laue_wall_epsilon_ispresent = .FALSE.
+    REAL(DP) :: laue_wall_epsilon
+    LOGICAL  :: laue_wall_sigma_ispresent = .FALSE.
+    REAL(DP) :: laue_wall_sigma
+    LOGICAL  :: laue_wall_lj6_ispresent = .FALSE.
+    LOGICAL :: laue_wall_lj6
+    !
+  END TYPE rism_type
+  !
   TYPE :: ion_control_type
     !
     CHARACTER(len=100) :: tagname
@@ -1365,12 +1675,21 @@ MODULE qes_types_module
     CHARACTER(len=256) :: assume_isolated
     LOGICAL  :: esm_ispresent = .FALSE.
     TYPE(esm_type) :: esm
-    LOGICAL  :: fcp_opt_ispresent = .FALSE.
-    LOGICAL :: fcp_opt
-    LOGICAL  :: fcp_mu_ispresent = .FALSE.
-    REAL(DP) :: fcp_mu
+    LOGICAL  :: gcscf_ispresent = .FALSE.
+    TYPE(gcscf_type) :: gcscf
     !
   END TYPE boundary_conditions_type
+  !
+  TYPE :: solvents_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    TYPE(solvent_type), DIMENSION(:), ALLOCATABLE :: solvent
+    INTEGER   :: ndim_solvent
+    !
+  END TYPE solvents_type
   !
   TYPE :: electric_field_type
     !
@@ -1437,6 +1756,8 @@ MODULE qes_types_module
     TYPE(scf_conv_type) :: scf_conv
     LOGICAL  :: opt_conv_ispresent = .FALSE.
     TYPE(opt_conv_type) :: opt_conv
+    LOGICAL  :: wf_collected_ispresent = .FALSE.
+    LOGICAL :: wf_collected
     !
   END TYPE convergence_info_type
   !
@@ -1447,12 +1768,26 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     INTEGER :: nsym
+    LOGICAL  :: colin_mag_ispresent = .FALSE.
+    INTEGER :: colin_mag
     INTEGER :: nrot
     INTEGER :: space_group
     TYPE(symmetry_type), DIMENSION(:), ALLOCATABLE :: symmetry
     INTEGER   :: ndim_symmetry
     !
   END TYPE symmetries_type
+  !
+  TYPE :: outputPBC_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: assume_isolated
+    LOGICAL  :: esm_ispresent = .FALSE.
+    TYPE(esm_type) :: esm
+    !
+  END TYPE outputPBC_type
   !
   TYPE :: magnetization_type
     !
@@ -1493,9 +1828,6 @@ MODULE qes_types_module
     LOGICAL  :: nbnd_dw_ispresent = .FALSE.
     INTEGER :: nbnd_dw
     REAL(DP) :: nelec
-    LOGICAL  :: num_of_atomic_wfc_ispresent = .FALSE.
-    INTEGER :: num_of_atomic_wfc
-    LOGICAL :: wf_collected
     LOGICAL  :: fermi_energy_ispresent = .FALSE.
     REAL(DP) :: fermi_energy
     LOGICAL  :: highestOccupiedLevel_ispresent = .FALSE.
@@ -1532,6 +1864,21 @@ MODULE qes_types_module
     !
   END TYPE cpstep_type
   !
+  TYPE :: rism3d_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: nmol
+    LOGICAL  :: molec_dir_ispresent = .FALSE.
+    CHARACTER(len=256) :: molec_dir
+    TYPE(solvent_type), DIMENSION(:), ALLOCATABLE :: solvent
+    INTEGER   :: ndim_solvent
+    REAL(DP) :: ecutsolv
+    !
+  END TYPE rism3d_type
+  !
   TYPE :: step_type
     !
     CHARACTER(len=100) :: tagname
@@ -1546,10 +1893,10 @@ MODULE qes_types_module
     TYPE(matrix_type) :: forces
     LOGICAL  :: stress_ispresent = .FALSE.
     TYPE(matrix_type) :: stress
-    LOGICAL  :: FCP_force_ispresent = .FALSE.
-    REAL(DP) :: FCP_force
-    LOGICAL  :: FCP_tot_charge_ispresent = .FALSE.
-    REAL(DP) :: FCP_tot_charge
+    LOGICAL  :: fcp_force_ispresent = .FALSE.
+    REAL(DP) :: fcp_force
+    LOGICAL  :: fcp_tot_charge_ispresent = .FALSE.
+    REAL(DP) :: fcp_tot_charge
     !
   END TYPE step_type
   !
@@ -1579,6 +1926,8 @@ MODULE qes_types_module
     TYPE(BerryPhaseOutput_type) :: BerryPhase
     LOGICAL  :: finiteElectricFieldInfo_ispresent = .FALSE.
     TYPE(finiteFieldOut_type) :: finiteElectricFieldInfo
+    LOGICAL  :: sawtoothEnergy_ispresent = .FALSE.
+    TYPE(sawtoothEnergy_type) :: sawtoothEnergy
     LOGICAL  :: dipoleInfo_ispresent = .FALSE.
     TYPE(dipoleOutput_type) :: dipoleInfo
     LOGICAL  :: gateInfo_ispresent = .FALSE.
@@ -1620,6 +1969,12 @@ MODULE qes_types_module
     TYPE(symmetry_flags_type) :: symmetry_flags
     LOGICAL  :: boundary_conditions_ispresent = .FALSE.
     TYPE(boundary_conditions_type) :: boundary_conditions
+    LOGICAL  :: fcp_settings_ispresent = .FALSE.
+    TYPE(fcp_type) :: fcp_settings
+    LOGICAL  :: rism_settings_ispresent = .FALSE.
+    TYPE(rism_type) :: rism_settings
+    LOGICAL  :: solvents_ispresent = .FALSE.
+    TYPE(solvents_type) :: solvents
     LOGICAL  :: ekin_functional_ispresent = .FALSE.
     TYPE(ekin_functional_type) :: ekin_functional
     LOGICAL  :: external_atomic_forces_ispresent = .FALSE.
@@ -1634,6 +1989,8 @@ MODULE qes_types_module
     TYPE(atomic_constraints_type) :: atomic_constraints
     LOGICAL  :: spin_constraints_ispresent = .FALSE.
     TYPE(spin_constraints_type) :: spin_constraints
+    LOGICAL  :: twoch__ispresent = .FALSE.
+    TYPE(two_chem_type) :: twoch_
     !
   END TYPE input_type
   !
@@ -1664,10 +2021,16 @@ MODULE qes_types_module
     TYPE(matrix_type) :: stress
     LOGICAL  :: electric_field_ispresent = .FALSE.
     TYPE(outputElectricField_type) :: electric_field
-    LOGICAL  :: FCP_force_ispresent = .FALSE.
-    REAL(DP) :: FCP_force
-    LOGICAL  :: FCP_tot_charge_ispresent = .FALSE.
-    REAL(DP) :: FCP_tot_charge
+    LOGICAL  :: fcp_force_ispresent = .FALSE.
+    REAL(DP) :: fcp_force
+    LOGICAL  :: fcp_tot_charge_ispresent = .FALSE.
+    REAL(DP) :: fcp_tot_charge
+    LOGICAL  :: rism3d_ispresent = .FALSE.
+    TYPE(rism3d_type) :: rism3d
+    LOGICAL  :: rismlaue_ispresent = .FALSE.
+    TYPE(rismlaue_type) :: rismlaue
+    LOGICAL  :: two_chem_ispresent = .FALSE.
+    TYPE(two_chem_type) :: two_chem
     !
   END TYPE output_type
   !
@@ -1683,6 +2046,7 @@ MODULE qes_types_module
     TYPE(general_info_type) :: general_info
     LOGICAL  :: parallel_info_ispresent = .FALSE.
     TYPE(parallel_info_type) :: parallel_info
+    LOGICAL  :: input_ispresent = .FALSE.
     TYPE(input_type) :: input
     LOGICAL  :: step_ispresent = .FALSE.
     TYPE(step_type), DIMENSION(:), ALLOCATABLE :: step

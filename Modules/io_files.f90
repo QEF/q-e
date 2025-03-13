@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,7 @@ MODULE io_files
   !
   ! ... IMPORTANT: when directory names are set, they must always end with "/"
   !
-  USE parameters, ONLY: ntypx
+  USE parameters, ONLY: ntypx, nsolx
   USE kinds,      ONLY: dp
   USE io_global,  ONLY: ionode, ionode_id, stdout
   USE mp,         ONLY: mp_barrier, mp_bcast, mp_sum
@@ -50,6 +50,8 @@ MODULE io_files
   !! location of PP files after a restart from file
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   !! default: UPF
+  CHARACTER(len=256) :: molfile( nsolx ) = 'MOL'
+  !
   CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
   LOGICAL            :: qexsd_init = .FALSE. 
   ! ... next two variables are no longer read from input but can be set
@@ -598,4 +600,3 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   RETURN
   !
 END SUBROUTINE davcio
-

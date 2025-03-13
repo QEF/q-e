@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -122,9 +122,9 @@ EOF
     check_failure $?
     $ECHO " done"
 
-    # 
+    #
     cat > silane_pw4gww.in << EOF
-&inputpw4gww    
+&inputpw4gww
     prefix='SiH4'
     num_nbndv(1)=4
     num_nbnds=8
@@ -155,11 +155,11 @@ EOF
     4  -9.11165 -13.67111 -13.58495 -14.42309
     5  -0.56519   0.21252   0.21196   0.90046
 EOF
-    # 
+    #
     cat > silane_bse.in << EOF
 &inputbse
     prefix='SiH4'
-    outdir='$TMP_DIR/'    
+    outdir='$TMP_DIR/'
     num_nbndv(1)=4
     numw_prod=50
     n_eig=1

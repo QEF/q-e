@@ -14,7 +14,7 @@ module m_gth
   !
   private
   public :: gth_parameters, readgth, vloc_gth, dvloc_gth, &
-       dvloc_gth_gpu, setlocq_gth, mk_ffnl_gth, mk_dffnl_gth, deallocate_gth
+       mk_ffnl_gth, mk_dffnl_gth, deallocate_gth
   !
   type gth_parameters
      integer  :: itype, lloc, lmax
@@ -118,7 +118,7 @@ contains
        !
        do ii=1,nq
           qr2=(qg(ii)*rrl)**2
-          vq(ii)=qg(ii)**3 * exp(-0.5_dp*qr2) / 105.0_dp
+          vq(ii)=qg(ii)**3 * exp(-0.5_dp*qr2) / sqrt(105.0_dp)
        end do
        !
     end if lif
@@ -257,7 +257,7 @@ contains
           qr2=qt*rrl**2
           e_qr2_h=exp(-0.5_dp*qr2)
           !
-          dvq(ii)=e_qr2_h * qt*(3._dp - qr2) / 105.0_dp
+          dvq(ii)=e_qr2_h * qt*(3._dp - qr2) / sqrt(105.0_dp)
        end do
        !
     end if lif
@@ -271,6 +271,9 @@ contains
 subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   !-----------------------------------------------------------------------
   !
+  ! compute vloc(G), including the correct G=0 limit, making no assumption
+  ! that G=0 is the first vector (so we can compute Vloc(q+G) as well)
+  !
   USE upf_kinds, ONLY: dp
   USE upf_const, ONLY: pi, fpi, e2, eps8
 
@@ -283,7 +286,7 @@ subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   !
   ! Local variables
   integer  :: ii, my_gth, igl, igl0
-  real(dp) :: cc1, cc2, cc3, cc4, rloc, epsatm, gx, gx2, rq2, rl3, e_rq2h, fact
+  real(dp) :: cc1, cc2, cc3, cc4, rloc, epsatm, gx2, rq2, rl3, e_rq2h
   !
   ! Find gtp param. set for type itype
   my_gth=0
@@ -303,131 +306,34 @@ subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   ! Compute epsatm = lim(q->0) [Vloc(q) + zion/(Pi*q^2)]
   epsatm=2._dp*pi*rloc**2*zion+(2._dp*pi)**(1.5_dp)*rloc**3*(cc1+3._dp*cc2+15._dp*cc3+105._dp*cc4)
   ! 1/\Omega * \sum_i epsatm(i) is v_loc(G=0)
-
-  ! Compute vloc(q)
-  if (gl (1) < eps8) then
-     !
-     ! first the G=0 term
-     !
-!    vloc (1) = 0._dp
-     vloc (1) = epsatm
-     igl0 = 2
-  else
-     igl0 = 1
-  endif
   !
-  !   here the G<>0 terms, we first compute the part of the integrand 
-  !   function independent of |G| in real space
-  !
-  do igl = igl0, ngl
-     gx     = sqrt (gl (igl) * tpiba2)
-     gx2    = gx**2
-     rq2    = (gx*rloc)**2
-     rl3    = rloc**3
-     e_rq2h = exp(-0.5_dp*rq2)
-     vloc (igl) = &
-         fpi * e_rq2h*(-zion/gx2 + sqrt(pi/2._dp)*rl3* &
-           ( &
+  do igl = 1, ngl
+     if ( gl(igl) < eps8 ) then
+        !   here the G=0 terms
+        !   NOTE: not assuming G are ordered
+        vloc(igl) = epsatm * e2 / omega
+     else
+        !   here the G<>0 terms
+        gx2    = gl(igl) * tpiba2
+        rq2    = gx2*rloc**2
+        rl3    = rloc**3
+        e_rq2h = exp(-0.5_dp*rq2)
+        vloc (igl) = &
+             fpi * e_rq2h*(-zion/gx2 + sqrt(pi/2._dp)*rl3* &
+             ( &
              cc1 + &
              cc2*(3._dp-rq2) + &
              cc3*(15._dp-10._dp*rq2+rq2**2) + &
              cc4*(105._dp-rq2*(105._dp-rq2*(21._dp-rq2))) &
-           ) &
-        )
+             ) &
+             )* e2 / omega
+     end if
   enddo
-  !
-  fact = e2 / omega
-  vloc (:) = vloc(:) * fact
   !
 end subroutine vloc_gth
+!
 !-----------------------------------------------------------------------
-subroutine dvloc_gth(itype, zion, tpiba2, ngl, gl, omega, dvloc)
-  !-----------------------------------------------------------------------
-  !
-  ! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
-  !
-  USE upf_kinds, ONLY: dp
-  USE upf_const, ONLY: pi, tpi, e2, eps8
-
-  implicit none
-  !
-  ! I/O
-  integer,  intent(in)  :: itype, ngl
-  real(dp), intent(in)  :: zion, tpiba2, omega, gl (ngl)
-  real(dp), intent(out) :: dvloc (ngl)
-  !
-  ! Local variables
-  integer  :: ii, my_gth, igl, igl0
-  real(dp) :: cc1, cc2, cc3, cc4, rloc, &
-              gx, gx2, gx3, rl2, rl3, rq2, r2q, r4g3, r6g5, e_rq2h, fact
-  !
-! IF ( do_comp_esm ) call upf_error('vloc_gth', 'ESM not implemented', itype)
-  !
-  ! Find gtp param. set for type itype
-  my_gth=0
-  do ii=1,size(gth_p)
-    if (gth_p(ii)%itype==itype) then
-      my_gth=ii
-      exit
-    endif
-  enddo
-  if (my_gth==0) call upf_error('dvloc_gth', 'cannot map itype in some gtp param. set', itype)
-  rloc=gth_p(my_gth)%rloc
-  cc1=gth_p(my_gth)%cc(1)
-  cc2=gth_p(my_gth)%cc(2)
-  cc3=gth_p(my_gth)%cc(3)
-  cc4=gth_p(my_gth)%cc(4)
-
-  ! Compute vloc(q)
-  if (gl (1) < eps8) then
-     !
-     ! first the G=0 term
-     !
-     dvloc (1) = 0._dp
-     igl0 = 2
-  else
-     igl0 = 1
-  endif
-  !
-  !   here the G<>0 terms, we first compute the part of the integrand 
-  !   function independent of |G| in real space
-  !
-  do igl = igl0, ngl
-     gx     = sqrt (gl (igl) * tpiba2)
-     gx2    = gx**2
-     gx3    = gx*gx2
-     rl2    = rloc**2
-     rl3    = rloc*rl2
-     rq2    = gx2*rl2
-     r2q    = gx*rl2
-     r4g3   = rl2*rl2*gx3
-     r6g5   = r4g3*rl2*gx2
-     e_rq2h = exp(-0.5_dp*rq2)
-     dvloc (igl) = &
-         e_rq2h*(zion*(rq2+2._dp)/gx3 + sqrt(pi/2._dp)*rl3* &
-           ( &
-             ( &
-               - 2._dp*r2q* (cc2+10._dp*cc3+105._dp*cc4) &
-               + 4._dp*r4g3*(cc3+21._dp*cc4) &
-               - 6._dp*r6g5* cc4 &
-             ) - r2q*( &
-               cc1 + &
-               cc2*(3._dp-rq2) + &
-               cc3*(15._dp-10._dp*rq2+rq2**2) + &
-               cc4*(105._dp-rq2*(105._dp-rq2*(21._dp-rq2))) &
-             ) &
-           ) &
-        )/gx
-  enddo
-  !
-  fact = tpi * e2 / omega
-  dvloc (:) = dvloc(:) * fact
-  !
-end subroutine dvloc_gth
-!
-!
-!-------------------------------------------------------------------------------
-SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
+subroutine dvloc_gth( itype, zion, tpiba2, ngl, gl, omega, dvloc )
   !------------------------------------------------------------------------------
   !! GPU version of 'dvloc_gth' from 'Modules/gth.f90'
   !! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
@@ -435,34 +341,31 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : pi, tpi, e2, eps8
   !
-  IMPLICIT NONE
+  implicit none
   !
   ! I/O
-  INTEGER, INTENT(IN) :: itype, ngl
-  REAL(DP), INTENT(IN) :: zion, tpiba2, omega
-  !
-  REAL(DP), INTENT(IN) :: gl_d(ngl)
-  REAL(DP), INTENT(OUT) :: dvloc_d(ngl)
+  integer,  intent(in) :: itype, ngl
+  real(dp), intent(in) :: zion, tpiba2, omega
+  real(dp), intent(in) :: gl(ngl)
+  real(dp), intent(out) :: dvloc(ngl)
   !
   ! Local variables
-  INTEGER :: ii, my_gth, igl, igl0
-  REAL(DP) :: cc1, cc2, cc3, cc4, rloc, gl1, &
+  integer :: ii, my_gth, igl, igl0
+  real(dp) :: cc1, cc2, cc3, cc4, rloc, gl1, &
               gx, gx2, gx3, rl2, rl3, rq2, r2q, r4g3, r6g5, e_rq2h, fact
   !
-#if defined(__CUDA)
-  attributes(DEVICE) ::  dvloc_d, gl_d
-#endif
+  !$acc data present( dvloc, gl )
   !
 ! IF ( do_comp_esm ) call upf_error('vloc_gth', 'ESM not implemented', itype)
   !
   ! Find gtp param. set for type itype
   my_gth = 0
-  DO ii = 1, SIZE(gth_p)
-    IF (gth_p(ii)%itype==itype) THEN
+  do ii = 1, SIZE(gth_p)
+    if (gth_p(ii)%itype==itype) then
       my_gth = ii
-      EXIT
-    ENDIF
-  ENDDO
+      exit
+    endif
+  enddo
   !
   IF ( my_gth==0 ) CALL upf_error( 'dvloc_gth', 'cannot map itype in some gtp param. set', itype )
   rloc = gth_p(my_gth)%rloc
@@ -472,25 +375,27 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
   cc4  = gth_p(my_gth)%cc(4)
   !
   ! Compute vloc(q)
-  gl1 = gl_d(1)
-  IF (gl1 < eps8) THEN
+  gl1 = gl(1)
+  if (gl1 < eps8) then
      !
      ! first the G=0 term
      !
-     dvloc_d(1) = 0.0_DP
+     !$acc kernels
+     dvloc(1) = 0.0_DP
+     !$acc end kernels
      igl0 = 2
-  ELSE
+  else
      igl0 = 1
-  ENDIF
+  endif
   !
   !   here the G<>0 terms, we first compute the part of the integrand 
   !   function independent of |G| in real space
   !
   fact = tpi * e2 / omega
   !
-  !$cuf kernel do (1) <<<*,*>>>
-  DO igl = igl0, ngl
-     gx     = SQRT(gl_d(igl) * tpiba2)
+  !$acc parallel loop
+  do igl = igl0, ngl
+     gx     = SQRT(gl(igl) * tpiba2)
      gx2    = gx**2
      gx3    = gx*gx2
      rl2    = rloc**2
@@ -500,7 +405,7 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
      r4g3   = rl2*rl2*gx3
      r6g5   = r4g3*rl2*gx2
      e_rq2h = EXP(-0.5_DP*rq2)
-     dvloc_d(igl) = fact * &
+     dvloc(igl) = fact * &
          e_rq2h*(zion*(rq2+2._DP)/gx3 + SQRT(pi/2._DP)*rl3* &
            ( &
              ( &
@@ -515,73 +420,11 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
              ) &
            ) &
         )/gx 
-  ENDDO
-  !
-  !
-END SUBROUTINE dvloc_gth_gpu
-!
-!
-!-----------------------------------------------------------------------
-subroutine setlocq_gth(itype, xq, zion, tpiba2, ngm, g, omega, vloc)
-!----------------------------------------------------------------------
-  !
-  USE upf_kinds, ONLY: dp
-  USE upf_const, ONLY: pi, fpi, e2, eps8
-
-  implicit none
-  !  
-  ! I/O
-  integer,  intent(in)  :: itype, ngm
-  real(dp), intent(in)  :: xq (3), zion, tpiba2, omega, g(3,ngm)
-  real(dp), intent(out) :: vloc (ngm)
-  !  
-  ! Local variables
-  integer  :: ii, ig, my_gth
-  real(dp) :: cc1, cc2, cc3, cc4, rloc, g2a, gx, gx2, rq2, rl3, e_rq2h, fact
-  !
-  ! Find gtp param. set for type itype
-  my_gth=0
-  do ii=1,size(gth_p)
-    if (gth_p(ii)%itype==itype) then
-      my_gth=ii
-      exit
-    endif
-  enddo
-  if (my_gth==0) call upf_error('vloc_gth', 'cannot map itype in some gth param. set', itype)
-  rloc=gth_p(my_gth)%rloc
-  cc1=gth_p(my_gth)%cc(1)
-  cc2=gth_p(my_gth)%cc(2)
-  cc3=gth_p(my_gth)%cc(3)
-  cc4=gth_p(my_gth)%cc(4)
-  !
-  do ig = 1, ngm
-    g2a = (xq (1) + g (1, ig) ) **2 + &
-          (xq (2) + g (2, ig) ) **2 + &
-          (xq (3) + g (3, ig) ) **2
-    if (g2a < eps8) then
-      vloc (ig) = 0.d0
-    else
-      gx     = sqrt (g2a * tpiba2)
-      gx2    = gx**2
-      rq2    = (gx*rloc)**2
-      rl3    = rloc**3
-      e_rq2h = exp(-0.5_dp*rq2)
-      vloc (ig) = &
-         fpi * e_rq2h*(-zion/gx2 + sqrt(pi/2._dp)*rl3* &
-           ( &
-             cc1 + &
-             cc2*(3._dp-rq2) + &
-             cc3*(15._dp-10._dp*rq2+rq2**2) + &
-             cc4*(105._dp-rq2*(105._dp-rq2*(21._dp-rq2))) &
-           ) &
-        )
-    endif
   enddo
   !
-  fact = e2 / omega
-  vloc (:) = vloc(:) * fact
+  !$acc end data
   !
-end subroutine setlocq_gth
+end subroutine dvloc_gth
 !-----------------------------------------------------------------------
 subroutine deallocate_gth( lflag )
   !-----------------------------------------------------------------------
@@ -604,31 +447,36 @@ subroutine deallocate_gth( lflag )
   !
 end subroutine deallocate_gth
 !-----------------------------------------------------------------------
-subroutine readgth (iunps, np, upf)
+subroutine readgth (psfile, np, upf, ierr)
   !-----------------------------------------------------------------------
   !
   USE upf_kinds,    ONLY: dp
+  USE upf_io,       ONLY: stdout
   USE upf_const,    ONLY: e2, tpi
   USE upf_params,   ONLY: lmaxx
+  USE upf_utils,    ONLY: l_to_spdf
   USE pseudo_types, ONLY: pseudo_upf
 
   implicit none
   !
   ! I/O
   TYPE (pseudo_upf) :: upf
-  integer :: iunps, np
+  character(LEN=*), intent(in) :: psfile
+  integer, intent(in) :: np
+  integer, intent(out):: ierr
   !
   ! Local variables
-  integer  :: ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, ii, jj, ll, nn, nnonloc, &
-              nprl, os, ns, iv, jv
+  integer  :: iunps, ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, &
+              ii, jj, ll, nn, nnonloc, nprl, os, ns, iv, jv
   real(dp) :: rcore, qcore, rc2, prefact, znucl, r2well, rloc, rrl, cc(4)
   character(len=256)            :: info
-  character(len=  1), parameter :: ch10=char(10), spdf(0:3) = ['S','P','D','F']
+  character(len=  1), parameter :: ch10=char(10)
   character(len=  2), external  :: atom_name
   integer,  allocatable         :: nproj(:)
   real(dp), allocatable         :: hij(:,:,:), kij(:,:,:)
   type(gth_parameters), pointer, dimension(:) :: gth_tmp_p
   !
+  ierr = 1
   os=0; if (associated(gth_p)) os=size(gth_p)
   ns=os+1; allocate(gth_tmp_p(ns))
   if (os>0) then
@@ -665,15 +513,22 @@ subroutine readgth (iunps, np, upf)
   allocate(upf%lchi(upf%nwfc))
   upf%lchi(:) = 0
 
+  open(newunit=iunps, file=psfile, form='formatted', status='old', iostat = ios)
+  if ( ios .ne. 0 ) go to 400
   read (iunps, '(a)', end=400, err=400, iostat=ios) info
   read (iunps, *, err=400) znucl, upf%zp, pspdat
-  if (upf%zp <= 0._dp .or. upf%zp > 100 ) call upf_error ('readgth', 'Wrong zp ', np)
+  if (upf%zp <= 0._dp .or. upf%zp > 100 ) then
+     write(stdout,'(5x,"readgth: Wrong zp ")')
+     return
+  end if
   upf%psd=atom_name ( NINT(znucl) )
   call gth_grid_for_rho(upf,znucl)
 
   read (iunps, *, err=400) pspcod,pspxc,lmax,lloc,mmax,r2well
-  IF ( pspcod /= 10 .AND. pspcod /= 12 ) &
-     call upf_error ('readgth', 'unknown/invalid pspcod:', pspcod )
+  IF ( pspcod /= 10 .AND. pspcod /= 12 ) then
+     write(stdout,'(5x,"readgth: unknown/invalid pspcod")')
+     return
+  end if
   IF ( pspcod == 12 ) THEN
      ! pseudo with NLCC
      upf%nlcc=.true.
@@ -703,10 +558,12 @@ subroutine readgth (iunps, np, upf)
   ELSE IF (pspxc == -101130) THEN ! PBE from libXC
      upf%dft = 'PBE'
   ELSE
-     call upf_error ('readgth', 'pspxc cod. cannot be understood', abs (np) )
+     write(stdout,'(5x,"readgth: unknown/invalid pspxc code")')
+     return
   ENDIF
   !
   cc(:)=0._dp
+  !! FIXME: dangerous syntax, are we sure nn has the expected value?
   read (iunps, *, err=400) rloc,nn,(cc(jj),jj=1,nn)
   gth_p(ns)%rloc =rloc
   gth_p(ns)%cc(:)=cc(:)
@@ -719,6 +576,7 @@ subroutine readgth (iunps, np, upf)
   ! Read and echo the coefficients of non-local projectors
   upf%nbeta=0
   prjloop: do ll=0,lmax
+    !! FIXME: dangerous syntax, are we sure nprl has the expected value?
     read (iunps, *, err=400) rrl,nprl,(hij(ll,1,jj),jj=1,nprl)
     upf%nbeta = upf%nbeta + nprl
     gth_p(ns)%rrl(ll)=rrl
@@ -750,6 +608,7 @@ subroutine readgth (iunps, np, upf)
       upf%rho_atc(ii) = prefact * exp(-0.5_dp * upf%r(ii)**2 / rc2)
     enddo
   end if
+  close (unit=iunps)
   !
   allocate(upf%lll(upf%nbeta), upf%els_beta(upf%nbeta), upf%dion(upf%nbeta,upf%nbeta))
   allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta), upf%kbeta(upf%nbeta))
@@ -764,7 +623,7 @@ subroutine readgth (iunps, np, upf)
       iv = iv+1
       gth_p(ns)%lll(iv)=ll
       gth_p(ns)%ipr(iv)=ii
-      upf%lll(iv)=ll; WRITE (upf%els_beta(iv), '(I1,A1)' ) ii, spdf(ll)
+      upf%lll(iv)=ll; WRITE (upf%els_beta(iv), '(I1,A1)' ) ii, l_to_spdf(ll)
       jloop: do jj=ii, nprl
         jv = iv+jj-ii
         upf%dion(iv,jv) = hij(ll,ii,jj)/e2
@@ -774,9 +633,11 @@ subroutine readgth (iunps, np, upf)
   enddo lloop
   !
   deallocate(hij,kij,nproj)
+  ierr = 0 
   return
   !
-400 call upf_error ('readgth', 'pseudo file is empty or wrong', abs (np) )
+400 write(stdout,'(5x,"readgth: pseudo file is empty or wrong")' )
+  !
 end subroutine readgth
 !*****************************************************************************************
 subroutine gth_grid_for_rho(upf,znucl)

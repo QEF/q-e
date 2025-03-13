@@ -5,19 +5,12 @@
  /
  &system
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
-    ecutwfc = 30.0, ecutrho = 240.0,
+    ecutwfc = 40.0, ecutrho = 320.0,
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='gauss', degauss=0.01,
     nspin=2,
-    lda_plus_u=.true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'atomic',
-    Hubbard_U(1)=5.0, 
-    Hubbard_U(2)=5.0,
-    Hubbard_U_back(1) = 2.0
-    Hubbard_U_back(2) = 2.0
  /
  &electrons
     mixing_mode = 'plain'
@@ -26,9 +19,9 @@
     diago_david_ndim=4
  /
 ATOMIC_SPECIES
- Fe1  1.  Fe.pz-nd-rrkjus.UPF
- Fe2  1.  Fe.pz-nd-rrkjus.UPF
- O    1.  O.pz-rrkjus.UPF
+ Fe1  1.  Fe.pbe-spn-rrkjus_psl.0.2.1.UPF
+ Fe2  1.  Fe.pbe-spn-rrkjus_psl.0.2.1.UPF
+ O    1.  O.pbe-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
  Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
@@ -40,3 +33,8 @@ CELL_PARAMETERS {alat}
 1.00 0.50 0.50
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {atomic}
+U Fe1-3d 5.0
+U Fe1-3p 2.0
+U Fe2-3d 5.0
+U Fe2-3p 2.0

@@ -1,0 +1,5 @@
+&bands
+  outdir = './',
+  prefix='MgB2',
+  filband='MgB2.bands.6x6x6.dat',
+/

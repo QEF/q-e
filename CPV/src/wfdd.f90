@@ -6,40 +6,57 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE wanpar
-! nw:       the number of the G vectors
-! nit:      the number of total iteration during searching
-! nsd:      the number of steepest descent iterations
-! ibrav:    the structure index, the same as ibrav in CP code.
-  INTEGER :: nw,  nit, nsd, ibrav
+  !
+  INTEGER :: nw
+  !! the number of the G vectors
+  INTEGER :: nit
+  !! the number of total iteration during searching
+  INTEGER :: nsd
+  !! the number of steepest descent iterations
+  INTEGER :: ibrav
+  !! the structure index, the same as ibrav in CP code.
   LOGICAL adapt, restart
-! wfdt:     time step during searching
-! maxwfdt:  the maximum time step during searching
-! b1,b2,b3: the reciprocal lattice
-! alat:     the lattice parameter
-! a1,a2,a3: the real-space lattice
-  real(kind=8) :: wfdt, maxwfdt, b1(3), b2(3), b3(3), alat
-  real(kind=8) :: a1(3), a2(3), a3(3), tolw
-
-! wfg:      the G vectors involoved in general symmetry calculation
-!           the units are b1, b2, b3.
-!           For example:
-!            the ith G vector: wfg(i,1)*b1+wfg(i,2)*b2+wfg(i,3)*b3
+  ! 
+  real(kind=8) :: wfdt
+  !! time step during searching
+  real(kind=8) :: maxwfdt
+  !! the maximum time step during searching
+  real(kind=8) :: b1(3)
+  !! reciprocal lattice vector
+  real(kind=8) :: b2(3)
+  !! reciprocal lattice vector
+  real(kind=8) :: b3(3)
+  !! reciprocal lattice vector
+  real(kind=8) :: alat
+  !! the lattice parameter
+  real(kind=8) :: a1(3)
+  !! the real-space lattice vector
+  real(kind=8) :: a2(3)
+  !! the real-space lattice vector
+  real(kind=8) :: a3(3)
+  !! the real-space lattice vector
+  real(kind=8) :: tolw
+     
   INTEGER, ALLOCATABLE :: wfg(:,:)
-
-! weight:   the weight of each G vectors
+  !! the G vectors involoved in general symmetry calculation.
+  !! The units are b1, b2, b3. For example the ith G vector:
+  !! \( \text{wfg}(i,1)*b_1+\text{wfg}(i,2)*b_2+\text{wfg}(i,3)*b_3 \)
+  
   real(kind=8), ALLOCATABLE :: weight(:)
-!
-!       These are the Input variables for Damped Dynamics
-!
-! q:            imaginary mass of the Unitary Matrix
-! dt:           Time Step for damped dynamics
-! cgordd:       1=conjugate gradient/SD
-!               any other number = damped dynamics
-! fric:         damping coefficient, b/w 0 and 1
-! nsteps:       Max No. of MD Steps
-  real(kind=8) :: q, dt, fric
-  INTEGER :: cgordd, nsteps
-
+  !! the weight of each G vectors
+  !
+  !  These are the Input variables for Damped Dynamics
+  !   
+  real(kind=8) :: q
+  !! imaginary mass of the Unitary Matrix
+  real(kind=8) :: dt
+  !! Time Step for damped dynamics
+  real(kind=8) :: fric
+  !! damping coefficient, b/w 0 and 1
+  INTEGER :: cgordd
+  !! if 1 conjugate gradient/SD, if any other number damped dynamics
+  INTEGER :: nsteps
+  !! Max No. of MD Steps
 
 END MODULE wanpar
 
@@ -47,9 +64,9 @@ END MODULE wanpar
 PROGRAM wfdd
 !----------------------------------------------------------------------
 !
-!    This program works on the overlap matrix calculated
-!        from parallel machine and search the unitary transformation
-!        Uall corresponding to the Maximally localized Wannier functions.
+!!    This program works on the overlap matrix calculated
+!!        from parallel machine and search the unitary transformation
+!!        Uall corresponding to the Maximally localized Wannier functions.
 !
 !    The overlap matrix and lattice information are read from fort.38.
 !

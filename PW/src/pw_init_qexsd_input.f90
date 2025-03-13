@@ -1,4 +1,4 @@
-! Copyright (C) 2002-2015 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,24 +24,29 @@
                                 ip_atomic_positions => atomic_positions, lspinorb, ip_nqx1 => nqx1, ip_nqx2 => nqx2,  &
                                 ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
-                                ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     & 
-                                ip_hubbard_u => hubbard_u, ip_hubbard_u_back => hubbard_u_back, lback, l1back,        &
+                                ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     &
+                                ip_hubbard_u => hubbard_u, ip_hubbard_u2 => hubbard_u2,                               &
                                 ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta, ip_backall => backall, &
-                                ip_hubbard_alpha => hubbard_alpha, ip_Hubbard_alpha_back => hubbard_alpha_back,       &
-                                ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
+                                ip_hubbard_n => hubbard_n, ip_hubbard_l => hubbard_l,                                 &
+                                ip_hubbard_n2 => hubbard_n2, ip_hubbard_l2 => hubbard_l2, ip_hubbard_l3 => hubbard_l3,&
+                                ip_hubbard_n3 => Hubbard_n3,ip_hubbard_alpha => hubbard_alpha,                        &
+                                ip_Hubbard_alpha_back => hubbard_alpha_back, ip_hubbard_j => hubbard_j,               &
+                                starting_ns_eigenvalue, ip_hubbard_projectors => hubbard_projectors,                  &
+                                ip_hubbard_v => Hubbard_V,                                                            &
                                 vdw_corr, london, london_s6, london_c6, london_rcut, london_c6, xdm_a1, xdm_a2,       &
                                 ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                     &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
                                 nbnd, smearing, degauss, ip_occupations=>occupations, tot_charge, tot_magnetization,  &
+                                degauss_cond,nbnd_cond,nelec_cond,                                                    &
                                 ip_k_points => k_points, ecutwfc, ip_ecutrho => ecutrho, ip_nr1 => nr1, ip_nr2=>nr2,  &
                                 ip_nr3 => nr3, ip_nr1s => nr1s, ip_nr2s => nr2s,ip_nr3s => nr3s, ip_nr1b=>nr1b,       &
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
                                 ip_diagonalization=>diagonalization, mixing_mode, mixing_beta,                        &
-                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
+                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, exx_maxstep, electron_maxstep,       &
                                 diago_thr_init, diago_full_acc,                                                       & 
-                                diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
+                                diago_cg_maxiter, diago_david_ndim,                               &
                                 diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock,                                      &
-                                nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
+                                nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk, ip_labelk => labelk,     &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
                                 bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2,            &
@@ -49,24 +54,36 @@
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                           &
-                                ecfixed, qcutz, q2sigma,                                                              &    
-                                tforces, rd_for,                                                                      &
-                                rd_if_pos,                                                                               &
-                                tionvel, rd_vel,                                                                      &
+                                ecfixed, qcutz, q2sigma, tforces, rd_for, rd_if_pos, tionvel, rd_vel,                 &
                                 tefield, lelfield, dipfield, edir, emaxpos, eamp, eopreg, efield, efield_cart,gdir,   &
                                 lberry,nppstr,nberrycyc,                                                              &
                                 nconstr_inp, nc_fields, constr_type_inp, constr_target_inp, constr_inp, tconstr,      &
                                 constr_tol_inp, constrained_magnetization, lambda, fixed_magnetization, input_dft,    &
                                 tf_inp, ip_ibrav => ibrav,                                                            &
-                                gate, zgate, relaxz, block, block_1, block_2, block_height, real_space
+                                gate, zgate, relaxz, block, block_1, block_2, block_height, real_space,               &
+                                trism, esm_a, esm_zb, esm_debug, esm_debug_gpmax, lgcscf, gcscf_ignore_mun, gcscf_mu, &
+                                gcscf_conv_thr, gcscf_gk, gcscf_gh, gcscf_beta, lfcp, fcp_mu, fcp_dynamics,           &
+                                fcp_conv_thr, fcp_ndiis, fcp_rdiis, fcp_mass, fcp_velocity, fcp_temperature,          &
+                                fcp_tempw, fcp_tolp, fcp_delta_t, fcp_nraise, freeze_all_atoms, closure, starting1d,  &
+                                tempv, rmax1d, smear1d, rism1d_maxstep, rism1d_conv_thr, rism1d_bond_width,           &
+                                rism1d_dielectric, rism1d_molesize, rism1d_nproc, rism1d_nproc_switch, mdiis1d_size,  &
+                                mdiis1d_step, laue_expand_right, laue_expand_left, laue_both_hands, starting3d,       &
+                                ecutsolv, smear3d, solute_lj, solute_epsilon, solute_sigma, rmax_lj, rism3d_maxstep,  &
+                                rism3d_conv_thr, mdiis3d_size, mdiis3d_step, rism3d_conv_level, rism3d_planar_average,&
+                                laue_nfit, laue_expand_right, laue_expand_left, laue_starting_right,                  &
+                                laue_starting_left, laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv,&
+                                laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, laue_both_hands,      &
+                                laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon,             &
+                                laue_wall_sigma, laue_wall_lj6, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2,&
+                                solvents_unit
 !
   USE fixed_occ,         ONLY:  f_inp               
 !
   USE kinds,             ONLY:   DP
-  USE parameters,        ONLY:   ntypx
-  USE constants,         ONLY:   e2,bohr_radius_angs
-  USE ions_base,         ONLY:   iob_tau=>tau
+  USE two_chem,          ONLY:   twochem
+  USE parameters,        ONLY:   ntypx, sc_size
+  USE constants,         ONLY:   e2,bohr_radius_angs, RYTOEV
+  USE ions_base,         ONLY:   iob_tau=>tau, nat, nsp, ityp
   USE cell_base,         ONLY:   cb_at => at, cb_alat => alat, cb_iforceh => iforceh
   USE funct,             ONLY:   get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
   USE xc_lib,            ONLY:   xclib_dft_is
@@ -89,48 +106,51 @@
   INTEGER                                  ::   nt
   LOGICAL                                  ::   lsda,dft_is_hybrid,  dft_is_nonlocc,  is_hubbard(ntypx)=.FALSE.,&
                                                 is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
-  INTEGER                                  ::   Hubbard_l=0,hublmax=0
+  INTEGER                                  ::   hublmax=0
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
-  INTEGER,EXTERNAL                         ::   set_hubbard_l, set_hubbard_l_back 
   INTEGER                                  ::   lung,l 
   CHARACTER(LEN=8),  EXTERNAL              ::   schema_smearing
   CHARACTER(LEN=8)                         ::   smearing_loc
   CHARACTER(len=20)                        ::   dft_shortname
   CHARACTER(len=25)                        ::   dft_longname
   CHARACTER(LEN=80),TARGET                 ::  vdw_corr_, vdw_nonlocc_
-  CHARACTER(LEN=80),POINTER                ::  vdw_corr_pointer => NULL(), vdw_nonlocc_pt=>NULL()
+  CHARACTER(LEN=80),POINTER                ::  vdw_corr_pointer, vdw_nonlocc_pt
   LOGICAL,TARGET                           ::  gate_tgt, block_tgt, relaxz_tgt
   LOGICAL,POINTER                          ::  gate_ptr, block_ptr, relaxz_ptr
   REAL(DP),TARGET                          ::  block_1_tgt, block_2_tgt, block_height_tgt, zgate_tgt
   REAL(DP),POINTER                         ::  block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr
-  TYPE(hybrid_type),POINTER                ::  hybrid_
-  TYPE(dftU_type),POINTER                  ::  dftU_
-  TYPE(vdW_type),POINTER                   ::  vdW_
+  TYPE(hybrid_type)                        ::  hybrid_
+  TYPE(dftU_type)                          ::  dftU_
+  TYPE(vdW_type)                           ::  vdW_
   REAL(DP),TARGET                          ::  xdm_a1_, xdm_a2_, lond_s6_, lond_rcut_, ts_vdw_econv_thr_,&
                                                scr_par_, exx_frc_, ecutvcut_, ecut_fock_, loc_thr_, cell_factor_tg      
-  REAL(DP),POINTER                         ::  xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), lond_s6_pt=>NULL(), &
-                                               lond_rcut_pt=>NULL(), ts_vdw_econv_thr_pt=>NULL(),& 
-                                               ecut_fock_opt=>NULL(), scr_par_opt=>NULL(), exx_frc_opt=>NULL(), &
-                                               ecutvcut_opt=>NULL(), loc_thr_p => NULL(), cell_factor_pt => NULL()  
+  REAL(DP),POINTER                         ::  xdm_a1_pt, xdm_a2_pt, lond_s6_pt, lond_rcut_pt, ts_vdw_econv_thr_pt, & 
+                                               ecut_fock_opt, scr_par_opt, exx_frc_opt, ecutvcut_opt, loc_thr_p,    &
+                                               cell_factor_pt
   LOGICAL,TARGET                           ::  empirical_vdw, ts_vdw_isolated_, dftd3_threebody_
-  LOGICAL,POINTER                          ::  ts_vdw_isolated_pt=>NULL(), dftd3_threebody_pt=>NULL()
+  LOGICAL,POINTER                          ::  ts_vdw_isolated_pt, dftd3_threebody_pt
   INTEGER,TARGET                           :: dftd3_version_, spin_ns, nbnd_tg, nq1_tg, nq2_tg, nq3_tg  
-  INTEGER,POINTER                          :: dftd3_version_pt=>NULL(), nbnd_pt => NULL(), nq1_pt=>NULL(),&
-                                              nq2_pt=>NULL(), nq3_pt=>NULL()  
-  REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U_back_(:), hubbard_alpha_(:), &
+  INTEGER,POINTER                          :: dftd3_version_pt, nbnd_pt, nq1_pt, nq2_pt, nq3_pt   
+  REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U2_(:), hubbard_alpha_(:), &
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
                                               starting_ns_(:,:,:)
-  LOGICAL, ALLOCATABLE                     :: backall_(:)
-  INTEGER, ALLOCATABLE                     :: Hubbard_l_back_(:), Hubbard_l1_back_(:) 
+  INTEGER, ALLOCATABLE                     :: hubbard_l_(:), hubbard_n_(:) 
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
-  INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:) 
+  INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:)
   CHARACTER,EXTERNAL                       :: capital
-  INTEGER                                  :: i 
+  INTEGER                                  :: i, nt1, nt2, na, nb
+  REAL(DP), PARAMETER                      :: ev_to_Ha = 1 / e2 / RYTOEV 
   !
   ! 
-  NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr, dftU_, vdW_, hybrid_)
+  NULLIFY(vdw_corr_pointer, vdw_nonlocc_pt) 
+  NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
   NULLIFY (nr_1,nr_2,nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3) 
+  NULLIFY (xdm_a1_pt, xdm_a2_pt, lond_s6_pt, lond_rcut_pt, ts_vdw_econv_thr_pt) 
+  NULLIFY (ecut_fock_opt, scr_par_opt, exx_frc_opt, ecutvcut_opt)  
+  NULLIFY (loc_thr_p, cell_factor_pt) 
+  NULLIFY (ts_vdw_isolated_pt, dftd3_threebody_pt ) 
+  NULLIFY (dftd3_version_pt, nbnd_pt, nq1_pt, nq2_pt, nq3_pt) 
 
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
@@ -146,7 +166,8 @@
                                     restart_mode=restart_mode,prefix=prefix,pseudo_dir=pseudo_dir,outdir=outdir,       &
                                     stress=tstress,forces=tprnfor, wf_collect=wf_collect,disk_io=disk_io,              &
                                     max_seconds=max_seconds,etot_conv_thr=etot_conv_thr/e2,forc_conv_thr=forc_conv_thr/e2,   &
-                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, NSTEP = cf_nstep )
+                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, fcp=lfcp, rism=trism,&
+                                    NSTEP = cf_nstep)
   !------------------------------------------------------------------------------------------------------------------------
   !                                                 ATOMIC SPECIES                                                      
   !------------------------------------------------------------------------------------------------------------------------
@@ -190,10 +211,8 @@
   END IF
 
   !dft_is_hybrid=get_dft_is_hybrid()
-  dft_is_hybrid = xclib_dft_is('hybrid')
-  
+  dft_is_hybrid = xclib_dft_is('hybrid') 
   IF ( dft_is_hybrid) THEN
-     ALLOCATE(hybrid_)
      IF (screening_parameter > 0.0_DP) THEN 
         scr_par_ = screening_parameter 
         scr_par_opt => scr_par_ 
@@ -227,13 +246,14 @@
                             SCREENING_PARAMETER = scr_par_opt,  EXXDIV_TREATMENT = exxdiv_treatment,&
                             X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation, ECUTVCUT = ecutvcut_opt, &
                             LOCAL_THR = loc_thr_p )
+  ELSE 
+     hybrid_%lwrite=.false. 
   END IF
   dft_is_nonlocc=get_dft_is_nonlocc()
   vdw_corr_ = vdw_corr
   IF (london) vdw_corr_ = 'grimme-d2'
   empirical_vdw = .NOT. ( TRIM(vdw_corr_)  == 'none')
   IF (empirical_vdw .OR. dft_is_nonlocc) THEN
-    ALLOCATE (vdW_)
     IF ( empirical_vdw ) THEN
         vdw_corr_pointer => vdw_corr_
         SELECT CASE ( TRIM(vdw_corr_))
@@ -278,57 +298,70 @@
                              LONDON_S6 = lond_s6_pt, LONDON_RCUT = lond_rcut_pt, SPECIES = species_, &
                              XDM_A1 = xdm_a1_pt, XDM_A2 = xdm_a2_pt, DFTD3_VERSION = dftd3_version_pt, &
                              DFTD3_THREEBODY = dftd3_threebody_pt)
+    ELSE 
+     vdw_%lwrite=.false. 
   END IF
   !
   IF (ip_lda_plus_u) THEN
-     ALLOCATE (dftU_)
      !
      DO nt = 1, ntyp
        !
        is_hubbard(nt) = ip_Hubbard_U(nt)/= 0.0_dp .OR. &
-                        ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+                        ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_alpha(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_alpha_back(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_J0(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_beta(nt)/= 0.0_dp .OR. &
                         ANY(ip_Hubbard_J(:,nt) /= 0.0_DP)
-       IF (is_hubbard(nt)) hublmax = MAX (hublmax, set_hubbard_l(upf(nt)%psd))
+       IF (is_hubbard(nt)) hublmax = MAX (hublmax, ip_Hubbard_l(nt))
        !
-       is_hubbard_back(nt) = ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+       is_hubbard_back(nt) = ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                              ip_Hubbard_alpha_back(nt) /= 0.0_DP  
        !
      END DO
+     !
+    IF ( ANY(ip_hubbard_V(:,:,1) /=0.0_DP)) THEN
+        DO na = 1, nat
+           nt1 = ityp(na)
+           DO nb = 1, nat * (2*sc_size+1)**3
+              nt2 = ityp(mod(nb-1,nat)+1)
+              is_hubbard(nt1) = is_hubbard(nt1) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+              is_hubbard(nt2) = is_hubbard(nt2) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+           ENDDO
+        ENDDO
+     END IF
+     !
      IF ( ANY(ip_hubbard_u(1:ntyp) /=0.0_DP)) THEN
         ALLOCATE(hubbard_U_(ntyp))
-        hubbard_U_(1:ntyp) = ip_hubbard_u(1:ntyp)
+        hubbard_U_(1:ntyp) = ip_hubbard_u(1:ntyp) * ev_to_Ha
      END IF
-     IF ( ANY(ip_hubbard_u_back(1:ntyp) /=0.0_DP)) THEN
-        ALLOCATE(hubbard_U_back_(ntyp))
-        hubbard_U_back_(1:ntyp) = ip_hubbard_u_back(1:ntyp)
+     IF ( ANY(ip_hubbard_u2(1:ntyp) /=0.0_DP)) THEN
+        ALLOCATE(hubbard_U2_(ntyp))
+        hubbard_U2_(1:ntyp) = ip_hubbard_u2(1:ntyp) * ev_to_Ha
      END IF
      IF (ANY (ip_hubbard_J0 /=0.0_DP)) THEN
         ALLOCATE(hubbard_J0_(ntyp))
-        hubbard_J0_ (1:ntyp) = ip_hubbard_J0(1:ntyp)
+        hubbard_J0_ (1:ntyp) = ip_hubbard_J0(1:ntyp) * ev_to_Ha 
      END IF
      IF (ANY (ip_hubbard_alpha /=0.0_DP)) THEN
         ALLOCATE(hubbard_alpha_(ntyp))
-        hubbard_alpha_ (1:ntyp) = ip_hubbard_alpha(1:ntyp)
+        hubbard_alpha_ (1:ntyp) = ip_hubbard_alpha(1:ntyp) * ev_to_Ha
      END IF
      IF (ANY (ip_hubbard_alpha_back /=0.0_DP)) THEN
         ALLOCATE(hubbard_alpha_back_(ntyp))
-        hubbard_alpha_back_ (1:ntyp) = ip_hubbard_alpha_back(1:ntyp)
+        hubbard_alpha_back_ (1:ntyp) = ip_hubbard_alpha_back(1:ntyp) * ev_to_Ha
      END IF
      IF (ANY (ip_hubbard_beta /=0.0_DP)) THEN
         ALLOCATE(hubbard_beta_(ntyp))
-        hubbard_beta_ (1:ntyp) = ip_hubbard_beta(1:ntyp)
+        hubbard_beta_ (1:ntyp) = ip_hubbard_beta(1:ntyp) * ev_to_Ha
      END IF
      IF (ANY (ip_hubbard_J(:,1:ntyp) /=0.0_DP )) THEN
         ALLOCATE(hubbard_J_(3,ntyp))
-        hubbard_J_(1:3,1:ntyp) = ip_hubbard_J(1:3,1:ntyp)
+        hubbard_J_(1:3,1:ntyp) = ip_hubbard_J(1:3,1:ntyp) * ev_to_Ha
      END IF
      !
      IF (ANY(starting_ns_eigenvalue /= -1.0_DP)) THEN
-         IF (lsda) THEN
+         IF (ip_nspin == 2) THEN
             spin_ns = 2
          ELSE
             spin_ns = 1
@@ -338,48 +371,42 @@
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
      END IF
      !
-     IF (ANY(is_hubbard_back(1:ntyp))) THEN 
-        ALLOCATE (Hubbard_l_back_(ntyp)) 
-        IF (ANY(lback>=0)) THEN
-          Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
-        ELSE 
-          DO nt = 1, ntyp 
-             Hubbard_l_back_(nt) = set_hubbard_l_back(upf(nt)%psd)
-          END DO 
-        END IF
-        IF (ANY(ip_backall) ) THEN 
-           ALLOCATE(backall_(ntyp))
-           backall_ (1:ntyp) = ip_backall(1:ntyp)
-           IF (ANY(l1back >=0)) THEN
-              ALLOCATE(Hubbard_l1_back_(ntyp))
-              Hubbard_l1_back_ (1:ntyp) = l1back(1:ntyp)
-           ENDIF
-        END IF 
-     END IF 
+     IF ( ANY(ip_hubbard_n(1:ntyp) > -1)) THEN
+        ALLOCATE(hubbard_n_(ntyp))
+        hubbard_n_(1:ntyp) = ip_hubbard_n(1:ntyp)
+     END IF
+     IF ( ANY(ip_hubbard_l(1:ntyp) > -1)) THEN
+        ALLOCATE(hubbard_l_(ntyp))
+        hubbard_l_(1:ntyp) = ip_hubbard_l(1:ntyp)
+     END IF
      !
-     CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
+     !
+     CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ip_nat), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
-                           U_PROJECTION_TYPE=u_projection_type, &
-                           U=hubbard_U_, U_back=hubbard_U_back_, HUBB_L_BACK = Hubbard_l_back_, &
-                           HUBB_L1_BACK= Hubbard_l1_back_, J0=hubbard_J0_, J = hubbard_J_, &
+                           U_PROJECTION_TYPE=ip_hubbard_projectors, U=hubbard_U_, U2=hubbard_U2_,  & 
+                           HUBB_n2 = ip_hubbard_n2(1:ntyp), HUBB_L2 = ip_hubbard_l2(1:ntyp), &
+                           HUBB_N3 = ip_hubbard_n3(1:ntyp), HUBB_L3= ip_hubbard_l3(1:ntyp), J0=hubbard_J0_, & 
+                           J = hubbard_J_, n=hubbard_n_, l=hubbard_l_, HUBBARD_V = ip_hubbard_v * ev_to_Ha, &
                            ALPHA = hubbard_alpha_, BETA = hubbard_beta_, ALPHA_BACK = hubbard_alpha_back_, &
-                           STARTING_NS = starting_ns_, BACKALL = backall_ )
+                           STARTING_NS = starting_ns_, BACKALL = ip_backall )
+  ELSE
+    dftU_%lwrite = .false. 
   END IF
   CALL qexsd_init_dft(obj%dft, TRIM(dft_name), hybrid_, vdW_, dftU_)
-  IF (ASSOCIATED(hybrid_)) THEN
-    CALL qes_reset(hybrid_)
-    DEALLOCATE(hybrid_)
-  END IF
-  IF (ASSOCIATED(vdW_)) THEN
-    CALL qes_reset(vdW_)
-    DEALLOCATE(vdW_)
-  END IF
-  IF (ASSOCIATED(dftU_)) THEN
-    CALL qes_reset(dftU_)
-    DEALLOCATE(dftU_)
-  END IF
-
+  CALL qes_reset(hybrid_)
+  CALL qes_reset(vdW_)
+  CALL qes_reset(dftU_)
+  IF (ALLOCATED(hubbard_U_))          DEALLOCATE(hubbard_U_)
+  IF (ALLOCATED(hubbard_U2_))         DEALLOCATE(hubbard_U2_)
+  IF (ALLOCATED(hubbard_J0_))         DEALLOCATE(hubbard_J0_)
+  IF (ALLOCATED(hubbard_alpha_))      DEALLOCATE(hubbard_alpha_)
+  IF (ALLOCATED(hubbard_alpha_back_)) DEALLOCATE(hubbard_alpha_back_)
+  IF (ALLOCATED(hubbard_beta_))       DEALLOCATE(hubbard_beta_)
+  IF (ALLOCATED(hubbard_J_))          DEALLOCATE(hubbard_J_)
+  IF (ALLOCATED(starting_ns_))        DEALLOCATE(starting_ns_)
+  IF (ALLOCATED(hubbard_n_))          DEALLOCATE(hubbard_n_)
+  IF (ALLOCATED(hubbard_l_))          DEALLOCATE(hubbard_l_)
   !
   !------------------------------------------------------------------------------------------------------------------------
   !                                                   SPIN ELEMENT
@@ -415,7 +442,9 @@
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin, &
                               TOT_MAG  = tot_magnetization)
      END IF
-  END IF 
+  END IF  
+  obj%twoch__ispresent=.TRUE.
+  CALL qexsd_init_twochem(obj%twoch_,'twoch_', twochem, nbnd_cond,degauss_cond,nelec_cond)
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                    BASIS ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------
@@ -442,8 +471,9 @@
     diagonalization = ip_diagonalization
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
-                                   mixing_ndim, electron_maxstep, tqr, real_space, tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                                   diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
+                                   mixing_ndim, exx_maxstep, electron_maxstep, tqr, real_space, tq_smoothing, &
+                                   tbeta_smoothing, diago_thr_init, &
+                                   diago_full_acc, diago_cg_maxiter, diago_david_ndim, &
                                    diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
@@ -456,7 +486,7 @@
 
   ELSE 
      CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
-                                   alat,a1, ibrav_lattice,ip_xk, ip_wk)
+                                   alat,a1, ibrav_lattice,ip_xk, ip_wk,ip_labelk)
 
   END IF
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -487,23 +517,83 @@
      obj%boundary_conditions_ispresent=.FALSE.
   ELSE 
      obj%boundary_conditions_ispresent = .TRUE.
-     IF ( TRIM ( assume_isolated) .EQ. "esm") THEN 
-        SELECT CASE (TRIM(esm_bc)) 
+     IF ( TRIM ( assume_isolated) .EQ. "esm") THEN
+        SELECT CASE (TRIM(esm_bc))
           CASE ('pbc' )
-             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc)
           CASE ('bc1' )
-             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
-                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
-          CASE ('bc2', 'bc3', 'bc4' )
-             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
-                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
-        END SELECT 
-     ELSE 
-        CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated) 
-     END IF 
+            IF (trism) THEN
+              IF (lgcscf) THEN
+                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                     esm_nfit=esm_nfit, esm_debug=esm_debug, esm_debug_gpmax=esm_debug_gpmax, &
+                     lgcscf=lgcscf, gcscf_ignore_mun=gcscf_ignore_mun, gcscf_mu=gcscf_mu, &
+                     gcscf_conv_thr=gcscf_conv_thr, gcscf_gk=gcscf_gk, gcscf_gh=gcscf_gh, gcscf_beta=gcscf_beta)
+               ELSE
+                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                     esm_nfit=esm_nfit, esm_debug=esm_debug, esm_debug_gpmax=esm_debug_gpmax)
+               END IF
+            ELSE
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_debug=esm_debug, esm_debug_gpmax=esm_debug_gpmax)
+            END IF
+          CASE ('bc2', 'bc3')
+            IF (lgcscf) THEN
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_efield=esm_efield, esm_w=esm_w, esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax, lgcscf=lgcscf, gcscf_ignore_mun=gcscf_ignore_mun, &
+                   gcscf_mu=gcscf_mu, gcscf_conv_thr=gcscf_conv_thr, gcscf_gk=gcscf_gk, gcscf_gh=gcscf_gh, &
+                   gcscf_beta=gcscf_beta)
+            ELSE
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_efield=esm_efield, esm_w=esm_w,esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax)
+            END IF
+          CASE ('bc4')
+            IF (lgcscf) THEN
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_w=esm_w, esm_a=esm_a, esm_zb=esm_zb, esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax, lgcscf=lgcscf, gcscf_ignore_mun=gcscf_ignore_mun, &
+                   gcscf_mu=gcscf_mu, gcscf_conv_thr=gcscf_conv_thr, gcscf_gk=gcscf_gk, gcscf_gh=gcscf_gh, &
+                   gcscf_beta=gcscf_beta)
+            ELSE
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_w=esm_w, esm_a=esm_a, esm_zb=esm_zb, esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax)
+            END IF
+        END SELECT
+     ELSE
+        CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated)
+     END IF
+  END IF
+  !------------------------------------------------------------------------------------------------------------------------
+  !                              Ficticious charge particle (FCP)
+  !------------------------------------------------------------------------------------------------------------------------
+  IF (lfcp) THEN
+     obj%fcp_settings_ispresent = .TRUE.
+     CALL qexsd_init_fcp(obj%fcp_settings, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
+                         fcp_mass, fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t,&
+                         fcp_nraise, freeze_all_atoms)
+  ELSE
+     obj%fcp_settings_ispresent = .FALSE.
+  END IF
+  !------------------------------------------------------------------------------------------------------------------------
+  !                              RISM
+  !------------------------------------------------------------------------------------------------------------------------
+  IF (trism) THEN
+     obj%rism_settings_ispresent = .TRUE.
+     CALL qexsd_init_rism(obj%rism_settings, nsolv, closure, tempv, ecutsolv, nsp, solute_lj, solute_epsilon, solute_sigma, &
+          rmax_lj,rmax1d, starting1d, starting3d, smear1d, smear3d, rism1d_maxstep, rism3d_maxstep, rism1d_conv_thr, &
+          rism3d_conv_thr, mdiis1d_size, mdiis3d_size, mdiis1d_step, mdiis3d_step, rism1d_bond_width, rism1d_dielectric, &
+          rism1d_molesize, rism1d_nproc, rism1d_nproc_switch, rism3d_conv_level, rism3d_planar_average, laue_nfit, &
+          laue_expand_right, laue_expand_left, laue_starting_right, laue_starting_left, laue_buffer_right, &
+          laue_buffer_right_solu, laue_buffer_right_solv, laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, &
+          laue_both_hands, laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon, laue_wall_sigma, &
+          laue_wall_lj6)
+     obj%solvents_ispresent = .TRUE.
+     CALL qexsd_init_solvents(obj%solvents, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2, solvents_unit)
+  ELSE
+     obj%rism_settings_ispresent = .FALSE.
+     obj%solvents_ispresent = .FALSE.
   END IF
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                              EKIN FUNCTIONAL 
@@ -526,13 +616,9 @@
   !-------------------------------------------------------------------------------------------------------------------------------
   !                                            FREE POSITIONS
   !---------------------------------------------------------------------------------------------------------------------------- 
-  IF ( TRIM(calculation) .NE. "scf" .AND. TRIM(calculation) .NE. "nscf" .AND. &
-                                           TRIM(calculation) .NE. "bands") THEN
-      obj%free_positions_ispresent=.TRUE.
-      CALL qexsd_init_free_positions( obj%free_positions, rd_if_pos, ip_nat)
-  ELSE
-      obj%free_positions_ispresent = .FALSE.
-  END IF
+  ! Always dump free positions, regardless of the calculation
+  obj%free_positions_ispresent = .TRUE.
+  CALL qexsd_init_free_positions( obj%free_positions, rd_if_pos, ip_nat)
   !----------------------------------------------------------------------------------------------------------------------------
   !                                  STARTING IONIC VELOCITIES 
   !-----------------------------------------------------------------------------------------------------------------------------

@@ -16,7 +16,6 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE io_files,             ONLY : prefix, tmp_dir, iunwfc, nwordwfc
   USE kinds,    ONLY : DP
-  USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
   USE wvfct,     ONLY : npwx, npw, nbnd, wg

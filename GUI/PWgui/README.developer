@@ -9,7 +9,7 @@
 For QE developers: updating the PWgui modules
 ---------------------------------------------
 
-If some new variables have been added to a given QE program, please
+When new input variables are added to a given QE program, please
 update corresponding module definition files, which are located in
 modules/ directory.
 
@@ -27,13 +27,13 @@ GUIB-definition language. Such a description provides two items: (i)
 it defines the input-syntax and concomitantly (ii) defines the GUI.
 
 The modules are located in the modules/ directory. Each module is
-located in its own directory. For example the PW.X module is located
+located in its own directory. For example, the PW.X module is located
 in directory modules/pw. The following files are located therein:
 
 	* pw.tcl 	- the main module definition file, the rest of
 			  the files are sourced from it
 	* pw-event.tcl 	- implementation of the event-driven mechanism
-	* pw-help.tcl	- help file describing all the pw.x variables
+	* pw-help.tcl	- help file describing the pw.x variables
 	* commands.tcl	- auxiliary commands used by file pw.tcl
 
 Hereafter such files are called "module definition files".
@@ -45,21 +45,21 @@ How to add a new module to PWgui
 Let's say we want to add a new module named "mymodule". We have to
 perform two tasks:
 
-	(i) Write the Module Definition Files 
+	(i) Write the module definition files 
 
 Create a directory: modules/mymodule, and therein a file
-mymodule.tcl. If needed, create also files: mymodule-event.tcl,
-mymodule-help.tcl, and commands.tcl. 
+mymodule.tcl. If needed, create also mymodule-event.tcl,
+mymodule-help.tcl, and commands.tcl files.
 
-For the syntax of the module definition file see some existing
+For the syntax of the module definition file, see some existing
 modules. For example, see files in modules/pp (an easy example), or in
 modules/pw (a complex example). For further documentation see also:
 http://www-k3.ijs.si/kokalj/guib/documentation.html.
 
-	(ii) Inform the GUI About New Module
+	(ii) Inform the GUI about the new module
 
-Now we should edit the file src-tcl/pwscf.itcl, and add the following
-line on the proper place (search for addModule string):
+Edit the src-tcl/pwscf.itcl file, and add the following line on the
+proper place (search for addModule string):
 
 $gui addModule module mymodule "MyModule.X" \
 	[file join $env(PWGUI) modules mymodule mymodule.tcl] { 
@@ -67,9 +67,9 @@ $gui addModule module mymodule "MyModule.X" \
 }
 
 
-We can also add a documentation for the module. Let say that we have
-an INPUT_MYMODULE.txt file. We need to tranform it into a simple
-INPUT_MYMODULE.html file in the doc/ directory by editing the
+It is recommended to also add a documentation for the module. Let say
+that we have an INPUT_MYMODULE.txt file. We need to tranform it into a
+simple INPUT_MYMODULE.html file in the doc/ directory by editing the
 doc/Makefile file. Then we sould edit the src-tcl/pwscf.itcl file and
 add the following line on the proper place (search for addHelp
 string):

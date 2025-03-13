@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -35,7 +35,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -97,22 +97,22 @@ cat > si.in << EOF
     outdir='$TMP_DIR/'
     tstress = .TRUE.
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc =12.0,  nbnd = 8,
-    input_dft='pbe0', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq, 
+    input_dft='pbe0', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq,
     exxdiv_treatment='$exxdiv_treatment'
     ecutvcut=$ecutvcut
     x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &electrons
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS alat
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
@@ -153,21 +153,21 @@ cat > si.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc =12.0,  nbnd = 8,
-    input_dft='hse', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq, 
+    input_dft='hse', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq,
     x_gamma_extrapolation = $x_gamma_extrapolation
     exxdiv_treatment = '$exxdiv_treatment'
  /
  &electrons
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS alat
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
@@ -209,21 +209,21 @@ cat > si.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc =12.0,  nbnd = 8,
-    input_dft='gaupbe', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq, 
+    input_dft='gaupbe', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq,
     x_gamma_extrapolation = .false.
     exxdiv_treatment = 'none'
  /
  &electrons
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS alat
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
@@ -299,11 +299,11 @@ cat > o.inp << EOF
  /
 ATOMIC_SPECIES
   O 16.0  OPBE$ps.RRKJ3
-ATOMIC_POSITIONS angstrom 
-  O  0.1 0.2 0.3 
+ATOMIC_POSITIONS angstrom
+  O  0.1 0.2 0.3
 K_POINTS gamma
-#automatic 
-#1 1 1  0 0 0 
+#automatic
+#1 1 1  0 0 0
 EOF
 $ECHO "  running oxygen atom..\c"
 $PW_COMMAND < o.inp > o.$xc.$ps.out-$ecut
@@ -344,11 +344,11 @@ cat > c.inp << EOF
  /
 ATOMIC_SPECIES
   C 16.0  CPBE$ps.RRKJ3
-ATOMIC_POSITIONS angstrom 
-  C  0.1 0.2 0.3 
+ATOMIC_POSITIONS angstrom
+  C  0.1 0.2 0.3
 K_POINTS gamma
-#automatic 
-#1 1 1  0 0 0 
+#automatic
+#1 1 1  0 0 0
 EOF
 $ECHO "  running carbon atom..\c"
 $PW_COMMAND < c.inp > c.$xc.$ps.out-$ecut
@@ -389,11 +389,11 @@ cat > n.inp << EOF
  /
 ATOMIC_SPECIES
   N 16.0  NPBE$ps.RRKJ3
-ATOMIC_POSITIONS angstrom 
-  N  0.1 0.2 0.3 
+ATOMIC_POSITIONS angstrom
+  N  0.1 0.2 0.3
 K_POINTS gamma
-#automatic 
-#1 1 1  0 0 0 
+#automatic
+#1 1 1  0 0 0
 EOF
 $ECHO "  running nitrogen atom..\c"
 $PW_COMMAND < n.inp > n.$xc.$ps.out-$ecut
@@ -404,7 +404,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/n.*
 $ECHO " done"
 
-b=0.3169 
+b=0.3169
 cat > n2.inp << EOF
 &CONTROL
                  calculation = 'scf' ,
@@ -435,12 +435,12 @@ cat > n2.inp << EOF
  /
 ATOMIC_SPECIES
   N 16.0  NPBE$ps.RRKJ3
-ATOMIC_POSITIONS angstrom 
+ATOMIC_POSITIONS angstrom
   N  $b  $b  $b
   N -$b -$b -$b
 K_POINTS gamma
-#automatic 
-#1 1 1  0 0 0 
+#automatic
+#1 1 1  0 0 0
 EOF
 $ECHO "  running n2 molecule..\c"
 $PW_COMMAND < n2.inp > n2.$xc.$ps.out-$ecut
@@ -483,16 +483,16 @@ cat > co.inp << EOF
 ATOMIC_SPECIES
   C 16.0  CPBE$ps.RRKJ3
   O 16.0  OPBE$ps.RRKJ3
-ATOMIC_POSITIONS angstrom 
+ATOMIC_POSITIONS angstrom
   C  $b  $b  $b
   O -$b -$b -$b
 K_POINTS gamma
-#automatic 
-#1 1 1  0 0 0 
+#automatic
+#1 1 1  0 0 0
 EOF
 $ECHO "  running co molecule..\c"
 $PW_COMMAND < co.inp > co.$xc.$ps.out-$ecut
-$ECHO " done" 
+$ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
@@ -532,12 +532,12 @@ cat > o2.inp << EOF
  /
 ATOMIC_SPECIES
   O 16.0  OPBE$ps.RRKJ3
-ATOMIC_POSITIONS angstrom 
+ATOMIC_POSITIONS angstrom
   O  $b  $b  $b
   O -$b -$b -$b
 K_POINTS gamma
-#automatic 
-#1 1 1  0 0 0 
+#automatic
+#1 1 1  0 0 0
 EOF
 $ECHO "  running o2 molecule..\c"
 $PW_COMMAND < o2.inp > o2.$xc.$ps.out-$ecut
@@ -561,7 +561,7 @@ paste CO O C | awk '{be= (\$1-\$2-\$3) * 13.6058 * 23.06; print "CO : ",be}'
 rm C N O CO O2 N2
 EOF
 sh summarize
-$ECHO 
+$ECHO
 done
 
 $ECHO "$EXAMPLE_DIR : done"

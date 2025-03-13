@@ -68,7 +68,12 @@ Magnetic spectroscopy (inelastic neutron scattering)
 
 Spin dynamics from time-dependent density functional perturbation theory
 Authors: T. Gorni, I. Timrov, and S. Baroni,
-Source: The European Physical Journal B   Volume: 91   Article Number: 249   Published: 2018
+Source: The European Physical Journal B   Volume: 91   Article Number: 249     Published: 2018
+
+turboMagnon – A code for the simulation of spin-wave spectra using the Liouville-Lanczos approach 
+to time-dependent density-functional perturbation theory,
+Authors: T. Gorni, O. Baseggio, P. Delugas, S. Baroni, and I. Timrov
+Source: Computer Physics Communications   Volume: 280  Article Number: 108500  Published: 2022
 
 -------------------------------------------------------------------------------------------------------------
 

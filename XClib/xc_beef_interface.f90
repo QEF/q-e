@@ -22,33 +22,33 @@ MODULE beef_interface
     INTERFACE
     !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda ) BIND(C, NAME="beefx_")
-    !$acc routine seq
-    USE iso_c_binding
+        USE iso_c_binding
+        !$acc routine seq
         REAL (C_DOUBLE)            :: r, g, e, dr, dg
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beefx
     !
     SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda) BIND(C, NAME="beeflocalcorr_")
-    !$acc routine seq
-    USE iso_c_binding
+        USE iso_c_binding
+        !$acc routine seq
         REAL (C_DOUBLE), INTENT(INOUT) :: r, g, e, dr, dg
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beeflocalcorr
     !
     SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda) BIND(C, NAME="beeflocalcorrspin_")
-    !$acc routine seq
-    USE iso_c_binding
+        USE iso_c_binding
+        !$acc routine seq
         REAL (C_DOUBLE), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beeflocalcorrspin
     !
     SUBROUTINE beefsetmode(mode) BIND(C, NAME="beefsetmode_")
-    USE iso_c_binding
+        USE iso_c_binding
         INTEGER(C_INT), INTENT(IN) :: mode
     END SUBROUTINE beefsetmode
     !
     SUBROUTINE beefrandinit(seed) BIND(C, NAME="beefrandinit_")
-    USE iso_c_binding
+        USE iso_c_binding
         INTEGER(C_INT), INTENT(IN) :: seed
     END SUBROUTINE beefrandinit
     !
@@ -56,7 +56,7 @@ MODULE beef_interface
     END SUBROUTINE beefrandinitdef
     !
     SUBROUTINE beefensemble(beefxc, ensemble) BIND(C, NAME="beefensemble_")
-    USE iso_c_binding
+        USE iso_c_binding
         REAL (C_DOUBLE), INTENT(INOUT) :: beefxc(*), ensemble(*)
     END SUBROUTINE beefensemble
     !
@@ -102,27 +102,27 @@ MODULE beef_interface
     ! and not in the above interfaces.
     !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda )
-      !$acc routine seq
       !! Evaluate bee exchange energy and its derivatives \(d\epsilon/d\rho\) and 
       !! \( (d\epsilon/d|\nabla \rho| ) / |\nabla\rho|\).
       USE kind_l, ONLY : dp
+      !$acc routine seq
       REAL (dp) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beefx
     !
     SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda)
-      !$acc routine seq
       !! Evaluate local part of bee correlation and its derivatives \(d\epsilon/drho\)
       !! and \( (d\epsilon/d|\nabla\rho|) / |\nabla\rho| \).
       USE kind_l, ONLY : dp
+      !$acc routine seq
       REAL (dp), INTENT(INOUT) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorr
     !
     SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda)
-      !$acc routine seq
       !! Evaluate local part of bee correlation for spin polarized system.
       USE kind_l, ONLY : dp
+      !$acc routine seq
       REAL (dp), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorrspin

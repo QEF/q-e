@@ -1,0 +1,793 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>kcw.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      kcw.x / KCW / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.4)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm15">&amp;CONTROL</a></p>
+<blockquote>
+<a href="#idm16">prefix</a> | <a href="#idm19">outdir</a> | <a href="#idm22">calculation</a> | <a href="#idm33">kcw_iverbosity</a> | <a href="#idm36">kcw_at_ks</a> | <a href="#idm39">read_unitary_matrix</a> | <a href="#idm42">spread_thr</a> | <a href="#idm46">homo_only</a> | <a href="#idm50">l_vcut</a> | <a href="#idm55">assume_isolated</a> | <a href="#idm62">spin_component</a> | <a href="#idm66">mp1</a> | <a href="#idm67">mp2</a> | <a href="#idm68">mp3</a> | <a href="#idm71">lrpa</a> | <a href="#idm74">io_sp</a> | <a href="#idm77">io_real_space</a> | <a href="#idm80">irr_bz</a> | <a href="#idm83">use_wct</a>
+</blockquote>
+   <p><a href="#idm86">&amp;WANNIER</a></p>
+<blockquote>
+<a href="#idm87">seedname</a> | <a href="#idm90">num_wann_occ</a> | <a href="#idm93">num_wann_emp</a> | <a href="#idm96">have_empty</a> | <a href="#idm99">has_disentangle</a> | <a href="#idm102">check_ks</a> | <a href="#idm105">alpha_mix(niter)</a>
+</blockquote>
+   <p><a href="#idm108">&amp;SCREEN</a></p>
+<blockquote>
+<a href="#idm109">niter</a> | <a href="#idm112">nmix</a> | <a href="#idm115">tr2</a> | <a href="#idm118">i_orb</a> | <a href="#idm121">eps_inf</a> | <a href="#idm127">check_spread</a>
+</blockquote>
+   <p><a href="#idm131">&amp;HAM</a></p>
+<blockquote>
+<a href="#idm132">do_bands</a> | <a href="#idm136">use_ws_distance</a> | <a href="#idm139">write_hr</a> | <a href="#idm142">on_site_only</a>
+</blockquote>
+   <p><a href="#idm145">K_POINTS</a></p>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Input data format:</b> { } = optional, [ ] = it depends, # = comment
+
+<b>Structure of the input data:</b>
+===============================================================================
+
+<b>&amp;CONTROL</b>
+   ...
+<b>/</b>
+
+<b>&amp;WANNIER</b>
+   ...
+<b>/</b>
+
+<b>&amp;SCREEN</b>
+   ...
+<b>/</b>
+
+<b>&amp;HAM</b>
+   ...
+<b>/</b>
+
+<b>K_POINTS</b> { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+if (gamma)
+   nothing to read
+if (automatic)
+   nk1, nk2, nk3, k1, k2, k3
+if (not automatic)
+   nks
+   xk_x, xk_y, xk_z,  wk
+if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
+   </pre></blockquote>
+</blockquote>
+   <a name="idm15"></a><a name="CONTROL"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>CONTROL</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm16"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">prefix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'pwscf'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Prepended to input/output filenames; must be the same
+used in the previous PW calculations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm19"></a><a name="outdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">outdir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+current directory ('./')
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Directory containing input, output, and scratch files;
+must be the same as specified in the calculation of
+previous PW calculation.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm22"></a><a name="calculation"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">calculation</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Specify the KCW calculation to be done
+Possible choices:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'wann2kcw'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Pre-processing to prepare KCW calculation.
+Read previous PWSCF and possibly W90 outputs and prepare the KCW
+calculation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'screen'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Perform the calculation of KCW screening coefficient using a
+LR approach as described here <a href="https://doi.org/10.1021/acs.jctc.7b01116">https://doi.org/10.1021/acs.jctc.7b01116</a>
+and <a href="https://arxiv.org/abs/2202.08155">arXiv:2202.08155</a>
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'ham'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Perform the calculation interpolation and diagonalization of the KI hamiltonian
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'cc'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Computes the (estimated) q+G=0 contribution to the bare and screened KC corrections.
+A report on this quantities is printed on output and can be used to correct a
+posteriori a "screen" calculation performed without any corrective scheme (<a href="#l_vcut">l_vcut</a>=.false.)
+avoiding the need of re-doing a "screen" calculation.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm33"></a><a name="kcw_iverbosity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">kcw_iverbosity</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+= 0 : minimal output
+= 1 : as above + performs additional checks.
+&gt; 1 : as above + additional infos on all the steps.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm36"></a><a name="kcw_at_ks"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">kcw_at_ks</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .TRUE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true the KS canonical orbitals are used instead of Wannier
+functions. It makes sense for isolated system only.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm39"></a><a name="read_unitary_matrix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">read_unitary_matrix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true read the Unitary matrix written by Wannier90.
+Implicitely means a previous wannier90 calculation was
+performed and a KCW calculation will be performed starting
+from MLWF. Requires 'write_hr = .true.' in wannier90.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm42"></a><a name="spread_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">spread_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.0001 Ry
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+HARD-CODED FOR NOW. Two or more Wannier functions are considered
+identical if their spread (self-hartree) differ by less than spread_thr.
+Requires <a href="#check_spread">check_spread</a> = .true.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm46"></a><a name="homo_only"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">homo_only</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> FALSE
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#kcw_at_ks">kcw_at_ks</a> = .TRUE. only the screening paramenter for the HOMO is
+calculated. Mainly for a perturbative calculation of the first Ionization
+Potential in isolated systems.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm50"></a><a name="l_vcut"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">l_vcut</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> FALSE
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE. the Gygi-Baldereschi scheme is used to deal with
+the q-&gt;0 divergence of the Coulomb integral (bare and screened).
+Improves the convergence wrt k/q-point sampling.
+Requires to correctly set <a href="#eps_inf">eps_inf</a> for the calculation of
+the screened interaction.
+
+Use it only for periodic system.
+For isoleted system use <a href="#assume_isolated">assume_isolated</a>, instead.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm55"></a><a name="assume_isolated"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">assume_isolated</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'none'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Used to perform calculation assuming the system to be
+isolated (a molecule or a cluster in a 3D supercell).
+
+Currently available choices:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'none'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> (default): regular periodic calculation w/o any correction.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'martyna-tuckerman'</span>, <span class="flag">'m-t'</span>, <span class="flag">'mt'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Martyna-Tuckerman correction
+to both total energy and scf potential. Adapted from:
+G.J. Martyna, and M.E. Tuckerman,
+"A reciprocal space based method for treating long
+range interactions in ab-initio and force-field-based
+calculation in clusters", J. Chem. Phys. 110, 2810 (1999),
+<a href="https://doi.org/10.1063/1.477923">doi:10.1063/1.477923</a>.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm62"></a><a name="spin_component"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">spin_component</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Which spin channel to calculate (only collinear calculation).
+1 = spin up channel
+2 = spin down channel
+It has to be consistent with the previous Wannier90
+calculation (see 'spin' keyword in Wannier90 documentation)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm66"></a><a name="mp1"></a>mp1, <a name="idm67"></a><a name="mp2"></a>mp2, <a name="idm68"></a><a name="mp3"></a>mp3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> -1,-1,-1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Parameters of the Monkhorst-Pack grid (no offset).
+Same meaning as for nk1, nk2, nk3 in the input of pw.x.
+It has to coincide with the regular mesh used for the
+wannier90 calculation.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm71"></a><a name="lrpa"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lrpa</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the response function is computed neglecting xc
+effects both in the kernel and in the response function (RPA).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm74"></a><a name="io_sp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">io_sp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. write wannier orbital densities in single-precision.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm77"></a><a name="io_real_space"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">io_real_space</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. write Wannier orbital densities and Wannier functions in real space.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm80"></a><a name="irr_bz"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">irr_bz</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. compute and use the symmetries of the Wannier orbital densities
+to reduce the number of k and q points for the BZ sampling.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm83"></a><a name="use_wct"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">use_wct</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. allow to use symmetries that send the Wannier orbital density into
+the Wannier translated by a lattice vector (wcf= wannier center translation)
+to further reduce the number of q points
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm86"></a><a name="WANNIER"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>WANNIER</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm87"></a><a name="seedname"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">seedname</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> wann
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The seedname of the previous Wannier90 calculation for occupied states.
+NOTA BENE: the code implicitely assumed that the seedname for empty
+state is the same as that for occupied state with "_emp" appended.
+Keep this in mind when set up the wannier90 inputs.
+
+For example:
+wann.win         is the wannier90 input file for the occupied states.
+wann_emp.win     is the wannier90 input file for the empty states.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm90"></a><a name="num_wann_occ"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">num_wann_occ</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The number of wannier function for the occupied manifold.
+It has to coincide with the number of occupied KS orbitals.
+The whole KS manifold has to be wannierised (no 'exclude_band'
+option for occupied state, at the moment).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm93"></a><a name="num_wann_emp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">num_wann_emp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The number of wannier function for the empty manifold.
+It has to coincide with the number of empty wannier function
+from the previous wannier90 calculation
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm96"></a><a name="have_empty"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">have_empty</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> FALSE
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true empty state are computed. Require a previous wannier90
+calculation for the empty manifold. The code search for the
+unitary matrices in the wannier90 file seedname_emp_u.mat
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm99"></a><a name="has_disentangle"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">has_disentangle</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> FALSE
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Specify if a disentangle unitary matrix needs to be read. Requires
+a consisten calcuation from the previous wannier90 run.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm102"></a><a name="check_ks"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">check_ks</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> FALSE
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Specify if a diagonalization of the KS matrix build using the wannier
+function in input has to be performed. This is mainly for debugging purpose.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm105"></a><a name="alpha_mix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">alpha_mix(niter)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> alpha_mix(1)=0.7
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Mixing factor (for each iteration) for updating
+the scf potential:
+
+vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm108"></a><a name="SCREEN"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>SCREEN</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm109"></a><a name="niter"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">niter</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> maxter=100
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum number of iterations in a scf step. If you want
+more than 100, edit variable "maxter" in PH/phcom.f90
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm112"></a><a name="nmix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nmix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 4
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Number of iterations used in potential mixing.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm115"></a><a name="tr2"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">tr2</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1e-14
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Threshold for self-consistency.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm118"></a><a name="i_orb"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">i_orb</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> -1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Perform the screening calculation for a particular orbital.
+If i_orb = -1 (default) all the orbitals are computed.
+Assumes values between 1 and the total number of wannier
+functions.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm121"></a><a name="eps_inf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eps_inf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.d0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The macroscopic dielectric constant. Needed for the Gygi-Baldereschi
+scheme if <a href="#l_vcut">l_vcut</a> = .TRUE.
+Typically from exp or from a ph.x calculation.
+
+NOTA BENE: This would be equivalent to a Makov-Payne correction. It works well
+for cubic systems. Less well for anisotropic systems.
+
+ANISOTROPIC SYSTEMS: In this case a generalization of the GB scheme is implemented
+based on Nano Lett.,9, 975 (2009). It requires the full dielectric tensor to be provided.
+The code searches (in the working dir) for a file named "eps.dat" containing the macrospocic
+dielectric tensor. If it does not find it, the value <a href="#eps_inf">eps_inf</a> provided in input will be
+used (isotropic approximation). If not even <a href="#eps_inf">eps_inf</a> is provided in input no correction
+is applied to the screened KC correction.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm127"></a><a name="check_spread"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">check_spread</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE. the spread (self-hartree) of the Wannier functions is
+checked and used to decide whether two or more Wannier functions
+can be considered "identical" or not. Two Wannier functions are
+considered identical if their spread (self-hartree) differ by less
+than 1e-4 Ry (Hard coded for now, see <a href="#spread_thr">spread_thr</a>).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm131"></a><a name="HAM"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>HAM</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm132"></a><a name="do_bands"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">do_bands</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the interpolated band structure is computed along
+a path specified with the K_POINTS card ( see PW documentation
+<a href="https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS">https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS</a> )
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm136"></a><a name="use_ws_distance"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">use_ws_distance</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .TRUE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the position of the Wannier function inside the cell is used
+to set the proper distance and to have a smoother interpolation. Requires
+seedname_centres.xyz to be printed by the previous Wannier90 run. If the
+file is not found it is automatically switched to .FALSE. and only the
+distance between the cells is used (see also Wannier90 documentation)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm139"></a><a name="write_hr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">write_hr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .TRUE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the KCW hamiltonain in the Wannier basis and in real spase H(R)_m_n
+is printed to file. Usefull for furhter post-processing.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm142"></a><a name="on_site_only"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">on_site_only</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. only the on-site and diagonal elements of the KCW hamiltonain
+are computed (R=0 and n=m).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm145"></a><a name="K_POINTS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">K_POINTS</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody><tr><td><p><pre> see <a href="https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS">https://www.quantum-espresso.org/Doc/INPUT_PW.html#K_POINTS</a>
+      </pre></p></td></tr></tbody></table></td></tr>
+</table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Thu Feb 06 12:11:15 CET 2025.
+	</small>
+</body>
+</html>

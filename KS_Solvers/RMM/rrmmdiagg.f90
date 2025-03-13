@@ -9,7 +9,7 @@
 #define ZERO ( 0._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
+SUBROUTINE rrmmdiagg( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi, hpsi, spsi, e, &
                       g2kin, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
@@ -61,10 +61,10 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   REAL(DP),    PARAMETER   :: SMIN = 0.05_DP
   REAL(DP),    PARAMETER   :: SMAX = 1.00_DP
   !
-  EXTERNAL :: h_psi, s_psi
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
   !
@@ -95,17 +95,20 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
      IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate sphi ', ABS(ierr) )
      !
   END IF
+  !$acc enter data create(phi, sphi, hphi)
   !
   ALLOCATE( kpsi( npwx, nbnd ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
   !
   ALLOCATE( hkpsi( npwx, nbnd ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hkpsi ', ABS(ierr) )
+  !$acc enter data create(kpsi, hkpsi)
   !
   IF ( uspp ) THEN
      !
      ALLOCATE( skpsi( npwx, nbnd ), STAT=ierr )
      IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate skpsi ', ABS(ierr) )
+     !$acc enter data create(skpsi)
      !
   END IF
   !
@@ -129,6 +132,7 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
+  !$acc kernels
   phi  = ZERO
   hphi = ZERO
   IF ( uspp ) sphi = ZERO
@@ -136,6 +140,7 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   kpsi  = ZERO
   hkpsi = ZERO
   IF ( uspp ) skpsi = ZERO
+  !$acc end kernels 
   !
   hr = 0._DP
   sr = 0._DP
@@ -170,10 +175,12 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   IF ( gstart == 2 ) THEN
      !
+     !$acc kernels
      psi (1,1:nbnd) = CMPLX( DBLE( psi (1,1:nbnd) ), 0._DP, kind=DP )
      hpsi(1,1:nbnd) = CMPLX( DBLE( hpsi(1,1:nbnd) ), 0._DP, kind=DP )
      IF ( uspp ) &
      spsi(1,1:nbnd) = CMPLX( DBLE( spsi(1,1:nbnd) ), 0._DP, kind=DP )
+     !$acc end kernels
      !
   END IF
   !
@@ -205,30 +212,38 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   IF ( ibnd_start > 1 ) THEN
      !
+     !$acc kernels
      psi (:,1:(ibnd_start-1)) = ZERO
      hpsi(:,1:(ibnd_start-1)) = ZERO
      IF ( uspp ) &
      spsi(:,1:(ibnd_start-1)) = ZERO
+     !$acc end kernels
      !
   END IF
   !
   IF ( ibnd_end < nbnd ) THEN
      !
+     !$acc kernels
      psi (:,(ibnd_end+1):nbnd) = ZERO
      hpsi(:,(ibnd_end+1):nbnd) = ZERO
      IF ( uspp ) &
      spsi(:,(ibnd_end+1):nbnd) = ZERO
+     !$acc end kernels
      !
   END IF
   !
+  !$acc host_data use_device(psi, hpsi, spsi)
   CALL mp_sum( psi,  inter_bgrp_comm )
   CALL mp_sum( hpsi, inter_bgrp_comm )
   IF ( uspp ) &
   CALL mp_sum( spsi, inter_bgrp_comm )
+  !$acc end host_data
   !
+  !$acc exit data delete(phi, sphi, hphi)
   DEALLOCATE( phi )
   DEALLOCATE( hphi )
   IF ( uspp ) DEALLOCATE( sphi )
+  !$acc exit data delete(kpsi, hkpsi, skpsi)
   DEALLOCATE( kpsi )
   DEALLOCATE( hkpsi )
   IF ( uspp ) DEALLOCATE( skpsi )
@@ -257,67 +272,66 @@ CONTAINS
     !
     INTEGER :: ibnd
     !
-    REAL(DP), EXTERNAL :: DDOT
+    REAL(DP), EXTERNAL :: MYDDOT
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
+    !$acc kernels
     hpsi = ZERO
+    !$acc end kernels
     !
-    CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+    CALL h_psi_ptr( npwx, npw, nbnd, psi, hpsi )
     !
     ! ... Operate the Overlap : S |psi>
     !
     IF ( uspp ) THEN
        !
+       !$acc kernels
        spsi = ZERO
+       !$acc end kernels
        !
-       CALL s_psi( npwx, npw, nbnd, psi, spsi )
+       CALL s_psi_ptr( npwx, npw, nbnd, psi, spsi )
        !
     END IF
     !
     ! ... Matrix element : <psi| H |psi>
     !
+    !$acc host_data use_device(psi, hpsi)
     DO ibnd = ibnd_start, ibnd_end
        !
-       hw(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
+       hw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
        !
-       IF ( gstart == 2 ) THEN
-          !
-          hw(ibnd )= hw(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( hpsi(1,ibnd) )
-          !
-       END IF
+       IF ( gstart == 2 ) &
+          hw(ibnd)= hw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, hpsi(1,ibnd),1)
        !
     END DO
+    !$acc end host_data
     !
     CALL mp_sum( hw(ibnd_start:ibnd_end), intra_bgrp_comm )
     !
     ! ... Matrix element : <psi| S |psi>
     !
+    !$acc host_data use_device(psi, spsi)
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( uspp ) THEN
           !
-          sw(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
+          sw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
           !
-          IF ( gstart == 2 ) THEN
-             !
-             sw(ibnd )= sw(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( spsi(1,ibnd) )
-             !
-          END IF
+          IF ( gstart == 2 ) &
+             sw(ibnd)= sw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, spsi(1,ibnd),1)
           !
        ELSE
           !
-          sw(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, psi(1,ibnd), 1 )
+          sw(ibnd) = 2._DP * MYDDOT( npw2, psi(1,ibnd), 1, psi(1,ibnd), 1 )
           !
-          IF ( gstart == 2 ) THEN
-             !
-             sw(ibnd )= sw(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( psi(1,ibnd) )
-             !
-          END IF
+          IF ( gstart == 2 ) &
+             sw(ibnd )= sw(ibnd) - MYDDOT( 1, psi(1,ibnd), 1, psi(1,ibnd),1)
           !
        END IF
        !
     END DO
+    !$acc end host_data
     !
     CALL mp_sum( sw(ibnd_start:ibnd_end), intra_bgrp_comm )
     !
@@ -352,11 +366,13 @@ CONTAINS
     COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
     REAL(DP),    ALLOCATABLE :: vr(:)
     REAL(DP),    ALLOCATABLE :: tr(:,:)
+    REAL(DP) :: kvr  ! vr(kdiis)
     !
     ALLOCATE( vec1( npwx ) )
     ALLOCATE( vec2( npwx, idiis ) )
     IF ( idiis > 1 )   ALLOCATE( vr( idiis ) )
     IF ( motconv > 0 ) ALLOCATE( tr( idiis, motconv ) )
+    !$acc enter data create(vec1, vec2, tr)
     !
     ! ... Save current wave functions and matrix elements
     !
@@ -364,10 +380,12 @@ CONTAINS
        !
        IF ( conv(ibnd) ) CYCLE
        !
-       CALL DCOPY( npw2, psi (1,ibnd), 1, phi (1,ibnd,idiis), 1 )
-       CALL DCOPY( npw2, hpsi(1,ibnd), 1, hphi(1,ibnd,idiis), 1 )
+       !$acc host_data use_device( psi, hpsi, spsi, phi, hphi, sphi )
+       CALL MYDCOPY( npw2, psi (1,ibnd), 1, phi (1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, hphi(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL DCOPY( npw2, spsi(1,ibnd), 1, sphi(1,ibnd,idiis), 1 )
+       CALL MYDCOPY( npw2, spsi(1,ibnd), 1, sphi(1,ibnd,idiis), 1 )
+       !$acc end host_data
        !
        php(ibnd,idiis) = hw(ibnd)
        psp(ibnd,idiis) = sw(ibnd)
@@ -388,47 +406,60 @@ CONTAINS
           !
           er = php(ibnd,kdiis)
           !
-          CALL DCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+          !$acc host_data use_device(phi, sphi, hphi, vec2)
+          CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL DAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+             CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
              !
           END IF
+          !$acc end host_data
           !
        END DO
        !
        er = php(ibnd,idiis)
        !
-       CALL DCOPY( npw2, hphi(1,ibnd,idiis), 1, vec1(1), 1 )
+       !$acc host_data use_device(phi, sphi, hphi, vec1)
+       CALL MYDCOPY( npw2, hphi(1,ibnd,idiis), 1, vec1(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DAXPY( npw2, -er, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL MYDAXPY( npw2, -er, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        ELSE
           !
-          CALL DAXPY( npw2, -er, phi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL MYDAXPY( npw2, -er, phi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        END IF
+       !$acc end host_data
        !
-       CALL DGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
+       !$acc host_data use_device(vec1, vec2, tr)
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
                    vec1(1), 1, 0._DP, tr(1,jbnd), 1 )
+       !$acc end host_data
        !
-       IF ( gstart == 2 ) &
-       tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+       IF ( gstart == 2 ) THEN 
+         !$acc kernels
+         tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+         !$acc end kernels
+       END IF 
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
+       !$acc host_data use_device(tr)
        CALL mp_sum( tr, intra_bgrp_comm )
+       !$acc end host_data
        !
     END IF
+    !
+    !$acc update self(tr) 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -449,35 +480,46 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
+       !$acc host_data use_device(phi, sphi, vec1, vec2)
        DO kdiis = 1, idiis
           !
-          CALL DCOPY( npw2, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+          CALL MYDCOPY( npw2, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL DCOPY( npw2, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL MYDCOPY( npw2, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        ELSE
           !
-          CALL DCOPY( npw2, phi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL MYDCOPY( npw2, phi(1,ibnd,idiis), 1, vec1(1), 1 )
           !
        END IF
+       !$acc end host_data
        !
-       CALL DGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
+       !$acc host_data use_device(vec1, vec2, tr)
+       CALL MYDGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
                    vec1(1), 1, 0._DP, tr(1,jbnd), 1 )
+       !$acc end host_data
        !
-       IF ( gstart == 2 ) &
-       tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+       IF ( gstart == 2 ) THEN
+         !$acc kernels
+         tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+         !$acc end kernels
+       END IF 
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
+       !$acc host_data use_device(tr)
        CALL mp_sum( tr, intra_bgrp_comm )
+       !$acc end host_data
        !
     END IF
+    !
+    !$acc update self(tr) 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -505,37 +547,46 @@ CONTAINS
           IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vr(:) )
           CALL mp_bcast( vr, root_bgrp, intra_bgrp_comm )
           !
+          !$acc kernels
           psi (:,ibnd) = ZERO
           hpsi(:,ibnd) = ZERO
           IF ( uspp ) spsi(:,ibnd) = ZERO
           kpsi(:,kbnd) = ZERO
+          !$acc end kernels
           !
           DO kdiis = 1, idiis
              !
              ! ... Wave functions
              !
-             CALL DAXPY( npw2, vr(kdiis), phi (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
-             CALL DAXPY( npw2, vr(kdiis), hphi(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
+             kvr = vr(kdiis) 
+             !$acc host_data use_device(psi, hpsi, spsi, phi, hphi, sphi )
+             CALL MYDAXPY( npw2, kvr, phi (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, hphi(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
              IF ( uspp ) &
-             CALL DAXPY( npw2, vr(kdiis), sphi(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+             CALL MYDAXPY( npw2, kvr, sphi(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+             !$acc end host_data
              !
              ! ... Residual vectors
              !
              er = php(ibnd,kdiis)
              !
-             CALL DCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
+             !$acc host_data use_device(phi, hphi, sphi, vec1 )
+             CALL MYDCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL DAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec1(1), 1 )
+                CALL MYDAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec1(1), 1 )
                 !
              ELSE
                 !
-                CALL DAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec1(1), 1 )
+                CALL MYDAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec1(1), 1 )
                 !
              END IF
+             !$acc end host_data
              !
-             CALL DAXPY( npw2, vr(kdiis), vec1(1), 1, kpsi(1,kbnd), 1 )
+             !$acc host_data use_device(kpsi, vec1)
+             CALL MYDAXPY( npw2, kvr, vec1(1), 1, kpsi(1,kbnd), 1 )
+             !$acc end host_data
              !
           END DO
           !
@@ -544,24 +595,33 @@ CONTAINS
           ! ... Wave functions
           !
           norm = SQRT( sw(ibnd) )
-          CALL DSCAL( npw2, 1._DP / norm, psi (1,ibnd), 1 )
-          CALL DSCAL( npw2, 1._DP / norm, hpsi(1,ibnd), 1 )
+          !$acc host_data use_device(psi, hpsi, spsi)
+          CALL MYDSCAL( npw2, 1._DP / norm, psi (1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, hpsi(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL DSCAL( npw2, 1._DP / norm, spsi(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, 1._DP / norm, spsi(1,ibnd), 1 )
+          !$acc end host_data
           !
           ! ... Residual vectors
           !
           er = hw(ibnd)
           !
-          CALL DCOPY( npw2, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          !$acc host_data use_device(hpsi, kpsi)
+          CALL MYDCOPY( npw2, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          !$acc end host_data
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             !$acc host_data use_device(spsi, kpsi)
+             CALL MYDAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             !$acc end host_data
              !
           ELSE
              !
-             CALL DAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             !civn: spsi --> psi ?
+             !$acc host_data use_device(psi, spsi, kpsi)
+             CALL MYDAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             !$acc end host_data
              !
           END IF
           !
@@ -570,16 +630,19 @@ CONTAINS
        ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN
           !
+          !$acc kernels
           psi (1,ibnd) = CMPLX( DBLE( psi (1,ibnd) ), 0._DP, kind=DP )
           hpsi(1,ibnd) = CMPLX( DBLE( hpsi(1,ibnd) ), 0._DP, kind=DP )
           IF ( uspp ) &
           spsi(1,ibnd) = CMPLX( DBLE( spsi(1,ibnd) ), 0._DP, kind=DP )
           kpsi(1,kbnd) = CMPLX( DBLE( kpsi(1,kbnd) ), 0._DP, kind=DP )
+          !$acc end kernels
           !
        END IF
        !
     END DO
     !
+    !$acc exit data delete(vec1, vec2, tr)
     DEALLOCATE( vec1 )
     DEALLOCATE( vec2 )
     IF ( idiis > 1 )   DEALLOCATE( vr )
@@ -732,7 +795,10 @@ CONTAINS
     REAL(DP)              :: c1, c2
     REAL(DP), ALLOCATABLE :: coef(:,:)
     !
-    REAL(DP), EXTERNAL    :: DDOT
+    REAL(DP), EXTERNAL    :: MYDDOT
+    !
+    INTEGER :: idx, ii
+    REAL(DP) :: ekinj
     !
     IF ( motconv > 0 ) THEN
        !
@@ -753,24 +819,30 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
-       ekin(jbnd) = 0._DP
+       ekinj = 0._DP
        !
+       !$acc kernels
        DO ig = gstart, npw
           !
           psir = DBLE ( psi(ig,ibnd) )
           psii = AIMAG( psi(ig,ibnd) )
           psi2 = psir * psir + psii * psii
-          ekin(jbnd) = ekin(jbnd) + 2._DP * g2kin(ig) * psi2
+          ekinj = ekinj + 2._DP * g2kin(ig) * psi2
           !
        END DO
+       !$acc end kernels
        !
        IF ( gstart == 2 ) THEN
           !
+          !$acc kernels
           psir = DBLE ( psi(1,ibnd) )
           psi2 = psir * psir
-          ekin(jbnd) = ekin(jbnd) + g2kin(1) * psi2
+          ekinj = ekinj + g2kin(1) * psi2
+          !$acc end kernels
           !
        END IF
+       !
+       ekin(jbnd) = ekinj
        !
     END DO
     !
@@ -789,22 +861,26 @@ CONTAINS
        IF ( conv(ibnd) ) CYCLE
        !
        jbnd = jbnd_index(ibnd)
+       ekinj = ekin(jbnd)
+       !
        kbnd = ibnd_index(ibnd)
        !
+       !$acc kernels
        DO ig = 1, npw
           !
-          x  = g2kin(ig) / ( 1.5_DP * ekin(jbnd) )
+          x  = g2kin(ig) / ( 1.5_DP * ekinj )
           x2 = x * x
           x3 = x * x2
           x4 = x * x3
           !
           k1 = 27._DP + 18._DP * x + 12._DP * x2 + 8._DP * x3
           k2 = k1 + 16._DP * x4
-          kdiag = ( -4._DP / 3._DP / ekin(jbnd) ) * k1 / k2
+          kdiag = ( -4._DP / 3._DP / ekinj ) * k1 / k2
           !
           kpsi(ig,kbnd) = kdiag * kpsi(ig,kbnd)
           !
        END DO
+       !$acc end kernels
        !
     END DO
     !
@@ -824,40 +900,57 @@ CONTAINS
        !
        DO ibnd = 1, ( ibnd_start - 1)
           !
-          IF ( .NOT. conv(ibnd) ) &
-          kpsi(:,ibnd_index(ibnd)) = ZERO
+          idx = ibnd_index(ibnd)
+          !
+          IF ( .NOT. conv(ibnd) ) THEN 
+            !$acc kernels
+            kpsi(:,idx) = ZERO
+            !$acc end kernels
+          END IF 
           !
        END DO
        !
        DO ibnd = ( ibnd_end + 1 ), nbnd
           !
-          IF ( .NOT. conv(ibnd) ) &
-          kpsi(:,ibnd_index(ibnd)) = ZERO
+          idx = ibnd_index(ibnd)
+          !
+          IF ( .NOT. conv(ibnd) ) THEN 
+            !$acc kernels
+            kpsi(:,idx) = ZERO
+            !$acc end kernels
+          END IF 
           !
        END DO
        !
+       !$acc host_data use_device(kpsi)
        CALL mp_sum( kpsi(:,1:notconv), inter_bgrp_comm )
+       !$acc end host_data
        !
     END IF
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
-    IF ( gstart == 2 ) &
-    kpsi (1,1:notconv) = CMPLX( DBLE( kpsi (1,1:notconv) ), 0._DP, kind=DP )
+    IF ( gstart == 2 ) THEN 
+      !$acc kernels
+      kpsi (1,1:notconv) = CMPLX( DBLE( kpsi (1,1:notconv) ), 0._DP, kind=DP )
+      !$acc end kernels
+    END IF 
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
-    CALL h_psi( npwx, npw, notconv, kpsi, hkpsi )
+    CALL h_psi_ptr( npwx, npw, notconv, kpsi, hkpsi )
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
-    IF ( uspp ) CALL s_psi( npwx, npw, notconv, kpsi, skpsi )
+    IF ( uspp ) CALL s_psi_ptr( npwx, npw, notconv, kpsi, skpsi )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
     IF ( gstart == 2 ) THEN
        !
+       !$acc kernels
        hkpsi(1,1:nbnd) = CMPLX( DBLE( hkpsi(1,1:nbnd) ), 0._DP, kind=DP )
        IF ( uspp ) &
        skpsi(1,1:nbnd) = CMPLX( DBLE( skpsi(1,1:nbnd) ), 0._DP, kind=DP )
+       !$acc end kernels
        !
     END IF
     !
@@ -870,43 +963,58 @@ CONTAINS
        jbnd = jbnd_index(ibnd)
        kbnd = ibnd_index(ibnd)
        !
-       php = 2._DP * DDOT( npw2, psi (1,ibnd), 1, hpsi (1,ibnd), 1 )
-       khp = 2._DP * DDOT( npw2, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 )
-       khk = 2._DP * DDOT( npw2, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 )
+       !$acc host_data use_device(psi, hpsi, kpsi, hkpsi)
+       php = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, hpsi (1,ibnd), 1 )
+       khp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 )
+       khk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 )
+       !$acc end host_data
        !
        IF ( gstart == 2 ) THEN
           !
-          php = php - DBLE( psi (1,ibnd) ) * DBLE ( hpsi (1,ibnd) )
-          khp = khp - DBLE( kpsi(1,kbnd) ) * DBLE ( hpsi (1,ibnd) )
-          khk = khk - DBLE( kpsi(1,kbnd) ) * DBLE ( hkpsi(1,kbnd) )
+          !$acc parallel loop seq
+          DO ii = 1, 1 
+            php = php - DBLE( psi (1,ibnd) ) * DBLE ( hpsi (1,ibnd) )
+            khp = khp - DBLE( kpsi(1,kbnd) ) * DBLE ( hpsi (1,ibnd) )
+            khk = khk - DBLE( kpsi(1,kbnd) ) * DBLE ( hkpsi(1,kbnd) )
+          END DO 
           !
        END IF
        !
        IF ( uspp ) THEN
           !
-          psp = 2._DP * DDOT( npw2, psi (1,ibnd), 1, spsi (1,ibnd), 1 )
-          ksp = 2._DP * DDOT( npw2, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 )
-          ksk = 2._DP * DDOT( npw2, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 )
+          !$acc host_data use_device(psi, spsi, kpsi, skpsi)
+          psp = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, spsi (1,ibnd), 1 )
+          ksp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 )
+          ksk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 )
+          !$acc end host_data
           !
           IF ( gstart == 2 ) THEN
              !
-             psp = psp - DBLE( psi (1,ibnd) ) * DBLE ( spsi (1,ibnd) )
-             ksp = ksp - DBLE( kpsi(1,kbnd) ) * DBLE ( spsi (1,ibnd) )
-             ksk = ksk - DBLE( kpsi(1,kbnd) ) * DBLE ( skpsi(1,kbnd) )
+             !$acc parallel loop seq
+             DO ii = 1, 1 
+               psp = psp - DBLE( psi (1,ibnd) ) * DBLE ( spsi (1,ibnd) )
+               ksp = ksp - DBLE( kpsi(1,kbnd) ) * DBLE ( spsi (1,ibnd) )
+               ksk = ksk - DBLE( kpsi(1,kbnd) ) * DBLE ( skpsi(1,kbnd) )
+             END DO
              !
           END IF
           !
        ELSE
           !
-          psp = 2._DP * DDOT( npw2, psi (1,ibnd), 1, psi (1,ibnd), 1 )
-          ksp = 2._DP * DDOT( npw2, kpsi(1,kbnd), 1, psi (1,ibnd), 1 )
-          ksk = 2._DP * DDOT( npw2, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 )
+          !$acc host_data use_device(psi, kpsi)
+          psp = 2._DP * MYDDOT( npw2, psi (1,ibnd), 1, psi (1,ibnd), 1 )
+          ksp = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, psi (1,ibnd), 1 )
+          ksk = 2._DP * MYDDOT( npw2, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 )
+          !$acc end host_data
           !
           IF ( gstart == 2 ) THEN
              !
-             psp = psp - DBLE( psi (1,ibnd) ) * DBLE ( psi (1,ibnd) )
-             ksp = ksp - DBLE( kpsi(1,kbnd) ) * DBLE ( psi (1,ibnd) )
-             ksk = ksk - DBLE( kpsi(1,kbnd) ) * DBLE ( kpsi(1,kbnd) )
+             !$acc parallel loop seq
+             DO ii = 1, 1 
+               psp = psp - DBLE( psi (1,ibnd) ) * DBLE ( psi (1,ibnd) )
+               ksp = ksp - DBLE( kpsi(1,kbnd) ) * DBLE ( psi (1,ibnd) )
+               ksk = ksk - DBLE( kpsi(1,kbnd) ) * DBLE ( kpsi(1,kbnd) )
+             END DO
              !
           END IF
           !
@@ -1020,26 +1128,30 @@ CONTAINS
        c1 = coef(1,jbnd)
        c2 = coef(2,jbnd)
        !
-       CALL DSCAL( npw2, c1, psi (1,ibnd), 1 )
-       CALL DAXPY( npw2, c2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
+       !$acc host_data use_device(psi, hpsi, spsi, kpsi, hkpsi, skpsi)
+       CALL MYDSCAL( npw2, c1, psi (1,ibnd), 1 )
+       CALL MYDAXPY( npw2, c2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
        !
-       CALL DSCAL( npw2, c1, hpsi (1,ibnd), 1 )
-       CALL DAXPY( npw2, c2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
+       CALL MYDSCAL( npw2, c1, hpsi (1,ibnd), 1 )
+       CALL MYDAXPY( npw2, c2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DSCAL( npw2, c1, spsi (1,ibnd), 1 )
-          CALL DAXPY( npw2, c2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
+          CALL MYDSCAL( npw2, c1, spsi (1,ibnd), 1 )
+          CALL MYDAXPY( npw2, c2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
           !
        END IF
+       !$acc end host_data
        !
        ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN
           !
+          !$acc kernels
           psi (1,ibnd) = CMPLX( DBLE( psi (1,ibnd) ), 0._DP, kind=DP )
           hpsi(1,ibnd) = CMPLX( DBLE( hpsi(1,ibnd) ), 0._DP, kind=DP )
           IF ( uspp ) &
           spsi(1,ibnd) = CMPLX( DBLE( spsi(1,ibnd) ), 0._DP, kind=DP )
+          !$acc end kernels
           !
        END IF
        !

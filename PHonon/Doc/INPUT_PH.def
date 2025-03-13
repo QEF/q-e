@@ -118,6 +118,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             info { Maximum allowed run time before the job stops smoothly. }
         }
 
+        var dftd3_hess -type CHARACTER { 
+            default { 'prefix.hess' }
+            info {
+                File where the D3 dispersion hessian matrix is read. Set to
+                'automatic.hess' to enable automatic mode (experimental). In
+                this mode, D3 Hessian is computed if 'automatic.hess' file is
+                missing.
+            }
+        }
+
         var fildyn -type CHARACTER { 
             default { 'matdyn' }
             info { File where the dynamical matrix is written. }
@@ -349,7 +359,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                 exceed nbnd of the preceding SCF or NSCF calculation.
             }
         }
-        var skip_upperfan  -type LOGICAL {
+        var skip_upper  -type LOGICAL {
             default { .false. }
             info {
                 If .true., skip calculation of the upper Fan self-energy, which

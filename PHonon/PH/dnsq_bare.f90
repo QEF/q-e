@@ -61,7 +61,6 @@ SUBROUTINE dnsq_bare
              ibeta, n, ihubst, ihubst1, ihubst2, nah, m, m1, m2,  &
              ibnd, ldim, npw, npwq, ik, ikk, ikq, iundnsbare
   COMPLEX(DP), ALLOCATABLE :: dqsphi(:,:), dmqsphi(:,:), dwfcatom_(:) 
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   LOGICAL :: exst
   ! 
   CALL start_clock( 'dnsq_bare' )
@@ -217,9 +216,10 @@ SUBROUTINE dnsq_bare
                        ! proj1 (ibnd,ihubst) = < S_{k}\phi_(k,I,m) | psi(ibnd,k) >
                        ! proj2 (ibnd,ihubst) = < \Delta_{-q}(S_{k+q} \phi_(k+q,I,m)) | psi(ibnd,k)>
                        !
+                       !FIXME these  are  two zgemms  that could  be done outside the loop 
                        DO ibnd = 1, nbnd
-                          proj1 (ibnd,ihubst) = ZDOTC (npw, swfcatomk(1,ihubst), 1, evc(1,ibnd), 1)
-                          proj2 (ibnd,ihubst) = ZDOTC (npw, dmqsphi(1,ihubst ), 1, evc(1,ibnd), 1)
+                         proj1 (ibnd,ihubst) = dot_product (swfcatomk(1:npw,ihubst), evc(1:npw,ibnd))
+                         proj2 (ibnd,ihubst) = dot_product ( dmqsphi(1:npw ,ihubst ),evc(1:npw,ibnd))
                        ENDDO
                        !  
                     ENDDO 

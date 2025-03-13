@@ -1,0 +1,362 @@
+#!/bin/sh
+
+nk=2
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use merge_wann.x "
+$ECHO "to merge separate wannierizations "
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x kcw.x wannier90.x pw2wannier90.x merge_wann.x"
+PSEUDO_LIST="Ga.upf As.upf"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results_1block" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results_1block
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+FILE="$BIN_DIR/../external/wannier90/utility/kmesh.pl"
+if test ! -x $FILE ; then
+        $ECHO
+        $ECHO "ERROR: $FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+$ECHO " done"
+
+#Overwrite NETWORK_PSEUDO
+NETWORK_PSEUDO="https://raw.githubusercontent.com/epfl-theos/koopmans/master/src/koopmans/pseudopotentials/pseudo_dojo_standard_v0.4.1/lda"
+
+# check for pseudopotentials
+$ECHO "  checking that pseudopotentials files exist      ...\c"
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+W90_COMMAND="$BIN_DIR/wannier90.x"
+PW2W90_COMMAND="$PARA_PREFIX $BIN_DIR/pw2wannier90.x"
+KCW_COMMAND_noPOSTFIX="$PARA_PREFIX $BIN_DIR/kcw.x"
+KCW_COMMAND="$PARA_PREFIX $BIN_DIR/kcw.x $PARA_POSTFIX"
+MERGE_WANN_COMMAND="$BIN_DIR/merge_wann.x"
+KMESH_COMMAND="$BIN_DIR/../external/wannier90/utility/kmesh.pl"
+$ECHO
+$ECHO "  running pw.x as:            $PW_COMMAND"
+$ECHO "  running kcw.x as:           $KCW_COMMAND"
+$ECHO "  running wannier90.x as:     $W90_COMMAND"
+$ECHO "  running pw2wannier90.x as:  $PW2W90_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='GaAs'
+SEEDNAME='wann'
+
+cat > $PREFIX.scf.in << EOF
+&CONTROL
+  calculation = 'scf'
+  etot_conv_thr =   2.0000000000d-05
+  forc_conv_thr =   1.0000000000d-04
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  pseudo_dir = '$PSEUDO_DIR/'
+  tprnfor = .true.
+  tstress = .true.
+  verbosity = 'high'
+/
+&SYSTEM
+  ecutwfc =  60
+  ibrav = 0
+  nat = 2
+  ntyp = 2
+  occupations = 'fixed'
+  nbnd = 16
+/
+&ELECTRONS
+  conv_thr =   4.0000000000d-10
+  electron_maxstep = 80
+  mixing_beta =   4.0000000000d-01
+/
+ATOMIC_SPECIES
+As     74.9216 As.upf
+Ga     69.7230 Ga.upf
+
+ATOMIC_POSITIONS angstrom
+As       1.4130000000     4.2390000000     4.2390000000
+Ga       0.0000000000     0.0000000000     0.0000000000
+
+CELL_PARAMETERS angstrom
+    0.0000000000     2.8260000000     2.8260000000
+    2.8260000000     0.0000000000     2.8260000000
+    2.8260000000     2.8260000000     0.0000000000
+
+K_POINTS automatic
+4 4 4 0 0 0
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX...\c"
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+$KMESH_COMMAND $nk $nk $nk  > k_points.txt
+
+cat > $PREFIX.nscf.in << EOF
+&CONTROL
+  calculation = 'nscf'
+  etot_conv_thr =   2.0000000000d-05
+  forc_conv_thr =   1.0000000000d-04
+  prefix='$PREFIX'
+  outdir='$TMP_DIR/'
+  pseudo_dir = '$PSEUDO_DIR/'
+  tprnfor = .true.
+  tstress = .true.
+  verbosity = 'high'
+/
+&SYSTEM
+  ecutwfc =   6.0000000000d+01
+  ibrav = 0
+  nat = 2
+  ntyp = 2
+  occupations = 'fixed'
+  nbnd = 16
+/
+&ELECTRONS
+  conv_thr =   4.0000000000d-10
+  electron_maxstep = 80
+  mixing_beta =   4.0000000000d-01
+ diago_full_acc = .true.
+/
+ATOMIC_SPECIES
+As     74.9216 As.upf
+Ga     69.7230 Ga.upf
+
+ATOMIC_POSITIONS angstrom
+As       1.4130000000     4.2390000000     4.2390000000
+Ga       0.0000000000     0.0000000000     0.0000000000
+
+CELL_PARAMETERS angstrom
+    0.0000000000     2.8260000000     2.8260000000
+    2.8260000000     0.0000000000     2.8260000000
+    2.8260000000     2.8260000000     0.0000000000
+
+$(cat k_points.txt)
+EOF
+$ECHO "  Running the NSCF calculation for $PREFIX...\c"
+$PW_COMMAND < $PREFIX.nscf.in > $PREFIX.nscf.out
+rm k_points.txt 
+$ECHO " done"
+
+
+for ib in 1; do 
+
+if [ ! -d wann_block$ib ]; then  mkdir wann_block$ib ; fi
+cd wann_block$ib
+
+$KMESH_COMMAND $nk $nk $nk  wann > k_points.txt
+
+nw=14; eb="15-16"; 
+proj1="As : l=2"
+proj2="Ga : l=2"
+proj3="As : sp3"
+
+cat > $SEEDNAME.win << EOF
+num_bands         =   $nw
+num_wann          =   $nw
+exclude_bands     =   $eb
+
+wannier_plot = .false.
+wannier_plot_list = 1
+
+num_iter          = 0
+num_print_cycles  = 10
+conv_window = 5
+conv_tol = 1e-10
+
+write_u_matrices = .true.
+write_xyz = .true.
+
+Begin Atoms_Cart
+ang
+As       1.4130000000     4.2390000000     4.2390000000
+Ga       0.0000000000     0.0000000000     0.0000000000
+End Atoms_Cart
+
+begin unit_cell_cart
+ang
+    0.0000000000     2.8260000000     2.8260000000
+    2.8260000000     0.0000000000     2.8260000000
+    2.8260000000     2.8260000000     0.0000000000
+end unit_cell_cart
+    
+Begin Projections     
+$proj1
+$proj2
+$proj3
+End Projections       
+
+bands_plot = .true.
+begin kpoint_path
+G 0.0000000000     0.0000000000     0.0000000000  X 0.5000000000     0.0000000000     0.5000000000 
+X 0.5000000000     0.0000000000     0.5000000000  U 0.6250000000     0.2500000000     0.6250000000
+K 0.3750000000     0.3750000000     0.7500000000  G 0.0000000000     0.0000000000     0.0000000000
+G 0.0000000000     0.0000000000     0.0000000000  L 0.5000000000     0.5000000000     0.5000000000 
+L 0.5000000000     0.5000000000     0.5000000000  W 0.5000000000     0.2500000000     0.7500000000
+W 0.5000000000     0.2500000000     0.7500000000  X 0.5000000000     0.0000000000     0.5000000000 
+end kpoint_path
+
+
+
+mp_grid      = $nk $nk $nk
+
+begin kpoints
+$(cat k_points.txt)
+end kpoints
+EOF
+
+cat > pw2wann.in <<EOF 
+&inputpp
+ prefix='$PREFIX'
+ outdir='$TMP_DIR/'
+ seedname = 'wann'
+ wan_mode   =  'standalone'
+ write_unk  = .false.
+/
+EOF
+
+$ECHO "  Running Wannierization block $ib for $PREFIX...\c"
+$W90_COMMAND -pp $SEEDNAME.win
+$PW2W90_COMMAND -in pw2wann.in > pw2wann.out
+$W90_COMMAND $SEEDNAME.win
+rm k_points.txt
+$ECHO "DONE"
+cd ../
+
+done 
+
+$ECHO "  Running merge_wann.x for $PREFIX...\c"
+$MERGE_WANN_COMMAND U       wann_block1/wann_u.mat > merge_U.out 
+$MERGE_WANN_COMMAND centres wann_block1/wann_centres.xyz > merge_centres.out 
+$ECHO "DONE"
+
+cat > kc.w2ki << EOF 
+&CONTROL
+   prefix='$PREFIX'
+   outdir='$TMP_DIR/'
+   kcw_iverbosity   = 1
+   kcw_at_ks        = .false.
+   calculation      = 'wann2kcw'
+   mp1              = $nk
+   mp2              = $nk
+   mp3              = $nk
+   read_unitary_matrix = .true.
+   l_vcut           = .true.
+   kcw_iverbosity    = 2
+/
+&WANNIER
+   seedname         = 'wann'
+   check_ks         = .true.
+   num_wann_occ     = 14
+   num_wann_emp     = 0
+   have_empty       = .false.
+   has_disentangle  = .false.
+/
+EOF
+
+$ECHO "  Running kcw.x interface for $PREFIX...\c"
+$KCW_COMMAND -in kc.w2ki > kc.w2ko
+$ECHO "DONE" 
+
+cat > kc.khi << EOF
+&CONTROL
+   prefix           = '$PREFIX'
+   outdir           = '$TMP_DIR'
+   kcw_iverbosity   = 1
+   kcw_at_ks        = .false.
+   calculation      = 'ham'
+   mp1              = $nk
+   mp2              = $nk
+   mp3              = $nk
+   read_unitary_matrix = .true.
+   l_vcut           = .true.
+   kcw_iverbosity    = 2
+/
+&WANNIER
+   seedname         = 'wann'
+   check_ks         = .true.
+   num_wann_occ     = 14
+   num_wann_emp     = 0
+   have_empty       = .false.
+   has_disentangle  = .false.
+/
+&HAM
+   do_bands         = .true.
+   use_ws_distance  = .true.
+   write_hr         = .true.
+   on_site_only     = .true.
+   l_alpha_corr     = .false.
+/
+K_POINTS crystal_b
+5
+ 0.50000   0.50000   0.50000 15 ! L
+ 0.00000   0.00000   0.00000 15 ! G
+ 0.50000   0.00000   0.50000 15 ! X
+ 0.37500   0.37500   0.75000 15 ! K
+ 0.00000   0.00000   0.00000  1 !G
+EOF
+
+$ECHO "  Running kcw.x ham for $PREFIX...\c"
+$KCW_COMMAND_noPOSTFIX -in kc.khi > kc.kho
+$ECHO "DONE"

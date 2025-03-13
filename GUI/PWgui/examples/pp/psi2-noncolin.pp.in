@@ -1,0 +1,16 @@
+ &INPUTPP
+   plot_num        = 7
+   spin_component(1) = 1
+   spin_component(2) = 3
+   kpoint(1)       = 1
+   kpoint(2)       = 4
+   kband(1)        = 1
+   kband(2)        = 4
+ /
+ &PLOT
+   nfile           = 1 
+   weight(1)       = 1.0
+   iflag           = 3 
+   output_format   = 5 
+ /
+

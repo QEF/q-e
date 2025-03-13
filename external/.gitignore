@@ -1,0 +1,45 @@
+
+#
+# home files
+#
+config.log
+make.inc
+
+#
+# configuration
+#
+myconfig*
+config/configure.msg
+config/config.status
+include/c_defs.h
+include/configure.h
+include/f_defs.h
+install/make_blas.inc
+install/make_lapack.inc
+
+#
+# compilation
+#
+bin/*.x
+src/*.x
+src/*.o
+src/*.a
+src/*.mod
+src/*.MOD
+src/FortCuda/*.x
+src/FortCuda/*.o
+src/FortCuda/*.a
+src/FortCuda/*.mod
+src/FortCuda/*.MOD
+
+#
+# ext libs
+#
+extlibs/*/*stamp
+extlibs/*/bin/
+extlibs/*/include/
+extlibs/*/lib/
+#
+extlibs/blas/BLAS/
+extlibs/lapack/lapack*/
+

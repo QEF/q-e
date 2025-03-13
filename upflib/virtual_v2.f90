@@ -58,7 +58,7 @@ PROGRAM virtual_test
      
      INQUIRE ( FILE = TRIM(filein(is)), EXIST = exst )  
      IF (.NOT. exst ) CALL upf_error ( 'virtual_v2.x: ', TRIM(filein(is)) // ' not found', 5)
-     CALL read_ps ( filein(is), upf(is) )
+     CALL read_ps_new ( filein(is), upf(is), .false., ierr )
      PRINT '('' '')'
      IF ( TRIM(upf(is)%typ) == 'PAW') CALL upf_error('virtual_v2.x: ', &
           'Use of PAW is not implemented', 1) 

@@ -18,14 +18,13 @@ SUBROUTINE phescf()
   USE ions_base,       ONLY : nat
   USE noncollin_module,ONLY : noncolin, nspin_mag
   USE lsda_mod,        ONLY : nspin
-  USE control_ph,      ONLY : convt, zeu, rec_code, rec_code_read, lnoloc, &
-                              where_rec, done_epsil, done_zeu, epsil
+  USE control_ph,      ONLY : zeu, lnoloc, done_epsil, done_zeu, epsil
   USE output,          ONLY : fildrho
   USE ph_restart,      ONLY : ph_writefile
   USE freq_ph
   USE ramanm,          ONLY : ramtns, lraman, elop, done_lraman, done_elop
   USE lrus,            ONLY : int3, int3_nc, int3_paw
-  USE control_lr,      ONLY : lrpa
+  USE control_lr,      ONLY : convt, lrpa, rec_code, rec_code_read, where_rec
   USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax
   USE ldaU_lr,         ONLY : dnsscf
   USE ldaU_ph,         ONLY : dnsscf_all_modes
@@ -50,6 +49,10 @@ SUBROUTINE phescf()
      IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, nat, nspin_mag, 3))
      IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, 3))
   ENDIF
+  !
+  ! Set symmetry representation in lr_symm_base
+  !
+  CALL ph_set_upert_e()
   !
   ! DFPT+U: dnsscf in the electric field calculation
   ! is the scf change of atomic occupations ns induced by the electric field.
@@ -133,6 +136,8 @@ SUBROUTINE phescf()
      IF (okpaw) DEALLOCATE (int3_paw)
      IF (noncolin) DEALLOCATE(int3_nc)
   ENDIF
+  !
+  CALL ph_deallocate_upert()
   !
   ! DFPT+U
   !

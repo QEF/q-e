@@ -14,8 +14,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   !! Run an instance of the Plane Wave Self-Consistent Field code 
   !! MPI initialization and input data reading is performed in the 
-  !! calling code - returns in exit_status the exit code for pw.x, 
-  !! returned in the shell. Values are:  
+  !! calling code - returns in exit_status the exit code for pw.x:
   !! * 0: completed successfully
   !! * 1: an error has occurred (value returned by the errore() routine)
   !! * 2-127: convergence error
@@ -27,6 +26,10 @@ SUBROUTINE run_pwscf( exit_status )
   !!     (note: in the future, check_stop_now could also return a value
   !!     to specify the reason of exiting, and the value could be used
   !!     to return a different value for different reasons)
+  !! @Note
+  !! 20/04/23 Unless preprocessing flag __RETURN_EXIT_STATUS is set (see
+  !! routine do_stop) pw.x no longer returns an exit status != 0  to the shell
+  !! @endnote
   !
   !! @Note
   !! 10/01/17 Samuel Ponce: Add Ford documentation
@@ -42,7 +45,6 @@ SUBROUTINE run_pwscf( exit_status )
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs,&
                                    lensemb, lforce=>tprnfor, tstress
-  USE control_flags,        ONLY : io_level
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : sigma, force
@@ -55,12 +57,24 @@ SUBROUTINE run_pwscf( exit_status )
   USE qmmm,                 ONLY : qmmm_initialization, qmmm_shutdown, &
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
-  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx, exx_is_active
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   USE add_dmft_occ,         ONLY : dmft
+  USE extffield,            ONLY : init_extffield, close_extffield
+  USE input_parameters,     ONLY : nextffield
   !
   USE device_fbuff_m,             ONLY : dev_buf
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,      ONLY : use_environ
+  USE environ_pw_module, ONLY : is_ms_gcs, init_ms_gcs
+#endif
+#if defined (__OSCDFT)
+  USE plugin_flags,      ONLY : use_oscdft
+  USE oscdft_base,       ONLY : oscdft_ctx
+  USE oscdft_functions,  ONLY : oscdft_run_pwscf
+#endif
   !
   IMPLICIT NONE
   !
@@ -114,7 +128,14 @@ SUBROUTINE run_pwscf( exit_status )
   !
   ! call to void routine for user defined / plugin patches initializations
   !
+#if defined(__LEGACY_PLUGINS)
   CALL plugin_initialization()
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL init_ms_gcs()
+  END IF
+#endif
   !
   CALL check_stop_init()
   !
@@ -138,6 +159,14 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL init_run()
   !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'PW', nextffield )
+     !
+  END IF
+  !
   IF ( check_stop_now() ) THEN
      exit_status = 255
      CALL qexsd_set_status( exit_status )
@@ -149,23 +178,38 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... electronic self-consistency or band structure calculation
      !
+#if defined (__OSCDFT)
+     IF (use_oscdft) THEN
+        CALL oscdft_run_pwscf(oscdft_ctx)
+     ELSE
+#endif
      IF ( .NOT. lscf) THEN
         CALL non_scf()
      ELSE
         CALL electrons()
      END IF
+#if defined (__OSCDFT)
+     END IF
+#endif
      !
      ! ... code stopped by user or not converged
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
-        IF ( check_stop_now() ) exit_status = 255
-        IF ( .NOT. conv_elec) THEN
-            IF (dmft) exit_status =  131
+        IF ( check_stop_now() ) THEN
+            exit_status = 255
         ELSE
-            exit_status = 2
+           IF (dmft) THEN
+              exit_status =  131
+           ELSE
+              exit_status = 2
+           ENDIF
         ENDIF
         CALL qexsd_set_status(exit_status)
-        CALL punch( 'config' )
+        IF(exx_is_active()) then
+          CALL punch( 'all' )
+        ELSE
+          CALL punch( 'config' )
+        ENDIF
         RETURN
      ENDIF
      !
@@ -307,7 +351,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL qexsd_set_status( exit_status )
   IF ( lensemb ) CALL beef_energies( )
-  IF ( io_level > -2 ) CALL punch( 'all' )
+  CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
   !
@@ -336,7 +380,7 @@ SUBROUTINE reset_gvectors( )
   !! energy computed with G-vectors and plane waves for the final cell
   !
   USE io_global,  ONLY : stdout
-  USE basis,      ONLY : starting_wfc, starting_pot
+  USE starting_scf, ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
   USE xc_lib,     ONLY : xclib_dft_is

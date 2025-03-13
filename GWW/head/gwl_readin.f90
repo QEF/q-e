@@ -33,14 +33,14 @@ SUBROUTINE phq_readin()
   USE fft_base,      ONLY : dffts
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
-  USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
-                            zue, zeu, xmldyn, newgrid,                      &
-                            trans, reduce_io, tr2_ph, niter_ph,       &
-                            nmix_ph, ldisp, recover, lnoloc, start_irr, &
+  USE control_lr,    ONLY : maxter, alpha_mix, lgamma_gamma, reduce_io, tr2_ph, niter_ph, &
+                            nmix_ph, rec_code_read
+  USE control_ph,    ONLY : epsil, zue, zeu, xmldyn, newgrid, &
+                            trans, ldisp, recover, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
-                            rec_code_read, qplot, only_init, only_wfc, &
+                            qplot, only_init, only_wfc, &
                             low_directory_check, nk1, nk2, nk3, k1, k2, k3
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -71,12 +71,10 @@ SUBROUTINE phq_readin()
   ! YAMBO <
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
-  USE ldaU,          ONLY : lda_plus_u, U_projection, lda_plus_u_kind
+  USE ldaU,          ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind
   USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
-  USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-      skip_upperfan
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type, nsteps_lanczos,second_grid_n,second_grid_i,&
   &l_scissor,scissor, len_head_block_freq, len_head_block_wfc, l_easy
   !
@@ -124,8 +122,7 @@ SUBROUTINE phq_readin()
                        q_in_band_form, q2d, qplot, low_directory_check, &
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
-                       wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upperfan, &
+                       wpot_dir, &
                        l_head, omega_gauss, n_gauss, grid_type,nsteps_lanczos,l_scissor,scissor,&
                        second_grid_n,second_grid_i,len_head_block_wfc,len_head_block_freq, l_easy
 
@@ -137,8 +134,8 @@ SUBROUTINE phq_readin()
   ! nat_todo     : number of atom to be displaced
   ! verbosity    : verbosity control (iverbosity is obsolete)
   ! outdir       : directory where input, output, temporary files reside
-  ! epsil        : if true calculate dielectric constant
-  ! trans        : if true calculate phonon
+  ! epsil        : (OBSELETE) if true calculate dielectric constant
+  ! trans        : (OBSELETE) if true calculate phonon
   ! electron-phonon : select the kind of electron-phonon calculation
   ! elph         : if true calculate electron-phonon coefficients
   ! elph_mat     : if true eph coefficients for wannier
@@ -206,10 +203,6 @@ SUBROUTINE phq_readin()
   ! do_long_range: if .true., add the long-range part of the potential to dvscf
   ! do_charge_neutral: if .true., impose the neutrality condition on Born effective charges
   ! wpot_dir: folder where w_pot binary files are located
-  ! ahc_dir: Directory where the output binary files for AHC e-ph coupling are written
-  ! ahc_nbnd: Number of bands where the electron self-energy is to be computed.
-  ! ahc_nbndskip: Number of bands to exclude when computing the self-energy.
-  ! skip_upperfan: If .true., skip the calculation of upper Fan self-energy.
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
@@ -264,7 +257,7 @@ SUBROUTINE phq_readin()
   trans        = .TRUE.
   lrpa         = .FALSE.
   lnoloc       = .FALSE.
-  epsil        = .FALSE.
+  epsil        = .TRUE.
   zeu          = .TRUE.
   zue          = .FALSE.
   fpol         = .FALSE.
@@ -317,13 +310,6 @@ SUBROUTINE phq_readin()
   do_charge_neutral = .FALSE.
   do_long_range = .FALSE.
   wpot_dir = ' '
-  !
-  ! electron_phonon == 'ahc'
-  ahc_dir = ' '
-  ahc_nbnd = 0
-  ahc_nbndskip = 0
-  skip_upperfan = .FALSE.
-  elph_ahc = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -387,6 +373,14 @@ SUBROUTINE phq_readin()
   CASE DEFAULT
      CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
   END SELECT
+
+  !
+  ! JDE: Catch situation where head crashes because PHonon tries to read u from file
+  !
+  IF (.NOT. trans) THEN
+     trans = .TRUE.
+     WRITE(stdout, '(5x, "CAREFUL: trans reset to TRUE to prevent CRASH")')
+  END IF
 
   !
   ! ...  broadcast all input variables
@@ -489,14 +483,6 @@ SUBROUTINE phq_readin()
      elph_simple=.false.
      trans = .false.
      elph_tetra = 3
-  CASE( 'ahc' )
-     elph = .true.
-     elph_ahc = .true.
-     elph_mat = .false.
-     elph_simple = .false.
-     elph_epa = .false.
-     trans = .false.
-     nogg = .true.
   CASE DEFAULT
      elph=.false.
      elph_mat=.false.
@@ -519,7 +505,7 @@ SUBROUTINE phq_readin()
 
   IF (modenum /= 0) search_sym=.FALSE.
 
-  IF (elph_mat .OR. elph_ahc) THEN
+  IF (elph_mat) THEN
      trans = .FALSE.
   ELSEIF (.NOT. elph) THEN
      trans = trans .OR. ldisp
@@ -602,23 +588,6 @@ SUBROUTINE phq_readin()
     'ldvscf_interpolate and magnetism not implemented', 1)
   IF (okpaw .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
     'PAW and ldvscf_interpolate not tested.', 1)
-  !
-  ! AHC e-ph coupling
-  !
-  IF (elph_ahc) THEN
-    !
-    IF (ahc_nbnd <= 0) CALL errore('phq_readin', &
-      'ahc_nbnd must be specified as a positive integer')
-    IF (ahc_nbndskip < 0) CALL errore('phq_readin', &
-      'ahc_nbndskip cannot be negative')
-    !
-    IF (ahc_dir == ' ') ahc_dir = TRIM(tmp_dir) // "ahc_dir/"
-    ahc_dir = trimcheck(ahc_dir)
-    !
-  ENDIF ! elph_ahc
-  !
-  IF (elph_ahc .AND. trans) CALL errore ('phq_readin', &
-    'elph_ahc can be used only when trans = .false.', 1)
   !
   ! reads the frequencies ( just if fpol = .true. )
   !
@@ -777,8 +746,8 @@ SUBROUTINE phq_readin()
      WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 101, 064305 (2020)"
      WRITE(stdout,'(5x,a)')  "in publications or presentations arising from this work."
      ! 
-     IF (U_projection.NE."atomic") CALL errore("phq_readin", &
-          " The phonon code for this U_projection_type is not implemented",1)
+     IF (Hubbard_projectors.NE."atomic") CALL errore("phq_readin", &
+          " The phonon code for this Hubbard_projectors type is not implemented",1)
      IF (lda_plus_u_kind.NE.0) CALL errore("phq_readin", &
           " The phonon code for this lda_plus_u_kind is not implemented",1)
      IF (elph) CALL errore("phq_readin", &
@@ -788,15 +757,6 @@ SUBROUTINE phq_readin()
      !
   ENDIF
   ! checks
-  IF (elph_ahc .AND. domag) CALL errore ('phq_readin', &
-    'elph_ahc and magnetism not implemented', 1)
-  IF (elph_ahc .AND. okpaw) CALL errore ('phq_readin', &
-    'elph_ahc and PAW not tested.', 1)
-  IF (elph_ahc .AND. okvan) CALL errore ('phq_readin', &
-    'elph_ahc and PAW not tested.', 1)
-  IF (elph_ahc .AND. lda_plus_u) CALL errore ('phq_readin', &
-    'elph_ahc and lda_plus_u not tested.', 1)
-
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
   
@@ -921,7 +881,7 @@ SUBROUTINE phq_readin()
   !
   !YAMBO >
   IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
-      .AND. .NOT. (elph_yambo .OR. elph_ahc)) &
+      .AND. .NOT. (elph_yambo)) &
           CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &

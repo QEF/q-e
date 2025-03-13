@@ -45,13 +45,15 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_qpoint_grid
     MODULE PROCEDURE qes_reset_dftU
     MODULE PROCEDURE qes_reset_HubbardCommon
+    MODULE PROCEDURE qes_reset_HubbardInterSpecieV
     MODULE PROCEDURE qes_reset_SiteMoment
     MODULE PROCEDURE qes_reset_HubbardJ
+    MODULE PROCEDURE qes_reset_ChannelOcc
+    MODULE PROCEDURE qes_reset_HubbardOcc
     MODULE PROCEDURE qes_reset_SitMag
     MODULE PROCEDURE qes_reset_starting_ns
     MODULE PROCEDURE qes_reset_Hubbard_ns
     MODULE PROCEDURE qes_reset_HubbardBack
-    MODULE PROCEDURE qes_reset_backL
     MODULE PROCEDURE qes_reset_vdW
     MODULE PROCEDURE qes_reset_spin
     MODULE PROCEDURE qes_reset_bands
@@ -62,6 +64,10 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_basisSetItem
     MODULE PROCEDURE qes_reset_reciprocal_lattice
     MODULE PROCEDURE qes_reset_electron_control
+    MODULE PROCEDURE qes_reset_fcp
+    MODULE PROCEDURE qes_reset_rism
+    MODULE PROCEDURE qes_reset_solute
+    MODULE PROCEDURE qes_reset_solvent
     MODULE PROCEDURE qes_reset_k_points_IBZ
     MODULE PROCEDURE qes_reset_monkhorst_pack
     MODULE PROCEDURE qes_reset_k_point
@@ -72,6 +78,8 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_symmetry_flags
     MODULE PROCEDURE qes_reset_boundary_conditions
     MODULE PROCEDURE qes_reset_esm
+    MODULE PROCEDURE qes_reset_gcscf
+    MODULE PROCEDURE qes_reset_solvents
     MODULE PROCEDURE qes_reset_ekin_functional
     MODULE PROCEDURE qes_reset_spin_constraints
     MODULE PROCEDURE qes_reset_electric_field
@@ -81,6 +89,7 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_inputOccupations
     MODULE PROCEDURE qes_reset_outputElectricField
     MODULE PROCEDURE qes_reset_BerryPhaseOutput
+    MODULE PROCEDURE qes_reset_sawtoothEnergy
     MODULE PROCEDURE qes_reset_dipoleOutput
     MODULE PROCEDURE qes_reset_finiteFieldOut
     MODULE PROCEDURE qes_reset_polarization
@@ -118,6 +127,9 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_matrix
     MODULE PROCEDURE qes_reset_integerMatrix
     MODULE PROCEDURE qes_reset_scalarQuantity
+    MODULE PROCEDURE qes_reset_rism3d
+    MODULE PROCEDURE qes_reset_rismlaue
+    MODULE PROCEDURE qes_reset_two_chem
   END INTERFACE qes_reset
   !
   CONTAINS
@@ -139,7 +151,9 @@ MODULE qes_reset_module
     IF (obj%parallel_info_ispresent) &
       CALL qes_reset_parallel_info(obj%parallel_info)
     obj%parallel_info_ispresent = .FALSE.
-    CALL qes_reset_input(obj%input)
+    IF (obj%input_ispresent) &
+      CALL qes_reset_input(obj%input)
+    obj%input_ispresent = .FALSE.
     IF (obj%step_ispresent) THEN
       IF (ALLOCATED(obj%step)) THEN
         DO i=1, SIZE(obj%step)
@@ -227,6 +241,15 @@ MODULE qes_reset_module
     IF (obj%boundary_conditions_ispresent) &
       CALL qes_reset_boundary_conditions(obj%boundary_conditions)
     obj%boundary_conditions_ispresent = .FALSE.
+    IF (obj%fcp_settings_ispresent) &
+      CALL qes_reset_fcp(obj%fcp_settings)
+    obj%fcp_settings_ispresent = .FALSE.
+    IF (obj%rism_settings_ispresent) &
+      CALL qes_reset_rism(obj%rism_settings)
+    obj%rism_settings_ispresent = .FALSE.
+    IF (obj%solvents_ispresent) &
+      CALL qes_reset_solvents(obj%solvents)
+    obj%solvents_ispresent = .FALSE.
     IF (obj%ekin_functional_ispresent) &
       CALL qes_reset_ekin_functional(obj%ekin_functional)
     obj%ekin_functional_ispresent = .FALSE.
@@ -248,6 +271,9 @@ MODULE qes_reset_module
     IF (obj%spin_constraints_ispresent) &
       CALL qes_reset_spin_constraints(obj%spin_constraints)
     obj%spin_constraints_ispresent = .FALSE.
+    IF (obj%twoch__ispresent) &
+      CALL qes_reset_two_chem(obj%twoch_)
+    obj%twoch__ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_input
   !
@@ -268,8 +294,8 @@ MODULE qes_reset_module
     IF (obj%stress_ispresent) &
       CALL qes_reset_matrix(obj%stress)
     obj%stress_ispresent = .FALSE.
-    obj%FCP_force_ispresent = .FALSE.
-    obj%FCP_tot_charge_ispresent = .FALSE.
+    obj%fcp_force_ispresent = .FALSE.
+    obj%fcp_tot_charge_ispresent = .FALSE.
     obj%n_step_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_step
@@ -312,8 +338,17 @@ MODULE qes_reset_module
     IF (obj%electric_field_ispresent) &
       CALL qes_reset_outputElectricField(obj%electric_field)
     obj%electric_field_ispresent = .FALSE.
-    obj%FCP_force_ispresent = .FALSE.
-    obj%FCP_tot_charge_ispresent = .FALSE.
+    obj%fcp_force_ispresent = .FALSE.
+    obj%fcp_tot_charge_ispresent = .FALSE.
+    IF (obj%rism3d_ispresent) &
+      CALL qes_reset_rism3d(obj%rism3d)
+    obj%rism3d_ispresent = .FALSE.
+    IF (obj%rismlaue_ispresent) &
+      CALL qes_reset_rismlaue(obj%rismlaue)
+    obj%rismlaue_ispresent = .FALSE.
+    IF (obj%two_chem_ispresent) &
+      CALL qes_reset_two_chem(obj%two_chem)
+    obj%two_chem_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_output
   !
@@ -477,6 +512,7 @@ MODULE qes_reset_module
     obj%crystal_positions_ispresent = .FALSE.
     CALL qes_reset_cell(obj%cell)
     obj%nat_ispresent = .FALSE.
+    obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%alat_ispresent = .FALSE.
     obj%bravais_index_ispresent = .FALSE.
     obj%alternative_axes_ispresent = .FALSE.
@@ -629,6 +665,16 @@ MODULE qes_reset_module
     obj%lread  = .FALSE.
     !
     obj%lda_plus_u_kind_ispresent = .FALSE.
+    IF (obj%Hubbard_Occ_ispresent) THEN
+      IF (ALLOCATED(obj%Hubbard_Occ)) THEN
+        DO i=1, SIZE(obj%Hubbard_Occ)
+          CALL qes_reset_HubbardOcc(obj%Hubbard_Occ(i))
+        ENDDO
+        DEALLOCATE(obj%Hubbard_Occ)
+      ENDIF
+      obj%ndim_Hubbard_Occ = 0
+      obj%Hubbard_Occ_ispresent = .FALSE.
+    ENDIF
     IF (obj%Hubbard_U_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_U)) THEN
         DO i=1, SIZE(obj%Hubbard_U)
@@ -689,6 +735,16 @@ MODULE qes_reset_module
       obj%ndim_starting_ns = 0
       obj%starting_ns_ispresent = .FALSE.
     ENDIF
+    IF (obj%Hubbard_V_ispresent) THEN
+      IF (ALLOCATED(obj%Hubbard_V)) THEN
+        DO i=1, SIZE(obj%Hubbard_V)
+          CALL qes_reset_HubbardInterSpecieV(obj%Hubbard_V(i))
+        ENDDO
+        DEALLOCATE(obj%Hubbard_V)
+      ENDIF
+      obj%ndim_Hubbard_V = 0
+      obj%Hubbard_V_ispresent = .FALSE.
+    ENDIF
     IF (obj%Hubbard_ns_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_ns)) THEN
         DO i=1, SIZE(obj%Hubbard_ns)
@@ -710,16 +766,6 @@ MODULE qes_reset_module
       obj%ndim_Hubbard_back = 0
       obj%Hubbard_back_ispresent = .FALSE.
     ENDIF
-    IF (obj%Hubbard_U_back_ispresent) THEN
-      IF (ALLOCATED(obj%Hubbard_U_back)) THEN
-        DO i=1, SIZE(obj%Hubbard_U_back)
-          CALL qes_reset_HubbardCommon(obj%Hubbard_U_back(i))
-        ENDDO
-        DEALLOCATE(obj%Hubbard_U_back)
-      ENDIF
-      obj%ndim_Hubbard_U_back = 0
-      obj%Hubbard_U_back_ispresent = .FALSE.
-    ENDIF
     IF (obj%Hubbard_alpha_back_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_alpha_back)) THEN
         DO i=1, SIZE(obj%Hubbard_alpha_back)
@@ -740,6 +786,7 @@ MODULE qes_reset_module
       obj%ndim_Hubbard_ns_nc = 0
       obj%Hubbard_ns_nc_ispresent = .FALSE.
     ENDIF
+    obj%new_format_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_dftU
   !
@@ -757,6 +804,21 @@ MODULE qes_reset_module
     obj%label_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardCommon
+  !
+  !
+  SUBROUTINE qes_reset_HubbardInterSpecieV(obj)
+    !
+    IMPLICIT NONE
+    TYPE(HubbardInterSpecieV_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%label1_ispresent = .FALSE.
+    obj%label2_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_HubbardInterSpecieV
   !
   !
   SUBROUTINE qes_reset_SiteMoment(obj)
@@ -788,6 +850,42 @@ MODULE qes_reset_module
     obj%label_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardJ
+  !
+  !
+  SUBROUTINE qes_reset_ChannelOcc(obj)
+    !
+    IMPLICIT NONE
+    TYPE(ChannelOcc_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%specie_ispresent = .FALSE.
+    obj%label_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_reset_HubbardOcc(obj)
+    !
+    IMPLICIT NONE
+    TYPE(HubbardOcc_type),INTENT(INOUT)    :: obj
+    INTEGER :: i
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    IF (ALLOCATED(obj%channel_occ)) THEN
+      DO i=1, SIZE(obj%channel_occ)
+        CALL qes_reset_ChannelOcc(obj%channel_occ(i))
+      ENDDO
+      DEALLOCATE(obj%channel_occ)
+    ENDIF
+    obj%ndim_channel_occ = 0
+    !
+  END SUBROUTINE qes_reset_HubbardOcc
   !
   !
   SUBROUTINE qes_reset_SitMag(obj)
@@ -856,36 +954,17 @@ MODULE qes_reset_module
     !
     IMPLICIT NONE
     TYPE(HubbardBack_type),INTENT(INOUT)    :: obj
-    INTEGER :: i
     !
     obj%tagname = ""
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
-    IF (ALLOCATED(obj%l_number)) THEN
-      DO i=1, SIZE(obj%l_number)
-        CALL qes_reset_backL(obj%l_number(i))
-      ENDDO
-      DEALLOCATE(obj%l_number)
-    ENDIF
-    obj%ndim_l_number = 0
+    obj%n3_number_ispresent = .FALSE.
+    obj%l3_number_ispresent = .FALSE.
+    obj%label_ispresent = .FALSE.
     obj%species_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardBack
-  !
-  !
-  SUBROUTINE qes_reset_backL(obj)
-    !
-    IMPLICIT NONE
-    TYPE(backL_type),INTENT(INOUT)    :: obj
-    !
-    obj%tagname = ""
-    obj%lwrite  = .FALSE.
-    obj%lread  = .FALSE.
-    !
-    obj%l_index_ispresent = .FALSE.
-    !
-  END SUBROUTINE qes_reset_backL
   !
   !
   SUBROUTINE qes_reset_vdW(obj)
@@ -1082,16 +1161,134 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%exx_nstep_ispresent = .FALSE.
     obj%real_space_q_ispresent = .FALSE.
     obj%real_space_beta_ispresent = .FALSE.
     obj%diago_cg_maxiter_ispresent = .FALSE.
-    obj%diago_ppcg_maxiter_ispresent = .FALSE.
     obj%diago_david_ndim_ispresent = .FALSE.
     obj%diago_rmm_ndim_ispresent = .FALSE.
     obj%diago_gs_nblock_ispresent = .FALSE.
     obj%diago_rmm_conv_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_electron_control
+  !
+  !
+  SUBROUTINE qes_reset_fcp(obj)
+    !
+    IMPLICIT NONE
+    TYPE(fcp_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%fcp_mu_ispresent = .FALSE.
+    obj%fcp_dynamics_ispresent = .FALSE.
+    obj%fcp_conv_thr_ispresent = .FALSE.
+    obj%fcp_ndiis_ispresent = .FALSE.
+    obj%fcp_rdiis_ispresent = .FALSE.
+    obj%fcp_mass_ispresent = .FALSE.
+    obj%fcp_velocity_ispresent = .FALSE.
+    obj%fcp_temperature_ispresent = .FALSE.
+    obj%fcp_tempw_ispresent = .FALSE.
+    obj%fcp_tolp_ispresent = .FALSE.
+    obj%fcp_delta_t_ispresent = .FALSE.
+    obj%fcp_nraise_ispresent = .FALSE.
+    obj%freeze_all_atoms_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_fcp
+  !
+  !
+  SUBROUTINE qes_reset_rism(obj)
+    !
+    IMPLICIT NONE
+    TYPE(rism_type),INTENT(INOUT)    :: obj
+    INTEGER :: i
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    IF (ALLOCATED(obj%solute)) THEN
+      DO i=1, SIZE(obj%solute)
+        CALL qes_reset_solute(obj%solute(i))
+      ENDDO
+      DEALLOCATE(obj%solute)
+    ENDIF
+    obj%ndim_solute = 0
+    obj%closure_ispresent = .FALSE.
+    obj%tempv_ispresent = .FALSE.
+    obj%ecutsolv_ispresent = .FALSE.
+    obj%rmax_lj_ispresent = .FALSE.
+    obj%rmax1d_ispresent = .FALSE.
+    obj%starting1d_ispresent = .FALSE.
+    obj%starting3d_ispresent = .FALSE.
+    obj%smear1d_ispresent = .FALSE.
+    obj%smear3d_ispresent = .FALSE.
+    obj%rism1d_maxstep_ispresent = .FALSE.
+    obj%rism3d_maxstep_ispresent = .FALSE.
+    obj%rism1d_conv_thr_ispresent = .FALSE.
+    obj%rism3d_conv_thr_ispresent = .FALSE.
+    obj%mdiis1d_size_ispresent = .FALSE.
+    obj%mdiis3d_size_ispresent = .FALSE.
+    obj%mdiis1d_step_ispresent = .FALSE.
+    obj%mdiis3d_step_ispresent = .FALSE.
+    obj%rism1d_bond_width_ispresent = .FALSE.
+    obj%rism1d_dielectric_ispresent = .FALSE.
+    obj%rism1d_molesize_ispresent = .FALSE.
+    obj%rism1d_nproc_ispresent = .FALSE.
+    obj%rism1d_nproc_switch_ispresent = .FALSE.
+    obj%rism3d_conv_level_ispresent = .FALSE.
+    obj%rism3d_planar_average_ispresent = .FALSE.
+    obj%laue_nfit_ispresent = .FALSE.
+    obj%laue_expand_right_ispresent = .FALSE.
+    obj%laue_expand_left_ispresent = .FALSE.
+    obj%laue_starting_right_ispresent = .FALSE.
+    obj%laue_starting_left_ispresent = .FALSE.
+    obj%laue_buffer_right_ispresent = .FALSE.
+    obj%laue_buffer_right_solu_ispresent = .FALSE.
+    obj%laue_buffer_right_solv_ispresent = .FALSE.
+    obj%laue_buffer_left_ispresent = .FALSE.
+    obj%laue_buffer_left_solu_ispresent = .FALSE.
+    obj%laue_buffer_left_solv_ispresent = .FALSE.
+    obj%laue_both_hands_ispresent = .FALSE.
+    obj%laue_reference_ispresent = .FALSE.
+    obj%laue_wall_ispresent = .FALSE.
+    obj%laue_wall_z_ispresent = .FALSE.
+    obj%laue_wall_rho_ispresent = .FALSE.
+    obj%laue_wall_epsilon_ispresent = .FALSE.
+    obj%laue_wall_sigma_ispresent = .FALSE.
+    obj%laue_wall_lj6_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_rism
+  !
+  !
+  SUBROUTINE qes_reset_solute(obj)
+    !
+    IMPLICIT NONE
+    TYPE(solute_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    !
+  END SUBROUTINE qes_reset_solute
+  !
+  !
+  SUBROUTINE qes_reset_solvent(obj)
+    !
+    IMPLICIT NONE
+    TYPE(solvent_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%density2_ispresent = .FALSE.
+    obj%unit_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_solvent
   !
   !
   SUBROUTINE qes_reset_k_points_IBZ(obj)
@@ -1251,8 +1448,9 @@ MODULE qes_reset_module
     IF (obj%esm_ispresent) &
       CALL qes_reset_esm(obj%esm)
     obj%esm_ispresent = .FALSE.
-    obj%fcp_opt_ispresent = .FALSE.
-    obj%fcp_mu_ispresent = .FALSE.
+    IF (obj%gcscf_ispresent) &
+      CALL qes_reset_gcscf(obj%gcscf)
+    obj%gcscf_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_boundary_conditions
   !
@@ -1266,8 +1464,55 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%nfit_ispresent = .FALSE.
+    obj%w_ispresent = .FALSE.
+    obj%efield_ispresent = .FALSE.
+    obj%a_ispresent = .FALSE.
+    obj%zb_ispresent = .FALSE.
+    obj%debug_ispresent = .FALSE.
+    obj%debug_gpmax_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_esm
+  !
+  !
+  SUBROUTINE qes_reset_gcscf(obj)
+    !
+    IMPLICIT NONE
+    TYPE(gcscf_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%ignore_mun_ispresent = .FALSE.
+    obj%mu_ispresent = .FALSE.
+    obj%conv_thr_ispresent = .FALSE.
+    obj%gk_ispresent = .FALSE.
+    obj%gh_ispresent = .FALSE.
+    obj%beta_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_gcscf
+  !
+  !
+  SUBROUTINE qes_reset_solvents(obj)
+    !
+    IMPLICIT NONE
+    TYPE(solvents_type),INTENT(INOUT)    :: obj
+    INTEGER :: i
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    IF (ALLOCATED(obj%solvent)) THEN
+      DO i=1, SIZE(obj%solvent)
+        CALL qes_reset_solvent(obj%solvent(i))
+      ENDDO
+      DEALLOCATE(obj%solvent)
+    ENDIF
+    obj%ndim_solvent = 0
+    !
+  END SUBROUTINE qes_reset_solvents
   !
   !
   SUBROUTINE qes_reset_ekin_functional(obj)
@@ -1370,6 +1615,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%constr_target_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_atomic_constraint
   !
@@ -1408,6 +1654,9 @@ MODULE qes_reset_module
     IF (obj%finiteElectricFieldInfo_ispresent) &
       CALL qes_reset_finiteFieldOut(obj%finiteElectricFieldInfo)
     obj%finiteElectricFieldInfo_ispresent = .FALSE.
+    IF (obj%sawtoothEnergy_ispresent) &
+      CALL qes_reset_sawtoothEnergy(obj%sawtoothEnergy)
+    obj%sawtoothEnergy_ispresent = .FALSE.
     IF (obj%dipoleInfo_ispresent) &
       CALL qes_reset_dipoleOutput(obj%dipoleInfo)
     obj%dipoleInfo_ispresent = .FALSE.
@@ -1446,6 +1695,23 @@ MODULE qes_reset_module
     obj%ndim_electronicPolarization = 0
     !
   END SUBROUTINE qes_reset_BerryPhaseOutput
+  !
+  !
+  SUBROUTINE qes_reset_sawtoothEnergy(obj)
+    !
+    IMPLICIT NONE
+    TYPE(sawtoothEnergy_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%eamp_ispresent = .FALSE.
+    obj%eopreg_ispresent = .FALSE.
+    obj%emaxpos_ispresent = .FALSE.
+    obj%edir_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_sawtoothEnergy
   !
   !
   SUBROUTINE qes_reset_dipoleOutput(obj)
@@ -1567,6 +1833,7 @@ MODULE qes_reset_module
     IF (obj%opt_conv_ispresent) &
       CALL qes_reset_opt_conv(obj%opt_conv)
     obj%opt_conv_ispresent = .FALSE.
+    obj%wf_collected_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_convergence_info
   !
@@ -1621,6 +1888,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%colin_mag_ispresent = .FALSE.
     IF (ALLOCATED(obj%symmetry)) THEN
       DO i=1, SIZE(obj%symmetry)
         CALL qes_reset_symmetry(obj%symmetry(i))
@@ -1694,6 +1962,9 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    IF (obj%esm_ispresent) &
+      CALL qes_reset_esm(obj%esm)
+    obj%esm_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_outputPBC
   !
@@ -1739,6 +2010,8 @@ MODULE qes_reset_module
     obj%potentiostat_contr_ispresent = .FALSE.
     obj%gatefield_contr_ispresent = .FALSE.
     obj%vdW_term_ispresent = .FALSE.
+    obj%esol_ispresent = .FALSE.
+    obj%levelshift_contr_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_total_energy
   !
@@ -1756,7 +2029,6 @@ MODULE qes_reset_module
     obj%nbnd_ispresent = .FALSE.
     obj%nbnd_up_ispresent = .FALSE.
     obj%nbnd_dw_ispresent = .FALSE.
-    obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
     obj%lowestUnoccupiedLevel_ispresent = .FALSE.
@@ -2089,6 +2361,69 @@ MODULE qes_reset_module
     obj%Units_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_scalarQuantity
+  !
+  !
+  SUBROUTINE qes_reset_rism3d(obj)
+    !
+    IMPLICIT NONE
+    TYPE(rism3d_type),INTENT(INOUT)    :: obj
+    INTEGER :: i
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%molec_dir_ispresent = .FALSE.
+    IF (ALLOCATED(obj%solvent)) THEN
+      DO i=1, SIZE(obj%solvent)
+        CALL qes_reset_solvent(obj%solvent(i))
+      ENDDO
+      DEALLOCATE(obj%solvent)
+    ENDIF
+    obj%ndim_solvent = 0
+    !
+  END SUBROUTINE qes_reset_rism3d
+  !
+  !
+  SUBROUTINE qes_reset_rismlaue(obj)
+    !
+    IMPLICIT NONE
+    TYPE(rismlaue_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%both_hands_ispresent = .FALSE.
+    obj%nfit_ispresent = .FALSE.
+    obj%pot_ref_ispresent = .FALSE.
+    obj%charge_ispresent = .FALSE.
+    obj%right_start_ispresent = .FALSE.
+    obj%right_expand_ispresent = .FALSE.
+    obj%right_buffer_ispresent = .FALSE.
+    obj%right_buffer_u_ispresent = .FALSE.
+    obj%right_buffer_v_ispresent = .FALSE.
+    obj%left_start_ispresent = .FALSE.
+    obj%left_expand_ispresent = .FALSE.
+    obj%left_buffer_ispresent = .FALSE.
+    obj%left_buffer_u_ispresent = .FALSE.
+    obj%left_buffer_v_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_rismlaue
+  !
+  !
+  SUBROUTINE qes_reset_two_chem(obj)
+    !
+    IMPLICIT NONE
+    TYPE(two_chem_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%ef_cond_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_two_chem
   !
   !
 END MODULE qes_reset_module

@@ -43,7 +43,6 @@
         PUBLIC :: deallocate_electrons
         PUBLIC :: ib_owner, ib_local, nb_l
         PUBLIC :: ei
-        PUBLIC :: print_eigenvalues
         PUBLIC :: distribute_c, collect_c
         PUBLIC :: distribute_b, collect_b
 !
@@ -235,47 +234,6 @@
    END SUBROUTINE electrons_setup
 
 !----------------------------------------------------------------------
-
-   SUBROUTINE print_eigenvalues( ei_unit, tfile, tstdout, nfi, tps )
-      !
-      use constants,  only : autoev 
-      USE io_global,  ONLY : stdout, ionode
-      !
-      INTEGER,  INTENT(IN) :: ei_unit
-      LOGICAL,  INTENT(IN) :: tfile, tstdout
-      INTEGER,  INTENT(IN) :: nfi
-      REAL(DP), INTENT(IN) :: tps
-      !
-      INTEGER :: i, j, ik
-      !
-      IF ( tfile ) THEN
-          WRITE(ei_unit,30) nfi, tps
-      END IF
-      !
-      ik = 1
-      !
-      DO j = 1, nspin
-         !
-         IF( tstdout ) THEN
-            WRITE( stdout,1002) ik, j
-            WRITE( stdout,1004) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
-         END IF
-         !
-         IF( tfile ) THEN
-            WRITE(ei_unit,1010) ik, j
-            WRITE(ei_unit,1020) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
-         END IF
-         !
-      END DO
-      !
-  30  FORMAT(2X,'STEP:',I7,1X,F10.2)
- 1002 FORMAT(/,3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
- 1004 FORMAT(10F8.2)
- 1010 FORMAT(3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
- 1020 FORMAT(10F8.2)
-      !
-      RETURN
-   END SUBROUTINE print_eigenvalues
 
 !  ----------------------------------------------
 

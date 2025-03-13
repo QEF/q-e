@@ -7,6 +7,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE simpson(mesh, func, rab, asum)
+  !$acc routine vector
   !-----------------------------------------------------------------------
   !
   !     simpson's rule integration. On input:
@@ -22,27 +23,30 @@ SUBROUTINE simpson(mesh, func, rab, asum)
   !
   USE upf_kinds, ONLY: DP
   IMPLICIT NONE
-  INTEGER, INTENT(in) :: mesh
-  real(DP), INTENT(in) :: rab (mesh), func (mesh)
+  INTEGER,  INTENT(in) :: mesh
+  real(DP), INTENT(in) :: rab(mesh), func(mesh)
   real(DP), INTENT(out):: asum
   !
-  real(DP) :: f1, f2, f3, r12
+  real(DP) :: f1, f2, f3, r12, fct
   INTEGER :: i
   !
   asum = 0.0d0
   r12 = 1.0d0 / 3.0d0
-  f3 = func (1) * rab (1) * r12
-
-  DO i = 2, mesh - 1, 2
-     f1 = f3
-     f2 = func (i) * rab (i) * r12
-     f3 = func (i + 1) * rab (i + 1) * r12
-     asum = asum + f1 + 4.0d0 * f2 + f3
+  !
+  !$acc loop vector reduction(+:asum)
+  DO i = 2, mesh-1
+    fct = DBLE(ABS(MOD(i,2)-2)*2)
+    asum = asum + fct * func(i) * rab(i)
   ENDDO
+  IF (MOD(mesh,2)==1) THEN
+    asum = (asum + func(1)*rab(1) + func(mesh)*rab(mesh)) * r12
+  ELSE
+    asum = (asum + func(1)*rab(1) - func(mesh-1)*rab(mesh-1)) * r12
+  ENDIF
   !
   ! if mesh is not odd, use open formula instead:
   ! ... 2/3*f(n-5) + 4/3*f(n-4) + 13/12*f(n-3) + 0*f(n-2) + 27/12*f(n-1)
-  !!! Under testing
+  !** Under testing
   !
   !IF ( MOD(mesh,2) == 0 ) THEN
   !   print *, 'mesh even: correction:', f1*5.d0/4.d0-4.d0*f2+23.d0*f3/4.d0, &

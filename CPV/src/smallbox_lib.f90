@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
       SUBROUTINE initbox ( tau0, alat, at, ainv, taub, irb, iabox, nabox )
 !-----------------------------------------------------------------------
-!
-!     sets the indexes irb and positions taub for the small boxes 
-!     around atoms
+      !! Sets the indexes \(\text{irb}\) and positions \(\text{taub}\) for
+      !! the small boxes around atoms.
 !
       USE kinds,                    ONLY: DP
       USE ions_base,                ONLY: nat, ityp
@@ -134,10 +133,10 @@
 !-----------------------------------------------------------------------
       SUBROUTINE phbox( taub, iverbosity, eigrb )
 !-----------------------------------------------------------------------
-!     calculates the phase factors for the g's of the little box
-!     eigrt=exp(-i*g*tau) .
-!     Uses the same logic for fast calculation as in phfac
-!        
+      !! Calculates the phase factors for the g's of the little box:
+      !! \[ \text{eigrt}=\exp(-i\ g\ \text{tau})\ . \]
+      !! Uses the same logic for fast calculation as in \(\texttt{phfac}\).
+!
       USE kinds,         only: DP
       use io_global,     only: stdout
       use ions_base,     only: nsp, na, nat

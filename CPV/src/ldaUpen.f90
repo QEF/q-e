@@ -8,8 +8,7 @@
 !-------------------------------------------------------------------------
 MODULE step_penalty
 !-------------------------------------------------------------------------
-  !
-  ! LDA+U with occupation constraint 
+  !! Module for LDA+U with occupation constraint.
   !
   USE kinds
   implicit none
@@ -71,10 +70,9 @@ CONTAINS
 !-----------------------------------------------------------------------
   SUBROUTINE penalty_e ( offset, swfc, proj, e_hubbard, hpsi )
 !-----------------------------------------------------------------------
-!
-!      Calculate the energy (added to e_hubbard) and the potential (added
-!      to hpsi) due to constraint
-!
+      !! Calculate the energy (added to \(\text{e_hubbard}\)) and the
+      !! potential (added to \(\text{hpsi}\)) due to constraint.
+      !
       USE kinds,              ONLY: dp        
       USE ions_base,          ONLY: nat, nsp, ityp
       USE gvecw,              ONLY: ngw
@@ -140,9 +138,8 @@ CONTAINS
 !-----------------------------------------------------------------------
    SUBROUTINE penalty_f ( is, ia, dns, forceh )
 !-----------------------------------------------------------------------
-!
-!      Calculate forces due to constraint (added to forceh)
-!
+      !! Calculate forces due to constraint (added to forceh)
+      !
       USE kinds,              ONLY: dp        
       USE ions_base,          ONLY: na, nat, nsp
       USE gvecw,              ONLY: ngw
@@ -192,10 +189,12 @@ CONTAINS
 !-----------------------------------------------------------------------
       subroutine stepfn(A,sigma,x_value,g_value,step_value)
 !-----------------------------------------------------------------------
-!     This subroutine calculates the value of the gaussian and step
-!     functions with a given x_value. A and sigma are given in the
-!     input file. ... to be used in occupation_constraint...
-!
+      !! This subroutine calculates the value of the gaussian and step
+      !! functions with a given \(\text{x_value}\). \(\text{A}\) and
+      !! \(\text{sigma}\) are given in the input file.
+      !
+      !! ... to be used in occupation_constraint...
+      !
       USE constants, ONLY : pi
       implicit none
       real(kind=8) A, sigma, x_value, g_value, step_value

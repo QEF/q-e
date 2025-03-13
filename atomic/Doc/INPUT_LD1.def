@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -program ld1.x {
+input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
     toc {}
 

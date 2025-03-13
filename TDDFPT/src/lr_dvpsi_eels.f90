@@ -87,7 +87,9 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   ! and kept in memory for the rest of the code.
   !
   CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+  !$acc update device(evc)
   CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+  !$acc update device(evq)
   !
   ! Re-ordering of the G vectors.
   !
@@ -104,10 +106,14 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      ELSE
         !
         ! FFT to R-space
+        !$acc data copy(revc, dvpsi1)    
         CALL cft_wave(ik, evc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
         CALL cft_wave(ik, dvpsi1(1,ibnd), revc, -1) 
+        !$acc end data
+        !
+        !$acc update self(evc)
         !
      ENDIF
      !

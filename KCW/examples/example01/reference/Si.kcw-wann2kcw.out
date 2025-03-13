@@ -1,0 +1,524 @@
+
+     =--------------------------------------------------------------------------------=
+                      :::    :::           ::::::::         :::       ::: 
+                     :+:   :+:           :+:    :+:        :+:       :+:  
+                    +:+  +:+            +:+               +:+       +:+   
+                   +#++:++             +#+               +#+  +:+  +#+    
+                  +#+  +#+            +#+               +#+ +#+#+ +#+     
+                 #+#   #+#           #+#    #+#         #+#+# #+#+#       
+                ###    ###           ########           ###   ###         
+
+       Koopmans functional implementation based on DFPT; please cite this program as
+
+        N.Colonna, R. De Gennaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+
+                                                                                    
+
+       If you use the non-collinear mode (with/without spin-orbit coupling) please cite
+
+        A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
+     =--------------------------------------------------------------------------------=
+
+     Program KCW v.7.3.1 starts on 25Sep2024 at 15: 8:58 
+        Git branch: develop
+        Last git commit: bdd82480539e9b5a8a2317b314f3e3ce005b4fba-dirty
+        Last git commit date: Sat Sep 21 21:24:12 2024 +0000
+        Last git commit subject: Merge branch 'XClib_some_updates' into 'develop'
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       2
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     204015 MiB available memory on the printing compute node when the environment starts
+ 
+
+     KCW INPUT SUMMARY 
+     ============================================
+
+      CONTROL 
+       # title               =       W2K Silicon
+       # out_dir             =/home/colonna_n/CO
+       # prefix              =                Si
+       # calculation         =          wann2kcw
+       # kcw_iverbosity      =                 2
+       # kcw_at_ks           =                 F
+       # MP grid             =     2     2     2
+       # spin_component      =                 1
+       # homo_only           =                 F
+       # read_unitary_matrix =                 T
+       # check_ks            =                 T
+       # l_vcut              =                 F
+       # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
+
+      WANNIER 
+       # seedname            =                Si
+       # num_wann_occ        =                 4
+       # num_wann_emp        =                 4
+       # have_empty          =                 T
+       # has_disentangle     =                 T
+       # l_unique_manifold   =                 F
+     ============================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          73      73     22                  821      821     152
+     Max          74      74     23                  823      823     153
+     Sum         295     295     91                 3287     3287     609
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     REPORT # of electrons
+     nelec=      8.00000000
+     nelup=      4.00000000
+     neldw=      4.00000000
+     nkstot=    16
+     nspin=      2
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Optimal Matrix READ
+
+     INFO: total number of Wannier functions    8
+
+     INFO: Unitary matrix, READ from file
+
+     INFO: Buffer for WFs, OPENED
+
+     INFO: Buffer for WFs ALL-k, OPENED
+
+     INFO: Minimizing orbitals from Unitary Matrix Rotation
+
+        INFO: Performing a check on the eigenvalues of the rotated KS Hamilotnian ... 
+
+        Rotated Occupation Matrix (ROM) ik=    1   xk =  0.0000  0.0000  0.0000
+
+          1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   3.999999999872854
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=      0.0000      0.0000      0.0000   ...    DONE 
+
+        WANN      -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+        PWSCF     -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+
+        Rotated Occupation Matrix (ROM) ik=    2   xk = -0.5000  0.5000 -0.5000
+
+          1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   4.000000000143838
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=     -0.5000      0.5000     -0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        Rotated Occupation Matrix (ROM) ik=    3   xk =  0.5000  0.5000  0.5000
+
+          1.0000 -0.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   3.999999999992849
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=      0.5000      0.5000      0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        Rotated Occupation Matrix (ROM) ik=    4   xk =  0.0000  1.0000  0.0000
+
+          1.0000  0.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   3.999999999944624
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=      0.0000      1.0000      0.0000   ...    DONE 
+
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+
+        Rotated Occupation Matrix (ROM) ik=    5   xk = -0.5000 -0.5000  0.5000
+
+          1.0000 -0.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   3.999999999984310
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=     -0.5000     -0.5000      0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        Rotated Occupation Matrix (ROM) ik=    6   xk = -1.0000  0.0000  0.0000
+
+          1.0000 -0.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000 -0.0000  0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   4.000000000032231
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=     -1.0000      0.0000      0.0000   ...    DONE 
+
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+
+        Rotated Occupation Matrix (ROM) ik=    7   xk =  0.0000  0.0000  1.0000
+
+          1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   4.000000000093324
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=      0.0000      0.0000      1.0000   ...    DONE 
+
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+
+        Rotated Occupation Matrix (ROM) ik=    8   xk = -0.5000  0.5000  0.5000
+
+          1.0000 -0.0000  0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000  1.0000 -0.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000 -0.0000  1.0000 -0.0000  0.0000  0.0000  0.0000  0.0000
+         -0.0000 -0.0000 -0.0000  1.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+          0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+        Trace   3.999999999971887
+        ROM eig     0.0000   0.0000   0.0000   0.0000   1.0000   1.0000   1.0000   1.0000
+
+        KS Hamiltonian calculation at k=     -0.5000      0.5000      0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        INFO: Performing a check on the eigenvalues of the rotated KS Hamiltonian ... DONE
+
+     INFO: Minimizing orbitals DEFINED
+
+     INFO: Coulomb q+G=0 treatment:
+     INFO: Divergence            none    
+     INFO: q-grid dimension         2   2   2
+     INFO: cell volume               270.256360799503
+     INFO: Gamma Extrapolation       F
+     INFO: extrapolation q->0 term not estimated
+     INFO: Bare Coulomb q+G=0            0.00000E+00
+
+
+     INFO: PREPARING THE KCW CALCULATION ...
+
+     INFO: Compute Wannier-orbital Densities ...
+
+        ==============================================================================
+        iq =     1
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    1   1  )        1        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   2  )        2        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   3  )        3        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   4  )        4        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   5  )        5        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   6  )        6        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   7  )        7        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    1   8  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     1   Structure Factor S(q) [Re, Im] =   8.00000000  0.00000000
+
+
+        ==============================================================================
+        iq =     2
+        The Wannier density at  q =   -0.5000000   0.5000000  -0.5000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.0000000   0.5000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    2   1  )        2        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   2  )        1        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   3  )        4        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   4  )        3        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   5  )        6        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   6  )        5        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   7  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    2   8  )        7        +  0.0000  0.0000  1.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     2   Structure Factor S(q) [Re, Im] =   0.00000000 -0.00000000
+
+
+        ==============================================================================
+        iq =     3
+        The Wannier density at  q =    0.5000000   0.5000000   0.5000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.5000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    3   1  )        3        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   2  )        4        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   3  )        1        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   4  )        2        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   5  )        7        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   6  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   7  )        5        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    3   8  )        6        +  0.0000  1.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     3   Structure Factor S(q) [Re, Im] =   0.00000000 -0.00000000
+
+
+        ==============================================================================
+        iq =     4
+        The Wannier density at  q =    0.0000000   1.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.5000000   0.5000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    4   1  )        4        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   2  )        3        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   3  )        2        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   4  )        1        +  0.0000  1.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   5  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   6  )        7        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   7  )        6        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    4   8  )        5        +  0.0000  1.0000  1.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     4   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
+
+
+        ==============================================================================
+        iq =     5
+        The Wannier density at  q =   -0.5000000  -0.5000000   0.5000000  [Cart ]
+        The Wannier density at  q =    0.5000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    5   1  )        5        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   2  )        6        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   3  )        7        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   4  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   5  )        1        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   6  )        2        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   7  )        3        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    5   8  )        4        +  1.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     5   Structure Factor S(q) [Re, Im] =   0.00000000 -0.00000000
+
+
+        ==============================================================================
+        iq =     6
+        The Wannier density at  q =   -1.0000000   0.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.5000000   0.0000000   0.5000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    6   1  )        6        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   2  )        5        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   3  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   4  )        7        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   5  )        2        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   6  )        1        +  1.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   7  )        4        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    6   8  )        3        +  1.0000  0.0000  1.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     6   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
+
+
+        ==============================================================================
+        iq =     7
+        The Wannier density at  q =    0.0000000   0.0000000   1.0000000  [Cart ]
+        The Wannier density at  q =    0.5000000   0.5000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    7   1  )        7        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   2  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   3  )        5        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   4  )        6        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   5  )        3        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   6  )        4        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   7  )        1        +  1.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    7   8  )        2        +  1.0000  1.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     7   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
+
+
+        ==============================================================================
+        iq =     8
+        The Wannier density at  q =   -0.5000000   0.5000000   0.5000000  [Cart ]
+        The Wannier density at  q =    0.5000000   0.5000000   0.5000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (    8   1  )        8        +  0.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   2  )        7        +  0.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   3  )        6        +  0.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   4  )        5        +  0.0000  1.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   5  )        4        +  1.0000  0.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   6  )        3        +  1.0000  0.0000  1.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   7  )        2        +  1.0000  1.0000  0.0000 [Cryst]
+        The map (iq,ik) --> ip + G      (    8   8  )        1        +  1.0000  1.0000  1.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+        INFO: iq =     8   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
+
+     INFO: Wannier density number
+     iwann=   1   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   2   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   3   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   4   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   5   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   6   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   7   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+     iwann=   8   ipol=   1   int rho_wann[ipol](r) [Re, Im] =        1.00000000       -0.00000000
+
+     INFO: Orbital Self-Hartree (SH)
+     orb     1     SH   0.272879
+     orb     2     SH   0.272879
+     orb     3     SH   0.272879
+     orb     4     SH   0.272879
+     orb     5     SH   0.095366
+     orb     6     SH   0.095366
+     orb     7     SH   0.095365
+     orb     8     SH   0.095366
+
+     INFO: PREPARING THE KCW CALCULATION ... DONE
+
+
+ 
+     KCW          :      0.25s CPU      0.28s WALL
+
+     INITIALIZATION: 
+     map          :      0.00s CPU      0.00s WALL (       8 calls)
+     rho_of_q     :      0.09s CPU      0.10s WALL (       8 calls)
+ 
+     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+     h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
+ 
+     h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
+ 
+ 
+ 
+      General routines
+     calbec       :      0.00s CPU      0.00s WALL (       8 calls)
+     fft          :      0.00s CPU      0.00s WALL (       5 calls)
+     ffts         :      0.01s CPU      0.01s WALL (     448 calls)
+     fftw         :      0.03s CPU      0.03s WALL (    1152 calls)
+     davcio       :      0.00s CPU      0.00s WALL (     176 calls)
+ 
+ 
+     KCW          :      0.25s CPU      0.28s WALL
+
+ 
+   This run was terminated on:  15: 8:58  25Sep2024            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
