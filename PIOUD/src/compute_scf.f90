@@ -18,7 +18,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   ! ... Written by Carlo Sbraccia (2003-2006)
   !
-  USE basis,            ONLY : starting_wfc, starting_pot
+  USE starting_scf,     ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, tstress
