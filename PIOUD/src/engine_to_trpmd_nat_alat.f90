@@ -15,7 +15,7 @@ SUBROUTINE engine_to_path_nat_alat()
   !
   USE input_parameters, ONLY : nat 
   USE cell_base, ONLY : alat
-  USE path_input_parameters_module, ONLY : nat_ => nat, alat_ => alat
+  USE ring_input_parameters_module, ONLY : nat_ => nat, alat_ => alat
   !
   !
   IMPLICIT NONE

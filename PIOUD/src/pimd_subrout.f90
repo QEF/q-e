@@ -741,7 +741,7 @@ subroutine reweight_pioud_irun4(psip,ieskin,scalpar,iflagerr,rank &
 
  use pimd_variables, only: kdyn_eig,yessecond &
                          ,write_cov,kdyn,nbead,ndimMD
- USE path_io_units_module,         ONLY : iunpath
+ USE ring_io_units_module,         ONLY : iunpath
  USE random_numbers, ONLY: randy
  USE random_pioud, ONLY: pioud_randy
 
@@ -1395,7 +1395,7 @@ SUBROUTINE pimdnvt_init(epot)!,forcetmp)!(qui devo mettere forze e potenziale)
                                    rcentroid,cost,forceMD,mass_ion,forceMD_old,vel, &
                                    ekinq,ekinqp,unit_dot_out,restart_pimd
 
-      USE path_io_units_module,         ONLY : iunpath
+      USE ring_io_units_module,         ONLY : iunpath
       IMPLICIT NONE
       
       integer :: i,nseed
@@ -1536,14 +1536,14 @@ END SUBROUTINE pimdnvt_init
 
 SUBROUTINE pimdnvt( ep)!,forcetmp)
      
-     USE path_variables,   ONLY : istep_path
+     USE ring_variables,   ONLY : istep_path
      USE pimd_variables,   ONLY : iblockMD,nstep_block,irun,deltahtilde,natMD,avp, &
                                   ipot,anormp,iprint,gMD,kbm1,nbeadMD,av,anorm, &
                                   rpos_old,rpos,forceMD_old,forceMD,epot_old,&
                                   ikin,unit_dot_ek,unit_dot_ep,unit_dot_ep2,&
                                   unit_dot_eplr,unit_dot_epsr,ekinq,ekinqp,&
                                   unit_dot_out,ndimMD
-     USE path_io_units_module,         ONLY : iunpath
+     USE ring_io_units_module,         ONLY : iunpath
      IMPLICIT NONE
       
      integer :: i,ii,step_blockMD
@@ -1654,7 +1654,7 @@ END SUBROUTINE pimdnvt
 subroutine pimd_allocation
    
    USE pimd_variables
-   USE path_io_units_module,         ONLY : iunpath
+   USE ring_io_units_module,         ONLY : iunpath
    implicit none
    integer :: i,j,ii,jj,ind
    
@@ -1955,7 +1955,7 @@ subroutine pimd_read_input(unit)
 !!! *********************************************************************!!!
 
   use pimd_variables
-  USE path_io_units_module,         ONLY : iunpath
+  USE ring_io_units_module,         ONLY : iunpath
   implicit none   
   integer :: i,j,l,k,ii,jj,ind,ntest
   integer, intent(in) :: unit
@@ -2341,7 +2341,6 @@ subroutine checkpoint(ttk)
                              unit_dot_forces_cen,&
                              unit_dot_velocities_cen,&
                              unit_dot_stress_cen
-  ! USE path_variables,   ONLY : stress_pes
   USE constants,        ONLY : ry_kbar
   implicit none
 !    *******************************************************************

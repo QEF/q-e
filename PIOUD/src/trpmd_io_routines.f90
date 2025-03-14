@@ -36,10 +36,10 @@ MODULE trpmd_io_routines
      SUBROUTINE write_output()
        !-----------------------------------------------------------------------
        !
-       USE path_io_units_module,  ONLY : iunpath
-       USE path_variables, ONLY :  path_length, & !num_of_images,
+       USE ring_io_units_module,  ONLY : iunpath
+       USE ring_variables, ONLY :  path_length, & !num_of_images,
                                    pos !pes
-       USE path_formats,   ONLY : run_info, run_output
+       USE ring_formats,   ONLY : run_info, run_output
        USE ions_base,             ONLY : zv, ityp, nat
        USE fcp_variables,         ONLY : lfcpopt, fcp_mu
        USE fcp_opt_routines, ONLY : fcp_neb_ef, fcp_neb_nelec
@@ -101,9 +101,9 @@ MODULE trpmd_io_routines
        ! ... this subroutine initializes the file needed for the
        ! ... parallelization among images
        !
-       USE path_io_units_module, ONLY : iunnewimage
+       USE ring_io_units_module, ONLY : iunnewimage
        USE io_files, ONLY : prefix
-       USE path_variables, ONLY : tune_load_balance
+       USE ring_variables, ONLY : tune_load_balance
        !
        IMPLICIT NONE
        !
@@ -134,7 +134,7 @@ MODULE trpmd_io_routines
        !
        USE io_files,       ONLY : iunnewimage, iunlock, prefix
        USE io_global,      ONLY : ionode
-       USE path_variables, ONLY : tune_load_balance
+       USE ring_variables, ONLY : tune_load_balance
        !
        IMPLICIT NONE
        !

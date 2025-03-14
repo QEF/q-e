@@ -15,16 +15,16 @@ MODULE trpmd_base
   !
   ! ... Other relevant files are:
   !
-  ! ... path_variables.f90
+  ! ... ring_variables.f90
   ! ... trpmd_io_routines.f90
   ! ... path_opt_routines.f90
   ! ... path_reparametrisation.f90
-  ! ... path_formats.f90
-  ! ... compute_scf.f90
+  ! ... ring_formats.f90
+  ! ... compute_scf_pioud.f90
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps32, pi, autoev, bohr_radius_angs, eV_to_kelvin
-  USE path_io_units_module,  ONLY : iunpath
+  USE ring_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -48,17 +48,17 @@ MODULE trpmd_base
       USE ions_base,        ONLY : amass, ityp
       USE io_files,         ONLY : prefix, tmp_dir
       USE mp_images,        ONLY : nimage
-      USE path_input_parameters_module, ONLY : pos_      => pos, &
+      USE ring_input_parameters_module, ONLY : pos_      => pos, &
                                                input_images, nstep_path_ => nstep_path
-      USE path_input_parameters_module, ONLY : restart_mode
-      USE path_input_parameters_module, ONLY : nat
-      USE path_variables,   ONLY : pos, istep_path, nstep_path,    &
+      USE ring_input_parameters_module, ONLY : restart_mode
+      USE ring_input_parameters_module, ONLY : nat
+      USE ring_variables,   ONLY : pos, istep_path, nstep_path,    &
                                    dim1, & !,  grad_pes, num_of_images,  & !pes
                                     path_length,  &
                                   !  deg_of_freedom,   &
                                    tune_load_balance,  & ! posold, 
                                    pending_image
-      USE path_variables,   ONLY : path_allocation
+      USE ring_variables,   ONLY : path_allocation
       USE fcp_variables,        ONLY : lfcpopt
       USE fcp_opt_routines,     ONLY : fcp_opt_allocation
       use pimd_variables, ONLY : nbeadMD, pes
@@ -176,9 +176,9 @@ MODULE trpmd_base
     SUBROUTINE initial_guess()
       !--------------------------------------------------------------------
 
-      USE path_input_parameters_module, ONLY : input_images
-      USE path_variables,   ONLY : pos, dim1, path_length ! num_of_images, 
-      USE path_io_units_module,         ONLY : iunpath
+      USE ring_input_parameters_module, ONLY : input_images
+      USE ring_variables,   ONLY : pos, dim1, path_length ! num_of_images, 
+      USE ring_io_units_module,         ONLY : iunpath
       USE pimd_variables, ONLY : nbeadMD
       !
       IMPLICIT NONE
@@ -208,7 +208,7 @@ MODULE trpmd_base
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : pending_image, istep_path !pes, num_of_images
+      USE ring_variables, ONLY : pending_image, istep_path !pes, num_of_images
       USE pimd_variables, ONLY : nbeadMD, pes
       !
       IMPLICIT NONE
@@ -222,7 +222,7 @@ MODULE trpmd_base
       !
       IF ( pending_image /= 0 ) fii = pending_image
       !
-      CALL compute_scf( fii, lii, stat )
+      CALL compute_scf_pioud( fii, lii, stat )
       !
       IF ( .NOT. stat ) RETURN
       !
@@ -238,13 +238,13 @@ MODULE trpmd_base
     SUBROUTINE explore_phasespace()
       !-----------------------------------------------------------------------
       !
-      USE path_variables,    ONLY :  pos, nstep_path ! ,lneb, lsmd
-      USE path_variables,   ONLY :  istep_path,   &
+      USE ring_variables,    ONLY :  pos, nstep_path ! ,lneb, lsmd
+      USE ring_variables,   ONLY :  istep_path,   &
                                    pending_image !, conv_path &
                                    !pes !CI_scheme
                                   !  Emax_index
       USE trpmd_io_routines, ONLY : write_output
-      USE path_formats,     ONLY : scf_iter_fmt
+      USE ring_formats,     ONLY : scf_iter_fmt
       USE fcp_variables,    ONLY : lfcpopt
       use mp_world
       !
@@ -383,7 +383,7 @@ MODULE trpmd_base
     SUBROUTINE explore_phasespace_init()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : pending_image
+      USE ring_variables, ONLY : pending_image
       !
       IMPLICIT NONE
       !

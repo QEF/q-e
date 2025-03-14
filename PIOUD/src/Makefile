@@ -12,19 +12,19 @@ pioud.o \
 
 
 PIOUDLIBS = \
-compute_scf.o \
+compute_scf_pioud.o \
 engine_to_trpmd_pos.o \
 engine_to_trpmd_nat_alat.o \
 fcp_opt_routines.o \
 fcp_variables.o \
 trpmd_base.o \
-path_formats.o \
+ring_formats.o \
 pw_gen_inputs.o \
-path_input_parameters_module.o \
+ring_input_parameters_module.o \
 trpmd_io_routines.o \
-path_io_units_module.o \
+ring_io_units_module.o \
 pimd_variables.o \
-path_variables.o \
+ring_variables.o \
 pimd_subrout.o \
 pimd_utils.o \
 set_defaults.o \

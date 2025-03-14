@@ -31,47 +31,6 @@ SUBROUTINE pw_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
   myrank =  mp_rank(comm)
   parse_unit = find_free_unit()
   OPEN(unit=parse_unit,file=trim(parse_file_name),status="old")
-  ! ---------------------------------------------------
-  ! NEB INPUT PART
-  ! ---------------------------------------------------  
-!   i=0
-   !  nimage = 0
-!   neb_unit = find_free_unit()
-!   OPEN(unit=neb_unit,file='neb.dat',status="unknown")
-!   dummy=""
-!   DO WHILE (len_trim(dummy)<1)
-!      READ(parse_unit,fmt='(A512)',END=10) dummy
-!   ENDDO
-!   nimage = 1
-!   IF(trim(ADJUSTL(dummy)) == "BEGIN") THEN
-!      DO WHILE (trim(ADJUSTL(dummy)) /= "END")
-!         READ(parse_unit,*) dummy
-      !   IF(trim(ADJUSTL(dummy)) == "BEGIN_PATH_INPUT") THEN
-           
-      !      READ(parse_unit,'(A512)') dummy
-           
-      !      DO WHILE (trim(ADJUSTL(dummy)) /= "END_PATH_INPUT")
-      !         IF(myrank==root) WRITE(neb_unit,*) trim(ADJUSTL(dummy))
-      !         READ(parse_unit,'(A512)') dummy
-      !      ENDDO
-      !   ENDIF
-      !   nimage = 1
-      !   IF(trim(ADJUSTL(dummy)) == "FIRST_IMAGE") THEN
-      !      nimage = nimage + 1
-      !   ENDIF
-      !   IF(trim(ADJUSTL(dummy)) == "INTERMEDIATE_IMAGE") THEN
-      !      nimage = nimage + 1
-      !   ENDIF
-      !   IF(trim(ADJUSTL(dummy)) == "LAST_IMAGE") THEN
-      !      nimage=nimage+1
-      !   ENDIF
-!      ENDDO
-!   ELSE
-!      CALL infomsg('path_gen_inputs','key word BEGIN missing')
-!   ENDIF
-!   CLOSE(neb_unit)
-  !------------------------------------------------
-  !
   !
   ! ------------------------------------------------
   ! ENGINE INPUT PART

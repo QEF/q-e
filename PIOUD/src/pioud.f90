@@ -26,9 +26,9 @@ PROGRAM pioud
   ! USE path_read_namelists_module, ONLY : path_read_namelist
   ! USE path_read_cards_module,     ONLY : path_read_cards
   !
-  USE path_input_parameters_module, ONLY : input_images, allocate_path_input_ions, &
+  USE ring_input_parameters_module, ONLY : input_images, allocate_path_input_ions, &
                                            deallocate_path_input_ions
-  USE path_io_units_module,  ONLY : iunpath
+  USE ring_io_units_module,  ONLY : iunpath
   !
   IMPLICIT NONE
   !

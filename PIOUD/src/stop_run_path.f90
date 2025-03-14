@@ -16,8 +16,8 @@ SUBROUTINE stop_run_path( lflag )
   USE io_global,          ONLY : ionode, stdout
   USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
-  USE path_variables,     ONLY : path_deallocation
-  USE path_io_units_module,      ONLY : iunpath
+  USE ring_variables,     ONLY : path_deallocation
+  USE ring_io_units_module,      ONLY : iunpath
   USE fcp_opt_routines,          ONLY : fcp_opt_deallocation
   USE fcp_variables,             ONLY : lfcpopt
   !

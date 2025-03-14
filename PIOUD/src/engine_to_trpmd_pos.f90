@@ -17,10 +17,10 @@ SUBROUTINE engine_to_path_pos(idx)
   !
   USE kinds,         ONLY : DP
   !
-  USE path_input_parameters_module, ONLY : input_images, minimum_image
-  USE path_input_parameters_module, ONLY : nat, alat 
-  USE path_input_parameters_module, ONLY : pos, typ
-  USE path_io_units_module,         ONLY : iunpath
+  USE ring_input_parameters_module, ONLY : input_images, minimum_image
+  USE ring_input_parameters_module, ONLY : nat, alat 
+  USE ring_input_parameters_module, ONLY : pos, typ
+  USE ring_io_units_module,         ONLY : iunpath
   !
   USE ions_base, ONLY : tau, ityp
   USE cell_base, ONLY : bg, at

@@ -18,7 +18,7 @@ MODULE fcp_opt_routines
    !
    USE kinds,          ONLY : DP
    USE constants,      ONLY : eps8, eps16, e2, rytoev, fpi
-   USE path_variables, ONLY : pos
+   USE ring_variables, ONLY : pos
    USE io_global,      ONLY : meta_ionode, meta_ionode_id
    USE mp,             ONLY : mp_bcast
    USE mp_world,       ONLY : world_comm
@@ -26,7 +26,6 @@ MODULE fcp_opt_routines
                               fcp_mdiis_size, fcp_mdiis_step, &
                               fcp_tot_charge_first, fcp_tot_charge_last
    USE mdiis,          ONLY : mdiis_type, allocate_mdiis, deallocate_mdiis, update_by_mdiis
-   ! USE path_variables, ONLY : num_of_images
    USE pimd_variables, ONLY : nbeadMD
    !
    IMPLICIT NONE
@@ -57,7 +56,7 @@ CONTAINS
       USE ions_base,      ONLY : nat, ityp, zv
       USE klist,          ONLY : tot_charge, nelec
       USE io_files,       ONLY : prefix, tmp_dir
-      USE path_variables, ONLY : restart
+      USE ring_variables, ONLY : restart
       USE ener,           ONLY : ef
       !
       IMPLICIT NONE

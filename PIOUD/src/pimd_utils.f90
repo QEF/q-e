@@ -1,7 +1,7 @@
 ! subroutine pimd_get_force_from_pw(forcetmp)
 
 !    use pimd_variables, only : nbeadMD,natMD,ndimMD
-!    use path_variables, only : grad_pes
+!    use ring_variables, only : grad_pes
 !    implicit none
 !    integer k,iat,i,cc
 !    real(8) :: forcetmp(ndimMD,natMD,nbeadMD)
@@ -23,7 +23,7 @@
 
 subroutine pimd_get_pot_from_pw(epMD)
    
-  !  use path_variables, only : pes  
+  !  use ring_variables, only : pes  
    use pimd_variables, only : nbeadMD,pes
    implicit none
    real(8) :: epMD
@@ -39,10 +39,10 @@ end subroutine pimd_get_pot_from_pw
    
 subroutine pimd_pw_convert_pos(abc)
  
- ! use path_input_parameters_module, only : pos
-  use path_variables, only : pos
+ ! use ring_input_parameters_module, only : pos
+  use ring_variables, only : pos
   use pimd_variables, only : rpos,rcentroid,nbeadMD,natMD,ndimMD
-  USE path_io_units_module,  ONLY : iunpath
+  USE ring_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -119,11 +119,11 @@ end subroutine pimd_pw_convert_pos
 
 subroutine pimd_restart_traj()
  
- ! use path_input_parameters_module, only : pos
-  use path_variables, only : pos
+ ! use ring_input_parameters_module, only : pos
+  use ring_variables, only : pos
   use pimd_variables, only : rpos,vel,nbeadMD,natMD,ndimMD
   use pimd_variables, only : unit_dot_positions, unit_dot_velocities
-  USE path_io_units_module,         ONLY : iunpath
+  USE ring_io_units_module,         ONLY : iunpath
   
   implicit none
   integer cc,k,iat,i,iflagerr,ngen
@@ -202,7 +202,7 @@ SUBROUTINE pimd_get_amas_and_nat
   !
   USE pimd_variables, ONLY : nbeadMD,ndimMD,mtot,&
                              natMD,amas,ion_name,fixcm,gMD
-  use path_input_parameters_module, only : nat
+  use ring_input_parameters_module, only : nat
   !
   USE ions_base, ONLY : amass, ityp, atm
   !
@@ -234,11 +234,11 @@ END SUBROUTINE pimd_get_amas_and_nat
 
 
 SUBROUTINE pimd_mp_bcast
-  use path_variables, only : nstep_path, num_of_images
+  use ring_variables, only : nstep_path, num_of_images
                                            
   use pimd_variables, only : nbeadMD,nblocks,nstep_block, forceMD,&
                               ndimMD,natMD
-  use path_input_parameters_module, only : nat
+  use ring_input_parameters_module, only : nat
   USE io_global, ONLY : meta_ionode,meta_ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm, mpime
@@ -280,8 +280,8 @@ SUBROUTINE refold(idx,rpostmp)
 
   USE kinds,         ONLY : DP
 
-  USE path_input_parameters_module, ONLY : alat 
-  USE path_io_units_module,         ONLY : iunpath
+  USE ring_input_parameters_module, ONLY : alat 
+  USE ring_io_units_module,         ONLY : iunpath
   USE pimd_variables,               ONLY : natMD, ndimMD, nbeadMD, rpos
   !
   USE ions_base, ONLY : tau, ityp
@@ -378,7 +378,7 @@ END SUBROUTINE refold
 SUBROUTINE my_mimage(vector_in,vector_out)
   
   use cell_base, only : at
-  USE path_input_parameters_module, ONLY : alat
+  USE ring_input_parameters_module, ONLY : alat
   
   implicit none
   double precision, intent(in) :: vector_in(3)
@@ -412,8 +412,8 @@ SUBROUTINE my_refold(idx,rpostmp0,rpostmp1)
 
   USE kinds,         ONLY : DP
 
-  USE path_input_parameters_module, ONLY : alat 
-  USE path_io_units_module,         ONLY : iunpath
+  USE ring_input_parameters_module, ONLY : alat 
+  USE ring_io_units_module,         ONLY : iunpath
   USE pimd_variables,               ONLY : natMD, ndimMD, nbeadMD, rpos
   !
   IMPLICIT NONE
@@ -450,7 +450,7 @@ SUBROUTINE verify_pioud_tmpdir()
   !-----------------------------------------------------------------------
   !
   USE clib_wrappers,    ONLY : f_mkdir
-  USE path_input_parameters_module, ONLY : restart_mode
+  USE ring_input_parameters_module, ONLY : restart_mode
   USE io_files,         ONLY : prefix, check_tempdir, delete_if_present, tmp_dir
   use pimd_variables, only : nbeadMD !Is it input_images in piioud.f90
   USE mp_world,         ONLY : world_comm, mpime, nproc
