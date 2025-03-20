@@ -35,29 +35,39 @@ This module will set the following variables in your project:
 
 #]=======================================================================]
 
-find_library(
-    MBD_LIBRARIES
-    NAMES "mbd"
-    HINTS ${MBD_ROOT}
-    PATH_SUFFIXES "lib")
+find_package(Mbd CONFIG)
+if(Mbd_FOUND)
+  set(real_target Mbd::mbd)
+  get_target_property(alias ${real_target} ALIASED_TARGET)
+  if(alias)
+    set(real_target ${alias})
+  endif()
+  add_library(MBD::MBD ALIAS ${real_target})
+else()
+  find_library(
+      MBD_LIBRARIES
+      NAMES "mbd"
+      HINTS ${MBD_ROOT}
+      PATH_SUFFIXES "lib")
 
-find_path(
-    MBD_INCLUDE_DIRS
-    NAMES "mbd.mod"
-    HINTS ${MBD_ROOT}
-    PATH_SUFFIXES 
-        "mbd"
-        "include")
+  find_path(
+      MBD_INCLUDE_DIRS
+      NAMES "mbd.mod"
+      HINTS ${MBD_ROOT}
+      PATH_SUFFIXES
+      "mbd"
+      "include")
 
-find_package_handle_standard_args(MBD
-  REQUIRED_VARS
-    MBD_LIBRARIES
-    MBD_INCLUDE_DIRS)
+  find_package_handle_standard_args(MBD
+      REQUIRED_VARS
+      MBD_LIBRARIES
+      MBD_INCLUDE_DIRS)
 
-if(MBD_FOUND)
-  add_library(MBD::MBD INTERFACE IMPORTED)
-  target_link_libraries(MBD::MBD 
-    INTERFACE ${MBD_LIBRARIES})
-  target_include_directories(MBD::MBD
-    INTERFACE ${MBD_INCLUDE_DIRS})
+  if(MBD_FOUND)
+    add_library(MBD::MBD INTERFACE IMPORTED)
+    target_link_libraries(MBD::MBD
+        INTERFACE ${MBD_LIBRARIES})
+    target_include_directories(MBD::MBD
+        INTERFACE ${MBD_INCLUDE_DIRS})
+  endif()
 endif()
