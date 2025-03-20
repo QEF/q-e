@@ -183,6 +183,10 @@ endfunction(qe_add_executable)
 
 function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
+    set_target_properties(${LIB} PROPERTIES
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+        VERSION ${PROJECT_VERSION}
+    )
     _qe_add_target(${LIB} ${ARGN})
 endfunction(qe_add_library)
 
