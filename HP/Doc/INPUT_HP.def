@@ -322,5 +322,15 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program hp.x 
             }
         }
 
+        var no_metq0 -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. the metallic response term at q=0 is ignored
+                (i.e. the last term in Eq. (22) in PRB 103, 045141 (2021)).
+                This is useful for magnetic insulators to avoid the divergence
+                of the calculation.
+            }
+        }
+
 }  
 }

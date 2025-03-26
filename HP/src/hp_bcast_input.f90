@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,8 @@ SUBROUTINE hp_bcast_input ( )
                                background, compute_hp, sum_pertq, perturb_only_atom,   &
                                determine_num_pert_only, skip_equivalence_q, niter_max, &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3, dist_thr, determine_q_mesh_only
+                               nmix, nq1, nq2, nq3, dist_thr, determine_q_mesh_only,   &
+                               no_metq0
   !
   IMPLICIT NONE
   !
@@ -45,6 +46,7 @@ SUBROUTINE hp_bcast_input ( )
   CALL mp_bcast (determine_num_pert_only, meta_ionode_id, world_comm)
   CALL mp_bcast (determine_q_mesh_only, meta_ionode_id, world_comm)
   CALL mp_bcast (disable_type_analysis, meta_ionode_id, world_comm)
+  CALL mp_bcast (no_metq0, meta_ionode_id, world_comm)
   !
   ! Integers
   !

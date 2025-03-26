@@ -1,5 +1,5 @@
 !                                         
-! Copyright (C) 2001-2018 Quantum ESPRESSO
+! Copyright (C) 2001-2015 Quantum ESPRESSO
 ! This file is distributed under the terms
 ! GNU General Public License. See the file
 ! in the root directory of the present dis
@@ -208,3 +208,272 @@ SUBROUTINE adddvhubscf (ipert, ik)
   RETURN
   ! 
 END SUBROUTINE adddvhubscf
+
+SUBROUTINE revert_mag_u (ns_nc)
+   !
+   ! This routine reverts the sign of the Hubbard magnetization,
+   ! to be used in the noncollinear magnetic case.
+   ! Written by L. Binci (2023)
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE lsda_mod,             ONLY : nspin
+   USE ldaU,                 ONLY : lda_plus_u_kind, Hubbard_l, is_hubbard, &
+                                    Hubbard_lmax
+   USE noncollin_module,     ONLY : npol
+   !
+   IMPLICIT NONE
+   INTEGER :: na, nt, m1, m2, is, is1, is2, ldim
+   COMPLEX(DP) :: ns, ms(3)
+   COMPLEX(DP), INTENT(INOUT) :: ns_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat)
+   !
+   DO na = 1, nat
+      nt = ityp(na)
+      IF (is_hubbard(nt)) THEN
+          ldim = 2 * Hubbard_l(nt) + 1
+          DO m1 = 1, ldim
+              DO m2 = 1, ldim
+                   !
+                   ! charge
+                   ns = (ns_nc(m1,m2,1,na) + ns_nc(m1,m2,4,na))
+                   ! magnetization
+                   ms(1) =  (ns_nc(m1,m2,2,na)  + ns_nc(m1,m2,3,na))
+                   ms(2) =  -(0.d0,1.0d0)*(ns_nc(m1,m2,2,na)  - ns_nc(m1,m2,3,na))
+                   ms(3) =  (ns_nc(m1,m2,1,na)  - ns_nc(m1,m2,4,na))
+                   !
+                   ms(:) = -ms(:)
+                   !
+                   ns_nc(m1,m2,1,na) = 0.5d0*( ns + ms(3))
+                   ns_nc(m1,m2,2,na) = 0.5d0*( ms(1) + (0.d0,1.0d0)*ms(2) )
+                   ns_nc(m1,m2,3,na) = 0.5d0*( ms(1) - (0.d0,1.0d0)*ms(2) )
+                   ns_nc(m1,m2,4,na) = 0.5d0*( ns - ms(3) )
+              ENDDO
+          ENDDO
+      ENDIF
+   ENDDO
+   !
+   RETURN
+   !
+ END SUBROUTINE revert_mag_u
+
+ SUBROUTINE calc_vh_u( ns, v_hub)
+   !
+   !! Recomputes the noncollinear Hubbard potential.
+   !! Used for a (spin-)Hubbard matrix with reversed magnetization
+   !! Similar to v_hubbard_nc within PW/src/v_of_rho.f90
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U
+   USE lsda_mod,             ONLY : nspin
+   USE control_flags,        ONLY : iverbosity, dfpt_hub
+   USE io_global,            ONLY : stdout
+   !
+   IMPLICIT NONE
+   !
+   COMPLEX(DP), INTENT(IN) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+   !! Occupation matrix
+   COMPLEX(DP), INTENT(INOUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+   !! Hubbard potential
+   INTEGER  :: is, is1, na, nt, m1, m2
+   ! ... local variables
+   !
+   v_hub(:,:,:,:) = 0.d0
+   !
+   DO na = 1, nat
+      nt = ityp (na)
+      IF (Hubbard_U(nt) /= 0.d0) THEN
+         !
+         ! is=1 and is=4 are diagonal components
+         ! is=2 and is=3 are off-diagonal components
+         DO is = 1, nspin
+            IF (is == 2) THEN
+             is1 = 3
+            ELSEIF (is == 3) THEN
+             is1 = 2
+            ELSE
+             is1 = is ! is=1 or is=4
+            ENDIF
+            !
+            IF (is1 == is) THEN
+               !
+               ! Non spin-flip contribution (is=1 and is=4)
+               ! (diagonal [spin indexes] occupancy matrices)
+               DO m1 = 1, 2*Hubbard_l(nt) + 1
+                  v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + 0.5D0*Hubbard_U(nt)
+                  DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                     v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - Hubbard_U(nt) * ns(m2,m1,is,na)
+                  ENDDO
+               ENDDO
+            ELSE
+               !
+               ! Spin-flip contribution (is=2 and is=3)
+               ! (NON-diagonal [spin indexes] occupancy matrices)
+               DO m1 = 1, 2*Hubbard_l(nt) + 1
+                  DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                     v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - Hubbard_U(nt)*ns(m2,m1,is1,na)
+                  ENDDO
+               ENDDO
+            ENDIF
+         ENDDO !is
+      ENDIF
+   ENDDO
+   !
+   RETURN
+   !
+ END SUBROUTINE calc_vh_u
+ !--------------------------------------------------------------------------
+
+ SUBROUTINE revert_mag_uv (nsg_nc)
+   !
+   ! This routine reverts the sign of the Hubbard magnetization,
+   ! to be used in the noncollinear magnetic case.
+   ! Written by L. Binci (2023)
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE lsda_mod,             ONLY : nspin
+   USE ldaU,                 ONLY : lda_plus_u_kind, Hubbard_l, is_hubbard, &
+                                    Hubbard_lmax, ldmx_tot, max_num_neighbors,ldim_u,&
+                                    neighood, at_sc
+   USE noncollin_module,     ONLY : npol
+   USE control_lr,           ONLY : nbnd_occ
+   !
+   IMPLICIT NONE
+   INTEGER :: na, nt, m1, m2, is, is1, is2, ldim, ibnd, nt1, nt2, na1, na2, viz,&
+              ldim1, ldim2, eq_na2, isp1, isp2
+   INTEGER, EXTERNAL :: find_viz
+   COMPLEX(DP) :: ns, ms(3)
+   COMPLEX(DP), INTENT(INOUT) :: nsg_nc(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+   !
+   DO na1 = 1, nat
+      nt1 = ityp (na1)
+      IF ( ldim_u(nt1).GT.0 ) THEN
+         ldim1 = ldim_u(nt1)
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            eq_na2 = at_sc(na2)%at
+            nt2 = ityp (eq_na2)
+            ldim2 = ldim_u(nt2)
+            !IF (na1.GT.na2) THEN
+            !   DO m1 = 1, ldim1
+            !      DO m2 = 1, ldim2
+            !         DO is1 = 1, npol
+            !            DO is2 = 1, npol
+            !               isp1 = is2 + npol*(is1-1)
+            !               isp2 = is1 + npol*(is2-1)
+            !               nsg_nc(m2,m1,viz,na1,isp1) = &
+            !                  CONJG(nsg_nc(m1,m2,find_viz(na2,na1),na2,isp2))
+            !            ENDDO
+            !         ENDDO
+            !      ENDDO
+            !   ENDDO
+            !ELSE
+               DO m1 = 1, ldim1
+                  DO m2 = 1, ldim2
+                     ! charge
+                     ns = (nsg_nc(m2,m1,viz,na1,1) + nsg_nc(m2,m1,viz,na1,4))
+                     ! magnetization
+                     ms(1) = (nsg_nc(m2,m1,viz,na1,2) + nsg_nc(m2,m1,viz,na1,3))
+                     ms(2) = -(0.d0,1.0d0)*(nsg_nc(m2,m1,viz,na1,2) - nsg_nc(m2,m1,viz,na1,3))
+                     ms(3) = (nsg_nc(m2,m1,viz,na1,1) - nsg_nc(m2,m1,viz,na1,4))
+                     !
+                     ms(:) = -ms(:)
+                     !
+                     nsg_nc(m2,m1,viz,na1,1) = 0.5d0*( ns + ms(3))
+                     nsg_nc(m2,m1,viz,na1,2) = 0.5d0*( ms(1) + (0.d0,1.0d0)*ms(2) )
+                     nsg_nc(m2,m1,viz,na1,3) = 0.5d0*( ms(1) - (0.d0,1.0d0)*ms(2) )
+                     nsg_nc(m2,m1,viz,na1,4) = 0.5d0*( ns - ms(3) )
+                  ENDDO
+               ENDDO
+            !ENDIF
+         ENDDO
+      ENDIF
+   ENDDO
+   !
+   RETURN
+   !
+ END SUBROUTINE revert_mag_uv
+
+ SUBROUTINE calc_vh_uv( nsg, v_hub)
+   !
+   !! Recomputes the noncollinear Hubbard potential.
+   !! Used for a (spin-)Hubbard matrix with reversed magnetization
+   !! Similar to v_hubbard_nc within PW/src/v_of_rho.f90
+   !
+   USE kinds,             ONLY : DP
+   USE ions_base,         ONLY : nat, ityp
+   USE ldaU,              ONLY : Hubbard_l, Hubbard_alpha, Hubbard_J0, Hubbard_beta,   &
+                                 ldim_u, ldmx_tot, max_num_neighbors, at_sc, neighood, &
+                                 Hubbard_V, Hubbard_alpha_back, is_hubbard, is_hubbard_back
+   USE lsda_mod,          ONLY : nspin
+   USE control_flags,     ONLY : iverbosity, dfpt_hub
+   USE io_global,         ONLY : stdout
+   USE noncollin_module,  ONLY : npol
+   !
+   IMPLICIT NONE
+   !
+   COMPLEX(DP), INTENT(IN)  :: nsg  (ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+   COMPLEX(DP), INTENT(OUT) :: v_hub(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+   !
+   ! Local variables
+   !
+   INTEGER :: is, is1, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2
+   INTEGER, EXTERNAL :: find_viz
+   !
+   v_hub(:,:,:,:,:) = (0.d0, 0.d0)
+   !
+   DO na1 = 1, nat
+      nt1 = ityp(na1)
+      IF ( is_hubbard(nt1) ) THEN
+         DO is = 1, nspin
+            IF (is == 2) THEN
+               is1 = 3
+            ELSEIF (is == 3) THEN
+               is1 = 2
+            ELSE
+               is1 = is
+            ENDIF
+            DO viz = 1, neighood(na1)%num_neigh
+               na2 = neighood(na1)%neigh(viz)
+               equiv_na2 = at_sc(na2)%at
+               nt2 = ityp(equiv_na2)
+               !
+               IF (is_hubbard(nt2) .AND. &
+                   (Hubbard_V(na1,na2,1).NE.0.d0) ) THEN
+                   !
+                   ! Here no need to use is1: complex conjugation is enough
+                   ! For both standard and background states of a center atom
+                   DO m1 = 1, ldim_u(nt1)
+                      ! For both standard and background states of the neighbor atom
+                      DO m2 = 1, ldim_u(nt2)
+                         v_hub(m2,m1,viz,na1,is) = - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,1)
+                      ENDDO
+                   ENDDO
+                   !
+                   IF ( na1.EQ.na2 .AND. is1.EQ.is) THEN
+                      !
+                      na = find_viz(na1,na1)
+                      ! This is the diagonal term (like in the DFT+U only case)
+                      DO m1 = 1, ldim_u(nt1)
+                         v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
+                                        + Hubbard_V(na1,na1,1) * 0.5d0
+                      ENDDO
+                      !
+                   ENDIF
+                   !
+               ENDIF
+               !
+            ENDDO ! viz
+            !
+         ENDDO ! is
+         !
+      ENDIF
+      !
+   ENDDO ! na1
+   !
+   !
+   RETURN
+   !
+ END SUBROUTINE calc_vh_uv
+ !--------------------------------------------------------------------------
