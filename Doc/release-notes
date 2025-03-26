@@ -1,6 +1,10 @@
 Fixed in development version:
   * Symmetrization glitches on many processors (reported by Yunqi Shao)
   * Crash for noncolinear PAW case on many processors (reported by I. Timrov)
+  * The HP code for the magnetic noncollinear case had a bug
+    when symmetry was used (some symmetry arrays were not re-initialized
+    when perturbing Hubbard atoms) and the magnetization direction flip was 
+    missing in the Hubbard term (for the second Sternheimer equation) (fixed by L. Binci)
 
 New in development version:
   * Interface between Wannier90 and DFT+U to use Wannier functions as

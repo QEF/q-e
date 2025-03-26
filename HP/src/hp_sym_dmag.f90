@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -251,6 +251,8 @@ subroutine hp_sym_dmag (dmagtosym)
                 !
                 if (t_rev(isym) == 1) then 
                    mag(:) = conjg(mag(:)) * phase2 (isym)
+                else
+                   mag(:) = mag(:) * phase2 (isym)
                 end if
                 !
                 dmagsym(i,j,k,1)=dmagsym(i,j,k,1)+mag(1)

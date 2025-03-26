@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE wavefunctions,        ONLY : evc
   USE klist,                ONLY : lgauss, ltetra, nelec, ngk
   USE gvecs,                ONLY : doublegrid
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rho, v, vrs
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE wvfct,                ONLY : nbnd, npwx
@@ -45,10 +45,10 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
   USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
-  USE ldaU_lr,              ONLY : dnsscf
+  USE ldaU_lr,              ONLY : dnsscf, vh_u_save, vh_uv_save
   USE ldaU_hp,              ONLY : thresh_init, dns0, trace_dns_tot_old, &
                                    conv_thr_chi_best, iter_best, niter_max, nmix, &
-                                   alpha_mix, code, lrdvwfc, iudvwfc
+                                   alpha_mix, code, lrdvwfc, iudvwfc, no_metq0
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
@@ -56,6 +56,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE lsda_mod,             ONLY : nspin
   USE lr_nc_mag,            ONLY : lr_apply_time_reversal, deeq_nc_save, int3_nc_save
   USE lr_symm_base,         ONLY : lr_npert, upert, upert_mq
+  USE ldaU,                 ONLY : lda_plus_u_kind, nsg, v_nsg
   !
   IMPLICIT NONE
   !
@@ -199,6 +200,15 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   lmetq0 = (lgauss .OR. ltetra) .AND. lgamma
   !
+  ! If the user specified in the input that no_metq0=.true. this means
+  ! we want to force remove the metallic term at q=0 (e.g. for magnetic insulators
+  ! when the smearing is used). We remove the last term in Eq. (22) 
+  ! in PRB 103, 045141 (2021) (and also for the response charge density), 
+  ! otherwise this term can diverge for magnetic insulators
+  ! due to a division by DOS(E_Fermi) which can be vanishing.
+  !
+  IF (no_metq0) lmetq0 = .FALSE.
+  !
   IF (lmetq0) THEN
      ALLOCATE (ldos (dfftp%nnr, nspin_mag))
      ALLOCATE (ldoss(dffts%nnr, nspin_mag))
@@ -254,6 +264,16 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      DO isolv = 1, nsolv
         !
+        !  change the sign of the magnetic field if required
+        !
+        IF (isolv == 2) THEN
+           IF (lda_plus_u_kind == 0) THEN
+              v%ns_nc (:,:,:,:) = vh_u_save(:,:,:,:,2)
+           ELSEIF (lda_plus_u_kind == 2) THEN
+              v_nsg(:,:,:,:,:) = vh_uv_save(:,:,:,:,:,2)
+           ENDIF
+        ENDIF
+        !
         ! set threshold for iterative solution of the linear system
         !
         IF ( iter == 1 ) THEN
@@ -276,6 +296,16 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         !
         IF ((.NOT. all_conv) .AND. (iter == 1)) THEN
            WRITE(stdout, '(6x, "sternheimer_kernel not converged. Try to increase thresh_init.")')
+        ENDIF
+        !
+        !  reset the original magnetic field if it was changed
+        !
+        IF (isolv == 2) THEN
+           IF (lda_plus_u_kind == 0) THEN
+               v%ns_nc (:,:,:,:) = vh_u_save(:,:,:,:,1)
+           ELSEIF(lda_plus_u_kind == 2) THEN
+               v_nsg (:,:,:,:,:) = vh_uv_save(:,:,:,:,:,1)
+           ENDIF
         ENDIF
         !
      ENDDO ! isolv

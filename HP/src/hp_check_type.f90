@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,12 +23,16 @@ subroutine hp_check_type(na)
   !   other atoms (this is needed in order to mimic an isolated
   !   perturbation in a supercell approach).
   ! 
+  USE kinds,              ONLY : DP
   USE ions_base,          ONLY : ityp, nat, ntyp => nsp, tau
   USE io_global,          ONLY : stdout
   USE symm_base,          ONLY : nsym, set_sym, ft, nofrac
-  USE noncollin_module,   ONLY : nspin_mag, m_loc
+  USE noncollin_module,   ONLY : nspin_mag, m_loc, ux, noncolin, &
+                                 domag, angle1, angle2
   USE fft_base,           ONLY : dfftp
   USE ldaU_hp,            ONLY : recalc_sym
+  USE xc_lib,             ONLY : xclib_dft_is
+  USE lsda_mod,           ONLY : starting_magnetization
   !
   IMPLICIT NONE
   !
@@ -86,6 +90,19 @@ subroutine hp_check_type(na)
      !
      IF (.not.ALLOCATED(m_loc)) ALLOCATE(m_loc(3,nat))
      m_loc(:,:) = 0.0d0 
+     !
+     IF (noncolin.and.domag) THEN
+        DO na_ = 1, nat
+           m_loc(1,na_) = starting_magnetization(ityp(na_)) * &
+                       SIN( angle1(ityp(na_)) ) * COS( angle2(ityp(na_)) )
+           m_loc(2,na_) = starting_magnetization(ityp(na_)) * &
+                       SIN( angle1(ityp(na_)) ) * SIN( angle2(ityp(na_)) )
+           m_loc(3,na_) = starting_magnetization(ityp(na_)) * &
+                       COS( angle1(ityp(na_)) )
+        END DO
+        ux=0.0_DP
+        if (xclib_dft_is('gradient')) call compute_ux(m_loc,ux,nat)
+     ENDIF
      !
      CALL set_sym (nat, tau, ityp, nspin_mag, m_loc)
      !
