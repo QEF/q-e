@@ -14,7 +14,7 @@ function atomic_number(atm)
   character(len=*) :: atm
   integer :: atomic_number
 
-  character(len=2) :: elements(109), atom
+  character(len=2) :: elements(120), atom
   data elements/' H',                              'He', &
                 'Li','Be',' B',' C',' N',' O',' F','Ne', &
                 'Na','Mg','Al','Si',' P',' S','Cl','Ar', &
@@ -31,7 +31,8 @@ function atomic_number(atm)
                           'Tl','Pb','Bi','Po','At','Rn', &
                 'Fr','Ra','Ac','Th','Pa',' U','Np','Pu', &
                 'Am','Cm','Bk','Cf','Es','Fm','Md','No', &
-                'Lr','Rf','Db','Sg','Bh','Hs','Mt' /
+                'Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds', &
+                'Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og','Uu','Ub' /
   integer :: n
 
   atom='  '
