@@ -40,13 +40,6 @@ MODULE fft_helper_subroutines
   !
 #if defined(__CUDA)
   PUBLIC :: fftx_psi2c_gamma_gpu, fftx_c2psi_gamma_gpu
-  !
-  ! ... nlm and nl array: hold conversion indices from 3D to
-  !     1-D vectors. Columns along the z-direction are stored
-  !     contigiously.
-  INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
-#else
-  INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
 #endif
   !
 CONTAINS
@@ -537,10 +530,10 @@ CONTAINS
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
      INTEGER :: ig, desc_ngm
      !
-     CALL alloc_nl_pntrs( desc )
      desc_ngm = desc%ngm
      !
-     !$acc data present_or_copyin(c) present_or_copyout(psi)
+     !$acc data present_or_copyin(c,desc) present_or_copyout(psi)
+     !$acc data present_or_copyin(desc%nl,desc%nlm)
      !$acc kernels
      psi = (0.0d0,0.d0)
      !$acc end kernels
@@ -548,32 +541,31 @@ CONTAINS
         IF( desc%lgamma ) THEN
            !$acc parallel loop present_or_copyin(ca)
            DO ig = 1, desc_ngm
-              psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
-              psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+              psi(desc%nlm(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
+              psi(desc%nl(ig)) = c(ig) + ci * ca(ig)
            ENDDO
         ELSE
            !$acc parallel loop present_or_copyin(ca)
            DO ig = 1, desc_ngm
-              psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+              psi(desc%nl(ig)) = c(ig) + ci * ca(ig)
            ENDDO
         ENDIF
      ELSE
         IF( desc%lgamma ) THEN
            !$acc parallel loop
            DO ig = 1, desc_ngm
-              psi(nlm_d(ig)) = CONJG(c(ig))
-              psi(nl_d(ig)) = c(ig)
+              psi(desc%nlm(ig)) = CONJG(c(ig))
+              psi(desc%nl(ig)) = c(ig)
            ENDDO
         ELSE
            !$acc parallel loop
            DO ig = 1, desc_ngm
-              psi(nl_d(ig)) = c(ig)
+              psi(desc%nl(ig)) = c(ig)
            ENDDO
         ENDIF
      ENDIF
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
   END SUBROUTINE fftx_oned2threed
   !
@@ -625,28 +617,26 @@ CONTAINS
         nng = SIZE(vout1)
      ENDIF
      !
-     CALL alloc_nl_pntrs( desc )
-     !
-     !$acc data present_or_copyin(vin) present_or_copyout(vout1)
+     !$acc data present_or_copyin(vin,desc) present_or_copyout(vout1)
+     !$acc data present_or_copyin(desc%nl,desc%nlm)
      !
      IF( PRESENT( vout2 ) ) THEN
         !$acc parallel loop present_or_copyout(vout2)
         DO ig = 1, nng
-           fp = vin(nl_d(iigs_+ig))+vin(nlm_d(iigs_+ig))
-           fm = vin(nl_d(iigs_+ig))-vin(nlm_d(iigs_+ig))
+           fp = vin(desc%nl(iigs_+ig))+vin(desc%nlm(iigs_+ig))
+           fm = vin(desc%nl(iigs_+ig))-vin(desc%nlm(iigs_+ig))
            vout1(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
            vout2(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
         ENDDO
      ELSE
         !$acc parallel loop
         DO ig = 1, nng
-           vout1(ig) = vin(nl_d(iigs_+ig))
+           vout1(ig) = vin(desc%nl(iigs_+ig))
         ENDDO
      ENDIF
      !
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
   END SUBROUTINE fftx_threed2oned
   !
@@ -666,9 +656,8 @@ CONTAINS
      INTEGER :: ig, idx, n, v_siz, pack_size, remainder, howmany, &
                 group_size, ioff
      !
-     CALL alloc_nl_pntrs( desc )
-     !
-     !$acc data present_or_copyin(vin) present_or_copyout(vout1)
+     !$acc data present_or_copyin(vin,desc) present_or_copyout(vout1)
+     !$acc data present_or_copyin(desc%nl,desc%nlm)
      !
      IF (PRESENT(howmany_set)) THEN
        !
@@ -685,8 +674,8 @@ CONTAINS
          DO idx = 0, pack_size-1
            DO ig = 1, n
              ioff = idx*v_siz
-             fp = (vin(ioff+nl_d(ig)) + vin(ioff+nlm_d(ig)))*0.5d0
-             fm = (vin(ioff+nl_d(ig)) - vin(ioff+nlm_d(ig)))*0.5d0
+             fp = (vin(ioff+desc%nl(ig)) + vin(ioff+desc%nlm(ig)))*0.5d0
+             fm = (vin(ioff+desc%nl(ig)) - vin(ioff+desc%nlm(ig)))*0.5d0
              vout1(ig,idx*2+1)   = CMPLX(DBLE(fp),AIMAG(fm),KIND=DP)
              vout1(ig,idx*2+2) = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
            ENDDO
@@ -695,7 +684,7 @@ CONTAINS
        IF (remainder > 0) THEN
          !$acc parallel loop
          DO ig = 1, n
-           vout1(ig,group_size) = vin(pack_size*v_siz+nl_d(ig))
+           vout1(ig,group_size) = vin(pack_size*v_siz+desc%nl(ig))
          ENDDO
        ENDIF
        !
@@ -706,23 +695,22 @@ CONTAINS
        IF( PRESENT(vout2) ) THEN
           !$acc parallel loop present_or_copyout(vout2)
           DO ig = 1, n
-             fp = vin(nl_d(ig))+vin(nlm_d(ig))
-             fm = vin(nl_d(ig))-vin(nlm_d(ig))
+             fp = vin(desc%nl(ig))+vin(desc%nlm(ig))
+             fm = vin(desc%nl(ig))-vin(desc%nlm(ig))
              vout1(ig,1) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
              vout2(ig) = CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
           ENDDO
        ELSE
           !$acc parallel loop
           DO ig = 1, n
-             vout1(ig,1) = vin(nl_d(ig))
+             vout1(ig,1) = vin(desc%nl(ig))
           ENDDO
        ENDIF
        !
      ENDIF
      !
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
   END SUBROUTINE fftx_psi2c_gamma
   !
@@ -773,9 +761,8 @@ CONTAINS
      !
      INTEGER :: ig, igmax, idx, n, group_size, v_siz
      !
-     CALL alloc_nl_pntrs( desc )
-     !
-     !$acc data present_or_copyin(vin,igk) present_or_copyout(vout)
+     !$acc data present_or_copyin(vin,igk,desc) present_or_copyout(vout)
+     !$acc data present_or_copyin(desc%nl)
      !
      IF (PRESENT(howmany_set)) THEN
         !
@@ -786,7 +773,7 @@ CONTAINS
         !$acc parallel loop collapse(2)
         DO idx = 0, group_size-1
            DO ig = 1, n
-              vout(ig,idx+1) = vin(idx*v_siz+nl_d(igk(ig)))
+              vout(ig,idx+1) = vin(idx*v_siz+desc%nl(igk(ig)))
            ENDDO
         ENDDO
         !
@@ -795,14 +782,13 @@ CONTAINS
         igmax = MIN(desc%ngw,SIZE(vout(:,1)))
         !$acc parallel loop
         DO ig = 1, igmax
-          vout(ig,1) = vin(nl_d(igk(ig)))
+          vout(ig,1) = vin(desc%nl(igk(ig)))
         ENDDO
         !
      ENDIF
      !
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
      RETURN
      !
@@ -829,12 +815,11 @@ CONTAINS
      ! ... The outer loop goes through i : i + 2*NOGRP to cover
      ! ... 2*NOGRP eigenstates at each iteration
      !
-     CALL alloc_nl_pntrs( desc )
-     !
      right_nnr = desc%nnr
      !
 #if defined(_OPENACC)
-     !$acc data present_or_copyin(c_bgrp) present_or_copyout(psis)
+     !$acc data present_or_copyin(c_bgrp,desc) present_or_copyout(psis)
+     !$acc data present_or_copyin(desc%nl,desc%nlm)
 #else
      !$omp  parallel
      !$omp  single
@@ -864,15 +849,15 @@ CONTAINS
         IF ( ieg < dbnd ) THEN
            !$acc parallel loop
            DO ig = 1, n !desc%ngw
-             psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg)) + ci * CONJG(c_bgrp(ig,ieg+1))
-             psis(ib+nl_d(ig)) = c_bgrp(ig,ieg) + ci * c_bgrp(ig,ieg+1)
+             psis(ib+desc%nlm(ig)) = CONJG(c_bgrp(ig,ieg)) + ci * CONJG(c_bgrp(ig,ieg+1))
+             psis(ib+desc%nl(ig)) = c_bgrp(ig,ieg) + ci * c_bgrp(ig,ieg+1)
            ENDDO
         ELSEIF ( ieg == dbnd ) THEN
            ! ... important: if n is odd => c(*,n+1)=0.
            !$acc parallel loop
            DO ig = 1, n !desc%ngw
-             psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg))
-             psis(ib+nl_d(ig)) = c_bgrp(ig,ieg)
+             psis(ib+desc%nlm(ig)) = CONJG(c_bgrp(ig,ieg))
+             psis(ib+desc%nl(ig)) = c_bgrp(ig,ieg)
            ENDDO
         ENDIF
 #if !defined(_OPENACC)
@@ -882,12 +867,11 @@ CONTAINS
      ENDDO
 #if defined(_OPENACC)
      !$acc end data
+     !$acc end data
 #else
      !$omp end single
      !$omp end parallel
 #endif
-     !
-     CALL dealloc_nl_pntrs( desc )
      !
      RETURN
      !
@@ -910,12 +894,11 @@ CONTAINS
      INTEGER :: right_nnr, idx, j, js, je, numblock, ntgrp
      INTEGER, PARAMETER :: blocksize = 256
      !
-     CALL alloc_nl_pntrs( desc )
-     !
      right_nnr = desc%nnr
      !
 #if defined(_OPENACC)
-     !$acc data present_or_copyin(c_bgrp,igk) present_or_copyout(psis)
+     !$acc data present_or_copyin(c_bgrp,igk,desc) present_or_copyout(psis)
+     !$acc data present_or_copyin(desc%nl)
 #endif
      !
      ntgrp = fftx_ntgrp( desc )
@@ -934,16 +917,15 @@ CONTAINS
        DO j = 1, numblock
           js = (j-1)*blocksize+1
           je = MIN(j*blocksize,ngk)
-          psis(nl_d(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+1)
+          psis(desc%nl(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+1)
        ENDDO
      ENDDO
 #if !defined(_OPENACC)
      !$omp end parallel do
 #else
      !$acc end data
+     !$acc end data
 #endif
-     !
-     CALL dealloc_nl_pntrs( desc )
      !
      RETURN
      !
@@ -971,24 +953,23 @@ CONTAINS
      ioff = 0
      CALL tg_get_recip_inc( desc, right_inc )
      !
-     CALL alloc_nl_pntrs( desc )
-     !
-     !$acc data present_or_copyin(vin) present_or_copyout(vout)
+     !$acc data present_or_copyin(vin,desc) present_or_copyout(vout)
+     !$acc data present_or_copyin(desc%nl,desc%nlm)
      !
      DO idx = 1, 2*fftx_ntgrp(desc), 2
        !
        IF ( idx<dbnd ) THEN
          !$acc parallel loop
          DO j = 1, n
-           fp = ( vin(nl_d(j)+ioff) + vin(nlm_d(j)+ioff) )
-           fm = ( vin(nl_d(j)+ioff) - vin(nlm_d(j)+ioff) )
+           fp = ( vin(desc%nl(j)+ioff) + vin(desc%nlm(j)+ioff) )
+           fm = ( vin(desc%nl(j)+ioff) - vin(desc%nlm(j)+ioff) )
            vout(j,idx)   = CMPLX( DBLE(fp),AIMAG(fm),KIND=DP)
            vout(j,idx+1) = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
          ENDDO
        ELSEIF ( idx==dbnd ) THEN
          !$acc parallel loop
          DO j = 1, n
-            vout(j,idx) = vin(nl_d(j)+ioff)
+            vout(j,idx) = vin(desc%nl(j)+ioff)
          ENDDO
        ENDIF
        !
@@ -997,8 +978,7 @@ CONTAINS
      ENDDO
      !
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
      RETURN
      !
@@ -1074,50 +1054,6 @@ CONTAINS
 1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
      RETURN
   END SUBROUTINE fft_dist_info
-  !
-  !----------------------------------------------------------------
-  SUBROUTINE alloc_nl_pntrs( desc )
-    !------------------------------------------------------------
-    !! Workaround to use nl and nlm arrays with or without openacc+cuda
-    !! - allocation.
-    IMPLICIT NONE
-    TYPE(fft_type_descriptor), INTENT(IN) :: desc
-#if defined(__CUDA) && defined(_OPENACC)
-    nl_d  => desc%nl_d
-    nlm_d => desc%nlm_d
-#else
-    IF (.NOT.ALLOCATED(nl_d)) THEN
-      ALLOCATE( nl_d(desc%ngm) )
-      nl_d = desc%nl
-    ENDIF
-    IF ( desc%lgamma .AND. .NOT.ALLOCATED(nlm_d)) THEN
-      ALLOCATE( nlm_d(desc%ngm) )
-      nlm_d = desc%nlm
-    ENDIF
-    !$acc enter data copyin( nl_d, nlm_d )
-#endif
-    !
-  END SUBROUTINE alloc_nl_pntrs
-  !
-  !----------------------------------------------------------------
-  SUBROUTINE dealloc_nl_pntrs( desc )
-    !------------------------------------------------------------
-    !! Workaround to use nl and nlm arrays with or without openacc+cuda
-    !! - deallocation.
-    IMPLICIT NONE
-    TYPE(fft_type_descriptor), INTENT(IN) :: desc
-#if !defined(__CUDA) || !defined(_OPENACC)
-    IF ( ALLOCATED(nl_d) ) THEN
-      !$acc exit data delete( nl_d )
-      DEALLOCATE( nl_d )
-    ENDIF
-    IF ( desc%lgamma .AND. ALLOCATED(nlm_d) ) THEN
-      !$acc exit data delete( nlm_d )
-      DEALLOCATE( nlm_d )
-    ENDIF
-#endif
-    !
-  END SUBROUTINE dealloc_nl_pntrs
   !
   !
 END MODULE fft_helper_subroutines

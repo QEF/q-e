@@ -49,14 +49,12 @@ CONTAINS
       DEALLOCATE( dfft%nl )
    ENDIF
    ALLOCATE( dfft%nl( dfft%ngm ) )
-   !$acc enter data create(dfft,dfft%nl)
    if (dfft%lgamma) THEN
       IF( ALLOCATED( dfft%nlm ) ) THEN
          !$acc exit data delete(dfft%nlm)
          DEALLOCATE( dfft%nlm )
       ENDIF
       ALLOCATE( dfft%nlm( dfft%ngm ) )
-      !$acc enter data create(dfft%nlm)
    END IF
    !
    DO ng = 1, dfft%ngm
@@ -97,7 +95,7 @@ CONTAINS
 
    ENDDO
    !
-   !$acc update device(dfft%nl,dfft%nlm)
+   !$acc enter data copyin(dfft,dfft%nl,dfft%nlm)
 #if defined(__CUDA)
    IF( ALLOCATED( dfft%nl_d ) ) DEALLOCATE( dfft%nl_d )
    ALLOCATE( dfft%nl_d, SOURCE = dfft%nl )
