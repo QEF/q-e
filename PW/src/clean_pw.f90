@@ -181,6 +181,7 @@ SUBROUTINE clean_pw( lflag )
   !
   nr1 = dffts%nr1; nr2 = dffts%nr2; nr3 = dffts%nr3
   CALL fft_type_deallocate( dffts )
+  !
   dffts%nr1 = nr1; dffts%nr2 = nr2; dffts%nr3 = nr3
   !
   ! ... stick-owner matrix allocated in sticks_base

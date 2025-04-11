@@ -342,9 +342,8 @@ CONTAINS
      INTEGER :: ig, idx, n, v_siz, pack_size, remainder, howmany, &
                 group_size
      !
-     CALL alloc_nl_pntrs( desc )
-     !
-     !$acc data present_or_copyin(c) present_or_copyout(psi)
+     !$acc data present_or_copyin(c,desc) present_or_copyout(psi)
+     !$acc data present_or_copyin(desc%nl,desc%nlm)
      !
      IF (PRESENT(howmany_set)) THEN
        !
@@ -373,8 +372,8 @@ CONTAINS
           !$acc parallel loop collapse(2)
           DO idx = 0, pack_size-1
              DO ig = 1, n
-                psi(nl_d(ig) + idx*v_siz) = c(ig,2*idx+1) + (0.d0,1.d0)*c(ig,2*idx+2)
-                psi(nlm_d(ig) + idx*v_siz) = CONJG(c(ig,2*idx+1) - (0.d0,1.d0)*c(ig,2*idx+2))
+                psi(desc%nl(ig) + idx*v_siz) = c(ig,2*idx+1) + (0.d0,1.d0)*c(ig,2*idx+2)
+                psi(desc%nlm(ig) + idx*v_siz) = CONJG(c(ig,2*idx+1) - (0.d0,1.d0)*c(ig,2*idx+2))
              ENDDO
           ENDDO
        ENDIF
@@ -382,8 +381,8 @@ CONTAINS
        IF (remainder > 0) THEN
           !$acc parallel loop
           DO ig = 1, n
-             psi(nl_d(ig) + pack_size*v_siz) = c(ig,group_size)
-             psi(nlm_d(ig) + pack_size*v_siz) = CONJG(c(ig,group_size))
+             psi(desc%nl(ig) + pack_size*v_siz) = c(ig,group_size)
+             psi(desc%nlm(ig) + pack_size*v_siz) = CONJG(c(ig,group_size))
           ENDDO
        ENDIF
        !
@@ -398,22 +397,21 @@ CONTAINS
        IF( PRESENT(ca) ) THEN
           !$acc parallel loop present_or_copyin(ca)
           DO ig = 1, n
-            psi(nlm_d(ig)) = CONJG(c(ig,1)) + ci * CONJG(ca(ig))
-            psi(nl_d(ig)) = c(ig,1) + ci * ca(ig)
+            psi(desc%nlm(ig)) = CONJG(c(ig,1)) + ci * CONJG(ca(ig))
+            psi(desc%nl(ig)) = c(ig,1) + ci * ca(ig)
           ENDDO
        ELSE
           !$acc parallel loop
           DO ig = 1, n
-            psi(nlm_d(ig)) = CONJG(c(ig,1))
-            psi(nl_d(ig)) = c(ig,1)
+            psi(desc%nlm(ig)) = CONJG(c(ig,1))
+            psi(desc%nl(ig)) = c(ig,1)
           ENDDO
        ENDIF
        !
      ENDIF
      !
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
   END SUBROUTINE fftx_c2psi_gamma
   !
@@ -475,9 +473,8 @@ CONTAINS
      !
      INTEGER :: nnr, i, j, ig
      !
-     CALL alloc_nl_pntrs( desc )
-     !
-     !$acc data present_or_copyin(c,igk) present_or_copyout(psi)
+     !$acc data present_or_copyin(c,igk,desc) present_or_copyout(psi)
+     !$acc data present_or_copyin(desc%nl)
      !
      IF (PRESENT(howmany)) THEN
         !
@@ -490,7 +487,7 @@ CONTAINS
         !$acc parallel loop collapse(2)
         DO i = 0, howmany-1
           DO j = 1, ngk
-            psi(nl_d(igk(j))+i*nnr) = c(j,i+1)
+            psi(desc%nl(igk(j))+i*nnr) = c(j,i+1)
           ENDDO
         ENDDO
         !
@@ -506,7 +503,7 @@ CONTAINS
         !$omp do
 #endif
         DO ig = 1, ngk
-          psi(nl_d(igk(ig))) = c(ig,1)
+          psi(desc%nl(igk(ig))) = c(ig,1)
         ENDDO
 #if !defined(_OPENACC)
         !$omp end do nowait
@@ -516,8 +513,7 @@ CONTAINS
      ENDIF
      !
      !$acc end data
-     !
-     CALL dealloc_nl_pntrs( desc )
+     !$acc end data
      !
   END SUBROUTINE fftx_c2psi_k
   !
