@@ -410,7 +410,7 @@ CONTAINS
          IF (.NOT. dft_is_hybrid) RETURN 
          IF (PRESENT(nq1) .AND. PRESENT(nq2) .AND. PRESENT(nq3) ) THEN
             qpoint_grid_opt => qpoint_grid           
-            CALL qes_init (qpoint_grid, "qpoint_grid", nq1, nq2, nq3, "")
+            CALL qes_init (qpoint_grid, "qpoint_grid", max(nq1,1), max(nq2,1), max(nq3,1), "")
          END IF 
          !
          CALL qes_init ( obj, "hybrid", qpoint_grid_opt, ecutfock, exx_fraction, &
