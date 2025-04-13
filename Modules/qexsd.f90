@@ -131,7 +131,7 @@ CONTAINS
       CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
       CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
                             VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
-                                    "http://www.quantum-espresso.org/ns/qes/qes_241104.xsd" )
+                                    "http://www.quantum-espresso.org/ns/qes/qes_250412.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
               COMMENT = "All quantities are in Hartree atomic units unless otherwise specified" ) 
