@@ -185,7 +185,8 @@ PROGRAM matdyn
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn, &
                         fleig, fildyn, fildyn_prefix
   CHARACTER(LEN=10)  :: asr
-  LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity, loto_disable
+  LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity, loto_disable, &
+             remove_interaction_blocks
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:), frc_ifc(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
   REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:), wq(:), &
@@ -242,7 +243,7 @@ PROGRAM matdyn
        &           la2F, ndos, DeltaE, degauss, q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
        &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma, &
-       &           loto_disable, huang, read_lr, write_frc
+       &           loto_disable, huang, read_lr, write_frc, remove_interaction_blocks
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -289,6 +290,7 @@ PROGRAM matdyn
      loto_2d=.false.
      el_ph_nsigma=10
      loto_disable = .false.
+     remove_interaction_blocks = .false.
      huang = .true.
      read_lr = .false.
      write_frc = .false.
@@ -331,6 +333,7 @@ PROGRAM matdyn
      CALL mp_bcast(point_label_type,ionode_id, world_comm)
      CALL mp_bcast(loto_2d,ionode_id, world_comm)
      CALL mp_bcast(loto_disable,ionode_id, world_comm)
+     CALL mp_bcast(remove_interaction_blocks, ionode_id, world_comm)
      CALL mp_bcast(el_ph_nsigma,ionode_id, world_comm)
      CALL mp_bcast(huang,ionode_id, world_comm)
      CALL mp_bcast(read_lr,ionode_id, world_comm)
@@ -346,7 +349,8 @@ PROGRAM matdyn
            WRITE(stdout, *)
            WRITE(stdout, '(4x,a)') ' fildyn has been provided, running q2r...'
         END IF
-        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, la2F, loto_2d, read_lr)
+        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, la2F, loto_2d, read_lr, &
+                    remove_interaction_blocks)
      END IF
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
