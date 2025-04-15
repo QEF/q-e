@@ -831,7 +831,7 @@ CONTAINS
         !$omp task default(none) &
         !$omp          firstprivate( eig_index, dbnd, right_nnr ) &
         !$omp          private( eig_offset, ib, ieg, ig ) &
-        !$omp          shared( c_bgrp, desc, psis, nl_d, nlm_d, n )
+        !$omp          shared( c_bgrp, desc, psis, n )
 #endif
         !
         ! ... here we pack 2*nogrp electronic states in the psis array
