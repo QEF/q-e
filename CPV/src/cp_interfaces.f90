@@ -68,11 +68,9 @@
    PUBLIC :: stress_kin
 
    PUBLIC :: interpolate_lambda
-   PUBLIC :: update_lambda
    PUBLIC :: elec_fakekine
    PUBLIC :: wave_rand_init
    PUBLIC :: crot
-   PUBLIC :: proj
 
    PUBLIC :: phfacs
    PUBLIC :: strucf
@@ -521,18 +519,6 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE update_lambda
-      SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff, tdist )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER, INTENT(IN) :: n, noff
-         REAL(DP)            :: lambda(:,:)
-         COMPLEX(DP)         :: c0(:,:), c2(:)
-         INTEGER, INTENT(IN) :: i
-         LOGICAL, INTENT(IN) :: tdist   !  if .true. lambda is distributed
-      END SUBROUTINE
-   END INTERFACE
-
    INTERFACE elec_fakekine
       SUBROUTINE elec_fakekine_x( ekincm, ema0bg, emass, c0, cm, ngw, n, noff, delt )
          USE kinds,              ONLY: DP
@@ -565,16 +551,6 @@
          COMPLEX(DP), INTENT(IN)    :: c0(:,:)
          REAL(DP),    INTENT(IN)    :: lambda(:,:)
          REAL(DP),    INTENT(OUT)   :: eig(:)
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE proj
-      SUBROUTINE proj_gamma( a, b, ngw, n, noff, lambda)
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER,     INTENT( IN )  :: ngw, n, noff
-         COMPLEX(DP), INTENT(INOUT) :: a(:,:), b(:,:)
-         REAL(DP),    OPTIONAL      :: lambda(:,:)
       END SUBROUTINE
    END INTERFACE
 
