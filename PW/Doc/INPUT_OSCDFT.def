@@ -600,6 +600,9 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
                For example, 5(3d)6(2s2p) will be accepted, however the
                atomic wavefunction of atom 5 and atom 6 may not be orthogonal.
                (unless @ref orthogonalize_swfc is .true.)
+
+            5. To use oscdft_type = 2, see the last two examples below as well as
+               PW/examples/example15.
         }
     }
 
@@ -712,6 +715,60 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
                      occupation number of the @i 3d orbital of atom 39 to a target of 4.0135939
             Row 5-7: Apply a constraint on the sum of the 3rd, 4th, and 5th spin-down
                      occupation number of the @i 3d orbital of atom 39 to a target of 3.0020503
+
+            @b {Input File:}
+            &OSCDFT
+              oscdft_type=2,
+              n_oscdft=20,
+              constraint_diag = .true.
+              ...
+            /
+            TARGET_OCCUPATION_NUMBERS
+              1 1 1 0.990
+              1 1 2 0.990
+              1 1 3 0.995
+              1 1 4 0.997
+              1 1 5 0.997
+              1 2 1 0.055
+              1 2 2 0.055
+              1 2 3 0.171
+              1 2 4 0.171
+              1 2 5 0.975
+              ...
+            @b Explanations:
+              Column 1: the atomic index (according to ATOMIC_POSITIONS)
+              Column 2: the spin index (1 for up, and 2 for down)
+              Column 3: the index of the eigenvalue
+                        (e.g. from 1 to 5 for d electrons)
+              Column 4: the target eignvalue of the occupation matrix
+              For more details, see PW/examples/example15/run1 and README.
+
+            @b {Input File:}
+            &OSCDFT
+              oscdft_type=2,
+              n_oscdft=100,
+              constraint_diag = .false.
+              ...
+            /
+            TARGET_OCCUPATION_NUMBERS
+              1 1 1 1  1.000
+              1 1 1 2  0.000
+              1 1 1 3  0.000
+              1 1 1 4  0.000
+              1 1 1 5  0.000
+              1 1 2 1  0.000
+              1 1 2 2  1.000
+              1 1 2 3  0.000
+              1 1 2 4  0.000
+              1 1 2 5  0.000
+              ...
+            @b Explanations:
+              Column 1: the atomic index (according to ATOMIC_POSITIONS)
+              Column 2: the spin index (1 for up, and 2 for down)
+              Columns 3 and 4: the indices of the magnetic quantum numbers
+                               (e.g. from 1 to 5 for d electrons)
+              Column 5: the target occupation value
+              For more details, see PW/examples/example15/run2 and README.
         }
     }
 }

@@ -24,7 +24,7 @@ The contrained DFT+U calculation can be done in two ways:
          s is the spin index (1 for up, and 2 for down),
          m is the index of the eigenvalue 
          (e.g. from 1 to 5 for d electrons),
-         'eigenvalue' is the target eignvalue.
+         'eigenvalue' is the target eignvalue of the occupation matrix.
 
 2. By providing the full target occupation matrix (see run2)
 

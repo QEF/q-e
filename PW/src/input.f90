@@ -1990,10 +1990,6 @@ SUBROUTINE dftu_iosys ( ntyp, noncolin )
                             reserv_ => reserv, &
                             backall_ => backall, &
                             reserv_back_ => reserv_back
-#if defined (__OSCDFT)
-   USE plugin_flags, ONLY : use_oscdft
-   USE oscdft_base,  ONLY : oscdft_ctx
-#endif 
   !
   IMPLICIT NONE
   !
