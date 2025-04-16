@@ -40,7 +40,6 @@ SUBROUTINE rotate_ks ()
   INTEGER :: ik, n_orb, ik_eff,nkstot_eff
   INTEGER :: lrwfc 
   !
-  COMPLEX(DP),EXTERNAL :: zdotc
   INTEGER, EXTERNAL :: global_kpoint_index
   INTEGER :: global_ik
   INTEGER :: i
