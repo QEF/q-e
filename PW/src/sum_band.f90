@@ -65,7 +65,6 @@ SUBROUTINE sum_band()
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL(dp), EXTERNAL :: e_band
   !
-  !
   CALL start_clock( 'sum_band' )
   !
   IF ( nhm > 0 ) THEN
@@ -158,7 +157,7 @@ SUBROUTINE sum_band()
     ENDIF
   ENDIF
 #if defined (__OSCDFT)
-  IF (use_oscdft) CALL oscdft_sum_band(oscdft_ctx)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL oscdft_sum_band(oscdft_ctx)
 #endif
   !
   ! ... for band parallelization: set band computed by this processor

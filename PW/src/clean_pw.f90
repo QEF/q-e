@@ -1,5 +1,5 @@
 
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -75,6 +75,10 @@ SUBROUTINE clean_pw( lflag )
 #endif
 #if defined (__CUDA)
   USE cudafor
+#endif
+#if defined (__OSCDFT)
+   USE plugin_flags,     ONLY : use_oscdft
+   USE oscdft_base,      ONLY : oscdft_ctx
 #endif
   !
   IMPLICIT NONE
@@ -224,6 +228,11 @@ SUBROUTINE clean_pw( lflag )
 #endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL clean_environ('PW', lflag)
+#endif
+#if defined (__OSCDFT)
+     IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+        DEALLOCATE (oscdft_ctx%inp%occupation)
+     ENDIF
 #endif
   CALL   plugin_clean('PW', lflag) 
   !

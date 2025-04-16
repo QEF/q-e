@@ -51,6 +51,18 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
               gamma_val(n_oscdft) ]
     }
     namelist OSCDFT {
+
+        var oscdft_type -type INTEGER {
+            default { 1 }
+            info {
+                1 : C. Ku, P. H. L. Sit, J. Chem. Theory Comput. 15, 4781 (2019).
+                2 : L. Ponet, E. Di Lucente, N. Marzari, npj Comput. Mater. 10, 151 (2024). 
+                
+                Note: For oscdft_type=2, only the keyword "occupation" and the keywords
+                      constraint_* can be used (see below). 
+            }
+        }
+
         var n_oscdft -type INTEGER {
             status { REQUIRED }
             info {
@@ -322,6 +334,55 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
                 Atomic orbitals are not orthogonalized in this case.
             }
         }
+
+        var constraint_strength -type DOUBLE {
+            default { 1.0D0 }
+            info { 
+                Multiplicative factor in front of the constraint term in 
+                the potential (and energy).
+            }
+        }
+
+        var constraint_conv_thr -type DOUBLE {
+            default { 5.0D-3 }
+            info { 
+                Convergence threshold for the mean absolute error (MAE) computed
+                by averaging the absolute difference between the current and 
+                target occupation matrices. When this threshold is reached,
+                the constarined is released. 
+            }
+        }
+
+        var constraint_maxstep -type INTEGER {
+            default { 200 }
+            info { 
+                When the number of SCF iterations is larger than this number, 
+                the constraint is not updated.
+            }
+        }
+
+        var constraint_mixing_beta -type DOUBLE {
+            default { 4.0D-1 }
+            info {
+                The multiplicative factor in front of the constraint term.
+            }
+        }
+
+        var constraint_diag -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., TARGET_OCCUPATION_NUMBERS must contain the 
+                eigenvalues of the occupation matrix instead of the full 
+                (generally) nondiagonal target occupation matrix. 
+                The code will read these eigenvalues and reconstruct the 
+                nondiagonal target occupation matrix that will be used 
+                for constrained calculations. This should behave similarly
+                to the starting_ns_eigenvalue keyword, but better since the 
+                constraint is applied until the constraint_conv_thr is 
+                reached (contrary to a simple reinitialization of starting
+                occupations that is done using starting_ns_eigenvalue).
+            }
+        }
     }
     card TARGET_OCCUPATION_NUMBERS {
         label {
@@ -502,7 +563,8 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
         }
     }
     card GAMMA_VAL {
-        label { Conditional card, used only if @ref optimization_method == 'gradient descent2', ignored otherwise ! }
+        label { Conditional card, used only if @ref optimization_method == 'gradient descent2', ignored otherwise !  
+                This card can be used only with oscdft_type = 1.}
         syntax {
             table gamma_val {
                 rows -start 1 -end n_oscdft {
@@ -545,7 +607,8 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
         text {
             @b {Input File:}
             &OSCDFT
-              n_oscdft=2
+              oscdft_type=1,
+              n_oscdft=2,
               ...
             /
             TARGET_OCCUPATION_NUMBERS
@@ -560,7 +623,8 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
 
             @b {Input File:}
             &OSCDFT
-              n_oscdft=2
+              oscdft_type=1,
+              n_oscdft=2,
               ...
             /
             TARGET_OCCUPATION_NUMBERS
@@ -581,7 +645,8 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
 
             @b {Input File:}
             &OSCDFT
-              n_oscdft=7
+              oscdft_type=1,
+              n_oscdft=7,
               ...
             /
             TARGET_OCCUPATION_NUMBERS
@@ -605,7 +670,8 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
 
             @b {Input File:}
             &OSCDFT
-              n_oscdft=7
+              oscdft_type=1,
+              n_oscdft=7,
               ...
             /
             TARGET_OCCUPATION_NUMBERS
@@ -629,7 +695,8 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
 
             @b {Input File:}
             &OSCDFT
-              n_oscdft=7
+              oscdft_type=1,
+              n_oscdft=7,
               ...
             /
             TARGET_OCCUPATION_NUMBERS

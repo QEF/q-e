@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,6 +16,11 @@ MODULE ldaU
   USE parameters,    ONLY : ntypx, natx, sc_size
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE control_flags, ONLY : dfpt_hub
+#if defined (__OSCDFT)
+  USE plugin_flags,      ONLY : use_oscdft
+  USE oscdft_base,       ONLY : oscdft_ctx
+  USE oscdft_functions,  ONLY : oscdft_init_constraint
+#endif 
   !
   SAVE
   !
@@ -159,6 +164,7 @@ MODULE ldaU
   !! Distance between atoms in the 3x3x3 supercell (if sc_size = 1)
   INTEGER,  ALLOCATABLE :: ityp_s(:)
   !! Type of atoms in the 3x3x3 supercell (if sc_size = 1)
+  REAL(DP), ALLOCATABLE :: nsnew(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: nsg(:,:,:,:,:), nsgnew(:,:,:,:,:)
   !! Generalized occupation matrices, which depend on two atomic sites.
   !! These matrices nsg(at1,m1,viz,m2,sp) store the expectation value:
@@ -400,7 +406,7 @@ CONTAINS
           IF (  is_hubbard(nt) ) THEN
              ! Hubbard_l is read from the input file (HUBBARD card)
              Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
-             ldmx = MAX( ldmx, ldim_u(nt) )
+             ldmx = MAX( ldmx, 2*Hubbard_l(nt)+1 )
              ldim_u(nt) = 2*Hubbard_l(nt)+1
              IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
           ENDIF
@@ -478,6 +484,12 @@ CONTAINS
        CALL errore( 'init_hubbard', 'Not allowed value of lda_plus_u_kind', 1 )
        !
     ENDIF
+    !
+#if defined (__OSCDFT)
+     IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+        CALL oscdft_init_constraint (oscdft_ctx, ldmx, starting_ns, lda_plus_u, lda_plus_u_kind, is_hubbard)
+     ENDIF
+#endif
     !
     IF ( Hubbard_lmax == -1 ) CALL errore( 'init_hubbard', &
          'DFT+Hubbard calculation but Hubbard_l not set', 1 )
@@ -563,6 +575,13 @@ CONTAINS
      IF ( ALLOCATED( dist_s ) )        DEALLOCATE( dist_s )
      IF ( ALLOCATED( ityp_s ) )        DEALLOCATE( ityp_s )
   ENDIF
+  !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF ( ALLOCATED( oscdft_ctx%constraining ) ) DEALLOCATE( oscdft_ctx%constraining )
+     IF ( ALLOCATED( oscdft_ctx%constraint ) ) DEALLOCATE( oscdft_ctx%constraint )
+  ENDIF
+#endif
   !
   RETURN
   !

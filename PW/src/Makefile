@@ -269,6 +269,7 @@ oscdft_occupations.o \
 oscdft_wfcO.o \
 oscdft_forces.o \
 oscdft_forces_subs.o \
+oscdft_extended.o \
 d3hess_mod.o
 
 

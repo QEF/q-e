@@ -6,6 +6,9 @@ MODULE oscdft_input
    USE mp,          ONLY : mp_bcast
    USE mp_images,   ONLY : intra_image_comm
    USE oscdft_enums
+   USE ions_base,   ONLY : nat
+   USE upf_params,  ONLY : lqmax
+   USE lsda_mod,    ONLY : nspin
 
    PRIVATE
    PUBLIC oscdft_input_type, oscdft_read_input
@@ -28,7 +31,8 @@ MODULE oscdft_input
                                orthogonalize_ns,&
                                normalize_swfc,&
                                debug_print
-      INTEGER               :: noscdft,&
+      INTEGER               :: oscdft_type,&
+                               noscdft,&
                                warm_up_niter,&
                                convergence_type,& ! CONV_*
                                optimization_method,& ! OPT_*
@@ -57,6 +61,12 @@ MODULE oscdft_input
                                initial_multipliers(:),& ! ioscdft
                                debug_step(:),& ! ioscdft
                                gamma_val(:) ! ioscdft
+      REAL(DP), ALLOCATABLE :: occupation(:,:,:,:)
+      REAL(DP)              :: constraint_strength, &
+                               constraint_conv_thr, &
+                               constraint_mixing_beta
+      INTEGER               :: constraint_maxstep
+      LOGICAL               :: constraint_diag
       CHARACTER(LEN=256), ALLOCATABLE :: orbital_desc(:)
    END TYPE oscdft_input_type
 
@@ -85,7 +95,9 @@ MODULE oscdft_input
          OPEN(unit=iun, file=TRIM(filename), status="old")
 
          CALL read_namelist(inp, iun)
+        
          CALL alloc_inp(inp)
+           
          CALL read_cards(inp, iun)
 
          CLOSE(iun)
@@ -104,6 +116,7 @@ MODULE oscdft_input
       END SUBROUTINE capitalize
 
       SUBROUTINE read_namelist(inp, iun)
+
          IMPLICIT NONE
 
          TYPE(oscdft_input_type), INTENT(INOUT) :: inp
@@ -123,7 +136,8 @@ MODULE oscdft_input
                                orthogonalize_ns,&
                                normalize_swfc,&
                                debug_print
-         INTEGER            :: n_oscdft,&
+         INTEGER            :: oscdft_type,&
+                               n_oscdft,&
                                warm_up_niter,&
                                iteration_type,&
                                maxiter,&
@@ -141,8 +155,14 @@ MODULE oscdft_input
                                min_gamma_n,&
                                min_multiplier,&
                                max_multiplier,&
-                               total_energy_threshold
-         NAMELIST / oscdft / n_oscdft,&
+                               total_energy_threshold,&
+                               constraint_strength,&
+                               constraint_conv_thr,&
+                               constraint_mixing_beta
+         LOGICAL            :: constraint_diag
+         INTEGER            :: constraint_maxstep
+         NAMELIST / oscdft / oscdft_type,&
+                             n_oscdft,&
                              warm_up_niter,&
                              convergence_type,&
                              iteration_type,&
@@ -172,11 +192,19 @@ MODULE oscdft_input
                              test_exit_oscdft_iter,&
                              orthogonalize_swfc,&
                              orthogonalize_ns,&
-                             normalize_swfc
+                             normalize_swfc,&
+                             constraint_strength, &
+                             constraint_conv_thr, &
+                             constraint_maxstep, &
+                             constraint_mixing_beta, &
+                             constraint_diag
 
 
-         ! defaults
+         oscdft_type                     = 1
          n_oscdft                        = -1
+
+         ! Defaults for oscdft_type = 1
+         ! Note: none of these parameters can be used for oscdft_type=2
          iteration_type                  = -1
          warm_up_niter                   = 0
          convergence_type                = "GRADIENT"
@@ -207,6 +235,14 @@ MODULE oscdft_input
          orthogonalize_ns                = .false.
          normalize_swfc                  = .false.
 
+         ! Defaults for oscdft_type = 2
+         ! Note: none of these parameters can be used for oscdft_type=1
+         constraint_strength             = 1.D0
+         constraint_conv_thr             = 5.D-3
+         constraint_maxstep              = 2.D2
+         constraint_mixing_beta          = 4.D-1
+         constraint_diag                 = .false.
+
          ios = 0
          error_type = 0
          IF (ionode) THEN
@@ -214,6 +250,7 @@ MODULE oscdft_input
             IF (ios == 0) THEN
                inp%print_occup_matrix     = print_occupation_matrix
                inp%print_occup_eigvects   = print_occupation_eigenvectors
+               inp%oscdft_type            = oscdft_type
                inp%noscdft                = n_oscdft
                inp%warm_up_niter          = warm_up_niter
                inp%min_conv_thr           = min_conv_thr
@@ -239,6 +276,12 @@ MODULE oscdft_input
                inp%orthogonalize_swfc     = orthogonalize_swfc
                inp%orthogonalize_ns       = orthogonalize_ns
                inp%normalize_swfc         = normalize_swfc
+               !
+               inp%constraint_strength    = constraint_strength
+               inp%constraint_conv_thr    = constraint_conv_thr
+               inp%constraint_maxstep     = constraint_maxstep
+               inp%constraint_mixing_beta = constraint_mixing_beta
+               inp%constraint_diag        = constraint_diag
 
                CALL capitalize(convergence_type)
                SELECT CASE (TRIM(convergence_type))
@@ -289,9 +332,13 @@ MODULE oscdft_input
                END SELECT
 
                IF (inp%noscdft <= 0) error_type = 5
-               IF (inp%iteration_type /= 0 .AND. inp%iteration_type /= 1) THEN
+
+               IF (inp%iteration_type /= 0 .AND. inp%iteration_type /= 1 .AND. &
+                   inp%oscdft_type == 1) THEN
                   error_type = 6
                END IF
+
+               IF (inp%oscdft_type <= 0 .OR. inp%oscdft_type > 2) error_type = 7
             END IF
          END IF
          CALL mp_bcast(ios,        ionode_id, intra_image_comm)
@@ -311,11 +358,18 @@ MODULE oscdft_input
                CALL errore("oscdft_read_namelist", "n_oscdft <= 0", 1)
             CASE (6)
                CALL errore("oscdft_read_namelist", "iteration_type invalid", 1)
+            CASE (7)
+               CALL errore("oscdft_read_namelist", "invalid oscdft_type", 1)
          END SELECT
 
          CALL bcast_inp(inp)
 
-         IF (inp%noscdft < 0) CALL errore("oscdft_read_namelist", "n_oscdft must be >= 0", 1)
+         IF (inp%noscdft < 0) &
+            CALL errore("oscdft_read_namelist", "n_oscdft must be >= 0", 1)
+         
+         IF (inp%oscdft_type <= 0 .OR. inp%oscdft_type > 2) &
+            CALL errore("oscdft_read_namelist", "oscdft_type must be 1 or 2", 1)
+
       END SUBROUTINE read_namelist
 
       SUBROUTINE bcast_inp(inp)
@@ -326,6 +380,7 @@ MODULE oscdft_input
          CALL mp_bcast(inp%print_occup_matrix,     ionode_id, intra_image_comm)
          CALL mp_bcast(inp%print_occup_eigvects,   ionode_id, intra_image_comm)
          CALL mp_bcast(inp%noscdft,                ionode_id, intra_image_comm)
+         CALL mp_bcast(inp%oscdft_type,            ionode_id, intra_image_comm)
          CALL mp_bcast(inp%warm_up_niter,          ionode_id, intra_image_comm)
          CALL mp_bcast(inp%convergence_type,       ionode_id, intra_image_comm)
          CALL mp_bcast(inp%optimization_method,    ionode_id, intra_image_comm)
@@ -354,6 +409,12 @@ MODULE oscdft_input
          CALL mp_bcast(inp%orthogonalize_swfc,     ionode_id, intra_image_comm)
          CALL mp_bcast(inp%orthogonalize_ns,       ionode_id, intra_image_comm)
          CALL mp_bcast(inp%normalize_swfc,         ionode_id, intra_image_comm)
+         !
+         CALL mp_bcast(inp%constraint_strength,    ionode_id, intra_image_comm)
+         CALL mp_bcast(inp%constraint_conv_thr,    ionode_id, intra_image_comm)
+         CALL mp_bcast(inp%constraint_maxstep,     ionode_id, intra_image_comm)
+         CALL mp_bcast(inp%constraint_mixing_beta, ionode_id, intra_image_comm)
+         CALL mp_bcast(inp%constraint_diag,        ionode_id, intra_image_comm)
       END SUBROUTINE bcast_inp
 
       SUBROUTINE alloc_inp(inp)
@@ -361,28 +422,39 @@ MODULE oscdft_input
 
          TYPE(oscdft_input_type), INTENT(INOUT) :: inp
 
-         ALLOCATE(inp%constraint_applied(inp%noscdft),&
-            inp%spin_index(inp%noscdft),&
-            inp%occup_index(inp%noscdft),&
-            inp%occup_index_sum(20,inp%noscdft),&
-            inp%target_occup(inp%noscdft),&
-            inp%initial_multipliers(inp%noscdft),&
-            inp%print_occup(inp%noscdft),&
-            inp%debug_step(inp%noscdft),&
-            inp%start_index(inp%noscdft),&
-            inp%orbital_desc(inp%noscdft),&
-            inp%gamma_val(inp%noscdft))
+         IF (inp%oscdft_type==1) THEN
+            !
+            ALLOCATE(inp%constraint_applied(inp%noscdft),&
+               inp%spin_index(inp%noscdft),&
+               inp%occup_index(inp%noscdft),&
+               inp%occup_index_sum(20,inp%noscdft),&
+               inp%target_occup(inp%noscdft),&
+               inp%initial_multipliers(inp%noscdft),&
+               inp%print_occup(inp%noscdft),&
+               inp%debug_step(inp%noscdft),&
+               inp%start_index(inp%noscdft),&
+               inp%orbital_desc(inp%noscdft),&
+               inp%gamma_val(inp%noscdft))
+            !
+            inp%constraint_applied   = 0
+            inp%spin_index           = 0
+            inp%occup_index          = 0
+            inp%occup_index_sum(:,:) = 0
+            inp%target_occup         = 0.D0
+            inp%initial_multipliers  = 0.D0
+            inp%print_occup          = .false.
+            inp%debug_step           = 0.D0
+            inp%start_index          = 1
+            inp%gamma_val(:)         = 1.D0
+            !
+         ELSEIF (inp%oscdft_type==2) THEN
+            !
+            ALLOCATE(inp%occupation(lqmax,lqmax,nspin,nat)) 
+            inp%occupation(:,:,:,:) = -2.D0
+            !
+         ENDIF
 
-         inp%constraint_applied   = 0
-         inp%spin_index           = 0
-         inp%occup_index          = 0
-         inp%occup_index_sum(:,:) = 0
-         inp%target_occup         = 0.D0
-         inp%initial_multipliers  = 0.D0
-         inp%print_occup          = .false.
-         inp%debug_step           = 0.D0
-         inp%start_index          = 1
-         inp%gamma_val(:)         = 1.D0
+         RETURN
       END SUBROUTINE alloc_inp
 
       SUBROUTINE read_cards(inp, unit)
@@ -414,43 +486,67 @@ MODULE oscdft_input
                   "card_target_occupation_numbers",&
                   "TARGET_OCCUPATION_NUMBERS two occurences found",&
                   1)
-               CALL card_target(inp, input_line)
+               IF (inp%oscdft_type==1) THEN
+                  CALL card_target_1(inp, input_line)
+               ELSEIF (inp%oscdft_type==2) THEN
+                  CALL card_target_2(inp, input_line)
+               ENDIF
                done_target = .true.
             CASE ("GAMMA_VAL", "GAMMA VAL")
-               IF (inp%optimization_method == OPT_GRADIENT_DESCENT2) THEN
-                  IF (done_gamma) CALL errore(&
-                     "card_target_occupation_numbers",&
-                     "TARGET_OCCUPATION_NUMBERS two occurences found",&
-                     1)
-                  CALL card_gamma_val(inp, input_line)
-                  done_gamma = .true.
-               ELSE
+               IF (inp%oscdft_type==1) THEN
+                  IF (inp%optimization_method == OPT_GRADIENT_DESCENT2) THEN
+                     IF (done_gamma) CALL errore(&
+                        "card_target_occupation_numbers",&
+                        "TARGET_OCCUPATION_NUMBERS two occurences found",&
+                        1)
+                     CALL card_gamma_val(inp, input_line)
+                     done_gamma = .true.
+                  ELSE
+                     CALL errore(&
+                        "oscdft_read_cards",&
+                        "GAMMA_VAL needs optimization_methods == 'GRADIENT DESCENT2'",&
+                        1)
+                  END IF
+               ELSEIF (inp%oscdft_type==2) THEN
                   CALL errore(&
-                     "oscdft_read_cards",&
-                     "GAMMA_VAL needs optimization_methods == 'GRADIENT DESCENT2'",&
-                     1)
-               END IF
+                        "oscdft_read_cards",&
+                        "GAMMA_VAL cannot be used with oscdft_type = 2",&
+                        1)
+               ENDIF
             CASE DEFAULT
                IF (ionode) WRITE(stdout, '(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+               IF (inp%oscdft_type==2) THEN
+                  CALL errore("oscdft_read_cards","Please check the OSCDFT input",1)
+               ENDIF
          END SELECT
 
          GOTO 100
          120 CONTINUE
 
-         CALL mp_bcast(inp%constraint_applied,  ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%spin_index,          ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%occup_index,         ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%target_occup,        ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%initial_multipliers, ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%print_occup,         ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%debug_step,          ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%start_index,         ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%occup_index_sum,     ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%gamma_val,           ionode_id, intra_image_comm)
-         CALL mp_bcast(inp%orbital_desc,        ionode_id, intra_image_comm)
+         IF (inp%oscdft_type==1) THEN 
+            CALL mp_bcast(inp%constraint_applied,  ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%spin_index,          ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%occup_index,         ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%target_occup,        ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%initial_multipliers, ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%print_occup,         ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%debug_step,          ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%start_index,         ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%occup_index_sum,     ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%gamma_val,           ionode_id, intra_image_comm)
+            CALL mp_bcast(inp%orbital_desc,        ionode_id, intra_image_comm)
+         ELSEIF (inp%oscdft_type==2) THEN 
+            CALL mp_bcast(inp%occupation,          ionode_id, intra_image_comm)
+         ENDIF
+
+         RETURN
+ 
       END SUBROUTINE read_cards
 
-      SUBROUTINE card_target(inp, input_line)
+      SUBROUTINE card_target_1(inp, input_line)
+         !
+         !! Read the TARGET_OCCUPATION_NUMBERS card for oscdft_type = 1
+         !
          USE clib_wrappers, ONLY : feval_infix
          IMPLICIT NONE
 
@@ -601,7 +697,136 @@ MODULE oscdft_input
                inp%debug_step(ioscdft) = feval_infix(ierr, field_str)
             ENDIF
          END DO
-      END SUBROUTINE card_target
+      END SUBROUTINE card_target_1
+
+      SUBROUTINE card_target_2(inp, input_line)
+         !
+         !! Read the TARGET_OCCUPATION_NUMBERS card for oscdft_type = 2
+         !! Format: na is m1 m2 occupation 
+         !
+         USE clib_wrappers, ONLY : feval_infix
+         IMPLICIT NONE
+
+         TYPE(oscdft_input_type), INTENT(INOUT) :: inp
+         CHARACTER(LEN=256),      INTENT(INOUT) :: input_line
+         CHARACTER(LEN=256)                     :: field_str
+         LOGICAL                                :: tend
+         INTEGER                                :: ioscdft, ierr, nfield, ifield
+         REAL(DP)                               :: ns
+         INTEGER                                :: na, & ! atom index
+                                                   is, & ! spin index
+                                                   m1, & ! magnetic quantum number                             
+                                                   m2    ! magnetic quantum number                             
+           
+ 
+         DO ioscdft = 1, inp%noscdft
+            ! 
+            CALL read_line(input_line, end_of_file=tend)
+            IF (tend) CALL errore("card_target_2",&
+                                  "EOF while reading TARGET_OCCUAPTION_NUMBERS",&
+                                  ioscdft)
+            !
+            CALL field_count(nfield, input_line)
+            IF (inp%constraint_diag .AND. nfield/=4) THEN
+               CALL errore("card_target_2",&
+                           "not correct number of entries in a row",&
+                           ioscdft)
+            ELSEIF (.NOT.inp%constraint_diag .AND. nfield/=5) THEN
+               CALL errore("card_target_2",&
+                           "not correct number of entries in a row",&
+                           ioscdft)
+            ENDIF
+            !
+            ! atom index
+            ifield = 1
+            CALL get_field(ifield, field_str, input_line)
+            CALL capitalize(field_str)
+            na = INT(feval_infix(ierr, field_str))
+            IF ((na<1).OR.(na>nat)) THEN
+               CALL errore("card_target_2",&
+                           "atom number invalid; should be in the range from 1 to the total number of atoms",&
+                           ioscdft)
+            ENDIF 
+            !
+            ! spin index
+            ifield = ifield + 1
+            CALL get_field(ifield, field_str, input_line)
+            CALL capitalize(field_str)
+            is = INT(feval_infix(ierr, field_str))
+            IF ((is/=1).AND.(is/=2)) THEN
+               CALL errore("card_target_2",&
+                           "spin index invalid; 1 for SPIN UP, 2 for SPIN DOWN",&
+                           ioscdft)
+            ENDIF
+            !
+            IF (inp%constraint_diag) THEN
+               !
+               ! Reading the index of the eigenvalues of the target occupation matrix
+               !
+               ! index of the eigenvalue
+               ifield = ifield + 1
+               CALL get_field(ifield, field_str, input_line)
+               CALL capitalize(field_str)
+               m1 = INT(feval_infix(ierr, field_str))
+               IF ((m1<1).OR.(m1>lqmax)) THEN
+                  CALL errore("card_target_2",&
+                              "magnetic quantum number invalid",&
+                              ioscdft)
+               ENDIF
+               !
+            ELSE
+               !
+               ! Reading the magnetic quantum number of the full target occupation matrix
+               !
+               ! first magnetic quantum number
+               ifield = ifield + 1
+               CALL get_field(ifield, field_str, input_line)
+               CALL capitalize(field_str)
+               m1 = INT(feval_infix(ierr, field_str))
+               IF ((m1<1).OR.(m1>lqmax)) THEN
+                  CALL errore("card_target_2",&
+                              "magnetic quantum number invalid",&
+                              ioscdft)
+               ENDIF
+               !
+               ! second magnetic quantum number
+               ifield = ifield + 1
+               CALL get_field(ifield, field_str, input_line)
+               CALL capitalize(field_str)
+               m2 = INT(feval_infix(ierr, field_str))
+               IF ((m2<1).OR.(m2>lqmax)) THEN
+                  CALL errore("card_target_2",&
+                              "magnetic quantum number invalid",&
+                              ioscdft)
+               ENDIF
+               !
+            ENDIF
+            !
+            ! occupation value (or eigenvalue if inp%constraint_diag=.true.)
+            ifield = ifield + 1
+            CALL get_field(ifield, field_str, input_line)
+            CALL capitalize(field_str)
+            ns = feval_infix(ierr, field_str)
+            IF ((ns<-1.D0).OR.(ns>1.D0)) THEN
+               CALL errore("card_target_2",&
+                           "occupation number invalid",&
+                           ioscdft)
+            ENDIF
+            !
+            IF (inp%constraint_diag) THEN
+               ! Eigenvalues of the occupation matrix
+               ! Note: this array is temporarily used as a workspace
+               inp%occupation(m1, m1, is, na) = ns
+            ELSE
+               ! Full occupation matrix
+               inp%occupation(m1, m2, is, na) = ns  
+            ENDIF
+            !
+         ENDDO
+         !
+         RETURN
+         !
+      END SUBROUTINE card_target_2
 
       SUBROUTINE card_gamma_val(inp, input_line)
          USE clib_wrappers, ONLY : feval_infix
@@ -627,5 +852,6 @@ MODULE oscdft_input
             inp%gamma_val(ioscdft) = feval_infix(ierr, field_str)
          END DO
       END SUBROUTINE card_gamma_val
+
 #endif
    END MODULE oscdft_input

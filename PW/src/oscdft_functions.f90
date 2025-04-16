@@ -27,7 +27,11 @@ MODULE oscdft_functions
           oscdft_h_psi,&
           oscdft_mix_rho,&
           oscdft_sum_band,&
-          oscdft_print_ns
+          oscdft_print_ns,&
+          oscdft_init_constraint,&
+          oscdft_constrain_ns,&
+          oscdft_v_constraint,&
+          oscdft_ns_set
    CONTAINS
       SUBROUTINE oscdft_get_deriv(ctx)
          IMPLICIT NONE
@@ -488,7 +492,13 @@ MODULE oscdft_functions
       SUBROUTINE oscdft_electrons_restart(ctx)
          IMPLICIT NONE
 
-         TYPE(oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE(oscdft_input_type),           POINTER       :: inp
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
+
          ! alternatively, the weights could be saved during exit and loaded here
          CALL weights()
       END SUBROUTINE oscdft_electrons_restart
@@ -510,8 +520,13 @@ MODULE oscdft_functions
 
       SUBROUTINE oscdft_scf_energy(ctx, plugin_etot)
          IMPLICIT NONE
-         TYPE(oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE(oscdft_input_type),   POINTER       :: inp
          REAL(DP),                  INTENT(INOUT) :: plugin_etot
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
 
          IF (ctx%initialized.AND.(.NOT.ctx%warming_up)) THEN
             CALL oscdft_calc_energy_offset(ctx)
@@ -563,7 +578,12 @@ MODULE oscdft_functions
          USE ener,             ONLY : etot
          IMPLICIT NONE
 
-         TYPE(oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE(oscdft_input_type),   POINTER       :: inp
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
 
          CALL oscdft_save_total_energy(ctx, etot)
 
@@ -619,10 +639,15 @@ MODULE oscdft_functions
          USE control_flags,                ONLY : use_gpu
          IMPLICIT NONE
 
-         TYPE(oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE(oscdft_input_type),   POINTER       :: inp
          INTEGER                                  :: file_size, iun
          INTEGER, EXTERNAL                        :: find_free_unit
          CHARACTER(LEN=:), ALLOCATABLE            :: str
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
 
          CALL oscdft_destroy_wavefunctions(ctx%wfcO, "DELETE")
          CALL oscdft_destroy_wavefunctions(ctx%wfcS, "DELETE")
@@ -658,7 +683,7 @@ MODULE oscdft_functions
 
          IMPLICIT NONE
 
-         COMPLEX(dp), INTENT(INOUT) :: h_diag(npwx,npol)
+         REAL(dp), INTENT(INOUT) :: h_diag(npwx,npol)
          TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
          TYPE(oscdft_input_type),           POINTER       :: inp
          TYPE(oscdft_indices_type),         POINTER       :: idx
@@ -677,6 +702,7 @@ MODULE oscdft_functions
          nst => ctx%nst
          wfcO => ctx%wfcO
 
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
          IF (.NOT.ctx%initialized) RETURN
          IF (ctx%warming_up) RETURN
          IF (idx%nconstr == 0) RETURN
@@ -686,7 +712,7 @@ MODULE oscdft_functions
          npw = ngk(current_k)
 
          IF (.NOT.ctx%wfc_allocated) THEN
-            CALL errore("oscdft_h_psi", "wfc not allocated", 1)
+            CALL errore("oscdft_h_diag", "wfc not allocated", 1)
          END IF
 
          ik = current_k
@@ -771,6 +797,7 @@ MODULE oscdft_functions
          idx => ctx%idx
          wfcO => ctx%wfcO
 
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
          IF (.NOT.ctx%initialized) RETURN
          IF (ctx%warming_up) RETURN
          IF (idx%nconstr == 0) RETURN
@@ -830,9 +857,14 @@ MODULE oscdft_functions
       SUBROUTINE oscdft_mix_rho(ctx, conv)
          IMPLICIT NONE
 
-         TYPE(oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE(oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE(oscdft_input_type),   POINTER       :: inp
          LOGICAL,                   INTENT(INOUT) :: conv
          LOGICAL                                  :: test
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
 
          IF (ctx%inp%iteration_type /= ITER_MULTIPLIERS_RHO) RETURN
          IF (ctx%inp%get_ground_state_first) RETURN
@@ -864,7 +896,13 @@ MODULE oscdft_functions
       SUBROUTINE oscdft_sum_band(ctx)
          IMPLICIT NONE
 
-         TYPE (oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE (oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE (oscdft_input_type),           POINTER       :: inp
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
+
          IF (ctx%initialized.AND.(.NOT.ctx%warming_up).AND.ctx%inp%sum_band) THEN
             CALL oscdft_new_ns(ctx, "oscdft_sum_band")
             CALL oscdft_get_occupation_numbers(ctx, .true.)
@@ -874,11 +912,339 @@ MODULE oscdft_functions
       SUBROUTINE oscdft_print_ns(ctx)
          IMPLICIT NONE
 
-         TYPE (oscdft_context_type), INTENT(INOUT) :: ctx
+         TYPE (oscdft_context_type), INTENT(INOUT), TARGET :: ctx
+         TYPE(oscdft_input_type),    POINTER       :: inp
+
+         inp => ctx%inp
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
+
          IF (ctx%initialized.AND.(.NOT.ctx%warming_up)) THEN
             CALL oscdft_new_ns(ctx, "oscdft_print_ns")
             CALL oscdft_get_occupation_numbers(ctx, .false.)
          END IF
       END SUBROUTINE oscdft_print_ns
+
+      SUBROUTINE oscdft_init_constraint (ctx, ldmx, starting_ns, lda_plus_u, lda_plus_u_kind, is_hubbard)        
+         !
+         !! This routine allocates and initializes some arrays
+         !! needed for constrained calculations
+         !
+         USE kinds,               ONLY : DP
+         USE ions_base,           ONLY : nat, ityp
+         USE parameters,          ONLY : ntypx
+         USE upf_params,          ONLY : lqmax
+         USE lsda_mod,            ONLY : nspin
+         USE noncollin_module,    ONLY : noncolin
+         USE oscdft_context,      ONLY : oscdft_context_type
+
+         IMPLICIT NONE
+         CLASS(oscdft_context_type), INTENT(INOUT) :: ctx
+         INTEGER, INTENT(IN) :: ldmx
+         REAL(DP), INTENT(INOUT) :: starting_ns(lqmax,2,ntypx)
+         LOGICAL, INTENT(IN) :: lda_plus_u
+         LOGICAL, INTENT(IN) :: is_hubbard(ntypx)
+         INTEGER, INTENT(IN) :: lda_plus_u_kind
+         INTEGER :: na, nt, is, m1, m2, ldim
+         !
+         IF (.NOT.(ctx%inp%oscdft_type==2)) RETURN
+         !
+         ctx%is_constraint = .FALSE.
+         !
+         ALLOCATE(ctx%constraining(nat))
+         ctx%constraining(:) = .FALSE.
+         !
+         ctx%conv = .TRUE.
+         !
+         ! Sanity checks
+         !
+         IF (.NOT.lda_plus_u) CALL errore( 'oscdft_init_constraint', &
+             'Constrained calculation with oscdft_type=2 can be done only for DFT+Hubbard', 1 ) 
+         !
+         IF (lda_plus_u_kind/=0 .AND. lda_plus_u_kind/=2) CALL errore( 'oscdft_init_constraint', &
+             'Constrained calculation with oscdft_type=2 can be done only for lda_plus_u_kind=0 or 2', 1 )
+         !
+         IF (noncolin) CALL errore( 'oscdft_init_constraint', &
+             'Constrained calculation with oscdft_type=2 and noncolin=true is not supported', 1 ) 
+         !
+         ! Check whether the user specified starting_ns_eigenvalue in the input
+         IF (ANY(starting_ns /= -1.0_dp)) THEN
+            WRITE( stdout, '(/5X,"WARNING!!! starting_ns_eigenvalue is not allowed when OSCDFT is enabled.")')
+            WRITE( stdout, '( 5X,"Instead, specify the target eigenvalues of the occupation matrix")')
+            WRITE( stdout, '( 5X,"in the OSCDFT input, by specifying constraint_diag = .true.")')
+            WRITE( stdout, '( 5X,"See the OSCDFT documentation for more details.")')
+            CALL errore('dftu_iosys',' starting_ns_eigenvalue and OSCDFT are not compatible', 1)
+         ENDIF
+         !
+         IF (ANY(ctx%inp%occupation /= -2.0_DP)) THEN
+            !
+            ALLOCATE (ctx%constraint(ldmx, ldmx, nspin, nat))
+            ctx%constraint(:,:,:,:) = 0.0_DP
+            !
+            ctx%conv = .FALSE.
+            !
+            DO na = 1, nat
+               !
+               nt = ityp(na)
+               !
+               ctx%constraining(na) = ANY(ctx%inp%occupation(:,:,:,na) /= -2.0_DP)
+               !
+               IF (ctx%constraining(na) .AND. .NOT.is_hubbard(nt)) CALL errore( 'oscdft_init_constraint', &
+                  'Constraints can be applied only to Hubbard atoms', 1 )
+               !
+               IF (ctx%inp%constraint_diag) THEN
+                  ! In this case, the array ctx%inp%occupation has been used as
+                  ! a workspace to store the eigenvalues of the occupation matrix. 
+                  ! Now we copy this data to starting_ns that will be used to 
+                  ! build the occupation matrix in the routine ns_adj, which in turn
+                  ! will write the result in the array ctx%inp%occupation for the 
+                  ! constrained calculation.
+                  DO is = 1, nspin
+                     DO m1 = 1, ldmx
+                        starting_ns(m1, is, nt) = ctx%inp%occupation(m1, m1, is, na)
+                     ENDDO
+                  ENDDO
+               ENDIF
+               !  
+            ENDDO 
+            !
+            IF (ANY(ctx%constraining(:))) ctx%is_constraint = .TRUE. 
+            ! 
+         ENDIF
+         !
+         RETURN
+         !
+      END SUBROUTINE oscdft_init_constraint
+
+      SUBROUTINE oscdft_constrain_ns (ctx, lmax, l, nscur, conv, dr2, tr2, iter)
+      !
+      !! This routine updates the constraint term based on the occupation matrix ns
+      !! It computes the mean absolute error (MAE) and the root mean square error (RMSE),
+      !! based on the current and target occupation matrices. When MAE is smaller than 
+      !! the threshold constraint_conv_thr, the convergence on the constraint is reached
+      !! and it is released, and the SCF calculation continues without the constraint.
+      !! If the system "likes" the energy minimum with the target occupations, then 
+      !! the SCF calculation will be stabilized there after the releasing of the constraint;
+      !! otherwise, the system will drift away from this target minim.
+      !
+      USE kinds,           ONLY : DP
+      USE io_global,       ONLY : stdout
+      USE parameters,      ONLY : ntypx
+      USE ions_base,       ONLY : nat, ityp
+      USE lsda_mod,        ONLY : nspin
+      USE oscdft_context,  ONLY : oscdft_context_type
+
+      IMPLICIT NONE
+      !
+      CLASS(oscdft_context_type), INTENT(INOUT) :: ctx
+      INTEGER, INTENT(IN) :: lmax
+      INTEGER, INTENT(IN) :: l(ntypx)
+      LOGICAL, INTENT(INOUT) :: conv
+      REAL(DP), INTENT(IN) ::dr2, tr2
+      INTEGER, INTENT(IN) :: iter
+      REAL(DP), INTENT(IN) :: nscur(2*lmax+1,2*lmax+1,nspin,nat)
+      !
+      INTEGER, PARAMETER :: ldmx = 7
+      INTEGER :: m1, m2, ldim, na, is, nt, counter
+      REAL(DP) :: ns_diff, totdist, totdist2, &
+                  mae, & ! Mean absolute error (MAE)
+                         ! MAE = \sum_{I,s,m1,m2=1}^{N} |n^Is_m1m2 - n^Is_m1m2_target| / N
+                  rmse   ! Root mean square error (RMSE)
+                         ! RMSE = SQRT{ \sum_{I,s,m1,m2=1}^{N} (n^Is_m1m2 - n^Is_m1m2_target)^2 / N }
+      !
+      IF (.NOT.(ctx%inp%oscdft_type==2)) RETURN
+      !
+      totdist = 0.0_DP
+      totdist2 = 0.0_DP
+      mae = 0.0_DP
+      rmse = 0.0_DP
+      counter = 0
+      !
+      IF (.NOT. conv) THEN
+         !
+         WRITE(stdout,'(/5x,19("="), " APPLYING CONSTRAINTS ",19("="))')   
+         WRITE(stdout, '(4x," Constraint strength: ", f7.3,/)') ctx%inp%constraint_strength
+         !
+         DO na = 1, nat
+            !
+            IF (ctx%constraining(na)) THEN
+               !
+               nt = ityp(na)
+               ldim = 2 * l(nt) + 1
+               !
+               DO is = 1, nspin
+                  !
+                  DO m1 = 1, ldim
+                     DO m2 = 1, ldim
+                        ! 
+                        ns_diff = nscur(m1, m2, is, na) - ctx%inp%occupation(m1, m2, is, na)
+                        !
+                        ctx%constraint(m1, m2, is, na) = ctx%constraint(m1, m2, is, na) + &
+                                                         ctx%inp%constraint_mixing_beta * ns_diff
+                        !
+                        totdist  = totdist  + ABS(ns_diff)
+                        totdist2 = totdist2 + (ns_diff)**2
+                        !
+                     ENDDO
+                  ENDDO
+                  !
+                  WRITE( stdout,'(5x,"Constraint matrix for atom ",1x,i3,1x," and spin ",1x,i2)') na, is
+                  DO m1 = 1, ldim
+                    WRITE( stdout,'(5x,7f7.3)') ( DBLE(ctx%constraint(m1,m2,is,na)), m2=1, ldim )
+                  ENDDO
+                  !
+               ENDDO
+               !
+               counter = counter + nspin*ldim*ldim
+               !
+            ENDIF
+            !
+         ENDDO
+         !
+         ! Compute the MAE and RMSE
+         IF (counter>0) THEN
+            mae = totdist/counter
+            rmse = SQRT(totdist2/counter)
+         ENDIF
+         WRITE(stdout, '(/5x,"MAE = ", f10.6, 2x," RMSE = ", f10.6)') mae, rmse
+         !
+         ! Check whether the convergence threshold on MAE is reached 
+         IF (mae < ctx%inp%constraint_conv_thr .AND. iter > 1) THEN
+             conv = .true.
+             WRITE(stdout,'(/5x,"CONSTRAINT CONVERGENCE THRESHOLD REACHED")')
+             WRITE(stdout,'(/5x,"SWITCHING OFF THE CONSTRAINT...")')
+         ELSEIF (iter > ctx%inp%constraint_maxstep) THEN
+             WRITE(stdout,'("constraint_maxstep reached")')
+             CALL errore( 'oscdft_constrain_ns', &
+                  'CONSTRAINT CONVERGENCE THRESHOLD HAS NOT BEEN REACHED', 1 ) 
+         ENDIF
+         !
+      ELSEIF (dr2 < tr2) THEN
+          conv = .true.
+          WRITE(stdout,'("SCF convergence reached")')
+      ENDIF
+      !
+      RETURN
+      !
+   END SUBROUTINE oscdft_constrain_ns
+
+   SUBROUTINE oscdft_v_constraint (ctx, lmax, l, ns, vtot, etot)
+      !
+      !! Computes the contribution to the potential from the Lagrange multipliers used
+      !! to constrain the occupation matrix to the target (DFT+U case).
+      !
+      USE kinds,           ONLY : DP
+      USE parameters,      ONLY : ntypx
+      USE ions_base,       ONLY : nat, ityp
+      USE lsda_mod,        ONLY : nspin
+      USE io_global,       ONLY : stdout
+      USE control_flags,   ONLY : iverbosity
+      USE oscdft_context,  ONLY : oscdft_context_type  
+ 
+      IMPLICIT NONE
+
+      CLASS(oscdft_context_type), INTENT(IN) :: ctx
+      INTEGER, INTENT(IN) :: lmax
+      INTEGER, INTENT(IN) :: l(ntypx)
+      REAL(DP), INTENT(IN)    :: ns(2 * lmax + 1, 2 * lmax + 1, nspin, nat)
+      REAL(DP), INTENT(INOUT) :: vtot(2 * lmax + 1, 2 * lmax + 1, nspin, nat)
+      REAL(DP), INTENT(INOUT) :: etot
+      REAL(DP) :: ec
+      INTEGER :: is, na, nt, ldim, m1, m2
+      !
+      IF (.NOT.(ctx%inp%oscdft_type==2) .OR. .NOT.ctx%is_constraint .OR. ctx%conv) RETURN
+      !
+      ec = 0
+      !
+      DO na = 1, nat
+         IF (ctx%constraining(na)) THEN
+            nt = ityp(na)
+            ldim = 2 * l(nt) + 1
+            DO is = 1, nspin
+               DO m1 = 1, ldim
+                  DO m2 = 1, ldim
+                     vtot(m1,m2,is,na) = vtot(m1, m2, is, na) + &
+                                         ctx%inp%constraint_strength * &
+                                         ctx%constraint(m1,m2,is,na)
+                     ec = ec + ctx%inp%constraint_strength * &
+                               ctx%constraint(m1,m2,is,na) * &
+                               (ns(m1,m2,is,na) - ctx%inp%occupation(m1,m2,is,na))
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDIF
+      ENDDO
+      !
+      IF (nspin == 1) THEN
+           ec = 2.d0 * ec
+      ENDIF
+      etot = etot + ec
+      !
+      IF (iverbosity > 0) THEN
+         WRITE(stdout, '(/5x,"CONSTRAINT ENERGY = ", f9.4, 1x," (Ry)")') ec
+      ENDIF
+      ! 
+      RETURN       
+      !
+   END SUBROUTINE oscdft_v_constraint
+
+   SUBROUTINE oscdft_ns_set (ctx, lmax, l, ns, lflag)
+      !
+      !! This routine adjusts (modifies) the ns based on constraints
+      !! If lflag=1, then copy ctx%inp%occupation to ns
+      !! If lflag=2, then copy ns to ctx%inp%occupation
+      !
+      USE kinds,           ONLY : DP
+      USE parameters,      ONLY : ntypx
+      USE io_global,       ONLY : stdout
+      USE ions_base,       ONLY : nat, ityp
+      USE lsda_mod,        ONLY : nspin
+      USE oscdft_context,  ONLY : oscdft_context_type
+      !
+      IMPLICIT NONE
+      CLASS(oscdft_context_type), INTENT(INOUT) :: ctx
+      INTEGER, INTENT(IN) :: lmax
+      INTEGER, INTENT(IN) :: l(ntypx)
+      REAL(DP), INTENT(INOUT) :: ns(2 * lmax + 1, 2 * lmax + 1, nspin, nat)
+      INTEGER, INTENT(IN) :: lflag
+      !
+      INTEGER :: na, nt, ldim, is, m1, m2
+      LOGICAL :: found
+      !
+      IF (.NOT.(ctx%inp%oscdft_type==2) .OR. .NOT.ctx%is_constraint) RETURN
+      !
+      found = .true.
+      !
+      WRITE(stdout, '(/5x,"Setting starting occupation matrices according to input constrained values")')
+      !
+      DO na = 1, nat
+         IF (ctx%constraining(na)) THEN
+            nt = ityp(na)
+            ldim = 2*l(nt)+1
+            DO is = 1, nspin
+               DO m1 = 1, ldim
+                  DO m2 = 1, ldim
+                     IF (lflag==1) THEN
+                        IF (ctx%inp%occupation(m1,m2,is,na)==-2.d0) THEN
+                           WRITE(stdout, '(/5x,"Warning!!! Missing element: ",4(1x,i4))') na, is, m1, m2 
+                           found = .false.
+                        ELSE
+                           ns(m1,m2,is,na) = ctx%inp%occupation(m1,m2,is,na)
+                        ENDIF
+                     ELSEIF (lflag==2) THEN
+                        ctx%inp%occupation(m1,m2,is,na) = ns(m1,m2,is,na)
+                     ENDIF
+                  ENDDO
+               ENDDO       
+            ENDDO
+         ENDIF
+      ENDDO
+      !
+      IF (.NOT.found) CALL errore( 'oscdft_ns_set', 'Missing target occupation matrix element', 1 )
+      !
+      RETURN
+      !
+   END SUBROUTINE oscdft_ns_set
+
 #endif
 END MODULE oscdft_functions

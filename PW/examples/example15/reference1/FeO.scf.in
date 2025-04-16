@@ -1,0 +1,38 @@
+ &control
+  calculation = 'scf'
+  restart_mode='from_scratch',
+  prefix='FeO',
+  pseudo_dir = '/home/timrov_i/WORKSPACE/PSI/Gitlab/tmp2/q-e/pseudo/',
+  outdir='/home/timrov_i/WORKSPACE/PSI/Gitlab/tmp2/q-e/tempdir/'
+  verbosity = 'high'
+ /
+ &system
+  ibrav= 0, celldm(1)=8.19, nat= 4, ntyp= 3,
+  ecutwfc = 30.0, ecutrho = 240.0, nbnd=20, nspin=2,
+  starting_magnetization(1)= 0.5,
+  starting_magnetization(2)=-0.5,
+  occupations='smearing', smearing='mv', degauss=0.01,
+ /
+ &electrons
+  mixing_mode = 'plain'
+  mixing_beta = 0.3
+  conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ Fe1  1.  Fe.pz-nd-rrkjus.UPF
+ Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ O    1.  O.pz-rrkjus.UPF
+ATOMIC_POSITIONS {crystal}
+ Fe1 0.0  0.0  0.0
+ Fe2 0.5  0.5  0.5
+ O   0.25 0.25 0.25
+ O   0.75 0.75 0.75
+CELL_PARAMETERS {alat}
+ 0.50 0.50 1.00
+ 0.50 1.00 0.50
+ 1.00 0.50 0.50
+K_POINTS {automatic}
+2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Fe1-3d 4.3
+U Fe2-3d 4.3

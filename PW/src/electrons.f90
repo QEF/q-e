@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -624,6 +624,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( iter > 1 ) THEN
         !
+#if defined (__OSCDFT)
+        IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+           ! do nothing
+        ELSE
+#endif
         IF ( iter == 2 ) THEN
            !
            IF ( lgcscf ) THEN
@@ -633,6 +638,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ENDIF
            !
         ENDIF
+#if defined (__OSCDFT)
+        ENDIF
+#endif
         !
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
         ! ... do not allow convergence threshold to become too small:
@@ -665,7 +673,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... diagonalization of the KS hamiltonian
         !
 #if defined (__OSCDFT)
-        IF (use_oscdft) THEN
+        IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
            CALL oscdft_electrons(oscdft_ctx, iter, et, nbnd, nkstot, nks)
         ELSE
 #endif
@@ -918,6 +926,18 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            CALL scf_type_COPY( rhoin, rho )
            !
+#if defined (__OSCDFT)
+           IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+              IF (lda_plus_u .AND. .NOT.oscdft_ctx%conv) THEN
+                 IF (lda_plus_u_kind.EQ.0) THEN
+                    CALL write_ns()
+                 ELSEIF (lda_plus_u_kind.EQ.2) THEN
+                    CALL write_nsg()
+                 ENDIF
+              ENDIF
+           ENDIF
+#endif
+           !
            IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) nsgnew = nsg
            !
            IF ( lgcscf ) THEN
@@ -975,7 +995,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      END IF
 #endif
 #if defined (__OSCDFT)
-     IF (use_oscdft) THEN
+     IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
         CALL oscdft_scf_energy(oscdft_ctx, plugin_etot)
      END IF
 #endif
@@ -1051,7 +1071,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
         ENDIF
 #if defined (__OSCDFT)
-        IF (use_oscdft) THEN
+        IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
            CALL oscdft_print_ns(oscdft_ctx)
         END IF
 #endif
@@ -1742,7 +1762,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
        IF (use_environ) CALL print_environ_energies('PW')
 #endif
 #if defined (__OSCDFT)
-       IF (use_oscdft .AND. conv_elec) CALL oscdft_print_energies(oscdft_ctx)
+       IF (use_oscdft .AND. conv_elec .AND. (oscdft_ctx%inp%oscdft_type==1)) &
+          CALL oscdft_print_energies(oscdft_ctx)
 #endif
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
