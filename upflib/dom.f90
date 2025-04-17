@@ -222,6 +222,9 @@ CONTAINS
     type(node), pointer :: prev
     integer :: n, nl, n1, n2, n3, m
     logical :: is_found
+#if defined(_AOCC)
+    character(:), allocatable:: temp
+#endif
     !
     ! Initialization
     if ( firstline ) then
@@ -404,11 +407,21 @@ CONTAINS
           else
              if ( in_attribute ) then
                 if ( .not. allocated(curr%attr) ) curr%attr = ' '
+#if defined(_AOCC)
+                temp = curr%attr // line(n:n) 
+                curr%attr = temp
+#else
                 curr%attr = curr%attr // line(n:n) 
+#endif
              end if
              if ( in_data      ) then
                 if ( .not. allocated(curr%data) ) curr%data = ' '
+#if defined(_AOCC)
+                temp = curr%data // line(n:n) 
+                curr%data = temp
+#else
                 curr%data = curr%data // line(n:n) 
+#endif
              end if
              n = n+1
           end if
@@ -416,7 +429,14 @@ CONTAINS
     end do scanline
     ! if data extends over more than one line, add space between lines
     if ( in_data .and. associated(curr) ) then
-       if ( allocated(curr%data) ) curr%data = curr%data // ' '
+       if ( allocated(curr%data) ) then
+#if defined(_AOCC)
+          temp = curr%data // ' ' 
+          curr%data = temp
+#else
+          curr%data = curr%data // ' '
+#endif
+          end if
     end if
 
   end function parseline
