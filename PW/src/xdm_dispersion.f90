@@ -209,7 +209,7 @@ CONTAINS
     USE atom,        ONLY : rgrid, msh
     USE splinelib,   ONLY : spline
     !
-    INTEGER :: i, j, ialloc, nn
+    INTEGER :: i, j, ialloc, n1, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
     !
     CALL start_clock('init_xdm')
@@ -237,11 +237,13 @@ CONTAINS
     IF (ialloc /= 0) CALL alloc_failed("rcore")
     DO i = 1, ntyp
        nn = msh(i)
-       IF (ispaw) THEN
-          rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2) + upf(i)%paw%ae_rho_atc(1:nn)
-       ELSE
-          rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2)
+       n1 = 1
+       IF ( rgrid(i)%r(n1) < 1.0D-8 ) THEN
+          rfree(n1,i) = 0.0_dp
+          n1 = n1 + 1
        END IF
+       rfree(n1:nn,i) = upf(i)%rho_at(n1:nn) / (fpi*rgrid(i)%r(n1:nn)**2) 
+       IF (ispaw) rfree(1:nn,i) = rfree(1:nn,i) + upf(i)%paw%ae_rho_atc(1:nn)
        CALL radial_gradient(rfree(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
        CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
        CALL spline(rgrid(i)%r(1:nn),rfree(1:nn,i),d1y(1),d2y(1),w2free(1:nn,i))
