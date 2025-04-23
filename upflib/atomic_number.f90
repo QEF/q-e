@@ -14,7 +14,7 @@ function atomic_number(atm)
   character(len=*) :: atm
   integer :: atomic_number
 
-  character(len=2) :: elements(109), atom
+  character(len=2) :: elements(120), atom
   data elements/' H',                              'He', &
                 'Li','Be',' B',' C',' N',' O',' F','Ne', &
                 'Na','Mg','Al','Si',' P',' S','Cl','Ar', &
@@ -31,7 +31,8 @@ function atomic_number(atm)
                           'Tl','Pb','Bi','Po','At','Rn', &
                 'Fr','Ra','Ac','Th','Pa',' U','Np','Pu', &
                 'Am','Cm','Bk','Cf','Es','Fm','Md','No', &
-                'Lr','Rf','Db','Sg','Bh','Hs','Mt' /
+                'Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds', &
+                'Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og','Un','Ub' /
   integer :: n
 
   atom='  '
@@ -59,7 +60,7 @@ function atomic_number(atm)
      atom(2:2)=lowercase(atm(2:2))
   end if
       
-  do n=1, 109
+  do n=1, 120
      if ( atom == elements(n) ) then
         atomic_number=n
         return
@@ -77,7 +78,7 @@ function atom_name(atomic_number)
   integer :: atomic_number
   character(len=2) :: atom_name
 
-  character(len=2) :: elements(109)
+  character(len=2) :: elements(120)
   data elements/' H',                              'He', &
                 'Li','Be',' B',' C',' N',' O',' F','Ne', &
                 'Na','Mg','Al','Si',' P',' S','Cl','Ar', &
@@ -94,9 +95,10 @@ function atom_name(atomic_number)
                           'Tl','Pb','Bi','Po','At','Rn', &
                 'Fr','Ra','Ac','Th','Pa',' U','Np','Pu', &
                 'Am','Cm','Bk','Cf','Es','Fm','Md','No', &
-                'Lr','Rf','Db','Sg','Bh','Hs','Mt' /
+                'Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds', &
+                'Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og','Un','Ub' /
 
-  if (atomic_number < 1 .or. atomic_number > 109) then
+  if (atomic_number < 1 .or. atomic_number > 120) then
      print *, 'Invalid atomic number: ',atomic_number
      atom_name = 'XX'
   else

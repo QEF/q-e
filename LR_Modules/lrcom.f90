@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -260,6 +260,11 @@ MODULE ldaU_lr
   !
   COMPLEX(DP), ALLOCATABLE :: dnsscf(:,:,:,:,:)
   !! SCF derivative of ns
+  !
+  COMPLEX(DP), ALLOCATABLE :: vh_u_save(:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: vh_uv_save(:,:,:,:,:,:)
+  ! to save the two unperturbed Hubbard U and V potentials;
+  ! one normal, and the other with the time-reversed m_hubb
   !
   COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)
   !! S * atomic wfc at k

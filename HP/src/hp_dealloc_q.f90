@@ -22,7 +22,7 @@ SUBROUTINE hp_dealloc_q()
                                   & dvxc_s, vsgga, segni
   USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
-  USE ldaU_lr,             ONLY : swfcatomk, swfcatomkpq
+  USE ldaU_lr,             ONLY : swfcatomk, swfcatomkpq, vh_u_save, vh_uv_save
   USE qpoint_aux,          ONLY : ikmks, ikmkmqs, becpt
   USE lr_nc_mag,           ONLY : deeq_nc_save
   !
@@ -61,6 +61,9 @@ SUBROUTINE hp_dealloc_q()
       deallocate(becpt)
   endif
   if (allocated(deeq_nc_save)) deallocate(deeq_nc_save)
+  !
+  if (allocated(vh_u_save))     deallocate (vh_u_save)
+  if (allocated(vh_uv_save))    deallocate (vh_uv_save)
   !
   ! GGA-specific arrays
   !

@@ -410,7 +410,7 @@ CONTAINS
          IF (.NOT. dft_is_hybrid) RETURN 
          IF (PRESENT(nq1) .AND. PRESENT(nq2) .AND. PRESENT(nq3) ) THEN
             qpoint_grid_opt => qpoint_grid           
-            CALL qes_init (qpoint_grid, "qpoint_grid", nq1, nq2, nq3, "")
+            CALL qes_init (qpoint_grid, "qpoint_grid", max(nq1,1), max(nq2,1), max(nq3,1), "")
          END IF 
          !
          CALL qes_init ( obj, "hybrid", qpoint_grid_opt, ecutfock, exx_fraction, &
@@ -718,7 +718,7 @@ CONTAINS
                         Hubb_occ_aux(ldim+m1,ldim+m2)=SQRT(DCONJG(Hub_ns_nc(m1,m2,4,i))*Hub_ns_nc(m1,m2,4,i))
                      END DO
                   END DO
-                  CALL qes_init (objs(i), TAGNAME = "Hubbard_ns_mod", SPECIE = TRIM(species(ityp(i))), &
+                  CALL qes_init (objs(i), TAGNAME = "Hubbard_ns_nc", SPECIE = TRIM(species(ityp(i))), &
                                LABEL = TRIM(labs(ityp(i))), SPIN =1, INDEX = i,ORDER ='F',Hubbard_NS = Hubb_occ_aux) 
                   IF (TRIM(labs(ityp(i))) == 'no Hubbard') objs(i)%lwrite = .FALSE. 
                END DO

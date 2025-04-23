@@ -56,9 +56,6 @@
     The dimension of spherical harmonics (lmaxq+1)^2 might be stored
     in another variable, something like ylmdim, or maxlm
 
-  - Interpolation tables: collect atomic wavefunction stuff from init_tab_atwfc
-    and interpolate_atwfc into module atwfc_mod.f90
-
   - Interpolation tables: rationalize names of variables and related routines
 ```
       CP     PW      better name     contains 	           computed in
