@@ -72,7 +72,7 @@ MODULE path_variables
   REAL(DP), ALLOCATABLE :: &
        pos(:,:),                 &! reaction path
        grad_pes(:,:),            &! gradients acting on the path
-       tangent(:,:)               &! tangent to the path
+       tangent(:,:)               ! tangent to the path
   INTEGER, ALLOCATABLE :: &
        fix_atom_pos(:,:)                ! 0 or 1, if 0 fixed atom
   LOGICAL, ALLOCATABLE :: &

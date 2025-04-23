@@ -1,10 +1,11 @@
 !
-! Copyright (C) 2002-2013 Quantum ESPRESSO group
+! Copyright (C) 2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
 !
 !=----------------------------------------------------------------------------=!
 !
@@ -15,14 +16,13 @@ END MODULE kinds
 MODULE ring_input_parameters_module
 !
 !=----------------------------------------------------------------------------=!
-!
+! 
+! ... Written by Carlo Sbraccia ( 2003-2006 )
 !  this module contains
-!  1) the definition of all input parameters for NEB
-!  2) the definition of namelist PATH
-!  3) routines that allocate/deallocate data needed in input
+!  1) the definition of other input parameters taken from NEB
+!  2) routines that allocate/deallocate data needed in input
 !  Based upon original NEB implementation ( C.S. 17/10/2003 )
-!
-!=----------------------------------------------------------------------------=!
+
   !
   USE kinds,      ONLY : DP
   !
@@ -31,37 +31,6 @@ MODULE ring_input_parameters_module
   !
   SAVE
   !
-!=----------------------------------------------------------------------------=!
-! BEGIN manual
-!
-!
-! * DESCRIPTION OF THE INPUT FILE
-!  (to be given as standard input)
-!
-!  The input file has the following layout:
-!
-!     &PATH
-!       path_parameter_1,
-!       path_parameter_2,
-!       .......
-!       path_parameter_Lastone
-!     /
-!     ATOMIC_SPECIES
-!      slabel_1 mass_1 pseudo_file_1
-!      slabel_2 mass_2 pseudo_file_2
-!      .....
-!     PATH_ATOMIC_POSITIONS
-!      alabel_1  px_1 py_1 pz_1
-!      alabel_2  px_2 py_2 pz_2
-!      .....
-!     CARD_3
-!     ....
-!     CARD_N
-!
-!  -- end of input file --
-!
-! ... variables added for "path" calculations
-!
   INTEGER :: nat = 1
   REAL(DP) :: alat
   !

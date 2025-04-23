@@ -1,9 +1,11 @@
 !
-! Copyright (C) 2011 Quantum ESPRESSO group
+! Copyright (C) 2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
 !
 !----------------------------------------------------------------------------
 SUBROUTINE pw_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)

@@ -1,26 +1,12 @@
-! subroutine pimd_get_force_from_pw(forcetmp)
-
-!    use pimd_variables, only : nbeadMD,natMD,ndimMD
-!    use ring_variables, only : grad_pes
-!    implicit none
-!    integer k,iat,i,cc
-!    real(8) :: forcetmp(ndimMD,natMD,nbeadMD)
-   
-!    forcetmp=0.d0
-!    DO k=1,nbeadMD
-!      cc=0
-!      DO iat=1,natMD
-!        DO i=1,ndimMD
-!          cc=cc+1
-!          forcetmp(i,iat,k)=-grad_pes(cc,k)
-!        END DO
-!      END DO
-!    END DO
-   
-!    return
-
-! end subroutine pimd_get_force_from_pw
-
+!
+! Copyright (C) 2025 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
+!
 subroutine pimd_get_pot_from_pw(epMD)
    
   !  use ring_variables, only : pes  

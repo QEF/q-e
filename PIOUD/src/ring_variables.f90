@@ -1,19 +1,19 @@
 !
-! Copyright (C) 2003-2006 Quantum ESPRESSO group
+! Copyright (C) 2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
+!
 MODULE ring_variables
   !---------------------------------------------------------------------------
   !
-  ! ... This module contains all variables needed by path optimisations
+  ! ... This module contains all variables taken from NEB path optimisations
   !
+  !  
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
-  !
 
   USE kinds, ONLY : DP
   !

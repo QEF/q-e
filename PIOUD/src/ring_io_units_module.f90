@@ -10,7 +10,8 @@ MODULE ring_io_units_module
   !----------------------------------------------------------------------------
   !
   ! ... this module contains the I/O units and files used by  "path"-routines
-  !
+  ! 
+  ! ... Written by Carlo Sbraccia ( 2003-2006 )
   IMPLICIT NONE
   !
   !

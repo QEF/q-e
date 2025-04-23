@@ -1,9 +1,11 @@
 !
-! Copyright (C) 2011-2013 Quantum ESPRESSO group
+! Copyright (C) 2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
 !
 !----------------------------------------------------------------------------
 PROGRAM pioud
@@ -11,25 +13,21 @@ PROGRAM pioud
   !
   ! ... PATH INTEGRAL MOLECULAR DYNAMICS CODE !!!
   !
-  USE io_global,         ONLY : meta_ionode, meta_ionode_id
-  USE environment,       ONLY : environment_start, environment_end
-  USE check_stop,        ONLY : check_stop_init
-  USE mp,                ONLY : mp_bcast
-  USE mp_global,         ONLY : mp_startup
-  USE mp_world,          ONLY : world_comm, mpime, root
-  USE mp_pools,          ONLY : intra_pool_comm
-  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE read_input,        ONLY : read_input_file
-  USE command_line_options,  ONLY : input_file_, ndiag_
-  !
-  USE trpmd_base,         ONLY : initialize_polymer, explore_phasespace
-  ! USE path_read_namelists_module, ONLY : path_read_namelist
-  ! USE path_read_cards_module,     ONLY : path_read_cards
-  !
+  USE io_global,                    ONLY : meta_ionode, meta_ionode_id
+  USE environment,                  ONLY : environment_start, environment_end
+  USE check_stop,                   ONLY : check_stop_init
+  USE mp,                           ONLY : mp_bcast
+  USE mp_global,                    ONLY : mp_startup
+  USE mp_world,                     ONLY : world_comm, mpime, root
+  USE mp_pools,                     ONLY : intra_pool_comm
+  USE mp_bands,                     ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE read_input,                   ONLY : read_input_file
+  USE command_line_options,         ONLY : input_file_, ndiag_
+  USE trpmd_base,                   ONLY : initialize_polymer, explore_phasespace
   USE ring_input_parameters_module, ONLY : input_images, allocate_path_input_ions, &
                                            deallocate_path_input_ions
-  USE ring_io_units_module,  ONLY : iunpath
-  !
+  USE ring_io_units_module,         ONLY : iunpath
+
   IMPLICIT NONE
   !
   include 'laxlib.fh'
@@ -38,10 +36,7 @@ PROGRAM pioud
   INTEGER :: unit_tmp, i, iimage
   INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  ! INTEGER :: input_images = 1 ! Consider we give one image  
-                              !!!added when sperate PIOUD from NEB
-  !
-  !
+  
   CALL mp_startup ( start_images=.true.)
   !
   CALL environment_start ( 'PIOUD' )   !!! <----my mod.
@@ -84,13 +79,9 @@ PROGRAM pioud
      close(unit=unit_tmp)                 !!! <----my mod.
   END IF                                  !!! <----my mod.
   
-!   unit_tmp = find_free_unit () 
-!   open(unit=unit_tmp,file="neb.dat",status="old")
-  ! CALL path_read_namelist(unit_tmp)
-  ! CALL path_read_cards(unit_tmp)
-!   close(unit=unit_tmp)
+
   
-  call pimd_mp_bcast   !!! <----my mod.
+  CALL pimd_mp_bcast   !!! <----my mod.
   !
   do i=1,input_images
     !
@@ -108,30 +99,24 @@ PROGRAM pioud
     !
   enddo
   
-  ! if (meta_ionode)  
-  call pimd_get_amas_and_nat
-    !!! <----my mod.
-  !
-  ! CALL ioneb()
+  CALL pimd_get_amas_and_nat
+
   CALL verify_pioud_tmpdir()
   CALL set_engine_output()
-  !
-  ! END INPUT RELATED
-  !
+
   CALL check_stop_init() 
   CALL initialize_polymer()
   CALL deallocate_path_input_ions()
-  !
+
   CALL explore_phasespace()
-  !
+
   CALL laxlib_end()
   
-  ! if ( meta_ionode) 
-  call pimd_deallocation    !!! <----my mod.
+  CALL pimd_deallocation    !!! <----my mod.
   if ( meta_ionode) call pimd_close_files   !!! <----my mod.
   
   CALL stop_run_path( .true. )     !!! <----my mod.
-  !
+  
   STOP
-  !
+  
 END PROGRAM pioud

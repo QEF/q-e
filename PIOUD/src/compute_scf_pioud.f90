@@ -1,10 +1,11 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
 !
 !----------------------------------------------------------------------------
 SUBROUTINE compute_scf_pioud( fii, lii, stat  )
@@ -16,7 +17,6 @@ SUBROUTINE compute_scf_pioud( fii, lii, stat  )
   ! ... for each image in the path, it performs the self-consistent loop
   ! ... computing the energy and the forces
   !
-  ! ... Written by Carlo Sbraccia (2003-2006)
   !
   USE starting_scf,     ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
@@ -31,8 +31,7 @@ SUBROUTINE compute_scf_pioud( fii, lii, stat  )
   USE ring_io_units_module, ONLY : iunpath
   USE ring_formats,     ONLY : scf_fmt, scf_fmt_para
   USE ring_variables,   ONLY : pos,    pending_image, &
-                               istep_path, num_of_images !pes, grad_pes,dim1,
-                              !  stress_pes ! <-- lp
+                               istep_path, num_of_images 
   USE pimd_variables,   ONLY : forceMD, nbeadMD, stress_pes_md, pes
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_images,        ONLY : inter_image_comm, intra_image_comm, &

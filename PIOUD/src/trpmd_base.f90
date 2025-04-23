@@ -1,10 +1,11 @@
 !
-! Copyright (C) 2003-2007 Quantum ESPRESSO group
+! Copyright (C) 2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
 !
 !---------------------------------------------------------------------------
 MODULE trpmd_base
@@ -17,8 +18,6 @@ MODULE trpmd_base
   !
   ! ... ring_variables.f90
   ! ... trpmd_io_routines.f90
-  ! ... path_opt_routines.f90
-  ! ... path_reparametrisation.f90
   ! ... ring_formats.f90
   ! ... compute_scf_pioud.f90
   !
@@ -53,10 +52,9 @@ MODULE trpmd_base
       USE ring_input_parameters_module, ONLY : restart_mode
       USE ring_input_parameters_module, ONLY : nat
       USE ring_variables,   ONLY : pos, istep_path, nstep_path,    &
-                                   dim1, & !,  grad_pes, num_of_images,  & !pes
+                                   dim1, & 
                                     path_length,  &
-                                  !  deg_of_freedom,   &
-                                   tune_load_balance,  & ! posold, 
+                                   tune_load_balance,  &  
                                    pending_image
       USE ring_variables,   ONLY : path_allocation
       USE fcp_variables,        ONLY : lfcpopt

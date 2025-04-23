@@ -1,5 +1,5 @@
 
-     Program PIOUD v.7.0 starts on 12Feb2025 at 14:31:12 
+     Program PIOUD v.7.4.1 starts on 23Apr2025 at 14:51:57 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,7 +13,7 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     1087 MiB available memory on the printing compute node when the environment starts
+     1832 MiB available memory on the printing compute node when the environment starts
  
 
      parsing_file_name: diamond_ceriotti.in
@@ -24,6 +24,9 @@
  with Path Integral Langevin approach                     
 ----------------------------------------------------------
  
+This code can be cited as follows:
+Mouhat, F., Sorella, S., Vuilleumier, R., Saitta, A. M., & Casula, M. JCTC, 13(6), 2400-2417. (2017).
+ 
      Reading input from pw_1.in
  iat           1 natMD           2
  iat           1 natMD           2
@@ -32,14 +35,14 @@
  
  -------- computes initial forces and energy --------------
      tcpu =      0.0    self-consistency for image   1
-     tcpu =      1.5    self-consistency for image   2
-     tcpu =      3.0    self-consistency for image   3
-     tcpu =      4.5    self-consistency for image   4
+     tcpu =      0.6    self-consistency for image   2
+     tcpu =      1.3    self-consistency for image   3
+     tcpu =      1.9    self-consistency for image   4
  ----------------------------------------------------------
  
  
  **********************************************************
- initial potential energy:  -11.3766660905538     
+ initial potential energy:  -11.3766660903163     
  initial kinetic energy:  1.140052165746966E-002
  initial potential energy per atom =      -5.688333045    
  quantities after initialization
@@ -56,72 +59,72 @@
 
      ------------------------------ iteration    1 ------------------------------
 
-     tcpu =      6.1    self-consistency for image   1
-     tcpu =      7.5    self-consistency for image   2
-     tcpu =      9.1    self-consistency for image   3
-     tcpu =     10.6    self-consistency for image   4
+     tcpu =      2.4    self-consistency for image   1
+     tcpu =      3.0    self-consistency for image   2
+     tcpu =      3.6    self-consistency for image   3
+     tcpu =      4.1    self-consistency for image   4
      image        energy (eV)
 
          1       -309.5748551
          2       -309.5748550
-         3       -309.5748549
-         4       -309.5748550
+         3       -309.5748550
+         4       -309.5748551
  
-     1     1  -11.37667       0.000000      -11.37667      0.1087650E-01  0.9063750E-03   286.2106      0.2850130E-02  0.2850130E-02
+     1     1  -11.37667       0.000000      -11.37667      0.1092744E-01  0.9106197E-03   287.5510      0.2850130E-02  0.2850130E-02
  **********************************************************
 
      ------------------------------ iteration    2 ------------------------------
 
-     tcpu =     12.1    self-consistency for image   1
-     tcpu =     13.6    self-consistency for image   2
-     tcpu =     15.1    self-consistency for image   3
-     tcpu =     16.6    self-consistency for image   4
+     tcpu =      4.7    self-consistency for image   1
+     tcpu =      5.2    self-consistency for image   2
+     tcpu =      5.7    self-consistency for image   3
+     tcpu =      6.3    self-consistency for image   4
      image        energy (eV)
 
-         1       -309.5748546
-         2       -309.5748543
-         3       -309.5748543
-         4       -309.5748545
+         1       -309.5748548
+         2       -309.5748546
+         3       -309.5748546
+         4       -309.5748547
  
-     1     2  -11.37667       0.000000      -11.37667      0.1093146E-01  0.9109553E-03   287.6569      0.2850136E-02  0.2850130E-02
+     1     2  -11.37667       0.000000      -11.37667      0.1097388E-01  0.9144899E-03   288.7731      0.2850134E-02  0.2850130E-02
  **********************************************************
 
      ------------------------------ iteration    3 ------------------------------
 
-     tcpu =     18.1    self-consistency for image   1
-     tcpu =     19.7    self-consistency for image   2
-     tcpu =     21.2    self-consistency for image   3
-     tcpu =     22.7    self-consistency for image   4
+     tcpu =      6.8    self-consistency for image   1
+     tcpu =      7.3    self-consistency for image   2
+     tcpu =      7.9    self-consistency for image   3
+     tcpu =      8.4    self-consistency for image   4
      image        energy (eV)
 
-         1       -309.5748539
-         2       -309.5748529
-         3       -309.5748536
-         4       -309.5748539
+         1       -309.5748543
+         2       -309.5748537
+         3       -309.5748541
+         4       -309.5748543
  
-     2     1  -11.37667       0.000000      -11.37667      0.1008919E-01  0.8407656E-03   265.4928      0.2850155E-02  0.2850127E-02
+     2     1  -11.37667       0.000000      -11.37667      0.1016270E-01  0.8468917E-03   267.4272      0.2850147E-02  0.2850128E-02
  **********************************************************
 
      ------------------------------ iteration    4 ------------------------------
 
-     tcpu =     24.3    self-consistency for image   1
-     tcpu =     25.9    self-consistency for image   2
-     tcpu =     27.4    self-consistency for image   3
-     tcpu =     29.0    self-consistency for image   4
+     tcpu =      9.0    self-consistency for image   1
+     tcpu =      9.5    self-consistency for image   2
+     tcpu =     10.1    self-consistency for image   3
+     tcpu =     10.7    self-consistency for image   4
      image        energy (eV)
 
-         1       -309.5748528
-         2       -309.5748508
-         3       -309.5748525
-         4       -309.5748532
+         1       -309.5748536
+         2       -309.5748523
+         3       -309.5748533
+         4       -309.5748538
  
-     2     2  -11.37667       0.000000      -11.37667      0.9509339E-02  0.7924449E-03   250.2343      0.2850184E-02  0.2850123E-02
+     2     2  -11.37667       0.000000      -11.37667      0.9631887E-02  0.8026572E-03   253.4591      0.2850167E-02  0.2850125E-02
  **********************************************************
  
-     PIOUD        :     27.28s CPU     30.48s WALL
+     PIOUD        :     10.79s CPU     11.26s WALL
 
  
-   This run was terminated on:  14:31:43  12Feb2025            
+   This run was terminated on:  14:52: 9  23Apr2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

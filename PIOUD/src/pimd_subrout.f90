@@ -1,3 +1,14 @@
+
+!
+! Copyright (C) 2025 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
+!
+
 module random_pioud
   USE kinds, ONLY : DP
 
@@ -1985,6 +1996,9 @@ subroutine pimd_read_input(unit)
   write(iunpath,'('' with Path Integral Langevin approach                     '')')
   write(iunpath,'(''----------------------------------------------------------'')')
   write(iunpath,*)
+  write(iunpath,'(''This code can be cited as follows:'')')
+  write(iunpath,'(''Mouhat, F., Sorella, S., Vuilleumier, R., Saitta, A. M., & Casula, M. JCTC, 13(6), 2400-2417. (2017).'')')
+  write(iunpath,*)
 
 !    ***   System parameters    ***
 
@@ -2009,6 +2023,8 @@ subroutine pimd_read_input(unit)
 
 ! Namelist 'dynamic' call  
   read(unit,nml=dynamics)
+
+  delt = delt * 41.341374576 ! Convert femtoseconds to atomic unit (time)
 
 !  ios = 0
 !  IF ( ionode ) THEN
@@ -2068,6 +2084,7 @@ subroutine pimd_read_input(unit)
        write(unit_dot_out,*) 'Classical/Quantum Langevin dyn. with Ceriotti integrator'
      elseif(irun == 4) then
        write(unit_dot_out,*) 'Quantum Langevin dyn. with PIOUD integrator'
+
      else
        write(unit_dot_out,*) ' type of run unknown: irun = ',irun
        stop
