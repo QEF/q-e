@@ -19,6 +19,3 @@
 [submodule "external/pw2qmcpack"]
 	path = external/pw2qmcpack
 	url = https://github.com/QMCPACK/pw2qmcpack.git
-[submodule "external/qe-gipaw"]
-	path = external/qe-gipaw
-	url = https://github.com/dceresoli/qe-gipaw

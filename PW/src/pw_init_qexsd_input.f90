@@ -500,8 +500,7 @@
   !-----------------------------------------------------------------------------------------------------------------------------
   IF (cell_factor > 0.d0 ) THEN
     cell_factor_tg = cell_factor 
-    cell_factor_pt => cell_factor_tg 
-
+    cell_factor_pt => cell_factor_tg  
   END IF
   CALL qexsd_init_cell_control(obj%cell_control, cell_dynamics, press, wmass, cell_factor_pt, cell_dofree, cb_iforceh)
   !---------------------------------------------------------------------------------------------------------------------------------
