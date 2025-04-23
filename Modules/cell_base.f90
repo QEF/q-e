@@ -9,7 +9,7 @@
   MODULE cell_base
     !------------------------------------------------------------------------------!
     !! Cell parameters and initialization.
-    ! 
+    !
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi, bohr_radius_angs
     USE io_global, ONLY : stdout

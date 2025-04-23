@@ -38,7 +38,7 @@ MODULE io_global
   !
   INTEGER :: meta_ionode_id = 0
   !! index of the global i/o node
-  LOGICAL ::  meta_ionode = .TRUE.
+  LOGICAL :: meta_ionode = .TRUE.
   !! TRUE if this processor is global i/o node
   !    
 END MODULE io_global
