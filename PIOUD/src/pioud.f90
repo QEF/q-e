@@ -30,7 +30,7 @@ PROGRAM pioud
 
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
+  !include 'laxlib.fh'
   !
   CHARACTER(len=256) :: engine_prefix, parsing_file_name
   INTEGER :: unit_tmp, i, iimage
