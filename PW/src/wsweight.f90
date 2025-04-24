@@ -59,8 +59,8 @@ function wsweight(r,rws,nrws)
   do ir =1,nrws
      rrt = r(1)*rws(1,ir) + r(2)*rws(2,ir) + r(3)*rws(3,ir)
      ck = rrt-rws(0,ir)
-     if ( ck .gt. eps ) return
-     if ( abs(ck) .lt. eps ) nreq = nreq + 1
+     if ( ck .gt. rrt *eps ) return
+     if ( abs(ck) .lt. rrt * eps ) nreq = nreq + 1
   end do
   wsweight = 1.d0/DBLE(nreq)
   return
