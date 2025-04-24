@@ -7,6 +7,10 @@
 !
 ! Written by Aadhityan A, Lorenzo Paulatto, Michele Casula, Tommaso Morresi
 !
+MODULE kinds
+  INTEGER, PARAMETER :: DP = KIND(1.0D0)
+END MODULE kinds
+
 !---------------------------------------------------------------------------
 MODULE trpmd_base
   !---------------------------------------------------------------------------
