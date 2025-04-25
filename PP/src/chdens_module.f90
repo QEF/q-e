@@ -112,7 +112,7 @@ SUBROUTINE chdens (plot_files,plot_num,nc)
   !   set the DEFAULT values
   !
   nfile         = 1
-  filepp(1)     = ' '
+  filepp(1)     = 'tmp.pp'
   weight(1)     = 1.0d0
   iflag         = 0
   radius        = 1.0d0
