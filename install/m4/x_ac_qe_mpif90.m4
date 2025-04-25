@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_MPIF90], [
 AC_REQUIRE([AC_PROG_FC])
@@ -123,6 +123,7 @@ xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
 armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
 frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
 ftn_version=`$mpif90 --version 2>&1 | grep "Cray Fortran"`
+aocc_version=`$mpif90 --version 2>&1 | grep "AMD clang version"`
 #
 if test "$ifort_version" != ""
 then
@@ -179,10 +180,16 @@ then
         version=`echo $fnt_version | cut -d" " -f 5`
         echo "${ECHO_T}ftn $version"
         f90_in_mpif90="ftn"
+elif test "$aocc_version" != ""
+then
+        version=`echo $aocc_version | cut -d"_" -f 2 | cut -d"-" -f 1`
+        echo "${ECHO_T}aocc $version"
+        f90_in_mpif90="flang"
 else
         echo "${ECHO_T}unknown, assuming gfortran"
         f90_in_mpif90="gfortran"
 fi
+
 # notify if serial and parallel compiler are the same
 if test "$set_use_parallel" -eq 1 ; then
    if test "$mpif90" = "$f90_in_mpif90" && test "$mpif90" != "ftn"; then
