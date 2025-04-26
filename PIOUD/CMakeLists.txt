@@ -1,22 +1,21 @@
 set(src_pioud
 src/compute_scf_pioud.f90
-src/engine_to_trpmd_nat_alat.f90
 src/engine_to_trpmd_pos.f90
+src/engine_to_trpmd_nat_alat.f90
 src/fcp_opt_routines.f90
 src/fcp_variables.f90
+src/trpmd_base.f90
+src/ring_formats.f90
+src/pw_gen_inputs.f90
+src/ring_input_parameters_module.f90
+src/trpmd_io_routines.f90
+src/ring_io_units_module.f90
+src/pimd_variables.f90
+src/ring_variables.f90
 src/pimd_subrout.f90
 src/pimd_utils.f90
-src/pimd_variables.f90
-src/pioud.f90
-src/pw_gen_inputs.f90
-src/ring_formats.f90
-src/ring_input_parameters_module.f90
-src/ring_io_units_module.f90
-src/ring_variables.f90
 src/set_defaults.f90
 src/stop_run_path.f90
-src/trpmd_base.f90
-src/trpmd_io_routines.f90
 )
 
 qe_add_library(qe_pioud ${src_pioud})
