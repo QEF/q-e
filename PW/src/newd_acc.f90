@@ -283,6 +283,7 @@ SUBROUTINE newd_acc( )
      endif
      !$acc end data
      !
+     !$acc exit data delete(ityp)
      RETURN
      !
   END IF
