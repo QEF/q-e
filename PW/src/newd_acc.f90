@@ -189,7 +189,7 @@ SUBROUTINE newq_acc(vr,deeq,skip_vltot)
 END SUBROUTINE newq_acc
   !
 !----------------------------------------------------------------------------
-SUBROUTINE newd_gpu( ) 
+SUBROUTINE newd_acc( ) 
   !----------------------------------------------------------------------------
   !! This routine computes the integral of the effective potential with
   !! the Q function and adds it to the bare ionic D term which is used
@@ -509,6 +509,6 @@ SUBROUTINE newd_gpu( )
     RETURN
     END SUBROUTINE newd_nc_acc
     !
-END SUBROUTINE newd_gpu
+END SUBROUTINE newd_acc
 
 END MODULE dfunct_gpum

@@ -51,7 +51,7 @@ SUBROUTINE potinit()
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
   USE uspp,                 ONLY : becsum
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
   !
@@ -269,7 +269,7 @@ SUBROUTINE potinit()
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+  IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw)
   !
   ! ... calculate 3D-RISM to get the solvation potential
   !
