@@ -40,7 +40,7 @@ SUBROUTINE newq_acc(vr,deeq,skip_vltot)
   ! INTERNAL
   INTEGER :: ngm_s, ngm_e, ngm_l
   ! starting/ending indices, local number of G-vectors
-  INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt, ierr
+  INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
   COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux(:,:), qgm(:,:)
@@ -209,10 +209,10 @@ SUBROUTINE newd_acc( )
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb, ierr
-  ! counters on g vectors, atom type, beta functions x 2,
-  !   atoms, spin, aux, aux, beta func x2 (again)
+  INTEGER :: ig, nt, ih, jh, na, is, nht
+  ! counters and auxiliary variables
   !
+  IF ( ALL( nh(1:ntyp) == 0 ) ) RETURN
   !$acc enter data create(ityp)
   !$acc update device(ityp)
   IF ( .NOT. okvan ) THEN
