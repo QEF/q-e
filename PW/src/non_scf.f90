@@ -148,7 +148,7 @@ SUBROUTINE non_scf( )
      IF (use_ace) CALL aceinit ( .false. )
      CALL v_of_rho( rho, rho_core, rhog_core, &
          ehart, etxc, vtxc, eth, etotefield, charge, v)
-     IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+     IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw,etot_cmp_paw)
      CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                    nspin, doublegrid )
      !

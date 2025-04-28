@@ -142,7 +142,7 @@ SUBROUTINE electrons()
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
-           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+           IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw,etot_cmp_paw)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -238,7 +238,7 @@ SUBROUTINE electrons()
         !
         IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
         !
-        IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+        IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw,etot_cmp_paw)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -446,7 +446,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE dfunct,               ONLY : newd
-  USE dfunct_gpum,          ONLY : newd_gpu
+  USE dfunct_gpum,          ONLY : newd_acc
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
   USE clib_wrappers,        ONLY : memstat
@@ -990,7 +990,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      ! ... PAW: newd contains PAW updates of NL coefficients
      !
      IF (.not. use_gpu) CALL newd()
-     IF (      use_gpu) CALL newd_gpu()
+     IF (      use_gpu) CALL newd_acc()
      !
      IF ( lelfield ) en_el =  calc_pol ( )
      !

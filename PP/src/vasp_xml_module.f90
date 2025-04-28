@@ -129,8 +129,6 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE fft_rho,              ONLY : rho_g2r
   USE uspp,                 ONLY : becsum
   USE uspp_param,           ONLY : upf
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE vdW_DF,               ONLY : generate_kernel

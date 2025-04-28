@@ -227,7 +227,7 @@ SUBROUTINE post_xml_init (  )
   USE uspp_param,           ONLY : upf, nhm, nsp
   USE read_pseudo_mod,      ONLY : readpp
   USE uspp,                 ONLY : becsum, allocate_uspp
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
@@ -412,7 +412,7 @@ SUBROUTINE post_xml_init (  )
   !
   IF (okpaw) THEN
      becsum = rho%bec
-     CALL PAW_potential(rho%bec, ddd_PAW)
+     CALL PAW_potential(rho%bec, ddd_paw)
   ENDIF 
   CALL newd()
   !

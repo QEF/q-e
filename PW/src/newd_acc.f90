@@ -40,7 +40,7 @@ SUBROUTINE newq_acc(vr,deeq,skip_vltot)
   ! INTERNAL
   INTEGER :: ngm_s, ngm_e, ngm_l
   ! starting/ending indices, local number of G-vectors
-  INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt, ierr
+  INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
   COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux(:,:), qgm(:,:)
@@ -189,7 +189,7 @@ SUBROUTINE newq_acc(vr,deeq,skip_vltot)
 END SUBROUTINE newq_acc
   !
 !----------------------------------------------------------------------------
-SUBROUTINE newd_gpu( ) 
+SUBROUTINE newd_acc( ) 
   !----------------------------------------------------------------------------
   !! This routine computes the integral of the effective potential with
   !! the Q function and adds it to the bare ionic D term which is used
@@ -209,10 +209,10 @@ SUBROUTINE newd_gpu( )
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb, ierr
-  ! counters on g vectors, atom type, beta functions x 2,
-  !   atoms, spin, aux, aux, beta func x2 (again)
+  INTEGER :: ig, nt, ih, jh, na, is, nht
+  ! counters and auxiliary variables
   !
+  IF ( ALL( nh(1:ntyp) == 0 ) ) RETURN
   !$acc enter data create(ityp)
   !$acc update device(ityp)
   IF ( .NOT. okvan ) THEN
@@ -509,6 +509,6 @@ SUBROUTINE newd_gpu( )
     RETURN
     END SUBROUTINE newd_nc_acc
     !
-END SUBROUTINE newd_gpu
+END SUBROUTINE newd_acc
 
 END MODULE dfunct_gpum
