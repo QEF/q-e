@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,7 +25,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !!   \(\text{input_rhout}\) is unchanged.
   !
   USE kinds,          ONLY : DP
-  USE ions_base,      ONLY : nat, ntyp => nsp
+  USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE gvect,          ONLY : ngm
   USE gvecs,          ONLY : ngms
   USE lsda_mod,       ONLY : nspin
@@ -42,13 +42,15 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                              mix_type_COPY, mix_type_SCAL
   USE io_global,      ONLY : stdout
   USE gcscf_module,   ONLY : lgcscf, gcscf_gh, gcscf_mu, gcscf_eps
-  USE ldaU,           ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, &
-                             max_num_neighbors, nsg, nsgnew
+  USE ldaU,           ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, nsnew, neighood, &
+                             max_num_neighbors, nsg, nsgnew, Hubbard_l, Hubbard_lmax
   USE buffers,        ONLY : open_buffer, close_buffer, get_buffer, save_buffer
 #if defined (__OSCDFT)
   USE plugin_flags,     ONLY : use_oscdft
   USE oscdft_base,      ONLY : oscdft_ctx
   USE oscdft_functions, ONLY : oscdft_mix_rho
+  USE ldaU,             ONLY : ldmx
+  USE oscdft_functions, ONLY : oscdft_constrain_ns
 #endif
   !
   IMPLICIT NONE
@@ -113,8 +115,17 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   ! ... external functions
   !
   INTEGER, EXTERNAL :: find_free_unit
-  !
   COMPLEX(DP), ALLOCATABLE :: df_nsg(:,:,:,:,:,:), dv_nsg(:,:,:,:,:,:)
+  !
+#if defined (__OSCDFT)
+  INTEGER :: iunmix_cons, & ! the unit for the constraint mixing
+             nword_cons
+  LOGICAL :: exst_mem_cons, exst_file_cons
+  COMPLEX(DP), ALLOCATABLE :: delta_cons(:,:,:,:), t_cons1(:,:,:, :),   &
+                              t_cons2(:,:,:, :), df_cons(:,:,:,:,:),    &
+                              dv_cons(:,:,:,:,:), cons_insave(:,:,:,:), & 
+                              cons_outsave(:,:,:,:)
+#endif
   !
   CALL start_clock( 'mix_rho' )
   !
@@ -161,13 +172,19 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   conv = ( dr2 < tr2 )
   !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (conv .AND. .NOT.oscdft_ctx%conv) conv = .FALSE.
+  ENDIF
+#endif
+  !
   IF ( lgcscf ) THEN
      !
      conv = conv .AND. ( ABS( ef - gcscf_mu ) < gcscf_eps )
      !
   END IF
 #if defined(__OSCDFT)
-  IF (use_oscdft) CALL oscdft_mix_rho(oscdft_ctx, conv)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL oscdft_mix_rho(oscdft_ctx, conv)
 #endif
   !
   IF ( conv .OR. dr2 < tr2_min ) THEN
@@ -198,6 +215,16 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         nsgnew(:,:,:,:,:) = deltansg(:,:,:,:,:) + nsg(:,:,:,:,:)
         DEALLOCATE(deltansg)
      ENDIF
+     !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. oscdft_ctx%conv) THEN
+        IF (ALLOCATED(dv_cons) ) DEALLOCATE( dv_cons )
+        IF (ALLOCATED(df_cons) ) DEALLOCATE( df_cons )
+        IF (ALLOCATED(delta_cons) ) DEALLOCATE( delta_cons )
+     ENDIF
+  ENDIF
+#endif   
      ! 
      CALL stop_clock( 'mix_rho' )
      !
@@ -212,6 +239,38 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      ALLOCATE( df_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
      ALLOCATE( dv_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
   ENDIF
+  !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     ALLOCATE (t_cons1(ldmx, ldmx, nspin, nat))
+     ALLOCATE (t_cons2(ldmx, ldmx, nspin, nat))
+     ALLOCATE (delta_cons(ldmx, ldmx, nspin, nat))
+     t_cons1(:,:,:,:) = oscdft_ctx%constraint(:,:,:,:)
+     IF (lda_plus_u) THEN
+        IF (lda_plus_u_kind==0) THEN
+           CALL oscdft_constrain_ns (oscdft_ctx, Hubbard_lmax, Hubbard_l, &
+                          input_rhout%ns, oscdft_ctx%conv, dr2, tr2, iter)
+        ELSEIF (lda_plus_u_kind==2) THEN
+           ALLOCATE (nsnew(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat))
+           CALL oscdft_nsg(3)
+           CALL oscdft_constrain_ns (oscdft_ctx, Hubbard_lmax, Hubbard_l, &
+                       nsnew, oscdft_ctx%conv, dr2, tr2, iter)
+           DEALLOCATE (nsnew)
+        ENDIF
+     ENDIF
+     IF (.NOT. oscdft_ctx%conv) THEN
+        delta_cons(:,:,:,:) = oscdft_ctx%constraint(:,:,:,:) - t_cons1(:,:,:,:)
+        t_cons2(:,:,:,:) = oscdft_ctx%constraint(:,:,:,:)
+     ENDIF
+     IF (.NOT. oscdft_ctx%conv) THEN
+        iunmix_cons = find_free_unit() + 1
+        nword_cons = ldmx * ldmx * nat * nspin * n_iter
+        CALL open_buffer( iunmix_cons, 'mix.hubcons', nword_cons, io_level, exst_mem_cons, exst_file_cons)
+        ALLOCATE( df_cons(ldmx,ldmx,nspin, nat, n_iter) )
+        ALLOCATE( dv_cons(ldmx,ldmx,nspin, nat, n_iter) )
+     ENDIF
+  ENDIF
+#endif
   !
   IF ( .NOT. ALLOCATED( df ) ) THEN
      ALLOCATE( df( n_iter ) )
@@ -251,6 +310,17 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         dv_nsg(:,:,:,:,:,ipos) = dv_nsg(:,:,:,:,:,ipos) - nsg
      ENDIF
      !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. .NOT.oscdft_ctx%conv) THEN
+        CALL get_buffer ( df_cons, nword_cons, iunmix_cons, 1 )
+        CALL get_buffer ( dv_cons, nword_cons, iunmix_cons, 2 )
+        df_cons(:,:,:,:,ipos) = df_cons(:,:,:,:,ipos) - delta_cons
+        dv_cons(:,:,:,:,ipos) = dv_cons(:,:,:,:,ipos) - t_cons2
+     ENDIF
+  ENDIF
+#endif
+     !
 #if defined(__NORMALIZE_BETAMIX)
      ! NORMALIZE
      ! TODO: need to check compatibility gcscf and lda_plus_u
@@ -269,6 +339,14 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         df_nsg(:,:,:,:,:,ipos) = df_nsg(:,:,:,:,:,ipos) * obn
         dv_nsg(:,:,:,:,:,ipos) = dv_nsg(:,:,:,:,:,ipos) * obn
      ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. .NOT.oscdft_ctx%conv) THEN
+        df_cons(:,:,:,:,ipos) = df_cons(:,:,:,:,ipos) * obn
+        dv_cons(:,:,:,:,ipos) = dv_cons(:,:,:,:,ipos) * obn
+     ENDIF
+  ENDIF
+#endif
 #endif
      !
   END IF
@@ -301,6 +379,19 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      nsgoutsave = deltansg !nsgnew
      !
   ENDIF
+  !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. .NOT.oscdft_ctx%conv) THEN
+        ALLOCATE( cons_insave(  ldmx,ldmx,nspin, nat) )
+        ALLOCATE( cons_outsave( ldmx,ldmx,nspin, nat ) )
+        cons_insave  = (0.d0, 0.d0)
+        cons_outsave = (0.d0, 0.d0)
+        cons_insave(:, :, :, :)  = t_cons2(:, :, :, :)
+        cons_outsave(:, :, :, :) = delta_cons(:, :, :, :)
+     ENDIF
+  ENDIF
+#endif
   !
   ! Nothing else to do on first iteration
   skip_on_first: &
@@ -371,6 +462,14 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
            nsg(:,:,:,:,:) = nsg(:,:,:,:,:) - gamma0*dv_nsg(:,:,:,:,:,i)
            deltansg(:,:,:,:,:) = deltansg(:,:,:,:,:) - gamma0*df_nsg(:,:,:,:,:,i)
         ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. .NOT.oscdft_ctx%conv) THEN
+        t_cons2(:, :, :, :) = t_cons2(:, :, :, :) - gamma0 * dv_cons(:, :, :, :, i)
+        delta_cons(:, :, :, :) = delta_cons(:, :, :, :) - gamma0 * df_cons(:, :, :, :, i)
+     ENDIF
+  ENDIF
+#endif
         !
     END DO
     DEALLOCATE(betamix, work)
@@ -400,6 +499,18 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      IF (ALLOCATED(nsgoutsave)) DEALLOCATE(nsgoutsave)
   ENDIF
   !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. .NOT.oscdft_ctx%conv) THEN
+        inext = mixrho_iter - ( ( mixrho_iter - 1 ) / n_iter ) * n_iter
+        df_cons(:,:,:,:,inext) = cons_outsave(:, :, :, :)
+        dv_cons(:,:,:,:,inext) = cons_insave(:, :, :, :)
+     ENDIF
+     IF (ALLOCATED(cons_insave))  DEALLOCATE(cons_insave)
+     IF (ALLOCATED(cons_outsave)) DEALLOCATE(cons_outsave)
+  ENDIF
+#endif
+  !
   ! ... preconditioning the new search direction
   !
   IF ( imix == 1 ) THEN
@@ -419,6 +530,20 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      nsg = nsg + alphamix * deltansg
      IF (ALLOCATED(deltansg)) DEALLOCATE(deltansg)
   ENDIF
+  !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint) THEN
+        IF (.NOT.oscdft_ctx%conv) THEN
+           oscdft_ctx%constraint(:, :, :, :) = t_cons2(:, :, :, :) + &
+                                     alphamix * delta_cons(:, :, :, :)
+        ELSE
+           oscdft_ctx%constraint(:, :, :, :) = 0.8 * t_cons1(:, :, :, :) 
+        ENDIF
+     ENDIF
+  ENDIF
+#endif
+  !
   ! ... simple mixing for high_frequencies (and set to zero the smooth ones)
   call high_frequency_mixing ( rhoin, input_rhout, alphamix )
   ! ... add the mixed rho for the smooth frequencies
@@ -434,6 +559,19 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      DEALLOCATE( df_nsg )
      CALL close_buffer(iunmix_nsg, 'keep')
   ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (oscdft_ctx%is_constraint .AND. .NOT.oscdft_ctx%conv) THEN
+        CALL save_buffer ( df_cons, nword_cons, iunmix_cons, 1 )
+        CALL save_buffer ( dv_cons, nword_cons, iunmix_cons, 2 )
+        DEALLOCATE( dv_cons )
+        DEALLOCATE( df_cons )
+        CALL close_buffer(iunmix_cons, 'keep')
+     ENDIF
+     IF (ALLOCATED(t_cons1)) DEALLOCATE( t_cons1 )
+     IF (ALLOCATED(t_cons2)) DEALLOCATE( t_cons2 )
+  ENDIF
+#endif
   !
   CALL stop_clock( 'mix_rho' )
   !

@@ -283,7 +283,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   ENDIF
 #if defined(__OSCDFT)
-  IF ( use_oscdft ) THEN
+  IF ( use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
      CALL oscdft_h_psi(oscdft_ctx, lda, n, m, psi, hpsi)
   END IF
 #endif

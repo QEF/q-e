@@ -295,7 +295,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
      !
   END IF
 #if defined(__OSCDFT)
-  IF ( use_oscdft ) THEN
+  IF ( use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
      CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi, hpsi)
   END IF
 #endif

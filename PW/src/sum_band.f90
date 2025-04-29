@@ -67,7 +67,6 @@ SUBROUTINE sum_band()
   COMPLEX(DP), ALLOCATABLE :: psic(:,:)
   !! Work space used for FFTs in this routine
   !
-  !
   CALL start_clock( 'sum_band' )
   !
   ALLOCATE( psic(dfftp%nnr,npol) )
@@ -163,7 +162,7 @@ SUBROUTINE sum_band()
     ENDIF
   ENDIF
 #if defined (__OSCDFT)
-  IF (use_oscdft) CALL oscdft_sum_band(oscdft_ctx)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL oscdft_sum_band(oscdft_ctx)
 #endif
   !
   ! ... for band parallelization: set band computed by this processor
