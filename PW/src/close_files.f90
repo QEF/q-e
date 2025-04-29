@@ -74,7 +74,7 @@ SUBROUTINE close_files( lflag )
      CALL close_buffer( iunefieldp, close_option )
   END IF
 #if defined (__OSCDFT)
-  IF (use_oscdft) CALL oscdft_close_files(oscdft_ctx)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL oscdft_close_files(oscdft_ctx)
 #endif
   !
   CALL mp_barrier( intra_image_comm )  

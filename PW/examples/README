@@ -71,6 +71,15 @@ example13:
    This example shows how to use pw.x to calculate the total energy
    of LiCoO2 using DFT+U+V with ultrasoft pseudopotentials.
 
+example14:
+   This example shows how to use pw.x to perform DFT + dynamical mean field
+   theory (DMFT) calculations charge self-consistently. The formalism
+   is making use of the interface with Wannier90.
+
+example15:
+   This example shows how to use pw.x to perform constrained DFT+U 
+   calculations for FeO.
+
 Additional feature-specific examples:
 
 

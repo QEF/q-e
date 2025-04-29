@@ -100,7 +100,8 @@ SUBROUTINE setup()
   USE random_numbers,     ONLY : set_random_seed
   USE dynamics_module,    ONLY : control_temp
 #if defined (__OSCDFT)
-  USE plugin_flags,          ONLY : use_oscdft
+  USE plugin_flags,       ONLY : use_oscdft
+  USE oscdft_base,        ONLY : oscdft_ctx
 #endif
 
   !
@@ -247,7 +248,7 @@ SUBROUTINE setup()
      ENDIF
   ENDIF
 #if defined (__OSCDFT)
-  IF (use_oscdft) THEN
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
      IF ( colin_mag == 2 ) THEN
         CALL infomsg( 'setup', 'colin_mag=2 not implemented for OSCDFT' )
         colin_mag = 1

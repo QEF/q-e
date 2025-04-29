@@ -30,7 +30,7 @@ SUBROUTINE print_clock_pw()
 #endif
 #if defined (__OSCDFT)
    USE plugin_flags,        ONLY : use_oscdft
-   USE oscdft_base,         ONLY : print_oscdft_clocks
+   USE oscdft_base,         ONLY : print_oscdft_clocks, oscdft_ctx
 #endif
    !
    IMPLICIT NONE
@@ -337,7 +337,7 @@ SUBROUTINE print_clock_pw()
    IF (use_environ) CALL print_environ_clocks()
 #endif
 #if defined (__OSCDFT)
-   IF (use_oscdft) CALL print_oscdft_clocks()
+   IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL print_oscdft_clocks(oscdft_ctx)
 #endif
    !
    RETURN
