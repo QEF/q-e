@@ -1,11 +1,11 @@
-# Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_BLAS], [
 
 have_blas=0
 
 # Flags for machine-specific libraries
-have_acml=0
+have_aocl=0
 have_atlas=0
 have_essl=0
 have_mkl=0
@@ -24,6 +24,15 @@ else
 
     # search for architecture-specific libraries
     
+    *:flang )
+	    #
+            # AOCC: assume -lblis -lflame without testing 
+	    #
+            unset ac_cv_search_dgemm # clear cached value
+            blas_libs="-lblis -lflame"
+            have_blas=1
+            have_aocl=1
+            ;;
     x86_64:* | mac686:* )
             #
             # search for MKL in directory $MKL_ROOT
@@ -68,7 +77,7 @@ else
                     AS_VERSION_COMPARE([$pgf_version], [19.1], [ ompimp="pgi" ], [ ompimp="intel" ], [ ompimp="intel" ] )
       		    mkl_lib="mkl_${ompimp}_lp64"
       		    mkl_omp="mkl_${ompimp}_thread"
-      		    add_mkl_flag="-pgf90libs"
+     I 		    add_mkl_flag="-pgf90libs"
 	       ;;
 	    esac
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
@@ -233,37 +242,6 @@ else
 
     # obsolescent or obsolete architectures
     
-    crayxt*:* )
-            # check for acml - OBSOLETE?
-            try_libdirs="$ld_library_path $libdirs"
-            for dir in none $try_libdirs
-            do
-                    unset ac_cv_search_dgemm # clear cached value
-                    if test "$dir" = "none"
-                    then
-                            try_loption=
-                    else
-                            echo $ECHO_N "in $dir: " $ECHO_C
-                            try_loption="-L$dir"
-                    fi
-
-                    FFLAGS="$test_fflags"
-                    LDFLAGS="$test_ldflags $try_loption"
-                    LIBS=""
-
-                    if test "$use_openmp" -eq 0; then
-                            AC_SEARCH_LIBS(dgemm, acml, have_blas=1 have_lapack=1
-                                have_acml=1 blas_libs="$try_loption $LIBS")
-                    else
-                            AC_SEARCH_LIBS(dgemm, acml_mp, have_blas=1 have_lapack=1
-                                have_acml=1 blas_libs="$try_loption $LIBS")
-                    fi
-
-                    if test "$ac_cv_search_dgemm" != "no"
-                    then break ; fi
-            done
-            ;;
-
     necsx:* )
             #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
             #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0

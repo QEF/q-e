@@ -67,15 +67,20 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
         }
         
         var filplot -type CHARACTER {
+            default { 'tmp.pp' }
             info { 
-                file "filplot" contains the quantity selected by plot_num 
-                (can be saved for further processing)
+                file "filplot" contains the quantity selected by plot_num.
+                Typically this is a temporary file and may be ignored,
+                unless you want to save it for further processing
             }
         }
         
         var plot_num -type INTEGER {
+            default { -1 }
             info { 
                 Selects what to save in filplot:
+
+                  -1  = do not do anything, skip step (1) (see header) 
 
                    0  = electron (pseudo-)charge density
 		   
@@ -430,9 +435,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
         group {
             
             dimension filepp -start 1 -end nfile -type CHARACTER {
-                default { filepp(1)=filplot } 
+                default { filepp(1)='tmp.pp' } 
                 info {
                     nfile = 1 : file containing the quantity to be plotted
+		                (should be the same as @ref filplot)
                     nfile > 1 : see @ref weight
                 }
             }

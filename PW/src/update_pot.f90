@@ -592,7 +592,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+  IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw)
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !

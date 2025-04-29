@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_F90], [
 
@@ -120,6 +120,17 @@ arm:armflang )
         try_ldflags="-g"
         try_ldflags_openmp="-pthread -fopenmp"
         try_ldflags_static="-static"
+        ;;
+*:flang )
+        try_fflags="-O3"
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O0 -g"
+        fi
+        try_fflags_nomain=""
+        try_f90flags="\$(FFLAGS) -cpp"
+        try_fflags_noopt="-O0 -g"
+        try_dflags="$try_dflags -D_AOCC"
+        try_ldflags=""
         ;;
 # from now on: likely obsolete cases
 x86_64:nagfor* )

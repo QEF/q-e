@@ -193,12 +193,12 @@ SUBROUTINE newd( )
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
-  ! counters on g vectors, atom type, beta functions x 2,
-  !   atoms, spin, aux, aux, beta func x2 (again)
+  INTEGER :: ig, nt, ih, jh, na, is, nht
+  ! counters and auxiliary variables
   !
   ! Note: lspinorb implies noncolin. 
   !
+  IF ( ALL ( nh(1:ntyp) == 0 ) ) RETURN
   IF ( .NOT. okvan ) THEN
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors

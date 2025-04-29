@@ -34,8 +34,6 @@ SUBROUTINE do_cond(done)
   USE mp_global, ONLY : mp_startup
   USE mp_pools,  ONLY : npool
   USE mp_images, ONLY : intra_image_comm, nproc_image
-  USE paw_onecenter,      ONLY : PAW_potential
-  USE paw_variables,      ONLY : okpaw, ddd_PAW
   USE mp
   USE environment,   ONLY : environment_start
 
