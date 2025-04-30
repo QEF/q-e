@@ -34,6 +34,7 @@ default :
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with Wannier functions'
 	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
+	@echo '  pioud        Path Integral Molecular Dynamics with PIOUD algorithm'
 	@echo '  gui          Graphical User Interface'
 	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
 	@echo ' '
@@ -142,6 +143,10 @@ kcw : pwlibs lrmods pp w90lib
 	if test -d KCW ; then \
 	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
 
+kcw : pw pwlibs 
+	if test -d PIOUD ; then \
+	( cd PIOUD ; $(MAKE) all || exit 1 ) ; fi
+
 gui : bindir
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
@@ -163,7 +168,7 @@ gui : bindir
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl kcw
+all   : pwall cp ld1 tddfpt hp xspectra gwl kcw pioud
 
 ###########################################################
 # Auxiliary targets used by main targets:
