@@ -1,0 +1,145 @@
+#!/bin/sh
+set -x
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+export GMON_OUT_PREFIX=gmon.out
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pioud.x to calculate an NVT"
+$ECHO "graphene Path Integral Molecular Dynamics simulation"
+$ECHO
+$ECHO "!!! Beware: pioud.x DOES NOT READ FROM STANDARD INPUT"
+$ECHO "!!! run as 'pioud.x -inp input_file_name > output_file_name'"
+$ECHO
+
+TMP_DIR=out
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pioud.x"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results_parallel" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results_parallel
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+
+# how to run executables
+# PIOUD_COMMAND="$PARA_PREFIX $BIN_DIR/pioud.x $PARA_POSTFIX"
+PIOUD_COMMAND="mpirun -n 4 $BIN_DIR/pioud.x -ni 4"
+# PIOUD_COMMAND="mpirun -n 4 $BIN_DIR/pioud.x -ni 2"
+# PIOUD_COMMAND="mpirun -n 1 $BIN_DIR/pioud.x"
+$ECHO
+$ECHO "  running Born-Oppenheimer PIOUD as: $PIOUD_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/diamond*
+$ECHO " done"
+# clean current result DIR
+# $ECHO "  cleaning $EXAMPLE_DIR/results_parallel...\c"
+# rm -rf $EXAMPLE_DIR/results_parallel
+# $ECHO " done"
+nbeadMD=4
+# NEB calculation. Automatic choice of the climbing image.
+cat > diamond.in << EOF
+BEGIN
+BEGIN_PIMD_INPUT
+&dynamics
+  restart_pimd=.false.
+  nbeadMD=$nbeadMD
+  nunitcells=1 !! Just for atomic potentials not DFT.
+  nblocks=4 !! not used check - only used for first run. restart not working -check
+  nstep_block=4 !! not used check - only used for first run. restart not working -check
+  iprint=1 !! Freqncy of output print
+  run='pioud' !! verlet,ceriotti,pioud
+  delt=0.004 !! for pioud, 41.32231 which is 1 fs in a.u., must be divided for sqrt(m_1) #time step
+  tempMD=300.d0 !! temprature in Kelvin
+  gammaMD=0.21d0 !! Damping parameter in(1/fs)
+  delta_force=1.d-4 !! Just for atomic potentials not DFT.
+  delta_harm=5.d-3 !! Just for atomic potentials not DFT.
+/
+END_PIMD_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix         = "diamond"
+  outdir         = "$TMP_DIR",
+  pseudo_dir     = "$PSEUDO_DIR",
+  tstress = .true.
+/
+&SYSTEM
+    ibrav = 2 ,
+    nosym_evc= .true.
+    a=3.56,
+    nat = 2,
+    ntyp = 1,
+    nspin=1,
+    ecutwfc = 25.0,
+    ecutrho = 120.0,
+    nbnd = 15,
+    occupations='smearing',
+    smearing='fd'
+    degauss=0.001,
+/
+&ELECTRONS
+  conv_thr    = 1.D-8,
+  mixing_beta = 0.3D0,
+/
+&IONS
+/
+ATOMIC_SPECIES
+C    12.0107  C.pbe-van_bm.UPF
+BEGIN_POSITIONS
+ATOMIC_POSITIONS crystal
+C        0.0   0.0  0.000000000
+C        0.12  0.12  0.12
+END_POSITIONS
+K_POINTS automatic
+4 4 4 0 0 0
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running Born-Oppenheimer pioud calculation... "
+$PIOUD_COMMAND -inp diamond.in  > diamond.out
+check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+#$ECHO "  cleaning $TMP_DIR...\c"
+#rm -rf $TMP_DIR/pwscf*
+#$ECHO " done"

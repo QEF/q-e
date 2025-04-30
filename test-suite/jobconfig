@@ -1,6 +1,11 @@
 # Note: unless a specific oreder of execution is desired,
 # there is no need to have for each set of tests a field below
 
+[pioud/]
+program = PIOUD
+inputs_args = ('diamond_ceriotti.in',''),('diamond_pimd.in',''), ('diamond_verlet.in','')
+
+
 [pw_atom/]
 program = PW
 inputs_args = ('atom.in', ''), ('atom-lsda.in',''), ('atom-occ1.in',''), ('atom-occ2.in',''), ('atom-pbe.in',''), ('atom-sigmapbe.in', '')
@@ -312,6 +317,9 @@ inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
 program = IMAGE
 inputs_args = ('si.scf.in', '1'), ('si.ph.in', '2')
 
+[pioud_*/]
+program = PIOUD
+
 [pw_*/]
 program = PW
 
@@ -355,6 +363,7 @@ inputs_args = ('view.in', '3 view.oscdft.in pw.in'), ('normalize.in', '3 normali
 
 
 [categories]
+pioud_all = pioud*??
 pw_all = pw_*??
 cp_all = cp_*??
 ph_all = ph_*??
