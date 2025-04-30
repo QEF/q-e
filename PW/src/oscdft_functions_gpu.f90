@@ -60,6 +60,7 @@ MODULE oscdft_functions_gpu
          idx => ctx%idx
          wfcO => ctx%wfcO
 
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
          IF (.NOT.ctx%initialized) RETURN
          IF (ctx%warming_up) RETURN
          IF (idx%nconstr == 0) RETURN

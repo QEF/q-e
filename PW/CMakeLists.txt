@@ -275,6 +275,7 @@ if (QE_ENABLE_OSCDFT)
         src/oscdft_wfcO.f90
         src/oscdft_forces.f90
         src/oscdft_forces_subs.f90
+        src/oscdft_extended.f90
         # GPU
         src/oscdft_functions_gpu.f90)
 endif()

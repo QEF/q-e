@@ -179,7 +179,7 @@ SUBROUTINE run_pwscf( exit_status )
      ! ... electronic self-consistency or band structure calculation
      !
 #if defined (__OSCDFT)
-     IF (use_oscdft) THEN
+     IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
         CALL oscdft_run_pwscf(oscdft_ctx)
      ELSE
 #endif

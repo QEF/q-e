@@ -1,0 +1,161 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST="O.pz-rrkjus.UPF Fe.pz-nd-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+
+# OSCDFT input
+cat > oscdft.in << EOF
+ &OSCDFT
+  oscdft_type = 2,
+  n_oscdft = 20, 
+  constraint_strength = 1.0,
+  constraint_conv_thr = 3.D-3,
+  constraint_maxstep = 100,
+  constraint_mixing_beta = 0.4,
+  constraint_diag = .true.
+/
+TARGET_OCCUPATION_NUMBERS
+  1 1 1 0.990
+  1 1 2 0.990
+  1 1 3 0.995
+  1 1 4 0.997
+  1 1 5 0.997
+  1 2 1 0.055
+  1 2 2 0.055
+  1 2 3 0.171
+  1 2 4 0.171
+  1 2 5 0.975
+  2 1 1 0.055
+  2 1 2 0.055
+  2 1 3 0.171
+  2 1 4 0.171
+  2 1 5 0.975
+  2 2 1 0.990
+  2 2 2 0.990
+  2 2 3 0.995
+  2 2 4 0.997
+  2 2 5 0.997
+EOF
+
+# self-consistent calculation
+cat > FeO.scf.in << EOF
+ &control
+  calculation = 'scf'
+  restart_mode='from_scratch',
+  prefix='FeO',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/'
+  verbosity = 'high'
+ /
+ &system
+  ibrav= 0, celldm(1)=8.19, nat= 4, ntyp= 3,
+  ecutwfc = 30.0, ecutrho = 240.0, nbnd=20, nspin=2,
+  starting_magnetization(1)= 0.5,
+  starting_magnetization(2)=-0.5,
+  occupations='smearing', smearing='mv', degauss=0.01,
+ /
+ &electrons
+  mixing_mode = 'plain'
+  mixing_beta = 0.3
+  conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ Fe1  1.  Fe.pz-nd-rrkjus.UPF
+ Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ O    1.  O.pz-rrkjus.UPF
+ATOMIC_POSITIONS {crystal}
+ Fe1 0.0  0.0  0.0
+ Fe2 0.5  0.5  0.5
+ O   0.25 0.25 0.25
+ O   0.75 0.75 0.75
+CELL_PARAMETERS {alat}
+ 0.50 0.50 1.00
+ 0.50 1.00 0.50
+ 1.00 0.50 0.50
+K_POINTS {automatic}
+2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Fe1-3d 4.3
+U Fe2-3d 4.3
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND -oscdft < FeO.scf.in > FeO.scf.out
+$ECHO " done"
+
+

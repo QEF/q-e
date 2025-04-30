@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,10 +20,16 @@ SUBROUTINE init_ns
    USE ions_base,    ONLY : nat, ityp
    USE lsda_mod,     ONLY : nspin, starting_magnetization
    USE ldaU,         ONLY : Hubbard_l, Hubbard_l2, Hubbard_l3, hubbard_occ, &
-                            is_hubbard, is_hubbard_back, ldim_back, backall
+                            is_hubbard, is_hubbard_back, ldim_back, backall, &
+                            Hubbard_lmax
    USE scf,          ONLY : rho
    USE uspp_param,   ONLY : upf
    USE io_global,    ONLY : stdout
+#if defined (__OSCDFT)
+   USE plugin_flags,     ONLY : use_oscdft
+   USE oscdft_base,      ONLY : oscdft_ctx
+   USE oscdft_functions, ONLY : oscdft_ns_set
+#endif
    !
    IMPLICIT NONE
    !
@@ -33,6 +39,14 @@ SUBROUTINE init_ns
    !
    rho%ns(:,:,:,:) = 0.d0
    !
+#if defined (__OSCDFT)
+   IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2) .AND. &
+      .NOT.oscdft_ctx%inp%constraint_diag) THEN
+      CALL oscdft_ns_set (oscdft_ctx, Hubbard_lmax, Hubbard_l, rho%ns, 1)
+      RETURN
+   ENDIF
+#endif
+   !
    DO na = 1, nat
       !
       nt = ityp(na)
@@ -40,6 +54,7 @@ SUBROUTINE init_ns
       IF (is_hubbard(nt)) THEN
          !
          ldim = 2*Hubbard_l(nt)+1
+         !
          nm = .TRUE.
          !
          totoc = hubbard_occ(nt,1)
@@ -76,6 +91,7 @@ SUBROUTINE init_ns
                ENDDO  
             ENDDO  
          ENDIF  
+         ! 
       ENDIF  
       !
       ! Background part
