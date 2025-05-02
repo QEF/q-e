@@ -143,7 +143,7 @@ kcw : pwlibs lrmods pp w90lib
 	if test -d KCW ; then \
 	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
 
-kcw : pw pwlibs 
+pioud : pw pwlibs 
 	if test -d PIOUD ; then \
 	( cd PIOUD ; $(MAKE) all || exit 1 ) ; fi
 

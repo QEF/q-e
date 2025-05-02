@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #For serial
-set -x
+# set -x
 
 
 # echo "Running PIOUD (serial)... $@"
