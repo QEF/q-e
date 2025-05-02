@@ -521,3 +521,14 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of non-collinear screening coefficients for MLWF
 - Calculation of non-collinear KI@Wann eigenvalues
+
+#################################################################
+# PIOUD tests
+#################################################################
+############################
+# pioud_diamond : C Diamond #
+############################
+The following features of the code are tested:
+- Single bead using "verlet" method
+- Single and multiple beads "ceriotti" method. (In the case of single bead it uses bussi method)
+- Single bead using "pioud" method
