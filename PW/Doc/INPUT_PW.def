@@ -1,4 +1,4 @@
-&input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
 
     toc {}
 
@@ -2655,9 +2655,9 @@
                 }
             }
 
-            var fnosep - type REAL {
-                default {1.D0}
-                info{
+            var fnosep -type REAL {
+                default { 1.D0 }
+                info {
                     oscillation frequency of the Nose thermorstat (in THz)
                     [note that 3 THz = 100 cm^-1], meaningful only with 
                     "ion_temperature = 'nose'" for Nose-Hoover chain one can 
@@ -2667,7 +2667,7 @@
                      
                 }
             }       
-            var nhpcl -type INTEGER{
+            var nhpcl -type INTEGER {
                 default { 1 }
                 info {
                     number of thermostats in the Nose-Hoover chain; 
@@ -2822,13 +2822,14 @@
                     used.
                     (bfgs only)
                 }
-            var tgdiis_step LOGICAL {
-                defauls {.true.} 
+            }
+
+            var tgdiis_step -type LOGICAL {
+                default {.true.} 
                 info { 
                     When G-DIIS (@ref bfgs_ndim > 1) is used for the structural relaxation this variable 
                     selects whether to use to full gdiis step or the BFGS trus radius. 
                     (bfgs only)
-                }
                 }
             }
 
