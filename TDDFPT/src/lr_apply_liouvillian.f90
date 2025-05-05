@@ -54,7 +54,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                                    & add_vuspsir_gamma, v_loc_psir,   &
                                    & s_psir_gamma, &
                                    & betasave, box_beta, box0, maxbox_beta
-  USE dfunct,               ONLY : newq
+  USE dfunct,               ONLY : newq_acc
   USE control_flags,        ONLY : tqr
   USE mp,                   ONLY : mp_sum, mp_barrier
   USE mp_global,            ONLY : intra_bgrp_comm
@@ -193,7 +193,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
               ELSE
                  ALLOCATE( psic(dfftp%nnr) )
                  psic(:) = (0.0d0,0.0d0)
-                 CALL newq(dvrs,d_deeq,.TRUE.)
+                 CALL newq_acc(dvrs,d_deeq,.TRUE.)
                  DEALLOCATE( psic )
               ENDIF
            ELSE

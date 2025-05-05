@@ -6,9 +6,121 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-MODULE dfunct_gpum
+MODULE dfunct
 !
 CONTAINS
+!
+!----------------------------------------------------------------------------
+SUBROUTINE newd( ) 
+  !--------------------------------------------------------------------------
+  !! Wrapper routine for Norm-Conserving and Ultrasoft/PAW cases
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : ityp, ntyp => nsp
+  USE uspp,                 ONLY : okvan
+  USE uspp_param,           ONLY : nh
+  IMPLICIT NONE
+  !
+  !! do not do anything if there are no projectors at all, in order to
+  !! prevent trouble with zero-size allocation / copy to gpu
+  !
+  IF ( ALL( nh(1:ntyp) == 0 ) ) RETURN
+  !
+  !$acc enter data create(ityp)
+  !$acc update device(ityp)
+  IF ( .NOT. okvan ) THEN
+     !
+     CALL newd_nous ( )
+     !
+  ELSE
+     !
+     CALL newd_us ( )
+     !
+  END IF
+  !$acc exit data delete(ityp)
+  !
+END SUBROUTINE newd
+!
+!----------------------------------------------------------------------------
+SUBROUTINE newd_nous( ) 
+  !----------------------------------------------------------------------------
+  !
+  !! no ultrasoft potentials: use bare coefficients for projectors
+  !
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE lsda_mod,             ONLY : nspin
+  USE uspp,                 ONLY : deeq, deeq_nc, dvan, dvan_so
+  USE uspp_param,           ONLY : nh
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ig, nt, ih, jh, na, is, nht
+  ! counters and auxiliary variables
+  !
+  !$acc data present (deeq, deeq_nc, dvan, dvan_so)
+  DO nt = 1, ntyp
+     !
+     nht = nh(nt)
+     if ( nht <= 0 ) CYCLE
+     !
+     IF ( lspinorb ) THEN
+        !
+        !$acc parallel loop collapse(4)
+        DO is =  1, nspin
+           DO na = 1, nat
+              DO jh = 1, nht
+                 DO ih = 1, nht
+                    IF ( ityp(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so(ih,jh,is,nt)
+                 END DO
+              END DO
+           END DO
+        END DO
+        !
+     ELSE IF ( noncolin ) THEN
+        !
+        !$acc parallel loop collapse(3)
+        DO na = 1, nat
+           DO jh = 1, nht
+              DO ih = 1, nht
+                 IF ( ityp(na) == nt ) THEN
+                    deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt)
+                    deeq_nc(ih,jh,na,2) = ( 0.D0, 0.D0 )
+                    deeq_nc(ih,jh,na,3) = ( 0.D0, 0.D0 )
+                    deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt)
+                 END IF
+              END DO
+           END DO
+        END DO
+        !
+     ELSE
+        !
+        !$acc parallel loop collapse(4)
+        DO is = 1, nspin
+           DO na = 1, nat
+              DO jh = 1, nht
+                 DO ih = 1, nht
+                    !
+                    IF ( ityp(na) == nt ) deeq(ih,jh,na,is) = dvan(ih,jh,nt)
+                    !
+                 END DO
+              END DO
+           END DO
+        END DO
+        !
+     END IF
+     !
+     ! ... sync with CPU (not sure this is needed)
+     if (noncolin) then
+        !$acc update self(deeq_nc)
+     else
+        !$acc update self(deeq)
+     endif
+     !
+  END DO
+  !$acc end data
+  !
+END SUBROUTINE newd_nous
 !
 !-------------------------------------------------------------------------
 SUBROUTINE newq_acc(vr,deeq,skip_vltot)
@@ -189,7 +301,7 @@ SUBROUTINE newq_acc(vr,deeq,skip_vltot)
 END SUBROUTINE newq_acc
   !
 !----------------------------------------------------------------------------
-SUBROUTINE newd_acc( ) 
+SUBROUTINE newd_us( ) 
   !----------------------------------------------------------------------------
   !! This routine computes the integral of the effective potential with
   !! the Q function and adds it to the bare ionic D term which is used
@@ -211,82 +323,6 @@ SUBROUTINE newd_acc( )
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht
   ! counters and auxiliary variables
-  !
-  IF ( ALL( nh(1:ntyp) == 0 ) ) RETURN
-  !$acc enter data create(ityp)
-  !$acc update device(ityp)
-  IF ( .NOT. okvan ) THEN
-     !
-     ! ... no ultrasoft potentials: use bare coefficients for projectors
-     !
-     !$acc data present (deeq, deeq_nc, dvan, dvan_so)
-     DO nt = 1, ntyp
-        !
-        nht = nh(nt)
-        !
-        IF ( lspinorb ) THEN
-           !
-           !$acc parallel loop collapse(4)
-           DO is =  1, nspin
-              DO na = 1, nat
-                 DO jh = 1, nht
-                    DO ih = 1, nht
-                       IF ( ityp(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so(ih,jh,is,nt)
-                    END DO
-                 END DO
-              END DO
-           END DO
-           !
-        ELSE IF ( noncolin ) THEN
-           !
-           !$acc parallel loop collapse(3)
-           DO na = 1, nat
-              DO jh = 1, nht
-                 DO ih = 1, nht
-                    IF ( ityp(na) == nt ) THEN
-                       deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt)
-                       deeq_nc(ih,jh,na,2) = ( 0.D0, 0.D0 )
-                       deeq_nc(ih,jh,na,3) = ( 0.D0, 0.D0 )
-                       deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt)
-                    END IF
-                 END DO
-              END DO
-           END DO
-           !
-        ELSE
-           !
-           if ( nht > 0 ) THEN
-              !$acc parallel loop collapse(4)
-              DO is = 1, nspin
-                 DO na = 1, nat
-                    DO jh = 1, nht
-                       DO ih = 1, nht
-                          !
-                          IF ( ityp(na) == nt ) deeq(ih,jh,na,is) = dvan(ih,jh,nt)
-                          !
-                       END DO
-                    END DO
-                 END DO
-              END DO
-              !
-           end if
-           !
-        END IF
-        !
-     END DO
-     !
-     ! ... sync with CPU (not sure this is needed)
-     if (noncolin) then
-        !$acc update self(deeq_nc)
-     else
-        !$acc update self(deeq)
-     endif
-     !$acc end data
-     !
-     !$acc exit data delete(ityp)
-     RETURN
-     !
-  END IF
   !
   CALL start_clock( 'newd' )
   !
@@ -318,7 +354,7 @@ SUBROUTINE newd_acc( )
      ELSE if_noncolin
         !
         nht = nh(nt)
-        !$acc parallel loop collapse(4)
+        !$acc parallel loop collapse(4) present(ityp,dvan,deeq)
         DO is = 1, nspin
            DO na = 1, nat
               DO ih = 1, nht
@@ -348,7 +384,6 @@ SUBROUTINE newd_acc( )
      !$acc update self(deeq)
   endif
   !
-  !$acc exit data delete(ityp)
   RETURN
   !
   CONTAINS
@@ -510,6 +545,6 @@ SUBROUTINE newd_acc( )
     RETURN
     END SUBROUTINE newd_nc_acc
     !
-END SUBROUTINE newd_acc
+  END SUBROUTINE newd_us
 
-END MODULE dfunct_gpum
+END MODULE dfunct
