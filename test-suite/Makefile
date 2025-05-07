@@ -52,9 +52,6 @@ run-tests-pw : prolog pseudo
 run-tests-ph : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
-run-tests-pioud : prolog pseudo
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pioud_all
-
 run-tests-epw : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
@@ -81,6 +78,9 @@ run-tests-all_currents : prolog pseudo
 
 run-tests-oscdft : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=oscdft_all
+
+run-tests-pioud : prolog pseudo
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pioud_all
 
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
