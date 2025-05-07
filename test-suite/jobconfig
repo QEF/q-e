@@ -1,11 +1,6 @@
 # Note: unless a specific oreder of execution is desired,
 # there is no need to have for each set of tests a field below
 
-[pioud/]
-program = PIOUD
-inputs_args = ('diamond_ceriotti.in',''),('diamond_pimd.in',''), ('diamond_verlet.in','')
-
-
 [pw_atom/]
 program = PW
 inputs_args = ('atom.in', ''), ('atom-lsda.in',''), ('atom-occ1.in',''), ('atom-occ2.in',''), ('atom-pbe.in',''), ('atom-sigmapbe.in', '')
@@ -67,6 +62,7 @@ program = PW
 inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-cg-gamma.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in','')
 
 [pw_md/]
+program = PW
 inputs_args = ('md.in','1'), ('md_restart_verlet.in','22'), ('md-wfc_extrap1.in','1'), ('md-wfc_extrap2.in','2'), ('md-pot_extrap1.in','1')  ,('md-pot_extrap2.in','2')
 
 [pw_workflow_vc-relax_dos/]
@@ -317,8 +313,10 @@ inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
 program = IMAGE
 inputs_args = ('si.scf.in', '1'), ('si.ph.in', '2')
 
-[pioud_*/]
+[pioud/]
 program = PIOUD
+inputs_args = ('diamond_ceriotti.in',''),('diamond_pimd.in',''), ('diamond_verlet.in','')
+
 
 [pw_*/]
 program = PW
@@ -353,6 +351,9 @@ program = QEHeat_h2o_mol_t
 [image_*/]
 program = IMAGE
 
+[pioud_*/]
+program = PIOUD
+
 [oscdft_pw]
 program = OSCDFT
 inputs_args = ('nooscdft.in', '1'), ('view.in', '2 view.oscdft.in'), ('scf.in', '2 scf.oscdft.in'), ('relax.in', '2 scf.oscdft.in'), ('k.in', '2 k.oscdft.in'), ('normcons.in', '2 normcons.oscdft.in')
@@ -363,7 +364,6 @@ inputs_args = ('view.in', '3 view.oscdft.in pw.in'), ('normalize.in', '3 normali
 
 
 [categories]
-pioud_all = pioud*??
 pw_all = pw_*??
 cp_all = cp_*??
 ph_all = ph_*??
@@ -378,3 +378,4 @@ all_currents_all = QEHeat_*
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*?? all_currents_*??
 kcw_all = kcw_*??
 oscdft_all = oscdft_pw oscdft_pp
+pioud_all = pioud*??

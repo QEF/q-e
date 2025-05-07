@@ -1,5 +1,9 @@
 
-     Program PIOUD v.7.4.1 starts on 23Apr2025 at 14:52:19 
+     Program PIOUD v.7.4.1 starts on  3May2025 at 17:16:28 
+        Git branch: develop
+        Last git commit: b8e2e7d48b99d6f83f9d5bf19c3b1fff01715a13
+        Last git commit date: Fri May 2 09:17:12 2025 +0200
+        Last git commit subject: added pioud section in the makefile
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,7 +17,7 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     1739 MiB available memory on the printing compute node when the environment starts
+     8313 MiB available memory on the printing compute node when the environment starts
  
 
      parsing_file_name: diamond_verlet.in
@@ -28,6 +32,7 @@ This code can be cited as follows:
 Mouhat, F., Sorella, S., Vuilleumier, R., Saitta, A. M., & Casula, M. JCTC, 13(6), 2400-2417. (2017).
  
      Reading input from pw_1.in
+     file C.UPF: wavefunction(s)  3d renormalized
  iat           1 natMD           2
  iat           1 natMD           2
  iat           2 natMD           2
@@ -35,20 +40,22 @@ Mouhat, F., Sorella, S., Vuilleumier, R., Saitta, A. M., & Casula, M. JCTC, 13(6
  
  -------- computes initial forces and energy --------------
      tcpu =      0.0    self-consistency for image   1
+     Message from routine setup:
+     no reason to have ecutrho>4*ecutwfc
  ----------------------------------------------------------
  
  
  **********************************************************
- initial potential energy:  -11.3766660904009     
+ initial potential energy:  -11.3147031448515     
  initial kinetic energy:  2.850130414367414E-003
- initial potential energy per atom =      -5.688333045    
+ initial potential energy per atom =      -5.657351572    
  quantities after initialization
 
 
 1)block   2)nmove   3)H   4)H_Nosé   5)E_pot   6)E_kin   7)Temp(Ha)   8)Temp(K)
 
 
- 0 0  -11.37382      -11.37382      -11.37667      0.2850130E-02  0.9500435E-03   300.0000    
+ 0 0  -11.31185      -11.31185      -11.31470      0.2850130E-02  0.9500435E-03   300.0000    
  
  
  ***********************************************************
@@ -56,48 +63,56 @@ Mouhat, F., Sorella, S., Vuilleumier, R., Saitta, A. M., & Casula, M. JCTC, 13(6
 
      ------------------------------ iteration    1 ------------------------------
 
-     tcpu =      0.7    self-consistency for image   1
+     tcpu =      0.5    self-consistency for image   1
+     Message from routine setup:
+     no reason to have ecutrho>4*ecutwfc
      image        energy (eV)
 
-         1       -309.5748551
+         1       -307.8887575
  
-     1     1  -11.37382       0.000000      -11.37667      0.2850129E-02  0.9500428E-03   299.9998    
+     1     1  -11.31185       0.000000      -11.31470      0.2850129E-02  0.9500429E-03   299.9998    
  **********************************************************
 
      ------------------------------ iteration    2 ------------------------------
 
-     tcpu =      1.2    self-consistency for image   1
+     tcpu =      1.0    self-consistency for image   1
+     Message from routine setup:
+     no reason to have ecutrho>4*ecutwfc
      image        energy (eV)
 
-         1       -309.5748550
+         1       -307.8887573
  
-     1     2  -11.37382       0.000000      -11.37667      0.2850123E-02  0.9500410E-03   299.9992    
+     1     2  -11.31185       0.000000      -11.31470      0.2850123E-02  0.9500409E-03   299.9992    
  **********************************************************
 
      ------------------------------ iteration    3 ------------------------------
 
-     tcpu =      1.8    self-consistency for image   1
+     tcpu =      1.4    self-consistency for image   1
+     Message from routine setup:
+     no reason to have ecutrho>4*ecutwfc
      image        energy (eV)
 
-         1       -309.5748547
+         1       -307.8887571
  
-     2     1  -11.37382       0.000000      -11.37667      0.2850114E-02  0.9500378E-03   299.9982    
+     2     1  -11.31185       0.000000      -11.31470      0.2850113E-02  0.9500377E-03   299.9982    
  **********************************************************
 
      ------------------------------ iteration    4 ------------------------------
 
-     tcpu =      2.3    self-consistency for image   1
+     tcpu =      1.9    self-consistency for image   1
+     Message from routine setup:
+     no reason to have ecutrho>4*ecutwfc
      image        energy (eV)
 
-         1       -309.5748544
+         1       -307.8887567
  
-     2     2  -11.37382       0.000000      -11.37667      0.2850100E-02  0.9500335E-03   299.9968    
+     2     2  -11.31185       0.000000      -11.31470      0.2850100E-02  0.9500332E-03   299.9968    
  **********************************************************
  
-     PIOUD        :      2.69s CPU      2.87s WALL
+     PIOUD        :      2.27s CPU      2.36s WALL
 
  
-   This run was terminated on:  14:52:21  23Apr2025            
+   This run was terminated on:  17:16:30   3May2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
