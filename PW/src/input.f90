@@ -2199,7 +2199,6 @@ SUBROUTINE set_wmass ( )
   ENDIF
   IF ( wmass <= 0.D0 ) CALL errore( 'set_wmass', &
             & 'vcsmd: a positive value for cell mass is required', 1 )
-  print *, 'check tnoseh fnoseh', tnoseh, fnoseh
   IF (tnoseh) CALL cell_nose_init(temph, fnoseh)
   !
 END SUBROUTINE set_wmass
