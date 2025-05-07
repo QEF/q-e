@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-MODULE dfunct
+MODULE dfunct_old
 !
 CONTAINS
 !
@@ -173,7 +173,7 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
 END SUBROUTINE newq
   !
 !----------------------------------------------------------------------------
-SUBROUTINE newd( )
+SUBROUTINE newd_old( )
   !----------------------------------------------------------------------------
   !! This routine computes the integral of the effective potential with
   !! the Q function and adds it to the bare ionic D term which is used
@@ -443,7 +443,7 @@ SUBROUTINE newd( )
       !
     END SUBROUTINE newd_nc
     !
-END SUBROUTINE newd
+END SUBROUTINE newd_old
 !
 !
-END MODULE dfunct
+END MODULE dfunct_old
