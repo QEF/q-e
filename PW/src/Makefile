@@ -32,7 +32,6 @@ atomic_wfc.o \
 atomic_wfc_mod.o \
 average_pp.o \
 acfdt_in_pw.o \
-newd.o \
 newd_acc.o \
 beef.o \
 bp_mod.o \
