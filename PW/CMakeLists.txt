@@ -21,7 +21,6 @@ set(src_pw
    src/atomic_wfc_mod.f90 
    src/average_pp.f90 
    src/acfdt_in_pw.f90 
-   src/newd.f90 
    src/newd_acc.f90 
    src/beef.f90 
    src/bp_mod.f90 
