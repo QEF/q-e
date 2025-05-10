@@ -1,0 +1,74 @@
+================================
+Introduction:
+================================
+In this example, we compute the total energy of the low-spin 
+transition-metal compound LiCoO2 using orbital-resolved DFT+U.
+While most previous implementations of the DFT+U method treat 
+nl-subshells (e.g., the d-shell of Co) as a single Hubbard manifold,
+the orbital-resolved method allows to assign on-site Hubbard U
+parameters on the level of (spin)-orbitals.
+This is particularly useful for shells whose (spin-)orbitals are strongly
+degenerate in terms of energy and where the "shell-averaged" approximation
+of current implementations collapses. See Macke et al., 
+arXiv:2312.13580 (2023) for further details.
+
+In the present example, the Co atoms are octahedrally coordinated
+by O atoms (O_h point group symmetry), which entails the formation of two
+distinct manifolds in the d-shell of Co: the doubly degenerate e_g states
+on the one hand and the triply degenerate t_2g ones on the other hand.
+Formally, the low-lying t_2g manifold of Co is fully occupied and -- given 
+the large number of localized electrons -- can be expected to suffer from
+electron self-interaction. Therefore, this manifold should benefit from 
+Hubbard U corrections.
+In contrast, the e_g manifold is high in energy and formally unoccupied.
+However, it participates in the formation of strong sigma-bonds with 
+the neighboring O atoms. Since this interaction is not at all "on-site"
+but rather "inter-site" (see example13), we should
+not treat the e_g manifold with Hubbard U corrections.
+
+In the following, we explain how this can be done using a "two-step"
+procedure whose first step is to investigate the order of the eigenstates,
+which are then targeted by orbital-resolved U corrections in the second run.
+
+================================
+Explanation of the input:
+================================
+The first run is just a plain PBE calculation for LiCoO2 in the primitive
+unit cell except that we assign a tiny value of the conventional Hubbard U
+to Co in order to force the code to write out the occupation matrices for
+the Co-3d shell (but without affecting the PBE result).
+
+Looking at the occupation eigenvalues printed in the output we can clearly
+observe the aforementioned degeneracy in the eigenvalues of the Co-3d occupation matrix.
+While the first two eigenvalues are ~0.42 (this is the e_g manifold), the last
+three eigenvalues are >0.95 and must correspond to the occupied t_2g manifold.
+
+Based on this observation, we can now set up the second input file:
+ - We change the value of the Hubbard parameter to the finite value of 5.0eV.
+   (NOTE: this is an example value, in practice Hubbard parameters should be
+    calculated from first principles, e.g., using LR-cDFT)
+ - In the same line, we add the indices "3 4 5" behind the Hubbard U parameter 
+   to tell the code that we wish to treat ONLY the 3rd, 4th and 5th eigenstate
+   of the Co-3d manifold (== the t_2g orbitals) with Hubbard U corrections
+ - Finally, we change the value of the keyword "startingpot" to 'file', to
+   ensure that orbital-resolved DFT+U will target the correct eigenstates
+      - N.B.: Restarting from a converged charge density is not mandatory, but
+	      strongly recommended unless you already know the order of the
+              eigenstates after a few self-consistent iterations (see example 16).
+
+================================
+Analysis of the output:
+================================
+Focussing on the results, we can see that the orbital-resolved PBE+U solution
+is slightly higher in energy than plain PBE, as expected. However, the 
+difference between the two is ~0.02Ry (>0.3eV), which is far smaller than 
+the difference between the PBE solution and the PBE+U+V solution (example13), 
+despite the use of the same Hubbard U parameter!
+
+This shows that the orbital-resolved approach can be useful to
+avoid applying spurious (over-)corrections to delocalized states such as e_g.
+Moreover, looking at the energy of the highest occupied molecular orbital (HOMO)
+and at that of the lowest unoccupied one (LUMO), we can see that the U correction
+strongly affects the former, lowering it by about 1.55eV, while having 
+no impact on the latter. Therefore, the band gap expands due to the 
+Hubbard U-induced downshift of the HOMO.

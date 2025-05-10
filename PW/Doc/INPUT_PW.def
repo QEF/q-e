@@ -108,11 +108,13 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
         
         [ @b HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
           if (DFT+U)
-              U  label(1)-manifold(1) u_val(1)
-            [ J0 label(1)-manifold(1) j0_val(1) ]
+              U     label(1)-manifold(1) u_val(1)     
+            [ J0    label(1)-manifold(1) j0_val(1) ]
+            [ ALPHA label(1)-manifold(1) alpha_val(1) ]
               .....
-              U  label(n)-manifold(n) u_val(n)
-            [ J0 label(n)-manifold(n) j0_val(n) ]            
+              U     label(n)-manifold(n) u_val(n)
+            [ J0    label(n)-manifold(n) j0_val(n) ]
+            [ ALPHA label(n)-manifold(n) alpha_val(n) ]      
           if (DFT+U+J)
               paramType(1) label(1)-manifold(1) paramValue(1)
               .....
@@ -125,12 +127,18 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
               U  label(N)-manifold(N) u_val(N)
             [ J0 label(N)-manifold(N) j0_val(N) ]
               V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
-        ]
+          if (DFT+U (orbital-resolved))
+              U     label(1)-shell(1) u_val(1)      eigenstate(1) [... eigenstate(4l+2)] 
+            [ ALPHA label(1)-shell(1) alpha_val(1)  eigenstate(1) [... eigenstate(4l+2)]  ]
+              .....
+              U     label(n)-shell(n) u_val(n)      eigenstate(n) [... eigenstate(4l+2)]  
+            [ ALPHA label(n)-shell(n) alpha_val(n)  eigenstate(n) [... eigenstate(4l+2)]  ]
         All Hubbard parameters must be specified in eV.
         manifold  = 3d, 2p, 4f...
+        shell  = 3d, 2p, 4f...
         paramType = U, J, B, E2, or E3
-        Check Doc/Hubbard_input.pdf for more details. 
-
+        eigenstate = 1, 2, 3, ..., 10 (d-shell)
+        Check Doc/Hubbard_input.pdf for more details. ]
     }
 
     #
@@ -1348,20 +1356,6 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                 three Hubbard manifolds per Hubbard atom. However, if you want
                 to specify three manifolds then the second and the third manifolds
                 will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
-            }
-        }
-        dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
-            default { 0.D0 for all species }
-            info {
-                Hubbard_alpha(i) is the perturbation (on atom i, in eV)
-                used to compute U (and V) with the linear-response method of
-                Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for DFT+U or DFT+U+V).
-                
-                Note: Hubbard U and V can be computed using the HP code
-                which is based on density-functional perturbation theory,
-                and it gives exactly the same result as the method of 
-                Cococcioni and de Gironcoli.
             }
         }
         dimension Hubbard_beta -start 1 -end ntyp -type REAL { 
@@ -4431,7 +4425,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
 
                 info {
                     Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
-                    U, J0, J, B, E2, E3, V in the HUBBARD card.
+                    U, ALPHA, J0, J, B, E2, E3, V in the HUBBARD card.
                 }
 
             }
@@ -4463,6 +4457,35 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                                   U Mn-3d 5.0
                                   U Ni-3d 6.0
                             }                                                                
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword ALPHA
+                                var label(1)-manifold(1)
+                                var alpha_val(1)
+                                info {
+                                    @b Remark: specs of @b ALPHA parameters are optional
+                                    @b ALPHA is the perturbation used to compute U (and V) with the linear-response method of
+                                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+
+                                    @b Syntax:
+                                      @b ALPHA @i {label-manifold alpha_val}
+                                        
+                                    @b Where:
+                                    @b ALPHA     = string constant "ALPHA"; indicates that specs for the @b ALPHA parameter will be given
+                                    @i label     = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i manifold  = specs of the manifold (e.g., 3d, 2p...)
+                                    @i alpha_val = value of the @i ALPHA parameter (in eV)
+                                    
+                                    @b Example:
+                                      HUBBARD (ortho-atomic)
+                                      U     Ni-3d 5.00
+                                      ALPHA Ni-3d 0.05
+                                      U     Mn-3d 5.00
+                                }
+                            }                                
                         }
                     }
                     line {
@@ -4503,6 +4526,15 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                             keyword U
                             var label(n)-manifold(n)
                             var u_val(n)
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword ALPHA
+                                var label(n)-manifold(n)
+                                var alpha_val(n)
+                            }
                         }
                     }
                     line {
@@ -4679,7 +4711,128 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                     }
                 }
             }
+            elsewhen -test "DFT+U (orbital-resolved)" {
+                syntax -flag $Hflags {
+
+                    # atom-1 specs
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                            keyword U
+                            var label(1)-shell(1)
+                            var u_val(1)
+                            var eigenstate(1,m)
+
+                            info {
+                                @b Syntax of the line:
+                                @b U @i {label-shell u_val eigenstate(1) [... eigenstate(m)]}
+
+                                @b Where:
+                                @b U             = string constant "U"; indicates the specs for a @b U parameter will be given
+                                @i label         = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i shell         = specs of the nl-subshell (e.g., 3d, 2p...)
+                                @i u_val         = value of the @i U parameter (in eV)
+                                @i eigenstate(m) = index/indices of the m-th eigenstate(s) belonging to the @i shell
+                                                   that will be targeted by @b U corrections (see below)
+                            }
+                            info {
+                                @b Syntax of the @i eigenstate parameter:
+
+                                @b CASE ( @ref nspin == 1 ):
+                                    Provide one up to 2l+1 (e.g., 5 for a d-shell) eigenstate indices varying
+                                    between 1 and 2l+1. 
+                                    These values correspond to the m-th eigenstate(s) of the @i shell occupancy 
+                                    matrix, to be targeted by Hubbard U corrections (see PW/examples/example15).
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U Mn-3d 4.70  3 4 5
+                                        U Ni-3d 3.50  1 2 
+
+                                @b CASE ( @ref nspin == 2 ):
+                                    Provide one up to 2*(2l+1) (e.g., 10 for a d-shell) eigenstate indices varying
+                                    between 1 and 2*(2l+1). These values correspond to the m-th eigenstate(s) of
+                                    the @i shell collinear occupancy matrix, to be targeted by Hubbard U corrections.
+                                    Indices from 1 to 2l+1 target spin-up eigenstates, while those from (2l+2)
+                                    to 2*(2l+1) target the  spin-down ones (see PW/examples/example16).
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U Mn-3d 4.70  3 4 5 8 9 10
+                                        U Ni-3d 3.50  1 2 6 7
+
+                                @b CASE ( @ref noncolin = .true. ):
+                                    Provide one up to 2*(2l+1) (e.g., 10 for a d-shell) eigenstate indices varying
+                                    between 1 and 2*(2l+1). These values correspond to the m-th eigenstate(s) of
+                                    the noncollinear occupancy matrix of the @i shell, to be targeted by Hubbard U
+                                    corrections.
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U Mn-3d 4.70  3 4 5 8 9 10
+                                        U Ni-3d 3.50  1 2 6 7  
+                            }                                   
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                                keyword ALPHA
+                                var label(1)-shell(1)
+                                var alpha_val(1)
+                                var eigenstate(1,m)
+                                info {
+                                    @b Remark: specs of (orbital-resolved) @b ALPHA parameters are optional
+                                    @b ALPHA is the perturbation used to compute U with the orbital-resolved 
+                                    linear-response method of Macke et al., arXiv:2312.13580 (2023), based on
+                                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+
+                                    @b Syntax of the line:
+                                    @b ALPHA @i {label-shell alpha_val eigenstate(1) [... eigenstate(m)]}
+                                        
+                                    @b Where:
+                                    @b ALPHA         = string constant "ALPHA"; indicates that specs for an @b ALPHA parameter will be given
+                                    @i label         = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i shell         = specs of the nl-subshell (e.g., 3d, 2p...)
+                                    @i alpha_val     = value of the @i ALPHA parameter (in eV)
+                                    @i eigenstate(m) = index/indices of the m-th eigenstate(s) belonging to the @i shell
+                                                       that will be targeted by @b ALPHA (same syntax as for orbital-resolved
+                                                       Hubbard U)
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U     Mn-3d 4.70 3 4 5
+                                        U     Ni-3d 3.50 1 2
+                                        ALPHA Ni-3d 0.05 1 2
+                                }         
+                            }
+                        }
+                    }
+                    # print ". . ." on a separate line
+                        
+                    line { etc }
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                            keyword U
+                            var label(n)-shell(n)
+                            var u_val(n)
+                            var eigenstate(n,m)
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                                keyword ALPHA
+                                var label(n)-shell(n)
+                                var alpha_val(n)
+                                var eigenstate(n,m)
+                            }                                
+                        }
+                    }                        
+                }
+            }
         }
     }
+    }
    ###
-}

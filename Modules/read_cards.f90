@@ -2202,23 +2202,29 @@ CONTAINS
       !
       ! Internal variables
       INTEGER :: i, nt, hu_nt, hu_nt2, nfield, na, nb, nc,&
-                 nx, ny, nz
-      LOGICAL :: is_u, is_j0, is_v, is_j, is_b, is_e2, is_e3
+                 nx, ny, nz, ldim, neigvals, eigval_index,&
+                 io_stat, field, j, is, m
+      REAL(DP):: hu_um_temp, hu_alpha_m_temp
+      LOGICAL :: is_u, is_um, is_j0, is_v, is_j, is_b, is_e2, is_e3, is_alpha, is_alpha_m
       CHARACTER(LEN=20)  :: hu_param, field_str, hu_val, &
                             hu_at, hu_wfc, hu_at2, hu_wfc2, string, str, &
-                            temp, hu_wfc_, hu_wfc2_
-      INTEGER, ALLOCATABLE :: counter_u(:), counter_j0(:), counter_j(:), counter_b(:), &
-                              counter_e2(:), counter_e3(:), counter_v(:,:), ityp(:)
+                            temp, hu_wfc_, hu_wfc2_, eigval_str
+      INTEGER, ALLOCATABLE :: counter_u(:), counter_j0(:), counter_j(:), counter_b(:), counter_alpha(:), &
+                              counter_e2(:), counter_e3(:), counter_v(:,:), ityp(:), target_indices(:)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       ! Output variables
-      REAL(DP) :: hu_u,  &   ! Hubbard U (on-site)
+      REAL(DP) :: hu_u,  &   ! Hubbard U (on-site)  
                   hu_j0, &   ! Hund's J0 (on-site)
                   hu_j,  &   ! Hund's J  (on-site)
                   hu_b,  &   ! Hund's B  (on-site) - only for d shell
                   hu_e2, &   ! Hund's E2 (on-site) - only for f shell
                   hu_e3, &   ! Hund's E3 (on-site) - only for f shell
-                  hu_v       ! Hubbard V (inter-site)
+                  hu_v,  &   ! Hubbard V (inter-site)
+                  hu_alpha   ! Hubbard alpha (on-site)
+      REAL(DP), ALLOCATABLE :: hu_um(:,:), &    ! Hubbard U (orbital-resolved, on-site)
+                               hu_alpha_m(:,:)  ! Hubbard alpha (orbital-resolved, on-site)
+      !
       INTEGER  :: hu_l,   &  ! orbital quantum number
                   hu_n,   &  ! principal quantum number
                   hu_l2,  &  ! orbital quantum number
@@ -2280,6 +2286,8 @@ CONTAINS
       counter_e2(:) = 0
       ALLOCATE(counter_e3(ntyp))
       counter_e3(:) = 0
+      ALLOCATE(counter_alpha(ntyp))
+      counter_alpha(:) = 0
       !
       ! Read Hubbard parameters, principal and orbital quantum numbers
       !
@@ -2298,6 +2306,7 @@ CONTAINS
          hu_nt=-1; hu_nt2=-1
          hu_u=0.0; hu_j0=0.0; hu_j=0.0; hu_b=0.0
          hu_e2=0.0; hu_e3=0.0; hu_v=0.0
+         hu_alpha_m_temp=0.0; hu_um_temp=0.0
          hu_wfc=''; hu_wfc_=''; hu_wfc2=''; hu_wfc2_=''
          !
          ! Read the i-th input line
@@ -2325,7 +2334,7 @@ CONTAINS
          ! Column 1: Read the Hubbard parameter name (e.g. U, J0, J, V)
          CALL get_field(1, hu_param, input_line)
          hu_param = TRIM(hu_param)
-         IF ( LEN_TRIM(hu_param) >= 5 ) THEN
+         IF ( LEN_TRIM(hu_param) > 5 ) THEN
             ! This is the case when most likely we reached the end of the HUBBARD card 
             ! and started reading the next card in the input. So we need to exit smoothly.
             ! This case will not happen if the HUBBARD card is the last in the input file.
@@ -2334,25 +2343,36 @@ CONTAINS
             GO TO 11
          ENDIF
          ! Check whether the length of the Hubbard parameter is within the allowed ranges
-         IF ( LEN_TRIM(hu_param) < 1 .or. LEN_TRIM(hu_param) > 2) &
+         IF ( LEN_TRIM(hu_param) < 1 .or. LEN_TRIM(hu_param) > 5) &
            CALL errore( 'card_hubbard', &
                       'Hubbard parameter name missing or too long', i )
          !
-         is_u  = ( hu_param == 'u' .OR. hu_param == 'U' )
-         is_j0 = ( hu_param == 'j0'.OR. hu_param == 'J0')
-         is_j  = ( hu_param == 'j' .OR. hu_param == 'J' )
-         is_b  = ( hu_param == 'b' .OR. hu_param == 'B' ) ! for d shell
-         is_e2 = ( hu_param == 'e2'.OR. hu_param == 'E2') ! for f shell
-         is_e3 = ( hu_param == 'e3'.OR. hu_param == 'E3') ! for f shell
-         is_v  = ( hu_param == 'v' .OR. hu_param == 'V' )
+         is_u  =     ( hu_param == 'u' .OR. hu_param == 'U' )
+         is_um =     ( is_u            .AND. nfield   >  3  ) ! error handling below
+         is_j0 =     ( hu_param == 'j0'.OR. hu_param == 'J0')
+         is_j  =     ( hu_param == 'j' .OR. hu_param == 'J' )
+         is_b  =     ( hu_param == 'b' .OR. hu_param == 'B' ) ! for d shell
+         is_e2 =     ( hu_param == 'e2'.OR. hu_param == 'E2') ! for f shell
+         is_e3 =     ( hu_param == 'e3'.OR. hu_param == 'E3') ! for f shell
+         is_v  =     ( hu_param == 'v' .OR. hu_param == 'V' )
+         is_alpha =  ( hu_param == 'alpha'.OR. &
+                hu_param == 'ALPHA' .OR. hu_param == 'Alpha')
+         is_alpha_m= ( is_alpha        .AND. nfield   >  3  )
          !
-         IF (.NOT.is_u .AND. .NOT.is_j0 .AND. .NOT.is_j .AND. &
-             .NOT.is_b .AND. .NOT.is_e2 .AND. .NOT.is_e3 .AND. .NOT.is_v) THEN
+         IF (is_um .OR. is_alpha_m) THEN
+            is_u  = .FALSE.    ! orbital-resolved U switches off standard U (more checks below)
+            is_alpha = .FALSE. ! same for orbital-resolved Hubbard_alpha vs. standard alpha
+         ENDIF
+         !
+         IF (.NOT.is_u .AND. .NOT.is_um .AND. .NOT.is_j0 .AND. .NOT.is_j .AND. &
+             .NOT.is_b .AND. .NOT.is_e2 .AND. .NOT.is_e3 .AND. .NOT.is_v .AND. &
+             .NOT.is_alpha .AND. .NOT.is_alpha_m) THEN
             WRITE(stdout,'(/5x,"Problem in the HUBBARD card on line ",i5)') i
             CALL errore('card_hubbard', 'Unknown label of the Hubbard parameter', i)
          ENDIF
          !
-         IF ( is_u .OR. is_j0 .OR. is_j .OR. is_b .OR. is_e2 .OR. is_e3) THEN
+         IF ( is_u .OR. is_um .OR. is_j0 .OR. is_j .OR. is_b .OR. is_e2 .OR. &
+              is_e3 .OR. is_alpha .OR. is_alpha_m) THEN
             !     
             ! Column 2: Read the atomic type name and the Hubbard manifold (e.g. Fe-3d)
             CALL get_field(2, field_str, input_line)
@@ -2400,6 +2420,14 @@ CONTAINS
                counter_e3(hu_nt) = counter_e3(hu_nt) + 1
                IF (counter_e3(hu_nt) > 1) CALL errore( 'card_hubbard', &
                        'More than 1 entry for E3 of the same atomic type is not allowed', i )
+            ELSEIF (is_alpha) THEN
+               counter_alpha(hu_nt) = counter_alpha(hu_nt) + 1
+               IF (counter_alpha(hu_nt) > 1) CALL errore( 'card_hubbard', &
+                       'More than 1 entry for ALPHA of the same atomic type is not allowed', i )
+            ELSEIF (is_alpha_m) THEN
+               counter_alpha(hu_nt) = counter_alpha(hu_nt) + 1
+               IF (counter_alpha(hu_nt) > 1) CALL errore( 'card_hubbard', &
+                       'More than 1 entry for orbital-resolved ALPHA of the same atomic type is not allowed', i )
             ENDIF
             !
             ! Read the Hubbard manifold(s)
@@ -2407,7 +2435,8 @@ CONTAINS
             ! allowed for the first (main) Hubbard channel.
             IF ( (is_u  .AND. counter_u(hu_nt)==1)  .OR. &
                  (is_j0 .AND. counter_j0(hu_nt)==1) .OR. &
-                  is_j .OR. is_b .OR. is_e2 .OR. is_e3 ) THEN
+                  is_j .OR. is_um .OR. is_b .OR. is_e2 .OR. &
+                  is_e3 .OR. is_alpha .OR. is_alpha_m ) THEN
                ! e.g. Fe-3d
                hu_wfc = between( field_str, '-', '' )
             ELSEIF ((is_u  .AND. counter_u(hu_nt)==2) .OR. &
@@ -2448,6 +2477,23 @@ CONTAINS
                IF ( hu_l_ == -1 ) CALL errore( 'card_hubbard', 'Hubbard l is wrong', i)
             ENDIF
             !
+            ldim =  2*hu_l+1 ! Compute number of magnetic quantum orbitals
+            !
+            ! Set up array to store orbital-resolved DFT+U parameters
+            IF (is_um .OR. is_alpha_m) THEN
+               IF (noncolin) THEN
+                  ! only need one dimension for noncollinear case
+                  ! retain the extra dimension of spin for compatibility
+                  ALLOCATE(hu_um(2*ldim,1))
+                  ALLOCATE(hu_alpha_m(2*ldim,1)) 
+               ELSE
+                  ALLOCATE(hu_um(ldim,nspin))
+                  ALLOCATE(hu_alpha_m(ldim,nspin))
+               ENDIF
+               hu_alpha_m(:,:) = 0.0
+               hu_um(:,:) = 0.0
+            ENDIF
+            !
             ! Sanity check
             IF (is_b .AND. hu_l/=2) THEN
                ! allowed only for d electrons
@@ -2469,22 +2515,28 @@ CONTAINS
             ! Assign the principal and orbital quantum numbers
             IF ( (is_u  .AND. counter_u(hu_nt)==1)  .OR. &
                  (is_j0 .AND. counter_j0(hu_nt)==1) .OR. &
-                  is_j .OR. is_b .OR. is_e2 .OR. is_e3 ) THEN
+                  is_j .OR. is_um .OR. is_b .OR. is_e2 .OR. &
+                  is_e3 .OR. is_alpha .OR. is_alpha_m ) THEN
                ! First Hubbard manifold
                IF (Hubbard_n(hu_nt)<0 .AND. Hubbard_l(hu_nt)<0) THEN
                   ! initialization
                   Hubbard_n(hu_nt) = hu_n
                   Hubbard_l(hu_nt) = hu_l
                ELSE
-                  ! sanity check (needed for DFT+U+V)
+                  ! sanity checks
                   IF (hu_n/=Hubbard_n(hu_nt) .OR. hu_l/=Hubbard_l(hu_nt)) THEN
                      WRITE(stdout,'(/5x,"Problem in the HUBBARD card on line ",i5)') i
                      IF (is_j0) CALL errore( 'card_hubbard', &
                           & 'Mismatch in the quantum numbers for U and J0 for the same atomic type', i )
                      IF (is_j)  WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund J")')
+                     IF (is_um) CALL errore( 'card_hubbard', 'Currently, orbital-resolved Hubbard U params &
+                           &can only be assigned to the orbitals of one shell per atom', i)
                      IF (is_b)  WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund B")')
                      IF (is_e2) WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund E2")')
                      IF (is_e3) WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund E3")')
+                     IF (is_alpha) WRITE(stdout,'(/5x,"Only one manifold is allowed for Hubbard ALPHA")')
+                     IF (is_alpha_m) CALL errore( 'card_hubbard', 'Orbital-resolved Hubbard ALPHA params &
+                           &can only be assigned to the orbitals of one shell per atom', i)
                      CALL errore( 'card_hubbard', &
                           & 'Mismatch in the quantum numbers for the same atomic type', i )
                   ENDIF
@@ -2932,6 +2984,11 @@ CONTAINS
                       'Value for the Hubbard parameter is missing', i )
          IF ( is_u ) THEN
             READ(hu_val,*, END=14, ERR=15) hu_u
+         ELSEIF ( is_um ) THEN
+            READ(hu_val,*, END=14, ERR=15) hu_um_temp
+            ! cannot store hu_val directly in hu_um because we 
+            ! need to read the indices of the eigenstates 
+            ! to which hu_val will be applied
          ELSEIF ( is_j0 ) THEN
             READ(hu_val,*, END=14, ERR=15) hu_j0
          ELSEIF ( is_j ) THEN
@@ -2944,17 +3001,89 @@ CONTAINS
             READ(hu_val,*, END=14, ERR=15) hu_e3
          ELSEIF ( is_v ) THEN
             READ(hu_val,*, END=14, ERR=15) hu_v
+         ELSEIF ( is_alpha ) THEN
+            READ(hu_val,*, END=14, ERR=15) hu_alpha
+         ELSEIF ( is_alpha_m ) THEN
+            READ(hu_val,*, END=14, ERR=15) hu_alpha_m_temp 
          ELSE
             CALL errore( 'card_hubbard', &
                       'Incorrect name of the Hubbard parameter', i )
          ENDIF
          !
-         ! Assign Hubbard parameters to the corresponding Hubbard arrays
+         IF ( is_um .OR. is_alpha_m ) THEN
+            !
+            ! ... orbital-resolved DFT+U: read and validate eigenvalue numbers:
+            !     read the fields that follow the Hubbard U value (nfield>3)
+            !     and check if these are integers between 1 and 2*l+1 (if nspin=1)
+            !     or 2*(2*l+1) if nspin==2 or nspin==4 (noncolinear).
+            !     If so, store all those indices in a vector, which we later
+            !     use to transfer the hu_um_temp into the actual Hubbard_Um array.
+            neigvals = nfield - 3
+            ! sanity check: there can't be more eigenvalues than 2*(2l+1)
+            IF ( neigvals > (2*ldim) ) THEN
+            ! ... or more than (2l+1) in the closed-shell case
+               IF ( nspin == 1 .AND. (.NOT. noncolin)) &
+               CALL errore( 'card_hubbard', &
+               'Too many target orbitals selected for orbital-resolved DFT+U', i )
+            ENDIF
+            !
+            ALLOCATE(target_indices(neigvals)) ! allocate a vector to store the eigenvalue indices
+            !
+            DO field = 4, nfield
+               ! start from 4 because the first three fields don't contain indices
+               ! read eigenvalue indices and check if they are (allowed) integers
+               CALL get_field(field, eigval_str, input_line)
+               eigval_str = TRIM(eigval_str)
+               READ(eigval_str, *, iostat=io_stat) eigval_index
+               !
+               IF (io_stat /= 0 )  CALL errore( 'card_hubbard', &
+                     'Must use integer values to specify eigenvalue indices &
+                         in orbital-resolved DFT+U.', i )
+               IF ( eigval_index < 1 .OR. eigval_index > (2*ldim) )  CALL errore( 'card_hubbard', &
+                     'The eigenvalues targeted by orbital-resolved U or ALPHA must range &
+                      &from 1 to 2*(2*l+1)', i )
+               IF ( (.NOT. noncolin) .AND. eigval_index > (nspin*ldim) )  CALL errore( 'card_hubbard', &
+                     'The eigenvalues targeted by orbital-resolved U or ALPHA cannot be larger &
+                      &than nspin*(2*l+1) in the colinear case.', i )
+               !
+               ! everything is alright: store the eigenvalue indices in the vector
+               target_indices(field-3) = eigval_index
+            ENDDO
+            !
+            ! Assign the orbital-resolved Hubbard parameter to the
+            ! temporary array using the vector of target eigvals
+            DO j = 1, SIZE(target_indices)
+               IF ( (target_indices(j) <= ldim) .OR. noncolin ) THEN 
+                  ! We are EITHER 1) in the spin-up channel with nspin==2,
+                  ! 2) nspin==1, or 3) nspin==4 (noncolinear magnetism).
+                  ! In this case, we also want to store indices 
+                  ! >ldim in the "first" spin channel
+                  IF ( is_um ) THEN
+                     hu_um(target_indices(j),1) = hu_um_temp
+                  ELSE
+                     hu_alpha_m(target_indices(j),1) = hu_alpha_m_temp
+                  ENDIF
+               ELSE
+                  ! If nspin == 2 and we're targeting a spin-down eigenvalue.
+                  ! Example: if U=4.0 is assigned to eigval 6 in a 3d manifold,
+                  ! store hu_um((6-5),2)=4.0
+                  IF ( is_um ) THEN
+                     hu_um(target_indices(j)-ldim, 2) = hu_um_temp 
+                  ELSE
+                     hu_alpha_m(target_indices(j)-ldim, 2) = hu_alpha_m_temp
+                  ENDIF
+               ENDIF 
+            ENDDO
+            DEALLOCATE(target_indices)
+         ENDIF
          !
+         ! Assign Hubbard parameters to the corresponding Hubbard arrays
+         ! Allow positive and negative values of Hubbard parameters
+         ! (in case users want to experiment with negative values)
          IF (is_u) THEN
             IF (counter_u(hu_nt)==1) THEN
                ! Hubbard parameter for the first (main) channel of the atomic type hu_nt
-               IF (Hubbard_U(hu_nt)<eps16) THEN
+               IF (ABS(Hubbard_U(hu_nt))<eps16) THEN
                    Hubbard_U(hu_nt) = hu_u
                ELSE
                    WRITE(stdout,'(/5x,"Problem in the HUBBARD card for U on line ",i5)') i
@@ -2963,7 +3092,7 @@ CONTAINS
                 ENDIF
             ELSEIF (counter_u(hu_nt)==2) THEN
                ! Hubbard parameter for the second (and third) channel(s) of the atomic type hu_nt
-               IF (Hubbard_U2(hu_nt)<eps16) THEN
+               IF (ABS(Hubbard_U2(hu_nt))<eps16) THEN
                    Hubbard_U2(hu_nt) = hu_u
                ELSE
                    WRITE(stdout,'(/5x,"Problem in the HUBBARD card for U on line ",i5)') i
@@ -2971,10 +3100,65 @@ CONTAINS
                            & 'U for this atomic type was already set', i )
                ENDIF
             ENDIF
+         ELSEIF (is_um .OR. is_alpha_m) THEN
+            IF (noncolin) THEN
+               DO m = 1, 2*ldim
+                  IF ( ABS(hu_um(m,1)) > eps16 ) THEN 
+                     !
+                     ! make sure we're not overwriting values that were already set
+                     IF ( ABS(Hubbard_Um_nc(m,hu_nt)) < eps16 ) THEN
+                        !
+                        Hubbard_Um_nc(m,hu_nt) = hu_um(m,1)
+                     ELSE
+                        WRITE(stdout,'(/5x,"Problem in the HUBBARD card for U on line ",i5)') i
+                        CALL errore( 'card_hubbard', &
+                                 & 'A Hubbard U parameter for this eigenvalue index was already set.', i )
+                     ENDIF
+                  !
+                  ELSEIF ( ABS(hu_alpha_m(m,1)) > eps16 ) THEN
+                     !
+                     IF ( ABS(Hubbard_alpha_m_nc(m,hu_nt)) < eps16 ) THEN
+                        Hubbard_alpha_m_nc(m,hu_nt) = hu_alpha_m(m,1)
+                     ELSE
+                        WRITE(stdout,'(/5x,"Problem in the HUBBARD card for ALPHA on line ",i5)') i
+                        CALL errore( 'card_hubbard', &
+                                 & 'A Hubbard ALPHA parameter for this eigenvalue index was already set.', i )
+                     ENDIF
+                  ENDIF
+               ENDDO
+            ELSE !colinear or closed-shell case
+               DO is = 1, nspin
+                  DO m = 1, ldim
+                     IF ( ABS(hu_um(m,is)) > eps16 ) THEN 
+                        !
+                        IF ( ABS(Hubbard_Um(m,is,hu_nt)) < eps16 ) THEN
+                           ! make sure we're not overwriting values that were already set
+                           Hubbard_Um(m,is,hu_nt) = hu_um(m,is)
+                        ELSE
+                           WRITE(stdout,'(/5x,"Problem in the HUBBARD card for U on line ",i5)') i
+                           CALL errore( 'card_hubbard', &
+                                    & 'A Hubbard U parameter for this eigenvalue index was already set.', i )
+                        ENDIF
+                     !
+                     ELSEIF ( ABS(hu_alpha_m(m,is)) > eps16 ) THEN
+                        IF ( ABS(Hubbard_alpha_m(m,is,hu_nt)) < eps16 ) THEN
+                           Hubbard_alpha_m(m,is,hu_nt) = hu_alpha_m(m,is)
+                        ELSE
+                           WRITE(stdout,'(/5x,"Problem in the HUBBARD card for ALPHA on line ",i5)') i
+                           CALL errore( 'card_hubbard', &
+                                    & 'A Hubbard ALPHA parameter for this eigenvalue index was already set.', i )
+                        ENDIF
+                     ENDIF
+                  ENDDO
+               ENDDO
+            ENDIF
+            DEALLOCATE(hu_um)
+            DEALLOCATE(hu_alpha_m)
+         !
          ELSEIF (is_j0) THEN
             IF (counter_j0(hu_nt)==1) THEN
                ! Hubbard parameter for the first (main) channel of the atomic type hu_nt
-               IF (Hubbard_J0(hu_nt)<eps16) THEN
+               IF (ABS(Hubbard_J0(hu_nt))<eps16) THEN
                    Hubbard_J0(hu_nt) = hu_j0
                ELSE
                    WRITE(stdout,'(/5x,"Problem in the HUBBARD card for J0 on line ",i5)') i
@@ -2985,8 +3169,21 @@ CONTAINS
                CALL errore( 'card_hubbard', &
                        & 'Two channels for J0 for the same atomic type is not implemented', i )
             ENDIF
+         ELSEIF (is_alpha) THEN
+            IF (counter_alpha(hu_nt)==1) THEN
+               IF (ABS(Hubbard_alpha(hu_nt)) < eps16) THEN
+                   Hubbard_alpha(hu_nt) = hu_alpha
+               ELSE
+                   WRITE(stdout,'(/5x,"Problem in the HUBBARD card for ALPHA on line ",i5)') i
+                   CALL errore( 'card_hubbard', &
+                           & 'ALPHA for this atomic type was already set', i )
+               ENDIF
+            ELSEIF (counter_alpha(hu_nt)==2) THEN
+               CALL errore( 'card_hubbard', &
+                       & 'Two channels for ALPHA for the same atomic type is not implemented', i )
+            ENDIF
          ELSEIF (is_j) THEN
-            IF (Hubbard_J(1,hu_nt)<eps16) THEN
+            IF (ABS(Hubbard_J(1,hu_nt))<eps16) THEN
                 Hubbard_J(1,hu_nt) = hu_j
             ELSE
                 WRITE(stdout,'(/5x,"Problem in the HUBBARD card for J on line ",i5)') i
@@ -2994,7 +3191,7 @@ CONTAINS
                         & 'J for this atomic type was already set', i )
             ENDIF
          ELSEIF (is_b) THEN
-            IF (Hubbard_J(2,hu_nt)<eps16) THEN
+            IF (ABS(Hubbard_J(2,hu_nt))<eps16) THEN
                 Hubbard_J(2,hu_nt) = hu_b
             ELSE
                 WRITE(stdout,'(/5x,"Problem in the HUBBARD card for B on line ",i5)') i
@@ -3002,7 +3199,7 @@ CONTAINS
                         & 'B for this atomic type was already set', i )
             ENDIF
          ELSEIF (is_e2) THEN
-            IF (Hubbard_J(2,hu_nt)<eps16) THEN
+            IF (ABS(Hubbard_J(2,hu_nt))<eps16) THEN
                 Hubbard_J(2,hu_nt) = hu_e2
             ELSE
                 WRITE(stdout,'(/5x,"Problem in the HUBBARD card for E2 on line ",i5)') i
@@ -3010,7 +3207,7 @@ CONTAINS
                         & 'E2 for this atomic type was already set', i )
             ENDIF
          ELSEIF (is_e3) THEN
-            IF (Hubbard_J(3,hu_nt)<eps16) THEN
+            IF (ABS(Hubbard_J(3,hu_nt))<eps16) THEN
                 Hubbard_J(3,hu_nt) = hu_e3
             ELSE
                 WRITE(stdout,'(/5x,"Problem in the HUBBARD card for E3 on line ",i5)') i
@@ -3018,7 +3215,7 @@ CONTAINS
                         & 'E3 for this atomic type was already set', i )
             ENDIF
          ELSEIF (is_v) THEN
-            IF (Hubbard_V(na,nb,nc)<eps16) THEN
+            IF (ABS(Hubbard_V(na,nb,nc))<eps16) THEN
                 Hubbard_V(na,nb,nc) = hu_v
             ELSE
                 WRITE(stdout,'(/5x,"Problem in the HUBBARD card for V on line ",i5)') i
@@ -3047,13 +3244,35 @@ CONTAINS
                     & 'Hund J is not compatible with Hund J0', i)
             IF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) CALL errore('card_hubbard', &
                     & 'Currently Hund J is not compatible with Hubbard V', i)
+            IF (ANY(ABS(Hubbard_Um(:,:,:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J is not compatible with orbital-resolved Hubbard U', i)                    
+            IF (ANY(ABS(Hubbard_alpha_m(:,:,:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J is not compatible with orbital-resolved Hubbard ALPHA', i)   
          ELSEIF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) THEN
             ! DFT+U+V(+J0)
             lda_plus_u_kind = 2
             ! 
             IF (noncolin .and. ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
                     & 'Currently Hund J0 is not compatible with noncolin=.true.', i)
-         ELSEIF (ANY(Hubbard_U(:)>eps16) .OR. ANY(Hubbard_J0(:)>eps16)) THEN
+            IF (ANY(ABS(Hubbard_Um(:,:,:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently DFT+U+V does not support orbital-resolved Hubbard U parameters', i)
+            IF (ANY(ABS(Hubbard_alpha_m(:,:,:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently DFT+U+V does not support orbital-resolved Hubbard ALPHA parameters', i)
+            !
+         ELSEIF (ANY(ABS(Hubbard_Um(:,:,:))>eps16) .OR. ANY(ABS(Hubbard_alpha_m(:,:,:))>eps16) .OR. &
+            & ANY(ABS(Hubbard_Um_nc(:,:))>eps16) .OR. ANY(ABS(Hubbard_alpha_m_nc(:,:))>eps16)) THEN
+            ! Orbital-resolved DFT+U
+            lda_plus_u_kind = 0
+            orbital_resolved = .true.
+            !
+            IF (ANY(Hubbard_U(:)>eps16)) CALL errore('card_hubbard', &
+                    & 'Cannot use shell-averaged Hubbard U parameters when using orbital-resolved DFT+U', i)
+            IF (ANY(Hubbard_alpha(:)>eps16)) CALL errore('card_hubbard', &
+                    & 'Cannot use shell-averaged Hubbard ALPHA parameters when using orbital-resolved DFT+U', i)
+            IF (ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
+                    & 'Orbital-resolved DFT+U does not (yet) support Hund J0 parameters', i)
+         ELSEIF (ANY(Hubbard_U(:)>eps16) .OR. ANY(Hubbard_J0(:)>eps16) .OR. &
+                  ANY(ABS(Hubbard_alpha(:)) >eps16)) THEN
             ! DFT+U(+J0)
             lda_plus_u_kind = 0
             IF (noncolin .and. ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
@@ -3092,6 +3311,7 @@ CONTAINS
       DEALLOCATE(counter_b)
       DEALLOCATE(counter_e2)
       DEALLOCATE(counter_e3)
+      DEALLOCATE(counter_alpha)
       IF (ALLOCATED(counter_v)) DEALLOCATE(counter_v)
       IF (ALLOCATED(ityp)) DEALLOCATE(ityp)
       tahub = .true.

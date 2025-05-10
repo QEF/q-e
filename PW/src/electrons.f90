@@ -425,7 +425,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE ldaU,                 ONLY : eth, lda_plus_u, lda_plus_u_kind, &
                                    niter_with_fixed_ns, hub_pot_fix, &
                                    nsg, nsgnew, v_nsg, at_sc, neighood, &
-                                   ldim_u, is_hubbard_back
+                                   ldim_u, is_hubbard_back, apply_U, orbital_resolved
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report, domag, nspin_mag, npol
@@ -641,7 +641,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ENDIF
 #endif
         !
-        ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
+        IF ( orbital_resolved ) THEN
+           ethr = MIN( ethr, 0.05D0*dr2 / MAX( 1.D0, nelec ) )
+           ! ... tighten diagonalization in orbital-resolved DFT+U
+           ! ... for faster convergence
+        ELSE
+           !
+           ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
+        ENDIF
         ! ... do not allow convergence threshold to become too small:
         ! ... iterative diagonalization may become unstable
         ethr = MAX( ethr, 1.D-13 )
@@ -768,9 +775,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF (hub_pot_fix) THEN
              IF (lda_plus_u_kind.EQ.0) THEN
-                IF (noncolin) CALL errore('electrons_scf', &
-                & 'hub_pot_fix is not implemented for (lda_plus_u_kind=0 .AND. noncolin)',1)     
-                rho%ns = rhoin%ns ! back to input values
+                IF (noncolin) THEN
+                   ! call occupation counting routine before resetting ns
+                   IF (orbital_resolved) CALL alpha_m_nc_trace(rho%ns_nc) 
+                   rho%ns_nc = rhoin%ns_nc
+                ELSE
+                   ! call occupation counting routine before resetting ns
+                   IF (orbital_resolved) CALL alpha_m_trace(rho%ns) 
+                   rho%ns = rhoin%ns ! back to input values
+                ENDIF
+                !
                 IF (lhb) rho%nsb = rhoin%nsb
              ELSEIF (lda_plus_u_kind.EQ.1) THEN
                 CALL errore('electrons_scf', &
@@ -899,6 +913,26 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
+           !
+           IF ( orbital_resolved .AND. (.NOT. apply_U) ) THEN
+              !
+              IF ( ethr .LE. 1.D-4 .OR. iter .GT. 10 ) THEN
+                 !
+                 ! ... activate the orbital-resolved Hubbard corrections
+                 ! ... once the eigenstates (and thus, the eigenvectors) 
+                 ! ... have stablilized. Also turn them on after 10 iterations
+                 ! ... but print a warning message in this case.
+                 WRITE( stdout, '(/,5X,47("="))')
+                 WRITE( stdout, '(/,5X,"Switching ON", &
+                    & " orbital-resolved Hubbard corrections")' )
+                 IF ( iter .GT. 10 ) &
+                    WRITE( stdout, '(/,5X,"WARNING: check convergence of eigenstates")')
+                 WRITE( stdout, '(/,5X,47("="))')
+                 !
+                 apply_U = .TRUE.
+              ENDIF
+           ENDIF
+           !
            !
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v )
@@ -1039,7 +1073,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! needed when computing U (and V) in a SCF way
            IF (hub_pot_fix) THEN
               IF (lda_plus_u_kind.EQ.0) THEN
-                 CALL new_ns(rho%ns)
+                 IF (noncolin) THEN
+                    CALL new_ns_nc(rho%ns_nc)
+                 ELSE
+                    CALL new_ns(rho%ns)
+                 ENDIF
                  IF (lhb) CALL new_nsb(rho%nsb)
               ELSEIF (lda_plus_u_kind.EQ.2) THEN
                  CALL new_nsg()
@@ -1048,9 +1086,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            ! Write the occupation matrices
            IF (lda_plus_u_kind == 0) THEN
-              IF (noncolin) THEN      
+              IF (noncolin) THEN
+                 IF ( orbital_resolved .AND. hub_pot_fix ) &
+                    CALL alpha_m_nc_trace(rho%ns_nc)      
                  CALL write_ns_nc()
-              ELSE        
+              ELSE
+                 IF ( orbital_resolved .AND. hub_pot_fix ) &
+                    CALL alpha_m_trace(rho%ns)
                  CALL write_ns()
               ENDIF
            ELSEIF (lda_plus_u_kind == 1) THEN
