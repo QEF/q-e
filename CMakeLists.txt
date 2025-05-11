@@ -668,6 +668,22 @@ if(QE_ENABLE_PROFILE_NVTX)
 endif(QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
+# FLAGS at the project level
+###########################################################
+string(TOUPPER "${CMAKE_BUILD_TYPE}" THIS_CONFIG)
+
+foreach(lang IN ITEMS C Fortran)
+  message("Project ${lang}_FLAGS: ${CMAKE_${lang}_FLAGS} ${CMAKE_${lang}_FLAGS_${THIS_CONFIG}}")
+endforeach(lang IN ITEMS C Fortran)
+
+get_directory_property(TMP_PROJECT_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
+message("Project INCLUDE_DIRECTORIES: ${TMP_PROJECT_INCLUDE_DIRECTORIES}")
+
+foreach(target_type IN ITEMS EXE SHARED)
+  message("Project ${target_type}_LINKER_FLAGS: ${CMAKE_${target_type}_LINKER_FLAGS} ${CMAKE_${target_type}_LINKER_FLAGS_${THIS_CONFIG}}")
+endforeach(target_type IN ITEMS EXE SHARED)
+
+###########################################################
 # Components
 ###########################################################
 add_subdirectory(external)
