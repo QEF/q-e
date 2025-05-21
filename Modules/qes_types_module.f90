@@ -161,6 +161,38 @@ MODULE qes_types_module
     !
   END TYPE HubbardJ_type
   !
+  TYPE :: vector_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: size
+    !
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: vector
+    !
+  END TYPE vector_type
+  !
+  TYPE :: HubbardM_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: size
+    CHARACTER(len=256) :: specie
+    LOGICAL :: specie_ispresent = .FALSE.
+    CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
+    INTEGER :: spin
+    LOGICAL :: spin_ispresent = .FALSE.
+    REAL(DP) :: jjj
+    LOGICAL :: jjj_ispresent = .FALSE.
+    !
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: HubbardM
+    !
+  END TYPE HubbardM_type
+  !
   TYPE :: ChannelOcc_type
     !
     CHARACTER(len=100) :: tagname
@@ -211,6 +243,21 @@ MODULE qes_types_module
     REAL(DP), DIMENSION(:), ALLOCATABLE :: starting_ns
     !
   END TYPE starting_ns_type
+  !
+  TYPE :: matrix_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: rank
+    INTEGER, DIMENSION(:), ALLOCATABLE :: dims
+    CHARACTER(len=256) :: order
+    LOGICAL :: order_ispresent = .FALSE.
+    !
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: matrix
+    !
+  END TYPE matrix_type
   !
   TYPE :: Hubbard_ns_type
     !
@@ -368,6 +415,18 @@ MODULE qes_types_module
     !
   END TYPE phase_type
   !
+  TYPE :: integerVector_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: size
+    !
+    INTEGER, DIMENSION(:), ALLOCATABLE :: integerVector
+    !
+  END TYPE integerVector_type
+  !
   TYPE :: equivalent_atoms_type
     !
     CHARACTER(len=100) :: tagname
@@ -426,45 +485,6 @@ MODULE qes_types_module
     CHARACTER(len=256) :: cpnumstep
     !
   END TYPE cpnumstep_type
-  !
-  TYPE :: vector_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: size
-    !
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: vector
-    !
-  END TYPE vector_type
-  !
-  TYPE :: integerVector_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: size
-    !
-    INTEGER, DIMENSION(:), ALLOCATABLE :: integerVector
-    !
-  END TYPE integerVector_type
-  !
-  TYPE :: matrix_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: rank
-    INTEGER, DIMENSION(:), ALLOCATABLE :: dims
-    CHARACTER(len=256) :: order
-    LOGICAL :: order_ispresent = .FALSE.
-    !
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: matrix
-    !
-  END TYPE matrix_type
   !
   TYPE :: integerMatrix_type
     !
@@ -807,6 +827,8 @@ MODULE qes_types_module
     LOGICAL :: diago_full_acc
     LOGICAL  :: diago_cg_maxiter_ispresent = .FALSE.
     INTEGER :: diago_cg_maxiter
+    LOGICAL  :: diago_ppcg_maxiter_ispresent = .FALSE.
+    INTEGER :: diago_ppcg_maxiter
     LOGICAL  :: diago_david_ndim_ispresent = .FALSE.
     INTEGER :: diago_david_ndim
     LOGICAL  :: diago_rmm_ndim_ispresent = .FALSE.
@@ -1489,6 +1511,9 @@ MODULE qes_types_module
     LOGICAL  :: Hubbard_U_ispresent = .FALSE.
     TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
     INTEGER   :: ndim_Hubbard_U
+    LOGICAL  :: Hubbard_Um_ispresent = .FALSE.
+    TYPE(HubbardM_type), DIMENSION(:), ALLOCATABLE :: Hubbard_Um
+    INTEGER   :: ndim_Hubbard_Um
     LOGICAL  :: Hubbard_J0_ispresent = .FALSE.
     TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J0
     INTEGER   :: ndim_Hubbard_J0

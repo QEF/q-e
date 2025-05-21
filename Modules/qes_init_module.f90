@@ -50,10 +50,15 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_HubbardInterSpecieV
     MODULE PROCEDURE qes_init_SiteMoment
     MODULE PROCEDURE qes_init_HubbardJ
+    MODULE PROCEDURE qes_init_vector
+    MODULE PROCEDURE qes_init_HubbardM
     MODULE PROCEDURE qes_init_ChannelOcc
     MODULE PROCEDURE qes_init_HubbardOcc
     MODULE PROCEDURE qes_init_SitMag
     MODULE PROCEDURE qes_init_starting_ns
+    MODULE PROCEDURE qes_init_matrix_1
+    MODULE PROCEDURE qes_init_matrix_2
+    MODULE PROCEDURE qes_init_matrix_3
     MODULE PROCEDURE qes_init_Hubbard_ns
     MODULE PROCEDURE qes_init_HubbardBack
     MODULE PROCEDURE qes_init_vdW
@@ -105,6 +110,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_algorithmic_info
     MODULE PROCEDURE qes_init_symmetries
     MODULE PROCEDURE qes_init_symmetry
+    MODULE PROCEDURE qes_init_integerVector
     MODULE PROCEDURE qes_init_equivalent_atoms
     MODULE PROCEDURE qes_init_info
     MODULE PROCEDURE qes_init_outputPBC
@@ -124,11 +130,6 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_cp_cellNose
     MODULE PROCEDURE qes_init_scalmags
     MODULE PROCEDURE qes_init_d3mags
-    MODULE PROCEDURE qes_init_vector
-    MODULE PROCEDURE qes_init_integerVector
-    MODULE PROCEDURE qes_init_matrix_1
-    MODULE PROCEDURE qes_init_matrix_2
-    MODULE PROCEDURE qes_init_matrix_3
     MODULE PROCEDURE qes_init_integerMatrix_1
     MODULE PROCEDURE qes_init_integerMatrix_2
     MODULE PROCEDURE qes_init_integerMatrix_3
@@ -1224,8 +1225,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_dftU(obj, tagname, new_format, lda_plus_u_kind, Hubbard_Occ, Hubbard_U,&
-                          Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_V,&
-                          Hubbard_ns, U_projection_type, Hubbard_back, Hubbard_alpha_back, Hubbard_ns_nc &
+                          Hubbard_Um, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns,&
+                          Hubbard_V, Hubbard_ns, U_projection_type, Hubbard_back, Hubbard_alpha_back, Hubbard_ns_nc &
                           )
     !
     IMPLICIT NONE
@@ -1236,6 +1237,7 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: lda_plus_u_kind
     TYPE(HubbardOcc_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_Occ
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_U
+    TYPE(HubbardM_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_Um
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_J0
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_alpha
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_beta
@@ -1279,6 +1281,14 @@ MODULE qes_init_module
       obj%Hubbard_U = Hubbard_U
     ELSE
       obj%Hubbard_U_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_Um)) THEN
+      obj%Hubbard_Um_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_Um(SIZE(Hubbard_Um)))
+      obj%ndim_Hubbard_Um = SIZE(Hubbard_Um) 
+      obj%Hubbard_Um = Hubbard_Um
+    ELSE
+      obj%Hubbard_Um_ispresent = .FALSE.
     END IF
     IF ( PRESENT(Hubbard_J0)) THEN
       obj%Hubbard_J0_ispresent = .TRUE.
@@ -1510,6 +1520,72 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_HubbardJ
   !
   !
+  SUBROUTINE qes_init_vector(obj, tagname, vector)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(vector_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), DIMENSION(:), INTENT(IN) :: vector
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%size = size(vector)
+    ALLOCATE(obj%vector(obj%size))
+    obj%vector = vector
+    !
+  END SUBROUTINE qes_init_vector
+  !
+  !
+  SUBROUTINE qes_init_HubbardM(obj, tagname, specie, label, spin, jjj, HubbardM)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(HubbardM_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), DIMENSION(:), INTENT(IN) :: HubbardM
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
+    INTEGER, OPTIONAL, INTENT(IN) :: spin
+    REAL(DP), OPTIONAL, INTENT(IN) :: jjj
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE 
+      obj%specie_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE 
+      obj%label_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(spin)) THEN
+      obj%spin_ispresent = .TRUE.
+      obj%spin = spin
+    ELSE 
+      obj%spin_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(jjj)) THEN
+      obj%jjj_ispresent = .TRUE.
+      obj%jjj = jjj
+    ELSE 
+      obj%jjj_ispresent = .FALSE.
+    END IF
+    obj%size = size(HubbardM)
+    ALLOCATE(obj%HubbardM(obj%size))
+    obj%HubbardM = HubbardM
+    !
+  END SUBROUTINE qes_init_HubbardM
+  !
+  !
   SUBROUTINE qes_init_ChannelOcc(obj, tagname, specie, label, index, ChannelOcc)
     !
     IMPLICIT NONE
@@ -1642,6 +1718,103 @@ MODULE qes_init_module
     obj%starting_ns = starting_ns
     !
   END SUBROUTINE qes_init_starting_ns
+  !
+
+  !
+  SUBROUTINE qes_init_matrix_1(obj, tagname, dims, mat, order)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(matrix_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER,DIMENSION(:),INTENT(IN) :: dims
+    REAL(DP), INTENT(IN) :: mat(:)
+    CHARACTER(LEN=*),OPTIONAL :: order
+    INTEGER :: rank, length, i
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    length = 1
+    rank = SIZE(dims)
+    DO i = 1, rank
+      length = length * dims(i)
+    END DO
+    obj%rank = rank
+    ALLOCATE(obj%matrix(length), obj%dims(rank) )
+    obj%matrix(1:length) = mat(1:length)
+    obj%dims = dims
+    IF (PRESENT(order)) THEN
+      obj%order = TRIM(order)
+    ELSE
+      obj%order = 'F'
+    END IF
+    !
+  END SUBROUTINE qes_init_matrix_1
+  !
+  !
+  SUBROUTINE qes_init_matrix_2(obj, tagname, dims, mat, order)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(matrix_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER,DIMENSION(:),INTENT(IN) :: dims
+    REAL(DP), INTENT(IN) :: mat(:,:)
+    CHARACTER(LEN=*),OPTIONAL :: order
+    INTEGER :: rank, length, i
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    length = 1
+    rank = SIZE(dims)
+    DO i = 1, rank
+      length = length * dims(i)
+    END DO
+    obj%rank = rank
+    ALLOCATE(obj%matrix(length), obj%dims(rank) )
+    obj%matrix(1:length) = reshape(mat, [length])
+    obj%dims = dims
+    IF (PRESENT(order)) THEN
+      obj%order = TRIM(order)
+    ELSE
+      obj%order = 'F'
+    END IF
+    !
+  END SUBROUTINE qes_init_matrix_2
+  !
+  !
+  SUBROUTINE qes_init_matrix_3(obj, tagname, dims, mat, order)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(matrix_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER,DIMENSION(:),INTENT(IN) :: dims
+    REAL(DP), INTENT(IN) :: mat(:,:,:)
+    CHARACTER(LEN=*),OPTIONAL :: order
+    INTEGER :: rank, length, i
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    length = 1
+    rank = SIZE(dims)
+    DO i = 1, rank
+      length = length * dims(i)
+    END DO
+    obj%rank = rank
+    ALLOCATE(obj%matrix(length), obj%dims(rank) )
+    obj%matrix(1:length) = reshape(mat, [length])
+    obj%dims = dims
+    IF (PRESENT(order)) THEN
+      obj%order = TRIM(order)
+    ELSE
+      obj%order = 'F'
+    END IF
+    !
+  END SUBROUTINE qes_init_matrix_3
   !
   !
   SUBROUTINE qes_init_Hubbard_ns(obj, tagname, order, specie, label, spin, index, Hubbard_ns)
@@ -2165,7 +2338,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
                                       conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
                                       diago_thr_init, diago_full_acc, exx_nstep, real_space_q,&
-                                      real_space_beta, diago_cg_maxiter, &
+                                      real_space_beta, diago_cg_maxiter, diago_ppcg_maxiter,&
                                       diago_david_ndim, diago_rmm_ndim, diago_gs_nblock, diago_rmm_conv &
                                       )
     !
@@ -2187,6 +2360,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: diago_thr_init
     LOGICAL,INTENT(IN) :: diago_full_acc
     INTEGER,OPTIONAL,INTENT(IN) :: diago_cg_maxiter
+    INTEGER,OPTIONAL,INTENT(IN) :: diago_ppcg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_david_ndim
     INTEGER,OPTIONAL,INTENT(IN) :: diago_rmm_ndim
     INTEGER,OPTIONAL,INTENT(IN) :: diago_gs_nblock
@@ -2229,6 +2403,12 @@ MODULE qes_init_module
       obj%diago_cg_maxiter = diago_cg_maxiter
     ELSE
       obj%diago_cg_maxiter_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(diago_ppcg_maxiter)) THEN
+      obj%diago_ppcg_maxiter_ispresent = .TRUE. 
+      obj%diago_ppcg_maxiter = diago_ppcg_maxiter
+    ELSE
+      obj%diago_ppcg_maxiter_ispresent = .FALSE.
     END IF
     IF ( PRESENT(diago_david_ndim)) THEN
       obj%diago_david_ndim_ispresent = .TRUE. 
@@ -4001,6 +4181,25 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_symmetry
   !
   !
+  SUBROUTINE qes_init_integerVector(obj, tagname, integerVector)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(integerVector_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, DIMENSION(:), INTENT(IN) :: integerVector
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%size = size(integerVector)
+    ALLOCATE(obj%integerVector(obj%size))
+    obj%integerVector = integerVector
+    !
+  END SUBROUTINE qes_init_integerVector
+  !
+  !
   SUBROUTINE qes_init_equivalent_atoms(obj, tagname, nat, equivalent_atoms)
     !
     IMPLICIT NONE
@@ -4726,141 +4925,6 @@ MODULE qes_init_module
     obj%SiteMagnetization = SiteMagnetization
     !
   END SUBROUTINE qes_init_d3mags
-  !
-  !
-  SUBROUTINE qes_init_vector(obj, tagname, vector)
-    !
-    IMPLICIT NONE
-    !
-    TYPE(vector_type), INTENT(OUT) :: obj
-    CHARACTER(LEN=*), INTENT(IN) :: tagname
-    REAL(DP), DIMENSION(:), INTENT(IN) :: vector
-    !
-    obj%tagname = TRIM(tagname)
-    obj%lwrite = .TRUE.
-    obj%lread = .TRUE.
-    !
-    obj%size = size(vector)
-    ALLOCATE(obj%vector(obj%size))
-    obj%vector = vector
-    !
-  END SUBROUTINE qes_init_vector
-  !
-  !
-  SUBROUTINE qes_init_integerVector(obj, tagname, integerVector)
-    !
-    IMPLICIT NONE
-    !
-    TYPE(integerVector_type), INTENT(OUT) :: obj
-    CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, DIMENSION(:), INTENT(IN) :: integerVector
-    !
-    obj%tagname = TRIM(tagname)
-    obj%lwrite = .TRUE.
-    obj%lread = .TRUE.
-    !
-    obj%size = size(integerVector)
-    ALLOCATE(obj%integerVector(obj%size))
-    obj%integerVector = integerVector
-    !
-  END SUBROUTINE qes_init_integerVector
-  !
-
-  !
-  SUBROUTINE qes_init_matrix_1(obj, tagname, dims, mat, order)
-    !
-    IMPLICIT NONE
-    !
-    TYPE(matrix_type), INTENT(OUT) :: obj
-    CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER,DIMENSION(:),INTENT(IN) :: dims
-    REAL(DP), INTENT(IN) :: mat(:)
-    CHARACTER(LEN=*),OPTIONAL :: order
-    INTEGER :: rank, length, i
-    !
-    obj%tagname = TRIM(tagname)
-    obj%lwrite = .TRUE.
-    obj%lread = .TRUE.
-    length = 1
-    rank = SIZE(dims)
-    DO i = 1, rank
-      length = length * dims(i)
-    END DO
-    obj%rank = rank
-    ALLOCATE(obj%matrix(length), obj%dims(rank) )
-    obj%matrix(1:length) = mat(1:length)
-    obj%dims = dims
-    IF (PRESENT(order)) THEN
-      obj%order = TRIM(order)
-    ELSE
-      obj%order = 'F'
-    END IF
-    !
-  END SUBROUTINE qes_init_matrix_1
-  !
-  !
-  SUBROUTINE qes_init_matrix_2(obj, tagname, dims, mat, order)
-    !
-    IMPLICIT NONE
-    !
-    TYPE(matrix_type), INTENT(OUT) :: obj
-    CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER,DIMENSION(:),INTENT(IN) :: dims
-    REAL(DP), INTENT(IN) :: mat(:,:)
-    CHARACTER(LEN=*),OPTIONAL :: order
-    INTEGER :: rank, length, i
-    !
-    obj%tagname = TRIM(tagname)
-    obj%lwrite = .TRUE.
-    obj%lread = .TRUE.
-    length = 1
-    rank = SIZE(dims)
-    DO i = 1, rank
-      length = length * dims(i)
-    END DO
-    obj%rank = rank
-    ALLOCATE(obj%matrix(length), obj%dims(rank) )
-    obj%matrix(1:length) = reshape(mat, [length])
-    obj%dims = dims
-    IF (PRESENT(order)) THEN
-      obj%order = TRIM(order)
-    ELSE
-      obj%order = 'F'
-    END IF
-    !
-  END SUBROUTINE qes_init_matrix_2
-  !
-  !
-  SUBROUTINE qes_init_matrix_3(obj, tagname, dims, mat, order)
-    !
-    IMPLICIT NONE
-    !
-    TYPE(matrix_type), INTENT(OUT) :: obj
-    CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER,DIMENSION(:),INTENT(IN) :: dims
-    REAL(DP), INTENT(IN) :: mat(:,:,:)
-    CHARACTER(LEN=*),OPTIONAL :: order
-    INTEGER :: rank, length, i
-    !
-    obj%tagname = TRIM(tagname)
-    obj%lwrite = .TRUE.
-    obj%lread = .TRUE.
-    length = 1
-    rank = SIZE(dims)
-    DO i = 1, rank
-      length = length * dims(i)
-    END DO
-    obj%rank = rank
-    ALLOCATE(obj%matrix(length), obj%dims(rank) )
-    obj%matrix(1:length) = reshape(mat, [length])
-    obj%dims = dims
-    IF (PRESENT(order)) THEN
-      obj%order = TRIM(order)
-    ELSE
-      obj%order = 'F'
-    END IF
-    !
-  END SUBROUTINE qes_init_matrix_3
   !
 
   !
