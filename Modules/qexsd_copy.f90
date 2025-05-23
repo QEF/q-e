@@ -321,9 +321,9 @@ CONTAINS
   SUBROUTINE qexsd_copy_dft ( dft_obj, nsp, atm, &
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
+       lda_plus_U, apply_u, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
        Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-       Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
+       Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
        vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
@@ -344,15 +344,16 @@ CONTAINS
     INTEGER, INTENT(inout) :: nq1, nq2, nq3
     LOGICAL, INTENT(inout) :: x_gamma_extrapolation
     !
-    LOGICAL, INTENT(out) :: lda_plus_U
+    LOGICAL, INTENT(out) :: lda_plus_U, apply_u
     INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax, Hubbard_lmax_back
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
     INTEGER, INTENT(inout) :: Hubbard_n(:), Hubbard_l(:), Hubbard_n2(:), Hubbard_l2(:), Hubbard_n3(:), Hubbard_l3(:) 
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U2(:), Hubbard_J0(:), Hubbard_J(:,:), Hubbard_V(:,:,:), &
-                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:), Hubbard_occ(:,:)
+                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:), Hubbard_occ(:,:),   & 
+                               Hubbard_Um(:,:,:)
     LOGICAL, INTENT(inout) :: backall(:)
     OPTIONAL    :: Hubbard_U2, Hubbard_n2, Hubbard_l2, Hubbard_lmax_back, Hubbard_alpha_back, &
-                   Hubbard_l3
+                   Hubbard_l3, Hubbard_Um
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
     LOGICAL,INTENT(inout)   :: dftd3_3body 
@@ -362,7 +363,7 @@ CONTAINS
     !
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
-    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich
+    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich, im, ispin
     !
     dft_name = TRIM(dft_obj%functional)
     IF ( dft_obj%hybrid_ispresent ) THEN
@@ -386,6 +387,7 @@ CONTAINS
     IF ( lda_plus_u ) THEN 
        Hubbard_U  = 0.0_DP
        Hubbard_U2 = 0.0_DP
+       Hubbard_Um = 0.0_DP
        Hubbard_alpha = 0.0_DP
        Hubbard_alpha_back = 0.0_DP
        Hubbard_J = 0.0_DP
@@ -421,6 +423,34 @@ CONTAINS
           END DO loop_on_hubbardU
        END IF 
        ! 
+       Hubbard_Um = 0.0_dp
+       IF ( dft_obj%dftU%Hubbard_Um_ispresent) THEN 
+          apply_u = .TRUE. 
+          loop_on_hubbardUm:DO ihub =1, dft_obj%dftU%ndim_Hubbard_Um
+             symbol = TRIM(dft_obj%dftU%Hubbard_Um(ihub)%specie)
+             label  = TRIM(dft_obj%dftU%Hubbard_Um(ihub)%label )  
+             IF (dft_obj%dftU%Hubbard_Um(ihub)%spin_ispresent) THEN
+                     ispin = dft_obj%dftU%Hubbard_Um(ihub)%spin
+             ELSE 
+                     ispin = 1
+             END IF
+             loop_on_speciesUm:DO isp = 1, nsp
+                IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN 
+                  Hubbard_Um(:,ispin,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM 
+                  READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
+                  hu_l = spdf_to_l( label(2:2) )
+                  Hubbard_n(isp) = hu_n
+                  Hubbard_l(isp) = hu_l
+                  IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
+                        CALL errore ("qexsd_copy_dft:", &
+                            &"Problem while reading Hubbard_n and/or Hubbard_l", 1 )
+                  EXIT loop_on_speciesUm
+                END IF 
+             END DO loop_on_speciesUm
+          END DO loop_on_hubbardUm
+       END IF 
+
+       !
        IF ( dft_obj%dftU%Hubbard_back_ispresent) THEN
           loop_hubbardBack:DO ihub =1, dft_obj%dftU%ndim_Hubbard_back
             symbol = TRIM(dft_obj%dftU%Hubbard_back(ihub)%species)

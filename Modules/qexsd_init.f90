@@ -49,8 +49,9 @@ MODULE qexsd_init
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
-            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
-            qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm, qexsd_init_sawtooth_info
+            qexsd_init_dftU, qexsd_init_vdw,     &
+            qexsd_init_berryPhaseOutput, qexsd_init_rism3d, qexsd_init_rismlaue,& 
+            qexsd_init_esm, qexsd_init_sawtooth_info
  !
 CONTAINS
   !
@@ -423,7 +424,7 @@ CONTAINS
       !
       SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, &
                                   is_hubbard_back, backall, hubb_n2, hubb_l2, hubb_n3, hubb_l3,    & 
-                                  noncolin, lda_plus_u_kind, U_projection_type, hubb_occ, U, U2,  J0, J,     &
+                                  noncolin, lda_plus_u_kind, U_projection_type, hubb_occ, U, U2,  J0, J, Um,  &
                                   n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, Hub_nsg, Hubbard_V )
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
@@ -445,12 +446,14 @@ CONTAINS
          REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U2(:), J0(:), alpha(:), alpha_back(:), &
                                            beta(:), J(:,:), hubb_occ(:,:)                           
          REAL(DP),OPTIONAL,INTENT(IN)   :: hubbard_v(:,:,:)
+         REAL(DP),OPTIONAL,INTENT(IN)   :: Um(:,:,:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:), Hub_nsg(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
          CHARACTER(10), ALLOCATABLE            :: label(:)
          TYPE(HubbardCommon_type),ALLOCATABLE  :: U_(:), U2_(:), J0_(:), alpha_(:), &
                                                   alpha_back_(:), beta_(:)
+         TYPE(HubbardM_type),ALLOCATABLE       :: Um_(:)
          TYPE(HubbardOcc_type),ALLOCATABLE     :: hubb_occ_(:)
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
@@ -488,6 +491,7 @@ CONTAINS
          IF (PRESENT(alpha_back))  CALL init_hubbard_commons(alpha_back, alpha_back_,label, "Hubbard_alpha_back") 
          IF (PRESENT(beta))        CALL init_hubbard_commons(beta, beta_, label, "Hubbard_beta")
          IF (PRESENT(J))           CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
+         IF (PRESENT(Um))          CALL init_hubbardM (Um, Um_, label, "Hubbard_Um") 
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))   THEN 
                                    CALL init_Hubbard_ns(Hubbard_ns_ , label, Hub_ns)
@@ -498,11 +502,12 @@ CONTAINS
          END IF 
          
          !
-         CALL qes_init (obj, "dftU", .true., lda_plus_u_kind, hubb_occ_,  U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
-                       Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
+         CALL qes_init (obj, "dftU", .true., lda_plus_u_kind, hubb_occ_,  U_, Um_, J0_, alpha_, beta_,  J_, & 
+                       starting_ns_, Hub_V_, Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_occs(hubb_occ_)
          CALL reset_hubbard_commons(U_)
+         CALL reset_hubbardM(Um_) 
          CALL reset_hubbard_commons(U2_)
          CALL reset_hubbard_commons(beta_) 
          CALL reset_hubbard_commons(J0_)
@@ -560,6 +565,45 @@ CONTAINS
                IF (TRIM(labs(i)) =='no Hubbard') objs(i)%lwrite = .FALSE. 
             END DO 
          END SUBROUTINE init_hubbard_J
+         !
+         SUBROUTINE init_hubbardM(dati, objs, labs, tag) 
+           IMPLICIT NONE 
+           real(dp) :: dati(:,:,:)
+           type(hubbardM_type),allocatable :: objs(:) 
+           character(len=*) :: labs(:), tag
+           !
+           integer :: nhubm, ihubm,nt, nspin, msize, it, ispin, nhubmtot, iobj
+           integer, allocatable :: packdati(:),channels_per_specimen(:),hubm(:) 
+           real(dp)  :: uvalue
+           !
+           nspin = size(dati,2) 
+           nhubm = count([(any(dati(:,:,it)/=0.0_dp),it=1,nsp)])
+           msize = size(dati,1) 
+           if (nhubm .EQ.  0) RETURN
+           allocate(channels_per_specimen(nhubm), &
+                   packdati(nhubm),               &
+                   hubm(size(dati,1))             &
+                   )  
+           packdati = pack([(it,it=1,nsp)], mask=[(any(dati(:,:,it)/=0.0),it=1,nsp)])
+           do ihubm =1, nhubm
+               channels_per_specimen(ihubm)  = count([(any(dati(:,ispin, packdati(ihubm))/=0),ispin=1, nspin)])
+           end do 
+           nhubmtot = sum(channels_per_specimen(:))  
+           allocate(objs(nhubmtot)) 
+           !
+           do ihubm = 1, nhubm 
+             it = packdati(ihubm)
+             iobj = 1  
+             if (ihubm .gt. 1)  iobj = iobj + sum(channels_per_specimen(1:ihubm-1)) 
+             do ispin = 1, channels_per_specimen(ihubm) 
+               call qes_init(objs(iobj), TRIM(tag), TRIM(species(it)),TRIM(labs(it)), ispin, &
+                       HubbardM = dati(:,ispin, ihubm)) 
+               if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
+               iobj = iobj + 1
+             end do 
+           end do
+         END SUBROUTINE init_hubbardM
+         !
          !
          FUNCTION check_and_init_Hubbard_V (objs, hubbard_v_, specs, labs) result( ndim ) 
            IMPLICIT NONE 
@@ -651,6 +695,17 @@ CONTAINS
             END DO
             DEALLOCATE(objs)
          END SUBROUTINE reset_hubbard_J 
+         !
+         SUBROUTINE reset_hubbardM(objs) 
+           IMPLICIT NONE 
+           TYPE(HubbardM_type), ALLOCATABLE :: objs(:) 
+           INTEGER :: i 
+           IF (.NOT. ALLOCATED(objs)) RETURN 
+           DO i =1, SIZE(objs) 
+             CALL qes_reset(objs(i)) 
+           END DO 
+           DEALLOCATE(objs)
+         END SUBROUTINE reset_hubbardM
          !
          SUBROUTINE init_starting_ns(objs, labs )
             IMPLICIT NONE

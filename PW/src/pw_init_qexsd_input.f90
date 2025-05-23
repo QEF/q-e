@@ -25,7 +25,7 @@
                                 ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
                                 ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     &
-                                ip_hubbard_u => hubbard_u, ip_hubbard_u2 => hubbard_u2,                               &
+                                ip_hubbard_u => hubbard_u, ip_hubbard_u2 => hubbard_u2, ip_hubbard_Um => hubbard_um,  &
                                 ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta, ip_backall => backall, &
                                 ip_hubbard_n => hubbard_n, ip_hubbard_l => hubbard_l,                                 &
                                 ip_hubbard_n2 => hubbard_n2, ip_hubbard_l2 => hubbard_l2, ip_hubbard_l3 => hubbard_l3,&
@@ -133,7 +133,7 @@
   INTEGER,POINTER                          :: dftd3_version_pt, nbnd_pt, nq1_pt, nq2_pt, nq3_pt   
   REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U2_(:), hubbard_alpha_(:), &
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
-                                              starting_ns_(:,:,:)
+                                              starting_ns_(:,:,:), Hubbard_Um_(:,:,:) 
   INTEGER, ALLOCATABLE                     :: hubbard_l_(:), hubbard_n_(:) 
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
@@ -307,6 +307,7 @@
      DO nt = 1, ntyp
        !
        is_hubbard(nt) = ip_Hubbard_U(nt)/= 0.0_dp .OR. &
+                        ANY(ip_hubbard_Um(:,:,nt)/=0.0_dp) .OR. &  
                         ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_alpha(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_alpha_back(nt) /= 0.0_DP .OR. &
@@ -379,12 +380,16 @@
         ALLOCATE(hubbard_l_(ntyp))
         hubbard_l_(1:ntyp) = ip_hubbard_l(1:ntyp)
      END IF
+     IF (ANY(ip_hubbard_Um(:,1:ip_nspin,1:ntyp)/=0.0_dp)) THEN 
+       ALLOCATE(Hubbard_Um_(1:2*hublmax+1, ip_nspin,1:ntyp)) 
+       Hubbard_Um_(:,:,:)  = ip_hubbard_Um(1:2*hublmax+1, 1:ip_nspin,1:ntyp) * ev_to_Ha   
+     END IF
      !
      !
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ip_nat), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
-                           U_PROJECTION_TYPE=ip_hubbard_projectors, U=hubbard_U_, U2=hubbard_U2_,  & 
+                           U_PROJECTION_TYPE=ip_hubbard_projectors, U=hubbard_U_, Um = hubbard_Um_, U2=hubbard_U2_,& 
                            HUBB_n2 = ip_hubbard_n2(1:ntyp), HUBB_L2 = ip_hubbard_l2(1:ntyp), &
                            HUBB_N3 = ip_hubbard_n3(1:ntyp), HUBB_L3= ip_hubbard_l3(1:ntyp), J0=hubbard_J0_, & 
                            J = hubbard_J_, n=hubbard_n_, l=hubbard_l_, HUBBARD_V = ip_hubbard_v * ev_to_Ha, &

@@ -787,9 +787,9 @@ MODULE cp_restart_new
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, dft_name, &
            nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-           lda_plus_U, lda_plus_U_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax,Hubbard_dum, &
+           lda_plus_U, bool_dum,lda_plus_U_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax,Hubbard_dum, &
            hub_l2_dum, hub_l2_dum, hub_l2_dum, hub_l2_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
-           Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
+           Hubbard_U, hubba_dum_dum,hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            HUBBARD_J = Hubbard_dum, HUBBARD_V = hubba_dum_dum, VDW_CORR = vdw_corr, dftd3_version = int_dum, & 
            dftd3_3body = bool_dum, SCAL6 = scal6,    & 
            LON_RCUT =lon_rcut, VDW_ISOLATED = vdw_isolated )
