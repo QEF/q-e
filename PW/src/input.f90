@@ -1345,6 +1345,8 @@ SUBROUTINE control_iosys()
   IF ( llondon.AND.lxdm .OR. llondon.AND.ts_vdw_ .OR. lxdm.AND.ts_vdw_ .OR. &
            ldftd3.AND.llondon .OR. ldftd3.AND.lxdm .OR. ldftd3.AND.ts_vdw ) &
      CALL errore("iosys","must choose a unique vdW correction!", 1)
+  IF ( lxdm .AND. noncolin ) &
+     CALL errore("iosys","XDM not implemented for noncolinear case", 1)
   !
   IF ( llondon) THEN
      lon_rcut    = london_rcut
