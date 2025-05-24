@@ -1,4 +1,8 @@
 Fixed in development version:
+  * Problem with too short variable holding tag name when reading UPF files,
+    occurring only for some fully-relativistic pseudopotentials
+  * Warning on poor testing of Berry Phase calculation removed, thanks to
+    accurate testing performed by Riccardo Dal Molin and Antimo Marrazzo.
   * Symmetrization glitches on many processors (reported by Yunqi Shao)
   * Crash for noncolinear PAW case on many processors (reported by I. Timrov)
   * The HP code for the magnetic noncollinear case had a bug
