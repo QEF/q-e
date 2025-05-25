@@ -11,6 +11,7 @@
 ! January 2019 Ronald E Cohen, fixed mods and averages on same branch
 ! April   2021 Paolo Giannozzi replaced calc_btq and qvan3 with "standard"
 !              QE way to compute Q(|G|) via interpolation table qrad + qvan2
+! May     2025 Riccardo Dal Molin and Antimo Marrazzo tested the code
 !
 !##############################################################################!
 !#                                                                            #!
@@ -306,7 +307,6 @@ SUBROUTINE c_phase
 !  --- Write header ---
    WRITE( stdout,"(/,/,/,15X,50('='))")
    WRITE( stdout,"(28X,'POLARIZATION CALCULATION')")
-   WRITE( stdout,"(25X,'!!! NOT THOROUGHLY TESTED !!!')")
    WRITE( stdout,"(15X,50('-'),/)")
 
 !  --- Check that we are working with an insulator with no empty bands ---
