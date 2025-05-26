@@ -595,11 +595,13 @@ CONTAINS
              it = packdati(ihubm)
              iobj = 1  
              if (ihubm .gt. 1)  iobj = iobj + sum(channels_per_specimen(1:ihubm-1)) 
-             do ispin = 1, channels_per_specimen(ihubm) 
-               call qes_init(objs(iobj), TRIM(tag), TRIM(species(it)),TRIM(labs(it)), ispin, &
-                       HubbardM = dati(:,ispin, ihubm)) 
-               if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
-               iobj = iobj + 1
+             do ispin = 1, nspin
+               if (ANY(dati(:,ispin,ihubm)/=0.0_DP)) THEN 
+                  call qes_init(objs(iobj), TRIM(tag), TRIM(species(it)),TRIM(labs(it)), ispin, &
+                                HubbardM = dati(:,ispin, ihubm)) 
+                  if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
+                  iobj = iobj + 1
+               end if
              end do 
            end do
          END SUBROUTINE init_hubbardM
