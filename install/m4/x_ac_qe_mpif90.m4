@@ -114,7 +114,8 @@ mpif90=$FC
 # check which compiler does mpif90 wrap
 
 echo $ECHO_N "checking version of $mpif90... $ECHO_C"
-ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+ifort_version=`$mpif90 --version 2>&1 | grep "IFORT"`
+ifx_version=`$mpif90 --version 2>&1 | grep "IFX"`
 pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
 gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
@@ -131,6 +132,12 @@ then
         f90_major_version=`echo $version | cut -d. -f1`
         echo "${ECHO_T}ifort $f90_major_version"
         f90_in_mpif90="ifort"
+elif test "$ifx_version" != ""
+then
+        version=`$mpif90 --version 2>&1 | grep "IFX" | cut -d ' ' -f3`
+        f90_major_version=`echo $version | cut -d. -f1`
+        echo "${ECHO_T}ifx $f90_major_version"
+        f90_in_mpif90="ifx"
 elif test "$nvfortran_version" != ""
 then
         version=`echo $nvfortran_version | cut -d ' ' -f2`
