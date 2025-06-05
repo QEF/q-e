@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -68,6 +68,7 @@ PROGRAM q2r
   !! aligned, etc.). In these cases the supplementary asr are cancelled
   !! during the orthonormalization procedure (see below).
   LOGICAL :: la2F
+  !! For electron-phonon calculations with interpolation
   LOGICAL :: loto_2d
   !! Set to TRUE to activate two-dimensional treatment of LO-TO splitting. 
   LOGICAL :: write_lr
