@@ -57,7 +57,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr, &
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
   !
   CHARACTER(LEN=20)  :: crystal
-  CHARACTER(LEN=3)   :: atm(ntypx)
+  CHARACTER(LEN=6)   :: atm(ntypx)
   CHARACTER(LEN=4)   :: post=''
   CHARACTER(LEN=256) :: fildyn, filin, filj, filf
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
