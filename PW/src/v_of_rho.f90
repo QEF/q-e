@@ -1748,7 +1748,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_Um, &
                                  Hubbard_alpha_m, lambda_ns, &
-                                 eigenvecs_ref, apply_U, hub_pot_fix
+                                 eigenvecs_ref, order_um, apply_U, hub_pot_fix
 USE lsda_mod,             ONLY : nspin
 USE constants,            ONLY : eps16, RYTOEV
 USE control_flags,        ONLY : iverbosity, dfpt_hub
@@ -1774,6 +1774,12 @@ COMPLEX(DP)              :: eigenvecs_current(2*Hubbard_lmax+1,2*Hubbard_lmax+1,
 INTEGER                  :: is, na, nt, m1, m2, m3, ldim, m_order
 ! the ordering vector for the orbital-tracking routine
 INTEGER                  :: order(2*Hubbard_lmax+1)
+LOGICAL                  :: is_first
+IF (.NOT. ALLOCATED(order_um)) THEN 
+  ALLOCATE(order_um(2*Hubbard_lmax+1,nat))  
+  order_um = 0
+END IF 
+
 !
 !
 eth    = 0.d0
@@ -1799,6 +1805,7 @@ DO na = 1, nat
       !
       ldim = 2 * Hubbard_l(nt) + 1
       eigenvecs_current(:,:,:) = CMPLX(0.d0,0.d0, kind=dp)
+      is_first = ALL(eigenvecs_ref(:,:,na) == eigenvecs_current)  
       !
       effU = 0.0
       effalpha = 0.0
@@ -1809,10 +1816,15 @@ DO na = 1, nat
       DO is = 1, nspin
          !
          ! sort eigenvectors with respect to the (reference) order established in eigvecs_first
-         order(:) = 0
+         IF (is_first) THEN  
+             order(1:ldim) = order_um(1:ldim,na) 
+         ELSE 
+             order(:) = 0
+         ENDIF 
          CALL order_eigenvecs( order(1:ldim), eigenvecs_current(1:ldim,1:ldim,is), &
                                  eigenvecs_ref(1:ldim,1:ldim,is,na), ldim )
          !
+         order_um(1:ldim,na) = order(1:ldim) 
          DO m1 = 1, ldim
             !
             ! calculate Hubbard potential and -energy
