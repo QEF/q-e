@@ -53,6 +53,8 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_HubbardOcc
     MODULE PROCEDURE qes_bcast_SitMag
     MODULE PROCEDURE qes_bcast_starting_ns
+    MODULE PROCEDURE qes_bcast_integerVector
+    MODULE PROCEDURE qes_bcast_orderUm
     MODULE PROCEDURE qes_bcast_matrix
     MODULE PROCEDURE qes_bcast_Hubbard_ns
     MODULE PROCEDURE qes_bcast_HubbardBack
@@ -105,7 +107,6 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_algorithmic_info
     MODULE PROCEDURE qes_bcast_symmetries
     MODULE PROCEDURE qes_bcast_symmetry
-    MODULE PROCEDURE qes_bcast_integerVector
     MODULE PROCEDURE qes_bcast_equivalent_atoms
     MODULE PROCEDURE qes_bcast_info
     MODULE PROCEDURE qes_bcast_outputPBC
@@ -910,6 +911,14 @@ MODULE qes_bcast_module
         CALL qes_bcast_Hubbard_ns(obj%Hubbard_ns(i), ionode_id, comm)
       ENDDO
     ENDIF
+    CALL mp_bcast(obj%Hub_m_order_ispresent, ionode_id, comm)
+    IF (obj%Hub_m_order_ispresent) THEN
+      CALL mp_bcast(obj%ndim_Hub_m_order, ionode_id, comm)
+      IF (.NOT.ionode) ALLOCATE(obj%Hub_m_order(obj%ndim_Hub_m_order))
+      DO i=1, obj%ndim_Hub_m_order
+        CALL qes_bcast_orderUm(obj%Hub_m_order(i), ionode_id, comm)
+      ENDDO
+    ENDIF
     CALL mp_bcast(obj%U_projection_type_ispresent, ionode_id, comm)
     IF (obj%U_projection_type_ispresent) &
       CALL mp_bcast(obj%U_projection_type, ionode_id, comm)
@@ -1183,6 +1192,56 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%starting_ns, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_starting_ns
+  !
+  !
+  SUBROUTINE qes_bcast_integerVector(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(integerVector_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%size, ionode_id, comm)
+    CALL mp_bcast(obj%size, ionode_id, comm)
+    IF (.NOT.ionode) ALLOCATE(obj%integerVector(obj%size))
+    CALL mp_bcast(obj%integerVector, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_integerVector
+  !
+  !
+  SUBROUTINE qes_bcast_orderUm(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(orderUm_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%size, ionode_id, comm)
+    CALL mp_bcast(obj%size, ionode_id, comm)
+    CALL mp_bcast(obj%specie_ispresent, ionode_id, comm)
+    IF (obj%specie_ispresent) &
+      CALL mp_bcast(obj%specie, ionode_id, comm)
+    CALL mp_bcast(obj%label_ispresent, ionode_id, comm)
+    IF (obj%label_ispresent) &
+      CALL mp_bcast(obj%label, ionode_id, comm)
+    CALL mp_bcast(obj%spin_ispresent, ionode_id, comm)
+    IF (obj%spin_ispresent) &
+      CALL mp_bcast(obj%spin, ionode_id, comm)
+    CALL mp_bcast(obj%atomidx_ispresent, ionode_id, comm)
+    IF (obj%atomidx_ispresent) &
+      CALL mp_bcast(obj%atomidx, ionode_id, comm)
+    IF (.NOT.ionode) ALLOCATE(obj%orderUm(obj%size))
+    CALL mp_bcast(obj%orderUm, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_orderUm
   !
   !
   SUBROUTINE qes_bcast_matrix(obj, ionode_id, comm )
@@ -2725,25 +2784,6 @@ MODULE qes_bcast_module
       CALL qes_bcast_equivalent_atoms(obj%equivalent_atoms, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_symmetry
-  !
-  !
-  SUBROUTINE qes_bcast_integerVector(obj, ionode_id, comm )
-    !
-    IMPLICIT NONE
-    !
-    TYPE(integerVector_type), INTENT(INOUT) :: obj
-    INTEGER, INTENT(IN) :: ionode_id, comm
-    !
-    CALL mp_bcast(obj%tagname, ionode_id, comm)
-    CALL mp_bcast(obj%lwrite, ionode_id, comm)
-    CALL mp_bcast(obj%lread, ionode_id, comm)
-    !
-    CALL mp_bcast(obj%size, ionode_id, comm)
-    CALL mp_bcast(obj%size, ionode_id, comm)
-    IF (.NOT.ionode) ALLOCATE(obj%integerVector(obj%size))
-    CALL mp_bcast(obj%integerVector, ionode_id, comm)
-    !
-  END SUBROUTINE qes_bcast_integerVector
   !
   !
   SUBROUTINE qes_bcast_equivalent_atoms(obj, ionode_id, comm )

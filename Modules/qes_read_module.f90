@@ -57,6 +57,8 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_HubbardOcc
     MODULE PROCEDURE qes_read_SitMag
     MODULE PROCEDURE qes_read_starting_ns
+    MODULE PROCEDURE qes_read_integerVector
+    MODULE PROCEDURE qes_read_orderUm
     MODULE PROCEDURE qes_read_matrix
     MODULE PROCEDURE qes_read_Hubbard_ns
     MODULE PROCEDURE qes_read_HubbardBack
@@ -109,7 +111,6 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_algorithmic_info
     MODULE PROCEDURE qes_read_symmetries
     MODULE PROCEDURE qes_read_symmetry
-    MODULE PROCEDURE qes_read_integerVector
     MODULE PROCEDURE qes_read_equivalent_atoms
     MODULE PROCEDURE qes_read_info
     MODULE PROCEDURE qes_read_outputPBC
@@ -3582,6 +3583,22 @@ MODULE qes_read_module
         CALL qes_read_Hubbard_ns(tmp_node, obj%Hubbard_ns(index), ierr )
     END DO
     !
+    tmp_node_list => getElementsByTagname(xml_node, "Hub_m_order")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hub_m_order_ispresent = .TRUE.
+    ELSE
+      obj%Hub_m_order_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hub_m_order = tmp_node_list_size
+    ALLOCATE(obj%Hub_m_order(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_orderUm(tmp_node, obj%Hub_m_order(index), ierr )
+    END DO
+    !
     tmp_node_list => getElementsByTagname(xml_node, "U_projection_type")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -4197,6 +4214,108 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_starting_ns
+  !
+  !
+  SUBROUTINE qes_read_integerVector(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(integerVector_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: integerVectorType",&
+                        "required attribute size not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: integerVectorType",&
+                      "required attribute size not found", 10 )
+      END IF
+    END IF
+    !
+    !
+    !
+    ALLOCATE (obj%integerVector(obj%size))
+    CALL extractDataContent(xml_node, obj%integerVector)
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_integerVector
+  !
+  !
+  SUBROUTINE qes_read_orderUm(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(orderUm_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: orderUmType",&
+                        "required attribute size not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: orderUmType",&
+                      "required attribute size not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "specie")) THEN
+      CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label")) THEN
+      CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "spin")) THEN
+      CALL extractDataAttribute(xml_node, "spin", obj%spin)
+      obj%spin_ispresent = .TRUE.
+    ELSE
+      obj%spin_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "atomidx")) THEN
+      CALL extractDataAttribute(xml_node, "atomidx", obj%atomidx)
+      obj%atomidx_ispresent = .TRUE.
+    ELSE
+      obj%atomidx_ispresent = .FALSE.
+    END IF
+    !
+    !
+    !
+    ALLOCATE (obj%orderUm(obj%size))
+    CALL extractDataContent(xml_node, obj%orderUm)
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_orderUm
   !
   !
   SUBROUTINE qes_read_matrix(xml_node, obj, ierr )
@@ -12302,43 +12421,6 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_symmetry
-  !
-  !
-  SUBROUTINE qes_read_integerVector(xml_node, obj, ierr )
-    !
-    IMPLICIT NONE
-    !
-    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
-    TYPE(integerVector_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
-    !
-    TYPE(Node), POINTER :: tmp_node
-    TYPE(NodeList), POINTER :: tmp_node_list
-    INTEGER :: tmp_node_list_size, index, iostat_
-    !
-    obj%tagname = getTagName(xml_node)
-    ! 
-    IF (hasAttribute(xml_node, "size")) THEN
-      CALL extractDataAttribute(xml_node, "size", obj%size)
-    ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: integerVectorType",&
-                        "required attribute size not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: integerVectorType",&
-                      "required attribute size not found", 10 )
-      END IF
-    END IF
-    !
-    !
-    !
-    ALLOCATE (obj%integerVector(obj%size))
-    CALL extractDataContent(xml_node, obj%integerVector)
-    !
-    obj%lwrite = .TRUE.
-    !
-  END SUBROUTINE qes_read_integerVector
   !
   !
   SUBROUTINE qes_read_equivalent_atoms(xml_node, obj, ierr )

@@ -56,6 +56,8 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_HubbardOcc
     MODULE PROCEDURE qes_write_SitMag
     MODULE PROCEDURE qes_write_starting_ns
+    MODULE PROCEDURE qes_write_integerVector
+    MODULE PROCEDURE qes_write_orderUm
     MODULE PROCEDURE qes_write_matrix
     MODULE PROCEDURE qes_write_Hubbard_ns
     MODULE PROCEDURE qes_write_HubbardBack
@@ -108,7 +110,6 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_algorithmic_info
     MODULE PROCEDURE qes_write_symmetries
     MODULE PROCEDURE qes_write_symmetry
-    MODULE PROCEDURE qes_write_integerVector
     MODULE PROCEDURE qes_write_equivalent_atoms
     MODULE PROCEDURE qes_write_info
     MODULE PROCEDURE qes_write_outputPBC
@@ -893,6 +894,11 @@ MODULE qes_write_module
            CALL qes_write_Hubbard_ns(xp, obj%Hubbard_ns(i) )
         END DO
      END IF
+     IF (obj%Hub_m_order_ispresent) THEN
+        DO i = 1, obj%ndim_Hub_m_order
+           CALL qes_write_orderUm(xp, obj%Hub_m_order(i) )
+        END DO
+     END IF
      IF (obj%U_projection_type_ispresent) THEN
         CALL xml_NewElement(xp, "U_projection_type")
            CALL xml_addCharacters(xp, TRIM(obj%U_projection_type))
@@ -1110,6 +1116,50 @@ MODULE qes_write_module
      END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_starting_ns
+
+   SUBROUTINE qes_write_integerVector(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(integerVector_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'size', obj%size )
+     CALL xml_addNewLine(xp)
+     DO i = 1, obj%size, 8
+        CALL xml_AddCharacters(xp, obj%integerVector(i:MIN(i+8-1, obj%size)))
+        CALL xml_AddNewLine(xp)
+     END DO
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_integerVector
+
+   SUBROUTINE qes_write_orderUm(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(orderUm_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'size', obj%size )
+     IF (obj%specie_ispresent) CALL xml_addAttribute(xp, 'specie', TRIM(obj%specie) )
+     IF (obj%label_ispresent) CALL xml_addAttribute(xp, 'label', TRIM(obj%label) )
+     IF (obj%spin_ispresent) CALL xml_addAttribute(xp, 'spin', obj%spin )
+     IF (obj%atomidx_ispresent) CALL xml_addAttribute(xp, 'atomidx', obj%atomidx )
+     CALL xml_addNewLine(xp)
+     DO i = 1, obj%size, 8
+        CALL xml_AddCharacters(xp, obj%orderUm(i:MIN(i+8-1, obj%size)))
+        CALL xml_AddNewLine(xp)
+     END DO
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_orderUm
 
    SUBROUTINE qes_write_matrix(xp, obj)
      !-----------------------------------------------------------------
@@ -2937,26 +2987,6 @@ MODULE qes_write_module
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_symmetry
-
-   SUBROUTINE qes_write_integerVector(xp, obj)
-     !-----------------------------------------------------------------
-     IMPLICIT NONE
-     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
-     TYPE(integerVector_type),INTENT(IN)    :: obj
-     ! 
-     INTEGER                                          :: i 
-     ! 
-     IF ( .NOT. obj%lwrite ) RETURN 
-     ! 
-     CALL xml_NewElement(xp, TRIM(obj%tagname))
-     CALL xml_addAttribute(xp, 'size', obj%size )
-     CALL xml_addNewLine(xp)
-     DO i = 1, obj%size, 8
-        CALL xml_AddCharacters(xp, obj%integerVector(i:MIN(i+8-1, obj%size)))
-        CALL xml_AddNewLine(xp)
-     END DO
-     CALL xml_EndElement(xp, TRIM(obj%tagname))
-   END SUBROUTINE qes_write_integerVector
 
    SUBROUTINE qes_write_equivalent_atoms(xp, obj)
      !-----------------------------------------------------------------

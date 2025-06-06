@@ -244,6 +244,38 @@ MODULE qes_types_module
     !
   END TYPE starting_ns_type
   !
+  TYPE :: integerVector_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: size
+    !
+    INTEGER, DIMENSION(:), ALLOCATABLE :: integerVector
+    !
+  END TYPE integerVector_type
+  !
+  TYPE :: orderUm_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: size
+    CHARACTER(len=256) :: specie
+    LOGICAL :: specie_ispresent = .FALSE.
+    CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
+    INTEGER :: spin
+    LOGICAL :: spin_ispresent = .FALSE.
+    INTEGER :: atomidx
+    LOGICAL :: atomidx_ispresent = .FALSE.
+    !
+    INTEGER, DIMENSION(:), ALLOCATABLE :: orderUm
+    !
+  END TYPE orderUm_type
+  !
   TYPE :: matrix_type
     !
     CHARACTER(len=100) :: tagname
@@ -414,18 +446,6 @@ MODULE qes_types_module
     REAL(DP) :: phase
     !
   END TYPE phase_type
-  !
-  TYPE :: integerVector_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: size
-    !
-    INTEGER, DIMENSION(:), ALLOCATABLE :: integerVector
-    !
-  END TYPE integerVector_type
   !
   TYPE :: equivalent_atoms_type
     !
@@ -1535,6 +1555,9 @@ MODULE qes_types_module
     LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
     TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
     INTEGER   :: ndim_Hubbard_ns
+    LOGICAL  :: Hub_m_order_ispresent = .FALSE.
+    TYPE(orderUm_type), DIMENSION(:), ALLOCATABLE :: Hub_m_order
+    INTEGER   :: ndim_Hub_m_order
     LOGICAL  :: U_projection_type_ispresent = .FALSE.
     CHARACTER(len=256) :: U_projection_type
     LOGICAL  :: Hubbard_back_ispresent = .FALSE.

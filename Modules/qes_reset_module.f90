@@ -54,6 +54,8 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_HubbardOcc
     MODULE PROCEDURE qes_reset_SitMag
     MODULE PROCEDURE qes_reset_starting_ns
+    MODULE PROCEDURE qes_reset_integerVector
+    MODULE PROCEDURE qes_reset_orderUm
     MODULE PROCEDURE qes_reset_matrix
     MODULE PROCEDURE qes_reset_Hubbard_ns
     MODULE PROCEDURE qes_reset_HubbardBack
@@ -106,7 +108,6 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_algorithmic_info
     MODULE PROCEDURE qes_reset_symmetries
     MODULE PROCEDURE qes_reset_symmetry
-    MODULE PROCEDURE qes_reset_integerVector
     MODULE PROCEDURE qes_reset_equivalent_atoms
     MODULE PROCEDURE qes_reset_info
     MODULE PROCEDURE qes_reset_outputPBC
@@ -766,6 +767,16 @@ MODULE qes_reset_module
       obj%ndim_Hubbard_ns = 0
       obj%Hubbard_ns_ispresent = .FALSE.
     ENDIF
+    IF (obj%Hub_m_order_ispresent) THEN
+      IF (ALLOCATED(obj%Hub_m_order)) THEN
+        DO i=1, SIZE(obj%Hub_m_order)
+          CALL qes_reset_orderUm(obj%Hub_m_order(i))
+        ENDDO
+        DEALLOCATE(obj%Hub_m_order)
+      ENDIF
+      obj%ndim_Hub_m_order = 0
+      obj%Hub_m_order_ispresent = .FALSE.
+    ENDIF
     obj%U_projection_type_ispresent = .FALSE.
     IF (obj%Hubbard_back_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_back)) THEN
@@ -971,6 +982,44 @@ MODULE qes_reset_module
     obj%spin_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_starting_ns
+  !
+  !
+  SUBROUTINE qes_reset_integerVector(obj)
+    !
+    IMPLICIT NONE
+    TYPE(integerVector_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    IF (ALLOCATED(obj%integerVector)) THEN
+      DEALLOCATE(obj%integerVector)
+    ENDIF
+    obj%size = 0
+    !
+  END SUBROUTINE qes_reset_integerVector
+  !
+  !
+  SUBROUTINE qes_reset_orderUm(obj)
+    !
+    IMPLICIT NONE
+    TYPE(orderUm_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    IF (ALLOCATED(obj%orderUm)) THEN
+      DEALLOCATE(obj%orderUm)
+    ENDIF
+    obj%size = 0
+    obj%specie_ispresent = .FALSE.
+    obj%label_ispresent = .FALSE.
+    obj%spin_ispresent = .FALSE.
+    obj%atomidx_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_orderUm
   !
   !
   SUBROUTINE qes_reset_matrix(obj)
@@ -1989,23 +2038,6 @@ MODULE qes_reset_module
     obj%equivalent_atoms_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_symmetry
-  !
-  !
-  SUBROUTINE qes_reset_integerVector(obj)
-    !
-    IMPLICIT NONE
-    TYPE(integerVector_type),INTENT(INOUT)    :: obj
-    !
-    obj%tagname = ""
-    obj%lwrite  = .FALSE.
-    obj%lread  = .FALSE.
-    !
-    IF (ALLOCATED(obj%integerVector)) THEN
-      DEALLOCATE(obj%integerVector)
-    ENDIF
-    obj%size = 0
-    !
-  END SUBROUTINE qes_reset_integerVector
   !
   !
   SUBROUTINE qes_reset_equivalent_atoms(obj)
