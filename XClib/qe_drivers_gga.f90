@@ -15,10 +15,6 @@ MODULE qe_drivers_gga
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
   USE kind_l,               ONLY: DP
-  USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga,     &
-                                  grho_threshold_gga, exx_started,   &
-                                  exx_fraction, screening_parameter, &
-                                  gau_parameter
   !
   IMPLICIT NONE
   !
@@ -38,6 +34,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
   !! See comments at the beginning of module for implemented cases
   !
+  USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga,     &
+                                  grho_threshold_gga, exx_started,   &
+                                  exx_fraction, screening_parameter, &
+                                  gau_parameter
   USE exch_gga
   USE corr_gga
   USE beef_interface, ONLY: beefx, beeflocalcorr
@@ -469,6 +469,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
   !-----------------------------------------------------------------------
   !! Gradient corrections for exchange - Hartree a.u.
   !
+  USE dft_setting_params,   ONLY: igcx, igcc, exx_started,   &
+                                  exx_fraction, screening_parameter, &
+                                  gau_parameter
   USE exch_gga
   USE beef_interface, ONLY: beefx
   !
@@ -1026,6 +1029,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !! Gradient corrections for correlations - Hartree a.u.  
   !! Implemented: Perdew86, GGA (PW91), PBE
   !
+  USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga
   USE corr_gga
   USE beef_interface, ONLY: beeflocalcorrspin
   !
@@ -1149,6 +1153,8 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   !!    * Lee, Yang & Parr;
   !!    * GGAC.
   !
+  USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga,     &
+                                  exx_started
   USE corr_gga
   !
   IMPLICIT NONE

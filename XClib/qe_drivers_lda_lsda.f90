@@ -15,8 +15,6 @@ MODULE qe_drivers_lda_lsda
   !! Contains the LDA drivers of QE that calculate XC energy and potential.
   !
   USE kind_l,               ONLY: DP
-  USE dft_setting_params,   ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
-                                  exx_fraction, finite_size_cell_volume
   USE exch_lda
   USE corr_lda
   !
@@ -54,6 +52,9 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !! $$ E_x = \int E_x(\text{rho}) dr, E_x(\text{rho}) = 
   !!               \text{rho}\epsilon_c(\text{rho})\ . $$
   !! Same for correlation.
+  !
+  USE dft_setting_params,   ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
+                                  exx_fraction, finite_size_cell_volume
   !
   IMPLICIT NONE
   !
@@ -275,6 +276,9 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !! * Correlation:
   !!    * Ceperley & Alder (Perdew-Zunger parameters);
   !!    * Perdew & Wang.
+  !
+  USE dft_setting_params,   ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
+                                  exx_fraction
   !
   IMPLICIT NONE
   !
