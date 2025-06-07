@@ -15,7 +15,6 @@ MODULE qe_drivers_d_lda_lsda
   !! Contains the routines to compute the derivative of the LDA XC potential.
   !
   USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: iexch, icorr, is_libxc
   !
   IMPLICIT NONE
   !
@@ -34,6 +33,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !! Computes the derivative of the XC potential with respect to the 
   !! local density.
   !
+  USE dft_setting_params, ONLY: iexch, icorr, is_libxc
   USE exch_lda,            ONLY: slater
   USE qe_drivers_lda_lsda, ONLY: xc_lda
   !
@@ -180,6 +180,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
+  USE dft_setting_params, ONLY: iexch, icorr, is_libxc
   USE exch_lda,            ONLY: slater
   USE corr_lda,            ONLY: pz, pz_polarized
   USE qe_drivers_lda_lsda, ONLY: xc_lsda
