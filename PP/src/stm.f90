@@ -234,6 +234,8 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      CALL invfft ('Rho', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF
+  ! FIXME: distributed data should not be collected here but in the calling code
+  !        for compatibility with all other cases
 #if defined(__MPI)
   CALL gather_grid (dfftp, rho%of_r(:,1), stmdos)
 #else

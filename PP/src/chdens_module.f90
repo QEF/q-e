@@ -220,7 +220,6 @@ SUBROUTINE chdens (plot_files,plot_num,nc)
     ENDDO
   ENDIF
 
-
   ! check for iflag
 
   IF (iflag <= 1) THEN
@@ -330,7 +329,6 @@ SUBROUTINE chdens (plot_files,plot_num,nc)
      CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
   ENDIF
 
-
   ! Looping over output files to be written
   DO iplot=1, SIZE(output_files) 
 
@@ -354,11 +352,29 @@ SUBROUTINE chdens (plot_files,plot_num,nc)
     !
     DO ifile = 1, nfile
        !
+       IF (ionode) &
        CALL plot_io (filepp (ifile), title, nr1sxa, nr2sxa, nr3sxa, &
             nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
             duals, ecuts, idum, atms, ityps, zvs, taus, rhos, - 1)
+       CALL mp_bcast( nr1sxa, ionode_id, world_comm )
+       CALL mp_bcast( nr2sxa, ionode_id, world_comm )
+       CALL mp_bcast( nr3sxa, ionode_id, world_comm )
+       CALL mp_bcast( nr1sa, ionode_id, world_comm )
+       CALL mp_bcast( nr2sa, ionode_id, world_comm )
+       CALL mp_bcast( nr3sa, ionode_id, world_comm )
+       CALL mp_bcast( nats, ionode_id, world_comm )
+       CALL mp_bcast( ntyps, ionode_id, world_comm )
+       CALL mp_bcast( ibravs, ionode_id, world_comm )
+       CALL mp_bcast( celldms, ionode_id, world_comm )
+       CALL mp_bcast( gcutmsa, ionode_id, world_comm )
+       CALL mp_bcast( duals, ionode_id, world_comm )
+       CALL mp_bcast( ecuts, ionode_id, world_comm )
   
        IF (ifile==1.and.plot_num==-1) THEN
+          CALL mp_bcast( atms, ionode_id, world_comm )
+          CALL mp_bcast( ityps, ionode_id, world_comm )
+          CALL mp_bcast( zvs, ionode_id, world_comm )
+          CALL mp_bcast( taus, ionode_id, world_comm )
           atm=atms
           ityp=ityps
           zv=zvs
@@ -411,7 +427,6 @@ SUBROUTINE chdens (plot_files,plot_num,nc)
        CALL isostm_plot(rhor, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
              isovalue, heightmin, heightmax, direction)     
     END IF
-  
     
     !
     !    At this point we start the calculations, first we normalize the

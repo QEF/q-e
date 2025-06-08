@@ -131,6 +131,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 5) THEN
 
      IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
+     ! FIXME: STM should follow the same logic as all other cases
+     !        and return distrubuted data, to be collected later
 #if defined(__MPI)
      CALL stm (sample_bias, raux1, istates)
 #else
@@ -324,6 +326,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #if defined(__MPI)
+  ! FIXME: STM case should be treated as all other cases
   IF (.not. (plot_num == 5 ) ) CALL gather_grid (dfftp, raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x, &
