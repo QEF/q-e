@@ -424,6 +424,7 @@ SUBROUTINE chdens (plot_files,plot_num,nc)
     IF ( (isostm_flag) .AND. ( (plot_num == -1) .OR. (plot_num == 5) ) ) THEN
        IF ( .NOT. (iflag == 2))&
           CALL errore ('chdens', 'isostm should have iflag = 2', 1)
+       IF (ionode) &
        CALL isostm_plot(rhor, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
              isovalue, heightmin, heightmax, direction)     
     END IF

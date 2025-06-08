@@ -42,7 +42,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: sample_bias
-  REAL(DP), INTENT(OUT):: stmdos (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x)
+  REAL(DP), INTENT(OUT):: stmdos (dfftp%nnr)
   ! the stm density of states
   INTEGER, INTENT(OUT):: istates
   ! the number of states to compute the image
@@ -234,13 +234,9 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      CALL invfft ('Rho', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF
-  ! FIXME: distributed data should not be collected here but in the calling code
-  !        for compatibility with all other cases
-#if defined(__MPI)
-  CALL gather_grid (dfftp, rho%of_r(:,1), stmdos)
-#else
+  !
   stmdos(:) = rho%of_r(:,1)
-#endif
+  !
   DEALLOCATE(psi)
   DEALLOCATE(gs)
   CALL stop_clock('STM')
