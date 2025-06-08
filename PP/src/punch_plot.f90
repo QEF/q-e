@@ -52,14 +52,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ! auxiliary vector (parallel case)
   REAL(DP), ALLOCATABLE :: raux1 (:)
 #endif
-  ! auxiliary vector
+  ! auxiliary vectors
   REAL(DP), ALLOCATABLE :: raux (:), raux2(:,:)
 
 
   IF (filplot == ' ') RETURN
-#if defined(__MPI)
-  ALLOCATE (raux1(  dfftp%nr1x *  dfftp%nr2x *  dfftp%nr3x))
-#endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
   IF (plot_num == 3 ) &
@@ -320,6 +317,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #if defined(__MPI)
+  ALLOCATE (raux1(  dfftp%nr1x *  dfftp%nr2x *  dfftp%nr3x))
   CALL gather_grid (dfftp, raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x, &
@@ -327,7 +325,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
          gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
   DEALLOCATE (raux1)
 #else
-
   CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x,  &
         dfftp%nr1,  dfftp%nr2,  dfftp%nr3, nat, ntyp, ibrav, celldm, at,&
         gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux, + 1)
