@@ -425,7 +425,7 @@ CONTAINS
       SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, &
                                   is_hubbard_back, backall, hubb_n2, hubb_l2, hubb_n3, hubb_l3,    & 
                                   noncolin, lda_plus_u_kind, U_projection_type, hubb_occ, U, U2,  J0, J, Um,  &
-                                  n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, Hub_nsg, Hubbard_V )
+                                  n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, order_um,Hub_ns_nc, Hub_nsg, Hubbard_V )
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
          INTEGER,INTENT(IN)             :: nsp
@@ -447,6 +447,7 @@ CONTAINS
                                            beta(:), J(:,:), hubb_occ(:,:)                           
          REAL(DP),OPTIONAL,INTENT(IN)   :: hubbard_v(:,:,:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: Um(:,:,:)
+         INTEGER, OPTIONAL, INTENT(IN)  :: order_um(:,:,:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:), Hub_nsg(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
@@ -460,6 +461,7 @@ CONTAINS
          TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
          TYPE(HubbardBack_type),ALLOCATABLE    :: Hub_back_(:)
          TYPE(HubbardInterSpecieV_type),ALLOCATABLE :: Hub_V_(:) 
+         TYPE(orderUm_type), ALLOCATABLE       :: order_Um_(:)
          LOGICAL                               :: noncolin_ =.FALSE.
          INTEGER                               :: icheck 
          !
@@ -491,7 +493,10 @@ CONTAINS
          IF (PRESENT(alpha_back))  CALL init_hubbard_commons(alpha_back, alpha_back_,label, "Hubbard_alpha_back") 
          IF (PRESENT(beta))        CALL init_hubbard_commons(beta, beta_, label, "Hubbard_beta")
          IF (PRESENT(J))           CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
-         IF (PRESENT(Um))          CALL init_hubbardM (Um, Um_, label, "Hubbard_Um") 
+         IF (PRESENT(Um))  THEN 
+           CALL init_hubbardM (Um, Um_, label, "Hubbard_Um") 
+           IF (present(order_um)) CALL init_orderUm  (order_um, order_Um_, label, "Hub_m_order") 
+         END IF 
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))   THEN 
                                    CALL init_Hubbard_ns(Hubbard_ns_ , label, Hub_ns)
@@ -503,11 +508,12 @@ CONTAINS
          
          !
          CALL qes_init (obj, "dftU", .true., lda_plus_u_kind, hubb_occ_,  U_, Um_, J0_, alpha_, beta_,  J_, & 
-                       starting_ns_, Hub_V_, Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
+                       starting_ns_, Hub_V_, Hubbard_ns_, order_Um_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_occs(hubb_occ_)
          CALL reset_hubbard_commons(U_)
          CALL reset_hubbardM(Um_) 
+         CALL reset_order_Um(order_Um_) 
          CALL reset_hubbard_commons(U2_)
          CALL reset_hubbard_commons(beta_) 
          CALL reset_hubbard_commons(J0_)
@@ -606,6 +612,33 @@ CONTAINS
            end do
          END SUBROUTINE init_hubbardM
          !
+         SUBROUTINE init_orderUm(dati, objs, labs, tag) 
+           IMPLICIT NONE 
+           integer  :: dati(:,:,:) 
+           type(orderUm_type),allocatable :: objs(:) 
+           character(len=*)  :: labs(:), tag 
+           ! 
+           integer :: iat, nat, nspin, ldim, ispin, iobj
+           character(len=10)  :: label_
+           character(len=4)  :: lab2ldim = 'spdf' 
+           !  
+           nat = size(dati,3)
+           nspin = size(dati,2) 
+           allocate (objs(nspin * nat)) 
+
+           do iat = 1, nat
+              label_ = labs(ityp(iat)) 
+              ldim  = 2 * index(lab2ldim, label_(2:2)) - 1
+              do ispin = 1, nspin 
+                 iobj = nspin*(iat-1) + ispin  
+                 if (ldim >= 1) &
+                   call qes_init(objs(iobj), tagname=tag, specie=TRIM(species(ityp(iat))), label=TRIM(label_),&
+                                 spin=ispin, atomidx=iat, OrderUm = dati(1:ldim,ispin,iat)) 
+                 if (label_ == "no hubbard") objs(iobj)%lwrite = .FALSE. 
+                 if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
+              end do 
+           end do    
+         END SUBROUTINE init_orderUm  
          !
          FUNCTION check_and_init_Hubbard_V (objs, hubbard_v_, specs, labs) result( ndim ) 
            IMPLICIT NONE 
@@ -708,6 +741,18 @@ CONTAINS
            END DO 
            DEALLOCATE(objs)
          END SUBROUTINE reset_hubbardM
+         !
+         SUBROUTINE reset_order_Um(objs) 
+           IMPLICIT NONE 
+           TYPE(orderUm_type), ALLOCATABLE :: objs(:)
+           INTEGER :: i
+           IF (.NOT. ALLOCATED(objs)) RETURN 
+           DO i =1, SIZE(objs)
+              CALL qes_reset(objs(i)) 
+           END DO 
+           DEALLOCATE(objs) 
+         END SUBROUTINE reset_order_Um
+         !
          !
          SUBROUTINE init_starting_ns(objs, labs )
             IMPLICIT NONE
