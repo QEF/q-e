@@ -106,14 +106,14 @@ MODULE pw_restart_new
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_Um, Hubbard_J, &
                                        Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V, Hubbard_occ,&
-                                       Hubbard_alpha, Hubbard_alpha_back, nsg, &
+                                       Hubbard_alpha, Hubbard_alpha_back, nsg, order_um, &
                                        Hubbard_J0, Hubbard_beta, Hubbard_U2, &
                                        is_hubbard, is_hubbard_back, backall, neighood, nsg
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, & 
-                                       absmag, local_charges, local_mag
+                                       absmag, local_charges, local_mag 
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        magtot_nc, lambda, domag, lspinorb
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
@@ -537,13 +537,15 @@ MODULE pw_restart_new
             !
             ! Currently rho%nsb is not written/read to/from XML 
             !
+            print '("CIAO order_um is allocate is",5L)', allocated(order_um)
             CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp),                & 
                     ITYP = ityp(1:nat), IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back, BACKALL = backall,& 
                     HUBB_OCC = Hubbard_occ, HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,& 
                     HUBB_N3 = n3_opt, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors,      &
-                    U =U_opt, Um = Um_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt,                              &
+                    U =U_opt, Um = Um_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt,                 &
                     Hubbard_V = Hubbard_V *Ry_to_Ha, alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt, & 
-                    starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, Hub_nsg = nsg_)
+                    starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, order_um = order_um, & 
+                    Hub_nsg = nsg_)
             !
             IF (ALLOCATED(J_opt)) DEALLOCATE(J_opt)
             IF (ALLOCATED(nsg_))  DEALLOCATE(nsg_)
