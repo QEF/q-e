@@ -1302,6 +1302,7 @@ MODULE pw_restart_new
       Hubbard_alpha      = Hubbard_alpha      * e2
       Hubbard_beta       = Hubbard_beta       * e2 
       Hubbard_U          = Hubbard_U          * e2 
+      Hubbard_Um         = Hubbard_Um         * e2
       Hubbard_U2         = Hubbard_U2         * e2 
       Hubbard_V          = Hubbard_V          * e2 
       Hubbard_J0         = Hubbard_J0         * e2 
