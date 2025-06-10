@@ -155,7 +155,7 @@ MODULE ldaU
   COMPLEX(DP), ALLOCATABLE :: eigenvecs_ref(:,:,:,:)
   !! Eigenvectors used for tracking
   !! orbitals in orbital-resolved DFT+U
-  INTEGER, ALLOCATABLE :: order_um(:,:) 
+  INTEGER, ALLOCATABLE :: order_um(:,:,:) 
   !!
   !***************************************************
   !                Hubbard V part                     !

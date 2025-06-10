@@ -1776,7 +1776,11 @@ INTEGER                  :: is, na, nt, m1, m2, m3, ldim, m_order
 INTEGER                  :: order(2*Hubbard_lmax+1)
 LOGICAL                  :: is_first
 IF (.NOT. ALLOCATED(order_um)) THEN 
-  ALLOCATE(order_um(2*Hubbard_lmax+1,nat))  
+  IF (nspin == 2 ) THEN 
+     ALLOCATE(order_um(2*Hubbard_lmax+1,nspin, nat))  
+  ELSE 
+     ALLOCATE(order_um(2*Hubbard_lmax+1,1,nat)) 
+  END IF 
   order_um = 0
 END IF 
 
@@ -1805,7 +1809,8 @@ DO na = 1, nat
       !
       ldim = 2 * Hubbard_l(nt) + 1
       eigenvecs_current(:,:,:) = CMPLX(0.d0,0.d0, kind=dp)
-      is_first = ALL(eigenvecs_ref(:,:,na) == eigenvecs_current)  
+      is_first = ALL(eigenvecs_ref(:,:,:,na) == eigenvecs_current)  
+
       !
       effU = 0.0
       effalpha = 0.0
@@ -1816,15 +1821,19 @@ DO na = 1, nat
       DO is = 1, nspin
          !
          ! sort eigenvectors with respect to the (reference) order established in eigvecs_first
-         IF (is_first) THEN  
-             order(1:ldim) = order_um(1:ldim,na) 
-         ELSE 
-             order(:) = 0
-         ENDIF 
+         IF (is_first)  THEN  
+             order(1:ldim) = order_um(1:ldim,is,na)
+             IF (ALL(order(1:ldim)==0)) order(1:ldim) = [(m1,m1=1,ldim)] 
+             DO m1 =1, ldim 
+               eigenvecs_ref(1:ldim, order(m1), is, na) = eigenvecs_current(1:ldim, m1, is) 
+             END DO 
+         END IF 
+         order(:) = 0
          CALL order_eigenvecs( order(1:ldim), eigenvecs_current(1:ldim,1:ldim,is), &
                                  eigenvecs_ref(1:ldim,1:ldim,is,na), ldim )
          !
-         order_um(1:ldim,na) = order(1:ldim) 
+         
+         order_um(1:ldim,is,na) = order(1:ldim) 
          DO m1 = 1, ldim
             !
             ! calculate Hubbard potential and -energy
