@@ -22,9 +22,26 @@ MODULE qexsd_copy
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
-       qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
+       qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, copy_order_um_from_xml, &
        qexsd_copy_efermi, qexsd_copy_rism3d, qexsd_copy_rismlaue, qexsd_copy_esm, qexsd_copy_twochem 
  !
+ INTERFACE 
+  SUBROUTINE copy_order_um_from_xml(dftU_obj, nsp, nat, Hubbard_lmax, order_um)
+    !! routine that copies order_um values from xml file to allocatable order_um, used 
+    !! for the initialization of the order_um variable in ldaU module. 
+    !FIXME to be collected with other related copying from dftU object or better read from the scf file
+     USE qes_types_module, only: dftU_type
+     IMPLICIT NONE
+     TYPE(dftU_type),INTENT(IN)  :: dftU_obj
+     !! object containing the dftU infortmation read from the XML file
+     INTEGER,INTENT(IN)          :: nsp, nat, Hubbard_lmax
+     !! number of species defined for this calculation 
+     !! number of atoms for this calculation
+     !! max l value for species in this calculatio 
+     INTEGER, ALLOCATABLE,INTENT(INOUT) :: order_um(:,:,:)  
+     !! allocatable 3-rank array to be written dimensions will be 2*Hubbarl_lmax+1, nspin, nat  
+  END SUBROUTINE copy_order_um_from_xml 
+END INTERFACE
 CONTAINS
   !-------------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version)
