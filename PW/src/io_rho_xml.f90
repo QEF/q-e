@@ -25,7 +25,7 @@ MODULE io_rho_xml
     SUBROUTINE write_scf ( rho, nspin )
       !
       USE paw_variables,    ONLY : okpaw
-      USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
+      USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg, apply_U, order_um
       USE two_chem,         ONLY : twochem
       USE xc_lib,           ONLY : xclib_dft_is
       USE noncollin_module, ONLY : noncolin, domag
@@ -103,6 +103,18 @@ MODULE io_rho_xml
          IF ( ionode ) THEN
             CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
          ENDIF
+         IF (apply_U) THEN 
+           IF (ionode) THEN 
+             OPEN (NEWUNIT=iunocc, FILE= TRIM(dirname) // 'Hubbard_m_order.txt', FORM='formatted', STATUS='unknown')
+             WRITE (iunocc, *, iostat = ierr ) SHAPE(order_um) 
+             WRITE (iunocc, *, iostat = ierr)  order_um 
+           END IF 
+           CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+           IF ( ierr/=0 ) CALL errore('write_scf', 'Writing ldaU Hubbard m order', 1)
+           IF ( ionode ) THEN
+              CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
+           ENDIF
+         END IF 
          !
       END IF
       !
@@ -129,7 +141,7 @@ MODULE io_rho_xml
       USE scf,              ONLY : scf_type
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
-                                   lda_plus_u_kind, nsg
+                                   lda_plus_u_kind, nsg, apply_U, order_um
       use lsda_mod,         ONLY : magtot
       USE noncollin_module, ONLY : noncolin, domag
       USE cell_base,        ONLY : omega
@@ -149,6 +161,7 @@ MODULE io_rho_xml
       CHARACTER(LEN=256) :: dirname
       LOGICAL :: lexist
       INTEGER :: nspin_, iunocc, iunpaw, ierr
+      INTEGER :: ll, nat
       INTEGER, EXTERNAL :: find_free_unit
 
       dirname = restart_dir ( )
@@ -255,6 +268,24 @@ MODULE io_rho_xml
          ! If projections on Hubbard manifold are read from file, there is no
          ! need to set starting values: reset them to prevent any problem
          starting_ns = -1.0_dp
+         IF (apply_U) THEN
+           IF (ionode) THEN 
+             OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'Hubbard_m_order.txt', &
+                 FORM='formatted', STATUS='old', IOSTAT=ierr )
+             READ(iunocc,*) ll, nspin_, nat 
+           END IF 
+           CALL mp_bcast(ll, ionode_id, intra_image_comm)
+           CALL mp_bcast(nspin, ionode_id, intra_image_comm) 
+           CALL mp_bcast(nat, ionode_id, intra_image_comm)  
+           ALLOCATE (order_um(ll, nspin, nat)) 
+           order_um = 0 
+           IF (ionode) READ(iunocc,*) order_um 
+           IF (ionode) CLOSE(iunocc, STATUS='KEEP') 
+           CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+           IF ( ierr/=0 ) CALL errore('read_scf', 'Reading ldaU ns', 1)
+           !
+           CALL mp_sum(order_um, intra_image_comm) 
+         END IF 
          !
       ENDIF
       !

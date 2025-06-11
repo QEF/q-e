@@ -537,7 +537,6 @@ MODULE pw_restart_new
             !
             ! Currently rho%nsb is not written/read to/from XML 
             !
-            print '("CIAO order_um is allocate is",5L)', allocated(order_um)
             CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp),                & 
                     ITYP = ityp(1:nat), IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back, BACKALL = backall,& 
                     HUBB_OCC = Hubbard_occ, HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,& 
