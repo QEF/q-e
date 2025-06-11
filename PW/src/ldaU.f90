@@ -240,6 +240,7 @@ CONTAINS
     lba = .FALSE.
     lb  = .FALSE.
     hub_back = .FALSE.
+    hub_pot_fix = .FALSE.
     orbital_resolved = .FALSE.
     apply_U = .FALSE.
     !
