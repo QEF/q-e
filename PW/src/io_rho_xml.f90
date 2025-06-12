@@ -107,7 +107,7 @@ MODULE io_rho_xml
            IF (ionode) THEN 
              OPEN (NEWUNIT=iunocc, FILE= TRIM(dirname) // 'Hubbard_m_order.txt', FORM='formatted', STATUS='unknown')
              WRITE (iunocc, *, iostat = ierr ) SHAPE(order_um) 
-             WRITE (iunocc, *, iostat = ierr)  order_um 
+             WRITE (iunocc, '(14I7)', iostat = ierr)  order_um 
            END IF 
            CALL mp_bcast( ierr, ionode_id, intra_image_comm )
            IF ( ierr/=0 ) CALL errore('write_scf', 'Writing ldaU Hubbard m order', 1)
@@ -275,9 +275,9 @@ MODULE io_rho_xml
              READ(iunocc,*) ll, nspin_, nat 
            END IF 
            CALL mp_bcast(ll, ionode_id, intra_image_comm)
-           CALL mp_bcast(nspin, ionode_id, intra_image_comm) 
+           CALL mp_bcast(nspin_, ionode_id, intra_image_comm) 
            CALL mp_bcast(nat, ionode_id, intra_image_comm)  
-           ALLOCATE (order_um(ll, nspin, nat)) 
+           ALLOCATE (order_um(ll, nspin_, nat)) 
            order_um = 0 
            IF (ionode) READ(iunocc,*) order_um 
            IF (ionode) CLOSE(iunocc, STATUS='KEEP') 

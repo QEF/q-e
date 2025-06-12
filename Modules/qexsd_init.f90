@@ -629,6 +629,7 @@ CONTAINS
            do iat = 1, nat
               label_ = labs(ityp(iat)) 
               ldim  = 2 * index(lab2ldim, label_(2:2)) - 1
+              if (noncolin_) ldim = ldim * 2 
               do ispin = 1, nspin 
                  iobj = nspin*(iat-1) + ispin  
                  if (ldim >= 1) &
