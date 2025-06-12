@@ -26,13 +26,13 @@
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
                                 ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     &
                                 ip_hubbard_u => hubbard_u, ip_hubbard_u2 => hubbard_u2, ip_hubbard_Um => hubbard_um,  &
-                                ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta, ip_backall => backall, &
-                                ip_hubbard_n => hubbard_n, ip_hubbard_l => hubbard_l,                                 &
-                                ip_hubbard_n2 => hubbard_n2, ip_hubbard_l2 => hubbard_l2, ip_hubbard_l3 => hubbard_l3,&
-                                ip_hubbard_n3 => Hubbard_n3,ip_hubbard_alpha => hubbard_alpha,                        &
-                                ip_Hubbard_alpha_back => hubbard_alpha_back, ip_hubbard_j => hubbard_j,               &
-                                starting_ns_eigenvalue, ip_hubbard_projectors => hubbard_projectors,                  &
-                                ip_hubbard_v => Hubbard_V,                                                            &
+                                ip_hubbard_Um_nc => hubbard_Um_nc, ip_hubbard_j0 => hubbard_j0,                       &
+                                ip_hubbard_beta => hubbard_beta, ip_backall => backall, ip_hubbard_n => hubbard_n,    &
+                                ip_hubbard_l => hubbard_l, ip_hubbard_n2 => hubbard_n2, ip_hubbard_l2 => hubbard_l2,  &
+                                ip_hubbard_l3 => hubbard_l3, ip_hubbard_n3 => Hubbard_n3,                             &
+                                ip_hubbard_alpha => hubbard_alpha, ip_Hubbard_alpha_back => hubbard_alpha_back,       &
+                                ip_hubbard_j => hubbard_j, starting_ns_eigenvalue,                                    &
+                                ip_hubbard_projectors => hubbard_projectors, ip_hubbard_v => Hubbard_V,               &
                                 vdw_corr, london, london_s6, london_c6, london_rcut, london_c6, xdm_a1, xdm_a2,       &
                                 ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                     &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
@@ -307,7 +307,8 @@
      DO nt = 1, ntyp
        !
        is_hubbard(nt) = ip_Hubbard_U(nt)/= 0.0_dp .OR. &
-                        ANY(ip_hubbard_Um(:,:,nt)/=0.0_dp) .OR. &  
+                        ANY(ip_hubbard_Um(:,:,nt)/=0.0_dp)  .OR. &
+                        ANY(ip_hubbard_Um_nc(:,nt)/=0.0_dp) .OR. &  
                         ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_alpha(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_alpha_back(nt) /= 0.0_DP .OR. &
@@ -383,6 +384,9 @@
      IF (ANY(ip_hubbard_Um(:,1:ip_nspin,1:ntyp)/=0.0_dp)) THEN 
        ALLOCATE(Hubbard_Um_(1:2*hublmax+1, ip_nspin,1:ntyp)) 
        Hubbard_Um_(:,:,:)  = ip_hubbard_Um(1:2*hublmax+1, 1:ip_nspin,1:ntyp) * ev_to_Ha   
+     ELSE IF (ANY(ip_hubbard_Um_nc(:,1:ntyp)/=0.0_dp)) THEN 
+       ALLOCATE (Hubbard_Um_(1:4*hublmax+2,1,1:ntyp)) 
+       Hubbard_Um_(:,1,:)  = ip_hubbard_Um_nc(1:4*hublmax+2,1:ntyp) * ev_to_Ha   
      END IF
      !
      !

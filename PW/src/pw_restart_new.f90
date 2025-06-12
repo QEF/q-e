@@ -104,11 +104,11 @@ MODULE pw_restart_new
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
-                                       Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_Um, Hubbard_J, &
-                                       Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V, Hubbard_occ,&
-                                       Hubbard_alpha, Hubbard_alpha_back, nsg, order_um, &
-                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, &
-                                       is_hubbard, is_hubbard_back, backall, neighood, nsg
+                                       Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_Um, Hubbard_Um_nc, & 
+                                       Hubbard_J, Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V,     & 
+                                       Hubbard_occ, Hubbard_alpha, Hubbard_alpha_back, nsg, order_um, Hubbard_J0,&
+                                       Hubbard_beta, Hubbard_U2, is_hubbard, is_hubbard_back, backall, neighood, &
+                                       nsg
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
@@ -509,9 +509,12 @@ MODULE pw_restart_new
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp)  
             END IF
             IF (ANY(Hubbard_Um(1:2*Hubbard_lmax+1,1:nspin,1:nsp)/=0.0_dp)) THEN
-            ALLOCATE (Um_opt(2*Hubbard_lmax+1,nspin,nsp))
+              ALLOCATE (Um_opt(2*Hubbard_lmax+1,nspin,nsp))
               Um_opt(1:2*Hubbard_lmax+1,1:nspin,1:nsp) = &
                       Hubbard_Um(1:2*Hubbard_lmax+1,1:nspin,1:nsp) * Ry_to_Ha  
+            ELSE IF (ANY(Hubbard_Um_nc(1:4*Hubbard_lmax+2,1:nsp)/=0.0_dp)) THEN 
+              ALLOCATE(Um_opt(4*Hubbard_lmax+2,1,1:nsp))
+              Um_opt(1:4*Hubbard_lmax+2,1,1:nsp) = Hubbard_Um_nc(1:4*Hubbard_lmax+2,1:nsp) * Ry_to_Ha 
             END IF 
             IF (lda_plus_u_kind==2) THEN
                ALLOCATE (nsg_(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
