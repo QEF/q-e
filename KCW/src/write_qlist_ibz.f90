@@ -4,7 +4,7 @@ SUBROUTINE write_qlist_ibz()
   USE io_global,           ONLY : ionode
   USE klist,               ONLY : nkstot, xk
   USE lsda_mod,            ONLY : lsda, isk
-  USE control_kcw,         ONLY : nqstot_ibz, fbz2ibz, wq_ibz
+  USE control_kcw,         ONLY : nqstot_ibz, fbz2ibz, wq_ibz, nqstot
   !
   implicit none
   !
@@ -18,8 +18,8 @@ SUBROUTINE write_qlist_ibz()
     OPEN (iun_qlist_ibz, file = filename)
     IF (ionode) THEN 
       WRITE(iun_qlist_ibz,*)  nqstot_ibz( iwann )
-      DO ik = 1, nkstot
-        IF (lsda .AND. isk(ik) /= spin_component) CYCLE
+      DO ik = 1, nqstot
+        !IF (lsda .AND. isk(ik) /= spin_component) CYCLE
         !
         IF( fbz2ibz(ik, iwann) .eq. -1 ) THEN
           WRITE(iun_qlist_ibz, *) -1, -1

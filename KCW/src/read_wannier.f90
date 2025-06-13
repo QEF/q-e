@@ -84,6 +84,14 @@ END subroutine read_wannier
   !
   num_wann = 0
   !
+  IF (nspin == 4) THEN
+      nkstot_eff = nkstot
+  ELSE IF (nspin ==2)  THEN
+      nkstot_eff = nkstot/nspin
+  ELSE
+      nkstot_eff = nkstot/nspin
+  ENDIF
+  !
   u_file=TRIM( seedname ) // '_u.mat'
   !
   ! ... The U matrix for empty states 
