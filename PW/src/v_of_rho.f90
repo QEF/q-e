@@ -692,9 +692,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !$acc end kernels
      !
      IF (do_cutoff_2D) THEN  !TS
-        !$acc update self(aux1)
         CALL cutoff_hartree(rhog(:), aux1, ehart)
-        !$acc update device(aux1)
      ELSE
 #if defined(_OPENACC)
         !$acc parallel loop
