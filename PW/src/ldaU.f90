@@ -281,9 +281,10 @@ CONTAINS
           is_hubbard_back(nt) = Hubbard_U2(nt)/= 0.0_dp     .OR. &
                                 Hubbard_alpha_back(nt) /= 0.0_dp                 
           !
-          orbital_resolved =  ANY(Hubbard_Um(:,:,:) /= 0.0_DP)       .OR. &
-                              ANY(Hubbard_Um_nc(:,nt) /= 0.0_DP)     .OR. &
-                              ANY(Hubbard_alpha_m(:,:,:) /= 0.0_DP)  .OR. &
+          orbital_resolved =  orbital_resolved .OR. &
+                              ANY(Hubbard_Um(:,:,nt) /= 0.0_DP)       .OR. &
+                              ANY(Hubbard_Um_nc(:,nt) /= 0.0_DP)      .OR. &
+                              ANY(Hubbard_alpha_m(:,:,nt) /= 0.0_DP)  .OR. &
                               ANY(Hubbard_alpha_m_nc(:,nt) /= 0.0_DP)
           !
           IF ( is_hubbard(nt) ) THEN
@@ -339,8 +340,9 @@ CONTAINS
           eigenvecs_ref(:,:,:,:) = CMPLX(0.d0,0.d0, kind=DP)
        ENDIF
        !
-       IF ( ANY(Hubbard_alpha(:) /= 0.0_DP) .OR. ANY(Hubbard_alpha_m(:,:,:) /= 0.0_DP) &
-          & .OR. ANY(Hubbard_alpha_m_nc(:,:) /= 0.0_DP)) THEN
+       IF ( ANY(Hubbard_alpha(1:ntyp) /= 0.0_DP)       .OR. &
+            ANY(Hubbard_alpha_m(:,:,1:ntyp) /= 0.0_DP) .OR. & 
+            ANY(Hubbard_alpha_m_nc(:,1:ntyp) /= 0.0_DP)       ) THEN
           ! To apply LR-cDFT to calculate Hubbard parameters,
           ! we fix the Hubbard potential. Also, if this is an orbital-
           ! resolved calculation, turn on corrections before the first iteration.
