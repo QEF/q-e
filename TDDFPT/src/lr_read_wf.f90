@@ -22,7 +22,7 @@ SUBROUTINE lr_read_wf()
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, diropn,&
                                  & tmp_dir, wfc_dir 
-  USE lr_variables,         ONLY : evc0, sevc0 ,revc0, evc0_virt,        &
+  USE lr_variables,         ONLY : evc0, sevc0, evc0_virt,        &
                                  & sevc0_virt, nbnd_total, becp1_virt,   &
                                  & becp1_c_virt, no_hxc, becp_1, becp1_c, &
                                  & test_case_no, size_evc, project,       &
@@ -120,7 +120,6 @@ SUBROUTINE normal_read()
   !
   ! The usual way of reading wavefunctions
   !
-  USE lr_variables,             ONLY : tg_revc0
   USE wavefunctions,     ONLY : psic
   USE realus,                   ONLY : tg_psic
   USE mp_global,                ONLY : me_bgrp
@@ -230,63 +229,6 @@ SUBROUTINE normal_read()
   ELSE
      !
      sevc0 = evc0
-     !
-  ENDIF
-  !
-  ! Calculation of the unperturbed wavefunctions in R-space revc0.
-  ! Inverse Fourier transform of evc0.
-  !
-  IF ( dffts%has_task_groups ) THEN
-       !
-       v_siz =  dffts%nnr_tg
-       incr = 2 * fftx_ntgrp(dffts)
-       tg_revc0 = (0.0d0,0.0d0)
-       !
-  ELSE
-       !
-       revc0 = (0.0d0,0.0d0)
-       !
-  ENDIF
-  !
-  IF ( gamma_only ) THEN
-     !
-     DO ibnd = 1, nbnd, incr
-        !
-        CALL invfft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
-        !
-        IF (dffts%has_task_groups) THEN               
-           !
-           DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
-               !
-               tg_revc0(j,ibnd,1) = tg_psic(j)
-               !  
-           ENDDO
-           !
-        ELSE
-           !
-           revc0(1:dffts%nnr,ibnd,1) = psic(1:dffts%nnr)
-           !
-        ENDIF
-        !
-     ENDDO
-     !
-  ELSE
-     !
-     ! The FFT is done in the same way as in invfft_orbital_k 
-     ! (where also the task groups is implemented but must be checked).
-     !
-     DO ik = 1, nks
-        DO ibnd = 1, nbnd
-           DO ig = 1, ngk(ik)
-               !
-               revc0(dffts%nl(igk_k(ig,ik)),ibnd,ik) = evc0(ig,ibnd,ik)
-               !
-           ENDDO
-           !
-           CALL invfft ('Wave', revc0(:,ibnd,ik), dffts)
-           !
-        ENDDO
-     ENDDO
      !
   ENDIF
   !
@@ -511,9 +453,6 @@ SUBROUTINE virt_read()
   !
   sevc0 = (0.0d0,0.0d0)
   sevc0(:,:,:) = sevc_all(:,1:nbnd,:)
-  !
-  revc0 = (0.0d0,0.0d0)
-  revc0(:,:,:) = revc_all(:,1:nbnd,:)
   !
   IF (nkb>0) THEN
      !

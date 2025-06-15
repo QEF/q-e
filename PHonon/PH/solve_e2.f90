@@ -123,6 +123,7 @@ subroutine solve_e2
         ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ikk)
+        !$acc update device(evc)
         npw = ngk(ikk)
         npwq= ngk(ikq)
         !

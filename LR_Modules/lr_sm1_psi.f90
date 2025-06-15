@@ -45,15 +45,15 @@ SUBROUTINE lr_sm1_psi (ik, lda, n, m, psi, spsi)
   !
   CALL start_clock( 'lr_sm1_psi' )
   !
+  !$acc data present_or_copyin(psi) present_or_copyout(spsi)
   IF ( gamma_only ) THEN
-     !$acc data present_or_copyin(psi) present_or_copyout(spsi)     
      CALL sm1_psi_gamma()
-     !$acc end data
   ELSEIF (noncolin) THEN
      CALL sm1_psi_nc()
   ELSE
      CALL sm1_psi_k()
   ENDIF
+  !$acc end data
   !
   CALL stop_clock( 'lr_sm1_psi' )
   !
@@ -89,8 +89,6 @@ CONTAINS
     !
     !
     ! Initialize spsi : spsi = psi
-    !
-!    !$acc data present(psi,spsi)
     !
     !$acc kernels
     spsi(:,:) = psi(:,:)
@@ -129,7 +127,6 @@ CONTAINS
     !$acc end host_data
     !
     !$acc exit data delete(ps)
-!    !$acc end data
     DEALLOCATE(ps)
     !
     RETURN
@@ -159,7 +156,9 @@ CONTAINS
     !
     ! Initialize spsi : spsi = psi
     !
-    CALL ZCOPY( lda*m, psi, 1, spsi, 1 )
+    !$acc kernels
+    spsi(:,:) = psi(:,:)
+    !$acc end kernels
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
@@ -175,7 +174,7 @@ CONTAINS
     !
     ! Calculate beta-functions vkb for a given k+q point.
     !
-    CALL init_us_2 (n, igk_k(1,ikq), xk(1,ikq), vkb)
+    CALL init_us_2 (n, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k+q, and put the result in becp%k.
@@ -230,7 +229,9 @@ SUBROUTINE sm1_psi_nc()
     !
     ! Initialize spsi : spsi = psi
     !
-    CALL ZCOPY( lda*npol*m, psi, 1, spsi, 1 )
+    !$acc kernels
+    spsi(:,:) = psi(:,:)
+    !$acc end kernels
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
