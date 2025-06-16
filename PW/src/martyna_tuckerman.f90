@@ -40,7 +40,7 @@ MODULE martyna_tuckerman
   !
   PRIVATE
   !
-  PUBLIC :: tag_wg_corr_as_obsolete, do_comp_mt, &
+  PUBLIC :: tag_wg_corr_as_obsolete, do_comp_mt, wg_corr, &
             wg_corr_ewald, wg_corr_loc, wg_corr_h, wg_corr_force
   !
 CONTAINS
@@ -74,18 +74,29 @@ CONTAINS
     !
     INTEGER :: ig
     !
+    !$acc data copyin(rho) copyout(v)
+    !
     IF (.NOT. wg_corr_is_updated) CALL init_wg_corr
     !
+    !$acc kernels
     v(:) = (0._dp,0._dp)
+    !$acc end kernels
     !
     eh_corr =  0._dp
+    !$acc parallel loop reduction(+:eh_corr)
     DO ig = 1, ngm
        v(ig) = e2 * wg_corr(ig) * rho(ig) 
        eh_corr = eh_corr + ABS(rho(ig))**2 * wg_corr(ig)
     ENDDO
-    IF (gamma_only) v(gstart:ngm) = 0.5_dp * v(gstart:ngm)
+    IF (gamma_only) THEN
+       !$acc kernels
+       v(gstart:ngm) = 0.5_dp * v(gstart:ngm)
+       !$acc end kernels
+    ENDIF
     !
     eh_corr = 0.5_dp * e2 * eh_corr * omega
+    !
+    !$acc end data
     !
     RETURN
     !
@@ -222,8 +233,12 @@ CONTAINS
     LOGICAL, SAVE :: first = .TRUE.
 #endif
     !
-    IF ( ALLOCATED(wg_corr) ) DEALLOCATE( wg_corr )
+    IF ( ALLOCATED(wg_corr) ) THEN
+      !$acc exit data delete(wg_corr)
+      DEALLOCATE( wg_corr )
+    ENDIF
     ALLOCATE( wg_corr(ngm) )
+    !$acc enter data create(wg_corr)
     !
     ! ... choose alpha in order to have convergence in the sum over G.
     ! upperbound is a safe upper bound for the error in the sum over G.
@@ -278,6 +293,8 @@ CONTAINS
     wg_corr(:) =  wg_corr(:) * EXP(-tpiba2*gg(:)*beta/4._dp)**2
     !
     IF (gamma_only) wg_corr(gstart:ngm) = 2.d0 * wg_corr(gstart:ngm)
+    !
+    !$acc update device(wg_corr)
     !
     wg_corr_is_updated = .TRUE.
     !

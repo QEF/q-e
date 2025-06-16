@@ -695,7 +695,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
         CALL cutoff_hartree(rhog(:), aux1, ehart)
      ELSE
 #if defined(_OPENACC)
-        !$acc parallel loop
+        !$acc parallel loop reduction(+:ehart)
 #elif defined(__OPENMP)
         !$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
 #endif
@@ -722,7 +722,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      ehart = ehart * fac
      !
      !$acc kernels
-     aux1 = aux1 * fac
+     aux1(:,:) = aux1(:,:) * fac
      !$acc end kernels
      !
      IF ( gamma_only ) THEN
@@ -737,9 +737,11 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
      IF (do_comp_mt) THEN
         ALLOCATE( vaux(ngm), rgtot(ngm) )
+        !$acc data create(vaux,rgtot)
+        !$acc kernels
         rgtot(:) = rhog(:)
+        !$acc end kernels
         CALL wg_corr_h( omega, ngm, rgtot, vaux, eh_corr )
-        !$acc data copyin(vaux)
         !$acc kernels
         aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
         aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))

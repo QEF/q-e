@@ -180,7 +180,7 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   !  
   !$acc data copyin(rhog) copy(aux1)
   !
-  !$acc parallel loop
+  !$acc parallel loop reduction(+:ehart)
   DO ig = gstart, ngm
      !
      fac = 1.D0 / gg(ig) * cutoff_2D(ig)
