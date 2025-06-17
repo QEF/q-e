@@ -69,6 +69,8 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
+  !$acc data copyin(rho,v)
+  !$acc data copyin(rho%of_r,rho%of_g,rho_core,rhog_core) copyout(v%of_r,v%kin_r)
   !
   IF (xclib_dft_is('meta')) THEN
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
@@ -83,6 +85,9 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! ... calculate hartree potential
   !
   CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
+  !
+  !$acc end data
+  !$acc end data
   !
   ! ... DFT+U(+V): build up (extended) Hubbard potential 
   !
@@ -601,15 +606,23 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
   !
-  !$acc end data
-  !$acc end data
-  !
   ! ... to avoid NaN in some rare cases (see summations in subroutine delta_e)
-  IF ( nspin==4 .AND. .NOT.domag ) v(:,2:nspin) = 0.D0
+  IF ( nspin==4 .AND. .NOT.domag ) THEN
+     !$acc kernels
+     v(:,2:nspin) = 0.D0
+     !$acc end kernels
+  ENDIF
   !
   ! ... add non local corrections (if any)
   !
-  IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
+  IF ( dft_is_nonlocc() ) THEN
+    !$acc update self(v)
+    CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
+    !$acc update device(v)
+  ENDIF
+  !
+  !$acc end data
+  !$acc end data
   !
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
