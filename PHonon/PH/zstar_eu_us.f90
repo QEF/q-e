@@ -91,8 +91,10 @@ subroutine zstar_eu_us
   do ik = 1, nksq
      ikk = ikks(ik)
      npw = ngk(ikk)
-     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikk)
-     !$acc update device(evc)
+     if (nksq.gt.1) then 
+        call get_buffer (evc, lrwfc, iuwfc, ikk)
+        !$acc update device(evc)
+     endif
      if (lsda) current_spin = isk (ikk)
      call init_us_2 (npw, igk_k(1,ikk), xk(1,ikk), vkb)
      weight = wk (ikk)
