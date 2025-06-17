@@ -340,7 +340,7 @@ CONTAINS
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, apply_u, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
        Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-       Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
+       Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_alpha_m, Hubbard_beta, Hubbard_J, Hubbard_V, &
        vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
@@ -367,7 +367,7 @@ CONTAINS
     INTEGER, INTENT(inout) :: Hubbard_n(:), Hubbard_l(:), Hubbard_n2(:), Hubbard_l2(:), Hubbard_n3(:), Hubbard_l3(:) 
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U2(:), Hubbard_J0(:), Hubbard_J(:,:), Hubbard_V(:,:,:), &
                                Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:), Hubbard_occ(:,:),   & 
-                               Hubbard_Um(:,:,:)
+                               Hubbard_Um(:,:,:), Hubbard_alpha_m(:,:,:) 
     LOGICAL, INTENT(inout) :: backall(:)
     OPTIONAL    :: Hubbard_U2, Hubbard_n2, Hubbard_l2, Hubbard_lmax_back, Hubbard_alpha_back, &
                    Hubbard_l3, Hubbard_Um
@@ -380,7 +380,7 @@ CONTAINS
     !
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
-    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich, im, ispin
+    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich, im, ispin, objldim
     !
     dft_name = TRIM(dft_obj%functional)
     IF ( dft_obj%hybrid_ispresent ) THEN
@@ -419,6 +419,9 @@ CONTAINS
        Hubbard_l2 =-1 
        Hubbard_l3 =-1 
        backall = .false.
+       !FIXME read and write of Hubbard_alpha_m from XML not yet implemented, temporarily 
+       ! we just set it to 0 not to break other cases 
+       Hubbard_alpha_m = 0.0_DP
        !
        IF ( dft_obj%dftU%Hubbard_U_ispresent) THEN 
           loop_on_hubbardU:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U
@@ -453,11 +456,20 @@ CONTAINS
              END IF
              loop_on_speciesUm:DO isp = 1, nsp
                 IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN 
-                  Hubbard_Um(:,ispin,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM 
                   READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
                   hu_l = spdf_to_l( label(2:2) )
                   Hubbard_n(isp) = hu_n
                   Hubbard_l(isp) = hu_l
+                  objldim = dft_obj%dftU%Hubbard_Um(ihub)%size 
+                  IF (objldim == 2*hu_l + 1)  THEN 
+                    Hubbard_Um(:,ispin,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM 
+                  ELSE IF (objldim == 2*(2*hu_l +1)) THEN 
+                    Hubbard_Um(:,1,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM(1:2*hu_l+1)
+                    Hubbard_Um(:,2,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM(2*hu_l+2:4*hu_l+2)
+                  ELSE 
+                    call errore("qexsd_copy_dft:", & 
+                       "size of Hubbard_Um element not compatible with label",1) 
+                  END IF  
                   IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
                         CALL errore ("qexsd_copy_dft:", &
                             &"Problem while reading Hubbard_n and/or Hubbard_l", 1 )

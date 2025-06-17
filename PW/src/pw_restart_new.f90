@@ -1176,7 +1176,8 @@ MODULE pw_restart_new
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
                                   Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, &
                                   Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, Hubbard_occ, &
-                                  Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors, Hubbard_Um, apply_u
+                                  Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors, Hubbard_Um, & 
+                                  Hubbard_Um_nc, apply_u, Hubbard_alpha_m, Hubbard_alpha_m_nc
       USE funct,           ONLY : enforce_input_dft, get_dft_short
       USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
                                   set_screening_parameter, set_gau_parameter, &
@@ -1225,7 +1226,7 @@ MODULE pw_restart_new
       LOGICAL  :: magnetic_sym, lvalid_input
       CHARACTER(LEN=37)  :: dft_name
       CHARACTER(LEN=256) ::dft_
-      INTEGER           :: npwx_g
+      INTEGER           :: npwx_g, llmax, ntmax
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
       TYPE (output_type)        :: output_obj 
@@ -1298,13 +1299,24 @@ MODULE pw_restart_new
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_u, apply_u,lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ,&
            Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-           Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
+           Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_alpha_m, Hubbard_beta, Hubbard_J, Hubbard_V, &
            vdw_corr, dftd3_version, dftd3_threebody, scal6, lon_rcut, vdw_isolated )
       Hubbard_alpha_back = Hubbard_alpha_back * e2 
       Hubbard_alpha      = Hubbard_alpha      * e2
       Hubbard_beta       = Hubbard_beta       * e2 
       Hubbard_U          = Hubbard_U          * e2 
       Hubbard_Um         = Hubbard_Um         * e2
+      Hubbard_Um_nc      = 0.0_DP 
+      Hubbard_alpha_m   = Hubbard_alpha_m     * e2 
+      Hubbard_alpha_m_nc = 0.0_DP 
+      IF (noncolin) THEN
+        llmax = SIZE(Hubbard_Um_nc,1)/2   
+        ntmax = SIZE(Hubbard_Um_nc,2) 
+        Hubbard_Um_nc(:,:) = RESHAPE(Hubbard_Um(:,:,:),[2*llmax,ntmax]) 
+        Hubbard_alpha_m_nc(:,:) = RESHAPE(Hubbard_alpha_m(:,:,:),[2*llmax, ntmax])   
+        Hubbard_Um = 0.0_DP 
+        Hubbard_alpha_m = 0.0_DP 
+      END IF
       Hubbard_U2         = Hubbard_U2         * e2 
       Hubbard_V          = Hubbard_V          * e2 
       Hubbard_J0         = Hubbard_J0         * e2 
