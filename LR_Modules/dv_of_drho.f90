@@ -183,10 +183,20 @@ subroutine dv_of_drho (dvscf, drhoc)
            ELSE
               do ig = 1, ngm
                  qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-                 if (qg2 > 1.d-8) then
-                    dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
-                                   & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
-                 endif
+                 g2  = g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
+                 IF (lnolr) THEN
+                    !
+                    IF (g2 > 1d-8 .AND. qg2 > 1.d-8) THEN
+                       dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
+                                      & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+                    ENDIF
+                    !
+                 ELSE
+                    if (qg2 > 1.d-8) then
+                       dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
+                                      & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+                    endif
+                 ENDIF
               enddo
            ENDIF
            !
