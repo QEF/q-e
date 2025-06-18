@@ -40,7 +40,6 @@
     INTEGER, INTENT(IN) :: irvec_k(3, nrr_k)
     !! Coordinates of real space vector for electrons
     !
-    CALL kpoints_time_reversal_init()
     !
     IF (lfast_kmesh) THEN
       ! The fine q-grid is not create (will be generated on the fly later)
@@ -50,6 +49,7 @@
       nqf = nqtotf
       WRITE(stdout, '(5x, a, 3i5)') 'Using uniform q-mesh: ', nqf1, nqf2, nqf3
     ELSE
+      CALL kpoints_time_reversal_init()
       CALL loadqmesh_serial()
       CALL loadkmesh_para()
     ENDIF
