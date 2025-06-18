@@ -749,6 +749,7 @@
     USE kinds,            ONLY : DP
     USE noncollin_module, ONLY : noncolin
     USE indabs,           ONLY : fermi_carrier_indabs
+    USE symmetry,         ONLY : kpoints_time_reversal_init
     !
     IMPLICIT NONE
     !
@@ -782,7 +783,10 @@
     !! Used to store $e^{2\pi r \cdot k}$ exponential
     COMPLEX(KIND = DP), ALLOCATABLE :: cufkk(:, :)
     !! Rotation matrix, fine mesh, points k
-
+    !
+    ! Load nsym_k and k k mesh
+    CALL kpoints_time_reversal_init()
+    !
     CALL loadkmesh_para()
 
     nelec_aux = nelec
