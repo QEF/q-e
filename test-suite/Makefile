@@ -191,16 +191,15 @@ clean:
 		epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
 		epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
 		epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
-		epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse epw_*/Fsparsecb \
-		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib \
-		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup.fmt \
-		epw_*/inv_taucb.fmt epw_*/inv_tau.fmt epw_*/restart.fmt epw_*/vmedata.fmt \
+		epw_*/Fepmatkq1* epw_*/Fepmatkqcb1* epw_*/Fsparse* epw_*/Fsparsecb* \
+		epw_*/*.cube epw_*/EPW.bib \
+		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup*.fmt \
+		epw_*/restart*.fmt epw_*/vmedata.fmt \
 		epw_*/selecq.fmt epw_*/dmedata.fmt epw_*/band.eig epw_*/ksdata.fmt \
-		epw_*/inv_tau_freq.fmt epw_*/inv_taucb_freq.fmt epw_*/inv_taucb_mode.fmt \
-		epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau_mode.fmt \
+		epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau* \
 		epw_*/wigner.fmt epw_*/*.dos epw_*/*.dmat* epw_*/*.qmap epw_*/*.dwmatwe* \
 		epw_*/*.symk epw_*/*.sthmatwe* epw_*/*.xqc* epw_*/*.dgmatwe* epw_*/*.cpmew* \
-		epw_*/elself_wfpt_sup.* epw_*/*.bak
+		epw_*/elself_wfpt_sup.* epw_*/*.bak epw_*/out.*
 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_super/*.bands.*.dat epw_pl/save/ epw_polar/save/ \
@@ -208,7 +207,9 @@ clean:
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save \
 		epw_qdpt/save epw_2D/save epw_hall/save epw_qdpt/*.dat epw_wfpt/save \
 		epw_wfpt/matdyn.modes epw_plrn/*.plrn epw_plrn/plrn_tmp epw_plrn/save \
-		epw_plrn/dtau.plrn.xsf
+		epw_plrn/dtau.plrn.xsf epw_tdbe/ie_ph.dat epw_tdbe/iph_e.dat          \
+		epw_tdbe/felec epw_tdbe/nphon epw_tdbe/*points epw_tdbe/selecq_tdbe.fmt \
+	        epw_tdbe/inv_tau_rta* epw_tdbe/ph_freq epw_tdbe/save
 
 # Cleaning IMAGE final files
 	@rm -rf image_*/_ph0 image_*/*.save image_*/*.xml image_*/*.dyn? image_*/*.dyn??  \

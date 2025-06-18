@@ -90,7 +90,7 @@
     !-----------------------------------------------------------------------
     USE kinds,       ONLY : DP
     USE input,       ONLY : nstemp, lfast_kmesh, nkf1, nkf2, nkf3
-    USE symm_base,   ONLY : nsym
+    USE symmetry,    ONLY : nsym => nsym_k
     USE global_var,  ONLY : nktotf, nkpt_ibztau, kpt_ibztau2ibz,       &
                             nkpt_bzfst, kpt_bztau2bz, kpt_bz2bztau,&
                             nkpt_bztau_max, kpt_ibztau2bz
@@ -190,7 +190,7 @@
     USE ep_constants,       ONLY : zero
     USE noncollin_module,   ONLY : noncolin
     USE cell_base,          ONLY : at, bg
-    USE symm_base,          ONLY : s, nsym
+    USE symmetry,           ONLY : s => s_k, nsym => nsym_k
     USE global_var,         ONLY : s_bztoibz, nbndfst, nktotf,      &
                                    nkpt_bztau_max, etf_all_b, vkk_all_b, &
                                    wkf_all_b, df_in_b, f_serta_b, f_in_b,    &
@@ -407,7 +407,7 @@
     USE ep_constants,     ONLY : zero, eps160
     USE io_global,        ONLY : stdout
     USE cell_base,        ONLY : at, bg
-    USE symm_base,        ONLY : s, nsym
+    USE symmetry,         ONLY : s => s_k, nsym => nsym_k
     USE input,            ONLY : nstemp, lfast_kmesh
     USE global_var,       ONLY : s_bztoibz, nbndfst, nktotf, &
                                  xkf_bz, kpt_bz2bztau, xqf, map_fst
@@ -420,7 +420,7 @@
     !! Total number of elements per cpu
     INTEGER, INTENT(in) :: nb_sp
     !! Total number of special points
-    INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
+    INTEGER, INTENT(in) :: xkf_sp(97, nb_sp)
     !! Special points indexes and symmetries
     INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
@@ -491,7 +491,7 @@
     !! Symmetry matrix in crystal for special points
     REAL(KIND = DP) :: sa_tot(3, 3)
     !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: S_xq(3)
+    REAL(KIND = DP) :: s_xq(3)
     !! Rotated q-point
     !
     ! Note 1: To find if a k+q point is within the fsthick we need to obtain the mapping
@@ -557,9 +557,9 @@
                   sb         = MATMUL(bg, sa_tot)
                   sr(:, :)   = MATMUL(at, TRANSPOSE(sb))
                   sr         = TRANSPOSE(sr)
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, S_xq(:), 1)
-                  CALL cryst_to_cart(1, S_xq(:), at, -1)
-                  CALL kpmq_map(xk, S_xq, 1, nkq_abs)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, s_xq(:), 1)
+                  CALL cryst_to_cart(1, s_xq(:), at, -1)
+                  CALL kpmq_map(xk, s_xq, 1, nkq_abs)
                   IF (lfast_kmesh) THEN
                     CALL bisection(SIZE(map_fst, 1), map_fst, nkq_abs, n_intval, val_intval, pos_intval)
                     IF (nkq_abs == 0) CYCLE ! The point is not within the fsthick
@@ -600,9 +600,9 @@
               sb         = MATMUL(bg, sa)
               sr(:, :)   = MATMUL(at, TRANSPOSE(sb))
               sr         = TRANSPOSE(sr)
-              CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, S_xq(:), 1)
-              CALL cryst_to_cart(1, S_xq(:), at, -1)
-              CALL kpmq_map(xk, S_xq, 1, nkq_abs)
+              CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, s_xq(:), 1)
+              CALL cryst_to_cart(1, s_xq(:), at, -1)
+              CALL kpmq_map(xk, s_xq, 1, nkq_abs)
               IF (lfast_kmesh) THEN
                 CALL bisection(SIZE(map_fst, 1), map_fst, nkq_abs, n_intval, val_intval, pos_intval)
                 IF (nkq_abs == 0) CYCLE ! The point is not within the fsthick
@@ -653,7 +653,7 @@
     USE kinds,            ONLY : DP
     USE ep_constants,     ONLY : zero, eps160
     USE cell_base,        ONLY : at, bg
-    USE symm_base,        ONLY : s, nsym
+    USE symmetry,         ONLY : s => s_k, nsym => nsym_k
     USE input,            ONLY : nstemp, lfast_kmesh
     USE global_var,       ONLY : s_bztoibz, nbndfst, nktotf, map_fst, xkf_bz, xqf, &
                                  kpt_bz2bztau, nsym_sp, ind_map
@@ -670,7 +670,7 @@
     !! At exit, is .true. if the k-point corresponding to the index "ind" is a special point
     INTEGER, INTENT(in) :: nb_sp
     !! Total number of special points
-    INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
+    INTEGER, INTENT(in) :: xkf_sp(97, nb_sp)
     !! Special points indexes and symmetries
     INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
@@ -749,7 +749,7 @@
     !! Symmetry matrix in crystal for special points
     REAL(KIND = DP) :: sa_tot(3, 3)
     !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: S_xq(3)
+    REAL(KIND = DP) :: s_xq(3)
     !! Rotated q-point
     !
     ! Note 1: To find if a k+q point is within the fsthick we need to obtain the mapping
@@ -827,9 +827,9 @@
                   sb         = MATMUL(bg, sa_tot)
                   sr(:, :)   = MATMUL(at, TRANSPOSE(sb))
                   sr         = TRANSPOSE(sr)
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, S_xq(:), 1)
-                  CALL cryst_to_cart(1, S_xq(:), at, -1)
-                  CALL kpmq_map(xk, S_xq, 1, nkq_abs)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, s_xq(:), 1)
+                  CALL cryst_to_cart(1, s_xq(:), at, -1)
+                  CALL kpmq_map(xk, s_xq, 1, nkq_abs)
                   IF (lfast_kmesh) THEN
                     CALL bisection(SIZE(map_fst, 1), map_fst, nkq_abs, n_intval, val_intval, pos_intval)
                     IF (nkq_abs == 0) CYCLE ! The point is not within the fsthick
@@ -880,9 +880,9 @@
               sb         = MATMUL(bg, sa)
               sr(:, :)   = MATMUL(at, TRANSPOSE(sb))
               sr         = TRANSPOSE(sr)
-              CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, S_xq(:), 1)
-              CALL cryst_to_cart(1, S_xq(:), at, -1)
-              CALL kpmq_map(xk, S_xq, 1, nkq_abs)
+              CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xq(:), 1, 0.d0, s_xq(:), 1)
+              CALL cryst_to_cart(1, s_xq(:), at, -1)
+              CALL kpmq_map(xk, s_xq, 1, nkq_abs)
               IF (lfast_kmesh) THEN
                 CALL bisection(SIZE(map_fst, 1), map_fst, nkq_abs, n_intval, val_intval, pos_intval)
                 IF (nkq_abs == 0) CYCLE ! The point is not within the fsthick

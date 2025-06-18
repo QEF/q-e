@@ -1,0 +1,11 @@
+MPIRUN="ibrun -n 56 "
+QEPATH=
+BGWPATH=
+EPSILON=$BGWPATH/epsilon.cplx.x
+SIGMA=$BGWPATH/sigma.cplx.x
+KERNEL=$BGWPATH/kernel.cplx.x
+ABSORPTION=$BGWPATH/absorption.cplx.x
+KGRID=$BGWPATH/kgrid.x
+PW=$QEPATH/pw.x
+PWFLAGS=" -nk 14 "
+PW2BGW=$QEPATH/pw2bgw.x

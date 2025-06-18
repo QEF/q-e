@@ -29,7 +29,7 @@
                                                      npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.8 starts on  9Jan2024 at 13:53:51 
+     Program EPW v.5.9 starts on  6Feb2025 at 19:17:53 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -44,7 +44,7 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     33652 MiB available memory on the printing compute node when the environment starts
+     5076 MiB available memory on the printing compute node when the environment starts
  
      Reading input from epw3.in
 
@@ -96,9 +96,9 @@
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
      number of k points=    0
                        cart. coord. in units 2pi/a_0
-     EPW          :      0.00s CPU      0.00s WALL
+     EPW          :      0.01s CPU      0.01s WALL
 
-     EPW          :      0.00s CPU      0.00s WALL
+     EPW          :      0.01s CPU      0.01s WALL
 
 
      -------------------------------------------------------------------
@@ -125,8 +125,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        51Mb
-                   VmPeak =      3739Mb
+     Memory usage:  VmHWM =        80Mb
+                   VmPeak =      2735Mb
      ===================================================================
      
      Using uniform q-mesh:     6    6    6
@@ -156,8 +156,8 @@
       
      All q-points are done, no need to restart !!
      ===================================================================
-     Memory usage:  VmHWM =        53Mb
-                   VmPeak =      3757Mb
+     Memory usage:  VmHWM =        86Mb
+                   VmPeak =      2753Mb
      ===================================================================
 
 
@@ -174,8 +174,8 @@
 
      Finish reading freq file
 
-                  Fermi level (eV) =     7.6644747168E+00
-     DOS(states/spin/eV/Unit Cell) =     9.1308568651E-01
+                  Fermi level (eV) =     7.6644747173E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308568490E-01
             Electron smearing (eV) =     1.0000000000E-01
                  Fermi window (eV) =     2.0000000000E+01
      Nr irreducible k-points within the Fermi shell =        28 out of        28
@@ -204,65 +204,66 @@
 
      Electron-phonon coupling strength =    0.8714948
  
-     Estimated Allen-Dynes Tc =    26.408172 K for muc =    0.16000
+     Estimated Tc using McMillan expression =  26.4082 K for muc =   0.1600
   
-     Estimated w_log in Allen-Dynes Tc =    61.470420 meV
+     Estimated Tc using Allen-Dynes modified McMillan expression =  27.4569 K
   
-     Estimated BCS superconducting gap =     4.005197 meV
+     Estimated Tc using SISSO machine learning model =  31.5015 K
   
-     Estimated Tc from machine learning model =    31.501506 K
+     Estimated w_log =  61.4704 meV
   
+     Estimated BCS superconducting gap using McMillan Tc =   4.0052 meV
+  
+     Actual number of frequency points (     1) =     58 for uniform       sampling
     
      temp(  1) =     16.00000 K
     
      Solve anisotropic Eliashberg equations on imaginary-axis
     
      Total number of frequency points nsiw(     1) =     58
-     Cutoff frequency wscut =     0.5068
+     Cutoff frequency wscut =     0.5000 eV
+     Maximum frequency =         0.4981 eV
      broyden mixing factor =      0.70000
     
-     Actual number of frequency points (     1) =     58 for uniform sampling
 
      Size of allocated memory per pool: ~=    0.0356 Gb
         iter      ethr          znormi      deltai [meV]
           1   2.728502E+00   1.843017E+00   4.824677E+00
-          2   1.220476E-01   1.839527E+00   5.482060E+00
-          3   1.461604E-01   1.833965E+00   6.380024E+00
-          4   2.074541E-01   1.822694E+00   7.889006E+00
-          5   1.284397E-02   1.822378E+00   7.917523E+00
-          6   3.908284E-01   1.836706E+00   5.879560E+00
-          7   2.826109E-01   1.820993E+00   7.803932E+00
-          8   7.576384E-02   1.826424E+00   7.398757E+00
-          9   5.891144E-02   1.823228E+00   7.830479E+00
-         10   3.685461E-02   1.821150E+00   8.086240E+00
-         11   2.299020E-02   1.822541E+00   7.920122E+00
-         12   7.441892E-03   1.822127E+00   7.974819E+00
+          2   1.220476E-01   1.839527E+00   5.482061E+00
+          3   1.461604E-01   1.833965E+00   6.380025E+00
+          4   2.074541E-01   1.822694E+00   7.889005E+00
+          5   1.284394E-02   1.822378E+00   7.917522E+00
+          6   3.908301E-01   1.836706E+00   5.879553E+00
+          7   2.826116E-01   1.820993E+00   7.803930E+00
+          8   7.576485E-02   1.826424E+00   7.398748E+00
+          9   5.891198E-02   1.823228E+00   7.830475E+00
+         10   3.685526E-02   1.821150E+00   8.086241E+00
+         11   2.299004E-02   1.822541E+00   7.920123E+00
+         12   7.441798E-03   1.822127E+00   7.974820E+00
      Convergence was reached in nsiter =     12
  
-     Chemical potential (itemp =   1) =     7.6644747168E+00 eV
+     Temp (itemp =   1) =   16.000 K  Free energy =    -0.045461 meV
  
-     Temp (itemp =   1) =   16.000 K  Free energy =    -0.022731 meV
- 
-     Min. / Max. values of superconducting gap =     2.461121   14.139494 meV
-     iaxis_imag   :     21.51s CPU     21.55s WALL (       1 calls)
+     Min. / Max. values of superconducting gap =     2.461121   14.139500 meV
+     iaxis_imag   :     10.92s CPU     11.05s WALL (       1 calls)
  
     
      Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
         pade    Re[znorm]   Re[delta] [meV]
-         52   1.678173E+00   7.378233E+00
+         52   1.677925E+00   7.378283E+00
  
      Convergence was reached for N =     52 Pade approximants
  
-     Min. / Max. values of superconducting gap =     2.478052   14.741282 meV
-     raxis_pade   :      0.05s CPU      0.05s WALL (       1 calls)
+     Min. / Max. values of superconducting gap =     2.478052   14.741337 meV
+     raxis_pade   :      0.09s CPU      0.09s WALL (       1 calls)
  
-     itemp =   1   total cpu time :             21.60 secs
+     itemp =   1   total cpu time :             11.14 secs
  
 
      Unfolding on the coarse grid
-     elphon_wrap  :      0.01s CPU      0.01s WALL (       1 calls)
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -270,15 +271,15 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.55s CPU      0.57s WALL (       1 calls)
 
+     wigner_seitz :      0.00s CPU      0.00s WALL (       1 calls)
      DynW2B       :      0.00s CPU      0.01s WALL (     216 calls)
      HamW2B       :      0.00s CPU      0.00s WALL (      21 calls)
 
-     ELIASHBERG   :     21.63s CPU     21.68s WALL (       1 calls)
+     ELIASHBERG   :     11.13s CPU     11.28s WALL (       1 calls)
 
      Total program execution
-     EPW          :     22.19s CPU     22.26s WALL
+     EPW          :     11.33s CPU     11.49s WALL
 
      % Copyright (C) 2016-2023 EPW-Collaboration                                    
                                                                                     
@@ -294,7 +295,7 @@
        J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
                                                                                                  
                                                                                              
-     % Since you used the [eliashberg] input, please consider also citing                    
+     % Since you used the [eliashberg] input,     please consider also citing                    
        E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)                         
                                                                                     
      For your convenience, this information is also reported in the                 

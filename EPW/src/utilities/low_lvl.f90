@@ -724,7 +724,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(inout) :: valueRSS(2)
+    INTEGER(KIND = 8), INTENT(out) :: valueRSS(2)
     !! Contains the value of the memory in kB
     !
     ! Local variables
@@ -973,13 +973,13 @@
     !----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE fractrasl(npw, igk, evc, eigv1, eig0v)
+    SUBROUTINE fractrasl(nbnd, npw, igk, evc, eigv1, eig0v)
     !----------------------------------------------------------------------
     !!
     !! Routine to compute fractional translations
     !!
     USE kinds,            ONLY : DP
-    USE wvfct,            ONLY : nbnd, npwx
+    USE wvfct,            ONLY : npwx
     USE noncollin_module, ONLY : noncolin, npol
     USE global_var,       ONLY : ngxxf
     !
@@ -987,6 +987,8 @@
     !
     INTEGER, INTENT(in) :: npw
     !! Number of plane-waves
+    INTEGER, INTENT(in) :: nbnd
+    !! Number of bands
     INTEGER, INTENT(in) :: igk(npw)
     !! G mapping
     COMPLEX(KIND = DP), INTENT(inout) :: evc(npwx * npol, nbnd)

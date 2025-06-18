@@ -171,7 +171,7 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1')
 
 [epw_metal/]
 program = EPW
-inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
+inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '3'), ('epw5.in', '10'), ('epw6.in', '11')
 
 [epw_soc/]
 program = EPW
@@ -219,7 +219,7 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'),
 
 [epw_2D/]
 program = EPW
-inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf_epw.in', '0'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw4.in', '5'), ('epw5.in', '5'), ('epw6.in', '5')
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf_epw.in', '0'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5'), ('epw3.in', '10'), ('epw4.in', '5'), ('epw5.in', '5'), ('epw6.in', '5'), ('epw7.in', '3'), ('epw8.in', '5')
 
 [epw_wfpt/]
 program = EPW
@@ -228,6 +228,9 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('matdyn.in', '6
 ####[epw_scdm/]
 ####program = EPW
 ####inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+[epw_tdbe/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('nscf.in', '1'), ('epw1.in', '3'),('epw2.in', '3'), ('epw3.in', '3') 
 
 [zg_conf/]
 program = ZG

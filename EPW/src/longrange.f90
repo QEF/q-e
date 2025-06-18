@@ -183,9 +183,9 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg, omega, alat, at
     USE ep_constants,  ONLY : eps6, ci, zero, czero, twopi, eps8, pi, fpi, e2
-    USE io_global,     ONLY : ionode_id
+    USE io_global,     ONLY : ionode_id, ionode
     USE mp_world,      ONLY : mpime
-    USE mp_global,     ONLY : world_comm
+    USE mp_global,     ONLY : world_comm, inter_pool_comm
     USE parallelism,   ONLY : para_bounds
     USE mp,            ONLY : mp_bcast, mp_sum
     USE input,         ONLY : lpolar, system_2d
@@ -379,10 +379,10 @@
     ! Distribute the cpu
     CALL para_bounds(mm_start, mm_stop, mmax)
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       diff = mm_stop - mm_start
     ENDIF
-    CALL mp_bcast(diff, ionode_id, world_comm)
+    CALL mp_bcast(diff, ionode_id, inter_pool_comm)
     !
     ! If you are the last cpu with less element
     IF (mm_stop - mm_start /= diff) THEN
@@ -729,7 +729,7 @@
       ENDIF ! criteria
     ENDDO ! mm
     !
-    CALL mp_sum(dyn_tmp, world_comm)
+    CALL mp_sum(dyn_tmp, inter_pool_comm)
     dyn(:, :) = dyn_tmp(:, :) + dyn(:, :)
     !
     !-------------------------------------------------------------------------------

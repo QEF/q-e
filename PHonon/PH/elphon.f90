@@ -1425,14 +1425,20 @@ SUBROUTINE elph_prt()
   REAL(DP), PARAMETER :: ryd2mev  = rytoev * 1.0E3_DP
   REAL(DP), PARAMETER :: eps = 0.01/ryd2mev
   REAL(DP) :: gamma, g2, w, w_1, w_2
+  COMPLEX(DP) :: gamma_cmplx
   REAL(DP) :: kpoint(3)
   REAL(DP) :: epc(nbnd, nbnd, 3 * nat)
   REAL(DP) :: epc_sym(nbnd, nbnd, 3 * nat)
+  REAL(DP) :: epc_unsym(nbnd, nbnd, 3 * nat)
+  REAL(DP) :: epc_real(nbnd, nbnd, 3 * nat)
+  REAL(DP) :: epc_imag(nbnd, nbnd, 3 * nat)
   REAL(DP), ALLOCATABLE :: et2(:, :)
   !
   COMPLEX(DP) :: el_ph_sum(3 * nat, 3 * nat)
   COMPLEX(DP) :: el_ph_sum_aux(3 * nat, 3 * nat)
   COMPLEX(DP), ALLOCATABLE :: el_ph_mat2(:, :, :, :)
+  COMPLEX(DP) :: el_ph_sum_cmplx(3 * nat, 1)
+  COMPLEX(DP) :: el_ph_sum_cmplx_aux(3 * nat, 1)
   !
   CALL start_clock('elphsum2')
   !
@@ -1535,20 +1541,27 @@ SUBROUTINE elph_prt()
             el_ph_sum(ipert, jpert) = CONJG(el_ph_mat2(jbnd, ibnd, ik2, ipert)) * &
                                             el_ph_mat2(jbnd, ibnd, ik2, jpert)
           ENDDO
+          el_ph_sum_cmplx(jpert, 1) = el_ph_mat2(jbnd, ibnd, ik2, jpert)
         ENDDO
         !
         ! from pert to cart
         !
         CALL dyn_pattern_to_cart(nat, u, el_ph_sum, el_ph_sum_aux)
         CALL compact_dyn(nat, el_ph_sum, el_ph_sum_aux)
+        CALL epf_pattern_to_cart(nat, u, el_ph_sum_cmplx, el_ph_sum_cmplx_aux)
+        CALL compact_epf(nat, el_ph_sum_cmplx, el_ph_sum_cmplx_aux)
         !
         DO nu = 1, nmodes
           gamma = 0.d0
+          gamma_cmplx = 0.d0
           DO vu = 1, 3 * nat
             DO mu = 1, 3 * nat
               gamma = gamma + REAL(CONJG(dyn(mu, nu)) * el_ph_sum(mu, vu) &
                       * dyn(vu, nu))
             ENDDO
+          ENDDO
+          DO mu = 1, 3 * nat
+            gamma_cmplx = gamma_cmplx + CONJG(dyn(mu, nu)) * el_ph_sum_cmplx(mu, 1)
           ENDDO
           gamma = gamma / 2.d0
           !
@@ -1561,9 +1574,13 @@ SUBROUTINE elph_prt()
           IF (w2(nu) .GT. 0.d0) THEN
             w = DSQRT(w2(nu))
             gamma = gamma / w
+            epc_real(ibnd, jbnd, nu) = REAL(gamma_cmplx) / (DSQRT(2.d0) * w)
+            epc_imag(ibnd, jbnd, nu) = IMAG(gamma_cmplx) / (DSQRT(2.d0) * w)
           ELSE
-            w = DSQRT(-w2(nu))
+            w = -DSQRT(-w2(nu))
             gamma = 0.d0
+            epc_real(ibnd, jbnd, nu) = 0.d0 
+            epc_imag(ibnd, jbnd, nu) = 0.d0
           ENDIF
           !
           IF (gamma .LT. 0.d0) gamma = 0.d0
@@ -1573,6 +1590,7 @@ SUBROUTINE elph_prt()
           ! gamma = |g| [Ry]
           !
           epc(ibnd, jbnd, nu) = gamma
+          epc_unsym(ibnd, jbnd, nu) = gamma
           !
         ENDDO
         !
@@ -1678,7 +1696,9 @@ SUBROUTINE elph_prt()
     WRITE(stdout, '(5x, a)') ' Electron-phonon vertex |g| (meV)'
     WRITE(stdout, '(/5x, "q coord.: ", 3f12.7)') xq
     WRITE(stdout, '(5x, "k coord.: ", 3f12.7)') kpoint
-    WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
+    !WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
+    WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   &
+                               |g_sym|[meV]   |g|[meV]   Re(g)[meV]   Im(g)[meV]'
     WRITE(stdout, '(5x, a)') REPEAT('-', 78)
     !
     DO ibnd = 1, nbnd
@@ -1688,12 +1708,15 @@ SUBROUTINE elph_prt()
           IF (w2(nu) .GT. 0.d0) THEN
             w = DSQRT(w2(nu))
           ELSE
-            w = DSQRT(-w2(nu))
+            w = -DSQRT(-w2(nu))
           ENDIF
           !
-          WRITE(stdout, '(3i9, 2f12.4, 1f20.10, 1e20.10)') ibnd, jbnd, nu, &
+          WRITE(stdout, '(3i9, 2f12.4, 1f20.10, 1e20.10, 3e20.10)') ibnd, jbnd, nu, &
                 rytoev * et2(ibnd, ikk2), rytoev * et2(jbnd, ikq2), &
-                ryd2mev * w, ryd2mev * epc(ibnd, jbnd, nu)
+                ryd2mev * w, ryd2mev * epc(ibnd, jbnd, nu), &
+                ryd2mev * epc_unsym(ibnd, jbnd, nu), &  
+                ryd2mev * epc_real(ibnd, jbnd, nu), &
+                ryd2mev * epc_imag(ibnd, jbnd, nu)
           !
         ENDDO
       ENDDO

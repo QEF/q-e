@@ -27,7 +27,7 @@
     !!
     USE kinds,            ONLY : DP
     USE mp_global,        ONLY : world_comm
-    USE io_global,        ONLY : stdout, ionode_id
+    USE io_global,        ONLY : stdout, ionode_id, ionode
     USE mp_world,         ONLY : mpime
     USE mp,               ONLY : mp_barrier, mp_bcast
     USE input,            ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, &
@@ -178,7 +178,7 @@
       !
       IF (icoulomb < 1) THEN
         ! We need BZ info to write FS files
-        IF (mpime == ionode_id) THEN
+        IF (ionode) THEN
           !
           OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
           IF (ios /= 0) CALL errore('eliashberg_init', 'error opening crystal.fmt', crystal)
@@ -210,7 +210,7 @@
         CALL mp_bcast(noncolin, ionode_id, world_comm)
         CALL mp_bcast(bg, ionode_id, world_comm)
       ELSE
-        IF (mpime == ionode_id) THEN
+        IF (ionode) THEN
           !
           OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
           IF (ios /= 0) CALL errore('eliashberg_init', 'error opening crystal.fmt', crystal)
@@ -394,9 +394,8 @@
     !! computes the isotropic spectral function a2F(w), total lambda, and
     !! distribution of lambda
     !!
-    !! SH: The "phdos" parts are moved to write_phdos subroutine, and
-    !!       "a2f_iso" file is not being written anymore (Nov 2021).
-    !!
+    !! SH: The "phdos" parts are moved to write_phdos subroutine(Nov 2021).
+    !! SM: Updated for distributing freq among images
     !
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iua2ffil, iufillambda, iufillambdaFS
@@ -411,7 +410,7 @@
                               wkfs, dwsph, ixkff, ekfs_all, nbndfs_all, ibnd_kfs_all_to_kfs, &
                               ixkf
     USE ep_constants,  ONLY : ryd2ev, eps2, zero, eps16, eps5
-    USE io_global,     ONLY : ionode_id
+    USE io_global,     ONLY : ionode_id, ionode
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
@@ -582,7 +581,7 @@
     CALL mp_sum(lambda_k, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       !
       !
       name1 = TRIM(prefix) // '.a2f'
@@ -728,7 +727,7 @@
     CALL mp_sum(lambda_k_bin, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       !
       ! SP: Produced if user really wants it
       IF (iverbosity == 2) THEN
@@ -960,15 +959,17 @@
     !! SH: Updated to write the machine learning estimate for Tc, and
     !!       to limit the "gap0" to 6 decimal digits (Nov 2021).
     !!
+    !! SM: update to write Allen and Dynes modified McMillan’s semiempirical result, 
+    !! and is needed when lambda > 1.5  [Alen and Dyne, PRB 12, 3, 1975]
+    !
     USE kinds,            ONLY : DP
     USE input,            ONLY : nqstep, muc, nstemp, icoulomb
     USE global_var,       ONLY : gtemp
-    USE supercond_common,        ONLY : wsph, dwsph, a2f_iso, gap0, spin_fac
+    USE supercond_common,        ONLY : wsph, dwsph, a2f_tmp, gap0, spin_fac
     USE ep_constants,     ONLY : kelvin2eV, zero
     USE noncollin_module, ONLY : noncolin
-    USE io_global,        ONLY : stdout, ionode_id
+    USE io_global,        ONLY : stdout, ionode_id, ionode
     USE mp_global,        ONLY : inter_pool_comm
-    USE mp_world,         ONLY : mpime
     USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum
     !
     IMPLICIT NONE
@@ -984,21 +985,27 @@
     !! superconding critical temperature
     REAL(KIND = DP):: tcml
     !! Estimated ML Tc
+    REAL(KIND = DP):: tc_AD
+    !! Estimated AD-modified Tc
     REAL(KIND = DP):: momavg
     !! avg. of 2nd moment of frequencies
     REAL(KIND = DP):: fomega, fmu
     !! coefficients of ML-based Tc
-    REAL(KIND = DP):: mucdum
+    REAL(KIND = DP):: f1, f2
+    !! coefficients of AD Tc
+    REAL(KIND = DP):: lambda1, lambda2
+    !! Lambda1, Lambda2, ratio in PRB 12, 3, 1975
+    REAL(KIND = DP):: muc_local
     !! alternative value for muc: 0.15
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       l_a2f  = zero
       logavg = zero
       momavg = zero
       DO iwph = 1, nqstep
-        l_a2f  = l_a2f  + a2f_iso(iwph) / wsph(iwph)
-        logavg = logavg + a2f_iso(iwph) * log(wsph(iwph)) / wsph(iwph)
-        momavg = momavg + a2f_iso(iwph) * wsph(iwph) * dwsph
+        l_a2f  = l_a2f  + a2f_tmp(iwph) / wsph(iwph)
+        logavg = logavg + a2f_tmp(iwph) * log(wsph(iwph)) / wsph(iwph)
+        momavg = momavg + a2f_tmp(iwph) * wsph(iwph) * dwsph
       ENDDO
       l_a2f  = l_a2f  * 2.d0 * dwsph
       logavg = logavg * 2.d0 * dwsph
@@ -1007,38 +1014,41 @@
       WRITE(stdout,'(5x,a,f12.7)') 'Electron-phonon coupling strength = ', l_a2f
       WRITE(stdout,'(a)') ' '
       !
-      ! SH: ML-based estimate of the Tc (Eqns. [6-8]; Xie et. al.; arXiv:2106.05235)
-      !
       IF ((icoulomb > 0) .AND. (muc > 0.15d0)) THEN
         ! HM: In the case of icoulomb > 0, because we use a value relatively larger than mu^*, 
         !     gap0 is estimated as too small if the input muc value is used in the estimations. 
         !     To avoid that, we will use muc = 0.15 in the estimations.
+        muc_local = 0.15d0
         WRITE(stdout, '(5x, a/)') 'muc = 0.15 is used in the following estimations'
-        mucdum = 0.15d0
-        ! Allen-Dynes estimate of Tc
-        !
-        tc = logavg / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2f) &
-                                  / (l_a2f - mucdum * (1.d0 + 0.62d0 * l_a2f)))
-        fomega = 1.92d0 * ((l_a2f + (logavg / momavg) - mucdum**(1.d0 / 3.d0)) / &
-                 (DSQRT(l_a2f) * EXP(logavg / momavg))) - 0.08d0
-        fmu    = (6.86d0 * EXP(-l_a2f / mucdum)) / ((1.d0 / l_a2f) - mucdum - &
-                 (logavg / momavg)) + 1.d0
-        tcml   = (fomega * fmu * logavg / 1.20d0) * EXP(- (1.04d0 * (1 + l_a2f)) / &
-                 (l_a2f - mucdum * (1 + 0.62d0 * l_a2f)))
-        tcml   = tcml / kelvin2eV
-      ELSE
-        ! Allen-Dynes estimate of Tc
-        !
-        tc = logavg / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2f) &
-                                  / (l_a2f - muc * (1.d0 + 0.62d0 * l_a2f)))
-        fomega = 1.92d0 * ((l_a2f + (logavg / momavg) - muc**(1.d0 / 3.d0)) / &
-                 (DSQRT(l_a2f) * EXP(logavg / momavg))) - 0.08d0
-        fmu    = (6.86d0 * EXP(-l_a2f / muc)) / ((1.d0 / l_a2f) - muc - &
-                (logavg / momavg)) + 1.d0
-        tcml   = (fomega * fmu * logavg / 1.20d0) * EXP(- (1.04d0 * (1 + l_a2f)) / &
-                 (l_a2f - muc * (1 + 0.62d0 * l_a2f)))
-        tcml   = tcml / kelvin2eV
+      ELSE 
+        muc_local = muc
       ENDIF
+      !
+      ! Standard Dyne modified McMillan formula
+      ! [W. McMillan, Phys. Rev. 167, 331 (1968), R. C. Dynes, Solid State Commun. 10, 615 (1972).]
+      tc = logavg / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2f) &
+                                  / (l_a2f - muc_local * (1.d0 + 0.62d0 * l_a2f)))
+      !
+      ! SM: Allen-Dynes modified McMillan formula with strong-coupling corrections 
+      ! [Eqs. (34-38) of Allen and Dyne, PRB 12,3 (1975)]
+      !
+      lambda1 = 2.46d0 * (1.d0 + 3.8d0 * muc_local)
+      lambda2 = 1.82d0 * (1.d0 + 6.3d0 * muc_local) * (momavg / logavg)
+      ! Strong-coupling correction factor f1
+      f1 = (1.d0 + (l_a2f / lambda1)**(3.d0 / 2.d0))**(1.d0 / 3.d0)
+      ! Shape correction factor f2
+      f2 = 1.d0 + ((momavg / logavg- 1.d0) * l_a2f**2 / (l_a2f**2 + lambda2**2))
+      ! AD-Modified Tc with f1 and f2 factors
+      tc_AD = (f1 * f2 * logavg / 1.2d0) * EXP(-1.04d0 * (1.d0 + l_a2f) &
+                                / (l_a2f - muc_local * (1.d0 + 0.62d0 * l_a2f)))
+      !
+      ! SH: ML-based estimate of the Tc (Eqns. [6-8]; Xie et. al.; arXiv:2106.05235)
+      fomega = 1.92d0 * ((l_a2f + (logavg / momavg) - muc_local**(1.d0 / 3.d0)) / &
+                (DSQRT(l_a2f) * EXP(logavg / momavg))) - 0.08d0
+      fmu    = (6.86d0 * EXP(-l_a2f / muc_local)) / ((1.d0 / l_a2f) - muc_local - &
+                (logavg / momavg)) + 1.d0
+      tcml   = (fomega * fmu * logavg / 1.20d0) * EXP(- (1.04d0 * (1 + l_a2f)) / &
+                (l_a2f - muc_local * (1 + 0.62d0 * l_a2f)))
       !
       ! initial guess for the gap edge using BCS superconducting ratio 3.52
       !
@@ -1050,15 +1060,19 @@
         CALL errore('estimate_tc_gap', 'initial guess for gap edge should be > 0.d0', 1)
       !
       ! tc in K
+      tc    = tc    / kelvin2eV
+      tc_AD = tc_AD / kelvin2eV
+      tcml  = tcml / kelvin2eV
       !
-      tc = tc / kelvin2eV
-      WRITE(stdout, '(5x, a, f12.6, a, f10.5)') 'Estimated Allen-Dynes Tc = ', tc, ' K for muc = ', muc
+      WRITE(stdout, '(5x, a, f8.4, a, f8.4)') 'Estimated Tc using McMillan expression = ', tc, ' K for muc = ', muc
       WRITE(stdout, '(a)') '  '
-      WRITE(stdout, '(5x, a, f12.6, a)') 'Estimated w_log in Allen-Dynes Tc = ', logavg * 1000.d0, ' meV'
+      WRITE(stdout, '(5x, a, f8.4, a)') 'Estimated Tc using Allen-Dynes modified McMillan expression = ', tc_AD, ' K'
       WRITE(stdout, '(a)') '  '
-      WRITE(stdout, '(5x, a, f12.6, a)') 'Estimated BCS superconducting gap = ', gap0 * 1000.d0, ' meV'
+      WRITE(stdout, '(5x, a, f8.4, a)') 'Estimated Tc using SISSO machine learning model = ', tcml , ' K'
       WRITE(stdout, '(a)') '  '
-      WRITE(stdout, '(5x, a, f12.6, a)') 'Estimated Tc from machine learning model = ', tcml , ' K'
+       WRITE(stdout, '(5x, a, f8.4, a)') 'Estimated w_log = ', logavg * 1000.d0, ' meV'
+      WRITE(stdout, '(a)') '  '
+      WRITE(stdout, '(5x, a, f8.4, a)') 'Estimated BCS superconducting gap using McMillan Tc = ', gap0 * 1000.d0, ' meV'
       WRITE(stdout, '(a)') '  '
       !
       IF (gtemp(1) / kelvin2eV > tc) THEN
@@ -1066,13 +1080,13 @@
         WRITE(stdout, '(5x, a)') 'WARNING WARNING WARNING '
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a, f9.3, a, f9.3, a)') 'The code may crash since tempsmin =', &
-                        gtemp(1) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
+                        gtemp(1) / kelvin2eV, ' K is larger than McMillan Tc = ', tc, ' K'
       ELSEIF (gtemp(nstemp) / kelvin2eV > tc) THEN
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a)') 'WARNING WARNING WARNING '
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a, f9.3, a, f9.3, a)') 'The code may crash since tempsmax =', &
-                        gtemp(nstemp) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
+                        gtemp(nstemp) / kelvin2eV, ' K is larger than McMillan Tc = ', tc, ' K'
       ENDIF
       !
       ! HP: muc needs to be divided by 2 to make consistent with the el-ph contribution
@@ -1240,8 +1254,8 @@
     USE low_lvl,       ONLY : mem_size_eliashberg
     USE io_var,        ONLY : iufilmat
     USE mp,            ONLY : mp_bcast, mp_barrier
-    USE mp_global,     ONLY : inter_pool_comm
-    USE io_global,     ONLY : stdout, ionode_id
+    USE mp_global,     ONLY : inter_pool_comm, inter_image_comm
+    USE io_global,     ONLY : stdout, ionode_id, ionode
     USE control_flags, ONLY : iverbosity
     USE mp_world,      ONLY : mpime
     USE sparse_ir,     ONLY : IR
@@ -1291,7 +1305,7 @@
     ALLOCATE(wsn(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('gen_freqgrid_iaxis', 'Error allocating wsn', 1)
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       !
       ! Initiate sampling scheme names
       IF (gridsamp == -1) THEN
@@ -1375,6 +1389,12 @@
     CALL mp_bcast(wsi, ionode_id, inter_pool_comm)
     CALL mp_bcast(wsn, ionode_id, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
+    ! SM: For ditibuting freq. among images, we need to broadcast among images
+    CALL mp_bcast(nsiw(itemp), ionode_id, inter_image_comm)
+    CALL mp_bcast(wsi, ionode_id, inter_image_comm)
+    CALL mp_bcast(wsn, ionode_id, inter_image_comm)
+    CALL mp_barrier(inter_image_comm)
+    !
     !
     ! frequency-grid for real-axis ( Pade approximants and analytic continuation)
     !

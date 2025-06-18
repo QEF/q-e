@@ -12,6 +12,7 @@
   etf_mem     = 1
   vme         = 'dipole'
   lphase      = .true.
+  eps_acoustic= 5.0
 
   nbndsub     =  8
   bands_skipped = 'exclude_bands = 1-10'

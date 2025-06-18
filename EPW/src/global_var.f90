@@ -72,12 +72,16 @@
     r_tot,                   &!  Number of interactions in QD bin
     stop_qdabs,              &!  If 1 stop qdabs
     size_m,                  &!  Decides maximum r_tot needed, 3 or 4 depending on Energy(mesh)
+    ctype,                   &!  Transport calculation type: -1 = hole, +1 = electron and 0 = both.
     maxdim                    !  Maximum number of states in QD bin after each q cycle
   INTEGER, ALLOCATABLE ::    &!
     ibndkept(:),             &!  indices of remaining bands after excluding bands in Wannierization step
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
     igk_k_all(:, :),         &!  Global index (in case of parallel)
+    image_arr(:),            &!  Image array (size = maximum number of q-points per image)
+    startq,                  &!  first q-point in the current image
+    lastq,                   &!  last q-point in the current image
     ngk_all(:),              &!  Global number of plane wave for each global k-point
     map_rebal(:),            &!  Map between the k-point and their load rebalanced one
     map_rebal_inv(:),        &!  Map between the k-point and their load rebalanced one
@@ -90,7 +94,7 @@
     bztoibz(:),              &!  BZ to IBZ map
     map_fst(:),              &!  Maps the k-point number from the full BZ with the k-point number of the subset within the fsthick.
     nkpt_ibztau(:),          &!  In case of B-field, number of kpoints with non-zero inv_tau
-    kpt_ibztau2ibz(:, :),    &!  In case of B-field, mapping index of the kpoints with non-zero inv_ta
+    kpt_ibztau2ibz(:, :),    &!  In case of B-field, mapping index of the kpoints with non-zero inv_tau
     kpt_bztau2bz(:, :),      &!  In case of B-field, inverse mapping between BZ index and reordered BZ index with non-zero inv_tau
     kpt_ibztau2bz(:, :, :),  &!  In case of B-field, inverse mapping between BZ index and reordered BZ index with non-zero inv_tau;
                               !  the shape here is different: take as input a IBZ index and the id of asymmetry operation
@@ -101,9 +105,11 @@
     s_bztoibz(:),            &!  Symmetry operation map for BZ to IBZ. This could be a INTEGER(KIND = 2) but does not work on all compilers
     selecq(:),               &!  Selected q-points within the fsthick window
     H_ind1(:),               &!  Column index for QD matrix
-    H_ind2(:)
+    H_ind2(:),               &!  Row index of QD matrix
+    selecq_QD(:,:)            !  q-points inside the QD meshgrid
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
+    inv_cell,                &!  Inverse of the unit cell volume (or area for 2D)
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
     threshold,               &!  Threshold below which the transition probabilities are not written to file in transport.
     area,                    &!  Area of the 2D unit cell.
@@ -117,8 +123,8 @@
     sum_E,                   &!  sum of total energy (phonon) for MC integration in QDPT
     alph                      !  Ewald alpha used to subtract out the long-range term
   REAL(KIND = DP), ALLOCATABLE ::&
-    a_all(:, :, :),          &!  electronic spectral function du to electron-phonon interaction
-    a_all_ph(:, :, :),       &!  phononic spectral function du to electron-phonon interaction
+    a_all(:, :, :),          &!  electronic spectral function due to electron-phonon interaction
+    a_all_ph(:, :, :, :),    &!  phononic spectral function due to electron-phonon interaction
     dos(:),                  &!  Density of states at the chemical potential.
     et_ks(:, :),             &!  lda eigenvalues
     xkq(:, :),               &!  local k+q grid, coarse (3, nks)
@@ -133,7 +139,11 @@
     etf(:, :),               &!  interpolated eigenvalues (nbnd, nkqf)
     etf_k(:, :),             &!  Saved interpolated KS eigenenergies for later used in q-parallelization (nbnd, nkqf)
     etf_ks(:, :),            &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues in the case of eig_read
+    fermi_energies_t(:),     &!  temperature dependent fermi energies for fast k mesh
     wf(:, :),                &!  interpolated eigenfrequencies
+    pi_0(:),                 &!  static part of the phonon self-energy
+    gammai_all(:, :, :, :),  &!  Imaginary part of the frequency dependent spectral function
+    pir_all(:, :, :, :),     &!  Real part of the Phonon self-energy (freq. dependent for spectral function)
     gamma_all(:, :, :, :),   &!  Gamma
     gamma_nest(:, :),        &!  Nesting function in the case of q-parallelization
     gamma_v_all(:, :, :, :),    &!  Gamma
@@ -158,6 +168,12 @@
     inv_tau_allcb_mode(:, :, :, :),  &!  mode resolved conduction band scattering rate
     inv_tau_all_freq(:, :, :),    &!  Scattering rate spectral decomposition (for one temperature)
     inv_tau_allcb_freq(:, :, :),  &!  Scattering rate conduction band spectral decomposition (for one temperature)
+    inv_tau_all_MPI(:, :, :),       &!  scattering rate MPI auxilary
+    inv_tau_allcb_MPI(:, :, :),     &!  Conduction band scattering rate MPI auxilary
+    inv_tau_all_mode_MPI(:, :, :, :),    &!  SR mode resolved MPI auxilary
+    inv_tau_allcb_mode_MPI(:, :, :, :),  &!  SR mode resolved conduction band MPI auxilary
+    inv_tau_all_freq_MPI(:, :, :),    &!  SR spectral decomposition MPI auxilary
+    inv_tau_allcb_freq_MPI(:, :, :),  &!  SR spectral decomposition conduction band MPI auxilary
     inv_tau_gb(:,:),         &!  Scattering rate for grain boundary
     zi_allvb(:, :, :),       &!  Z-factor in scattering rate
     zi_allcb(:, :, :),       &!  Second Z-factor in scattering rate (for both VB and CB calculations)
@@ -197,7 +213,7 @@
     ekf(:),                   &!  FIXME
     etfq(:,:),                &!  FIXME
     etf_qs(:,:),              &!  FIXME
-    Energy(:,:,:),                   &!  Quasi-degenerate states(mesh,pool,type)
+    Energy(:,:,:,:),                 &!  Quasi-degenerate states(mesh,pool,type)
     n_q(:,:),                        &!  The mesh-grid for quasi-degenerate perturbation theory(QDPT)
     E_mesh(:),                       &!  Mesh grid for
     E_grid(:),                       &!  Number of interactions in the mesh-grid
@@ -273,6 +289,26 @@
     dgf17(:, :, :, :),           &!  full delta g matrix in bloch rep stored in mem (nbnd, nbnd, nmodes, nkf)
     pmec(:, :, :, :),            &!  momentum matrix elements on the coarse mesh (ipol, nbnd, nbnd, nks)
     cpmew(:, :, :, :)             !  Momentum matrix in wannier basis
+    !--------------------------------------------------------------------------
+    ! ZD: Added for excitonic polaron calculation
+  COMPLEX(KIND=DP),ALLOCATABLE ::  &
+    G_full_epmat(:,:,:,:,:),     & ! (negnv, negnv, nkstot, nmodes, nqloc) One more dim for phonon
+    wf_temp(:,:),                & ! Temp variable to store coarse-grid phonon freq
+    ph_eig(:,:,:),               & ! Variable to store coarse-grid phonon eigenvectors
+    Asq(:,:),                    & ! (negnv, nkstot) exprln eigenvector after diagonalization
+    Asq_old(:,:),                & ! (negnv, nkstot) exprln eigenvector to construct explrn Hamil
+    A_cv_all(:,:,:,:,:),         & ! (nbndv,nbndc,nktotf,negnv,nktotf)
+    A_cvq(:,:,:,:),              & ! Temp variable for BSE eigenvector at q
+    A_cvqplusq(:,:,:,:),         & ! Temp variable for BSE eigenvector at Q+q
+    A_cv(:,:,:,:),               &
+    G_epmatq(:,:,:),             &
+    G_full_epmatq(:,:,:,:)
+  REAL(DP),ALLOCATABLE         ::  &
+    eigval_ex(:,:)                     ! (negnv, nkstot) BSE eigenvalues                        
+  REAL(DP)                     ::  &
+    explrn_etot,                 & ! Total energy of the excitonic polaron
+    explrn_eigval,               & ! explrn eigenvalue for the current iteration 
+    explrn_eigval_old              ! explrn eigenvalue for the previous iteration 
   !--------------------------------------------------------------------------
   !--------------------------------------------------------------------------
   END MODULE global_var

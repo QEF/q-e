@@ -12,14 +12,81 @@
   !----------------------------------------------------------------------
   !!
   !! This module contains all the routines linked with self-consistent electronic transport
+  !!   - transport_prepare
   !!   - transport_setup
-  !!   - transport_restart
+  !!   - transport_main
   !!   - ibte
-  !!   - iter_restart
+  !!   - transport_ibte
   !!
+  USE kinds, ONLY : DP
+  !
   IMPLICIT NONE
   !
+  REAL(kind = DP) :: nelec_to_ncarrier          
+  !! factor for the conversion from number of electrons per cell to input unit
+  !
   CONTAINS
+    !
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE transport_prepare()
+    !-----------------------------------------------------------------------
+    !! 
+    !!  This subroutine is used to prepare the parameters and flags used in the 
+    !!  transport module. 
+    !! 
+    !-----------------------------------------------------------------------
+    USE cell_base,       ONLY : omega, alat, at
+    USE input,           ONLY : system_2d
+    USE ep_constants,    ONLY : ryd2ev, bohr2ang, ang2cm
+    USE global_var,      ONLY : ctype, inv_cell
+    USE input,           ONLY : assume_metal, int_mob, carrier, ncarrier
+    !
+    IMPLICIT NONE
+    !
+    REAL(kind = DP) :: neperuc_to_cmm2 
+    !! factor for the conversion from number of electrons per cell to cm^-2
+    REAL(kind = DP) :: neperuc_to_cmm3 
+    !! factor for the conversion from number of electrons per cell to cm^-3
+    !
+    IF (system_2d == 'no') THEN
+      inv_cell = 1.0d0 / omega
+    ELSE
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      inv_cell = (1.0d0 / omega) * at(3, 3) * alat
+    ENDIF
+    !
+    neperuc_to_cmm2 = inv_cell * (bohr2ang * ang2cm)**(-2.d0)
+    neperuc_to_cmm3 = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    !
+    IF (system_2d == 'no') THEN
+      nelec_to_ncarrier = neperuc_to_cmm3
+    ELSE
+      ! for 2d system need to divide by area (vacuum in z-direction)
+      nelec_to_ncarrier = neperuc_to_cmm2
+    ENDIF
+    !
+    IF (assume_metal) THEN
+      ctype = -1  ! act like it's for holes
+    ELSEIF (int_mob) THEN
+      IF (carrier) THEN
+        ctype = 0 
+      ELSE
+        ctype = -1
+      ENDIF
+    ELSEIF (carrier) THEN
+      IF (ncarrier > 1.E5) THEN
+        ctype = 1
+      ELSEIF (ncarrier < -1.E5) THEN
+        ctype = -1
+      ENDIF
+    ELSE
+      ctype = -1
+    ENDIF
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE transport_prepare
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
     SUBROUTINE transport_setup(lrepmatw2_restart, lrepmatw5_restart)
@@ -30,7 +97,9 @@
     USE input,           ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, mob_nfreq, nstemp
     USE global_var,      ONLY : inv_tau_all, inv_tau_allcb, inv_tau_all_mode,             &
                                 inv_tau_allcb_mode, inv_tau_all_freq, inv_tau_allcb_freq, &
-                                threshold, nbndfst, nktotf
+                                inv_tau_all_MPI, inv_tau_allcb_MPI, inv_tau_all_mode_MPI, &
+                                inv_tau_allcb_mode_MPI, inv_tau_all_freq_MPI,             &
+                                inv_tau_allcb_freq_MPI, threshold, nbndfst, nktotf
     USE ep_constants,    ONLY : zero
     USE modes,           ONLY : nmodes
     USE control_flags,   ONLY : iverbosity
@@ -53,6 +122,14 @@
     IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb', 1)
     inv_tau_all(:, :, :)   = zero
     inv_tau_allcb(:, :, :) = zero
+    ! Dynamically allocate MPI auxilaries
+    ALLOCATE(inv_tau_all_MPI(nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_all_MPI', 1)
+    ALLOCATE(inv_tau_allcb_MPI(nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb_MPI', 1)
+    inv_tau_all_MPI(:, :, :)   = zero
+    inv_tau_allcb_MPI(:, :, :) = zero
+    !
     lrepmatw2_restart(:)   = 0
     lrepmatw5_restart(:)   = 0
     IF (iverbosity == 3) THEN
@@ -68,6 +145,19 @@
       inv_tau_allcb_mode(:, :, :, :) = zero
       inv_tau_all_freq(:, :, :)      = zero
       inv_tau_allcb_freq(:, :, :)    = zero
+      ! Dynamically allocate MPI auxilaries
+      ALLOCATE(inv_tau_all_mode_MPI(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_all_mode_MPI', 1)
+      ALLOCATE(inv_tau_allcb_mode_MPI(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb_mode_MPI', 1)
+      ALLOCATE(inv_tau_all_freq_MPI(mob_nfreq, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_all_freq_MPI', 1)
+      ALLOCATE(inv_tau_allcb_freq_MPI(mob_nfreq, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_setup', 'Error allocating inv_tau_allcb_freq_MPI', 1)
+      inv_tau_all_mode_MPI(:, :, :, :)   = zero
+      inv_tau_allcb_mode_MPI(:, :, :, :) = zero
+      inv_tau_all_freq_MPI(:, :, :)      = zero
+      inv_tau_allcb_freq_MPI(:, :, :)    = zero
     ENDIF
     ! We save matrix elements that are smaller than machine precision (1d-16).
     ! The sum of all the elements must be smaller than that
@@ -83,15 +173,18 @@
     !----------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE transport_restart(etf_all, ind_tot, ind_totcb, ef0, efcb)
+    SUBROUTINE transport_main(etf_all, ind_tot, ind_totcb, ef0, efcb)
     !-----------------------------------------------------------------------
     !!
-    !! Restart a transport calculation if epmatkqread == .true.
+    !! Transport calculation
     !!
-    USE kinds,            ONLY : DP
     USE input,            ONLY : nstemp
     USE global_var,       ONLY : nbndfst, nktotf, inv_tau_all, inv_tau_allcb, inv_tau_all_mode, &
-                                 inv_tau_all_freq, inv_tau_allcb_freq, inv_tau_allcb_mode
+                                 inv_tau_all_freq, inv_tau_allcb_freq, inv_tau_allcb_mode,      &
+                                 inv_tau_all_MPI, inv_tau_allcb_MPI, inv_tau_all_mode_MPI,      &
+                                 inv_tau_allcb_mode_MPI, inv_tau_all_freq_MPI,                  &
+                                 inv_tau_allcb_freq_MPI
+                                 
     USE ep_constants,     ONLY : zero
     USE control_flags,    ONLY : iverbosity
 #if defined(__MPI)
@@ -127,35 +220,50 @@
     !! k-point weights for all the k-points
     !
     ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
-    IF (ierr /= 0) CALL errore('transport_restart', 'Error allocating vkk_all', 1)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error allocating vkk_all', 1)
     ALLOCATE(wkf_all(nktotf), STAT = ierr)
-    IF (ierr /= 0) CALL errore('transport_restart', 'Error allocating wkf_all', 1)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error allocating wkf_all', 1)
     vkk_all(:, :, :) = zero
     wkf_all(:) = zero
     !
-    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+    CALL transport_ibte(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     !
     DEALLOCATE(vkk_all, STAT = ierr)
-    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating vkk_all', 1)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating vkk_all', 1)
     DEALLOCATE(wkf_all, STAT = ierr)
-    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating wkf_all', 1)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating wkf_all', 1)
     DEALLOCATE(inv_tau_all, STAT = ierr)
-    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_all', 1)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_all', 1)
     DEALLOCATE(inv_tau_allcb, STAT = ierr)
-    IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_allcb', 1)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_allcb', 1)
+    ! Deallocate MPI auxilaries
+    DEALLOCATE(inv_tau_all_MPI, STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_all_MPI', 1)
+    DEALLOCATE(inv_tau_allcb_MPI, STAT = ierr)
+    IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_allcb_MPI', 1)
+    !
     IF (iverbosity == 3) THEN
       DEALLOCATE(inv_tau_all_mode, STAT = ierr)
-      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_all_mode', 1)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_all_mode', 1)
       DEALLOCATE(inv_tau_allcb_mode, STAT = ierr)
-      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_allcb_mode', 1)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_allcb_mode', 1)
       DEALLOCATE(inv_tau_all_freq, STAT = ierr)
-      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_all_freq', 1)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_all_freq', 1)
       DEALLOCATE(inv_tau_allcb_freq, STAT = ierr)
-      IF (ierr /= 0) CALL errore('transport_restart', 'Error deallocating inv_tau_allcb_freq', 1)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_allcb_freq', 1)
+      ! Deallocate the MPI auxilaries
+      DEALLOCATE(inv_tau_all_mode_MPI, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_all_mode_MPI', 1)
+      DEALLOCATE(inv_tau_allcb_mode_MPI, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_allcb_mode_MPI', 1)
+      DEALLOCATE(inv_tau_all_freq_MPI, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_all_freq_MPI', 1)
+      DEALLOCATE(inv_tau_allcb_freq_MPI, STAT = ierr)
+      IF (ierr /= 0) CALL errore('transport_main', 'Error deallocating inv_tau_allcb_freq_MPI', 1)
     ENDIF
 
     !----------------------------------------------------------------------------
-    END SUBROUTINE transport_restart
+    END SUBROUTINE transport_main
     !----------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -164,16 +272,17 @@
                     inv_tau)
     !-----------------------------------------------------------------------
     !!
-    !! This routine computes the scattering rate with the iterative BTE (inv_tau).
+    !! This routine computes the transport properties with the iterative BTE.
     !! The fine k-point and q-point grid have to be commensurate.
     !! The k-point grid uses crystal symmetry to decrease computational cost.
     !!
-    USE kinds,            ONLY : DP, sgl
+    USE kinds,            ONLY : sgl
     USE io_global,        ONLY : stdout
     USE cell_base,        ONLY : at, bg
     USE input,            ONLY : mob_maxiter, nstemp, broyden_beta,            &
                                  mp_mesh_k, nkf1, nkf2, nkf3, bfieldx, bfieldy,&
-                                 bfieldz, lfast_kmesh
+                                 bfieldz, lfast_kmesh, ltrans_crta, sr_crta,   &
+                                 assume_metal
     USE global_var,       ONLY : nkqf, xkf, nkqtotf, nbndfst, &
                                  nktotf, xqf, gtemp, ixkqf_tr,&
                                  s_bztoibz_full, f_in_b, f_serta_b, df_in_b,   &
@@ -183,12 +292,13 @@
                                  ind_map, nsym_sp
     USE ep_constants,     ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10, &
                                  bohr2ang, ang2cm, hbarJ, eps6, eps8, byte2Mb, &
-                                 eps2, eps4, eps20, eps80, eps160, hbar, cm2m
-    USE ep_constants,     ONLY : electronvolt_si
+                                 eps2, eps4, eps20, eps80, eps160, hbar, cm2m, &
+                                 electronvolt_si, ry2thz_sr
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_global,        ONLY : world_comm
-    USE symm_base,        ONLY : s, nsym
-    USE printing,         ONLY : print_mob, print_mob_sym, print_mob_b, print_hall
+    USE mp_global,        ONLY : inter_pool_comm, inter_image_comm
+    USE symmetry,         ONLY : s => s_k, nsym => nsym_k
+    USE printing,         ONLY : print_mob, print_mob_sym, print_mob_b, print_hall, &
+                                 print_meff, print_meff_sym 
     USE io_transport,     ONLY : fin_write, fin_read
     USE io_files,         ONLY : diropn
     USE control_flags,    ONLY : iverbosity
@@ -254,7 +364,7 @@
     INTEGER :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
-    !! nsym + TR is the max number of symmetry
+    !! nsym (including TR) is the max number of symmetry
     INTEGER :: nb_sp
     !! Number of special points
     INTEGER :: ierr
@@ -281,14 +391,6 @@
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
     REAL(KIND = DP) :: carrier_density(nstemp)
     !! Carrier density [nb of carrier per unit cell]
-    REAL(KIND = DP) :: xkf_all(3, nkqtotf)
-    !! Collect k-point coordinate (and k+q) from all pools in parallel case
-    REAL(KIND = DP) :: f_serta(3, nbndfst, nktotf, nstemp)
-    !! SERTA solution
-    REAL(KIND = DP) :: f_in(3, nbndfst, nktotf, nstemp)
-    !! In solution for iteration i
-    REAL(KIND = DP) :: f_out(3, nbndfst, nktotf, nstemp)
-    !! In solution for iteration i
     REAL(KIND = DP) :: f_rot(3)
     !! Rotated Fi_in by the symmetry operation
     REAL(KIND = DP) :: error(nstemp)
@@ -321,9 +423,37 @@
     !! BTE conductivity tensor with Magnetic field.
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
+    REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
+    !! Collect k-point coordinate (and k+q) from all pools in parallel case
+    REAL(KIND = DP), ALLOCATABLE :: f_crta(:, :, :, :)
+    !! SERTA solution
+    REAL(KIND = DP), ALLOCATABLE :: f_serta(:, :, :, :)
+    !! SERTA solution
+    REAL(KIND = DP), ALLOCATABLE :: f_in(:, :, :, :)
+    !! In solution for iteration i
+    REAL(KIND = DP), ALLOCATABLE :: f_out(:, :, :, :)
+    !! In solution for iteration i
+    REAL(KIND = DP) :: inv_tau_crta
+    !! scattering rate for CRTA
+    !
+    inv_tau_crta = sr_crta
+    !
+    !! S.T: Allocations are needed to avoid heap-array problem
+    !
+    ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating xkf_all', 1)  
+    ALLOCATE(f_serta(3, nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_serta', 1)  
+    ALLOCATE(f_crta(3, nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_crta', 1) 
+    ALLOCATE(f_in(3, nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_in', 1) 
+    ALLOCATE(f_out(3, nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_out', 1) 
     !
     carrier_density(:) = zero
     xkf_all(:, :) = zero
+    !
 #if defined(__MPI)
     CALL poolgather2(3, nkqtotf, nkqf, xkf, xkf_all)
 #else
@@ -336,6 +466,7 @@
       WRITE(stdout, '(5x,a)') '-- ibte --'
       WRITE(stdout, '(5x,a,f12.6)') 'bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
       WRITE(stdout, '(5x,a,f12.6)') 's_bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2
+      WRITE(stdout, '(5x,a,f12.6)') 'f_crta : ',  (3 * nbndfst * nktotf * nstemp) * byte2Mb!REAL(8)
       WRITE(stdout, '(5x,a,f12.6)') 'f_serta : ',  (3 * nbndfst * nktotf * nstemp) * byte2Mb!REAL(8)
       WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nsym * nktotf * byte2Mb / 2 !INTEGER(4)
       rws(:, :) = zero
@@ -360,10 +491,11 @@
       !
     ENDIF ! mp_mesh_k
     !
+    f_crta(:, :, :, :) = zero
     f_serta(:, :, :, :) = zero
     !
     IF (iverbosity == 4) THEN
-      WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        f_serta   '
+      WRITE(stdout, '(2X, "   temp   k-index  ibnd", 15X, "k-point", 18X, "eig[Ry]", 19X, "f_serta")')    
     ENDIF
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
@@ -373,6 +505,7 @@
             ekk = etf_all(ibnd, ik) - ef0(itemp)
             dfnk = w0gauss(ekk / etemp, -99) / etemp
             ! (-) sign is because w0gauss is - df/de
+            f_crta(:, ibnd, ik, itemp) = - dfnk * vkk_all(:, ibnd, ik) / (inv_tau_crta)
             f_serta(:, ibnd, ik, itemp) = - dfnk * vkk_all(:, ibnd, ik) / (inv_tau(ibnd, ik, itemp))
             !
             IF (iverbosity == 4) THEN
@@ -387,6 +520,27 @@
       ENDDO
     ENDDO
     !
+    ! We now do CRTA with and without k-point symmetries
+    IF (ltrans_crta) THEN
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a)') REPEAT('=',93)
+      WRITE(stdout, '(5x,"BTE in the constant relaxation time approximation (CRTA)")')
+      WRITE(stdout, '(5x,"Scattering rates for all states are set as ", F15.6, " THz.")') sr_crta*ry2thz_sr
+      WRITE(stdout, '(5x,a)') REPEAT('=',93)
+      ! Store conductivity without B-field
+      sigma_serta(:, :, :) = zero
+      max_mob(:) = zero
+      ! K-point symmetry.
+      IF (mp_mesh_k) THEN
+        ! Averages points which leaves the k-point unchanged by symmetry in F and v.
+        ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
+        CALL k_avg(f_crta, vkk_all, nb_sp, xkf_sp)
+        CALL print_mob_sym(f_crta, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
+      ELSE
+        CALL print_mob(f_crta, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
+      ENDIF
+    ENDIF
+    !
     ! We now do SERTA with and without k-point symmetries
     WRITE(stdout, '(5x,a)') ' '
     WRITE(stdout, '(5x,a)') REPEAT('=',93)
@@ -395,13 +549,17 @@
     ! Store conductivity without B-field
     sigma_serta(:, :, :) = zero
     max_mob(:) = zero
+    f_crta(:, :, :, :) = f_crta(:, :, :, :) * inv_tau_crta
     ! K-point symmetry.
     IF (mp_mesh_k) THEN
       ! Averages points which leaves the k-point unchanged by symmetry in F and v.
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
+      CALL k_avg(f_crta, vkk_all, nb_sp, xkf_sp)
       CALL k_avg(f_serta, vkk_all, nb_sp, xkf_sp)
+      CALL print_meff_sym(f_crta, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
       CALL print_mob_sym(f_serta, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
     ELSE
+      CALL print_meff(f_crta, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
       CALL print_mob(f_serta, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
     ENDIF
     !
@@ -479,7 +637,8 @@
         ENDDO
       ENDIF
       !
-      CALL mp_sum(f_out, world_comm)
+      CALL mp_sum(f_out, inter_pool_comm)
+      CALL mp_sum(f_out, inter_image_comm)
       !
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
@@ -526,7 +685,7 @@
     ENDDO ! end of while loop
     !
     ! Print nk-resolved mobility $\mu_{nk}^{\alpha\beta}$
-    IF (iverbosity == 3) THEN
+    IF (iverbosity == 3  .AND. .NOT. assume_metal) THEN
       IF (mp_mesh_k) THEN
         CALL print_mob_sym(f_in, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_bte, max_mob, xkf_all(:, 1:nkqtotf:2))
       ENDIF
@@ -652,7 +811,8 @@
                         + trans_prob(ind) * f_in_b(:, jbnd, nkq_abs, itemp)
             ENDIF ! mp_mesh_k
           ENDDO ! ind
-          CALL mp_sum(F_out_b, world_comm)
+          CALL mp_sum(F_out_b, inter_pool_comm)
+          CALL mp_sum(F_out_b, inter_image_comm)
         ENDIF ! iter > 0
         !
         ! Multiply with the scattering rate inv_tau_b
@@ -780,7 +940,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+    SUBROUTINE transport_ibte(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     !----------------------------------------------------------------------------
     !!
     !! This routines opens all the required files to restart an IBTE calculation
@@ -788,10 +948,13 @@
     !! This routine requires that the scattering rates have been computed previously.
     !!
     ! ----------------------------------------------------------------------------
-    USE kinds,            ONLY : DP, i4b
-    USE global_var,       ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf, dos, evbm, ecbm
+    USE kinds,            ONLY : i4b
+    USE global_var,       ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf, dos, &
+                                 evbm, ecbm, ctype
     USE mp_world,         ONLY : mpime, world_comm
-    USE io_global,        ONLY : ionode_id, stdout
+    USE mp_images,        ONLY : my_image_id
+    USE mp_global,        ONLY : my_pool_id, inter_pool_comm
+    USE io_global,        ONLY : ionode_id, ionode, stdout
     USE io_files,         ONLY : tmp_dir, prefix
     USE input,            ONLY : nstemp, ncarrier, assume_metal
     USE ep_constants,     ONLY : zero
@@ -801,7 +964,7 @@
                                  iunsparsetcb, iunepmatcb
     USE mp,               ONLY : mp_bcast
     USE parallelism,      ONLY : fkbounds2
-    USE symm_base,        ONLY : nsym
+    USE symmetry,         ONLY : nsym => nsym_k
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET, MPI_MODE_RDONLY, MPI_INFO_NULL, &
                                  MPI_SEEK_SET, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
@@ -907,6 +1070,9 @@
     !! Transition probabilities
     REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
     !! Transition probabilities for cb
+    CHARACTER(LEN = 256) :: my_image_id_ch
+    !! Image ID
+    WRITE(my_image_id_ch, "(I0)") my_image_id
     !
     etf_all(:, :)    = zero
     wkf_all(:)       = zero
@@ -914,9 +1080,9 @@
     !
     ! SP - The implementation only works with MPI so far
     ! Read velocities
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       !
-      OPEN(UNIT = iufilibtev_sup, FILE = 'IBTEvel_sup.fmt', STATUS = 'old', IOSTAT = ios)
+      OPEN(UNIT = iufilibtev_sup, FILE = 'IBTEvel_sup' // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iufilibtev_sup, '(a)')
       READ(iufilibtev_sup, *) ind_tot, ind_totcb
       READ(iufilibtev_sup, '(a)')
@@ -942,7 +1108,7 @@
       CLOSE(iufilibtev_sup)
       !
       inv_tau_all(:, :, :) = zero
-      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_tau.fmt', STATUS = 'old', IOSTAT = ios)
+      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_tau' // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iufilibtev_sup, '(a)')
       READ(iufilibtev_sup, '(a)')
       DO itemp = 1, nstemp
@@ -955,7 +1121,7 @@
       CLOSE(iufilibtev_sup)
       !
       inv_tau_allcb(:, :, :) = zero
-      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_taucb.fmt', STATUS = 'old', IOSTAT = ios)
+      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_taucb' // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iufilibtev_sup, '(a)')
       READ(iufilibtev_sup, '(a)')
       DO itemp = 1, nstemp
@@ -969,23 +1135,23 @@
     ENDIF
     !
 #if defined(__MPI)
-    CALL MPI_BCAST(ind_tot, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
-    CALL MPI_BCAST(ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
+    CALL MPI_BCAST(ind_tot, 1, MPI_OFFSET, ionode_id, inter_pool_comm, ierr)
+    CALL MPI_BCAST(ind_totcb, 1, MPI_OFFSET, ionode_id, inter_pool_comm, ierr)
 #endif
-    CALL mp_bcast(ef0, ionode_id, world_comm)
-    CALL mp_bcast(evbm, ionode_id, world_comm)
-    CALL mp_bcast(ecbm, ionode_id, world_comm)
-    CALL mp_bcast(efcb, ionode_id, world_comm)
-    CALL mp_bcast(vkk_all, ionode_id, world_comm)
-    CALL mp_bcast(wkf_all, ionode_id, world_comm)
-    CALL mp_bcast(etf_all, ionode_id, world_comm)
-    CALL mp_bcast(nsym, ionode_id, world_comm)
-    CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
-    CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
+    CALL mp_bcast(ef0, ionode_id, inter_pool_comm)
+    CALL mp_bcast(evbm, ionode_id, inter_pool_comm)
+    CALL mp_bcast(ecbm, ionode_id, inter_pool_comm)
+    CALL mp_bcast(efcb, ionode_id, inter_pool_comm)
+    CALL mp_bcast(vkk_all, ionode_id, inter_pool_comm)
+    CALL mp_bcast(wkf_all, ionode_id, inter_pool_comm)
+    CALL mp_bcast(etf_all, ionode_id, inter_pool_comm)
+    CALL mp_bcast(nsym, ionode_id, inter_pool_comm)
+    CALL mp_bcast(inv_tau_all, ionode_id, inter_pool_comm)
+    CALL mp_bcast(inv_tau_allcb, ionode_id, inter_pool_comm)
     !
     ! Now choose hole or electron (the implementation does not support both)
     ! hole (or metals)
-    IF (ncarrier < -1E5 .OR. assume_metal) THEN
+    IF (ctype < 0) THEN
       !
       ! Split all the matrix elements across all cores.
       CALL fkbounds2(ind_tot, lower_bnd, upper_bnd)
@@ -994,13 +1160,13 @@
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout, '(5x,a,i10)') 'Number of elements per core ', nind
       ALLOCATE(trans_prob(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating trans_prob', 1)
       trans_prob(:) = 0.0d0
       !
       ! Open file containing trans_prob
-      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkq1'
+      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_image_id_ch)
 #if defined(__MPI)
-      CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmat, ierr)
+      CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmat, ierr)
 #else
       ! Note : For unformatted RECL, the size must be expressed as an even multiple of four
       INQUIRE(IOLENGTH = direct_io_factor) dum1
@@ -1010,7 +1176,7 @@
       OPEN(UNIT = iunepmat, FILE = filint, IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'old', ACCESS = 'direct', RECL = unf_recl)
 #endif
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN X.epmatkq1', 1)
       !
 #if defined(__MPI)
       ! Offset depending on CPU
@@ -1020,55 +1186,60 @@
       lsize = INT(nind, KIND = MPI_OFFSET_KIND)
       !
       CALL MPI_FILE_SEEK(iunepmat, lrepmatw2, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunepmat, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
       !
       ! Now open the sparse matrix mapping
-      CALL MPI_FILE_OPEN(world_comm, 'sparseq', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseq, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparseq', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparsek', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsek, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsek', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparsei', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsei, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsei', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparsej', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsej, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsej', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparset', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparset, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparset', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseq' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseq, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparseq', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsek' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsek, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsek', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsei' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsei, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsei', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsej' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsej, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsej', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparset' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparset, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparset', 1)
 #else
       READ(UNIT = iunepmat, REC = 1, IOSTAT = ierr) trans_prob
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading X.epmatkq1', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading X.epmatkq1', 1)
       !
       ! Now open the sparse matrix mapping
       INQUIRE(IOLENGTH = direct_io_factor) dum_int
       unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
       OPEN(UNIT = iunsparseq, FILE = 'sparseq', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparseq', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparseq', 1)
       OPEN(UNIT = iunsparsek, FILE = 'sparsek', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsek', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsek', 1)
       OPEN(UNIT = iunsparsei, FILE = 'sparsei', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsei', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsei', 1)
       OPEN(UNIT = iunsparsej, FILE = 'sparsej', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsej', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsej', 1)
       OPEN(UNIT = iunsparset, FILE = 'sparset', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparset', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparset', 1)
 #endif
       !
       ALLOCATE(sparse_q(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_q', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparse_q', 1)
       ALLOCATE(sparse_k(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_k', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparse_k', 1)
       ALLOCATE(sparse_i(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_i', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparse_i', 1)
       ALLOCATE(sparse_j(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_j', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparse_j', 1)
       ALLOCATE(sparse_t(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_t', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparse_t', 1)
       sparse_q(:) = 0.0d0
       sparse_k(:) = 0.0d0
       sparse_i(:) = 0.0d0
@@ -1079,36 +1250,36 @@
       lrepmatw4 = INT(lower_bnd - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       !
       CALL MPI_FILE_SEEK(iunsparseq, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunsparseq, sparse_q(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
       CALL MPI_FILE_SEEK(iunsparsek, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunsparsek, sparse_k(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
       CALL MPI_FILE_SEEK(iunsparsei, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunsparsei, sparse_i(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
       CALL MPI_FILE_SEEK(iunsparsej, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunsparsej, sparse_j(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
       CALL MPI_FILE_SEEK(iunsparset, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunsparset, sparse_t(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
 #else
       READ(iunsparseq, REC = 1, IOSTAT = ierr) sparse_q
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_q', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparse_q', 1)
       READ(iunsparsek, REC = 1, IOSTAT = ierr) sparse_k
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_k', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparse_k', 1)
       READ(iunsparsei, REC = 1, IOSTAT = ierr) sparse_i
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_i', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparse_i', 1)
       READ(iunsparsej, REC = 1, IOSTAT = ierr) sparse_j
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_j', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparse_j', 1)
       READ(iunsparset, REC = 1, IOSTAT = ierr) sparse_t
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_t', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparse_t', 1)
 #endif
       !
       ! Now call the ibte to solve the BTE iteratively until convergence
@@ -1117,69 +1288,69 @@
       !
 #if defined(__MPI)
       CALL MPI_FILE_CLOSE(iunepmat, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparseq, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsek, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsei, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsej, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparset, ierr)
 #else
       CLOSE(iunepmat, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing X.epmatkq1', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing X.epmatkq1', 1)
       CLOSE(iunsparseq, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparseq', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparseq', 1)
       CLOSE(iunsparsek, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsek', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparsek', 1)
       CLOSE(iunsparsei, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsei', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparsei', 1)
       CLOSE(iunsparsej, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsej', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparsej', 1)
       CLOSE(iunsparset, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparset', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparset', 1)
 #endif
       !
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       DEALLOCATE(trans_prob, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating trans_prob', 1)
       DEALLOCATE(sparse_q, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_q', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparse_q', 1)
       DEALLOCATE(sparse_k, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_k', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparse_k', 1)
       DEALLOCATE(sparse_i, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_i', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparse_i', 1)
       DEALLOCATE(sparse_j, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_j', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparse_j', 1)
       DEALLOCATE(sparse_t, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_t', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparse_t', 1)
       !
     ENDIF
     !
     ! Electrons
-    IF (ncarrier > 1E5) THEN
+    IF (ctype >= 0) THEN
       !
       CALL fkbounds2(ind_totcb, lower_bnd, upper_bnd)
       ! Allocate the local size
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout, '(5x,a,i10)') 'Number of elements per core ', nind
       ALLOCATE(trans_probcb(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating trans_probcb', 1)
       trans_probcb(:) = 0.0d0
       !
       ! Open file containing trans_prob
-      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkqcb1'
+      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkqcb1' // '_' // TRIM(my_image_id_ch)
 #if defined(__MPI)
-      CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatcb, ierr)
+      CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatcb, ierr)
 #else
       INQUIRE(IOLENGTH = direct_io_factor) dum1
       unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
       OPEN(UNIT = iunepmatcb, FILE = filint, IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'old', ACCESS = 'direct', RECL = unf_recl)
 #endif
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in opening X.epmatkqcb1', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in opening X.epmatkqcb1', 1)
       !
 #if defined(__MPI)
       ! Offset depending on CPU
@@ -1189,55 +1360,60 @@
       lsize = INT(nind, KIND = MPI_OFFSET_KIND)
       !
       CALL MPI_FILE_SEEK(iunepmatcb, lrepmatw2, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunepmatcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK iunepmatcb', 1)
       CALL MPI_FILE_READ(iunepmatcb, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunepmatcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunepmatcb', 1)
       !
       ! Now read the sparse matrix mapping
-      CALL MPI_FILE_OPEN(world_comm, 'sparseqcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseqcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparseqcb', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparsekcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsekcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsekcb', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparseicb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseicb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparseicb', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparsejcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsejcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsejcb', 1)
-      CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsetcb', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseqcb' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseqcb, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparseqcb', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsekcb' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsekcb, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsekcb', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseicb' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseicb, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparseicb', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsejcb' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsejcb, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsejcb', 1)
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsetcb' // '_' // TRIM(my_image_id_ch), &
+        MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsetcb', 1)
 #else
       READ(UNIT = iunepmatcb, REC = 1, IOSTAT = ierr) trans_probcb
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading X.epmatkq1', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading X.epmatkq1', 1)
       !
       ! Now open the sparse matrix mapping
       INQUIRE(IOLENGTH = direct_io_factor) dum_int
       unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
       OPEN(UNIT = iunsparseqcb, FILE = 'sparseqcb', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparseqcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparseqcb', 1)
       OPEN(UNIT = iunsparsekcb, FILE = 'sparsekcb', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsekcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsekcb', 1)
       OPEN(UNIT = iunsparseicb, FILE = 'sparseicb', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparseicb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparseicb', 1)
       OPEN(UNIT = iunsparsejcb, FILE = 'sparsejcb', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsejcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsejcb', 1)
       OPEN(UNIT = iunsparsetcb, FILE = 'sparsetcb', IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsetcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsetcb', 1)
 #endif
       !
       ALLOCATE(sparsecb_q(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_q', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparsecb_q', 1)
       ALLOCATE(sparsecb_k(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_k', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparsecb_k', 1)
       ALLOCATE(sparsecb_i(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_i', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparsecb_i', 1)
       ALLOCATE(sparsecb_j(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_j', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparsecb_j', 1)
       ALLOCATE(sparsecb_t(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_t', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error allocating sparsecb_t', 1)
       sparsecb_q(:) = 0.0d0
       sparsecb_k(:) = 0.0d0
       sparsecb_i(:) = 0.0d0
@@ -1248,36 +1424,36 @@
       lrepmatw4 = INT(lower_bnd - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       !
       CALL MPI_FILE_SEEK(iunsparseqcb, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunsparseqcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK iunsparseqcb', 1)
       CALL MPI_FILE_READ(iunsparseqcb, sparsecb_q(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparseqcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunsparseqcb', 1)
       CALL MPI_FILE_SEEK(iunsparsekcb, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunsparsekcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK iunsparsekcb', 1)
       CALL MPI_FILE_READ(iunsparsekcb, sparsecb_k(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparsekcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunsparsekcb', 1)
       CALL MPI_FILE_SEEK(iunsparseicb, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunsparseicb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK iunsparseicb', 1)
       CALL MPI_FILE_READ(iunsparseicb, sparsecb_i(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparseicb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunsparseicb', 1)
       CALL MPI_FILE_SEEK(iunsparsejcb, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunsparsejcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK iunsparsejcb', 1)
       CALL MPI_FILE_READ(iunsparsejcb, sparsecb_j(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparsejcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunsparsejcb', 1)
       CALL MPI_FILE_SEEK(iunsparsetcb, lrepmatw4, MPI_SEEK_SET, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunsparsetcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_SEEK iunsparsetcb', 1)
       CALL MPI_FILE_READ(iunsparsetcb, sparsecb_t(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparsetcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunsparsetcb', 1)
 #else
       READ(iunsparseqcb, REC = 1, IOSTAT = ierr) sparsecb_q
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_q', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparsecb_q', 1)
       READ(iunsparsekcb, REC = 1, IOSTAT = ierr) sparsecb_k
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_k', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparsecb_k', 1)
       READ(iunsparseicb, REC = 1, IOSTAT = ierr) sparsecb_i
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_i', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparsecb_i', 1)
       READ(iunsparsejcb, REC = 1, IOSTAT = ierr) sparsecb_j
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_j', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparsecb_j', 1)
       READ(iunsparsetcb, REC = 1, IOSTAT = ierr) sparsecb_t
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_t', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in reading sparsecb_t', 1)
 #endif
       !
       CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_probcb, efcb, &
@@ -1285,48 +1461,48 @@
       !
 #if defined(__MPI)
       CALL MPI_FILE_CLOSE(iunepmatcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparseqcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsekcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparseicb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsejcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsetcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_CLOSE', 1)
 #else
       CLOSE(iunepmatcb, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing X.epmatkqcb1', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing X.epmatkqcb1', 1)
       CLOSE(iunsparseqcb, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparseqcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparseqcb', 1)
       CLOSE(iunsparsekcb, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsekcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparsekcb', 1)
       CLOSE(iunsparseicb, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparseicb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparseicb', 1)
       CLOSE(iunsparsejcb, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsejcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparsejcb', 1)
       CLOSE(iunsparsetcb, STATUS = 'keep', IOSTAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsetcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'error in closing sparsetcb', 1)
 #endif
       DEALLOCATE(trans_probcb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating trans_probcb', 1)
       DEALLOCATE(sparsecb_q, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_q', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparsecb_q', 1)
       DEALLOCATE(sparsecb_k, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_k', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparsecb_k', 1)
       DEALLOCATE(sparsecb_i, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_i', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparsecb_i', 1)
       DEALLOCATE(sparsecb_j, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_j', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparsecb_j', 1)
       DEALLOCATE(sparsecb_t, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_t', 1)
+      IF (ierr /= 0) CALL errore('transport_ibte', 'Error deallocating sparsecb_t', 1)
       !
     ENDIF
     !
     !----------------------------------------------------------------------------
-    END SUBROUTINE iter_restart
+    END SUBROUTINE transport_ibte
     !----------------------------------------------------------------------------
     !
   !------------------------------------------------------------------------------

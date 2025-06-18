@@ -21,32 +21,33 @@
   PRIVATE
   SAVE
   !
-  PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral,    &
-            iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,  &
-            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,  &
-            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
-            iuint3paw, iufildos, iufilmat, iuelself_wfpt
-  PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
+  PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral,     &
+            iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,   &
+            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,   &
+            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures,  &
+            iuint3paw, iufildos, iufilmat, iuelself_wfpt, iunirobj, iufilnscf, &
+            epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
             iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, iufilFS,  &
-            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2, &
-            iudwwe, iudgwe, iusthwe, iupmwe, iuxqc, iuqmap, iudmat
-  PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
-            iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
-  PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,   &
-            iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb, &
-            iufilesigma_all, epwbib, iuindabs_all, iudirabs
-  PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
-            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb,  &
-            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk,  &
-            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge,iunsparsej_merge, &
-            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,                &
-            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,            &
-            iunsparsekcb_merge, iunepmat_merge
-  PUBLIC :: iunRpscell, iunkgridscell, iunpsirscell, iepfall, ihamil, iMmn, irho,  &
-            iUmn, iekanu, iwfplrn, idtauplrn, ipsirplrn, idosplrn, ixsfplrn
-  PUBLIC :: iunirobj, iufilnscf
-
+            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2, iuexphg,  &
+            iudwwe, iudgwe, iusthwe, iupmwe, iuxqc, iuqmap, iudmat, iuwigner,  &
+            iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, iunsparsetcb,   &
+            iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec, iuntaucb,      &
+            iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iuntau,        &
+            iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iunselecq,    &
+            iufilesigma_all, epwbib, iuindabs_all, iudirabs, iufilscatt_rate,  &
+            iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset,        &
+            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iufilmu_nk,&
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF,          &
+            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge, iundwdecay,  &
+            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,            &
+            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,        &
+            iunsparsekcb_merge, iunepmat_merge, iunsparsej_merge, iunRpscell,  &
+            iunkgridscell, iunpsirscell, iepfall, ihamil, iMmn, irho, iUmn,    &
+            iekanu, iwfplrn, idtauplrn, ipsirplrn, idosplrn, ixsfplrn,         &
+            iufilfelec, iufilnphon, iukmeshf, iuqmeshf, iuselecqfd, io_error,  &
+            iufelecrestart, iunphonrestart, iunphindx, iun3rdfc, iurpa,        &
+            iuahcsth, iuahcgkk, iuahcet, iuahcdw, iusymk, iufilmu_meff
   !
   ! Output of physically relevant quantities (60-100)
   !
@@ -147,6 +148,11 @@
   INTEGER :: iuqmap          = 152  ! File for the symmetry relation of q-points.
                                     ! Needed for unfolding the upper Fan term.
   INTEGER :: iudmat          = 153  ! Symmetry matrix elements
+  INTEGER :: iuahcsth        = 154  ! File unit for upper Fan matrix from ph.x
+  INTEGER :: iuahcgkk        = 155  ! File unit for E-ph matrix from ph.x
+  INTEGER :: iuahcet         = 156  ! File unit for Band energy from ph.x
+  INTEGER :: iuahcdw         = 157  ! File unit for Debye-Waller matrix from ph.x
+  INTEGER :: iusymk          = 158  ! Unit for reading and writing symk file
   !
   ! Output quantites related to Wannier (201-250)
   !
@@ -163,7 +169,9 @@
   INTEGER :: iudecayP        = 208  ! Dipole decay in real space
   INTEGER :: iudecaydyn      = 209  ! Dynamical matrix decay in real space
   INTEGER :: iudecayv        = 210  ! Velocity matrix decay in real space
-  INTEGER :: iubvec          = 211  ! b-vectors and their weight wb
+  INTEGER :: iundwdecay      = 211  ! Spatial decay of the Debye-Waller matrix elements
+  INTEGER :: iubvec          = 212  ! b-vectors and their weight wb
+  INTEGER :: iuwigner        = 213  ! List of Wigner-Seitz vectors
   !
   ! Output quantites related to transport (251-300)
   INTEGER :: iufilsigma      = 251 ! Electrical conductivity
@@ -179,11 +187,13 @@
   INTEGER :: iufilmu_nk      = 261 ! $\mu_{nk}^{\alpha\beta}$ in mobility_nk.fmt file
   INTEGER :: iufilmu_q       = 262 ! $\mu_{\nu q}^{\alpha\beta}$ in mobility_nuq.fmt mode
   INTEGER :: iures           = 263 ! Resistivity in metals using Ziman formula [.res]
+  INTEGER :: iufilmu_meff    = 264 ! $\M^{*-1}_{\alpha\beta}$ in m_effective.fmt file
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
   INTEGER :: iuindabs_all    = 302 ! Indirect absorption read/write
   INTEGER :: iudirabs        = 303 ! Direct absorption data
+  INTEGER :: iuexphg         = 304 ! Full exciton-phonon coupling matrix
   !
   ! Miscellaneous (326-350)
   INTEGER :: epwbib          = 326 ! EPW bibliographic file.
@@ -219,8 +229,17 @@
   INTEGER :: iunsparsejcb_merge  = 410
   INTEGER :: iunsparsetcb_merge  = 411
   !
-  !
-  PUBLIC :: io_error
+  ! Output of Time evolution of electron and phonon population
+  INTEGER :: iufilfelec         = 412
+  INTEGER :: iufilnphon         = 413
+  INTEGER :: iukmeshf           = 414
+  INTEGER :: iuqmeshf           = 415
+  INTEGER :: iuselecqfd         = 416
+  INTEGER :: iufelecrestart     = 417
+  INTEGER :: iunphonrestart     = 418
+  INTEGER :: iunphindx          = 419
+  INTEGER :: iun3rdfc           = 420
+  INTEGER :: iurpa              = 421
   !
   CONTAINS
     !----------------------------------------------------------------------------

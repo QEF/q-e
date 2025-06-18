@@ -1,0 +1,27 @@
+--
+&control
+    calculation     = 'scf'
+    prefix          = 'lif'
+    pseudo_dir      = './'
+    outdir          = './'
+    tprnfor         = .true.
+    tstress         = .true.
+/
+&system
+    ibrav           = 2
+    celldm(1)       = 7.67034
+    nat             = 2
+    ntyp            = 2
+    ecutwfc         = 150.0
+/
+&electrons
+    conv_thr        = 1.0d-12
+/
+ATOMIC_SPECIES
+ Li 6.941  Li.upf
+ F 18.9984 F.upf
+ATOMIC_POSITIONS crystal
+ Li 0.0000 0.0000 0.0000
+ F  0.5000 0.5000 0.5000
+K_POINTS automatic
+ 6 6 6 0 0 0
