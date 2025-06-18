@@ -11,7 +11,7 @@
   PROGRAM epw
   !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v5.9
+  !! version: v6.0
   !! license: GNU
   !! summary: EPW main driver
   !!
@@ -23,15 +23,15 @@
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout, ionode
   USE mp_world,         ONLY : mpime
-  USE mp_global,        ONLY : mp_startup, ionode_id
-  USE control_flags,    ONLY : gamma_only, use_gpu
+  USE mp_global,        ONLY : mp_startup, ionode_id, nimage
+  USE control_flags,    ONLY : gamma_only, use_gpu, iverbosity
   USE input,            ONLY : wannierize, nqc1, nqc2, nqc3
   USE global_version,   ONLY : version_number
   USE input,            ONLY : filukk, eliashberg, ep_coupling, epwread, epbread, &
-                               lcumulant, nbndsub
+                               lcumulant, nbndsub, do_tdbe
   USE environment,      ONLY : environment_start
   USE global_var,       ONLY : elph
-  USE close,            ONLY : close_final, deallocate_epw
+  USE close,            ONLY : close_final, deallocate_epw, remove_out_files
   USE cumulant,         ONLY : spectral_cumulant
   USE wannierization,   ONLY : wann_run
   USE io,               ONLY : openfilepw, loadbm
@@ -39,6 +39,8 @@
   use supercond_driver, ONLY : eliashberg_eqs
   USE ep_constants,     ONLY : zero
   USE wannier,          ONLY : build_wannier
+  USE check_stop,       ONLY : check_stop_init
+  USE tdbe_driver,      ONLY : tdbe
   !
   IMPLICIT NONE
   !
@@ -83,7 +85,7 @@
   REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
   !! The qpoints in the uniform coarse q-point grid.
   !
-  version_number = '5.9'
+  version_number = '6.0'
   !
   CALL init_clocks(.TRUE.)
   !
@@ -131,9 +133,19 @@
   !
   CALL environment_start(code)
   !
+  ! Do not move remove_out_files: this must be placed right after environment_start
+  !
+  IF (iverbosity /= -1) THEN
+    CALL remove_out_files()
+  ENDIF
+  !
   ! Read in the input file
   !
   CALL readin()
+  !
+  ! Add max_seconds to smoothly stop set by user
+  !
+  CALL check_stop_init()
   !
   IF (epwread .AND. .NOT. epbread) THEN
     WRITE(stdout,'(a)') "                      "
@@ -174,7 +186,7 @@
     ! the calculated wavefunctions
     ! Currently, matices from setphases_wrap are identity matrices.
     ! Thus, for the moment, calling of setphases_wrap is removed.
-!    CALL setphases_wrap()
+    ! CALL setphases_wrap()
     !
     IF (wannierize) THEN
       !
@@ -237,6 +249,12 @@
   !
   IF (eliashberg) THEN
     CALL eliashberg_eqs()
+  ENDIF
+  !
+  ! ymPan: start TDBE simulation
+  IF (do_tdbe) THEN
+    CALL tdbe()
+    CALL deallocate_epw()
   ENDIF
   !
   ! Print statistics and exit gracefully

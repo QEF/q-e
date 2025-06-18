@@ -1,0 +1,7 @@
+hole_position 0.51 0.5 0.5
+plot_spin 1
+plot_state 3 
+supercell_size 8 8 8 
+no_symmetries_fine_grid
+no_symmetries_shifted_grid
+

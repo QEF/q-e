@@ -73,7 +73,7 @@ then
   echo "Removing restart files ..."
   echo "Running EPW ..."
 ######  rm *.Fin_restart1 *.Fin_restartcb1 restart.fmt
-  rm restart.fmt
+  rm -rf restart* F* sparse*
   echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
@@ -104,7 +104,7 @@ then
 elif [[ "$1" == "8" ]]
 then
   echo "Running POSTAHC ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4"
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -117,6 +117,46 @@ then
   echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   cat *.bands.*.dat >> $3
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "10" ]]
+then
+  echo "Removing restart files ..."
+  echo "Running EPW with images..."
+  rm -rf restart* F* sparse*
+  export PARA_SUFFIX_OLD=${PARA_SUFFIX}
+  if [[ "$QE_USE_MPI" != "" ]]; then
+    if (( QE_USE_MPI % 2 == 0 )); then
+      export PARA_SUFFIX="-nk $((QE_USE_MPI / 2)) -ni 2"
+    else
+      export PARA_SUFFIX="-nk 1 -ni $QE_USE_MPI"
+    fi  
+  fi
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
+  export PARA_SUFFIX=${PARA_SUFFIX_OLD}
+  unset PARA_SUFFIX_OLD
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "11" ]]
+then
+  echo "Running EPW with images..."
+  export PARA_SUFFIX_OLD=${PARA_SUFFIX}
+  if [[ "$QE_USE_MPI" != "" ]]; then
+    if (( QE_USE_MPI % 2 == 0 )); then
+      export PARA_SUFFIX="-nk $((QE_USE_MPI / 2)) -ni 2"
+    else
+      export PARA_SUFFIX="-nk 1 -ni $QE_USE_MPI"
+    fi  
+  fi
+  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
+  export PARA_SUFFIX=${PARA_SUFFIX_OLD}
+  unset PARA_SUFFIX_OLD
   if [[ -e CRASH ]]
   then
     cat $3

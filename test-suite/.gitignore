@@ -53,6 +53,9 @@ epw_*/linewidth.*
 epw_*/scattering_rate_*
 epw_*/sparse*
 epw_*/specfun*
+epw_*/*tmp*
+epw_*/*bak
+epw_*/out*_0
 !epw_*/quadrupole.fmt
 !epw_metal/save/
 !epw_soc/save/

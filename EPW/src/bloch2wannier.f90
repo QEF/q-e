@@ -1303,8 +1303,9 @@
     USE cell_base,     ONLY : at, bg, alat
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, cone, eps8, one
     USE io_global,     ONLY : ionode_id
+    USE io_var,        ONLY : iundwdecay
     USE mp_global,     ONLY : inter_pool_comm
-    USE mp       ,     ONLY : mp_sum
+    USE mp,            ONLY : mp_sum
     USE mp_world,      ONLY : mpime
     USE global_var,    ONLY : zstar, epsi, qrpl
     USE input,         ONLY : lpolar
@@ -1366,8 +1367,6 @@
     !! Counter on WS points
     INTEGER :: imode
     !! Mode index
-    INTEGER :: iun
-    !! Unit for the decay file
     INTEGER :: ierr
     !! Error status
     REAL(KIND = DP) :: rdotk
@@ -1468,16 +1467,16 @@
     !  the matrix for the first mode only
     !
     IF ((mpime == ionode_id) .AND. is_dw_) THEN
-      OPEN(NEWUNIT = iun, FILE = 'decay.dwwane')
-      WRITE(iun, '(a)') '# Spatial decay of Debye-Waller matrix elements in electron Wannier basis'
+      OPEN(UNIT = iundwdecay, FILE = 'decay.dwwane')
+      WRITE(iundwdecay, '(a)') '# Spatial decay of Debye-Waller matrix elements in electron Wannier basis'
       DO ir = 1, nrr
         !
         tmp = MAXVAL(ABS(epmatw(:, :, ir, :)))
-        WRITE(iun, *) wslen(ir) * alat * bohr2ang, tmp
+        WRITE(iundwdecay, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
-      CLOSE(iun)
+      CLOSE(iundwdecay)
     ENDIF
     !
     DEALLOCATE(epmats, STAT = ierr)
@@ -1673,8 +1672,6 @@
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
-    LOGICAL :: exst
-    !! If the file exist
     INTEGER :: iq
     !! Counter on q-point
     INTEGER :: ir
@@ -1721,6 +1718,8 @@
     !! (Cartesian coordinates)
     COMPLEX(KIND = DP), ALLOCATABLE :: epmatwp_mem(:, :, :, :)
     !!  e-p matrix in Wannier basis
+    LOGICAL :: exst
+    !! Check if backup files exist
     !
     ALLOCATE(epmatwe(nbnd, nbnd, nrr_k, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'Error allocating epmatwe', 1)

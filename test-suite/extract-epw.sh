@@ -57,14 +57,17 @@ lambda=`grep "     lambda___(" $fname | awk '{print $4}'`
 lambda_tr=`grep "  lambda_tr(" $fname | awk '{print $4}'`
 gamma=`grep " gamma___=" $fname | awk '{print $6}'`
 omega=`grep " omega=" $fname | awk '{print $9}'`
+on_shell_Omega=`grep " on_shell_Omega=" $fname | awk '{print $12}'`
+off_shell_Omega=`grep " off_shell_Omega=" $fname | awk '{print $15}'`
 lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
 lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
 l_a2f=`grep "l_a2f =" $fname | awk '{print $6}'`
 efm=`grep "at Ef=" $fname | awk '{print $8}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
-allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
-bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
+mcmillan=`grep "Estimated Tc using McMillan expression =" $fname | awk '{print $9}'`
+allDyn=`grep "Estimated Tc using Allen-Dynes modified McMillan expression =" $fname | awk '{print $9}'`
+bcsgap=`grep "Estimated BCS superconducting gap using McMillan Tc =" $fname | awk '{print $10}'`
 max_eigenvalue=`grep -A 47 "Max. eigenvalue close to 1" $fname | grep 35.00 | awk '{print $2}'`
 pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
@@ -92,6 +95,11 @@ fi
 if test "$elph" != ""; then
         echo elph
         echo $elph
+fi
+
+if test "$mcmillan" != ""; then
+        echo mcmillan
+        echo $mcmillan
 fi
 
 if test "$allDyn" != ""; then
@@ -224,6 +232,15 @@ if test "$omega" != ""; then
         for x in $omega; do echo $x; done
 fi
 
+if test "$on_shell_Omega" != ""; then
+        echo on_shell_Omega
+        for x in $on_shell_Omega; do echo $x; done
+fi
+
+if test "$off_shell_Omega" != ""; then
+        echo off_shell_Omega
+        for x in $off_shell_Omega; do echo $x; done
+fi
 
 if test "$lam_tot" != ""; then
         echo lam_tot

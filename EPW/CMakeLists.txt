@@ -21,6 +21,7 @@ set(sources
     src/io/io_supercond.f90
     src/utilities/utilities.f90
     src/supercond_common.f90
+    src/supercond_vertex.f90
     src/supercond.f90
     src/supercond_iso.f90
     src/supercond_aniso.f90
@@ -54,7 +55,13 @@ set(sources
     src/polaron.f90
     src/qdabs.f90
     src/wfpt.f90
+    src/exphonon.f90
+    src/expolaron.f90
     src/utilities/screening.f90
+    src/tdbe_driver.f90
+    src/tdbe_mod.f90
+    src/tdbe_common.f90
+    src/phph.f90
     )
 
 qe_add_library(qe_epw ${sources})
@@ -141,12 +148,26 @@ qe_install_targets(
     # Libraries
     qe_epw
     # Exacutables
-    qe_epw_exe qe_zg_exe qe_zg_disca_exe qe_zg_pp_disca_exe qe_zg_bands_unfold_exe qe_zg_pp_spctrlfn_exe qe_zg_epsilon_Gaus_exe)
+    qe_epw_exe
+    qe_epw_nscf2supercond_exe
+    qe_zg_exe
+    qe_zg_disca_exe
+    qe_zg_pp_disca_exe
+    qe_zg_bands_unfold_exe
+    qe_zg_pp_spctrlfn_exe
+    qe_zg_epsilon_Gaus_exe)
 
 install(PROGRAMS bin/pp.py TYPE BIN RENAME epw_pp.py)
 
 add_custom_target(epw
     DEPENDS
         qe_epw_exe
+        qe_epw_nscf2supercond_exe
+        qe_zg_exe
+        qe_zg_disca_exe
+        qe_zg_pp_disca_exe
+        qe_zg_bands_unfold_exe
+        qe_zg_pp_spctrlfn_exe
+        qe_zg_epsilon_Gaus_exe
     COMMENT
         "electron-Phonon Coupling with wannier functions")

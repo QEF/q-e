@@ -9,6 +9,7 @@
   iverbosity  = 0
   etf_mem     = 0
   epw_memdist = .true.
+  eps_acoustic= 5.0
 
   use_ws = .false.
   lpolar = .true.

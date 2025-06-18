@@ -23,7 +23,7 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE indabs_main(iq, totq, first_cycle, iq_restart)
+    SUBROUTINE indabs_main(iqq, iq, totq, first_cycle, iq_restart)
     !-----------------------------------------------------------------------
     !!
     !! Main routine for phonon assisted absorption
@@ -41,17 +41,20 @@
                               gtemp, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
                               nbndfst, nktotf, ef0_fca, partion, &
                               epsilon2_abs_all, epsilon2_abs_lorenz_all, epstf_therm, &
-                              epsilon2_abs_imp, epsilon2_abs_lorenz_imp, eimpf17
+                              epsilon2_abs_imp, epsilon2_abs_lorenz_imp, eimpf17, startq, lastq
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero, &
                               bohr2ang, ang2cm
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_world,      ONLY : mpime
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id, my_image_id
+    USE mp_images,     ONLY : inter_image_comm, nimage
     USE cell_base,     ONLY : omega
     USE io_indabs,     ONLY : indabs_write
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(in) :: iqq
+    !! q-point index, counter
     INTEGER, INTENT(in) :: iq
     !! Q-point index
     INTEGER, INTENT(in) :: iq_restart
@@ -85,6 +88,8 @@
     !! Counter on mode
     INTEGER :: nksqtotf
     !! Total number of k+q points
+    INTEGER :: qtot_image
+    !! Total number of qpoints through images
     INTEGER :: iw
     !! Index for frequency
     INTEGER :: mbnd
@@ -159,7 +164,7 @@
     !
     cfac = 16.d0 * pi**2
     !
-    IF (iq == iq_restart) THEN
+    IF (iqq == iq_restart) THEN
       !
       ALLOCATE(omegap(nomega), STAT = ierr)
       IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
@@ -180,7 +185,7 @@
       DO iw = 1, nomega
         omegap(iw) = omegamin + (iw - 1) * omegastep
       ENDDO
-      IF (iq_restart == 1) THEN
+      IF (iq_restart == startq) THEN
         CALL dirabs()
       ENDIF
       WRITE(stdout, '(/5x,a/)') REPEAT('=',67)
@@ -393,14 +398,21 @@
           ENDDO ! ibnd
         ENDDO ! ik
         IF (restart) THEN
-          IF (MOD(iq, restart_step) == 0 .and. itemp == nstemp) THEN
-            WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iq
+          IF (MOD(iqq, restart_step) == 0 .and. itemp == nstemp) THEN
+            WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iqq
+            CALL mp_barrier(inter_pool_comm)
+            CALL mp_barrier(inter_image_comm)
             CALL mp_sum(epsilon2_abs, inter_pool_comm)
             CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
+            CALL mp_sum(epsilon2_abs, inter_image_comm)
+            CALL mp_sum(epsilon2_abs_lorenz, inter_image_comm)
+            qtot_image = totq
+            CALL mp_sum(qtot_image, inter_image_comm)
             CALL mp_barrier(inter_pool_comm)
+            CALL mp_barrier(inter_image_comm)
             epsilon2_abs_all = epsilon2_abs_all + epsilon2_abs
             epsilon2_abs_lorenz_all = epsilon2_abs_lorenz_all + epsilon2_abs_lorenz
-            CALL indabs_write(iq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
+            CALL indabs_write(iqq, qtot_image, epsilon2_abs_all, epsilon2_abs_lorenz_all)
             epsilon2_abs = 0.d0
             epsilon2_abs_lorenz = 0.d0
           ENDIF
@@ -410,21 +422,29 @@
     !
     ! The k points are distributed among pools: here we collect them
     !
-    IF (iq == nqtotf) THEN
+    IF (iq == lastq) THEN
       !
 #if defined(__MPI)
       !
       ! Note that poolgather2 works with the doubled grid (k and k+q)
       !
       CALL mp_barrier(inter_pool_comm)
+      CALL mp_barrier(inter_image_comm) 
       CALL mp_sum(epsilon2_abs, inter_pool_comm)
+      CALL mp_sum(epsilon2_abs, inter_image_comm)
       CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
+      CALL mp_sum(epsilon2_abs_lorenz, inter_image_comm)
+      CALL mp_barrier(inter_image_comm)
       CALL mp_barrier(inter_pool_comm)
-      IF (carrier .and. ii_g) THEN
+     IF (carrier .and. ii_g) THEN
+        CALL mp_barrier(inter_image_comm)
         CALL mp_barrier(inter_pool_comm)
         CALL mp_sum(epsilon2_abs_imp, inter_pool_comm)
         CALL mp_sum(epsilon2_abs_lorenz_imp, inter_pool_comm)
+        CALL mp_sum(epsilon2_abs_imp, inter_image_comm)
+        CALL mp_sum(epsilon2_abs_lorenz_imp, inter_image_comm)
         CALL mp_barrier(inter_pool_comm)
+        CALL mp_barrier(inter_image_comm)
       ENDIF
       !
 #endif
@@ -454,7 +474,7 @@
       !
       ! Output to file
       DO itemp = 1,nstemp
-        IF (mpime == ionode_id) THEN
+        IF (my_pool_id == ionode_id) THEN
           WRITE(c,"(i0)") neta + 1
           WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
           format_string = "("//TRIM(c) // "E22.14)"
@@ -523,7 +543,7 @@
                               epsilon2_abs_dir, epsilon2_abs_lorenz_dir, vmef
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE cell_base,     ONLY : omega
     USE mp_world,      ONLY : mpime
     !
@@ -696,7 +716,7 @@
     !Output to file
     !
     DO itemp = 1, nstemp
-      IF (mpime == ionode_id) THEN
+      IF (my_pool_id == ionode_id) THEN
         WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
         nameF = 'epsilon2_dirabs_' // trim(adjustl(tp)) // 'K.dat'
         OPEN(UNIT = iudirabs, FILE = nameF)
@@ -1165,10 +1185,9 @@
                                   ryd2mev, meV2invps
     USE constants,         ONLY : electron_si
     USE mp,                ONLY : mp_sum, mp_bcast
-    USE mp_global,         ONLY : world_comm
+    USE mp_global,         ONLY : inter_pool_comm
     USE mp_world,          ONLY : mpime
-    USE parallelism,      ONLY : poolgatherc4, poolgather2
-    USE parallelism,       ONLY : fkbounds
+    USE parallelism,       ONLY : poolgatherc4, poolgather2, fkbounds
     USE symm_base,         ONLY : s
     USE noncollin_module,  ONLY : noncolin
     USE pwcom,             ONLY : ef
@@ -1354,7 +1373,7 @@
       !
       !Sum over all pool to gather results
       !
-      CALL mp_sum(sigma(:, itemp), world_comm)
+      CALL mp_sum(sigma(:, itemp), inter_pool_comm)
       !
       sigma_m(:, :) = zero
       sigma_m(1, 1) = sigma(1, itemp)
