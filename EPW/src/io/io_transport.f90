@@ -2645,10 +2645,17 @@
     !! Current position inside the file during writing
     INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
     !! Current position inside the file during writing (electron)
+#if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(out) :: ind_tot
     !! Total number of points store on file
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(out) :: ind_totcb
     !! Total number of points store on file (CB)
+#else
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
+    !! Total number of element written to file
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
+    !! Total number of element written to file
+#endif
     CHARACTER(LEN = 256) :: my_image_id_ch
     !! image id
     LOGICAL :: exst
