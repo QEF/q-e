@@ -557,6 +557,14 @@ PROGRAM matdyn
         ! 
      END IF
      !
+     IF (asr == 'all' .AND. ANY(ABS(zeu) > 1.d-5) .AND. (.NOT. read_lr)) THEN
+        WRITE(stdout, '(/5x, a )') "WARNING: To use asr = 'all' for infrared-active solids, i.e., solids with nonzero"
+        WRITE(stdout, '( 5x, a )') "Born effective charge, one must set read_lr = .true. in the matdyn.x input. Also,"
+        WRITE(stdout, '( 5x, a )') "the flfrc file must have been constructed with write_lr = .true. in the q2r.x input."
+        WRITE(stdout, '( 5x, a )') "If the system is infrared inactive and you have nonzero Born effective charge due to"
+        WRITE(stdout, '( 5x, a/)') "numerical noise, you can ignore this warning."
+     ENDIF
+     !
      IF (asr /= 'no') THEN
         CALL set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, &
              nat_blk, ibrav, tau_blk, at_blk, huang)
