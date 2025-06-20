@@ -245,7 +245,7 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
            ! change sign to h and hs
            !
            !$acc kernels
-           h (:,ibnd_)=-g (:,ibnd_)
+           h (:,ibnd_)=-h (:,ibnd_)
            hs(:,ibnd_)=-hs(:,ibnd_)
            !$acc end kernels
            if (iter.ne.1) then
