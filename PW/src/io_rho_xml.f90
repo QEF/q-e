@@ -277,6 +277,7 @@ MODULE io_rho_xml
            CALL mp_bcast(ll, ionode_id, intra_image_comm)
            CALL mp_bcast(nspin_, ionode_id, intra_image_comm) 
            CALL mp_bcast(nat, ionode_id, intra_image_comm)  
+           IF (ALLOCATED(order_um)) DEALLOCATE (order_um) 
            ALLOCATE (order_um(ll, nspin_, nat)) 
            order_um = 0 
            IF (ionode) READ(iunocc,*) order_um 
