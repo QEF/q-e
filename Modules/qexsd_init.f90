@@ -578,7 +578,7 @@ CONTAINS
            type(hubbardM_type),allocatable :: objs(:) 
            character(len=*) :: labs(:), tag
            !
-           integer :: nhubm, ihubm,nt, nspin, msize, it, ispin, nhubmtot, iobj
+           integer :: nhubm, ihubm,nt, nspin, msize, it, ispin, nhubmtot, iobj, ldim
            integer, allocatable :: packdati(:),channels_per_specimen(:),hubm(:) 
            real(dp)  :: uvalue
            !
@@ -599,12 +599,14 @@ CONTAINS
            !
            do ihubm = 1, nhubm 
              it = packdati(ihubm)
+             ldim = 2 * l(it) + 1 
+             if (noncolin ) ldim = 2 * ldim
              iobj = 1  
              if (ihubm .gt. 1)  iobj = iobj + sum(channels_per_specimen(1:ihubm-1)) 
              do ispin = 1, nspin
                if (ANY(dati(:,ispin,ihubm)/=0.0_DP)) THEN 
                   call qes_init(objs(iobj), TRIM(tag), TRIM(species(it)),TRIM(labs(it)), ispin, &
-                                HubbardM = dati(:,ispin, ihubm)) 
+                                HubbardM = dati(1:ldim,ispin, ihubm)) 
                   if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
                   iobj = iobj + 1
                end if

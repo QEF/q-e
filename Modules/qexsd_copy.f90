@@ -462,10 +462,10 @@ CONTAINS
                   Hubbard_l(isp) = hu_l
                   objldim = dft_obj%dftU%Hubbard_Um(ihub)%size 
                   IF (objldim == 2*hu_l + 1)  THEN 
-                    Hubbard_Um(:,ispin,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM 
+                    Hubbard_Um(1:2*hu_l+1,ispin,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM 
                   ELSE IF (objldim == 2*(2*hu_l +1)) THEN 
-                    Hubbard_Um(:,1,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM(1:2*hu_l+1)
-                    Hubbard_Um(:,2,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM(2*hu_l+2:4*hu_l+2)
+                    Hubbard_Um(1:2*hu_l+1,1,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM(1:2*hu_l+1)
+                    Hubbard_Um(1:2*hu_l+1,2,isp) = dft_obj%dftU%Hubbard_Um(ihub)%HubbardM(2*hu_l+2:4*hu_l+2)
                   ELSE 
                     call errore("qexsd_copy_dft:", & 
                        "size of Hubbard_Um element not compatible with label",1) 
