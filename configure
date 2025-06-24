@@ -53,11 +53,11 @@ esac
 # NOTE: if you run configure without cleaning everything first,
 # there are chances that something may go wrong. Forcing veryclean.
 
+depend="yes"
 if [[  ($1 =~ "--save") ]] ; then
   depend="no"
   shift;
 elif [[ (-e make.inc) && (-e Makefile) ]] ; then
-  depend="yes"
   make -f Makefile veryclean
 fi
 test -e ./install/make.inc       && rm ./install/make.inc
