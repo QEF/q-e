@@ -102,7 +102,7 @@ module wannier
       !! Read wavefunction evc from file for global k point ik_global.
       !! Setup the plane wave variables npw and igk_k_ik
       !-------------------------------------------------------------------------
-      USE kinds,           ONLY : DP
+      USE kinds,           ONLY : DP, i8b
       USE mp_pools,        ONLY : my_pool_id, nproc_pool, me_pool
       USE io_files,        ONLY : prefix, tmp_dir, nwordwfc, iunwfc
       USE wvfct,           ONLY : npwx
@@ -133,7 +133,7 @@ module wannier
       !! Processer index, which is the postfix of the filename.
       INTEGER :: iun
       !! File unit
-      INTEGER*8 :: unf_recl
+      INTEGER(KIND=i8b) :: unf_recl
       !! Record length. Double precision to prevent integer overflow
       INTEGER :: direct_io_factor
       !! Factor for record length
