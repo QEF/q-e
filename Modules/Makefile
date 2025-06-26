@@ -79,6 +79,7 @@ space_group.o \
 set_para_diag.o \
 set_signal.o \
 set_vdw_corr.o \
+copy_order_um_from_xml.o \
 setqf.o \
 timestep.o\
 tsvdw.o\

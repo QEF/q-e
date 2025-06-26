@@ -70,6 +70,7 @@ set(src_modules
     set_para_diag.f90 
     set_signal.f90 
     set_vdw_corr.f90 
+    copy_order_um_from_xml.f90
     setqf.f90 
     timestep.f90
     tsvdw.f90

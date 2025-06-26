@@ -2049,8 +2049,8 @@ SUBROUTINE dftu_iosys ( ntyp )
   !
   !
   Hubbard_U_(1:ntyp)          = hubbard_u(1:ntyp) / rytoev
-  Hubbard_Um_(:,:,1:ntyp)     = hubbard_um(:,:,1:ntyp) / rytoev
-  Hubbard_Um_nc_(:,1:ntyp)    = hubbard_um_nc(:,1:ntyp) / rytoev
+  Hubbard_Um_(:,:,:)     = hubbard_um(:,:,:) / rytoev
+  Hubbard_Um_nc_(:,:)    = hubbard_um_nc(:,:) / rytoev
   Hubbard_J_(1:3,1:ntyp)      = hubbard_j(1:3,1:ntyp) / rytoev
   Hubbard_J0_(1:ntyp)         = hubbard_j0(1:ntyp) / rytoev
   Hubbard_V_(:,:,:)           = hubbard_V(:,:,:) / rytoev
@@ -2062,9 +2062,9 @@ SUBROUTINE dftu_iosys ( ntyp )
   Hubbard_n3_(1:ntyp)         = hubbard_n3(1:ntyp)
   Hubbard_l3_(1:ntyp)         = hubbard_l3(1:ntyp) 
   Hubbard_projectors_         = hubbard_projectors
-  Hubbard_alpha_(1:ntyp)      = hubbard_alpha(1:ntyp) / rytoev
-  Hubbard_alpha_m_(:,:,1:ntyp) = hubbard_alpha_m(:,:,1:ntyp) / rytoev
-  Hubbard_alpha_m_nc_(:,1:ntyp) = hubbard_alpha_m_nc(:,1:ntyp) / rytoev
+  Hubbard_alpha_(:)      = hubbard_alpha(:) / rytoev
+  Hubbard_alpha_m_(:,:,:) = hubbard_alpha_m(:,:,:) / rytoev
+  Hubbard_alpha_m_nc_(:,:) = hubbard_alpha_m_nc(:,:) / rytoev
   Hubbard_beta_(1:ntyp)       = hubbard_beta(1:ntyp) / rytoev
   Hubbard_occ_(1:ntyp,1:3)    = hubbard_occ(1:ntyp,1:3)
   Hubbard_alpha_back_(1:ntyp) = hubbard_alpha_back(1:ntyp) / rytoev

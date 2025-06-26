@@ -37,7 +37,7 @@ SUBROUTINE clean_pw( lflag )
   USE uspp_param,           ONLY : upf
   USE atwfc_mod,            ONLY : deallocate_tab_atwfc
   USE m_gth,                ONLY : deallocate_gth
-  USE ldaU,                 ONLY : deallocate_hubbard
+  USE ldaU,                 ONLY : deallocate_hubbard, order_um
   USE extfield,             ONLY : forcefield, forcegate
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
@@ -134,6 +134,7 @@ SUBROUTINE clean_pw( lflag )
   CALL destroy_scf_type( v    )
   CALL destroy_scf_type( vnew )
   !
+  IF ( ALLOCATED( order_um))     DEALLOCATE (order_um) 
   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
   IF ( ALLOCATED( vltot  ) )     DEALLOCATE( vltot  )
   IF ( ALLOCATED( rho_core  ) )  DEALLOCATE( rho_core  )
