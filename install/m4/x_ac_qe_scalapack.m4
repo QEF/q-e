@@ -37,8 +37,8 @@ if test "$have_mkl" -eq 1
       unset ac_cv_search_pdgemr2d # clear cached value
       LIBS="$mpi_libs $blas_libs"
 # Choose Intel scalapack for Intel MPI
-      if (test $with_scalapack -eq 2) || (test "$mpif90" == "mpiifx" )
-                                      || (test "$mpif90" == "mpiifort") ; then
+      if test $with_scalapack -eq 2 || test "$mpif90" == "mpiifx" || test "$mpif90" == "mpiifort"
+      then
          scalapack_libs=-lmkl_blacs_intelmpi_lp64
       else
          scalapack_libs=-lmkl_blacs_openmpi_lp64
