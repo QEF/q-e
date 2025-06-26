@@ -139,6 +139,7 @@ MODULE io_rho_xml
     SUBROUTINE read_scf ( rho, nspin, gamma_only )
       !
       USE scf,              ONLY : scf_type
+      USE control_flags,    ONLY : lscf
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
                                    lda_plus_u_kind, nsg, apply_U, order_um
@@ -272,23 +273,34 @@ MODULE io_rho_xml
            IF (ionode) THEN 
              OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'Hubbard_m_order.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
-             READ(iunocc,*) ll, nspin_, nat 
+             READ(iunocc,fmt=*,iostat=ierr) ll, nspin_, nat 
            END IF 
-           CALL mp_bcast(ll, ionode_id, intra_image_comm)
-           CALL mp_bcast(nspin_, ionode_id, intra_image_comm) 
-           CALL mp_bcast(nat, ionode_id, intra_image_comm)  
-           IF (ALLOCATED(order_um)) DEALLOCATE (order_um) 
-           ALLOCATE (order_um(ll, nspin_, nat)) 
-           order_um = 0 
-           IF (ionode) READ(iunocc,*) order_um 
-           IF (ionode) CLOSE(iunocc, STATUS='KEEP') 
            CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-           IF ( ierr/=0 ) CALL errore('read_scf', 'Reading ldaU ns', 1)
+           IF ( ierr/=0 ) THEN 
+              IF (lscf) THEN 
+                CALL infomsg('read_scf',&
+                   'OR-DFT+U from saved potential: m_order not found, I will redo U calc first' )
+                apply_U = .FALSE. 
+              ELSE 
+                call errore('read_scf', 'OR-DFT+U nscf calculation, but m_order not found ... stopping',1) 
+              END IF 
+           ELSE 
+              CALL mp_bcast(ll, ionode_id, intra_image_comm)
+              CALL mp_bcast(nspin_, ionode_id, intra_image_comm) 
+              CALL mp_bcast(nat, ionode_id, intra_image_comm)  
+              IF (ALLOCATED(order_um)) DEALLOCATE (order_um) 
+              ALLOCATE (order_um(ll, nspin_, nat)) 
+              order_um = 0 
+              IF (ionode) READ(iunocc,*) order_um 
+              IF (ionode) CLOSE(iunocc, STATUS='KEEP') 
+              CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+              IF ( ierr/=0 ) CALL errore('read_scf', 'Reading ldaU ns', 1)
+              !
+              CALL mp_sum(order_um, intra_image_comm) 
+           END IF 
            !
-           CALL mp_sum(order_um, intra_image_comm) 
-         END IF 
-         !
-      ENDIF
+         ENDIF
+       END IF   
       !
       IF ( okpaw ) THEN
          !
