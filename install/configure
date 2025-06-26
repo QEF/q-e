@@ -1440,9 +1440,8 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-cuda=PATH        prefix where CUDA is installed [default=no]
-  --with-cuda-cc=VAL      GPU architecture (Kepler: 35, Pascal: 60, Volta: 70)
-                          [default=35]
-  --with-cuda-runtime=VAL CUDA runtime (Pascal: 8+, Volta: 9+) [default=10.1]
+  --with-cuda-cc=VAL      GPU compute capabilities [default=70]
+  --with-cuda-runtime=VAL CUDA runtime [default=10.2]
   --with-cuda-mpi=VAL     CUDA-aware MPI (yes|no) [default=no]
   --with-libxc            (yes|no) Use libXC for some XC functionals (default:
                           no)
@@ -1451,9 +1450,9 @@ Optional Packages:
                           Directory where libxc Fortran headers were
                           installed.
   --with-fox              use FoX library (default: no)
-  --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
-                          "intel" to use Intel MPI and blacs (default: use
-                          openMPI)
+  --with-scalapack        (yes|no|intel) Use/do not use scalapack, "intel" may
+                          be explicitly specified for Intel MPI (default: yes,
+                          trying to detect if Intel MPI is used)
   --with-scalapack-qrcp   (yes|no) Run QRCP with scalapack. Requires ScaLAPACK
                           >= 2.1.0 or MKL >= 2020. (default: no)
   --with-elpa-include     Specify full path ELPA include and modules headers
@@ -4118,7 +4117,7 @@ fi
 if test "${with_cuda_cc+set}" = set; then :
   withval=$with_cuda_cc;
 else
-  with_cuda_cc=35
+  with_cuda_cc=70
 fi
 
 
@@ -4127,7 +4126,7 @@ fi
 if test "${with_cuda_runtime+set}" = set; then :
   withval=$with_cuda_runtime;
 else
-  with_cuda_runtime=10.1
+  with_cuda_runtime=10.2
 fi
 
 
@@ -6264,6 +6263,7 @@ do
 
 # look for scalapack if required
     test "$with_scalapack" -eq 0 && break
+
     if test "$scalapack_libs" = "" ; then
 # no additional libraries needed
        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pdgemr2d" >&5
@@ -6316,10 +6316,12 @@ if test "$have_mkl" -eq 1
    then
       unset ac_cv_search_pdgemr2d # clear cached value
       LIBS="$mpi_libs $blas_libs"
-      if test $with_scalapack -eq 1; then
-         scalapack_libs=-lmkl_blacs_openmpi_lp64
-      else
+# Choose Intel scalapack for Intel MPI
+      if (test $with_scalapack -eq 2) || (test "$mpif90" == "mpiifx" )
+                                      || (test "$mpif90" == "mpiifort") ; then
          scalapack_libs=-lmkl_blacs_intelmpi_lp64
+      else
+         scalapack_libs=-lmkl_blacs_openmpi_lp64
       fi
       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pdgemr2d" >&5
 $as_echo_n "checking for library containing pdgemr2d... " >&6; }

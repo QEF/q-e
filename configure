@@ -63,8 +63,7 @@ fi
 test -e ./install/make.inc       && rm ./install/make.inc
 
 if [[ ($depend == "yes") ]] ; then
-    # compute dependencies (next two lines avoid bogus errors)
-    touch ./include/qe_cdefs.h
+    # compute dependencies (next line avoids bogus errors)
     touch ./include/configure.h
     ./install/makedeps.sh
 fi
