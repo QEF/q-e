@@ -61,7 +61,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
     CALL ptrace()
 #endif
 #endif
-!
+  !
   !  .. write the message to a file and close it before exiting
   !  .. this will prevent loss of information on systems that
   !  .. do not flush the open streams
@@ -90,8 +90,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
 #endif
   !
   STOP 1
-  !
-  RETURN
   !
 END SUBROUTINE errore
 !
