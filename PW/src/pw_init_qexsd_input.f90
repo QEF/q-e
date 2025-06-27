@@ -303,6 +303,11 @@
   END IF
   !
   IF (ip_lda_plus_u) THEN
+     IF  (ip_nspin == 2) THEN
+       spin_ns = 2
+     ELSE
+       spin_ns = 1
+     END IF
      !
      DO nt = 1, ntyp
        !
@@ -363,11 +368,6 @@
      END IF
      !
      IF (ANY(starting_ns_eigenvalue /= -1.0_DP)) THEN
-         IF (ip_nspin == 2) THEN
-            spin_ns = 2
-         ELSE
-            spin_ns = 1
-         END IF
          ALLOCATE (starting_ns_(2*hublmax+1, spin_ns, ntyp))
          starting_ns_          (1:2*hublmax+1, 1:spin_ns, 1:ntyp) = &
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
@@ -381,9 +381,9 @@
         ALLOCATE(hubbard_l_(ntyp))
         hubbard_l_(1:ntyp) = ip_hubbard_l(1:ntyp)
      END IF
-     IF (ANY(ip_hubbard_Um(:,1:ip_nspin,1:ntyp)/=0.0_dp)) THEN 
-       ALLOCATE(Hubbard_Um_(1:2*hublmax+1, ip_nspin,1:ntyp)) 
-       Hubbard_Um_(:,:,:)  = ip_hubbard_Um(1:2*hublmax+1, 1:ip_nspin,1:ntyp) * ev_to_Ha   
+     IF (ANY(ip_hubbard_Um(:,1:spin_ns,1:ntyp)/=0.0_dp)) THEN 
+       ALLOCATE(Hubbard_Um_(1:2*hublmax+1, spin_ns,1:ntyp)) 
+       Hubbard_Um_(:,:,:)  = ip_hubbard_Um(1:2*hublmax+1, 1:spin_ns,1:ntyp) * ev_to_Ha   
      ELSE IF (ANY(ip_hubbard_Um_nc(:,1:ntyp)/=0.0_dp)) THEN 
        ALLOCATE (Hubbard_Um_(1:4*hublmax+2,1,1:ntyp)) 
        Hubbard_Um_(:,1,:)  = ip_hubbard_Um_nc(1:4*hublmax+2,1:ntyp) * ev_to_Ha   

@@ -508,10 +508,10 @@ MODULE pw_restart_new
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp)  
             END IF
-            IF (ANY(Hubbard_Um(1:2*Hubbard_lmax+1,1:nspin,1:nsp)/=0.0_dp)) THEN
-              ALLOCATE (Um_opt(2*Hubbard_lmax+1,nspin,nsp))
-              Um_opt(1:2*Hubbard_lmax+1,1:nspin,1:nsp) = &
-                      Hubbard_Um(1:2*Hubbard_lmax+1,1:nspin,1:nsp) * Ry_to_Ha  
+            IF (ANY(Hubbard_Um(1:2*Hubbard_lmax+1,1:MIN(nspin,2),1:nsp)/=0.0_dp)) THEN
+              ALLOCATE (Um_opt(2*Hubbard_lmax+1,MIN(nspin,2),nsp))
+              Um_opt(1:2*Hubbard_lmax+1,1:MIN(nspin,2),1:nsp) = &
+                      Hubbard_Um(1:2*Hubbard_lmax+1,1:MIN(nspin,2),1:nsp) * Ry_to_Ha  
             ELSE IF (ANY(Hubbard_Um_nc(1:4*Hubbard_lmax+2,1:nsp)/=0.0_dp)) THEN 
               ALLOCATE(Um_opt(4*Hubbard_lmax+2,1,1:nsp))
               Um_opt(1:4*Hubbard_lmax+2,1,1:nsp) = Hubbard_Um_nc(1:4*Hubbard_lmax+2,1:nsp) * Ry_to_Ha 
