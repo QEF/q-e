@@ -858,15 +858,19 @@ SUBROUTINE phq_readin()
   IF (tqr) CALL errore('phq_readin',&
      'The phonon code with Q in real space not available',1)
 
-  ! FM : incompatibility for lmultipole
-  IF (lmultipole) lnolr = .TRUE.
-  IF (lmultipole .and. (okvan .or. domag)) CALL errore('phq_readin',&
-     'lmultipole implemented only for norm-conserving potential, and without magnetization', 1)
-  IF (lmultipole .and. (ltetra .OR. lgauss)) CALL errore('phq_readin',&
+  IF (lmultipole)  THEN
+     ! FM : incompatibility for lmultipole
+     lnolr = .TRUE.
+     IF (okvan .or. domag) CALL errore('phq_readin',&
+     'lmultipole only for norm-conserving potential and no magnetization', 1)
+     IF (ltetra .OR. lgauss) CALL errore('phq_readin',&
      'lmultipole does not work with metal', 1)
-  IF (lmultipole .and. epsil) CALL errore('phq_readin',&
+     IF (epsil) CALL errore('phq_readin',&
      'lmultipole is already an electric field calculation', 1)
-  !
+#if defined(__CUDA)
+     CALL errore('phq_readin','lmultipole not ported to GPU', 1)
+#endif
+  END IF
   !
   IF (start_irr < 0 ) CALL errore('phq_readin', 'wrong start_irr',1)
   !
