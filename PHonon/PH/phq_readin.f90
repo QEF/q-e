@@ -868,7 +868,7 @@ SUBROUTINE phq_readin()
      IF (epsil) CALL errore('phq_readin',&
      'lmultipole is already an electric field calculation', 1)
 #if defined(__CUDA)
-     CALL errore('phq_readin','lmultipole not ported to GPU', 1)
+     CALL errore('phq_readin','multipoles for GPU not present in this version', 1)
 #endif
   END IF
   !

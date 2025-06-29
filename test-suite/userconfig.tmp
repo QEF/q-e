@@ -29,7 +29,7 @@ tolerance = ( (1.0e-5, 1.0e-5, 'e1'),
               (1.0e-2, 1.0e-2, 'v1d'),
               (6.0e-3, 1.0e-3, 't1') )
 skip_program = grep
-skip_args = 'not present in this version\|libxc needed for this functional\|not ported to GPU'
+skip_args = 'not present in this version\|libxc needed for this functional'
 
 [PH]
 exe = XXXXXX/test-suite/run-ph.sh
