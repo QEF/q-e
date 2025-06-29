@@ -150,9 +150,9 @@ contains
          call errore(' runcg_uspp ', ' parallelization over bands not yet implemented ', 1)
 #if defined(__CUDA)
       if (nkbus > 0 ) &
-         call errore(' runcg_uspp ', ' Ultrasoft case not ported to GPU ', 1)
+         call errore('runcg_uspp','USPP for GPU not present in this version', 1)
       if (tens) &
-         call errore(' runcg_uspp ', ' Ensemble DFT case not ported to GPU ', 1)
+         call errore('runcg_uspp','Ensemble DFT for GPU not present in this version', 1)
 #endif
       if (pre_state .and. nkbus > 0) &
          call errore(' runcg_uspp ', ' preconditioning with kinetic energy not implemented for ultrasoft pseudopotentials')
