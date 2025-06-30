@@ -26,9 +26,11 @@ subroutine fft_interpolate_real (dfft_in, v_in, dfft_out, v_out )
   call start_clock ('interpolate')
 
   IF (dfft_out%grid_id == dfft_in%grid_id) THEN
-
+     !$acc data present_or_copyin(v_in) present_or_copyout(v_out)     
+     !$acc kernels
      v_out (1:dfft_in%nnr) = v_in (1:dfft_in%nnr)
-
+     !$acc end kernels
+     !$acc end data
   ELSE
 
      if (dfft_in%lgamma .neqv. dfft_out%lgamma) &
@@ -37,7 +39,6 @@ subroutine fft_interpolate_real (dfft_in, v_in, dfft_out, v_out )
      ALLOCATE (aux_in( dfft_in%nnr), aux_out(dfft_out%nnr))
 
      aux_in (1:dfft_in%nnr) = v_in(1:dfft_in%nnr)
-
      CALL fwfft ('Rho', aux_in, dfft_in)
 
      aux_out(1:dfft_out%nnr) = (0.d0, 0.d0)
@@ -45,7 +46,9 @@ subroutine fft_interpolate_real (dfft_in, v_in, dfft_out, v_out )
      ngm = min(dfft_in%ngm, dfft_out%ngm)
 
      aux_out (dfft_out%nl (1:ngm) ) = aux_in (dfft_in%nl (1:ngm) )
-     IF (dfft_in%lgamma) aux_out (dfft_out%nlm (1:ngm) ) = aux_in (dfft_in%nlm (1:ngm) )
+     IF (dfft_in%lgamma) THEN
+        aux_out (dfft_out%nlm (1:ngm) ) = aux_in (dfft_in%nlm (1:ngm) )
+     ENDIF
 
      CALL invfft ('Rho', aux_out, dfft_out)
 
@@ -83,13 +86,14 @@ subroutine fft_interpolate_complex (dfft_in, v_in, dfft_out, v_out )
   call start_clock ('interpolate')
 
   IF (dfft_out%grid_id == dfft_in%grid_id) THEN
-
+     !$acc data present_or_copyin(v_in) present_or_copyout(v_out)
+     !$acc kernels
      v_out (1:dfft_in%nnr) = v_in (1:dfft_in%nnr)
-
+     !$acc end kernels
+     !$acc end data
   ELSE
 
      ALLOCATE (aux_in( dfft_in%nnr))
-
      aux_in (1:dfft_in%nnr) = v_in(1:dfft_in%nnr)
 
      CALL fwfft ('Rho', aux_in, dfft_in)

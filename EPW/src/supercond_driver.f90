@@ -26,7 +26,7 @@
     !!
     USE io_global,         ONLY : stdout
     USE input,             ONLY : liso, fila2f, gap_edge, lreal, limag, laniso, &
-                                  tc_linear, fbw, icoulomb
+                                  tc_linear, fbw, icoulomb, a2f_iso
     USE supercond_common,  ONLY : gap0
     USE supercond,         ONLY : eliashberg_init, estimate_tc_gap, find_a2f, &
                                   deallocate_eliashberg_elphon
@@ -43,32 +43,51 @@
     CALL start_clock('ELIASHBERG')
     !
     IF (liso) THEN
-      WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
-      IF (fbw) THEN
-        WRITE(stdout, '(5x, "Solve full-bandwidth isotropic Eliashberg equations")')
+      IF (.NOT. a2f_iso) THEN
+        WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
+        IF (fbw) THEN
+          WRITE(stdout, '(5x, "Solve full-bandwidth isotropic Eliashberg equations")')
+        ELSE
+          WRITE(stdout, '(5x, "Solve isotropic Eliashberg equations")')
+        ENDIF
+        WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
+        CALL eliashberg_init()
+        IF (fila2f == ' ') THEN
+          CALL read_frequencies()
+          CALL read_eigenvalues()
+          CALL read_kqmap()
+          CALL read_ephmat()
+          CALL find_a2f()
+          CALL deallocate_eliashberg_elphon()
+        ENDIF
+        !
+        CALL read_a2f()
+        CALL estimate_tc_gap()
+        IF (gap_edge > 0.d0) THEN
+          gap0 = gap_edge
+        ENDIF
+        IF (lreal) CALL eliashberg_iso_raxis()
+        IF (limag .AND. tc_linear) CALL crit_temp_iso()
+        IF (limag .AND. .NOT. tc_linear) CALL eliashberg_iso_iaxis()
       ELSE
-        WRITE(stdout, '(5x, "Solve isotropic Eliashberg equations")')
-      ENDIF
-      WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
-      CALL eliashberg_init()
-      IF (fila2f == ' ') THEN
-        CALL read_frequencies()
-        CALL read_eigenvalues()
-        CALL read_kqmap()
-        CALL read_ephmat()
-        CALL find_a2f()
-        CALL deallocate_eliashberg_elphon()
-      ENDIF
-      !
-      CALL read_a2f()
-      CALL estimate_tc_gap()
-      IF (gap_edge > 0.d0) THEN
-        gap0 = gap_edge
-      ENDIF
-      IF (lreal) CALL eliashberg_iso_raxis()
-      IF (limag .AND. tc_linear) CALL crit_temp_iso()
-      IF (limag .AND. .NOT. tc_linear) CALL eliashberg_iso_iaxis()
-      !
+        !! Added by S. Mishra for image-parallelization isotropic a2f without storing g2
+        IF (fbw) THEN
+          WRITE(stdout, '(5x, "Solve adiabatic full-bandwidth isotropic Eliashberg equations (image para)")')
+        ELSE 
+          WRITE(stdout, '(5x, "Solve adiabatic FSR isotropic Eliashberg equations (image para)")')
+        ENDIF
+        WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
+        CALL eliashberg_init()
+        CALL read_a2f()
+        CALL estimate_tc_gap()
+        IF (gap_edge > 0.d0) THEN
+          gap0 = gap_edge
+        ENDIF 
+        !
+        IF (lreal) CALL eliashberg_iso_raxis()
+        IF (limag .AND. tc_linear) CALL crit_temp_iso()
+        IF (limag .AND. .NOT. tc_linear) CALL eliashberg_iso_iaxis()
+      ENDIF ! a2f_iso
     ENDIF
     !
     IF (laniso) THEN

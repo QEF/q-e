@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -81,7 +81,7 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   INTEGER :: n_start, n_end, my_n
   INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), ew(:)
-  !$acc declare device_resident(hr, sr, vr, ew)
+  !$acc declare device_resident(hr, sr, vr)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
@@ -151,6 +151,7 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate ew ', ABS(ierr) )
+  !$acc enter data create(ew)
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate conv ', ABS(ierr) )
@@ -332,17 +333,17 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         END DO
      END DO
      !
-     !$acc host_data use_device(psi, hpsi, vr, ew)
+     !$acc host_data use_device(psi, hpsi, vr)
      if (n_start .le. n_end) &
      CALL DGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
+     !$acc end host_data
      !
      CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
      CALL g_psi_ptr( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
-     !$acc end host_data
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -606,10 +607,11 @@ SUBROUTINE regterg(  h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   END DO iterate
   !
   DEALLOCATE( conv )
-  DEALLOCATE( ew )
   DEALLOCATE( vr )
   DEALLOCATE( hr )
   DEALLOCATE( sr )
+  !$acc exit data delete(ew)
+  DEALLOCATE( ew )
   !
   IF ( uspp ) THEN
      !$acc exit data delete(spsi)

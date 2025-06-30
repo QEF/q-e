@@ -313,6 +313,10 @@ CONTAINS
     USE constants,            ONLY : BOHR_RADIUS_ANGS
     USE control_kcw,          ONLY : seedname, have_empty, num_wann_occ, num_wann_emp, &
                                      centers, use_ws_distance
+    USE io_global,            ONLY : ionode_id
+    USE mp,                   ONLY : mp_bcast
+    USE mp_global,            ONLY : intra_image_comm
+
     !
     !
     IMPLICIT NONE
@@ -380,6 +384,7 @@ CONTAINS
     ENDIF
     !
     centers = centers / ( alat * BOHR_RADIUS_ANGS )     ! alat always in BOHR ??? (TO BE CHECKED)
+    call mp_bcast ( centers, ionode_id, intra_image_comm ) 
     !
     DO n = 1, num_wann_occ+num_wann_emp
       !

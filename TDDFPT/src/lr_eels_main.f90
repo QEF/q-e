@@ -23,7 +23,7 @@ PROGRAM lr_eels_main
                                   & evc1, evc1_old, norm0, n_ipol, &
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
-                                  & itermax_int, revc0, lr_io_level, code2, &
+                                  & itermax_int, lr_io_level, code2, &
                                   & eels, approximation, calculator, fru, fiu, &
                                   & current_w, nfs, start_freq, last_freq, chirr, &
                                   & chirz, chizz, chizr, epsm1 

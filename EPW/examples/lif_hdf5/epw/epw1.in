@@ -1,0 +1,47 @@
+--------
+&inputepw
+  prefix                 = 'lif'
+  outdir                 = './'
+
+  elph                   = .true.
+  epwwrite               = .true.
+  epwread                = .false.
+
+  lpolar                 = .true.
+  nbndsub                =  10 
+  dvscf_dir              = './save/'
+
+  bands_skipped          = 'exclude_bands = 1:2, 13:18'
+  wannierize             = .true.
+  num_iter               = 500
+  iprint                 = 2
+
+  proj(1)                = 'F:p'
+  proj(2)                = 'F:s'
+  proj(3)                = 'F:d'
+  proj(4)                = 'Li:s'
+
+  exciton                = .true.
+  explrn                 = .false.
+
+  negnv_explrn           = 20 
+  nbndv_explrn           = 3   ! Match the valence band in BSE calcs. 
+  nbndc_explrn           = 7   ! Match the conduction band in BSE calcs. 
+
+ 
+	
+  wannier_plot           = .true.
+  wannier_plot_supercell = 8 8 8 
+  wannier_plot_radius    = 3.5d0 
+
+  nk1                    = 4 
+  nk2                    = 4 
+  nk3                    = 4 
+  nq1                    = 4 
+  nq2                    = 4 
+  nq3                    = 4 
+
+  band_plot              = .true.
+  filkf                  = './path.kpt'
+  filqf                  = './path.kpt'
+/

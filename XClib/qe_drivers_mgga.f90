@@ -15,8 +15,6 @@ MODULE qe_drivers_mgga
   !! Contains the mGGA drivers of QE that calculate XC energy and potential.
   !
   USE kind_l,               ONLY: DP
-  USE dft_setting_params,   ONLY: imeta, imetac, rho_threshold_mgga, &
-                                  grho2_threshold_mgga, tau_threshold_mgga
   !
   IMPLICIT NONE
   !
@@ -36,6 +34,8 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   !! Available cases: M06L and TPSS. Other mGGA functionals can be used
   !! through Libxc.
   !
+  USE dft_setting_params,   ONLY: imeta, rho_threshold_mgga, &
+                                  grho2_threshold_mgga
   USE metagga
   !
   IMPLICIT NONE
@@ -125,6 +125,8 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !! Available cases: M06L and TPSS. Other mGGA functionals can be used
   !! through Libxc.
   !
+  USE dft_setting_params,   ONLY: imeta, rho_threshold_mgga, &
+                                  grho2_threshold_mgga, tau_threshold_mgga
   USE metagga
   !
   IMPLICIT NONE

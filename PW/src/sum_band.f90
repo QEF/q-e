@@ -63,9 +63,14 @@ SUBROUTINE sum_band()
              nt,   &! counter on atomic types
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
-  !
+  REAL(dp), EXTERNAL :: e_band
+  COMPLEX(DP), ALLOCATABLE :: psic(:,:)
+  !! Work space used for FFTs in this routine
   !
   CALL start_clock( 'sum_band' )
+  !
+  ALLOCATE( psic(dfftp%nnr,npol) )
+  !$acc enter data create(psic)
   !
   IF ( nhm > 0 ) THEN
      ! Note: becsum and ebecsum are computed on GPU and copied to CPU
@@ -157,7 +162,7 @@ SUBROUTINE sum_band()
     ENDIF
   ENDIF
 #if defined (__OSCDFT)
-  IF (use_oscdft) CALL oscdft_sum_band(oscdft_ctx)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL oscdft_sum_band(oscdft_ctx)
 #endif
   !
   ! ... for band parallelization: set band computed by this processor
@@ -171,9 +176,6 @@ SUBROUTINE sum_band()
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
-  ! ... The band energy contribution eband is computed together with the charge
-  !
-  eband = 0.D0
   !
   CALL start_clock( 'sum_band:loop' )
   !
@@ -203,8 +205,13 @@ SUBROUTINE sum_band()
   END IF
   !
   CALL stop_clock( 'sum_band:loop' )
-  CALL mp_sum( eband, inter_pool_comm )
-  CALL mp_sum( eband, inter_bgrp_comm )
+  !
+  !$acc exit data delete(psic)
+  DEALLOCATE(psic)
+  !
+  ! ... Compute here the sum of band eigenvalues "eband"
+  !
+  eband =  e_band( )
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -321,8 +328,6 @@ SUBROUTINE sum_band()
        !! \(\texttt{sum_band}\) - part for gamma version.
        !
        USE uspp_init,      ONLY : init_us_2
-       USE wavefunctions,  ONLY : psic
-       !! psic is allocated work space
        !
        IMPLICIT NONE
        !
@@ -339,7 +344,6 @@ SUBROUTINE sum_band()
        ! ... of the wavefunctions to the charge
        !
        incr = 2
-       !$acc enter data create(psic)
        IF (xclib_dft_is('meta') .OR. lxdm) THEN
           ALLOCATE( grad_psic(npwx,2) )
           !$acc enter data create(grad_psic)
@@ -364,24 +368,12 @@ SUBROUTINE sum_band()
           !
           CALL stop_clock( 'sum_band:init_us_2' )
           !
-          ! ... here we compute the band energy: the sum of the eigenvalues
-          !
-          DO ibnd = ibnd_start, ibnd_end
-             !
-             ! ... the sum of eband and demet is the integral for
-             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
-             ! ... the eigenvalues.
-             !
-             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
-             !
-          ENDDO
-          !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
              ebnd = ibnd
              IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
              !
-             CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts )
+             CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic(:,1), dffts )
              !
              w1 = wg(ibnd,ik) / omega
              !
@@ -417,7 +409,7 @@ SUBROUTINE sum_band()
                    IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                    brange = ebnd-ibnd+1
                    !
-                   CALL wave_g2r( grad_psic(1:npw,1:brange), psic, dffts )
+                   CALL wave_g2r( grad_psic(1:npw,1:brange), psic(:,1), dffts )
                    !
                    ! ... increment the kinetic energy density ...
                    !  
@@ -440,7 +432,6 @@ SUBROUTINE sum_band()
           DEALLOCATE( grad_psic )
           !$acc update host(rho%kin_r)
        END IF
-       !$acc exit data delete(psic)
        RETURN
        !
      END SUBROUTINE sum_band_gamma
@@ -495,12 +486,15 @@ SUBROUTINE sum_band()
           incr = 1
           !$acc enter data create(psic_nc)
        ELSE IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          ! many_fft cannot be used with meta-GGA and XDM
           incr = 1
-          ALLOCATE( grad_psic(npwx,incr) )
-          !$acc enter data create(grad_psic)
        ELSE
           incr = many_fft
        ENDIF
+       IF (xclib_dft_is('meta') .OR. lxdm) THEN
+          ALLOCATE( grad_psic(npwx,incr) )
+          !$acc enter data create(grad_psic)
+       END IF
        !
        ALLOCATE( psicd(dffts%nnr*incr) )
        !$acc data create(psicd)
@@ -555,17 +549,6 @@ SUBROUTINE sum_band()
           ENDIF
           !
           DO ibnd = ibnd_start, ibnd_end, incr
-             !
-             ! ... here we compute the band energy: the sum of the eigenvalues
-             !
-             DO idx = 1, incr
-                IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
-                     wg(idx+ibnd-1,ik)
-             ENDDO
-             !
-             ! ... the sum of eband and demet is the integral for e < ef of
-             ! ... e n(e) which reduces for degauss=0 to the sum of the
-             ! ... eigenvalues
              !
              w1 = wg(ibnd,ik) / omega
              !
@@ -797,18 +780,6 @@ SUBROUTINE sum_band()
           !
           CALL stop_clock( 'sum_band:init_us_2' )
           !
-          ! ... here we compute the band energy: the sum of the eigenvalues
-          !
-          DO ibnd = ibnd_start, ibnd_end
-             !
-             ! ... the sum of eband and demet is the integral for
-             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
-             ! ... the eigenvalues.
-             !
-             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
-             !
-          ENDDO
-          !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
              CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw )
@@ -934,17 +905,6 @@ SUBROUTINE sum_band()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             ! ... here we compute the band energy: the sum of the eigenvalues
-             !
-             DO idx = 1, incr
-                IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
-                     wg(idx+ibnd-1,ik)
-             ENDDO
-             !
-             ! ... the sum of eband and demet is the integral for e < ef of
-             ! ... e n(e) which reduces for degauss=0 to the sum of the
-             ! ... eigenvalues
-             !
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
@@ -1043,4 +1003,38 @@ SUBROUTINE sum_band()
      END SUBROUTINE sum_band_k_tg
      !
 END SUBROUTINE sum_band
-
+!
+!----------------------------------------------------------------------------
+FUNCTION e_band ( )
+  !----------------------------------------------------------------------------
+  !
+  !! Calculation of band energy sum - Paolo Giannozzi Oct. 2024
+  !! To be called after "weights" 
+  !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : inter_bgrp_comm
+  USE mp_pools,             ONLY : inter_pool_comm
+  USE klist,                ONLY : nks
+  USE wvfct,                ONLY : et, wg, nbnd
+  !
+  IMPLICIT NONE
+  !
+  REAL(dp) :: e_band
+  INTEGER  :: ik, ibnd
+  !
+  e_band = 0.0_dp
+  !
+  k_loop: DO ik = 1, nks
+     !
+     band_loop: DO ibnd = 1, nbnd
+        !
+        e_band = e_band + wg(ibnd,ik) * et(ibnd,ik)
+        !
+     END DO band_loop
+     !
+  END DO k_loop
+  !
+  CALL mp_sum (e_band, inter_pool_comm)
+  !
+END FUNCTION e_band

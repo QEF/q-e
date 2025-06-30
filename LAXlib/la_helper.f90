@@ -120,11 +120,11 @@ SUBROUTINE laxlib_start_drv( ndiag_, parent_comm, do_distr_diag_inside_bgrp_  )
 
     !
     IF( ndiag_ > 0 ) THEN
-       ! command-line argument -ndiag N or -northo N set to a value N
-       ! use the command line value ensuring that it falls in the proper range
+       ! The caller suggested a diag group size
+       ! Ensuring that it falls in the proper range
        nproc_ortho_try = MIN( ndiag_ , parent_nproc )
     ELSE 
-       ! no command-line argument -ndiag N or -northo N is present
+       ! The caller didn't suggest a diag group size
        ! insert here custom architecture specific default definitions
 #if defined(__SCALAPACK) && !defined(__CUDA)
        nproc_ortho_try = MAX( parent_nproc, 1 )

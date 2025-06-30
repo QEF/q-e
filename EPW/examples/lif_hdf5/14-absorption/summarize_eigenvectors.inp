@@ -1,0 +1,5 @@
+.true.          ! Whether you used TDA. This will usually be .true.
+0               ! Number of eigenvectors in file.  Set to zero to use default ns*nv*nc*nk
+0 100           ! Emin Emax (eV). Energy window to print information about all states in
+3000            ! Max number of states to be printed
+0

@@ -28,7 +28,7 @@
 !=----------------------------------------------------------------------------=!
 !
 ! These routines allocate buffer spaces used in reduce_base_real_gpu.
-! These should be in data_buffer.f90 but need to be here becouse size is
+! These should be in data_buffer.f90 but need to be here because size
 ! depends on the __MSGSIZ_MAX definition
 SUBROUTINE allocate_buffers
     USE data_buffer
@@ -654,7 +654,6 @@ END SUBROUTINE reduce_base_real
   !! This version uses a fixed-length buffer of appropriate (?) dim
   !!
   USE util_param,  ONLY : DP, i8b
-  USE data_buffer, ONLY : buff => mp_buff_i
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -664,6 +663,7 @@ END SUBROUTINE reduce_base_real
   INTEGER, INTENT(in)    :: comm    ! communicator
   INTEGER, INTENT(in)    :: root    ! if root <  0 perform a reduction to all procs
                                     ! if root >= 0 perform a reduce only to root proc.
+  INTEGER(KIND = i8b):: buff(dim)   ! quick and dirty fix: automatic array
   !
 #if defined (__MPI)  
   !

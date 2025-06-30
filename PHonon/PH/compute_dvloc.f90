@@ -20,14 +20,16 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE cell_base,        ONLY : tpiba
   USE fft_base,         ONLY : dfftp, dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g
+  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g, gg
   USE gvecs,            ONLY : ngms
-  USE lsda_mod,         ONLY : nspin
+  USE lsda_mod,         ONLY : lsda, current_spin
+  USE noncollin_module, ONLY : nspin_mag
   USE uspp,             ONLY : nlcc_any
   USE eqv,              ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
   USE modes,            ONLY : nmodes
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
+  USE control_lr,       ONLY : lmultipole
   !
   IMPLICIT NONE
   !
@@ -55,6 +57,8 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   complex(DP), allocatable :: aux (:,:)
   complex(DP), pointer :: auxs (:)
   COMPLEX(DP), ALLOCATABLE :: drhoc(:)
+  COMPLEX(DP), EXTERNAL :: Vaeps_dvloc
+  COMPLEX(DP) :: pot
   !
 #if defined(__CUDA)
   INTEGER, POINTER, DEVICE :: nl_d(:), nlp_d(:)
@@ -109,9 +113,9 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   if (nlcc_any.and.addnlcc) then
      allocate (drhoc( dfftp%nnr))
-     allocate (aux( dfftp%nnr,nspin))
+     allocate (aux( dfftp%nnr,nspin_mag))
      nnp=dfftp%nnr
-     !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin))
+     !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin_mag))
      !
      CALL addcore (uact, drhoc)
      !
@@ -123,7 +127,11 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      deallocate (drhoc)
      !
      !$acc host_data use_device(aux)
-     CALL fwfft ('Rho', aux(:,1), dfftp)
+     IF (lsda) THEN
+        CALL fwfft ('Rho', aux(:,current_spin), dfftp)
+     ELSE
+        CALL fwfft ('Rho', aux(:,1), dfftp)
+     ENDIF
      !$acc end host_data
 !
 !  This is needed also when the smooth and the thick grids coincide to
@@ -134,12 +142,21 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      !$acc kernels present(auxs)
      auxs(:) = (0.d0, 0.d0)
      !$acc end kernels
-     !$acc parallel loop present(auxs,aux)
-     do ig=1,ngms
-        itmp = nl_d(ig)
-        itmpp = nlp_d(ig)
-        auxs(itmp) = aux(itmpp,1)
-     enddo
+     IF (lsda) THEN
+       !$acc parallel loop present(auxs,aux)
+       do ig=1,ngms
+          itmp = nl_d(ig)
+          itmpp = nlp_d(ig)
+          auxs(itmp) = aux(itmpp,current_spin)
+       enddo
+     ELSE
+       !$acc parallel loop present(auxs,aux)
+       do ig=1,ngms
+          itmp = nl_d(ig)
+          itmpp = nlp_d(ig)
+          auxs(itmp) = aux(itmpp,1)
+       enddo
+     ENDIF
      !$acc kernels present(dvlocin,auxs)
      dvlocin(:) = dvlocin(:) + auxs(:)
      !$acc end kernels
@@ -147,6 +164,13 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      deallocate (aux)
      deallocate (auxs)
   endif
+  !
+  IF (lmultipole .AND. gg(1) < 1d-8) THEN !FM: refer potential to all-electron calculation, see routine description
+    pot = Vaeps_dvloc(uact, dffts%nl(1))
+    !$acc kernels
+    dvlocin(dffts%nl(1)) = dvlocin(dffts%nl(1)) + pot
+    !$acc end kernels
+  ENDIF
   !
   ! Now we compute dV_loc/dtau in real space
   !

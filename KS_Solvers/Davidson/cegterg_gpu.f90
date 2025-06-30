@@ -40,8 +40,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, &
                                mp_size, mp_type_free, mp_allgather
-  USE device_fbuff_m,         ONLY : buffer => dev_buf
-  USE device_memcpy_m,    ONLY : dev_memcpy, dev_memset, dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -58,9 +56,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   INTEGER :: numblock
     ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx*npol,nvec)
-#if defined(__CUDA)
-   attributes(DEVICE)   :: evc_d
-#endif
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -84,7 +79,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! ... LOCAL variables
   !
-  COMPLEX(DP), ALLOCATABLE :: evc(:,:)
   REAL(DP), ALLOCATABLE :: e(:)
   
   INTEGER, PARAMETER :: maxter = 20
@@ -97,20 +91,12 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
     ! do-loop counters
   INTEGER :: i, j, k, ierr
   REAL(DP), ALLOCATABLE :: ew(:)
-  REAL(DP), POINTER :: ew_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: ew_d
-#endif
   COMPLEX(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
-  COMPLEX(DP), POINTER :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
-#if defined(__CUDA)
-  attributes(DEVICE) ::  psi_d, hpsi_d, spsi_d
-#endif
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -171,10 +157,6 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   !
   ! compute the number of chuncks
   numblock  = (npw+blocksize-1)/blocksize
-
-  ALLOCATE(  evc( npwx*npol, nvec ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' pcegterg ',' cannot allocate evc (host) ', ABS(ierr) )
   !
   ALLOCATE(  e( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -192,6 +174,7 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' pcegterg ',' cannot allocate spsi ', ABS(ierr) )
+     !$acc enter data create(spsi)
   END IF
   !
   ! ... Initialize the matrix descriptor
@@ -263,27 +246,22 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  IF ( uspp ) spsi = ZERO
-  !
-  hpsi = ZERO
-  psi  = ZERO
-  CALL buffer%lock_buffer(psi_d, (/npwx*npol, nvecx/), ierr)
-  CALL buffer%lock_buffer(hpsi_d, (/npwx*npol, nvecx/), ierr)
-  CALL buffer%lock_buffer(spsi_d, (/npwx*npol, nvecx/), ierr)
-  CALL buffer%lock_buffer(ew_d, nvecx, ierr)
-  
-  
-  evc(:,1:nvec) = evc_d(:,1:nvec)
-  psi(:,1:nvec) = evc(:,1:nvec)
-  CALL dev_memcpy(psi_d, evc_d, (/1, npwx*npol /), 1 , (/ 1, nvec /) )
+  !$acc enter data create(psi, hpsi, ew)
+  !$acc update host( evc_d)
+  !$acc kernels
+  psi(:,1:nvec) = evc_d(:,1:nvec)
+  !$acc end kernels
+  !$acc update host( psi)
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi_ptr( npwx, npw, nvec, psi_d, hpsi_d ) ; nhpsi = nhpsi + nvec
-  hpsi(1:npwx*npol, 1:nvec) = hpsi_d(1:npwx*npol, 1:nvec)
+  CALL h_psi_ptr( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
+  !$acc update host(hpsi)
   !
-  IF ( uspp ) CALL s_psi_ptr( npwx, npw, nvec, psi_d, spsi_d )
-  IF ( uspp ) spsi(1:npwx*npol, 1:nvec) = spsi_d(1:npwx*npol, 1:nvec)
+  IF ( uspp ) THEN
+     CALL s_psi_ptr( npwx, npw, nvec, psi, spsi )
+     !$acc update host(spsi)
+  END IF
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -355,10 +333,9 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... approximate inverse iteration
      !
-     ew_d = ew
-     psi_d(1:npwx*npol, nb1:nb1+notcnv-1) = psi(1:npwx*npol, nb1:nb1+notcnv-1)
-     CALL g_psi_ptr( npwx, npw, notcnv, npol, psi_d(1,nb1), ew_d(nb1) )
-     psi(1:npwx*npol, nb1:nb1+notcnv-1) = psi_d(1:npwx*npol, nb1:nb1+notcnv-1)
+     !$acc update device(psi, ew)
+     CALL g_psi_ptr( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
+     !$acc update host(psi)
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -401,12 +378,14 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     psi_d(1:npwx*npol, nb1:nb1+notcnv-1) = psi(1:npwx*npol, nb1:nb1+notcnv-1)
-     CALL h_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
-     hpsi(1:npwx*npol, nb1:nb1+notcnv-1) = hpsi_d(1:npwx*npol, nb1:nb1+notcnv-1)
+     !$acc update device(psi)
+     CALL h_psi_ptr( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
+     !$acc update host(hpsi)
      !
-     IF ( uspp ) CALL s_psi_ptr( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
-     IF ( uspp ) spsi = spsi_d
+     IF ( uspp ) THEN
+        CALL s_psi_ptr( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+        !$acc update host(spsi)
+     END IF
      !
      ! ... update the reduced hamiltonian
      !
@@ -510,7 +489,7 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         CALL start_clock( 'cegterg:last' )
         !
         CALL refresh_evc()
-        evc_d = evc       
+        !$acc update device(evc_d)
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -535,15 +514,16 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
+        CALL threaded_memcpy(psi, evc_d, nvec*npol*npwx*2)
+        !$acc update device(psi)
         !
         IF ( uspp ) THEN
-           !
            CALL refresh_spsi()
-           ! 
+           !$acc update device(spsi)
         END IF
         !
         CALL refresh_hpsi()
+        !$acc update device(hpsi)
         !
         ! ... refresh the reduced hamiltonian
         !
@@ -588,17 +568,14 @@ SUBROUTINE pcegterg_gpu(h_psi_ptr, s_psi_ptr, uspp, g_psi_ptr, &
   DEALLOCATE( nrc_ip )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
-  DEALLOCATE( ew )
-  DEALLOCATE( evc )
   DEALLOCATE( e )
-  
-  CALL buffer%release_buffer(psi_d, ierr)
-  CALL buffer%release_buffer(hpsi_d, ierr)
-  CALL buffer%release_buffer(spsi_d, ierr)
-  CALL buffer%release_buffer(ew_d, ierr)
-  !
-  IF ( uspp ) DEALLOCATE( spsi )
-  !
+  !$acc exit data delete(ew)
+  DEALLOCATE( ew )  
+  IF ( uspp ) THEN
+     !$acc exit data delete(spsi)
+     DEALLOCATE( spsi )
+  END IF
+  !$acc exit data delete (psi, hpsi)
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )  
   !
@@ -806,14 +783,14 @@ CONTAINS
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, ortho_parent_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
-                          psi(1,ir), kdmx, vl, nx, beta, evc(1,ic), kdmx )
+                          psi(1,ir), kdmx, vl, nx, beta, evc_d(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
-                          psi(1,ir), kdmx, vtmp, nx, beta, evc(1,ic), kdmx )
+                          psi(1,ir), kdmx, vtmp, nx, beta, evc_d(1,ic), kdmx )
               END IF
               ! 
 

@@ -56,6 +56,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   COMPLEX(DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), &
                             & dvrsc(:,:), dvrssc(:,:), &
                             & sevc1_new(:,:,:)
+  INTEGER :: npwx_siz
   ! Change of the Hartree and exchange-correlation (HXC) potential
   !
   CALL start_clock('lr_apply')
@@ -72,6 +73,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   dvrsc(:,:)  = (0.0d0,0.0d0)
   dvrssc(:,:) = (0.0d0,0.0d0)
   sevc1_new(:,:,:) = (0.0d0,0.0d0)
+  !
+  npwx_siz = npwx*npol
   !
   IF (no_hxc) THEN
      interaction1 = .false.
@@ -127,6 +130,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   ! 1) HXC term : P_c^+(k+q) V_HXC(q)*psi0(k) 
   ! 2) (H - E)*psi(k+q)
   !
+!$acc data copyin(dvrssc)  
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
@@ -164,7 +168,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
-!$acc data copyin(dvrssc) copy(dvpsi)
+!$acc data copy(dvpsi)
         CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvrssc, evc, dvpsi)
 !$acc end data        
         !
@@ -196,7 +200,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
-     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik),sevc1_new(1:npwx*npol,1:nbnd,ik), et)
+     !$acc data copyin(evq) copy(evc1(1:npwx_siz,1:nbnd,ik),sevc1_new(1:npwx_siz,1:nbnd,ik), et)
      CALL ch_psi_all (npwq, evc1(:,:,ik), sevc1_new(:,:,ik), et(:,ikk), ik, nbnd_occ(ikk)) 
      !$acc end data
      IF (noncolin) THEN
@@ -234,6 +238,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
                           & sevc1_new(1,1,ik), evc1_new(1,1,ik))
      !
   ENDDO ! loop on ik
+!$acc end data  
   !
   CALL apply_dpot_deallocate()
   DEALLOCATE (dvrsc)

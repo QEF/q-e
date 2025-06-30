@@ -67,7 +67,6 @@ SUBROUTINE dnsq_orth()
   COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), sum_dpqq(:,:)
   REAL(DP), ALLOCATABLE :: wgg(:,:,:)
   LOGICAL :: exst 
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock( 'dnsq_orth' )
   !
@@ -166,8 +165,8 @@ SUBROUTINE dnsq_orth()
               DO m = 1, 2*Hubbard_l(nt)+1
                  ihubst = offsetU(nah) + m   ! I m index
                  DO ibnd = 1, nbnd
-                    proj1(ibnd,ihubst) = ZDOTC (npw,  swfcatomk(:,ihubst),   1, evc(:,ibnd), 1)
-                    proj2(ibnd,ihubst) = ZDOTC (npwq, swfcatomkpq(:,ihubst), 1, evq(:,ibnd), 1)
+                 proj1(ibnd,ihubst) = dot_product(swfcatomk(1:npw,ihubst),  evc(1:npw,ibnd))
+                 proj2(ibnd,ihubst) = dot_product(swfcatomkpq(1:npwq,ihubst), evq(1:npwq,ibnd))
                  ENDDO
               ENDDO
            ENDIF 

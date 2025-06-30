@@ -24,46 +24,6 @@
        RETURN
      END SUBROUTINE interpolate_lambda_x
 
-
-!=----------------------------------------------------------------------------=!
-     SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff, tdist )
-!=----------------------------------------------------------------------------=!
-       USE kinds,              ONLY: DP
-       USE electrons_module,   ONLY: ib_owner, ib_local
-       USE mp_global,          ONLY: me_bgrp, intra_bgrp_comm
-       USE mp,                 ONLY: mp_sum
-       USE wave_base,          ONLY: hpsi
-       USE gvect, ONLY: gstart
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: n, noff
-       REAL(DP)            :: lambda(:,:)
-       COMPLEX(DP)         :: c0(:,:), c2(:)
-       INTEGER, INTENT(IN) :: i
-       LOGICAL, INTENT(IN) :: tdist   !  if .true. lambda is distributed
-       !
-       REAL(DP), ALLOCATABLE :: prod(:)
-       INTEGER :: ibl
-       LOGICAL :: gzero
-       !
-       gzero = (gstart == 2) 
-       ALLOCATE( prod( n ) )
-       prod = hpsi( gzero, c0, SIZE( c0, 1 ), c2, n, noff )
-       CALL mp_sum( prod, intra_bgrp_comm )
-       IF( tdist ) THEN
-          IF( me_bgrp == ib_owner( i ) ) THEN
-             ibl = ib_local( i )
-             lambda( ibl, : ) = prod( : )
-          END IF
-       ELSE
-          lambda( i, : ) = prod( : )
-       END IF
-       DEALLOCATE( prod )
-       RETURN
-     END SUBROUTINE update_lambda_x
-
-
-
-
 !=----------------------------------------------------------------------------=!
   subroutine elec_fakekine_x( ekincm, ema0bg, emass, c0, cm, ngw, n, noff, delt )
 !=----------------------------------------------------------------------------=!
@@ -320,76 +280,6 @@
 
       RETURN
    END SUBROUTINE crot_gamma2
-
-
-
-!=----------------------------------------------------------------------------=!
-   SUBROUTINE proj_gamma( a, b, ngw, n, noff, lambda)
-!=----------------------------------------------------------------------------=!
-        !! Projection \( A = A-\sum_B \langle B | A \rangle B \).
-        !! No replicated data are used, allowing scalability for large problems.
-        !
-        ! The layout of lambda is as follows :
-        !
-        !  (PE 0)                 (PE 1)               ..  (PE NPE-1)
-        !  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
-        !  lambda(1+  NPE,1:nx)   lambda(2+  NPE,1:nx) ..  lambda(NPE+  NPE,1:nx)
-        !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
-        !
-        !  distribute lambda's rows across processors with a blocking factor
-        !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_bgrp+1 to PE 1 and so on).
-        !  ----------------------------------------------
-         
-! ...   declare modules
-        USE kinds,              ONLY: DP
-        USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-        USE wave_base,          ONLY: dotp
-        USE gvect, ONLY: gstart
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        INTEGER,     INTENT( IN )  :: ngw, n, noff
-        COMPLEX(DP), INTENT(INOUT) :: a(:,:), b(:,:)
-        REAL(DP),    OPTIONAL      :: lambda(:,:)
-
-! ...   declare other variables
-        REAL(DP), ALLOCATABLE :: ee(:)
-        INTEGER :: i, j, jl
-        COMPLEX(DP) :: alp
-        LOGICAL :: gzero
-
-! ... end of declarations
-!  ----------------------------------------------
-
-        IF( n < 1 ) THEN
-          RETURN
-        END IF
-        gzero = (gstart == 2) 
-        ALLOCATE( ee( n ) )
-        
-        DO i = 1, n
-          DO j = 1, n
-            ee(j) = -dotp( gzero, ngw, b(:,j+noff-1), a(:,i+noff-1), intra_bgrp_comm )
-          END DO
-          IF( PRESENT(lambda) ) THEN
-            IF( MOD( (i-1), nproc_bgrp ) == me_bgrp ) THEN
-              DO j = 1, n
-                lambda( (i-1) / nproc_bgrp + 1, j ) = ee(j)
-              END DO
-            END IF
-          END IF
-          DO j = 1, n
-            alp = CMPLX(ee(j),0.0d0,kind=DP)
-            CALL zaxpy( ngw, alp, b(1,j+noff-1), 1, a(1,i+noff-1), 1 )
-          END DO
-        END DO
-        DEALLOCATE(ee)
-
-        RETURN
-   END SUBROUTINE proj_gamma
-
-
 
 
 !=----------------------------------------------------------------------------=!

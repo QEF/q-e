@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,8 +22,12 @@ SUBROUTINE init_nsg
    USE uspp_param,  ONLY : upf
    USE lsda_mod,    ONLY : nspin, starting_magnetization
    USE ldaU,        ONLY : Hubbard_l, Hubbard_l2, Hubbard_l3, hubbard_occ, &
-                           nsg, ldim_u, backall, is_hubbard, is_hubbard_back
+                           nsg, nsgnew, ldim_u, backall, is_hubbard, is_hubbard_back
    USE noncollin_module, ONLY : angle1, angle2, noncolin
+#if defined (__OSCDFT)
+   USE plugin_flags,     ONLY : use_oscdft
+   USE oscdft_base,      ONLY : oscdft_ctx
+#endif   
    !
    IMPLICIT NONE
    REAL(DP) :: totoc, totoc_b, cosin 
@@ -33,6 +37,14 @@ SUBROUTINE init_nsg
    INTEGER, EXTERNAL :: find_viz
    !
    nsg(:,:,:,:,:) = (0.d0, 0.d0)
+   !
+#if defined (__OSCDFT)
+   IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2) .AND. &
+      .NOT.oscdft_ctx%inp%constraint_diag) THEN
+      CALL oscdft_nsg(1)
+      nsg = nsgnew
+   ENDIF
+#endif
    ! 
    DO na = 1, nat
       ! 
@@ -43,6 +55,13 @@ SUBROUTINE init_nsg
       nt = ityp(na)
       !
       IF ( is_hubbard(nt) ) THEN 
+         !
+#if defined (__OSCDFT)
+      IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2) .AND. &
+         .NOT.oscdft_ctx%inp%constraint_diag) THEN
+         IF (ANY(DBLE(nsg(:,:,:,na,:))/=0.d0)) GO TO 7
+      ENDIF
+#endif
          !
          ldim = 2*Hubbard_l(nt)+1
          nm = .TRUE.
@@ -154,6 +173,13 @@ SUBROUTINE init_nsg
             !
          ENDIF
          !
+#if defined (__OSCDFT)
+      IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2) .AND. &
+         .NOT.oscdft_ctx%inp%constraint_diag) THEN
+7        CONTINUE
+      ENDIF
+#endif
+         !
       ENDIF
       ! 
    ENDDO ! na 
@@ -162,3 +188,4 @@ SUBROUTINE init_nsg
    !  
 END SUBROUTINE init_nsg
 !-----------------------------------------------------------------------
+

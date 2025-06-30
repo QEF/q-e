@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2013 Quantum ESPRESSO and Wannier90 groups
+! Copyright (C) 2003-2024 Quantum ESPRESSO and Wannier90 groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,470 +21,6 @@
 ! NOTE: old_spinor_proj is deprecated.
 !
 !
-module wannier
-   USE kinds, only : DP
-   !integer, allocatable :: nnb(:)       ! #b  (ik)
-   integer              :: nnb          ! #b
-   integer, allocatable :: kpb(:,:)     ! k+b (ik,ib)
-   integer, allocatable :: g_kpb(:,:,:) ! G_k+b (ipol,ik,ib)
-   integer, allocatable :: ig_(:,:)     ! G_k+b (ipol,ik,ib)
-   integer, allocatable :: lw(:,:), mw(:,:) ! l and m of wannier (16,n_wannier)
-   integer, allocatable :: num_sph(:)   ! num. func. in lin. comb., (n_wannier)
-   logical, allocatable :: excluded_band(:)
-   ! begin change Lopez, Thonhauser, Souza
-   integer  :: iun_nnkp,iun_mmn,iun_amn,iun_band,iun_spn,iun_plot,iun_parity,&
-        nnbx,nexband,iun_uHu,&
-        iun_uIu,& !ivo
-   ! end change Lopez, Thonhauser, Souza
-        iun_sHu, iun_sIu ! shc
-   integer  :: n_wannier !number of WF
-   integer  :: n_proj    !number of projection
-   complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
-   complex(DP), allocatable :: gf_spinor(:,:)
-   complex(DP), allocatable :: sgf_spinor(:,:)
-   integer               :: ispinw, ikstart, ikstop, iknum, reduce_unk_factor
-   character(LEN=15)     :: wan_mode    ! running mode
-   logical               :: logwann, wvfn_formatted, write_unk, write_eig, &
-   ! begin change Lopez, Thonhauser, Souza
-                            write_amn,write_mmn,reduce_unk,write_spn,&
-                            write_unkg,write_uhu,&
-                            write_dmn,read_sym, & !YN
-                            write_uIu, spn_formatted, uHu_formatted, uIu_formatted, & !ivo
-   ! end change Lopez, Thonhauser, Souza
-   ! shc
-                            write_sHu, write_sIu, sHu_formatted, sIu_formatted, &
-   ! end shc
-   ! irreducible BZ
-                            irr_bz, &
-   ! vv: Begin SCDM keywords
-                            scdm_proj
-   character(LEN=15)     :: scdm_entanglement
-   real(DP)              :: scdm_mu, scdm_sigma
-   ! vv: End SCDM keywords
-   ! input data from nnkp file
-   real(DP), allocatable :: center_w(:,:)     ! center_w(3,n_wannier)
-   integer,  allocatable :: spin_eig(:)
-   real(DP), allocatable :: spin_qaxis(:,:)
-   integer, allocatable  :: l_w(:), mr_w(:) ! l and mr of wannier (n_wannier) as from table 3.1,3.2 of spec.
-   integer, allocatable  :: r_w(:)      ! index of radial function (n_wannier) as from table 3.3 of spec.
-   real(DP), allocatable :: xaxis(:,:),zaxis(:,:) ! xaxis and zaxis(3,n_wannier)
-   real(DP), allocatable :: alpha_w(:)  ! alpha_w(n_wannier) ( called zona in wannier spec)
-   !
-   real(DP), allocatable :: csph(:,:)    ! expansion coefficients of gf on QE ylm function (16,n_wannier)
-   CHARACTER(len=256) :: seedname  = 'wannier'  ! prepended to file names in wannier90
-   ! For implementation of wannier_lib
-   integer               :: mp_grid(3)            ! dimensions of MP k-point grid
-   real(DP)              :: rlatt(3,3),glatt(3,3) ! real and recip lattices (Cartesian co-ords, units of Angstrom)
-   real(DP), allocatable :: kpt_latt(:,:)  ! k-points in crystal co-ords. kpt_latt(3,iknum)
-   real(DP), allocatable :: atcart(:,:)    ! atom centres in Cartesian co-ords and Angstrom units. atcart(3,nat)
-   integer               :: num_bands      ! number of bands left after exclusions
-   character(len=3), allocatable :: atsym(:) ! atomic symbols. atsym(nat)
-   integer               :: num_nnmax=12
-   complex(DP), allocatable :: m_mat(:,:,:,:), a_mat(:,:,:)
-   complex(DP), allocatable :: u_mat(:,:,:), u_mat_opt(:,:,:)
-   logical, allocatable     :: lwindow(:,:)
-   real(DP), allocatable    :: wann_centers(:,:),wann_spreads(:)
-   real(DP)                 :: spreads(3)
-   real(DP), allocatable    :: eigval(:,:)
-   logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
-   integer,allocatable :: rir(:,:)
-   logical,allocatable :: zerophase(:,:)
-   real(DP), allocatable :: bvec(:,:), xbvec(:,:)    ! bvectors
-   integer, PARAMETER :: header_len = 60
-   !! The length of header in amn/mmn/eig/... files
-   !! For unformatted stream IO, this must be the same as wannier90 when reading those files.
-   !
-   REAL(DP), ALLOCATABLE :: xk_all(:, :)
-   !! xk vector at all k points
-   !
-   CONTAINS
-   !
-   !----------------------------------------------------------------------------
-   SUBROUTINE utility_setup_wfc_and_pw(ik_global, evc, npw, igk_k_ik)
-      !-------------------------------------------------------------------------
-      !! Read wavefunction evc from file for global k point ik_global.
-      !! Setup the plane wave variables npw and igk_k_ik
-      !-------------------------------------------------------------------------
-      USE kinds,           ONLY : DP
-      USE mp_pools,        ONLY : my_pool_id, nproc_pool, me_pool
-      USE io_files,        ONLY : prefix, tmp_dir, nwordwfc, iunwfc
-      USE wvfct,           ONLY : npwx
-      USE pwcom,           ONLY : nbnd
-      USE noncollin_module,ONLY : npol
-      USE klist,           ONLY : nkstot, igk_k, ngk
-      USE gvect,           ONLY : g, ngm
-      USE gvecw,           ONLY : gcutw
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(IN) :: ik_global
-      !! Global k point index
-      COMPLEX(DP), INTENT(OUT) :: evc(npwx * npol, nbnd)
-      !! wavefunction at ik_global, read from file
-      INTEGER, INTENT(OUT) :: npw
-      !! number of plane waves at ik_global
-      INTEGER, INTENT(OUT) :: igk_k_ik(npwx)
-      !! index of G vectors at ik_global
-      !
-      CHARACTER(LEN = 256) :: wfcfile
-      !! Temp file
-      INTEGER :: ipool
-      !! Pool index where ik_global belongs to
-      INTEGER :: ik_local
-      !! Local k index of ik_global in ipool
-      INTEGER :: iproc
-      !! Processer index, which is the postfix of the filename.
-      INTEGER :: iun
-      !! File unit
-      INTEGER*8 :: unf_recl
-      !! Record length. Double precision to prevent integer overflow
-      INTEGER :: direct_io_factor
-      !! Factor for record length
-      INTEGER :: ios
-      !! Error number
-      REAL(KIND = DP) :: dummy
-      !! Dummy variable
-      REAL(DP) :: g2kin_(npwx)
-      !! Dummy g2kin_ to call gk_sort
-      CHARACTER(len=6), EXTERNAL :: int_to_char
-      !
-      evc = (0.0_DP, 0.0_DP)
-      !
-      ! For a global k point index, find the pool and local k point index.
-      CALL pool_and_local_kpoint_index(nkstot, ik_global, ipool, ik_local)
-      !
-      IF (ipool == my_pool_id) THEN
-! print*, "pool ", my_pool_id, " Reading locally  pool, ik_local ", ipool, ik_local
-         !
-         ! If ipool is this pool, just read from the buffer
-         !
-         CALL davcio(evc, 2*nwordwfc, iunwfc, ik_local, -1)
-         !
-      ELSE
-         !
-         ! If ipool is not this pool, open wfc file, read, and close.
-         !
-         ! Processer id
-         iproc = ipool * nproc_pool + me_pool
-         !
-         wfcfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // TRIM(int_to_char( iproc+1 ))
-! print*, "pool ", my_pool_id, " Reading globally pool, ik_local ", ipool, ik_local, trim(wfcfile)
-         !
-         INQUIRE(IOLENGTH = direct_io_factor) dummy
-         unf_recl = direct_io_factor * INT(2*nwordwfc, KIND=KIND(unf_recl))
-         !
-         OPEN(NEWUNIT = iun, FILE = TRIM(wfcfile), FORM = 'unformatted', &
-            ACCESS = 'direct', IOSTAT = ios, RECL = unf_recl)
-         IF (ios /= 0) CALL errore('utility_setup_wfc_and_pw', &
-            'error opening wfc file', 1)
-         READ(iun, REC = ik_local) evc
-         CLOSE(iun, STATUS = 'KEEP')
-      ENDIF
-      !
-      ! Setup npw and igk_k_ik, the G vector ordering at ik_global.
-      !
-      IF (ipool == my_pool_id) THEN
-         ! Use local G vector ordering
-         npw = ngk(ik_local)
-         igk_k_ik = igk_k(:, ik_local)
-      ELSE
-         ! k point from different pool. Calculate G vector ordering.
-         CALL gk_sort(xk_all(1, ik_global), ngm, g, gcutw, npw, igk_k_ik, g2kin_)
-      ENDIF
-      !
-   !----------------------------------------------------------------------------
-   END SUBROUTINE utility_setup_wfc_and_pw
-   !----------------------------------------------------------------------------
-   !
-   !----------------------------------------------------------------------------
-   SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, evc_kb_m, becp_kb)
-      !-------------------------------------------------------------------------
-      !!
-      !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
-      !! Optionally compute becp for k+b (for USPP case).
-      !! Do not calculate the excluded bands, using the variable excluded_band.
-      !!
-      !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
-      !!
-      !! TODO: Better name for evc_b
-      !!
-      !-------------------------------------------------------------------------
-      !
-      USE kinds,           ONLY : DP
-      USE fft_base,        ONLY : dffts
-      USE fft_interfaces,  ONLY : fwfft, invfft
-      USE mp_pools,        ONLY : my_pool_id
-      USE io_files,        ONLY : nwordwfc, iunwfc
-      USE control_flags,   ONLY : gamma_only
-      USE gvect,           ONLY : gstart, g, ngm
-      USE gvecw,           ONLY : gcutw
-      USE wvfct,           ONLY : nbnd, npwx
-      USE wavefunctions,   ONLY : psic
-      USE klist,           ONLY : xk, ngk, igk_k, nkstot
-      USE noncollin_module,ONLY : npol
-      USE becmod,          ONLY : bec_type, calbec
-      USE uspp,            ONLY : vkb
-      USE uspp_init,       ONLY : init_us_2
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(IN) :: ik
-      !! Local index of the k point
-      INTEGER, INTENT(IN) :: i_b
-      !! Index of the b vector
-      COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, num_bands)
-      !! Wavefunction u_{n,k+b}(G), with the G-vector ordering at k.
-      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: evc_kb_m(npwx, num_bands)
-      !! Optional. For Gamma-only case. Complex conjugate of u_{n,k+b}(-G).
-      TYPE(bec_type), OPTIONAL, INTENT(INOUT) :: becp_kb
-      !! Optional. Product of beta functions with |psi_k+b>
-      !
-      LOGICAL :: zerophase_kb
-      !! zerophase at (k, b)
-      INTEGER :: ig_kb
-      !! G vector index ig_ for (k, b)
-      INTEGER :: ik_g_w90
-      !! Global index of k+b. For lsda with spin down, subtract nkstot/2 to
-      !! start from 1.
-      INTEGER :: ikp_b
-      !! Index of k+b
-      INTEGER :: npw
-      !! Number of plane waves at k
-      INTEGER :: npw_b
-      !! Number of plane waves at k+b
-      INTEGER :: istart
-      !! Starting G vector index
-      INTEGER :: iend
-      !! Ending G vector index
-      INTEGER :: ipol
-      !! Polarization index
-      INTEGER :: n
-      !! Band index
-      INTEGER :: n_incl
-      !! Band index after exclusion
-      INTEGER :: ipool_b
-      !! Pool index where ikp_b belongs to
-      INTEGER :: ik_b_local
-      !! Local k index of ikp_b in ipool_b
-      INTEGER :: igk_kb(npwx)
-      !! G vector index at k+b
-      REAL(DP) :: g2kin_(npwx)
-      !! Dummy g2kin_ to call gk_sort
-      !
-      COMPLEX(DP), ALLOCATABLE :: phase(:)
-      !! Temporary storage for phase e&{i * G_kpb * r}
-      COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
-      !! Temporary storage for wavefunction at k+b
-      INTEGER :: ierr
-      !! Error number
-      !
-      INTEGER, EXTERNAL :: global_kpoint_index
-      !
-      IF (PRESENT(evc_kb_m) .AND. (.NOT. gamma_only)) CALL errore("utility_compute_u_kb", &
-         "evc_kb_m can be used only in the Gamma-only case", 1)
-      !
-      CALL start_clock("compute_u_kb")
-      !
-      ALLOCATE(phase(dffts%nnr), stat=ierr)
-      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
-      ALLOCATE(evc_b(npol*npwx, nbnd), stat=ierr)
-      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evc_b', 1)
-      !
-      evc_kb = (0.0_DP, 0.0_DP)
-      !
-      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
-      !
-      npw = ngk(ik)
-      !
-      ikp_b = kpb(ik_g_w90, i_b) + ikstart - 1
-      ig_kb = ig_(ik_g_w90, i_b)
-      zerophase_kb = zerophase(ik_g_w90, i_b)
-      !
-      ! Read wavefunction and setup ngk, igk_k for ikp_b
-      !
-      CALL utility_setup_wfc_and_pw(ikp_b, evc_b, npw_b, igk_kb)
-      !
-      ! Exclude the excluded bands.
-      !
-      n_incl = 0
-      DO n = 1, nbnd
-         IF (excluded_band(n)) CYCLE
-         n_incl = n_incl + 1
-         evc_b(:, n_incl) = evc_b(:, n)
-      ENDDO
-      !
-      ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
-      ! Computed phase is used inside the loop over bands.
-      !
-      IF (.NOT. zerophase_kb) THEN
-         phase(:) = (0.0_DP, 0.0_DP)
-         IF (ig_kb > 0) phase( dffts%nl(ig_kb) ) = (1.0_DP, 0.0_DP)
-         CALL invfft('Wave', phase, dffts)
-      ENDIF
-      !
-      ! Loop over bands
-      !
-      DO n = 1, num_bands
-         !
-         DO ipol = 1, npol
-            psic = (0.0_DP, 0.0_DP)
-            !
-            ! Copy evc_b to psic using the G-vector ordering at k+b.
-            !
-            istart = 1 + (ipol-1) * npwx
-            iend = istart + npw_b - 1
-            psic(dffts%nl( igk_kb(1:npw_b) )) = evc_b(istart:iend, n)
-            !
-            IF (gamma_only) psic(dffts%nlm( igk_kb(1:npw_b) )) = CONJG(evc_b(istart:iend, n))
-            !
-            ! Multiply e^{i * g_kpb * r} phase if necessary.
-            ! TODO: Add explanation on the phase factor
-            !
-            IF (.NOT. zerophase_kb) THEN
-               CALL invfft('Wave', psic, dffts)
-               psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
-               CALL fwfft('Wave', psic, dffts)
-            ENDIF
-            !
-            ! Save |u_{n, k+b}> in evc_kb using the G-vector ordering at k.
-            !
-            istart = 1 + (ipol-1) * npwx
-            iend = istart + npw - 1
-            evc_kb(istart:iend, n) = psic(dffts%nl( igk_k(1:npw, ik) ))
-            !
-            IF (gamma_only) THEN
-               IF (gstart == 2) psic(dffts%nlm(1)) = (0.0_DP, 0.0_DP)
-               evc_kb_m(1:npw, n) = CONJG(psic(dffts%nlm( igk_k(1:npw, ik) )))
-            ENDIF
-            !
-         ENDDO ! npol
-         !
-      ENDDO ! nbnd
-      !
-      IF (PRESENT(becp_kb)) THEN
-         !
-         ! Compute the product of beta functions with |psi_k+b>
-         !
-         CALL init_us_2(npw_b, igk_kb, xk_all(1, ikp_b), vkb)
-         CALL calbec(npw_b, vkb, evc_b, becp_kb, num_bands)
-         !
-      ENDIF
-      !
-      DEALLOCATE(phase)
-      DEALLOCATE(evc_b)
-      !
-      CALL stop_clock("compute_u_kb")
-      !
-   !----------------------------------------------------------------------------
-   END SUBROUTINE utility_compute_u_kb
-   !----------------------------------------------------------------------------
-   !
-   !----------------------------------------------------------------------------
-   SUBROUTINE utility_merge_files(postfix, formatted, ndata)
-      !-------------------------------------------------------------------------
-      !! For pool parallelization, each root_pool writes to different files.
-      !! Here, concatenate all prefix.postfix files
-      !-------------------------------------------------------------------------
-      !
-      USE kinds,           ONLY : DP
-      USE io_global,       ONLY : ionode
-      USE mp_pools,        ONLY : npool
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN) :: postfix
-      !! postfix for filename
-      LOGICAL, INTENT(IN) :: formatted
-      !! True if formatted file, false if unformatted file.
-      INTEGER, INTENT(IN), OPTIONAL :: ndata
-      !! Used only if formatted = .FALSE. Length of data on each line.
-      !
-      CHARACTER(LEN=256) :: filename
-      CHARACTER(LEN=256) :: line
-      INTEGER :: ipool, iun, iun2, i, ierr
-      CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      COMPLEX(DP), ALLOCATABLE :: arr(:)
-      !
-      IF ((.NOT. formatted) .AND. (.NOT. PRESENT(ndata))) THEN
-         CALL errore("utility_merge_files", "If formatted is false, ndata must be provided", 1)
-      ENDIF
-      !
-      IF (npool == 1) RETURN
-      IF (.NOT. ionode) RETURN
-      !
-      IF (formatted) THEN
-         !
-         filename = TRIM(seedname) // "." // TRIM(postfix)
-         OPEN (NEWUNIT=iun, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
-         !
-         DO ipool = 2, npool
-            filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
-            OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='formatted')
-            DO WHILE (.TRUE.)
-               READ(iun2, '(A)', END=200) line
-               WRITE(iun, '(A)') TRIM(line)
-            ENDDO
-200         CLOSE(iun2, STATUS="DELETE")
-         ENDDO
-         !
-         CLOSE(iun, STATUS="KEEP")
-         !
-      ELSE ! .NOT. formatted
-         !
-         ALLOCATE(arr(ndata), stat=ierr)
-         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating arr', 1)
-         !
-         filename = TRIM(seedname) // "." // TRIM(postfix)
-         OPEN (NEWUNIT=iun, file=TRIM(filename), form='unformatted', STATUS="OLD", POSITION="APPEND")
-         !
-         DO ipool = 2, npool
-            filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
-            OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='unformatted')
-            DO WHILE (.TRUE.)
-               READ(iun2, END=201) (arr(i), i=1, ndata)
-               WRITE(iun) (arr(i), i=1, ndata)
-            ENDDO
-201      CLOSE(iun2, STATUS="DELETE")
-         ENDDO
-         !
-         CLOSE(iun, STATUS="KEEP")
-         !
-         DEALLOCATE(arr)
-         !
-      ENDIF ! formatted
-   !----------------------------------------------------------------------------
-   END SUBROUTINE utility_merge_files
-   !----------------------------------------------------------------------------
-   !
-   !----------------------------------------------------------------------------
-   SUBROUTINE print_progress(i, n)
-      !-------------------------------------------------------------------------
-      !! Print progress of iterations
-      !-------------------------------------------------------------------------
-      !
-      USE io_global,  ONLY : stdout
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(IN) :: i
-      !! Current iteration
-      INTEGER, INTENT(IN) :: n
-      !! Endpoint of the iteration
-      !
-      WRITE(stdout, '(I8)', ADVANCE='NO') i
-      !! Newline every 10 iterations
-      IF (MOD(i, 10) == 0) WRITE(stdout, *)
-      !! Newline at the end of the iteration if not already done
-      IF ((i == n) .AND. (MOD(n, 10) /= 0)) WRITE(stdout, *)
-      FLUSH(stdout)
-      !
-   !----------------------------------------------------------------------------
-   END SUBROUTINE print_progress
-   !----------------------------------------------------------------------------
-   !
-end module wannier
-!
-
 module atproj
    ! module for atomic projectors
    USE kinds, ONLY: DP
@@ -498,6 +34,9 @@ module atproj
       INTEGER :: nproj ! total number of projectors for this species
       INTEGER, ALLOCATABLE :: l(:) ! angular momentum of each wfc
       REAL(DP), ALLOCATABLE :: radial(:, :) ! magnitude at each point, ngrid x nproj
+      !! spin-orbit coupling cases
+      INTEGER, ALLOCATABLE :: twoj(:) ! two times total angular momentum of each wfc
+      INTEGER, ALLOCATABLE :: twosz(:)  ! two times spin z component of each wfc, 1 or -1
    END TYPE atproj_type
 
    ! atomic proj input variables, start with atom_proj*
@@ -505,14 +44,19 @@ module atproj
    CHARACTER(LEN=256) :: atom_proj_dir ! directory of external projectors
    LOGICAL :: atom_proj_ext ! switch for using external files instead of orbitals from UPF
    INTEGER, PARAMETER :: nexatproj_max = 2000 ! max allowed number of projectors to be excluded
+   INTEGER, PARAMETER :: nfratproj_max = 2000 ! max allowed number of projectors to be frozen
    INTEGER :: atom_proj_exclude(nexatproj_max) ! index starts from 1
+   INTEGER :: atom_proj_frozen(nfratproj_max)
    LOGICAL :: atom_proj_ortho ! whether perform Lowdin orthonormalization
    LOGICAL :: atom_proj_sym ! whether perform symmetrization
 
    ! atomic proj internal variables, using *atproj*
    INTEGER :: nexatproj ! actual number of excluded projectors
+   INTEGER :: nfratproj ! number of frozen projectors
+   INTEGER :: nunfratproj ! number of unfrozen projectors n_proj = nfratproj + nunfratproj
    INTEGER :: natproj ! total number of projectors = n_proj + nexatproj
    LOGICAL, ALLOCATABLE :: atproj_excl(:) ! size = total num of projectors
+   LOGICAL, ALLOCATABLE :: atproj_frozen(:)
    INTEGER :: iun_atproj
    TYPE(atproj_type), ALLOCATABLE :: atproj_typs(:) ! all atom proj types
 
@@ -573,6 +117,36 @@ CONTAINS
       RETURN
    END SUBROUTINE allocate_atproj_type
 
+   SUBROUTINE allocate_atproj_type_so(typ)
+      !
+      IMPLICIT NONE
+      !
+      TYPE(atproj_type), INTENT(INOUT) :: typ
+      INTEGER :: nproj
+      INTEGER :: ierr
+      !
+      nproj = typ%nproj
+      ALLOCATE (typ%twoj(nproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating typ%twoj', 1)
+
+      RETURN
+   END SUBROUTINE allocate_atproj_type_so
+
+   SUBROUTINE allocate_atproj_type_nc(typ)
+      !
+      IMPLICIT NONE
+      !
+      TYPE(atproj_type), INTENT(INOUT) :: typ
+      INTEGER :: nproj
+      INTEGER :: ierr
+      !
+      nproj = typ%nproj
+      ALLOCATE (typ%twosz(nproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating typ%twosz', 1)
+
+      RETURN
+   END SUBROUTINE allocate_atproj_type_nc
+
    SUBROUTINE read_atomproj(typs)
       !
       ! read data files for atom proj
@@ -581,16 +155,20 @@ CONTAINS
       USE kinds, ONLY: dp
       USE io_global, ONLY: stdout
       USE ions_base, ONLY: nsp, atm
+      USE noncollin_module, ONLY: noncolin, lspinorb
       !
       IMPLICIT NONE
       !
       TYPE(atproj_type), INTENT(INOUT) :: typs(nsp)
       !
       INTEGER :: i, j, it
-      LOGICAL :: file_exists
+      INTEGER, ALLOCATABLE :: tmpl(:)
+      LOGICAL :: file_exists, nc_nosoc
       CHARACTER(len=256) :: filename
-      INTEGER :: ngrid, nproj
+      INTEGER :: ngrid, nproj, nproj_origin
+      REAL(DP), ALLOCATABLE :: readj(:), tmprad(:, :)
 
+      nc_nosoc = (noncolin .and. .not. lspinorb)
       DO it = 1, nsp
          filename = TRIM(atom_proj_dir)//'/'//TRIM(atm(it))//".dat"
          INQUIRE (FILE=TRIM(filename), EXIST=file_exists)
@@ -599,27 +177,79 @@ CONTAINS
          OPEN (NEWUNIT=iun_atproj, file=TRIM(filename), form='formatted')
          CALL skip_comments(iun_atproj)
 
-         READ (iun_atproj, *) ngrid, nproj
+         READ (iun_atproj, *) ngrid, nproj_origin
+         allocate(tmpl(nproj_origin), tmprad(ngrid, nproj_origin))
+         READ (iun_atproj, *) (tmpl(i), i=1, nproj_origin)
+         ! split to spin up and down
+         IF (nc_nosoc) THEN
+            nproj = 2 * nproj_origin
+         ELSE
+            nproj = nproj_origin
+         ENDIF
          WRITE (stdout, *) " Read from "//TRIM(filename)
          WRITE (stdout, '((A),(I4))') "   number of grid points   = ", ngrid
-         WRITE (stdout, '((A),(I4))') "   number of projectors    = ", nproj
 
          CALL allocate_atproj_type(typs(it), ngrid, nproj)
          typs(it)%atsym = atm(it)
+         IF (nc_nosoc) THEN
+            CALL allocate_atproj_type_nc(typs(it))
+            DO i = 1, nproj_origin
+               typs(it)%l(2*i-1) = tmpl(i)
+               typs(it)%twosz(2*i-1) = 1
+               typs(it)%l(2*i) = tmpl(i)
+               typs(it)%twosz(2*i) = -1
+            ENDDO 
+         ELSE
+            typs(it)%l = tmpl
+         ENDIF
+         deallocate(tmpl)
 
-         READ (iun_atproj, *) (typs(it)%l(i), i=1, nproj)
-         WRITE (stdout, '((A))', advance='no') "   ang. mom. of projectors = "
+         WRITE (stdout, '((A),(I4))') "   number of projectors    = ", nproj
+         WRITE (stdout, '((A))', advance='no') "   orb. ang. mom. of projectors = "
          DO i = 1, nproj
             WRITE (stdout, '(I4)', advance='no') typs(it)%l(i)
          END DO
+         WRITE (stdout, *)
+         IF (lspinorb) THEN
+            ALLOCATE (readj(nproj))
+            READ (iun_atproj, *) (readj(i), i=1, nproj)
+            CALL allocate_atproj_type_so(typs(it))
+            WRITE (stdout, '((A))', advance='no') "   tot. ang. mom. of projectors = "
+            DO i = 1, nproj
+               typs(it)%twoj(i) = NINT(2 * readj(i))
+               WRITE (stdout, '(F4.1)', advance='no') typs(it)%twoj(i)/2.d0
+            ENDDO
+            DEALLOCATE (readj)
+         ELSE IF (noncolin) THEN! nc_nosoc
+            WRITE (stdout, '((A))', advance='no') "   spin ang. mom. of projectors = "
+            DO i = 1, nproj
+               IF (typs(it)%twosz(i) == 1) THEN
+                  WRITE (stdout, '(A4)', advance='no') "UP"
+               ELSE IF (typs(it)%twosz(i) == -1) THEN
+                  WRITE (stdout, '(A4)', advance='no') "DN"
+               ELSE
+                  CALL errore('read_atomproj', 'twosz .ne. 1 or -1', 1)
+               ENDIF
+            ENDDO
+         ENDIF ! lspinorb or noncolin
+
          WRITE (stdout, *)
          WRITE (stdout, *)
 
          DO i = 1, ngrid
             READ (iun_atproj, *) typs(it)%xgrid(i), typs(it)%rgrid(i), &
-            (typs(it)%radial(i, j), j=1, nproj)
+            (tmprad(i, j), j=1, nproj_origin)
             ! PRINT *, i, typs(it)%xgrid(i), typs(it)%rgrid(i)
          END DO
+         IF (nc_nosoc) THEN
+            DO j = 1, nproj_origin
+               typs(it)%radial(:, 2*j-1) = tmprad(:, j)
+               typs(it)%radial(:, 2*j) = tmprad(:, j)
+            ENDDO
+         ELSE
+            typs(it)%radial = tmprad
+         ENDIF
+         deallocate(tmprad)
 
          CLOSE (iun_atproj)
       END DO
@@ -656,7 +286,7 @@ CONTAINS
       !
       ! ... local variables
       !
-      INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
+      INTEGER :: n_starting_wfc, lmax_wfc, nt, l, twoj, twosz, nb, na, m, lm, ig, iig, &
                  i0, i1, i2, i3, npw
       REAL(DP), ALLOCATABLE :: qg(:), ylm(:, :), chiq(:, :, :), gk(:, :)
       COMPLEX(DP), ALLOCATABLE :: sk(:), aux(:)
@@ -728,15 +358,29 @@ CONTAINS
         nt = ityp(na)
         DO nb = 1, atproj_typs(nt)%nproj
           l = atproj_typs(nt)%l(nb)
+          IF (noncolin) THEN
+            IF (lspinorb) THEN
+              twoj = atproj_typs(nt)%twoj(nb)
+            ELSE
+              twosz = atproj_typs(nt)%twosz(nb)
+            ENDIF
+          ENDIF
           lphase = (0.D0, 1.D0)**l
-          !
-          !  only support without spin-orbit coupling
-          !  if needed in the future, add code according to
-          !  PP/src/atomic_wfc_nc_proj.f90
-          !
-          CALL atomic_wfc___()
-          !
-          ! END IF
+          IF (noncolin) THEN
+            IF (lspinorb) THEN
+              !
+              IF (MOD(twoj, 2) == 1) THEN 
+                CALL atomic_wfc_so__()
+              ELSE
+                CALL atomic_wfc_so2__() ! not used yet
+              ENDIF ! MOD(twoj, 2) == 1 ?
+              !
+            ELSE ! non-collinear without soc
+              CALL atomic_wfc_nc__()
+            ENDIF ! lspinorb
+          ELSE ! not noncolin
+            CALL atomic_wfc___()
+          ENDIF
           !
         END DO
         !
@@ -769,6 +413,109 @@ CONTAINS
         !
       END SUBROUTINE atomic_wfc___
       !
+      SUBROUTINE atomic_wfc_so__()
+         !
+         !  ... spin-orbit case
+         !
+         REAL(DP) :: fact(2), j
+         REAL(DP), EXTERNAL :: spinor
+         INTEGER :: ind, ind1, n1, is, sph_ind
+         j = twoj/2.d0
+         DO m = -l-1, l
+            fact(1) = spinor(l, j, m, 1)
+            fact(2) = spinor(l, j, m, 2)
+            IF (abs(fact(1)) > 1.d-8 .OR. abs(fact(2)) > 1.d-8) THEN
+               n_starting_wfc = n_starting_wfc + 1
+               IF (n_starting_wfc > natproj) CALL errore &
+                  ('atomic_wfc_so', 'internal error: too many wfcs', 1)
+               DO is = 1, 2
+                  IF (abs(fact(is)) > 1.d-8) THEN
+                     ind=lmaxx+1+sph_ind(l,j,m,is)
+                     aux=(0.d0,0.d0)
+                     DO n1=1,2*l+1
+                        ind1=l**2+n1
+                        IF (abs(rot_ylm(ind,n1)) > 1.d-8) &
+                            aux(:)=aux(:)+rot_ylm(ind,n1)*ylm(:,ind1)
+                     ENDDO
+                     DO ig=1,npw
+                        wfcatom (ig,is,n_starting_wfc) = lphase*fact(is)*&
+                              sk(ig)*aux(ig)*chiq (ig, nb, nt)
+                     ENDDO
+                  ELSE
+                      wfcatom (:,is,n_starting_wfc) = (0.d0,0.d0)
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDDO
+      END SUBROUTINE atomic_wfc_so__
+      !
+      SUBROUTINE atomic_wfc_so2__()
+         !
+         ! ... spin-orbit case with no spin-orbit PP
+         !
+         real(DP) :: fact(2), j
+         real(DP), EXTERNAL :: spinor
+         INTEGER :: ind, ind1, n1, n2, is, sph_ind
+         !
+         DO n2 = l, l + 1
+            j = n2 - 0.5_dp
+            IF (j > 0.0_dp)  THEN
+               DO m = -l-1, l
+                  fact(1) = spinor(l,j,m,1)
+                  fact(2) = spinor(l,j,m,2)
+                  IF (abs(fact(1)) > 1.d-8 .or. abs(fact(2)) > 1.d-8) THEN
+                     n_starting_wfc = n_starting_wfc + 1
+                     IF (n_starting_wfc > natproj) CALL errore &
+                        ('atomic_wfc_so2', 'internal error: too many wfcs', 1)
+                     DO is=1,2
+                        IF (abs(fact(is)) > 1.d-8) THEN
+                           ind=lmaxx+1+sph_ind(l,j,m,is)
+                           aux=(0.0_dp,0.0_dp)
+                           DO n1=1,2*l+1
+                              ind1=l**2+n1
+                              IF (abs(rot_ylm(ind,n1)) > 1.d-8) &
+                                 aux(:)=aux(:)+rot_ylm(ind,n1)*ylm(:,ind1)
+                           ENDDO
+                           DO ig=1,npw
+                              wfcatom (ig,is,n_starting_wfc) = lphase * &
+                                 fact(is)*sk(ig)*aux(ig)*chiq(ig,nb,nt)
+                           ENDDO
+                        ENDIF
+                     ENDDO
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDDO
+         !
+      END SUBROUTINE atomic_wfc_so2__
+      !
+      SUBROUTINE atomic_wfc_nc__()
+         !
+         ! ... noncollinear case, mag along z (for projectors)
+         !
+         DO m = 1, 2 * l + 1
+            lm = l**2 + m
+            n_starting_wfc = n_starting_wfc + 1
+            if (n_starting_wfc > natproj) call errore &
+               ('atomic_wfc_nc__', 'internal error: too many wfcs', 1)
+            DO ig = 1, npw
+               aux(ig) = sk(ig) * ylm(ig, lm) * chiq(ig, nb, nt)
+            ENDDO
+
+            DO ig = 1, npw
+               IF (twosz == 1) THEN
+                  wfcatom(ig, 1, n_starting_wfc) = aux(ig)
+                  wfcatom(ig, 2, n_starting_wfc) = (0.0_dp, 0.0_dp)
+               ELSE IF (twosz == -1) THEN
+                  wfcatom(ig, 1, n_starting_wfc) = (0.0_dp, 0.0_dp)
+                  wfcatom(ig, 2, n_starting_wfc) = aux(ig)
+               ELSE
+                  CALL errore ('atomic_wfc_nc__', 'wrong twosz', 1)
+               ENDIF
+            ENDDO
+         ENDDO
+      END SUBROUTINE atomic_wfc_nc__
+      !
    END SUBROUTINE atomproj_wfc
 
    SUBROUTINE interp_atproj(npw, qg, nwfcm, chiq)
@@ -781,6 +528,8 @@ CONTAINS
       !
       USE kinds, ONLY: dp
       USE ions_base, ONLY: nsp
+      ! USE uspp_data, ONLY: dq
+      USE noncollin_module, ONLY: noncolin, lspinorb
       !
       IMPLICIT NONE
       !
@@ -797,7 +546,7 @@ CONTAINS
         DO nb = 1, atproj_typs(nt)%nproj
           DO ig = 1, npw
             qgr = qg(ig)
-            px = qgr/dq - INT(qgr/dq)
+            px = qgr/dq - DBLE(INT(qgr/dq))
             ux = 1.D0 - px
             vx = 2.D0 - px
             wx = 3.D0 - px
@@ -830,14 +579,17 @@ CONTAINS
       USE cell_base, ONLY: omega
       USE gvecw,     ONLY : ecutwfc
       USE mp, ONLY: mp_sum
+      USE noncollin_module, ONLY: noncolin, lspinorb
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: intra_bgrp_comm
       !
-      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm, nqx, ierr
+      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm, nqx, ierr, &
+                 ngrid
       !
-      REAL(DP), ALLOCATABLE :: aux(:), vchi(:), rab(:)
+      REAL(DP), ALLOCATABLE :: aux(:), vchi(:)
+      REAL(DP), ALLOCATABLE :: xab(:), rab(:)
       REAL(DP) :: vqint, pref, q
       !
       ndm = 0
@@ -846,7 +598,7 @@ CONTAINS
         ndm = MAX(ndm, atproj_typs(nt)%ngrid)
         nwfcm = MAX(nwfcm, atproj_typs(nt)%nproj)
       END DO
-      ALLOCATE (aux(ndm), vchi(ndm), rab(ndm), stat=ierr)
+      ALLOCATE (aux(ndm), vchi(ndm), xab(ndm), rab(ndm), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux/vchi/rab', 1)
       !
       ! chiq = radial fourier transform of atomic orbitals chi
@@ -861,8 +613,15 @@ CONTAINS
       tab_at(:, :, :) = 0.0_DP
       !
       DO nt = 1, nsp
-        rab = (atproj_typs(nt)%xgrid(2) - atproj_typs(nt)%xgrid(1))* &
-              atproj_typs(nt)%rgrid
+        ! initialize xab and rab
+        xab = 0.0D0
+        rab = 0.0D0
+        ngrid = atproj_typs(nt)%ngrid
+        xab(1:ngrid-1) = atproj_typs(nt)%xgrid(2:ngrid) -&
+                       atproj_typs(nt)%xgrid(1:ngrid-1)
+        xab(ngrid) = xab(ngrid-1)
+        rab = xab * atproj_typs(nt)%rgrid
+
         DO nb = 1, atproj_typs(nt)%nproj
           !
           l = atproj_typs(nt)%l(nb)
@@ -882,7 +641,7 @@ CONTAINS
       !
       CALL mp_sum(tab_at, intra_bgrp_comm)
       !
-      DEALLOCATE (aux, vchi, rab)
+      DEALLOCATE (aux, vchi, rab, xab)
       !
       RETURN
       !
@@ -918,7 +677,8 @@ PROGRAM pw2wannier90
   USE environment,ONLY : environment_start, environment_end
   USE wannier
   use atproj, only : atom_proj, atom_proj_dir, atom_proj_ext, &
-                     atom_proj_exclude, atom_proj_ortho, atom_proj_sym
+                     atom_proj_exclude, atom_proj_ortho, atom_proj_sym, &
+                     atom_proj_frozen
   USE read_namelists_module, only : check_namelist_read
   !
   IMPLICIT NONE
@@ -945,7 +705,7 @@ PROGRAM pw2wannier90
        scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma, &
    ! end change Vitale
        atom_proj, atom_proj_dir, atom_proj_ext, atom_proj_exclude, &
-       atom_proj_ortho
+       atom_proj_ortho, atom_proj_frozen
   !
   ! initialise environment
   !
@@ -1008,6 +768,7 @@ PROGRAM pw2wannier90
      atom_proj_ext = .false.
      atom_proj_ortho = .true.
      atom_proj_exclude = -1
+     atom_proj_frozen = -1
      ! Haven't tested symmetrization with external projectors, disable it for now
      atom_proj_sym = .false.
      !
@@ -1067,6 +828,7 @@ PROGRAM pw2wannier90
   CALL mp_bcast(atom_proj_ortho, ionode_id, world_comm)
   CALL mp_bcast(atom_proj_sym, ionode_id, world_comm)
   CALL mp_bcast(atom_proj_exclude, ionode_id, world_comm)
+  CALL mp_bcast(atom_proj_frozen, ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools in library mode not implemented
   !
@@ -1125,29 +887,25 @@ PROGRAM pw2wannier90
      IF (scdm_proj) CALL errore('pw2wannier90', "irr_bz and SCDM not implemented", 1)
      IF (write_unkg) CALL errore('pw2wannier90', "irr_bz and write_unkg not implemented", 1)
   ENDIF
-  IF (atom_proj) then
-    IF (atom_proj_ext .and. noncolin) CALL errore('pw2wannier90', &
-         "atom_proj_ext and noncolin not implemented", 1)
-  ENDIF
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )
-     WRITE(stdout,*) ' Spin CASE ( up )'
+     WRITE(stdout, '(5x,A)') ' Spin CASE ( up )'
      ispinw  = 1
      ikstart = 1
      ikstop  = nkstot/2
      iknum   = nkstot/2
   CASE ( 'down' )
-     WRITE(stdout,*) ' Spin CASE ( down )'
+     WRITE(stdout, '(5x,A)') ' Spin CASE ( down )'
      ispinw = 2
      ikstart = nkstot/2 + 1
      ikstop  = nkstot
      iknum   = nkstot/2
   CASE DEFAULT
      IF(noncolin) THEN
-        WRITE(stdout,*) ' Spin CASE ( non-collinear )'
+        WRITE(stdout, '(5x,A)') ' Spin CASE ( non-collinear )'
      ELSE
-        WRITE(stdout,*) ' Spin CASE ( default = unpolarized )'
+        WRITE(stdout, '(5x,A)') ' Spin CASE ( default = unpolarized )'
      ENDIF
      ispinw = 0
      ikstart = 1
@@ -6052,7 +5810,7 @@ SUBROUTINE compute_amn_with_atomproj
    ! 4. allow excluding bands specified by user
    !
    USE kinds, ONLY: DP
-   USE mp, ONLY: mp_bcast, mp_barrier
+   USE mp, ONLY: mp_bcast, mp_barrier, mp_sum
    USE mp_pools, ONLY: me_pool, root_pool, intra_pool_comm
    USE mp_world, ONLY: world_comm
    USE io_global, ONLY: stdout, ionode, ionode_id
@@ -6075,8 +5833,10 @@ SUBROUTINE compute_amn_with_atomproj
                           wf_times_overlap, wf_times_roverlap
    USE atproj, ONLY: atom_proj_dir, atom_proj_ext, atom_proj_ortho, &
                      atom_proj_sym, natproj, nexatproj, nexatproj_max, &
-                     atproj_excl, atproj_typs, atom_proj_exclude, &
-                     allocate_atproj_type, read_atomproj, init_tab_atproj, &
+                     nfratproj_max, nfratproj, nunfratproj, atproj_frozen, &
+                     atproj_excl, atproj_typs, atom_proj_exclude, atom_proj_frozen, &
+                     allocate_atproj_type, allocate_atproj_type_so, &
+                     allocate_atproj_type_nc, read_atomproj, init_tab_atproj, &
                      deallocate_atproj, atomproj_wfc
    USE wannier
    !
@@ -6085,9 +5845,9 @@ SUBROUTINE compute_amn_with_atomproj
    INCLUDE 'laxlib.fh'
    !
    INTEGER :: npw, npw_, ik, ibnd, nwfc, lmax_wfc
-   INTEGER :: i, j, k, it, l, m, ib, ip, ik_g_w90, ibnd1
+   INTEGER :: i, j, k, it, l, m, ib, ip, ik_g_w90, ibnd1, jj
    REAL(DP), ALLOCATABLE :: e(:)
-   COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :), wfcatomall(:, :)
+   COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :), wfcatomall(:, :), owfcatom(:, :)
    COMPLEX(DP), ALLOCATABLE :: proj0(:, :), proj0all(:, :), proj(:, :)
    COMPLEX(DP), ALLOCATABLE :: e_work_d(:, :)
    ! Some workspace for gamma-point calculation ...
@@ -6112,11 +5872,17 @@ SUBROUTINE compute_amn_with_atomproj
    INTEGER :: nproc_ortho
    ! distinguishes active procs in parallel linear algebra
    CHARACTER(len=256) :: err_str
-   LOGICAL :: has_excl_proj
+   LOGICAL :: has_excl_proj, has_frozen_proj
    INTEGER :: ierr
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    !
+   COMPLEX(DP), ALLOCATABLE :: v(:), ov(:)
+   ! if need to do Gram–Schmidt, temporary vector v
+   COMPLEX(DP) :: r1, r2
+   ! temporary variable to calculate Gram-Schmidt
+   INTEGER, ALLOCATABLE :: proj_excl_map(:)
+   LOGICAL, ALLOCATABLE :: has_frozen(:)
    CALL start_clock('compute_amn')
    !
    IF (wan_mode == 'library') THEN
@@ -6124,10 +5890,6 @@ SUBROUTINE compute_amn_with_atomproj
    ENDIF
    !
    IF (atom_proj_ext) THEN
-      IF (domag) CALL errore('pw2wannier90', &
-                   'does not support magnetism with external projectors', 1)
-      IF (noncolin) CALL errore('pw2wannier90', &
-                   'does not support non-collinear magnetism with external projectors', 1)
       IF (atom_proj_sym) CALL errore('pw2wannier90', &
                    'does not support symmetrization with external projectors', 1)
    ENDIF
@@ -6150,14 +5912,36 @@ SUBROUTINE compute_amn_with_atomproj
          n_proj = 0
          DO i = 1, nat
             it = ityp(i)
-            DO nwfc = 1, atproj_typs(it)%nproj
-               l = atproj_typs(it)%l(nwfc)
-               DO m = 1, 2*l+1
-                  n_proj = n_proj + 1
-                  WRITE (stdout, 1000, ADVANCE="no") n_proj, i, atproj_typs(it)%atsym, nwfc, l
-                  WRITE (stdout, '(" m=", i2, ")")') m
+            IF (lspinorb) THEN
+               DO nwfc = 1, atproj_typs(it)%nproj
+                  l = atproj_typs(it)%l(nwfc)
+                  DO m = -atproj_typs(it)%twoj(nwfc), atproj_typs(it)%twoj(nwfc), 2
+                     n_proj = n_proj + 1
+                     WRITE (stdout, 1000, ADVANCE="no") n_proj, i, atproj_typs(it)%atsym, nwfc, l
+                     WRITE (stdout, '(" j=", f3.1, " m_j=", f4.1, ")")') &
+                        atproj_typs(it)%twoj(nwfc)/2.d0, m/2.d0
+                  ENDDO
                ENDDO
-            ENDDO
+            ELSE IF (noncolin) THEN
+               DO nwfc = 1, atproj_typs(it)%nproj
+                  l = atproj_typs(it)%l(nwfc)
+                  DO m = 1, 2*l + 1
+                     n_proj = n_proj + 1
+                     WRITE (stdout, 1000, ADVANCE="no") n_proj, i, atproj_typs(it)%atsym, nwfc, l
+                        WRITE (stdout, '(" m=", i2, " s_z=", f4.1, ")")') &
+                           m, atproj_typs(it)%twosz(nwfc)/2.0d0
+                  ENDDO
+               ENDDO
+            ELSE
+               DO nwfc = 1, atproj_typs(it)%nproj
+                  l = atproj_typs(it)%l(nwfc)
+                  DO m = 1, 2*l+1
+                     n_proj = n_proj + 1
+                     WRITE (stdout, 1000, ADVANCE="no") n_proj, i, atproj_typs(it)%atsym, nwfc, l
+                     WRITE (stdout, '(" m=", i2, ")")') m
+                  ENDDO
+               ENDDO
+            ENDIF
          ENDDO
          WRITE (stdout, *) ''
       ELSE
@@ -6188,6 +5972,37 @@ SUBROUTINE compute_amn_with_atomproj
       IF (n_proj <= 0) CALL errore('pw2wannier90', &
             'Cannot project on zero atomic projectors!', 1)
       !
+      ! set frozen states (if using pao+external hydrogenic, we will freeze pao states)
+      ALLOCATE(atproj_frozen(n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_frozen', 1)
+      atproj_frozen = .false.
+      DO i = 1, nfratproj_max
+         IF (atom_proj_frozen(i) > n_proj) THEN
+            WRITE (err_str, *) 'atom_proj_frozen(', i, ') = ', atom_proj_frozen(i), &
+                               '> total number of projectors (', n_proj, ')'
+            CALL errore('pw2wannier90', err_str, i)
+         ELSEIF (atom_proj_frozen(i) < 0) THEN
+           CYCLE
+         ELSE
+            atproj_frozen(atom_proj_frozen(i)) = .true.
+         ENDIF
+      ENDDO
+      nfratproj = COUNT(atproj_frozen)
+      has_frozen_proj = (nfratproj > 0)
+      IF (has_frozen_proj) THEN
+         WRITE (stdout, *) '    frozen projectors: '
+         j = 0 ! how many elements have been written
+         DO i = 1, n_proj
+            IF (atproj_frozen(i)) THEN
+               WRITE (stdout, '(i8)', advance='no') i
+               j = j + 1
+               IF (MOD(j, 10) == 0) WRITE (stdout, *)
+           ENDIF
+         ENDDO
+         WRITE (stdout, *) ''
+         nunfratproj = n_proj - nfratproj
+      ENDIF
+      !
       ! check exclude
       ALLOCATE(atproj_excl(n_proj), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
@@ -6213,6 +6028,7 @@ SUBROUTINE compute_amn_with_atomproj
       IF (has_excl_proj) THEN
          WRITE (stdout, *) '    excluded projectors: '
          j = 0 ! how many elements have been written
+         !
          DO i = 1, n_proj
             IF (atproj_excl(i)) THEN
                WRITE (stdout, '(i8)', advance='no') i
@@ -6223,6 +6039,18 @@ SUBROUTINE compute_amn_with_atomproj
          WRITE (stdout, *) ''
          n_proj = n_proj - nexatproj
       ENDIF
+      !
+      ! make a map between reduced projectors and origin projectors
+      j = 0 ! index of reduced projectors
+      ALLOCATE(proj_excl_map(n_proj))
+      proj_excl_map = -1
+      DO i = 1, n_proj+nexatproj ! loop over all projectors
+         IF (atproj_excl(i)) CYCLE
+         ! if not excluded
+         j = j + 1
+         proj_excl_map(j) = i
+      ENDDO
+      !
       !
       IF (gamma_only) WRITE (stdout, '(5x,"gamma-point specific algorithms are used")')
       !
@@ -6240,6 +6068,15 @@ SUBROUTINE compute_amn_with_atomproj
          CALL mp_bcast(atproj_typs(it)%atsym, ionode_id, world_comm)
          CALL mp_bcast(atproj_typs(it)%xgrid, ionode_id, world_comm)
          CALL mp_bcast(atproj_typs(it)%rgrid, ionode_id, world_comm)
+         IF (lspinorb) THEN
+            IF (.NOT. ionode) &
+               CALL allocate_atproj_type_so(atproj_typs(it))
+            CALL mp_bcast(atproj_typs(it)%twoj, ionode_id, world_comm)
+         ELSE IF (noncolin) THEN
+            IF (.NOT. ionode) &
+               CALL allocate_atproj_type_nc(atproj_typs(it))
+            CALL mp_bcast(atproj_typs(it)%twosz, ionode_id, world_comm)
+         ENDIF
          CALL mp_bcast(atproj_typs(it)%l, ionode_id, world_comm)
          CALL mp_bcast(atproj_typs(it)%radial, ionode_id, world_comm)
       ENDDO
@@ -6254,12 +6091,21 @@ SUBROUTINE compute_amn_with_atomproj
    CALL mp_bcast(natproj, ionode_id, world_comm)
    CALL mp_bcast(n_proj, ionode_id, world_comm)
    CALL mp_bcast(nexatproj, ionode_id, world_comm)
+   CALL mp_bcast(nfratproj, ionode_id, world_comm)
+   CALL mp_bcast(nunfratproj, ionode_id, world_comm)
    CALL mp_bcast(has_excl_proj, ionode_id, world_comm)
+   CALL mp_bcast(has_frozen_proj, ionode_id, world_comm)
    IF (.NOT. ionode) THEN
       ALLOCATE(atproj_excl(n_proj+nexatproj), stat=ierr)
       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
+      ALLOCATE(atproj_frozen(n_proj+nexatproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_frozen', 1)
+      ALLOCATE(proj_excl_map(n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj_excl_map', 1)
    ENDIF
    CALL mp_bcast(atproj_excl, ionode_id, world_comm)
+   CALL mp_bcast(atproj_frozen, ionode_id, world_comm)
+   CALL mp_bcast(proj_excl_map, ionode_id, world_comm)
    !
    !   Initialize parallelism for linear algebra
    !
@@ -6283,6 +6129,9 @@ SUBROUTINE compute_amn_with_atomproj
       WRITE (stdout, *) '      n_proj    = ', n_proj
       IF (atom_proj_ext) THEN
         WRITE (stdout, *) '      natproj   = ', natproj
+        IF (has_frozen_proj) THEN
+          WRITE (stdout, *) '      nfratproj = ', nfratproj
+        ENDIF
       ELSE
         WRITE (stdout, *) '      natomwfc  = ', natomwfc
       END IF
@@ -6295,6 +6144,19 @@ SUBROUTINE compute_amn_with_atomproj
       WRITE (stdout, *)
    END IF
    !
+   IF (has_frozen_proj) THEN
+      ALLOCATE(has_frozen(n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating has_frozen', 1)
+      DO i = 1, n_proj
+         has_frozen(i) = atproj_frozen(proj_excl_map(i))
+      ENDDO
+
+      ALLOCATE (owfcatom(npwx*npol, n_proj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating owfcatom', 1)
+
+      ALLOCATE(v(npwx*npol), ov(npwx*npol))
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating v/ov', 1)
+   ENDIF
    ALLOCATE (proj(num_bands, n_proj), stat=ierr)
    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj', 1)
    !
@@ -6333,7 +6195,7 @@ SUBROUTINE compute_amn_with_atomproj
       CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
-      !
+      
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       npw = ngk(ik)
       !
@@ -6437,6 +6299,17 @@ SUBROUTINE compute_amn_with_atomproj
             CALL compute_zdistmat(npw_, n_proj, nx, wfcatom, swfcatom, overlap_d, &
                                  idesc, rank_ip, idesc_ip)
          ENDIF
+         IF (has_frozen_proj) THEN
+            DO j = 1, idesc(LAX_DESC_NC)
+               DO i = 1, idesc(LAX_DESC_NR)
+                  IF (has_frozen(i + idesc(LAX_DESC_IR) -1) .NEQV. &
+                     has_frozen(j + idesc(LAX_DESC_IC) -1)) THEN
+                     overlap_d(i, j) = (0.0_DP, 0.0_DP)
+                  ENDIF
+               END DO
+            END DO
+         ENDIF
+
          !
          ! diagonalize the overlap matrix
          !
@@ -6507,10 +6380,47 @@ SUBROUTINE compute_amn_with_atomproj
                                    idesc, rank_ip, idesc_ip, la_proc)
             DEALLOCATE (roverlap_d)
          ELSE
+            IF (has_frozen_proj) THEN
+               ! we need owfcatom = O^{-1/2} | phi> to do ortho
+               CALL wf_times_overlap(nx, npw_, wfcatom, overlap_d, owfcatom, &
+                                     idesc, rank_ip, idesc_ip, la_proc)
+            ENDIF
             CALL wf_times_overlap(nx, npw_, swfcatom, overlap_d, wfcatom, &
                                   idesc, rank_ip, idesc_ip, la_proc)
          END IF
          DEALLOCATE (overlap_d)
+
+         IF (has_frozen_proj) THEN
+            !
+            ! DO modified Gram–Schmidt algorithms to orthogonalize pao and ext projecotrs
+            ! shape(wfcatom) = npwx*npol, n_proj
+            !
+            ! For USPP cases, here wfcatom is exactly O^{-1/2} S | phi >
+            ! Notes that owfcatom = O^{-1/2} | phi >
+            ! and < phi | O^{-1/2} * O^{-1/2} S | phi > == I
+            DO j = 1, n_proj
+               IF (.NOT. has_frozen(j)) THEN
+                  v = wfcatom(:, j)
+                  ov = owfcatom(:, j)
+                  DO i = 1, n_proj
+                     IF (has_frozen(i)) THEN ! frozen projector
+                        r1 = dot_product(owfcatom(:, i), v)
+                        CALL mp_sum(r1, intra_pool_comm) 
+                        v = v - r1 * wfcatom(:, i)
+                        ov = ov - r1 * owfcatom(:, i)
+                     ENDIF
+                  ENDDO
+                  r2 = dot_product(ov, v)
+                  ! here in fact we can prove that r2 is always a real,
+                  ! but in case of calc errors, I keep it as complex
+                  CALL mp_sum(r2, intra_pool_comm)
+                  wfcatom(:, j) = v / sqrt(r2)
+                  owfcatom(:, j) = ov / sqrt(r2)
+                  ! should keep wfcatom and owfcatom the same pace
+                  has_frozen(j) = .true.
+               ENDIF
+            ENDDO
+         ENDIF ! has_frozen_proj
       ELSE
          wfcatom = swfcatom
       ENDIF ! atom_proj_ortho
@@ -6641,6 +6551,11 @@ SUBROUTINE compute_amn_with_atomproj
    IF (has_excl_proj) DEALLOCATE (wfcatomall)
    DEALLOCATE (idesc_ip)
    DEALLOCATE (rank_ip)
+   IF (has_frozen_proj) THEN
+      DEALLOCATE(has_frozen)
+      DEALLOCATE(v, ov)
+      DEALLOCATE(owfcatom)
+   ENDIF
    !
    ! write to standard output and to file
    !

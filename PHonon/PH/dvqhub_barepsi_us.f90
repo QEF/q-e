@@ -80,7 +80,6 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   COMPLEX(DP), ALLOCATABLE :: aux1(:), aux2(:), aux3(:), aux4(:), aux5(:), &
                               dqsphi(:,:), dmqsphi(:,:), dvqi(:,:), dvqhbar(:,:,:,:), &
                               vkb_(:,:), dwfcatom_(:)
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !  
   ALLOCATE (proj1(nbnd,nwfcU))
   ALLOCATE (proj2(nbnd,nwfcU))
@@ -220,9 +219,10 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
                  ! proj1 (ihubst,ibnd) = < S_{k}\phi_(k,I,m)| psi(ibnd,k) >
                  ! proj2 (ihubst,ibnd) = < \Delta_{-q}(S_{k+q} \phi_(k+q,I,m)) | psi(ibnd,k) > 
                  !
+                 !FIXME these are zgemms 
                  DO ibnd = 1, nbnd
-                    proj1(ibnd,ihubst) = ZDOTC (npw, swfcatomk(:,ihubst), 1, evc(:,ibnd), 1)
-                    proj2(ibnd,ihubst) = ZDOTC (npw, dmqsphi(:,ihubst), 1, evc(:,ibnd), 1)
+                 proj1(ibnd,ihubst) = dot_product (swfcatomk(1:npw,ihubst), evc(1:npw,ibnd))
+                 proj2(ibnd,ihubst) = dot_product(dmqsphi(1:npw,ihubst), evc(1:npw,ibnd))
                  ENDDO
                  !
               ENDDO ! m

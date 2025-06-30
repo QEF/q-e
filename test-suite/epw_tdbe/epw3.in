@@ -1,0 +1,78 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+  dvscf_dir   = './'
+  !! ===============================================
+  !! Turn this flag off the skip the wannier 
+  !! interpolation of e-ph matrix element
+  !! ===============================================  
+  ep_coupling = .false.
+  !! ===============================================
+  !! turn on this flag to perform TDBE calculations
+  !! ===============================================
+  epwread = .true.
+  do_tdbe = .true.
+  !! ===============================================
+  !! Heun method for time propagation
+  !! default option is euler method bte_solver = 'euler'
+  !! To use RK 4 method, set bte_solver = 'rk_4'
+  !! ===============================================
+  solver_tdbe='heun'
+  !! ===============================================  
+  !! If ph-ph interaction is included,
+  !! then set phph_tdbe = .true. and copy
+  !! the third order force constant file
+  !! to the current folder
+  !! ===============================================
+  phph_tdbe = .false.
+  nbndsub     =  8
+  asr_typ     = 'crystal'
+  use_ws      = .true.
+  wannierize  = .false.
+  mp_mesh_k   = .true.
+  !! ===============================================
+  !! specify the ratio of time step for e-ph 
+  !! interaction and that for ph-ph interaction dph
+  !! dph_tdbe = 10
+  !! ===============================================  
+  dt_tdbe     =  1.0   !! tstep is the time step in fs
+  nt_tdbe     =  500   !! total number of time step simulated  
+  twrite_tdbe =  10    !! write distributions every 10 steps
+  !! ===============================================  
+  !! chemical potential for carriers, both electron and hole
+  !! are set at the energy of Dirac point (non doped materials) 
+  !! ===============================================
+  ef_c_tdbe   = 6.6
+  !! =============================================== 
+  !! carr_dyn_tdbe = 1 means we consider only the
+  !! carrier dynamics in conduction bands
+  !! ===============================================
+  carr_dyn_tdbe  = 1
+  init_type_tdbe = 'FD' !! Fermi-Dirac distribution for carrires 
+  temp_ph_tdbe  = 300.0 !! Kelvin, initial lattice temperature
+  temp_el_tdbe  = 1500.0 !! Kelvin, initial electronic temperature
+  !! ===============================================
+  !! efermi_read and fermi_energy must be same as 
+  !! previous calculations to obtain g2
+  !! ===============================================
+  efermi_read = .true.
+  fermi_energy = 7.1 ! eV
+  fsthick     = 0.3 ! eV
+  !! ===============================================
+  degaussw    = 0.009 ! eV
+ 
+  nkf1        = 15 
+  nkf2        = 15 
+  nkf3        = 15  
+  nqf1        = 15  
+  nqf2        = 15  
+  nqf3        = 15  
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /

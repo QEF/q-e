@@ -1,5 +1,31 @@
-Fixed in 7.4.1 version 
-  Fixed in 7.4.1 version:
+New in 7.5 version:
+  * New Orbital Resolved DFT+U method -E. Macke, I. Timrov 
+    (see Macke et al. JCTC  2024 20 (11), 4824-4843) 
+  * Interface between Wannier90 and DFT+U to use Wannier functions as
+    Hubbard projectors (I. Timrov, A. Carta, C. Ederer et al., arXiv:2411.03937)
+  * Extension of pp.x to visualize Hubbard projectors of DFT+U (I. Timrov)
+  * Modularization of DFPT routines into dfpt_kernel (Jae-Mo Lihm)
+  * End support for PPCG diagonalization (I.C.)
+  * CUDA Fortran replaced by OpenACC almost everywhere (I.C., PG)
+  * Dynamical quadrupoles, octupoles, and Taylor expansion of the dielectric
+    response function, courtesy Francesco Macheda et al.
+    (Phys. Rev. B 110, 094306,https://doi.org/10.1103/PhysRevB.110.094306).
+  * Implemented NVT dynamics with Nose-Hoover thermostats with Verlet and velocity-Verlet engines
+  * Implemented NPT dynamics with Nose-Hoover thermostats, Parrinello-Rahman and Wentzcovich barostats and Beeman MD engine.  
+
+Fixed in 7.5 version:
+  * Problem with too short variable holding tag name when reading UPF files,
+    occurring only for some fully-relativistic pseudopotentials
+  * Warning on poor testing of Berry Phase calculation removed, thanks to
+    accurate testing performed by Riccardo Dal Molin and Antimo Marrazzo.
+  * Symmetrization glitches on many processors (reported by Yunqi Shao)
+  * Crash for noncolinear PAW case on many processors (reported by I. Timrov)
+  * The HP code for the magnetic noncollinear case had a bug
+    when symmetry was used (some symmetry arrays were not re-initialized
+    when perturbing Hubbard atoms) and the magnetization direction flip was 
+    missing in the Hubbard term (for the second Sternheimer equation) (fixed by L. Binci)
+
+Fixed in 7.4.1 version:
   * Error in qexml_init might cause EPW to fail in some cases
   * Case tefield=.true.: bad xml tag written
   * Bad weights occasionally written by matdyn.x
@@ -12,6 +38,9 @@ Incompatible changes in 7.4 version:
     modified and made uniform with all other constraints - courtesy Tae Yun Kim
 
 New in 7.4 version:
+  * Added to PW/tools MINpuT: an auxiliary DFT input generation script for
+    performing mismatched interface theory (MINT). See E. Gerber et al.,
+    Phys. Rev. Lett. 124, 106804 (2020)
   * Linear response phonon calculations with a two-chemical potential approach
     by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
   * Enabling detection of symmetries by comparison of species labels for example 

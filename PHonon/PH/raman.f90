@@ -14,10 +14,10 @@ subroutine raman
   USE klist,    ONLY : ltetra, lgauss
   USE lsda_mod, ONLY : lsda
   USE uspp, ONLY: okvan
-  USE control_ph, ONLY : epsil, convt, rec_code_read
+  USE control_ph, ONLY : epsil
   USE ph_restart, ONLY : ph_writefile
   USE ramanm, ONLY: lraman, elop, done_lraman, done_elop
-  USE control_lr, ONLY : lgamma
+  USE control_lr, ONLY : lgamma, convt, rec_code_read
 
   implicit none
 

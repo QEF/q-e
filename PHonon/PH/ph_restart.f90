@@ -389,10 +389,10 @@ MODULE ph_restart
       !------------------------------------------------------------------------
       !! In this case we save the information on the status of the calculation.
       !! The current q point, the current frequency, the label and the
-      !! code with the point where the code arrived so far. 
-      !! The former is easy to read in the xml file, 
-      !! the latter is simpler to use in the code. 
-      USE control_ph, ONLY : where_rec, rec_code
+      !! code with the point where the code arrived so far.
+      !! The former is easy to read in the xml file,
+      !! the latter is simpler to use in the code.
+      USE control_lr, ONLY : where_rec, rec_code
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: current_iq, current_iu
 
@@ -570,7 +570,8 @@ MODULE ph_restart
       !!       \(\text{zstarue}\) are available.
       !
       !
-      USE control_ph, ONLY : current_iq, where_rec, rec_code_read
+      USE control_ph, ONLY : current_iq
+      USE control_lr, ONLY : where_rec, rec_code_read
       USE freq_ph, ONLY : current_iu
       !
       IMPLICIT NONE

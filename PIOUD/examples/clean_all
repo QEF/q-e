@@ -1,0 +1,5 @@
+#!/bin/bash
+
+\rm pw_?.in >& /dev/null
+\rm -rf *.out >& /dev/null
+\rm -rf */results* >& /dev/null

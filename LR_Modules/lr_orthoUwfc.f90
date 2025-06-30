@@ -39,7 +39,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
   USE wvfct,            ONLY : npwx
   USE control_flags,    ONLY : gamma_only
   USE uspp,             ONLY : vkb, nkb, okvan
-  USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, becp
+  USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc,&
+                               becp
   USE buffers,          ONLY : save_buffer
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum
@@ -90,12 +91,16 @@ SUBROUTINE lr_orthoUwfc (lflag)
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   ALLOCATE (wfcatom(npwx*npol,natomwfc))
   ALLOCATE (swfcatom(npwx*npol,natomwfc))
-  IF ( .NOT. ALLOCATED(wfcU) ) ALLOCATE (wfcU(npwx*npol,nwfcU))
+  !$acc enter data create(wfcatom, swfcatom)
+  IF ( .NOT. ALLOCATED(wfcU) ) THEN
+     ALLOCATE (wfcU(npwx*npol,nwfcU))
+     !$acc enter data create(wfcU)
+  ENDIF
   !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
   ! Allocate the array becp = <beta|wfcatom>
-  IF (okvan) CALL allocate_bec_type (nkb,natomwfc,becp)
+  IF (okvan) CALL allocate_bec_type_acc (nkb,natomwfc,becp)
   !
   DO ik = 1, nksq
      !
@@ -103,9 +108,6 @@ SUBROUTINE lr_orthoUwfc (lflag)
      ikq  = ikqs(ik)
      npw  = ngk(ikk)
      npwq = ngk(ikq)
-     !
-     wfcatom  = (0.d0, 0.d0)
-     swfcatom = (0.d0, 0.d0)
      !
      ! Determine the atomic orbital at k : phi(k)
      !
@@ -122,9 +124,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
      ! Orthonormalize or normalize the atomic orbitals (if needed) 
      !
      IF (orthogonalize_wfc) THEN
-        !$acc data copy(wfcatom, swfcatom)
         CALL ortho_swfc (npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag)
-        !$acc end data
      END IF
      !
      ! If lflag=.TRUE. copy the result from (orthonormalized) wfcatom 
@@ -132,8 +132,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
      ! and then write wfcU = phi(k) to file with unit iuatwfc.
      !
      IF (lflag) THEN
-        wfcU = (0.d0, 0.d0)
         CALL copy_U_wfc (wfcatom, noncolin)
+        !$acc update host(wfcU)
         CALL save_buffer (wfcU, nwordwfcU, iuatwfc, ikk)
         IF (lgamma) CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
@@ -142,15 +142,12 @@ SUBROUTINE lr_orthoUwfc (lflag)
      ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
      ! and then write wfcU = S(k)*phi(k) to file with unit iuatswfc.
      !
-     wfcU = (0.d0, 0.d0)
      CALL copy_U_wfc (swfcatom, noncolin)
+     !$acc update host(wfcU)
      CALL save_buffer (wfcU, nwordwfcU, iuatswfc, ikk)
      IF (lgamma) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      IF (.NOT.lgamma) THEN
-        !
-        wfcatom  = (0.d0, 0.d0)
-        swfcatom = (0.d0, 0.d0)
         !
         ! Determine the atomic orbital at k+q : phi(k+q)
         !
@@ -167,9 +164,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
         ! Orthonormalize or normalize the atomic orbitals (if needed)
         !
         IF (orthogonalize_wfc) THEN 
-           !$acc data copy(wfcatom, swfcatom)
            CALL ortho_swfc (npwq, normalize_only, natomwfc, wfcatom, swfcatom, lflag)
-           !$acc end data
         END IF
         !
         ! If lflag=.TRUE. copy the result from (orthonormalized) wfcatom 
@@ -177,8 +172,8 @@ SUBROUTINE lr_orthoUwfc (lflag)
         ! and then write wfcU = phi(k) to file with unit iuatwfc.
         !
         IF (lflag) THEN
-           wfcU = (0.d0, 0.d0)
            CALL copy_U_wfc (wfcatom, noncolin)
+           !$acc update host(wfcU)
            CALL save_buffer (wfcU, nwordwfcU, iuatwfc, ikq)
         ENDIF
         !
@@ -186,18 +181,17 @@ SUBROUTINE lr_orthoUwfc (lflag)
         ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
         ! and then write wfcU = S(k+q)*phi(k+q) to file with unit iuatswfc.
         !
-        wfcU = (0.d0, 0.d0)
         CALL copy_U_wfc (swfcatom, noncolin)
+        !$acc update host(wfcU)
         CALL save_buffer (wfcU, nwordwfcU, iuatswfc, ikq)
         !
      ENDIF
      !
   ENDDO  
-  !
+  !$acc exit data delete(wfcatom, swfcatom)
   DEALLOCATE (wfcatom)
   DEALLOCATE (swfcatom)
-  !
-  IF (okvan) CALL deallocate_bec_type (becp)
+  IF (okvan) CALL deallocate_bec_type_acc (becp)
   !
   use_bgrp_in_hpsi = save_flag
   !
@@ -215,7 +209,8 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   !
   USE kinds,          ONLY : DP
   USE becmod,         ONLY : calbec, becp
-  USE uspp_init,        ONLY : init_us_2
+  USE uspp_init,      ONLY : init_us_2
+  USE control_flags,  ONLY : offload_type
   !
   IMPLICIT NONE
   INTEGER,     INTENT(IN)  :: npw_
@@ -226,7 +221,9 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   ! NCPP case
   !
   IF ( nkb == 0 .OR. .NOT. okvan ) THEN
+     !$acc kernels
      swfc = wfc
+     !$acc end kernels
      RETURN
   ENDIF
   !
@@ -235,16 +232,15 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   ! Compute beta functions vkb at ik_
   !
   CALL init_us_2 (npw_, igk_k(1,ik_), xk(1,ik_), vkb, .true.)
-  !$acc update host(vkb)
   !
   ! Compute the product of beta functions vkb
   ! with the functions wfc : becp = <vkb|wfc>
   !
-  CALL calbec (npw_, vkb, wfc, becp)
+  CALL calbec (offload_type, npw_, vkb, wfc, becp)
   !
   ! Calculate S*|wfc> = |wfc> + \sum qq * |vkb> * becp 
   !  
-  CALL s_psi (npwx, npw_, natomwfc, wfc, swfc)
+  CALL s_psi_acc (npwx, npw_, natomwfc, wfc, swfc)
   !
   RETURN
   !

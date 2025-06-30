@@ -14,7 +14,7 @@ export REFERENCE_VERSION=6.0
 export ESPRESSO_ROOT=${shell pwd}/../
 
 # Edit this line if you have build QE in a directory different from ESPRESSO_ROOT
-export ESPRESSO_BUILD=${ESPRESSO_ROOT} 
+export ESPRESSO_BUILD=${ESPRESSO_ROOT}
 
 # Edit these lines to change the number of processors for MPI/OpenMP parallel execution
 export TESTCODE_NPROCS=4

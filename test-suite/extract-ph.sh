@@ -29,6 +29,8 @@ born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
 # in the version below, phfreq only contains frequencies in cm^-1, not in THz
 phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 dos=`grep "DOS =" $fname | awk '{print $3; print $8}'`
+quad=`grep -A 2 'quadrupole.fmt' $fname | tail -1 | awk '{print $6}'`
+epsil=`grep -A 6 'epsilon.fmt' $fname | tail -1 | awk '{print $5}'`
 lambda=$(awk '
 # reset counters
 /Diagonalizing the dynamical matrix/{
@@ -77,6 +79,8 @@ lambda=$(awk '
   }
   ifreq = (ifreq + 1) % num_freq
 }' $fname)
+dnsscf_e=`grep -A 5 "DNS_SCF SYMMETRIZED IN ELECTRIC FIELD IN CARTESIAN COORDINATES" $fname  | tail -3`
+dnsscf_ph=`grep -A 5 "DNS_SCF SYMMETRIZED IN CARTESIAN COORDINATES" $fname  | tail -3`
 
 # Q2R
 qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
@@ -172,9 +176,29 @@ if test "$dos" != ""; then
         for x in $dos; do echo $x; done
 fi
 
+if test "$quad" != ""; then
+        echo quad 
+        for x in $quad; do echo $quad; done
+fi
+
+if test "$epsil" != ""; then
+        echo epsil 
+        for x in $epsil; do echo $epsil; done
+fi
+
 if test "$lambda" != ""; then
         echo lambda
         for x in $lambda; do echo $x; done
+fi
+
+if test "$dnsscf_e" != ""; then
+        echo dnsscf_e
+        for x in $dnsscf_e; do echo $x; done
+fi
+
+if test "$dnsscf_ph" != ""; then
+        echo dnsscf_ph
+        for x in $dnsscf_ph; do echo $x; done
 fi
 
 if test "$qpt" != ""; then

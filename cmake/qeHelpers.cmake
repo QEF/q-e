@@ -69,7 +69,7 @@ function(qe_fix_fortran_modules TGT)
                 PUBLIC
                     $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${TGT}>
                 INTERFACE
-                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT}>)
+                    $<INSTALL_INTERFACE:${QE_INSTALL_Fortran_MODULES}/qe/${TGT}>)
         endif()
     endforeach()
 endfunction(qe_fix_fortran_modules)
@@ -183,6 +183,10 @@ endfunction(qe_add_executable)
 
 function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
+    set_target_properties(${LIB} PROPERTIES
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+        VERSION ${PROJECT_VERSION}
+    )
     _qe_add_target(${LIB} ${ARGN})
 endfunction(qe_add_library)
 
@@ -219,7 +223,7 @@ function(qe_install_targets TGT)
             get_target_property(tgt_module_dir ${tgt} Fortran_MODULE_DIRECTORY)
             if(tgt_module_dir)
                 install(DIRECTORY ${tgt_module_dir}/
-                    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT})
+                    DESTINATION ${QE_INSTALL_Fortran_MODULES}/qe/${TGT})
             endif()
         endif()        
     endforeach()

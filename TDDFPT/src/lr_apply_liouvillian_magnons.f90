@@ -260,7 +260,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
-     !$acc data copy(evc1(1:npwx*npol,1:nbnd,ik,1),sevc1_new(1:npwx*npol,1:nbnd,ik), et(:,ikk))
+     !$acc data copyin(evc1(1:npwx*npol,1:nbnd,ik,1)) copy(sevc1_new(1:npwx*npol,1:nbnd,ik,1), et(:,ikk))
      CALL ch_psi_all (npwq, evc1(:,:,ik,1), sevc1_new(:,:,ik,1), et(:,ikk), ik, nbnd_occ(ikk)) 
      !$acc end data
      !
@@ -410,7 +410,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
-     !$acc data copy(evc1(1:npwx*npol,1:nbnd,ik,2),sevc1_new(1:npwx*npol,1:nbnd,ik,2), et(:,imk))
+     !$acc data copyin(evc1(1:npwx*npol,1:nbnd,ik,2)) copy(sevc1_new(1:npwx*npol,1:nbnd,ik,2), et(:,imk))
      CALL ch_psi_all (npwq, evc1(:,:,ik,2), sevc1_new(:,:,ik,2), et(:,imk), ik, nbnd_occ(imk))
      !$acc end data
      !

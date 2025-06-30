@@ -19,27 +19,30 @@ SUBROUTINE calculate_phase (gvect, phase)
   USE fft_support,          ONLY : good_fft_dimension
   USE cell_base,            ONLY : at
   USE constants,            ONLY : tpi
+  USE control_kcw,          ONLY : r, ir_end
   !
   IMPLICIT NONE
   !
   !REAL(DP), INTENT(IN) :: gvect(3)
   !
   REAL(DP) :: gvect(3)
-  ! ... the G vector in input 
+  ! ... the G vector in input (in cartesian coordinates)
   !
   COMPLEX(DP), INTENT(OUT) :: phase(dffts%nnr)
-  ! ... e^{i G \dot r } in OUTPUT
+  ! ... e^{-i G \dot r } in OUTPUT
   !
-  REAL(DP),    ALLOCATABLE :: r(:,:)
+  ! now this is defined in the module
+  !REAL(DP),    ALLOCATABLE :: r(:,:)
   ! ... position 
   !
-  INTEGER  :: i, j, k, ip, ir, ir_end, idx, j0, k0
+  INTEGER  :: i, j, k, ip, ir, idx, j0, k0 !, ir_end <- removed  
+                                            ! because is in module!
   ! ... counters 
   !
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3, dot_prod
   ! ... invers of the real grid dimensions
   ! 
-  ALLOCATE(r(dffts%nnr,3))
+  IF(.not. ALLOCATED(r)) ALLOCATE(r(dffts%nnr,3))
   r(:,:) = 0.d0
   !
   ! The reciprocal vector in crystall coordinate
@@ -95,6 +98,6 @@ SUBROUTINE calculate_phase (gvect, phase)
 
      !
   ENDDO
-  DEALLOCATE(r)
+  !DEALLOCATE(r)
   !
 END subroutine

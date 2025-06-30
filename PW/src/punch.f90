@@ -37,6 +37,7 @@ SUBROUTINE punch( what )
   USE pw_restart_new,       ONLY : pw_write_schema, write_collected_wfc
   USE qexsd_module,         ONLY : qexsd_reset_steps
   USE io_rho_xml,           ONLY : write_scf
+  USE xc_lib,               ONLY : xclib_dft_is
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions,        ONLY : evc
   USE xdm_module,           ONLY : write_xdmdat
@@ -89,7 +90,9 @@ SUBROUTINE punch( what )
      IF ( lscf .OR. lforcet ) THEN
         CALL write_scf( rho, nspin )
         WRITE( stdout, '(", charge density")', ADVANCE ='NO' )
-     END IF
+        IF ( xclib_dft_is('meta') ) &
+           WRITE( stdout, '(" with meta-GGA kinetic term")', ADVANCE ='NO' )
+     END IF 
      !
      ! ... correlation functions of 3D-RISM.
      ! ... do not overwrite them, in case of non-scf

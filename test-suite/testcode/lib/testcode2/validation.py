@@ -194,7 +194,7 @@ strict: if true, then require numbers to be within both thresholds.
         '''Compare test and benchmark values to the relative tolerance.'''
         if self.relative:
             diff = test_val - benchmark_val
-            if benchmark_val == 0 and diff == 0:
+            if benchmark_val == 0 and abs(diff) < 1e-17:
                 err = 0
             elif benchmark_val == 0:
                 err = float("Inf")

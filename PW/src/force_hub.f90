@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2023 Quantum ESPRESSO group
+! Copyright (C) 2002-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -70,9 +70,9 @@ SUBROUTINE force_hub( forceh )
    INTEGER, EXTERNAL :: find_viz
    !
    !
-   CALL start_clock_gpu( 'force_hub' )
+   CALL start_clock( 'force_hub' )
    !
-   !$acc data  present(vkb) copyin(wfcU) 
+   !$acc data  present(vkb,wfcU) 
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
@@ -107,13 +107,14 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    ALLOCATE( spsi(npwx*npol,nbnd) ) 
-   !$acc enter data create(spsi)
    ALLOCATE( wfcatom(npwx*npol,natomwfc) )
+   !$acc enter data create(spsi,wfcatom)
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE( swfcatom(npwx*npol,natomwfc) )
       ALLOCATE( eigenval(natomwfc) )
       ALLOCATE( eigenvect(natomwfc,natomwfc) )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
+      !$acc enter data create(swfcatom,eigenval, eigenvect, overlap_inv)
    ENDIF
    !
    IF (noncolin) THEN
@@ -148,8 +149,6 @@ SUBROUTINE force_hub( forceh )
       !$acc update device(evc) 
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
-      ! ... FIXME this update is needed for ortho-atomic case
-      !$acc update self(vkb)
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type_acc( nkb, nbnd, becp )
       Call calbec(offload_type, npw, vkb, evc, becp ) 
@@ -159,7 +158,6 @@ SUBROUTINE force_hub( forceh )
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
       CALL orthoUwfc_k( ik, .TRUE. )
-      !$acc update device(wfcU)
       !
       ! ... proj=<wfcU|S|evc>
       IF (noncolin) THEN
@@ -180,8 +178,6 @@ SUBROUTINE force_hub( forceh )
       ELSE
          !$acc update self(proj%k)
       ENDIF
-      !
-      !$acc data copyin(wfcatom,overlap_inv)
       !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -334,8 +330,6 @@ SUBROUTINE force_hub( forceh )
          !
       ENDDO ! alpha
       !
-      !$acc end data
-      !
    ENDDO ! ik
    !
    CALL mp_sum( forceh, inter_pool_comm )
@@ -354,15 +348,15 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    !$acc end data
-   !$acc exit data delete(spsi) finalize
-   !
+   !$acc exit data delete(spsi,wfcatom) 
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      !$acc exit data delete(swfcatom,eigenval,eigenvect,overlap_inv) 
+      DEALLOCATE( overlap_inv )
       DEALLOCATE( swfcatom )
       DEALLOCATE( eigenval )
       DEALLOCATE( eigenvect )
-      DEALLOCATE( overlap_inv )
    ENDIF
    !
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
@@ -378,7 +372,13 @@ SUBROUTINE force_hub( forceh )
 #endif
    use_bgrp_in_hpsi = save_flag
    !
-   CALL stop_clock_gpu( 'force_hub' )
+   CALL stop_clock( 'force_hub' )
+   CALL print_clock( 'force_hub' )
+   CALL print_clock( 'dndtau' )
+   CALL print_clock( 'dndgtau' )
+   CALL print_clock( 'dprojdtau' )
+   CALL print_clock( 'calc_doverlap' )
+   CALL print_clock( 'matel_dSdtau' )
    !
    RETURN
    !
@@ -447,7 +447,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
+   !$acc data present(wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -652,7 +652,7 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
-   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
+   !$acc data present(wfcU) create(dproj,dproj_us)
    !
    ! Compute the USPP contribution to dproj:
    ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
@@ -1189,7 +1189,7 @@ SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE ( dproj1(nwfcU,nb_s:nb_e) )
    ALLOCATE ( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
-   !$acc data present_or_copyin(wfcU) create(dproj1,dproj2,dproj_us)
+   !$acc data present(wfcU) create(dproj1,dproj2,dproj_us)
    !
    !
    ! Compute the derivative of the generalized occupation matrices 
@@ -1401,7 +1401,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    REAL(DP), ALLOCATABLE :: dproj(:,:)
    INTEGER, EXTERNAL :: find_viz
    !
-   CALL start_clock_gpu( 'dngdtau' )
+   CALL start_clock( 'dngdtau' )
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
@@ -1509,7 +1509,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ENDIF
    ENDDO
    !
-   CALL stop_clock_gpu( 'dngdtau' )
+   CALL stop_clock( 'dngdtau' )
    !
    RETURN
    !
@@ -1539,10 +1539,10 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : okvan, nkb
    USE uspp_param,           ONLY : nh
-   USE basis,                ONLY : natomwfc, wfcatom, swfcatom
+   USE basis,                ONLY : natomwfc, wfcatom
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
+   USE force_mod,            ONLY : overlap_inv, doverlap_inv
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, offsetU
    !
    IMPLICIT NONE
@@ -1581,7 +1581,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    COMPLEX(DP), ALLOCATABLE :: dwfc(:,:), &
                                dproj0(:,:) !derivative of the projector
    !
-   CALL start_clock_gpu( 'dprojdtau' )
+   CALL start_clock( 'dprojdtau' )
    !
    !$acc data present_or_copyin(dproj)
    !
@@ -1608,7 +1608,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... Note: parallelization here is over plane waves, not over bands!
       !
       ALLOCATE ( dwfc(npwx*npol,ldim*npol) )
-      dwfc(:,:) = (0.d0, 0.d0)
       !$acc data create(dwfc)
       !
       !$acc kernels
@@ -1689,7 +1688,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                  " Forces with background and  ortho-atomic are not supported", 1 )
       !
       ALLOCATE( dwfc(npwx*npol,ldim*npol) )
-      !$acc data create(dwfc) present_or_copyin(wfcatom,overlap_inv)
+      !$acc data create(dwfc) present(wfcatom,overlap_inv)
       !
       !$acc kernels
       dwfc(:,:) = (0.d0,0.d0)
@@ -1778,7 +1777,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    !$acc end data
    !
-   CALL stop_clock_gpu( 'dprojdtau' )
+   CALL stop_clock( 'dprojdtau' )
    !
    RETURN
    !
@@ -1848,8 +1847,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !! This routine computes the derivative of \(O^{-1/2}\) transposed.
    !
    USE kinds,            ONLY : DP
-   USE wvfct,             ONLY : npwx
-   USE noncollin_module,  ONLY : noncolin
+   USE wvfct,            ONLY : npwx
+   USE noncollin_module, ONLY : noncolin, npol
    USE cell_base,        ONLY : tpiba
    USE gvect,            ONLY : g
    USE uspp,             ONLY : okvan
@@ -1875,87 +1874,92 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    INTEGER :: ig, m1, m2, npw, m_start, m_end
    REAL(DP) :: gvec, xki
-   COMPLEX(DP) :: temp
-   COMPLEX(DP), ALLOCATABLE :: doverlap(:,:), doverlap_us(:,:)
+   COMPLEX(DP), ALLOCATABLE :: dwfcatom(:,:)
+   ! auxiliary array for fast calculation
+   !$acc declare device_resident(dwfcatom)
+   COMPLEX(DP), ALLOCATABLE :: doverlap(:,:)
    ! derivative of the overlap matrix  
+   COMPLEX(DP), ALLOCATABLE :: doverlap_us(:,:)
+   ! derivative of the overlap matrix, auxiliary array
    !
-   CALL start_clock( 'calc_doverlap_inv' )
+   CALL start_clock( 'calc_doverlap' )
    !
    IF (Hubbard_projectors.NE."ortho-atomic") RETURN
    !
    xki = xk(ipol,ik)
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
+   ALLOCATE( doverlap_us(natomwfc,natomwfc) )
    !
-   !$acc data present_or_copyin(wfcatom,swfcatom) 
+   !$acc data create(doverlap,doverlap_us) present_or_copyin(wfcatom,swfcatom) 
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
+   doverlap_us(:,:) = (0.0d0,0.0d0)
    !$acc end kernels
-   doverlap(:,:) = (0.0d0,0.0d0)
    !
    npw = ngk(ik)
    !
    ! ... Determine how many atomic wafefunctions there are for atom 'alpha'
    ! ... and determine their position in the list of all atomic 
    ! ... wavefunctions of all atoms
+   !
    CALL natomwfc_per_atom( alpha, m_start, m_end )
    !
    ! ... Compute the derivative dO_IJ/d\tau(alpha,ipol)
    ! ... Calculate < dphi_I/d\tau(alpha,ipol) | S | phi_J >
+   ALLOCATE ( dwfcatom(npwx*npol, m_start:m_end) )
+   !$acc parallel loop collapse(2)
    DO m1 = m_start, m_end
-      DO m2 = 1, natomwfc
-         temp = (0.d0,0.d0)
-         !$acc parallel loop reduction(+:temp)
-         DO ig = 1, npw
-            ! ... (k+G) * 2pi/a
-            gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
-            temp = temp + (0.d0,1.d0) * gvec * CONJG(wfcatom(ig,m1)) *&
-                          swfcatom(ig,m2)
-            IF (noncolin) temp = temp + (0.d0,1.d0) * gvec &
-                     * CONJG(wfcatom(ig+npwx,m1))  * swfcatom(ig+npwx,m2)
-         ENDDO
-         doverlap(m1,m2) = temp
-      ENDDO
-   ENDDO
+      DO ig = 1, npol*npwx
+         IF ( ig <= npw ) THEN
+            gvec =  (g(ipol,igk_k(ig,ik)) + xki) * tpiba
+         ELSE IF ( ig > npwx .AND. ig <= npwx+npw ) THEN
+            gvec =  (g(ipol,igk_k(ig-npwx,ik)) + xki) * tpiba
+         ELSE
+            gvec =  0.0_dp
+         END IF
+         dwfcatom(ig,m1) = (0.0_dp,-1.0_dp) * gvec * wfcatom(ig,m1)
+      END DO
+   END DO
+   !$acc host_data use_device(dwfcatom, swfcatom, doverlap_us)
+   CALL MYZGEMM &
+        ( 'C', 'N', m_end-m_start+1, natomwfc, npwx*npol, (1.0_dp, 0.0_dp), &
+        dwfcatom(1,m_start), npwx*npol, swfcatom, npwx*npol, (0.0_dp,0.0_dp),&
+        doverlap_us(m_start,1), natomwfc )
+   !$acc end host_data
+   DEALLOCATE ( dwfcatom )
    ! ... Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
+   ! ... (use hermitian conjugate of previously computed matrix)
+   !$acc kernels
+   doverlap(:,:) = doverlap_us(:,:)
+   !$acc end kernels
+   !$acc parallel loop collapse(2)
    DO m1 = 1, natomwfc
       DO m2 = m_start, m_end
-         temp = (0.d0,0.d0)
-         !$acc parallel loop reduction(+:temp)
-         DO ig = 1, npw
-            ! ... (k+G) * 2pi/a
-            gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
-            temp = temp + (0.d0,-1.d0) * gvec * CONJG(swfcatom(ig,m1)) *&
-                          wfcatom(ig,m2)
-            IF (noncolin) temp = temp + (0.d0,-1.d0) * gvec &
-                            * CONJG(swfcatom(ig+npwx,m1))  * wfcatom(ig+npwx,m2)  
-         ENDDO
-         doverlap(m1,m2) = doverlap(m1,m2) + temp
-      ENDDO
-   ENDDO
+         doverlap(m1,m2) = doverlap(m1,m2) + CONJG(doverlap_us(m2,m1))
+      END DO
+   END DO
    !
    ! ... Sum over G vectors
-   CALL mp_sum( doverlap, intra_bgrp_comm )
    !
-   !$acc data copyin(doverlap)
+   !$acc host_data use_device(doverlap)
+   CALL mp_sum( doverlap, intra_bgrp_comm )
+   !$acc end host_data 
    !
    ! ... Add the USPP term in dO_IJ/d\tau(alpha,ipol):
    ! ... < phi_I | dS/d\tau(alpha,ipol) | phi_J >
    !
    IF (okvan) THEN
       ! ... Calculate doverlap_us = < phi_I | dS/d\tau(alpha,ipol) | phi_J >
-      ALLOCATE( doverlap_us(natomwfc,natomwfc) )
-      !$acc data create(doverlap_us)
       CALL matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, natomwfc, &
                                      wfcatom, natomwfc, wfcatom,       &
                                      doverlap_us, 1, natomwfc, 0, .true. )
       !$acc kernels
       doverlap(:,:) = doverlap(:,:) + doverlap_us(:,:)
       !$acc end kernels
-      !$acc end data 
-      DEALLOCATE( doverlap_us )
    ENDIF
+   !
    !
    ! ... Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
    ! ... Note the transposition!
@@ -1964,8 +1968,9 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
                                 doverlap, doverlap_inv )
    !
    !$acc end data
-   !$acc end data
+   DEALLOCATE( doverlap_us )
    DEALLOCATE( doverlap )
+   CALL stop_clock( 'calc_doverlap' )
    !
 END SUBROUTINE calc_doverlap_inv
 !
@@ -2026,6 +2031,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    COMPLEX(DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), dbetaB(:,:), &
                                betaB(:,:), aux(:,:), qq(:,:)
    !
+   CALL start_clock( 'matel_dSdtau' )
    A_dS_B(:,:) = (0.0d0, 0.0d0)
    !
    IF (.NOT.okvan) RETURN
@@ -2281,6 +2287,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    DEALLOCATE( qq     )
    !
    !$acc end data
+   CALL stop_clock( 'matel_dSdtau' )
    !
    RETURN
    !
@@ -2363,7 +2370,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore( "dprojdtau_gamma", &
                 " Forces with gamma-only and ortho-atomic are not supported", 1 )
    !
-   CALL start_clock_gpu( 'dprojdtau' )
+   CALL start_clock( 'dprojdtau' )
    !
    !$acc data present_or_copyin(dproj,wfcU)
    !
@@ -2538,7 +2545,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    !$acc end data
    !
-   CALL stop_clock_gpu( 'dprojdtau' )
+   CALL stop_clock( 'dprojdtau' )
    !
    RETURN
    !

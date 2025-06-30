@@ -20,7 +20,7 @@
   CONTAINS
     !
     !----------------------------------------------------------------------
-    SUBROUTINE indabs_write(iq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
+    SUBROUTINE indabs_write(iqq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
     !----------------------------------------------------------------------
     !!
     !! Write indirect optical spectra
@@ -37,7 +37,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: iq
+    INTEGER, INTENT(in) :: iqq
     !! Current q-point
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points
@@ -71,7 +71,7 @@
     IF (mpime == ionode_id) THEN
       !
       leps_all = 2 * 3 * nomega * neta * nstemp + 2
-      aux(1) = REAL(iq - 1, KIND = DP) ! we need to start at the next q
+      aux(1) = REAL(iqq - 1, KIND = DP) ! we need to start at the next q
       ! Second element is the total number of q-points
       aux(2) = REAL(totq, KIND = DP)
       !
@@ -106,7 +106,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE indabs_read(iq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
+    SUBROUTINE indabs_read(iqq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
     !----------------------------------------------------------------------
     !!
     !! Read indirect optical spectra
@@ -124,7 +124,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(inout) :: iq
+    INTEGER, INTENT(inout) :: iqq
     !! Current q-point
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points
@@ -178,8 +178,8 @@
         !
         !
         ! First element is the iteration number
-        iq = INT(aux(1))
-        iq = iq + 1 ! we need to start at the next q
+        iqq = INT(aux(1))
+        iqq = iqq + 1 ! we need to start at the next q
         nqtotf_read = INT(aux(2))
         IF (nqtotf_read /= totq) CALL errore('indabs_read', &
           &'Error: The current total number of q-point is not the same as the read one. ', 1)
@@ -212,11 +212,11 @@
     CALL mp_bcast(exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast(iq, ionode_id, world_comm)
+      CALL mp_bcast(iqq, ionode_id, world_comm)
       CALL mp_bcast(epsilon2_abs_all, ionode_id, world_comm)
       CALL mp_bcast(epsilon2_abs_lorenz_all, ionode_id, world_comm)
       !
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iq,'/', totq
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq
     ENDIF
     !----------------------------------------------------------------------
     END SUBROUTINE indabs_read

@@ -104,7 +104,6 @@ subroutine dhdrhopsi
   complex(DP) :: itdba, tmpc
   ! i / ( 2 * delta_xk )
   ! working space
-  complex(DP), EXTERNAL :: zdotc
   ! the scalar product function
 
   allocate (et_sw     (nbnd)          )
@@ -200,8 +199,7 @@ subroutine dhdrhopsi
               !
               do ibnd = 1, nbnd_occ (ik)
                  do jbnd = 1, nbnd_occ (ik)
-                    ps1 (jbnd, ibnd) = zdotc (npwq, &
-                         evc (1, jbnd), 1, ev_sw (1, ibnd), 1)
+                 ps1 (jbnd, ibnd) = dot_product (evc (1:npwq, jbnd), ev_sw (1:npwq, ibnd))
                  enddo
               enddo
               call mp_sum ( ps1, intra_bgrp_comm )
@@ -246,7 +244,7 @@ subroutine dhdrhopsi
            call cft_wave (ik, dvpsi (1, ibnd), auxr, -1 )
            do jbnd = 1, nbnd_occ (ik)
               ps2 (jbnd, ibnd, ipa ) = &
-                     -zdotc (npwq, evc (1, jbnd), 1, dvpsi (1, ibnd), 1)
+                      -dot_product (evc (1:npwq, jbnd), dvpsi (1:npwq, ibnd))
            enddo
         enddo
      enddo
@@ -280,8 +278,7 @@ subroutine dhdrhopsi
         do ibnd = 1, nbnd_occ (ik)
            auxg (:) = (0.d0, 0.d0)
            do jbnd = 1, nbnd_occ (ik)
-              ps0 (jbnd) = -zdotc (npw, evc (1, jbnd), 1, &
-                                     chif (1, ibnd, ipa), 1)
+           ps0 (jbnd) = -dot_product (evc (1:npw, jbnd), chif (1:npw, ibnd, ipa))
            enddo
            call mp_sum ( ps0, intra_bgrp_comm )
            do jbnd = 1, nbnd_occ (ik)

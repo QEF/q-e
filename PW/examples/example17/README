@@ -1,0 +1,113 @@
+================================
+Introduction:
+================================
+This example continues the demonstration of how to apply the 
+orbital-resolved DFT+U method (Macke et al, arXiv:2312.13580 (2023))
+using the example of the low-spin transition-metal compound LiCoO2. 
+
+Unlike in the previous example (example15), in the following, we pursue 
+a one-step procedure in order to compute the total energy of the PBE+U 
+ground state with the Hubbard U manifold being the t_2g orbitals of the Co-3d
+shell in LiCoO2. 
+
+!!!!!!!
+BEWARE: this prodcedure can only be applied because we know
+from previous calculations that the t_2g orbitals correspond to the 3rd, 4th
+and 5th eigenvalue of the Co-3d occupation matrix (the ordering is ascending,
+i.e. 1st eigenvalue is the least occupied orbital, 5th is most occupied).
+If you don't know this order in advance for your system of interest, 
+please stick to the two-step procedure shown in example15.
+!!!!!!!
+
+================================
+Explanation of the input:
+================================
+Although the desired solution is nonmagnetic, we set nspin=2 for demonstration
+purposes. The input file is a regular PBE+U input, except that some integers
+follow the value of the Hubbard U parameter (here 5.0eV).
+These integers are the eigenvalue indices of the target orbitals and therefore
+define the Hubbard manifold. When correcting a d-shell, in the spin-unpolarized 
+case (nspin=1), we can target the magnetic quantum orbitals 1 (corresponding
+to the least occupied eigenstate) to 5 (the most occupied one).
+
+However, in the collinear spin-polarized case (nspin=2), we can target individual 
+spin-orbitals. Here, the integers 1 to 5 are used to select the spin-up
+orbitals while 6 to 10 are used to target the spin-down channel's orbitals.
+For a p-shell, 1 to 3 would refer to spin-up while 4 to 6 would target the
+spin-down spin orbitals.
+
+In this example, we suppose that we know the t_2g orbitals will turn out to
+be the three most occupied ones of each spin-channel. Thus, we assign the 
+Hubbard U correction to the indices "3 4 5 8 9 10", where the first three 
+values target the 3rd, 4th and 5th eigenstate of the spin-up channel while
+the latter three target the 3rd (8-5), 4th (9-5) and 5th (10-5) eigenstate
+of the spin-down channel.
+
+================================
+Analysis of the output:
+================================
+The output of this calculation is mostly identical to that of example15, 
+including the total energy. However, since we are not restarting from a 
+converged charge density, the code prints a warning and also switches on
+the orbital-resolved Hubbard U corrections only after the 5th iteration 
+of the SCF cycle. Here, it prints another warning that reads
+
+     "Switching ON orbital-resolved Hubbard corrections"
+
+This feature was implemented for the one-step procedure so that the eigenstates
+(and their eigenvectors) can stabilize to a certain level before the 
+orbital-resolved corrections are applied. This is extremely important because 
+the default starting guess is a superposition of atomic orbitals, which is often
+a terrbile approximation for the true ground state of most systems.
+Thus, the initial eigenstates and eigenvalues typically bear no resemblance with
+the converged eigenstates.
+
+If we applied orbital-resolved Hubbard corrections from the very beginning to,
+say, the 3rd, 4th and 5th eigenstate in the one-step procedure, 
+we would target the last three of the following reference eigenstates:
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] (up, down, total) =   5.00000  2.00000  7.00000
+     Atomic magnetic moment for atom   1 =   3.00000
+     SPIN  1
+     eigenvalues:    
+       1.000  1.000  1.000  1.000  1.000   !!! COMMENT: The last three of these eigenstates !
+     eigenvectors (columns):
+       1.000  0.000  0.000  0.000  0.000
+       0.000  1.000  0.000  0.000  0.000
+       0.000  0.000  1.000  0.000  0.000
+       0.000  0.000  0.000  1.000  0.000
+       0.000  0.000  0.000  0.000  1.000
+     occupation matrix ns (before diag.):
+       1.000  0.000  0.000  0.000  0.000
+       0.000  1.000  0.000  0.000  0.000
+       0.000  0.000  1.000  0.000  0.000
+       0.000  0.000  0.000  1.000  0.000
+       0.000  0.000  0.000  0.000  1.000
+
+We can clearly see that in the spin-up channel all eigenvalues are 1.00, which is far
+from the expected result for this system.
+However, after 5 SCF iterations, the occupation matrices look like below, and we can
+easily distingish between those states with eigenvalues >0.96 (t_2g orbitals)
+and those with eigenvalues ~0.43 (e_g orbitals).
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] (up, down, total) =   3.76340  3.75188  7.51528
+     Atomic magnetic moment for atom   1 =   0.01152
+     SPIN  1
+     eigenvalues:
+       0.430  0.430  0.967  0.967  0.970  !! Target the last three eigenstates !!
+     eigenvectors (columns):
+       0.000  0.000  0.000 -0.000 -1.000
+      -0.682  0.424  0.147 -0.578  0.000
+      -0.424 -0.682  0.578  0.147  0.000
+      -0.315 -0.507 -0.778 -0.198 -0.000
+      -0.507  0.315 -0.198  0.778 -0.000
+     occupation matrix ns (before diag.):
+       0.970  0.000  0.000  0.000  0.000
+       0.000  0.621  0.000 -0.000 -0.257
+       0.000  0.000  0.621 -0.257  0.000
+       0.000 -0.000 -0.257  0.776 -0.000
+       0.000 -0.257  0.000 -0.000  0.776

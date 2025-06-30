@@ -65,6 +65,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   ALLOCATE( sr( nstart, nstart ) )    
   ALLOCATE( vr( nstart, nstart ) )    
   ALLOCATE( en( nstart ) )
+  !$acc enter data create(aux, hr, sr, vr, en)
   call start_clock('rotwfcg'); !write(*,*) 'start rotwfcg' ; FLUSH(6)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -73,64 +74,90 @@ SUBROUTINE rotate_wfc_gamma( h_psi_ptr, s_psi_ptr, overlap, &
   !
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
-  IF ( gstart == 2 ) &
+  IF ( gstart == 2 ) THEN
+     !$acc kernels
      psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0,kind=DP)
+     !$acc end kernels
+  END IF
   !
   call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
   CALL h_psi_ptr( npwx, npw, nstart, psi, aux )
   call stop_clock('rotwfcg:hpsi'); !write(*,*) 'stop rotwfcg:hpsi' ; FLUSH(6)
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
+  !$acc kernels
   hr=0.D0
+  !$acc end kernels
   CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
+  !$acc host_data use_device(psi, aux, hr)
   if (n_start .le. n_end) &
-  CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
-  IF ( gstart == 2 ) call DGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, hr(1,n_start), nstart )
+  CALL MYDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
+  IF ( gstart == 2 ) call MYDGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, hr(1,n_start), nstart )
   CALL mp_sum( hr, inter_bgrp_comm )
   !     
   CALL mp_sum( hr, intra_bgrp_comm )
+  !$acc end host_data
   !     
+  !$acc kernels
   sr=0.D0
+  !$acc end kernels
   IF ( overlap ) THEN 
      ! 
      CALL s_psi_ptr( npwx, npw, nstart, psi, aux )
      !
+     !$acc host_data use_device(psi, aux, sr)
      if (n_start .le. n_end) &
-     CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
-     IF ( gstart == 2 ) CALL DGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, sr(1,n_start), nstart )
+     CALL MYDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
+     IF ( gstart == 2 ) CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, sr(1,n_start), nstart )
+     !$acc end host_data
      !              
   ELSE
      !
+     !$acc host_data use_device(psi, sr)
      if (n_start .le. n_end) &
-     CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
-     IF ( gstart == 2 ) CALL DGER( nstart, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
+     CALL MYDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
+     IF ( gstart == 2 ) CALL MYDGER( nstart, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
+     !$acc end host_data
      !
   END IF
+  !$acc host_data use_device(sr)
   CALL mp_sum( sr, inter_bgrp_comm )
   !
   CALL mp_sum( sr, intra_bgrp_comm )
+  !$acc end host_data
   call stop_clock('rotwfcg:hc'); !write(*,*) 'stop rotwfcg:hc' ; FLUSH(6)
   !
   ! ... Diagonalize
   !
   call start_clock('rotwfcg:diag'); !write(*,*) 'start rotwfcg:diag' ; FLUSH(6)
+  !$acc host_data use_device(hr, sr, en, vr)
   CALL diaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc end host_data
   call stop_clock('rotwfcg:diag'); !write(*,*) 'stop rotwfcg:diag' ; FLUSH(6)
   call start_clock('rotwfcg:evc'); !write(*,*) 'start rotwfcg:evc' ; FLUSH(6)
   !
+  !$acc kernels
   e(:) = en(1:nbnd)
+  !$acc end kernels
   !
   ! ... update the basis set
   !
+  !$acc kernels
   aux=(0.D0,0.D0)
+  !$acc end kernels
+  !$acc host_data use_device(psi, aux, vr)
   if (n_start .le. n_end) &
-  CALL DGEMM( 'N','N', npw2, nbnd, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nstart, 0.D0, aux, npwx2 )
+  CALL MYDGEMM( 'N','N', npw2, nbnd, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nstart, 0.D0, aux, npwx2 )
   CALL mp_sum( aux, inter_bgrp_comm )
+  !$acc end host_data
   !   
+  !$acc kernels
   evc(:,:) = aux(:,1:nbnd)
+  !$acc end kernels
   call stop_clock('rotwfcg:evc'); !write(*,*) 'stop rotwfcg:evc' ; FLUSH(6)
   !
+  !$acc exit data delete(aux, en, vr, sr, hr)
   DEALLOCATE( en )
   DEALLOCATE( vr )
   DEALLOCATE( sr )

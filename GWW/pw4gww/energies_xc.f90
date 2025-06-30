@@ -374,7 +374,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin, v_states )
 !NOT_TO_BE_INCLUDED_START
           allocate(hpsi(npwx,nbnd))
           hpsi(:,:)=(0.d0,0.d0)
-          CALL vloc_psi_gamma ( npwx, npw, nbnd, evc, vr(1,ispin), hpsi )
+          CALL vloc_psi_gamma_acc ( npwx, npw, nbnd, evc, vr(1,ispin), hpsi )
           call dgemm('T','N',nbnd,nbnd,2*npw,2.d0,evc,2*npwx,hpsi,2*npwx,&
                &0.d0,et_off,nbnd)
           if(gstart==2) then

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,7 @@ SUBROUTINE hp_readin()
                                skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
                                nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter, &
-                               determine_q_mesh_only
+                               determine_q_mesh_only, no_metq0
   USE paw_variables,    ONLY : okpaw
   !
   IMPLICIT NONE
@@ -44,7 +44,7 @@ SUBROUTINE hp_readin()
                          niter_max, alpha_mix, nmix, compute_hp, perturb_only_atom,   &
                          start_q, last_q, sum_pertq, ethr_nscf, num_neigh, lmin,      &
                          determine_num_pert_only, disable_type_analysis, docc_thr,    &
-                         determine_q_mesh_only
+                         determine_q_mesh_only, no_metq0
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       Data read from input is subsequently broadcast to all processors
@@ -87,6 +87,7 @@ SUBROUTINE hp_readin()
   nmix               = 4     
   max_seconds        = 1.E+7_DP
   lrpa               = .FALSE.   ! Needed in dv_of_drho
+  no_metq0           = .FALSE.
   CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   !
@@ -145,6 +146,7 @@ SUBROUTINE input_sanity()
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
   USE xc_lib,           ONLY : xclib_dft_is
+  USE Coul_cut_2D,      ONLY : do_cutoff_2D
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind, Hubbard_J0, &
                                Hubbard_V, is_hubbard_back
   !
@@ -228,6 +230,9 @@ SUBROUTINE input_sanity()
   !
   IF ( xclib_dft_is('hybrid') ) CALL errore('hp_readin',&
      'The HP code with hybrid functionals is not yet available',1)
+  !
+  IF (do_cutoff_2D) CALL errore('hp_readin',&
+     'The HP code does not support the 2D cutoff',1)
   !
   RETURN
   !

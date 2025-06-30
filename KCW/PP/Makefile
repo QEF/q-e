@@ -48,7 +48,7 @@ kcwpp_sh.x:  compute_self_hartree.o $(SH_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)
 	- ( cd ../../bin ; ln -fs ../KCW/PP/$@ . )
 
 ups.x: ups.o $(PWOBJS) $(QEMODS)
-	$(LD) $(LDFLAGS) -o $@ ups.o ../../PP/src/stop_pp.o $(PWOBJS) $(QEMODS) \
+	$(LD) $(LDFLAGS) -o $@ ups.o $(PWOBJS) $(QEMODS) \
 	$(LIBS) $(QELIBS)
 
 tldeps :

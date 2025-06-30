@@ -30,7 +30,7 @@ SUBROUTINE print_clock_pw()
 #endif
 #if defined (__OSCDFT)
    USE plugin_flags,        ONLY : use_oscdft
-   USE oscdft_base,         ONLY : print_oscdft_clocks
+   USE oscdft_base,         ONLY : print_oscdft_clocks, oscdft_ctx
 #endif
    !
    IMPLICIT NONE
@@ -110,9 +110,6 @@ SUBROUTINE print_clock_pw()
    ELSE  IF (isolve == 1) THEN
       CALL print_clock( 'rcgdiagg' )   ; CALL print_clock( 'ccgdiagg' )
       CALL print_clock( 'wfcrot' )
-   ELSE  IF (isolve == 2) THEN
-      CALL print_clock( 'ppcg_gamma' ) ; CALL print_clock( 'ppcg_k' )
-      CALL print_clock( 'wfcrot' )
    ELSE  IF (isolve == 3) THEN
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
    ELSE IF ( isolve == 4 ) THEN
@@ -160,16 +157,6 @@ SUBROUTINE print_clock_pw()
       END IF
    ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
-   ELSE IF ( isolve == 2 ) THEN
-      WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
-      IF ( iverbosity > 0 )  THEN
-         CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
-         CALL print_clock( 'ppcg:hpsi' )
-         CALL print_clock( 'ppcg:cholQR' )
-         CALL print_clock( 'ppcg:RR' )
-         CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
-         CALL print_clock( 'ppcg:lock' )
-      END IF
    ELSE IF ( isolve == 3 ) THEN
       WRITE( stdout, '(/5x,"Called by paro_*:")' )
       IF ( iverbosity > 0 )  THEN
@@ -350,7 +337,7 @@ SUBROUTINE print_clock_pw()
    IF (use_environ) CALL print_environ_clocks()
 #endif
 #if defined (__OSCDFT)
-   IF (use_oscdft) CALL print_oscdft_clocks()
+   IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) CALL print_oscdft_clocks(oscdft_ctx)
 #endif
    !
    RETURN

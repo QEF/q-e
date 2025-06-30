@@ -28,16 +28,16 @@
     !! Called at the end of the run
     !!
     USE mp,            ONLY : mp_end, mp_barrier
-    USE mp_global,     ONLY : inter_pool_comm, mp_global_end
+    USE mp_global,     ONLY : mp_global_end
     USE io_global,     ONLY : stdout
     USE printing,      ONLY : print_clock_epw
     USE input,         ONLY : eliashberg, gridsamp, plselfen, specfun_pl, scattering, iterative_bte, lpolar, &
                               lindabs, bfieldx, bfieldy, bfieldz, system_2d, ii_scattering, plrn, loptabs, &
-                              lwfpt
+                              lwfpt, do_tdbe
     USE global_var,    ONLY : adapt_smearing, qrpl
     USE io_var,        ONLY : epwbib
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : ionode_id
+    USE mp_world,      ONLY : world_comm
+    USE io_global,     ONLY : ionode
     USE ep_constants,  ONLY : eps40
     !
     IMPLICIT NONE
@@ -61,7 +61,7 @@
     WRITE(stdout, '(a)') "     ==============================================================================="
     WRITE(stdout, '(a)') "                                                                                    "
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       !
       OPEN(UNIT = epwbib, FILE = 'EPW.bib')
       !
@@ -435,11 +435,37 @@
         WRITE(epwbib, '(a)') " }                                                                                       "
       ENDIF
       !
+      ! TDBE
+      IF (do_tdbe) THEN
+        WRITE(epwbib, '(a)') "                                                                                         "
+        WRITE(epwbib, '(a)') " % Since you used the [do_tdbe] input, please consider also citing                       "
+        WRITE(epwbib, '(a)') "                                                                                         "
+        WRITE(epwbib, '(a)') " @Article{Caruso2021,                                                                    "
+        WRITE(epwbib, '(a)') "   Title   = {Ultrafast dynamics of electrons and phonons: from the two-temperature &
+                                            model to the time-dependent Boltzmann equation},                           "
+        WRITE(epwbib, '(a)') "   Author  = {Fabio Caruso and Dino Novko},                                              "
+        WRITE(epwbib, '(a)') "   Journal = {Adv. Phys.: X},                                                            "
+        WRITE(epwbib, '(a)') "   Year    = {2022},                                                                     "
+        WRITE(epwbib, '(a)') "   Volume  = {7}                                                                         "
+        WRITE(epwbib, '(a)') "   Pages   = {2095925},                                                                  "
+        WRITE(epwbib, '(a)') "   Doi     = {10.1080/23746149.2022.2095925}                                             "
+        WRITE(epwbib, '(a)') " }                                                                                       "
+        WRITE(epwbib, '(a)') " @Article{Pan2023,                                                                       "
+        WRITE(epwbib, '(a)') "   Title   = {Vibrational Dichroism of Chiral Valley Phonons},                           "
+        WRITE(epwbib, '(a)') "   Author  = {Yiming Pan and Fabio Caruso},                                              "
+        WRITE(epwbib, '(a)') "   Journal = {Nano Lett.},                                                               "
+        WRITE(epwbib, '(a)') "   Year    = {2023},                                                                     "
+        WRITE(epwbib, '(a)') "   Volume  = {23}                                                                        "
+        WRITE(epwbib, '(a)') "   Pages   = {7463-7469},                                                                "
+        WRITE(epwbib, '(a)') "   Doi     = {10.1021/acs.nanolett.3c01904}                                              "
+        WRITE(epwbib, '(a)') " }                                                                                       "
+      ENDIF
+      !
       CLOSE(epwbib)
       !
     ENDIF
     !
-    CALL mp_end(inter_pool_comm)
+    CALL mp_end(world_comm)
     CALL mp_global_end()
     !
     STOP

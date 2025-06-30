@@ -183,14 +183,8 @@ SUBROUTINE lr_alloc_init()
   ! Allocate the R-space unperturbed orbitals
   !
   IF (dffts%has_task_groups) THEN
-     ALLOCATE(tg_revc0(dffts%nnr_tg,nbnd,nksq))
      IF (.NOT. ALLOCATED(tg_psic)) &
           & ALLOCATE( tg_psic(dffts%nnr_tg) )
-  ELSE
-     IF (.NOT.eels) THEN
-        ALLOCATE(revc0(dffts%nnr,nbnd,nksq))
-        revc0(:,:,:) = (0.0d0,0.0d0)
-     ENDIF
   ENDIF
   !
   ! Optical case: allocate the response charge-density

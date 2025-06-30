@@ -1202,7 +1202,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -textvalue {
                             "Davidson with overlap matrix  <david>"
                             "Conjugate-gradient band-by-band <cg>"
-                            "PPCG iterative diagonalization <ppcg>"
+                            "PPCG iterative diagonalization (end support Dec 2024) <ppcg>"
                             "ParO iterative diagonalization <paro>"
                             "RMM-DIIS iterative diagonalization <rmm-davidson>"
                         }
@@ -1249,13 +1249,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     
                     var diago_cg_maxiter {
                         -label    "Max. \# of iterations for CG (diago_cg_maxiter):"
-                        -widget   spinint
-                        -validate posint
-                        -fmt      %d
-                    }
-
-                    var diago_ppcg_maxiter {
-                        -label    "Max. \# of iterations for PPCG (diago_ppcg_maxiter):"
                         -widget   spinint
                         -validate posint
                         -fmt      %d

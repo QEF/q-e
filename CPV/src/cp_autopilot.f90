@@ -138,7 +138,7 @@ CONTAINS
     USE cp_electronic_mass,       ONLY: emass, emass_cutoff, emass_precond
     USE cg_module,                ONLY : tcg,allocate_cg,cg_info, &
                                          nfi_firstcg,c0old
-    USE wavefunctions,     ONLY : cm_bgrp,c0_bgrp
+    USE cp_wavefunctions,         ONLY : cm_bgrp,c0_bgrp
     USE ensemble_dft,             ONLY : tens,allocate_ensemble_dft
     USE uspp,                     ONLY : nkb, nkbus
     USE electrons_base,           ONLY : nspin, nbsp, nbspx, nudx

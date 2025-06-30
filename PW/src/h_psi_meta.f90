@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007 Quantum ESPRESSO group
+! Copyright (C) 2007-2024 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba
   USE lsda_mod,             ONLY : nspin, current_spin
-  USE wvfct,                ONLY : current_k
+  USE wvfct,                ONLY : npwx, current_k
   USE gvect,                ONLY : g
   USE scf,                  ONLY : kedtau
   USE klist,                ONLY : xk, igk_k
@@ -36,25 +36,23 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   !! the wavefunction
   COMPLEX(DP) :: hpsi(ldap,mp)
   !! Hamiltonian dot psip
-  !FIXME! this variable should be mapped with openACC 
-  !$acc declare deviceptr(hpsi,psip) 
   !
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: psi_g(:,:)
-  INTEGER :: im, i, j, nrxxs, ebnd, brange, psdim, dim_g
+  INTEGER :: im, i, j, nrxxs, ebnd, brange, dim_g
   REAL(DP) :: kplusgi, fac
   COMPLEX(DP), PARAMETER :: ci=(0.d0,1.d0)
   !
   CALL start_clock( 'h_psi_meta' )
   !
   nrxxs = dffts%nnr
-  psdim = SIZE(psic)
   dim_g = 1
   IF (gamma_only) dim_g = 2
   !
-  ALLOCATE( psi_g(psdim,dim_g) )
+  ALLOCATE( psi_g(npwx,dim_g) )
   !$acc enter data create(psi_g, psic) copyin(kedtau) 
+  !$acc data present_or_copyin(psip) present_or_copyout(hpsi) 
   !
   IF (gamma_only) THEN
      !
@@ -128,6 +126,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
      !
   ENDIF
   !
+  !$acc end data
   !$acc exit data delete(psi_g,psic,kedtau)
   DEALLOCATE( psi_g )
   !

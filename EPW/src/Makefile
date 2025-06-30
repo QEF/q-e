@@ -38,6 +38,7 @@ printing.o \
 utilities/kfold.o \
 utilities/bzgrid.o \
 io/io_supercond.o \
+supercond_vertex.o \
 utilities/utilities.o \
 supercond_common.o \
 supercond.o \
@@ -73,6 +74,13 @@ wann_common.o \
 polaron.o \
 qdabs.o\
 wfpt.o \
+exphonon.o \
+expolaron.o \
+utilities/screening.o \
+tdbe_driver.o \
+tdbe_mod.o \
+tdbe_common.o \
+phph.o \
 utilities/screening.o \
 #default : epw
 

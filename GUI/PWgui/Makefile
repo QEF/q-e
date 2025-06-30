@@ -3,7 +3,8 @@ REPACK  = $(HERE)/sys_utils/repack.sh
 STARKIT = $(HERE)/sys_utils/starkit.sh
 SCRATCH = .scratch
 
-PWGUI_VERSION    = $(shell cat VERSION)
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_version.h )
+PWGUI_VERSION    = $(VERSION)
 PWGUI_TARNAME    = PWgui-$(PWGUI_VERSION)
 PWGUI_DIRNAME    = PWgui-$(PWGUI_VERSION)
 PWGUI_VFS        = pwgui_vfs
@@ -61,7 +62,10 @@ distclean: veryclean
 	-cd lib/; rm -f *
 	cd $(PWGUI_VFS); $(MAKE) distclean	
 
-init:
+version:
+	echo '$(VERSION)' > VERSION
+
+init: version
 	-cd doc/; $(MAKE)
 	-if test ! -d lib; then mkdir lib; fi
 	-cd lib/; rm -f Guib-*; ln -sf $(_GUIB_DIR) $(_GUIB_DIRNAME)

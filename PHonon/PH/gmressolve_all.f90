@@ -89,7 +89,6 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   complex(kind=DP) ::  bk, ak
   !  the ratio between rho
   !  step length
-  complex(kind=DP), external ::  zdotc
   !  the scalar product
   real(kind=DP) :: t
   complex(kind=DP):: c, s, ei
@@ -152,7 +151,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call cg_psi(ndmx, ndim, 1, r(1,ibnd), h_diag(1,ibnd), 1 )
 !print*,'r3',sum(dpsi),sum(d0psi)
            ! norm of pre. r : bet = |r|
-           bet(ibnd) = zdotc (ndim, r(1,ibnd), 1, r(1,ibnd), 1)
+           bet(ibnd) = dot_product (r(1:ndim,ibnd), r(1:ndim,ibnd))
 #if defined(__MPI)
            call mp_sum ( bet(ibnd), intra_bgrp_comm  )
 #endif
@@ -212,8 +211,8 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            do i = 1, j
               !
               ! compute hm(i,j)
-!              hm(i,j) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
-              hm4para(1) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
+              ! hm(i,j) = dot_product (w(1:ndim,ibnd), v(1:ndim,ibnd,i))
+              hm4para(1) = dot_product (w(1:ndim,ibnd), v(1:ndim,ibnd,i))
 #if defined(__MPI)
               call mp_sum ( hm4para, intra_bgrp_comm )
 #endif
@@ -223,8 +222,8 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
               !
            enddo
            !   compute hm(j+1,j)
-!           hm(j+1,j) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
-           hm4para(1) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
+           ! hm(j+1,j) = dot_product (w(1:ndim,ibnd), w(1:ndim,ibnd))
+           hm4para(1) = dot_product (w(1:ndim,ibnd), w(1:ndim,ibnd))
 #if defined(__MPI)
            call mp_sum ( hm4para, intra_bgrp_comm )
 #endif

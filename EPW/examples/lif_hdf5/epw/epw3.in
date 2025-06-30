@@ -1,0 +1,36 @@
+--------
+&inputepw
+  prefix            = 'lif'
+  outdir            = './'
+
+  elph              = .true.
+  epwwrite          = .false.
+  epwread           = .true.
+
+  lpolar            = .true.
+  nbndsub           =  10 
+  dvscf_dir         = './save/'
+
+  exciton           = .true.
+  explrn            = .true.
+  plot_explrn_e     = .true.
+  plot_explrn_h     = .true.
+
+  negnv_explrn      = 20 
+  nbndv_explrn      = 3   ! Match the valence band in BSE calcs. 
+  nbndc_explrn      = 7   ! Match the conduction band in BSE calcs. 
+
+  step_wf_grid_plrn = 2 
+
+  nk1               = 4 
+  nk2               = 4 
+  nk3               = 4 
+  nq1               = 4 
+  nq2               = 4 
+  nq3               = 4 
+
+  band_plot         = .false.
+  filkf             = './path.kpt'
+  filqf             = './path.kpt'
+/
+

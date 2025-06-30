@@ -7,7 +7,7 @@
 !
 !
 !------------------------------------------------
-SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
+SUBROUTINE addnlcc_zstar_eu_us( drhop )
 !----------===================-------------------
 
   USE kinds, ONLY : DP
@@ -22,7 +22,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   IMPLICIT NONE
 
-  COMPLEX(DP) :: drhoscf (dfftp%nnr,nspin_mag,3)
+  COMPLEX(DP) :: drhop (dfftp%nnr,nspin_mag,3)
 
 
   INTEGER :: nrtot, ipert, is, irr, mode
@@ -52,7 +52,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            dvaux = (0.0_dp,0.0_dp)
            CALL addcore(u(1, mode), drhoc)
            !
-           CALL dv_of_drho_xc(dvaux, drho = drhoscf(1, 1, ipol))
+           CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipol))
            !
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &

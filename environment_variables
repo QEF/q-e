@@ -120,7 +120,7 @@ if test "`which curl`" = "" ; then
       # echo "wget found"
    fi
 else
-   WGET="curl -o"
+   WGET="curl -f -o"
    # echo "curl found"
 fi
 

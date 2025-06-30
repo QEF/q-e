@@ -22,10 +22,11 @@ PROGRAM kcw
   !!
   !!  Code written by Nicola Colonna (EPFL April 2019) 
   !!
-  !!
   !!  Non-collinear code written in 2022-24 by 
   !!  Antimo Marrazzo (SISSA, UniTS) and Nicola Colonna (PSI)
-  !!  A. Marrazzo and N. Colonna, arXiv:2402.14575 (2024) 
+  !!  A. Marrazzo and N. Colonna, arXiv:2402.14575 (2024), Phys. Rev. Research 6, 033085 (2024)
+  !!
+  !!  Implementation of Symmetries by G. Cistaro and N. Colonna (EPFL/PSI 2024)
   !!
   !
   USE mp_global,         ONLY : mp_startup,mp_global_end 

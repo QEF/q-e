@@ -12,7 +12,7 @@
     ntyp            = 1
     ecutwfc         = 20
     occupations     = 'fixed'
-    nbnd = 12
+    nbnd = 9
  /
  &electrons
     diago_full_acc  = .true.

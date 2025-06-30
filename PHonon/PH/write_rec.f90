@@ -23,7 +23,7 @@ CONTAINS
 
   !-----------------------------------------------------------------------
   SUBROUTINE write_rec( where, irr, dr2, iter, convt, npe, dvscfin, &
-                        drhoscfh, dbecsum )
+                        drhop, dbecsum )
     !-----------------------------------------------------------------------
     !! This routine saves the information needed to recover the phonon.
     !
@@ -36,13 +36,14 @@ CONTAINS
     USE fft_base, ONLY : dfftp
     USE uspp, ONLY : okvan, nlcc_any
     USE phus, ONLY : int1, int2
-    USE control_ph, ONLY : where_rec, rec_code, reduce_io, current_iq
+    USE control_lr, ONLY : where_rec, rec_code, reduce_io
+    USE control_ph, ONLY : current_iq
     USE ph_restart, ONLY : ph_writefile
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE io_files, ONLY : seqopn
 
     USE lrus,   ONLY : int3
-    USE eqv,    ONLY : drhoscfs
+    USE eqv,    ONLY : drhos
     USE qpoint, ONLY : nksq
 
     IMPLICIT NONE
@@ -51,7 +52,7 @@ CONTAINS
     LOGICAL, INTENT(IN) :: convt
     REAL(DP), INTENT(IN) :: dr2
     COMPLEX(DP), INTENT(IN) :: dvscfin(dfftp%nnr,nspin_mag,npe)
-    COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoscfh (dfftp%nnr, nspin_mag, npe)
+    COMPLEX(DP), INTENT(IN), OPTIONAL :: drhop (dfftp%nnr, nspin_mag, npe)
     COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
     INTEGER :: ierr
@@ -83,8 +84,8 @@ CONTAINS
     WRITE (iunrec) this_pcxpsi_is_on_file
     WRITE (iunrec) zstareu0, zstarue0
     WRITE (iunrec) dvscfin
-    IF (PRESENT(drhoscfh).AND.convt.AND.nlcc_any) WRITE (iunrec) drhoscfh
-    IF (convt.AND.ALLOCATED(drhoscfs)) WRITE(iunrec) drhoscfs
+    IF (PRESENT(drhop).AND.convt.AND.nlcc_any) WRITE (iunrec) drhop
+    IF (convt.AND.ALLOCATED(drhos)) WRITE(iunrec) drhos
     IF (PRESENT(dbecsum)) WRITE(iunrec) dbecsum
     IF (okvan) WRITE (iunrec) int1, int2, int3
 
@@ -97,7 +98,7 @@ CONTAINS
   END SUBROUTINE write_rec
   
   !-----------------------------------------------------------------------------------
-  SUBROUTINE read_rec( dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum )
+  SUBROUTINE read_rec( dr2, iter0, npe, dvscfin, dvscfins, drhop, dbecsum )
     !--------------------------------------------------------------------------------
     !! General restart reading routine.
     !
@@ -111,13 +112,14 @@ CONTAINS
     USE lsda_mod, ONLY : nspin
     USE noncollin_module, ONLY : noncolin, nspin_mag
     USE units_ph, ONLY : this_pcxpsi_is_on_file
-    USE control_ph, ONLY : ext_recover, convt
+    USE control_lr, ONLY : convt
+    USE control_ph, ONLY : ext_recover
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE phus, ONLY : int1, int2
     USE io_files, ONLY : seqopn
 
     USE lrus, ONLY : int3
-    USE eqv,  ONLY : drhoscfs
+    USE eqv,  ONLY : drhos
 
     IMPLICIT NONE
     INTEGER, INTENT(OUT) :: iter0
@@ -125,7 +127,7 @@ CONTAINS
     REAL(DP), INTENT(OUT) :: dr2
     COMPLEX(DP), INTENT(OUT) :: dvscfin (dfftp%nnr, nspin_mag, npe)
     COMPLEX(DP), INTENT(OUT) :: dvscfins (dffts%nnr, nspin_mag, npe)
-    COMPLEX(DP), INTENT(OUT), OPTIONAL :: drhoscfh (dfftp%nnr, nspin_mag, npe)
+    COMPLEX(DP), INTENT(OUT), OPTIONAL :: drhop (dfftp%nnr, nspin_mag, npe)
     COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
     INTEGER :: is, ipol
@@ -137,8 +139,8 @@ CONTAINS
     READ (iunrec) this_pcxpsi_is_on_file
     READ (iunrec) zstareu0, zstarue0
     READ (iunrec) dvscfin
-    IF (convt.AND.nlcc_any) READ(iunrec) drhoscfh
-    IF (convt.AND.ALLOCATED(drhoscfs)) READ(iunrec) drhoscfs
+    IF (convt.AND.nlcc_any) READ(iunrec) drhop
+    IF (convt.AND.ALLOCATED(drhos)) READ(iunrec) drhos
     IF (PRESENT(dbecsum)) READ(iunrec) dbecsum
     IF (okvan) THEN
        READ (iunrec) int1, int2, int3

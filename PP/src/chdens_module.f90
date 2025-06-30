@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@
 MODULE chdens_module
 CONTAINS
 !-----------------------------------------------------------------------
-SUBROUTINE chdens (plot_files,plot_num)
+SUBROUTINE chdens (plot_files,plot_num,nc)
   !-----------------------------------------------------------------------
   !      Writes the charge density (or potential, or polarisation)
   !      into a file format suitable for plotting
@@ -46,6 +46,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE run_info,   ONLY: title
   USE control_flags, ONLY: gamma_only
   USE wavefunctions,  ONLY: psic
+  USE wannier,        ONLY : dfftp_c, dffts_c
 
   IMPLICIT NONE
   CHARACTER (len=256), DIMENSION(:), ALLOCATABLE, INTENT(in) :: plot_files
@@ -56,11 +57,13 @@ SUBROUTINE chdens (plot_files,plot_num)
   !
   INTEGER, INTENT(in) :: plot_num
   !
+  INTEGER, INTENT(IN) :: nc(3) ! dimension of the supercell 
+  !
   INTEGER, PARAMETER :: nfilemax = 7
   ! maximum number of files with charge
 
   INTEGER :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, i, output_format, idum, direction, iplot
+       na, i, j, k, n, output_format, idum, direction, iplot
 
   real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), isovalue,heightmin,heightmax
@@ -86,7 +89,7 @@ SUBROUTINE chdens (plot_files,plot_num)
           '3D                  ', &
           '2D polar on a sphere'/)
 
-  real(DP) :: celldms (6), gcutmsa, duals, zvs(ntypx), ats(3,3)
+  real(DP) :: celldms (6), gcutmsa, duals, zvs(ntypx), ats(3,3), bgs(3,3)
   real(DP), ALLOCATABLE :: taus (:,:), rhor(:), rhos(:)
   INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
@@ -109,7 +112,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   !   set the DEFAULT values
   !
   nfile         = 1
-  filepp(1)     = ' '
+  filepp(1)     = 'tmp.pp'
   weight(1)     = 1.0d0
   iflag         = 0
   radius        = 1.0d0
@@ -216,7 +219,6 @@ SUBROUTINE chdens (plot_files,plot_num)
         WRITE(output_files(iplot),"(A,A)") TRIM(plot_files(iplot)), TRIM(fileout)
     ENDDO
   ENDIF
-
 
   ! check for iflag
 
@@ -327,15 +329,19 @@ SUBROUTINE chdens (plot_files,plot_num)
      CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
   ENDIF
 
-
   ! Looping over output files to be written
   DO iplot=1, SIZE(output_files) 
 
     fileout = output_files(iplot)
     IF (.NOT. luse_filepp) filepp(1) = plot_files(iplot)
 
-    ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-    ALLOCATE  (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+    IF (plot_num==25) THEN
+       ALLOCATE (rhor(dffts_c%nr1x*dffts_c%nr2x*dffts_c%nr3x))
+       ALLOCATE (rhos(dffts_c%nr1x*dffts_c%nr2x*dffts_c%nr3x))
+    ELSE
+       ALLOCATE (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+       ALLOCATE (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+    ENDIF
     ALLOCATE  (taus( 3 , nat))
     ALLOCATE  (ityps( nat))
     !
@@ -346,11 +352,29 @@ SUBROUTINE chdens (plot_files,plot_num)
     !
     DO ifile = 1, nfile
        !
+       IF (ionode) &
        CALL plot_io (filepp (ifile), title, nr1sxa, nr2sxa, nr3sxa, &
             nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
             duals, ecuts, idum, atms, ityps, zvs, taus, rhos, - 1)
+       CALL mp_bcast( nr1sxa, ionode_id, world_comm )
+       CALL mp_bcast( nr2sxa, ionode_id, world_comm )
+       CALL mp_bcast( nr3sxa, ionode_id, world_comm )
+       CALL mp_bcast( nr1sa, ionode_id, world_comm )
+       CALL mp_bcast( nr2sa, ionode_id, world_comm )
+       CALL mp_bcast( nr3sa, ionode_id, world_comm )
+       CALL mp_bcast( nats, ionode_id, world_comm )
+       CALL mp_bcast( ntyps, ionode_id, world_comm )
+       CALL mp_bcast( ibravs, ionode_id, world_comm )
+       CALL mp_bcast( celldms, ionode_id, world_comm )
+       CALL mp_bcast( gcutmsa, ionode_id, world_comm )
+       CALL mp_bcast( duals, ionode_id, world_comm )
+       CALL mp_bcast( ecuts, ionode_id, world_comm )
   
        IF (ifile==1.and.plot_num==-1) THEN
+          CALL mp_bcast( atms, ionode_id, world_comm )
+          CALL mp_bcast( ityps, ionode_id, world_comm )
+          CALL mp_bcast( zvs, ionode_id, world_comm )
+          CALL mp_bcast( taus, ionode_id, world_comm )
           atm=atms
           ityp=ityps
           zv=zvs
@@ -358,10 +382,12 @@ SUBROUTINE chdens (plot_files,plot_num)
        ENDIF
        !
        IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-       IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
-            errore ('chdens', 'incompatible nr1x or nr2x', 1)
-       IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
-            errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
+       IF (.NOT.plot_num==25) THEN
+          IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
+               errore ('chdens', 'incompatible nr1x or nr2x', 1)
+          IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
+              errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
+       ENDIF
        IF (ibravs/=ibrav) CALL errore ('chdens', 'incompatible ibrav', 1)
        IF (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
            abs(ecuts-ecutwfc)>1.d-8) &
@@ -375,6 +401,7 @@ SUBROUTINE chdens (plot_files,plot_num)
        !
        rhor (:) = rhor (:) + weight (ifile) * rhos (:)
     ENDDO
+    !
     DEALLOCATE (ityps)
     DEALLOCATE (taus)
     DEALLOCATE (rhos)
@@ -397,10 +424,10 @@ SUBROUTINE chdens (plot_files,plot_num)
     IF ( (isostm_flag) .AND. ( (plot_num == -1) .OR. (plot_num == 5) ) ) THEN
        IF ( .NOT. (iflag == 2))&
           CALL errore ('chdens', 'isostm should have iflag = 2', 1)
+       IF (ionode) &
        CALL isostm_plot(rhor, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
              isovalue, heightmin, heightmax, direction)     
     END IF
-  
     
     !
     !    At this point we start the calculations, first we normalize the
@@ -493,6 +520,34 @@ SUBROUTINE chdens (plot_files,plot_num)
        !
     ENDIF
     !
+    IF (plot_num==25) THEN
+       !
+       ! Constructing the supercell nc(1) x nc(2) x nc(3)
+       DO i = 1, 3
+          ats(:,i) = at(:,i) * nc(i)
+          bgs(:,i) = bg(:,i) / nc(i)
+       ENDDO
+       nats = nat*nc(1)*nc(2)*nc(3)
+       ALLOCATE (taus(3,nats))
+       ALLOCATE (ityps(nats))
+       n = 0
+       DO i = 1, nc(1)
+          DO j = 1, nc(2)
+             DO k = 1, nc(3)
+                DO na = 1, nat
+                   n = n + 1
+                   taus(:,n) = tau(:,na) + DBLE(i)*at(:,1) &
+                                         + DBLE(j)*at(:,2) &
+                                         + DBLE(k)*at(:,3)
+                   ityps(n) = ityp(na)
+                ENDDO
+             ENDDO
+          ENDDO
+       ENDDO
+       IF (iflag/=3) CALL errore("chdens","plot_num=25 currently supports only iflag=3",1) 
+       !
+    ENDIF 
+    ! 
     !     And now the plot (rhog in G-space, rhor in real space)
     !
     IF (iflag <= 1) THEN
@@ -520,15 +575,45 @@ SUBROUTINE chdens (plot_files,plot_num)
        ENDIF
   
     ELSEIF (iflag == 3) THEN
-  
+
+      IF (plot_num==25) THEN
+       !
+       IF (output_format == 5.and.ionode) THEN
+          !
+          ! XCRYSDEN FORMAT
+          !
+          CALL xsf_struct (alat, ats, nats, taus, atm, ityps, ounit)
+          CALL xsf_fast_datagrid_3d &
+               (rhor, dffts_c%nr1, dffts_c%nr2, dffts_c%nr3, &
+                dffts_c%nr1x, dffts_c%nr2x, dffts_c%nr3x, ats, alat, ounit)
+          !
+       ELSEIF (output_format == 6.and.ionode ) THEN
+          !
+          ! GAUSSIAN CUBE FORMAT
+          !
+          IF (TRIM(interpolation) == 'fourier') THEN
+             CALL write_cubefile (alat, ats, bgs, nats, taus, atm, ityps, rhor, &
+                  dffts_c%nr1, dffts_c%nr2, dffts_c%nr3, &
+                  dffts_c%nr1x, dffts_c%nr2x, dffts_c%nr3x, ounit)
+          ELSE
+             CALL errore("chdens","The chosen type of interpolation is not supported",1)
+          END IF 
+          !
+       ELSEIF (ionode) THEN
+          CALL errore("chdens","The chosen type of the output format is not supported",1)
+       END IF
+       !
+      ELSE
+       !
        IF (output_format == 5.and.ionode) THEN
           !
           ! XCRYSDEN FORMAT
           !
           CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
           CALL xsf_fast_datagrid_3d &
-               (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
-  
+               (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
+ 
        ELSEIF (output_format == 6.and.ionode ) THEN
           !
           ! GAUSSIAN CUBE FORMAT
@@ -568,7 +653,9 @@ SUBROUTINE chdens (plot_files,plot_num)
              !
           ENDIF
        ENDIF
-  
+       !
+      ENDIF
+
     ELSEIF (iflag == 4) THEN
        radius = radius / alat
        CALL plot_2ds (nx, ny, radius, ngm, g, rhog, output_format, ounit)
@@ -583,11 +670,12 @@ SUBROUTINE chdens (plot_files,plot_num)
     !
     IF (allocated(rhog)) DEALLOCATE(rhog)
     DEALLOCATE(rhor)
-  
+    !
+    IF (ALLOCATED(taus)) DEALLOCATE(taus)
+    IF (ALLOCATED(ityps)) DEALLOCATE(ityps)
+    !
   ENDDO
 
-  DEALLOCATE(tau)
-  DEALLOCATE(ityp)
   IF (ALLOCATED(output_files)) DEALLOCATE(output_files)
 
 END SUBROUTINE chdens

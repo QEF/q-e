@@ -1,0 +1,49 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+  dvscf_dir   = './'
+  elph        = .true.
+  epbwrite    = .false.
+  epbread     = .false.
+  epwwrite    = .false.
+  epwread     = .true.
+!  etf_mem     = 1
+
+  restart_step = 1000
+  nbndsub     =  8
+!  eig_read    = .true.
+  asr_typ     = 'crystal'
+  use_ws      = .true.
+
+  wannierize  = .false.
+  
+  ephwrite    = .true.
+  mp_mesh_k   = .true.
+
+  efermi_read = .true.
+  !!! consider both cbands and vbands
+!  fermi_energy = 6.5   
+!  fsthick     = 1.2 ! eV
+  !!! consider only conductin bands
+  fermi_energy  = 7.1 ! eV 
+  fsthick       = 0.3 ! eV 
+  !!! consider only valence bands
+  ! fermi_energy = 5.5
+  ! fsthick = 0.8
+  temps      = 1 ! K
+  degaussw    = 0.005 ! eV
+  nkf1        = 15 
+  nkf2        = 15 
+  nkf3        = 15 
+  nqf1        = 15 
+  nqf2        = 15 
+  nqf3        = 15 
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /

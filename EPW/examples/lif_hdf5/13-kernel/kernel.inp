@@ -1,0 +1,5 @@
+number_val_bands 3 
+number_cond_bands 7  
+no_symmetries_coarse_grid
+screening_semiconductor
+exciton_Q_shift 2 0 0 0

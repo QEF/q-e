@@ -219,7 +219,7 @@ SUBROUTINE ep_matrix_element_wannier()
       dvscfins = (0.0_DP,0.0_DP)
 
       do ipol = 1, 3
-        CALL davcio_drho ( dvscfins(:,:,ipol),  lrdrho, iudrho,  ipol,  -1 )
+        CALL davcio_drho ( dvscfins(1,1,ipol),  lrdrho, iudrho,  ipol,  -1 )
         call dv_of_drho ( dvscfins(:,:,ipol))
       end do
 
@@ -586,7 +586,6 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
     ios
 
   COMPLEX(DP) , ALLOCATABLE :: elphmat (:,:,:),aux_psi(:,:)
-  COMPLEX(DP), EXTERNAL :: zdotc
   INTEGER, EXTERNAL :: find_free_unit
   !
   allocate (evq(npol*npwx,nbnd))
@@ -673,13 +672,14 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
       !
       ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
       !
+      !FIXME use zgemm like in elphon.f90 lines 562-:-570 ... or remove duplication is useless 
       DO ibnd =elph_nbnd_min, elph_nbnd_max
         DO jbnd = elph_nbnd_min, elph_nbnd_max
-          elphmat (jbnd, ibnd, ipert) = zdotc (npwq_refolded, evq (1, jbnd), 1, &
-            dvpsi (1, ibnd), 1)
+        elphmat (jbnd, ibnd, ipert) = dot_product( evq (1:npwq_refolded, jbnd), &
+                                                               dvpsi (1:npwq_refolded, ibnd)) 
           IF (noncolin) &
             elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
-            zdotc (npwq_refolded, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
+            dot_product (evq(npwx+1:npwx+npwq_refolded,jbnd), dvpsi(npwx+1:npwq_refolded,ibnd)) 
         ENDDO
       ENDDO
     ENDDO

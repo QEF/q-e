@@ -49,8 +49,9 @@ MODULE qexsd_init
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
-            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
-            qexsd_init_rism3d, qexsd_init_rismlaue, qexsd_init_esm, qexsd_init_sawtooth_info
+            qexsd_init_dftU, qexsd_init_vdw,     &
+            qexsd_init_berryPhaseOutput, qexsd_init_rism3d, qexsd_init_rismlaue,& 
+            qexsd_init_esm, qexsd_init_sawtooth_info
  !
 CONTAINS
   !
@@ -410,7 +411,7 @@ CONTAINS
          IF (.NOT. dft_is_hybrid) RETURN 
          IF (PRESENT(nq1) .AND. PRESENT(nq2) .AND. PRESENT(nq3) ) THEN
             qpoint_grid_opt => qpoint_grid           
-            CALL qes_init (qpoint_grid, "qpoint_grid", nq1, nq2, nq3, "")
+            CALL qes_init (qpoint_grid, "qpoint_grid", max(nq1,1), max(nq2,1), max(nq3,1), "")
          END IF 
          !
          CALL qes_init ( obj, "hybrid", qpoint_grid_opt, ecutfock, exx_fraction, &
@@ -423,8 +424,8 @@ CONTAINS
       !
       SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, &
                                   is_hubbard_back, backall, hubb_n2, hubb_l2, hubb_n3, hubb_l3,    & 
-                                  noncolin, lda_plus_u_kind, U_projection_type, hubb_occ, U, U2,  J0, J,     &
-                                  n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, Hub_nsg, Hubbard_V )
+                                  noncolin, lda_plus_u_kind, U_projection_type, hubb_occ, U, U2,  J0, J, Um,  &
+                                  n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, order_um,Hub_ns_nc, Hub_nsg, Hubbard_V )
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
          INTEGER,INTENT(IN)             :: nsp
@@ -445,18 +446,22 @@ CONTAINS
          REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U2(:), J0(:), alpha(:), alpha_back(:), &
                                            beta(:), J(:,:), hubb_occ(:,:)                           
          REAL(DP),OPTIONAL,INTENT(IN)   :: hubbard_v(:,:,:)
+         REAL(DP),OPTIONAL,INTENT(IN)   :: Um(:,:,:)
+         INTEGER, OPTIONAL, INTENT(IN)  :: order_um(:,:,:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:), Hub_nsg(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
          CHARACTER(10), ALLOCATABLE            :: label(:)
          TYPE(HubbardCommon_type),ALLOCATABLE  :: U_(:), U2_(:), J0_(:), alpha_(:), &
                                                   alpha_back_(:), beta_(:)
+         TYPE(HubbardM_type),ALLOCATABLE       :: Um_(:)
          TYPE(HubbardOcc_type),ALLOCATABLE     :: hubb_occ_(:)
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
          TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
          TYPE(HubbardBack_type),ALLOCATABLE    :: Hub_back_(:)
          TYPE(HubbardInterSpecieV_type),ALLOCATABLE :: Hub_V_(:) 
+         TYPE(orderUm_type), ALLOCATABLE       :: order_Um_(:)
          LOGICAL                               :: noncolin_ =.FALSE.
          INTEGER                               :: icheck 
          !
@@ -488,6 +493,10 @@ CONTAINS
          IF (PRESENT(alpha_back))  CALL init_hubbard_commons(alpha_back, alpha_back_,label, "Hubbard_alpha_back") 
          IF (PRESENT(beta))        CALL init_hubbard_commons(beta, beta_, label, "Hubbard_beta")
          IF (PRESENT(J))           CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
+         IF (PRESENT(Um))  THEN 
+           CALL init_hubbardM (Um, Um_, label, "Hubbard_Um") 
+           IF (present(order_um)) CALL init_orderUm  (order_um, order_Um_, label, "Hub_m_order") 
+         END IF 
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))   THEN 
                                    CALL init_Hubbard_ns(Hubbard_ns_ , label, Hub_ns)
@@ -498,11 +507,13 @@ CONTAINS
          END IF 
          
          !
-         CALL qes_init (obj, "dftU", .true., lda_plus_u_kind, hubb_occ_,  U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
-                       Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
+         CALL qes_init (obj, "dftU", .true., lda_plus_u_kind, hubb_occ_,  U_, Um_, J0_, alpha_, beta_,  J_, & 
+                       starting_ns_, Hub_V_, Hubbard_ns_, order_Um_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_occs(hubb_occ_)
          CALL reset_hubbard_commons(U_)
+         CALL reset_hubbardM(Um_) 
+         CALL reset_order_Um(order_Um_) 
          CALL reset_hubbard_commons(U2_)
          CALL reset_hubbard_commons(beta_) 
          CALL reset_hubbard_commons(J0_)
@@ -560,6 +571,77 @@ CONTAINS
                IF (TRIM(labs(i)) =='no Hubbard') objs(i)%lwrite = .FALSE. 
             END DO 
          END SUBROUTINE init_hubbard_J
+         !
+         SUBROUTINE init_hubbardM(dati, objs, labs, tag) 
+           IMPLICIT NONE 
+           real(dp) :: dati(:,:,:)
+           type(hubbardM_type),allocatable :: objs(:) 
+           character(len=*) :: labs(:), tag
+           !
+           integer :: nhubm, ihubm,nt, nspin, msize, it, ispin, nhubmtot, iobj, ldim
+           integer, allocatable :: packdati(:),channels_per_specimen(:),hubm(:) 
+           real(dp)  :: uvalue
+           !
+           nspin = size(dati,2) 
+           nhubm = count([(any(dati(:,:,it)/=0.0_dp),it=1,nsp)])
+           msize = size(dati,1) 
+           if (nhubm .EQ.  0) RETURN
+           allocate(channels_per_specimen(nhubm), &
+                   packdati(nhubm),               &
+                   hubm(size(dati,1))             &
+                   )  
+           packdati = pack([(it,it=1,nsp)], mask=[(any(dati(:,:,it)/=0.0),it=1,nsp)])
+           do ihubm =1, nhubm
+               channels_per_specimen(ihubm)  = count([(any(dati(:,ispin, packdati(ihubm))/=0),ispin=1, nspin)])
+           end do 
+           nhubmtot = sum(channels_per_specimen(:))  
+           allocate(objs(nhubmtot)) 
+           !
+           do ihubm = 1, nhubm 
+             it = packdati(ihubm)
+             ldim = 2 * l(it) + 1 
+             if (noncolin ) ldim = 2 * ldim
+             iobj = 1  
+             if (ihubm .gt. 1)  iobj = iobj + sum(channels_per_specimen(1:ihubm-1)) 
+             do ispin = 1, nspin
+               if (ANY(dati(:,ispin,ihubm)/=0.0_DP)) THEN 
+                  call qes_init(objs(iobj), TRIM(tag), TRIM(species(it)),TRIM(labs(it)), ispin, &
+                                HubbardM = dati(1:ldim,ispin, ihubm)) 
+                  if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
+                  iobj = iobj + 1
+               end if
+             end do 
+           end do
+         END SUBROUTINE init_hubbardM
+         !
+         SUBROUTINE init_orderUm(dati, objs, labs, tag) 
+           IMPLICIT NONE 
+           integer  :: dati(:,:,:) 
+           type(orderUm_type),allocatable :: objs(:) 
+           character(len=*)  :: labs(:), tag 
+           ! 
+           integer :: iat, nat, nspin, ldim, ispin, iobj
+           character(len=10)  :: label_
+           character(len=4)  :: lab2ldim = 'spdf' 
+           !  
+           nat = size(dati,3)
+           nspin = size(dati,2) 
+           allocate (objs(nspin * nat)) 
+
+           do iat = 1, nat
+              label_ = labs(ityp(iat)) 
+              ldim  = 2 * index(lab2ldim, label_(2:2)) - 1
+              if (noncolin_) ldim = ldim * 2 
+              do ispin = 1, nspin 
+                 iobj = nspin*(iat-1) + ispin  
+                 if (ldim >= 1) &
+                   call qes_init(objs(iobj), tagname=tag, specie=TRIM(species(ityp(iat))), label=TRIM(label_),&
+                                 spin=ispin, atomidx=iat, OrderUm = dati(1:ldim,ispin,iat)) 
+                 if (label_ == "no hubbard") objs(iobj)%lwrite = .FALSE. 
+                 if (nspin == 1) objs(iobj)%spin_ispresent = .FALSE. 
+              end do 
+           end do    
+         END SUBROUTINE init_orderUm  
          !
          FUNCTION check_and_init_Hubbard_V (objs, hubbard_v_, specs, labs) result( ndim ) 
            IMPLICIT NONE 
@@ -652,6 +734,29 @@ CONTAINS
             DEALLOCATE(objs)
          END SUBROUTINE reset_hubbard_J 
          !
+         SUBROUTINE reset_hubbardM(objs) 
+           IMPLICIT NONE 
+           TYPE(HubbardM_type), ALLOCATABLE :: objs(:) 
+           INTEGER :: i 
+           IF (.NOT. ALLOCATED(objs)) RETURN 
+           DO i =1, SIZE(objs) 
+             CALL qes_reset(objs(i)) 
+           END DO 
+           DEALLOCATE(objs)
+         END SUBROUTINE reset_hubbardM
+         !
+         SUBROUTINE reset_order_Um(objs) 
+           IMPLICIT NONE 
+           TYPE(orderUm_type), ALLOCATABLE :: objs(:)
+           INTEGER :: i
+           IF (.NOT. ALLOCATED(objs)) RETURN 
+           DO i =1, SIZE(objs)
+              CALL qes_reset(objs(i)) 
+           END DO 
+           DEALLOCATE(objs) 
+         END SUBROUTINE reset_order_Um
+         !
+         !
          SUBROUTINE init_starting_ns(objs, labs )
             IMPLICIT NONE
             TYPE(starting_ns_type), ALLOCATABLE   :: objs(:)
@@ -718,7 +823,7 @@ CONTAINS
                         Hubb_occ_aux(ldim+m1,ldim+m2)=SQRT(DCONJG(Hub_ns_nc(m1,m2,4,i))*Hub_ns_nc(m1,m2,4,i))
                      END DO
                   END DO
-                  CALL qes_init (objs(i), TAGNAME = "Hubbard_ns_mod", SPECIE = TRIM(species(ityp(i))), &
+                  CALL qes_init (objs(i), TAGNAME = "Hubbard_ns_nc", SPECIE = TRIM(species(ityp(i))), &
                                LABEL = TRIM(labs(ityp(i))), SPIN =1, INDEX = i,ORDER ='F',Hubbard_NS = Hubb_occ_aux) 
                   IF (TRIM(labs(ityp(i))) == 'no Hubbard') objs(i)%lwrite = .FALSE. 
                END DO
@@ -818,6 +923,7 @@ CONTAINS
             CHARACTER   :: hubbard_shell(4) = ['s','p','d','f']
             n2_ispresent  = PRESENT(n2) .AND. PRESENT(l2)
             n3_ispresent  = PRESENT(n3) .AND. PRESENT(l3) 
+            allocate(idx(COUNT(labels_(1:nsp) /= "no Hubbard")))
             idx = PACK( [(i,i=1, nsp)] , [(INDEX(labels_(i),"no")==0,i=1,nsp)])
             ndim = SIZE(idx)
             ALLOCATE (objs(ndim))

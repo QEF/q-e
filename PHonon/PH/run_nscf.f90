@@ -24,7 +24,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE gvecs,     ONLY: gcutms
   !!!
   USE disp,            ONLY : lgamma_iq
-  USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
+  USE control_ph,      ONLY : recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
   USE io_global,       ONLY : stdout, ionode
@@ -36,7 +36,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
   USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
-  USE control_lr,      ONLY : ethr_nscf
+  USE control_lr,      ONLY : ethr_nscf, reduce_io
   USE qpoint,          ONLY : xq
   USE noncollin_module,ONLY : noncolin, domag
   USE klist,           ONLY : qnorm, nelec

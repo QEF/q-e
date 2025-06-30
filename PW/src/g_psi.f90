@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2024 Quantum ESPRESO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,117 +8,57 @@
 #define TEST_NEW_PRECONDITIONING
 !
 !-----------------------------------------------------------------------
-SUBROUTINE g_psi( lda, n, m, npol, psi, e )
-  !-----------------------------------------------------------------------
-  !! This routine computes an estimate of the inverse Hamiltonian
-  !! and applies it to m wavefunctions.
-  !
+subroutine g_psi (lda, n, m, npol, psi, e)
+  !---------------------------------------------------------------------
   USE kinds
-  USE g_psi_mod
-  USE g_psi_mod_gpum, ONLY : using_h_diag, using_s_diag
+  USE g_psi_mod, ONLY : h_diag, s_diag
   !
   IMPLICIT NONE
   !
   INTEGER, intent(in) :: lda
-  !! input: the leading dimension of psi
+  !! leading dimension of psi
   INTEGER,intent(in) :: n
-  !! input: the real dimension of psi
+  !! real dimension of psi
   INTEGER,intent(in) :: m
-  !! input: the number of coordinates of psi
+  !! number of bands
   INTEGER, intent(in) :: npol
-  !! input: the number of bands
-  COMPLEX(DP) :: psi(lda, npol, m)
-  !! inp/out: the psi vector
+  !! number of polarizations
+  COMPLEX(DP), intent(inout) :: psi(lda, npol, m)
+  !! wavefunctions (psi)
   REAL(DP), intent(in) :: e(m)
-  !! input: the eigenvectors
+  !! Kohn-Sham eigenvalues
   !
-  !  ... local variables
+  !    Local variables
   !
-  INTEGER :: ipol
-  ! counter of coordinates of psi
-  REAL(DP), PARAMETER :: eps = 1.0d-4
-  ! a small number
-  REAL(DP) :: x, scala, denm
+  real(DP), parameter :: eps = 1.0d-4
+  !! a small number
+  real(DP) :: scala = 1.0_dp
+  !! scaling factor
+  real(DP) :: x, denm
+  !! various factors
+  integer :: k, i, ipol
+  ! do loop counters
   !
-  INTEGER :: k, i
-  ! counter on psi functions
-  ! counter on G vectors
-  INTEGER, PARAMETER :: blocksize = 256
-  INTEGER :: iblock, numblock
-  ! chunking parameters
+  call start_clock_gpu ('g_psi')
   !
-  CALL using_h_diag(0); call using_s_diag(0)
-  CALL start_clock( 'g_psi' )
-  !
-  ! compute the number of chuncks
-  numblock  = (n+blocksize-1)/blocksize
-  !
+  !$acc parallel loop collapse(3) present(h_diag, s_diag, psi, e)
+  do ipol=1,npol
+     do k = 1, m
+        do i = 1, n
 #ifdef TEST_NEW_PRECONDITIONING
-  scala = 1.d0
-  !$omp parallel do collapse(3) private(x, denm)
-  DO k = 1, m
-     DO ipol=1, npol
-        DO iblock = 1, numblock
-           DO i = (iblock-1)*blocksize+1, MIN( iblock*blocksize, n )
-              x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
-              denm = 0.5_dp*(1.d0+x+SQRT(1.d0+(x-1)*(x-1.d0)))/scala
-              psi (i, ipol, k) = psi (i, ipol, k) / denm
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
-  !$omp end parallel do
+           x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
+           denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
 #else
-  !$omp parallel do collapse(3) private(denm)
-  DO ipol=1,npol
-     DO k = 1, m
-        DO iblock = 1, numblock
-           DO i = (iblock-1)*blocksize+1, MIN( iblock*blocksize, n )
-              denm = h_diag(i,ipol) - e(k) * s_diag(i,ipol)
-              !
-              ! denm = g2+v(g=0) - e(k)
-              !
-                 IF (ABS(denm) < eps) denm = SIGN( eps, denm )
-              !
-              ! denm = sign( max( abs(denm),eps ), denm )
-              !
-              psi(i, ipol, k) = psi(i, ipol, k) / denm
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
-  !$omp end parallel do
+           !
+           ! denm = g2+v(g=0)-e(k)*s  with  |denm| >= eps
+           !
+           denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
+           if (abs (denm) < eps) denm = sign (eps, denm)
 #endif
+           psi (i, ipol, k) = psi (i, ipol, k) / denm
+        enddo
+     enddo
+  enddo
+  call stop_clock ('g_psi')
   !
-  CALL stop_clock( 'g_psi' )
-  !
-  RETURN
-  !
-END SUBROUTINE g_psi
-
-!-----------------------------------------------------------------------
-subroutine g_1psi (lda, n, psi, e)
-  !-----------------------------------------------------------------------
-  !
-  !    As g_psi, for a single wavefunction
-  !
-  USE kinds
-  USE noncollin_module,     ONLY : npol
-
-  implicit none
-
-  integer, intent(in) :: lda, & ! input: the leading dimension of psi
-                         n      ! input: the real dimension of psi
-  complex(DP) :: psi (lda, npol) ! inp/out: the psi vector
-  real(DP), intent(in) :: e     ! input: the eigenvector
-  !
-  call start_clock ('g_1psi')
-
-  ! convert scalar e to size-1 vector [e] to exactly match g_psi argument type
-  CALL g_psi (lda, n, 1, npol, psi, [e])
-
-  call stop_clock ('g_1psi')
-
-  return
-
-end subroutine g_1psi
+end subroutine g_psi

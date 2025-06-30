@@ -43,7 +43,6 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    INTEGER :: nt, l1, l2, ibeta1, ibeta2, ibnd
    COMPLEX(DP) :: projauxvec4
    COMPLEX(DP), ALLOCATABLE :: aux1(:), projvec1vec2(:)
-   COMPLEX(DP), EXTERNAL :: ZDOTC
    ! 
    CALL start_clock ( 'doubleprojqq' )
    !
@@ -61,7 +60,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
       ! Calculate: projvec1vec2(ibnd) = < vec1(ibnd) | vec2 > for each l1 
       !
       DO ibnd = 1, nbnd
-         projvec1vec2(ibnd) = ZDOTC (npw1, vec1(:,ibnd), 1, vec2(:,ibeta1), 1)
+      projvec1vec2(ibnd) = dot_product (vec1(1:npw1,ibnd), vec2(1:npw1,ibeta1))
       ENDDO
       !
       CALL mp_sum(projvec1vec2, intra_bgrp_comm)
@@ -77,7 +76,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
       !
       ! Calculate projauxvec4 = < aux1 | vec4 >
       !
-      projauxvec4 = ZDOTC (npw2, aux1, 1, vec4, 1)
+      projauxvec4 = dot_product(aux1(1:npw2), vec4(1:npw2))
       !
       CALL mp_sum(projauxvec4, intra_bgrp_comm)
       !
@@ -127,7 +126,6 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
    INTEGER :: nt, l1, l2, ibeta1, ibeta2, ibnd
    COMPLEX(DP), ALLOCATABLE :: aux1(:)
    COMPLEX(DP) ::  projauxvec4
-   COMPLEX(DP), EXTERNAL :: ZDOTC
    !
    CALL start_clock ( 'doubleprojqq2' )
    ! 
@@ -150,7 +148,7 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
       !
       ! Calculate projauxvec4 = < aux1 | vec4 >
       !
-      projauxvec4 = ZDOTC (npw2, aux1, 1, vec4, 1)
+      projauxvec4 = dot_product(aux1(1:npw2), vec4(1:npw2))
       !
       CALL mp_sum(projauxvec4, intra_bgrp_comm)
       !
@@ -206,7 +204,6 @@ SUBROUTINE term_one_1 (ik, icart, jcart, evc_, &
     !
     INTEGER     :: npw, ikk, ibnd
     COMPLEX(DP), ALLOCATABLE :: d2wfcatomk(:), sd2wfcatomk(:), projd2(:)
-    COMPLEX(DP), EXTERNAL :: ZDOTC
     !
     ALLOCATE(d2wfcatomk(npwx))
     ALLOCATE(sd2wfcatomk(npwx))
@@ -232,7 +229,7 @@ SUBROUTINE term_one_1 (ik, icart, jcart, evc_, &
     ! at ihubst1 (i.e. I m) 
     !
     DO ibnd = 1, nbnd
-       projd2(ibnd) = ZDOTC (npw, evc_(:,ibnd), 1, sd2wfcatomk, 1)
+    projd2(ibnd) = dot_product (evc_(1:npw,ibnd), sd2wfcatomk(1:npw))
     ENDDO
     !
     CALL mp_sum(projd2, intra_bgrp_comm)
@@ -716,7 +713,6 @@ SUBROUTINE term_three (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
   COMPLEX(DP), ALLOCATABLE :: sdwfcatomk(:,:,:), projdphi(:,:,:), &
                               dpqq1(:), dpqq2(:), dpqq3(:),     &
                               dpqq4(:), aux(:), aux2(:)
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   ALLOCATE (sdwfcatomk(npwx,nwfcU,3)) 
   ALLOCATE (projdphi(nbnd,nwfcU,3)) 
@@ -750,10 +746,8 @@ SUBROUTINE term_three (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
         ! at ihubst1 (i.e. I m). 
         ! 
         DO ibnd = 1, nbnd
-           projdphi(ibnd, ihubst1, icar) = &
-                ZDOTC (npw, evc_(:,ibnd), 1, sdwfcatomk(:,ihubst1,icar), 1)
-           projdphi(ibnd, ihubst2, icar) = &
-                ZDOTC (npw, evc_(:,ibnd), 1, sdwfcatomk(:,ihubst2,icar), 1)
+           projdphi(ibnd, ihubst1, icar) = dot_product (evc_(1:npw,ibnd), sdwfcatomk(1:npw,ihubst1,icar))
+           projdphi(ibnd, ihubst2, icar) = dot_product (evc_(1:npw,ibnd), sdwfcatomk(1:npw,ihubst2,icar))
         ENDDO
         ! 
      ENDIF 
@@ -903,7 +897,6 @@ SUBROUTINE term_three_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
   COMPLEX(DP), ALLOCATABLE :: sdwfcatomk(:,:,:), projdphi(:,:,:),     &
                               dpqq1(:), dpqq2(:), dpqq3(:), dpqq4(:), &
                               aux(:), aux2(:)
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   ALLOCATE (sdwfcatomk(npwx,nwfcU,3))
   ALLOCATE (projdphi(nbnd,nwfcU,3)) 
@@ -937,10 +930,8 @@ SUBROUTINE term_three_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
         ! at ihubst1 (i.e. I m). 
         !
         DO ibnd = 1, nbnd
-           projdphi(ibnd, ihubst1, icar) = &
-                & ZDOTC (npw, evc_(:,ibnd), 1, sdwfcatomk(:,ihubst1,icar), 1)
-           projdphi(ibnd, ihubst2, icar) = &
-                & ZDOTC (npw, evc_(:,ibnd), 1, sdwfcatomk(:,ihubst2,icar), 1)
+           projdphi(ibnd, ihubst1, icar) = dot_product (evc_(1:npw,ibnd), sdwfcatomk(1:npw,ihubst1,icar))
+           projdphi(ibnd, ihubst2, icar) = dot_product (evc_(1:npw,ibnd), sdwfcatomk(1:npw,ihubst2,icar))
         ENDDO
         !
      ENDIF 

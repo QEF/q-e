@@ -77,8 +77,7 @@ SUBROUTINE read_ps_new ( psfile, upf, printout, ierr )
         CALL readrrkj (iunps, upf, ierr)
         IF ( ierr == 0 ) ierr = -5
      ELSE IF (psfile (lm3:l) =='.gth' .OR. psfile(lm3:l) == '.GTH' ) THEN
-        !! FIXME: should be done in the same way as for the other cases
-        CLOSE (iunps)
+        !! FIXME: should follow the same logic of the other cases
         ierr = -7
      ELSE
         CALL read_ncpp (iunps, upf, ierr)

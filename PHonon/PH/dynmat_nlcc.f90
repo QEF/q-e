@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine dynmat_nlcc (imode0, drhoscf, npe)
+subroutine dynmat_nlcc (imode0, drhop, npe)
   !
   !! This routine adds a contribution to the dynamical matrix due
   !! to the NLCC.
@@ -22,6 +22,7 @@ subroutine dynmat_nlcc (imode0, drhoscf, npe)
   USE modes,  ONLY : nirr, npert, u
   USE uspp,   ONLY : nlcc_any
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
+  USE control_lr, ONLY: lmultipole
 
   implicit none
 
@@ -29,7 +30,7 @@ subroutine dynmat_nlcc (imode0, drhoscf, npe)
   !! input: the starting mode
   integer, intent(in) :: npe
   !! input: the number of perturbations
-  complex(DP), intent(in) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  complex(DP), intent(in) :: drhop (dfftp%nnr, nspin_mag, npe)
   !! input: the change of density due to perturbation
 
   integer :: nrtot, ipert, jpert, is, irr, mode, mode1
@@ -67,7 +68,11 @@ subroutine dynmat_nlcc (imode0, drhoscf, npe)
      call addcore(u(1, mode), drhoc)
      !
      dvaux(:, :) = (0.d0, 0.d0)
-     CALL dv_of_drho_xc(dvaux, drho = drhoscf(1, 1, ipert), drhoc = drhoc)
+     IF (.NOT. lmultipole) THEN
+       CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipert), drhoc = drhoc)
+     ELSE
+       CALL dv_of_drho_xc(dvaux, drho = drhop(1, 1, ipert))
+     ENDIF
      !
      mode1 = 0
      do irr = 1, nirr

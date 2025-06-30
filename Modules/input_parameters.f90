@@ -429,7 +429,7 @@ MODULE input_parameters
         !
         ! the following are the parameters for DFT+Hubbard
         LOGICAL :: lda_plus_u = .false.              
-        INTEGER :: lda_plus_u_kind = -1              
+        INTEGER :: lda_plus_u_kind = -1            
         INTEGER, PARAMETER :: nspinx=2 ! lqmax is taken from upf_params
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         INTEGER  :: Hubbard_l(nsx)  = -1
@@ -440,17 +440,22 @@ MODULE input_parameters
         INTEGER  :: Hubbard_n3(nsx) = -1
         REAL(DP) :: Hubbard_U(nsx)  = 0.0_DP
         REAL(DP) :: Hubbard_U2(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_Um(lqmax,nspinx,nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_Um_nc(2*lqmax,nsx) = 0.0_DP
         REAL(DP) :: Hubbard_V(natx,natx*(2*sc_size+1)**3,4) = 0.0_DP 
         REAL(DP) :: Hubbard_J0(nsx) = 0.0_DP
         REAL(DP) :: Hubbard_J(3,nsx) = 0.0_DP
         REAL(DP) :: Hubbard_alpha(nsx) = 0.0_DP
         REAL(DP) :: Hubbard_alpha_back(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_alpha_m(lqmax,nspinx,nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_alpha_m_nc(2*lqmax,nsx) = 0.0_DP
         REAL(DP) :: Hubbard_beta(nsx) = 0.0_DP
         REAL(DP) :: Hubbard_occ(nsx,3) = -1.0_DP
         CHARACTER(len=80) :: Hubbard_projectors = ''
         LOGICAL :: reserv(nsx) = .FALSE.
         LOGICAL :: reserv_back(nsx) = .FALSE.
         LOGICAL :: hub_pot_fix = .FALSE.
+        LOGICAL :: orbital_resolved = .FALSE.
         LOGICAL :: backall(nsx) = .FALSE.
 
           ! For linking to DMFT calculations
@@ -682,9 +687,9 @@ MODULE input_parameters
              lda_plus_u, lda_plus_u_kind, U_projection_type, Hubbard_parameters, & ! obsolete
              Hubbard_U, Hubbard_J0, Hubbard_J, Hubbard_V, Hubbard_U_back,     & ! moved to HUBBARD card 
              Hubbard_alpha, Hubbard_alpha_back, Hubbard_beta, Hubbard_occ,    &
-             hub_pot_fix, reserv, reserv_back, dmft, dmft_prefix,             &
-             edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
-             input_dft, la2F, assume_isolated,                                &
+             hub_pot_fix, orbital_resolved, reserv, reserv_back, dmft,        &
+             dmft_prefix, edir, emaxpos, eopreg, eamp, smearing,              &
+             starting_ns_eigenvalue, input_dft, la2F, assume_isolated,        &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
              scdmden, scdmgrd, nscdm, n_proj,                                 &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
@@ -907,7 +912,7 @@ MODULE input_parameters
         !! dimension of mixing subspace. Used in PWscf only.
 
         CHARACTER(len=80) :: diagonalization = 'david'
-        !! diagonalization = 'david', 'cg', 'ppcg', 'paro' or 'rmm'
+        !! diagonalization = 'david', 'cg', 'paro' or 'rmm'
         !! algorithm used by PWscf for iterative diagonalization
 
         REAL(DP) :: diago_thr_init = 0.0_DP
@@ -917,11 +922,6 @@ MODULE input_parameters
         INTEGER :: diago_cg_maxiter = 100
         !! max number of iterations for the first iterative diagonalization.
         !! Using conjugate-gradient algorithm - used in PWscf only.
-
-        INTEGER :: diago_ppcg_maxiter = 100
-        !! max number of iterations for the first iterative diagonalization
-        !! using projected preconditioned conjugate-gradient algorithm - 
-        !! used in PWscf only.
 
         INTEGER :: diago_david_ndim = 4
         !! dimension of the subspace used in Davidson diagonalization
@@ -1096,10 +1096,10 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
         !! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(11)
+        CHARACTER(len=80) :: ion_dynamics_allowed(12)
         !! allowed options for ion\_dynamics.
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
-                                    'damp', 'verlet', 'bfgs', 'beeman',& 
+                                    'damp', 'verlet', 'velocity-verlet', 'bfgs', 'beeman',& 
                                     'langevin-smc', 'ipi', 'fire' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
@@ -1821,6 +1821,7 @@ MODULE input_parameters
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .false.
         REAL(DP), ALLOCATABLE :: xk(:,:), wk(:)
+        CHARACTER(len=50), ALLOCATABLE :: labelk(:)
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(len=80) :: k_points = 'gamma'
         !! select the k points mesh. Available options:  
@@ -2019,6 +2020,7 @@ SUBROUTINE reset_input_checks()
     !
     IF ( allocated( xk ) ) DEALLOCATE( xk )
     IF ( allocated( wk ) ) DEALLOCATE( wk )
+    IF ( allocated( labelk ) ) DEALLOCATE( labelk )
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
     IF ( allocated( rd_if_pos ) ) DEALLOCATE( rd_if_pos )

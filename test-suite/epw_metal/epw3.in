@@ -44,7 +44,6 @@
   assume_metal = .true.
   ngaussw      = -99  ! we want F-D distribution for metals
 
-  int_mob       = .true.
   iterative_bte = .true.
   scattering    = .true.
   carrier       = .false.

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2023 Quantum ESPRESSO group
+! Copyright (C) 2002-2025 Quantum ESPRESSO Foundation
 !
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -34,7 +34,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
   INTEGER,          INTENT(IN) :: ierr
     ! the error flag
   INTEGER :: crashunit, mpime
-  INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(LEN=6) :: cerr
   !
   IF( ierr <= 0 ) RETURN
@@ -62,22 +61,20 @@ SUBROUTINE errore( calling_routine, message, ierr )
     CALL ptrace()
 #endif
 #endif
-!
-#if defined(__MPI)
-  !
-  mpime = mp_rank(MPI_COMM_WORLD)
   !
   !  .. write the message to a file and close it before exiting
   !  .. this will prevent loss of information on systems that
   !  .. do not flush the open streams
   !  .. added by C.C.
   !
-  crashunit = find_free_unit ()
-  OPEN( UNIT = crashunit, FILE = crash_file, &
+  OPEN( NEWUNIT = crashunit, FILE = crash_file, &
         POSITION = 'APPEND', STATUS = 'UNKNOWN' )
   !
   WRITE( UNIT = crashunit, FMT = '(/,1X,78("%"))' )
+#if defined(__MPI)
+  mpime = mp_rank(MPI_COMM_WORLD)
   WRITE( UNIT = crashunit, FMT = '(5X,"task #",I10)' ) mpime
+#endif
   WRITE( UNIT = crashunit, &
          FMT = '(5X,"from ",A," : error #",I10)' ) TRIM(calling_routine), ierr
   WRITE( UNIT = crashunit, FMT = '(5X,A)' ) TRIM(message)
@@ -85,6 +82,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   CLOSE( UNIT = crashunit )
   !
+#if defined(__MPI)
   ! ... try to exit in a smooth way
   !
   CALL mp_abort(1,MPI_COMM_WORLD)
@@ -92,8 +90,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
 #endif
   !
   STOP 1
-  !
-  RETURN
   !
 END SUBROUTINE errore
 !

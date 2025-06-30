@@ -177,7 +177,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         CALL vloc_psi_tg_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
      ELSE
         ! ... usual reciprocal-space algorithm
-        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+        CALL vloc_psi_gamma_acc( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
         !
      ENDIF 
      !
@@ -186,7 +186,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      IF ( dffts%has_task_groups ) THEN
         CALL vloc_psi_tg_nc( lda, n, m, psi, vrs, hpsi )
      ELSE
-        CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
+        CALL vloc_psi_nc_acc( lda, n, m, psi, vrs, hpsi )
      END IF
      !
   ELSE  
@@ -217,7 +217,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         CALL vloc_psi_tg_k( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
      ELSE
         ! ... usual reciprocal-space algorithm
-        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+        CALL vloc_psi_k_acc( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
         !
      ENDIF
      !
@@ -283,7 +283,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   ENDIF
 #if defined(__OSCDFT)
-  IF ( use_oscdft ) THEN
+  IF ( use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
      CALL oscdft_h_psi(oscdft_ctx, lda, n, m, psi, hpsi)
   END IF
 #endif

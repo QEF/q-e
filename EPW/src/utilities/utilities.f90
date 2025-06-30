@@ -725,6 +725,175 @@
     !--------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
+    SUBROUTINE fast_fermi(nrr_k, irvec_k, efcb)
+    !-----------------------------------------------------------------------
+    !!
+    !!  This routine computes the Fermi energy as a function of temperature
+    !!  when lfast_kmesh is used. It first loads the full k mesh interpolates
+    !!  the eigenvalues and then computes the fermi level.
+    !!
+    !-----------------------------------------------------------------------
+    USE input,            ONLY : nstemp, lindabs, nbndsub, isk_dummy, mp_mesh_k, &
+                                 ii_partion
+    USE global_var,       ONLY : gtemp, ctype, xkf, etf, chw, nkqf, nbndskip,   &
+                                 wkf, xkf_irr, wkf_irr, bztoibz, s_bztoibz,     &
+                                 fermi_energies_t, partion
+    USE wannier2bloch,    ONLY : hamwan2bloch
+    USE cell_base,        ONLY : at, bg
+    USE ep_constants,     ONLY : twopi, ci, zero, czero, two, one
+    USE pwcom,            ONLY : nelec
+    USE mp_global,        ONLY : my_pool_id
+    USE mp_world,         ONLY : mpime
+    USE io_global,        ONLY : ionode_id
+    USE bzgrid,           ONLY : loadkmesh_para
+    USE kinds,            ONLY : DP
+    USE noncollin_module, ONLY : noncolin
+    USE indabs,           ONLY : fermi_carrier_indabs
+    USE symmetry,         ONLY : kpoints_time_reversal_init
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nrr_k
+    !! number of electronic WS points
+    INTEGER, INTENT(in) :: irvec_k(3, nrr_k)
+    !! Coordinates of real space vector for electrons
+    REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
+    !! Second fermi level for the temperature itemp
+
+    ! Local variables
+    INTEGER :: ik
+    !! Counter on coarse k-point grid
+    INTEGER :: itemp           
+    !! Temperature index
+    INTEGER :: ierr
+    !! Error status
+    REAL(KIND = DP) :: etemp
+    !! Temperature in Ry (this includes division by kb)
+    REAL(KIND = DP) :: xxq(3)
+    !! Current q-point
+    REAL(KIND = DP) :: xxk(3)
+    !! Current k-point on the fine grid
+    REAL(KIND = DP) :: nelec_aux
+    !! Temporary nelec
+    REAL(KIND = DP), ALLOCATABLE :: irvec_r(:, :)
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    REAL(KIND = DP), ALLOCATABLE :: rdotk(:)
+    !! $r\cdot k$
+    COMPLEX(KIND = DP), ALLOCATABLE :: cfac(:)
+    !! Used to store $e^{2\pi r \cdot k}$ exponential
+    COMPLEX(KIND = DP), ALLOCATABLE :: cufkk(:, :)
+    !! Rotation matrix, fine mesh, points k
+    !
+    ! Load nsym_k and k k mesh
+    CALL kpoints_time_reversal_init()
+    !
+    CALL loadkmesh_para()
+
+    nelec_aux = nelec
+    ALLOCATE(etf(nbndsub, nkqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating etf', 1)
+    ALLOCATE(cufkk(nbndsub, nbndsub), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating cufkk', 1)
+    ALLOCATE(cfac(nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating cfac', 1)
+    ALLOCATE(rdotk(nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating rdotk', 1)
+    ALLOCATE(irvec_r(3, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating irvec_r', 1)
+    ALLOCATE(isk_dummy(nkqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating isk_dummy', 1)
+    ALLOCATE(fermi_energies_t(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating fermi_energies_t',1)
+    ALLOCATE(partion(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating partion', 1)
+
+    irvec_r = REAL(irvec_k, KIND = DP)
+    etf(:, :)   = zero
+    cufkk(:, :) = czero
+    cfac(:)     = czero
+    rdotk(:)    = zero
+    fermi_energies_t (:) = 0.d0
+    partion(:) = 1
+
+    xxq = 0.d0
+    !
+    ! nkqf is the number of kpoints in the pool
+    DO ik = 1, nkqf
+     !
+     xxk = xkf(:, ik)
+     !
+     IF (2 * (ik / 2) == ik) THEN
+       !
+       !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
+       !
+       CALL cryst_to_cart(1, xxq, at, -1)
+       xxk = xkf(:, ik - 1) + xxq
+       CALL cryst_to_cart(1, xxq, bg, 1)
+       !
+     ENDIF
+     !
+     ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+     ! + optimize the 2\pi r\cdot k with Blas
+     CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1)
+     cfac(:) = EXP(ci * rdotk(:))
+     !
+     CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac)
+    ENDDO
+
+    IF (noncolin) THEN
+      nelec = nelec - one * nbndskip
+    ELSE
+      nelec = nelec - two * nbndskip
+    ENDIF
+
+
+    DO itemp = 1, nstemp
+      etemp = gtemp(itemp)
+      IF (ii_partion) CALL calcpartion(itemp, etemp, ctype)
+      IF (lindabs) THEN
+        CALL fermi_carrier_indabs(itemp, etemp, fermi_energies_t, ctype)
+      ELSE
+        CALL fermicarrier(itemp, etemp, fermi_energies_t, efcb, ctype)
+      ENDIF
+    ENDDO
+
+    nelec = nelec_aux
+
+    DEALLOCATE(irvec_r, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating irvec_r', 1)
+    DEALLOCATE(rdotk, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating rdotk', 1)
+    DEALLOCATE(cfac, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating cfac', 1)
+    DEALLOCATE(cufkk, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating cufkk', 1)
+    DEALLOCATE(etf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating etf', 1)
+    DEALLOCATE(xkf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating xkf', 1)
+    DEALLOCATE(wkf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating wkf', 1)
+    DEALLOCATE(partion, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating partion', 1)
+    DEALLOCATE(isk_dummy, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating isk_dummy', 1)
+    IF (mpime == ionode_id .AND. mp_mesh_k) THEN
+      DEALLOCATE(xkf_irr, STAT = ierr)
+      IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating xkf_irr', 1)
+      DEALLOCATE(wkf_irr, STAT = ierr)
+      IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating wkf_irr', 1)
+    ENDIF
+    IF (mp_mesh_k) THEN
+      DEALLOCATE(bztoibz, STAT = ierr)
+      IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating bztoibz',1)
+      DEALLOCATE(s_bztoibz, STAT = ierr)
+      IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating s_bztoibz', 1)
+    ENDIF
+
+    END SUBROUTINE fast_fermi
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
     SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
     !-----------------------------------------------------------------------
     !!
@@ -742,8 +911,10 @@
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE input,     ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
-                          system_2d, carrier, efermi_read, assume_metal, ngaussw
+                          system_2d, carrier, efermi_read, assume_metal, ngaussw, &
+                          lfast_kmesh
     USE input,     ONLY : isk_dummy
+    USE transport, ONLY : nelec_to_ncarrier
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
     !
@@ -791,9 +962,6 @@
     !! Fermi level in exponential format
     REAL(KIND = DP) :: rel_err
     !! Relative error
-    REAL(KIND = DP) :: factor
-    !! Factor that goes from number of carrier per unit cell to number of
-    !! carrier per cm^-3
     REAL(KIND = DP) :: arg
     !! Argument of the exponential
     REAL(KIND = DP) :: inv_cell
@@ -1016,11 +1184,7 @@
     !
     ! Case 2 :
     ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)
-    IF (system_2d == 'no') THEN
-      factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
-    ELSE
-      factor = inv_cell * (bohr2ang * ang2cm)**(-2.d0)
-    ENDIF
+    !
     eup = 1d-160 ! e^(-large) = 0.0 (small)
     elw = 1.0d80 ! e^0 = 1
     IF (ncarrierp < -1E5 .OR. (int_mob .AND. carrier)) THEN
@@ -1042,7 +1206,7 @@
               fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
-            hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
+            hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * nelec_to_ncarrier
           ENDDO
           !
         ENDDO
@@ -1092,7 +1256,7 @@
               fnk = 1.0d0 / (ks_expcb(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
-            electron_density = electron_density + wkf(ikk) * fnk * factor
+            electron_density = electron_density + wkf(ikk) * fnk * nelec_to_ncarrier
           ENDDO
           !
         ENDDO
@@ -1173,7 +1337,7 @@
     !
     ! In the case were we do not want mobility (just scattering rates)
     IF (.NOT. int_mob .AND. .NOT. carrier) THEN
-      IF (efermi_read) THEN
+      IF (lfast_kmesh) THEN
         !
         ef0(itemp) = fermi_energy
         !

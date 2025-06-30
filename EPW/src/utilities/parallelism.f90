@@ -74,6 +74,59 @@
     END SUBROUTINE para_bounds
     !---------------------------------------------------------------------
     !
+    !--------------------------------------------------------------------
+    SUBROUTINE image_division(totq, selecq, image_array, size_image_arr, size_image)
+    !--------------------------------------------------------------------
+    !!
+    !! Added by S. Tiwari
+    !! Subroutine finds the q-points for each image
+    !!
+    !---------------------------------
+    !
+    USE mp_global,   ONLY : my_pool_id, inter_image_comm
+    USE mp_images,   ONLY : my_image_id, nimage
+    USE mp,          ONLY : mp_barrier
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: totq
+    !! Total number of q-points inside the window
+    INTEGER, INTENT(in) :: selecq(totq)
+    !! q-points inside the window
+    INTEGER, INTENT(inout) :: size_image_arr(nimage)
+    !! Number of q-points in each image
+    INTEGER, INTENT(inout), ALLOCATABLE :: image_array(:)
+    !! q-points in each image
+    INTEGER, INTENT(out) :: size_image
+    !! Total number of q-points inside the image
+    !
+    !! Size if q-points in each images 
+    INTEGER :: image
+    !! Counter over images
+    INTEGER :: iq
+    !! Counter over q-points
+    INTEGER :: ierr
+    !! Index for error
+    !
+    size_image = CEILING(REAL(totq) / nimage) 
+    ALLOCATE(image_array(size_image), STAT = ierr)
+    IF (ierr /= 0) CALL errore("image_division", "image_array not built", 1)
+    image_array(:) = -1
+    image = 1   
+    size_image_arr(:) = 0 
+    DO iq = 1, totq
+      IF (MOD(iq, nimage) == my_image_id) THEN
+        image_array(image) = selecq(iq)
+        size_image_arr(my_image_id+1) = image
+        image = image + 1
+      ENDIF
+    ENDDO    
+    size_image = image-1
+    ! 
+    !---------------------------------------------------------------------
+    END SUBROUTINE image_division
+    !---------------------------------------------------------------------
+    !
     !---------------------------------------------------------------------
     SUBROUTINE kpointdivision(ik0)
     !---------------------------------------------------------------------

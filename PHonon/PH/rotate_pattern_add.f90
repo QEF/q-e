@@ -88,6 +88,43 @@
   RETURN 
   END SUBROUTINE dyn_pattern_to_cart
 !
+!----------------------------------------------------------------------
+  SUBROUTINE epf_pattern_to_cart(nat, u, dyn, phi)
+  !---------------------------------------------------------------------
+  !! KL - This routine is copied from dyn_pattern_to_cart(nat, u, dyn, phi), 
+  !! and transforms the g matrix (3*nat, 1), written in the basis
+  !! of the pattern, in the g matrix phi, in the cartesian basis.
+  !
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: nat
+  COMPLEX(DP), INTENT(IN) :: u(3*nat, 3*nat)
+  COMPLEX(DP), INTENT(IN) :: dyn(3*nat, 1)
+  COMPLEX(DP), INTENT(OUT) :: phi(3, 1, nat, 1)
+
+  COMPLEX(DP) :: work
+  INTEGER :: i, j, icart, jcart, na, nb, mu, nu
+
+  DO i = 1, 3 * nat
+     na = (i - 1) / 3 + 1
+     icart = i - 3 * (na - 1)
+     DO j = 1, 1
+        nb = (j - 1) / 3 + 1
+        jcart = j - 3 * (nb - 1)
+        work = (0.d0, 0.d0)
+        DO mu = 1, 3 * nat
+           DO nu = 1, 1
+              work = work + u (i, mu) * dyn (mu, nu)
+           ENDDO
+        ENDDO
+        phi (icart, jcart, na, nb) = work
+     ENDDO
+  ENDDO
+
+  RETURN
+  END SUBROUTINE epf_pattern_to_cart
+!
+!-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
   SUBROUTINE compact_dyn(nat, dyn, phi)
   !-----------------------------------------------------------------------
@@ -117,12 +154,38 @@
   END SUBROUTINE compact_dyn
 !
 !-----------------------------------------------------------------------
+  SUBROUTINE compact_epf(nat, dyn, phi)
+  !-----------------------------------------------------------------------
+  !! KL - This routine is copied from compact_dyn(nat, dyn, phi), 
+  !! and writes the epf g-matrix from a 3,1,nat,1 array to a 3*nat,1 array.
+  !
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: nat
+  COMPLEX(DP), INTENT(IN) :: phi(3,1,nat,1)
+  COMPLEX(DP), INTENT(OUT) :: dyn(3*nat, 1)
+
+  INTEGER :: na, nb, icart, jcart, imode, jmode
+
+  DO na = 1, nat
+     DO icart = 1, 3
+        imode = 3 * ( na - 1 ) + icart
+        DO nb = 1, 1
+           DO jcart = 1, 1
+              jmode = 3 * ( nb - 1 ) + jcart
+              dyn (imode, jmode) = phi (icart, jcart, na, nb)
+           END DO
+        END DO
+     END DO
+  END DO
+  RETURN
+  END SUBROUTINE compact_epf
+  !-----------------------------------------------------------------------
   SUBROUTINE scompact_dyn(nat, dyn, phi)
   !-----------------------------------------------------------------------
   !! This routine writes the dynamical matrix from a 3*nat,3*nat array
   !! to a 3,3,nat,nat array.
   !
-
   USE kinds, ONLY : DP
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat

@@ -397,6 +397,7 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !! If \(\text{recl}=-1\), the file existence is checked, nothing else
   !! is done.
   !
+  USE kinds, ONLY: i8b
   implicit none
   !
   !    first the input variables
@@ -417,7 +418,7 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   character(len=320) :: tempfile
   ! complete file name
   real(dp):: dummy
-  integer*8 :: unf_recl
+  integer(kind=i8b) :: unf_recl
   ! double precision to prevent integer overflow
   integer :: ios, direct_io_factor
   logical :: opnd

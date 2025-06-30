@@ -29,6 +29,7 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   USE control_kcw
   USE dv_of_drho_lr
   USE kinds,                 ONLY : DP
+  USE constants,             ONLY : tpi
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout
   USE wavefunctions,         ONLY : evc, psic
@@ -56,6 +57,10 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   USE response_kernels,      ONLY : sternheimer_kernel
   USE scf,                   ONLY : vrs
   USE qpoint_aux,            ONLY : ikmks
+  USE lr_symm_base,          ONLY : lr_npert, upert, upert_mq, minus_q, nsymq
+  USE qpoint,                ONLY : xq
+  USE symm_base,             ONLY : ft
+  USE cell_base,             ONLY : at
   !
   !USE cell_base,            ONLY : omega
   !
@@ -111,6 +116,10 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   !!## DEBUG 
   !
   LOGICAL :: new
+  COMPLEX(DP)    ::   imag
+  REAL(DP)       ::   xq_cryst(3)
+  INTEGER        ::   isym
+
   ! Set to false to revert to the previous implementation of the Linear solver (consistent with QE7.1)
   new = .true.
   !
@@ -133,6 +142,22 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   ALLOCATE (drhoscfh (dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfout (dfftp%nnr, nspin_mag))    
   ALLOCATE (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , 1)) 
+  !
+  ! Set symmetry representation in lr_symm_base
+  !
+  lr_npert = 1
+  ALLOCATE(upert(lr_npert, lr_npert, nsymq))
+  xq_cryst = xq
+  imag = (0.D0, 1.D0)
+  CALL cryst_to_cart(1,xq_cryst,at,-1)
+  DO isym = 1, nsymq
+     upert(1, 1, isym) = EXP(- imag * tpi * dot_product( xq_cryst(:), ft(:, isym) ) ) 
+  ENDDO
+  IF (minus_q) THEN
+     ALLOCATE(upert_mq(lr_npert, lr_npert))
+     upert_mq(1, 1) = (1.d0, 0.d0)
+  ENDIF ! minus_q
+  ! 
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , 1, nsolv))
   ALLOCATE (aux ( dffts%nnr ))    
   ALLOCATE (drhoc(dfftp%nnr))
@@ -260,6 +285,12 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
      !   drhoscfh(:, nspin) = psic(:)
      !ENDIF
      !
+     ! Symmetrization of the response charge density.
+     !
+     IF (irr_bz) CALL psymdvscf (drhoscfh)
+     !
+
+     !
      !    Now we compute for all perturbations the total charge and potential
      !
      !CALL addusddens (drhoscfh, dbecsum, irr, imode0, 1, 0)
@@ -335,7 +366,9 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   DEALLOCATE (drhoscfh)
   IF (doublegrid) DEALLOCATE (dvscfins)
   DEALLOCATE (dvscfin)
-  !
+  DEALLOCATE (upert)
+  IF (minus_q) DEALLOCATE(upert_mq) 
+  ! 
   CALL stop_clock ('solve_linter')
   !
   RETURN
@@ -386,6 +419,7 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
   USE fft_base,              ONLY : dffts
   USE klist,                 ONLY : igk_k, ngk
   USE fft_interfaces,        ONLY : fwfft, invfft
+  USE fft_wave,              ONLY : invfft_wave, fwfft_wave
   USE qpoint,                ONLY : npwq, ikks, ikqs
   USE lsda_mod,              ONLY : nspin, current_spin
   USE wavefunctions,         ONLY : evc
@@ -414,7 +448,7 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
   !          aux (dffts%nl(igk_k(ig,ikk)),1)=evc(ig,ibnd)
   !       ENDDO
   !       CALL invfft ('Wave', aux, dffts)
-         CALL invfft_wave (npw, igk_k (1,ikk), evc(:,ibnd), aux )
+         CALL invfft_wave (npwx, npw, igk_k (1,ikk), evc(:,ibnd), aux )
 
          DO ir = 1, dffts%nnr
              aux(ir,1)=aux(ir,1)*delta_vr(ir,current_spin) 
@@ -424,10 +458,10 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
  !        DO ig = 1, npwq
  !           dvpsi(ig,ibnd)=aux(dffts%nl(igk_k(ig,ikq)),1)
  !        ENDDO
-         CALL fwfft_wave (npwq, igk_k (1,ikq), dvpsi(:,ibnd) , aux)
+         CALL fwfft_wave (npwx, npwq, igk_k (1,ikq), dvpsi(:,ibnd) , aux)
 
       ELSEIF (nspin==4) THEN
-         CALL invfft_wave (npw, igk_k (1,ikk), evc(:,ibnd), aux )
+         CALL invfft_wave (npwx, npw, igk_k (1,ikk), evc(:,ibnd), aux )
          IF (domag) then
             DO ir = 1, dffts%nnr
                sup=aux(ir,1)*(delta_vr(ir,1)+delta_vr(ir,4))+ &
@@ -443,7 +477,7 @@ SUBROUTINE kcw_dvqpsi (ik, delta_vr, isolv)
                aux(ir,2)=aux(ir,2)*delta_vr(ir,1)
             ENDDO
          END IF
-         CALL fwfft_wave (npwq, igk_k (1,ikq),dvpsi(:,ibnd) , aux)
+         CALL fwfft_wave (npwx, npwq, igk_k (1,ikq),dvpsi(:,ibnd) , aux)
       ENDIF
      !
   ENDDO
@@ -488,7 +522,7 @@ SUBROUTINE sternheimer_kernel_old(first_iter, npert, i_ref, lrdvpsi, iudvpsi, &
   COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
   LOGICAL, INTENT(OUT) :: all_conv
   REAL(DP), INTENT(OUT) :: averlt
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin, npert)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dffts%nnr, nspin, npert)
   COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2, nat, nspin, npert)
   INTEGER, INTENT(IN) :: lrdvpsi
   INTEGER, INTENT(IN) :: iudvpsi

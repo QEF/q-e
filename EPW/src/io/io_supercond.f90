@@ -261,7 +261,8 @@
     !!
     !! SH: Modified to write the full-bandwidth runs' files, and re-ordered
     !!       "deltai, ..." arrays' indices for efficiency (Nov 2021).
-    !!
+    !! SM: Only ionode write to file
+    !
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
@@ -273,8 +274,7 @@
     USE parallelism,   ONLY : fkbounds
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
-    USE io_global,     ONLY : ionode_id
-    USE mp_world,      ONLY : mpime
+    USE io_global,     ONLY : ionode_id, ionode
     !
     IMPLICIT NONE
     !
@@ -352,7 +352,7 @@
         n = 1
       ENDIF
       !
-      IF (mpime == ionode_id) THEN
+      IF (ionode) THEN
         !
         IF (temp < 10.d0) THEN
           WRITE(name1, '(a, a1, a4, a9, f4.2)') TRIM(prefix), '.', cname, '_aniso_00', temp
@@ -394,8 +394,8 @@
         !
         CALL gap_FS(itemp)
         !
-      ENDIF ! mpime
-      !
+      ENDIF ! ionode
+      ! SM: Todo: Change to Wolrd_com once q-para aniso is implemented
       CALL mp_bcast(agap, ionode_id, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
       !
@@ -412,31 +412,33 @@
     !
     ! isotropic case
     IF (liso) THEN
-      IF (temp < 10.d0) THEN
-        WRITE(name1, '(a, a1, a4, a7, f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
-      ELSEIF (temp >= 10.d0 .AND. temp < 100.d0 ) THEN
-        WRITE(name1, '(a, a1, a4, a6, f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
-      ELSEIF (temp >= 100.d0) THEN
-        WRITE(name1, '(a, a1, a4, a5, f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
-      ENDIF
-      OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('eliashberg_write_iaxis', 'error opening file ' // name1, iufilgap)
-      !
-      ! SH: write the header for fbw runs
-      IF (fbw) THEN
-        WRITE(iufilgap, '(4a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]', 'shift(w) [eV]'
-      ELSE
-        WRITE(iufilgap, '(3a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]'
-      ENDIF
-      DO iw = 1, nsiw(itemp) ! loop over omega
-        ! SH: write the entries for fbw runs
-        IF (fbw) THEN
-          WRITE(iufilgap, '(4ES20.10)') wsi(iw), znormi(iw), deltai(iw), shifti(iw)
-        ELSE
-          WRITE(iufilgap, '(3ES20.10)') wsi(iw), znormi(iw), deltai(iw)
+      IF (ionode) THEN 
+        IF (temp < 10.d0) THEN
+          WRITE(name1, '(a, a1, a4, a7, f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
+        ELSEIF (temp >= 10.d0 .AND. temp < 100.d0 ) THEN
+          WRITE(name1, '(a, a1, a4, a6, f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
+        ELSEIF (temp >= 100.d0) THEN
+          WRITE(name1, '(a, a1, a4, a5, f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
         ENDIF
-      ENDDO
-      CLOSE(iufilgap)
+        OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('eliashberg_write_iaxis', 'error opening file ' // name1, iufilgap)
+        !
+        ! SH: write the header for fbw runs
+        IF (fbw) THEN
+          WRITE(iufilgap, '(4a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]', 'shift(w) [eV]'
+        ELSE
+          WRITE(iufilgap, '(3a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]'
+        ENDIF
+        DO iw = 1, nsiw(itemp) ! loop over omega
+          ! SH: write the entries for fbw runs
+          IF (fbw) THEN
+            WRITE(iufilgap, '(4ES20.10)') wsi(iw), znormi(iw), deltai(iw), shifti(iw)
+          ELSE
+            WRITE(iufilgap, '(3ES20.10)') wsi(iw), znormi(iw), deltai(iw)
+          ENDIF
+        ENDDO
+        CLOSE(iufilgap)
+      ENDIF ! ionode
     ENDIF
     !
     RETURN
@@ -708,11 +710,9 @@
     USE io_files,      ONLY : prefix
     USE ions_base,     ONLY : nat
     USE input,         ONLY : nqstep, nqsmear, degaussq, delta_qsmear, &
-                              eps_acoustic, lifc, a2f
+                              eps_acoustic, lifc, a2f, a2f_iso
     USE ep_constants,  ONLY : zero, ryd2mev
-    USE mp_world,      ONLY : mpime
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-    USE io_global,     ONLY : stdout, ionode_id
+    USE io_global,     ONLY : stdout, ionode
     USE modes,         ONLY : nmodes
     USE global_var,    ONLY : wf, wqf, nqtotf, xqf
     USE wannier2bloch, ONLY : dynwan2bloch, dynifc2blochf
@@ -791,11 +791,11 @@
     ENDDO ! iq
     !
     ! SM: Write freq. using nqtotf instead of totq
-    IF (.NOT. a2f) CALL write_freq()
+    IF (.NOT. (a2f .OR. a2f_iso)) CALL write_freq()
     !
     ! Starting the calculation of phdos
     !
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       !
       ALLOCATE(ww(nqstep), STAT = ierr)
       IF (ierr /= 0) CALL errore('write_phdos', 'Error allocating ww', 1)
@@ -1040,6 +1040,165 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
+    SUBROUTINE write_dos_tetra(eferm, nele)
+    !-----------------------------------------------------------------------
+    !!
+    !! SM: This routine writes electronic "dos" using tetrahedron method
+    !!
+    USE kinds,         ONLY : DP
+    USE symm_base,     ONLY : nsym, s, time_reversal, t_rev
+    USE noncollin_module, ONLY : noncolin
+    USE cell_base,     ONLY : at, bg
+    USE io_var,        ONLY : iufildos
+    USE io_files,      ONLY : prefix, tmp_dir
+    USE input,         ONLY : nbndsub, fsthick, dos_del, nkf1, nkf2, nkf3
+    USE ep_constants,  ONLY : ryd2ev, zero
+    USE global_var,    ONLY : xkf, etf, wkf, nkqf, nkf, nktotf
+    USE io_global,     ONLY : stdout, ionode
+    USE ktetra,        ONLY : tetra, tetra_type, tetra_init, tetra_dos_t
+    USE parallelism,   ONLY : poolgather
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP) :: eferm
+    !! Fermi energy
+    REAL(KIND = DP) :: nele
+    !! pre-calculated number of electrons in Fermi window
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: fildos
+    !! Name of Fermi ene. window dos file
+    !
+    INTEGER :: ie
+    !! counter over energy intervals
+    INTEGER :: ik, ikk 
+    !! counter of k points
+    INTEGER :: wnum
+    !! number of energy intervals in Fermi window
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: nspin_
+    !! Local spin variable
+    REAL(KIND = DP) :: wene
+    !! energies in Fermi window
+    REAL(KIND = DP) :: wval(2)
+    !! dos value in fermi window
+    REAL(KIND = DP) :: wele(2)
+    !! no of electrons in fermi window
+    REAL(KIND = DP) :: dosef
+    !! the density of states at the Fermi level
+    REAL(KIND = DP) :: nelec_ef
+    !! the number of electrons under the Fermi level
+    REAL(KIND = DP), ALLOCATABLE :: wene_arr(:)
+    !! Temporary array for energy 
+    REAL(KIND = DP), ALLOCATABLE :: wval_arr(:)
+    !! Temporary array for dos value
+    REAL(KIND = DP), ALLOCATABLE :: wele_arr(:)
+    !! Temporary array for no. of electrons
+    REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
+    !! Collect eigenenergies from all pools in parallel case
+    REAL(KIND = DP), ALLOCATABLE :: etf_loc(:, :)
+    !! Eigen-energies local full k-bzgrids.
+    REAL(KIND = DP), ALLOCATABLE :: xkf_loc(:, :)
+    !!  k-point coordinate local full k-bzgrids.
+    REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
+    !! Collect k-point coordinate from all pools in parallel case
+    !
+    fildos = TRIM(tmp_dir) // '/' // TRIM(prefix) // '.dos'
+    !
+    wnum = NINT(2.d0 * fsthick * ryd2ev / dos_del)
+    !
+    ALLOCATE(wene_arr(wnum), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating wene_arr', 1)
+    ALLOCATE(wval_arr(wnum), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating wval_arr', 1)
+    ALLOCATE(wele_arr(wnum), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating wele_arr', 1)
+    ALLOCATE(etf_all(nbndsub, nktotf),  STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating etf_all', 1)
+    ALLOCATE(etf_loc(nbndsub, nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating etf_loc', 1)
+    ALLOCATE(xkf_all(3, nktotf),  STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating xkf_all', 1)
+    ALLOCATE(xkf_loc(3, nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error allocating xkf_loc', 1)
+    !
+    DO ik = 1, nkf
+      ikk = 2 * ik - 1
+      xkf_loc(:, ik) = xkf(:, ikk)
+      etf_loc(:, ik) = etf(:, ikk)
+    ENDDO
+    !
+    CALL cryst_to_cart( nkf, xkf_loc, bg, 1 )
+    CALL poolgather(3, nktotf, nkf, xkf_loc, xkf_all)
+    CALL poolgather(nbndsub, nktotf, nkf, etf_loc, etf_all)
+    !
+    WRITE( stdout,'(/5x,"Tetrahedra used"/)')
+    WRITE( stdout,'(/5x,"Tetrahedras are initiated with ", I12, " k points"/)') nktotf
+    WRITE( stdout,'(/5x,"The kmesh is ", 3I6/)') nkf1, nkf2, nkf3
+    ! Initialization of tetrahedra
+    CALL tetra_init ( nsym, s, .FALSE., t_rev, at, bg, nktotf, &
+                      0,0,0, nkf1,nkf2,nkf3, nktotf, xkf_all )
+    !
+    wele = zero
+    dosef = zero
+    !
+    IF (noncolin) THEN
+       nspin_ = 4
+    ELSE
+       nspin_ = 1
+    ENDIF
+    ! 
+    CALL tetra_dos_t( etf_all, nspin_, nbndsub, nktotf, eferm, wval, wele)
+    dosef = wval(1)
+    nelec_ef = wele(1)
+    DO ie = 1, wnum
+      wene = (eferm - fsthick) + DBLE(ie - 1) * dos_del / ryd2ev
+      CALL tetra_dos_t( etf_all, nspin_, nbndsub, nktotf, wene, wval, wele)
+      wene_arr(ie) = wene
+      wval_arr(ie) = wval(1)
+      wele_arr(ie) = wele(1)
+    ENDDO
+    !
+    IF (ionode) THEN
+      !
+      fildos = TRIM(tmp_dir) // '/' // TRIM(prefix) // '.dos'
+      OPEN(UNIT = iufildos, FILE = fildos, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('write_dos_tetra', 'error opening file ' // fildos, iufildos)
+      WRITE(iufildos, '(a, ES20.10, a, ES20.10, a, ES20.10)') '# EFermi[eV]    ', eferm * ryd2ev ,'   dos_EFermi[eV^-1] ', &
+        dosef / ryd2ev, " nelec at EFermi : ", nelec_ef
+      WRITE(iufildos, '(a, ES20.10, a, ES20.10)') '# FermiWind[eV] ', fsthick * ryd2ev, '   Nr_electrons      ', nele
+      WRITE(iufildos, '(a, ES20.10, a, i8)')     '# dos_del[eV]   ', dos_del,          '   Nr_bins           ', wnum
+      WRITE(iufildos, '(a)') '#            E [eV]           dos[state/eV]       Int dos[#]'
+      !
+      DO ie = 1, wnum
+        ! total DOS is being written (not per spin!) for compatibility with QE format
+        WRITE(iufildos, '(5x, 3ES20.10)') wene_arr(ie) * ryd2ev, wval_arr(ie) / ryd2ev , wele_arr(ie)
+      ENDDO
+      !
+      CLOSE(iufildos)
+    ENDIF !ionode
+    !
+    DEALLOCATE(wene_arr, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error deallocating wene_arr', 1)
+    DEALLOCATE(wval_arr, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error deallocating wval_arr', 1)
+    DEALLOCATE(wele_arr, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error deallocating wele_arr', 1)
+    DEALLOCATE(etf_loc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error deallocating etf_loc', 1)
+    DEALLOCATE(etf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_dos_tetra', 'Error deallocating etf_all', 1)
+    !
+    WRITE(stdout, '(/5x, a/)') 'Finish writing dos file using tetrahedra ' // TRIM(prefix) // '.dos'
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE write_dos_tetra
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
     SUBROUTINE read_dos()
     !-----------------------------------------------------------------------
     !!
@@ -1124,17 +1283,15 @@
     !!
     !! Read the eliashberg spectral function from fila2f
     !!
-    !! SH: Modified with removing "a2f_iso file" (Nov 2021).
     !!
     USE input,         ONLY : nqstep, fila2f
-    USE supercond_common, ONLY : wsphmax, wsph, dwsph, a2f_iso
+    USE supercond_common, ONLY : wsphmax, wsph, dwsph, a2f_tmp
     USE ep_constants,  ONLY : zero
     USE io_var,        ONLY : iua2ffil
-    USE io_global,     ONLY : ionode_id, stdout
+    USE io_global,     ONLY : ionode_id, stdout, ionode
     USE io_files,      ONLY : prefix
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : world_comm
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-    USE mp_world,      ONLY : mpime
     !
     IMPLICIT NONE
     !
@@ -1145,21 +1302,21 @@
     INTEGER :: ierr
     !! Error status
     !
-    ALLOCATE(a2f_iso(nqstep), STAT = ierr)
-    IF (ierr /= 0) CALL errore('read_a2f', 'Error allocating a2f_iso', 1)
+    ALLOCATE(a2f_tmp(nqstep), STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_a2f', 'Error allocating a2f_tmp', 1)
     ALLOCATE(wsph(nqstep), STAT = ierr)
     IF (ierr /= 0) CALL errore('read_a2f', 'Error allocating wsph', 1)
-    a2f_iso(:) = zero
+    a2f_tmp(:) = zero
     wsph(:) = zero
     !
     IF (fila2f == ' ') WRITE(fila2f, '(a, a4)') TRIM(prefix), '.a2f'
-    IF (mpime == ionode_id) THEN
+    IF (ionode) THEN
       OPEN(UNIT = iua2ffil, FILE = fila2f, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('read_a2f', 'error opening file ' // fila2f, iua2ffil)
       !
       READ(iua2ffil, *)
       DO iwph = 1, nqstep
-        READ(iua2ffil, *) wsph(iwph), a2f_iso(iwph) ! freq from meV to eV
+        READ(iua2ffil, *) wsph(iwph), a2f_tmp(iwph) ! freq from meV to eV
         wsph(iwph) = wsph(iwph) / 1000.d0
       ENDDO
       wsphmax = wsph(nqstep)
@@ -1169,11 +1326,10 @@
     ENDIF
     !
     ! first node broadcasts everything to all nodes
-    CALL mp_bcast(a2f_iso, ionode_id, inter_pool_comm)
-    CALL mp_bcast(wsph, ionode_id, inter_pool_comm)
-    CALL mp_bcast(wsphmax, ionode_id, inter_pool_comm)
-    CALL mp_bcast(dwsph, ionode_id, inter_pool_comm)
-    CALL mp_barrier(inter_pool_comm)
+    CALL mp_bcast(a2f_tmp, ionode_id, world_comm)
+    CALL mp_bcast(wsph, ionode_id, world_comm)
+    CALL mp_bcast(wsphmax, ionode_id, world_comm)
+    CALL mp_bcast(dwsph, ionode_id, world_comm)
     !
     WRITE(stdout, '(/5x, a/)') 'Finish reading a2f file'
     !

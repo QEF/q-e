@@ -53,11 +53,15 @@
   USE input,         ONLY : epbread, epbwrite, epwread, lifc,                   &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3,                 &
-                            fixsym, epw_noinv, system_2d, compute_dmat, lwfpt
+                            fixsym, epw_noinv, system_2d, compute_dmat, lwfpt,  &
+                            exciton             
+                            ! ZD: last line for ex-plrn
   USE global_var,    ONLY : epmatq, dynq, et_ks, xkq, ifc, veff,&
                             zstar, epsi, cu, cuq, lwin, lwinq, nbndep, ibndkept,&
                             ngxx, exband, wscache, area, ngxxf, shift,  &
-                            gmap, qrpl, Qmat, L, do_cutoff_2D_epw, alph, nbndskip
+                            gmap, qrpl, Qmat, L, do_cutoff_2D_epw, alph, nbndskip,&
+                            wf_temp, wf                                         
+                            ! ZD: last line for ex-plrn
   USE input,         ONLY : et_loc, et_all, xk_all
   USE ep_constants,  ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -79,6 +83,10 @@
   USE pw2wan,        ONLY : compute_pmn_para
   USE ep_coarse,     ONLY : ep_coarse_compute, dvscf_read
   USE noncollin_module, ONLY : m_loc, npol, noncolin, lspinorb, nspin_mag
+  USE exphonon,      ONLY : calc_G_epmat_subbnd, find_iq, prepare_ex_ph_g, release_ex_ph_g
+  USE klist,         ONLY : degauss, ngauss
+  ! ZD: the last line for ex-ph calculations
+
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -227,9 +235,27 @@
   !! Change of the scf potential
   COMPLEX(KIND = DP), ALLOCATABLE :: el_ph_mat(:, :, :, :)
   !! ep matrix element for this q-point
+  INTEGER :: iq_order
+  !! The index of current q in the order of the klist in nscf calculations
+  REAL(KIND = DP) :: xq0_cryst(3)
+  !! The current coords of iq in the crystal coordinate
+  COMPLEX(KIND = DP) :: cz2_out(nmodes, nmodes)
+  !! The rotated eigenvectors. 
+  !! ZD: This will be set to equal cz2 before rotate_epmat
+  !! to avoid possible mess-up from multiply mass factors
+  !! Current coarse q-point coords in crystal coordinate.
   !
   CALL start_clock('elphon_wrap')
   !
+#if defined(__HDF5)
+  WRITE(stdout, '(5x, a)') 'HDF5 is used in the current build. &
+                            Exciton-phonon coupling calculations are enabled.'
+#else
+  exciton = .FALSE.
+  WRITE(stdout, '(5x, a)') 'HDF5 is NOT used in the current build. &
+                            Exciton-phonon coupling calculations are disabled.'
+#endif
+
   alph = 1.0
   !
   ! S. Tiwari: Initializing the Ewald parameter whose units are (2pi/alat)^{2}
@@ -375,6 +401,8 @@
       READ(crystal, *) do_cutoff_2D_epw
       READ(crystal, *) w_centers
       READ(crystal, *) L
+      READ(crystal, *) degauss
+      READ(crystal, *) ngauss
       !
     ENDIF ! mpime == ionode_id
     CALL mp_bcast(nat      , ionode_id, world_comm)
@@ -394,6 +422,8 @@
     CALL mp_bcast(do_cutoff_2D_epw , ionode_id, world_comm)
     CALL mp_bcast(w_centers, ionode_id, world_comm)
     CALL mp_bcast(L        , ionode_id, world_comm)
+    CALL mp_bcast(degauss  , ionode_id, world_comm)
+    CALL mp_bcast(ngauss   , ionode_id, world_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
@@ -548,6 +578,11 @@
     !
     CALL gmap_sym(nsym, s, ft, gmapsym, eigv)
     !
+    ! ZD: initialize arrays for ex-ph matrix
+    IF (exciton) THEN
+      CALL prepare_ex_ph_g()
+    ENDIF
+    !
     ! Setup for compute_dmat
     !
     IF (compute_dmat) THEN
@@ -643,6 +678,12 @@
         sym(isym) = .TRUE.
       ENDDO
       !
+      ! ZD: allocate array for temporary store of phonon frequencies
+      IF(exciton) THEN 
+        ALLOCATE(wf_temp(nmodes,nq),STAT=ierr)
+        IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error allocating wf_temp', 1) 
+      ENDIF     
+      !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
       CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
@@ -668,6 +709,14 @@
         !
         IF (iq == 1) WRITE(stdout, *)
         WRITE(stdout, 5) nqc, xq
+        ! ZD: determine the nscf-iq index of the current (iq_irr, iq) pair
+        IF(exciton) THEN
+          xq0_cryst = xq
+          CALL cryst_to_cart(1, xq0_cryst, at, -1)
+          CALL find_iq(xq0_cryst, nqc1, nqc2, nqc3, iq_order)
+          ! WRITE(stdout, '(5x, a, I5, 3F10.5)') 'Current q in cryst. coord.: ', iq_order, xq0_cryst
+          wf(:,iq_order)=wf_temp(:,iq)
+        ENDIF
         !
         ! Prepare the kmap for the refolding
         !
@@ -836,6 +885,9 @@
         !
         CALL rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2, timerev)
         !
+        ! ZD: Store cz2 for ex-ph calculation when nedded
+        cz2_out(:,:) = cz2(:,:)
+        !
         CALL rotate_epmat(cz1, cz2, xq, nqc, lwin, lwinq, exband, timerev)
         !DBSP
         !write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
@@ -844,6 +896,11 @@
         !print*,'dynq ', SUM(dynq(:,:,nqc))
         !print*,'et ', et_loc(:,2)
         !END
+        ! ZD: Calculate the ex-ph matrix
+        IF (exciton) THEN
+          CALL calc_G_epmat_subbnd(iq_order, cz2_out, nqc)
+        ENDIF
+        ! 
         ! SP: Now we treat separately the case imq == 0
         IF (imq == 0) THEN
           timerev = .TRUE.
@@ -859,6 +916,15 @@
           ! and populate the uniform grid
           nqc = nqc + 1
           xqc(:,nqc) = xq
+          !
+          ! ZD: Determine the nscf-iq index of the current (iq_irr, iq) pair
+          IF(exciton) THEN
+            xq0_cryst = xq
+            CALL cryst_to_cart(1, xq0_cryst, at, -1)
+            CALL find_iq(xq0_cryst, nqc1, nqc2, nqc3, iq_order)
+            ! WRITE(stdout, '(5x, a, I5, 3F10.5)') 'Current q in cryst. coord.: ', iq_order, xq0_cryst
+            wf(:,iq_order)=wf_temp(:,iq)
+          ENDIF
           !
           IF (iq == 1) WRITE(stdout, *)
           WRITE(stdout,5) nqc, xq
@@ -902,17 +968,35 @@
           !
           CALL rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2, timerev)
           !
+          ! ZD: Store cz2 for ex-ph calculation when nedded
+          cz2_out(:,:) = cz2(:,:)
+          !
           CALL rotate_epmat(cz1, cz2, xq, nqc, lwin, lwinq, exband, timerev)
           !
+          ! ZD: Calculate the ex-ph matrix
+          IF (exciton) THEN
+            CALL calc_G_epmat_subbnd(iq_order, cz2_out, nqc)
+          ENDIF
+          ! 
           xq0 = -xq0
         ENDIF ! end imq == 0
         !
       ENDDO
+      ! ZD: Deallocate the temporary array for phonon frequencies
+      IF(exciton) THEN 
+        DEALLOCATE(wf_temp,STAT=ierr)
+        IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating wf_temp', 1)   
+      ENDIF  
       !
       iq_first = iq_first + nq
       if (imq == 0) iq_first = iq_first + nq
       !
     ENDDO ! irr-q loop
+    !
+    ! ZD: Deallocate all the arrays related to ex-ph coupling
+    IF (exciton) THEN 
+      CALL release_ex_ph_g()
+    ENDIF
     !
     IF (nqc /= nqc1 * nqc2 * nqc3) CALL errore('ep_coarse_unfolding', 'nqc /= nq1*nq2*nq3', nqc)
     !
@@ -1019,12 +1103,14 @@
   ENDIF
   !
   ! In case of image parallelization we want to stop after writing the .epb file
-  IF (nimage > 1) THEN
-    WRITE(stdout, '(/5x, "Image parallelization. The code will stop now. "/)')
-    WRITE(stdout, '(/5x, "You need to restart a calculation by reading the .epb "/)')
-    WRITE(stdout, '(/5x, "                       with pool parallelization only. "/)')
-    CALL stop_epw()
-  ENDIF
+  ! S. Tiwari: Since the image parallelization is enabled, we allow the check to
+  ! fail
+  !  IF (nimage > 1) THEN
+  !    WRITE(stdout, '(/5x, "Image parallelization. The code will stop now. "/)')
+  !    WRITE(stdout, '(/5x, "You need to restart a calculation by reading the .epb "/)')
+  !    WRITE(stdout, '(/5x, "                       with pool parallelization only. "/)')
+  !    CALL stop_epw()
+  !  ENDIF
   !
   IF (.NOT. epbread .AND. epwread) THEN
     ! CV: need dummy nqc, xqc for the ephwann_shuffle call

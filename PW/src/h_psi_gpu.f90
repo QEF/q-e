@@ -42,7 +42,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi, hpsi )
   INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !
   !
-  CALL start_clock_gpu( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
+  CALL start_clock( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
   !
   ! band parallelization with non-distributed bands is performed if
   ! 1. enabled (variable use_bgrp_in_hpsi must be set to .T.)
@@ -76,7 +76,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi, hpsi )
      !
   ENDIF
   !
-  CALL stop_clock_gpu( 'h_psi_bgrp' )
+  CALL stop_clock( 'h_psi_bgrp' )
   !
   !
   RETURN
@@ -86,17 +86,12 @@ END SUBROUTINE h_psi_gpu
 !----------------------------------------------------------------------------
 SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !----------------------------------------------------------------------------
-  !----------------------------------------------------------------------------
   !! This routine computes the product of the Hamiltonian matrix with m 
   !! wavefunctions contained in psi.
   !
-#if defined(__CUDA)
-  USE cudafor
-  USE becmod,                  ONLY: calbec
-#endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp
+  USE becmod,                  ONLY: bec_type, becp, calbec
   USE lsda_mod,                ONLY: current_spin
   USE uspp,                    ONLY: nkb, vkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
@@ -111,7 +106,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma_gpu, vexxace_k_gpu
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
-  USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin  
@@ -126,35 +120,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m)
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)
   !
-  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
-#if defined(__CUDA)
-  attributes(PINNED) :: psi_host, hpsi_host
-#endif
-  !
   INTEGER     :: ipol, ibnd, i
   REAL(dp)    :: ee
   !
-  LOGICAL     :: need_host_copy
-  !
-  CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
+  CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
-  need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
-                     xclib_dft_is('meta') .OR. &
-                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo") .OR. &
-                    (exx_is_active() .AND. .NOT. use_ace) .OR. lelfield
-
-
-  IF (need_host_copy) THEN
-      ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
-      !$acc host_data use_device(psi)
-      CALL dev_memcpy(psi_host, psi)    ! psi_host = psi
-      !$acc end host_data
-  ENDIF
-
-
   !$acc parallel loop collapse(2) present(g2kin, hpsi, psi)
   DO ibnd = 1, m
      DO i=1, lda
@@ -172,14 +144,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
      END DO
   END DO
 
-
-  IF (need_host_copy) THEN
-    !$acc host_data use_device(hpsi)
-    CALL dev_memcpy(hpsi_host, hpsi)    ! hpsi_host = hpsi
-    !$acc end host_data
-  END IF
-
-  CALL start_clock_gpu( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
+  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
   ! ... Here the product with the local potential V_loc psi
   !
@@ -194,36 +159,29 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
         DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
-           CALL invfft_orbital_gamma(psi_host, ibnd, m )
+           CALL invfft_orbital_gamma(psi, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
-           CALL start_clock_gpu( 'h_psi:calbec' )
+           CALL start_clock( 'h_psi:calbec' )
            CALL calbec_rs_gamma( ibnd, m, becp%r )
            !$acc update device(becp%r)
-           CALL stop_clock_gpu( 'h_psi:calbec' )
+           CALL stop_clock( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m ) 
            ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_gamma( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
-           CALL fwfft_orbital_gamma( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
+           CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-        !$acc end host_data
         !
      ELSE
         ! ... usual reciprocal-space algorithm
-        !$acc host_data use_device(psi, hpsi)
-        CALL vloc_psi_gamma_gpu ( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$acc end host_data
+        CALL vloc_psi_gamma_acc ( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !
      ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
-     !$acc host_data use_device(psi, hpsi)
-     CALL vloc_psi_nc_gpu ( lda, n, m, psi, vrs, hpsi )
-     !$acc end host_data
+     CALL vloc_psi_nc_acc ( lda, n, m, psi, vrs, hpsi )
      !
   ELSE  
      ! 
@@ -237,31 +195,24 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
         !
         DO ibnd = 1, m
            ! ... transform psi to real space -> psic 
-           CALL invfft_orbital_k(psi_host, ibnd, m )
+           CALL invfft_orbital_k(psi, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
-           CALL start_clock_gpu( 'h_psi:calbec' )
+           CALL start_clock( 'h_psi:calbec' )
            CALL calbec_rs_k( ibnd, m )
            !$acc update device(becp%k)
-           CALL stop_clock_gpu( 'h_psi:calbec' )
+           CALL stop_clock( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
            CALL add_vuspsir_k( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
-           CALL fwfft_orbital_k( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
+           CALL fwfft_orbital_k( hpsi, ibnd, m, add_to_orbital=.TRUE. )
            !
         ENDDO
-        IF (need_host_copy) THEN
-          !$acc host_data use_device(hpsi)
-          CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-          !$acc end host_data
-        END IF
         !
      ELSE
         !
-        !$acc host_data use_device(psi, hpsi)
-        CALL vloc_psi_k_gpu ( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$acc end host_data
+        CALL vloc_psi_k_acc ( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !
      ENDIF
      !
@@ -272,47 +223,37 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
-     CALL start_clock_gpu( 'h_psi:calbec' )
-#if defined(__CUDA)
+     CALL start_clock( 'h_psi:calbec' )
      Call calbec(offload_type, n, vkb, psi, becp, m )
-#endif
-     CALL stop_clock_gpu( 'h_psi:calbec' )
-     !$acc host_data use_device(hpsi)
-     CALL add_vuspsi_gpu( lda, n, m, hpsi )
-     !$acc end host_data
+     CALL stop_clock( 'h_psi:calbec' )
+     CALL add_vuspsi_acc( lda, n, m, hpsi )
      !
   END IF
   !  
-  CALL stop_clock_gpu( 'h_psi:pot' )
+  CALL stop_clock( 'h_psi:pot' )
   !
   IF (xclib_dft_is('meta')) THEN
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi) ! hpsi_host = hpsi
-     call h_psi_meta (lda, n, m, psi_host, hpsi_host)
-     CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-     !$acc end host_data
+     call h_psi_meta (lda, n, m, psi, hpsi)
   end if
   !
   ! ... Here we add the Hubbard potential times psi
   !
   IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi )    ! hpsi_host = hpsi
-     !$acc end host_data
      IF ( noncolin ) THEN
-        CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi, hpsi_host)  ! hpsi = hpsi_host
-        !$acc end host_data
+        !FIXME: vhpsi_nc must be ported to GPU
+        !$acc update host(psi, hpsi)
+        CALL vhpsi_nc( lda, n, m, psi, hpsi )
+        !$acc update device(psi, hpsi)
      ELSE
         IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
+          ! DFT + U
           CALL vhpsi_gpu( lda, n, m, psi, hpsi )  ! DFT+U
-        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN          ! DFT+U+V
-          CALL vhpsi( lda, n, m, psi_host, hpsi_host )
-          !$acc host_data use_device(hpsi)
-          CALL dev_memcpy(hpsi, hpsi_host)
-          !$acc end host_data
+        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
+          ! DFT+U+V  FIXME: must be ported to GPU
+          !$acc update host(psi, hpsi)
+          CALL vhpsi( lda, n, m, psi, hpsi )
+          !$acc update device(psi, hpsi)
         ENDIF
      ENDIF
      !
@@ -332,11 +273,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
            !$acc end host_data
         END IF
      ELSE
-        !$acc host_data use_device(hpsi)
-        CALL dev_memcpy(hpsi_host, hpsi ) ! hpsi_host = hpsi
-        CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
-        CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-        !$acc end host_data
+        !$acc update host (psi,hpsi)
+        CALL vexx( lda, n, m, psi, hpsi, becp )
+        !$acc update device(hpsi)
      END IF
   END IF
   !
@@ -344,23 +283,19 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
   !
   IF ( lelfield ) THEN
      !
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi_host, hpsi ) ! hpsi_host = hpsi
-     !$acc end host_data
+     !$acc update host (psi,hpsi)
      IF ( .NOT.l3dstring ) THEN
-        CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,gdir, efield )
+        CALL h_epsi_her_apply( lda, n, m, psi, hpsi, gdir, efield )
      ELSE
         DO ipol=1,3
-           CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,ipol,efield_cry(ipol) )
+           CALL h_epsi_her_apply( lda, n, m, psi, hpsi, ipol, efield_cry(ipol) )
         END DO
      END IF
-     !$acc host_data use_device(hpsi)
-     CALL dev_memcpy(hpsi, hpsi_host) ! hpsi = hpsi_host
-     !$acc end host_data
+     !$acc update device(hpsi)
      !
   END IF
 #if defined(__OSCDFT)
-  IF ( use_oscdft ) THEN
+  IF ( use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
      CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi, hpsi)
   END IF
 #endif
@@ -376,10 +311,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi, hpsi )
       !$acc end kernels
   end if
   !
-  if (need_host_copy) then
-      DEALLOCATE(psi_host , hpsi_host )
-  end if
-  CALL stop_clock_gpu( 'h_psi' )
+  CALL stop_clock( 'h_psi' )
   !
   RETURN
   !

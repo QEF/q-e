@@ -42,12 +42,16 @@ SUBROUTINE lr_apply_s(vect, svect)
        WRITE(stdout,'("<lr_apply_s>")')
     ENDIF
     !
+    !$acc data present_or_copyin(vect(1:npwx*npol,1:nbnd,1:nksq)) present_or_copyout(svect(1:npwx*npol,1:nbnd,1:nksq))
     IF ( nkb==0 .or. (.not.okvan) ) THEN
        !
+       !$acc kernels
        svect(:,:,:) = vect(:,:,:) 
+       !$acc end kernels
        RETURN
        !
     ENDIF
+    !$acc end data
     !
     CALL start_clock('lr_apply_s')
     !

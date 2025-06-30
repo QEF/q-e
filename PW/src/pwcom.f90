@@ -374,10 +374,8 @@ MODULE force_mod
   REAL(DP) :: sigma(3,3)
   !! the stress acting on the system
   REAL(DP), ALLOCATABLE :: eigenval(:)
-  !$acc declare device_resident(eigenval)
   !! eigenvalues of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
-  !$acc declare device_resident(eigenvect)
   !! eigenvectors of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: overlap_inv(:,:)
   !! overlap matrix (transposed): (O^{-1/2})^T

@@ -89,9 +89,9 @@ SUBROUTINE lr_readin
                         & force_real_alpha, force_zero_alpha, lan_precondition 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
-                        & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
-                        & broadening,print_spectrum,start,finish,step,if_check_orth, if_random_init, &
-                        & if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
+                        & reference,single_pole, sort_contr, diag_of_h, close_pre,        &
+                        & broadening,print_spectrum,start,finish,step, if_random_init, &
+                        & p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
                         & conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,               &
                         & lplot_drho, vccouple_shift, ltammd
   !
@@ -174,7 +174,6 @@ SUBROUTINE lr_readin
      close_pre=1.0E-5
      turn2planb=1.0E-3
      precondition=.true.
-     dav_debug=.false.
      reference=0.0d0
      vccouple_shift=0.0d0
      single_pole=.false.
@@ -183,8 +182,6 @@ SUBROUTINE lr_readin
      start=0.0d0
      finish=1.0d0
      step=0.001d0
-     if_check_orth=.false.
-     if_check_her=.false.
      if_random_init=.false.
      p_nbnd_occ=10
      p_nbnd_virt=10

@@ -1,0 +1,53 @@
+BEGIN
+BEGIN_PIMD_INPUT
+&dynamics
+  restart_pimd=.false.
+  nbeadMD=1
+  nunitcells=1
+  nblocks=2 !! not used check - only used for first run. restart not working -check
+  nstep_block=2 !! not used check - only used for first run. restart not working -check
+  iprint=1 !! Freqncy of output print
+  run='verlet' !! verlet,ceriotti,pioud
+  delt=0.004  !! in fs #time step
+  tempMD=300.d0 !! temprature in Kelvin
+  gammaMD=0.21d0 !! Damping parameter in(1/fs)
+  delta_force=1.d-4 !! Just for atomic potentials not DFT.
+  delta_harm=5.d-3 !! Just for atomic potentials not DFT.
+/
+END_PIMD_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix         = "diamond"
+  tstress = .true.
+/
+&SYSTEM
+    ibrav = 2 ,
+    nosym_evc= .true.
+    a=3.56,
+    nat = 2,
+    ntyp = 1,
+    nspin=1,
+    ecutwfc = 25.0,
+    ecutrho = 120.0,
+    nbnd = 15,
+    occupations='smearing',
+    smearing='fd'
+    degauss=0.001,
+/
+&ELECTRONS
+  conv_thr    = 1.D-8,
+  mixing_beta = 0.3D0,
+/
+&IONS
+/
+ATOMIC_SPECIES
+C    12.0107  C.UPF
+BEGIN_POSITIONS
+ATOMIC_POSITIONS crystal
+C        0.0   0.0  0.000000000
+C        0.25  0.25  0.25
+END_POSITIONS
+K_POINTS automatic
+4 4 4 0 0 0
+END_ENGINE_INPUT
+END

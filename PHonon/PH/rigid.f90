@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE rigid
-  PUBLIC :: rgd_blk, dyndiag, nonanal, nonanal_ifc, cdiagh2
+  PUBLIC :: rgd_blk, dyndiag, nonanal, nonanal_ifc, cdiagh2, &
+            remove_dyn_interaction
   PRIVATE
   CONTAINS
 !
@@ -529,5 +530,37 @@ subroutine cdiagh2 (n,h,ldh,e,v)
   !
   return
 end subroutine cdiagh2
-
+!
+!-----------------------------------------------------------------------
+SUBROUTINE remove_dyn_interaction (d,na_)
+  !-----------------------------------------------------------------------
+  !
+  !   removes from the dynamical matrix the columsn and the rows
+  !   for the atoms with vanishing diagonal blocks (i,j,ia,ia)
+  !
+  USE kinds,       ONLY : DP
+  IMPLICIT NONE
+  INTEGER,INTENT(IN)      :: na_
+  COMPLEX(DP), INTENT(INOUT)  :: d(3,3,na_,na_)
+  REAL(DP)                :: norm
+  !
+  INTEGER ia, ipol, jpol
+  COMPLEX(dp) :: z(3,3)
+  DO ia = 1, na_
+    norm = 0._dp
+    z = d(:,:,ia,ia)
+    DO ipol = 1, 3
+      norm = norm + REAL(z(ipol,ipol))**2 + AIMAG(z(ipol,ipol))**2
+      DO jpol =ipol+1, 3
+         norm = norm + 2._DP * REAL(z(ipol,jpol))**2 + AIMAG(z(ipol,jpol))**2
+      END DO
+    END DO
+    IF (norm .lt. 1.e-8_DP ) THEN
+      d(:,:,ia,:) = 0._DP
+      d(:,:,:,ia)  =  0._DP
+    END IF
+  END DO
+  !
+END SUBROUTINE remove_dyn_interaction
+!
 END MODULE rigid

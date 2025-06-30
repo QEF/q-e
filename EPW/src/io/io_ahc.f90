@@ -75,6 +75,7 @@ CONTAINS
   USE global_var,       ONLY : nbndep, sthmatq
   USE kfold,            ONLY : ktokpmq
   USE parallelism,      ONLY : fkbounds
+  USE io_var,           ONLY : iuahcsth, iuahcgkk, iuahcet
   !
   IMPLICIT NONE
   !
@@ -115,12 +116,6 @@ CONTAINS
   !! First band inside the outer window
   INTEGER :: ik_global
   !! Global index of k point (for pool parallelization)
-  INTEGER :: iuahcsth
-  !! File unit for upper Fan matrix from ph.x
-  INTEGER :: iuahcgkk
-  !! File unit for E-ph matrix from ph.x
-  INTEGER :: iuahcet
-  !! File unit for Band energy from ph.x
   INTEGER :: recl
   !! Record length of the ph.x data
   INTEGER :: ios
@@ -170,24 +165,24 @@ CONTAINS
   fileetq = TRIM(dvscf_dir) // 'ahc_dir/ahc_etq_iq' // TRIM(int_to_char(iq_irr)) // '.bin'
   !
   INQUIRE(IOLENGTH=recl) sth_mat
-  OPEN(NEWUNIT=iuahcsth, FILE=TRIM(filesth), ACTION='read', FORM='unformatted', &
+  OPEN(UNIT=iuahcsth, FILE=TRIM(filesth), ACTION='read', FORM='unformatted', &
        ACCESS='direct', STATUS='old', RECL=recl, IOSTAT=ios)
   IF (ios /= 0) CALL errore('read_sthmat', 'error opening '//TRIM(filesth), 1)
   !
   INQUIRE(IOLENGTH=recl) ep_mat_ph
-  OPEN(NEWUNIT=iuahcgkk, FILE=TRIM(fileepph), ACTION='read', FORM='unformatted', &
+  OPEN(UNIT=iuahcgkk, FILE=TRIM(fileepph), ACTION='read', FORM='unformatted', &
        ACCESS='direct', STATUS='old', RECL=recl, IOSTAT=ios)
   IF (ios /= 0) CALL errore('read_sthmat', 'error opening '//TRIM(fileepph), 1)
   !
   INQUIRE(IOLENGTH=recl) etk_ph
-  OPEN(NEWUNIT=iuahcet, FILE=TRIM(fileetk), ACTION='read', FORM='unformatted', &
+  OPEN(UNIT=iuahcet, FILE=TRIM(fileetk), ACTION='read', FORM='unformatted', &
        ACCESS='direct', STATUS='old', RECL=recl, IOSTAT=ios)
   IF (ios /= 0) CALL errore('read_sthmat', 'error opening '//TRIM(fileetk), 1)
   READ(iuahcet, REC=1) etk_ph
   CLOSE(iuahcet)
   !
   INQUIRE(IOLENGTH=recl) etq_ph
-  OPEN(NEWUNIT=iuahcet, FILE=TRIM(fileetq), ACTION='read', FORM='unformatted', &
+  OPEN(UNIT=iuahcet, FILE=TRIM(fileetq), ACTION='read', FORM='unformatted', &
        ACCESS='direct', STATUS='old', RECL=recl, IOSTAT=ios)
   IF (ios /= 0) CALL errore('read_sthmat', 'error opening '//TRIM(fileetq), 1)
   READ(iuahcet, REC=1) etq_ph
@@ -336,6 +331,7 @@ CONTAINS
   USE input,            ONLY : ahc_nbnd, dvscf_dir
   USE global_var,       ONLY : dw_mat, nbndep
   USE parallelism,      ONLY : fkbounds
+  USE io_var,           ONLY : iuahcdw
   !
   IMPLICIT NONE
   !
@@ -364,8 +360,6 @@ CONTAINS
   !! Counter on modes
   INTEGER :: idir
   !! Counter on directions
-  INTEGER :: iuahcdw
-  !! File unit for Debye-Waller matrix from ph.x
   INTEGER :: recl
   !! Record length of the ph.x data
   INTEGER :: ios
@@ -392,7 +386,7 @@ CONTAINS
   filedw = TRIM(dvscf_dir) // 'ahc_dir/ahc_dw.bin'
   !
   INQUIRE(IOLENGTH=recl) dw_mat_temp
-  OPEN(NEWUNIT=iuahcdw, FILE=TRIM(filedw), ACTION='read', FORM='unformatted', &
+  OPEN(UNIT=iuahcdw, FILE=TRIM(filedw), ACTION='read', FORM='unformatted', &
        ACCESS='direct', STATUS='old', RECL=recl, IOSTAT=ios)
   IF (ios /= 0) CALL errore('read_dwmat', 'error opening '//TRIM(filedw), 1)
   !

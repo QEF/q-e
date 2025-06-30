@@ -55,6 +55,11 @@ SUBROUTINE summary()
   USE environment,     ONLY : print_cuda_info
   USE london_module,   ONLY : print_london
   USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
+  USE dynamics_module, ONLY : dt 
+  USE control_flags,   ONLY : tnosep
+  USE ions_nose,       ONLY : ions_nose_info 
+  USE cell_nose,       ONLY : cell_nose_info 
+
   !
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
@@ -165,6 +170,8 @@ SUBROUTINE summary()
 #if defined (__ENVIRON)
   IF (use_environ) CALL print_environ_summary()
 #endif
+CALL ions_nose_info(dt)
+CALL cell_nose_info(dt) 
   !
   ! ... CUDA
   !
@@ -362,8 +369,7 @@ SUBROUTINE summary()
   ENDIF
 
   IF ( real_space ) WRITE( stdout, &
-       & '(5x,"Real space treatment of Beta functions,", &
-       &      " V.1 (BE SURE TO CHECK MANUAL!)")' )
+       & '(5x,"Real space treatment of Beta functions (CHECK MANUAL) ")' )
   IF ( tbeta_smoothing ) WRITE( stdout, '(5x,"Beta functions are smoothed ")' )
   IF ( tqr ) WRITE( stdout, '(5x,"Real space treatment of Q(r)")' )
   IF ( tq_smoothing ) WRITE( stdout, '(5x,"Augmentation charges are smoothed ")' )

@@ -57,7 +57,7 @@
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, ryd2ev, one, two, zero, ci, eps6, eps8
     USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, inter_image_comm
     USE io_selfen,     ONLY : selfen_el_write, selfen_el_write_wfpt, spectral_write
     USE parallelism,   ONLY : poolgather2
     USE utilities,     ONLY : fermi_dirac
@@ -537,7 +537,7 @@
     USE kinds,         ONLY : DP
     USE ep_constants,  ONLY : ryd2mev, ryd2ev, czero, zero, eps6, one, kelvin2eV
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, inter_image_comm
     USE io_global,     ONLY : stdout, ionode
     USE io_var,        ONLY : linewidth_elself, iuelself_wfpt
     USE input,         ONLY : nbndsub, efermi_read, fermi_energy, nstemp, &
@@ -607,12 +607,18 @@
     CALL mp_sum(sigmar_all, inter_pool_comm)
     CALL mp_sum(sigmai_all, inter_pool_comm)
     CALL mp_sum(zi_all, inter_pool_comm)
+    CALL mp_sum(sigmar_all, inter_image_comm)
+    CALL mp_sum(sigmai_all, inter_image_comm)
+    CALL mp_sum(zi_all, inter_image_comm)
     IF (lwfpt) THEN
       CALL mp_sum(sigmar_dw_all, inter_pool_comm)
       CALL mp_sum(sigma_ahc_hdw, inter_pool_comm)
       CALL mp_sum(sigma_ahc_uf, inter_pool_comm)
     ENDIF
-    IF (iverbosity == 3) CALL mp_sum(sigmai_mode, inter_pool_comm)
+    IF (iverbosity == 3) THEN 
+      CALL mp_sum(sigmai_mode, inter_pool_comm)
+      CALL mp_sum(sigmai_mode, inter_image_comm)
+    ENDIF
     !
     ! Average over degenerate eigenstates
     !
@@ -822,7 +828,8 @@
     !-----------------------------------------------------------------------
     !!
     !! Compute the imaginary part of the phonon self energy due to electron-
-    !! phonon interaction in the Migdal approximation. This corresponds to
+    !! phonon interaction in the Migdal approximation and dynamically renormalize the 
+    !! adiabatic frequencies. The imaginary part corresponds to
     !! the phonon linewidth (half width). The phonon frequency is taken into
     !! account in the energy selection rule.
     !!
@@ -843,19 +850,22 @@
     USE input,         ONLY : nbndsub, fsthick, efermi_read, fermi_energy,  &
                               nstemp, ngaussw, degaussw, shortrange,        &
                               nsmear, delta_smear, eps_acoustic, specfun_ph, &
-                              delta_approx, vme, lfast_kmesh
+                              delta_approx, vme, lfast_kmesh, isk_dummy, &
+                              wmax_specfun, wmin_specfun, nw_specfun, &
+                              phonselfen
     USE pwcom,         ONLY : nelec, ef
-    USE input,         ONLY : isk_dummy
     USE global_var,    ONLY : epf17, ibndmin, etf, wkf, xqf, wqf, nkqf,  &
                               nkf, wf, xqf, lambda_all, lambda_v_all,    &
                               vmef, gamma_all, gamma_v_all, efnew, nbndfst, &
-                              gtemp, nktotf, adapt_smearing
+                              gtemp, nktotf, adapt_smearing, pi_0, gammai_all, &
+                              pir_all
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, ryd2ev, one, two, zero, eps4,&
-                              eps6, eps8, pi
+                              eps6, eps8, pi, ci, cone
     USE utilities,     ONLY : fermi_dirac
-    !
+    USE klist,         ONLY : degauss, ngauss 
+   !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iqq
@@ -888,7 +898,9 @@
     INTEGER :: n
     !! Counter on number of mode degeneracies
     INTEGER :: itemp
-    !! Counter on temperatuers
+    !! Counter on temperatures
+    INTEGER :: iw
+    !! Counter on energy for the spectral function
     !
     REAL(KIND = DP) :: g2
     !! Electron-phonon matrix elements squared in Ry^2
@@ -900,14 +912,20 @@
     !! Eigen energy at k on the fine grid relative to the Fermi level
     REAL(KIND = DP) :: ekq
     !! Eigen energy at k+q on the fine grid relative to the Fermi level
+    REAL(KIND = DP) :: etmp1
+    !! Temporary variable to store etmp1 = ekq - ekk
+    REAL(KIND = DP) :: etmp2
+    !! Temporary variable to store etmp2 = ekq - ekk - ww
     REAL(KIND = DP) :: wgkk
     !! Fermi-Dirac occupation factor $f_{nk}(T)$
     REAL(KIND = DP) :: wgkq
     !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
     REAL(KIND = DP) :: weight
-    !! Imaginary part of the phonhon self-energy factor
+    !! Imaginary or real part of the phonon self-energy factor
     !!$$ \pi N_q \Im(\frac{f_{nk}(T) - f_{mk+q(T)}}{\varepsilon_{nk}-\varepsilon_{mk+q}-\omega_{q\nu}+i\delta}) $$
     !! In practice the imaginary is performed with a delta Dirac
+    REAL(KIND = DP) :: weight0
+    !! static part of the phonon self-energy factor
     REAL(KIND = DP) :: w0g1
     !! Dirac delta at k for the imaginary part of $\Sigma$
     REAL(KIND = DP) :: w0g2
@@ -916,6 +934,12 @@
     !! degaussw0 = (ismear-1) * delta_smear + degaussw
     REAL(KIND = DP) :: inv_degaussw0
     !! Inverse degaussw0 for efficiency reasons
+    REAL(KIND = DP) :: inv_degauss
+    !! inverse smearing from the scf calculation
+    REAL(KIND = DP) :: ww(nw_specfun)
+    !! Current frequency
+    REAL(KIND = DP) :: dw
+    !! frequency increment
     REAL(KIND = DP) :: lambda_tot
     !! Integrated lambda function
     REAL(KIND = DP) :: lambda_tr_tot
@@ -939,8 +963,16 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! This function computes the derivative of the Fermi-Dirac function
     !! It is therefore an approximation for a delta function
+    REAL(KIND = DP) :: fact
+    !! difference between occupations: fnk - fmk+q
+    REAL(KIND = DP) :: fact_scf
+    !! difference between occupations: fnk - fmk+q, but calculated for the smearing type and value from the ph.x calculation
     REAL(KIND = DP) :: wq(nmodes)
     !! Phonon frequency on the fine grid
+    REAL(KIND = DP) :: wq_dyn(nmodes)
+    !! One-shot nonadiabatic phonon frequency on the fine grid (on-shell)
+    REAL(KIND = DP) :: wq_dyn_sc(nmodes)
+    !! self-consistent nonadiabatic phonon frequency
     REAL(KIND = DP) :: inv_wq(nmodes)
     !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
     REAL(KIND = DP) :: g2_tmp(nmodes)
@@ -949,6 +981,8 @@
     !! Gamma is the imaginary part of the phonon self-energy
     REAL(KIND = DP) :: gamma_v(nmodes)
     !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
+    REAL(KIND = DP) :: pi_r(nmodes)
+    !! dynamical real part of the phonon self-energy
     REAL(KIND = DP) :: lambda_tmp(nmodes)
     !! Temporary value of lambda for av.
     REAL(KIND = DP) :: lambda_v_tmp(nmodes)
@@ -964,25 +998,54 @@
     REAL(KIND = DP) :: coskkq(nbndfst, nbndfst)
     !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
     !
+    CHARACTER(LEN=256) :: ngauss_         
+    !! smearing type used for the ph.x calculation, read from an xml file
+    !
+    !
     IF (adapt_smearing) CALL errore('selfen_phon_q', 'adapt_smearing cannot be used with phonon self-energy', 1)
     !
+    IF (specfun_ph) THEN
+      dw = (wmax_specfun - wmin_specfun) / DBLE(nw_specfun - 1)
+      DO iw = 1, nw_specfun
+        ww(iw) = wmin_specfun + DBLE(iw - 1) * dw
+      ENDDO
+      pir_all(:, :, :, :) = zero
+      gammai_all(:, :, :, :) = zero
+    ENDIF
     !
+    !    
     DO itemp = 1, nstemp
       IF (iq == 1) THEN
-        WRITE(stdout, '(/5x, a)') REPEAT('=',67)
-        WRITE(stdout, '(5x, "Phonon (Imaginary) Self-Energy in the Migdal Approximation")')
-        WRITE(stdout, '(5x, a/)') REPEAT('=',67)
-        !
+        IF (phonselfen) THEN
+          WRITE(stdout, '(/5x, a)') REPEAT('=',67)
+          WRITE(stdout, '(5x, "Phonon (Imaginary) Self-Energy in the Migdal Approximation")')
+          WRITE(stdout, '(5x, a/)') REPEAT('=',67)
+          !
+          IF (ngauss == 0) THEN
+            ngauss_ = 'Gaussian'
+          ELSEIF (ngauss == 1) THEN
+            ngauss_ =  'Methfessel-Paxton'
+          ELSEIF (ngauss == -1) THEN
+            ngauss_ = 'Marzari-Vanderbilt'
+          ELSEIF (ngauss == -99) THEN
+            ngauss_ = 'Fermi-Dirac'
+          ENDIF
         IF (fsthick < 1.d3 ) WRITE(stdout, '(/5x, a, f10.6, a)' ) &
-             'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', gtemp(itemp) * ryd2ev, ' eV'
-        !
+                 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+          WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', gtemp(itemp) * ryd2ev, ' eV'
+          WRITE(stdout, '(/5x, a)' ) 'On- and Off-shell dynamical frequency renormalization will be performed using:'
+          WRITE(stdout, '(/5x, a)' ) ' Omega^2 = omega^2 + 2omega(Re[Pi(Omega,T_low)]- Pi[0,T_high]).'
+          WRITE(stdout, '(5x, a, a)') 'Smearing type for the static self-energy: ', trim(ngauss_)
+          WRITE(stdout, '(5x, a, f10.6, a)') 'smearing value for the static self-energy: T_high = ', degauss,' Ry.'
+        ENDIF
       ENDIF
       !
       !
       ! Now pre-treat phonon modes for efficiency
       ! Treat phonon frequency and Bose occupation
       wq(:) = zero
+      wq_dyn(:) = zero
+      wq_dyn_sc(:) = zero
       DO imode = 1, nmodes
         IF (lfast_kmesh) THEN
           wq(imode) = wf(imode, iqq)
@@ -997,6 +1060,8 @@
           inv_wq(imode) = zero
         ENDIF
       ENDDO
+      !
+      inv_degauss = one / degauss
       !
       DO ismear = 1, nsmear
         !
@@ -1036,6 +1101,8 @@
         w0g1 = zero
         gamma(:)   = zero
         gamma_v(:) = zero
+        pi_0(:)  = zero
+        pi_r(:) = zero
         !
         DO ik = 1, nkf
           !
@@ -1077,14 +1144,14 @@
                 !
                 IF (delta_approx) THEN
                   w0g1 = w0gauss(ekk * inv_degaussw0, 0) * inv_degaussw0
-                ELSE
-                  wgkk = fermi_dirac(ekk, gtemp(itemp))
                 ENDIF
+                wgkk = fermi_dirac(ekk, gtemp(itemp))
                 !
                 DO jbnd = 1, nbndfst
                   !
                   !  the fermi occupation for k+q
                   ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
+                  etmp1 = ekq - ekk
                   !
                   ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                   ! with hbar = 1 and M already contained in the eigenmodes
@@ -1099,6 +1166,9 @@
                     g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
                   ENDIF
                   !
+                  wgkq = fermi_dirac(ekq, gtemp(itemp))
+                  fact = wgkq - wgkk
+                  !
                   IF (delta_approx) THEN
                     !
                     w0g2 = w0gauss(ekq * inv_degaussw0, 0) * inv_degaussw0
@@ -1108,25 +1178,62 @@
                     !
                   ELSE
                     !
-                    wgkq = fermi_dirac(ekq, gtemp(itemp))
-                    !
                     ! = k-point weight * [f(E_k) - f(E_k+q)] / [E_k+q - E_k - w_q + id]
                     ! This is the imaginary part of the phonon self-energy, sans
                     ! the matrix elements [Eq. 4 in Comput. Phys. Commun. 209, 116 (2016)]
                     !
-                    !weight = wkf (ikk) * (wgkk - wgkq) * AIMAG(cone / (ekq - ekk - wq - ci * degaussw0))
+                    ! weight = wkf (ikk) * (wgkk - wgkq) * AIMAG(cone / (ekq - ekk - wq - ci * degaussw0))
                     !
                     ! SP: The expression below is the imag part of phonon self-energy,
                     ! sans matrix elements [Eq. 9 in Comput. Phys. Commun. 209, 116 (2016)]
                     !  = pi * k-point weight * [f(E_k) - f(E_k+q)] * delta[E_k+q - E_k - w_q]
                     !
-                    weight = pi * wkf(ikk) * (wgkk - wgkq) * w0gauss((ekq - ekk - wq(imode)) * inv_degaussw0, 0) * inv_degaussw0
+                    weight = -pi * wkf(ikk) * fact * w0gauss((etmp1 - wq(imode)) * inv_degaussw0, 0) * inv_degaussw0
                     !
                   ENDIF
                   !
                   gamma(imode)   = gamma(imode)   + weight * g2
                   gamma_v(imode) = gamma_v(imode) + weight * g2 * (1.0d0 - coskkq(ibnd, jbnd))
                   !
+                  ! calculate the static part of the phonon self-energy from the ph.x calculation
+                  ! in the limit of a vanishing denominator, the static self-energy becomes a derivative 
+                  ! (f(ekq) - f(ekk) / (ekq - ekk) -> -(df/de)_{e=ekk}
+                  !
+                  fact_scf = wgauss(-ekq * inv_degauss, ngauss) - wgauss(-ekk * inv_degauss, ngauss)
+                  fact = wgkq - wgkk
+                  !
+                  IF (abs(etmp1) < 1.0D-5 ) THEN
+                    weight0 = -wkf (ikk) * inv_degauss * w0gauss(ekk * inv_degauss, ngauss)
+                  ELSE
+                    weight0 = wkf(ikk) * fact_scf / etmp1
+                  ENDIF
+                  !
+                  pi_0(imode)    =  pi_0(imode)   + weight0 * g2
+                  ! calculate the real part of the dynamical phonon self-energy          
+                  weight = wkf(ikk) * fact * REAL(cone / (etmp1 -  wq(imode) - ci * degaussw0))
+                  pi_r(imode)    = pi_r(imode)   + weight * g2
+                  !
+                  IF (specfun_ph) THEN
+                    DO iw = 1, nw_specfun
+                      !
+                      ! below we calculate the full phonon self-energy, its real and imaginary parts
+                      ! 
+                      etmp2 = etmp1 - ww(iw)
+                      weight = wkf(ikk) * fact * REAL(cone / (etmp2 - ci * degaussw0))
+                      !
+                      pir_all(iw, imode, itemp, ismear) = pir_all(iw, imode, itemp, ismear) + weight * g2
+                      !
+                      ! Normal implementation
+                      ! weight = wkf (ikk) * fact * AIMAG(cone / (etmp2 - ci * degaussw))
+                      !
+                      ! More stable:
+                      ! Analytical im. part
+                      weight = pi * wkf(ikk) * fact * w0gauss(etmp2 * inv_degaussw0, 0) * inv_degaussw0
+                      !
+                      gammai_all(iw, imode, itemp, ismear) = gammai_all(iw, imode, itemp, ismear) + weight * g2
+                      !
+                    ENDDO ! iw
+                  ENDIF 
                 ENDDO ! jbnd
               ENDDO   ! ibnd
             ENDDO ! loop on q-modes
@@ -1138,76 +1245,293 @@
         ! collect contributions from all pools (sum over k-points)
         ! this finishes the integral over the BZ  (k)
         !
+	CALL mp_sum(pi_r, inter_pool_comm)
+	CALL mp_sum(pi_0, inter_pool_comm)
         CALL mp_sum(gamma, inter_pool_comm)
         CALL mp_sum(gamma_v, inter_pool_comm)
         CALL mp_sum(fermicount, inter_pool_comm)
         CALL mp_barrier(inter_pool_comm)
         !
-        ! An average over degenerate phonon-mode is performed.
-        DO imode = 1, nmodes
-          n = 0
-          tmp1 = zero
-          tmp2 = zero
-          tmp3 = zero
-          tmp4 = zero
-          DO jmode = 1, nmodes
-            IF (ABS(wq(imode) - wq(jmode)) < eps6) THEN
-              n = n + 1
-              IF (wq(jmode) > eps_acoustic) THEN
-                tmp1 =  tmp1 + gamma(jmode)   / pi / wq(imode)**two / dosef
-                tmp2 =  tmp2 + gamma_v(jmode) / pi / wq(imode)**two / dosef
-              ENDIF
-              tmp3 =  tmp3 + gamma(jmode)
-              tmp4 =  tmp4 + gamma_v(jmode)
+        IF (phonselfen) THEN
+          ! An average over degenerate phonon-mode is performed.
+          DO imode = 1, nmodes
+            ! calculate the one-shot dynamical correction to the adiabatic frequency.
+            wq_dyn(imode) = wq(imode)**2 + 2*wq(imode) * (pi_r(imode) - pi_0(imode))
+            wq_dyn(imode) =  SQRT(ABS(wq_dyn(imode))) * wq_dyn(imode) / ABS(wq_dyn(imode))
+            !
+            ! If there are any dynamical corrections to the DFPT frequency, calculate also the self-consistent (off-shell) correction 
+            IF (abs(wq_dyn(imode) - wq(imode)) > 1.0D-5) THEN
+              CALL omega_dyn_sc(iqq, iq, imode, degaussw0, gtemp(itemp), pi_0(imode), ef0, ef, wq(imode), wq_dyn_sc(imode))
+            ELSE
+              wq_dyn_sc(imode) = wq_dyn(imode)
             ENDIF
-          ENDDO ! jbnd
-          lambda_tmp(imode)   = tmp1 / FLOAT(n)
-          lambda_v_tmp(imode) = tmp2 / FLOAT(n)
-          gamma_tmp(imode)    = tmp3 / FLOAT(n)
-          gamma_v_tmp(imode)  = tmp4 / FLOAT(n)
-        ENDDO
-        lambda_all(:, iq, ismear, itemp)   = lambda_tmp(:)
-        lambda_v_all(:, iq, ismear, itemp) = lambda_v_tmp(:)
-        gamma_all(:, iq, ismear, itemp)    = gamma_tmp(:)
-        gamma_v_all(:, iq, ismear, itemp)  = gamma_v_tmp(:)
-        lambda_tot    = SUM(lambda_all(:, iq, ismear, itemp))
-        lambda_tr_tot = SUM(lambda_v_all(:, iq, ismear, itemp))
-        !
-        WRITE(stdout, '(/5x, "ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5, " Temp: ", f8.3, "K")') ismear, iq, &
-                                                                      xqf(:, iq), wqf(iq), gtemp(itemp) * ryd2ev / kelvin2eV
-        WRITE(stdout, '(5x, a)') REPEAT('-', 67)
-        !
-        DO imode = 1, nmodes
+            ! 
+            n = 0
+            tmp1 = zero
+            tmp2 = zero
+            tmp3 = zero
+            tmp4 = zero
+            DO jmode = 1, nmodes
+              IF (ABS(wq(imode) - wq(jmode)) < eps6) THEN
+                n = n + 1
+                IF (wq(jmode) > eps_acoustic) THEN
+                  tmp1 =  tmp1 + gamma(jmode)   / pi / wq(imode)**two / dosef
+                  tmp2 =  tmp2 + gamma_v(jmode) / pi / wq(imode)**two / dosef
+                ENDIF
+                tmp3 =  tmp3 + gamma(jmode)
+                tmp4 =  tmp4 + gamma_v(jmode)
+              ENDIF
+            ENDDO ! jbnd
+            lambda_tmp(imode)   = tmp1 / FLOAT(n)
+            lambda_v_tmp(imode) = tmp2 / FLOAT(n)
+            gamma_tmp(imode)    = tmp3 / FLOAT(n)
+            gamma_v_tmp(imode)  = tmp4 / FLOAT(n)
+          ENDDO
+          lambda_all(:, iq, ismear, itemp)   = lambda_tmp(:)
+          lambda_v_all(:, iq, ismear, itemp) = lambda_v_tmp(:)
+          gamma_all(:, iq, ismear, itemp)    = gamma_tmp(:)
+          gamma_v_all(:, iq, ismear, itemp)  = gamma_v_tmp(:)
+          lambda_tot    = SUM(lambda_all(:, iq, ismear, itemp))
+          lambda_tr_tot = SUM(lambda_v_all(:, iq, ismear, itemp))
           !
-          WRITE(stdout, 102) imode, lambda_all(imode, iq, ismear, itemp), &
-                             ryd2mev * gamma_all(imode, iq, ismear, itemp), ryd2mev * wq(imode)
-          WRITE(stdout, 104) imode, lambda_v_all(imode, iq, ismear, itemp), &
-                             ryd2mev * gamma_v_all(imode, iq, ismear, itemp), ryd2mev * wq(imode)
+          WRITE(stdout, '(/5x, "ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5, " Temp: ", f8.3, "K")') ismear, iq, &
+                                                                        xqf(:, iq), wqf(iq), gtemp(itemp) * ryd2ev / kelvin2eV
+          WRITE(stdout, '(5x, a)') REPEAT('-', 67)
           !
-        ENDDO
-        !
-        WRITE(stdout, 103) lambda_tot
-        WRITE(stdout, 105) lambda_tr_tot
-        !
-        IF (.NOT. specfun_ph) THEN
+          DO imode = 1, nmodes
+            !
+            WRITE(stdout, 102) imode, lambda_all(imode, iq, ismear, itemp), &
+                               ryd2mev * gamma_all(imode, iq, ismear, itemp), &
+                               ryd2mev * wq(imode), ryd2mev * wq_dyn(imode), &
+                               ryd2mev * wq_dyn_sc(imode)
+            WRITE(stdout, 104) imode, lambda_v_all(imode, iq, ismear, itemp), &
+                               ryd2mev * gamma_v_all(imode, iq, ismear, itemp),&
+                               ryd2mev * wq(imode), ryd2mev * wq_dyn(imode), &
+                               ryd2mev * wq_dyn_sc(imode)
+          !
+          ENDDO
+          !
+          WRITE(stdout, 103) lambda_tot
+          WRITE(stdout, 105) lambda_tr_tot
+          !
           WRITE(stdout, '(5x, a/)') REPEAT('-', 67)
           WRITE(stdout, '(/5x, a, i8, a, i8/)' ) 'Number of (k,k+q) pairs on the Fermi surface: ', fermicount, ' out of ', nktotf
+          !
         ENDIF
-        !
       ENDDO !smears
       !
     ENDDO ! itemp
     100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
     101 FORMAT(5x, 'DOS =', f10.6, ' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
-    102 FORMAT(5x, 'lambda___( ', i3, ' )=', f15.6, '   gamma___=', f15.6, ' meV', '   omega=', f12.4, ' meV')
+    102 FORMAT(5x, 'lambda___( ', i3, ' )=', f15.6, '   gamma___=', f15.6, ' meV', '  omega=', f12.4, ' meV', &
+                   '   on_shell_Omega=', f12.4, ' meV'  , '  off_shell_Omega=', f12.4, ' meV')
     103 FORMAT(5x, 'lambda___( tot )=', f15.6)
-    104 FORMAT(5x, 'lambda_tr( ',i3,' )=', f15.6, '   gamma_tr=', f15.6, ' meV', '   omega=', f12.4, ' meV')
+    104 FORMAT(5x, 'lambda_tr( ',i3,' )=', f15.6, '   gamma_tr=', f15.6, ' meV', '  omega=', f12.4, ' meV' , &
+                   '   on_shell_Omega=', f12.4, ' meV', '  off_shell_Omega=', f12.4, ' meV')
     105 FORMAT(5x, 'lambda_tr( tot )=', f15.6)
     !
     RETURN
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE selfen_phon_q
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE omega_dyn_sc(iqq, iq, imode, degaussw0, eptemp,pi_0, ef0, ef, wq, wq_dyn_sc)
+    !-----------------------------------------------------------------------
+    !! This routine uses the bisection method to calculate the off-shell dynamical correction to the DFPT frequency. 
+    !! The self-consistent loop, determines its renormalization using the equation: Omega**2 = omega_DFPT**2 + 2*omega_DFPT*(Pi(Omega) - Pi(0))
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
+    USE modes,         ONLY : nmodes
+    USE input,         ONLY : nbndsub, fsthick, shortrange, eps_acoustic
+    USE global_var,    ONLY : epf17, ibndmin, etf, wkf, xqf, wqf, nkqf,  &
+                              nkf, wf, xqf, nbndfst, nktotf
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm
+    USE ep_constants,  ONLY : one, two, zero, eps4, eps6, eps8, pi, ci, cone, ryd2mev
+    USE utilities,     ONLY : fermi_dirac
+    !
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: iqq
+    !! Current q-point index from the selecq
+    INTEGER, INTENT(in) :: iq
+    !! Current q-point index
+    ! Local variables
+    !
+    INTEGER :: ik
+    !! Counter on the k-point index
+    INTEGER :: ikk
+    !! k-point index
+    INTEGER :: ikq
+    !! q-point index
+    INTEGER :: ibnd
+    !! Counter on bands at k
+    INTEGER :: jbnd
+    !! Counter on bands at k+q
+    INTEGER, INTENT(in) :: imode
+    !! Counter on mode
+    INTEGER :: iter
+    !! Counter on iterations 
+    INTEGER :: max_iter
+    !! maximum number of iterations
+    !
+    REAL(KIND = DP), INTENT(in) :: eptemp
+    !! temperature from the epw input file
+    REAL(KIND = DP), INTENT(in) :: ef0
+    !! Fermi energy level
+    REAL(KIND = DP), INTENT(in) ::  ef
+    !! fermi energy consistent with the ephwann shuffle routine
+    REAL(KIND = DP), INTENT(in) :: degaussw0
+    !! smearing fromt he input file
+    REAL(KIND = DP), INTENT(out) :: wq_dyn_sc
+    !! off-shell dynamically renormalized frequency
+    REAL(KIND = DP), INTENT(in) :: pi_0
+    !! static part of the phonon self-energy
+    REAL(KIND = DP), INTENT(in) :: wq
+    !! adiabatic fine-grid frequency
+    REAL(KIND = DP) :: g2
+    !! Electron-phonon matrix elements squared in Ry^2
+    REAL(KIND = DP) :: ekk
+    !! Eigen energy at k on the fine grid relative to the Fermi level
+    REAL(KIND = DP) :: ekq
+    !! Eigen energy at k+q on the fine grid relative to the Fermi level
+    REAL(KIND = DP) :: wgkk
+    !! Fermi-Dirac occupation factor $f_{nk}(T)$
+    REAL(KIND = DP) :: wgkq
+    !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
+    REAL(KIND = DP) :: weight
+    !! Imaginary and real  part of the phonhon self-energy factor
+    REAL(KIND = DP) :: inv_wq(nmodes)
+    !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Fermi-Dirac distribution function (when -99)
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! This function computes the derivative of the Fermi-Dirac function
+    !! It is therefore an approximation for a delta function
+    REAL(KIND = DP) :: g2_tmp(nmodes)
+    !! If the phonon frequency is too small discart g
+    REAL(KIND = DP) ::  pi_a
+    !! dynamical real part of the phonon self-energy for omega = a
+    REAL(KIND = DP) ::  pi_b
+    !! dynamical real part of the phonon self-energy  for omega = b
+    REAL(KIND = DP) ::  pi_c
+    !! dynamical real part of the phonon self-energy for omega = c
+    REAL(KIND = DP) ::  b
+    !! upper bound on the dynamically renormalized freq. for the bisection method
+    REAL(KIND = DP) ::  a
+    !! lower bound on the dynamically renormalized freq. for the bisection method
+    REAL(KIND = DP) ::  c
+    !! (a+b)/2
+    REAL(KIND = DP) ::  ga
+    !! dynamically renormalized frequency minus the argument of the ph.self-energy: Omega(a) - a 
+    REAL(KIND = DP) ::  gb
+    !! dynamically renormalized frequency minus the argument of the ph.self-energy: Omega(b) - b 
+    REAL(KIND = DP) ::  gc
+    !! dynamically renormalized frequency minus the argument of the ph.self-energy: Omega(c) -c
+    REAL(KIND = DP) ::  tol
+    !! the threshold for the bisection method convergence
+    !   
+    wq_dyn_sc = zero
+    tol = 1.0D-5
+    IF (wq > eps_acoustic) THEN
+      g2_tmp(imode) = one
+      inv_wq(imode) = one / (two * wq)
+    ELSE
+      g2_tmp(imode) = zero
+      inv_wq(imode) = zero
+    ENDIF
+    !
+    !
+    max_iter = 200
+    CALL start_clock ('SC-OMEGA')
+    !the lower bound of the off-shell frequency
+    a = wq * 0.5
+    ! the upper bound for the off-shell frequency
+    b = wq * 3.0
+    !
+    DO iter = 1, max_iter
+      wgkk = zero
+      wgkq = zero
+      pi_a = zero
+      pi_b = zero
+      pi_c = zero
+      c = (a + b) * 0.5
+      DO ik = 1, nkf
+        !
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
+        IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+            (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
+          !
+          !
+          DO ibnd = 1, nbndfst
+            !
+            !  the fermi occupation for k
+            ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
+            !
+            wgkk = fermi_dirac(ekk, eptemp)
+            !
+            DO jbnd = 1, nbndfst
+              !
+              ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
+              !
+              ! here we take into account the zero-point DSQRT(hbar/2M\omega)
+              ! with hbar = 1 and M already contained in the eigenmodes
+              ! g2 is Ry^2, wkf must already account for the spin factor
+              !
+              IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
+                                       .OR. ABS(xqf(3, iq)) > eps8)) THEN
+                ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
+                !     number, in which case its square will be a negative number.
+                g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq(imode) * g2_tmp(imode))
+              ELSE
+                g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
+              ENDIF
+              !
+              wgkq = fermi_dirac(ekq, eptemp)
+              ! calculate the real part of the dynamical phonon self-energy          
+              weight = wkf(ikk) * (wgkq - wgkk) * REAL(cone / (ekq - ekk - a - ci * degaussw0))
+              pi_a    = pi_a   + weight * g2
+              weight = wkf(ikk) * (wgkq - wgkk) * REAL(cone / (ekq - ekk - b - ci * degaussw0))
+              pi_b    = pi_b   + weight * g2
+              weight = wkf(ikk) * (wgkq - wgkk) * REAL(cone / (ekq - ekk - c - ci * degaussw0))
+              pi_c    = pi_c   + weight * g2
+              !
+            ENDDO ! jbnd
+          ENDDO   ! ibnd
+        ENDIF ! endif fsthick
+      ENDDO ! loop on k
+      !
+      CALL mp_sum(pi_a, inter_pool_comm)
+      CALL mp_sum(pi_b, inter_pool_comm)
+      CALL mp_sum(pi_c, inter_pool_comm)
+      !Update the freq and calculate f(omega) and check if f(omega) =  Omega(omega) - omega = 0
+      ga = wq**two + two * wq * (pi_a - pi_0)
+      ga =  SQRT(ABS(ga)) * ga / ABS(ga) - a
+      gb = wq**two + two * wq * (pi_b - pi_0)
+      gb =  SQRT(ABS(gb)) * gb / ABS(gb) - b
+      gc = wq**two + two * wq * (pi_c - pi_0)
+      gc =  SQRT(ABS(gc)) * gc / ABS(gc)- c   
+      IF (ABS(gc) < tol .OR. (b - a) * 0.5 < tol )  THEN
+        wq_dyn_sc = c 
+        EXIT
+      ELSEIF (( ga * gc) < 0) THEN
+        b = c 
+      ELSE
+        a = c
+      ENDIF 
+    ENDDO
+    CALL stop_clock ('SC-OMEGA')
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE omega_dyn_sc
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
