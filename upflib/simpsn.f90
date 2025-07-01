@@ -11,7 +11,7 @@ SUBROUTINE simpson(mesh, func, rab, asum)
   !-----------------------------------------------------------------------
   !
   !     simpson's rule integration. On input:
-  !       mesh = the number of grid points (should be odd)
+  !       mesh = the number of grid points (should be odd, see below if even)
   !       func(i)= function to be integrated
   !       rab(i) = r(i) * dr(i)/di * di
   !     For the logarithmic grid not including r=0 :
@@ -30,30 +30,26 @@ SUBROUTINE simpson(mesh, func, rab, asum)
   real(DP) :: f1, f2, f3, r12, fct
   INTEGER :: i
   !
-  asum = 0.0d0
-  r12 = 1.0d0 / 3.0d0
+  asum = 0.0_dp
+  r12 = 1.0_dp / 3.0_dp
   !
   !$acc loop vector reduction(+:asum)
   DO i = 2, mesh-1
+     !! next line: 4 for i even, 2 for i odd
     fct = DBLE(ABS(MOD(i,2)-2)*2)
     asum = asum + fct * func(i) * rab(i)
   ENDDO
   IF (MOD(mesh,2)==1) THEN
+    !! mesh is odd, usual Simpson formula
     asum = (asum + func(1)*rab(1) + func(mesh)*rab(mesh)) * r12
   ELSE
-    asum = (asum + func(1)*rab(1) - func(mesh-1)*rab(mesh-1)) * r12
+    !! mesh is even, use the same formula as in DFTK:
+    !! ... + 4/3*f(n-3) + 15/12*f(n-2) + f(n-1) + 5/12*f(n)
+    asum = (asum + func(1)*rab(1) - func(mesh-2)*rab(mesh-2) * 0.25_dp &
+                                  + func(mesh-1)*rab(mesh-1)           &
+                                  + func(mesh)  *rab(mesh) * 1.25_dp ) * r12
   ENDIF
   !
-  ! if mesh is not odd, use open formula instead:
-  ! ... 2/3*f(n-5) + 4/3*f(n-4) + 13/12*f(n-3) + 0*f(n-2) + 27/12*f(n-1)
-  !** Under testing
-  !
-  !IF ( MOD(mesh,2) == 0 ) THEN
-  !   print *, 'mesh even: correction:', f1*5.d0/4.d0-4.d0*f2+23.d0*f3/4.d0, &
-  !                                      func(mesh)*rab(mesh), asum
-  !   asum = asum + f1*5.d0/4.d0 - 4.d0*f2 + 23.d0*f3/4.d0
-  !END IF
-
   RETURN
 END SUBROUTINE simpson
 
