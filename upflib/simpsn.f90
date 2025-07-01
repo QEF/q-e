@@ -44,7 +44,7 @@ SUBROUTINE simpson(mesh, func, rab, asum)
     asum = (asum + func(1)*rab(1) + func(mesh)*rab(mesh)) * r12
   ELSE
     !! mesh is even, use the same formula as in DFTK:
-    !! ... + 4/3*f(n-3) + 15/12*f(n-2) + f(n-1) + 5/12*f(n)
+    !! ... + 2/3*f(n-3) + 15/12*f(n-2) + f(n-1) + 5/12*f(n)
     asum = (asum + func(1)*rab(1) - func(mesh-2)*rab(mesh-2) * 0.25_dp &
                                   + func(mesh-1)*rab(mesh-1)           &
                                   + func(mesh)  *rab(mesh) * 1.25_dp ) * r12
