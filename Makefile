@@ -300,7 +300,7 @@ clean :
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic LR_Modules upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
-		QEHeat KCW \
+		QEHeat KCW PIOUD \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
