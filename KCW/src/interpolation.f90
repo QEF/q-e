@@ -312,7 +312,7 @@ CONTAINS
     USE cell_base,            ONLY : alat, bg
     USE constants,            ONLY : BOHR_RADIUS_ANGS
     USE control_kcw,          ONLY : seedname, have_empty, num_wann_occ, num_wann_emp, &
-                                     centers, use_ws_distance
+                                     centers, use_ws_distance, l_unique_manifold
     USE io_global,            ONLY : ionode_id
     USE mp,                   ONLY : mp_bcast
     USE mp_global,            ONLY : intra_image_comm
@@ -331,7 +331,11 @@ CONTAINS
     IF ( ionode ) THEN
       !
       filename = trim(seedname)//'_centres.xyz'
-      nlines = num_wann_occ
+      if ( l_unique_manifold ) then
+        nlines = num_wann_occ + num_wann_emp
+      else
+        nlines = num_wann_occ
+      end if
       !
 50    INQUIRE( file=filename, exist=exst )
       !
@@ -372,7 +376,7 @@ CONTAINS
       !
       CLOSE( 100 )
       !
-      IF ( have_empty .and. .not. check_emp ) THEN
+      IF ( have_empty .and. .not. check_emp .and. .not. l_unique_manifold) THEN
         !
         filename = trim(seedname)//'_emp_centres.xyz'
         nlines = num_wann_emp
