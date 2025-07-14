@@ -125,6 +125,7 @@ PROGRAM do_projwfc
   CALL mp_bcast( lbinary_data,    ionode_id, intra_image_comm )
   CALL mp_bcast( lgww,      ionode_id, intra_image_comm )
   CALL mp_bcast( pawproj,   ionode_id, intra_image_comm )
+  CALL mp_bcast( kresolveddos,    ionode_id, intra_image_comm )
   CALL mp_bcast( tdosinboxes,     ionode_id, intra_image_comm )
   CALL mp_bcast( n_proj_boxes,    ionode_id, intra_image_comm )
   CALL mp_bcast( irmin,     ionode_id, intra_image_comm )
