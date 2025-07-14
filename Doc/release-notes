@@ -1,3 +1,9 @@
+Incompatible changes in 7.5 version:
+  * The Simpson routine for radial integration has been modified for the case
+    of an even number of points in the integration grid. The current version 
+    is more accurate than the previous one, but may yield slightly different
+    numerical results.
+
 New in 7.5 version:
   * New Orbital Resolved DFT+U method -E. Macke, I. Timrov 
     (see Macke et al. JCTC  2024 20 (11), 4824-4843) 
