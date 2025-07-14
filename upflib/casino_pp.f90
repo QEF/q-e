@@ -662,12 +662,12 @@ CONTAINS
           !and apply the offset IF they have
 
           IF ( minval(abs(upf_in%chi(:,l))) /= 0 ) THEN
-             vnl(:,l)= (upf_in%beta(:,l)/(upf_in%chi(:,l)) &
+             vnl(:,l)= (upf_in%beta(:,i)/(upf_in%chi(:,l)) &
                   *upf_in%r(:)) + vnl(:,l)
           ELSE
              WRITE(0,"(A,ES10.3,A)") 'Applying ',offset , ' offset to &
                   &wavefunction to avoid divide by zero'
-             vnl(:,l)= (upf_in%beta(:,l)/(upf_in%chi(:,l)+offset) &
+             vnl(:,l)= (upf_in%beta(:,i)/(upf_in%chi(:,l)+offset) &
                   *upf_in%r(:)) + vnl(:,l)
           ENDIF
 
