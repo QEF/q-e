@@ -15,7 +15,7 @@
  /
  &electrons
     mixing_beta = 0.5,
-    conv_thr =  1.0d-12
+    conv_thr =  1.0d-10
  /
 ATOMIC_SPECIES
  H  1.0   H.pz-vbc.UPF
