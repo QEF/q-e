@@ -136,6 +136,7 @@ SUBROUTINE do_phonon(auxdyn)
               CALL ep_matrix_element_wannier()
            ELSE
               CALL elphon()
+              IF (.NOT. elph_ahc) CALL rediagonalize_dyn () 
            END IF
            !
         END IF
