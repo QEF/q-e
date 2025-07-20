@@ -432,7 +432,7 @@ CONTAINS
        DO ispin = 1, nspin
           ! spin-contribution to rhoae; this is used in the calculation of the volume
           IF (.NOT.ispaw) THEN
-             rhoae = rho%of_r(:,ispin)
+             rhoae = MAX(rho%of_r(:,ispin),0._DP)
           END IF
           ALLOCATE(gaux(3,dfftp%nnr),ggaux(3,3,dfftp%nnr),STAT=ialloc)
           IF (ialloc /= 0) CALL alloc_failed("gaux, ggaux")
