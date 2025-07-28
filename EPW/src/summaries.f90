@@ -31,7 +31,8 @@
   USE symm_base,     ONLY : s, sname, ft, sr, t_rev
   USE noncollin_module, ONLY : noncolin, domag, lspinorb
   USE funct,         ONLY : write_dft_name
-  USE input,         ONLY : title, laniso, plrn, epbwrite, epwwrite
+  USE input,         ONLY : title, laniso, plrn, epbwrite, epwwrite, &
+                            ephwrite
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq
   USE control_flags, ONLY : iverbosity
   USE fft_base,      ONLY : dfftp, dffts
@@ -78,22 +79,36 @@
     WRITE(stdout, '(/5x, "scaling to achieve maximum speedup")')
     WRITE(stdout, '(/5x, "---------------------------------------------------------------")')
   ELSEIF ((nimage > 1) .AND. ((laniso) .OR. (plrn))) THEN
+    WRITE(stdout, '(/5x,"-------------------------------Error----------------------------")')
     WRITE(stdout, '(/5x, "You have enabled image parallelization over q-grid ")')
     WRITE(stdout, '(/5x, "Unfortunately, image parallelization does not work for ")')
     WRITE(stdout, '(/5x, "anisotropic Eliashberg calculations and polaron calculation.")')
     WRITE(stdout, '(/5x, "Restart the calculation with pool-parallelization only.")')
     WRITE(stdout, '(/5x, "The calculation will stop now. "/)')
+    WRITE(stdout, '(/5x, "---------------------------------------------------------------")')
     CALL stop_epw() 
   ENDIF
   !
   IF ((nimage > 1) .AND. (epwwrite)) THEN
+    WRITE(stdout, '(/5x,"-------------------------------Error----------------------------")')
     WRITE(stdout, '(/5x, "You have enabled image parallelization over q-grid ")')
     WRITE(stdout, '(/5x, "Unfortunately, image parallelization does not work for ")')
     WRITE(stdout, '(/5x, "coarse grid calculations for Wannier representation.")')
     WRITE(stdout, '(/5x, "Restart the calculation with pool-parallelization only.")')
     WRITE(stdout, '(/5x, "The calculation will stop now. "/)')
+    WRITE(stdout, '(/5x, "---------------------------------------------------------------")')
     CALL stop_epw()   
   ENDIF 
+  IF ((nimage > 1) .AND. (ephwrite)) THEN
+    WRITE(stdout, '(/5x,"-------------------------------Error----------------------------")')
+    WRITE(stdout, '(/5x, "You have enabled image parallelization over q-grid ")')
+    WRITE(stdout, '(/5x, "Unfortunately, image parallelization does not work for ")')
+    WRITE(stdout, '(/5x, "ephwrite = .true..")')
+    WRITE(stdout, '(/5x, "Restart the calculation with pool-parallelization only.")')
+    WRITE(stdout, '(/5x, "The calculation will stop now. "/)')
+    WRITE(stdout, '(/5x, "---------------------------------------------------------------")')
+    CALL stop_epw() 
+  ENDIF
   ! 
   WRITE(stdout, 100) title, ibrav, alat, omega, nat, ntyp, ecutwfc, ecutwfc * dual
 100 FORMAT(/,5x,a75,/,/,5x, &

@@ -759,7 +759,7 @@
     !! Coordinates of real space vector for electrons
     REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
     !! Second fermi level for the temperature itemp
-
+    !
     ! Local variables
     INTEGER :: ik
     !! Counter on coarse k-point grid
@@ -788,7 +788,7 @@
     CALL kpoints_time_reversal_init()
     !
     CALL loadkmesh_para()
-
+    !
     nelec_aux = nelec
     ALLOCATE(etf(nbndsub, nkqf), STAT = ierr)
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating etf', 1)
@@ -806,7 +806,7 @@
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating fermi_energies_t',1)
     ALLOCATE(partion(nstemp), STAT = ierr)
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating partion', 1)
-
+    !
     irvec_r = REAL(irvec_k, KIND = DP)
     etf(:, :)   = zero
     cufkk(:, :) = czero
@@ -814,7 +814,7 @@
     rdotk(:)    = zero
     fermi_energies_t (:) = 0.d0
     partion(:) = 1
-
+    !
     xxq = 0.d0
     !
     ! nkqf is the number of kpoints in the pool

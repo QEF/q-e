@@ -318,7 +318,7 @@
   ! lfast_kmesh is a special optimization level to deal with ultra dense fine homogeneous grids.
   !
   ! Compute the Fermi energy as a function of temperature if required when using lfast_kmesh option
-  IF(lfast_kmesh) CALL fast_fermi(nrr_k, irvec_k, efcb)
+  IF (lfast_kmesh) CALL fast_fermi(nrr_k, irvec_k, efcb)
   !
   CALL load_mesh(nrr_k, irvec_k)
   !
