@@ -22,7 +22,7 @@ else
 fi
 if [[ "$1" == "1" ]]
 then
-  echo "Running PW ..."
+  #echo "Running PW ..."
   #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
@@ -35,8 +35,8 @@ then
   then 
     cat CRASH > $3
   else
-    echo "Running PW ..."
-# echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+    #echo "Running PW ..."
+    #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
     ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
     if [[ -e CRASH ]]
     then
