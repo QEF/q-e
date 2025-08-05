@@ -901,7 +901,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                &    "too large:",/,5X,                      &
                                & "Diagonalizing with lowered threshold",/)' )
               !
-              ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )
+              ethr = MAX( 0.1D0*dr2 / MAX( 1.D0, nelec ), 1.D-13 )
               !
               CYCLE scf_step
               !
