@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,10 +16,6 @@ MODULE klist
   IMPLICIT NONE
   !
   SAVE
-  !
-  !FIXME !TODO variables as igk_k, mill, g and others persist in the device memory
-  ! for the whole duration of the run, their allocation in the device should be
-  ! done using !$acc declare create () instead of using !$acc enter/exit data create/delete().
   !
   CHARACTER (LEN=32) :: smearing
   !! smearing type
@@ -313,9 +309,12 @@ MODULE ener
   REAL(DP) :: hwf_energy
   !! this is the Harris-Weinert-Foulkes energy
   REAL(DP) :: eband
-  !! the band energy
+  !! the band energy: eband  = \sum_i \epsilon_i (calculated by sum_band)
   REAL(DP) :: deband
-  !! scf correction to have variational energy
+  !!  deband is minus the Hartree+XC energy term:
+  !!  deband = -\sum_i <\psi_i|V_h + V_xc|\psi_i>, or equivalently
+  !!  deband = -\int (v_H(r) + v_{xc}(r)) n(r) dr
+  !! eband + deband = kinetic + external potential energy
   REAL(DP) :: ehart
   !! the Hartree energy
   REAL(DP) :: etxc
@@ -331,11 +330,11 @@ MODULE ener
   REAL(DP) :: exdm
   !! the XDM dispersion energy
   REAL(DP) :: demet
-  !! the sic energy
-  REAL(DP) :: esic
-  !! the scissor energy
-  REAL(DP) :: esci
   !! variational correction ("-TS") for metals
+  REAL(DP) :: esic
+  !! the sic energy
+  REAL(DP) :: esci
+  !! the scissor energy
   REAL(DP) :: epaw
   !! sum of one-center paw contributions
   REAL(DP) :: ef
