@@ -137,7 +137,7 @@ SUBROUTINE lr_write_restart()
         !
      ENDDO
      !
-  ELSE
+  ELSEIF (eels) THEN
      !
      DO i=1,LR_iteration-1
         !
@@ -156,9 +156,34 @@ SUBROUTINE lr_write_restart()
      ! X. Ge: Compatable with the old version. The beta & gamma will not be used in 
      ! the spectrum calculation.
      !
+     WRITE(158,*) beta_store(pol_index,LR_iteration)
+     WRITE(158,*) gamma_store(pol_index,LR_iteration)
+     DO j=1,n_ipol
+        WRITE(158,*) zeta_store (pol_index,j,LR_iteration)
+     ENDDO
+     !          
+  ELSE
+     !
+     DO i=1,LR_iteration-1
+        !
+        WRITE(158,*) beta_store(pol_index,i+1)
+        WRITE(158,*) gamma_store(pol_index,i+1)
+        !
+        ! This is absolutely necessary for cross platform compatibility
+        !
+        DO j=1,n_op
+           WRITE(158,*) zeta_store (pol_index,j,i)
+        ENDDO
+        !
+     ENDDO
+     !
+     !
+     ! X. Ge: Compatable with the old version. The beta & gamma will not be used in 
+     ! the spectrum calculation.
+     !
      WRITE(158,*) beta_store(pol_index,LR_iteration)             
      WRITE(158,*) gamma_store(pol_index,LR_iteration)             
-     DO j=1,n_ipol                                               
+     DO j=1,n_op                                               
         WRITE(158,*) zeta_store (pol_index,j,LR_iteration)        
      ENDDO
      !
