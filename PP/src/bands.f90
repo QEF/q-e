@@ -428,33 +428,25 @@ SUBROUTINE punch_band_2d(filband,spin_component)
    ALLOCATE(et_collect(nbnd,nkstot))
    CALL poolcollect(    3, nks, xk, nkstot, xk_collect)
    CALL poolcollect( nbnd, nks, et, nkstot, et_collect)
-
-   start_k=1
-   last_k=nkstot
-   nks_eff=nkstot
-   IF (nspin==2) THEN
-      nks_eff=nkstot/2
-      IF (spin_component==1) THEN
-         start_k=1
-         last_k=nks_eff
-      ELSE
-         start_k=nks_eff+1
-         last_k=nkstot
-      ENDIF
-   ENDIF
 !
 !  Determine xk0
 !
-   xk0(:)=xk_collect(:,start_k)
+   xk0(:)=xk_collect(:,1)
 !
-! Determine dkx
+! Determine dky
 !
-   dky(:)=xk_collect(:,start_k+1)-xk0(:)
+   dky(:)=xk_collect(:,2)-xk0(:)
 !
-! Determine n2 and dky
+! Determine n2 and dkx
 !
+! Spin polarization: consider only the first half of k-points
+  IF ( nspin == 2 ) then
+     nks_eff = nkstot/2
+  ELSE
+     nks_eff = nkstot
+  ENDIF
 
-loop_k:  DO j=start_k+2, nkstot
+loop_k:  DO j=3, nks_eff
      xkdum(:)=xk0(:)+(j-1)*dky(:)
      IF (ABS(xk_collect(1,j)-xkdum(1))>eps8.OR.   &
          ABS(xk_collect(2,j)-xkdum(2))>eps8.OR.   &
@@ -464,6 +456,7 @@ loop_k:  DO j=start_k+2, nkstot
          EXIT loop_k
      ENDIF
   ENDDO  loop_k
+
   n1=nks_eff/n2
   IF (n1*n2 /= nks_eff) CALL errore('punch_band_2d',&
                                     'Problems with k points',1)
@@ -479,6 +472,8 @@ loop_k:  DO j=start_k+2, nkstot
      CALL mp_bcast(ios,ionode_id, intra_image_comm)
 100  CALL errore('punch_band_2d','Problem opening outputfile',ios)
      ijk=0
+     ! Spin component 2: select second set of k-points
+     IF ( spin_component == 2 ) ijk = ijk + nks_eff
      DO i1=1,n1
         DO i2=1,n2
            ijk=ijk+1
