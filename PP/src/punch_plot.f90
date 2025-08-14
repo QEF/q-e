@@ -158,7 +158,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) &
         CALL errore('punch_plot','elf+noncolin not yet implemented',1)
-     CALL do_elf_kin(raux,.TRUE.)
+     CALL do_elf_kin(raux,.TRUE.,0)
 
   ELSEIF (plot_num == 9) THEN
      !
