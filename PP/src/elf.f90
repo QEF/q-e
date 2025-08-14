@@ -6,10 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE do_elf (elf)
+SUBROUTINE do_elf_kin(fout,iself,spin_component)
   !-----------------------------------------------------------------------
   !
-  !  calculation of the electron localization function;
+  !  Calculation of the electron localization function (iself = true)
+  !  or the kinetic energy density (iself = false). In the case of the
+  !  KED calculation, spin_component = 0 gives the total KED, and
+  !  spin_component = 1 or 2 gives the contribution from the
+  !  corresponding spin channel.
+  !
   !     elf = 1/(1+d**2)
   !  where
   !     d = ( t(r) - t_von_Weizacker(r) ) / t_Thomas-Fermi(r)
@@ -32,7 +37,7 @@ SUBROUTINE do_elf (elf)
   USE gvecs, ONLY : ngms, doublegrid, dual
   USE io_files, ONLY: restart_dir
   USE klist, ONLY: nks, xk, ngk, igk_k
-  USE lsda_mod, ONLY: nspin
+  USE lsda_mod, ONLY: nspin, isk
   USE scf, ONLY: rho, rhoz_or_updw
   USE symme, ONLY: sym_rho, sym_rho_init
   USE wvfct, ONLY: nbnd, wg
@@ -45,7 +50,9 @@ SUBROUTINE do_elf (elf)
   ! I/O variables
   !
   IMPLICIT NONE
-  REAL(DP) :: elf (dfftp%nnr)
+  REAL(DP) :: fout (dfftp%nnr)
+  LOGICAL :: iself
+  INTEGER :: spin_component
   !
   ! local variables
   !
@@ -54,7 +61,7 @@ SUBROUTINE do_elf (elf)
   REAL(DP), ALLOCATABLE :: kkin (:), tbos (:,:)
   COMPLEX(DP), ALLOCATABLE :: aux (:), aux2 (:)
   !
-  CALL infomsg ('do_elf', 'elf + US not fully implemented')
+  CALL infomsg ('do_elf_kin', 'elf/kin + US not fully implemented')
   !
   ALLOCATE (kkin(dfftp%nnr))
   ALLOCATE (aux (dffts%nnr))
@@ -68,6 +75,9 @@ SUBROUTINE do_elf (elf)
      !   reads the eigenfunctions
      !
      CALL read_collected_wfc ( restart_dir(), ik, evc )
+
+     ! skip if this is a KED calculation with requrested spin_component
+     IF (.NOT.iself .AND. spin_component > 0 .AND. isk(ik) /= spin_component) CYCLE
      !
      DO ibnd = 1, nbnd
         DO j = 1, 3
@@ -130,67 +140,72 @@ SUBROUTINE do_elf (elf)
      kkin (:) = dble(aux(:))
      !
   ENDIF
-  !
-  ! Calculate the bosonic kinetic density, stored in tbos
-  !          aux --> charge density in Fourier space
-  !         aux2 --> iG * rho(G)
-  !
-  ALLOCATE ( tbos(dfftp%nnr,nspin), aux2(dfftp%nnr) )
-  !
-  ! set rho%of_r(:,1) = spin up, rho%of_r(:,2) = spin down charge
-  !
-  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
-  !
-  ! FIXME: the following gradient calculation could be performed
-  !        in a more straightforward way using "fft_gradient_r2r"
-  !
-  DO k = 1, nspin
-     tbos(:,k) = 0.d0
-     aux(:) = cmplx( rho%of_r(:, k), 0.d0 ,kind=DP)
-     CALL fwfft ('Rho', aux, dfftp)
+  IF (iself) then
+     !! calculation of the ELF !!
      !
-     DO j = 1, 3
-        aux2(:) = (0.d0,0.d0)
-        DO i = 1, ngm
-           aux2(dfftp%nl(i)) = aux(dfftp%nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
-        ENDDO
-        IF (gamma_only) THEN
+     ! Calculate the bosonic kinetic density, stored in tbos
+     !          aux --> charge density in Fourier space
+     !         aux2 --> iG * rho(G)
+     !
+     ALLOCATE ( tbos(dfftp%nnr,nspin), aux2(dfftp%nnr) )
+     !
+     ! set rho%of_r(:,1) = spin up, rho%of_r(:,2) = spin down charge
+     !
+     IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
+     !
+     ! FIXME: the following gradient calculation could be performed
+     !        in a more straightforward way using "fft_gradient_r2r"
+     !
+     DO k = 1, nspin
+        tbos(:,k) = 0.d0
+        aux(:) = cmplx( rho%of_r(:, k), 0.d0 ,kind=DP)
+        CALL fwfft ('Rho', aux, dfftp)
+        !
+        DO j = 1, 3
+           aux2(:) = (0.d0,0.d0)
            DO i = 1, ngm
-              aux2(dfftp%nlm(i)) = aux(dfftp%nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+              aux2(dfftp%nl(i)) = aux(dfftp%nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
            ENDDO
-        ENDIF
+           IF (gamma_only) THEN
+              DO i = 1, ngm
+                 aux2(dfftp%nlm(i)) = aux(dfftp%nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+              ENDDO
+           ENDIF
 
-        CALL invfft ('Rho', aux2, dfftp)
-        DO i = 1, dfftp%nnr
-           tbos (i, k) = tbos (i, k) + dble(aux2(i))**2
+           CALL invfft ('Rho', aux2, dfftp)
+           DO i = 1, dfftp%nnr
+              tbos (i, k) = tbos (i, k) + dble(aux2(i))**2
+           ENDDO
         ENDDO
      ENDDO
-  ENDDO
-  !
-  ! Calculate ELF
-  !
-  fac = 5.d0 / (3.d0 * (6.d0 * pi**2) ** (2.d0 / 3.d0) )
-  elf(:) = 0.d0
-  DO i = 1, dfftp%nnr
-     IF ( nspin == 2 ) THEN
-        IF ( (rho%of_r (i,1) > 1.d-30).and.(rho%of_r (i,2) > 1.d-30) ) THEN
-           d = fac / ( rho%of_r(i,1)**(5d0/3d0) + rho%of_r(i,2)**(5d0/3d0) ) &
-                *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) - &
-                0.25d0*tbos(i,2)/rho%of_r(i,2) + 1.d-5)
-           elf (i) = 1.0d0 / (1.0d0 + d**2)
+     !
+     ! Calculate ELF
+     !
+     fac = 5.d0 / (3.d0 * (6.d0 * pi**2) ** (2.d0 / 3.d0) )
+     fout(:) = 0.d0
+     DO i = 1, dfftp%nnr
+        IF ( nspin == 2 ) THEN
+           IF ( (rho%of_r (i,1) > 1.d-30).and.(rho%of_r (i,2) > 1.d-30) ) THEN
+              d = fac / ( rho%of_r(i,1)**(5d0/3d0) + rho%of_r(i,2)**(5d0/3d0) ) &
+                 *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) - &
+                 0.25d0*tbos(i,2)/rho%of_r(i,2) + 1.d-5)
+              fout (i) = 1.0d0 / (1.0d0 + d**2)
+           ENDIF
+        ELSE
+           IF ( rho%of_r (i,1) > 1.d-30 ) THEN
+              d = fac / ( rho%of_r(i,1)**(5d0/3d0) ) &
+                 *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) + 1.d-5)
+              fout (i) = 1.0d0 / (1.0d0 + d**2)
+           END IF
         ENDIF
-     ELSE
-        IF ( rho%of_r (i,1) > 1.d-30 ) THEN
-           d = fac / ( rho%of_r(i,1)**(5d0/3d0) ) &
-                *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) + 1.d-5)
-           elf (i) = 1.0d0 / (1.0d0 + d**2)
-        END IF
-     ENDIF
-  END DO
-  DEALLOCATE (aux, aux2, tbos, kkin)
-  RETURN
+     END DO
+     DEALLOCATE (aux, aux2, tbos, kkin)
+  ELSE
+     !! calculation of the kinetic energy density !!
+     fout = kkin
+  ENDIF
 
-END SUBROUTINE do_elf
+END SUBROUTINE do_elf_kin
 !-----------------------------------------------------------------------
 SUBROUTINE do_rdg (rdg)
   !-----------------------------------------------------------------------
@@ -346,6 +361,3 @@ SUBROUTINE do_dori (dori)
 
 END SUBROUTINE do_dori
 
-
-
-!-----------------------------------------------------------------------

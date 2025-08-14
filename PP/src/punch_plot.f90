@@ -158,7 +158,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) &
         CALL errore('punch_plot','elf+noncolin not yet implemented',1)
-     CALL do_elf (raux)
+     CALL do_elf_kin(raux,.TRUE.)
 
   ELSEIF (plot_num == 9) THEN
      !
@@ -272,15 +272,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !      plot of the kinetic energy density
      !
-     IF ( lsda ) THEN
-        IF (spin_component == 0) THEN
-           raux(:) = rho%kin_r(:,1)+rho%kin_r(:,2)
-        ELSE
-           raux(:) = rho%kin_r(:, spin_component)
-        ENDIF
-     ELSE
-        raux(:) = rho%kin_r(:,1)
-     ENDIF
+     CALL do_elf_kin(raux,.FALSE.,spin_component)
 
   ELSEIF (plot_num == 23) THEN
      !

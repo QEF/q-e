@@ -168,7 +168,8 @@ SUBROUTINE extract (plot_files,plot_num,nc)
   !   If needed, allocate and initialize wavefunction-related variables
   !
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
-         (plot_num==8).or.(plot_num==10).or.(plot_num==23).or.(plot_num==25)
+         (plot_num==8).or.(plot_num==10).or.(plot_num==22).or.(plot_num==23).or. &
+         (plot_num==25)
   CALL read_file_new ( needwf )
   !
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
