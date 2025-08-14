@@ -355,7 +355,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
            CALL fwfft_orbital_gamma(evc_temp, ibnd, nbnd) 
            !
            d0psi(:,ibnd,  1,ip) = evc_temp(:,ibnd)
-           d0psi(:,ibnd+1,1,ip) = evc_temp(:,ibnd+1)
+           IF(ibnd<nbnd) d0psi(:,ibnd+1,1,ip) = evc_temp(:,ibnd+1)
            !
         ENDDO
         !

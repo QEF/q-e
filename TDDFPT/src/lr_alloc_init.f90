@@ -249,20 +249,21 @@ SUBROUTINE lr_alloc_init()
   ALLOCATE(alpha_store(n_ipol,itermax))
   ALLOCATE(beta_store(n_ipol,itermax))
   ALLOCATE(gamma_store(n_ipol,itermax))
-  ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
+  IF (eels) THEN
+     ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
+  ELSE
+     ALLOCATE(zeta_store(n_ipol,n_op,itermax))
+  ENDIF
   alpha_store(:,:)  = 0.0d0
   beta_store(:,:)   = 0.0d0
   gamma_store(:,:)  = 0.0d0
   zeta_store(:,:,:) = (0.0d0,0.0d0)
   !
   IF (magnons) THEN
-     DEALLOCATE (zeta_store)
-     ALLOCATE(zeta_store(n_ipol,n_op,itermax))
      ALLOCATE(alpha_magnons_store(n_ipol,itermax))
      ALLOCATE(gamma_magnons_store(n_ipol,itermax))
      alpha_magnons_store = (0.0d0, 0.0d0)
      gamma_magnons_store = (0.0d0, 0.0d0)
-     zeta_store(:,:,:) = (0.0d0,0.0d0)
   ENDIF
   !
   IF (gamma_only) THEN

@@ -27,6 +27,6 @@ else
 fi
 
 echo ' RUNNING ',"${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/all_currents.x ${PARA_POSTFIX} -input $1 > $2 2> $3"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/all_currents.x ${PARA_POSTFIX} -input $1 > $2 2> $3
+${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/all_currents.x ${PARA_POSTFIX} -input $1 > $2 2> $3
 
 rm -f input_tmp.in

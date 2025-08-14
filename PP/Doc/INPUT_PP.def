@@ -137,7 +137,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                    21 = all-electron charge density (valence+core).
                         For PAW calculations only; requires a very dense real-space grid. 
 
-                   22 = kinetic energy density (for meta-GGA and XDM only)
+                   22 = kinetic energy density
 
                    23 = the charge density of states between emin & emax
 

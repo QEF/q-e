@@ -212,6 +212,10 @@ CONTAINS
     INTEGER :: i, j, ialloc, n1, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
     !
+
+    ! No UPF information, nothing to initialize (e.g. when called from pp.x)
+    IF (.NOT.ALLOCATED(upf)) RETURN
+
     CALL start_clock('init_xdm')
 
     ispaw = ALL(upf(1:ntyp)%tpawp)
@@ -432,7 +436,7 @@ CONTAINS
        DO ispin = 1, nspin
           ! spin-contribution to rhoae; this is used in the calculation of the volume
           IF (.NOT.ispaw) THEN
-             rhoae = rho%of_r(:,ispin)
+             rhoae = MAX(rho%of_r(:,ispin),0._DP)
           END IF
           ALLOCATE(gaux(3,dfftp%nnr),ggaux(3,3,dfftp%nnr),STAT=ialloc)
           IF (ialloc /= 0) CALL alloc_failed("gaux, ggaux")

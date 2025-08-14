@@ -83,10 +83,10 @@ SUBROUTINE one_lanczos_step()
        WRITE(stdout,'("<lr_lanczos_one_step>")')
     ENDIF
     !
-    IF (magnons) THEN 
-       ALLOCATE (zeta(n_op))
-    ELSE 
+    IF (eels) THEN 
        ALLOCATE (zeta(n_ipol))
+    ELSE
+       ALLOCATE (zeta(n_op))
     ENDIF
     !
     ! Memory usage
@@ -193,7 +193,7 @@ SUBROUTINE one_lanczos_step()
        ELSE
           CALL lanczos_pseudohermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
                                       &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
-                                      &evc1_old(:,:,:,1), n_ipol, d0psi(:,:,:,:), alpha, beta, &
+                                      &evc1_old(:,:,:,1), n_op, d0psi(:,:,:,:), alpha, beta, &
                                       &gamma, zeta)
        ENDIF
     ELSE
@@ -210,7 +210,7 @@ SUBROUTINE one_lanczos_step()
        ELSE
           CALL lanczos_nonhermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
                                    &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1(:,:,:), &
-                                   &evc1_old(:,:,:,1), n_ipol, d0psi, alpha, beta, &
+                                   &evc1_old(:,:,:,1), n_op, d0psi, alpha, beta, &
                                    &gamma, zeta)
        ENDIF
     ENDIF 
@@ -273,7 +273,7 @@ SUBROUTINE one_lanczos_step()
           WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta(ip)),aimag(zeta(ip))
        ENDDO
        !
-    ELSEIF (mod(LR_iteration,2)==0) THEN
+    ELSEIF (eels) THEN
        !
        DO ip = 1, n_ipol
           !
@@ -282,23 +282,34 @@ SUBROUTINE one_lanczos_step()
           !
        ENDDO
        !
-       ! OBM: evc1(:,:,:,1) contains the q of x for even steps, 
-       ! lets calculate the response related observables.
-       ! 
-       IF (charge_response == 1 .and. .not.eels .and. .not. magnons) THEN
-          CALL lr_calc_dens(evc1_old(:,:,:,1), .true.)
-          CALL lr_calc_F(evc1_old(:,:,:,1))
+    ELSE 
+       IF (mod(LR_iteration,2)==0) THEN
+          !
+          DO ip = 1, n_op
+             !
+             zeta_store (pol_index,ip,LR_iteration) = zeta(ip)
+             WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta(ip)),aimag(zeta(ip))
+             !
+          ENDDO
+          !
+          ! OBM: evc1(:,:,:,1) contains the q of x for even steps, 
+          ! lets calculate the response related observables.
+          ! 
+          IF (charge_response == 1) THEN
+             CALL lr_calc_dens(evc1_old(:,:,:,1), .true.)
+             CALL lr_calc_F(evc1_old(:,:,:,1))
+          ENDIF
+          !
+       ELSE
+          !
+          DO ip = 1, n_op
+             !
+             zeta_store (pol_index,ip,LR_iteration) = zeta(ip)
+             WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta(ip)),aimag(zeta(ip))
+             !
+          ENDDO
+          !
        ENDIF
-       !
-    ELSE
-       !
-       DO ip = 1, n_ipol
-          !
-          zeta_store (pol_index,ip,LR_iteration) = zeta(ip)
-          WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta(ip)),aimag(zeta(ip))
-          !
-       ENDDO
-       !
     ENDIF
     !
     ! X. Ge: To increase the stability, apply orthogonalize.

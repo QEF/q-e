@@ -458,7 +458,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
         ! Update the container with the actual interaction for this band(s).
         revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:) &
              & -1.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd,evc(:,:,1)) & 
-             & +1.d0 * scale * k2d_vexx_term_gamma(w1,w2,psic,fac,ibnd,.false.)
+             & +1.d0 * scale * k2d_term_gamma(w1,w2,psic,fac,ibnd,.false.)
         !
      ENDDO
      !
@@ -690,7 +690,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
      IF (.NOT.ltammd) THEN
         revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:)&
              & -1.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd,orbital) &
-             & -1.d0 * scale * k2d_vexx_term_gamma(w1,w2,psic,fac,ibnd,.true.)
+             & -1.d0 * scale * k2d_term_gamma(w1,w2,psic,fac,ibnd,.true.)
      ELSE
         !
         ! Slightly different interaction in the Tamm--Dancoff case.
@@ -1130,16 +1130,12 @@ FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
   !
 END FUNCTION k1d_term_k
 !
-FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi_int)
+FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi_int)
   !------------------------------------------------------------------
   !
   !   This routine computes the  K^2d term, Eq (22) from Eq Ref (1).
   !   psi contains two bands of |b> with w1, w2 the associated weights
   !   fac_in contains the interaction W(G) and ibnd the band index n'.
-  !
-  !   Also computes the Vexx term, Eq (15) from Eq Ref (2). 
-  !   So in gamma calculations, h_psi soubrite doesn't call anymore 
-  !   vexx routine 
   !
   !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
   !   (2)  Ge, Binnie, Rocca, Gebauer, Baroni, Comp. Phys. Comm., 
@@ -1208,22 +1204,6 @@ FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi
              & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd,1)) &
              & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd,1))
         !
-        IF (interaction) then 
-           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
-                & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1))
-           IF (ibnd < nbnd) then
-              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
-                   & +AIMAG(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1))
-           ENDIF
-        ELSE
-           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
-                & -DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1)) 
-           IF (ibnd < nbnd) then
-              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
-                   & -AIMAG(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1))
-           ENDIF
-        ENDIF
-        !
      ELSE
         pseudo_dens_c(1:nnr_) = CMPLX( &
              & w1*DBLE(psi(1:nnr_))*AIMAG(red_revc0(1:nnr_,ibnd2-1,1)),&
@@ -1253,25 +1233,6 @@ FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi
              & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd,1)) &
              & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd,1))
         !
-        ! 
-        ! and interaction for Vexx term
-        !
-        IF (interaction) then
-           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
-                & +DBLE(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1)) 
-           IF (ibnd < nbnd) then
-              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
-                   & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1))
-           ENDIF
-        ELSE
-           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
-                & -DBLE(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1))
-           IF (ibnd < nbnd) then
-              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
-                   & -AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1))
-           ENDIF
-        ENDIF
-        !
      ENDIF
      !
      !
@@ -1279,7 +1240,7 @@ FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi
   !
   RETURN
   !
-END FUNCTION k2d_vexx_term_gamma
+END FUNCTION k2d_term_gamma
 !
 FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
   !------------------------------------------------------------------

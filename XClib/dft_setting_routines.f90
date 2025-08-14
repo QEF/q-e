@@ -512,7 +512,7 @@ CONTAINS
 #if defined(__LIBXC)
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, libxc_flag(max_flags)
+    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, libxc_flag(max_flags+1)
     REAL(DP) :: omega, alpha, beta
 #endif
     LOGICAL :: is_libxc13, is_libxc12

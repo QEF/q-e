@@ -951,6 +951,8 @@
     CALL errore('readin', 'phonon self-energy only works with full uniform k-mesh', 1)
   IF ((elecselfen .OR. specfun_el) .AND. mp_mesh_q) &
     CALL errore('readin', 'electron self-energy only works with full uniform q-mesh', 1)
+  IF (mp_mesh_k .AND. mp_mesh_q) &
+    CALL errore('readin', 'both mp_mesh_k and mp_mesh_q cannot be True, use either', 1)
   IF (ephwrite) THEN
     IF (.NOT. ep_coupling .AND. .NOT. elph) CALL errore('readin', &
       'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
