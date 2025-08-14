@@ -76,7 +76,7 @@ SUBROUTINE do_elf_kin(fout,iself,spin_component)
      !
      CALL read_collected_wfc ( restart_dir(), ik, evc )
 
-     ! skip if this is a KED calculation with requrested spin_component
+     ! skip if this is a KED calculation with requested spin_component
      IF (.NOT.iself .AND. spin_component > 0 .AND. isk(ik) /= spin_component) CYCLE
      !
      DO ibnd = 1, nbnd
