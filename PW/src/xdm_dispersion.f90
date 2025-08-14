@@ -212,6 +212,10 @@ CONTAINS
     INTEGER :: i, j, ialloc, n1, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
     !
+
+    ! No UPF information, nothing to initialize (e.g. when called from pp.x)
+    IF (.NOT.ALLOCATED(upf)) RETURN
+
     CALL start_clock('init_xdm')
 
     ispaw = ALL(upf(1:ntyp)%tpawp)

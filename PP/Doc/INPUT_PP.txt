@@ -142,7 +142,7 @@ NAMELIST: &INPUTPP
                       21 = all-electron charge density (valence+core).
                            For PAW calculations only; requires a very dense real-space grid.
                    
-                      22 = kinetic energy density (for meta-GGA and XDM only)
+                      22 = kinetic energy density
                    
                      123 = DORI: density overlap regions indicator
                            (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
