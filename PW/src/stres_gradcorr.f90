@@ -54,7 +54,7 @@ SUBROUTINE stres_gradcorr( rho, rho_core, rhog_core, nspin, domag, &
   IF ( xclib_dft_is('meta') .AND. nspin>1 )  CALL errore( 'stres_gradcorr', &
        'Meta-GGA stress does not work with spin polarization', 1 )
   !
-  !$acc data present_or_copyin( rho, rho%of_r, rho%of_g, rho_core, rhog, rhog_core, g )
+  !$acc data present_or_copyin( rho, rho%of_r, rho%of_g, rho_core, rhog_core, g )
   !
   np = 1
   IF ( nspin==2 .AND. xclib_dft_is('meta') ) np = 3
