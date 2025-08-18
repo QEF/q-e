@@ -182,7 +182,7 @@ MODULE io_rho_xml
       IF ( nspin == 2 ) THEN
          magtot = 0.0_dp
          IF ( gstart == 2 ) magtot = rho%of_g(1, 2) * omega
-         CALL mp_sum(magtot, intra_image_comm)
+         CALL mp_sum(magtot, intra_bgrp_comm)
       END IF
       !
       ! read kinetic energy density
