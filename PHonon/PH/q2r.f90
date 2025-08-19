@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -68,11 +68,14 @@ PROGRAM q2r
   !! aligned, etc.). In these cases the supplementary asr are cancelled
   !! during the orthonormalization procedure (see below).
   LOGICAL :: la2F
+  !! For electron-phonon calculations with interpolation
   LOGICAL :: loto_2d
   !! Set to TRUE to activate two-dimensional treatment of LO-TO splitting. 
   LOGICAL :: write_lr
   !! Set to .true. to write long-range IFC into IFC file when enforcing
   !! asr='all' for polar solids in matdyn.
+  LOGICAL :: remove_interaction_blocks
+  !! Input to remove interactions in the dyn matrix between fixed atoms
   INTEGER :: ios
   !
   NAMELIST / input / fildyn, flfrc, prefix, zasr, la2F, loto_2d, write_lr, el_ph_nsigma
@@ -87,6 +90,7 @@ PROGRAM q2r
   prefix = ' '
   loto_2d=.false.
   write_lr = .false.
+  remove_interaction_blocks = .false.
   zasr = 'no'
      !
   la2F=.false.
@@ -106,8 +110,10 @@ PROGRAM q2r
   CALL mp_bcast(la2F, ionode_id, world_comm)
   CALL mp_bcast(el_ph_nsigma, ionode_id, world_comm)
   CALL mp_bcast(write_lr, ionode_id, world_comm)
+  CALL mp_bcast(remove_interaction_blocks, ionode_id, world_comm)
   !
-  CALL do_q2r(fildyn, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
+  CALL do_q2r(fildyn, flfrc, prefix, zasr, la2F, loto_2d, write_lr, &
+              remove_interaction_blocks)
   !
   CALL environment_end('Q2R')
 

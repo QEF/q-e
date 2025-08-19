@@ -29,7 +29,7 @@
                                                      npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.8 starts on  9Jan2024 at 13:54:41 
+     Program EPW v.5.9 starts on  6Feb2025 at 19:18:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -44,7 +44,7 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     33563 MiB available memory on the printing compute node when the environment starts
+     5075 MiB available memory on the printing compute node when the environment starts
  
      Reading input from epw5.in
 
@@ -106,18 +106,20 @@
 
      Electron-phonon coupling strength =    0.8714948
  
-     Estimated Allen-Dynes Tc =    26.408172 K for muc =    0.16000
+     Estimated Tc using McMillan expression =  26.4082 K for muc =   0.1600
   
-     Estimated w_log in Allen-Dynes Tc =    61.470420 meV
+     Estimated Tc using Allen-Dynes modified McMillan expression =  27.4569 K
   
-     Estimated BCS superconducting gap =     4.005197 meV
+     Estimated Tc using SISSO machine learning model =  31.5015 K
   
-     Estimated Tc from machine learning model =    31.501506 K
+     Estimated w_log =  61.4704 meV
+  
+     Estimated BCS superconducting gap using McMillan Tc =   4.0052 meV
   
   
      WARNING WARNING WARNING 
   
-     The code may crash since tempsmax =   41.000 K is larger than Allen-Dynes Tc =    26.408 K
+     The code may crash since tempsmax =   41.000 K is larger than McMillan Tc =    26.408 K
 
      Start: Solving (isotropic) linearized Eliashberg equation with solver = power 
 
@@ -130,38 +132,38 @@
              Temp.       Max.         nsiw     wscut    Nr. of iters
              (K)       eigenvalue    (itemp)   (eV)      to Converge
       -----------------------------------------------------------------
-             1.00      3.4475242      923      0.5000        5
-             2.00      2.9617711      462      0.5008        6
-             3.00      2.6786271      308      0.5011        6
-             4.00      2.4783107      231      0.5014        6
-             5.00      2.3233371      185      0.5022        6
-             6.00      2.1969772      154      0.5019        6
-             7.00      2.0903763      132      0.5022        6
-             8.00      1.9981452      115      0.5003        6
-             9.00      1.9171295      103      0.5044        6
-            10.00      1.8445346       92      0.5008        6
+             1.00      3.4475243      923      0.5000        5
+             2.00      2.9617712      462      0.5008        6
+             3.00      2.6786272      308      0.5011        6
+             4.00      2.4783108      231      0.5014        6
+             5.00      2.3233372      185      0.5022        6
+             6.00      2.1969773      154      0.5019        6
+             7.00      2.0903764      132      0.5022        6
+             8.00      1.9981453      115      0.5003        6
+             9.00      1.9171296      103      0.5044        6
+            10.00      1.8445347       92      0.5008        6
             11.00      1.7791792       84      0.5033        6
             12.00      1.7195374       77      0.5035        6
             13.00      1.6647336       71      0.5033        6
-            14.00      1.6141173       66      0.5041        6
-            15.00      1.5672087       62      0.5076        6
+            14.00      1.6141174       66      0.5041        6
+            15.00      1.5672088       62      0.5076        6
             16.00      1.5231870       58      0.5068        6
-            17.00      1.4830491       54      0.5016        7
-            18.00      1.4442860       51      0.5019        7
-            19.00      1.4078568       49      0.5092        7
+            17.00      1.4830492       54      0.5016        7
+            18.00      1.4442861       51      0.5019        7
+            19.00      1.4078569       49      0.5092        7
             20.00      1.3730197       46      0.5035        7
             21.00      1.3401342       44      0.5060        7
-            22.00      1.3087708       42      0.5062        7
+            22.00      1.3087709       42      0.5062        7
             23.00      1.2787891       40      0.5044        7
             24.00      1.2500699       38      0.5003        7
             25.00      1.2228408       37      0.5076        7
             26.00      1.1966976       36      0.5138        7
-            27.00      1.1711876       34      0.5044        7
+            27.00      1.1711877       34      0.5044        7
             28.00      1.1469515       33      0.5079        7
             29.00      1.1235720       32      0.5103        7
             30.00      1.0982732       31      0.5117        8
             31.00      1.0762632       30      0.5119        8
-            32.00      1.0549108       29      0.5111        8
+            32.00      1.0549109       29      0.5111        8
             33.00      1.0341673       28      0.5092        8
             34.00      1.0139884       27      0.5062        8
             35.00      0.9943346       26      0.5022        8
@@ -169,7 +171,7 @@
             37.00      0.9614515       25      0.5109        9
             38.00      0.9436325       24      0.5041        9
             39.00      0.9271893       24      0.5173        9
-            40.00      0.9102489       23      0.5090        9
+            40.00      0.9102490       23      0.5090        9
             41.00      0.8907162       23      0.5217       10
       -----------------------------------------------------------------
      Finish: Solving (isotropic) linearized Eliashberg equation
@@ -185,10 +187,10 @@
      Electron-Phonon interpolation
 
 
-     ELIASHBERG   :      6.63s CPU      6.71s WALL (       1 calls)
+     ELIASHBERG   :      7.32s CPU      7.39s WALL (       1 calls)
 
      Total program execution
-     EPW          :      6.64s CPU      6.71s WALL
+     EPW          :      7.33s CPU      7.41s WALL
 
      % Copyright (C) 2016-2023 EPW-Collaboration                                    
                                                                                     
@@ -204,7 +206,7 @@
        J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
                                                                                                  
                                                                                              
-     % Since you used the [eliashberg] input, please consider also citing                    
+     % Since you used the [eliashberg] input,     please consider also citing                    
        E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)                         
                                                                                     
      For your convenience, this information is also reported in the                 

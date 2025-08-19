@@ -2,6 +2,8 @@ set(src_modules
     additional_kpoints.f90 
     atomic_wfc_mod.f90
     autopilot.f90 
+    ions_nose.f90
+    cell_nose.f90
     basic_algebra_routines.f90 
     becmod.f90 
     bfgs_module.f90 
@@ -68,6 +70,7 @@ set(src_modules
     set_para_diag.f90 
     set_signal.f90 
     set_vdw_corr.f90 
+    copy_order_um_from_xml.f90
     setqf.f90 
     timestep.f90
     tsvdw.f90

@@ -19,7 +19,7 @@ subroutine compute_weight (wgg)
   USE wvfct,          ONLY : nbnd, wg, et, nbnd_cond
   USE paw_variables,  ONLY : okpaw
   USE qpoint,         ONLY : nksq, ikks, ikqs
-  USE control_ph,     ONLY : rec_code_read
+  USE control_lr,     ONLY : rec_code_read
   USE dfpt_tetra_mod, ONLY : dfpt_tetra_ttheta
   USE ldaU,           ONLY : lda_plus_u
   USE two_chem,         ONLY : twochem

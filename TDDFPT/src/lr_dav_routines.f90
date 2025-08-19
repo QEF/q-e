@@ -26,7 +26,6 @@ contains
                                 & if_dft_spectrum, reference
     use lr_variables, only : nbnd_total
     use io_global,    only : stdout
-    use lr_dav_debug
  
     implicit none
     integer :: ib,ic,iv
@@ -186,14 +185,13 @@ contains
     use kinds,         only : dp
     use wvfct,         only : nbnd, npwx, et
     use lr_dav_variables
-    use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt,&
+    use lr_variables,         only : evc0, sevc0 , evc0_virt,&
                                    & sevc0_virt, nbnd_total, davidson, restart
     use io_global,    only : stdout
     use wvfct,       only : npwx,nbnd,et
     use gvect,                only : gstart
     use uspp,           only : okvan
     use lr_us
-    use lr_dav_debug
 
     implicit none
     integer :: ib,ia,ipw,ibnd
@@ -231,7 +229,6 @@ contains
     dav_iter=0
 101 continue
     dav_conv=.false.
-    ! call check_orth()
     write(stdout,'(5x,"Finished initiating.")')
     !
     RETURN
@@ -437,7 +434,6 @@ contains
     use lr_us
     use uspp,           only : okvan
     use lr_dav_variables
-    use lr_dav_debug
     use lr_us
 
     implicit none
@@ -605,7 +601,6 @@ contains
     use lr_us
     use uspp,           only : okvan
     use lr_dav_variables
-    use lr_dav_debug
     use lr_us
 
     implicit none
@@ -629,9 +624,6 @@ contains
     call start_clock("matrix")
     call ZGEMM('N', 'N', num_basis,num_basis,num_basis,(1.0D0,0.0D0),M_D,&
                num_basis_max,M_C,num_basis_max,(0.0D0,0.0D0), M,num_basis_max)
-    call check("M_C")
-    call check("M_D")
-    call check("M")
 
     ! Solve M_DC
     ! It is dangerous to be "solved", use its shadow avatar in order to protect the original one
@@ -672,8 +664,8 @@ contains
 #endif
 
     ! Recover eigenvectors in the whole space
-    left_full(:,:,:,:)=0.0d0
-    right_full(:,:,:,:)=0.0d0
+    left_full(:,:,:,:)=(0.0d0, 0.0d0)
+    right_full(:,:,:,:)=(0.0d0, 0.0d0)
     do ieign = 1, num_eign
       do ibr = 1, num_basis
         left_full(:,:,1,ieign)=left_full(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
@@ -733,7 +725,6 @@ contains
     use io_global, only : stdout
     use wvfct,                only : nbnd, npwx
     use uspp,           only : okvan
-    use lr_dav_debug
     use lr_us
     
     implicit none
@@ -842,7 +833,6 @@ contains
     use io_global,       only : stdout
     use uspp,           only : okvan
     use lr_us
-    use lr_dav_debug
     use wvfct,                only : npwx
     
     implicit none
@@ -1181,7 +1171,6 @@ contains
     use klist,       only : ngk
     use lr_dav_variables, only : reference, diag_of_h, tr_energy,eign_value_order,&
                      &turn2planb
-    use g_psi_mod
     
     implicit none
     complex(dp)  :: vect(npwx,nbnd)
@@ -1543,7 +1532,7 @@ contains
     use kinds,         only : DP
     use wvfct,         only : nbnd,et
     use lr_dav_variables
-    use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt
+    use lr_variables,         only : evc0, sevc0 , evc0_virt
     use wvfct,                only : npwx,wg
     use fft_base,             only : dffts,dfftp
     use uspp,           only : okvan
@@ -1984,7 +1973,6 @@ contains
     use charg_resp,           only : lr_calc_R
     use io_global,    only : stdout,ionode
     use io_files,      only : prefix
-    use lr_dav_debug
 
     implicit none
     integer :: ib,ic,iv,i

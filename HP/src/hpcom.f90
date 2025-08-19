@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2022 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,6 +29,7 @@ MODULE ldaU_hp
              determine_q_mesh_only,   &     ! If .true. determine the q mesh for a given perturbed atom and exit
              determine_num_pert_only, &     ! If .true. determine only which atoms must be perterbed
              skip_equivalence_q,      &     ! If .true. the full frid of q points will be used
+             no_metq0,                &     ! If .true. the metallic response term at q=0 is ignored
              disable_type_analysis,   &     ! If .true. disable the algorithm which detects whether
                                             ! there are atoms of the same type but with different occupations
              skip_atom(500)                 ! If .true. no LR calculation will be performed 

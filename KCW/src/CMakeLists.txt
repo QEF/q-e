@@ -46,7 +46,15 @@ set(src_kcw
     kcw_allocate_q.f90
     kcw_deallocate_q.f90
     setup_coulomb_exx.f90
-    coulomb.f90)
+    coulomb.f90
+    find_IBZ_q.f90 
+    kcw_kpoint_grid.f90 
+    kcw_deallocate_symmetry_arrays.f90 
+    write_qlist_ibz.f90 
+    read_qlist_ibz.f90 
+    kcw_read_sym.f90 
+    kcw_write_sym.f90 
+    )
 
 qe_add_library(qe_kcw ${src_kcw})
 target_link_libraries(

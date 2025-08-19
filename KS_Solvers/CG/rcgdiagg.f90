@@ -6,6 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! define __VERBOSE to print a message after each eigenvalue is computed
+!
+!civn: Dec, 18th 2024
+!      merging rcgdiagg_gpu with rcgdiagg in a unique source file 
+!      with OpenACC directives. 
+!      go back to commit 751be151c67f2edea352f9a34107fe87706258cb 
+!      if you need to see the old two separate files
+!
 !----------------------------------------------------------------------------
 SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
                      npwx, npw, nbnd, psi, e, btype, &
@@ -46,9 +53,10 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
   INTEGER                  :: i, j, m, m_start, m_end, iter, moved
   REAL(DP),    ALLOCATABLE :: lagrange(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
-                              scg(:), ppsi(:), g0(:)  
+                              scg(:), ppsi(:), g0(:), lagrange_c(:)
   REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                               cg0, e0, es(2)
+  REAL(DP)                 :: es1
   REAL(DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                  :: reorder
   INTEGER                  :: npw2, npwx2
@@ -56,7 +64,7 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   ! ... external functions
   !
-  REAL (DP), EXTERNAL :: ddot
+  REAL(DP), EXTERNAL :: MYDDOT
   EXTERNAL  hs_1psi_ptr,    s_1psi_ptr
   ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
   ! s_1psi_ptr( npwx, npw, psi, spsi )
@@ -80,6 +88,8 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ALLOCATE( ppsi( npwx ) )
   !    
   ALLOCATE( lagrange( nbnd ) )
+  ALLOCATE( lagrange_c( nbnd ) )
+  !$acc enter data create(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
   !
   avg_iter = 0.D0
   notconv  = 0
@@ -88,7 +98,7 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
   ! ... every eigenfunction is calculated separately
   !
   DO m = 1, nbnd
-
+        !
      IF ( btype(m) == 1 ) THEN
         !
         ethr_m = ethr
@@ -107,29 +117,49 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !
      CALL start_clock( 'cg:ortho' )
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
+     !$acc kernels
      lagrange = 0.d0
-     if(m_start.le.m_end) &
-     CALL DGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
-     CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
-     IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
+     !$acc end kernels
+     if(m_start.le.m_end) then
+       !$acc host_data use_device(psi, spsi, lagrange)
+       CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
+       !$acc end host_data
+     endif 
+     !$acc host_data use_device(lagrange)
+     CALL mp_sum( lagrange, 1, m , inter_bgrp_comm )
+     !$acc end host_data
+     IF ( gstart == 2 ) THEN 
+        !$acc kernels
+        lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
+        !$acc end kernels
+     END IF
+     !$acc host_data use_device(lagrange)
+     CALL mp_sum( lagrange, 1, m , intra_bgrp_comm )
+     !$acc end host_data
      !
-     CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
-     !
+     !$acc kernels copyin(m) 
      psi_norm = lagrange(m)
-     !
      DO j = 1, m - 1
-        !
-        psi(:,m)  = psi(:,m) - lagrange(j) * psi(:,j)
-        !
         psi_norm = psi_norm - lagrange(j)**2
-        !
      END DO
-     !
      psi_norm = SQRT( psi_norm )
+     !$acc end kernels
      !
+     !$acc parallel
+     !$acc loop gang 
+     DO i = 1, npwx
+       !$acc loop seq 
+       DO j = 1, m - 1
+           psi(i,m)  = psi(i,m) - lagrange(j) * psi(i,j)
+        END DO
+     END DO
+     !$acc end parallel 
+     !
+     !$acc kernels
      psi(:,m) = psi(:,m) / psi_norm
      ! ... set Im[ psi(G=0) ] -  needed for numerical stability
      IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
+     !$acc end kernels
      CALL stop_clock( 'cg:ortho' )
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
@@ -140,8 +170,10 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
      !
      ! ... NB:  ddot(2*npw,a,1,b,1) = DBLE( zdotc(npw,a,1,b,1) )
      !
-     e(m) = 2.D0 * ddot( npw2, psi(1,m), 1, hpsi, 1 )
-     IF ( gstart == 2 ) e(m) = e(m) - psi(1,m) * hpsi(1)
+     !$acc host_data use_device(psi, hpsi)
+     e(m) = 2.D0 * MYDDOT( npw2, psi(1,m), 1, hpsi, 1 )
+     IF ( gstart == 2 ) e(m) = e(m) - MYDDOT( 1, psi(1,m), 1, hpsi(1), 1 )  
+     !$acc end host_data
      !
      CALL mp_sum( e(m), intra_bgrp_comm )
      !
@@ -152,26 +184,30 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... calculate  P (PHP)|y>
         ! ... ( P = preconditioning matrix, assumed diagonal )
         !
-        g(1:npw)    = hpsi(1:npw) / precondition(:)
-        ppsi(1:npw) = spsi(1:npw) / precondition(:)
+        !$acc kernels 
+        g(1:npw)    = hpsi(1:npw) / precondition(1:npw)
+        ppsi(1:npw) = spsi(1:npw) / precondition(1:npw)
+        !$acc end kernels
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = 2.D0 * ddot( npw2, spsi(1), 1, g(1), 1 )
-        es(2) = 2.D0 * ddot( npw2, spsi(1), 1, ppsi(1), 1 )
-        !
+        !$acc host_data use_device(spsi, g, ppsi)
+        es(1) = 2.D0 * MYDDOT( npw2, spsi(1), 1, g(1), 1 )
+        es(2) = 2.D0 * MYDDOT( npw2, spsi(1), 1, ppsi(1), 1 )
         IF ( gstart == 2 ) THEN
-           !
-           es(1) = es(1) - spsi(1) * g(1)
-           es(2) = es(2) - spsi(1) * ppsi(1)
-           !
+           es(1) = es(1) - MYDDOT( 1, spsi(1), 1, g(1), 1 )  
+           es(2) = es(2) - MYDDOT( 1, spsi(1), 1, ppsi(1), 1 ) 
         END IF
+        !$acc end host_data
         !
         CALL mp_sum( es , intra_bgrp_comm )
         !
         es(1) = es(1) / es(2)
         !
-        g(:) = g(:) - es(1) * ppsi(:)
+        es1 = es(1)
+        !$acc kernels   
+        g(:) = g(:) - es1 * ppsi(:)
+        !$acc end kernels
         !
         ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y>  ensures that  
         ! ... <g| S P^2|y> = 0
@@ -183,29 +219,43 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
         CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
         !
         CALL start_clock( 'cg:ortho' )
+        !$acc kernels
         lagrange(1:m-1) = 0.d0
+        !$acc end kernels
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
-        if(m_start.le.m_end) &
-        CALL DGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange(m_start), 1 )
-        CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
-        IF ( gstart == 2 ) lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
-        !
-        CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
-        !
-        DO j = 1, ( m - 1 )
-           !
-           g(:)   = g(:)   - lagrange(j) * psi(:,j)
-           scg(:) = scg(:) - lagrange(j) * psi(:,j)
-           !
-        END DO
+        if(m_start.le.m_end) then
+          !$acc host_data use_device(psi, scg, lagrange)
+          CALL MYDGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange(m_start), 1 )
+          !$acc end host_data
+        endif
+        !$acc host_data use_device(lagrange)
+        CALL mp_sum( lagrange, 1, m-1 , inter_bgrp_comm )
+        !$acc end host_data
+        IF ( gstart == 2 ) THEN
+           !$acc kernels
+           lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
+           !$acc end kernels
+        END IF
+        !$acc host_data use_device(lagrange)
+        CALL mp_sum( lagrange, 1, m-1, intra_bgrp_comm )
+        !$acc end host_data
+        !$acc kernels
+        lagrange_c(:) = cmplx(lagrange(:), 0.0_dp)
+        !$acc end kernels
+        !$acc host_data use_device(psi, g, scg, lagrange_c)
+        Call MYZGEMV('N', npwx, (m-1), -(1.0d0, 0.0d0), psi, npwx, lagrange_c, 1, (1.0d0, 0.0d0), g,   1)
+        Call MYZGEMV('N', npwx, (m-1), -(1.0d0, 0.0d0), psi, npwx, lagrange_c, 1, (1.0d0, 0.0d0), scg, 1)
+        !$acc end host_data
         CALL stop_clock( 'cg:ortho' )
         !
         IF ( iter /= 1 ) THEN
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = 2.D0 * ddot( npw2, g(1), 1, g0(1), 1 )
-           IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
+           !$acc host_data use_device(g, g0)
+           gg1 = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
+           IF ( gstart == 2 ) gg1 = gg1 - MYDDOT( 1, g(1), 1, g0(1), 1 )  
+           !$acc end host_data
            !
            CALL mp_sum(  gg1 , intra_bgrp_comm )
            !
@@ -213,12 +263,15 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         ! ... gg is <g(n+1)|S|g(n+1)>
         !
+        !$acc kernels   
         g0(:) = scg(:)
+        g0(1:npw) = g0(1:npw) * precondition(1:npw)
+        !$acc end kernels
         !
-        g0(1:npw) = g0(1:npw) * precondition(:)
-        !
-        gg = 2.D0 * ddot( npw2, g(1), 1, g0(1), 1 )
-        IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
+        !$acc host_data use_device(g, g0)
+        gg = 2.D0 * MYDDOT( npw2, g(1), 1, g0(1), 1 )
+        IF ( gstart == 2 ) gg = gg - MYDDOT( 1, g(1), 1, g0(1), 1 ) 
+        !$acc end host_data
         !
         CALL mp_sum(  gg , intra_bgrp_comm )
         !
@@ -228,7 +281,9 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            gg0 = gg
            !
+           !$acc kernels   
            cg(:) = g(:)
+           !$acc end kernels
            !
         ELSE
            !
@@ -239,8 +294,9 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
            gamma = ( gg - gg1 ) / gg0
            gg0   = gg
            !
-           cg(:) = cg(:) * gamma
-           cg(:) = g + cg(:)
+           !$acc kernels   
+           cg(:) = g(:) + cg(:) * gamma
+           !$acc end kernels
            !
            ! ... The following is needed because <y(n+1)| S P^2 |cg(n+1)> 
            ! ... is not 0. In fact :
@@ -248,20 +304,26 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            psi_norm = gamma * cg0 * sint
            !
+           !$acc kernels   
            cg(:) = cg(:) - psi_norm * psi(:,m)
+           !$acc end kernels
            !
         END IF
         !
         ! ... |cg> contains now the conjugate gradient
         ! ... set Im[ cg(G=0) ] -  needed for numerical stability
+        !$acc kernels
         IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
+        !$acc end kernels
         !
         ! ... |scg> is S|cg>
         !
         CALL hs_1psi_ptr( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        cg0 = 2.D0 * ddot( npw2, cg(1), 1, scg(1), 1 )
-        IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
+        !$acc host_data use_device(cg, scg)
+        cg0 = 2.D0 * MYDDOT( npw2, cg(1), 1, scg(1), 1 )
+        IF ( gstart == 2 ) cg0 = cg0 - MYDDOT( 1, cg(1), 1, scg(1), 1 ) 
+        !$acc end host_data
         !
         CALL mp_sum(  cg0 , intra_bgrp_comm )
         !
@@ -275,15 +337,19 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 4.D0 * ddot( npw2, psi(1,m), 1, ppsi(1), 1 )
-        IF ( gstart == 2 ) a0 = a0 - 2.D0 * psi(1,m) * ppsi(1)
+        !$acc host_data use_device(psi, ppsi)
+        a0 = 4.D0 * MYDDOT( npw2, psi(1,m), 1, ppsi(1), 1 )
+        IF ( gstart == 2 ) a0 = a0 - 2.D0 * MYDDOT( 1, psi(1,m), 1, ppsi(1), 1 ) 
+        !$acc end host_data
         !
         a0 = a0 / cg0
         !
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
-        b0 = 2.D0 * ddot( npw2, cg(1), 1, ppsi(1), 1 )
-        IF ( gstart == 2 ) b0 = b0 - cg(1) * ppsi(1)
+        !$acc host_data use_device(cg, ppsi)
+        b0 = 2.D0 * MYDDOT( npw2, cg(1), 1, ppsi(1), 1 )
+        IF ( gstart == 2 ) b0 = b0 - MYDDOT( 1, cg(1), 1, ppsi(1), 1 ) 
+        !$acc end host_data 
         !
         b0 = b0 / cg0**2
         !
@@ -319,7 +385,9 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         ! ... upgrade |psi>
         !
+        !$acc kernels  
         psi(:,m) = cost * psi(:,m) + sint / cg0 * cg(:)
+        !$acc end kernels
         !
         ! ... here one could test convergence on the energy
         !
@@ -327,9 +395,11 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
         !
         ! ... upgrade H|psi> and S|psi>
         !
+        !$acc kernels  
         spsi(:) = cost * spsi(:) + sint / cg0 * scg(:)
         !
         hpsi(:) = cost * hpsi(:) + sint / cg0 * ppsi(:)
+        !$acc end kernels
         !
      END DO iterate
      !
@@ -371,19 +441,25 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
            !
            e0 = e(m)
            !
+           !$acc kernels  
            ppsi(:) = psi(:,m)
+           !$acc end kernels
            !
            DO j = m, i + 1, - 1
               !
               e(j) = e(j-1)
               !
+              !$acc kernels  
               psi(:,j) = psi(:,j-1)
+              !$acc end kernels
               !
            END DO
            !
            e(i) = e0
            !
+           !$acc kernels  
            psi(:,i) = ppsi(:)
+           !$acc end kernels
            !
            ! ... this procedure should be good if only a few inversions occur,
            ! ... extremely inefficient if eigenvectors are often in bad order
@@ -397,7 +473,8 @@ SUBROUTINE rcgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
   !
   avg_iter = avg_iter / DBLE( nbnd )
   !
-  DEALLOCATE( lagrange )
+  !$acc exit data delete(hpsi, spsi, g, g0, cg, scg, ppsi, lagrange, lagrange_c)
+  DEALLOCATE( lagrange, lagrange_c )
   DEALLOCATE( ppsi )
   DEALLOCATE( g0 )
   DEALLOCATE( cg )

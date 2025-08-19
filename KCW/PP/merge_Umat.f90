@@ -10,15 +10,15 @@ PROGRAM merge
  complex*16, allocatable :: U1(:,:,:)
  complex*16, allocatable :: U2(:,:,:)
  complex*16, allocatable :: U(:,:,:)
- real*16, allocatable :: k(:,:)
- real*16 :: re, im
+ real*8, allocatable :: k(:,:)
+ real*8 :: re, im
  integer :: ik, ib, jb, ii, iib, jjb
  character(256) :: dum,arg
  character(256), allocatable :: filename(:)
  integer :: nargs, iarg, ni, nf, nb1_
  !
  nargs = command_argument_count()
- write(*,*) nargs 
+ write(*,*) nargs
  IF (nargs == 0 ) STOP
  allocate (filename(nargs) )
  !
@@ -53,7 +53,7 @@ PROGRAM merge
    write(*,*) ni, nf, nb1_
    do ik = 1, nk1
       read (27, *)
-      !write(*,*) 
+      !write(*,*)
       read  (27, '(f15.10,sp,f15.10,sp,f15.10)') k(:, ik)
       !write (* , '(f15.10,sp,f15.10,sp,f15.10)') k(:, ik)
       !write(*,'(f15.10,sp,f15.10,sp,f15.10)')  k(:,ik)
@@ -69,7 +69,7 @@ PROGRAM merge
  write(*,*) nb, nk1
  WRITE(*,'(2(f15.10,sp,f15.10))') U(1,1,1), U(nb,nb,nk1)
  open (40, file='wann_u.mat', form='formatted')
- write (40, *) "Written by merge.x" 
+ write (40, *) "Written by merge.x"
  write (40, '(3I12)') nk1, nb, nb
  do ik = 1, nk1
    write(40, *)

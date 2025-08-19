@@ -21,6 +21,7 @@ SUBROUTINE stress( sigma )
   USE fft_base,         ONLY : dfftp
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
+  USE noncollin_module, ONLY : domag
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, &
                                ts_vdw, mbd_vdw
@@ -100,13 +101,8 @@ SUBROUTINE stress( sigma )
   !
   ! ... XC contribution: add gradient corrections (non diagonal)
   !
-  IF (.NOT.xclib_dft_is('meta')) THEN
-    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
-                         nspin, dfftp, g, alat, omega, sigmaxc )
-  ELSE
-    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
-                         nspin, dfftp, g, alat, omega, sigmaxc, rho%kin_r )
-  ENDIF
+  CALL stres_gradcorr( rho, rho_core, rhog_core, nspin, domag, &
+                       dfftp, g, alat, omega, sigmaxc )
   !
   ! ... meta-GGA contribution
   !

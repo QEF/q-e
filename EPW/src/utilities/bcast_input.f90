@@ -18,8 +18,7 @@
   !! In this routine the first processor sends the input to all the other processors
   !!
 #if defined(__MPI)
-  USE phcom,         ONLY : zue, trans, tr2_ph, nmix_ph, niter_ph, lnscf,     &
-                            ldisp, fildvscf, fildrho, epsil, alpha_mix
+  USE output,        ONLY : fildvscf, fildrho
   USE input,         ONLY : epexst, epbwrite, ep_coupling,                    &
                             eliashberg, elecselfen, eig_read, plselfen,       &
                             efermi_read, dvscf_dir, delta_smear, ngaussw,     &
@@ -74,6 +73,7 @@
                             beta_plrn, Mmn_plrn, recal_Mmn_plrn, r0_plrn,     &
                             debug_plrn, time_rev_U_plrn, g_start_band_plrn,   &
                             g_end_band_plrn, g_start_energy_plrn,             &
+                            g_scale_plrn,                                     &
                             g_end_energy_plrn, model_vertex_plrn,             &
                             model_enband_plrn, model_phfreq_plrn, kappa_plrn, &
                             omega_LO_plrn, m_eff_plrn, step_wf_grid_plrn,     &
@@ -84,7 +84,24 @@
                             loptabs, wf_quasi, nq_init, start_mesh,           &
                             DW, mode_res, QD_min, QD_bin, do_CHBB,            &
                             elecselfen_type, calc_nelec_wann, lopt_w2b,       &
-                            lfast_kmesh, epw_memdist
+                            exciton, nbndv_explrn, nbndc_explrn,              & 
+                            negnv_explrn, explrn, plot_explrn_e,              &
+                            plot_explrn_h, only_c_explrn, only_v_explrn,      &
+                            step_k1_explrn, step_k2_explrn, step_k3_explrn,   &
+                            only_pos_modes_explrn, dtau_max_plrn,             &
+                            lfast_kmesh, epw_memdist, a2f_iso,                &
+                            acoustic_plrn, cal_acous_plrn, dos_tetra, fd,     &
+                            ltrans_crta, sr_crta
+  ! -------------------------------------------------------------------------------------
+  !Added for calculating time-dependent Boltzmann transport Equation
+  USE input,         ONLY : do_tdbe, dt_tdbe, nt_tdbe, twrite_tdbe,           &
+                            temp_el_tdbe, temp_ph_tdbe, init_type_tdbe,       &
+                            init_sigma_tdbe, ef_c_tdbe, ef_v_tdbe,            &
+                            carr_dyn_tdbe, dg_tdbe, nkf1d, nkf2d, nkf3d,      &
+                            nqf1d, nqf2d, nqf3d, dph_tdbe, restart_tdbe,      &
+                            phph_tdbe, solver_tdbe, phwmin_tdbe, ephmat_dir,  &
+                            lscreen_tdbe                         
+  ! -------------------------------------------------------------------------------------
   USE global_var,    ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -98,12 +115,7 @@
   !
   ! logicals
   !
-  CALL mp_bcast(epsil           , meta_ionode_id, world_comm)
-  CALL mp_bcast(trans           , meta_ionode_id, world_comm)
-  CALL mp_bcast(zue             , meta_ionode_id, world_comm)
   CALL mp_bcast(elph            , meta_ionode_id, world_comm)
-  CALL mp_bcast(lnscf           , meta_ionode_id, world_comm)
-  CALL mp_bcast(ldisp           , meta_ionode_id, world_comm)
   CALL mp_bcast(elecselfen      , meta_ionode_id, world_comm)
   CALL mp_bcast(phonselfen      , meta_ionode_id, world_comm)
   CALL mp_bcast(plselfen        , meta_ionode_id, world_comm)
@@ -199,11 +211,17 @@
   CALL mp_bcast(lopt_w2b        , meta_ionode_id, world_comm)
   CALL mp_bcast(lfast_kmesh     , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_memdist     , meta_ionode_id, world_comm)
+  CALL mp_bcast(dos_tetra       , meta_ionode_id, world_comm)
+  CALL mp_bcast(fd              , meta_ionode_id, world_comm)
+  CALL mp_bcast(a2f_iso        , meta_ionode_id, world_comm)
+  CALL mp_bcast(do_tdbe         , meta_ionode_id, world_comm)
+  CALL mp_bcast(dg_tdbe         , meta_ionode_id, world_comm)
+  CALL mp_bcast(restart_tdbe    , meta_ionode_id, world_comm)
+  CALL mp_bcast(phph_tdbe       , meta_ionode_id, world_comm)
+  CALL mp_bcast(lscreen_tdbe    , meta_ionode_id, world_comm)
   !
   ! integers
   !
-  CALL mp_bcast(niter_ph    , meta_ionode_id, world_comm)
-  CALL mp_bcast(nmix_ph     , meta_ionode_id, world_comm)
   CALL mp_bcast(iverbosity  , meta_ionode_id, world_comm)
   CALL mp_bcast(ngaussw     , meta_ionode_id, world_comm)
   CALL mp_bcast(nw          , meta_ionode_id, world_comm)
@@ -242,16 +260,26 @@
   CALL mp_bcast(david_ndim_plrn, meta_ionode_id, world_comm)
   CALL mp_bcast(init_ntau_plrn, meta_ionode_id, world_comm)
   CALL mp_bcast(icoulomb    , meta_ionode_id, world_comm)
+  CALL mp_bcast(nt_tdbe      , meta_ionode_id, world_comm)
+  CALL mp_bcast(twrite_tdbe , meta_ionode_id, world_comm)
+  CALL mp_bcast(carr_dyn_tdbe, meta_ionode_id, world_comm)
+  CALL mp_bcast(nkf1d       , meta_ionode_id, world_comm)
+  CALL mp_bcast(nkf2d       , meta_ionode_id, world_comm)
+  CALL mp_bcast(nkf3d       , meta_ionode_id, world_comm)
+  CALL mp_bcast(nqf1d       , meta_ionode_id, world_comm)
+  CALL mp_bcast(nqf2d       , meta_ionode_id, world_comm)
+  CALL mp_bcast(nqf3d       , meta_ionode_id, world_comm)
+  CALL mp_bcast(dph_tdbe    , meta_ionode_id, world_comm)
   !
   ! REAL*8
   !
-  CALL mp_bcast(tr2_ph        , meta_ionode_id, world_comm)
   CALL mp_bcast(amass         , meta_ionode_id, world_comm)
-  CALL mp_bcast(alpha_mix     , meta_ionode_id, world_comm)
   CALL mp_bcast(xq            , meta_ionode_id, world_comm)
   CALL mp_bcast(degaussw      , meta_ionode_id, world_comm)
   CALL mp_bcast(delta_smear   , meta_ionode_id, world_comm)
   CALL mp_bcast(eps_acoustic  , meta_ionode_id, world_comm)
+  CALL mp_bcast(acoustic_plrn , meta_ionode_id, world_comm)
+  CALL mp_bcast(dtau_max_plrn , meta_ionode_id, world_comm)
   CALL mp_bcast(degaussq      , meta_ionode_id, world_comm)
   CALL mp_bcast(delta_qsmear  , meta_ionode_id, world_comm)
   CALL mp_bcast(wscut         , meta_ionode_id, world_comm)
@@ -290,6 +318,8 @@
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
+  CALL mp_bcast(ltrans_crta   , meta_ionode_id, world_comm)
+  CALL mp_bcast(sr_crta       , meta_ionode_id, world_comm)
   CALL mp_bcast(ii_charge     , meta_ionode_id, world_comm)
   CALL mp_bcast(ii_n          , meta_ionode_id, world_comm)
   CALL mp_bcast(ii_eda        , meta_ionode_id, world_comm)
@@ -297,6 +327,13 @@
   CALL mp_bcast(g_tol_plrn    , meta_ionode_id, world_comm)
   CALL mp_bcast(init_ethrdg_plrn, meta_ionode_id, world_comm)
   CALL mp_bcast(init_k0_plrn  , meta_ionode_id, world_comm)
+  CALL mp_bcast(dt_tdbe       , meta_ionode_id, world_comm)
+  CALL mp_bcast(temp_el_tdbe  , meta_ionode_id, world_comm)
+  CALL mp_bcast(temp_ph_tdbe  , meta_ionode_id, world_comm)
+  CALL mp_bcast(init_sigma_tdbe, meta_ionode_id, world_comm)
+  CALL mp_bcast(ef_c_tdbe     , meta_ionode_id, world_comm)
+  CALL mp_bcast(ef_v_tdbe     , meta_ionode_id, world_comm)
+  CALL mp_bcast(phwmin_tdbe   , meta_ionode_id, world_comm)
   !
   ! characters
   !
@@ -316,6 +353,7 @@
   CALL mp_bcast(lrot             , meta_ionode_id, world_comm)
   CALL mp_bcast(plrn             , meta_ionode_id, world_comm)
   CALL mp_bcast(cal_psir_plrn    , meta_ionode_id, world_comm)
+  CALL mp_bcast(cal_acous_plrn   , meta_ionode_id, world_comm)
   CALL mp_bcast(interp_Ank_plrn  , meta_ionode_id, world_comm)
   CALL mp_bcast(interp_Bqu_plrn  , meta_ionode_id, world_comm)
   CALL mp_bcast(start_band_plrn  , meta_ionode_id, world_comm)
@@ -349,6 +387,7 @@
   CAll mp_bcast(beta_plrn        , meta_ionode_id, world_comm)
   CAll mp_bcast(g_start_band_plrn, meta_ionode_id, world_comm)
   CAll mp_bcast(g_end_band_plrn  , meta_ionode_id, world_comm)
+  CAll mp_bcast(g_scale_plrn  , meta_ionode_id, world_comm)
   CAll mp_bcast(g_start_energy_plrn, meta_ionode_id, world_comm)
   CAll mp_bcast(g_end_energy_plrn, meta_ionode_id, world_comm)
   CAll mp_bcast(step_wf_grid_plrn, meta_ionode_id, world_comm)
@@ -380,6 +419,25 @@
   CALL mp_bcast(elecselfen_type  , meta_ionode_id, world_comm)
   CALL mp_bcast(filirobj         , meta_ionode_id, world_comm)
   CALL mp_bcast(filnscf_coul     , meta_ionode_id, world_comm)
+  ! ZD: ex-plrn
+  ! TODO: follow the same style as above by data type
+  CALL mp_bcast (exciton                 , meta_ionode_id, world_comm)
+  CALL mp_bcast (nbndv_explrn            , meta_ionode_id, world_comm)
+  CALL mp_bcast (nbndc_explrn            , meta_ionode_id, world_comm)
+  CALL mp_bcast (explrn                  , meta_ionode_id, world_comm)
+  CALL mp_bcast (plot_explrn_e           , meta_ionode_id, world_comm)
+  CALL mp_bcast (plot_explrn_h           , meta_ionode_id, world_comm)
+  CALL mp_bcast (negnv_explrn            , meta_ionode_id, world_comm)
+  CALL mp_bcast (only_c_explrn           , meta_ionode_id, world_comm)
+  CALL mp_bcast (only_v_explrn           , meta_ionode_id, world_comm)
+  CALL mp_bcast (step_k1_explrn          , meta_ionode_id, world_comm)
+  CALL mp_bcast (step_k2_explrn          , meta_ionode_id, world_comm)
+  CALL mp_bcast (step_k3_explrn          , meta_ionode_id, world_comm)
+  CALL mp_bcast (only_pos_modes_explrn   , meta_ionode_id, world_comm)
+  !! ZD: ex-plrn
+  CALL mp_bcast(init_type_tdbe   , meta_ionode_id, world_comm)
+  CALL mp_bcast(solver_tdbe      , meta_ionode_id, world_comm)
+  CALL mp_bcast(ephmat_dir       , meta_ionode_id, world_comm)
   !
 #endif
   !

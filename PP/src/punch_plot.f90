@@ -52,14 +52,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ! auxiliary vector (parallel case)
   REAL(DP), ALLOCATABLE :: raux1 (:)
 #endif
-  ! auxiliary vector
+  ! auxiliary vectors
   REAL(DP), ALLOCATABLE :: raux (:), raux2(:,:)
 
 
   IF (filplot == ' ') RETURN
-#if defined(__MPI)
-  ALLOCATE (raux1(  dfftp%nr1x *  dfftp%nr2x *  dfftp%nr3x))
-#endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
   IF (plot_num == 3 ) &
@@ -131,11 +128,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 5) THEN
 
      IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
-#if defined(__MPI)
-     CALL stm (sample_bias, raux1, istates)
-#else
      CALL stm (sample_bias, raux,  istates)
-#endif
      WRITE (title, '(" Bias in eV = ",f10.4," # states",i4)') &
              sample_bias * rytoev, istates
 
@@ -165,7 +158,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) &
         CALL errore('punch_plot','elf+noncolin not yet implemented',1)
-     CALL do_elf (raux)
+     CALL do_elf_kin(raux,.TRUE.,0)
 
   ELSEIF (plot_num == 9) THEN
      !
@@ -279,15 +272,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !      plot of the kinetic energy density
      !
-     IF ( lsda ) THEN
-        IF (spin_component == 0) THEN
-           raux(:) = rho%kin_r(:,1)+rho%kin_r(:,2)
-        ELSE
-           raux(:) = rho%kin_r(:, spin_component)
-        ENDIF
-     ELSE
-        raux(:) = rho%kin_r(:,1)
-     ENDIF
+     CALL do_elf_kin(raux,.FALSE.,spin_component)
 
   ELSEIF (plot_num == 23) THEN
      !
@@ -324,14 +309,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #if defined(__MPI)
-  IF (.not. (plot_num == 5 ) ) CALL gather_grid (dfftp, raux, raux1)
+  ALLOCATE (raux1(  dfftp%nr1x *  dfftp%nr2x *  dfftp%nr3x))
+  CALL gather_grid (dfftp, raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x, &
          dfftp%nr1,  dfftp%nr2,  dfftp%nr3, nat, ntyp, ibrav, celldm, at, &
          gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
   DEALLOCATE (raux1)
 #else
-
   CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x,  &
         dfftp%nr1,  dfftp%nr2,  dfftp%nr3, nat, ntyp, ibrav, celldm, at,&
         gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux, + 1)

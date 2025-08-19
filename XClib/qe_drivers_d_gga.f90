@@ -17,7 +17,6 @@ MODULE qe_drivers_d_gga
   !
   USE kind_l,               ONLY: DP
   USE xclib_utils_and_para, ONLY: error_msg, nowarning
-  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc
   !
   IMPLICIT NONE
   !
@@ -36,6 +35,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   !! This routine computes the derivative of the exchange and correlation
   !! potentials of GGA family.
   !
+  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc
   USE qe_drivers_gga,   ONLY: gcxc
   !
   IMPLICIT NONE
@@ -145,6 +145,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !! This routine computes the derivative of the exchange and correlation
   !! potentials in the spin-polarized case.
   !
+  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc
   USE qe_drivers_gga,   ONLY: gcx_spin, gcc_spin
   !
   IMPLICIT NONE

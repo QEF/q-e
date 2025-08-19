@@ -41,6 +41,10 @@ newdq.o \
 non_scf_ph.o \
 set_intq_nc.o \
 lr_sym_mod.o \
+sym_def.o \
+psymdvscf.o \
+symdvscf.o \
+sym_dmag.o \
 orthogonalize.o \
 setup_nscf.o \
 set_dbecsum_nc.o \

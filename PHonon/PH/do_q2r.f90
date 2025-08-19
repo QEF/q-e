@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
+SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr, &
+                  remove_interaction_blocks)
   !-----------------------------------------------------------------------
   !! This is the main driver of the \(\texttt{q2r}\) code.
   !
@@ -23,7 +24,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
                          read_dyn_mat, read_dyn_mat_tail, &
                          write_dyn_mat_header, write_ifc
   USE environment, ONLY : environment_start, environment_end
-  USE rigid,       ONLY : rgd_blk
+  USE rigid,       ONLY : rgd_blk, remove_dyn_interaction
   USE el_phon,     ONLY : el_ph_nsigma
   !
   IMPLICIT NONE
@@ -42,6 +43,8 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
   !! Input to treat the 2D LO-TO splitting
   LOGICAL, INTENT(IN) :: write_lr
   !! Input to write the long-range IFC
+  LOGICAL, INTENT(IN) :: remove_interaction_blocks
+  !! Input to remove interactions in the dyn matrix between fixed atoms
   !
   ! Local variables
   INTEGER :: nr1, nr2, nr3, nr(3)
@@ -54,7 +57,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
   !
   CHARACTER(LEN=20)  :: crystal
-  CHARACTER(LEN=3)   :: atm(ntypx)
+  CHARACTER(LEN=6)   :: atm(ntypx)
   CHARACTER(LEN=4)   :: post=''
   CHARACTER(LEN=256) :: fildyn, filin, filj, filf
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -230,6 +233,10 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
      !
      NQ_LOOP : DO nq = 1,nqs
         WRITE(stdout,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
+        !
+        IF (remove_interaction_blocks) &
+           CALL remove_dyn_interaction(phiq(:,:,:,:,nq), nat)
+        !
         lq = .TRUE.
         DO ipol=1,3
            xq = 0.0d0

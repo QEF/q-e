@@ -146,7 +146,7 @@ SUBROUTINE koopmans_ham ()
     WRITE( stdout, '(10x, "KS  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
     ehomo_ks = MAX ( ehomo_ks, eigvl(num_wann_occ ) )
-    elumo_ks = MIN ( elumo_ks, eigvl(num_wann_occ+1 ) )
+    IF (num_wann .gt. num_wann_occ) elumo_ks = MIN ( elumo_ks, eigvl(num_wann_occ+1 ) )
     !
     ham(:,:) = Hamlt(ik,:,:) 
     CALL cdiagh( num_wann, ham, num_wann, eigvl, eigvc )
@@ -377,6 +377,7 @@ SUBROUTINE koopmans_ham ()
     USE kinds,                ONLY : DP
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft, invfft
+    USE fft_wave,             ONLY : invfft_wave
     USE klist,                ONLY : igk_k, ngk
     USE mp,                   ONLY : mp_sum
     USE control_kcw,          ONLY : spin_component, num_wann, x_q, &
@@ -528,7 +529,7 @@ SUBROUTINE koopmans_ham ()
          npw_k = ngk(ik)
          evc_k_g(:) =  evc0(:,iwann)
          evc_k_r(:,:) = CMPLX(0.D0,0.D0,kind=DP)
-         CALL invfft_wave (npw_k, igk_k (1,ik), evc_k_g , evc_k_r )
+         CALL invfft_wave (npwx, npw_k, igk_k (1,ik), evc_k_g , evc_k_r )
          !! The wfc R=0 n=iwann in R-space at k
          !
          !DO jwann = iwann+1, num_wann 
@@ -551,10 +552,10 @@ SUBROUTINE koopmans_ham ()
             evc_kq_r = CMPLX(0.D0,0.D0,kind=DP)
             IF(nspin==4 .or. debug_nc ) THEN
               npw_kq_m = ngk(ikq_m)
-              CALL invfft_wave (npw_kq_m, igk_k (1,ikq_m), evc_kq_g , evc_kq_r )
+              CALL invfft_wave (npwx, npw_kq_m, igk_k (1,ikq_m), evc_kq_g , evc_kq_r )
             ELSE
               npw_kq = ngk(ikq)
-              CALL invfft_wave (npw_kq, igk_k (1,ikq), evc_kq_g , evc_kq_r )
+              CALL invfft_wave (npwx, npw_kq, igk_k (1,ikq), evc_kq_g , evc_kq_r )
             END IF
 
             ! The wfc in R-space at k' <-- k+q where k' = (k+q)-G_bar

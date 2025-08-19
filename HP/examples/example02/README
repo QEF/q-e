@@ -1,5 +1,6 @@
-In order to compute U for magnetic insulators one needs to follow
-special procedure. Since we do not know a priori the magnetization
+There are two ways how to compute U for magnetic insulators.
+
+OPTION 1: Since we do not know a priori the magnetization
 of the system, we perform a calculation with a finite 
 starting_magnetization (in the range from -1 to +1) which requires 
 to treat the system of interest as a metal (i.e. to use a smearing). 
@@ -52,3 +53,8 @@ DFPT calculation. The solution to this problem is the following:
      constrained magnetization). 
 
 3. Perform the linear-response calculation of U using the HP code.
+
+OPTION 2: Perform step 1 above. Then jump directly to step 3 by setting
+          no_metq0 = .true. in the input file for the HP calculation. 
+          This will skip the metallic response term at q=0 (i.e. the last 
+          term in Eq. (22) in PRB 103, 045141 (2021)).

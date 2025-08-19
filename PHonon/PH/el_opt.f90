@@ -62,13 +62,7 @@ subroutine el_opt
         call davcio (chif(1,1,ipb), lrchf, iuchf, nrec, -1)
      enddo
 
-     ! ps (ipa,ipb) = \sum_i < depsi_i(ipa) | chif_i(ipb) >
-     !       do ibnd = 1, nbnd_occ (ik)
-     !             ps (ipa, ipb) =  ps (ipa, ipb) +           &
-     !                  zdotc (npw, depsi (1, ibnd, ipa), 1,  &
-     !                               chif (1, ibnd, ipb), 1 )
-     !       end do
-
+     
      CALL zgemm( 'C', 'N', 3, 6, npwx*nbnd_occ(ik), (1.0_dp,0.0_dp),  &
                  depsi, npwx*nbnd, chif, npwx*nbnd, &
                  (0.0_dp,0.0_dp), ps, 3 )

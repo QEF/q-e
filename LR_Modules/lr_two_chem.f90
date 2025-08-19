@@ -11,33 +11,32 @@ MODULE  lr_two_chem
   COMPLEX(DP),SAVE,PUBLIC :: def_val(3)
   COMPLEX(DP),SAVE,PUBLIC :: def_cond(3)
   ! the change of the Fermi energy for each pert. for valence and conduction manifold in the twochem case.
-  COMPLEX(DP),ALLOCATABLE, SAVE,PUBLIC :: drhoscf_cond(:,:,:)
+  COMPLEX(DP),ALLOCATABLE, SAVE,PUBLIC :: drhos_cond(:,:,:)
   !! output: the change of the scf charge
-  COMPLEX(DP),ALLOCATABLE, SAVE,PUBLIC :: drhoscfh_cond(:,:,:)
+  COMPLEX(DP),ALLOCATABLE, SAVE,PUBLIC :: drhop_cond(:,:,:)
   COMPLEX(DP),ALLOCATABLE, SAVE,PUBLIC :: dbecsum_cond(:,:,:,:),dbecsum_cond_nc(:,:,:,:,:,:)
   COMPLEX(DP),ALLOCATABLE, SAVE,PUBLIC :: ldos_cond(:,:),ldoss_cond(:,:)
   REAL(DP), SAVE, PUBLIC               :: dos_ef_cond
   REAL(DP), ALLOCATABLE, SAVE,PUBLIC    :: becsum1_cond(:,:,:)
   REAL(DP), ALLOCATABLE, SAVE, PUBLIC   :: becsum_cond(:,:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>, i in the conduction manifold
   COMPLEX (DP), ALLOCATABLE :: becsum_cond_nc(:,:,:,:)     !conduction manifold
-  COMPLEX (DP), ALLOCATABLE :: becsumort_cond(:,:,:,:) 
+  COMPLEX (DP), ALLOCATABLE :: becsumort_cond(:,:,:,:)
   !! it contains \(\text{alphasum}+\sum_i \langle\psi_i | \beta_n\rangle\langle\beta_m| \delta \psi_i \rangle\) (conduction
   !manifold)
   COMPLEX (DP), ALLOCATABLE :: alphasum_cond_nc(:,:,:,:,:)   ! nhm*(nhm+1)/2,3,nat,npol,npol)
-  REAL (DP), ALLOCATABLE :: alphasum_cond(:,:,:,:) ! (nhm*(nhm+1)/2,3,nat,nspin) 
-  !! used to compute modes. It contains \(\sum_i \langle \psi_i| d/du 
+  REAL (DP), ALLOCATABLE :: alphasum_cond(:,:,:,:) ! (nhm*(nhm+1)/2,3,nat,nspin)
+  !! used to compute modes. It contains \(\sum_i \langle \psi_i| d/du
   !! (|\beta_n><beta_m|) | \psi_i\rangle + (m-n)\) for the conduction manifold
   CONTAINS
 !
 !-----------------------------------------------------------------------
 subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
-           drhoscf,drhoscf_cond,dbecsum,dbecsum_cond,becsum1,becsum1_cond, irr, sym_def)
+           drhop,drhop_cond,dbecsum,dbecsum_cond,becsum1,becsum1_cond)
   !-----------------------------------------------------------------------
   !! This routine takes care of the effects of a shift of the two chemical potentials, due to the
   !! perturbation, that can take place in a metal at q=0, in the twochem case
   !! Optionally, update dbecsum using becsum1.
   !
-  USE efermi_shift,         ONLY : def_symmetrization
   USE kinds,                ONLY : DP
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -61,8 +60,8 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   !! density of states at the two chemical potentials
   COMPLEX(DP), INTENT(IN) :: ldos(dfftp%nnr, nspin_mag),ldos_cond(dfftp%nnr, nspin_mag)
   !! local DOS at Ef (with augmentation)
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin_mag, npert)
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf_cond(dfftp%nnr, nspin_mag,npert)
+  COMPLEX(DP), INTENT(INOUT) :: drhop(dfftp%nnr, nspin_mag, npert)
+  COMPLEX(DP), INTENT(INOUT) :: drhop_cond(dfftp%nnr, nspin_mag,npert)
   !! the change of the charge (with augmentation)
   COMPLEX(DP), INTENT(INOUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, npert)
   !! input:  dbecsum = 2 <psi|beta> <beta|dpsi>
@@ -74,10 +73,6 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   REAL(DP), INTENT(IN), OPTIONAL :: becsum1_cond((nhm*(nhm+1))/2, nat, nspin_mag)
   !! becsum1_cond = wdelta_cond * <psi|beta> <beta|psi>
   !! (where wdelta is a Dirac-delta-like function)
-  INTEGER, INTENT(IN), OPTIONAL :: irr
-  !
-  PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
-  !! Symmetrization routine for the fermi energy change
   !
   ! local variables
   !
@@ -85,8 +80,8 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   !! counter on spin polarizations
   INTEGER :: ipert
   !! counter on perturbations
-  COMPLEX(DP) :: drhoscf_val(dfftp%nnr, nspin_mag,npert)
-  COMPLEX(DP) :: delta_n,delta_nv,delta_nc
+  COMPLEX(DP) :: drhop_val(dfftp%nnr, nspin_mag,npert)
+  COMPLEX(DP) :: delta_nv,delta_nc
   !! the change in electron number
   !! This may be complex since perturbation may be complex
   !
@@ -101,18 +96,18 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
   WRITE( stdout, * )
-  drhoscf_val(:,:,:) = drhoscf(:,:,:)-drhoscf_cond(:,:,:)
+  drhop_val(:,:,:) = drhop(:,:,:)-drhop_cond(:,:,:)
   do ipert = 1, npert
      delta_nv = (0.d0, 0.d0)
      delta_nc = (0.d0, 0.d0)
      do is = 1, nspin_lsda
-        CALL fwfft ('Rho', drhoscf_val(:,is,ipert), dfftp)
-        if (gg(1) < 1.0d-8) delta_nv = delta_nv + omega*drhoscf_val(dfftp%nl(1),is,ipert)
-        CALL invfft ('Rho', drhoscf_val(:,is,ipert), dfftp)
+        CALL fwfft ('Rho', drhop_val(:,is,ipert), dfftp)
+        if (gg(1) < 1.0d-8) delta_nv = delta_nv + omega*drhop_val(dfftp%nl(1),is,ipert)
+        CALL invfft ('Rho', drhop_val(:,is,ipert), dfftp)
         !valence states
-        CALL fwfft ('Rho', drhoscf_cond(:,is,ipert), dfftp)
-        if (gg(1) < 1.0d-8) delta_nc = delta_nc + omega*drhoscf_cond(dfftp%nl(1),is,ipert)
-        CALL invfft ('Rho', drhoscf_cond(:,is,ipert), dfftp)
+        CALL fwfft ('Rho', drhop_cond(:,is,ipert), dfftp)
+        if (gg(1) < 1.0d-8) delta_nc = delta_nc + omega*drhop_cond(dfftp%nl(1),is,ipert)
+        CALL invfft ('Rho', drhop_cond(:,is,ipert), dfftp)
      enddo
      call mp_sum ( delta_nv, intra_bgrp_comm )
      call mp_sum ( delta_nc, intra_bgrp_comm )
@@ -127,18 +122,18 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
   !
   ! symmetrizes the Fermi energy shift
   !
-  IF (present(sym_def)) CALL sym_def(def_val)
-   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift valence (Ry) =",2es15.4)')&
+  CALL sym_def(def_val)
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift valence (Ry) =",2es15.4)')&
        (ipert, def_val (ipert) , ipert = 1, npert )
-  IF (present(sym_def)) CALL sym_def(def_cond)
-   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift conduction (Ry) =",2es15.4)')&
+  CALL sym_def(def_cond)
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift conduction (Ry) =",2es15.4)')&
        (ipert, def_cond (ipert) , ipert = 1, npert )
   !
   ! corrects the density response accordingly...
   !
   do ipert = 1, npert
-     call zaxpy (dfftp%nnr*nspin_mag, def_val(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
-     call zaxpy (dfftp%nnr*nspin_mag, def_cond(ipert), ldos_cond, 1, drhoscf(1,1,ipert), 1)
+     call zaxpy (dfftp%nnr*nspin_mag, def_val(ipert), ldos, 1, drhop(1,1,ipert), 1)
+     call zaxpy (dfftp%nnr*nspin_mag, def_cond(ipert), ldos_cond, 1, drhop(1,1,ipert), 1)
   enddo
   !
   ! In the PAW case there is also a metallic term
@@ -161,15 +156,15 @@ subroutine ef_shift_twochem (npert, dos_ef,dos_ef_cond,ldos,ldos_cond,&
 !-------------------------------------------------------------------------
 !
 !-------------------------------------------------------------------------
-subroutine ef_shift_wfc_twochem(npert, ldoss,ldoss_cond, drhoscf)
+subroutine ef_shift_wfc_twochem(npert, ldoss,ldoss_cond, drhos)
   !-----------------------------------------------------------------------
   !! This routine takes care of the effects of a shift of both chemical potentials, due to the
-  !! perturbation, that can take place in a metal at q=0, on the wavefunctions. 
+  !! perturbation, that can take place in a metal at q=0, on the wavefunctions.
   !
   USE kinds,                ONLY : DP
   USE mp,                   ONLY : mp_sum
   USE wavefunctions,        ONLY : evc
-  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE buffers,              ONLY : get_buffer, save_buffer
   USE wvfct,                ONLY : npwx, et, nbnd, nbnd_cond
@@ -192,7 +187,7 @@ subroutine ef_shift_wfc_twochem(npert, ldoss,ldoss_cond, drhoscf)
   !! local DOS at Ef without augmentation
   COMPLEX(DP), INTENT(IN) :: ldoss_cond(dffts%nnr, nspin_mag)
   !! local DOS at ef_cond without augmentation, for the conduction chemical potential
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin_mag, npert)
+  COMPLEX(DP), INTENT(INOUT) :: drhos(dffts%nnr, nspin_mag, npert)
   !! the change of the charge (with augmentation)
   !
   ! local variables
@@ -256,8 +251,8 @@ subroutine ef_shift_wfc_twochem(npert, ldoss,ldoss_cond, drhoscf)
   !
   do ipert = 1, npert
      do is = 1, nspin_mag
-        call zaxpy (dffts%nnr, def_val(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
-        call zaxpy (dffts%nnr, def_cond(ipert), ldoss_cond(1,is), 1, drhoscf(1,is,ipert), 1)
+        call zaxpy (dffts%nnr, def_val(ipert), ldoss(1,is), 1, drhos(1,is,ipert), 1)
+        call zaxpy (dffts%nnr, def_cond(ipert), ldoss_cond(1,is), 1, drhos(1,is,ipert), 1)
      enddo
   enddo
   !
@@ -269,7 +264,7 @@ subroutine ef_shift_wfc_twochem(npert, ldoss,ldoss_cond, drhoscf)
 subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   !-----------------------------------------------------------------------
   !
-  !    This routine compute the local and total density of states 
+  !    This routine compute the local and total density of states
   !    for the conduction chemical potential in the twochem case
   !
   !    Note: this routine use psic as auxiliary variable. it should alread
@@ -337,7 +332,7 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
-  !$acc enter data copyin(evc, nl_d) 
+  !$acc enter data copyin(evc, nl_d)
   v_siz = dffts%nnr
 
   call start_clock ('localdos_cond')
@@ -355,7 +350,7 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   !
   !  loop over kpoints
   !
-  !$acc data create(psic, psic_nc) copy(ldoss) 
+  !$acc data create(psic, psic_nc) copy(ldoss)
   do ik = 1, nksq
      if (lsda) current_spin = isk (ikks(ik))
      npw = ngk(ikks(ik))
@@ -365,7 +360,7 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
      !
      if (nksq > 1) then
              call get_buffer (evc, lrwfc, iuwfc, ikks(ik))
-             !$acc update device(evc) 
+             !$acc update device(evc)
      endif
      call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb, .true.)
      !
@@ -554,12 +549,12 @@ subroutine localdos_cond (ldos, ldoss, becsum1, dos_ef)
   !
   IF (noncolin) deallocate(becsum1_nc)
   call deallocate_bec_type_acc(becp)
-  !$acc exit data detach(evc) delete(nl_d) 
+  !$acc exit data detach(evc) delete(nl_d)
   call stop_clock ('localdos_cond')
   return
 end subroutine localdos_cond
 !-----------------------------------------------------------------------
-subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
+subroutine incdrhoscf_cond (drhos, weight, ik, dbecsum, dpsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -591,7 +586,7 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   ! input: the weight of the k point
   COMPLEX(DP), INTENT (IN) :: dpsi (npwx,nbnd)
   ! input: the perturbed wfc for the given k point
-  COMPLEX(DP), INTENT (INOUT) :: drhoscf (dffts%nnr), dbecsum (nhm*(nhm+1)/2,nat)
+  COMPLEX(DP), INTENT (INOUT) :: drhos (dffts%nnr), dbecsum (nhm*(nhm+1)/2,nat)
   ! input/output: the accumulated change to the charge density and dbecsum
   !
   !   here the local variables
@@ -609,13 +604,13 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   INTEGER :: right_inc, ntgrp
   ! counters
 
-  ! For device buffer 
+  ! For device buffer
   INTEGER, ALLOCATABLE :: nl_d(:)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
-  !$acc enter data copyin(nl_d, evc) 
-  
+  !$acc enter data copyin(nl_d, evc)
+
 
   CALL start_clock_gpu ('incdrhoscf_cond')
   !
@@ -646,8 +641,8 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  !$acc data copyin(dpsi(1:npwx,1:nbnd)) copy(drhoscf(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz))& 
-  !$acc present(igk_k, evc, nl_d) 
+  !$acc data copyin(dpsi(1:npwx,1:nbnd)) copy(drhos(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz))&
+  !$acc present(igk_k, evc, nl_d)
   do ibnd = 1+(nbnd-nbnd_cond), nbnd_occ(ikk), incr
   !only conduction states
      !
@@ -687,10 +682,10 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
            tg_drho (ir) = tg_drho (ir) + wgt * CONJG(tg_psi (ir) ) *  tg_dpsi (ir)
         enddo
         !
-        ! reduce the group charge (equivalent to sum over bands of 
+        ! reduce the group charge (equivalent to sum over bands of
         ! orbital group)
         !
-        CALL tg_reduce_rho( drhoscf, tg_drho, dffts )
+        CALL tg_reduce_rho( drhos, tg_drho, dffts )
         !
      ELSE
         !
@@ -698,12 +693,12 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Initialize psi and dpsic
         !
-        !$acc kernels 
+        !$acc kernels
         psi (:) = (0.d0, 0.d0)
         dpsic(:) = (0.d0, 0.d0)
         !$acc end kernels
         !
-        !$acc parallel loop 
+        !$acc parallel loop
         do ig = 1, npw
            itmp = nl_d (igk_k(ig,ikk) )
            psi (itmp ) = evc (ig, ibnd)
@@ -725,9 +720,9 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Calculation of the response charge-density
         !
-        !$acc parallel loop 
+        !$acc parallel loop
         do ir = 1, v_siz
-           drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
+           drhos (ir) = drhos (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         enddo
         !
      ENDIF
@@ -737,7 +732,7 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
   !
   ! Ultrasoft contribution
   ! Calculate dbecsum = <evc|vkb><vkb|dpsi>
-  ! 
+  !
   CALL addusdbec_cond (ik, weight, dpsi, dbecsum)
   !
   DEALLOCATE(psi)
@@ -749,7 +744,7 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
      DEALLOCATE(tg_drho)
   ENDIF
   !
-  !$acc exit data detach(evc) delete(nl_d) 
+  !$acc exit data detach(evc) delete(nl_d)
   CALL stop_clock_gpu ('incdrhoscf_cond')
   !
   RETURN
@@ -757,7 +752,7 @@ subroutine incdrhoscf_cond (drhoscf, weight, ik, dbecsum, dpsi)
 end subroutine incdrhoscf_cond
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
+subroutine incdrhoscf_cond_nc (drhos, weight, ik, dbecsum, dpsi, rsign)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -768,7 +763,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat
   USE cell_base,            ONLY : omega
-  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : npol, domag, nspin_mag
@@ -795,7 +790,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   ! the sign in front of the response of the magnetization density
   COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
   ! input: the perturbed wfcs at the given k point
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf (dfftp%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
+  COMPLEX(DP), INTENT(INOUT) :: drhos (dffts%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
   ! input/output: the accumulated change of the charge density and dbecsum
   !
   !   here the local variable
@@ -810,7 +805,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   COMPLEX(DP), ALLOCATABLE :: tg_psi (:,:), tg_dpsi (:,:), tg_drho(:,:)
   !
   INTEGER :: npw, npwq, ikk, ikq, itmp
-  INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, v_sizp, idx, ioff, ioff_tg, nxyp
+  INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
   INTEGER :: ntgrp, right_inc
   ! counters
   !
@@ -819,7 +814,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
-  !$acc enter data copyin(nl_d, evc) 
+  !$acc enter data copyin(nl_d, evc)
   !
   !
   CALL start_clock_gpu ('incdrhoscf_cond')
@@ -846,13 +841,12 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
      !
   ELSE
      v_siz = dffts%nnr
-     v_sizp = dfftp%nnr
   ENDIF
   !
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd)) copy(drhoscf(1:v_sizp,1:nspin_mag)) & 
+  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd)) copy(drhos(1:v_siz,1:nspin_mag)) &
   !$acc create(psi(1:v_siz,1:npol),dpsic(1:v_siz,1:npol)) present(igk_k, evc, nl_d)
   do ibnd = 1+(nbnd-nbnd_cond), nbnd_occ(ikk), incr
   !only conduction states
@@ -914,7 +908,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
         ! reduce the group charge (equivalent to sum over the bands of the
         ! orbital group)
         !
-        CALL tg_reduce_rho( drhoscf, tg_drho, dffts )
+        CALL tg_reduce_rho( drhos, tg_drho, dffts )
         !
      ELSE
         !
@@ -922,7 +916,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
         !
         ! Initialize psi and dpsic
         !
-        !$acc kernels  
+        !$acc kernels
         psi (:,:) = (0.d0, 0.d0)
         dpsic (:,:) = (0.d0, 0.d0)
         !$acc end kernels
@@ -955,17 +949,17 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
         !
         !$acc parallel loop
         do ir = 1, v_siz
-           drhoscf(ir,1)=drhoscf(ir,1)+wgt*(CONJG(psi(ir,1))*dpsic(ir,1)  +  &
+           drhos(ir,1)=drhos(ir,1)+wgt*(CONJG(psi(ir,1))*dpsic(ir,1)  +  &
                                             CONJG(psi(ir,2))*dpsic(ir,2) )
         enddo
         IF (domag) THEN
            !$acc parallel loop
            do ir = 1, v_siz
-              drhoscf(ir,2)=drhoscf (ir,2) + (rsign) *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
+              drhos(ir,2)=drhos (ir,2) + (rsign) *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
                                                   + CONJG(psi(ir,2))*dpsic(ir,1) )
-              drhoscf(ir,3)=drhoscf (ir,3) + (rsign) *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
+              drhos(ir,3)=drhos (ir,3) + (rsign) *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
                                                   - CONJG(psi(ir,2))*dpsic(ir,1) ) * (0.d0,-1.d0)
-              drhoscf(ir,4)=drhoscf (ir,4) + (rsign) *wgt * (CONJG(psi(ir,1))*dpsic(ir,1) &
+              drhos(ir,4)=drhos (ir,4) + (rsign) *wgt * (CONJG(psi(ir,1))*dpsic(ir,1) &
                                                   - CONJG(psi(ir,2))*dpsic(ir,2) )
            enddo
         END IF
@@ -993,7 +987,7 @@ subroutine incdrhoscf_cond_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
      DEALLOCATE(tg_drho)
   END IF
   !
-  !$acc exit data detach(evc) delete(nl_d) 
+  !$acc exit data detach(evc) delete(nl_d)
   CALL stop_clock_gpu ('incdrhoscf_cond')
   !
   RETURN
@@ -1251,14 +1245,13 @@ SUBROUTINE sternheimer_kernel_twochem(first_iter, time_reversed, npert, lrdvpsi,
    !In addition to the usual density response, it also calculates the conduction bands only
    !density response, needed to determine the conduction and valence manifold chemical potential
    !shift that can be present in the q=0 case
-    !! FIXME: Only 1:dffts%nnr is used for drhoout, but it is allocated as 1:dfftp%nnr.
    !----------------------------------------------------------------------------
    USE kinds,                 ONLY : DP
    USE io_global,             ONLY : stdout
    USE mp,                    ONLY : mp_sum
    USE mp_pools,              ONLY : inter_pool_comm
    USE buffers,               ONLY : get_buffer, save_buffer
-   USE fft_base,              ONLY : dfftp
+   USE fft_base,              ONLY : dffts
    USE ions_base,             ONLY : nat
    USE klist,                 ONLY : xk, wk, ngk, igk_k
    USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
@@ -1298,9 +1291,9 @@ SUBROUTINE sternheimer_kernel_twochem(first_iter, time_reversed, npert, lrdvpsi,
    !! average number of iterations for the linear equation solver
    COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
    !! dV_ind calculated in the previous iteration
-   COMPLEX(DP), INTENT(INOUT) :: drhoout(dfftp%nnr, nspin_mag, npert)
+   COMPLEX(DP), INTENT(INOUT) :: drhoout(dffts%nnr, nspin_mag, npert)
    !! induced charge density
-   COMPLEX(DP), INTENT(INOUT) :: drhoout_cond(dfftp%nnr, nspin_mag, npert)
+   COMPLEX(DP), INTENT(INOUT) :: drhoout_cond(dffts%nnr, nspin_mag, npert)
    !! induced charge density
    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2, nat, nspin_mag, npert)
    !! becsum with dpsi
@@ -1495,5 +1488,46 @@ SUBROUTINE sternheimer_kernel_twochem(first_iter, time_reversed, npert, lrdvpsi,
    !
 !----------------------------------------------------------------------------
 END SUBROUTINE sternheimer_kernel_twochem
+!
+SUBROUTINE allocate_twochem(npe, nsolv)
+   USE fft_base,             ONLY : dfftp, dffts
+   USE ions_base,            ONLY : nat
+   USE uspp_param,           ONLY : nhm
+   USE lsda_mod,             ONLY : nspin
+   USE paw_variables,        ONLY : okpaw
+   USE noncollin_module,     ONLY : noncolin, nspin_mag
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: npe, nsolv
+   !
+   IF (noncolin) allocate (dbecsum_cond_nc (nhm,nhm, nat , nspin , npe, nsolv))
+   allocate (drhos_cond ( dffts%nnr, nspin_mag , npe))
+   allocate (drhop_cond ( dfftp%nnr, nspin_mag , npe))
+   allocate (dbecsum_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
+   allocate ( ldos_cond( dfftp%nnr  , nspin_mag) )
+   allocate ( ldoss_cond( dffts%nnr , nspin_mag) )
+   allocate (becsum1_cond ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
+   call localdos_cond ( ldos_cond , ldoss_cond , becsum1_cond, dos_ef_cond )
+   IF (.NOT.okpaw) deallocate(becsum1_cond)
+END SUBROUTINE allocate_twochem
+!
+SUBROUTINE deallocate_twochem
+   USE paw_variables,        ONLY : okpaw
+   USE noncollin_module,     ONLY : noncolin
+   !
+   IMPLICIT NONE
+   !
+   !deallocate for twochem calculation at gamma
+   if (allocated(ldoss_cond)) deallocate (ldoss_cond)
+   if (allocated(ldos_cond)) deallocate (ldos_cond)
+   deallocate (dbecsum_cond)
+   IF (okpaw) THEN
+            if (allocated(becsum1_cond)) deallocate (becsum1_cond)
+   ENDIF
+   IF (noncolin) deallocate (dbecsum_cond_nc)
+   deallocate (drhop_cond)
+   deallocate (drhos_cond)
+END SUBROUTINE deallocate_twochem
 !
 END MODULE lr_two_chem

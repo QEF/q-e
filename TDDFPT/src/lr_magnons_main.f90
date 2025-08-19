@@ -22,7 +22,7 @@ PROGRAM lr_magnons_main
                                   & evc1, evc1_old, norm0, n_ipol, &
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
-                                  & itermax_int, revc0, lr_io_level, code3, &
+                                  & itermax_int, lr_io_level, code3, &
                                   & magnons, approximation, V0psi, ipol, n_op, &
                                   & evc1_rgt, evc1_lft, evc1_rgt_old, evc1_lft_old
   USE io_files,              ONLY : nd_nmbr

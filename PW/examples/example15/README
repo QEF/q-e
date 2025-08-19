@@ -1,0 +1,43 @@
+
+This example shows how to use pw.x to perform constrained DFT+U
+calculations for FeO. The method is described in 
+L. Ponet et al., npj Comput. Mater. 10, 151 (2024).
+
+In order to peform this calculation, Quantum ESPRESSO must be 
+configured with the -D__OSCDFT flag: please see the documentation
+for more details at q-e/PW/Doc/INPUT_OSCDFT.def. Then one needs
+to prepare the OSCDFT input file (please see below), and execute
+the pw.x command with the flag -oscdft as follows:
+pw.x -oscdft < FeO.scf.in > FeO.scf.out
+
+This contrained approach is implemented inside the oxidation-state
+constrained DFT (OSCDFT) framework, with the option oscdft_type = 2.
+
+The contrained DFT+U calculation can be done in two ways:
+1. By providing the eigenvalues of the target occupation matrix (see run1)
+
+   The syntax for this first option is the following:
+   TARGET_OCCUPATION_NUMBERS
+   I s m eigenvalue
+
+   Here, I is the atomic index (according to ATOMIC_POSITIONS),
+         s is the spin index (1 for up, and 2 for down),
+         m is the index of the eigenvalue 
+         (e.g. from 1 to 5 for d electrons),
+         'eigenvalue' is the target eignvalue of the occupation matrix.
+
+2. By providing the full target occupation matrix (see run2)
+
+   The syntax for this first option is the following:
+   TARGET_OCCUPATION_NUMBERS
+   I s m m' occupation
+
+   Here, I is the atomic index (according to ATOMIC_POSITIONS),
+         s is the spin index (1 for up, and 2 for down),
+         m and m' are the indices of the magnetic quantum numbers 
+         (e.g. from 1 to 5 for d electrons),
+         'occupation' is the target occupation value.
+
+Please see the documentation at q-e/PW/Doc/INPUT_OSCDFT.def for the
+descritpion of all other input keywords in the OSCDFT input file.
+

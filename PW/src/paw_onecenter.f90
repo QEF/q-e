@@ -2292,10 +2292,10 @@ MODULE paw_onecenter
     ! ... local variables
     !
     REAL(DP), ALLOCATABLE :: rho_rad(:,:)    ! auxiliary: the charge+mag along a line
-    REAL(DP) :: rhoout_rad(i%m,rad(i%t)%nx,nspin_gga) ! auxiliary: rho up and down along a line
+    REAL(DP) :: rhoout_rad(i%m,nx_loc,nspin_gga) ! auxiliary: rho up and down along a line
     REAL(DP) :: mag                    ! modulus of the magnetization
     REAL(DP) :: m(3)                   
-    INTEGER :: ix, k, ixk, ipol, kpol ! counter on mesh points
+    INTEGER :: ix, ix0, k, ixk, ipol, kpol ! counter on mesh points
     INTEGER :: im_sum
     !
     IF (nspin /= 4) CALL errore( 'compute_rho_spin_lm', 'called in the wrong case', 1 )
@@ -2319,6 +2319,7 @@ MODULE paw_onecenter
     DO ix = ix_s, ix_e
        DO k = 1, i%m
           !
+          ix0 = ix-ix_s+1
           ixk = (ix-ix_s)*i%m+k
           !
           rho_rad(ixk,1:nspin) = rho_rad(ixk,1:nspin)*g(i%t)%rm2(k)
@@ -2339,9 +2340,9 @@ MODULE paw_onecenter
              segni_rad(k,ix) = SIGN(1.0_DP, m(1)*ux(1)+m(2)*ux(2)+m(3)*ux(3))
           ENDIF
           !
-          rhoout_rad(k,ix,1) = 0.5d0*( rho_rad(ixk,1) + segni_rad(k,ix)*mag )* &
+          rhoout_rad(k,ix0,1) = 0.5d0*( rho_rad(ixk,1) + segni_rad(k,ix)*mag )* &
                                          g(i%t)%r2(k)
-          rhoout_rad(k,ix,2) = 0.5d0*( rho_rad(ixk,1) - segni_rad(k,ix)*mag )* &
+          rhoout_rad(k,ix0,2) = 0.5d0*( rho_rad(ixk,1) - segni_rad(k,ix)*mag )* &
                                          g(i%t)%r2(k)
        ENDDO
     ENDDO
@@ -2500,8 +2501,8 @@ MODULE paw_onecenter
     !
     REAL(DP), ALLOCATABLE :: rho_rad(:,:)  ! auxiliary: the charge+mag along a line
     REAL(DP), ALLOCATABLE :: drho_rad(:,:) ! auxiliary: the induced ch+mag along a line
-    REAL(DP) :: rhoout_rad(i%m, rad(i%t)%nx, nspin_gga)  ! auxiliary: rho up and down along a line
-    REAL(DP) :: drhoout_rad(i%m, rad(i%t)%nx, nspin_gga) ! auxiliary: the charge of the charge+mag along a line
+    REAL(DP) :: rhoout_rad(i%m, nx_loc, nspin_gga)  ! auxiliary: rho up and down along a line
+    REAL(DP) :: drhoout_rad(i%m, nx_loc, nspin_gga) ! auxiliary: the charge of the charge+mag along a line
     REAL(DP) :: mag                 ! modulus of the magnetization
     REAL(DP) :: prod
     REAL(DP) :: m(3)
@@ -2549,10 +2550,10 @@ MODULE paw_onecenter
              segni_rad(k,ix) = SIGN(1.0_DP, m(1)*ux(1)+m(2)*ux(2)+m(3)*ux(3))
           ENDIF
           !
-          rhoout_rad(k,ix,1) = 0.5d0*( rho_rad(ixk,1) + segni_rad(k,ix)*mag )
-          rhoout_rad(k,ix,2) = 0.5d0*( rho_rad(ixk,1) - segni_rad(k,ix)*mag )
-          drhoout_rad(k,ix,1) = 0.5d0 * drho_rad(ixk,1) 
-          drhoout_rad(k,ix,2) = 0.5d0 * drho_rad(ixk,1)
+          rhoout_rad(k,ix0,1) = 0.5d0*( rho_rad(ixk,1) + segni_rad(k,ix)*mag )
+          rhoout_rad(k,ix0,2) = 0.5d0*( rho_rad(ixk,1) - segni_rad(k,ix)*mag )
+          drhoout_rad(k,ix0,1) = 0.5d0 * drho_rad(ixk,1) 
+          drhoout_rad(k,ix0,2) = 0.5d0 * drho_rad(ixk,1)
           !
           IF (mag*g(i%t)%rm2(k) > eps12) THEN
              prod = 0.0_DP
@@ -2561,8 +2562,8 @@ MODULE paw_onecenter
                 prod = prod + m(ipol) * drho_rad(ixk,ipol+1)
              ENDDO
              prod = 0.5_DP * prod
-             drhoout_rad(k,ix,1) = drhoout_rad(k,ix,1) + segni_rad(k,ix) * prod
-             drhoout_rad(k,ix,2) = drhoout_rad(k,ix,2) - segni_rad(k,ix) * prod 
+             drhoout_rad(k,ix0,1) = drhoout_rad(k,ix0,1) + segni_rad(k,ix) * prod
+             drhoout_rad(k,ix0,2) = drhoout_rad(k,ix0,2) - segni_rad(k,ix) * prod 
           ENDIF
        ENDDO
     ENDDO

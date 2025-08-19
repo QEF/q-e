@@ -38,8 +38,7 @@ if(BLAS_FOUND OR LAPACK_FOUND)
                         ${_search_path}
                     PATH_SUFFIXES
                         "include"
-                        "fftw"
-                        "include/fftw"
+                        "include/mkl"
                     NO_DEFAULT_PATH
                 )
                 find_path(VendorFFTW_INCLUDE_FFTW3
@@ -52,9 +51,12 @@ if(BLAS_FOUND OR LAPACK_FOUND)
                         "include"
                         "fftw"
                         "include/fftw"
+                        "include/mkl/fftw"
                     NO_DEFAULT_PATH
                 )
-                set(VendorFFTW_INCLUDE_DIRS ${VendorFFTW_INCLUDE_MKL_DFTI} ${VendorFFTW_INCLUDE_FFTW3})
+                if(VendorFFTW_INCLUDE_MKL_DFTI AND VendorFFTW_INCLUDE_FFTW3)
+                  set(VendorFFTW_INCLUDE_DIRS ${VendorFFTW_INCLUDE_MKL_DFTI} ${VendorFFTW_INCLUDE_FFTW3})
+                endif()
 
                 add_library(VendorFFTW INTERFACE IMPORTED)
                 list(APPEND VendorFFTW_LIBRARIES 

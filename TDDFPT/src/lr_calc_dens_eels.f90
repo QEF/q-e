@@ -29,7 +29,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd, npwx
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : nksq, ikks, ikqs
-  USE wavefunctions,  ONLY : evc
+  USE wavefunctions,         ONLY : evc
   USE uspp_param,            ONLY : nhm 
   USE uspp,                  ONLY : okvan, vkb
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
@@ -54,11 +54,18 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
               ikq, & ! index of the point k+q
               npwq   ! number of the plane-waves at point k+q
   REAL(DP) :: weight ! weight of the k point
+  INTEGER :: nnr_siz, nnrs_siz
   !
-  CALL start_clock('lr_calc_dens')
+  CALL start_clock_gpu('lr_calc_dens')
   !
+  nnr_siz = dfftp%nnr
+  nnrs_siz = dffts%nnr
   ALLOCATE ( drhoscfh(dffts%nnr) )
+!$acc data present_or_copyin(dpsi(1:npwx,1:nbnd,1:nksq)) present_or_copyout(drhoscf(1:nnr_siz)) create(drhoscfh(1:nnrs_siz))
+  !
+  !$acc kernels
   drhoscfh(:) = (0.0d0, 0.0d0)
+  !$acc end kernels
   !
   IF (okvan) THEN
      ALLOCATE (dbecsum(nhm*(nhm+1)/2,nat)) 
@@ -74,6 +81,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
      ! Read the unperturbed wavefuctions evc at k
      !
      IF (nksq > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     !$acc update device(evc)
      !
      ! The weight of the k point
      !
@@ -81,7 +89,8 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
      !
      ! Calculate beta-functions vkb at point k+q
      !
-     IF (okvan) CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
+     IF (okvan) CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
+     !$acc update host(vkb)
      !
      ! Calculation of the response charge density
      !
@@ -114,12 +123,16 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   ! Reduce the response charge density across pools.
   !
 #if defined(__MPI)
+  !$acc host_data use_device(drhoscf)
   CALL mp_sum (drhoscf, inter_pool_comm)
+  !$acc end host_data
 #endif
   !
   ! Symmetrization of the charge density response
   ! wrt the small group of q.
   !
+!$acc end data
+  !  
 #if defined(__MPI)
   CALL lr_psym_eels(drhoscf)
 #else
@@ -129,7 +142,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   DEALLOCATE (drhoscfh)
   IF (okvan) DEALLOCATE (dbecsum)
   !
-  CALL stop_clock('lr_calc_dens')
+  CALL stop_clock_gpu('lr_calc_dens')
   !
   RETURN
   !

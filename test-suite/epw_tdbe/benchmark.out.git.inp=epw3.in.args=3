@@ -1,0 +1,348 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.5.9 starts on  2May2025 at 11:53: 2 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     112522 MiB available memory on the printing compute node when the environment starts
+ 
+     Reading input from epw3.in
+
+     No temperature supplied. Setting temps(:) to 300 K.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+ 
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     Construct the Wigner-Seitz cell using Wannier centers and atomic positions 
+     Number of WS vectors for electrons      339
+     Number of WS vectors for phonons       63
+
+     Reading Hamiltonian, Dynamical matrix in Wann rep from epwdata.fmt and crystal.fmt
+
+
+     Finished reading epwdata.fmt and crystal.fmt
+
+
+     Finished reading vmedata.fmt
+
+
+     Fermi energy coarse grid =   6.250723 eV
+     Using uniform q-mesh:    15   15   15
+     Size of q point mesh for interpolation:       3375
+     Using uniform k-mesh:    15   15   15
+     Size of k point mesh for interpolation:       6750
+     Max number of k points per pool:             6750
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+     Number of irreducible k points is:   120
+
+     ===================================================================
+
+     Fermi energy is read from the input file: Ef =   7.100000 eV
+
+     ===================================================================
+
+     There are   8.00000 electrons per unit cell
+
+     Total nb of band    8
+
+              ibndmin =     5  ebndmin =     6.844 eV
+              ibndmax =     6  ebndmax =     7.398 eV
+
+     Number selected, total            100            144
+     Number selected, total            200            286
+     Number selected, total            300            422
+     Number selected, total            400            576
+     Number selected, total            500            710
+     Number selected, total            600            835
+     Number selected, total            700            954
+     Number selected, total            800           1069
+     Number selected, total            900           1189
+     Number selected, total           1000           1307
+     Number selected, total           1100           1452
+     Number selected, total           1200           1582
+     Number selected, total           1300           1739
+     Number selected, total           1400           1871
+     Number selected, total           1500           2029
+     Number selected, total           1600           2151
+     Number selected, total           1700           2300
+     Number selected, total           1800           2416
+     Number selected, total           1900           2537
+     Number selected, total           2000           2652
+     Number selected, total           2100           2768
+     Number selected, total           2200           2890
+     Number selected, total           2300           3035
+     Number selected, total           2400           3181
+     Number selected, total           2500           3323
+     We need to compute     2535 q-points
+      
+     threshold of phonon freqency(mev):  0.619921
+     Fermi Surface thickness =   0.300000 eV
+     Initial distribution of phonon is simulated with BE distribution at  300.000 K temperarue
+
+     Initial distribution of electrons is simulated with FD distribution at 1500.000 K (temperarue)
+     Real time dynamics for electron, initial distribution determined by FD distribution
+     chemical potential of electron is6.600000 eV
+ npool_g2 =            1
+
+     Finished reading freq file
+
+     Fermi level defined by user(eV)     7.1000000000E+00
+     Fermi level ef  written in the previous calculation (eV) =     7.1000000000E+00
+     DOS(states/spin/eV/Unit Cell) =    -3.2719075186E-34
+            Electron smearing (eV) =     9.0000000000E-03
+                 Fermi window (eV) =     3.0000000000E-01
+           2 bands within the Fermi window
+
+     Nr irreducible k-points within the Fermi shell =        14 out of       120
+
+           2 bands within the Fermi window
+
+
+     Finished reading egnv file 
+
+
+     Start reading e-ph matrix elements 
+
+
+     Max nr of q-points =       240
+
+
+     Finished reading ikmap files
+
+
+     Start reading .ephmat files
+
+
+     Finished reading .ephmat files
+
+
+     scatter nkfs (      14) irr- k-points within energy window into cpus
+
+          Number of kpoints of the fine mesh within energy window determined by nkfs :
+         240
+
+     ===================================================================
+
+     Solving TDBE with heun       method.
+
+     Electron and phonon distributions at       10.000000 fs are written to files
+
+     Electron and phonon distributions at       20.000000 fs are written to files
+
+     Electron and phonon distributions at       30.000000 fs are written to files
+
+     Electron and phonon distributions at       40.000000 fs are written to files
+
+     Electron and phonon distributions at       50.000000 fs are written to files
+
+     Electron and phonon distributions at       60.000000 fs are written to files
+
+     Electron and phonon distributions at       70.000000 fs are written to files
+
+     Electron and phonon distributions at       80.000000 fs are written to files
+
+     Electron and phonon distributions at       90.000000 fs are written to files
+
+     Electron and phonon distributions at      100.000000 fs are written to files
+
+     Electron and phonon distributions at      110.000000 fs are written to files
+
+     Electron and phonon distributions at      120.000000 fs are written to files
+
+     Electron and phonon distributions at      130.000000 fs are written to files
+
+     Electron and phonon distributions at      140.000000 fs are written to files
+
+     Electron and phonon distributions at      150.000000 fs are written to files
+
+     Electron and phonon distributions at      160.000000 fs are written to files
+
+     Electron and phonon distributions at      170.000000 fs are written to files
+
+     Electron and phonon distributions at      180.000000 fs are written to files
+
+     Electron and phonon distributions at      190.000000 fs are written to files
+
+     Electron and phonon distributions at      200.000000 fs are written to files
+
+     Electron and phonon distributions at      210.000000 fs are written to files
+
+     Electron and phonon distributions at      220.000000 fs are written to files
+
+     Electron and phonon distributions at      230.000000 fs are written to files
+
+     Electron and phonon distributions at      240.000000 fs are written to files
+
+     Electron and phonon distributions at      250.000000 fs are written to files
+
+     Electron and phonon distributions at      260.000000 fs are written to files
+
+     Electron and phonon distributions at      270.000000 fs are written to files
+
+     Electron and phonon distributions at      280.000000 fs are written to files
+
+     Electron and phonon distributions at      290.000000 fs are written to files
+
+     Electron and phonon distributions at      300.000000 fs are written to files
+
+     Electron and phonon distributions at      310.000000 fs are written to files
+
+     Electron and phonon distributions at      320.000000 fs are written to files
+
+     Electron and phonon distributions at      330.000000 fs are written to files
+
+     Electron and phonon distributions at      340.000000 fs are written to files
+
+     Electron and phonon distributions at      350.000000 fs are written to files
+
+     Electron and phonon distributions at      360.000000 fs are written to files
+
+     Electron and phonon distributions at      370.000000 fs are written to files
+
+     Electron and phonon distributions at      380.000000 fs are written to files
+
+     Electron and phonon distributions at      390.000000 fs are written to files
+
+     Electron and phonon distributions at      400.000000 fs are written to files
+
+     Electron and phonon distributions at      410.000000 fs are written to files
+
+     Electron and phonon distributions at      420.000000 fs are written to files
+
+     Electron and phonon distributions at      430.000000 fs are written to files
+
+     Electron and phonon distributions at      440.000000 fs are written to files
+
+     Electron and phonon distributions at      450.000000 fs are written to files
+
+     Electron and phonon distributions at      460.000000 fs are written to files
+
+     Electron and phonon distributions at      470.000000 fs are written to files
+
+     Electron and phonon distributions at      480.000000 fs are written to files
+
+     Electron and phonon distributions at      490.000000 fs are written to files
+
+     Electron and phonon distributions at      500.000000 fs are written to files
+
+     Unfolding on the coarse grid
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+
+     wigner_seitz :      0.23s CPU      0.23s WALL (       1 calls)
+     DynW2B       :      0.04s CPU      0.04s WALL (    3375 calls)
+     HamW2B       :      0.09s CPU      0.09s WALL (    6750 calls)
+
+
+     TDBE         :    105.06s CPU    107.12s WALL (       1 calls)
+     TDBE: dt     :    103.68s CPU    105.61s WALL (     500 calls)
+
+     Total program execution
+     EPW          :   1m45.06s CPU   1m47.12s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

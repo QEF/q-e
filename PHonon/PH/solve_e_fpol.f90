@@ -37,9 +37,6 @@ subroutine solve_e_fpol( iw )
   USE wvfct,                 ONLY : npwx, nbnd, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
-  USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
-                                    niter_ph, &
-                                    rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq
   USE units_ph,              ONLY : iudrho, lrdrho
@@ -49,7 +46,8 @@ subroutine solve_e_fpol( iw )
   USE mp,                    ONLY : mp_sum
 
   USE eqv,                   ONLY : dpsi, dvpsi
-  USE control_lr,            ONLY : nbnd_occ, lgamma
+  USE control_lr,            ONLY : nbnd_occ, lgamma, nmix_ph, tr2_ph, alpha_mix, convt, &
+                                    niter_ph, flmixdpot, rec_code
   USE dv_of_drho_lr
   USE uspp_init,        ONLY : init_us_2
 
@@ -169,7 +167,10 @@ subroutine solve_e_fpol( iw )
         !
         ! read unperturbed wavefunctions psi_k in G_space, for all bands
         !
-        if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
+        if (nksq.gt.1) then 
+           call get_buffer(evc, lrwfc, iuwfc, ik)
+           !$acc update device(evc)
+        endif
         !
         ! compute beta functions and kinetic energy for k-point ik
         ! needed by h_psi, called by cch_psi_all, called by gmressolve_all

@@ -1,0 +1,36 @@
+&control
+      calculation = 'scf'
+      tprnfor = .true.
+      tstress = .true.
+   /
+   &system
+      ibrav = 4
+      celldm(1) = 4.7419,
+      celldm(3) = 4.3,
+      nat = 2
+      ntyp = 2
+      ecutwfc = 35
+      ecutrho = 350.0
+      occupations = 'smearing'
+      smearing = 'gauss'
+      degauss = 0.01
+      noncolin = .true.
+      lspinorb = .true.
+      starting_magnetization(1) = 0.5
+   /
+   &electrons
+      conv_thr =  1.d-13
+      mixing_beta = 0.5
+      electron_maxstep = 200
+      mixing_mode = 'plain'
+   /
+   ATOMIC_SPECIES
+   N 14.00674  N.rel-pz-n-rrkjus_psl.1.0.0.UPF
+   B 10.81     B.rel-pz-n-rrkjus_psl.1.0.0.UPF
+   ATOMIC_POSITIONS crystal
+   N   0.010000000  -0.288675135   0.000000000
+   B   0.000000000   0.288675135   0.000000000
+   K_POINTS automatic
+   3 3 1 0 0 0
+   HUBBARD ortho-atomic
+   U   N-2p   2.0

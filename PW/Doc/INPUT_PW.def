@@ -108,11 +108,13 @@
         
         [ @b HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
           if (DFT+U)
-              U  label(1)-manifold(1) u_val(1)
-            [ J0 label(1)-manifold(1) j0_val(1) ]
+              U     label(1)-manifold(1) u_val(1)     
+            [ J0    label(1)-manifold(1) j0_val(1) ]
+            [ ALPHA label(1)-manifold(1) alpha_val(1) ]
               .....
-              U  label(n)-manifold(n) u_val(n)
-            [ J0 label(n)-manifold(n) j0_val(n) ]            
+              U     label(n)-manifold(n) u_val(n)
+            [ J0    label(n)-manifold(n) j0_val(n) ]
+            [ ALPHA label(n)-manifold(n) alpha_val(n) ]      
           if (DFT+U+J)
               paramType(1) label(1)-manifold(1) paramValue(1)
               .....
@@ -125,12 +127,18 @@
               U  label(N)-manifold(N) u_val(N)
             [ J0 label(N)-manifold(N) j0_val(N) ]
               V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
-        ]
+          if (DFT+U (orbital-resolved))
+              U     label(1)-shell(1) u_val(1)      eigenstate(1) [... eigenstate(4l+2)] 
+            [ ALPHA label(1)-shell(1) alpha_val(1)  eigenstate(1) [... eigenstate(4l+2)]  ]
+              .....
+              U     label(n)-shell(n) u_val(n)      eigenstate(n) [... eigenstate(4l+2)]  
+            [ ALPHA label(n)-shell(n) alpha_val(n)  eigenstate(n) [... eigenstate(4l+2)]  ]
         All Hubbard parameters must be specified in eV.
         manifold  = 3d, 2p, 4f...
+        shell  = 3d, 2p, 4f...
         paramType = U, J, B, E2, or E3
-        Check Doc/Hubbard_input.pdf for more details. 
-
+        eigenstate = 1, 2, 3, ..., 10 (d-shell)
+        Check Doc/Hubbard_input.pdf for more details. ]
     }
 
     #
@@ -820,26 +828,26 @@
                 For QE-v7.2 and older versions, only the second option is allowed.
 
                 If you expect a nonzero magnetization in your ground state,
-		you MUST either specify a nonzero value for at least one
-		atomic type, or constrain the magnetization using variable
-		@ref tot_magnetization for LSDA, @ref constrained_magnetization
-		for noncollinear/spin-orbit calculations. If you don't,
-		you will get a nonmagnetic (zero magnetization) state. 
+		        you MUST either specify a nonzero value for at least one
+		        atomic type, or constrain the magnetization using variable
+		        @ref tot_magnetization for LSDA, @ref constrained_magnetization
+		        for noncollinear/spin-orbit calculations. If you don't,
+		        you will get a nonmagnetic (zero magnetization) state. 
                 In order to perform LSDA calculations for an antiferromagnetic
-		state, define two different atomic species corresponding to
-		sublattices of the same atomic type.
+		        state, define two different atomic species corresponding to
+		        sublattices of the same atomic type.
                 
                 @b {NOTE 1:} @ref starting_magnetization is ignored in most BUT NOT ALL
-		cases in non-scf calculations: it is safe to keep the same
-		values for the scf and subsequent non-scf calculation.
+		        cases in non-scf calculations: it is safe to keep the same
+		        values for the scf and subsequent non-scf calculation.
                 
-		@b {NOTE 2:} If you fix the magnetization with
-		@ref tot_magnetization, do not specify @ref starting_magnetization.
+		        @b {NOTE 2:} If you fix the magnetization with
+		        @ref tot_magnetization, do not specify @ref starting_magnetization.
                 
-		@b {NOTE 3:} In the noncollinear/spin-orbit case, starting with zero 
+		        @b {NOTE 3:} In the noncollinear/spin-orbit case, starting with zero 
                 starting_magnetization on all atoms imposes time reversal
                 symmetry. The magnetization is never calculated and is
-		set to zero (the internal variable domag is set to .FALSE.).
+		        set to zero (the internal variable domag is set to .FALSE.).
             }
         }
 
@@ -967,29 +975,29 @@
             }
         }
 
-       var force_symmorphic -type LOGICAL { 
-           default { .FALSE. }
-           info {
+        var force_symmorphic -type LOGICAL { 
+            default { .FALSE. }
+            info {
                if (.TRUE.) force the symmetry group to be symmorphic by disabling
                symmetry operations having an associated fractionary translation
-          }
-      }
+            }
+        }
 
-       var use_all_frac -type LOGICAL { 
-           default { .FALSE. }
-           info {
-               if (.FALSE.) force real-space FFT grids to be commensurate with
-               fractionary translations of non-symmorphic symmetry operations,
-               if present (e.g.: if a fractional translation (0,0,c/4) exists, 
-               the FFT dimension along the c axis must be multiple of 4).
-               if (.TRUE.) do not impose any constraints to FFT grids, even in
-               the presence of non-symmorphic symmetry operations. 
-               BEWARE: use_all_frac=.TRUE. may lead to wrong results for
-               hybrid functionals and phonon calculations. Both cases use 
-               symmetrization in real space that works for non-symmorphic 
-               operations only if the real-space FFT grids are commensurate.
-          }
-      }
+        var use_all_frac -type LOGICAL { 
+            default { .FALSE. }
+            info {
+                if (.FALSE.) force real-space FFT grids to be commensurate with
+                fractionary translations of non-symmorphic symmetry operations,
+                if present (e.g.: if a fractional translation (0,0,c/4) exists, 
+                the FFT dimension along the c axis must be multiple of 4).
+                if (.TRUE.) do not impose any constraints to FFT grids, even in
+                the presence of non-symmorphic symmetry operations. 
+                BEWARE: use_all_frac=.TRUE. may lead to wrong results for
+                hybrid functionals and phonon calculations. Both cases use 
+                symmetrization in real space that works for non-symmorphic 
+                operations only if the real-space FFT grids are commensurate.
+            }
+        }
 
         var occupations -type CHARACTER {
             options {
@@ -1195,7 +1203,7 @@
             default { 0 }
             info {
                 Conduction band band shift (in eV) through self-consistent 
-		scissor operator. When performing gammaDFT calculations 
+		        scissor operator. When performing gammaDFT calculations 
                 of polarons, the polaron level is not shifted.
             }
         }
@@ -1300,7 +1308,7 @@
                 potential (see README in examples/EXX_example for more)
                 Set this to .false. for GAU-PBE.
             }
-         }
+        }
 
         var ecutvcut -type REAL {
             default { 0.0 Ry }
@@ -1348,20 +1356,6 @@
                 three Hubbard manifolds per Hubbard atom. However, if you want
                 to specify three manifolds then the second and the third manifolds
                 will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
-            }
-        }
-        dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
-            default { 0.D0 for all species }
-            info {
-                Hubbard_alpha(i) is the perturbation (on atom i, in eV)
-                used to compute U (and V) with the linear-response method of
-                Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for DFT+U or DFT+U+V).
-                
-                Note: Hubbard U and V can be computed using the HP code
-                which is based on density-functional perturbation theory,
-                and it gives exactly the same result as the method of 
-                Cococcioni and de Gironcoli.
             }
         }
         dimension Hubbard_beta -start 1 -end ntyp -type REAL { 
@@ -1583,7 +1577,7 @@
 	        determines when atomic magnetic moments are printed on output:
                 @b {report = 0}  never
                 @b {report =-1}  at the beginning of the scf and at convergence
-		@b {report = N}  as -1, plus every N scf iterations
+		        @b {report = N}  as -1, plus every N scf iterations
             }
         }
         
@@ -2206,7 +2200,7 @@
                 }
 
                 opt -val {'ppcg'} {
-                    PPCG iterative diagonalization
+                    PPCG iterative diagonalization (end support on Dec 2024)
                 }
 
                 opt -val {'paro', 'ParO'} {
@@ -2242,12 +2236,6 @@
         var diago_cg_maxiter -type INTEGER {
             info {
                 For conjugate gradient diagonalization:  max number of iterations
-            }
-        }
-
-        var diago_ppcg_maxiter -type INTEGER {
-            info {
-                For @b ppcg diagonalization:  max number of iterations
             }
         }
 
@@ -2414,7 +2402,7 @@
     
     namelist IONS  {
         label { 
-            REQUIRED if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            REQUIRED if @ref calculation == 'relax', 'md', 'vc-hrelax', or 'vc-md' 
             OPTIONAL for @ref calculation == 'scf' (only @ref ion_positions is used)
         }
  
@@ -2477,15 +2465,14 @@
                     Can be used for constrained 
                     optimisation: see @ref CONSTRAINTS card
                 }
-		opt -val 'fire' {
+		        opt -val 'fire' {
                     use the FIRE minimization algorithm employing the
-		    semi-implicit Euler integration scheme
-		    see:
-		       Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
-		       Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+		            semi-implicit Euler integration scheme
+		            see:
+		            Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+		            Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
 
-                    Can be used for constrained 
-                    optimisation: see @ref CONSTRAINTS card
+                    Can be used for constrained optimisation: see @ref CONSTRAINTS card
                 }
                 info {
                     @b CASE ( @ref calculation == 'md' )
@@ -2494,6 +2481,10 @@
                     @b (default)  use Verlet algorithm to integrate
                     Newton's equation. For constrained 
                     dynamics, see @ref CONSTRAINTS card
+                }
+                opt -val 'velocity-verlet' {
+                  use velocity-Verlet algorithm to integrate Newton's equation. 
+                  For constrained dynamics, see @ref CONSTRAINTS card. 
                 }
                 opt -val 'langevin' {
                     ion dynamics is over-damped Langevin
@@ -2604,8 +2595,7 @@
                     opt -val 'rescaling' {
                         control ionic temperature via velocity rescaling
                         (first method) see parameters @ref tempw, @ref tolp, and
-                        @ref nraise (for VC-MD only). This rescaling method
-                        is the only one currently implemented in VC-MD
+                        @ref nraise (for VC-MD only). 
                     }
                     opt -val 'rescale-v' {
                         control ionic temperature via velocity rescaling
@@ -2621,6 +2611,12 @@
                         by the (negative) value @ref delta_t, starting from @ref tempw.
                         If  @ref delta_t is positive, the target temperature is augmented.
                         The temperature is controlled via velocitiy rescaling.
+                    }
+                    opt -val 'nose' {
+                        control ionic temperature using Nose-Hoover 
+                        thermostat. See also parameters @ref fnosep , @ref tempw , 
+                        @ref nhpcl, @ref ndega , @ref nhptyp
+
                     }
                     opt -val 'berendsen' {
                         control ionic temperature using "soft" velocity
@@ -2653,6 +2649,77 @@
                 }
             }
 
+            var fnosep -type REAL {
+                default { 1.D0 }
+                info {
+                    oscillation frequency of the Nose thermorstat (in THz)
+                    [note that 3 THz = 100 cm^-1], meaningful only with 
+                    "ion_temperature = 'nose'" for Nose-Hoover chain one can 
+                    ser frequncies for all @ref nhpcl thermostats 
+                    ( fnosep = X Y Z etc.) If only first is set, the defaults for
+                    the others will be the same. 
+                     
+                }
+            }       
+            var nhpcl -type INTEGER {
+                default { 1 }
+                info {
+                    number of thermostats in the Nose-Hoover chain; 
+                    currently maximum allowed is 4
+                }
+            }  
+
+            var nhptyp -type INTEGER {
+                default { 0 } 
+                info {
+                    type of the "massive" Nose-Hoover chain thermostat:
+                     * nhptyp = 0 usese one NH chain for all atoms. 
+                     * nhtyp=1 uses a  NH chain per each atomic type
+                     * nhptyp=2 use a NH chaing per atom, this one is usefulf
+                       for extremely rapid equipartioning. 
+                     * nhptyp =3 together with @ref nhgrp allows fine grained thermostat 
+                       control 
+                }
+            }  
+            dimension nhgrp -start 1 -end ntyp -type INTEGER {
+                default { 0 }
+                info {
+                    specifies which thermostat group to use for given atomic type
+                    when >0 assigns all the atoms in this type to thermostat
+                    labeled nhgrp(i), when =0 each atom in the type gets its own
+                    thermostat. Finally, when <0, then this atomic type will have
+                    temperature "not controlled". Example: HCOOLi, with types H (1), C(2), O(3), Li(4);
+                    setting nhgrp={2 2 0 -1} will add a common thermostat for both H & C,
+                    one thermostat per each O (2 in total), and a non-updated thermostat
+                    for Li which will effectively make temperature for Li "not controlled"
+                }
+            }    
+
+
+            dimension fnhscl -start 1 -end ntyp -type REAL {
+                default { (Nat_{total}-1)/Nat_{total} }
+                info {
+                    these are the scaling factors to be used together with nhptyp=3 and nhgrp(i)
+                    in order to take care of possible reduction in the degrees of freedom due to
+                    constraints. Suppose that with the previous example HCOOLi, C-H bond is
+                    constrained. Then, these 2 atoms will have 5 degrees of freedom in total instead
+                    of 6, and one can set fnhscl={5/6 5/6 1. 1.}. This way the target kinetic energy
+                    for H&C will become 6(kT/2)*5/6 = 5(kT/2). This option is to be used for
+                    simulations with many constraints, such as rigid water with something else in there
+                }
+            }  
+
+
+            var ndega -type INTEGER {
+                default { 0 }
+                info {
+                    number of degrees of freedom used for temperature calculation
+                    ndega <= 0 sets the number of degrees of freedom to
+                    [3*nat-abs(ndega)], ndega > 0 is used as the target number
+                }   
+            } 
+
+      
             var tolp -type REAL { 
                 default { 100.D0 }
                 info {
@@ -2759,6 +2826,15 @@
                 }
             }
 
+            var tgdiis_step -type LOGICAL {
+                default {.true.} 
+                info { 
+                    When G-DIIS (@ref bfgs_ndim > 1) is used for the structural relaxation this variable 
+                    selects whether to use to full gdiis step or the BFGS trus radius. 
+                    (bfgs only)
+                }
+            }
+
             var trust_radius_max -type REAL { 
                 default { 0.8D0 }
                 info {
@@ -2805,35 +2881,35 @@
 		    recommended values are between 0.1 and 0.3 
                 }
             }
-	    var fire_falpha -type REAL { 
+	        var fire_falpha -type REAL { 
                 default { 0.99D0 }
                 info {
                     Scaling of the alpha mixing parameter for steps with P > 0;  
                 }
             }
-	    var fire_nmin -type INTEGER { 
+	        var fire_nmin -type INTEGER { 
                 default { 5 }
                 info {
                     Minimum number of steps with P > 0 before increase of @ref dt 
                 }
             }
-	    var fire_f_inc -type REAL { 
+	        var fire_f_inc -type REAL { 
                 default { 1.1D0 }
                 info {
                    Factor for increasing @ref dt 
                 }
             }
-	    var fire_f_dec -type REAL { 
+	        var fire_f_dec -type REAL { 
                 default { 0.5D0 }
                 info {
                    Factor for decreasing @ref dt 
                 }
             }
-	    var fire_dtmax -type REAL { 
+	        var fire_dtmax -type REAL { 
                 default { 10.D0 }
                 info {
                    Determines the maximum value of @ref dt in the FIRE minimization;
-		   dtmax = fire_dtmax*@ref dt 
+		            dtmax = fire_dtmax*@ref dt 
                 }
             }
         }
@@ -4010,7 +4086,7 @@
     card CONSTRAINTS {
         label {
             Optional card, used for constrained dynamics or constrained optimizations
-            (only if @ref ion_dynamics=='damp' or 'verlet', variable-cell excepted)
+            (only if @ref ion_dynamics=='damp','verlet' or 'velocity-verlet', variable-cell excepted)
         }
         message {
             When this card is present the SHAKE algorithm is automatically used.
@@ -4357,7 +4433,7 @@
 
                 info {
                     Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
-                    U, J0, J, B, E2, E3, V in the HUBBARD card.
+                    U, ALPHA, J0, J, B, E2, E3, V in the HUBBARD card.
                 }
 
             }
@@ -4389,6 +4465,35 @@
                                   U Mn-3d 5.0
                                   U Ni-3d 6.0
                             }                                                                
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword ALPHA
+                                var label(1)-manifold(1)
+                                var alpha_val(1)
+                                info {
+                                    @b Remark: specs of @b ALPHA parameters are optional
+                                    @b ALPHA is the perturbation used to compute U (and V) with the linear-response method of
+                                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+
+                                    @b Syntax:
+                                      @b ALPHA @i {label-manifold alpha_val}
+                                        
+                                    @b Where:
+                                    @b ALPHA     = string constant "ALPHA"; indicates that specs for the @b ALPHA parameter will be given
+                                    @i label     = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i manifold  = specs of the manifold (e.g., 3d, 2p...)
+                                    @i alpha_val = value of the @i ALPHA parameter (in eV)
+                                    
+                                    @b Example:
+                                      HUBBARD (ortho-atomic)
+                                      U     Ni-3d 5.00
+                                      ALPHA Ni-3d 0.05
+                                      U     Mn-3d 5.00
+                                }
+                            }                                
                         }
                     }
                     line {
@@ -4429,6 +4534,15 @@
                             keyword U
                             var label(n)-manifold(n)
                             var u_val(n)
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword ALPHA
+                                var label(n)-manifold(n)
+                                var alpha_val(n)
+                            }
                         }
                     }
                     line {
@@ -4605,7 +4719,128 @@
                     }
                 }
             }
+            elsewhen -test "DFT+U (orbital-resolved)" {
+                syntax -flag $Hflags {
+
+                    # atom-1 specs
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                            keyword U
+                            var label(1)-shell(1)
+                            var u_val(1)
+                            var eigenstate(1,m)
+
+                            info {
+                                @b Syntax of the line:
+                                @b U @i {label-shell u_val eigenstate(1) [... eigenstate(m)]}
+
+                                @b Where:
+                                @b U             = string constant "U"; indicates the specs for a @b U parameter will be given
+                                @i label         = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i shell         = specs of the nl-subshell (e.g., 3d, 2p...)
+                                @i u_val         = value of the @i U parameter (in eV)
+                                @i eigenstate(m) = index/indices of the m-th eigenstate(s) belonging to the @i shell
+                                                   that will be targeted by @b U corrections (see below)
+                            }
+                            info {
+                                @b Syntax of the @i eigenstate parameter:
+
+                                @b CASE ( @ref nspin == 1 ):
+                                    Provide one up to 2l+1 (e.g., 5 for a d-shell) eigenstate indices varying
+                                    between 1 and 2l+1. 
+                                    These values correspond to the m-th eigenstate(s) of the @i shell occupancy 
+                                    matrix, to be targeted by Hubbard U corrections (see PW/examples/example15).
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U Mn-3d 4.70  3 4 5
+                                        U Ni-3d 3.50  1 2 
+
+                                @b CASE ( @ref nspin == 2 ):
+                                    Provide one up to 2*(2l+1) (e.g., 10 for a d-shell) eigenstate indices varying
+                                    between 1 and 2*(2l+1). These values correspond to the m-th eigenstate(s) of
+                                    the @i shell collinear occupancy matrix, to be targeted by Hubbard U corrections.
+                                    Indices from 1 to 2l+1 target spin-up eigenstates, while those from (2l+2)
+                                    to 2*(2l+1) target the  spin-down ones (see PW/examples/example16).
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U Mn-3d 4.70  3 4 5 8 9 10
+                                        U Ni-3d 3.50  1 2 6 7
+
+                                @b CASE ( @ref noncolin = .true. ):
+                                    Provide one up to 2*(2l+1) (e.g., 10 for a d-shell) eigenstate indices varying
+                                    between 1 and 2*(2l+1). These values correspond to the m-th eigenstate(s) of
+                                    the noncollinear occupancy matrix of the @i shell, to be targeted by Hubbard U
+                                    corrections.
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U Mn-3d 4.70  3 4 5 8 9 10
+                                        U Ni-3d 3.50  1 2 6 7  
+                            }                                   
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                                keyword ALPHA
+                                var label(1)-shell(1)
+                                var alpha_val(1)
+                                var eigenstate(1,m)
+                                info {
+                                    @b Remark: specs of (orbital-resolved) @b ALPHA parameters are optional
+                                    @b ALPHA is the perturbation used to compute U with the orbital-resolved 
+                                    linear-response method of Macke et al., arXiv:2312.13580 (2023), based on
+                                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+
+                                    @b Syntax of the line:
+                                    @b ALPHA @i {label-shell alpha_val eigenstate(1) [... eigenstate(m)]}
+                                        
+                                    @b Where:
+                                    @b ALPHA         = string constant "ALPHA"; indicates that specs for an @b ALPHA parameter will be given
+                                    @i label         = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i shell         = specs of the nl-subshell (e.g., 3d, 2p...)
+                                    @i alpha_val     = value of the @i ALPHA parameter (in eV)
+                                    @i eigenstate(m) = index/indices of the m-th eigenstate(s) belonging to the @i shell
+                                                       that will be targeted by @b ALPHA (same syntax as for orbital-resolved
+                                                       Hubbard U)
+
+                                    @b Example:
+                                        HUBBARD (ortho-atomic)
+                                        U     Mn-3d 4.70 3 4 5
+                                        U     Ni-3d 3.50 1 2
+                                        ALPHA Ni-3d 0.05 1 2
+                                }         
+                            }
+                        }
+                    }
+                    # print ". . ." on a separate line
+                        
+                    line { etc }
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                            keyword U
+                            var label(n)-shell(n)
+                            var u_val(n)
+                            var eigenstate(n,m)
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL, INTEGER} {
+                                keyword ALPHA
+                                var label(n)-shell(n)
+                                var alpha_val(n)
+                                var eigenstate(n,m)
+                            }                                
+                        }
+                    }                        
+                }
+            }
         }
     }
+    }
    ###
-}

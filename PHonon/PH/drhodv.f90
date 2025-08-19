@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine drhodv (nu_i0, nper, drhoscf)
+subroutine drhodv (nu_i0, nper, drhos)
   !-----------------------------------------------------------------------
   !! This subroutine computes the electronic term
   !! \( 2\langle d\psi|dv - e ds|\psi\rangle \)
@@ -14,7 +14,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !! The contribution of the nonlocal potential is calculated in
   !! \(\texttt{drhodvnl}\), the contribution of the local potential
   !! in \(\texttt{drhodvloc}\).  
-  !! Note that \(\text{drhoscf}\) contain only the smooth part of the
+  !! Note that \(\text{drhos}\) contain only the smooth part of the
   !! induced charge density, calculated in solve linter.  
   !! February 2020: the routine has been generalized to 
   !! address also the case noncolin.and.domag. For the 
@@ -35,7 +35,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE becmod,    ONLY : calbec, bec_type, becscal, becupdate, &
                         allocate_bec_type, deallocate_bec_type, &
                         allocate_bec_type_acc, deallocate_bec_type_acc
-  USE fft_base,  ONLY : dfftp
+  USE fft_base,  ONLY : dffts
   USE io_global, ONLY : stdout
   USE buffers,   ONLY : get_buffer
   USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
@@ -55,6 +55,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
   USE control_flags,    ONLY : offload_type
+  USE control_lr,       ONLY : lmultipole
 
   implicit none
 
@@ -62,7 +63,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !! input: number of perturbations of this represent
   integer :: nu_i0
   !! input: the initial position of the mode
-  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,nper)
+  complex(DP) :: drhos(dffts%nnr,nspin_mag,nper)
   !! the change of density due to perturbations
   !
   ! ... local variables
@@ -115,11 +116,19 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb, .true.)
      DO isolv=1, nsolv
         do mu = 1, nper
-           nrec = (mu - 1) * nksq + ik + (isolv-1) * nksq * nper
-           if (nksq > 1 .or. nper > 1 .OR. nsolv==2) then
-                             call get_buffer(dpsi, lrdwf, iudwf, nrec)
-                             !$acc update device(dpsi)
-           endif
+           !
+           IF (.NOT. lmultipole) THEN
+             nrec = (mu - 1) * nksq + ik + (isolv-1) * nksq * nper
+             if (nksq > 1 .or. nper > 1 .OR. nsolv==2) then
+                               call get_buffer(dpsi, lrdwf, iudwf, nrec)
+                               !$acc update device(dpsi)
+             endif
+           ELSE
+             nrec = ik
+             call get_buffer(dpsi, lrdwf, iudwf, nrec)
+             !$acc update device(dpsi)
+           ENDIF
+           !
 #if defined(__CUDA)
            call calbec( offload_type, npwq, vkb, dpsi, bectmp )
            call becupdate( offload_type, dbecq, mu, nper, bectmp )
@@ -209,7 +218,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   ! add the contribution of the local part of the perturbation
   !
-   call drhodvloc (nu_i0, nper, drhoscf, wdyn)
+   call drhodvloc (nu_i0, nper, drhos, wdyn)
   !
   ! add to the rest of the dynamical matrix
   !

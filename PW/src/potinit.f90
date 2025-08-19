@@ -40,7 +40,8 @@ SUBROUTINE potinit()
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw, esol, vsol
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
-                                   nsg, nsgnew
+                                   nsg, nsgnew, apply_U, hub_pot_fix, &
+                                   orbital_resolved
   USE noncollin_module,     ONLY : noncolin, domag, report, lforcet
   USE io_files,             ONLY : restart_dir, input_drho, check_file_exist
   USE mp,                   ONLY : mp_sum
@@ -51,7 +52,7 @@ SUBROUTINE potinit()
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
   USE uspp,                 ONLY : becsum
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
   !
@@ -86,6 +87,11 @@ SUBROUTINE potinit()
      !
      ! ... Cases a) and b): the charge density is read from file
      ! ... this also reads rho%ns if DFT+U, rho%bec if PAW, rho%kin if metaGGA
+     !
+     ! ... if we restart from a preexisting charge density, the eigenstates
+     ! ... are considered stable and we can apply orbital-resolved Hubbard 
+     ! ... corrections starting from the first iteration
+     IF ( orbital_resolved ) apply_U = .TRUE.
      !
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
@@ -152,7 +158,19 @@ SUBROUTINE potinit()
      !
      IF (lda_plus_u) THEN
         !
-        IF (lda_plus_u_kind == 0) THEN    
+        IF (lda_plus_u_kind == 0) THEN
+           IF ( hub_pot_fix ) &
+              CALL errore( 'potinit', &
+                     'cannot apply Hubbard alpha without &
+                     &restarting from a converged potential', 1 )
+           IF ( orbital_resolved .AND. (.NOT. apply_U) ) THEN
+              WRITE( stdout, '(/,5X,47("="))')
+              WRITE( stdout, '(/,5X,"Not restarting from a converged ", &
+                                &    "potential:",/,5X,             &
+              & "Orbital-resolved Hubbard corrections not yet active")')
+              WRITE( stdout, '(/,5X,47("="))')
+              !
+           ENDIF
            IF (noncolin) THEN
               CALL init_ns_nc() 
            ELSE 
@@ -269,7 +287,7 @@ SUBROUTINE potinit()
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+  IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw)
   !
   ! ... calculate 3D-RISM to get the solvation potential
   !

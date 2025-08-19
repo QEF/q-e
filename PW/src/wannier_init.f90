@@ -18,7 +18,7 @@ SUBROUTINE wannier_init(hwwa)
   USE input_parameters, only: constrain_pot, wan_data
   USE lsda_mod, only: nspin
   USE ions_base, only : nat
-  USE basis, only : natomwfc, swfcatom
+  USE basis, only : natomwfc
   USE constants, only: rytoev
   USE klist, only: nks
   USE io_files
@@ -66,9 +66,6 @@ SUBROUTINE wannier_init(hwwa)
   CALL open_buffer( iunwf, 'wwf', nwordwf, io_level, exst )
 
   ! For atomic wavefunctions
-
-  IF(.NOT. ALLOCATED(swfcatom)) ALLOCATE( swfcatom( npwx, natomwfc))
-  
   nwordatwfc = npwx*natomwfc*npol
   INQUIRE( UNIT = iunsat, OPENED = opnd )
   IF(.NOT. opnd) CALL open_buffer( iunsat,'satwfc',nwordatwfc,io_level,exst )

@@ -30,8 +30,7 @@ subroutine compute_alphasum_cond
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
   USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE control_ph, ONLY : rec_code_read
-  USE control_lr, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ, rec_code_read
   USE lr_two_chem, ONLY: alphasum_cond,alphasum_cond_nc
   implicit none
 
@@ -159,4 +158,3 @@ subroutine compute_alphasum_cond
   !      call stop_ph(.true.)
   return
 end subroutine compute_alphasum_cond
-

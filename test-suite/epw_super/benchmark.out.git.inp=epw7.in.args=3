@@ -29,7 +29,7 @@
                                                      npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.9 starts on 26Aug2024 at 17:14:30 
+     Program EPW v.5.9 starts on  6Feb2025 at 19:20:40 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -44,10 +44,9 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     184425 MiB available memory on the printing compute node when the environment starts
+     5075 MiB available memory on the printing compute node when the environment starts
  
-     Waiting for input...
-     Reading input from standard input
+     Reading input from epw7.in
 
      Reading supplied temperature list.
                       
@@ -106,8 +105,8 @@
 
      Finish reading freq file
 
-                  Fermi level (eV) =     7.6644747171E+00
-     DOS(states/spin/eV/Unit Cell) =     9.1308568537E-01
+                  Fermi level (eV) =     7.6644747173E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308568490E-01
             Electron smearing (eV) =     1.0000000000E-01
                  Fermi window (eV) =     2.0000000000E+01
      Nr irreducible k-points within the Fermi shell =        28 out of        28
@@ -134,20 +133,22 @@
 
      Finish reading a2f file
 
-     Electron-phonon coupling strength =    0.8714949
+     Electron-phonon coupling strength =    0.8714948
  
-     Estimated Allen-Dynes Tc =    26.408181 K for muc =    0.16000
+     Estimated Tc using McMillan expression =  26.4082 K for muc =   0.1600
   
-     Estimated w_log in Allen-Dynes Tc =    61.470416 meV
+     Estimated Tc using Allen-Dynes modified McMillan expression =  27.4569 K
   
-     Estimated BCS superconducting gap =     4.005199 meV
+     Estimated Tc using SISSO machine learning model =  31.5015 K
   
-     Estimated Tc from machine learning model =    31.501523 K
+     Estimated w_log =  61.4704 meV
+  
+     Estimated BCS superconducting gap using McMillan Tc =   4.0052 meV
   
   
      WARNING WARNING WARNING 
   
-     The code may crash since tempsmax =   30.000 K is larger than Allen-Dynes Tc =    26.408 K
+     The code may crash since tempsmax =   30.000 K is larger than McMillan Tc =    26.408 K
 
      Start reading ir object file
 
@@ -167,65 +168,81 @@
      broyden mixing factor =      0.70000
     
         iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]
-          1   2.838740E+00   1.690241E+00   3.158009E+00   2.595801E+00   7.664475E+00
-          2   3.237299E-01   1.806816E+00   5.371406E+00   9.232988E+00   7.664475E+00
-          3   2.661584E-01   1.770806E+00   7.740898E+00   5.418096E+00   7.664475E+00
-          4   1.762495E+00   1.786413E+00   2.961829E+00   7.932650E+00   7.664475E+00
-          5   7.853001E-02   1.782781E+00   3.155112E+00   8.209060E+00   7.664475E+00
-          6   5.254119E-01   1.766790E+00   6.662684E+00   8.901546E+00   7.664475E+00
-          7   4.565744E-01   1.726732E+00   1.169177E+01   1.684242E+01   7.664475E+00
-          8   8.423946E-02   1.728524E+00   1.048804E+01   1.929727E+01   7.664475E+00
-          9   2.200356E-01   1.753941E+00   8.557738E+00   1.588050E+01   7.664475E+00
-         10   7.633840E-01   1.777027E+00   4.915631E+00   1.046018E+01   7.664475E+00
-         11   8.858866E-02   1.774547E+00   5.167462E+00   1.166308E+01   7.664475E+00
-         12   4.987369E-01   1.776731E+00   3.295237E+00   1.078846E+01   7.664475E+00
-         13   2.816840E-01   1.777956E+00   4.917507E+00   1.085890E+01   7.664475E+00
-         14   1.217718E+00   1.763870E+00   1.942259E+00   1.067335E+01   7.664475E+00
-         15   6.946082E-02   1.766724E+00   2.132970E+00   1.108632E+01   7.664475E+00
-         16   2.247660E-02   1.766830E+00   2.073947E+00   1.109532E+01   7.664475E+00
-         17   3.615549E-01   1.768296E+00   3.456035E+00   1.223042E+01   7.664475E+00
-         18   7.191042E-02   1.766239E+00   3.765161E+00   1.277348E+01   7.664475E+00
-         19   9.738462E-02   1.769323E+00   4.312500E+00   1.251684E+01   7.664475E+00
-         20   8.226777E-01   1.755587E+00   2.195118E+00   1.051404E+01   7.664475E+00
-         21   3.323837E-01   1.762781E+00   1.644022E+00   9.230599E+00   7.664475E+00
-         22   1.024299E-01   1.766125E+00   1.828740E+00   9.805287E+00   7.664475E+00
-         23   3.805470E-01   1.779179E+00   3.195653E+00   1.110519E+01   7.664475E+00
-         24   6.405706E-01   1.762856E+00   9.458587E+00   1.153292E+01   7.664475E+00
-         25   3.074439E+00   1.762849E+00   2.078434E+00   8.887733E+00   7.664475E+00
-         26   3.652963E-01   1.734708E+00   1.768013E+00   6.917381E+00   7.664475E+00
-         27   1.261660E+00   1.730619E+00   9.060288E-01   6.154103E+00   7.664475E+00
-         28   3.651440E+00   1.723015E+00   2.088248E-01   5.598828E+00   7.664475E+00
-         29   1.317340E+00   1.728170E+00   3.871681E-01   5.724082E+00   7.664475E+00
-         30   8.720564E-01   1.727880E+00   1.749925E+00   6.629270E+00   7.664475E+00
-         31   1.933190E-01   1.720180E+00   2.266692E+00   6.720659E+00   7.664475E+00
-         32   1.029578E+00   1.723961E+00   1.236783E+00   6.081437E+00   7.664475E+00
-         33   3.825904E-01   1.713919E+00   1.908150E+00   6.083626E+00   7.664475E+00
-         34   5.241731E-01   1.775158E+00   3.261349E+00   8.048598E+00   7.664475E+00
-         35   6.559147E-01   1.764430E+00   1.012848E+01   9.550133E+00   7.664475E+00
-         36   2.037144E-02   1.756800E+00   1.051037E+01   8.558348E+00   7.664475E+00
-         37   7.103775E-03   1.732047E+00   1.046403E+01   8.921837E+00   7.664475E+00
-     Convergence was reached in nsiter =     37
+          1   2.838739E+00   1.690241E+00   3.158008E+00   2.595800E+00   7.664475E+00
+          2   3.237295E-01   1.806816E+00   5.371401E+00   9.232987E+00   7.664475E+00
+          3   2.661590E-01   1.770806E+00   7.740896E+00   5.418106E+00   7.664475E+00
+          4   1.762473E+00   1.786413E+00   2.961853E+00   7.932663E+00   7.664475E+00
+          5   7.853888E-02   1.782781E+00   3.155094E+00   8.209061E+00   7.664475E+00
+          6   5.254148E-01   1.766789E+00   6.662809E+00   8.901585E+00   7.664475E+00
+          7   4.565516E-01   1.726738E+00   1.169148E+01   1.684170E+01   7.664475E+00
+          8   8.420116E-02   1.728521E+00   1.048816E+01   1.929776E+01   7.664475E+00
+          9   2.200271E-01   1.753937E+00   8.557903E+00   1.588083E+01   7.664475E+00
+         10   7.632709E-01   1.777027E+00   4.916116E+00   1.046001E+01   7.664475E+00
+         11   8.838905E-02   1.774551E+00   5.166733E+00   1.166255E+01   7.664475E+00
+         12   4.992719E-01   1.776737E+00   3.293505E+00   1.078694E+01   7.664475E+00
+         13   2.819992E-01   1.777965E+00   4.917260E+00   1.085672E+01   7.664475E+00
+         14   1.215918E+00   1.763882E+00   1.943962E+00   1.067473E+01   7.664475E+00
+         15   6.983793E-02   1.766746E+00   2.135895E+00   1.108662E+01   7.664475E+00
+         16   2.248463E-02   1.766856E+00   2.077230E+00   1.109511E+01   7.664475E+00
+         17   3.615071E-01   1.768310E+00   3.461139E+00   1.222929E+01   7.664475E+00
+         18   7.177673E-02   1.766237E+00   3.769647E+00   1.277243E+01   7.664475E+00
+         19   1.074409E-01   1.768996E+00   4.364940E+00   1.257638E+01   7.664475E+00
+         20   8.068026E-01   1.755780E+00   2.245156E+00   1.062769E+01   7.664475E+00
+         21   3.822846E-01   1.762112E+00   1.615385E+00   9.079222E+00   7.664475E+00
+         22   1.407668E-01   1.763484E+00   1.390703E+00   9.074773E+00   7.664475E+00
+         23   4.217615E-01   1.781992E+00   2.708423E+00   1.067540E+01   7.664475E+00
+         24   5.151663E-01   1.773501E+00   5.975520E+00   8.521143E+00   7.664475E+00
+         25   3.218909E-01   1.746053E+00   8.538254E+00   8.717877E+00   7.664475E+00
+         26   2.154152E-02   1.729350E+00   8.344278E+00   7.732243E+00   7.664475E+00
+         27   1.116215E-01   1.745642E+00   7.647234E+00   7.533122E+00   7.664475E+00
+         28   1.587374E-01   1.745537E+00   9.044533E+00   8.820949E+00   7.664475E+00
+         29   4.865362E-02   1.766135E+00   8.677876E+00   1.030217E+01   7.664475E+00
+         30   7.107693E-02   1.773177E+00   8.114801E+00   1.056373E+01   7.664475E+00
+         31   7.281358E-02   1.732915E+00   8.582416E+00   7.200020E+00   7.664475E+00
+         32   7.498510E-02   1.750742E+00   8.141069E+00   7.217170E+00   7.664475E+00
+         33   5.939450E-01   1.762426E+00   5.352812E+00   6.096078E+00   7.664475E+00
+         34   2.881288E-01   1.758206E+00   7.307790E+00   6.618895E+00   7.664475E+00
+         35   1.532868E-01   1.754419E+00   8.521602E+00   7.041164E+00   7.664475E+00
+         36   8.080608E-01   1.755470E+00   4.957253E+00   5.763570E+00   7.664475E+00
+         37   9.599096E-02   1.752827E+00   5.345610E+00   5.873319E+00   7.664475E+00
+         38   2.450458E-01   1.747269E+00   6.869247E+00   6.787112E+00   7.664475E+00
+         39   8.166131E-02   1.744232E+00   7.433258E+00   7.327889E+00   7.664475E+00
+         40   5.319913E+00   1.726470E+00  -6.725360E-01   1.172046E+01   7.664475E+00
+         41   1.197952E+00   1.747719E+00   6.286143E+00   6.275579E+00   7.664475E+00
+         42   4.793832E-01   1.721657E+00   1.159387E+01   1.203712E+01   7.664475E+00
+         43   4.469877E-02   1.717765E+00   1.210488E+01   1.357353E+01   7.664475E+00
+         44   1.413326E-01   1.707921E+00   1.406115E+01   1.322621E+01   7.664475E+00
+         45   8.307882E-02   1.722978E+00   1.302199E+01   7.107356E+00   7.664475E+00
+         46   1.740012E-01   1.734600E+00   1.117413E+01   8.284314E+00   7.664475E+00
+         47   2.247226E-02   1.731425E+00   1.091476E+01   8.220846E+00   7.664475E+00
+         48   4.274311E-02   1.727566E+00   1.146224E+01   7.972356E+00   7.664475E+00
+         49   7.094168E-02   1.722219E+00   1.226179E+01   7.391059E+00   7.664475E+00
+         50   8.229310E-01   1.732599E+00   6.835406E+00   3.260969E+00   7.664475E+00
+         51   3.965314E-01   1.728644E+00   1.111058E+01   5.507126E+00   7.664475E+00
+         52   3.468637E-02   1.724097E+00   1.148851E+01   5.689303E+00   7.664475E+00
+         53   7.788831E-03   1.723181E+00   1.144257E+01   5.474760E+00   7.664475E+00
+     Convergence was reached in nsiter =     53
  
-     Chemical potential (itemp =   1) =     7.6644747171E+00 eV
+     Chemical potential (itemp =   1) =     7.6644747173E+00 eV
  
-     Temp (itemp =   1) =   17.000 K  Free energy =    -0.077915 meV
+     Temp (itemp =   1) =   17.000 K  Free energy =    -0.096525 meV
  
-     Min. / Max. values of superconducting gap =     2.108865   19.658272 meV
-     iaxis_imag   :      9.43s CPU      9.66s WALL (       1 calls)
+     Min. / Max. values of superconducting gap =     1.191269   27.046700 meV
+     iaxis_imag   :     37.88s CPU     38.01s WALL (       1 calls)
  
     
      Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
         pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]
-         28   1.587756E+00   9.672382E+00   8.876859E+00
+         28   1.578950E+00   1.052450E+01   5.365352E+00
  
      Convergence was reached for N =     28 Pade approximants
  
-     Min. / Max. values of superconducting gap =     2.130223   21.392756 meV
-     raxis_pade   :      0.02s CPU      0.05s WALL (       1 calls)
+     Min. / Max. values of superconducting gap =     1.211042   31.277442 meV
+     raxis_pade   :      0.09s CPU      0.09s WALL (       1 calls)
  
-     itemp =   1   total cpu time :              9.71 secs
+     itemp =   1   total cpu time :             38.11 secs
  
      Actual number of frequency points (     2) =     31 for sparse-ir     sampling
     
@@ -240,37 +257,36 @@
      broyden mixing factor =      0.70000
     
         iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]
-          1   3.087819E+00   1.675090E+00   7.815576E+00   5.054607E+00   7.664475E+00
-          2   1.928815E-01   1.765817E+00   1.125036E+01   1.147969E+01   7.664475E+00
-          3   5.651578E-02   1.711220E+00   1.250895E+01   1.022662E+01   7.664475E+00
-          4   1.483608E-01   1.668980E+00   1.422186E+01   1.064590E+01   7.664475E+00
-          5   1.558280E-02   1.659124E+00   1.404544E+01   9.257553E+00   7.664475E+00
-          6   3.262409E-02   1.676555E+00   1.378008E+01   1.028048E+01   7.664475E+00
-          7   1.367903E-02   1.675703E+00   1.400999E+01   1.025119E+01   7.664475E+00
-          8   1.810056E-02   1.671057E+00   1.428676E+01   1.160925E+01   7.664475E+00
-          9   6.141155E-03   1.673906E+00   1.421021E+01   1.151892E+01   7.664475E+00
-     Convergence was reached in nsiter =      9
+          1   3.118927E+00   1.671958E+00   8.449378E+00   5.551856E+00   7.664475E+00
+          2   1.701046E-01   1.758778E+00   1.183700E+01   1.177777E+01   7.664475E+00
+          3   5.255012E-02   1.704109E+00   1.286943E+01   1.059604E+01   7.664475E+00
+          4   9.813957E-02   1.673296E+00   1.394934E+01   1.102477E+01   7.664475E+00
+          5   2.863638E-02   1.657015E+00   1.424417E+01   9.385252E+00   7.664475E+00
+          6   4.093094E-02   1.674226E+00   1.388703E+01   1.053449E+01   7.664475E+00
+          7   1.055213E-02   1.676771E+00   1.410418E+01   1.047108E+01   7.664475E+00
+          8   2.690381E-03   1.675962E+00   1.407831E+01   1.077769E+01   7.664475E+00
+     Convergence was reached in nsiter =      8
  
-     Chemical potential (itemp =   2) =     7.6644747171E+00 eV
+     Chemical potential (itemp =   2) =     7.6644747173E+00 eV
  
-     Temp (itemp =   2) =   20.000 K  Free energy =    -0.138029 meV
+     Temp (itemp =   2) =   20.000 K  Free energy =    -0.135699 meV
  
-     Min. / Max. values of superconducting gap =     2.697492   27.798626 meV
-     iaxis_imag   :     11.71s CPU     11.98s WALL (       2 calls)
+     Min. / Max. values of superconducting gap =     2.632364   27.728668 meV
+     iaxis_imag   :     43.55s CPU     43.74s WALL (       2 calls)
  
     
      Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
         pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]
-         28   1.529275E+00   1.316714E+01   1.144188E+01
+         28   1.531578E+00   1.304243E+01   1.070067E+01
  
      Convergence was reached for N =     28 Pade approximants
  
-     Min. / Max. values of superconducting gap =     2.729788   31.225178 meV
-     raxis_pade   :      0.05s CPU      0.10s WALL (       2 calls)
+     Min. / Max. values of superconducting gap =     2.664244   31.266193 meV
+     raxis_pade   :      0.21s CPU      0.21s WALL (       2 calls)
  
-     itemp =   2   total cpu time :             12.08 secs
+     itemp =   2   total cpu time :             43.96 secs
  
      Actual number of frequency points (     3) =     31 for sparse-ir     sampling
     
@@ -285,33 +301,33 @@
      broyden mixing factor =      0.70000
     
         iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]
-          1   3.544128E+00   1.660102E+00   1.008239E+01   7.195384E+00   7.664475E+00
-          2   9.623194E-02   1.737164E+00   1.307907E+01   1.260941E+01   7.664475E+00
-          3   5.888610E-02   1.683811E+00   1.352673E+01   1.136068E+01   7.664475E+00
-          4   3.742873E-02   1.671434E+00   1.384846E+01   1.148794E+01   7.664475E+00
-          5   6.813689E-03   1.667103E+00   1.392694E+01   1.114245E+01   7.664475E+00
+          1   3.538728E+00   1.660599E+00   1.000703E+01   7.120855E+00   7.664475E+00
+          2   9.606524E-02   1.738102E+00   1.302302E+01   1.257883E+01   7.664475E+00
+          3   5.864111E-02   1.684496E+00   1.349787E+01   1.133978E+01   7.664475E+00
+          4   3.896000E-02   1.671615E+00   1.383774E+01   1.147735E+01   7.664475E+00
+          5   6.964979E-03   1.667103E+00   1.391647E+01   1.111451E+01   7.664475E+00
      Convergence was reached in nsiter =      5
  
-     Chemical potential (itemp =   3) =     7.6644747171E+00 eV
+     Chemical potential (itemp =   3) =     7.6644747173E+00 eV
  
-     Temp (itemp =   3) =   30.000 K  Free energy =    -0.117020 meV
+     Temp (itemp =   3) =   30.000 K  Free energy =    -0.116833 meV
  
-     Min. / Max. values of superconducting gap =     2.540187   27.493873 meV
-     iaxis_imag   :     12.96s CPU     13.26s WALL (       3 calls)
+     Min. / Max. values of superconducting gap =     2.535291   27.493615 meV
+     iaxis_imag   :     47.26s CPU     47.46s WALL (       3 calls)
  
     
      Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
         pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]
-         28   1.525372E+00   1.294150E+01   1.104476E+01
+         28   1.525387E+00   1.292991E+01   1.101750E+01
  
      Convergence was reached for N =     28 Pade approximants
  
-     Min. / Max. values of superconducting gap =     2.611336   31.805227 meV
-     raxis_pade   :      0.08s CPU      0.13s WALL (       3 calls)
+     Min. / Max. values of superconducting gap =     2.606382   31.791386 meV
+     raxis_pade   :      0.28s CPU      0.29s WALL (       3 calls)
  
-     itemp =   3   total cpu time :             13.39 secs
+     itemp =   3   total cpu time :             47.75 secs
  
 
      Unfolding on the coarse grid
@@ -324,10 +340,10 @@
      Electron-Phonon interpolation
 
 
-     ELIASHBERG   :     13.09s CPU     13.48s WALL (       1 calls)
+     ELIASHBERG   :     47.66s CPU     47.89s WALL (       1 calls)
 
      Total program execution
-     EPW          :     13.09s CPU     13.50s WALL
+     EPW          :     47.69s CPU     47.91s WALL
 
      % Copyright (C) 2016-2023 EPW-Collaboration                                    
                                                                                     

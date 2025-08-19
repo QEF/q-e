@@ -211,6 +211,38 @@ input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
            effects both in the kernel and in the response function (RPA).
 	   }
 	}
+
+       var io_sp -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. write wannier orbital densities in single-precision.
+           }
+        }
+
+       var io_real_space -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. write Wannier orbital densities and Wannier functions in real space.
+           }
+        }
+
+      var irr_bz -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. compute and use the symmetries of the Wannier orbital densities
+           to reduce the number of k and q points for the BZ sampling.
+           }
+        }
+
+      var use_wct -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. allow to use symmetries that send the Wannier orbital density into
+           the Wannier translated by a lattice vector (wcf= wannier center translation) 
+           to further reduce the number of q points
+           }
+        }
+
 }  
 
 
@@ -274,7 +306,15 @@ input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
             }
         }
 
+       var alpha_mix(niter)  -type REAL {
+            default { alpha_mix(1)=0.7 }
+            info {
+                Mixing factor (for each iteration) for updating
+                the scf potential:
 
+                vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+            }
+        }
 }
 
 

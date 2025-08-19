@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ SUBROUTINE new_nsg()
   USE wvfct,                ONLY : nbnd, npw, npwx, wg
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : evc
-  USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunsat, iunhub
+  USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -38,6 +38,10 @@ SUBROUTINE new_nsg()
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
   USE noncollin_module,     ONLY : npol, colin_mag
+#if defined (__OSCDFT)
+  USE plugin_flags,         ONLY : use_oscdft
+  USE oscdft_base,          ONLY : oscdft_ctx
+#endif 
   !
   IMPLICIT NONE
   !
@@ -214,6 +218,17 @@ SUBROUTINE new_nsg()
         ENDIF
      ENDDO
   ENDDO
+  !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2) .AND. &
+                  .NOT.oscdft_ctx%inp%constraint_diag) THEN
+     IF (.NOT.oscdft_ctx%conv) THEN
+        nsgnew(:,:,:,:,:) = nrg(:,:,:,:,:)
+        DEALLOCATE(nrg)
+        RETURN
+     ENDIF
+  ENDIF
+#endif
   ! 
   ! symmetrize the quantities nr -> ns
   !
@@ -494,7 +509,7 @@ SUBROUTINE new_nsg_nc()
    USE wvfct,                ONLY : nbnd, npw, npwx, wg
    USE control_flags,        ONLY : gamma_only
    USE wavefunctions,        ONLY : evc
-   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunsat, iunhub
+   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
    USE buffers,              ONLY : get_buffer
    USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum

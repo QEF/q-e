@@ -50,6 +50,9 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   use lr_variables,      ONLY : lr_verbosity
   use control_flags,     only : gamma_only
   USE io_global,         ONLY : stdout
+#if defined(__CUDA)
+  USE cublas
+#endif  
   !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: ikk, ikq   
@@ -71,6 +74,7 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   !else
     inverse_mode = inverse
   !endif
+  !$acc data present_or_copyin(evq(1:npwx*npol,1:nbnd), sevc(1:npwx*npol,1:nbnd)) present_or_copy(dvpsi(1:npwx*npol,1:nbnd))
   !
   IF (gamma_only) THEN
      !
@@ -86,6 +90,8 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
      !
   ENDIF
   !
+  !$acc end data
+  !
   CALL stop_clock ('lr_ortho')
   !
   RETURN
@@ -100,120 +106,148 @@ SUBROUTINE lr_ortho_k()
 
   COMPLEX(DP), ALLOCATABLE :: ps(:,:)
   INTEGER :: ibnd, jbnd, nbnd_eff
-  REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
+  REAL(DP) :: wg1, w0g, wgp, wwg(nbnd), deltae, theta
   REAL(DP), EXTERNAL :: w0gauss, wgauss
 
   ALLOCATE(ps(nbnd,nbnd))
   !
+  !$acc enter data create(ps(:,:))
+  !
   IF (lgauss) THEN
-       !
-       !  metallic case
-       !
-       ps = (0.d0, 0.d0)
-       IF (inverse_mode) THEN
-          CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), ngk(ikk), (1.d0,0.d0), &
-                      sevc, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
-       ELSE
-          CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), ngk(ikk), (1.d0,0.d0), &
-                      evq, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
-       ENDIF
-       !
-       DO ibnd = 1, nbnd_occ (ikk)
-          wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
-          w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
-          DO jbnd = 1, nbnd
-             wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
-             deltae = et (jbnd, ikq) - et (ibnd, ikk)
-             theta = wgauss (deltae / degauss, 0)
-             wwg = wg1 * (1.d0 - theta) + wgp * theta
-             IF (jbnd <= nbnd_occ (ikq) ) THEN
-                IF (abs (deltae) > 1.0d-5) THEN
-                    wwg = wwg + alpha_pv * theta * (wgp - wg1) / deltae
-                ELSE
-                   !
-                   !  if the two energies are too close takes the limit
-                   !  of the 0/0 ratio
-                   !
-                   wwg = wwg - alpha_pv * theta * w0g
-                ENDIF
-             ENDIF
-             !
-             ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
-             !
-          ENDDO
-          CALL DSCAL (2*ngk(ikk), wg1, dvpsi(1,ibnd), 1)
-       ENDDO
-       !
-       nbnd_eff = nbnd
-       !
+     !
+     !  metallic case
+     !
+     !$acc kernels
+     ps(:,:) = (0.d0, 0.d0)
+     !$acc end kernels
+     !
+     !$acc host_data use_device(sevc, evq, dvpsi, ps)
+     !
+     IF (inverse_mode) THEN
+        CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), ngk(ikk), (1.d0,0.d0), &
+                    sevc, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
+     ELSE
+        CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), ngk(ikk), (1.d0,0.d0), &
+                    evq, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
+     ENDIF
+     !
+     !$acc end host_data
+     !
+     DO ibnd = 1, nbnd_occ (ikk)
+        wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
+        w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
+        DO jbnd = 1, nbnd
+           wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
+           deltae = et (jbnd, ikq) - et (ibnd, ikk)
+           theta = wgauss (deltae / degauss, 0)
+           wwg(jbnd) = wg1 * (1.d0 - theta) + wgp * theta
+           IF (jbnd <= nbnd_occ (ikq) ) THEN
+              IF (abs (deltae) > 1.0d-5) THEN
+                 wwg(jbnd) = wwg(jbnd) + alpha_pv * theta * (wgp - wg1) / deltae
+              ELSE
+                 !
+                 !  if the two energies are too close takes the limit
+                 !  of the 0/0 ratio
+                 !
+                 wwg(jbnd) = wwg(jbnd) - alpha_pv * theta * w0g
+              ENDIF
+           ENDIF
+           !
+        ENDDO
+        !
+        !$acc parallel loop copyin(wwg)
+        DO jbnd = 1, nbnd
+           ps(jbnd,ibnd) = wwg(jbnd) * ps(jbnd,ibnd)
+        ENDDO
+        !$acc kernels
+        dvpsi(1:ngk(ikk), ibnd) = wg1 * dvpsi(1:ngk(ikk), ibnd)
+        !$acc end kernels
+     ENDDO
+     !
+     nbnd_eff = nbnd
+     !
   ELSE
-      !
-      !  insulators
-      !
-      ps = (0.d0, 0.d0)
-      !
-      IF (inverse_mode) THEN
-         !
-         ! ps = <sevc|dvpsi>
-         !
-         CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), ngk(ikk), &
-                   (1.d0,0.d0), sevc, npwx, dvpsi, npwx, &
-                   (0.d0,0.d0), ps, nbnd )
-         !
-      ELSE
-         !
-         ! ps = <evq|dvpsi>
-         !
-         CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), ngk(ikk), &
-                   (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
-                   (0.d0,0.d0), ps, nbnd )
-      ENDIF
-      !
-      nbnd_eff = nbnd_occ(ikk)
-      !
+     !
+     !  insulators
+     !
+     !$acc kernels
+     ps(:,:) = (0.d0, 0.d0)
+     !$acc end kernels
+     !
+     !$acc host_data use_device(sevc, evq, dvpsi, ps)
+     !
+     IF (inverse_mode) THEN
+        !
+        ! ps = <sevc|dvpsi>
+        !
+        CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), ngk(ikk), &
+                  (1.d0,0.d0), sevc, npwx, dvpsi, npwx, &
+                  (0.d0,0.d0), ps, nbnd )
+        !
+     ELSE
+        !
+        ! ps = <evq|dvpsi>
+        !
+        CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), ngk(ikk), &
+                  (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
+                  (0.d0,0.d0), ps, nbnd )
+     ENDIF
+     !
+     !$acc end host_data
+     !
+     nbnd_eff = nbnd_occ(ikk)
+     !
   ENDIF
   !
 #if defined(__MPI)
-   CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
+  !$acc host_data use_device(ps) 
+  CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
+  !$acc end host_data
 #endif
   !
+  !$acc host_data use_device(sevc, evq, dvpsi, ps)
+  !
   IF (lgauss) THEN
-      !
-      !  Metallic case
-      !
-      if (inverse_mode) then
-         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd, &
-                   (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
-                   dvpsi, npwx )
-      else
-         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd, &
-                   (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
-                   dvpsi, npwx )
-      endif
-      !
+     !
+     !  Metallic case
+     !
+     if (inverse_mode) then
+        CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd, &
+                  (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
+                  dvpsi, npwx )
+     else
+        CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd, &
+                  (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
+                  dvpsi, npwx )
+     endif
+     !
   ELSE
-      !
-      !  Insulators: note that nbnd_occ(ikk)=nbnd_occ(ikq) in an insulator
-      !
-      if (inverse_mode) then
-         !
-         ! |dvspi> =  |dvpsi> - |evq><sevc|dvpsi>
-         !
-         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
-                   (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
-                   dvpsi, npwx )
-         !
-      else
-         !
-         ! |dvspi> =  |dvpsi> - |sevc><evq|dvpsi>
-         !
-         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
-                   (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
-                   dvpsi, npwx )
-         !
-      endif
-      !
+     !
+     !  Insulators: note that nbnd_occ(ikk)=nbnd_occ(ikq) in an insulator
+     !
+     if (inverse_mode) then
+        !
+        ! |dvspi> =  |dvpsi> - |evq><sevc|dvpsi>
+        !
+        CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
+                  (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
+                  dvpsi, npwx )
+        !
+     else
+        !
+        ! |dvspi> =  |dvpsi> - |sevc><evq|dvpsi>
+        !
+        CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
+                  (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
+                  dvpsi, npwx )
+        !
+     endif
+     !
   ENDIF
+  !
+  !$acc end host_data
+  !
+  !$acc exit data delete(ps)
   !
   DEALLOCATE(ps)
   !
@@ -227,12 +261,12 @@ SUBROUTINE lr_ortho_gamma()
 
   COMPLEX(DP), ALLOCATABLE :: ps_c(:,:)
   REAL(DP), ALLOCATABLE :: ps(:,:)
-  INTEGER :: ibnd, jbnd, nbnd_eff
-  REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
-  REAL(DP), EXTERNAL :: w0gauss, wgauss
+  INTEGER :: nbnd_eff
 
   ALLOCATE(ps(nbnd,nbnd))
   ALLOCATE(ps_c(nbnd,nbnd))
+  !
+  !$acc enter data create(ps(:,:), ps_c(:,:))
   !
   IF (lgauss) THEN
       !
@@ -244,7 +278,11 @@ SUBROUTINE lr_ortho_gamma()
       !
       ! Insulators
       !
-      ps = 0.d0
+      !$acc kernels
+      ps(:,:) = 0.d0
+      !$acc end kernels
+      !
+      !$acc host_data use_device(sevc,evq,dvpsi,ps)
       !
       IF (inverse_mode) THEN
          ! 
@@ -262,9 +300,13 @@ SUBROUTINE lr_ortho_gamma()
          !
       ENDIF
       !
+      !$acc end host_data
+      !
       nbnd_eff = nbnd
       !
       ! G=0 has been accounted twice, therefore we subtruct one contribution.
+      !
+      !$acc host_data use_device(sevc,evq,dvpsi,ps)
       !
       IF (gstart == 2) THEN
          !
@@ -272,28 +314,34 @@ SUBROUTINE lr_ortho_gamma()
             !
             ! ps = ps - <sevc|dvpsi>
             !
-            CALL DGER( nbnd, nbnd, -1.D0, sevc, 2*npwx, dvpsi, 2*npwx, ps, nbnd)
+            CALL MYDGER( nbnd, nbnd, -1.D0, sevc, 2*npwx, dvpsi, 2*npwx, ps, nbnd)
             !
          ELSE
             !
             ! ps = ps - <evq|dvpsi>
             !
-            CALL DGER( nbnd, nbnd, -1.D0, evq, 2*npwx, dvpsi, 2*npwx, ps, nbnd )
+            CALL MYDGER( nbnd, nbnd, -1.D0, evq, 2*npwx, dvpsi, 2*npwx, ps, nbnd )
             !
          ENDIF
          !
       ENDIF
       !
+      !$acc end host_data
+      !
   ENDIF
   !
 #if defined(__MPI)
-   CALL mp_sum(ps(:,:),intra_bgrp_comm)
+  !$acc host_data use_device(ps)
+  CALL mp_sum(ps(:,:),intra_bgrp_comm)
+  !$acc end host_data
 #endif
   !
   ! In the original code dpsi was used as a storage for sevc, since in
   ! tddfpt we have it stored in memory as sevc0 this part is obsolote
   !
-  ps_c = cmplx(ps, 0.d0, dp)
+  !$acc kernels
+  ps_c(:,:) = cmplx(ps(:,:), 0.d0, dp)
+  !$acc end kernels
   !
   IF (lgauss) THEN
       !
@@ -304,6 +352,8 @@ SUBROUTINE lr_ortho_gamma()
   ELSE
      !
      !  Insulators: note that nbnd_occ(ikk) = nbnd_occ(ikq)
+     !
+     !$acc host_data use_device(sevc,evq,dvpsi,ps_c)
      !
      IF (inverse_mode) THEN
         !
@@ -321,7 +371,11 @@ SUBROUTINE lr_ortho_gamma()
         !
      ENDIF
      !
+     !$acc end host_data
+     !
   ENDIF
+  !
+  !$acc exit data delete(ps, ps_c)
   !
   DEALLOCATE(ps)
   DEALLOCATE(ps_c)
@@ -339,21 +393,28 @@ SUBROUTINE lr_ortho_noncolin()
 
   COMPLEX(DP), ALLOCATABLE :: ps(:,:)
   INTEGER :: ibnd, jbnd, nbnd_eff
-  REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
+  REAL(DP) :: wg1, w0g, wgp, wwg(nbnd), deltae, theta
   REAL(DP), EXTERNAL :: w0gauss, wgauss
   
   IF (inverse_mode) CALL errore ('lr_ortho', "The inverse mode is not implemented!",1)
   !
   ALLOCATE(ps(nbnd,nbnd))
   !
+  !$acc enter data create(ps(:,:))
+             
+  !
   IF (lgauss) THEN
        !
        !  metallic case
        !
-       ps = (0.d0, 0.d0)
+       !$acc kernels
+       ps(:,:) = (0.d0, 0.d0)
+       !$acc end kernels
        !
+       !$acc host_data use_device(evq,dvpsi,ps)
        CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npwx*npol, (1.d0,0.d0), &
                     evq, npwx*npol, dvpsi, npwx*npol, (0.d0,0.d0), ps, nbnd )
+       !$acc end host_data
        !
        DO ibnd = 1, nbnd_occ (ikk)
           !
@@ -369,20 +430,26 @@ SUBROUTINE lr_ortho_noncolin()
              !
              IF (jbnd <= nbnd_occ (ikq) ) THEN
                 IF (abs (deltae) > 1.0d-5) THEN
-                    wwg = wwg + alpha_pv * theta * (wgp - wg1) / deltae
+                    wwg(jbnd) = wwg(jbnd) + alpha_pv * theta * (wgp - wg1) / deltae
                 ELSE
                    !
                    !  if the two energies are too close takes the limit
                    !  of the 0/0 ratio
                    !
-                   wwg = wwg - alpha_pv * theta * w0g
+                   wwg(jbnd) = wwg(jbnd) - alpha_pv * theta * w0g
                 ENDIF
              ENDIF
              !
-             ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
-             !
           ENDDO
-             CALL DSCAL (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
+          !
+          !$acc parallel loop copyin(wwg)
+          DO jbnd = 1, nbnd
+             ps(jbnd,ibnd) = wwg(jbnd) * ps(jbnd,ibnd)
+          ENDDO
+          !
+          !$acc kernels
+          dvpsi(1:npwx*npol, ibnd) = wg1 * dvpsi(1:npwx*npol, ibnd)
+          !$acc end kernels
        ENDDO
        !
        nbnd_eff = nbnd
@@ -391,24 +458,32 @@ SUBROUTINE lr_ortho_noncolin()
       !
       !  insulators
       !
-      ps = (0.d0, 0.d0)
+      !$acc kernels
+      ps(:,:) = (0.d0, 0.d0)
+      !$acc end kernels
       !
       ! ps = <evq|dvpsi>
       !
+      !
+      !$acc host_data use_device(evq,dvpsi,ps)
       CALL ZGEMM( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
                 (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, (0.d0,0.d0), ps, nbnd )
+      !$acc end host_data  
       !
       nbnd_eff = nbnd_occ(ikk)
       !
    ENDIF
    !
 #if defined(__MPI)
+   !$acc host_data use_device(ps)
    CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
+   !$acc end host_data
 #endif
    !
    ! In the original dpsi was used as a storage for sevc, since in
    ! tddfpt we have it stored in memory as sevc0 this part is obsolote.
    !
+   !$acc host_data use_device(sevc,dvpsi,ps)
    IF (lgauss) THEN
       !
       !  metallic case
@@ -428,6 +503,9 @@ SUBROUTINE lr_ortho_noncolin()
                 (-1.d0,0.d0),sevc,npwx*npol,ps,nbnd,(1.0d0,0.d0), dvpsi,npwx*npol )
       !
    ENDIF
+   !$acc end host_data
+   !
+   !$acc exit data delete(ps)
    !
    DEALLOCATE(ps)
    !

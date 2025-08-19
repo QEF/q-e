@@ -59,8 +59,13 @@
     !! Mode index
     INTEGER :: ip
     !! REal space index (either nrr_k or nq)
-    COMPLEX(KIND = DP):: aux(nbnd * nbnd * np * nmodes)
+    INTEGER :: ierr
+    !! Error index
+    COMPLEX(KIND = DP), ALLOCATABLE :: aux(:)
     !! 1-D vector to store the matrix elements.
+    !
+    ALLOCATE(aux(nbnd * nbnd * np * nmodes), STAT = ierr)
+    IF (ierr /= 0) CALL errore('rwepmatw', 'Error allocating aux', 1)
     !
     lrec = 2 * nbnd * nbnd * np * nmodes
     !
@@ -107,6 +112,9 @@
       !
     ENDIF
     !
+    DEALLOCATE(aux, STAT = ierr)
+    IF (ierr /= 0) CALL errore('rwepmatw', 'Error deallocating aux', 1)
+    !
     !----------------------------------------------------------------------
     END SUBROUTINE rwepmatw
     !----------------------------------------------------------------------
@@ -120,6 +128,7 @@
     USE kinds,     ONLY : DP
     USE input,     ONLY : nbndsub, eig_read, etf_mem, lifc, lwfpt
     USE pwcom,     ONLY : ef, nelec
+    USE klist,     ONLY : degauss, ngauss
     USE global_var,ONLY : chw, rdw, cdmew, cvmew, chw_ks, zstar, epsi, &
                           epmatwp, crrw, L, do_cutoff_2D_epw, dwmatwe, cpmew, &
                           nbndskip
@@ -193,6 +202,8 @@
       WRITE(crystal,*) do_cutoff_2D_epw
       WRITE(crystal,*) w_centers
       WRITE(crystal,*) L
+      WRITE(crystal,*) degauss
+      WRITE(crystal,*) ngauss
       !
       WRITE(epwdata,*) ef
       WRITE(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
@@ -296,7 +307,7 @@
                           epsi, crrw, dwmatwe, cpmew, epmatwp_dist
     USE ions_base, ONLY : nat
     USE modes,     ONLY : nmodes
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : stdout, ionode_id
     USE io_files,  ONLY : prefix, diropn, tmp_dir
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, &
                           iunepmatwp, iudwwe, iupmwe
@@ -304,14 +315,14 @@
     USE parallelism,      ONLY : para_bounds
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_MODE_RDONLY, MPI_DOUBLE_PRECISION, &
-                                 MPI_STATUS_IGNORE, MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL
+                                 MPI_STATUS_IGNORE, MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
+                                 MPI_DOUBLE_COMPLEX
 #endif
 #if defined(__NAG)
     USE f90_unix_io,ONLY : flush
 #endif
-    USE io_global, ONLY : ionode_id
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : world_comm
+    USE mp_global, ONLY : world_comm, inter_pool_comm
     USE mp_world,  ONLY : mpime
 
     !
@@ -354,10 +365,12 @@
     !! Dummy variable
 #if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_recl
-    !! Record length for parallel reading epmatwp 
+    !! Record length for parallel reading epmatwp
     INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_offset
-#endif
     !! Offset for parallel reading epmatwp 
+    INTEGER :: epmatwp_block_dtype
+    !! MPI block datatype for parallel reading epmatwp
+#endif
     INTEGER :: irn
     !! Mode*WS-vector Index
     INTEGER :: irn_loc
@@ -474,6 +487,15 @@
     ENDIF
     !
     IF (etf_mem == 0) THEN
+      !
+#if defined(__MPI)
+      CALL MPI_TYPE_CONTIGUOUS((nbndsub**2) * nrr_k, MPI_DOUBLE_COMPLEX, epmatwp_block_dtype, ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error creating epmatwp_block_dtype', 1)
+      !
+      CALL MPI_TYPE_COMMIT(epmatwp_block_dtype, ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error commiting epmatwp_block_dtype', 1)
+#endif
+      !
       IF (.NOT. epw_memdist) THEN
         ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g), STAT = ierr)
         IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp', 1)
@@ -501,7 +523,10 @@
           CLOSE(iunepmatwp)
         ENDIF
         !
-        CALL mp_bcast(epmatwp, ionode_id, world_comm)
+#if defined(__MPI)
+        CALL MPI_BCAST(epmatwp, nmodes * nrr_g, epmatwp_block_dtype, ionode_id, world_comm, ierr)
+        IF (ierr /= 0) CALL errore('epw_read', 'Error broadcasting epmatwp', ierr)
+#endif
         !
       ELSE ! epw_memdist
 #if defined(__MPI)
@@ -512,17 +537,12 @@
         CALL para_bounds(ir_start, ir_stop, nrr_g * nmodes)
         nirn_loc = ir_stop - ir_start + 1
         !
-        epmatwp_recl = 2_MPI_OFFSET_KIND * INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
-                                           INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
-                                           INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
-                                           INT(nirn_loc, KIND = MPI_OFFSET_KIND)
-        !
         ALLOCATE(epmatwp_dist(nbndsub, nbndsub, nrr_k, nirn_loc), STAT = ierr)
         IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp_dist', 1)
         epmatwp_dist = czero
         !
         filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp'
-        CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp, ierr)
+        CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp, ierr)
         IF (ierr /= 0) CALL errore('epw_read', 'error in MPI_FILE_OPEN', 1)
         !
         epmatwp_offset = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
@@ -530,13 +550,23 @@
                                     INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
                                     INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
                                     INT(ir_start - 1, KIND = MPI_OFFSET_KIND)
+        !                                    
         CALL MPI_FILE_READ_AT_ALL(iunepmatwp, epmatwp_offset, epmatwp_dist, &
-                                  epmatwp_recl, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+          nirn_loc, epmatwp_block_dtype, MPI_STATUS_IGNORE, ierr)
+        IF (ierr /= 0) CALL errore('epw_read', 'Error reading epmatwp', 1)
+        !
         CALL MPI_FILE_CLOSE(iunepmatwp, ierr)
+        IF (ierr /= 0) CALL errore('epw_read', 'Error closing epmatwp', 1)
 #else
         CALL errore('epw_read', 'Distributed storage of epmatwp can only be used with MPI', 1)
 #endif
       ENDIF ! epw_memdist
+      !
+#if defined(__MPI)
+      CALL MPI_TYPE_FREE(epmatwp_block_dtype, ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error freeing epmatwp_block_dtype', 1)
+#endif
+      !
     ENDIF
     !
     ! Sternheimer and hopping correction matrices are read inside the loop over
@@ -570,7 +600,6 @@
       !
     ENDIF ! lwfpt
     !
-    !CALL mp_barrier(inter_pool_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(epwdata)
       CLOSE(iunvmedata)
@@ -591,9 +620,8 @@
     !! Write Wigner-Seitz data for restarts and third-party codes.
     !!
     USE kinds,     ONLY : DP
-    USE io_files,  ONLY : prefix, tmp_dir
     USE io_global, ONLY : ionode
-    USE mp_world,  ONLY : mpime
+    USE io_var,    ONLY : iuwigner
     !
     IMPLICIT NONE
     !
@@ -614,33 +642,31 @@
     !
     INTEGER :: ir, iw, na
     !! WS-vector, Wannier-function, and atom indices
-    INTEGER :: iuwigner
-    !! File unit
     !
     IF (.NOT. ionode) RETURN
     !
-    OPEN(NEWUNIT=iuwigner, FILE='wigner.fmt', ACTION='write', STATUS='replace')
+    OPEN(UNIT=iuwigner, FILE='wigner.fmt', ACTION='write', STATUS='replace')
     !
-    WRITE (iuwigner, 1) nrr_k, nrr_q, nrr_g, dims, dims2
+    WRITE(iuwigner, 1) nrr_k, nrr_q, nrr_g, dims, dims2
     !
     DO ir = 1, nrr_k
-      WRITE (iuwigner, 2) irvec_k(:, ir), wslen_k(ir)
+      WRITE(iuwigner, 2) irvec_k(:, ir), wslen_k(ir)
       DO iw = 1, dims
-        WRITE (iuwigner, 1) ndegen_k(ir, iw, :)
+        WRITE(iuwigner, 1) ndegen_k(ir, iw, :)
       ENDDO
     ENDDO
     !
     DO ir = 1, nrr_q
-      WRITE (iuwigner, 2) irvec_q(:, ir), wslen_q(ir)
+      WRITE(iuwigner, 2) irvec_q(:, ir), wslen_q(ir)
       DO na = 1, dims2
-        WRITE (iuwigner, 1) ndegen_q(ir, na, :)
+        WRITE(iuwigner, 1) ndegen_q(ir, na, :)
       ENDDO
     ENDDO
     !
     DO ir = 1, nrr_g
-      WRITE (iuwigner, 2) irvec_g(:, ir), wslen_g(ir)
+      WRITE(iuwigner, 2) irvec_g(:, ir), wslen_g(ir)
       DO iw = 1, dims
-        WRITE (iuwigner, 1) ndegen_g(iw, ir, :)
+        WRITE(iuwigner, 1) ndegen_g(iw, ir, :)
       ENDDO
     ENDDO
     !
@@ -661,10 +687,10 @@
     !! Read Wigner-Seitz data during restarts.
     !!
     USE kinds,     ONLY : DP
-    USE io_files,  ONLY : prefix, tmp_dir
     USE io_global, ONLY : ionode, ionode_id
     USE mp,        ONLY : mp_bcast
     USE mp_global, ONLY : world_comm
+    USE io_var,    ONLY : iuwigner
     !
     IMPLICIT NONE
     !
@@ -685,13 +711,13 @@
     !
     INTEGER :: ir, iw, na
     !! WS-vector, Wannier-function, and atom indices
-    INTEGER :: iuwigner, ierr
-    !! File unit and error status
+    INTEGER :: ierr
+    !! Error status
     !
     IF (ionode) THEN
-      OPEN(NEWUNIT=iuwigner, FILE='wigner.fmt', ACTION='read', STATUS='old')
+      OPEN(UNIT=iuwigner, FILE='wigner.fmt', ACTION='read', STATUS='old')
       !
-      READ (iuwigner, *) nrr_k, nrr_q, nrr_g, dims, dims2
+      READ(iuwigner, *) nrr_k, nrr_q, nrr_g, dims, dims2
     ENDIF
     !
     CALL mp_bcast(nrr_k, ionode_id, world_comm)
@@ -721,23 +747,23 @@
     !
     IF (ionode) THEN
       DO ir = 1, nrr_k
-        READ (iuwigner, *) irvec_k(:, ir), wslen_k(ir)
+        READ(iuwigner, *) irvec_k(:, ir), wslen_k(ir)
         DO iw = 1, dims
-          READ (iuwigner, *) ndegen_k(ir, iw, :)
+          READ(iuwigner, *) ndegen_k(ir, iw, :)
         ENDDO
       ENDDO
       !
       DO ir = 1, nrr_q
-        READ (iuwigner, *) irvec_q(:, ir), wslen_q(ir)
+        READ(iuwigner, *) irvec_q(:, ir), wslen_q(ir)
         DO na = 1, dims2
-          READ (iuwigner, *) ndegen_q(ir, na, :)
+          READ(iuwigner, *) ndegen_q(ir, na, :)
         ENDDO
       ENDDO
       !
       DO ir = 1, nrr_g
-        READ (iuwigner, *) irvec_g(:, ir), wslen_g(ir)
+        READ(iuwigner, *) irvec_g(:, ir), wslen_g(ir)
         DO iw = 1, dims
-          READ (iuwigner, *) ndegen_g(iw, ir, :)
+          READ(iuwigner, *) ndegen_g(iw, ir, :)
         ENDDO
       ENDDO
       !
@@ -771,10 +797,9 @@
     USE input,     ONLY : asr_typ, dvscf_dir, nqc1, nqc2, nqc3
     USE ions_base, ONLY : nat
     USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : stdout, ionode_id
     USE io_var,    ONLY : iunifc
     USE noncollin_module, ONLY : nspin_mag
-    USE io_global, ONLY : ionode_id
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
     USE mp_world,  ONLY : mpime, world_comm
@@ -924,8 +949,7 @@
         DO j = 1, 3
           DO na = 1, nat
             DO nb = 1, nat
-              CALL mp_bcast(ifc(:, :, :, i, j, na, nb), ionode_id, inter_pool_comm)
-              CALL mp_bcast(ifc(:, :, :, i, j, na, nb), root_pool, intra_pool_comm)
+              CALL mp_bcast(ifc(:, :, :, i, j, na, nb), ionode_id, world_comm)
             ENDDO
           ENDDO
         ENDDO
@@ -2241,22 +2265,22 @@
     use io_files,         ONLY : prefix
     USE cell_base,        ONLY : ibrav, celldm, omega, at, bg
     USE ions_base,        ONLY : amass, tau, nat, ntyp => nsp, ityp
-    USE global_var,       ONLY : dynq, zstar, epsi
+    USE global_var,       ONLY : dynq, zstar, epsi, wf_temp
     USE symm_base,        ONLY : nsym
-    USE input,            ONLY : dvscf_dir, lpolar, nqc1, nqc2, nqc3
+    USE input,            ONLY : dvscf_dir, lpolar, nqc1, nqc2, nqc3, exciton
     USE modes,            ONLY : nmodes
     USE control_flags,    ONLY : iverbosity
     USE noncollin_module, ONLY : nspin_mag
     USE io_global,        ONLY : ionode, stdout, ionode_id, meta_ionode_id
-    USE ep_constants,         ONLY : cone, czero, twopi, rydcm1, eps6, zero
+    USE ep_constants,     ONLY : cone, czero, twopi, rydcm1, eps6, zero
     USE io_var,           ONLY : iudyn
-    !USE bloch2wann2r,     ONLY : dynifc2blochc
     USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
     USE io_dyn_mat,       ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                                  read_dyn_mat, read_dyn_mat_tail
     USE mp_world,         ONLY : mpime
     USE mp_global,        ONLY : world_comm
     USE mp,               ONLY : mp_bcast
+    USE rigid,            ONLY : cdiagh2
     !
     IMPLICIT NONE
     !
@@ -2297,22 +2321,18 @@
     !!
     LOGICAL :: is_xml_file
     !! Is the file XML
-    CHARACTER(LEN = 3) :: atm
-    !!
+    CHARACTER(LEN = 3), ALLOCATABLE :: atm(:)
+    !! dummy variable for atom types when xml is used
+    CHARACTER(LEN = 3) :: atm_
+    !! dummy variable for atom types when xml is not used
     CHARACTER(LEN = 4) :: filelab
     !!
     CHARACTER(LEN = 80) :: line
     !!
     CHARACTER(LEN = 256) :: tempfile
     !!
-    INTEGER :: neig
-    !! The total number of eigenvalues found
     INTEGER :: info
     !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
-    INTEGER :: ifail(nmodes)
-    !! Contains the indices of the eigenvectors that failed to converge
-    INTEGER :: iwork(5 * nmodes)
-    !! Integer work array
     INTEGER :: isym
     !! Symmetry number
     INTEGER :: m1, m2, m3
@@ -2369,8 +2389,6 @@
     !!
     INTEGER, PARAMETER :: nrwsx = 200
     !!
-    REAL(KIND = DP) :: rwork(7 * nmodes)
-    !! Real work array
     REAL(KIND = DP) :: arg
     !!
     REAL(KIND = DP) :: aq(3)
@@ -2419,15 +2437,11 @@
     !!
     COMPLEX(KIND = DP) :: cfac
     !!
-    COMPLEX(KIND = DP) :: cwork(2 * nmodes)
-    !! Complex work array
     COMPLEX(KIND = DP) :: gamma(nmodes, nmodes)
     !! the Gamma matrix for the symmetry operation on the dyn mat
     COMPLEX(KIND = DP) :: dynq_tmp(nmodes, nmodes)
     !!
     COMPLEX(KIND = DP) :: cz1(nmodes, nmodes)
-    !!
-    COMPLEX(KIND = DP) :: dynp(nmodes * (nmodes + 1) / 2)
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: dyn(:, :, :, :) ! 3,3,nat,nat
     !! Dynamical matrix
@@ -2449,11 +2463,20 @@
       CALL read_dyn_mat_param(tempfile, ntyp, nat)
       ALLOCATE(m_loc(3, nat), STAT = ierr)
       IF (ierr /= 0) CALL errore('dynmat', 'Error allocating m_loc', 1)
-      ALLOCATE(dchi_dtau(3, 3, 3,nat), STAT = ierr)
+      ALLOCATE(atm(ntyp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error allocating atm', 1)
+      ALLOCATE(dchi_dtau(3, 3, 3, nat), STAT = ierr)
       IF (ierr /= 0) CALL errore('dynmat', 'Error allocating dchi_dtau', 1)
       CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
               celldm, at, bg, omega, atm, amass2, tau, ityp, &
               m_loc, nqs, lrigid, epsi_, zstar_, lraman, dchi_dtau)
+      DEALLOCATE(m_loc, STAT = ierr)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error deallocating m_loc', 1)
+      DEALLOCATE(atm, STAT = ierr)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error deallocating atm', 1)
+      DEALLOCATE(dchi_dtau, STAT = ierr)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error deallocating dchi_dtau', 1)
+      !
       ALLOCATE(dyn(3, 3, nat, nat), STAT = ierr)
       IF (ierr /= 0) CALL errore('dynmat', 'Error allocating dyn', 1)
       IF (ionode) THEN
@@ -2579,7 +2602,7 @@
           ENDDO
         ENDIF
         DO nt = 1, ntyp
-          READ(iudyn, *) i, atm, amass_
+          READ(iudyn, *) i, atm_, amass_
           IF (nt /=i .OR. ABS(amass_ - amass(nt))  > 1.0d-2) THEN
             WRITE(stdout,*) amass_, amass(nt)
             CALL errore('dynmat_asr', 'inconsistent data', 1)
@@ -2868,13 +2891,12 @@
         !
         DO jmode = 1, nmodes
           DO imode = 1, jmode
-             dynp(imode + (jmode - 1) * jmode / 2) = &
-                 (dynq_tmp(imode, jmode) + CONJG(dynq_tmp(jmode, imode))) / 2.d0
+            dynq_tmp(imode, jmode) = &
+              (dynq_tmp(imode, jmode) + CONJG(dynq_tmp(jmode, imode))) / 2.d0
           ENDDO
         ENDDO
         !
-        CALL ZHPEVX('V', 'A', 'U', nmodes, dynp, 0.0, 0.0, 0, 0, -1.0, neig, w1, cz1, nmodes, cwork, &
-                   rwork, iwork, ifail, info)
+        CALL cdiagh2(nmodes, dynq_tmp, nmodes, w1, cz1)
         !
         DO nu = 1, nmodes
           IF (w1(nu) > 0.d0) THEN
@@ -2886,6 +2908,37 @@
         WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^-1)")')
         WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
       ENDIF
+    ! ZD: Save eigenfrequencies for ex-ph calculations
+      IF (exciton) THEN
+        DO na = 1, nat
+          DO nb = 1, nat
+            massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)))
+            dynq_tmp(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
+            dynq(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb, current_iq) * massfac
+          END DO
+        END DO
+        !
+        DO jmode = 1, nmodes
+          DO imode = 1, jmode
+            dynq_tmp(imode, jmode) = &
+              (dynq_tmp(imode, jmode) + CONJG(dynq_tmp(jmode, imode))) / 2.d0
+          ENDDO
+        ENDDO
+        !
+        CALL cdiagh2(nmodes, dynq_tmp, nmodes, w1, cz1)
+        !
+        DO nu = 1, nmodes
+          IF (w1(nu) > 0.d0) THEN
+            wf_temp(nu,iq) =  DSQRT(ABS(w1(nu)))
+          ELSE
+            wf_temp(nu,iq) = -DSQRT(ABS(w1(nu)))
+          ENDIF
+        ENDDO
+        ! WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^-1)")')
+        ! WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
+        !
+      ENDIF
+      !
       !END --------------------------------------------------
       current_iq = current_iq + 1
       !

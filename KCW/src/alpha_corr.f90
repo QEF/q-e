@@ -88,6 +88,7 @@ SUBROUTINE alpha_corr ( iwann, delta)
       USE scf,                   ONLY : rho, rho_core, rhog_core
       USE fft_base,              ONLY : dffts
       USE fft_interfaces,        ONLY : fwfft
+      USE fft_wave,              ONLY : invfft_wave
       USE lsda_mod,              ONLY : nspin, isk, lsda
       USE klist,                 ONLY : nkstot, ngk, igk_k, nks
       USE control_kcw,           ONLY : evc0, iuwfc_wann, num_wann, spin_component, nqstot, iurho_wann,&
@@ -143,7 +144,7 @@ SUBROUTINE alpha_corr ( iwann, delta)
         !evc_g(:) =  evc(:,iwann)
         !
         evc_r(:,:) = ZERO
-        CALL invfft_wave (npw, igk_k (1,ik), evc_g , evc_r )
+        CALL invfft_wave (npwx, npw, igk_k (1,ik), evc_g , evc_r )
         !! The wfc in R-space at k
         IF (nspin_mag==2) THEN
             eig_k = sum ( vxc(:,spin_component) * evc_r(:,1) * CONJG(evc_r(:,1) ) ) !check the (:,->1)

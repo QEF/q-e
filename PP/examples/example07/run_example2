@@ -1,0 +1,598 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use Wannier90 to generate WFs as Hubbard projectors for
+$ECHO  DFT+U calculation on MnO. Read file README for more details"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw2wannier90.x wannier2pw.x wannier90.x"
+PSEUDO_LIST="Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF O.pbesol-n-rrkjus_psl.1.0.0.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PW2WANNIER90="$PARA_PREFIX $BIN_DIR/pw2wannier90.x $PARA_POSTFIX"
+WANNIER2PW="$PARA_PREFIX $BIN_DIR/wannier2pw.x $PARA_POSTFIX"
+WANNIER90="$BIN_DIR/wannier90.x"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running pw2wannier90.x as: $PW2WANNIER90"
+$ECHO "  running wannier2pw.x as: $WANNIER2PW"
+$ECHO "  running wannier90.x as: $WANNIER90"
+$ECHO
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+
+# 1) self-consistent calculation with standard PBEsol
+cat > MnO.scf.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='MnO',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 0,
+    celldm(1) = 7.88,
+    nat = 4,
+    ntyp = 3,
+    ecutwfc = 50.0,
+    ecutrho = 500.0,
+    occupations = 'smearing',
+    smearing = 'gauss',
+    degauss = 0.01,
+    nspin=2,
+    starting_magnetization(1) =  0.5,
+    starting_magnetization(2) = -0.5,
+ /
+ &electrons
+    mixing_beta = 0.3
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ Mn1  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ Mn2  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ O    15.999  O.pbesol-n-rrkjus_psl.1.0.0.UPF
+ATOMIC_POSITIONS {alat}
+Mn1             -0.0000000000        0.0000000000        0.0000000000
+Mn2              0.5227536359        0.5227536359       -0.0071351948
+O                0.5263212717       -0.0035675591       -0.0035675591
+O                1.0490748311        0.5191860001       -0.0107028305
+CELL_PARAMETERS {alat}
+   1.045507271   0.515618443   0.515618443
+   0.515618443   1.045507271   0.515618443
+   0.515618443   0.515618443   1.045507271
+K_POINTS {automatic}
+4 4 4 0 0 0
+HUBBARD {ortho-atomic}
+U Mn1-3d 1.d-10
+U Mn2-3d 1.d-10
+EOF
+$ECHO "  Running scf for MnO using PBEsol...\c"
+$PW_COMMAND < MnO.scf.in > MnO.scf.out
+$ECHO " done"
+
+
+# 2) non-self-consistent calculation with standard PBEsol
+cat > MnO.nscf.in << EOF
+ &control
+    calculation = 'nscf'
+    restart_mode='from_scratch',
+    prefix='MnO',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    verbosity = 'high'
+ /
+ &system
+    ibrav = 0,
+    celldm(1) = 7.88,
+    nat = 4,
+    ntyp = 3,
+    ecutwfc = 50.0,
+    ecutrho = 500.0,
+    occupations = 'smearing',
+    smearing = 'gauss',
+    degauss = 0.01,
+    nspin=2,
+    starting_magnetization(1) =  0.5,
+    starting_magnetization(2) = -0.5,
+    nosym = .true.
+    noinv = .true.
+    nbnd = 36
+ /
+ &electrons
+    mixing_beta = 0.3
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ Mn1  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ Mn2  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ O    15.999  O.pbesol-n-rrkjus_psl.1.0.0.UPF
+ATOMIC_POSITIONS {alat}
+Mn1             -0.0000000000        0.0000000000        0.0000000000
+Mn2              0.5227536359        0.5227536359       -0.0071351948
+O                0.5263212717       -0.0035675591       -0.0035675591
+O                1.0490748311        0.5191860001       -0.0107028305
+CELL_PARAMETERS {alat}
+   1.045507271   0.515618443   0.515618443
+   0.515618443   1.045507271   0.515618443
+   0.515618443   0.515618443   1.045507271
+K_POINTS {crystal}
+64
+  0.00000000  0.00000000  0.00000000  1.562500e-02
+  0.00000000  0.00000000  0.25000000  1.562500e-02
+  0.00000000  0.00000000  0.50000000  1.562500e-02
+  0.00000000  0.00000000  0.75000000  1.562500e-02
+  0.00000000  0.25000000  0.00000000  1.562500e-02
+  0.00000000  0.25000000  0.25000000  1.562500e-02
+  0.00000000  0.25000000  0.50000000  1.562500e-02
+  0.00000000  0.25000000  0.75000000  1.562500e-02
+  0.00000000  0.50000000  0.00000000  1.562500e-02
+  0.00000000  0.50000000  0.25000000  1.562500e-02
+  0.00000000  0.50000000  0.50000000  1.562500e-02
+  0.00000000  0.50000000  0.75000000  1.562500e-02
+  0.00000000  0.75000000  0.00000000  1.562500e-02
+  0.00000000  0.75000000  0.25000000  1.562500e-02
+  0.00000000  0.75000000  0.50000000  1.562500e-02
+  0.00000000  0.75000000  0.75000000  1.562500e-02
+  0.25000000  0.00000000  0.00000000  1.562500e-02
+  0.25000000  0.00000000  0.25000000  1.562500e-02
+  0.25000000  0.00000000  0.50000000  1.562500e-02
+  0.25000000  0.00000000  0.75000000  1.562500e-02
+  0.25000000  0.25000000  0.00000000  1.562500e-02
+  0.25000000  0.25000000  0.25000000  1.562500e-02
+  0.25000000  0.25000000  0.50000000  1.562500e-02
+  0.25000000  0.25000000  0.75000000  1.562500e-02
+  0.25000000  0.50000000  0.00000000  1.562500e-02
+  0.25000000  0.50000000  0.25000000  1.562500e-02
+  0.25000000  0.50000000  0.50000000  1.562500e-02
+  0.25000000  0.50000000  0.75000000  1.562500e-02
+  0.25000000  0.75000000  0.00000000  1.562500e-02
+  0.25000000  0.75000000  0.25000000  1.562500e-02
+  0.25000000  0.75000000  0.50000000  1.562500e-02
+  0.25000000  0.75000000  0.75000000  1.562500e-02
+  0.50000000  0.00000000  0.00000000  1.562500e-02
+  0.50000000  0.00000000  0.25000000  1.562500e-02
+  0.50000000  0.00000000  0.50000000  1.562500e-02
+  0.50000000  0.00000000  0.75000000  1.562500e-02
+  0.50000000  0.25000000  0.00000000  1.562500e-02
+  0.50000000  0.25000000  0.25000000  1.562500e-02
+  0.50000000  0.25000000  0.50000000  1.562500e-02
+  0.50000000  0.25000000  0.75000000  1.562500e-02
+  0.50000000  0.50000000  0.00000000  1.562500e-02
+  0.50000000  0.50000000  0.25000000  1.562500e-02
+  0.50000000  0.50000000  0.50000000  1.562500e-02
+  0.50000000  0.50000000  0.75000000  1.562500e-02
+  0.50000000  0.75000000  0.00000000  1.562500e-02
+  0.50000000  0.75000000  0.25000000  1.562500e-02
+  0.50000000  0.75000000  0.50000000  1.562500e-02
+  0.50000000  0.75000000  0.75000000  1.562500e-02
+  0.75000000  0.00000000  0.00000000  1.562500e-02
+  0.75000000  0.00000000  0.25000000  1.562500e-02
+  0.75000000  0.00000000  0.50000000  1.562500e-02
+  0.75000000  0.00000000  0.75000000  1.562500e-02
+  0.75000000  0.25000000  0.00000000  1.562500e-02
+  0.75000000  0.25000000  0.25000000  1.562500e-02
+  0.75000000  0.25000000  0.50000000  1.562500e-02
+  0.75000000  0.25000000  0.75000000  1.562500e-02
+  0.75000000  0.50000000  0.00000000  1.562500e-02
+  0.75000000  0.50000000  0.25000000  1.562500e-02
+  0.75000000  0.50000000  0.50000000  1.562500e-02
+  0.75000000  0.50000000  0.75000000  1.562500e-02
+  0.75000000  0.75000000  0.00000000  1.562500e-02
+  0.75000000  0.75000000  0.25000000  1.562500e-02
+  0.75000000  0.75000000  0.50000000  1.562500e-02
+  0.75000000  0.75000000  0.75000000  1.562500e-02
+HUBBARD {ortho-atomic}
+U Mn1-3d 1.d-10
+U Mn2-3d 1.d-10
+EOF
+$ECHO "  Running nscf for MnO using PBEsol...\c"
+$PW_COMMAND < MnO.nscf.in > MnO.nscf.out
+$ECHO " done"
+
+
+# 3) Wannierization using Wannier90 (pre-processing)
+# Spin up component
+cat > MnO_up.win << EOF
+ conv_window = 3
+ num_iter = 0
+ iprint = 1
+ kmesh_tol = 1e-4
+
+Begin Projections
+Mn:s;d
+O:p
+End Projections
+
+ dis_num_iter = 2000
+ dis_mix_ratio = 1.0
+
+ exclude_bands : 1-10
+
+ num_wann  = 18
+ num_bands = 26
+
+ dis_win_min =  5.0
+ dis_win_max = 35.0 
+ dis_froz_min=  5.0
+ dis_froz_max= 18.0
+
+ write_u_matrices = true
+
+Begin Unit_Cell_Cart
+Bohr
+8.23859516  4.06306984  4.06306984
+4.06306984  8.23859516  4.06306984
+4.06306984  4.06306984  8.23859516
+End Unit_Cell_Cart
+
+Begin Atoms_frac
+ Mn  0.00   0.00   0.00
+ Mn  0.50   0.50  -0.50
+ O   0.75  -0.25  -0.25
+ O   1.25   0.25  -0.75
+End Atoms_frac
+
+mp_grid = 4 4 4
+
+Begin Kpoints
+  0.00000000  0.00000000  0.00000000
+  0.00000000  0.00000000  0.25000000
+  0.00000000  0.00000000  0.50000000
+  0.00000000  0.00000000  0.75000000
+  0.00000000  0.25000000  0.00000000
+  0.00000000  0.25000000  0.25000000
+  0.00000000  0.25000000  0.50000000
+  0.00000000  0.25000000  0.75000000
+  0.00000000  0.50000000  0.00000000
+  0.00000000  0.50000000  0.25000000
+  0.00000000  0.50000000  0.50000000
+  0.00000000  0.50000000  0.75000000
+  0.00000000  0.75000000  0.00000000
+  0.00000000  0.75000000  0.25000000
+  0.00000000  0.75000000  0.50000000
+  0.00000000  0.75000000  0.75000000
+  0.25000000  0.00000000  0.00000000
+  0.25000000  0.00000000  0.25000000
+  0.25000000  0.00000000  0.50000000
+  0.25000000  0.00000000  0.75000000
+  0.25000000  0.25000000  0.00000000
+  0.25000000  0.25000000  0.25000000
+  0.25000000  0.25000000  0.50000000
+  0.25000000  0.25000000  0.75000000
+  0.25000000  0.50000000  0.00000000
+  0.25000000  0.50000000  0.25000000
+  0.25000000  0.50000000  0.50000000
+  0.25000000  0.50000000  0.75000000
+  0.25000000  0.75000000  0.00000000
+  0.25000000  0.75000000  0.25000000
+  0.25000000  0.75000000  0.50000000
+  0.25000000  0.75000000  0.75000000
+  0.50000000  0.00000000  0.00000000
+  0.50000000  0.00000000  0.25000000
+  0.50000000  0.00000000  0.50000000
+  0.50000000  0.00000000  0.75000000
+  0.50000000  0.25000000  0.00000000
+  0.50000000  0.25000000  0.25000000
+  0.50000000  0.25000000  0.50000000
+  0.50000000  0.25000000  0.75000000
+  0.50000000  0.50000000  0.00000000
+  0.50000000  0.50000000  0.25000000
+  0.50000000  0.50000000  0.50000000
+  0.50000000  0.50000000  0.75000000
+  0.50000000  0.75000000  0.00000000
+  0.50000000  0.75000000  0.25000000
+  0.50000000  0.75000000  0.50000000
+  0.50000000  0.75000000  0.75000000
+  0.75000000  0.00000000  0.00000000
+  0.75000000  0.00000000  0.25000000
+  0.75000000  0.00000000  0.50000000
+  0.75000000  0.00000000  0.75000000
+  0.75000000  0.25000000  0.00000000
+  0.75000000  0.25000000  0.25000000
+  0.75000000  0.25000000  0.50000000
+  0.75000000  0.25000000  0.75000000
+  0.75000000  0.50000000  0.00000000
+  0.75000000  0.50000000  0.25000000
+  0.75000000  0.50000000  0.50000000
+  0.75000000  0.50000000  0.75000000
+  0.75000000  0.75000000  0.00000000
+  0.75000000  0.75000000  0.25000000
+  0.75000000  0.75000000  0.50000000
+  0.75000000  0.75000000  0.75000000
+End Kpoints
+
+ bands_plot= true
+ bands_num_points = 75
+begin kpoint_path
+Γ 0.0000000000  0.0000000000    0.0000000000   X 0.5000000000   0.0000000000    0.5000000000
+X 0.5000000000  0.0000000000    0.5000000000   U 0.6250000000   0.2500000000    0.6250000000
+U 0.6250000000  0.2500000000    0.6250000000   K 0.3750000000   0.3750000000    0.7500000000
+K 0.3750000000  0.3750000000    0.7500000000   Γ 0.0000000000   0.0000000000    0.0000000000
+Γ 0.0000000000  0.0000000000    0.0000000000   L 0.5000000000   0.5000000000    0.5000000000
+L 0.5000000000  0.5000000000    0.5000000000   W 0.5000000000   0.2500000000    0.7500000000
+W 0.5000000000  0.2500000000    0.7500000000   X 0.5000000000   0.0000000000    0.5000000000
+end kpoint_path
+EOF
+$ECHO "  Running the Wannierization for MnO (spin up)...\c"
+$WANNIER90 -pp MnO_up
+$ECHO " done"
+
+# Spin down component
+cp MnO_up.win MnO_down.win
+$ECHO "  Running the Wannierization for MnO (spin down)...\c"
+$WANNIER90 -pp MnO_down
+$ECHO " done"
+
+# 4) pw2wannier90 to compute Mmn and Amn matrices
+# Spin up component
+cat > MnO_up.pw2wan.in << EOF
+ &INPUTPP
+   prefix = 'MnO'
+   outdir = '$TMP_DIR/',
+   seedname = 'MnO_up',
+   spin_component = 'up'
+   write_mmn  = .true.
+   write_amn  = .true.
+ /
+EOF
+$ECHO "  Running pw2wannier90 for MnO (spin up)...\c"
+$PW2WANNIER90 < MnO_up.pw2wan.in > MnO_up.pw2wan.out
+$ECHO " done"
+
+# Spin down component
+cat > MnO_down.pw2wan.in << EOF
+ &INPUTPP
+   prefix = 'MnO'
+   outdir = '$TMP_DIR/',
+   seedname = 'MnO_down',
+   spin_component = 'down'
+   write_mmn  = .true.
+   write_amn  = .true.
+ /
+EOF
+$ECHO "  Running pw2wannier90 for MnO (spin down)...\c"
+$PW2WANNIER90 < MnO_down.pw2wan.in > MnO_down.pw2wan.out
+$ECHO " done"
+
+
+# 5) Wannierization using Wannier90
+$ECHO "  Running the Wannierization for MnO (spin up)...\c"
+$WANNIER90 MnO_up
+$ECHO " done"
+$ECHO "  Running the Wannierization for MnO (spin down)...\c"
+$WANNIER90 MnO_down
+$ECHO " done"
+
+# 6) Using wannier2pw to build the Hubbard projectors for DFT+U
+# Spin up component
+cat > MnO_up.wan2pw.in << EOF
+ &INPUTPP
+   prefix = 'MnO'
+   outdir = '$TMP_DIR/',
+   seedname = 'MnO_up',
+   hubbard = .true.
+   spin_component = 'up'
+   exclude_ks_bands = 10
+   wan2hub(2)  = .true.
+   wan2hub(3)  = .true.
+   wan2hub(4)  = .true.
+   wan2hub(5)  = .true.
+   wan2hub(6)  = .true.
+   wan2hub(8)  = .true.
+   wan2hub(9)  = .true.
+   wan2hub(10) = .true.
+   wan2hub(11) = .true.
+   wan2hub(12) = .true.
+ /
+EOF
+$ECHO "  Running wannier2pw for MnO (spin up)...\c"
+$WANNIER2PW < MnO_up.wan2pw.in > MnO_up.wan2pw.out
+$ECHO " done"
+
+# Spin down component
+cat > MnO_down.wan2pw.in << EOF
+ &INPUTPP
+   prefix = 'MnO'
+   outdir = '$TMP_DIR/',
+   seedname = 'MnO_down',
+   hubbard = .true.
+   spin_component = 'down'
+   exclude_ks_bands = 10
+   wan2hub(2)  = .true.
+   wan2hub(3)  = .true.
+   wan2hub(4)  = .true.
+   wan2hub(5)  = .true.
+   wan2hub(6)  = .true.
+   wan2hub(8)  = .true.
+   wan2hub(9)  = .true.
+   wan2hub(10) = .true.
+   wan2hub(11) = .true.
+   wan2hub(12) = .true.
+ /
+EOF
+$ECHO "  Running wannier2pw for MnO (spin down)...\c"
+$WANNIER2PW < MnO_down.wan2pw.in > MnO_down.wan2pw.out
+$ECHO " done"
+
+# 7) Self-consistent calculation using PBEsol+U with WFs
+cat > MnO.scf-wan.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='MnO',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    verbosity = 'high'
+ /
+ &system
+    ibrav = 0,
+    celldm(1) = 7.88,
+    nat = 4,
+    ntyp = 3,
+    ecutwfc = 50.0,
+    ecutrho = 500.0,
+    occupations = 'smearing',
+    smearing = 'gauss',
+    degauss = 0.01,
+    nspin=2,
+    starting_magnetization(1) =  0.5,
+    starting_magnetization(2) = -0.5,
+    nosym = .true.
+    noinv = .true.
+    nbnd = 36
+ /
+ &electrons
+    mixing_beta = 0.3
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ Mn1  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ Mn2  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ O    15.999  O.pbesol-n-rrkjus_psl.1.0.0.UPF
+ATOMIC_POSITIONS {alat}
+Mn1             -0.0000000000        0.0000000000        0.0000000000
+Mn2              0.5227536359        0.5227536359       -0.0071351948
+O                0.5263212717       -0.0035675591       -0.0035675591
+O                1.0490748311        0.5191860001       -0.0107028305
+CELL_PARAMETERS {alat}
+   1.045507271   0.515618443   0.515618443
+   0.515618443   1.045507271   0.515618443
+   0.515618443   0.515618443   1.045507271
+K_POINTS {crystal}
+64
+  0.00000000  0.00000000  0.00000000  1.562500e-02
+  0.00000000  0.00000000  0.25000000  1.562500e-02
+  0.00000000  0.00000000  0.50000000  1.562500e-02
+  0.00000000  0.00000000  0.75000000  1.562500e-02
+  0.00000000  0.25000000  0.00000000  1.562500e-02
+  0.00000000  0.25000000  0.25000000  1.562500e-02
+  0.00000000  0.25000000  0.50000000  1.562500e-02
+  0.00000000  0.25000000  0.75000000  1.562500e-02
+  0.00000000  0.50000000  0.00000000  1.562500e-02
+  0.00000000  0.50000000  0.25000000  1.562500e-02
+  0.00000000  0.50000000  0.50000000  1.562500e-02
+  0.00000000  0.50000000  0.75000000  1.562500e-02
+  0.00000000  0.75000000  0.00000000  1.562500e-02
+  0.00000000  0.75000000  0.25000000  1.562500e-02
+  0.00000000  0.75000000  0.50000000  1.562500e-02
+  0.00000000  0.75000000  0.75000000  1.562500e-02
+  0.25000000  0.00000000  0.00000000  1.562500e-02
+  0.25000000  0.00000000  0.25000000  1.562500e-02
+  0.25000000  0.00000000  0.50000000  1.562500e-02
+  0.25000000  0.00000000  0.75000000  1.562500e-02
+  0.25000000  0.25000000  0.00000000  1.562500e-02
+  0.25000000  0.25000000  0.25000000  1.562500e-02
+  0.25000000  0.25000000  0.50000000  1.562500e-02
+  0.25000000  0.25000000  0.75000000  1.562500e-02
+  0.25000000  0.50000000  0.00000000  1.562500e-02
+  0.25000000  0.50000000  0.25000000  1.562500e-02
+  0.25000000  0.50000000  0.50000000  1.562500e-02
+  0.25000000  0.50000000  0.75000000  1.562500e-02
+  0.25000000  0.75000000  0.00000000  1.562500e-02
+  0.25000000  0.75000000  0.25000000  1.562500e-02
+  0.25000000  0.75000000  0.50000000  1.562500e-02
+  0.25000000  0.75000000  0.75000000  1.562500e-02
+  0.50000000  0.00000000  0.00000000  1.562500e-02
+  0.50000000  0.00000000  0.25000000  1.562500e-02
+  0.50000000  0.00000000  0.50000000  1.562500e-02
+  0.50000000  0.00000000  0.75000000  1.562500e-02
+  0.50000000  0.25000000  0.00000000  1.562500e-02
+  0.50000000  0.25000000  0.25000000  1.562500e-02
+  0.50000000  0.25000000  0.50000000  1.562500e-02
+  0.50000000  0.25000000  0.75000000  1.562500e-02
+  0.50000000  0.50000000  0.00000000  1.562500e-02
+  0.50000000  0.50000000  0.25000000  1.562500e-02
+  0.50000000  0.50000000  0.50000000  1.562500e-02
+  0.50000000  0.50000000  0.75000000  1.562500e-02
+  0.50000000  0.75000000  0.00000000  1.562500e-02
+  0.50000000  0.75000000  0.25000000  1.562500e-02
+  0.50000000  0.75000000  0.50000000  1.562500e-02
+  0.50000000  0.75000000  0.75000000  1.562500e-02
+  0.75000000  0.00000000  0.00000000  1.562500e-02
+  0.75000000  0.00000000  0.25000000  1.562500e-02
+  0.75000000  0.00000000  0.50000000  1.562500e-02
+  0.75000000  0.00000000  0.75000000  1.562500e-02
+  0.75000000  0.25000000  0.00000000  1.562500e-02
+  0.75000000  0.25000000  0.25000000  1.562500e-02
+  0.75000000  0.25000000  0.50000000  1.562500e-02
+  0.75000000  0.25000000  0.75000000  1.562500e-02
+  0.75000000  0.50000000  0.00000000  1.562500e-02
+  0.75000000  0.50000000  0.25000000  1.562500e-02
+  0.75000000  0.50000000  0.50000000  1.562500e-02
+  0.75000000  0.50000000  0.75000000  1.562500e-02
+  0.75000000  0.75000000  0.00000000  1.562500e-02
+  0.75000000  0.75000000  0.25000000  1.562500e-02
+  0.75000000  0.75000000  0.50000000  1.562500e-02
+  0.75000000  0.75000000  0.75000000  1.562500e-02
+HUBBARD {wf}
+U Mn1-3d 5.0
+U Mn2-3d 5.0
+EOF
+$ECHO "  Running scf for MnO using PBEsol+U with WFs...\c"
+$PW_COMMAND < MnO.scf-wan.in > MnO.scf-wan.out
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

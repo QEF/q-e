@@ -233,6 +233,8 @@ SUBROUTINE compute_optical_spectrum()
        ipol = 1
      ENDIF
      !
+     n_op = 3
+     !
      ! Polarization symmetry
      !
      IF ( .not. sym_op == 0 ) THEN
@@ -271,7 +273,7 @@ SUBROUTINE compute_optical_spectrum()
      !
      ALLOCATE(beta_store(n_ipol,itermax))
      ALLOCATE(gamma_store(n_ipol,itermax))
-     ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
+     ALLOCATE(zeta_store(n_ipol,n_op,itermax))
      !
      ALLOCATE(a(itermax))
      ALLOCATE(b(itermax-1))
@@ -637,69 +639,69 @@ SUBROUTINE compute_optical_spectrum()
      !------------------------------------------------------------------------!
      !
      IF (allocated(perceived_intensity)) THEN
-       WRITE(stdout,'(5x,"Perceived color analysis is experimental")')
-       perceived_intensity(:)=perceived_intensity(:)/perceived_renorm
-       perceived_intensity(:)=1.0d0-perceived_intensity(:) !inverse spectrum
-       filename = trim(prefix) // "-spectra.ppm"
-       OPEN(UNIT=20,FILE=filename,STATUS='UNKNOWN')
-       WRITE(20, '(A2)') 'P6'
-       WRITE(20, '(I0,'' '',I0)') perceived_itermax, int(perceived_itermax/8)
-       WRITE(20, '(A)') '255'
-       DO j=1, int(perceived_itermax/8)
-       DO i=1,perceived_itermax
-        IF (perceived_evaluated(i)<0.0d0) THEN
-          WRITE(20, '(3A1)', advance='no') achar(0), achar(0), achar(0)
-         ELSE
-          wl=91.1266519/perceived_evaluated(i) !hc/hbar.omega=lambda (hbar.omega in rydberg units)
-          !
-          !WARNING alpha_temp duty change: now contains R G and B
-          !
-          CALL wl_to_color(wl,alpha_temp(1),alpha_temp(2),alpha_temp(3))
-          !Now the intensities
-          !First the degradation toward the end
-          IF (wl >700) THEN
-            scale=.3+.7* (780.-wl)/(780.-700.)
-          ELSEIF (wl<420.) THEN
-            scale=.3+.7*(wl-380.)/(420.-380.)
-         ELSE
-            scale=1.
-         ENDIF
-         alpha_temp(:)=scale*alpha_temp(:)
-         !Then the data from absorbtion spectrum
-         alpha_temp(:)=perceived_intensity(i)*alpha_temp(:)
-         !The perceived color can also be calculated here
-         IF (j==1) THEN
-          perceived_red=perceived_red+alpha_temp(1)
-          perceived_green=perceived_green+alpha_temp(2)
-          perceived_blue=perceived_blue+alpha_temp(3)
-         ENDIF
-         IF (alpha_temp(1)>1.0d0) PRINT *,alpha_temp(1)
-          WRITE(20, '(3A1)', advance='no') achar(int(255*alpha_temp(1))), &
-                                           achar(int(255*alpha_temp(2))), &
-                                           achar(int(255*alpha_temp(3)))
-        ENDIF
-       ENDDO
-       ENDDO
-       CLOSE(20)
-       !Now lets write a file with perceived color
-       perceived_red=perceived_red/(1.0d0*perceived_itermax)
-       perceived_green=perceived_green/(1.0d0*perceived_itermax)
-       perceived_blue=perceived_blue/(1.0d0*perceived_itermax)
-       WRITE(stdout,'(5x,"Perceived R G B ",3(F15.8,1X))') perceived_red,perceived_green,perceived_blue
-       filename = trim(prefix) // "-perceived.ppm"
-       OPEN(UNIT=20,FILE=filename,STATUS='UNKNOWN')
-       WRITE(20, '(A2)') 'P6'
-       WRITE(20, '(I0,'' '',I0)') 180,180
-       WRITE(20, '(A)') '255'
-       DO j=1, 180
-        DO i=1, 180
-           WRITE(20, '(3A1)', advance='no') achar(int(255*perceived_red)), &
-                                            achar(int(255*perceived_green)), &
-                                            achar(int(255*perceived_blue))
-
+        WRITE(stdout,'(5x,"Perceived color analysis is experimental")')
+        perceived_intensity(:)=perceived_intensity(:)/perceived_renorm
+        perceived_intensity(:)=1.0d0-perceived_intensity(:) !inverse spectrum
+        filename = trim(prefix) // "-spectra.ppm"
+        OPEN(UNIT=20,FILE=filename,STATUS='UNKNOWN')
+        WRITE(20, '(A2)') 'P6'
+        WRITE(20, '(I0,'' '',I0)') perceived_itermax, int(perceived_itermax/8)
+        WRITE(20, '(A)') '255'
+        DO j=1, int(perceived_itermax/8)
+           DO i=1,perceived_itermax
+              IF (perceived_evaluated(i)<0.0d0) THEN
+                 WRITE(20, '(3A1)', advance='no') achar(0), achar(0), achar(0)
+              ELSE
+                 wl=91.1266519/perceived_evaluated(i) !hc/hbar.omega=lambda (hbar.omega in rydberg units)
+                 !
+                 !WARNING alpha_temp duty change: now contains R G and B
+                 !
+                 CALL wl_to_color(wl,alpha_temp(1),alpha_temp(2),alpha_temp(3))
+                 !Now the intensities
+                 !First the degradation toward the end
+                 IF (wl >700) THEN
+                    scale=.3+.7* (780.-wl)/(780.-700.)
+                 ELSEIF (wl<420.) THEN
+                    scale=.3+.7*(wl-380.)/(420.-380.)
+                 ELSE
+                    scale=1.
+                 ENDIF
+                 alpha_temp(:)=scale*alpha_temp(:)
+                 !Then the data from absorbtion spectrum
+                 alpha_temp(:)=perceived_intensity(i)*alpha_temp(:)
+                 !The perceived color can also be calculated here
+                 IF (j==1) THEN
+                    perceived_red=perceived_red+alpha_temp(1)
+                    perceived_green=perceived_green+alpha_temp(2)
+                    perceived_blue=perceived_blue+alpha_temp(3)
+                 ENDIF
+                 IF (alpha_temp(1)>1.0d0) PRINT *,alpha_temp(1)
+                    WRITE(20, '(3A1)', advance='no') achar(int(255*alpha_temp(1))), &
+                                                     achar(int(255*alpha_temp(2))), &
+                                                     achar(int(255*alpha_temp(3)))
+              ENDIF
+           ENDDO
         ENDDO
-       ENDDO
-       CLOSE(20)
+        CLOSE(20)
+        !Now lets write a file with perceived color
+        perceived_red=perceived_red/(1.0d0*perceived_itermax)
+        perceived_green=perceived_green/(1.0d0*perceived_itermax)
+        perceived_blue=perceived_blue/(1.0d0*perceived_itermax)
+        WRITE(stdout,'(5x,"Perceived R G B ",3(F15.8,1X))') perceived_red,perceived_green,perceived_blue
+        filename = trim(prefix) // "-perceived.ppm"
+        OPEN(UNIT=20,FILE=filename,STATUS='UNKNOWN')
+        WRITE(20, '(A2)') 'P6'
+        WRITE(20, '(I0,'' '',I0)') 180,180
+        WRITE(20, '(A)') '255'
+        DO j=1, 180
+           DO i=1, 180
+              WRITE(20, '(3A1)', advance='no') achar(int(255*perceived_red)), &
+                                               achar(int(255*perceived_green)), &
+                                               achar(int(255*perceived_blue))
+
+           ENDDO
+        ENDDO
+        CLOSE(20)
      ENDIF
      !
      !----------------------------------------------------------------------!

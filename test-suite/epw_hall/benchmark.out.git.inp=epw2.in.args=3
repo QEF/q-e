@@ -1,11 +1,3 @@
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
                                                                                       
                                        ``:oss/                                        
                            `.+s+.     .+ys--yh+     `./ss+.                           
@@ -37,7 +29,7 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
                                                      npj Comput Mater 9, 156 (2023)   
                                                                                       
 
-     Program EPW v.5.9 starts on 20Aug2024 at 15:28:20 
+     Program EPW v.5.9 starts on 17Feb2025 at 12:33:11 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -48,19 +40,21 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     8 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       8
-     181995 MiB available memory on the printing compute node when the environment starts
+     184622 MiB available memory on the printing compute node when the environment starts
  
      Reading input from epw2.in
+
+     etf_mem = 3 results in the internal parameter lfast_kmesh switched on for efficient k mesh generation.
 
      WARNING: The specified dis_win_min is ignored.
               You should instead use bands_skipped = 'exclude_bands = ...'
               to control the lower bound of band manifold.
-     WARNING: The use of etf_mem == 3 has been tested and validated for cubic and hexagonal materials.
-              For other materials, use with care and possibly use etf_mem == 1.
+     WARNING: The use of lfast_kmesh has been tested and validated for cubic and hexagonal materials.
+              For other materials, use with care and possibly use lfast_kmesh = .FALSE.
 
      Reading supplied temperature list.
                       
@@ -110,9 +104,9 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
      number of k points=    0
                        cart. coord. in units 2pi/a_0
-     EPW          :      0.00s CPU      0.01s WALL
+     EPW          :      0.00s CPU      0.00s WALL
 
-     EPW          :      0.00s CPU      0.01s WALL
+     EPW          :      0.00s CPU      0.00s WALL
 
 
      -------------------------------------------------------------------
@@ -139,6 +133,12 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
 
      Computes the analytic long-range interaction for polar materials [lpolar]
       
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       19
+     Number of WS vectors for phonons       19
+     Number of WS vectors for electron-phonon       19
+     Maximum number of cores for efficient parallelization      114
+     Results may improve by using use_ws == .TRUE. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -146,13 +146,14 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =       193Mb
+     Memory usage:  VmHWM =       194Mb
                    VmPeak =      3941Mb
      ===================================================================
      
+     Add time reversal symmetry into k grid.
      Number of k-points inside fsthick * 1.2 in the full BZ:       712
-     Size of k point mesh for interpolation:        108
-     Max number of k points per pool:               14
+     Size of k point mesh for interpolation:         62
+     Max number of k points per pool:                8
 
      Fermi energy coarse grid =  11.817695 eV
 
@@ -170,12 +171,12 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
               ibndmax =     3  ebndmax =    11.624 eV
 
 
-     Number of ep-matrix elements per pool :          378 ~=    2.95 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :          216 ~=    1.69 Kb (@ 8 bytes/ DP)
       
      A selecq.fmt file was found but re-created because selecqread == .FALSE. 
-     Number selected, total           1000           1615
-     Number selected, total           2000           6837
-     We only need to compute     2700 q-points
+     Number selected, total           1000           2069
+     Number selected, total           2000           7884
+     We only need to compute     2102 q-points
       
      Valence band maximum    =  11.767174 eV
 
@@ -195,22 +196,22 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
 
      Save matrix elements larger than threshold:   0.173611111111E-24
       
-     Progression iq (fine) =       1000/      2700
-       Adaptative smearing el-ph = Min:    48.109905 meV
-                                   Max:   364.221414 meV
-     Progression iq (fine) =       2000/      2700
-       Adaptative smearing el-ph = Min:    32.306802 meV
-                                   Max:   365.837643 meV
+     Progression iq (fine) =       1000/      2102
+       Adaptative smearing el-ph = Min:    37.200958 meV
+                                   Max:   202.350584 meV
+     Progression iq (fine) =       2000/      2102
+       Adaptative smearing el-ph = Min:     1.414214 meV
+                                   Max:   385.291058 meV
       300.000     12.2236       0.999995E+13
       
      epmatkqread automatically changed to .TRUE. as all scattering have been computed.
       
      ===================================================================
-     Memory usage:  VmHWM =       221Mb
-                   VmPeak =      4078Mb
+     Memory usage:  VmHWM =       216Mb
+                   VmPeak =      4058Mb
      ===================================================================
 
-     Number of elements per core       3378
+     Number of elements per core       2112
      Symmetry mapping finished
       
      =============================================================================================
@@ -222,9 +223,9 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.39682E-22    0.198490E+03   -0.217972E-18    0.178213E-17
-                                      -0.16219E-26   -0.138132E-17    0.198490E+03    0.657250E-16
-                                       0.26314E-22   -0.170783E-17    0.668884E-16    0.198490E+03
+      300.000  12.2236   0.99999E+13  -0.26470E-22    0.198483E+03    0.355003E-21    0.476477E-14
+                                       0.00000E+00    0.284002E-21    0.198483E+03   -0.355003E-22
+                                       0.26470E-22   -0.476477E-14   -0.355003E-22    0.198483E+03
       
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -237,11 +238,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.52987E-22    0.236807E+03    0.908786E-17    0.228471E-16
-                                       0.48144E-24    0.363239E-18    0.236807E+03   -0.167031E-15
-                                      -0.12905E-21    0.567100E-17    0.474761E-15    0.236807E+03
+      300.000  12.2236   0.99999E+13   0.10588E-21    0.236541E+03   -0.124251E-21    0.476477E-14
+                                       0.00000E+00   -0.710006E-22    0.236541E+03   -0.284002E-21
+                                      -0.10588E-21    0.476477E-14    0.000000E+00    0.236541E+03
 
-                                                      0.236807E+03    Max error
+                                                      0.236541E+03    Max error
      Iteration number:         2
 
      =============================================================================================
@@ -249,11 +250,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.10588E-21    0.251721E+03    0.934233E-17    0.466296E-17
-                                       0.38773E-24   -0.290534E-18    0.251721E+03   -0.427915E-15
-                                      -0.87688E-22    0.476203E-17    0.288346E-15    0.251721E+03
+      300.000  12.2236   0.99999E+13   0.10588E-21    0.251260E+03    0.142001E-21    0.476473E-14
+                                       0.00000E+00    0.000000E+00    0.251260E+03    0.142001E-21
+                                      -0.10588E-21    0.476477E-14   -0.426004E-21    0.251260E+03
 
-                                                      0.149137E+02    Max error
+                                                      0.147190E+02    Max error
      Iteration number:         3
 
      =============================================================================================
@@ -261,11 +262,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.53406E-22    0.255524E+03   -0.400124E-18    0.142342E-16
-                                      -0.50077E-25   -0.290818E-18    0.255524E+03    0.260664E-15
-                                       0.13277E-21   -0.612547E-17    0.852007E-21    0.255524E+03
+      300.000  12.2236   0.99999E+13  -0.15982E-26    0.254969E+03    0.000000E+00   -0.476470E-14
+                                      -0.22088E-28    0.426004E-21    0.254969E+03   -0.284002E-21
+                                       0.16172E-26   -0.476470E-14   -0.284002E-21    0.254969E+03
 
-                                                      0.380297E+01    Max error
+                                                      0.370856E+01    Max error
      Iteration number:         4
 
      =============================================================================================
@@ -273,11 +274,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.53405E-22    0.256843E+03    0.868802E-17   -0.956864E-17
-                                      -0.59780E-25    0.952402E-17    0.256843E+03   -0.668572E-16
-                                       0.11612E-21    0.103423E-16    0.290088E-16    0.256843E+03
+      300.000  12.2236   0.99999E+13  -0.10588E-21    0.256242E+03   -0.142001E-21    0.728821E-19
+                                      -0.63109E-29   -0.142001E-21    0.256242E+03   -0.142001E-21
+                                       0.10588E-21    0.722431E-19   -0.426004E-21    0.256242E+03
 
-                                                      0.131935E+01    Max error
+                                                      0.127305E+01    Max error
      Iteration number:         5
 
      =============================================================================================
@@ -285,11 +286,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.53350E-22    0.257209E+03   -0.876098E-17    0.269242E-16
-                                       0.15872E-26   -0.981512E-17    0.257209E+03   -0.214322E-15
-                                       0.12815E-22   -0.105789E-16   -0.511913E-15    0.257209E+03
+      300.000  12.2236   0.99999E+13  -0.52404E-26    0.256589E+03    0.000000E+00   -0.476470E-14
+                                       0.63109E-29    0.142001E-21    0.256589E+03    0.568005E-21
+                                       0.48562E-26   -0.476470E-14    0.568005E-21    0.256589E+03
 
-                                                      0.365384E+00    Max error
+                                                      0.347573E+00    Max error
      Iteration number:         6
 
      =============================================================================================
@@ -297,11 +298,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.10547E-21    0.257328E+03   -0.363417E-18    0.907528E-17
-                                      -0.14562E-25    0.728466E-19    0.257328E+03   -0.242305E-15
-                                      -0.88923E-22    0.936090E-17   -0.558444E-15    0.257328E+03
+      300.000  12.2236   0.99999E+13   0.40145E-26    0.256702E+03    0.426004E-21   -0.476477E-14
+                                       0.00000E+00    0.000000E+00    0.256702E+03    0.142001E-21
+                                      -0.32320E-26   -0.476477E-14   -0.426004E-21    0.256702E+03
 
-                                                      0.119525E+00    Max error
+                                                      0.112276E+00    Max error
      Iteration number:         7
 
      =============================================================================================
@@ -309,11 +310,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.10593E-21    0.257363E+03   -0.472509E-18   -0.144067E-16
-                                       0.47176E-24    0.945117E-17    0.257363E+03   -0.251924E-15
-                                      -0.11580E-21   -0.139224E-16   -0.632893E-15    0.257363E+03
+      300.000  12.2236   0.99999E+13  -0.10588E-21    0.256734E+03    0.142001E-21    0.476470E-14
+                                      -0.94663E-29   -0.142001E-21    0.256734E+03   -0.142001E-21
+                                       0.10588E-21    0.476470E-14   -0.426004E-21    0.256734E+03
 
-                                                      0.345873E-01    Max error
+                                                      0.320183E-01    Max error
      Iteration number:         8
 
      =============================================================================================
@@ -321,11 +322,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.52891E-22    0.257374E+03    0.721011E-19   -0.933025E-17
-                                      -0.71124E-25   -0.145125E-18    0.257374E+03   -0.241985E-15
-                                      -0.86123E-22   -0.930568E-17    0.446552E-15    0.257374E+03
+      300.000  12.2236   0.99999E+13  -0.10588E-21    0.256744E+03   -0.142001E-21    0.476473E-14
+                                       0.32312E-26   -0.284002E-21    0.256744E+03    0.426004E-21
+                                       0.10588E-21    0.476477E-14   -0.142001E-21    0.256744E+03
 
-                                                      0.109613E-01    Max error
+                                                      0.100095E-01    Max error
      Iteration number:         9
 
      =============================================================================================
@@ -333,11 +334,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.53402E-22    0.257377E+03    0.934315E-17   -0.992724E-17
-                                       0.34732E-24    0.145551E-18    0.257377E+03   -0.260738E-15
-                                       0.83024E-22    0.361948E-19   -0.158205E-15    0.257377E+03
+      300.000  12.2236   0.99999E+13   0.81489E-27    0.256747E+03    0.568005E-21   -0.476481E-14
+                                       0.00000E+00    0.000000E+00    0.256747E+03    0.000000E+00
+                                      -0.16164E-26   -0.476470E-14    0.284002E-21    0.256747E+03
 
-                                                      0.324777E-02    Max error
+                                                      0.292335E-02    Max error
      Iteration number:        10
 
      =============================================================================================
@@ -345,11 +346,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.15928E-21    0.257378E+03    0.618415E-18   -0.239601E-14
-                                      -0.35705E-24    0.945146E-17    0.257378E+03   -0.250890E-15
-                                      -0.99677E-22    0.238697E-14   -0.729376E-19    0.257378E+03
+      300.000  12.2236   0.99999E+13   0.24265E-26    0.256747E+03   -0.568005E-21    0.476477E-14
+                                       0.63109E-29    0.000000E+00    0.256747E+03    0.000000E+00
+                                      -0.16195E-26    0.476477E-14    0.000000E+00    0.256747E+03
 
-                                                      0.101174E-02    Max error
+                                                      0.897757E-03    Max error
      Iteration number:        11
      =============================================================================================
      The iteration reached the maximum but did not converge.
@@ -359,18 +360,18 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      =============================================================================================
      BTE in the SERTA with B-field
      =============================================================================================
-     Number of contributing elements for the master core      81072
+     Number of contributing elements for the master core     101376
 
      =============================================================================================
        Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.39739E-22    0.198490E+03    0.524004E-03   -0.506717E-14
-                                       0.17219E-21   -0.524004E-03    0.198490E+03    0.169605E-14
-                                       0.20155E-21   -0.121001E-14   -0.401340E-15    0.198490E+03
+      300.000  12.2236   0.99999E+13  -0.11911E-21    0.198483E+03    0.686900E-03    0.446697E-14
+                                      -0.26470E-21   -0.686900E-03    0.198483E+03   -0.476477E-14
+                                       0.66174E-22    0.139965E-13    0.208447E-14    0.198483E+03
 
-                                                      0.588883E+02    Max error
+                                                      0.582646E+02    Max error
       
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation with B-field
@@ -383,11 +384,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.15826E-21    0.236807E+03    0.622380E-03    0.234054E-14
-                                      -0.52937E-21   -0.622380E-03    0.236807E+03   -0.632101E-14
-                                      -0.27958E-21   -0.241038E-14   -0.217760E-14    0.236807E+03
+      300.000  12.2236   0.99999E+13  -0.31763E-21    0.236541E+03    0.794611E-03   -0.725271E-19
+                                      -0.15882E-21   -0.794611E-03    0.236541E+03    0.727046E-19
+                                      -0.31764E-21    0.119119E-13   -0.476489E-14    0.236541E+03
 
-                                                      0.383176E+02    Max error
+                                                      0.380584E+02    Max error
       
      Iteration number:         2
 
@@ -396,11 +397,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.15896E-21    0.251721E+03    0.907080E-03   -0.950851E-14
-                                      -0.58228E-21   -0.907080E-03    0.251721E+03   -0.556038E-14
-                                      -0.49052E-22    0.180545E-14    0.100878E-14    0.251721E+03
+      300.000  12.2236   0.99999E+13  -0.31764E-21    0.251260E+03    0.109086E-02   -0.357372E-14
+                                       0.10588E-21   -0.109086E-02    0.251260E+03   -0.476513E-14
+                                       0.52942E-21    0.476477E-14   -0.119121E-14    0.251260E+03
 
-                                                      0.149137E+02    Max error
+                                                      0.147190E+02    Max error
       
      Iteration number:         3
 
@@ -409,11 +410,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.15814E-21    0.255524E+03    0.975515E-03   -0.476962E-14
-                                       0.15958E-21   -0.975515E-03    0.255524E+03    0.387116E-14
-                                      -0.18996E-21   -0.418267E-14    0.389976E-14    0.255524E+03
+      300.000  12.2236   0.99999E+13   0.15882E-21    0.254969E+03    0.116348E-02    0.107210E-13
+                                       0.21175E-21   -0.116348E-02    0.254969E+03   -0.581779E-18
+                                       0.42355E-21   -0.357365E-14   -0.119127E-14    0.254969E+03
 
-                                                      0.380297E+01    Max error
+                                                      0.370856E+01    Max error
       
      Iteration number:         4
 
@@ -422,11 +423,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.52133E-22    0.256843E+03    0.101297E-02   -0.828631E-14
-                                      -0.15934E-21   -0.101297E-02    0.256843E+03   -0.103888E-14
-                                       0.96569E-22    0.413250E-14   -0.345748E-14    0.256843E+03
+      300.000  12.2236   0.99999E+13   0.10588E-21    0.256242E+03    0.120272E-02   -0.102951E-20
+                                       0.10588E-21   -0.120272E-02    0.256242E+03    0.426004E-21
+                                      -0.26470E-21   -0.476470E-14    0.119119E-13    0.256242E+03
 
-                                                      0.131935E+01    Max error
+                                                      0.127305E+01    Max error
       
      Iteration number:         5
 
@@ -435,11 +436,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.21216E-21    0.257209E+03    0.102460E-02    0.750899E-14
-                                      -0.42348E-21   -0.102460E-02    0.257209E+03    0.122834E-14
-                                       0.22135E-21    0.892436E-14    0.878901E-15    0.257209E+03
+      300.000  12.2236   0.99999E+13   0.37058E-21    0.256589E+03    0.121498E-02    0.238268E-14
+                                       0.52944E-22   -0.121498E-02    0.256589E+03    0.714694E-14
+                                       0.58234E-21    0.238249E-14    0.119119E-14    0.256589E+03
 
-                                                      0.365384E+00    Max error
+                                                      0.347573E+00    Max error
       
      Iteration number:         6
 
@@ -448,11 +449,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.31809E-21    0.257328E+03    0.102913E-02   -0.955795E-14
-                                       0.10481E-21   -0.102913E-02    0.257328E+03    0.222745E-14
-                                      -0.17237E-21    0.591178E-15    0.331347E-14    0.257328E+03
+      300.000  12.2236   0.99999E+13  -0.74116E-21    0.256702E+03    0.121971E-02    0.190584E-13
+                                      -0.52941E-22   -0.121971E-02    0.256702E+03   -0.952932E-14
+                                      -0.31765E-21    0.714719E-14   -0.119113E-14    0.256702E+03
 
-                                                      0.119525E+00    Max error
+                                                      0.112276E+00    Max error
       
      Iteration number:         7
 
@@ -461,11 +462,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.21181E-21    0.257363E+03    0.103064E-02    0.239758E-14
-                                       0.54489E-22   -0.103064E-02    0.257363E+03   -0.517875E-15
-                                      -0.72178E-22   -0.179614E-14   -0.531161E-15    0.257363E+03
+      300.000  12.2236   0.99999E+13   0.21176E-21    0.256734E+03    0.122129E-02   -0.154847E-13
+                                      -0.52935E-22   -0.122129E-02    0.256734E+03    0.714636E-14
+                                       0.10592E-21   -0.107209E-13   -0.714721E-14    0.256734E+03
 
-                                                      0.345873E-01    Max error
+                                                      0.320183E-01    Max error
       
      Iteration number:         8
 
@@ -474,11 +475,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.15905E-21    0.257374E+03    0.103117E-02   -0.235087E-14
-                                       0.15948E-21   -0.103117E-02    0.257374E+03    0.340476E-14
-                                       0.17945E-21   -0.305230E-14    0.445835E-14    0.257374E+03
+      300.000  12.2236   0.99999E+13  -0.40390E-27    0.256744E+03    0.122183E-02   -0.131031E-13
+                                      -0.21176E-21   -0.122183E-02    0.256744E+03    0.476477E-14
+                                       0.31764E-21    0.190590E-13    0.907388E-19    0.256744E+03
 
-                                                      0.109613E-01    Max error
+                                                      0.100095E-01    Max error
       
      Iteration number:         9
 
@@ -487,11 +488,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.10543E-21    0.257377E+03    0.103135E-02   -0.594520E-14
-                                       0.10610E-21   -0.103135E-02    0.257377E+03   -0.387372E-15
-                                       0.16547E-21   -0.538432E-14   -0.224078E-15    0.257377E+03
+      300.000  12.2236   0.99999E+13   0.26470E-21    0.256747E+03    0.122201E-02    0.131032E-13
+                                      -0.10588E-21   -0.122201E-02    0.256747E+03   -0.476455E-14
+                                       0.26469E-21    0.357358E-14   -0.357367E-14    0.256747E+03
 
-                                                      0.324777E-02    Max error
+                                                      0.292335E-02    Max error
       
      Iteration number:        10
 
@@ -500,11 +501,11 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.42330E-21    0.257378E+03    0.103141E-02    0.723444E-14
-                                      -0.42258E-21   -0.103141E-02    0.257378E+03   -0.247661E-14
-                                       0.25845E-21    0.651835E-14   -0.854614E-14    0.257378E+03
+      300.000  12.2236   0.99999E+13  -0.10590E-21    0.256747E+03    0.122208E-02   -0.119119E-14
+                                       0.37058E-21   -0.122208E-02    0.256747E+03   -0.363097E-18
+                                      -0.31762E-21   -0.262063E-13   -0.476473E-14    0.256747E+03
 
-                                                      0.101174E-02    Max error
+                                                      0.897757E-03    Max error
       
      Iteration number:        11
      =============================================================================================
@@ -522,17 +523,17 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
       
      Temperature:   300.0000 K
      Conductivity tensor without magnetic field | with magnetic field [Siemens/m]
-       0.31801E-01  -0.34923E-22   0.28553E-21  |   0.31801E-01   0.83954E-07  -0.81185E-18
-      -0.22131E-21   0.31801E-01   0.10530E-19  |  -0.83954E-07   0.31801E-01   0.27174E-18
-      -0.27362E-21   0.10717E-19   0.31801E-01  |  -0.19386E-18  -0.64301E-19   0.31801E-01
+       0.31800E-01   0.56877E-25   0.76340E-18  |   0.31800E-01   0.11005E-06   0.71568E-18
+       0.45502E-25   0.31800E-01  -0.56877E-26  |  -0.11005E-06   0.31800E-01  -0.76340E-18
+      -0.76340E-18  -0.56877E-26   0.31800E-01  |   0.22425E-17   0.33397E-18   0.31800E-01
      Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]
-       0.19849E+03  -0.21797E-18   0.17821E-17  |  -0.19011E-06   0.70101E+02  -0.67812E-09
-      -0.13813E-17   0.19849E+03   0.65725E-16  |  -0.70101E+02  -0.19011E-06   0.21810E-09
-      -0.17078E-17   0.66888E-16   0.19849E+03  |  -0.16165E-09  -0.62639E-10  -0.14068E-06
+       0.19848E+03   0.35500E-21   0.47648E-14  |   0.38024E-08   0.91896E+02  -0.39841E-10
+       0.28400E-21   0.19848E+03  -0.35500E-22  |  -0.91896E+02  -0.13149E-21  -0.63745E-09
+      -0.47648E-14  -0.35500E-22   0.19848E+03  |   0.25100E-08   0.27887E-09   0.79850E-07
      Hall factor
-      -0.957789E-09    0.353171E+00   -0.341639E-11
-      -0.353171E+00   -0.957789E-09    0.109881E-11
-      -0.814379E-12   -0.315578E-12   -0.708764E-09
+       0.191571E-10    0.462992E+00   -0.200726E-12
+      -0.462992E+00    0.165620E-24   -0.321159E-11
+       0.126457E-10    0.140501E-11    0.402300E-09
 
      =============================================================================================
      BTE
@@ -540,20 +541,20 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
       
      Temperature:   300.0000 K
      Conductivity tensor without magnetic field | with magnetic field [Siemens/m]
-       0.41236E-01   0.99081E-22  -0.38388E-18  |   0.41236E-01   0.16525E-06   0.11591E-17
-       0.15143E-20   0.41236E-01  -0.40197E-19  |  -0.16525E-06   0.41236E-01  -0.39679E-18
-       0.38243E-18  -0.11686E-22   0.41236E-01  |   0.10443E-17  -0.13692E-17   0.41236E-01
+       0.41135E-01  -0.91004E-25   0.76340E-18  |   0.41135E-01   0.19580E-06  -0.19085E-18
+       0.00000E+00   0.41135E-01   0.00000E+00  |  -0.19580E-06   0.41135E-01  -0.58174E-22
+       0.76340E-18   0.00000E+00   0.41135E-01  |  -0.41987E-17  -0.76339E-18   0.41135E-01
      Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]
-       0.25738E+03   0.61842E-18  -0.23960E-14  |  -0.33849E-03   0.10641E+03   0.99358E-09
-       0.94515E-17   0.25738E+03  -0.25089E-15  |  -0.10641E+03  -0.33849E-03  -0.22963E-09
-       0.23870E-14  -0.72938E-19   0.25738E+03  |   0.42624E-09  -0.88170E-09   0.10263E-05
+       0.25675E+03  -0.56800E-21   0.47648E-14  |  -0.45429E-03   0.12639E+03  -0.61599E-09
+       0.00000E+00   0.25675E+03   0.00000E+00  |  -0.12639E+03  -0.45429E-03  -0.37553E-13
+       0.47648E-14   0.00000E+00   0.25675E+03  |  -0.32031E-08  -0.49279E-09   0.27572E-05
      Hall factor
-      -0.131515E-05    0.413442E+00    0.386037E-11
-      -0.413442E+00   -0.131515E-05   -0.892186E-12
-       0.165607E-11   -0.342570E-11    0.398750E-08
+      -0.176941E-05    0.492280E+00   -0.239920E-11
+      -0.492280E+00   -0.176941E-05   -0.137128E-15
+      -0.124759E-10   -0.191935E-11    0.107391E-07
 
      Unfolding on the coarse grid
-     elphon_wrap  :      0.00s CPU      0.01s WALL (       1 calls)
+     elphon_wrap  :      0.00s CPU      0.30s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -561,21 +562,21 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
 
 
      Electron-Phonon interpolation
-     ep-interp    :      2.25s CPU     11.52s WALL (    2700 calls)
+     ep-interp    :      1.45s CPU     13.77s WALL (    2102 calls)
 
      wigner_seitz :      0.00s CPU      0.00s WALL (       1 calls)
-     DynW2B       :      0.10s CPU      0.27s WALL (    2700 calls)
-     HamW2B       :      0.13s CPU      0.28s WALL (   38875 calls)
-     ephW2Bp      :      0.17s CPU      0.47s WALL (    2700 calls)
-     ephW2B       :      0.13s CPU      0.21s WALL (    2920 calls)
-     vmeW2B       :      0.04s CPU      0.07s WALL (    5840 calls)
-     vmeW2Bp      :      0.08s CPU      0.20s WALL (    2700 calls)
-     rgd_blk_epw  :      0.12s CPU      0.19s WALL (    2920 calls)
-     print_ibte   :      1.52s CPU      9.88s WALL (    2700 calls)
+     DynW2B       :      0.07s CPU      0.21s WALL (    2102 calls)
+     HamW2B       :      0.06s CPU      0.14s WALL (   17859 calls)
+     ephW2Bp      :      0.12s CPU      0.40s WALL (    2102 calls)
+     ephW2B       :      0.10s CPU      0.17s WALL (    2336 calls)
+     vmeW2B       :      0.03s CPU      0.05s WALL (    4672 calls)
+     vmeW2Bp      :      0.06s CPU      0.15s WALL (    2102 calls)
+     rgd_blk_epw  :      0.09s CPU      0.16s WALL (    2336 calls)
+     print_ibte   :      0.97s CPU     12.54s WALL (    2102 calls)
 
 
      Total program execution
-     EPW          :      2.48s CPU     11.77s WALL
+     EPW          :      1.70s CPU     14.04s WALL
 
      % Copyright (C) 2016-2023 EPW-Collaboration                                    
                                                                                     

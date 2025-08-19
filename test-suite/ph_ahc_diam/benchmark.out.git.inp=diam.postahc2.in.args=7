@@ -1,10 +1,11 @@
 
-     Program POSTAHC v.6.5 starts on  9Apr2020 at 16:53:27 
+     Program POSTAHC v.7.2 starts on 12Mar2024 at 19: 9: 9 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -12,55 +13,85 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     Fft bands division:     nmany     =       1
- 
-     Calculating electron self-energy. Loop over q points
-       1       2       3       4       5       6       7       8 
- 
-     Skip upper Fan: upper Fan self-energy is set to zero
- 
-     Real part of diagonal electron self-energy in Ry
+     4780 MiB available memory on the printing compute node when the environment starts
+
+     Waiting for input...
+     Reading input from standard input
+      Title line not specified: using 'default'.
+
+     Reading xml data from directory:
+
+     ./diam.save/
+     file C.UPF: wavefunction(s)  3d renormalized
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         121     121     43                  893      893     181
+
+     Using Slab Decomposition
+
+     There are          8 q points in total.
+     Calculating        8 q points in the root core.
+     Total number of bands :        9
+     Bands to calculate the self-energy :       1 to        4
+
+     Calculating electron self-energy. Loop over        8 q points
+
+
+     skip_upper = .true.: the upper Fan self-energy is set to zero, and the
+                          Debye-Waller self-energy is truncated.
+
+     Diagonal electron self-energy in eV
      Self-energy of degenerate states are averaged.
-     Total_Fan = Upper_Fan + Lower_Fan
-     Total = Total_Fan + DW
- 
+     The DW and Upper_Fan terms are real-valued by construction.
+     For states with energy outside the AHC window, all output are zero.
+     Total = Upper_DW + Lower_DW + Upper_Fan + Lower_Fan
+
      Begin postahc output
-         ik  ibnd       Total          DW   Total_Fan   Upper_Fan   Lower_Fan
-          1     1  -0.0379190   0.0007773  -0.0386963   0.0000000  -0.0386963
-          1     2   0.0180099   0.0438047  -0.0257948   0.0000000  -0.0257948
-          1     3   0.0180099   0.0438047  -0.0257948   0.0000000  -0.0257948
-          1     4   0.0180099   0.0438047  -0.0257948   0.0000000  -0.0257948
-          2     1  -0.0400718   0.0019322  -0.0420040   0.0000000  -0.0420040
-          2     2  -0.0486684   0.0145147  -0.0631831   0.0000000  -0.0631831
-          2     3   0.0459231   0.0349731   0.0109500   0.0000000   0.0109500
-          2     4   0.0459231   0.0349731   0.0109500   0.0000000   0.0109500
-          3     1  -0.0487428   0.0023636  -0.0511064   0.0000000  -0.0511064
-          3     2   0.0331788   0.0247317   0.0084470   0.0000000   0.0084470
-          3     3   0.0969264   0.0309596   0.0659668   0.0000000   0.0659668
-          3     4   0.0524227   0.0335007   0.0189220   0.0000000   0.0189220
-          4     1  -0.0472693   0.0052949  -0.0525642   0.0000000  -0.0525642
-          4     2   0.0126477   0.0118944   0.0007533   0.0000000   0.0007533
-          4     3  -0.0418651   0.0211798  -0.0630449   0.0000000  -0.0630449
-          4     4   0.0312758   0.0321946  -0.0009188   0.0000000  -0.0009188
-          5     1  -0.0385948   0.0034158  -0.0420105   0.0000000  -0.0420105
-          5     2   0.0669594   0.0179428   0.0490166   0.0000000   0.0490166
-          5     3  -0.0143887   0.0283055  -0.0426941   0.0000000  -0.0426941
-          5     4   0.0517871   0.0314274   0.0203598   0.0000000   0.0203598
+         ik  ibnd    Re[Total]     Upper_DW      Lower_DW   Upper_Fan Re[Lower_Fan]   Im[Total]
+          1     1  -5.0608E-01   0.0000E+00  -5.0351E-02   0.0000E+00  -4.5573E-01   4.0729E-03
+          1     2  -1.0145E-01   0.0000E+00   1.9774E-01   0.0000E+00  -2.9919E-01   2.2909E-02
+          1     3  -1.0145E-01   0.0000E+00   1.9774E-01   0.0000E+00  -2.9919E-01   2.2909E-02
+          1     4  -1.0145E-01   0.0000E+00   1.9774E-01   0.0000E+00  -2.9919E-01   2.2909E-02
+          2     1  -5.3256E-01   0.0000E+00  -5.9833E-02   0.0000E+00  -4.7272E-01   5.2920E-01
+          2     2  -7.7999E-01   0.0000E+00   3.7011E-02   0.0000E+00  -8.1700E-01   4.8042E-01
+          2     3   3.7750E-01   0.0000E+00   1.9051E-01   0.0000E+00   1.8699E-01   4.3505E-01
+          2     4   3.7750E-01   0.0000E+00   1.9051E-01   0.0000E+00   1.8699E-01   4.3505E-01
+          3     1  -6.8517E-01   0.0000E+00  -4.8174E-02   0.0000E+00  -6.3700E-01   2.1720E-02
+          3     2   2.9133E-01   0.0000E+00   1.1912E-01   0.0000E+00   1.7221E-01   1.6584E+00
+          3     3   1.0784E+00   0.0000E+00   1.3673E-01   0.0000E+00   9.4162E-01   5.8145E-01
+          3     4   4.4720E-01   0.0000E+00   1.4566E-01   0.0000E+00   3.0154E-01   4.2448E-02
+          4     1  -6.8187E-01   0.0000E+00  -4.5924E-02   0.0000E+00  -6.3594E-01   2.8049E-01
+          4     2   8.0717E-02   0.0000E+00   2.1817E-02   0.0000E+00   5.8900E-02   8.0354E-01
+          4     3  -7.3026E-01   0.0000E+00   7.2130E-02   0.0000E+00  -8.0239E-01   6.4754E-01
+          4     4   2.4984E-01   0.0000E+00   1.9953E-01   0.0000E+00   5.0307E-02   8.0023E-01
+          5     1  -5.5864E-01   0.0000E+00  -5.1090E-02   0.0000E+00  -5.0755E-01   2.3402E-01
+          5     2   7.7375E-01   0.0000E+00   5.9849E-02   0.0000E+00   7.1390E-01   1.2576E+00
+          5     3  -4.0052E-01   0.0000E+00   1.3108E-01   0.0000E+00  -5.3160E-01   1.1957E+00
+          5     4   4.7664E-01   0.0000E+00   1.6034E-01   0.0000E+00   3.1629E-01   1.6514E-01
      End postahc output
- 
-     Full off-diagonal complex self-energy is written
-     in selfen_real.dat and selfen_imag.dat.
-     Can differ from the output above because the
-     Self-energy of degenerate states are NOT averaged.
- 
- 
+
+     Full off-diagonal complex self-energy matrix is written in files
+     selfen_real.dat and selfen_imag.dat. These data can differ from
+     the output above because the self-energy of degenerate states are
+     NOT averaged in the selfen_*.dat output.
+
+
      debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
      lower_fan    :      0.00s CPU      0.00s WALL (       8 calls)
- 
-     POSTAHC      :      0.01s CPU      0.01s WALL
 
- 
-   This run was terminated on:  16:53:27   9Apr2020            
+     POSTAHC      :      0.03s CPU      0.04s WALL
+
+
+   This run was terminated on:  19: 9: 9  12Mar2024            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

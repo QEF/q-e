@@ -44,7 +44,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
+SUBROUTINE bpcg_k( hs_psi_ptr, g_psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -82,7 +82,6 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
   !
   COMPLEX(DP), ALLOCATABLE ::  b(:,:),                        & ! RHS for testing
                                p(:,:), hp(:,:), sp(:,:), z(:,:) ! additional working vetors
-  !$acc declare device_resident(b, z)
 
   COMPLEX(DP), ALLOCATABLE ::  spsi0vec (:,:) ! the product of spsi0 and a group of vectors
   !$acc declare device_resident(spsi0vec)
@@ -102,7 +101,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
   !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
 
-  EXTERNAL  hs_psi_ptr, g_1psi_ptr
+  EXTERNAL  hs_psi_ptr, g_psi_ptr
   ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
   ! hs_psi_ptr( npwx, npw, nvec, psi, hpsi, spsi )
   !
@@ -119,7 +118,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
   ALLOCATE( z( kdmx, block_size ), b( kdmx, block_size ) )
   ALLOCATE( p(kdmx,block_size), hp(kdmx,block_size), sp(kdmx,block_size) )
   ALLOCATE( spsi0vec(nbnd, block_size) )
-  !$acc enter data create(p, hp, sp)
+  !$acc enter data create(p, hp, sp, z, b)
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
@@ -130,7 +129,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
-     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
+     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the search
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
         !$acc parallel  
@@ -150,11 +149,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
         !$acc end parallel
 
         ! initial preconditioned gradient 
-        !$acc host_data use_device(z, e)
-        do l=nactive+1,nactive+nnew; i=l+done
-           call g_1psi_ptr(npwx,npw,z(:,l),e(i))     
-        end do
-        !$acc end host_data
+        CALL g_psi_ptr( npwx, npw, nnew, npol, z(:,nactive+1), e(nactive+done+1) )
 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
@@ -264,11 +259,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
         END DO 
      end do
 
-     !$acc host_data use_device(z, e)
-     do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-        call g_1psi_ptr(npwx,npw,z(:,l),e(i))
-     end do
-     !$acc end host_data
+     CALL g_psi_ptr( npwx, npw, nactive, npol, z, e(done+1) )
 
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
@@ -419,7 +410,7 @@ SUBROUTINE bpcg_k( hs_psi_ptr, g_1psi_ptr, psi0, spsi0, npw, npwx, nbnd, npol, n
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 
-  !$acc exit data delete(p, hp, sp)
+  !$acc exit data delete(p, hp, sp, z, b)
   DEALLOCATE( spsi0vec )
   DEALLOCATE( b, p, hp, sp, z )
   DEALLOCATE( ethr_cg, ff, ff0, cg_iter )

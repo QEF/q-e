@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -66,6 +66,7 @@ SUBROUTINE hp_setup_q()
   USE control_flags,    ONLY : noinv
   USE eqv,              ONLY : dmuxc
   USE qpoint,           ONLY : xq
+  USE xc_lib,           ONLY : xclib_dft_is
   USE control_lr,       ONLY : lgamma
   USE lr_symm_base,     ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE ldaU_hp,          ONLY : niter_max, alpha_mix, skip_equivalence_q
@@ -73,10 +74,13 @@ SUBROUTINE hp_setup_q()
   USE control_flags,    ONLY : modenum
   USE lr_nc_mag,        ONLY : deeq_nc_save
   USE dfunct,           ONLY : newd
+  USE ldaU_lr,          ONLY : vh_u_save, vh_uv_save
+  USE ldaU,             ONLY : lda_plus_u_kind, Hubbard_lmax, max_num_neighbors, nsg, v_nsg
   !
   IMPLICIT NONE
   INTEGER :: ir, isym, ik, it, na
   LOGICAL :: sym(48), magnetic_sym
+  COMPLEX(DP), ALLOCATABLE :: ns_nc(:,:,:,:,:), nsg_nc(:,:,:,:,:,:)
   !
   CALL start_clock ('hp_setup_q')
   !
@@ -104,6 +108,7 @@ SUBROUTINE hp_setup_q()
                      COS( angle1(ityp(na)) )
      END DO
      ux=0.0_DP
+     if (xclib_dft_is('gradient')) call compute_ux(m_loc,ux,nat)
      !
      ! Change the sign of the magnetic field in the screened US coefficients
      ! and save also the coefficients computed with -B_xc.
@@ -115,6 +120,33 @@ SUBROUTINE hp_setup_q()
        v%of_r(:,2:4)=-v%of_r(:,2:4)
        deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
        deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+     ENDIF
+  ENDIF
+  !
+  ! Calculate the unperturbed Hubbard potential
+  ! with the reversed Hubbard magnetization
+  ! and save it. Used for the unperturbed
+  ! Hamiltonian in the Sternheimer linear system.
+  !
+  IF (noncolin .and. domag) THEN
+    IF (lda_plus_u_kind == 0) THEN
+        vh_u_save = (0.d0, 0.d0)
+        ALLOCATE (ns_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, 1))
+        ns_nc = (0.d0, 0.d0)
+        vh_u_save(:,:,:,:,1) = v%ns_nc(:,:,:,:)
+        ns_nc(:,:,:,:,1) = rho%ns_nc(:,:,:,:)
+        CALL revert_mag_u ( ns_nc(:,:,:,:,1) )
+        CALL calc_vh_u (ns_nc(:,:,:,:,1), vh_u_save(:,:,:,:,2))
+        DEALLOCATE(ns_nc)
+     ELSEIF(lda_plus_u_kind == 2) THEN
+        vh_uv_save = (0.d0, 0.d0)
+        ALLOCATE (nsg_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, max_num_neighbors, nat, nspin, 1))
+        nsg_nc = (0.d0, 0.d0)
+        vh_uv_save(:,:,:,:,:,1) = v_nsg(:,:,:,:,:)
+        nsg_nc(:,:,:,:,:,1) = nsg(:,:,:,:,:)
+        CALL revert_mag_uv ( nsg_nc(:,:,:,:,:,1) )
+        CALL calc_vh_uv (nsg_nc(:,:,:,:,:,1), vh_uv_save(:,:,:,:,:,2))
+        DEALLOCATE(nsg_nc)
      ENDIF
   ENDIF
   ! 

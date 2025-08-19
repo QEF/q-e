@@ -65,8 +65,6 @@ SUBROUTINE c_bands_nscf_ph( )
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSE IF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
-  ELSE IF ( isolve == 2 ) THEN
-     WRITE( stdout, '(5X,"PPCG style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
@@ -93,8 +91,10 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... Needed for LDA+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
-          CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) THEN
+        CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
+        !$acc update device(wfcU)
+     END IF
      !
      ! ... calculate starting  wavefunctions
      !

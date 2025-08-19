@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{7.4.1}
+\def\version{7.5.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -36,7 +36,7 @@
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
   % title
-  \Huge User's Guide for \\ \qe\ (v.\version)
+  \Huge Guide to building from sources \\ \qe\ (v.\version)
 }
 
 \maketitle
@@ -45,13 +45,9 @@
 
 \section{Introduction}
 
-This guide gives a general overview of the contents and of the installation
-of \qe\ (opEn-Source Package for Research in Electronic Structure, Simulation,
-and Optimization), version \version.
-
-{\em Important notice: due to the lack of time and of manpower, this
-  manual does not cover many important aspects and may contain outdated
-  information.}
+This guide gives a very general overview of
+\qe\ (opEn-Source Package for Research in Electronic Structure, Simulation,
+and Optimization), version \version, and explains how to build it from sources.
 
 The \qe\ distribution contains the core packages \PWscf\ (Plane-Wave
 Self-Consistent Field) and \CP\ (Car-Parrinello) for the calculation
@@ -101,10 +97,9 @@ The following auxiliary packages are included as well:
 %      phonon dispersion plotting utility (to be
 %      used in conjunction with \PHonon).
 \end{itemize}
-A copy of required external libraries is either included or automatically
-downloaded from the net.
-Finally, several additional packages that exploit data produced by \qe\
-or patch some \qe\ routines can be automatically installed using
+Several additional packages that exploit data produced by \qe\
+or patch some \qe\ routines can be downloaded and build together with \qe,
+notably:
 \make:
 \begin{itemize}
 \item \texttt{Wannier90}:
@@ -132,22 +127,23 @@ data is available for most packages in files \texttt{INPUT\_*.txt} and
 
 The \qe\ codes work on many different types of Unix machines,
 including parallel machines using both OpenMP and MPI
-(Message Passing Interface).
-\qe\ also runs on Mac OS X and MS-Windows machines
-(see section \ref{Sec:Installation}). Since Feb.2021 the main
-repository also works with NVidia GPU's.
+(Message Passing Interface), as well as machines running
+Mac OS X or MS-Windows.
+Since Feb.2021 NVidia GPU's are supported by the stable releases.
+AMD GPU's are also supported but not yet in the main repository
+and in stable releases.
 
 Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
 \item the \texttt{Doc/} and \texttt{examples/} directories
-  of the \qe\ distribution;
-  \item the web site \texttt{www.quantum-espresso.org};
-  \item the archives of the  mailing list:
-   See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
+   of the \qe\ distribution;
+\item the web site \texttt{www.quantum-espresso.org};
+\item the archives of the  mailing list:
+   see section \ref{SubSec:Contacts}, ``Contacts'', for more info;
+\item the Wiki pages on GitLab:
+   \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
+   People who want to contribute to \qe\ should read these!
 \end{itemize}
-People who want to contribute to \qe\ should read the
-Wiki pages on GitLab: \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
-
 This guide does not explain the basic Unix concepts (shell, execution
 path, directories etc.) and utilities needed to run \qe; it does not
 explain either solid state physics and its computational methods.
@@ -170,12 +166,20 @@ The maintenance and further development of the \qe\ distribution
 is promoted by the \qe\ Foundation under the coordination of
 Paolo Giannozzi (Univ. Udine and IOM-CNR, Italy) and Pietro Delugas
 (SISSA Trieste) with a strong support from the MaX - Materials design
-at the Exascale EU Centre of Excellence. The GPU porting is mostly the
-work of Pietro Bonf\`a (Univ. Parma).
+at the Exascale EU Centre of Excellence and from the CINECA computing 
+centre. The NVidia GPU porting owes much to Pietro Bonf\`a (Univ. Modena), 
+Ivan Carnimeo (SISSA Trieste), Fabrizio Ferrari Ruffino (IOM-CNR).
 
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sec.\ref{SubSec:Terms}, include:
 \begin{itemize}
+  \item Ye Luo (Argonne) for many contributions to CMake maintenance,
+  improved threading, GPU porting, CI (Continuous integration), testing;
+  \item Laura Bellentani (CINECA) for GPU porting, optimization 
+  and benchmarking;
+  \item Fabio Affinito and Sergio Orlandini (CINECA) for ELPA support, 
+  for contributions to the FFT library, and for various parallelization
+  improvements;
   \item Victor Yu (Urbana-Champaign) for various bug fixes and
 	optimizations;
   \item Alexandre Tkatchenko's group, in particular Szabolcs Goger
@@ -183,11 +187,6 @@ mentioned in Sec.\ref{SubSec:Terms}, include:
   Hsin-Yu Ko (Cornell), for Many-Body Dispersion (MBD) correction;
   \item Federico Ficarelli and Daniele Cesarini (CINECA), with help
   from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
-  \item Ye Luo (Argonne) for many contributions to improved threading,
-  GPU porting, CI (Continuous integration), and testing;
-  \item Fabio Affinito and Sergio Orlandini (CINECA) for ELPA support, 
-  for contributions to the FFT library, and for various parallelization
-  improvements;
   \item Sebastiano Caravati for direct support of GTH pseudopotentials
   in analytical form, Santana Saha and Stefan Goedecker (Basel U.)
   for improved UPF converter of newer GTH pseudopotentials;
@@ -212,8 +211,10 @@ mentioned in Sec.\ref{SubSec:Terms}, include:
 Contributors to specific \qe\ packages are acknowledged in the
 documentation of each package.
 
-An alphabetic list of further
-contributors who answered questions on the mailing list, found
+An alphabetic list \footnote{no longer maintained since some time: 
+you may find the names of more recent contributors in merge requests 
+and issues on GitLab, \texttt{https://gitlab.com/QEF/q-e}.}
+of further contributors who answered questions on the mailing list, found
 bugs, helped in porting to new architectures, wrote some code,
 contributed in some way or another at some stage, follows:
 \begin{quote}
@@ -257,6 +258,7 @@ PLEASE NOTE: only messages that appear to come from the
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
+
 
 The main entry point for developers is the GitLab web site:
 \texttt{https://gitlab.com/QEF/q-e}.
@@ -319,8 +321,8 @@ or the file License in the distribution).
 \subsection{Download}
 \label{SubSec:Download}
 
-\qe\ is distributed in source form, but selected binary packages
-and virtual machines are also available.
+\qe\ is distributed in source form, but selected binary packages,
+virtual machines, dockers, may also be available.
 Stable and development releases of the \qe\ source package
 (current version is \version), as well as available binary
 packages, can be downloaded from the links listed in the
@@ -379,12 +381,12 @@ common to all packages:
 \texttt{UtilXlib/}   & Miscellaneous timing, error handling, MPI utilites\\
 \texttt{XClib/}      & Exchange-correlation functionals (excepted van der Waals)\\
 \texttt{MBD/}        & Routines for many-body dispersions\\
+\texttt{dft-d3/}     & Routines for DFT-D3 disesive corrections\\
 \texttt{LR\_Modules/}& Fortran modules and utilities used by linear-response codes\\
 \texttt{install/}    & installation scripts and utilities\\
 \texttt{pseudo}/     & pseudopotential files used by examples\\
 \texttt{Doc/}        & general documentation\\
-\texttt{archive/}    & external libraries in .tar.gz form\\
-\texttt{external/}   & external libraries downloaded by CMake\\
+\texttt{external/}   & external libraries automatically downloaded\\
 \texttt{test-suite/} & automated tests
 \end{tabular}
 \\
@@ -408,50 +410,49 @@ while others are specific to a single package:
 
 Finally, directory \texttt{COUPLE/} contains code and documentation
 that is useful to call \qe\ programs from external codes.
-\subsection{Prerequisites}
+
+\subsection{Prerequisites for source compilation}
 \label{Sec:Installation}
 
-To install \qe\ from source, you need first of all a minimal Unix
-environment, that is: a command shell (e.g., bash, sh) and utilities \make,
-\texttt{awk}, \texttt{sed}. In order to install external
-libraries from scratch, you will also need \texttt{git} v.2.13 or later.
-For MS-Windows, see Sec.\ref{SubSec:Windows}.
-If you prefer installation with CMake (supported since v.6.7), 
-you will need a recent (v.3.20 or later) working CMake software;
-otherwise you will need the \configure\ command from autoconf
-(and, for FoX compilation only, \texttt{m4}).
+First of all, you need a minimal Unix environment: a command shell 
+like bash or sh, utilities \make, \texttt{awk}, \texttt{sed}. 
+Note that the scripts contained in the distribution 
+assume that the local  language is set to the standard, i.e. "C"; 
+other settings may break them. Use \texttt{export LC\_ALL=C} (sh/bash) 
+or \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
+when running those scripts.
 
-Note that the scripts contained
-in the distribution assume that the local  language is set to the
-standard, i.e. "C"; other settings
-may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
-\texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
-when running scripts (including installation scripts).
+If you are not compiling a stable releasei from tarballs,
+you will also need \texttt{git} v.2.13 or later to get the 
+external libraries.
+You will need either CMake v.3.20 or later, or the \configure\ 
+command from \texttt{autoconf} v. 2.64 or later.
 
-Second, you need a Fortran compiler compliant with F2008 standard.
-For parallel execution, you will also need MPI libraries and a parallel
-(i.e. MPI-aware) compiler. For massively parallel machines, or
-for simple multicore parallelization, an OpenMP-aware compiler
-and libraries are also required. To compile for GPUs you need a
-recent version of the NVidia HPC SDK (software development kit),
-formerly PGI compiler, freely available for download.
+Second, you need a Fortran compiler compliant with F2008 standard
+and any half-decent C compiler.
+For parallel execution, a parallel MPI-aware Fortran compiler 
+and MPI libraries implementing v.3 of the standard (notably, 
+non-blocking broadcast and gather operations) are required.
+For massively parallel machines, or for simple multicore parallelization, 
+an OpenMP-aware Fortran compiler and libraries are also required. 
+To compile 
+for NVidia GPUs you need the NVidia HPC SDK (software development kit) 
+v.21.7 or later, freely available for download.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
 avoiding nonstandard extensions and newer features that are not
 widespread or stabilized. If however your compiler is older than
 a few ($\sim 5$) years, it is likely that something will not work.
 The same applies to mathematical and MPI libraries.
-For GPU compilation, you need v.21.7 or later of the NVidia HPC SDK
-(previous versions may or may not work).
 
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines
 using PC hardware, may or may not have the needed software. If not,
-you need to buy a commercial compiler or to use the open-source gfortran
-compiler from the gcc distribution (and possibly MPI libraries and run-time
-software). Note that most commercial compilers are also available
-free of charge under some conditions (e.g. academic or personal usage, no
-support) and may provide MPI libraries and run-time software as well.
+you may use the open-source gfortran compiler from the gcc distribution,
+and possibly open-source MPI libraries and run-time software. You may 
+also get a commercial compiler, some of which are available free of charge 
+under some conditions (e.g. academic or personal usage, no support) and may 
+provide MPI libraries and run-time software as well.
 
 \subsection{Building with CMake}
 
@@ -459,17 +460,20 @@ See \texttt{https://gitlab.com/QEF/q-e/-/wikis/Developers/CMake-build-system}.
 
 \subsection{Building with \make}
 
-To install the \qe\ source package using \make, run the \configure\
-script. This is actually a wrapper to the true \configure,
+\subsubsection{Generalities}
+To build the \qe\ source package using \make, run the \configure\
+script first. This is actually a wrapper to the true \configure,
 located in the \texttt{install/} subdirectory (\configure\ -h for help).
-\configure\ will (try to) detect compilers and libraries available on
-your machine, and set up things accordingly. Presently it supports
-all "common" computers, that is: based on Intel, AMD, ARM CPUs,
-running Linux, Mac OS X, MS-Windows. \qe\ is known to work on many
-more kinds of machines but may requires some tweaking, especially for
-the hardware of large HPC centers. Detailed but sometimes outdated
-installation instructions for specific HPC machines may be found in
-files \texttt{install/README.}{\em sys}, where {\em sys} is the machine name.
+\configure\ will (try to) detect available compilers and libraries for
+your machine, and set up things accordingly.
+
+IMPORTANT: \configure\ will likely work only if your desired Fortran and 
+C compilers are in your execution path, as specified in the PATH environment 
+variable, and if the related system libraries can be reached (again,
+as specified in suitable environment variables). Also, you may need to set 
+environment variable OMPI\_FC to the serial compiler you want, if you are
+using \texttt{mpif90} from OpenMPI. Most compiler suites come with a script
+or a "module" file that properly defines all the needed environment variables. 
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -479,10 +483,9 @@ Instructions for the impatient:
 \end{verbatim}
 This will (try to) produce parallel (MPI) executable if a proper parallel
 environment is detected, serial executables otherwise. For OpenMP executables,
-specify \texttt{./configure --enable-openmp}. Symlinks to executable programs
-will be placed in the \texttt{bin/}
-subdirectory. Note that both C and Fortran compilers must be in your execution
-path, as specified in the PATH environment variable.
+specify \texttt{./configure --enable-openmp}. For  GPUs, see GPU-specific
+instructions. Symlinks to executable programs appear in the \texttt{bin/} 
+subdirectory.
 
 \noindent \configure\ generates the following files:
 
@@ -503,10 +506,9 @@ in any \texttt{Makefile}, type \texttt{make depend}, or run
 
 It is convenient to use "parallel make" to speed up compilation:
 \texttt{make -jN} compiles in parallel on N processors. Note that
-if you interrupt \make, you may run into trouble the next time you 
-type \make (for instance, if \make\ is interrupted while unpacking
-and compiling an external library).
-If so, run \texttt{make clean}, or even \texttt{make distclean}, 
+if you interrupt \make\ while unpacking and compiling an external 
+library, you may run into trouble the next time you type \make. 
+If so, run \texttt{make veryclean}, or even \texttt{make distclean}, 
 before running \make\ again.
 
 You should always be able to compile the \qe\ suite
@@ -514,22 +516,22 @@ of programs without having to edit any of the generated files. However you
 may have to tune \configure\ by specifying appropriate environment variables
 and/or command-line options. Usually the tricky part is to get external
 libraries recognized and used: see Sec.\ref{Sec:Libraries}
-for details and hints. In most cases, you may simply edit file
+for details and hints. In many cases, you may simply edit file
 \texttt{make.inc}. 
 
-Environment variables may be set in any of these ways:
+\subsubsection{Environment variables}
+The behavior of \configure\ can be changed by defining some environment
+variables. These can be set in any of these ways:
 \begin{verbatim}
      export VARIABLE=value; ./configure             # sh, bash, ksh
      setenv VARIABLE value; ./configure             # csh, tcsh
      env VARIABLE=value ./configure                 # any shell
      ./configure VARIABLE=value                     # any shell
 \end{verbatim}
-As a rule: do not define environment variables for \configure\ unless
-you have a good reason to. Try \configure\ with no options as a first step.
 Some environment variables that are relevant to \configure\ are:
 
 \begin{tabular}{ll}
-\texttt{ARCH}& label identifying the machine type (see below)\\
+\texttt{ARCH}& label identifying the machine type (see next section)\\
 \texttt{F90, CC} &names of Fortran and C compilers\\
 \texttt{MPIF90} &       name of parallel Fortran 90 compiler (using MPI)\\
 \texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
@@ -537,11 +539,17 @@ Some environment variables that are relevant to \configure\ are:
 \texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
 \texttt{LIBDIRS}&     extra directories where to search for libraries\\
 \end{tabular}\\
-(note that \texttt{F90} is an ``historical'' name -- we actually use
+
+IMPORTANT: as a rule, DO NOT DEFINE environment variables for \configure,
+except those needed to have your compiler and libraries working.
+Always try \configure\ with no further options as a first step,
+unless you have a good reason to specify them.
+
+Note that \texttt{F90} is an ``historical'' name -- we actually use
 Fortran 2008 -- and that it should be used only together with option
-\texttt{--disable-parallel}. In fact, the value of F90 must be
+\texttt{--disable-parallel}. This is because the value of F90 must be
 consistent with the parallel Fortran compiler which is determined by
-\configure\ and stored in the \texttt{MPIF90} variable).
+\configure\ and stored in the \texttt{MPIF90} variable.
 
 For example, the following command line:
 \begin{verbatim}
@@ -555,6 +563,13 @@ Note that the value of \texttt{FFLAGS} must be quoted, because it contains
 spaces. NOTA BENE: passing the complete path to compilers (e.g.,
 \texttt{F90=/path/to/f90xyz}) may lead to obscure errors during
 compilation.
+
+\subsubsection{Supported architectures}
+Presently \configure\ supports all "common" computers, that is: based on 
+Intel, AMD, ARM CPUs, NVidia and (in a development branch) AMD GPUs, 
+running Linux and (often but not always) Mac OS X and MS-Windows.
+\qe\ works on many more kinds of machines but may requires some tweaking, 
+especially for the hardware of large HPC centers.
 
 If your machine type is unknown to \configure, you may use the
 \texttt{ARCH}
@@ -584,14 +599,11 @@ for NEC SX6 on a PC). Currently supported architectures are:
 \texttt{ia64}*     & Intel 64-bit (Itanium) running Linux
 \end{tabular}\\
 
-{\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1.
-Cray Unicos machines, SGI machines with MIPS architecture, HP-Compaq Alphas
-are no longer supported since v.4.2; PowerPC Macs are no longer
-supported since v.5.0; IBM machines with AIX are no longer supported
-since v.6.0; all architectures marked with a * are to be considered
+{\em Note}: all architectures marked with a * are to be considered
 obsolescent or obsolete.
 
-Finally, \configure\ recognizes the following command-line options.
+\subsubsection{Command-line options}
+\configure\ recognizes the following command-line options.
 Not all of them are implemented for all compilers, though. Default value
 is between bracket:\\
 \begin{tabular}{ll}
@@ -608,8 +620,8 @@ is between bracket:\\
 and the following optional packages:\\
 \begin{tabular}{ll}
 \texttt{--with-fox} & Use official FoX library instead of built-in replacement (default:no)\\
-\texttt{--with-scalapack}& (yes$|$no$|$intel) Use scalapack if available. \\
-      &Set to \texttt{intel} to use Intel MPI and BLACS (default: use OpenMPI)\\
+\texttt{--with-scalapack}& (yes$|$no$|$intel) Use scalapack if available (default:yes) \\
+                         &Use \texttt{intel} to force Intel MPI and BLACS (obsolescent)\\
 \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
   headers (no)\\
 \texttt{--with-elpa-lib}& Specify full path of the ELPA library (no)\\
@@ -629,19 +641,19 @@ and the following optional packages:\\
 \texttt{--with-libxc}        & Enable support for the \libxc\ library (no) \\
 \texttt{--with-libxc-prefix} & directory where \libxc\ is installed \\
 \texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
-\end{tabular}\\
-\\
-In order to compile the code for NVidia GPU's you will need a recent version
-(v.21.7 or later) of the NVidia HPC software development kit (SDK). Beware:
-some versions are known to miscompile QE. Ensure that all needed environmental
-variables
+\end{tabular}
+
+\subsubsection{\configure\ for NVidia GPU's}
+In order to compile the code for NVidia GPU's you need the NVidia HPC software
+development kit (SDK). Beware: some versions may mis-compile \qe.
+Ensure that all needed environmental variables
 are properly defined, e.g. by running the "module" file provided in the HPC SDK with command
 \texttt{module}. Specify \texttt{--with-cuda} and \texttt{--with-cuda-cc} as explained 
 below. Other options below
 are optional. Enabling faster communications between GPUs, via NVlink or Infiniband RDMA, 
 is essential for optimal parallel performance. 
 
-The following \configure\ options are available:\\
+The following \configure\ GPU options are available:\\
 \begin{tabular}{ll}
 \texttt{--with-cuda=value}&         enable compilation of GPU-accelerated subroutines.\\
                           &         \texttt{value} should point the path where the CUDA toolkit \\
@@ -692,74 +704,61 @@ unless you use option \texttt{--save}.
 \subsection{Libraries}
 \label{Sec:Libraries}
 
-\qe\ downloads a copy of the following external libraries if needed:
-\begin{itemize}
- \item FoX for reading and writing xml files;
- \item BLAS (\texttt{http://www.netlib.org/blas/}) and LAPACK
-  (\texttt{http://www.netlib.org/lapack/}) for linear algebra;
-\item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms.
-\end{itemize}
-Optimized vendor-specific libraries often yield huge performance gains
-with respect to compiled libraries and should be used whenever
-possible. \configure\ always try to locate the best mathematical
-libraries.
-\\
+\subsubsection{BLAS and LAPACK}
+\qe\ needs the BLAS and LAPACK mathematical libraries.
+As a rule, one should always use vendor-specific optimized 
+BLAS and LAPACK, such as e.g. those found in Intel's MKL. 
+They often yield huge performance gains with respect to 
+compiled libraries. \configure\ always try to locate the 
+best mathematical libraries.
 
-\paragraph{BLAS and LAPACK}
-\qe\ can use any architecture-optimized BLAS and LAPACK replacements,
-like those contained e.g. in the MKL for Intel and AMD CPUs, or
-ESSL for IBM Power machines.
-
-If no optimized libraries are available, one may try the ATLAS library:
-\texttt{http://math-atlas.sourceforge.net/}. Note that ATLAS is not
-a complete replacement for LAPACK: it contains all of the BLAS, plus the
-LU code, plus the full storage Cholesky code. Follow the instructions in the
-ATLAS distributions to produce a full LAPACK replacement.
+If optimized BLAS and LAPACK are not available, \qe\ automatically 
+downloads and compiles them. Another option is to try the ATLAS library: 
+\texttt{http://math-atlas.sourceforge.net/}.
+Note that ATLAS is not a complete replacement for LAPACK: it contains
+all of the BLAS, plus the LU code, plus the full storage Cholesky code.
+Follow the instructions in the ATLAS distributions to produce a full 
+LAPACK replacement. Also note that the ATLAS project appears to be dead.
 
 Sergei Lisenkov reported success and good performances with optimized
 BLAS by Kazushige Goto. The library is now available under an
 open-source license: see the GotoBLAS2 page at \\
-\texttt{http://www.tacc.utexas.edu/tacc-software/gotoblas2/}.
+\texttt{http://www.openmathlib.org/OpenBLAS/}.
 
-\paragraph{FFT}
-The FFTXlib of \qe\ contains a copy of an old FFTW library.
-It also supports
-the newer FFTW3 library and some vendor-specific FFT libraries.
+
+\subsubsection{FFT}
+The FFTXlib package of \qe\ contains a copy of an old FFTW library,
+but also supports the newer FFTW3 library and some vendor-specific 
+FFT libraries. It is strongly recommanded to use FFT's from an
+optimized library, such as e.g. those contained in Intel MKL.
 \configure\ will first search for vendor-specific FFT libraries;
 if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
 \configure\ will add the appropriate preprocessing options:
 \begin{itemize}
-\item \texttt{-D\_\_LINUX\_ESSL} for ESSL on IBM Linux machines,
-\item \texttt{-DASL} for NEC ASL library on NEC machines (obsolete?),
 \item \texttt{-D\_\_DFTI}  for DFTI (Intel MKL library),
 \item \texttt{-D\_\_FFTW3} for FFTW3 (external),
 \item \texttt{-D\_\_FFTW}  for FFTW (internal library),
+\item \texttt{-D\_\_LINUX\_ESSL} for ESSL on IBM Linux machines (obsolete?),
+\item \texttt{-DASL} for NEC ASL library on NEC machines (obsolete?),
 \end{itemize}
 to \texttt{DFLAGS} in the \texttt{make.inc} file.
 If you edit \texttt{make.inc} manually, please note that one and
 only one among the mentioned preprocessing option must be set.
 
-If you have MKL libraries, you may either use the provided FFTW3
-interface (v.10 and later), or directly link FFTW3 from MKL (v.12
-and later) or use DFTI (recommended).
+If you have MKL libraries, you may either link FFTW3 from MKL,
+or use DFTI (recommended).
 
-\paragraph{MPI libraries}
-MPI libraries are usually needed for parallel execution, unless you are
+
+\subsubsection{MPI libraries}
+MPI libraries are needed for parallel execution, unless you are
 happy with OpenMP-only multicore parallelization.
 In well-configured machines, \configure\ should find the appropriate
 parallel compiler for you, and this should find the appropriate
-libraries. Since often this doesn't
-happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
+libraries. If this does not happen, see Sec.\ref{SubSec:LinuxPCMPI}.
 
-{\em Note:} since v.6.1, MPI libraries implementing v.3 of the standard
-(notably, non-blocking broadcast and gather operations) are required.
 
-\paragraph{Libraries for accelerators}
-The accelerated version of the code uses standard CUDA libraries 
-\texttt{cublas, cufft, curand, cusolver}, available from the NVidia HPC SDK.
-
-\paragraph {HDF5}
+\subsubsection{HDF5}
 The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/}),
 v.1.8.16 or later, can be used to perform binary I/O using the HDF5
 format.
@@ -791,16 +790,22 @@ serial or parallel HDF5 library, and will  set the flag
 \texttt{-D\_\_HDF5\_SERIAL} in the \texttt{make.inc} file accordingly.
 
 
-\paragraph{Other libraries}
-\qe\ can use the MASS vector math
-library from IBM, if available (only on machines with XLF compiler:
-likely obsolete).
+\subsubsection{Other libraries}
+The accelerated version of the code for NVidia GPU's uses standard CUDA 
+libraries \texttt{cublas, cufft, curand, cusolver} that are available 
+from the NVidia HPC SDK and found by \configure.
 
-\paragraph{If optimized libraries are not found}
+If the appropriate \configure\ option is set, the code downloads and compile 
+the FoX library (\texttt{m4} is required in this case) for reading and writing
+xml files.  This option is useful only for debugging. 
+
+\qe\ can use the MASS vector math library from IBM, but for a single routine
+and only with the XLF compiler, so it is hardly worth it.
+
+\subsubsection{In case of trouble}
 The \configure\ script attempts to find optimized libraries, but may fail
 if they have been installed in non-standard places. You should examine
-the final value of \texttt{BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS} (if needed),
-\texttt{MASS\_LIBS} (IBM only), either in the output of \configure\ or in the generated
+the final value of \texttt{BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS} (if needed), either in the output of \configure\ or in the generated
 \texttt{make.inc}, to check whether it found all the libraries that you intend to use.
 
 If some library was not found, you can specify a list of directories to search
@@ -808,7 +813,7 @@ in the environment variable \texttt{LIBDIRS},
 and rerun \configure; directories in the
 list must be separated by spaces. For example:
 \begin{verbatim}
-   ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
+   ./configure LIBDIRS="/opt/intel/oneapi/mkl /usr/lib/math"
 \end{verbatim}
 If this still fails, you may set some or all of the \texttt{*\_LIBS} variables manually
 and retry. For example:
@@ -816,7 +821,7 @@ and retry. For example:
    ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
 \end{verbatim}
 Beware that in this case, \configure\ will blindly accept the specified value,
-and won't do any extra search.
+and won't do any check or extra search.
 
 \subsection{Libxc library}
 
@@ -933,7 +938,7 @@ dimensions, set in file \texttt{Modules/parameters.f90}:
       npsx   = ntypx,  &! max number of different PPs (obsolete)
       nsx    = ntypx,  &! max number of atomic species (CP)
       npk    = 40000,  &! max number of k-points
-      lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)
+      lmaxx  = 4,      &! max non local angular momentum (l=0 to lmaxx)
       lqmax= 2*lmaxx+1  ! max number of angular momenta of Q
 \end{verbatim}
 These values should work for the vast majority of cases. In case you need
@@ -971,8 +976,12 @@ the following codes: \pwx, \cpx, \phx, \epwx, \texttt{hp.x}.
 Instructions for the impatient:
 \begin{verbatim}
     cd test-suite
-    make run-tests
+    make [NPROCS=X] run-tests
 \end{verbatim}
+where the square brackets mean that what is inside is optional, \texttt{X} 
+is the number of processors (for a parallel build: do not set \texttt{X}
+to more than 1 for a serial build!).
+
 Instructions for all others: go to the \texttt{test-suite/} directory,
 read the \texttt{README} file, or at least, type \make. You may need
 to edit the \texttt{run-XX.sh} shells, defining variables
@@ -1072,10 +1081,9 @@ compilation error.
 \end{enumerate}
 If many symbols are missing in the loading phase: you did not specify the
 location of all needed libraries (LAPACK, BLAS, FFTW, machine-specific
-optimized libraries), in the needed order.
-Note that \qe\ is self-contained (with the exception of MPI libraries for
-parallel compilation): if system libraries are missing, the problem is in
-your compiler/library combination or in their usage, not in \qe.
+optimized libraries), in the needed order. If system libraries are missing, 
+the problem is in your compiler/library combination or in their usage, not 
+in \qe.
 \item
 If you get {\em Segmentation fault} or similar errors
 in the provided tests and examples: your compiler, or
@@ -1090,12 +1098,11 @@ If all test fails, look into the output and error files:
 there is some dumb reason for failure.
 \item
 If most test pass but some fail, again: look into the output
-and error files. A frequent source of trouble is complex function
-\texttt{zdotc}. See the "Linux PCs with gfortran compilers" paragraph.
+and error files.
 \end{itemize}
 
 
-\subsubsection{Linux PC}
+\subsubsection{Linux PC's}
 
 Both AMD and Intel CPUs, 32-bit and 64-bit, are supported and work,
 either in 32-bit emulation and in 64-bit mode. 64-bit executables
@@ -1106,49 +1113,16 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give
 any advantage anyway.
 
-Currently, \configure\ supports gfortran and the Intel (ifort), NVidia
-(nvfortran, formerly PGI pgf90) compilers. ARM (armflang) and NAG (nagfor)
-compilers are supported but little tested and may or may not work.
-Pathscale, Sun Studio, AMD Open64, are no longer supported after v.6.2;
-g95, since v.6.1.
-
-Intel MKL mathematical libraries are supported. ACML support must be
-considered as obsolete.
-
 It is usually convenient to create semi-statically linked executables (with only
 libc, libm, libpthread dynamically linked). If you want to produce a binary
 that runs on different machines, compile it on the oldest machine you have
 (i.e. the one with the oldest version of the operating system).
 
-\paragraph{Linux PCs with gfortran}
+Currently, configure\ supports, and \qe\ works with, not-too-old and
+not-too-buggy versions of gfortran, Intel (ifx, ifort), NVidia (nvfortran), 
+AMD (AOCC v.5), ARM (armflang), Cray (ftn) compilers.
 
-Gfortran v.4.8.5, still found on CentOS machines, no longer compiles
-\qe\ v.6.6 or later, due to a gfortran bug. You need at least gfortran v.4.9.X.
-
-"There is a known incompatibility problem between different calling
-convention for Fortran functions that return complex values [...]
-If your code crashes during a call to \texttt{zdotc},
-recompile \qe\ using the internal BLAS and LAPACK routines
-(...)
-to see if the problem disappears; or, add the \texttt{-ff2c} flag"
-(info by Giovanni Pizzi, Jan. 2013).
-You may also consider replacing the offending calls to \texttt{zdotc}
-with fortran intrinsic \texttt{dot\_product}.
-
-If you want to use MKL libraries together with gfortran,
-link \texttt{-lmkl\_gf\_lp64}, not \texttt{-lmkl\_intel\_lp64}.
-
-\paragraph{Linux PCs with Intel compiler (ifort)}
-
-The Intel compiler ifort \texttt{http://software.intel.com/}
-produces fast executables, at least on Intel CPUs, but not all versions
-work as expected. In particular, ifort versions earlier than v.15
-miscompile the new XML code in QE v.6.4 and later and should not be
-used any longer. In case of trouble, update your version
-with the most recent patches. Since each major release of ifort
-differs a lot from the previous one, compiled objects from different
-releases may be incompatible and should not be mixed.
-
+\paragraph{Linux PCs with Intel compiler (ifx, ifort)}
 If \configure\ doesn't find the compiler, or if you get
 {\em Error loading shared libraries} at run time, you may have
 forgotten to execute the script that
@@ -1157,22 +1131,19 @@ done this for you, you should execute the appropriate script -- located in
 the directory containing the compiler executable -- in your
 initialization files. Consult the documentation provided by Intel.
 
-The warning: {\em feupdateenv is not implemented and will always fail},
-can be safely ignored. Complains about ``recommended formats'' may also
-be ignored.
-
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries
-(freely available at
-\texttt{https://software.intel.com/en-us/performance-libraries}).
-MKL libraries can be used also with non-Intel compilers.
-They work also for AMD CPU, selecting the appropriate machine-optimized
-libraries: see ``Linux PCs with AMD processors''.
+(freely available together with the Intel compiler at
+\texttt{https://software.intel.com}). They can be used also 
+with non-Intel compilers. With gfortran, one has to link 
+\texttt{-lmkl\_gf\_lp64} instead of \texttt{-lmkl\_intel\_lp64} 
+(\configure\ should take care of it).
 
-\configure\ properly detects only recent (v.12 or later) MKL libraries,
+\configure\ properly detects MKL libraries,
 as long as the \$MKLROOT environment variable is set in the current shell.
-Normally this environment variable is set by sourcing the Intel MKL or Intel
-Parallel Studio environment script.
+Normally this environment variable is set by sourcing the environment script
+provided by Intel.
+
 By default the non-threaded version of MKL is linked, unless option
 \texttt{configure --with-openmp} is specified. In case of trouble,
 refer to the following web page to find the correct way to link MKL:\\
@@ -1183,18 +1154,10 @@ environment variable OMP\_NUM\_THREADS to 1 unless you know how to run
 MPI+OpenMP. See Sec.\ref{Sec:para} for more info on this
 and on the difference between MPI and OpenMP parallelization.
 
-If you get a mysterious "too many communicators" error and a
-subsequent crash: there is a bug in Intel MPI and MKL 2016 update 3.
-See this thread and the links quoted therein:
-\verb|http://www.mail-archive.com/pw_forum@pwscf.org/msg29684.html|.
-
 \paragraph{Linux PCs with AMD processors}
-For AMD CPUs you may find convenient to link AMD acml libraries
-(can be freely downloaded from AMD web site).
-\configure\ should recognize properly installed acml libraries.
-UPDATE (February 2020): acml have been discontinued. There are new
-libraries called AMD Optimizing CPU Libraries (AOCL), tuned for the
-AMD EPYC processor family.
+For AMD CPUs there are optimized libraries called AOCL, AMD Optimizing CPU 
+Libraries, bundled with the AOCC v.5 compiler, freely available from AMD.
+
 `` Recently I played around with some AMD EPYC cpus and the bad thing
 is that I also saw some strange numbers when using libflame/aocl 2.1.
 (...) Since version 2020 the MKL performs rather well when using AMD cpus,
@@ -1216,8 +1179,7 @@ export MKL_CBWR=AUTO
 \label{SubSec:LinuxPCMPI}
 PC clusters running some version of MPI are a very popular
 computational platform nowadays. \qe\ is known to work
-with at least two of the major MPI implementations (MPICH, LAM-MPI),
-plus with the newer MPICH2 and OpenMPI implementation.
+with at least the MPICH2 and OpenMPI implementations.
 \configure\ should automatically recognize a properly installed
 parallel environment and prepare for parallel compilation.
 Unfortunately this not always happens. In fact:
@@ -1253,10 +1215,23 @@ see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 
 \subsubsection{Microsoft Windows}
 \label{SubSec:Windows}
+Currently the safest way to build \qe\ on Windows is to enable the
+Windows Subsystem for Linux (WSL) v.2, available on Windows 10 and 11.
+You may install a Linux distribution you like and compile as on Linux. 
+It works very well. See here:
+\texttt{https://learn.microsoft.com/en-us/windows/wsl/install}
+
+Another option is  Quantum Mobile:
+\texttt{https://www.materialscloud.org/work/quantum-mobile}.
+
+If you prefere a native Windows build, you are welcome to try 
+the various possibilities listed below and to report details
+in case of success.
+
 Since February 2020 \qe\ can be compiled on MS-Windows 10 using PGI 19.10
 Community Edition (freely downloadable). \configure\ works with the bash
-script provided by PGI but the \configure\ of FoX fails: use script
-\texttt{install/build\_fox\_with\_pgi.sh} to manually compile FoX.
+script provided by PGI (the \configure\ of FoX fails: use script
+\texttt{install/build\_fox\_with\_pgi.sh} to manually compile FoX).
 
 Another option: use MinGW/MSYS. Download the installer from
 \texttt{https://osdn.net/projects/mingw/}, install MinGW, MSYS, gcc and
@@ -1269,14 +1244,27 @@ reasons.
 Another option is Cygwin, a UNIX environment which runs under Windows: see\\
 \texttt{http://www.cygwin.com/}.
 
-Windows-10 users may also enable the Windows Subsystem for Linux (see here:\\
-\texttt{https://docs.microsoft.com/en-us/windows/wsl/install-win10}),
-install a Linux distribution, compile \qe\ as on Linux. It works very well.
-
-As a final option, one can use Quantum Mobile:\\
-\texttt{https://www.materialscloud.org/work/quantum-mobile}.
-
 \subsubsection{Mac OS}
+
+Mac OS-X machines with gfortran, and possibly other compilers as well,
+should in principle work, but "your mileage may vary", depending upon 
+the specific software stack you are using. Parallel compilation with 
+OpenMPI should also work.
+
+Gfortran information and binaries for Mac OS-X here:
+\texttt{http://hpc.sourceforge.net/}.
+
+If you get an error like
+\begin{verbatim}
+  clang: error: no input files
+  make[1]: *** [laxlib.fh] Error 1
+  make: *** [libla] Error 1i
+\end{verbatim}
+redefine \texttt{CPP} as \texttt{CPP=gcc -E} in \texttt{make.inc}.
+
+Mysterious crashes in \texttt{zdotc} are due to a known incompatibility of
+complex functions with some optimized BLAS. They should no longer be an
+issue, as all \texttt{zdotc} have been replaced from the current \qe\ version.
 
 "I have had some success compiling pw.x on the newish apple hardware.
 Running run-tests-pw-parallel resulted in all but 3 tests passed (3 unknown).
@@ -1299,31 +1287,11 @@ I pulled a more up-to-date version from iains/gcc-darwin-arm64 github repo\\
 \item PW/src/efermig.f90 needed to be compiled without optimization -O0. 
 No idea why at the moment."
 \end{enumerate}
-(Info by John Vinson, NIST)
-
-Mac OS-X machines with gfortran or with the Intel compiler ifort
-and MKL libraries should work, but "your mileage may vary", depending
-upon the specific software stack you are using. Parallel compilation
-with OpenMPI should also work.
-
-If you get an error like
-\begin{verbatim}
-  clang: error: no input files
-  make[1]: *** [laxlib.fh] Error 1
-  make: *** [libla] Error 1i
-\end{verbatim}
-redefine \texttt{CPP} as \texttt{CPP=gcc -E} in \texttt{make.inc}.
-
-Gfortran information and binaries for Mac OS-X here:
-\texttt{http://hpc.sourceforge.net/} and
-\texttt{https://wiki.helsinki.fi/display/HUGG/GNU+compiler+install+on+Mac+OS+X}.
-
-Mysterious crashes in \texttt{zdotc} are due to a known incompatibility of
-complex functions with some optimized BLAS. See the "Linux PCs with gfortran"
-paragraph.
+(Info by John Vinson, NIST, )
 
 \subsubsection{Cray machines}
 
+Cray machines may be tricky:
 ''... despite what people can imagine, every CRAY machine deployed can
 have different environment. For example on the machine I usually use
 for tests [...] I do have to unload some modules to make QE running
@@ -1331,12 +1299,12 @@ properly. On another CRAY [...] there is also Intel compiler as option
 and the system is slightly different compared to the other.'' 
 (info by Filippo Spiga)
 
-For recent Cray machines, use \texttt{./configure ARCH=craype}.
+\texttt{./configure ARCH=craype} should work for recent Cray machines.
 This selects the \texttt{ftn} compiler, that typically uses
 the \texttt{crayftn} compiler but may also use other ones,
 depending upon the site and personal environment. \texttt{ftn} v.15.0.1
-compiles QE properly. With the \verb|PrgEnv-cray| module v.6.0.10,
-\texttt{ftn} v.14.0.3, you run into the following problems:
+and later should compile QE properly. Some compiler versions may however
+run into problems like these for \texttt{ftn} v.14.0.3:
 \begin{itemize}
 \item internal compiler error in \verb|esm_stres_mod.f90|;
 \item crashes when writing the final xml data file.
@@ -1351,8 +1319,6 @@ If you want to use the Intel compiler instead, try something like:
 $ module swap PrgEnv-cray PrgEnv-intel
 $ ./configure ARCH=craype [--enable-openmp --enable-parallel --with-scalapack]
 \end{verbatim}
-
-Old Cray machines: T3D, T3E, X1, etc, are no longer supported.
 
 \newpage
 
@@ -1593,7 +1559,7 @@ need to access your files that are scattered in an unpredictable
 way across disks residing on different nodes.
 
 You can use input variable \texttt{disk\_io} to vary the
-amount of I/O done by \pwx. Since v.5.1, the default value is
+amount of I/O done by \pwx. The default value is
 \texttt{disk\_io='low'}, so the code will store wavefunctions
 into RAM and not on disk during the calculation. Specify
 \texttt{disk\_io='medium'} only if you have too many k-points
@@ -1607,6 +1573,12 @@ if you do not need to keep final data files.
 \subsection{Tricks and problems}
 \label{SubSec:badpara}
 
+\paragraph{Trouble with parallel execution}
+Always verify if your executable is actually compiled for
+parallel execution or not: it is declared in the first lines
+of output. Running several instances of a serial code with
+\texttt{mpirun} or \texttt{mpiexec} produces strange crashes.
+
 Many problems in parallel execution derive from the mixup of different
 MPI libraries and runtime environments. There are two major MPI
 implementations, OpenMPI and MPICH, coming in various versions,
@@ -1615,18 +1587,20 @@ not necessarily compatible; plus vendor-specific implementations
 compilers (typically, \texttt{mpif90} scripts calling different
 serial compilers), multiple MPI libraries, multiple launchers
 for parallel codes (different versions of \texttt{mpirun} and/or
-\texttt{mpiexec}). You have to figure out the proper combination
+\texttt{mpiexec}). 
+
+You have to figure out the proper combination
 of all of the above, which may require using command \texttt{module}
 or manually setting environment variables and execution paths.
 What exactly has to be done depends upon the configuration of your
 machine. You should inquire with your system administrator or user
-support (if available; if not, YOU are the system administrator
-and user support and YOU have to solve your problems).
+support, if available; if not, YOU are the system administrator
+and user support and YOU have to solve your problems.
 
-Always verify if your executable is actually compiled for
-parallel execution or not: it is declared in the first lines
-of output. Running several instances of a serial code with
-\texttt{mpirun} or \texttt{mpiexec} produces strange crashes.
+Please also note that while mysterious and irreproducible crashes
+in parallel execution may be due to \qe\ bugs, more often than not 
+they are a consequence of buggy compilers or of buggy or miscompiled 
+MPI libraries.
 
 \paragraph{Trouble with input files}
 Input files should be plain ASCII text. The presence of CRLF line 
@@ -1657,45 +1631,18 @@ confuse even the \texttt{-i/in/inp/input} mechanism that is present in all
 \qe\ codes. In this case, use the \texttt{-i} option of \texttt{mpirun.lsf}
 to provide an input file.
 
-\paragraph{Trouble with MKL and MPI parallelization}
-If you notice very bad parallel performances with MPI and MKL libraries,
-it is very likely that the OpenMP parallelization performed by the latter
-is colliding with MPI. Recent versions of MKL enable autoparallelization
-by default on multicore machines.  You must set the environment variable
-OMP\_NUM\_THREADS to 1 to disable it.
-Note that if for some reason the correct setting  of variable
-OMP\_NUM\_THREADS
-does not propagate to all processors, you may equally run into trouble.
-Lorenzo Paulatto (Nov. 2008) suggests to use the \texttt{-x} option to \texttt{mpirun} to
-propagate OMP\_NUM\_THREADS to all processors.
-Axel Kohlmeyer suggests the following (April 2008):
-"(I've) found that Intel is now turning on multithreading without any
-warning and that is for example why their FFT seems faster than
-FFTW. For serial and OpenMP based runs this makes no difference (in
-fact the multi-threaded FFT helps), but if you run MPI locally, you
-actually lose performance. Also if you use the 'numactl' tool on linux
-to bind a job to a specific cpu core, MKL will still try to use all
-available cores (and slow down badly). The cleanest way of avoiding
-this mess is to either link with
-\begin{quote}
-\texttt{-lmkl\_intel\_lp64 -lmkl\_sequential -lmkl\_core} (on 64-bit:
-x86\_64, ia64)\\
-\texttt{-lmkl\_intel -lmkl\_sequential -lmkl\_core} (on 32-bit, i.e. ia32 )
-\end{quote}
-or edit the \texttt{libmkl\_'platform'.a} file. I'm using now a file
-\texttt{libmkl10.a} with:
-\begin{verbatim}
-  GROUP (libmkl_intel_lp64.a libmkl_sequential.a libmkl_core.a)
-\end{verbatim}
-It works like a charm". UPDATE: Since v.4.2, \configure\ links by
-default MKL without multithreaded support.
+\paragraph{Trouble with MPI-OpenMP parallelization}
+It is often advantageous to compile for both MPI and OpenMP parallelization,
+taking advantage of both. If however you get really bad performances, you 
+may have run into a conflict between the two parallelizations, leading to
+more than one thread trying to access the same core.
 
-\paragraph{Trouble with compilers and MPI libraries}
-Many users of \qe, in particular those working on PC clusters,
-have to rely on themselves (or on less-than-adequate system managers) for
-the correct configuration of software for parallel execution. Mysterious and
-irreproducible crashes in parallel execution are sometimes due to bugs
-in \qe, but more often than not are a consequence of buggy
-compilers or of buggy or miscompiled MPI libraries.
+\qe\ cannot control where MPI processes and OpenMP thread execute:
+this is something that the operating system should know about. 
+All you can control is the number of MPI processes (with \texttt{mpirun})
+and of OpenMP threads per MPI process (with the environment variable
+OMP\_NUM\_THREADS=N). If you are out of luck and of better ideas, just set
+OMP\_NUM\_THREADS=1,
+
 
 \end{document}

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
+subroutine drhodvloc (nu_i0, npe, drhos, wdyn)
   !-----------------------------------------------------------------------
   !! This subroutine computes the contribution of the local
   !! potential to the electronic term <psi|dv-e ds|dpsi> of the dynamical
@@ -14,7 +14,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
-  USE fft_base,  ONLY : dfftp, dffts
+  USE fft_base,  ONLY : dffts
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
@@ -29,7 +29,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !! input: the number of perturbation of this representations
   integer :: nu_i0
   !! input: the initial position of the mode
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  complex(DP) :: drhos (dffts%nnr, nspin_mag, npe)
   !! the change of density due to perturbations
   complex(DP) :: wdyn(3*nat, 3*nat)
   !! auxiliary matrix where drhodv is stored
@@ -58,7 +58,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
         do is = 1, nspin_lsda
         ! FIXME : use zgemm instead of dot_product
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
-                dot_product(drhoscf (1:dffts%nnr, is, ipert), dvloc) * &
+                dot_product(drhos (1:dffts%nnr, is, ipert), dvloc) * &
                   omega / (dffts%nr1 * dffts%nr2 * dffts%nr3)
         enddo
      enddo

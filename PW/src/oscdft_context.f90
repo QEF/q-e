@@ -58,6 +58,12 @@ MODULE oscdft_context
 
       REAL(DP), ALLOCATABLE          :: force_oscdft(:,:)
 
+      ! oscdft_type=2
+      LOGICAL, ALLOCATABLE           :: constraining(:)
+      LOGICAL                        :: conv, &
+                                        is_constraint
+      REAL(DP), ALLOCATABLE          :: constraint(:,:,:,:) 
+
    END TYPE oscdft_context_type
 
    CONTAINS
@@ -664,6 +670,10 @@ MODULE oscdft_context
          inp => ctx%inp
          idx => ctx%idx
 
+         WRITE(stdout, 701) inp%oscdft_type
+
+         IF (.NOT.(inp%oscdft_type==1)) RETURN
+
          IF (npol .NE. 1) CALL errore("oscdft_init", "current value of npol not implemented", 1)
          IF (noncolin) CALL errore("oscdft_init", "noncolin not supported", 1)
 
@@ -707,9 +717,9 @@ MODULE oscdft_context
                IF ((oidx <= 0).AND.&
                    (oidx /= OCCUP_TRACE).AND.&
                    (oidx /= OCCUP_SUM)) THEN
-                  CALL errore("oscdft_init",&
-                              "occup_index not implemented yet for this swapping technique",&
-                              ioscdft)
+                   CALL errore("oscdft_init",&
+                               "occup_index not implemented yet for this swapping technique",&
+                                ioscdft)
                ENDIF
             ENDDO
          ENDIF
@@ -736,6 +746,7 @@ MODULE oscdft_context
          600 FORMAT("OSCDFT DEBUG: ", A, "(", I5, "): ", *(F8.5, " "))
          601 FORMAT("=======================================================================================")
          700 FORMAT("OSCDFT: iteration type ", I1, ": ", A)
+         701 FORMAT(/5x,"OSCDFT: oscdft_type ", I1)
       END SUBROUTINE oscdft_init_context
 
       SUBROUTINE oscdft_alloc_nst(nst, max_ns_dim, nconstr, noscdft)

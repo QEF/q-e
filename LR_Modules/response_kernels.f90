@@ -49,18 +49,17 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !!
    !! Output:
    !!    - avg_iter: average number of iterations for the linear equation solver
-   !!    - drhoout: induced charge density
+   !!    - drhoout: induced charge density (dffts, without augmentation term)
    !!    - dbecsum: becsum with dpsi
    !!    - dbecsum_nc: becsum with dpsi. Optional, used if noncolin is true.
    !!
-   !! FIXME: Only 1:dffts%nnr is used for drhoout, but it is allocated as 1:dfftp%nnr.
    !----------------------------------------------------------------------------
    USE kinds,                 ONLY : DP
    USE io_global,             ONLY : stdout
    USE mp,                    ONLY : mp_sum
    USE mp_pools,              ONLY : inter_pool_comm
    USE buffers,               ONLY : get_buffer, save_buffer
-   USE fft_base,              ONLY : dfftp
+   USE fft_base,              ONLY : dffts
    USE ions_base,             ONLY : nat
    USE klist,                 ONLY : xk, wk, ngk, igk_k
    USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
@@ -101,7 +100,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !! average number of iterations for the linear equation solver
    COMPLEX(DP), POINTER, INTENT(INOUT) :: dvscfins(:, :, :)
    !! dV_ind calculated in the previous iteration
-   COMPLEX(DP), INTENT(INOUT) :: drhoout(dfftp%nnr, nspin_mag, npert)
+   COMPLEX(DP), INTENT(INOUT) :: drhoout(dffts%nnr, nspin_mag, npert)
    !! induced charge density
    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2, nat, nspin_mag, npert)
    !! becsum with dpsi
@@ -143,6 +142,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
+   h_diag = (0.d0, 0.d0)
+   aux2 = (0.d0, 0.d0)
    !
    !$acc enter data create(aux2(1:npwx*npol, 1:nbnd))
    !

@@ -70,7 +70,7 @@ SUBROUTINE setup()
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, init_hubbard, lda_plus_u_kind
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard, lda_plus_u_kind, orbital_resolved
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
@@ -100,7 +100,8 @@ SUBROUTINE setup()
   USE random_numbers,     ONLY : set_random_seed
   USE dynamics_module,    ONLY : control_temp
 #if defined (__OSCDFT)
-  USE plugin_flags,          ONLY : use_oscdft
+  USE plugin_flags,       ONLY : use_oscdft
+  USE oscdft_base,        ONLY : oscdft_ctx
 #endif
 
   !
@@ -247,7 +248,7 @@ SUBROUTINE setup()
      ENDIF
   ENDIF
 #if defined (__OSCDFT)
-  IF (use_oscdft) THEN
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
      IF ( colin_mag == 2 ) THEN
         CALL infomsg( 'setup', 'colin_mag=2 not implemented for OSCDFT' )
         colin_mag = 1
@@ -310,8 +311,10 @@ SUBROUTINE setup()
   ! ... are transformed into standard pseudopotentials
   !
   IF ( lspinorb ) THEN
-     IF ( ALL ( .NOT. upf(:)%has_so ) ) &
-          CALL infomsg ('setup','At least one non s.o. pseudo')
+     IF ( ALL ( .NOT. upf(:)%has_so ) ) CALL errore ('setup', &
+         'Spin-orbit calculations require at least one spin-orbit pseudo',1)
+     IF ( ANY ( .NOT. upf(:)%has_so ) ) CALL infomsg ('setup', &
+         'Not all pseudopotentials have spin-orbit data')
   ELSE
      CALL average_pp ( ntyp )
   END IF
@@ -425,7 +428,7 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           IF ( lgcscf ) THEN
+           IF ( lgcscf .OR. orbital_resolved ) THEN
               !
               ethr = 1.D-8
               !

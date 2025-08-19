@@ -13,6 +13,7 @@
   mp_mesh_k   = .true.
   lpolar      = .true.
   vme         = 'dipole'
+  eps_acoustic= 5.0
 
   use_ws      = .false.
   lifc        = .false.

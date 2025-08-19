@@ -106,7 +106,7 @@
     USE ep_constants,  ONLY : zero
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : ionode_id
+    USE io_global,     ONLY : meta_ionode, meta_ionode_id
     USE input,         ONLY : nstemp
     !
     IMPLICIT NONE
@@ -140,7 +140,7 @@
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + 2)
     !! Vector to store the array
     !
-    IF (mpime == ionode_id) THEN
+    IF (meta_ionode) THEN
       !
       lsigma_all = 3 * nbndfst * nktotf * nstemp + 2
       ! First element is the current q-point
@@ -208,7 +208,7 @@
     USE ep_constants,  ONLY :  zero
     USE mp,            ONLY : mp_barrier, mp_bcast
     USE mp_world,      ONLY : mpime, world_comm
-    USE io_global,     ONLY : ionode_id
+    USE io_global,     ONLY : meta_ionode, meta_ionode_id
     USE input,         ONLY : nstemp
     !
     IMPLICIT NONE
@@ -246,7 +246,7 @@
     !
     CHARACTER(LEN = 256) :: name1
     !
-    IF (mpime == ionode_id) THEN
+    IF (meta_ionode) THEN
       !
       ! First inquire if the file exists
 #if defined(__MPI)
@@ -298,13 +298,13 @@
       ENDIF
     ENDIF
     !
-    CALL mp_bcast(exst, ionode_id, world_comm)
+    CALL mp_bcast(exst, meta_ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast(iqq, ionode_id, world_comm)
-      CALL mp_bcast(sigmar_all, ionode_id, world_comm)
-      CALL mp_bcast(sigmai_all, ionode_id, world_comm)
-      CALL mp_bcast(zi_all, ionode_id, world_comm)
+      CALL mp_bcast(iqq, meta_ionode_id, world_comm)
+      CALL mp_bcast(sigmar_all, meta_ionode_id, world_comm)
+      CALL mp_bcast(sigmai_all, meta_ionode_id, world_comm)
+      CALL mp_bcast(zi_all, meta_ionode_id, world_comm)
       !
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1) THEN
@@ -599,6 +599,7 @@
     USE mp,        ONLY : mp_barrier
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
+    USE mp_global, ONLY : my_pool_id
     !
     IMPLICIT NONE
     !
@@ -635,7 +636,7 @@
     REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun * nstemp + 2)
     !! Vector to store the array
     !
-    IF (mpime == ionode_id) THEN
+    IF (my_pool_id == ionode_id) THEN
       !
       ! energy range and spacing for spectral function
       !
@@ -704,8 +705,9 @@
     USE io_files,      ONLY : prefix, tmp_dir, diropn
     USE ep_constants,  ONLY : zero
     USE mp,            ONLY : mp_barrier, mp_bcast
-    USE mp_world,      ONLY : mpime, world_comm
+    USE mp_world,      ONLY : world_comm
     USE io_global,     ONLY : ionode_id
+    USE mp_global,     ONLY : my_pool_id
     !
     IMPLICIT NONE
     !
@@ -743,7 +745,7 @@
     CHARACTER(LEN = 256) :: name1
     !
     !
-    IF (mpime == ionode_id) THEN
+    IF (my_pool_id == ionode_id) THEN
       !
       ! First inquire if the file exists
 #if defined(__MPI)

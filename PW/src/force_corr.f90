@@ -50,7 +50,7 @@ SUBROUTINE force_corr( forcescc )
   CALL mp_max (qmax, intra_bgrp_comm)
   CALL init_tab_rhoat (qmax, omega, intra_bgrp_comm, ierr)
   !  
-  ! ... vnew is V_out - V_in, psic is the temp space
+  ! ... vnew is V_out - V_in
   !
   ALLOCATE( vauxr(dfftp%nnr), vauxg(dfftp%nnr,1) )
   !

@@ -7,9 +7,7 @@ MODFLAGS= $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
 CG = \
 ccgdiagg.o \
-rcgdiagg.o \
-rcgdiagg_gpu.o \
-ccgdiagg_gpu.o
+rcgdiagg.o
 
 all : libcg.a
 

@@ -567,7 +567,7 @@
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
     USE mp_world,         ONLY : mpime
-    USE symm_base,        ONLY : s
+    USE symmetry,         ONLY : s => s_k
     USE cell_base,        ONLY : bg
     USE mp,               ONLY : mp_bcast
     USE input,            ONLY : mp_mesh_k, nkf1, nkf2, nkf3

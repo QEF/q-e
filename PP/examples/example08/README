@@ -1,0 +1,12 @@
+This example shows how to plot the squared modulus of the Hubbard 
+projectors functions of DFT+U. 
+
+It is necessary to set disk_io = 'medium' in the pw.x input file 
+in order to save on disk the Hubbard projectors for the post-processing.
+
+Currently, only iflag = 3 is supported, while output_format can be 5 or 6.
+
+Current limitations:
+- symmetry must be disabled
+- noncollinear case is not supported
+

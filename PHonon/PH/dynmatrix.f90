@@ -28,10 +28,8 @@ subroutine dynmatrix_new(iq_)
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE disp,          ONLY : omega_disp
-  USE control_ph,    ONLY : always_run
-  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
-                            done_zue, where_rec, &
-                            rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
+  USE control_ph,    ONLY : epsil, zue, search_sym, ldisp, &
+                            done_zue, always_run, ldiag, done_epsil, done_zeu, xmldyn, &
                             current_iq, qplot
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
@@ -43,7 +41,7 @@ subroutine dynmatrix_new(iq_)
 
   USE lr_symm_base,  ONLY : minus_q, irotmq, nsymq, rtau
   USE qpoint,        ONLY : xq
-  USE control_lr,    ONLY : lgamma
+  USE control_lr,    ONLY : lgamma, lgamma_gamma, where_rec, rec_code
 
   implicit none
   INTEGER, INTENT(IN) :: iq_

@@ -43,7 +43,6 @@ set(src_tddfpt
     src/lr_dav_routines.f90
     src/lr_us.f90
     src/lr_test_restart.f90
-    src/lr_dav_debug.f90
     src/plugin_tddfpt_potential.f90
     src/lr_sternheimer.f90
     src/linear_solvers.f90

@@ -74,7 +74,6 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   !
   INTEGER :: nt, ih, m3, m4, ig, l, npw, npwq
   COMPLEX(DP), ALLOCATABLE :: sc1(:), sc2(:), aux1(:), aux2(:)
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   ! 
   CALL start_clock( 'delta_sphi' )
   !
@@ -102,8 +101,8 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
         ! Scalar products in the m3 m4 sum  
         !
         DO ih = 1, nh(nt)
-           sc1(ih) = ZDOTC (npw, vkb_(:,ih+ofsbeta(na)),  1, wfcatomk_(:,ihubst), 1)
-           sc2(ih) = ZDOTC (npw, dvkb_(:,ih+ofsbeta(na)), 1, wfcatomk_(:,ihubst), 1)
+        sc1(ih) = dot_product (vkb_(1:npw,ih+ofsbeta(na)), wfcatomk_(1:npw,ihubst))
+        sc2(ih) = dot_product (dvkb_(1:npw,ih+ofsbeta(na)), wfcatomk_(1:npw,ihubst))
         ENDDO
         !
         CALL mp_sum(sc1, intra_bgrp_comm)
@@ -149,8 +148,8 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
         ! Scalar products in the m3 m4 sum
         !
         DO ih = 1, nh(nt)
-           sc1(ih) = ZDOTC (npwq, vkbkpq_(:,ih+ofsbeta(na)),  1, wfcatomkpq_(:,ihubst), 1)
-           sc2(ih) = ZDOTC (npwq, dvkbkpq_(:,ih+ofsbeta(na)), 1, wfcatomkpq_(:,ihubst), 1)
+        sc1(ih) = dot_product ( vkbkpq_(1:npwq,ih+ofsbeta(na)), wfcatomkpq_(1:npwq,ihubst))
+        sc2(ih) = dot_product (dvkbkpq_(1:npwq,ih+ofsbeta(na)), wfcatomkpq_(1:npwq,ihubst))
         ENDDO
         !
         CALL mp_sum(sc1, intra_bgrp_comm)

@@ -400,8 +400,14 @@ CONTAINS
     IF ( ALLOCATED( desc%tg_sdsp ) )DEALLOCATE( desc%tg_sdsp )
     IF ( ALLOCATED( desc%tg_rdsp ) )DEALLOCATE( desc%tg_rdsp )
 
-    IF ( ALLOCATED( desc%nl ) )  DEALLOCATE( desc%nl )
-    IF ( ALLOCATED( desc%nlm ) ) DEALLOCATE( desc%nlm )
+    IF ( ALLOCATED( desc%nl ) ) THEN
+       !$acc exit data delete(desc,desc%nl)
+       DEALLOCATE( desc%nl )
+    ENDIF
+    IF ( ALLOCATED( desc%nlm ) ) THEN
+       !$acc exit data delete(desc%nlm)
+       DEALLOCATE( desc%nlm )
+    ENDIF
 
 #if defined(__CUDA)
     IF ( ALLOCATED( desc%ismap_d ) )   DEALLOCATE( desc%ismap_d )

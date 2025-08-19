@@ -14,16 +14,17 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests-XX [NPROCS=N]        : run tests [optionally, on N processors]'
+	@echo ' run-tests-XX [NPROCS=N NBGRP=M]  : run tests [optionally, on N processors and M band groups]'
 	@echo ' for XX=pw, cp, ph, pp, hp, tddfpt, kcw, all_currents, epw, zg, xsd-pw'
-	@echo ' run-tests [NPROCS=N]           : run all tests above (except the last four)'
-	@echo ' run-custom-test testdir=DIR [NPROCS=N]: run test in DIR only'
-	@echo ' compare                     : compare last output with reference'
-	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
-	@echo ' clean                       : clean stdout/sderr of all tests'
+	@echo ' run-tests [NPROCS=N]             : run all tests above (except the last four)'
+	@echo ' run-custom-test testdir=DIR [NPROCS=N NBGRP=M]: run test in DIR only'
+	@echo ' compare                          : compare last output with reference'
+	@echo ' pseudo                           : download needed PPs into ESPRESSO_PSEUDO'
+	@echo ' clean                            : clean stdout/sderr of all tests'
 	@echo ' '
 	@echo 'For additional advanced commands and settings please manually inspect'
 	@echo 'ENVIRONMENT and Makefile files'
+	@echo 'NBGRP is ignored if NPROCS is not set'
 
 prolog :
 	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
@@ -40,13 +41,13 @@ pseudo :
 	@./check_pseudo.sh kcw_
 	@./check_pseudo.sh oscdft_
 
-run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-pp run-tests-hp run-tests-tddfpt run-tests-kcw
+run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-pp run-tests-hp run-tests-tddfpt run-tests-kcw run-tests-pioud
 
 run-tests-cp : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw : prolog pseudo
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
+	env QE_USE_MPI=$(NPROCS) env QE_USE_BGRP=$(NBGRP) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 run-tests-ph : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
@@ -78,12 +79,15 @@ run-tests-all_currents : prolog pseudo
 run-tests-oscdft : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=oscdft_all
 
+run-tests-pioud : prolog pseudo
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pioud_all
+
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
 run-custom-test : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
+	env QE_USE_MPI=$(NPROCS) env QE_USE_BGRP=$(NBGRP) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 run-tests-xsd-pw : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \
@@ -158,10 +162,13 @@ clean:
 	@rm -rf ph_*/*.wfc* ph_*/*.hub*
 	@rm -rf ph_1d/dynmat.axsf ph_1d/dynmat.mold
 	@rm -rf ph_2d/bn.frc ph_2d/bn.frq ph_2d/bn.frq.gp
+	@rm -rf ph_twochem/dynq1
+	@rm -rf ph_multipole/*npz ph_multipole/*fmt ph_multipole/*dat* ph_multipole/*pkl ph_multipole/*processing*
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.dyn.freq
 # Special case for PH ahc
-	@rm -rf ph_ahc*/wpot*/ ph_ahc*/selfen_*.dat ph_ahc*/diam.modes? ph_ahc*/*.ifc ph_ahc*/ahc_dir*
+	@rm -rf ph_ahc*/wpot*/ ph_ahc*/selfen_*.dat ph_ahc_diam/diam.modes? ph_ahc_bas/BAs.modes? ph_ahc*/*.ifc \
+		ph_ahc*/*.fc ph_ahc*/ahc_dir*
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters* \
 		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out
@@ -184,16 +191,15 @@ clean:
 		epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
 		epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
 		epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
-		epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse epw_*/Fsparsecb \
-		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib \
-		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup.fmt \
-		epw_*/inv_taucb.fmt epw_*/inv_tau.fmt epw_*/restart.fmt epw_*/vmedata.fmt \
+		epw_*/Fepmatkq1* epw_*/Fepmatkqcb1* epw_*/Fsparse* epw_*/Fsparsecb* \
+		epw_*/*.cube epw_*/EPW.bib \
+		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup*.fmt \
+		epw_*/restart*.fmt epw_*/vmedata.fmt \
 		epw_*/selecq.fmt epw_*/dmedata.fmt epw_*/band.eig epw_*/ksdata.fmt \
-		epw_*/inv_tau_freq.fmt epw_*/inv_taucb_freq.fmt epw_*/inv_taucb_mode.fmt \
-		epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau_mode.fmt \
+		epw_*/mobility_nk.fmt epw_*/mobility_nuq.fmt epw_*/inv_tau* \
 		epw_*/wigner.fmt epw_*/*.dos epw_*/*.dmat* epw_*/*.qmap epw_*/*.dwmatwe* \
 		epw_*/*.symk epw_*/*.sthmatwe* epw_*/*.xqc* epw_*/*.dgmatwe* epw_*/*.cpmew* \
-		epw_*/elself_wfpt_sup.* epw_*/*.bak
+		epw_*/elself_wfpt_sup.* epw_*/*.bak epw_*/out.*
 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_super/*.bands.*.dat epw_pl/save/ epw_polar/save/ \
@@ -201,7 +207,9 @@ clean:
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save \
 		epw_qdpt/save epw_2D/save epw_hall/save epw_qdpt/*.dat epw_wfpt/save \
 		epw_wfpt/matdyn.modes epw_plrn/*.plrn epw_plrn/plrn_tmp epw_plrn/save \
-		epw_plrn/dtau.plrn.xsf
+		epw_plrn/dtau.plrn.xsf epw_tdbe/ie_ph.dat epw_tdbe/iph_e.dat          \
+		epw_tdbe/felec epw_tdbe/nphon epw_tdbe/*points epw_tdbe/selecq_tdbe.fmt \
+	        epw_tdbe/inv_tau_rta* epw_tdbe/ph_freq epw_tdbe/save
 
 # Cleaning IMAGE final files
 	@rm -rf image_*/_ph0 image_*/*.save image_*/*.xml image_*/*.dyn? image_*/*.dyn??  \

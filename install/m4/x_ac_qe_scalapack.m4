@@ -6,7 +6,7 @@ have_scalapack=0
 
 AC_ARG_WITH(scalapack,
    [AS_HELP_STRING([--with-scalapack],
-       [(yes|no|intel) Use scalapack if available. Set to "intel" to use Intel MPI and blacs (default: use openMPI)])],
+       [(yes|no|intel) Use/do not use scalapack, "intel" may be explicitly specified for Intel MPI (default: yes, trying to detect if Intel MPI is used)])],
    [if  test "$withval" = "yes" ; then
       with_scalapack=1
    elif  test "$withval" = "intel" ; then
@@ -25,6 +25,7 @@ do
 
 # look for scalapack if required
     test "$with_scalapack" -eq 0 && break
+
     if test "$scalapack_libs" = "" ; then
 # no additional libraries needed
        AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
@@ -35,10 +36,12 @@ if test "$have_mkl" -eq 1
    then
       unset ac_cv_search_pdgemr2d # clear cached value
       LIBS="$mpi_libs $blas_libs"
-      if test $with_scalapack -eq 1; then
-         scalapack_libs=-lmkl_blacs_openmpi_lp64
-      else
+# Choose Intel scalapack for Intel MPI
+      if test $with_scalapack -eq 2 || test "$mpif90" == "mpiifx" || test "$mpif90" == "mpiifort"
+      then
          scalapack_libs=-lmkl_blacs_intelmpi_lp64
+      else
+         scalapack_libs=-lmkl_blacs_openmpi_lp64
       fi
       AC_SEARCH_LIBS(pdgemr2d, "mkl_scalapack_lp64" , have_scalapack=1
                      try_dflags="$try_dflags -D__SCALAPACK"

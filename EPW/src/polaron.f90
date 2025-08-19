@@ -16,6 +16,8 @@
   !! Partial cleaning by SP (Nov 2023)
   !! Partial cleaning by STiwari (Nov 2023)
   !! Partial cleaning by JLB (Aug 2024)
+  !! Adding variables by KL (Oct 2024)
+  !! Optimization by DK, TYK, JLB (May 2025)
   !!
   USE kinds,     ONLY : DP
   USE buffers,   ONLY : open_buffer, get_buffer, save_buffer, close_buffer
@@ -496,7 +498,7 @@
     !!
     USE modes,         ONLY : nmodes
     USE input,         ONLY : g_start_band_plrn, g_end_band_plrn, &
-                              io_lvl_plrn, eps_acoustic
+                              io_lvl_plrn, eps_acoustic, g_scale_plrn
     USE global_var,    ONLY : nkf
     USE ep_constants,  ONLY : eps8, two, czero
     USE mp,            ONLY : mp_sum, mp_bcast
@@ -524,7 +526,8 @@
       ikq = ikq_all(ik, iq)
       DO imode = 1, nmodes
         IF (wfreq(imode, iq) > eps_acoustic) THEN
-          epf(:, :, imode, ik) = &
+          !epf(:, :, imode, ik) = &
+          epf(:, :, imode, ik) = g_scale_plrn * &
           epfg(g_start_band_plrn:g_end_band_plrn, g_start_band_plrn:g_end_band_plrn, imode, ik) / DSQRT(two * wfreq(imode, iq))
         ENDIF
       ENDDO ! imode
@@ -573,7 +576,6 @@
     REAL(KIND = DP) :: xxk_target(1:3)
     !! k+q point coordinates in 1BZ
     !
-    CALL start_clock('find_k+q')
     ikq_all = 0
     !
     ik_global = ikqLocal2Global(ik, nktotf)
@@ -593,7 +595,6 @@
         EXIT
       ENDIF
     ENDDO
-    CALL stop_clock('find_k+q')
     !
     IF (ikq_all == 0) CALL errore('ikq_all','k + q not found', 1)
     !
@@ -713,7 +714,6 @@
     !
     WRITE(stdout, '(/5x, "======================== Polaron Timers ===========================")')
     CALL print_clock('main_prln')
-    CALL print_clock('find_k+q')
     CALL print_clock('plrn_prepare')
     CALL print_clock('write_files')
     CALL print_clock('Bqu_tran')
@@ -725,15 +725,12 @@
     CALL print_clock('read_gmat')
     CALL print_clock('read_Hmat')
     CALL print_clock('Write_Hmat')
-    CALL print_clock('HOffDiagTerm')
-    CALL print_clock('HdiagTerm')
     CALL print_clock( 'cegterg' )
     CALL print_clock( 'cegterg:init' )
     CALL print_clock( 'cegterg:diag' )
     CALL print_clock( 'cegterg:update' )
     CALL print_clock( 'cegterg:overlap' )
     CALL print_clock( 'cegterg:last' )
-    CALL print_clock('ik_l2g')
     CALL print_clock('cal_bqu')
     CALL print_clock('init_Ank')
     CALL print_clock('find_EVBM')
@@ -762,7 +759,8 @@
                               conv_thr_plrn, init_plrn, niter_plrn,             &
                               nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, r0_plrn,      &
                               init_ntau_plrn, nbndsub, as, time_rev_A_plrn,     &
-                              model_phfreq_plrn, omega_LO_plrn, scell_mat_plrn
+                              model_phfreq_plrn, omega_LO_plrn, scell_mat_plrn, &
+                              acoustic_plrn, cal_acous_plrn, dtau_max_plrn
     USE io_global,     ONLY : stdout, ionode, meta_ionode_id
     USE global_var,    ONLY : nqtotf, nktotf, wf
     USE cell_base,     ONLY : alat
@@ -843,6 +841,8 @@
     !! Polaron wave function coefficients in Wannier basis, Amp
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau(:, :)
     !! Polaron displacements
+    COMPLEX(KIND = DP), ALLOCATABLE :: dtau_acoustic(:, :)
+    !! Polaron displacements by acoustic phonon modes
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau_save(:, :)
     !! Polaron displacements from previous iteration to compare
     COMPLEX(KIND = DP), ALLOCATABLE :: dtau_list(:, :, :)
@@ -855,6 +855,11 @@
     dtau = czero
     dtau_save = czero
     debug = debug_plrn
+    IF (cal_acous_plrn) THEN
+      ALLOCATE(dtau_acoustic(nktotf, nmodes), STAT = ierr)
+      IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating dtau_acoustic', 1)
+      dtau_acoustic = czero
+    ENDIF
     !
     CALL start_clock('main_prln')
     ! Gather all the eigenvalues to determine the EBM/VBM,
@@ -989,7 +994,11 @@
         dtau_diff = MAXVAL(ABS(REAL(dtau - dtau_save)))
         esterr = dtau_diff
         IF (dtau_diff < conv_thr_plrn .AND. iter > 1) THEN
-          IF(MAXVAL(ABS(REAL(dtau))) > alat / 2.d0) THEN
+          !! IF(MAXVAL(ABS(REAL(dtau))) > alat / 2.d0) THEN
+          !! KL: dtau_max_plrn is a criteria of maximual polaron displacements
+          !! of a physical solution, which is 0.5d0 by default. 
+          !! When acoustic phonon modes are found to be important, one can try to increase. 
+          IF(MAXVAL(ABS(REAL(dtau))) > alat * dtau_max_plrn) THEN
             CALL errore("polaron_scf","Non-physical solution, check initial guess and convergence.", 1)
           ENDIF
           ! converged, write the final value of eigenvalue
@@ -1086,6 +1095,10 @@
       CALL scell_plrn_bmat_tran('Bmat2Dtau', .true., Bmat, nqtotf, nRp, Rp, nrr_q, ndegen_q, irvec_q, rws, nrws, dtau)
     ELSE
       CALL plrn_bmat_tran('Bmat2Dtau', .true., Bmat, nqf1, nqf2, nqf3, nrr_q, ndegen_q, irvec_q, rws, nrws, dtau)
+      IF (cal_acous_plrn) THEN
+        CALL plrn_bmat_tran('Bmat2Dtau', .true., Bmat, nqf1, nqf2, nqf3, nrr_q, ndegen_q, irvec_q, rws, nrws, &
+                            dtau_acoustic, acoustic_plrn=acoustic_plrn)
+      ENDIF
     ENDIF
     CALL stop_clock('Bqu_tran')
     CALL start_clock('write_files')
@@ -1099,11 +1112,17 @@
       CALL write_plrn_bmat(Bmat, 'Bmat.plrn', wf)
       ! Write dtau
       CALL write_plrn_bmat(dtau, 'dtau.plrn')
+      IF (cal_acous_plrn) THEN
+        CALL write_plrn_bmat(dtau_acoustic, 'dtau.acoustic.plrn')
+      ENDIF
       ! Write dtau in a user-friendly format for visulization
       IF (scell_mat_plrn) THEN
         CALL scell_write_plrn_dtau_xsf(dtau, nqtotf, nRp, Rp, as, 'dtau.plrn.xsf')
       ELSE
         CALL write_plrn_dtau_xsf(dtau, nqf1, nqf2, nqf3, 'dtau.plrn.xsf')
+      IF (cal_acous_plrn) THEN
+        CALL write_plrn_dtau_xsf(dtau_acoustic, nqf1, nqf2, nqf3, 'dtau.acoustic.plrn.xsf')
+      ENDIF
       ENDIF
     ENDIF
     CALL stop_clock('write_files')
@@ -1116,6 +1135,10 @@
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating eigvec_wan', 1)
     DEALLOCATE(Bmat, STAT = ierr)
     IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating Bmat', 1)
+    IF (cal_acous_plrn) THEN
+      DEALLOCATE(dtau_acoustic, STAT = ierr)
+      IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating dtau_acoustic', 1)
+    ENDIF
     !
     CALL stop_clock('main_prln')
     !
@@ -1710,7 +1733,6 @@
             CALL stop_clock('read_Hmat')
           ENDIF
           !
-          CALL start_clock('HdiagTerm')
           IF (isGVec(xqf(1:3, iq))) THEN
             ! Note that, ik is local index while ikq is global index,
             ! so even when q=0, ik \= ikq, but ik_global == ikq
@@ -1719,9 +1741,7 @@
             indexkn2 = (ikq - 1) * nbnd_plrn + ibnd
             Hamil(indexkn2, index_loc) = Hamil(indexkn2, index_loc) + ctemp
           ENDIF
-          CALL stop_clock('HdiagTerm')
           !
-          CALL start_clock('HOffDiagTerm')
           DO jbnd = 1, nbnd_plrn
             indexkn2 = (ikq - 1) * nbnd_plrn + jbnd
             DO inu = 1, nmodes
@@ -1731,7 +1751,6 @@
               Hamil(indexkn2, index_loc) = Hamil(indexkn2, index_loc) + ctemp
             ENDDO
           ENDDO
-          CALL stop_clock('HOffDiagTerm')
           IF (nhblock_plrn /= 1) THEN
             IF ((index_loc == hblocksize .OR. indexkn1 == nkf * nbnd_plrn)) THEN
               CALL start_clock('Write_Hmat')
@@ -1793,14 +1812,12 @@
     INTEGER :: lastn
     !! Upper bound for k-points in pools
     !
-    CALL start_clock('ik_l2g')
     CALL fkbounds(nkqtotf, startn, lastn)
     !
     ikqLocal2Global = startn + ikq - 1
     IF (ikqLocal2Global > lastn) THEN
       CALL errore('ikqLocal2Global', 'Index of k/q is beyond this pool.', 1)
     ENDIF
-    CALL stop_clock('ik_l2g')
     !
     !-----------------------------------------------------------------------
     END FUNCTION ikqLocal2Global
@@ -2895,13 +2912,18 @@
     !! Number of polaron states    
     !
     ! Local variables
+    LOGICAL :: scell_
+    !! Dummy variable to set a default value (.FALSE.) for scell
     CHARACTER(LEN = 5) :: dmmy
     !! Dummy variable to read from scell wf file
     !
     !
-    OPEN(UNIT = iwfplrn, FILE = 'Amp.plrn')
+    OPEN(UNIT = iwfplrn, FILE = TRIM(filename))
     !
-    IF (PRESENT(scell) .AND. scell) THEN
+    scell_ = .FALSE.
+    IF (PRESENT(scell)) scell_ = scell
+    !
+    IF (scell_) THEN
       READ(iwfplrn, '(a, 3I10)') dmmy, nktotf_p, nbndsub_p, nPlrn_p
       ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
       ! Just assigning an arbitrary value
@@ -3078,13 +3100,18 @@
     !! Number of phonon modes 
     !
     ! Local variables
+    LOGICAL :: scell_
+    !! Dummy variable to set a default value (.FALSE.) for scell
     CHARACTER(LEN = 5) :: dmmy
     !! Dummy variable to read from scell wf file
     !
     !
     OPEN(UNIT = idtauplrn, FILE = 'dtau.plrn')
     !
-    IF (PRESENT(scell) .AND. scell) THEN
+    scell_ = .FALSE.
+    IF (PRESENT(scell)) scell_ = scell
+    !
+    IF (scell_) THEN
       READ(idtauplrn, '(a, 3I10)') dmmy, nqtotf_p, nmodes_p
       ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
       ! Just assigning an arbitrary value
@@ -3252,9 +3279,7 @@
     COMPLEX(KIND = DP) :: cufkk(nbndsub, nbndsub)
     !! U_{mn} matrices after interpolated KS Hamiltonian diagonalization
     COMPLEX(KIND = DP) :: cfac(nrr_k)
-    !! Exponential factor for Hamiltonian transformation
-    COMPLEX(KIND = DP) :: expTable(3)
-    !! Table for exponential factors
+    !!! Exponential factor for Hamiltonian transformation
     !
     nkf_p(1:3) = (/nkf1_p, nkf2_p, nkf3_p/)
     IF (nbndsub_p /= nbndsub) CALL errore('plrnwfwan2bloch','Different bands included in last calculation!', 1)
@@ -3279,7 +3304,6 @@
     eigvecout = czero
     DO ik = 1, nkf
       xxk = xkf(1:3, 2 * ik - 1)
-      expTable(1:3) = EXP( twopi * ci * xxk(1:3) )
       ik_global = ikqLocal2Global(ik, nktotf)
       !
       IF (t_rev) THEN
@@ -3301,8 +3325,7 @@
         ENDIF
         DO ikglob = 1, nkf1_p * nkf2_p * nkf3_p
           i_vec(1:3) = MODULO(index_Rp(ikglob, nkf_p) + center_shift, nkf_p)
-          ! Same as EXP(twopi * ci * DOT_PRODUCT((/ix, iy, iz/), xxk)), to save time
-          ctemp = PRODUCT(expTable(1:3)**i_vec(1:3))
+          ctemp = EXP(CMPLX(0.0_DP, twopi * DOT_PRODUCT(xxk, i_vec), KIND = DP))
           DO ibnd = 1, nbndsub_p ! loop over all Wannier state m
             DO jbnd = 1, nbnd_plrn ! loop over all Bloch state n
               indexkn1 = (ikglob - 1) * nbndsub + ibnd !mp
@@ -3654,7 +3677,7 @@
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------
     SUBROUTINE plrn_bmat_tran(ttype, t_rev, mat_in, nqf1_p, nqf2_p, nqf3_p, &
-          nrr_q, ndegen_q, irvec_q, rws, nrws, mat_out, ip_center)
+          nrr_q, ndegen_q, irvec_q, rws, nrws, mat_out, ip_center, acoustic_plrn)
     !-----------------------------------------------------------------------------------
     !! Fourier transform between Bmat and dtau,
     !! Eq.(39) of PRB 99, 235139 (2019).
@@ -3695,6 +3718,8 @@
     !! Number of real-space Wigner-Seitz
     INTEGER, INTENT(in), OPTIONAL :: ip_center(1:3)
     !! Coordinates of polaron center, for shifting supercell
+    REAL(KIND = DP), INTENT(in), OPTIONAL :: acoustic_plrn
+    !! the cutoff frequency of acoustic phonon modes in dtau.acoustic.plrn.xsf
     REAL(KIND = DP), INTENT(in) :: rws(:, :)
     !! Real-space wigner-Seitz vectors
     COMPLEX(KIND = DP), INTENT(in) :: mat_in(:, :)
@@ -3739,8 +3764,6 @@
     !! Phonon frequency squared
     COMPLEX(KIND = DP) :: dtemp
     !! Prefactor
-    COMPLEX(KIND = DP) :: expTable(3)
-    !! Multiplications within exponential
     COMPLEX(KIND = DP) :: uf(nmodes, nmodes)
     !! Phonon eigenvectors
     !
@@ -3776,7 +3799,6 @@
           mirror_q = .true.
         ENDIF
       ENDIF
-      expTable(1:3) = EXP(twopi * ci * xxq(1:3))
       !
       ! Get phonon eigenmode and eigenfrequencies
       IF (.NOT. lifc) THEN
@@ -3805,6 +3827,10 @@
       !!IF(t_rev .and. iq > iqpg) uf = CONJG(uf) !transpose
       DO inu = 1, nmodes ! inu -> nu
         IF (wf(inu, iq) < eps_acoustic) CYCLE !JLB - cycle zero and imaginary frequency modes
+        IF (PRESENT(acoustic_plrn)) THEN
+          IF (wf(inu, iq) > acoustic_plrn) CYCLE 
+          ! KL - include only modes with frequency lower than acoustic_plrn
+        ENDIF
         DO ika = 1, nmodes ! ika -> kappa alpha
           ina = (ika - 1) / 3 + 1
           ctemp = DSQRT(two / (wf(inu, iq) * amass(ityp(ina))))
@@ -3816,8 +3842,7 @@
           DO iRp = ip_start, ip_end !, (nqf1_p + 1)/2
             Rp_vec(1:3) = MODULO(index_Rp(iRp, nqf_p) + center_shift, nqf_p)
             ! D_{\kappa\alpha\nu,p}(q) = e_{\kappa\alpha,\nu}(q) \exp(iq\cdot R_p)
-            !dtemp = uf_q(ika, inu, iq) * PRODUCT(expTable(1:3)**Rp_vec(1:3))
-            dtemp = uf(ika, inu) * PRODUCT(expTable(1:3)**Rp_vec(1:3))
+            dtemp = uf(ika, inu) * EXP(CMPLX(0.0_DP, twopi * DOT_PRODUCT(xxq, Rp_vec), KIND = DP))
             IF (itype == 1) THEN ! Bqv -> dtau
               ! \Delta \tau_{\kappa\alpha p} = -\frac{1}{N_p} \sum_{q\nu} C_{\kappa\nu q} D_{\kappa\alpha\nu q}  B^*_{q\nu}
               ! Dtau(iRp, ika) = Dtau(iRp, ika) + conjg(B(iq, inu)) * ctemp * dtemp

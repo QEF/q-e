@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 7.4.1
+    VERSION 7.5
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -148,6 +148,14 @@ set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
 # OSCDFT
 option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
 
+# Expose Fortran module install directory
+# https://gitlab.kitware.com/cmake/cmake/-/issues/19608
+set(QE_INSTALL_Fortran_MODULES ${CMAKE_INSTALL_INCLUDEDIR} CACHE PATH
+        "Fortran module install directory"
+)
+if(IS_ABSOLUTE QE_INSTALL_Fortran_MODULES)
+    message(FATAL_ERROR "Absolute path of QE_INSTALL_Fortran_MODULES is NOT supported.")
+endif()
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -462,9 +470,8 @@ if(NOT QE_LAPACK_INTERNAL)
         unset(CMAKE_REQUIRED_LINK_OPTIONS)
     endif()
     if(LAPACK_FOUND)
-        target_link_libraries(qe_lapack INTERFACE ${LAPACK_LIBRARIES})
-        target_link_options(qe_lapack INTERFACE ${LAPACK_LINKER_FLAGS})
-        set(CMAKE_REQUIRED_LIBRARIES "${LAPACK_LINKER_FLAGS};${LAPACK_LIBRARIES}")
+        target_link_libraries(qe_lapack INTERFACE LAPACK::LAPACK)
+        set(CMAKE_REQUIRED_LIBRARIES LAPACK::LAPACK)
         if(QE_ENABLE_OPENMP)
             target_link_libraries(qe_lapack INTERFACE ${OpenMP_Fortran_LIBRARIES})
             list(APPEND CMAKE_REQUIRED_LIBRARIES "${OpenMP_Fortran_LIBRARIES}")
@@ -661,6 +668,22 @@ if(QE_ENABLE_PROFILE_NVTX)
 endif(QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
+# FLAGS at the project level
+###########################################################
+string(TOUPPER "${CMAKE_BUILD_TYPE}" THIS_CONFIG)
+
+foreach(lang IN ITEMS C Fortran)
+  message("Project ${lang}_FLAGS: ${CMAKE_${lang}_FLAGS} ${CMAKE_${lang}_FLAGS_${THIS_CONFIG}}")
+endforeach(lang IN ITEMS C Fortran)
+
+get_directory_property(TMP_PROJECT_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
+message("Project INCLUDE_DIRECTORIES: ${TMP_PROJECT_INCLUDE_DIRECTORIES}")
+
+foreach(target_type IN ITEMS EXE SHARED)
+  message("Project ${target_type}_LINKER_FLAGS: ${CMAKE_${target_type}_LINKER_FLAGS} ${CMAKE_${target_type}_LINKER_FLAGS_${THIS_CONFIG}}")
+endforeach(target_type IN ITEMS EXE SHARED)
+
+###########################################################
 # Components
 ###########################################################
 add_subdirectory(external)
@@ -688,6 +711,7 @@ add_subdirectory(TDDFPT)
 add_subdirectory(XSpectra)
 add_subdirectory(QEHeat)
 add_subdirectory(KCW)
+add_subdirectory(PIOUD)
 add_subdirectory(GUI)
 if(QE_ENABLE_DOC)
     add_subdirectory(Doc)

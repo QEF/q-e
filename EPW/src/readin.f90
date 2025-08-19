@@ -37,7 +37,7 @@
                             vme, degaussw, epexst, epwwrite, epbread, phonselfen, nqc2,&
                             elecselfen, a2f, plselfen, specfun_pl, nest_fn, filukk,    &
                             rand_nk, rand_k, rand_nq, rand_q, nkc1, nkc2, nkc3, nqc1,  &
-                            nqc3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acoustic, nw, &
+                            nqc3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acoustic, nw,&
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
                             broyden_beta, conv_thr_raxis, temps, tempsmin, tempsmax,   &
@@ -75,11 +75,12 @@
                             seed_plrn, ethrdg_plrn, time_rev_A_plrn, nhblock_plrn,     &
                             beta_plrn, Mmn_plrn, recal_Mmn_plrn, r0_plrn, debug_plrn,  &
                             time_rev_U_plrn,  g_start_band_plrn, g_end_band_plrn,      &
-                            g_start_energy_plrn, g_end_energy_plrn, lrot,              &
+                            g_start_energy_plrn, g_end_energy_plrn, g_scale_plrn, lrot,&
                             model_vertex_plrn, model_enband_plrn, model_phfreq_plrn,   &
                             kappa_plrn, omega_LO_plrn, m_eff_plrn, step_wf_grid_plrn,  &
                             g_power_order_plrn, g_tol_plrn, io_lvl_plrn,               &
                             scell_mat_plrn, scell_mat, init_ntau_plrn, nethrdg_plrn,   &
+                            cal_acous_plrn, acoustic_plrn, dtau_max_plrn,              &
                             adapt_ethrdg_plrn, init_ethrdg_plrn, gridsamp, griddens,   &
                             tc_linear, tc_linear_solver, fbw, dos_del, muchem,         &
                             filirobj, eps_cut_ir, icoulomb, emax_coulomb, emin_coulomb,&
@@ -87,10 +88,21 @@
                             len_mesh, meshnum, wf_quasi, do_CHBB, nq_init, a_gap0,     &
                             start_mesh, DW, loptabs, mode_res, QD_min, QD_bin,         &
                             david_ndim_plrn, elecselfen_type, calc_nelec_wann,         &
-                            lopt_w2b, epw_memdist, lfast_kmesh
-  USE input,         ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
+                            exciton, nbndc_explrn, nbndv_explrn, negnv_explrn, explrn, &
+                            plot_explrn_e, plot_explrn_h, only_c_explrn, only_v_explrn,&
+                            step_k1_explrn, step_k2_explrn, step_k3_explrn,            &
+                            only_pos_modes_explrn, a2f_iso,                            &
+                            lopt_w2b, epw_memdist, lfast_kmesh, ltrans_crta, sr_crta,  &
+                            dos_tetra, fd, xk_all, xk_loc, xk_cryst, isk_all, isk_loc, &
+                            et_all, et_loc, do_tdbe, dt_tdbe, nt_tdbe, twrite_tdbe,    &
+                            temp_el_tdbe, temp_ph_tdbe, init_type_tdbe,                &
+                            ef_v_tdbe, carr_dyn_tdbe, dg_tdbe, nkf1d, nkf2d, nkf3d,    &
+                            nqf1d, nqf2d, nqf3d, dph_tdbe, restart_tdbe, phph_tdbe,    &
+                            solver_tdbe, phwmin_tdbe, ephmat_dir, lscreen_tdbe,        &
+                            ef_c_tdbe, init_sigma_tdbe
   USE global_var,    ONLY : elph, num_wannier_plot, wanplotlist, gtemp, qrpl
-  USE ep_constants,  ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m, one, bohr2nm
+  USE ep_constants,  ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m,   &
+                            one, bohr2nm, ry2thz_sr
   USE constants,     ONLY : electron_si, AMU_RY, eps16
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
@@ -103,8 +115,9 @@
   USE io_var,        ONLY : iunkf, iunqf
   USE paw_variables, ONLY : okpaw
   USE io,            ONLY : param_get_range_vector
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module,      ONLY : noncolin
   USE open_close_input_file, ONLY : open_input_file, close_input_file
+  USE check_stop,    ONLY : max_seconds
   !
   IMPLICIT NONE
   !
@@ -184,12 +197,12 @@
        pdos_sigma_plrn, pdos_max_plrn, pdos_min_plrn,                          &
        seed_plrn, ethrdg_plrn, time_rev_A_plrn, nhblock_plrn,                  &
        beta_plrn, Mmn_plrn, recal_Mmn_plrn, r0_plrn, debug_plrn,               &
-       time_rev_U_plrn,  g_start_band_plrn, g_end_band_plrn,                   &
+       time_rev_U_plrn,  g_start_band_plrn, g_end_band_plrn, g_scale_plrn,     &
        g_start_energy_plrn, g_end_energy_plrn,                                 &
        model_vertex_plrn, model_enband_plrn, model_phfreq_plrn,                &
        kappa_plrn, omega_LO_plrn, m_eff_plrn, step_wf_grid_plrn,               &
-       g_power_order_plrn, g_tol_plrn, io_lvl_plrn,                            &
-       scell_mat_plrn, scell_mat, init_ntau_plrn,                              &
+       g_power_order_plrn, g_tol_plrn, io_lvl_plrn, cal_acous_plrn,            &
+       scell_mat_plrn, scell_mat, init_ntau_plrn, acoustic_plrn,dtau_max_plrn, &
        adapt_ethrdg_plrn, init_ethrdg_plrn, nethrdg_plrn, david_ndim_plrn,     &
        tc_linear, tc_linear_solver, gridsamp, griddens, fbw, dos_del, muchem,  &
        filirobj, eps_cut_ir, icoulomb, emax_coulomb, emin_coulomb,             &
@@ -197,7 +210,17 @@
        loptabs, len_mesh, meshnum, wf_quasi, nq_init, start_mesh, DW,          &
        mode_res, QD_min, QD_bin, do_CHBB, lwfpt, compute_dmat, ahc_nbnd,       &
        ahc_nbndskip, ahc_win_min, ahc_win_max, a_gap0, elecselfen_type,        &
-       calc_nelec_wann, lopt_w2b, epw_memdist
+       exciton, nbndc_explrn, nbndv_explrn, negnv_explrn, explrn,              &
+       plot_explrn_e, plot_explrn_h, only_c_explrn, only_v_explrn,             &
+       step_k1_explrn, step_k2_explrn, step_k3_explrn, only_pos_modes_explrn,  &
+       calc_nelec_wann, lopt_w2b, epw_memdist, lfast_kmesh, dos_tetra, fd,     &
+       a2f_iso, max_seconds,  ltrans_crta, sr_crta,                            &
+       !Added for calculating time-dependent Boltzmann transport Equation
+       do_tdbe, dt_tdbe, nt_tdbe, twrite_tdbe, temp_el_tdbe, temp_ph_tdbe,     &
+       init_type_tdbe, init_sigma_tdbe, ef_c_tdbe, ef_v_tdbe,                  &
+       carr_dyn_tdbe, dg_tdbe, nkf1d, nkf2d, nkf3d, nqf1d,                     &
+       nqf2d, nqf3d, dph_tdbe, restart_tdbe, phph_tdbe,                        &
+       solver_tdbe, phwmin_tdbe, ephmat_dir, lscreen_tdbe
   ! --------------------------------------------------------------------------------
   !
   ! amass    : atomic masses
@@ -263,6 +286,8 @@
   ! Added by Roxana Margine
   ! ephwrite    : if .TRUE. write el-phonon matrix elements on the fine mesh to file
   ! eps_acoustic: min phonon frequency for e-p and a2f calculations (units of cm-1)
+  ! acoustic_plrn: max phonon frequency for polaron dtau (units of cm-1)
+  ! dtau_max_plrn: max dtau for polaron displacements allowed in a physical solution (units of alat)
   ! band_plot   : if .TRUE. write files to plot band structure and phonon dispersion
   ! fermi_plot  : if .TRUE. write files to plot Fermi surface
   ! degaussq    : smearing for sum over q in e-ph coupling (units of meV)
@@ -299,7 +324,7 @@
   ! fila2f       : input file with eliashberg spectral function
   ! max_memlt    : maximum memory that can be allocated per pool
   ! efermi_read  : if. true. read from input file
-  ! fermi_energy : fermi eneergy read from input file (units of eV)
+  ! fermi_energy : fermi energy read from input file (units of eV)
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction (units of eV)
   ! wmax_specfun : max frequency in electron spectral function due to e-p interaction (units of eV)
   ! nw_specfun   : nr. of bins for frequency in electron spectral function due to e-p interaction
@@ -308,7 +333,7 @@
   ! Added by Samad Hajinazar
   ! tc_linear        : if .TRUE. linearized Eliashberg eqn. for Tc will be solved
   ! tc_linear_solver : Algorithm to solve eigenvalue problem for Tc (default='power', 'lapack')
-  ! gridsamp         : Type of the Matsubara freq. sampling 
+  ! gridsamp         : Type of the Matsubara freq. sampling
   !                    (-1= read from file; 0= uniform; 1= sparse; 2= sparse-ir, 3= uniform (FFT))
   ! griddens         : Measure of sparsity of the grid (default=1.d0, larger values give denser mesh)
   ! fbw              : if .TRUE. full-bandwidth calculations will be performed
@@ -320,14 +345,17 @@
   !                    a_gap0 = negative, step function will be used.
   !                    a_gap0 = 0.0, we will use an initial guess with no frequency-dependence.
   !                    a_gap0 > eps8, we will use the Lorentzian: f(iw) = gap0 / (1 + a_gap0 * (iw / wsphmax)**2).
-  ! positive_matsu   : If true, the domain of Matsubara frequency is limited to positive. (default=true) 
+  ! positive_matsu   : If true, the domain of Matsubara frequency is limited to positive. (default=true)
   ! eps_cut_ir       : This is a threshold to ignore negligibly small IR coefficients (default=1d-5).
-  !                    If eps_cut_ir is zero or negative, all coefficients are used in iterative calculations.             
+  !                    If eps_cut_ir is zero or negative, all coefficients are used in iterative calculations.
   ! filirobj         : input file with the objects of IR-basis
   ! icoulomb         : this tag specifies how to calculate the Coulomb contribution to the Eliashberg eqs.
   ! emax_coulomb     : Only the bands lower than "emax_coulomb + efermi" are considered
   ! emin_coulomb     : Only the bands upper than "emin_coulomb + efermi" are considered
   ! filnscf_coul     : input file with electronic eigenvalues for Coulomb contribution
+  !
+  ! Added by Shashi Mishra
+  ! a2f_iso         : if .TRUE. isotropic a2f is calculated on the fly without storing g2 to file
   !
   ! Added by Carla Verdi & Samuel Pon\'e
   ! lpolar     : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
@@ -389,9 +417,15 @@
   !                   following PRL 130, 166301 (2023) and requires the presence of a "quadrupole.fmt" file.
   !                   if 'dipole_sh' then the long-range terms include dipoles following [PRB 105, 115414 (2022)]
   !
-  ! Addad by Zhe Liu
+  ! Added by Zhe Liu
   ! calc_nelec_wann : compute number of electrons in wannierized band
   ! epw_memdist     : distributed storage of epmatwp in MPI processes, only works with etf_mem = 0
+  !
+  ! Added by S. Mishra
+  ! dos_tetra       : if .TRUE. compute density of states using tetrahedron method
+  ! fd              : if .TRUE. , IFC came from finite displacement calculation like ZG method
+  !                   This tag is needed when we use 3x3x3 or 4x4x4 supercell calculation using ZG method
+  !                   to get the IFCs.
   !
   ! Added by Manos Kioupakis
   ! omegamin        : Photon energy minimum
@@ -417,6 +451,18 @@
   !     : Note: Before v5.4, vme = .FALSE. was the velocity in the local approximation as <\psi_mk|p|\psi_nk>
   !             Before v5.4, vme = .TRUE. was = to 'wannier'
   !
+  ! Added by S. Tiwari
+  ! loptabs : enable quasi-degenerate many-body perturbation theory for optical
+  ! absorption (QDPT)
+  ! len_mesh : number of mesh-grids for QDPT
+  ! start_mesh : starting mesh for QDPT
+  ! meshnum : last grid for QDPT 
+  ! QD_bin : size of QDPT bin
+  ! QD_min : minima for starting QDPT
+  ! wf_quasi : write QD many-body wafefunctions
+  ! do_CHBB : perform CHBB calculations with QDPT expressions
+  ! DW : add the seond order perturbative term in QDPT
+  !
   ! Added by Jae-Mo Lihm for Wannier function perturbation theory
   ! lwfpt : enable Wannier function perturbation theory calculations
   ! compute_dmat: compute dmat, the overlap matrix between psi(Sk) and S*psi(k)
@@ -430,12 +476,12 @@
   !     for more information.
   !     If 'nonadiabatic' then computes the non-adiabatic electron self-energy (default).
   ! lopt_w2b : if .TRUE. use optimized version of Wannier-to-Bloch Fourier transformation
+  ! ZD TODO: add comments for newly added variables
   !
   IF ( npool * nimage /= nproc ) THEN
     CALL errore("readin", "Number of processes must be equal to product "//&
                 "of number of pools and"//new_line('n')//"     number of "//&
-                "images"//new_line('n')//"     Image parallelization can be used "//&
-                "only in calculations on coarse grid.", 1)
+                "images"//new_line('n')//" ", 1)
   END IF
   !
   nk1tmp = 0
@@ -469,286 +515,330 @@
   ENDIF
   !
   ! Set default values for variables in namelist
-  amass(:)     = 0.d0
-  iverbosity   = 0
-  elph         = .FALSE.
-  elecselfen   = .FALSE.
-  phonselfen   = .FALSE.
-  plselfen     = .FALSE.
-  specfun_el   = .FALSE.
-  specfun_ph   = .FALSE.
-  specfun_pl   = .FALSE.
-  epbread      = .FALSE.
-  epbwrite     = .FALSE.
-  epwread      = .FALSE.
-  epwwrite     = .TRUE.
-  restart      = .FALSE.
-  restart_step = 100
-  wannierize   = .FALSE.
-  write_wfn    = .FALSE.
-  kmaps        = .FALSE.
-  nest_fn      = .FALSE.
-  wepexst      = .FALSE.
-  epexst       = .FALSE.
-  eig_read     = .FALSE.
-  dis_win_max  = 9999.d0
-  dis_win_min  = -9999.d0
-  dis_froz_max = 9999.d0
-  dis_froz_min = -9999.d0
-  num_iter     = 200
-  proj(:)      = ''
-  auto_projections = .FALSE.
-  scdm_proj    = .FALSE.
-  scdm_entanglement = 'isolated'
-  scdm_mu      = 0.d0
-  scdm_sigma   = 1.d0
-  bands_skipped= ''
-  wdata(:)     = ''
-  iprint       = 2
-  wannier_plot = .FALSE.
-  wannier_plot_scale = 1.0d0
-  wannier_plot_radius = 3.5d0
-  wannier_plot_supercell = (/5,5,5/)
-  wannier_plot_list = ''
-  reduce_unk   = .FALSE.
-  wmin         = 0.d0
-  wmax         = 0.3d0
-  eps_acoustic  = 5.d0 ! cm-1
-  nw           = 10
-  fsthick      = 1.d10 ! eV
-  degaussw     = 0.025d0 ! eV
-  a2f          = .FALSE.
-  etf_mem      = 1
-  ngaussw      = 1
-  outdir       = '.'
-  dvscf_dir    = '.'
-  prefix       = 'pwscf'
-  filqf        = ' '
-  restart_filq = ' '
-  filkf        = ' '
-  fildrho      = ' '
-  fildvscf     = ' '
-  filukk       = ' '
-  rand_q       = .FALSE.
-  delta_approx = .FALSE.
-  rand_nq      = 1
-  rand_k       = .FALSE.
-  rand_nk      = 1
-  nq1          = 0
-  nq2          = 0
-  nq3          = 0
-  nk1          = 0
-  nk2          = 0
-  nk3          = 0
-  nqf1         = 0
-  nqf2         = 0
-  nqf3         = 0
-  nkf1         = 0
-  nkf2         = 0
-  nkf3         = 0
-  mp_mesh_k    = .FALSE.
-  mp_mesh_q    = .FALSE.
-  nbndsub      = 0
-  nsmear       = 1
-  delta_smear  = 0.01d0 ! eV
-  modenum      = 0 ! Was -1 previously and read from Modules/input_parameters.f90
-                   ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
-                   ! anymore. Change the default EPW value to match the previous QE one.
-  vme          = 'wannier' ! Note: Was .FALSE. by default until EPW v5.1 and then .TRUE. until EPW v5.4
-  elecselfen_type = 'nonadiabatic'
-  ephwrite     = .FALSE.
-  band_plot    = .FALSE.
-  fermi_plot   = .FALSE.
-  nqsmear      = 10
-  nqstep       = 500
-  delta_qsmear = 0.05d0 ! meV
-  degaussq     = 0.05d0 ! meV
-  lreal        = .FALSE.
-  limag        = .FALSE.
-  lpade        = .FALSE.
-  lacon        = .FALSE.
-  liso         = .FALSE.
-  laniso       = .FALSE.
-  lpolar       = .FALSE.
-  lifc         = .FALSE.
-  asr_typ      = 'simple'
-  lscreen      = .FALSE.
-  scr_typ      = 0
-  fermi_diff   = 1.d0
-  smear_rpa    = 0.05d0
-  lcumulant    = .FALSE.
-  bnd_cum      = 1
-  kerwrite     = .FALSE.
-  kerread      = .FALSE.
-  imag_read    = .FALSE.
-  eliashberg   = .FALSE.
-  ep_coupling  = .TRUE.
-  tc_linear    = .FALSE.
-  tc_linear_solver = 'power'
-  gridsamp     = 0
-  griddens     = 1.d0
-  fbw          = .FALSE.
-  dos_del      = 1.d-02
-  muchem       = .FALSE.
-  a_gap0       = 1.0d0
-  nswi         = 0
-  wscut        = 0.d0
-  broyden_beta = 0.7d0
-  broyden_ndim = 8
-  conv_thr_raxis = 5.d-04
-  conv_thr_iaxis = 1.d-05
-  conv_thr_racon = 5.d-04
-  gap_edge     = 0.d0
-  positive_matsu = .TRUE.
-  icoulomb     = 0
-  emax_coulomb = 1.d5
-  emin_coulomb = -1.d5
-  filirobj     = ' '
-  filnscf_coul = ' '
-  eps_cut_ir   = 1.d-5
-  nstemp       = 0
-  temps(:)     = -1.d0
-  nsiter       = 40
-  npade        = 90
-  muc          = 0.d0
-  fila2f       = ' '
-  max_memlt    = 2.85d0
-  efermi_read  = .FALSE.
-  fermi_energy = 0.d0
-  wmin_specfun = 0.d0 ! eV
-  wmax_specfun = 0.3d0 ! eV
-  nw_specfun   = 100
-  system_2d    = 'no'   ! Previously was .FALSE.
-  scattering   = .FALSE.
-  scattering_serta = .FALSE.
-  scatread     = .FALSE.
-  scattering_0rta = .FALSE.
-  int_mob      = .FALSE.
-  iterative_bte = .FALSE.
-  scissor      = 0.d0 ! eV
-  carrier      = .FALSE.
-  ncarrier     = 0.d0 ! cm^-3
-  longrange_only = .FALSE.
-  shortrange   = .FALSE.
-  prtgkk       = .FALSE.
-  nel          = 0.0d0
-  meff         = 1.d0
-  epsiheg      = 1.d0
-  lphase       = .FALSE.
-  lrot         = .FALSE.
-  omegamin     = 0.d0  ! eV
-  omegamax     = 10.d0 ! eV
-  omegastep    = 1.d0  ! eV
-  sigma_ref    = 1.d0  ! 1/(Ohm m)
-  lindabs      = .FALSE.
-  mob_maxiter  = 50
-  use_ws       = .FALSE.
-  epmatkqread  = .FALSE.
-  selecqread   = .FALSE.
-  nc           = 4.0d0
-  assume_metal = .FALSE.  ! default is we deal with an insulator
-  fixsym       = .FALSE.
-  epw_no_t_rev = .TRUE.
-  epw_tr       = .TRUE.
-  epw_nosym    = .FALSE.
-  epw_noinv    = .FALSE.
-  epw_crysym   = .FALSE.
-  bfieldx      = 0.d0  ! Tesla
-  bfieldy      = 0.d0  ! Tesla
-  bfieldz      = 0.d0  ! Tesla
-  mob_maxfreq  = 100 ! Maximum frequency for spectral decomposition in meV
-  mob_nfreq    = 100 ! Number of frequency for the spectral decomposition
-  ii_g         = .FALSE.
-  ii_charge    = 1.0d0
-  ii_n         = 0.0d0
-  ii_scattering = .FALSE.
-  ii_only      = .FALSE.
-  ii_lscreen   = .TRUE.
-  ii_eda       = 0.0d0
-  ii_partion   = .FALSE.
-  gb_scattering = .FALSE.
-  gb_only      = .FALSE.
-  gb_size      = 0.0d0  ! nm
-  !
-  ! Added for polaron calculations by Chao Lian
-  nstate_plrn  = 1
-  niter_plrn   = 50
-  plrn         = .FALSE.
-  restart_plrn = .FALSE.
-  model_vertex_plrn = .false.
-  model_enband_plrn = .false.
-  model_phfreq_plrn = .false.
-  kappa_plrn    = 0.0
-  omega_LO_plrn = 0.0
-  m_eff_plrn    = 0.0
-  conv_thr_plrn = 1E-5
-  g_power_order_plrn = 1
-  step_wf_grid_plrn  = 1
-  cal_psir_plrn      = .FALSE.
-  interp_Ank_plrn    = .FALSE.
-  interp_Bqu_plrn    = .FALSE.
-
-  start_band_plrn   = 0
-  end_band_plrn     = 0
-  g_start_band_plrn = 0
-  g_end_band_plrn   = 0
-  g_start_energy_plrn = -10.0
-  g_end_energy_plrn   = 10.0
-
-  full_diagon_plrn = .FALSE.
-  mixing_Plrn      = 1.0
-  init_plrn        = 1
-  Mmn_plrn         = .FALSE.
-  recal_Mmn_plrn   = .FALSE.
-  debug_plrn       = .FALSE.
-  r0_plrn          = 0.0
-  nDOS_plrn        = 1000
-  edos_min_plrn    = 0.0 ! eV
-  pdos_min_plrn    = 0.0 ! meV
-  edos_max_plrn    = 0.0 ! eV
-  pdos_max_plrn    = 0.0 ! meV
-  edos_sigma_plrn  = 0.01d0 ! eV
-  pdos_sigma_plrn  = 0.1 ! meV
-  type_plrn        = -1
-  init_sigma_plrn  = 4.6
-  init_k0_plrn     = (/1000.d0, 1000.d0, 1000.d0/)
-  ethrdg_plrn      = 1E-6
-  time_rev_A_plrn  = .FALSE.
-  time_rev_U_plrn  = .FALSE.
-  nhblock_plrn     = 1
-  beta_plrn        = 0.0
-  g_tol_plrn       = -0.01
-  io_lvl_plrn      = 0
-  scell_mat_plrn   = .FALSE.
-  scell_mat(1, 1:3) = (/1, 0, 0/)
-  scell_mat(2, 1:3) = (/0, 1, 0/)
-  scell_mat(3, 1:3) = (/0, 0, 1/)
-  init_ntau_plrn    = 1
-  adapt_ethrdg_plrn = .FALSE.
-  init_ethrdg_plrn  = 1.d-2
-  nethrdg_plrn      = 11
-  david_ndim_plrn   = 4
-  loptabs     = .FALSE.
-  do_CHBB     = .FALSE.
-  len_mesh    = 1
-  meshnum     = 1
-  wf_quasi    = -1
-  nq_init     = -1
-  start_mesh  = 0
-  DW          = 0
-  mode_res    = 0
-  QD_bin      = 0.0
-  QD_min      = 0.005
-  lwfpt       = .FALSE.
-  compute_dmat = .FALSE.
-  calc_nelec_wann = .FALSE.
-  ahc_nbnd       = -1
-  ahc_nbndskip   = 0
-  ahc_win_min    = -9999.d0
-  ahc_win_max    = -9999.d0
-  lopt_w2b    = .FALSE.
-  lfast_kmesh = .FALSE.
-  epw_memdist = .FALSE.
+  amass(:)               = 0.d0
+  iverbosity             = 0
+  elph                   = .FALSE.
+  elecselfen             = .FALSE.
+  phonselfen             = .FALSE.
+  plselfen               = .FALSE.
+  specfun_el             = .FALSE.
+  specfun_ph             = .FALSE.
+  specfun_pl             = .FALSE.
+  epbread                = .FALSE.
+  epbwrite               = .FALSE.
+  epwread                = .FALSE.
+  epwwrite               = .TRUE.
+  restart                = .FALSE.
+  restart_step           = 100
+  wannierize             = .FALSE.
+  write_wfn              = .FALSE.
+  kmaps                  = .FALSE.
+  nest_fn                = .FALSE.
+  wepexst                = .FALSE.
+  epexst                 = .FALSE.
+  eig_read               = .FALSE.
+  dis_win_max            = 9999.d0
+  dis_win_min            = -9999.d0
+  dis_froz_max           = 9999.d0
+  dis_froz_min           = -9999.d0
+  num_iter               = 200
+  proj(:)                = ''
+  auto_projections       = .FALSE.
+  scdm_proj              = .FALSE.
+  scdm_entanglement      = 'isolated'
+  scdm_mu                = 0.d0
+  scdm_sigma             = 1.d0
+  bands_skipped          = ''
+  wdata(:)               = ''
+  iprint                 = 2
+  wannier_plot           = .FALSE.
+  wannier_plot_scale     = 1.0d0
+  wannier_plot_radius    = 3.5d0
+  wannier_plot_supercell = (/5, 5, 5/)
+  wannier_plot_list      = ''
+  reduce_unk             = .FALSE.
+  wmin                   = 0.d0
+  wmax                   = 0.3d0
+  eps_acoustic           = 0.1d0 ! cm-1
+  ! SP - the default of eps_acoustic was changed from 5 cm-1 to 0.1 cm-1 (05/2025)
+  acoustic_plrn          = 100.d0 ! cm-1
+  dtau_max_plrn          = 0.5d0 ! alat
+  nw                     = 10
+  fsthick                = 1.d10 ! eV
+  degaussw               = 0.025d0 ! eV
+  a2f                    = .FALSE.
+  etf_mem                = 1
+  ngaussw                = 1
+  outdir                 = '.'
+  dvscf_dir              = '.'
+  prefix                 = 'pwscf'
+  filqf                  = ' '
+  restart_filq           = ' '
+  filkf                  = ' '
+  fildrho                = ' '
+  fildvscf               = ' '
+  filukk                 = ' '
+  rand_q                 = .FALSE.
+  delta_approx           = .FALSE.
+  rand_nq                = 1
+  rand_k                 = .FALSE.
+  rand_nk                = 1
+  nq1                    = 0
+  nq2                    = 0
+  nq3                    = 0
+  nk1                    = 0
+  nk2                    = 0
+  nk3                    = 0
+  nqf1                   = 0
+  nqf2                   = 0
+  nqf3                   = 0
+  nkf1                   = 0
+  nkf2                   = 0
+  nkf3                   = 0
+  mp_mesh_k              = .FALSE.
+  mp_mesh_q              = .FALSE.
+  nbndsub                = 0
+  nsmear                 = 1
+  delta_smear            = 0.01d0 ! eV
+  modenum                = 0 ! Was -1 previously and read from Modules/input_parameters.f90
+                             ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
+                             ! anymore. Change the default EPW value to match the previous QE one.
+  vme                    = 'wannier' ! Note: Was .FALSE. by default until EPW v5.1 and then .TRUE. until EPW v5.4
+  elecselfen_type        = 'nonadiabatic'
+  ephwrite               = .FALSE.
+  band_plot              = .FALSE.
+  fermi_plot             = .FALSE.
+  nqsmear                = 10
+  nqstep                 = 500
+  delta_qsmear           = 0.05d0 ! meV
+  degaussq               = 0.05d0 ! meV
+  lreal                  = .FALSE.
+  limag                  = .FALSE.
+  lpade                  = .FALSE.
+  lacon                  = .FALSE.
+  liso                   = .FALSE.
+  laniso                 = .FALSE.
+  lpolar                 = .FALSE.
+  lifc                   = .FALSE.
+  asr_typ                = 'simple'
+  lscreen                = .FALSE.
+  scr_typ                = 0
+  fermi_diff             = 1.d0
+  smear_rpa              = 0.05d0
+  lcumulant              = .FALSE.
+  bnd_cum                = 1
+  kerwrite               = .FALSE.
+  kerread                = .FALSE.
+  imag_read              = .FALSE.
+  eliashberg             = .FALSE.
+  ep_coupling            = .TRUE.
+  tc_linear              = .FALSE.
+  tc_linear_solver       = 'power'
+  gridsamp               = 0
+  griddens               = 1.d0
+  fbw                    = .FALSE.
+  dos_del                = 1.d-02
+  muchem                 = .FALSE.
+  a_gap0                 = 1.0d0
+  nswi                   = 0
+  wscut                  = 0.d0
+  broyden_beta           = 0.7d0
+  broyden_ndim           = 8
+  conv_thr_raxis         = 5.d-04
+  conv_thr_iaxis         = 1.d-05
+  conv_thr_racon         = 5.d-04
+  gap_edge               = 0.d0
+  positive_matsu         = .TRUE.
+  icoulomb               = 0
+  emax_coulomb           = 1.d5
+  emin_coulomb           = -1.d5
+  filirobj               = ' '
+  filnscf_coul           = ' '
+  eps_cut_ir             = 1.d-5
+  nstemp                 = 0
+  temps(:)               = -1.d0
+  nsiter                 = 40
+  npade                  = 90
+  muc                    = 0.d0
+  fila2f                 = ' '
+  max_memlt              = 2.85d0
+  efermi_read            = .FALSE.
+  fermi_energy           = 0.d0
+  wmin_specfun           = 0.d0 ! eV
+  wmax_specfun           = 0.3d0 ! eV
+  nw_specfun             = 100
+  system_2d              = 'no'   ! Previously was .FALSE.
+  scattering             = .FALSE.
+  scattering_serta       = .FALSE.
+  scatread               = .FALSE.
+  scattering_0rta        = .FALSE.
+  int_mob                = .FALSE.
+  iterative_bte          = .FALSE.
+  scissor                = 0.d0 ! eV
+  carrier                = .FALSE.
+  ncarrier               = 0.d0 ! cm^-3
+  longrange_only         = .FALSE.
+  shortrange             = .FALSE.
+  prtgkk                 = .FALSE.
+  nel                    = 0.0d0
+  meff                   = 1.d0
+  epsiheg                = 1.d0
+  lphase                 = .FALSE.
+  lrot                   = .FALSE.
+  omegamin               = 0.d0  ! eV
+  omegamax               = 10.d0 ! eV
+  omegastep              = 1.d0  ! eV
+  sigma_ref              = 1.d0  ! 1/(Ohm m)
+  lindabs                = .FALSE.
+  mob_maxiter            = 50
+  use_ws                 = .FALSE.
+  epmatkqread            = .FALSE.
+  selecqread             = .FALSE.
+  nc                     = 4.0d0
+  assume_metal           = .FALSE.  ! default is we deal with an insulator
+  fixsym                 = .FALSE.
+  epw_no_t_rev           = .TRUE.
+  epw_tr                 = .TRUE.
+  epw_nosym              = .FALSE.
+  epw_noinv              = .FALSE.
+  epw_crysym             = .FALSE.
+  bfieldx                = 0.d0  ! Tesla
+  bfieldy                = 0.d0  ! Tesla
+  bfieldz                = 0.d0  ! Tesla
+  mob_maxfreq            = 100 ! Maximum frequency for spectral decomposition in meV
+  mob_nfreq              = 100 ! Number of frequency for the spectral decomposition
+  ltrans_crta            = .FALSE.
+  sr_crta                = 1   ! default scattering rate for CRTA in THz
+  ii_g                   = .FALSE.
+  ii_charge              = 1.0d0
+  ii_n                   = 0.0d0
+  ii_scattering          = .FALSE.
+  ii_only                = .FALSE.
+  ii_lscreen             = .TRUE.
+  ii_eda                 = 0.0d0
+  ii_partion             = .FALSE.
+  gb_scattering          = .FALSE.
+  gb_only                = .FALSE.
+  gb_size                = 0.0d0  ! nm
+  nstate_plrn            = 1
+  niter_plrn             = 50
+  plrn                   = .FALSE.
+  restart_plrn           = .FALSE.
+  model_vertex_plrn      = .FALSE.
+  model_enband_plrn      = .FALSE.
+  model_phfreq_plrn      = .FALSE.
+  kappa_plrn             = 0.0
+  omega_LO_plrn          = 0.0
+  m_eff_plrn             = 0.0
+  conv_thr_plrn          = 1E-5
+  g_power_order_plrn     = 1
+  step_wf_grid_plrn      = 1
+  cal_psir_plrn          = .FALSE.
+  cal_acous_plrn         = .FALSE.
+  interp_Ank_plrn        = .FALSE.
+  interp_Bqu_plrn        = .FALSE.
+  start_band_plrn        = 0
+  end_band_plrn          = 0
+  g_start_band_plrn      = 0
+  g_end_band_plrn        = 0
+  g_start_energy_plrn    = -10.0
+  g_end_energy_plrn      = 10.0
+  g_scale_plrn           = 1.0
+  full_diagon_plrn       = .FALSE.
+  mixing_Plrn            = 1.0
+  init_plrn              = 1
+  Mmn_plrn               = .FALSE.
+  recal_Mmn_plrn         = .FALSE.
+  debug_plrn             = .FALSE.
+  r0_plrn                = 0.0
+  nDOS_plrn              = 1000
+  edos_min_plrn          = 0.0 ! eV
+  pdos_min_plrn          = 0.0 ! meV
+  edos_max_plrn          = 0.0 ! eV
+  pdos_max_plrn          = 0.0 ! meV
+  edos_sigma_plrn        = 0.01d0 ! eV
+  pdos_sigma_plrn        = 0.1 ! meV
+  type_plrn              = -1
+  init_sigma_plrn        = 4.6
+  init_k0_plrn           = (/1000.d0, 1000.d0, 1000.d0/)
+  ethrdg_plrn            = 1E-6
+  time_rev_A_plrn        = .FALSE.
+  time_rev_U_plrn        = .FALSE.
+  nhblock_plrn           = 1
+  beta_plrn              = 0.0
+  g_tol_plrn             = -0.01
+  io_lvl_plrn            = 0
+  scell_mat_plrn         = .FALSE.
+  scell_mat(1, 1:3)      = (/1, 0, 0/)
+  scell_mat(2, 1:3)      = (/0, 1, 0/)
+  scell_mat(3, 1:3)      = (/0, 0, 1/)
+  init_ntau_plrn         = 1
+  adapt_ethrdg_plrn      = .FALSE.
+  init_ethrdg_plrn       = 1.d-2
+  nethrdg_plrn           = 11
+  david_ndim_plrn        = 4
+  loptabs                = .FALSE.
+  do_CHBB                = .FALSE.
+  len_mesh               = 1
+  meshnum                = 1
+  wf_quasi               = -1
+  nq_init                = -1
+  start_mesh             = 0
+  DW                     = 0
+  mode_res               = 0
+  QD_bin                 = 0.0
+  QD_min                 = 0.005
+  lwfpt                  = .FALSE.
+  compute_dmat           = .FALSE.
+  calc_nelec_wann        = .FALSE.
+  ahc_nbnd               = -1
+  ahc_nbndskip           = 0
+  ahc_win_min            = -9999.d0
+  ahc_win_max            = -9999.d0
+  lopt_w2b               = .FALSE.
+  exciton                = .FALSE.
+  explrn                 = .FALSE.
+  plot_explrn_e          = .FALSE.
+  plot_explrn_h          = .FALSE.
+  only_c_explrn          = .FALSE.
+  only_v_explrn          = .FALSE.
+  only_pos_modes_explrn  = .TRUE.
+  nbndc_explrn           = 2
+  nbndv_explrn           = 2
+  negnv_explrn           = 1
+  step_k1_explrn         = 1
+  step_k2_explrn         = 1
+  step_k3_explrn         = 1
+  lfast_kmesh            = .FALSE.
+  epw_memdist            = .FALSE.
+  dos_tetra              = .FALSE.
+  fd                     = .FALSE.
+  do_tdbe                = .FALSE.
+  dt_tdbe                = 1.0
+  nt_tdbe                = 3000
+  twrite_tdbe            = 30
+  temp_el_tdbe           = 1000.d0
+  temp_ph_tdbe           = 100.d0
+  init_sigma_tdbe        = 0.1
+  init_type_tdbe         = 'FD'
+  solver_tdbe            = 'euler'
+  ef_v_tdbe              = -9999.0
+  ef_c_tdbe              = 9999.0
+  carr_dyn_tdbe          = 3
+  dg_tdbe                = .FALSE.
+  nqf1d                  = 0
+  nqf2d                  = 0
+  nqf3d                  = 0
+  nkf1d                  = 0
+  nkf2d                  = 0
+  nkf3d                  = 0
+  restart_tdbe           = .FALSE.
+  phph_tdbe              = .FALSE.
+  phwmin_tdbe            = 0.d0
+  dph_tdbe               = 50
+  lscreen_tdbe           = .FALSE.
+  a2f_iso                = .FALSE. 
+  max_seconds            = 1.E+7_DP
   !
   ! Reading the namelist inputepw and check
   IF (meta_ionode) THEN
@@ -821,7 +911,7 @@
   ! file with rotation matrix U(k) for interpolation
   filukk = TRIM(prefix) // '.ukk'
   IF (nsmear < 1) CALL errore('readin', 'Wrong number of nsmears', 1)
-  IF (iverbosity < 0 .OR. iverbosity > 4) CALL errore('readin', 'Wrong iverbosity', 1)
+  IF (iverbosity < -1 .OR. iverbosity > 6) CALL errore('readin', 'Wrong iverbosity', 1)
   IF (epbread .AND. epbwrite) CALL errore('readin', 'epbread cannot be used with epbwrite', 1)
   IF (epbread .AND. epwread) CALL errore('readin', 'epbread cannot be used with epwread', 1)
   IF (degaussw * 4.d0 > fsthick) CALL errore('readin', ' degaussw too close to fsthick', 1)
@@ -845,6 +935,8 @@
   IF (ABS(degaussw) < eps16 .AND. specfun_el) CALL errore('readin', &
       'adapt_smearing cannot be used with spectral functions. Set degaussw > 0.', 1)
   IF (a2f .AND. .NOT. phonselfen) CALL errore('readin', 'a2f requires phonoselfen', 1)
+  IF (a2f_iso .AND. ephwrite) CALL errore('epw_readin', 'Error: a2f_iso only work with ephwrite=.FALSE.', 1)
+  IF (a2f_iso .AND. laniso) CALL errore('epw_readin', 'Error: a2f_iso can only work with laniso=.FALSE.', 1)
   IF (elph .AND. .NOT. ep_coupling) CALL errore('readin', 'elph requires ep_coupling=.true.', 1)
   IF ((elph .AND. wannierize) .AND. (epwread)) CALL errore('readin', &
       'must use same w90 rotation matrix for entire run', 1)
@@ -859,6 +951,8 @@
     CALL errore('readin', 'phonon self-energy only works with full uniform k-mesh', 1)
   IF ((elecselfen .OR. specfun_el) .AND. mp_mesh_q) &
     CALL errore('readin', 'electron self-energy only works with full uniform q-mesh', 1)
+  IF (mp_mesh_k .AND. mp_mesh_q) &
+    CALL errore('readin', 'both mp_mesh_k and mp_mesh_q cannot be True, use either', 1)
   IF (ephwrite) THEN
     IF (.NOT. ep_coupling .AND. .NOT. elph) CALL errore('readin', &
       'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
@@ -894,7 +988,7 @@
         &is deprecated and switched to etf_mem = 1 automatically.'
     etf_mem = 1
   ENDIF
-  IF (etf_mem /= 0 .AND. epw_memdist) CALL errore('epw_readin', 'Error: epw_memdist only work with etf_mem = 0.', 1)
+  IF (etf_mem /= 0 .AND. epw_memdist) CALL errore('readin', 'Error: epw_memdist only work with etf_mem = 0.', 1)
   IF (etf_mem == 0 .AND. .NOT. epw_memdist) &
      WRITE(stdout, '(/,5x,a)') 'Suggestion: epw_memdist == .true. can reduce the memory usage when etf_mem == 0.'
   IF (etf_mem == 3) THEN
@@ -904,11 +998,14 @@
          &lfast_kmesh switched on for efficient k mesh generation.'
   ENDIF
   !
+  IF (int_mob .AND. assume_metal) CALL errore('readin', 'int_mob does not work with assume_metal.', 1)
+  !
   IF (lfast_kmesh) THEN
     IF (.NOT. mp_mesh_k) CALL errore('readin', 'When lfast_kmesh (etf_mem = 3), you have to use mp_mesh_k == .true.', 1)
     IF (.NOT. efermi_read) CALL errore('readin', 'When lfast_kmesh (etf_mem = 3), you have to use efermi_read == .true.', 1)
     IF (int_mob) CALL errore('readin', 'When lfast_kmesh (etf_mem = 3), you have to use int_mob == .false.', 1)
-    IF (.NOT. carrier) CALL errore('readin', 'When lfast_kmesh (etf_mem = 3), you have to use carrier == .true.', 1)
+    IF (.NOT. carrier .AND. .NOT. assume_metal) CALL errore('readin', 'When lfast_kmesh (etf_mem = 3), &
+                                                       you have to use carrier == .true. for semiconductors', 1)
     IF (phonselfen) CALL errore('readin', 'phonselfen is not implemented with lfast_kmesh (etf_mem = 3)', 1)
     IF (filkf /= ' ' .OR. filqf /= ' ' .OR. rand_k .OR. rand_q) THEN
       CALL errore('readin', 'lfast_kmesh (etf_mem = 3) requires homogeneous grids', 1)
@@ -934,6 +1031,10 @@
     CALL errore('set_asr','invalid Acoustic Sum Rule:' // asr_typ, 1)
   ENDIF
   !
+  IF (fd .AND. (.NOT. lifc)) THEN
+    CALL errore('readin', 'Error: fd needs lifc set to .TRUE.', 1)
+  ENDIF
+  !
   IF (scdm_proj) THEN
     IF ((TRIM(scdm_entanglement) /= 'isolated') .AND. &
         (TRIM(scdm_entanglement) /= 'erfc')     .AND. &
@@ -952,6 +1053,14 @@
       'lopt_w2b = .true. works only for homogeneous grids', 1)
   ENDIF
   !
+  IF (do_tdbe .AND. .NOT. dg_tdbe) THEN
+    nqf1d        = nqf1
+    nqf2d        = nqf2
+    nqf3d        = nqf3
+    nkf1d        = nkf1
+    nkf2d        = nkf2
+    nkf3d        = nkf3
+  ENDIF
   !
   ! Make sure the files exists
   !
@@ -969,19 +1078,20 @@
   ENDIF ! meta_ionode
   IF (iterative_bte) THEN
     ! The fine grids have to be homogeneous and the same. Otherwise the populations can oscillate.
-    IF (nkf1 /= nqf1 .OR. nkf2 /= nqf2 .OR. nkf3 /= nqf3) THEN
-      CALL errore('readin', 'Error: the fine k-points and q-points grids have to be the same when doing IBTE.', 1)
+    IF (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0) THEN
+      CALL errore('readin', 'Error: the fine k-points and q-points grids have to be commensurate when doing IBTE.', 1)
     ENDIF
   ENDIF
   IF (auto_projections .AND. proj(1) /= ' ') CALL errore('readin', &
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
-  IF (dis_win_min > -9999.d0 + eps16) THEN
-    dis_win_min  = -9999.d0
-    WRITE(stdout, '(/,5x,a)') 'WARNING: The specified dis_win_min is ignored.'
-    WRITE(stdout, '(5x,a)') "         You should instead use bands_skipped = 'exclude_bands = ...'"
-    WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
+  IF ((dis_win_min > -9999.d0 + eps16) .AND. (.NOT. calc_nelec_wann)) THEN
+    calc_nelec_wann = .TRUE.
+    WRITE(stdout, '(/,5x,a,F12.4,a)') "The dis_win_min is specified as ", dis_win_min, " eV"
+    WRITE(stdout, '(5x,a)') "         To get a correct nelec, calc_nelec_wann is set to .TRUE."
+    WRITE(stdout, '(5x,a)') "         If you just want to control the lower bound of band manifold, "
+    WRITE(stdout, '(5x,a)') "         try bands_skipped = 'exclude_bands = ...' instead."
   ENDIF
   !
   ! 2D interpolation
@@ -1142,10 +1252,15 @@
   ! Max frequency for the spectral decomposition of mobility from meV to Ry.
   mob_maxfreq = mob_maxfreq / ryd2mev
   !
+  ! Constant scattering rate from THz to Ry
+  sr_crta = sr_crta / ry2thz_sr
+  !
   ! fermi_energy read from the input file from eV to Ryd
   IF (efermi_read) THEN
     fermi_energy = fermi_energy / ryd2ev
   ENDIF
+  !
+  !
   ! bfield: input in Tesla=[V/(m^2/s)] , convert in [eV/(Ang^2/s)]
   bfieldx = bfieldx * electron_si * ang2m**(-2)
   bfieldy = bfieldy * electron_si * ang2m**(-2)
@@ -1157,6 +1272,7 @@
   !
   ! from cm-1 to Ryd
   eps_acoustic = eps_acoustic / ev2cmm1 / ryd2ev
+  acoustic_plrn = acoustic_plrn / ev2cmm1 / ryd2ev
   !
   ! wmin and wmax from eV to Ryd
   wmin = wmin / ryd2ev

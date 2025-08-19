@@ -22,13 +22,19 @@ SUBROUTINE kcw_run_nscf (do_band)
   USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : ethr_nscf
-  USE control_kcw,     ONLY : tmp_dir_kcwq
+  USE control_kcw,     ONLY : tmp_dir_kcwq, kcw_iverbosity
   USE klist,           ONLY : nelec
+  USE control_kcw,     ONLY : irr_bz
+  USE control_kcw,     ONLY : mp1, mp2, mp3
+  USE klist,           ONLY : xk, wk
+  USE start_k,         ONLY : init_start_k, nks_start, xk_start
+  USE start_k,         ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE io_global,       ONLY : stdout
   !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: do_band
-  INTEGER :: verbosity_save
+  INTEGER :: verbosity_save, ik
   !
   CALL start_clock( 'kcw_run_nscf' )
   !
@@ -62,7 +68,35 @@ SUBROUTINE kcw_run_nscf (do_band)
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
-  CALL setup_nscf ( .FALSE., xq, .TRUE. )
+  ! we need the IBZ of k if sym.
+  !
+  IF( irr_bz) THEN
+    !WRITE(*,*) "nks_start: ", nks_start
+    !
+    ! need to setup nk1, nk2, nk3 from start_k
+    !if we don't do it, the code will crash when reading the charge density.
+    !
+    !nk1 = mp1
+    !nk2 = mp2
+    !nk3 = mp3
+    !k1 = 0.D0
+    !k2 = 0.D0
+    !k3 = 0.D0
+    !
+   CALL init_start_k( mp1, mp2, mp3, 0, 0, 0, 'cartesian', &
+   mp1*mp2*mp3, xk, wk ) 
+   
+   IF (kcw_iverbosity .gt. 2) THEN 
+     WRITE(stdout ,'(8X, "SYM :nks_start =", i5)') nks_start
+     !DO ik=1, nks_start 
+      WRITE(stdout,'(8X, "     xk_start(",i5, " )=", 3F12.4)') (ik, xk_start(:,ik), ik=1, nks_start)
+     !END DO
+   ENDIF
+   CALL setup_nscf ( .TRUE., xq, .FALSE. ) 
+   ! the second false restrict to IBZ(q) the k points
+  ELSE 
+    CALL setup_nscf ( .FALSE., xq, .TRUE. ) 
+  END IF
   !
   CALL init_run()
   !

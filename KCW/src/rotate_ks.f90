@@ -40,11 +40,10 @@ SUBROUTINE rotate_ks ()
   INTEGER :: ik, n_orb, ik_eff,nkstot_eff
   INTEGER :: lrwfc 
   !
-  COMPLEX(DP),EXTERNAL :: zdotc
   INTEGER, EXTERNAL :: global_kpoint_index
   INTEGER :: global_ik
   INTEGER :: i
-  REAL(DP) :: occ_mat_aux(num_wann,num_wann)
+  COMPLEX(DP) :: occ_mat_aux(num_wann,num_wann)
   !
   IF ( ionode )  THEN 
     IF (read_unitary_matrix) WRITE( stdout, '(/,5x,A)') &

@@ -161,10 +161,13 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   CALL mp_bcast (iter_restart, ionode_id, world_comm)
   CALL mp_bcast (norm0(pol_index), ionode_id, world_comm)
   CALL mp_bcast (beta_store(pol_index,:), ionode_id, world_comm)
-  CALL mp_bcast (gamma_store(pol_index,:), ionode_id, world_comm)
   CALL mp_bcast (zeta_store(pol_index,:,:), ionode_id, world_comm)
-  CALL mp_bcast (alpha_magnons_store(pol_index,:), ionode_id, world_comm)
-  CALL mp_bcast (gamma_magnons_store(pol_index,:), ionode_id, world_comm)
+  IF (magnons) THEN
+     CALL mp_bcast (alpha_magnons_store(pol_index,:), ionode_id, world_comm)
+     CALL mp_bcast (gamma_magnons_store(pol_index,:), ionode_id, world_comm)
+  ELSE
+     CALL mp_bcast (gamma_store(pol_index,:), ionode_id, world_comm)
+  ENDIF
 #endif
   !
   ! Optical case: read projection

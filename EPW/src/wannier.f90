@@ -103,7 +103,7 @@
     !! Counter on coarse q-point grid
     INTEGER :: lrepmatw
     !! record length while reading file
-    INTEGER :: valueRSS(2)
+    INTEGER(KIND = 8) :: valueRSS(2)
     !! Return virtual and resisdent memory from system
     INTEGER :: ierr
     !! Error status

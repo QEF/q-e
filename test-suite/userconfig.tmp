@@ -2,7 +2,7 @@
 exe = XXXXXX/test-suite/run-pw.sh
 extract_program = XXXXXX/test-suite/extract-pw.sh
 inputs_args = ('*.in', '')
-run_cmd_template = tc.program tc.input tc.output tc.error
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (8.0e+0, 1.0e+1, 'n1'),
               (1.0e-3, None,   'f1'),
@@ -29,7 +29,7 @@ tolerance = ( (1.0e-5, 1.0e-5, 'e1'),
               (1.0e-2, 1.0e-2, 'v1d'),
               (6.0e-3, 1.0e-3, 't1') )
 skip_program = grep
-skip_args = 'not present in this version\|libxc needed for this functional\|not ported to GPU'
+skip_args = 'not present in this version\|libxc needed for this functional'
 
 [PH]
 exe = XXXXXX/test-suite/run-ph.sh
@@ -50,6 +50,8 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (5.0e-4, 5.0e-4, 'dos'),
               (5.0e-2, 1.0e-1, 'born_diff'),
               (1.5e-0,   None, 'lambda'),
+              (1.0e-4,   None, 'dnsscf_e'),
+              (1.0e-4,   None, 'dnsscf_ph'),
               (3.0e-1, 5.0e-3, 'lambda2'),
               (1.0e-6, 1.0e-6, 'qpt'),
               (2.0e+0,   None, 'phfreq'),
@@ -57,7 +59,10 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (1.0e-3, 1.0e-5, 'rlatt_cart'),
               (1.0e-3, 1.0e-5, 'rlatt_crys'),
               (5.0e-1,   None, 'sum_w_pot'),
-              (5.0e-4, 1.0e-2, 'postahc_selfen'))
+              (5.0e-4, 1.0e-2, 'postahc_selfen'),
+              (1.0e-2, 1.0e-2, 'quad'),
+              (1.0e-1, 1.0e-2, 'epsil'))
+
 skip_program = grep
 skip_args = 'not present in this version'
 
@@ -106,12 +111,15 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (7.0e-1,   None, 'lambda_tr'),
               (1.0e-2,   None, 'gamma'),
               (1.1e-2, 5.0e-4, 'omega'),
+              (1.1e-1, 5.0e-4, 'on_shell_Omega'),
+              (1.1e-1, 5.0e-4, 'off_shell_Omega'),
               (1.0e-4, 5.0e-4, 'lam_tot'),
               (3.0e+1, 1.0e+0, 'lam_tr'),
               (2.0e-5, 6.0e-3, 'logavg'),
               (1.0e-2, 5.0e-2, 'l_a2f'),
               (1.0e-5, 1.0e-5, 'efm'),
               (5.0e-4, 5.0e-4, 'elph'),
+              (4.0e-2, 1.5e-3, 'mcmillan'),
               (4.0e-2, 1.5e-3, 'allDyn'),
               (2.0e-3, 5.0e-4, 'pi'),
               (1.0e-2, 5.0e-2, 'bcsgap'),
@@ -187,8 +195,8 @@ skip_program = grep
 skip_args = 'not present in this version'
 
 [QEHeat_h2o_mol_t]
-exe = XXXXXX/test-suite/run-all_currents.x
-extract_program = XXXXXX/test-suite/extract-all_currents.x
+exe = XXXXXX/test-suite/run-all_currents.sh
+extract_program = XXXXXX/test-suite/extract-all_currents.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (1.0e-1, 2.5e-5 ) )
@@ -196,8 +204,8 @@ skip_program = grep
 skip_args = 'not present in this version'
 
 [QEHeat_h2o_mol]
-exe = XXXXXX/test-suite/run-all_currents.x
-extract_program = XXXXXX/test-suite/extract-all_currents.x
+exe = XXXXXX/test-suite/run-all_currents.sh
+extract_program = XXXXXX/test-suite/extract-all_currents.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (1.0e-1, 1.0e-7 ) )
@@ -205,8 +213,8 @@ skip_program = grep
 skip_args = 'not present in this version'
 
 [QEHeat_translation]
-exe = XXXXXX/test-suite/run-all_currents.x
-extract_program = XXXXXX/test-suite/extract-all_currents.x
+exe = XXXXXX/test-suite/run-all_currents.sh
+extract_program = XXXXXX/test-suite/extract-all_currents.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (1.0e-2, 1.0e-4 ) )
@@ -292,5 +300,16 @@ exe = XXXXXX/test-suite/run-oscdft.sh
 extract_program = XXXXXX/test-suite/extract-oscdft-pp.sh
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (1e-3, None) )
+skip_program = grep
+skip_args = 'not present in this version\|libxc needed for this functional'
+
+[PIOUD]
+exe = XXXXXX/test-suite/run-pioud.sh
+extract_program = XXXXXX/test-suite/extract-pioud.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.input tc.output tc.error tc.args
+tolerance = ( (8.0e-4, 1.0e-4, 'Temp_K'),
+              (8.0e+0, 1.0e+1, 'Temp_Ha'),
+               (8.0e-4, 1.0e-4, 'E_kin'))
 skip_program = grep
 skip_args = 'not present in this version\|libxc needed for this functional'

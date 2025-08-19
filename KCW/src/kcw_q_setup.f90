@@ -43,7 +43,11 @@ subroutine kcw_q_setup
   USE scf,              ONLY : v, vrs, vltot, kedtau
   USE fft_base,         ONLY : dfftp
   USE gvecs,            ONLY : doublegrid
-  USE symm_base,        ONLY : inverse_s
+  USE symm_base,        ONLY : nrot, nsym, s, ft, irt, time_reversal, &
+                               inverse_s, d1, d2, d3
+  USE lr_symm_base,     ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
+  USE qpoint,           ONLY : xq
+  USE control_lr,       ONLY : lgamma
   USE noncollin_module, ONLY : domag, noncolin, m_loc, angle1, angle2, ux
   !USE funct,            ONLY : dft_is_gradient
   USE xc_lib,           ONLY : xclib_dft_is
@@ -56,7 +60,7 @@ subroutine kcw_q_setup
   !
   INTEGER :: na, it 
   ! counters
-  logical :: magnetic_sym
+  LOGICAL :: magnetic_sym
   !
   call start_clock ('kcw_q_setup')
   !
@@ -102,6 +106,32 @@ subroutine kcw_q_setup
   ! 6) Computes alpha_pv
   !
   call setup_alpha_pv()
+  !
+  ! 9) Set various symmetry-related variables
+  !
+  magnetic_sym = noncolin .AND. domag
+  time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
+  !
+  ! The small group of q was already determined. At q\=0 it is calculated
+  ! by set_nscf, at q=0 it coincides with the point group and we take nsymq=nsym
+  !
+  IF (lgamma) THEN
+     !
+     nsymq   = nsym
+     !
+     IF ( time_reversal ) THEN
+         minus_q = .TRUE.
+     ELSE
+         minus_q = .FALSE.
+     ENDIF
+     !
+  ENDIF
+  !
+  ! Calculate the vectors G associated to the symmetry Sq = q + G
+  ! If minus_q=.true. calculate also irotmq and the G associated to Sq=-q+G
+  !
+  CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
+
   !
   !  set the alpha_mix parameter
   !

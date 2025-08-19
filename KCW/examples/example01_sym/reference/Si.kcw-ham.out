@@ -1,0 +1,572 @@
+
+     =--------------------------------------------------------------------------------=
+                      :::    :::           ::::::::         :::       ::: 
+                     :+:   :+:           :+:    :+:        :+:       :+:  
+                    +:+  +:+            +:+               +:+       +:+   
+                   +#++:++             +#+               +#+  +:+  +#+    
+                  +#+  +#+            +#+               +#+ +#+#+ +#+     
+                 #+#   #+#           #+#    #+#         #+#+# #+#+#       
+                ###    ###           ########           ###   ###         
+
+       Koopmans functional implementation based on DFPT; please cite this program as
+
+        N.Colonna, R. De Gennaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+
+                                                                                    
+
+       If you use the non-collinear mode (with/without spin-orbit coupling) please cite
+
+        A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
+     =--------------------------------------------------------------------------------=
+
+     Program KCW v.7.3.1 starts on  2Oct2024 at 10:54: 3 
+        Git branch: SAWFinDEV
+        Last git commit: 876a087ca20a62c5a97287dd40a506478924b648-dirty
+        Last git commit date: Tue Oct 1 17:09:07 2024 +0200
+        Last git commit subject: Wrong filename missing _g when reading in g space
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     14690 MiB available memory on the printing compute node when the environment starts
+ 
+
+     KCW INPUT SUMMARY 
+     ============================================
+
+      CONTROL 
+       # title               =            KI H2O
+       # out_dir             =/home/gcistaro/cod
+       # prefix              =                Si
+       # calculation         =               ham
+       # kcw_iverbosity      =                 1
+       # kcw_at_ks           =                 F
+       # MP grid             =     2     2     2
+       # spin_component      =                 1
+       # homo_only           =                 F
+       # read_unitary_matrix =                 T
+       # check_ks            =                 T
+       # l_vcut              =                 F
+       # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
+       # irr_bz              =                 F
+       # shift_centers       =                 F
+
+      WANNIER 
+       # seedname            =                Si
+       # num_wann_occ        =                 4
+       # num_wann_emp        =                 4
+       # have_empty          =                 T
+       # has_disentangle     =                 T
+       # l_unique_manifold   =                 F
+
+      HAM 
+       # qp_symm             =                 F
+       # kipz_corr           =                 F
+       # MP grid             =     2     2     2
+       # do_bands            =                 T
+       # use_ws_distance     =                 T
+       # write_hr            =                 T
+       # l_alpha_corr        =                 F
+       # on_site_only        =                 T
+     ============================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     /home/gcistaro/codes/q-e-kcw/tempdir/Si.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         295     295     91                 3287     3287     609
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: total number of primitive cell    8
+
+     READING SCREENING PARAMETERS
+
+     INFO: alphas read from:/home/gcistaro/codes/q-e-kcw/tempdir/kcw/Si.alpha.dat                                                                                                                                                                                                           
+     iwann =     1   alpha =      0.30564462
+     iwann =     2   alpha =      0.30564445
+     iwann =     3   alpha =      0.30564452
+     iwann =     4   alpha =      0.30564449
+     iwann =     5   alpha =      0.23808817
+     iwann =     6   alpha =      0.23808858
+     iwann =     7   alpha =      0.23808970
+     iwann =     8   alpha =      0.23808868
+
+     INFO: MLWF read from file: Reading collected, re-writing distributed wavefunctions
+
+        KS Hamiltonian calculation at k=      0.0000      0.0000      0.0000   ...    DONE 
+
+        WANN      -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+        PWSCF     -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+
+        KS Hamiltonian calculation at k=     -0.5000      0.5000     -0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        KS Hamiltonian calculation at k=      0.5000      0.5000      0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        KS Hamiltonian calculation at k=      0.0000      1.0000      0.0000   ...    DONE 
+
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+
+        KS Hamiltonian calculation at k=     -0.5000     -0.5000      0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+        KS Hamiltonian calculation at k=     -1.0000      0.0000      0.0000   ...    DONE 
+
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+
+        KS Hamiltonian calculation at k=      0.0000      0.0000      1.0000   ...    DONE 
+
+        WANN      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+        PWSCF     -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+
+        KS Hamiltonian calculation at k=     -0.5000      0.5000      0.5000   ...    DONE 
+
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+        PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
+
+     INFO: Coulomb q+G=0 treatment:
+     INFO: Divergence            none    
+     INFO: q-grid dimension         2   2   2
+     INFO: cell volume               270.256360799503
+     INFO: Gamma Extrapolation       F
+     INFO: extrapolation q->0 term not estimated
+     INFO: Bare Coulomb q+G=0            0.00000E+00
+
+     INFO: READING Wannier-orbital Densities ...
+
+        ==============================================================================
+        iq =     1
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     2
+        The  Wannier density at  q =   -0.5000000   0.5000000  -0.5000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.0000000   0.5000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     3
+        The  Wannier density at  q =    0.5000000   0.5000000   0.5000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.5000000   0.0000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     4
+        The  Wannier density at  q =    0.0000000   1.0000000   0.0000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.5000000   0.5000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     5
+        The  Wannier density at  q =   -0.5000000  -0.5000000   0.5000000  [Cart ]
+        The  Wannier density at  q =    0.5000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     6
+        The  Wannier density at  q =   -1.0000000   0.0000000   0.0000000  [Cart ]
+        The  Wannier density at  q =    0.5000000   0.0000000   0.5000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     7
+        The  Wannier density at  q =    0.0000000   0.0000000   1.0000000  [Cart ]
+        The  Wannier density at  q =    0.5000000   0.5000000   0.0000000  [Cryst]
+        ==============================================================================
+
+
+        ==============================================================================
+        iq =     8
+        The  Wannier density at  q =   -0.5000000   0.5000000   0.5000000  [Cart ]
+        The  Wannier density at  q =    0.5000000   0.5000000   0.5000000  [Cryst]
+        ==============================================================================
+
+     INFO: total number of wannier to compute    8 from     1 to     8
+     INFO: PREPARING THE KCW CALCULATION ... DONE
+
+
+
+     INFO: Skipping off-diag: only R=0 and i=j
+
+     INFO: KC SCALAR TERM CALCULATION ... START
+
+     INFO: KC SCALAR TERM CALCULATION ... END
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+          KS      -5.7058     6.3432     6.3432     6.3432     8.7374     8.7374     8.7374     9.4921
+          KI      -6.5782     5.4709     5.4709     5.4709     8.9472     8.9472     8.9472     9.7019
+
+          k =-0.5000 0.5000-0.5000     band energies (ev):
+
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
+
+          k = 0.5000 0.5000 0.5000     band energies (ev):
+
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
+
+          k = 0.0000 1.0000 0.0000     band energies (ev):
+
+          KS      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+          KI      -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
+
+          k =-0.5000-0.5000 0.5000     band energies (ev):
+
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
+
+          k =-1.0000 0.0000 0.0000     band energies (ev):
+
+          KS      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+          KI      -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
+
+          k = 0.0000 0.0000 1.0000     band energies (ev):
+
+          KS      -1.5321    -1.5321     3.4046     3.4046     6.7657     6.7657    16.2469    16.2469
+          KI      -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
+
+          k =-0.5000 0.5000 0.5000     band energies (ev):
+
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
+          KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
+
+        KS       highest occupied, lowest unoccupied level (ev):     6.3432    6.7657
+        KI[2nd]  highest occupied, lowest unoccupied level (ev):     5.4709    6.9754
+
+     ====================================
+     STARTING BAND STRUCTURE INTERPOLATION
+     ====================================
+
+        KC interpolated eigenvalues at k=      0.0000      0.0000      0.0000
+
+          -6.5782     5.4709     5.4709     5.4709     8.9472     8.9472     8.9472     9.7019
+
+        KC interpolated eigenvalues at k=      0.0500      0.0000      0.0500
+
+          -6.5531     5.3549     5.3988     5.3988     8.8804     9.1578     9.1578     9.7075
+
+        KC interpolated eigenvalues at k=      0.1000      0.0000      0.1000
+
+          -6.4743     5.0124     5.1897     5.1897     8.6851     9.7098     9.7615     9.7615
+
+        KC interpolated eigenvalues at k=      0.1500      0.0000      0.1500
+
+          -6.3317     4.4594     4.8641     4.8641     8.3781     9.6712    10.6792    10.6792
+
+        KC interpolated eigenvalues at k=      0.2000      0.0000      0.2000
+
+          -6.1106     3.7215     4.4541     4.4541     7.9900     9.5452    11.7963    11.7963
+
+        KC interpolated eigenvalues at k=      0.2500      0.0000      0.2500
+
+          -5.7940     2.8325     3.9999     3.9999     7.5673     9.2959    12.9835    12.9835
+
+        KC interpolated eigenvalues at k=      0.3000      0.0000      0.3000
+
+          -5.3656     1.8326     3.5460     3.5460     7.1698     8.9136    14.1169    14.1169
+
+        KC interpolated eigenvalues at k=      0.3500      0.0000      0.3500
+
+          -4.8135     0.7653     3.1368     3.1368     6.8635     8.4243    15.0932    15.0932
+
+        KC interpolated eigenvalues at k=      0.4000      0.0000      0.4000
+
+          -4.1321    -0.3245     2.8123     2.8123     6.7081     7.8860    15.8368    15.8368
+
+        KC interpolated eigenvalues at k=      0.4500      0.0000      0.4500
+
+          -3.3248    -1.3939     2.6040     2.6040     6.7429     7.3767    16.2997    16.2997
+
+        KC interpolated eigenvalues at k=      0.5000      0.0000      0.5000
+
+          -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
+
+        KC interpolated eigenvalues at k=      0.5125      0.0250      0.5125
+
+          -2.4092    -2.4007     2.5272     2.5382     6.9747     6.9931    16.4401    16.4701
+
+        KC interpolated eigenvalues at k=      0.5250      0.0500      0.5250
+
+          -2.4235    -2.3894     2.5124     2.5561     6.9727     7.0457    16.3907    16.5097
+
+        KC interpolated eigenvalues at k=      0.5375      0.0750      0.5375
+
+          -2.4481    -2.3701     2.4891     2.5857     6.9706     7.1321    16.3091    16.5731
+
+        KC interpolated eigenvalues at k=      0.5500      0.1000      0.5500
+
+          -2.4838    -2.3422     2.4591     2.6268     6.9697     7.2505    16.1961    16.6567
+
+        KC interpolated eigenvalues at k=      0.5625      0.1250      0.5625
+
+          -2.5318    -2.3047     2.4252     2.6788     6.9719     7.3983    16.0531    16.7558
+
+        KC interpolated eigenvalues at k=      0.5750      0.1500      0.5750
+
+          -2.5935    -2.2568     2.3903     2.7412     6.9791     7.5724    15.8817    16.8645
+
+        KC interpolated eigenvalues at k=      0.5875      0.1750      0.5875
+
+          -2.6702    -2.1971     2.3577     2.8135     6.9932     7.7691    15.6839    16.9768
+
+        KC interpolated eigenvalues at k=      0.6000      0.2000      0.6000
+
+          -2.7630    -2.1243     2.3308     2.8947     7.0159     7.9843    15.4619    17.0861
+
+        KC interpolated eigenvalues at k=      0.6125      0.2250      0.6125
+
+          -2.8726    -2.0371     2.3128     2.9842     7.0487     8.2134    15.2181    17.1859
+
+        KC interpolated eigenvalues at k=      0.6250      0.2500      0.6250
+
+          -2.9994    -1.9340     2.3066     3.0811     7.0926     8.4517    14.9551    17.2697
+
+        KC interpolated eigenvalues at k=      0.3750      0.3750      0.7500
+
+          -2.9994    -1.9340     2.3066     3.0811     7.0926     8.4517    14.9551    17.2697
+
+        KC interpolated eigenvalues at k=      0.3375      0.3375      0.6750
+
+          -3.4744    -1.5171     2.3772     3.4062     7.2939     9.1729    14.0795    17.3672
+
+        KC interpolated eigenvalues at k=      0.3000      0.3000      0.6000
+
+          -4.0500    -0.9189     2.5939     3.7619     7.5909     9.8050    13.1353    17.1387
+
+        KC interpolated eigenvalues at k=      0.2625      0.2625      0.5250
+
+          -4.6520    -0.1331     2.9393     4.1219     7.9524    10.2445    12.1978    16.5171
+
+        KC interpolated eigenvalues at k=      0.2250      0.2250      0.4500
+
+          -5.2106     0.8169     3.3762     4.4626     8.3362    10.4325    11.3305    15.5118
+
+        KC interpolated eigenvalues at k=      0.1875      0.1875      0.3750
+
+          -5.6798     1.8744     3.8618     4.7662     8.7010    10.3659    10.5791    14.2081
+
+        KC interpolated eigenvalues at k=      0.1500      0.1500      0.3000
+
+          -6.0409     2.9538     4.3509     5.0203     9.0142     9.9689    10.0953    12.7553
+
+        KC interpolated eigenvalues at k=      0.1125      0.1125      0.2250
+
+          -6.2963     3.9514     4.7974     5.2188     9.2519     9.5078     9.7128    11.3457
+
+        KC interpolated eigenvalues at k=      0.0750      0.0750      0.1500
+
+          -6.4602     4.7602     5.1566     5.3596     9.1908     9.3292     9.3739    10.2080
+
+        KC interpolated eigenvalues at k=      0.0375      0.0375      0.0750
+
+          -6.5499     5.2877     5.3899     5.4432     9.0071     9.0494     9.1632     9.7297
+
+        KC interpolated eigenvalues at k=      0.0000      0.0000      0.0000
+
+          -6.5782     5.4709     5.4709     5.4709     8.9472     8.9472     8.9472     9.7019
+
+        KC interpolated eigenvalues at k=      0.0500      0.0500      0.0500
+
+          -6.5594     5.3362     5.4407     5.4407     9.0263     9.0263     9.0459     9.7171
+
+        KC interpolated eigenvalues at k=      0.1000      0.1000      0.1000
+
+          -6.5009     4.9413     5.3531     5.3531     9.1831     9.2559     9.2559     9.9104
+
+        KC interpolated eigenvalues at k=      0.1500      0.1500      0.1500
+
+          -6.3962     4.3127     5.2166     5.2166     9.1136     9.6134     9.6135    10.4947
+
+        KC interpolated eigenvalues at k=      0.2000      0.2000      0.2000
+
+          -6.2356     3.4920     5.0446     5.0446     8.9220    10.0640    10.0640    11.3351
+
+        KC interpolated eigenvalues at k=      0.2500      0.2500      0.2500
+
+          -6.0078     2.5324     4.8539     4.8539     8.6851    10.5635    10.5635    12.2910
+
+        KC interpolated eigenvalues at k=      0.3000      0.3000      0.3000
+
+          -5.7027     1.4955     4.6633     4.6633     8.4410    11.0630    11.0630    13.2543
+
+        KC interpolated eigenvalues at k=      0.3500      0.3500      0.3500
+
+          -5.3167     0.4493     4.4913     4.4913     8.2183    11.5135    11.5136    14.1257
+
+        KC interpolated eigenvalues at k=      0.4000      0.4000      0.4000
+
+          -4.8659    -0.5254     4.3548     4.3548     8.0406    11.8711    11.8712    14.8183
+
+        KC interpolated eigenvalues at k=      0.4500      0.4500      0.4500
+
+          -4.4246    -1.3030     4.2671     4.2671     7.9262    12.1007    12.1007    15.2632
+
+        KC interpolated eigenvalues at k=      0.5000      0.5000      0.5000
+
+          -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
+
+        KC interpolated eigenvalues at k=      0.5000      0.4750      0.5250
+
+          -4.1973    -1.6210     4.1793     4.2110     7.8780    12.0043    12.2390    15.5497
+
+        KC interpolated eigenvalues at k=      0.5000      0.4500      0.5500
+
+          -4.1580    -1.5859     4.0124     4.1343     7.8495    11.5582    12.4170    15.8695
+
+        KC interpolated eigenvalues at k=      0.5000      0.4250      0.5750
+
+          -4.0886    -1.5369     3.7544     4.0106     7.7982    10.9754    12.7125    16.2443
+
+        KC interpolated eigenvalues at k=      0.5000      0.4000      0.6000
+
+          -3.9839    -1.4896     3.4355     3.8456     7.7252    10.3476    13.1171    16.5862
+
+        KC interpolated eigenvalues at k=      0.5000      0.3750      0.6250
+
+          -3.8381    -1.4668     3.0975     3.6470     7.6393     9.7295    13.6119    16.8460
+
+        KC interpolated eigenvalues at k=      0.5000      0.3500      0.6500
+
+          -3.6459    -1.4980     2.7910     3.4245     7.5572     9.1564    14.1685    16.9952
+
+        KC interpolated eigenvalues at k=      0.5000      0.3250      0.6750
+
+          -3.4045    -1.6112     2.5659     3.1896     7.4996     8.6523    14.7527    17.0184
+
+        KC interpolated eigenvalues at k=      0.5000      0.3000      0.7000
+
+          -3.1161    -1.8192     2.4554     2.9562     7.4883     8.2332    15.3279    16.9098
+
+        KC interpolated eigenvalues at k=      0.5000      0.2750      0.7250
+
+          -2.7897    -2.1079     2.4630     2.7417     7.5430     7.9081    15.8593    16.6720
+
+        KC interpolated eigenvalues at k=      0.5000      0.2500      0.7500
+
+          -2.4438    -2.4438     2.5682     2.5682     7.6789     7.6800    16.3152    16.3163
+
+        KC interpolated eigenvalues at k=      0.5000      0.2250      0.7250
+
+          -2.4428    -2.4428     2.5673     2.5673     7.6612     7.6623    16.3191    16.3202
+
+        KC interpolated eigenvalues at k=      0.5000      0.2000      0.7000
+
+          -2.4401    -2.4401     2.5648     2.5648     7.6100     7.6110    16.3305    16.3314
+
+        KC interpolated eigenvalues at k=      0.5000      0.1750      0.6750
+
+          -2.4357    -2.4357     2.5608     2.5608     7.5306     7.5315    16.3477    16.3485
+
+        KC interpolated eigenvalues at k=      0.5000      0.1500      0.6500
+
+          -2.4303    -2.4303     2.5558     2.5558     7.4314     7.4321    16.3686    16.3693
+
+        KC interpolated eigenvalues at k=      0.5000      0.1250      0.6250
+
+          -2.4242    -2.4242     2.5503     2.5503     7.3223     7.3228    16.3908    16.3914
+
+        KC interpolated eigenvalues at k=      0.5000      0.1000      0.6000
+
+          -2.4181    -2.4181     2.5447     2.5447     7.2141     7.2145    16.4122    16.4125
+
+        KC interpolated eigenvalues at k=      0.5000      0.0750      0.5750
+
+          -2.4126    -2.4126     2.5397     2.5397     7.1173     7.1175    16.4306    16.4308
+
+        KC interpolated eigenvalues at k=      0.5000      0.0500      0.5500
+
+          -2.4082    -2.4082     2.5357     2.5357     7.0410     7.0411    16.4448    16.4449
+
+        KC interpolated eigenvalues at k=      0.5000      0.0250      0.5250
+
+          -2.4054    -2.4054     2.5331     2.5331     6.9922     6.9922    16.4536    16.4536
+
+        KC interpolated eigenvalues at k=      0.5000      0.0000      0.5000
+
+          -2.4045    -2.4045     2.5322     2.5322     6.9754     6.9754    16.4566    16.4566
+
+     ENDING BAND STRUCTURE INTERPOLATION
+
+
+     Writing all to output data dir /home/gcistaro/codes/q-e-kcw/tempdir/Si_kcw.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
+ 
+     KCW          :      0.16s CPU      0.20s WALL
+
+     INITIALIZATION: 
+ 
+     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
+ 
+     h_psi        :      0.01s CPU      0.01s WALL (       8 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
+ 
+ 
+ 
+      General routines
+     calbec       :      0.00s CPU      0.00s WALL (       8 calls)
+     fft          :      0.00s CPU      0.00s WALL (       5 calls)
+     ffts         :      0.01s CPU      0.01s WALL (     512 calls)
+     fftw         :      0.00s CPU      0.00s WALL (     128 calls)
+     davcio       :      0.00s CPU      0.01s WALL (      72 calls)
+ 
+ 
+     KCW          :      0.16s CPU      0.20s WALL
+
+ 
+   This run was terminated on:  10:54: 3   2Oct2024            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

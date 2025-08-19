@@ -30,6 +30,7 @@
                               iunsparseqcb, iunepmatcb, iunepmatwp2
     USE input,         ONLY : iterative_bte, int_mob, carrier, etf_mem, assume_metal
     USE input,         ONLY : int_mob, carrier, ncarrier
+    USE global_var,    ONLY : ctype
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL
 #endif
@@ -48,11 +49,11 @@
 #endif
     !
     IF (iterative_bte) THEN
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. assume_metal) THEN
+      IF (ctype == 0 .OR. ctype == -1) THEN
         CLOSE(iunepmat)
         CLOSE(iunsparseq)
       ENDIF
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0)) .AND. .NOT. assume_metal) THEN
+      IF (ctype == 0 .OR. ctype == 1) THEN
         CLOSE(iunepmatcb)
         CLOSE(iunsparseqcb)
       ENDIF  ! in all other cases it is still to decide which files to open
@@ -134,7 +135,7 @@
     !
     USE units_lr,  ONLY : iuwfc, iudwf
     USE units_ph,  ONLY : iudrho
-    USE phcom,     ONLY : fildrho
+    USE output,    ONLY : fildrho
     USE mp_global, ONLY : me_pool,root_pool
     !
     IMPLICIT NONE
@@ -151,6 +152,40 @@
     !
     !------------------------------------------------------------------
     END SUBROUTINE close_final
+    !------------------------------------------------------------------
+    !
+    !------------------------------------------------------------------
+    SUBROUTINE remove_out_files
+    !------------------------------------------------------------------
+    !
+    USE io_files,          ONLY : delete_if_present
+    USE mp_images,         ONLY : my_image_id, me_image
+    USE io_global,         ONLY : stdout, ionode, meta_ionode
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN = 256) :: uname
+    !! Temporary out files
+    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+    !! string to integer
+    !
+    ! Disable writing to out. files for all ranks except the meta-io rank
+    IF( .NOT. meta_ionode ) THEN
+#if defined(_WIN32)
+      OPEN ( unit = stdout, file='NUL:', status='unknown' )
+#else
+      OPEN ( unit = stdout, file='/dev/null', status='unknown' )
+#endif
+    END IF
+    !
+    ! Delete the out. files that were created by environment_start
+    ! The file name should match the uname defined in environment_start
+    uname = 'out.' // trim(int_to_char(my_image_id)) // '_' // &
+            trim(int_to_char(me_image))
+    CALL delete_if_present(uname)
+    !
+    !------------------------------------------------------------------
+    END SUBROUTINE remove_out_files
     !------------------------------------------------------------------
     !
   !------------------------------------------------------------------

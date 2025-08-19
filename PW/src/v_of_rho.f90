@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE noncollin_module, ONLY : noncolin, nspin_lsda
   USE ions_base,        ONLY : nat, tau
   USE ldaU,             ONLY : lda_plus_u, lda_plus_u_kind, ldmx_b, &
-                               nsg, v_nsg 
+                               nsg, v_nsg, Hubbard_l, Hubbard_lmax, apply_U, orbital_resolved 
   USE xc_lib,           ONLY : xclib_dft_is
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
@@ -29,6 +29,11 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   USE libmbd_interface, ONLY : mbd_interface
   USE sic_mod,          ONLY : add_vsic
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_v_constraint
+#endif  
   !
   IMPLICIT NONE
   !
@@ -86,10 +91,18 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         !
         ! DFT+U (simplified)
         !
-        IF (noncolin) THEN 
-           CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth)
-        ELSE  
-           CALL v_hubbard (rho%ns, v%ns, eth)
+        IF (noncolin) THEN
+           IF (orbital_resolved) THEN        
+              CALL v_hubbard_resolved_nc (rho%ns_nc, v%ns_nc, eth)
+           ELSE
+              CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth)
+           ENDIF
+        ELSE
+           IF (orbital_resolved) THEN
+              CALL v_hubbard_resolved(rho%ns, v%ns, eth)
+           ELSE
+              CALL v_hubbard (rho%ns, v%ns, eth)
+           ENDIF
         ENDIF   
         !
         ! Background
@@ -124,6 +137,18 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
      ENDIF
      !
   ENDIF
+  !
+#if defined (__OSCDFT)
+  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==2)) THEN
+     IF (lda_plus_u) THEN
+        IF (lda_plus_u_kind == 0) THEN
+           CALL oscdft_v_constraint (oscdft_ctx, Hubbard_lmax, Hubbard_l, rho%ns, v%ns, eth)
+        ELSEIF (lda_plus_u_kind == 2) THEN
+           CALL oscdft_v_constraint_extended (nsg, v_nsg, eth)
+        ENDIF
+     ENDIF
+  ENDIF
+#endif
   !
   ! ... add an electric field
   ! 
@@ -1705,6 +1730,353 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    !
  END SUBROUTINE v_hubbard_extended_nc
 !
+!-----------------------------------------------------------------------
+SUBROUTINE v_hubbard_resolved( ns, v_hub, eth )
+!---------------------------------------------------------------------
+!
+!! Computes Hubbard potential and Hubbard energy
+!! for a manifold of selected spin- or magnetic quantum orbitals.
+!! The Hubbard potential is first calculated in the diagonal representation
+!! based on the eigenvalues of the occupation matrix and then 
+!! re-rotated using the eigenvectors in order to retain compatiblity with
+!! other parts of the code.
+!! See Macke et al., arXiv:2312.13580 (2023).
+!! Uses the simplified rotationally-invariant formulation by
+!! Dudarev et al., Phys. Rev. B 57, 1505 (1998).
+!
+USE kinds,                ONLY : DP
+USE ions_base,            ONLY : nat, ityp
+USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_Um, &
+                                 Hubbard_alpha_m, lambda_ns, &
+                                 eigenvecs_ref, order_um, apply_U, hub_pot_fix
+USE lsda_mod,             ONLY : nspin
+USE constants,            ONLY : eps16, RYTOEV
+USE control_flags,        ONLY : iverbosity, dfpt_hub
+USE io_global,            ONLY : stdout
+!
+IMPLICIT NONE
+!
+REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+!! occupation matrix
+REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+!! Hubbard potential
+REAL(DP), INTENT(OUT) :: eth
+!! Hubbard energy
+!
+!  ... local variables
+!
+! Hubbard potential in the diagonal representation
+REAL(DP)                 :: v_hub_diag(2*Hubbard_lmax+1,nspin,nat), temp
+REAL(DP)                 :: effU, effalpha
+! eigenvectors of the ns occupation matrix in the current iteration
+COMPLEX(DP)              :: eigenvecs_current(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin)
+!
+INTEGER                  :: is, na, nt, m1, m2, m3, ldim, m_order
+! the ordering vector for the orbital-tracking routine
+INTEGER                  :: order(2*Hubbard_lmax+1)
+LOGICAL                  :: is_first
+IF (.NOT. ALLOCATED(order_um)) THEN 
+  IF (nspin == 2 ) THEN 
+     ALLOCATE(order_um(2*Hubbard_lmax+1,nspin, nat))  
+  ELSE 
+     ALLOCATE(order_um(2*Hubbard_lmax+1,1,nat)) 
+  END IF 
+  order_um = 0
+END IF 
+
+!
+!
+eth    = 0.d0
+lambda_ns(:,:,:) = 0.d0
+! orbital occupations (=eigenvalues of rho%ns)
+!
+v_hub(:,:,:,:) = 0.d0
+v_hub_diag(:,:,:) = 0.d0 
+!
+IF ( .NOT. apply_U ) RETURN
+! Do not apply corrections before the eigenstates have stabilized
+! The eigenstates are considered stable a) when starting from a
+! converged charge density or b) when the treshold of iterative 
+! diagonalization gets small enough (typically within 3-6 iterations).
+! This is controlled by electrons.f90.
+! 
+DO na = 1, nat
+   !
+   nt = ityp (na)
+   !
+   IF ( ANY(ABS(Hubbard_Um(:,:,nt)) .GT. eps16) .OR. &
+        ANY(ABS(Hubbard_alpha_m(:,:,nt)) .GT. eps16) ) THEN       
+      !
+      ldim = 2 * Hubbard_l(nt) + 1
+      eigenvecs_current(:,:,:) = CMPLX(0.d0,0.d0, kind=dp)
+      is_first = ALL(eigenvecs_ref(:,:,:,na) == eigenvecs_current)  
+
+      !
+      effU = 0.0
+      effalpha = 0.0
+      !
+      CALL diag_ns( ldim, ns(1:ldim,1:ldim,:,na), lambda_ns(1:ldim,:,na), &
+                    eigenvecs_current(1:ldim,1:ldim,:) )
+      !
+      DO is = 1, nspin
+         !
+         ! sort eigenvectors with respect to the (reference) order established in eigvecs_first
+         IF (is_first)  THEN  
+             order(1:ldim) = order_um(1:ldim,is,na)
+             IF (ALL(order(1:ldim)==0)) order(1:ldim) = [(m1,m1=1,ldim)] 
+             DO m1 =1, ldim 
+               eigenvecs_ref(1:ldim, order(m1), is, na) = eigenvecs_current(1:ldim, m1, is) 
+             END DO 
+         END IF 
+         order(:) = 0
+         CALL order_eigenvecs( order(1:ldim), eigenvecs_current(1:ldim,1:ldim,is), &
+                                 eigenvecs_ref(1:ldim,1:ldim,is,na), ldim )
+         !
+         
+         order_um(1:ldim,is,na) = order(1:ldim) 
+         DO m1 = 1, ldim
+            !
+            ! calculate Hubbard potential and -energy
+            ! using the eigenvalues and their ordering
+            m_order = order(m1)
+            effU = Hubbard_Um(m_order,is,nt)
+            effalpha = Hubbard_alpha_m(m_order,is,nt)
+            !
+            ! linear Hubbard U terms:
+            eth = eth + ( effalpha + 0.5D0*effU ) * lambda_ns(m1,is,na)
+            v_hub_diag(m1,is,na) = v_hub_diag(m1,is,na) + &
+                                       effalpha + 0.5D0*effU
+            ! quadratic Hubbard U terms:
+            eth = eth - 0.5D0 * effU * lambda_ns(m1,is,na) * lambda_ns(m1,is,na)
+            v_hub_diag(m1,is,na) = v_hub_diag(m1,is,na) - &
+                                       effU * lambda_ns(m1,is,na)
+            !
+            ! The following can be eliminated once code is approved
+#if defined(__DEBUG)
+            WRITE( stdout,'(/5x,"v_of_rho:")')
+            WRITE( stdout,'(/5x,"AT:",i2," ,m_order:",i2,", is: ",i2,", LAMBDA:",f7.5," U:",f7.5)') &
+                  na,m_order,is,lambda_ns(m1,is,na),effU*RYTOEV
+            IF ( effalpha /= 0.d0) &
+               WRITE( stdout,'(/5x,"m_order:",i2,", is: ",i2,", LAMBDA:",f8.5," alpha:",f8.5)') &
+                  m_order,is,lambda_ns(m1,is,na),effalpha*RYTOEV
+            WRITE( stdout,'(/5x,"Hubbard potential of this state (v_hub_diag) = ",f8.5)') &
+                  v_hub_diag(m1,is,na)
+            WRITE( stdout,'(/5x,"Cumulative running total of Hubbard energies (eth) = ",f8.5)') eth
+#endif
+            !
+         ENDDO
+         !
+         ! backrotation of v_hub_diag to the non-diagonal v_hub
+         DO m1 = 1, ldim
+            DO m2 = 1, ldim
+               temp = CMPLX(0.d0,0.d0, kind=dp)
+               DO m3 = 1, ldim
+                  temp = temp + CONJG(eigenvecs_current(m1,m3,is))* &
+                     v_hub_diag(m3,is,na)*eigenvecs_current(m2,m3,is)
+               ENDDO
+               v_hub(m1,m2,is,na) = DBLE(temp)
+            ENDDO
+         ENDDO
+      ENDDO ! is
+      !
+      IF ( ALL(eigenvecs_ref(:,:,:,na) .EQ. 0.d0) ) THEN
+         !
+         ! if this routine is executed for the first time,
+         ! save the current eigenvecs as reference eigenvecs
+         eigenvecs_ref(1:ldim,1:ldim,:,na) = eigenvecs_current(1:ldim,1:ldim,:)
+      ENDIF
+      !
+   ENDIF
+   !
+ENDDO ! nt
+!
+IF (nspin==1) eth = 2.d0 * eth
+!
+! print Hubbard energy
+!
+IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
+   WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.5,1x," (Ry)")') eth
+ENDIF
+!
+RETURN
+!
+END SUBROUTINE v_hubbard_resolved
+!----------------------------------------------------------------------------
+SUBROUTINE v_hubbard_resolved_nc( ns, v_hub, eth )
+!----------------------------------------------------------------------------
+!
+!! Computes Hubbard potential and Hubbard energy
+!! for a manifold of selected orbitals (noncollinear formulation).
+!! The Hubbard potential is first calculated in the diagonal representation
+!! based on the eigenvalues of the occupation matrix and then 
+!! re-rotated using the eigenvectors in order to retain compatiblity with
+!! other parts of the code.
+!! Uses the simplified rotationally-invariant formulation by
+!! Dudarev et al., Phys. Rev. B 57, 1505 (1998).
+!
+USE kinds,                ONLY : DP
+USE ions_base,            ONLY : nat, ityp
+USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_Um_nc, &
+                                 Hubbard_alpha_m_nc, lambda_ns, order_um,&
+                                 eigenvecs_ref, apply_U, hub_pot_fix
+USE lsda_mod,             ONLY : nspin
+USE constants,            ONLY : eps16, RYTOEV
+USE control_flags,        ONLY : iverbosity, dfpt_hub
+USE io_global,            ONLY : stdout
+!
+IMPLICIT NONE
+!
+COMPLEX(DP), INTENT(IN) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+!! occupation matrix
+COMPLEX(DP), INTENT(OUT):: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+!! Hubbard potential
+REAL(DP), INTENT(OUT) :: eth
+!! Hubbard energy
+!
+!  ... local variables
+!
+REAL(DP)                 :: effU, effalpha
+COMPLEX(DP)              :: v_hub_diag(4*Hubbard_lmax+2,nat), temp
+COMPLEX(DP)              :: v_hub_temp(4*Hubbard_lmax+2,4*Hubbard_lmax+2)
+COMPLEX(DP)              :: eigenvecs_current(4*Hubbard_lmax+2,4*Hubbard_lmax+2)
+!
+INTEGER                  :: is, na, nt, m1, m2, m3, ldim, m_order
+!
+INTEGER                  :: order(4*Hubbard_lmax+2) 
+LOGICAL                  :: is_first
+!! ordering vector
+!
+IF (.NOT. ALLOCATED(order_um)) THEN 
+  ALLOCATE(order_um(4*Hubbard_lmax+2,1,nat)) 
+  order_um = 0
+END IF 
+
+eth    = 0.d0
+lambda_ns(:,:,:) = 0.d0
+! orbital occupations (=eigenvalues of rho%ns)
+!
+v_hub(:,:,:,:) = 0.d0
+v_hub_diag(:,:) = 0.d0 
+! Hubbard potential in the diagonal representation
+!
+IF ( .NOT. apply_U ) RETURN
+! Do not apply corrections before the eigenstates have stabilized
+! The eigenstates are considered stable a) when starting from a
+! converged charge density or b) when the treshold of iterative 
+! diagonalization gets small enough (typically within 3-6 iterations)
+! this is checked in electrons.f90
+! 
+DO na = 1, nat
+   !
+   nt = ityp (na)
+   !
+   IF ( ANY(ABS(Hubbard_Um_nc(:,nt)) .GT. eps16) .OR. &
+        ANY(ABS(Hubbard_alpha_m_nc(:,nt)) .GT. eps16) ) THEN       
+      !
+      ldim = 2 * Hubbard_l(nt) + 1
+      eigenvecs_current(:,:) = CMPLX(0.d0,0.d0, kind=dp)
+      is_first = ALL(eigenvecs_ref(:,1,:,na) == eigenvecs_current)  
+      !
+      effU = 0.0
+      effalpha = 0.0
+      !
+      CALL diag_ns_nc( ldim, ns(1:ldim,1:ldim,:,na), lambda_ns(1:2*ldim,1,na), &
+                     eigenvecs_current(1:2*ldim,1:2*ldim) )
+                              !
+      ! sort eigenvectors with respect to the (reference) order established in eigvecs_first
+      IF (is_first)  THEN  
+        order(1:2*ldim) = order_um(1:2*ldim,1,na)
+        IF (ALL(order(1:2*ldim)==0)) order(1:2*ldim) = [(m1,m1=1,2*ldim)] 
+        DO m1 =1, 2*ldim 
+          eigenvecs_ref(1:2*ldim, order(m1), 1, na) = eigenvecs_current(1:2*ldim, m1) 
+        END DO 
+      END IF 
+      order(:) = 0
+      !
+      CALL order_eigenvecs( order(1:2*ldim), eigenvecs_current(1:2*ldim,1:2*ldim), &
+                                 eigenvecs_ref(1:2*ldim,1:2*ldim,1,na), 2*ldim )
+      !
+      ! No need to iterate over is (all done in diag_ns_nc)
+      order_um(1:2*ldim,1,na) = order(1:2*ldim) 
+      DO m1 = 1, 2*ldim
+         !
+         ! calculate Hubbard potential and -energy
+         ! using the eigenvalues and their ordering
+         m_order = order(m1)
+         effU = Hubbard_Um_nc(m_order,nt)
+         effalpha = Hubbard_alpha_m_nc(m_order,nt)
+         !
+         ! linear Hubbard U terms:
+         eth = eth + ( effalpha + 0.5D0*effU ) * lambda_ns(m1,1,na)
+         v_hub_diag(m1,na) = v_hub_diag(m1,na) + &
+                                    effalpha + 0.5D0*effU
+         ! quadratic Hubbard U terms:
+         eth = eth - 0.5D0 * effU * lambda_ns(m1,1,na) * lambda_ns(m1,1,na)
+         v_hub_diag(m1,na) = v_hub_diag(m1,na) - &
+                                    effU * lambda_ns(m1,1,na)
+         !
+         ! The following block can be eliminated once code is approved
+#if defined(__DEBUG)
+         WRITE( stdout,'(/5x,"v_of_rho (NC):")')
+         WRITE( stdout,'(/5x,"AT:",i2," ,m_order:",i2,", LAMBDA:",f7.5," U:",f7.5)') &
+               na,m_order,lambda_ns(m1,1,na),effU*RYTOEV
+         IF ( effalpha /= 0.d0) &
+            WRITE( stdout,'(/5x,"m_order:",i2,", LAMBDA:",f8.5," alpha:",f8.5)') &
+               m_order,lambda_ns(m1,1,na),effalpha*RYTOEV
+         WRITE( stdout,'(/5x,"Hubbard potential of this state (v_hub_diag) = ",f8.5)') &
+               v_hub_diag(m1,na)
+         WRITE( stdout,'(/5x,"Cumulative running total of Hubbard energies (eth) = ",f8.5)') eth
+#endif
+         !
+      ENDDO
+         !
+      ! backrotation of v_hub_diag to the non-diagonal v_hub
+      ! first, go back to the 2ldim*2ldim matrix
+      v_hub_temp(:,:) = 0.d0
+      !
+      DO m1 = 1, 2*ldim
+         DO m2 = 1, 2*ldim
+            temp = CMPLX(0.d0,0.d0, kind=dp)
+            DO m3 = 1, 2*ldim
+               temp = temp + CONJG(eigenvecs_current(m1,m3))* &
+                  v_hub_diag(m3,na)*eigenvecs_current(m2,m3)
+            ENDDO
+            v_hub_temp(m1,m2) = temp
+         ENDDO
+      ENDDO
+      ! now, sort the different quadrants of v_hub_temp into the actual
+      ! v_hub. upper left quadrant is spin 1, upper right spin 2 etc.
+      !
+      DO m1 = 1, ldim
+         DO m2 = 1,ldim
+            v_hub(m1,m2,1,na) = v_hub_temp(m1,m2)
+            v_hub(m1,m2,2,na) = v_hub_temp(m1,ldim+m2)
+            v_hub(m1,m2,3,na) = v_hub_temp(ldim+m1,m2)
+            v_hub(m1,m2,4,na) = v_hub_temp(ldim+m1,ldim+m2)
+         ENDDO
+      ENDDO
+      !
+      IF ( ALL(eigenvecs_ref(:,:,1,na) .EQ. 0.d0) ) THEN
+         ! if this routine is executed for the first time,
+         ! save the current eigenvecs as reference eigenvecs
+         eigenvecs_ref(1:2*ldim,1:2*ldim,1,na) = &
+                     & eigenvecs_current(1:2*ldim,1:2*ldim)
+      ENDIF
+      !
+   ENDIF
+   !
+ENDDO ! nt
+!
+! print Hubbard energy
+!
+IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
+   WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.5,1x," (Ry)")') eth
+ENDIF
+!
+RETURN
+!
+END SUBROUTINE v_hubbard_resolved_nc
+!----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
 SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !----------------------------------------------------------------------------

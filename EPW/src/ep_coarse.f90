@@ -269,8 +269,6 @@
     !! Counter on bands
     INTEGER :: jbnd
     !! Counter on bands
-    INTEGER :: hbnd
-    !! Counter on bands
     INTEGER :: ipert
     !! Counter on change of Vscf due to perturbations
     INTEGER :: mode
@@ -293,6 +291,8 @@
     !! Lower bounds index after k paral
     INTEGER :: upper_bnd
     !! Upper bounds index after k paral
+    INTEGER :: nbnd_loc
+    !! Local number of bands for band parallelization
     INTEGER :: nkq
     !! Index of k+q-point in the pool
     INTEGER :: nkq_abs
@@ -316,16 +316,14 @@
     !! SU2 rotation matrix to act WFs
     COMPLEX(KIND = DP) :: su2_no_dagger(2, 2)
     !! SU2 that comes out of find_u, we need the dagger of this, which we assign to su2
-    COMPLEX(KIND = DP) :: aux4(npwx * npol, nbnd)
-    !! Rotated psi_m,k+q WF by SU(2)
-    COMPLEX(KIND = DP) :: aux5(npwx * npol, nbnd)
-    !! Rotated psi_nk WF by SU(2)
     COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:, :)
     !! Auxillary wavefunction
     COMPLEX(KIND = DP), ALLOCATABLE :: aux2(:, :)
     !! Auxillary wavefunction
-    COMPLEX(KIND = DP), ALLOCATABLE :: aux3(:, :)
-    !! Auxillary wavefunction
+    COMPLEX(KIND = DP), ALLOCATABLE :: aux4(:, :)
+    !! Rotated psi_m,k+q WF by SU(2)
+    COMPLEX(KIND = DP), ALLOCATABLE :: aux5(:, :)
+    !! Rotated psi_nk WF by SU(2)
     COMPLEX(KIND = DP), ALLOCATABLE :: elphmat(:, :, :)
     !! arrays for e-ph matrix elements
     COMPLEX(KIND = DP), EXTERNAL :: zdotc
@@ -335,11 +333,8 @@
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating elphmat', 1)
     ALLOCATE(aux1(dffts%nnr, npol), STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating aux1', 1)
-    ALLOCATE(aux2(npwx * npol, nbnd), STAT = ierr)
-    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating aux2', 1)
     elphmat(:, :, :) = czero
     aux1(:, :) = czero
-    aux2(:, :) = czero
     zero_vect = zero
     xkq(:, :) = zero
     !
@@ -352,12 +347,16 @@
     !
     ! SP: Bound for band parallelism
     CALL fkbounds_bnd(nbndep, lower_band, upper_band)
+    nbnd_loc = upper_band - lower_band + 1
     !
-    ALLOCATE(aux3(npwx * npol, lower_band:upper_band), STAT = ierr)
-    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating aux3', 1)
+    ALLOCATE(aux2(npwx * npol, nbndep), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating aux2', 1)
+    ALLOCATE(aux4(npwx * npol, nbndep), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating aux4', 1)
+    ALLOCATE(aux5(npwx * npol, nbndep), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating aux5', 1)
     ALLOCATE(dvpsi(npwx * npol, lower_band:upper_band), STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating dvpsi', 1)
-    aux3(:, :) = czero
     dvpsi(:, :) = czero
     !
     ! setup for k+q folding
@@ -416,8 +415,6 @@
       !  then calculate SU(2) transformation matrix from
       !  find_u.
       ! --------------------------------------------------
-      aux4(:, :) = czero
-      aux5(:, :) = czero
       s_cart(:, :) = zero
       su2_no_dagger(:, :) = czero
       su2(:, :) = czero
@@ -446,22 +443,24 @@
       !------------------------------------------------------------
       ! Rotate evc --> axu5 and evq --> aux4 by SU2^{dagger}
       !------------------------------------------------------------
-      IF (noncolin) THEN
-        DO ibnd = 1, nbndep
-          jbnd = ibndkept(ibnd)
+      aux4(:, :) = czero
+      aux5(:, :) = czero
+      DO ibnd = 1, nbndep
+        jbnd = ibndkept(ibnd)
+        IF (noncolin) THEN
           DO ig = 1, npw
-            aux5(ig, jbnd) = su2(1, 1) * evc(ig, jbnd) + su2(1, 2) * evc(ig + npwx, jbnd)
-            aux5(ig + npwx, jbnd) = su2(2, 1) * evc(ig, jbnd) + su2(2, 2) * evc(ig + npwx, jbnd)
+            aux5(ig, ibnd) = su2(1, 1) * evc(ig, jbnd) + su2(1, 2) * evc(ig + npwx, jbnd)
+            aux5(ig + npwx, ibnd) = su2(2, 1) * evc(ig, jbnd) + su2(2, 2) * evc(ig + npwx, jbnd)
           ENDDO
           DO ig = 1, npwq
-            aux4(ig, jbnd) = su2(1, 1) * evq(ig, jbnd) + su2(1, 2) * evq(ig + npwx, jbnd)
-            aux4(ig + npwx, jbnd) = su2(2, 1) * evq(ig, jbnd) + su2(2, 2) * evq(ig + npwx, jbnd)
+            aux4(ig, ibnd) = su2(1, 1) * evq(ig, jbnd) + su2(1, 2) * evq(ig + npwx, jbnd)
+            aux4(ig + npwx, ibnd) = su2(2, 1) * evq(ig, jbnd) + su2(2, 2) * evq(ig + npwx, jbnd)
           ENDDO
-        ENDDO
-      ELSE
-        aux5 = evc
-        aux4 = evq
-      ENDIF
+        ELSE
+          aux5(1:npw,  ibnd) = evc(1:npw,  jbnd)
+          aux4(1:npwq, ibnd) = evq(1:npwq, jbnd)
+        ENDIF
+      ENDDO
       !
       ! ----------------------------------------------------------------
       ! Set the gauge for the eigenstates: unitary transform and phases
@@ -509,8 +508,8 @@
       !  u_{k+q+G_0} carries an additional factor e^{i G_0 v}
       !
       IF (ANY( ABS(ft(:, isym)) > eps8 )) THEN
-        CALL fractrasl(npw,  igk,  aux5, eigv, cone)
-        CALL fractrasl(npwq, igkq, aux4, eigv, cone)
+        CALL fractrasl(nbndep, npw,  igk,  aux5, eigv, cone)
+        CALL fractrasl(nbndep, npwq, igkq, aux4, eigv, cone)
       ENDIF
       !
       ! ---------------------------------------------------------------------
@@ -545,24 +544,23 @@
       !
       ! ... and we recompute the becp terms with the wfs (rotated through igk)
       !
-      CALL calbec(npw, vkb, aux5, becp1(ik))
+      CALL calbec(npw, vkb, aux5, becp1(ik), nbndep)
       !
       ! we also recompute the derivative of the becp terms with the (rotated) wfs
       !
       DO ipol = 1, 3
-        aux2 = czero
-        DO ibnd = 1, nbndep
-          jbnd = ibndkept(ibnd)
+        aux2(:, :) = czero
+        DO ibnd = lower_band, upper_band
           DO ig = 1, npw
-            aux2(ig, jbnd) = aux5(ig, jbnd) * tpiba * ci * (sxk(ipol) + g(ipol,igk(ig)))
+            aux2(ig, ibnd) = aux5(ig, ibnd) * tpiba * ci * (sxk(ipol) + g(ipol,igk(ig)))
           END DO
           IF (noncolin) THEN
             DO ig = 1, npw
-              aux2(ig + npwx, jbnd) = aux5(ig + npwx, jbnd) * tpiba * ci * (sxk(ipol) + g(ipol, igk(ig)))
+              aux2(ig + npwx, ibnd) = aux5(ig + npwx, ibnd) * tpiba * ci * (sxk(ipol) + g(ipol, igk(ig)))
             ENDDO
           ENDIF
         ENDDO
-        CALL calbec(npw, vkb, aux2, alphap(ipol, ik))
+        CALL calbec(npw, vkb, aux2(:, lower_band:upper_band), alphap(ipol, ik), upper_band - lower_band + 1)
       ENDDO
       !
       ! now we generate vkb on the igkq() set because dvpsi is needed on that set
@@ -581,54 +579,34 @@
         !  the call to dvqpsi_us3 differs from the old one to dvqpsi_us
         !  only the xkqtmp passed.
         !
+        !  The bare potential from nonlinear core correction is not compute in dvqpsi_us3
+        !  (because of the .FALSE. parameter) because it is part of the induced potential
+        !  dvscfins written by ph.x. This is done so because the bare potential is spin
+        !  independent but the potential due to core correction is not.
+        !
         !  we have to use the first q in the star in the dvqpsi_us3 call below (xq0)
         !
         mode = imode0 + ipert
         IF (timerev) THEN
-          CALL dvqpsi_us3(ik, CONJG(u(:, mode)), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq, aux5)
+          CALL dvqpsi_us3(ik, CONJG(u(:, mode)), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq, &
+                          aux5, CONJG(dvscfins(:, :, ipert)))
         ELSE
-          CALL dvqpsi_us3(ik, u(:, mode), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq, aux5)
+          CALL dvqpsi_us3(ik, u(:, mode), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq, &
+                          aux5, dvscfins(:, :, ipert))
         ENDIF
         !DBSP
         ! b = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
         !
-        !  calculate dvscf_q*psi_k
-        !
-        CALL start_clock('dvscf_q*psi_k')
-        !
-        aux3 = czero
-        DO ibnd = lower_band, upper_band
-          jbnd = ibndkept(ibnd)
-          CALL invfft_wave(npw, igk, aux5(:, jbnd), aux1)
-          IF (timerev) THEN
-            CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:, :, ipert)), current_spin)
-          ELSE
-            CALL apply_dpot(dffts%nnr, aux1, dvscfins(:, :, ipert), current_spin)
-          ENDIF
-          CALL fwfft_wave(npwq, igkq, aux3(:, ibnd), aux1)
-        ENDDO
-        dvpsi = dvpsi + aux3
-        !
-        !DBSP
-        !c = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
-        !
         CALL adddvscf2(ipert, ik)
         ! DBPS
-        !d = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
+        ! c = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
+        CALL ZGEMM('C', 'N', nbndep, nbnd_loc, npwx * npol, &
+                  (1.d0, 0.d0), aux4(1, 1), npwx * npol, dvpsi(1, lower_band), npwx * npol, &
+                  (0.d0, 0.d0), elphmat(1, 1, ipert), nbndep)
         !
-        DO ibnd =lower_band, upper_band
-          DO jbnd = 1, nbndep
-            hbnd = ibndkept(jbnd)
-            elphmat(jbnd, ibnd, ipert) = ZDOTC(npwq, aux4(1, hbnd), 1, dvpsi(1, ibnd), 1)
-            IF (noncolin) THEN
-              elphmat(jbnd, ibnd, ipert) = elphmat(jbnd, ibnd, ipert) + &
-                 ZDOTC(npwq, aux4(npwx + 1, hbnd), 1, dvpsi(npwx + 1, ibnd), 1)
-            ENDIF
-          ENDDO
-        ENDDO
       ENDDO
       !
       CALL mp_sum(elphmat, intra_pool_comm)
@@ -638,7 +616,6 @@
       !IF (ik==2) THEN
       !  write(*,*)'SUM dvpsi b ', b
       !  write(*,*)'SUM dvpsi c ', c
-      !  write(*,*)'SUM dvpsi d ', d
       !  write(*,*)'elphmat(:, :, :)**2', SUM((REAL(REAL(elphmat(:, :, :))))**2)+SUM((REAL(AIMAG(elphmat(:, :, :))))**2)
       !ENDIF
       !
@@ -729,8 +706,10 @@
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating aux1', 1)
     DEALLOCATE(aux2, STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating aux2', 1)
-    DEALLOCATE(aux3, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating aux3', 1)
+    DEALLOCATE(aux4, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating aux4', 1)
+    DEALLOCATE(aux5, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating aux5', 1)
     DEALLOCATE(dvpsi, STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating dvpsi', 1)
     DEALLOCATE(etq, STAT = ierr)
@@ -742,4 +721,3 @@
   !-----------------------------------------------------------------------------
   END MODULE ep_coarse
   !-----------------------------------------------------------------------------
-

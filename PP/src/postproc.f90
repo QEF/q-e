@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2024 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@
 MODULE pp_module
 CONTAINS
 !-----------------------------------------------------------------------
-SUBROUTINE extract (plot_files,plot_num)
+SUBROUTINE extract (plot_files,plot_num,nc)
   !-----------------------------------------------------------------------
   !
   !    Reads data produced by pw.x, computes the desired quantity (rho, V, ...)
@@ -36,9 +36,11 @@ SUBROUTINE extract (plot_files,plot_num)
   USE mp,        ONLY : mp_bcast
   USE mp_images, ONLY : intra_image_comm
   USE constants, ONLY : rytoev
-  USE parameters, ONLY : npk
+  USE parameters,ONLY : npk
   USE io_global, ONLY : stdout
-  USE run_info, ONLY: title
+  USE run_info,  ONLY : title
+  USE ldaU,      ONLY : lda_plus_u
+  USE lsda_mod,  ONLY : nspin
   !
   IMPLICIT NONE
   !
@@ -46,7 +48,9 @@ SUBROUTINE extract (plot_files,plot_num)
   !
   CHARACTER(len=256), DIMENSION(:), ALLOCATABLE, INTENT(out) :: plot_files
   INTEGER, INTENT(out) :: plot_num
+  INTEGER, INTENT(out) :: nc(3)
 
+  INTEGER :: n0(3)
   CHARACTER (len=2), DIMENSION(0:3) :: spin_desc = &
        (/ '  ', '_X', '_Y', '_Z' /)
 
@@ -56,16 +60,16 @@ SUBROUTINE extract (plot_files,plot_num)
   REAL(DP) :: emin, emax, sample_bias, z, dz
 
   REAL(DP) :: degauss_ldos, delta_e
-  CHARACTER(len=256) :: filplot
+  CHARACTER(len=256) :: filplot, spin_label(2)
   INTEGER :: plot_nkpt, plot_nbnd, plot_nspin, nplots
-  INTEGER :: iplot, ikpt, ibnd, ispin
+  INTEGER :: iplot, iplot2, ikpt, ibnd, ispin
 
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
 
   NAMELIST / inputpp / title, outdir, prefix, plot_num, sample_bias, &
       spin_component, z, dz, emin, emax, delta_e, degauss_ldos, kpoint, kband, &
-      filplot, lsign, use_gauss_ldos
+      filplot, lsign, use_gauss_ldos, nc, n0
   !
   !   set default values for variables in namelist
   !
@@ -87,6 +91,8 @@ SUBROUTINE extract (plot_files,plot_num)
   delta_e=0.1d0
   degauss_ldos=-999.0d0
   use_gauss_ldos=.false.
+  nc(:) = 1
+  n0(:) = 0
   !
   ios = 0
   !
@@ -123,6 +129,8 @@ SUBROUTINE extract (plot_files,plot_num)
   CALL mp_bcast( filplot, ionode_id, intra_image_comm )
   CALL mp_bcast( lsign, ionode_id, intra_image_comm )
   CALL mp_bcast( use_gauss_ldos, ionode_id, intra_image_comm)
+  CALL mp_bcast( nc, ionode_id, intra_image_comm )
+  CALL mp_bcast( n0, ionode_id, intra_image_comm )
   !
   ! no task specified: do nothing and return
   !
@@ -131,7 +139,7 @@ SUBROUTINE extract (plot_files,plot_num)
      RETURN
   ENDIF
   !
-  IF (plot_num < 0 .or. (plot_num > 24 .and. &
+  IF (plot_num < 0 .or. (plot_num > 25 .and. &
         plot_num /= 119 .and. plot_num /= 123)) CALL errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
@@ -146,11 +154,22 @@ SUBROUTINE extract (plot_files,plot_num)
          ('postproc', 'wrong spin_component', 3)
   ENDIF
   !
+  ! Check on the nc and n0 variables
+  IF (((nc(1)/=1) .OR. (nc(2)/=1) .OR. (nc(3)/=1)) .AND. .NOT.(plot_num==25)) &
+     CALL errore('postproc', 'nc can be used only for plot_num=25',1)
+  IF (((n0(1)/=0) .OR. (n0(2)/=0) .OR. (n0(3)/=0)) .AND. .NOT.(plot_num==25)) &
+     CALL errore('postproc', 'n0 can be used only for plot_num=25',1)
+  IF (plot_num==25) THEN
+     IF ((nc(1)<1) .OR. (nc(2)<1) .OR. (nc(3)<1)) &
+     CALL errore('postproc', 'nc must be greater or equal to 1',1)
+  ENDIF
+  !
   !   Read xml file, allocate and initialize general variables
   !   If needed, allocate and initialize wavefunction-related variables
   !
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
-         (plot_num==8).or.(plot_num==10).or.(plot_num==23)
+         (plot_num==8).or.(plot_num==10).or.(plot_num==22).or.(plot_num==23).or. &
+         (plot_num==25)
   CALL read_file_new ( needwf )
   !
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
@@ -188,7 +207,6 @@ SUBROUTINE extract (plot_files,plot_num)
   nplots = 1
   IF (plot_num == 3) THEN
      nplots=(emax-emin)/delta_e + 1
-  
   ELSEIF (plot_num == 7) THEN
       IF (kpoint(2) == 0)  kpoint(2) = kpoint(1)
       plot_nkpt = kpoint(2) - kpoint(1) + 1
@@ -196,12 +214,13 @@ SUBROUTINE extract (plot_files,plot_num)
       plot_nbnd = kband(2) - kband(1) + 1
       IF (spin_component(2) == 0)  spin_component(2) = spin_component(1)
       plot_nspin = spin_component(2) - spin_component(1) + 1
-
       nplots = plot_nbnd * plot_nkpt * plot_nspin
-
   ELSEIF (plot_num == 23) THEN
       IF (spin_component(1) == 3) nplots = 2
-
+  ELSEIF (plot_num == 25) THEN
+      IF (.NOT.lda_plus_u) CALL errore('postproc',&
+         'plot_num=25 can be used only for DFT+Hubbard',1)
+      CALL hubbard_projectors (filplot, plot_num, nc, n0, nplots)
   ENDIF
   ALLOCATE( plot_files(nplots) )
   plot_files(1) = filplot
@@ -252,6 +271,23 @@ SUBROUTINE extract (plot_files,plot_num)
         !
     ENDIF
     !
+  ELSEIF (plot_num == 25) THEN
+    !
+    spin_label(:) = ''
+    IF (nspin==2) THEN
+       spin_label(1) = '_up'
+       spin_label(2) = '_down'
+       DEALLOCATE (plot_files)
+       ALLOCATE (plot_files(nplots*nspin))
+    ENDIF
+    !
+    DO ispin=1,nspin
+       DO iplot=1,nplots
+          iplot2 = iplot + (ispin-1)*nplots
+          WRITE(plot_files(iplot2),'(A, I0.3, A)') TRIM(filplot), iplot, TRIM(spin_label(ispin))
+       ENDDO
+    ENDDO
+    !
   ELSE
     ! Single call to punch_plot
     IF (plot_num == 3) THEN
@@ -263,6 +299,8 @@ SUBROUTINE extract (plot_files,plot_num)
      ENDIF
 
   ENDIF
+  !
+  RETURN
   !
 END SUBROUTINE extract
 
@@ -293,6 +331,7 @@ PROGRAM pp
   !
   CHARACTER(len=256), DIMENSION(:), ALLOCATABLE :: plot_files
   INTEGER :: plot_num
+  INTEGER :: nc(3)
   !
   ! initialise environment
   !
@@ -303,9 +342,9 @@ PROGRAM pp
   !
   IF ( ionode )  CALL input_from_file ( )
   !
-  CALL extract (plot_files, plot_num)
+  CALL extract (plot_files, plot_num, nc)
   !
-  CALL chdens (plot_files, plot_num)
+  CALL chdens (plot_files, plot_num, nc)
   !
   CALL environment_end ( 'POST-PROC' )
   !

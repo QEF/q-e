@@ -45,7 +45,6 @@ SUBROUTINE init_run()
                                  xclib_dft_is, xclib_set_finite_size_volume, &
                                  dft_has_finite_size_correction
   !
-  USE dfunct_gpum,        ONLY : newd_gpu
   USE rism_module,        ONLY : lrism, rism_alloc3d
   USE extffield,          ONLY : init_extffield
   USE control_flags,      ONLY : scissor
@@ -173,15 +172,7 @@ SUBROUTINE init_run()
   !
   CALL potinit()
   !
-  IF ( use_gpu ) THEN
-    !
-    CALL newd_gpu()
-    !
-  ELSE
-    !
-    CALL newd()
-    !
-  END IF
+  CALL newd()
   !
   CALL wfcinit()
   !

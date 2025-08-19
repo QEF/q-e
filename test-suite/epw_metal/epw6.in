@@ -1,0 +1,90 @@
+--
+&inputepw
+  prefix      = 'pb'
+  amass(1)    = 207.2
+  outdir      = './'
+
+  etf_mem     = 0
+  lfast_kmesh = .true.
+  epw_memdist = .true.
+  lopt_w2b    = .true.
+  iverbosity  = 3
+
+  elph        = .true.
+  epwwrite    = .false.
+  epwread     = .true.
+  vme         = 'dipole'
+
+  nbndsub       =  4
+  bands_skipped = 'exclude_bands = 1-5'
+
+  wannierize  = .false.
+  num_iter    = 300
+  dis_win_max = 21
+  dis_win_min = -3
+  dis_froz_min= -3
+  dis_froz_max= 13.5
+  proj(1)     = 'Pb:sp3'
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'G 0.00 0.00 0.00 X 0.00 0.50 0.50'
+  wdata(4) = 'X 0.00 0.50 0.50 W 0.25 0.50 0.75'
+  wdata(5) = 'W 0.25 0.50 0.75 L 0.50 0.50 0.50'
+  wdata(6) = 'L 0.50 0.50 0.50 K 0.375 0.375 0.75'
+  wdata(7) = 'K 0.375 0.375 0.75 G 0.00 0.00 0.00'
+  wdata(8) = 'G 0.00 0.00 0.00 L 0.50 0.50 0.50'
+  wdata(9) = 'end kpoint_path'
+  wdata(10)= 'bands_plot_format = gnuplot'
+  iverbosity  = 0
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  lifc        = .true.
+  asr_typ     = 'crystal'
+
+  fsthick      = 3 ! eV
+  degaussw     = 0.0  ! eV (adaptative smearing)
+  degaussq     = 0.05 ! meV
+  assume_metal = .true.
+  ngaussw      = -99  ! we want F-D distribution for metals
+
+  iterative_bte = .true.
+  scattering    = .true.
+  carrier       = .false.
+  mp_mesh_k     = .true.
+  epmatkqread   = .false.
+  mob_maxiter   = 30
+  broyden_beta  = 1.0
+  restart       = .true.
+  restart_step  = 50
+  selecqread    = .false.
+  nstemp        = 2
+  temps         = 100 300
+
+  efermi_read = .true.
+  fermi_energy =  11.74
+  !fermi_energies_t =  11.74076242797560   11.68985723330131                                    
+
+  ltrans_crta = .true.
+  sr_crta = 100.0
+
+  dvscf_dir   = './save'
+
+  nkf1        = 12
+  nkf2        = 12
+  nkf3        = 12
+
+  nqf1        = 12
+  nqf2        = 12
+  nqf3        = 12
+
+  nk1         = 3
+  nk2         = 3
+  nk3         = 3
+
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /
