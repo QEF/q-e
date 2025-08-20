@@ -47,13 +47,13 @@ SUBROUTINE add_bfield( v, rho )
   REAL(DP), ALLOCATABLE :: m2(:,:), m_loc(:,:), r_loc(:)
   INTEGER :: ir, ipol, nt, na, npol, dfftp_nnr
   !
-  !$acc data copyin(rho,pointlist,factlist) copy(v)
-  !
   dfftp_nnr = dfftp%nnr
   etcon=0.D0
   !
   IF (nspin==1 .OR. i_cons==0)  RETURN
   ! i_cons==0, no constraint
+  !
+  !$acc data copyin(rho,pointlist,factlist) copy(v)
   !
   npol = nspin - 1
   ! number of relevant magnetic components:
