@@ -69,6 +69,9 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
+  !$acc data copyin(rho,v)
+  !$acc data copyin(rho%of_r,rho%of_g,rho_core,rhog_core) copyout(v%of_r,v%kin_r)
+  !
   IF (xclib_dft_is('meta')) THEN
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   ELSE
@@ -82,6 +85,9 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! ... calculate hartree potential
   !
   CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
+  !
+  !$acc end data
+  !$acc end data
   !
   ! ... DFT+U(+V): build up (extended) Hubbard potential 
   !
@@ -600,15 +606,23 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
   !
-  !$acc end data
-  !$acc end data
-  !
   ! ... to avoid NaN in some rare cases (see summations in subroutine delta_e)
-  IF ( nspin==4 .AND. .NOT.domag ) v(:,2:nspin) = 0.D0
+  IF ( nspin==4 .AND. .NOT.domag ) THEN
+     !$acc kernels
+     v(:,2:nspin) = 0.D0
+     !$acc end kernels
+  ENDIF
   !
   ! ... add non local corrections (if any)
   !
-  IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
+  IF ( dft_is_nonlocc() ) THEN
+    !$acc update self(v)
+    CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
+    !$acc update device(v)
+  ENDIF
+  !
+  !$acc end data
+  !$acc end data
   !
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
@@ -659,7 +673,11 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   CALL start_clock( 'v_h' )
   !
+  !$acc data copyin(rhog) copy(v)
+  !
   ALLOCATE( aux(dfftp%nnr), aux1(2,ngm), vh(dfftp%nnr) )
+  !$acc data create(aux,aux1,vh)
+  !
   charge = 0.D0
   !
   IF ( gstart == 2 ) THEN
@@ -677,16 +695,23 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      ! ... calculate modified Hartree potential for ESM
      !
      CALL esm_hartree( rhog, ehart, aux )
+     !$acc update device(aux)
      !
   ELSE
      !
-     ehart     = 0.D0
+     ehart = 0.D0
+     !$acc kernels
      aux1(:,:) = 0.D0
+     !$acc end kernels
      !
      IF (do_cutoff_2D) THEN  !TS
         CALL cutoff_hartree(rhog(:), aux1, ehart)
      ELSE
-!$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
+#if defined(_OPENACC)
+        !$acc parallel loop reduction(+:ehart)
+#elif defined(__OPENMP)
+        !$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
+#endif
         DO ig = gstart, ngm
            !
            fac = 1.D0 / gg(ig) 
@@ -700,14 +725,18 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
            aux1(2,ig) = rgtot_im * fac
            !
         ENDDO
-!$omp end parallel do
+#if defined(__OPENMP)
+        !$omp end parallel do
+#endif
      ENDIF
      !
      fac = e2 * fpi / tpiba2
      !
      ehart = ehart * fac
      !
-     aux1 = aux1 * fac
+     !$acc kernels
+     aux1(:,:) = aux1(:,:) * fac
+     !$acc end kernels
      !
      IF ( gamma_only ) THEN
         !
@@ -721,17 +750,25 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
      IF (do_comp_mt) THEN
         ALLOCATE( vaux(ngm), rgtot(ngm) )
+        !$acc data create(vaux,rgtot)
+        !$acc kernels
         rgtot(:) = rhog(:)
+        !$acc end kernels
         CALL wg_corr_h( omega, ngm, rgtot, vaux, eh_corr )
+        !$acc kernels
         aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
         aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
+        !$acc end kernels
         ehart = ehart + eh_corr
+        !$acc end data
         DEALLOCATE( rgtot, vaux )
      ENDIF
      !
      CALL mp_sum( ehart, intra_bgrp_comm )
      !
+     !$acc kernels
      aux(1:ngm) = CMPLX( aux1(1,1:ngm), aux1(2,1:ngm), KIND=DP )
+     !$acc end kernels
      !
   ENDIF
   !
@@ -743,19 +780,26 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   IF ( nspin == 4 ) THEN
      !
+     !$acc kernels
      v(:,1) = v(:,1) + vh(:)
+     !$acc end kernels
      !
   ELSE
      !
      DO is = 1, nspin
         !
+        !$acc kernels
         v(:,is) = v(:,is) + vh(:)
+        !$acc end kernels
         !
      ENDDO
      !
   ENDIF
   !
+  !$acc end data
   DEALLOCATE( aux, aux1, vh )
+  !
+  !$acc end data
   !
   CALL stop_clock( 'v_h' )
   !

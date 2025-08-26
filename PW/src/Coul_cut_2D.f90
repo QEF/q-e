@@ -55,6 +55,7 @@ SUBROUTINE cutoff_fact()
   REAL(DP) :: Gzlz, Gplz
   !
   ALLOCATE( cutoff_2D(ngmx) ) 
+  !$acc enter data create(cutoff_2D)
   !
   ! Message to indicate that the cutoff is active. 
   WRITE(stdout, *) "----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D"
@@ -78,6 +79,7 @@ SUBROUTINE cutoff_fact()
      Gzlz = g(3,ng)*tpi*lz/alat
      cutoff_2D(ng) = 1.0d0 - EXP(-Gplz)*COS(Gzlz)
   ENDDO
+  !$acc update device(cutoff_2D)
   !
   RETURN
   !
@@ -176,6 +178,9 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   REAL(DP) :: fac
   REAL(DP) :: rgtot_re, rgtot_im
   !  
+  !$acc data copyin(rhog) copy(aux1)
+  !
+  !$acc parallel loop reduction(+:ehart)
   DO ig = gstart, ngm
      !
      fac = 1.D0 / gg(ig) * cutoff_2D(ig)
@@ -189,6 +194,8 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
      aux1(2,ig) = rgtot_im * fac
      !
   ENDDO
+  !
+  !$acc end data
   !
   RETURN
   !

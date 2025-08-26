@@ -43,15 +43,17 @@ SUBROUTINE add_bfield( v, rho )
   !
   ! ... local variables
   !
-  REAL(DP) :: ma, mperp, xx, fact, m1(3), etcon, fact1(3)
+  REAL(DP) :: ma, mperp, xx, fact, m1(3), m1_ipol, etcon, fact1(3)
   REAL(DP), ALLOCATABLE :: m2(:,:), m_loc(:,:), r_loc(:)
-  INTEGER :: ir, ipol, nt, na, npol
+  INTEGER :: ir, ipol, nt, na, npol, dfftp_nnr
   !
-  !
+  dfftp_nnr = dfftp%nnr
   etcon=0.D0
   !
   IF (nspin==1 .OR. i_cons==0)  RETURN
   ! i_cons==0, no constraint
+  !
+  !$acc data copyin(rho,pointlist,factlist) copy(v)
   !
   npol = nspin - 1
   ! number of relevant magnetic components:
@@ -107,12 +109,14 @@ SUBROUTINE add_bfield( v, rho )
      !
      IF (noncolin) THEN
         !
-        DO ir = 1, dfftp%nnr
+        !$acc parallel loop copyin(m2)
+        DO ir = 1, dfftp_nnr
            IF (pointlist(ir) == 0 ) CYCLE
            ! The omega/(n1*n2*n3) factor had no justification and has been
            ! removed after v.7.3.1 - Noticed by Tae Yun Kim
            ! fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
            fact = 2.D0*lambda*factlist(ir)
+           !$acc loop seq
            DO ipol = 1,3
               v(ir,ipol+1) = v(ir,ipol+1) + fact*m2(ipol,pointlist(ir))
            ENDDO       ! ipol
@@ -120,7 +124,8 @@ SUBROUTINE add_bfield( v, rho )
         !
      ELSE
         !
-        DO ir = 1, dfftp%nnr
+        !$acc parallel loop copyin(m2)
+        DO ir = 1, dfftp_nnr
            IF (pointlist(ir) == 0 ) CYCLE
            ! As above: factor omega/(n1*n2*n3) removed
            fact = 2.D0*lambda*factlist(ir)
@@ -137,10 +142,12 @@ SUBROUTINE add_bfield( v, rho )
      !
      m1 = 0.d0
      DO ipol = 1, npol
-        DO ir = 1, dfftp%nnr
-           m1(ipol) = m1(ipol) + rho(ir,ipol+1)
+        m1_ipol = 0.d0
+        !$acc parallel loop reduction(+:m1_ipol)
+        DO ir = 1, dfftp_nnr
+           m1_ipol = m1_ipol + rho(ir,ipol+1)
         ENDDO
-        m1(ipol) = m1(ipol) * omega / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
+        m1(ipol) = m1_ipol * omega / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
      ENDDO
      CALL mp_sum( m1, intra_bgrp_comm )
      !
@@ -148,7 +155,8 @@ SUBROUTINE add_bfield( v, rho )
        IF (npol==1) THEN
           fact = 2.D0*lambda
           bfield(1) = -fact*(m1(1) - mcons(1,1))
-          DO ir = 1, dfftp%nnr
+          !$acc parallel loop copyin(bfield)
+          DO ir = 1, dfftp_nnr
              v(ir,1) = v(ir,1) - bfield(1)
              v(ir,2) = v(ir,2) + bfield(1)
           ENDDO
@@ -156,7 +164,8 @@ SUBROUTINE add_bfield( v, rho )
           fact = 2.D0*lambda
           DO ipol=1,3
              bfield(ipol) = -fact*(m1(ipol) - mcons(ipol,1))
-             DO ir = 1, dfftp%nnr
+             !$acc parallel loop copyin(bfield)
+             DO ir = 1, dfftp_nnr
                 v(ir,ipol+1) = v(ir,ipol+1) - bfield(ipol)
              ENDDO
           ENDDO
@@ -195,8 +204,9 @@ SUBROUTINE add_bfield( v, rho )
        etcon = lambda * xx**2
        bfield(:) = 2.D0 * lambda * xx * fact1(:)
        !
+       !$acc parallel loop collapse(2) copyin(bfield)
        DO ipol = 1, 3
-          DO ir = 1, dfftp%nnr
+          DO ir = 1, dfftp_nnr
              v(ir,ipol+1) = v(ir,ipol+1) + bfield(ipol)
           ENDDO
        ENDDO
@@ -222,13 +232,15 @@ SUBROUTINE add_bfield( v, rho )
              (bfield(ipol), ipol=1,npol)
      !
      IF (npol==1) THEN
-        DO ir = 1, dfftp%nnr
+        !$acc parallel loop copyin(bfield)
+        DO ir = 1, dfftp_nnr
            v(ir,1) = v(ir,1) - bfield(ipol)
            v(ir,2) = v(ir,2) + bfield(ipol)
         ENDDO
      ELSE
+        !$acc parallel loop collapse(2) copyin(bfield)
         DO ipol = 1, 3
-           DO ir = 1, dfftp%nnr
+           DO ir = 1, dfftp_nnr
               v(ir,ipol+1) = v(ir,ipol+1) - bfield(ipol)
            ENDDO
         ENDDO
@@ -240,6 +252,7 @@ SUBROUTINE add_bfield( v, rho )
      !
   ENDIF
   !
+  !$acc end data
   !
   RETURN
   !

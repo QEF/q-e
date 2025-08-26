@@ -147,7 +147,10 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( vloc )      )  DEALLOCATE( vloc      )
-  IF ( ALLOCATED( cutoff_2D ) )  DEALLOCATE( cutoff_2D )
+  IF ( ALLOCATED( cutoff_2D ) ) THEN
+    !$acc exit data delete(cutoff_2d)
+    DEALLOCATE( cutoff_2D )
+  ENDIF
   IF ( ALLOCATED( lr_Vloc )   )  DEALLOCATE( lr_Vloc   )
   IF ( ALLOCATED( strf )      )  DEALLOCATE( strf      )
   !
