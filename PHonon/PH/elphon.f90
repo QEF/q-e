@@ -203,6 +203,8 @@ SUBROUTINE rediagonalize_dyn( )
         CALL read_dyn_mat_tail(nat)
 
         deallocate( phip )
+        !
+     END IF
      !
      ! Write phonon frequency to stdout
      !
@@ -216,7 +218,6 @@ SUBROUTINE rediagonalize_dyn( )
      !
      WRITE( stdout, '(1x,74("*"))')
      !
-  ENDIF ! .NOT. trans
   !
 8000 FORMAT(/,5x,'Diagonalizing the dynamical matrix', &
        &       //,5x,'q = ( ',3f14.9,' ) ',//,1x,74('*'))
