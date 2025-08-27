@@ -419,7 +419,7 @@ SUBROUTINE punch_band_2d(filband,spin_component)
    INTEGER, INTENT(IN) :: spin_component
    REAL(DP) :: xk0(3), xk1(3), xk2(3), dkx(3), dky(3), xkdum(3), mdkx, mdky
    INTEGER :: n1, n2
-   INTEGER :: ik, i, i1, i2, ibnd, ijk, start_k, last_k, nks_eff, j, ios
+   INTEGER :: ik, i, i1, i2, ibnd, ijk, nks_eff, j, ios
    CHARACTER(LEN=256) :: filename
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
    REAL(DP), ALLOCATABLE :: xk_collect(:,:), et_collect(:,:)
